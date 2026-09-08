@@ -121,7 +121,7 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 - **The design will change.** Do not build component styling beyond the tokens (M0.7) and mixins (M0.8).
 - **No print styles anywhere except the spell recipe view** (M10.22). `_print.scss` is created by that task and scoped to it.
 - Gitflow: `feature/*` → `staging`; `staging` → `main` via `release/MAJOR.MINOR.PATCH`; `hotfix/*` opens both; `main-sync/YYYY-MM-DD-HH-MM-SS` brings `main` back down. Staging carries the same protections as production; local development is the only relaxed environment.
-- Document as you go in `claude-docs/` — a summary per subsystem, an append-only transcript, one doc per component. Several tasks name it as an acceptance criterion.
+- Document as you go in `claude-docs/` — a summary per subsystem, an append-only transcript, one doc per component. Several tasks name it as an acceptance criterion. [`claude-docs/README.md`](claude-docs/README.md) describes the layout.
 
 ---
 
