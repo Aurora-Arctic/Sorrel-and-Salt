@@ -122,6 +122,40 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 
 ---
 
+## Asana task tracking
+
+The Asana board **Sorrel & Salt** is the source of truth for what to work on — not `TASKS.md`, which is the frozen original breakdown. Board sections are the milestones (M0–M11); the `Task ID` text field carries the `M0.1`-style identifier.
+
+| Object | GID |
+|---|---|
+| Project | `1218257926462425` |
+| `Status` field | `1218259502689548` |
+| → `Not Started` | `1218259502689549` |
+| → `In Progress` | `1218259502689550` |
+| → `In Review` | `1218259502689551` |
+| → `Completed` | `1218259502689552` |
+
+Set it with `asana_update_task`, passing `custom_fields` as `{"1218259502689548": "<option gid>"}`. The field reaches subtasks even though they are not project members, so no task needs adding to the project first.
+
+**Every task carries a `Status` single-select**, and it moves in one direction only:
+
+| Status | Set it when |
+|---|---|
+| `Not Started` | The default. Every task starts here and stays there until work actually begins. |
+| `In Progress` | The feature branch for the task exists and work has started — not when the task is merely read or planned. |
+| `In Review` | The PR is open. Set it in the same turn the PR is created, alongside the comment carrying the PR link. |
+| `Completed` | The PR is **merged**. Never before — a green CI run is not a merge. |
+
+Rules that follow from this:
+
+- **Set the status through the Asana MCP tools, in the same turn as the event.** A status left stale is worse than no status: it says work is happening that is not.
+- `Completed` and the task's completed checkbox move together. Both happen on merge, never earlier.
+- Do not skip states. A task that goes `Not Started` → `Completed` hides the review step that the one-task-per-PR rule exists to make visible.
+- Status is not a substitute for the progress comment. Comment on the task as work proceeds; the status field is the at-a-glance summary of those comments, not a replacement.
+- If a PR is closed without merging, the task returns to `In Progress` — not `Completed`, not `Not Started`.
+
+---
+
 ## Out of scope for v1
 
 Do not build, and do not leave hooks for beyond what the design doc names: the **entire notes subsystem** (stories 35–46; §13), edit history, viewer spell approval, compendium/category suggestions, duplicate merge tooling, bulk add from the compendium, GraphQL response caching, email/password sign-in, note moderation.
