@@ -1,4 +1,6 @@
 @use 'sass:color';
+@use 'sass:list';
+@use 'sass:map';
 
 // M0.6 set this project's own typefaces and base palette, replacing the
 // resume-2026 values the M0.5 port carried over as a placeholder.
@@ -79,6 +81,185 @@ $shadow-dark: rgba(6, 5, 3, 0.8);
 $shadow-light: rgba(35, 32, 26, 0.18);
 
 // ---------------------------------------------------------------------------
+// Category groups — M0.7
+// ---------------------------------------------------------------------------
+//
+// The eight groups of §6, which exist so the chip selector can collapse 52
+// categories into sections instead of a flat wall of them. Each group needs a
+// colour distinguishable from the other seven at chip size.
+//
+// The eight hues are one rotation of $sorrel in 22.5deg steps, taking only the
+// odd multiples. That half-step offset is the point: it guarantees no group
+// lands on the accent hue (96deg) or the secondary hue (8deg), both already
+// claimed by the UI chrome. A category chip wearing the accent colour would
+// read as selected when it is not.
+//
+// Saturation is lifted off $sorrel by one amount per theme — the same lift for
+// all eight, which is what keeps them reading as one family while letting each
+// theme set its own intensity. Light needs by far the bigger lift: to clear
+// 4.5:1 on parchment a colour has to stay dark, and a dark colour at moderate
+// saturation reads as mud rather than as colour. Dark theme lightens its
+// colours instead, where moderate saturation already reads clearly.
+//
+// Lightness is then trimmed per group, and only as far as the contrast floor
+// demands — equal HSL lightness is not equal perceived lightness, so indigo
+// takes a +34% lift to clear 4.5:1 on soot where jade takes +9%. Every ratio is
+// tabulated in claude-docs/design-decisions/m0.7-category-and-safety-tokens.md.
+$category-group-step: 22.5deg;
+$category-group-saturation: (
+  dark: 14%,
+  light: 50%,
+);
+
+// `step` is an odd multiple of $category-group-step — odd is what holds the set
+// on the half-step offset. Slugs are the §6 group names shortened to the word
+// that identifies the group; the category seed's `group` field matches them.
+$category-groups: (
+  // 208.5deg — steel blue
+  'protection': (
+      step: 5,
+      dark: 22%,
+      light: 0%,
+    ),
+  // 163.5deg — teal
+  'cleansing': (
+      step: 3,
+      dark: 9%,
+      light: -7%,
+    ),
+  // 73.5deg — gold
+  'prosperity': (
+      step: 15,
+      dark: 7%,
+      light: -8%,
+    ),
+  // 343.5deg — rose
+  'love': (
+      step: 11,
+      dark: 29%,
+      light: 0%,
+    ),
+  // 253.5deg — indigo
+  'mind': (
+      step: 7,
+      dark: 34%,
+      light: 0%,
+    ),
+  // 118.5deg — jade
+  'wellbeing': (
+      step: 1,
+      dark: 9%,
+      light: -6%,
+    ),
+  // 298.5deg — violet
+  'craft': (
+      step: 9,
+      dark: 26%,
+      light: 0%,
+    ),
+  // 28.5deg — hearth amber
+  'practice': (
+      step: 13,
+      dark: 17%,
+      light: 0%,
+    )
+);
+
+// Every function below is keyed by theme, and a mistyped theme would otherwise
+// surface as `null is not a number` from somewhere deep in color.adjust().
+@function _assert-theme($theme) {
+  @if not list.index((dark, light), $theme) {
+    @error 'Unknown theme "#{$theme}". Expected dark or light.';
+  }
+
+  @return $theme;
+}
+
+// Resolves one group to a concrete colour. Only the theme mixins call this;
+// components use category-group() below, which hands back the token instead.
+@function category-group-color($slug, $theme) {
+  $theme: _assert-theme($theme);
+  $spec: map.get($category-groups, $slug);
+
+  @if $spec == null {
+    @error 'Unknown category group "#{$slug}". The eight groups are: #{map.keys($category-groups)}.';
+  }
+
+  @return color.adjust(
+    $sorrel,
+    $hue: map.get($spec, step) * $category-group-step,
+    $saturation: map.get($category-group-saturation, $theme),
+    $lightness: map.get($spec, $theme)
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Badge palettes — M0.7
+// ---------------------------------------------------------------------------
+//
+// Two badges appear on an IngredientCard, and they are deliberately not equals.
+// Safety is a warning — an ingredient flagged toxic or unsafe to burn (story
+// 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted
+// in saturation alongside the groups. Low stock is an inventory state, not an
+// alarm (story 54), so it takes the muted ink and is left unsaturated. That
+// keeps exactly one loud badge in the app, and spends no hue — which matters,
+// because every hue not already reserved now belongs to one of the eight groups.
+//
+// Each palette is one ink per theme. Fill and edge are that ink mixed back into
+// the card surface, so a badge tints the surface it actually sits on instead of
+// carrying a hardcoded panel colour.
+$badge-palettes: (
+  'safety': (
+    dark: color.adjust($wax, $saturation: 30%, $lightness: 30%),
+    light: color.adjust($wax, $saturation: 35%),
+  ),
+  'low-stock': (
+    dark: $chalk-muted,
+    light: $ink-muted,
+  ),
+);
+
+// Mix weights, per theme rather than per palette: a tint over near-black needs
+// slightly more ink to register than the same tint over parchment. The edge
+// weights are the smallest clearing 3:1 against both surfaces (WCAG 1.4.11).
+$badge-fill-weight: (
+  dark: 14%,
+  light: 12%,
+);
+$badge-edge-weight: (
+  dark: 70%,
+  light: 75%,
+);
+
+// $part is 'fg', 'bg' or 'border'. As with category-group-color(), only the
+// theme mixins call this.
+@function badge-palette-color($palette, $theme, $part) {
+  $theme: _assert-theme($theme);
+  $inks: map.get($badge-palettes, $palette);
+
+  @if $inks == null {
+    @error 'Unknown badge palette "#{$palette}". The palettes are: #{map.keys($badge-palettes)}.';
+  }
+
+  $ink: map.get($inks, $theme);
+  $surface: $parchment-raised;
+
+  @if $theme == dark {
+    $surface: $soot-raised;
+  }
+
+  @if $part == 'fg' {
+    @return $ink;
+  } @else if $part == 'bg' {
+    @return color.mix($ink, $surface, map.get($badge-fill-weight, $theme));
+  } @else if $part == 'border' {
+    @return color.mix($ink, $surface, map.get($badge-edge-weight, $theme));
+  } @else {
+    @error 'Unknown badge part "#{$part}". Expected fg, bg or border.';
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Token aliases — what components consume
 // ---------------------------------------------------------------------------
 //
@@ -95,6 +276,30 @@ $secondary: var(--secondary);
 $secondary-hover: var(--secondary-hover);
 $shadow-elevated: var(--shadow-elevated);
 $shadow-floating: var(--shadow-floating);
+
+// The M0.7 tokens are functions rather than one variable each: there are 8 + 6
+// of them, they are always reached by name, and a function can reject a typo at
+// compile time where `var(--group-protectoin)` would fail silently in the
+// browser. Same contract as the aliases above — a component names a group or a
+// badge part, never a theme and never a raw hue.
+@function category-group($slug) {
+  @if not map.has-key($category-groups, $slug) {
+    @error 'Unknown category group "#{$slug}". The eight groups are: #{map.keys($category-groups)}.';
+  }
+
+  @return var(--group-#{$slug});
+}
+
+@function badge-token($palette, $part) {
+  @if not map.has-key($badge-palettes, $palette) {
+    @error 'Unknown badge palette "#{$palette}". The palettes are: #{map.keys($badge-palettes)}.';
+  }
+  @if not list.index(('fg', 'bg', 'border'), $part) {
+    @error 'Unknown badge part "#{$part}". Expected fg, bg or border.';
+  }
+
+  @return var(--badge-#{$palette}-#{$part});
+}
 
 // ---------------------------------------------------------------------------
 // Type
