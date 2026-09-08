@@ -1,4 +1,5 @@
 @use 'sass:list';
+@use 'sass:map';
 @use './variables' as *;
 
 // Ported from resume-2026's src/scss/_mixins.scss, minus the mixins that
@@ -50,6 +51,22 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+// M0.7. The eight category-group and four badge custom properties, generated
+// from the maps in _variables.scss rather than spelled out per theme. Both
+// theme mixins call this with their own name, so the two halves cannot drift:
+// adding a group or changing a mix weight is one edit in one place.
+@mixin semantic-tokens($theme) {
+  @each $slug in map.keys($category-groups) {
+    --group-#{$slug}: #{category-group-color($slug, $theme)};
+  }
+
+  @each $palette in map.keys($badge-palettes) {
+    @each $part in badge-parts($palette) {
+      --badge-#{$palette}-#{$part}: #{badge-palette-color($palette, $theme, $part)};
+    }
+  }
+}
+
 // M0.6. The two halves of the palette, as the custom properties named by the
 // token aliases in _variables.scss.
 //
@@ -75,6 +92,7 @@
   --shadow-elevated: 0 20px 45px #{$shadow-dark};
   --shadow-floating: 0 2px 8px #{$shadow-dark};
 
+  @include semantic-tokens(dark);
   @include font-smoothing-antialiased;
 }
 
@@ -91,6 +109,8 @@
   --secondary-hover: #{$wax-deep};
   --shadow-elevated: 0 20px 45px #{$shadow-light};
   --shadow-floating: 0 2px 8px #{$shadow-light};
+
+  @include semantic-tokens(light);
 
   -webkit-font-smoothing: auto;
   -moz-osx-font-smoothing: auto;
