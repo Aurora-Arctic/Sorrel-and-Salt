@@ -32,13 +32,20 @@ export default {
   // restarts. 61000 serves, 61001 is `ladle preview`, 61002 is the HMR socket.
   hmrPort: 61002,
   addons: {
-    // The app is dark-first (globals.scss: `:root { @include theme-dark }`),
-    // so the workshop opens dark too. This sets `html[data-theme="dark"]` on
-    // load; the M0.31 decorator will drive the same control through the M0.29
-    // helper.
+    // The toolbar's theme control. M0.31's decorator (.ladle/components.tsx)
+    // reads its state and drives `html[data-theme]` through the M0.29 helper —
+    // the one place a theme is applied — so the workshop and the app agree on
+    // what a theme swap does.
+    //
+    // `defaultState: 'auto'` is the control's unset position: on load the
+    // decorator writes no attribute and .ladle/theme.scss resolves the theme
+    // through `prefers-color-scheme`, exactly as globals.scss does in the app
+    // for a viewer who has never touched the toggle. One click on the control
+    // pins light or dark from there. The app itself is still dark-first — that
+    // lives in globals.scss (`:root { @include theme-dark }`), not here.
     theme: {
       enabled: true,
-      defaultState: 'dark',
+      defaultState: 'auto',
     },
   },
 };
