@@ -1,19 +1,19 @@
 @use './variables' as *;
 @use './mixins' as *;
 
-// Ported from resume-2026's src/scss/_typography.scss. The `@media print` and
-// `html[data-print-mode='...']` tiers are deliberately not carried over —
-// this project has no print styles outside the spell recipe view (M10.22).
+// Global body/heading rules. Ported from resume-2026 in M0.5; M0.6 swapped the
+// families for Cormorant Unicase / Lexend and moved every colour onto the
+// theme tokens.
 //
-// Font files are self-hosted rather than pulled from fonts.googleapis.com /
-// fonts.gstatic.com, and never by a CSS at-import here — that avoids adding
-// an external DNS/connection/CSS/woff2 request chain to the critical path
-// rather than just making it non-blocking. M0.6 picks the families and the
-// loading strategy that goes with them.
-
-html {
-  @include font-smoothing-antialiased;
-}
+// The `@media print` and `html[data-print-mode='...']` tiers are deliberately
+// not carried over — this project has no print styles outside the spell recipe
+// view (M10.22).
+//
+// Every `html[data-theme='light']` duplicate that the port carried is gone
+// too: the tokens resolve per theme at runtime, so one rule now covers dark,
+// light and system-preference. Nothing here should name a palette colour
+// directly — if a rule needs a hue that isn't a token yet, the token is the
+// thing to add.
 
 body {
   font-family: $font-body;
@@ -25,8 +25,13 @@ h2,
 h3,
 h4 {
   font-family: $font-heading;
-  font-weight: 500;
+  // Cormorant Unicase is a high-contrast display serif whose unicase forms all
+  // sit at cap height; at 500 its thin strokes go weedy on a dark ground, so
+  // headings run one step heavier than the resume-2026 port did.
+  font-weight: 600;
+  letter-spacing: 0.01em;
   margin: 0 0 1rem;
+  text-wrap: balance;
 }
 
 h1 {
@@ -64,61 +69,36 @@ dd {
 }
 
 a {
-  color: $wine-stained;
+  color: $accent;
   transition: color 200ms $theme-transition-easing;
 
   &:visited {
-    color: $text;
+    color: $text-primary;
   }
 
   &:hover {
-    color: $wine-glow;
+    color: $accent-hover;
+  }
+
+  &:focus-visible {
+    @include focus-ring($accent);
   }
 }
 
-html[data-theme='light'] a {
-  color: $wine-deep;
-
-  &:visited {
-    color: $silver-oxide;
-  }
-
-  &:hover {
-    color: $grape-press;
-  }
-}
-
-// Reuse the body-text colors (already ≥6:1) rather than pushing the wine
-// hue further with another derived token, and add an underline so links
-// don't depend on the color difference at all — WCAG's "don't rely on
-// color alone" guidance, for users who've explicitly asked for more
-// contrast than the baseline above already provides.
+// Reuse the body ink (already ≥13:1 in both themes) rather than pushing the
+// sorrel hue further with another derived token, and add an underline so links
+// don't depend on the colour difference at all — WCAG's "don't rely on colour
+// alone", for users who have explicitly asked for more contrast than the
+// baseline above already provides.
 @media (prefers-contrast: more) {
   a {
-    color: $text;
+    color: $text-primary;
     text-decoration: underline;
 
     &:hover {
-      color: $text;
+      color: $text-primary;
     }
   }
-
-  html[data-theme='light'] a {
-    color: $silver-oxide;
-    text-decoration: underline;
-
-    &:hover {
-      color: $silver-oxide;
-    }
-  }
-}
-
-// Dark mode (the default) needs antialiased/grayscale font smoothing since
-// light text on a dark background renders heavier than the reverse; light
-// mode reverts to the browser default.
-html[data-theme='light'] {
-  -webkit-font-smoothing: auto;
-  -moz-osx-font-smoothing: auto;
 }
 
 header {
@@ -143,13 +123,9 @@ ul {
       position: absolute;
       left: -1.25rem;
       top: -0.125rem;
-      color: $wine;
+      color: $accent;
     }
   }
-}
-
-html[data-theme='light'] ul li::before {
-  color: $grape-press;
 }
 
 @include reduced-motion {
