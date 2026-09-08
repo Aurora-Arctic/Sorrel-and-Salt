@@ -135,3 +135,13 @@ The one v1 concession to v2: the ingredient detail page (M8.19) is built so a no
 ## Skills
 
 No Claude skills are ported into this repo yet. **M0.10** ports the applicable ones from `resume-2026` (testing conventions, component documentation, commit and PR conventions, CI debugging) and requires listing them here with their triggers. Update this section when that task lands.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
