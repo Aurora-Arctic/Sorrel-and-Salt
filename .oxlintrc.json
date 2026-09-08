@@ -1,0 +1,47 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "jsx-a11y"],
+  "settings": {
+    "react": {
+      "version": "19.2.8"
+    }
+  },
+  "rules": {
+    "no-console": "warn"
+  },
+  "ignorePatterns": ["public", ".next", "out"],
+  "overrides": [
+    {
+      "files": [
+        "next.config.ts",
+        "drizzle.config.ts",
+        "vitest.config.ts",
+        "playwright.config.ts",
+        "e2e/**/*.ts",
+        "Docker/clean.js",
+        "scripts/**/*.ts"
+      ],
+      "env": {
+        "node": true
+      }
+    },
+    {
+      "files": ["src/**/*.{ts,tsx}"],
+      "env": {
+        "browser": true
+      }
+    },
+    {
+      "files": ["src/db/**/*.ts", "src/app/**/route.ts"],
+      "env": {
+        "node": true
+      }
+    },
+    {
+      "files": ["scripts/**/*.ts"],
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ]
+}
