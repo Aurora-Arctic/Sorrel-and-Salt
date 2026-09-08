@@ -13,3 +13,5 @@ A `hotfix/*` source branch always needs to land in both `main` (production) and 
 **Step 8 — drafting.** Reuse the same title across every target's PR unless the diffs genuinely warrant different framing. Each PR gets its own Summary/Test plan body based on its own step-7 diff.
 
 **Step 9 — creating/updating.** Do this independently per target — an existing PR into one doesn't affect the others, and skipping one target (per step 7, if its diff against `HEAD` is empty) doesn't block creating/updating the rest. Report every PR URL back to the user.
+
+**Step 10 — Asana.** Run once, not per target. After every PR has been created/updated, post a single `asana_create_task_story` comment on the task that lists all of them (`main`, `staging`, and the optional `release/*`), then set `In Review` once via `asana_update_task`. If every target only updated an already-open PR, add the comment and leave the status alone. `SKILL.md`'s step 10 covers task identification and the not-found handling unchanged.

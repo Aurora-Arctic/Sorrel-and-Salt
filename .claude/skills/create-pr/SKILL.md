@@ -1,6 +1,6 @@
 ---
 name: create-pr
-description: Use when the user asks to open a PR, create a pull request, or wrap up the current branch for review (e.g. "create a PR", "open a PR for this", "let's get this reviewed"). Commits (after asking) and automatically pushes the current branch's work, then opens a PR with a generated summary of the work done — proposes a target branch based on the repo's Gitflow rules for the current branch's prefix (feature/release/hotfix/staging); `hotfix/*` branches automatically get PRs into both `main` and `staging`, plus a third into an in-flight `release/*` branch if the user opts in.
+description: Use when the user asks to open a PR, create a pull request, or wrap up the current branch for review (e.g. "create a PR", "open a PR for this", "let's get this reviewed"). Commits (after asking) and automatically pushes the current branch's work, then opens a PR with a generated summary of the work done — proposes a target branch based on the repo's Gitflow rules for the current branch's prefix (feature/release/hotfix/staging); `hotfix/*` branches automatically get PRs into both `main` and `staging`, plus a third into an in-flight `release/*` branch if the user opts in. On creating a PR it also moves the linked Asana task to `In Review` and comments the PR link on it.
 ---
 
 # create-pr
@@ -77,9 +77,18 @@ Turn the current branch's work into a pull request against a Gitflow-appropriate
    - Otherwise, run `gh pr create --base <target> --title "..." --body "$(cat <<'EOF' ... EOF)"`.
    - Report the PR URL back to the user.
 
+10. **Move the Asana task to `In Review` and post the PR link.**
+    - Per [`CLAUDE.md`](../../../CLAUDE.md)'s "Asana task tracking" section, `In Review` is set **in the same turn the PR is created, alongside a comment carrying the PR link** — so do this now, not as a follow-up.
+    - Identify the task ID. First try the source branch name: a `feature/m0.29-...` or `hotfix/m3.8-...` slug carries it as the leading `m<major>.<minor>` segment → `M0.29`. If the branch name has no such segment, ask the user for the Asana `Task ID` in plain chat (free-text, no options). If they don't have one, skip this step and say so.
+    - Find the task: `asana_search_tasks` with `projects.any` = `1218257926462425` and `text` = the task ID, then match a result whose `Task ID` custom field equals it exactly (the text search is fuzzy — don't rely on it alone). If zero or more than one task matches, don't guess — tell the user and skip the rest of this step.
+    - When step 9 **created** a new PR: in this same turn, `asana_create_task_story` with a comment carrying the PR URL, then `asana_update_task` with `custom_fields` = `{"1218259502689548": "1218259502689551"}` (the `In Review` option). For a `hotfix/*` branch, list every PR opened (`main`, `staging`, and the optional `release/*`) in the one comment, and set `In Review` once — see [reference-hotfix.md](reference-hotfix.md).
+    - When step 9 only **updated** an already-open PR: the task is already `In Review` — just add an `asana_create_task_story` comment noting the PR was updated, and leave the status field alone.
+    - Status moves one direction only: never set `Completed` here (that happens on merge), and never move a task backward. If the task is already `In Review` or `Completed`, don't re-set it — just add the comment.
+
 ## Notes
 
 - This project's `.claude/settings.json` has `git push origin *` and `gh pr create/view/comment/list` under `permissions.ask` — expect (and don't try to suppress) a confirmation prompt on those calls; that's intentional, not a bug.
+- Step 10's Asana project / field / option GIDs are mirrored from [`CLAUDE.md`](../../../CLAUDE.md)'s "Asana task tracking" table — that table is the source of truth if they ever drift. Setting the status the same turn the PR opens is a hard rule there ("A status left stale is worse than no status"), not a nicety.
 - Never force-push, never push to `main`, and never skip the pre-commit hook (`--no-verify`) to make a commit succeed.
 - Target selection is Gitflow-aware (see step 3) — don't default to `main` out of habit. `hotfix/*` branches use a different flow entirely — see [reference-hotfix.md](reference-hotfix.md); `main`/`staging` are never asked about there, only an optional third `release/*` target is. [`CLAUDE.md`](../../../CLAUDE.md)'s Gitflow line — later `.github/workflows/gitflow.yml`, once M0.17/M0.20 land it — is the source of truth if the rules table in step 3 ever drifts.
 - `main-sync/*` branches are normally created and PR'd directly by `/create-main-sync`, which doesn't defer to this skill (same reasoning `/create-release` uses for its own release branch). This skill's `main-sync/*` handling exists so re-running `/create-pr` from an already-created sync branch still proposes the right (only) target.
