@@ -1,0 +1,2109 @@
+Name,Subtask of,Section/Column,Notes,Estimate (hrs),Task ID,Type
+M0 · Repo bootstrap,,"M0 — Repo, tooling & environment",Feature grouping. 10 tasks.,,,Feature
+M0.1 — Scaffold Next.js 15 App Router with strict TypeScript,M0 · Repo bootstrap,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want a running Next.js 15 App Router project with strict TypeScript so that every later task builds on the framework the design doc chose.
+
+DESCRIPTION
+Create the app skeleton with the App Router, `strict: true` and `noEmit: true` in tsconfig, and the `src/` layout from §3 of the design doc (app, components, services, db, graphql, lib, scss) as empty directories with .gitkeep.
+
+ACCEPTANCE CRITERIA
+- `npm run dev` serves a page on port 8000
+- `npx tsc --noEmit` passes with strict mode on
+- Directory skeleton matches §3 exactly
+- No Pages Router files present",1,M0.1,Task
+M0.2 — Port Oxlint config with Next.js node-globals override,M0 · Repo bootstrap,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want the same lint rules as resume-2026 so that code style is consistent across my repos and CI can gate on it.
+
+DESCRIPTION
+Copy `.oxlintrc.json` verbatim, then swap the `gatsby-*.ts` node-globals override for `next.config.ts`, `drizzle.config.ts`, `src/db/**`, and `src/app/**/route.ts`.
+
+ACCEPTANCE CRITERIA
+- `npm run lint` passes on the scaffolded repo
+- Node globals resolve without error in the four override paths
+- No Gatsby-specific overrides remain",1,M0.2,Task
+M0.3 — Port Prettier config and pre-commit hook,M0 · Repo bootstrap,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want formatting enforced before commit so that no PR review is spent on whitespace.
+
+DESCRIPTION
+Copy `.prettierrc` and `.prettierignore`, install the `pre-commit` npm package, and set the array to `['lint', 'format:check', 'typecheck']`.
+
+ACCEPTANCE CRITERIA
+- `npm run format:check` passes
+- A commit with badly formatted code is blocked locally
+- The pre-commit array matches resume-2026",1,M0.3,Task
+"M0.4 — Port makefile and npm scripts, drop Gatsby helpers",M0 · Repo bootstrap,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want the familiar make targets so that I run the same commands in both repos.
+
+DESCRIPTION
+Port the makefile wrapper. Point `dev`/`build`/`start` at Next.js. Remove `predevelop`, `prebuild`, `postclean` and the `Docker/link-public.js` and `Docker/clean.js` Gatsby workarounds. Add placeholders for `db:generate`, `db:migrate`, `db:seed`, `db:reset`, `codegen`.
+
+ACCEPTANCE CRITERIA
+- `make help` lists every target
+- `make build` produces a Next.js production build
+- No Gatsby helper scripts remain in Docker/
+- Database and codegen script names exist even if they exit non-zero for now",2,M0.4,Task
+M0.5 — Port only the foundational Sass partials,M0 · Repo bootstrap,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want the minimum shared Sass so that styling can start without importing a design that is going to change anyway.
+
+DESCRIPTION
+Copy only `_variables.scss`, `_mixins.scss` and `_typography.scss` into `src/scss/`. Do not port `_buttons.scss` or `_print.scss` — button styling will be redesigned, and print styling is needed for exactly one view (the spell recipe) and will be written there. Confirm `@use`, never `@import`.
+
+ACCEPTANCE CRITERIA
+- A component importing `@use '../../scss/variables' as *;` compiles
+- `focus-ring()`, `theme-transition()` and `reduced-motion` all resolve
+- No `_buttons.scss` or `_print.scss` in the repo
+- No `@import` statements anywhere in src/scss",1,M0.5,Task
+M0.6 — Choose typefaces and base colour palette,M0 · Repo bootstrap,"M0 — Repo, tooling & environment","USER STORY
+As a user, I want the app to look like a considered thing rather than a default so that it feels appropriate to what it holds.
+
+DESCRIPTION
+Decision task. Pick a display and body typeface pairing and a base palette (surface, text, accent, and the light and dark variants of each). Record the choice and the reasoning in claude-docs, and set them in `_variables.scss` and `_typography.scss`. This is a deliberate blocker for the semantic tokens that follow.
+
+ACCEPTANCE CRITERIA
+- Typeface pairing chosen, licensed for the intended use, and self-hosted or loaded with a documented strategy
+- Base palette defined for both light and dark themes
+- Every text-on-surface pairing meets 4.5:1
+- Decision and rationale recorded in claude-docs
+- Font loading does not cause a layout shift on first paint",2,M0.6,Task
+M0.7 — Add category-group and safety design tokens,M0 · Repo bootstrap,"M0 — Repo, tooling & environment","USER STORY
+As a user, I want categories and safety warnings to be visually distinguishable so that I can scan a page without reading every label.
+
+DESCRIPTION
+Building on the base palette, extend `_variables.scss` with 8 category-group colours matching §6's groups and a safety-badge palette.
+
+ACCEPTANCE CRITERIA
+- 8 group colours defined and named after the groups in §6
+- All new colours meet 4.5:1 contrast against their intended background
+- Derived from the M0.6 base palette rather than picked independently",1,M0.7,Task
+"M0.8 — Add modal-surface, chip and badge mixins",M0 · Repo bootstrap,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want shared mixins for the three new UI primitives so that modals, chips and badges are consistent everywhere they appear.
+
+DESCRIPTION
+Add `modal-surface()`, `chip()` and `badge()` to `_mixins.scss`, each honouring the existing `theme-transition()` and `reduced-motion` conventions.
+
+ACCEPTANCE CRITERIA
+- Each mixin compiles in isolation
+- `chip()` supports selected and unselected states
+- `badge()` accepts a palette argument for safety vs low-stock
+- All three respect prefers-reduced-motion",2,M0.8,Task
+"M0.9 — Scaffold claude-docs, README and CLAUDE.md",M0 · Repo bootstrap,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want the documentation convention in place from commit one so that subsystem docs accumulate instead of being retrofitted.
+
+DESCRIPTION
+Create `claude-docs/` with a subsystem summary stub, the append-only transcript file, and a `components/` directory. Write README and CLAUDE.md covering vocabulary (compendium / ingredients / grimoire), commands, and the coverage rule about running `:coverage` variants.
+
+ACCEPTANCE CRITERIA
+- claude-docs structure matches the resume-2026 convention
+- CLAUDE.md states the three domain nouns and their meanings
+- CLAUDE.md records that verification uses the `:coverage` script variants
+- README explains local setup in under ten steps",1,M0.9,Task
+M0.10 — Port applicable Claude skills from resume-2026,M0 · Repo bootstrap,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want my existing agent skills available in this repo so that the assistant follows the same conventions here without being re-taught them.
+
+DESCRIPTION
+Review the skills in resume-2026 and port the ones that apply — testing conventions, component documentation, commit and PR conventions, CI debugging. Leave behind anything Gatsby-specific. Adjust paths and command names to this repo, and note in CLAUDE.md which skills exist and when each applies.
+
+ACCEPTANCE CRITERIA
+- Ported skills live in the conventional skills directory and are discoverable
+- Every ported skill references commands that actually exist in this repo
+- Gatsby-specific skills are excluded, not copied and edited into uselessness
+- CLAUDE.md lists the available skills and their triggers",2,M0.10,Task
+M0 · Local dev environment,,"M0 — Repo, tooling & environment",Feature grouping. 4 tasks.,,,Feature
+M0.11 — Slim two-stage Dockerfile.node,M0 · Local dev environment,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want a small image so that pulls, CI cold starts and rebuilds stay fast.
+
+DESCRIPTION
+Write a slim `Docker/Dockerfile.node` on an alpine or slim Node base with two stages — `development` and `testing` — rather than porting the three-stage resume-2026 file wholesale. The devcontainer consumes the development stage instead of getting its own. Layer-cache dependencies separately from source.
+
+ACCEPTANCE CRITERIA
+- Both stages build
+- Final image is materially smaller than the resume-2026 equivalent, with the number recorded
+- A source-only change does not reinstall dependencies
+- `testing` stage can run vitest",2,M0.11,Task
+"M0.12 — Port docker-compose, drop Gatsby LMDB volume",M0 · Local dev environment,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want a working compose file so that `make docker-up` gives me the app without local Node version juggling.
+
+DESCRIPTION
+Copy `docker-compose.yaml`, keep the `node_modules` volume, remove the Gatsby LMDB cache volume.
+
+ACCEPTANCE CRITERIA
+- `make docker-up` starts the app container
+- node_modules volume persists across restarts
+- No LMDB volume remains",1,M0.12,Task
+M0.13 — Add the Postgres service to docker-compose,M0 · Local dev environment,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want a local Postgres so that tests exercise RLS, triggers and pg_trgm rather than a substitute that cannot.
+
+DESCRIPTION
+Add the Postgres service with a named volume and a health check, wired to the same image tag that CI will use once M0.18 publishes it. Set `DATABASE_URL` for the app and devcontainer services.
+
+ACCEPTANCE CRITERIA
+- `make docker-up` starts Postgres 17 and reports healthy
+- App container connects using the service name
+- Data survives `docker compose restart`
+- No Neon connection is required for local work",2,M0.13,Task
+M0.14 — Port devcontainer against the development stage,M0 · Local dev environment,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want the devcontainer to come up with a database attached so that a fresh clone is productive immediately.
+
+DESCRIPTION
+Copy `.devcontainer/`, point it at the `development` stage of the slim Dockerfile, add `depends_on: postgres` with the health condition, and forward ports 8000 and 8001.
+
+ACCEPTANCE CRITERIA
+- Devcontainer opens and installs dependencies
+- Postgres is reachable from inside it
+- No dedicated devcontainer image stage exists
+- Both ports forward correctly",1,M0.14,Task
+M0 · CI pipeline port,,"M0 — Repo, tooling & environment",Feature grouping. 10 tasks.,,,Feature
+M0.15 — Port shared composite actions,M0 · CI pipeline port,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want the reusable composite actions available so that each check workflow stays a thin wrapper.
+
+DESCRIPTION
+Copy the shared composite actions from resume-2026 unchanged, adjusting any hardcoded repo name.
+
+ACCEPTANCE CRITERIA
+- Composite actions resolve when referenced locally
+- No references to the resume-2026 repo remain
+- At least one workflow consumes each action successfully",1,M0.15,Task
+"M0.16 — Port lint, format and typecheck workflows",M0 · CI pipeline port,"M0 — Repo, tooling & environment","USER STORY
+As a reviewer, I want style and type checks on every PR so that review time goes to logic.
+
+DESCRIPTION
+Copy the three reusable per-check workflows and confirm each runs its npm script inside the testing container image.
+
+ACCEPTANCE CRITERIA
+- Each workflow runs green on the scaffolded repo
+- Each fails when its check is deliberately broken
+- All three run inside the container, not on the runner host",1,M0.16,Task
+M0.17 — Port build and audit workflows,M0 · CI pipeline port,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want build and dependency-audit checks so that a broken build or a known vulnerability never reaches staging.
+
+DESCRIPTION
+Copy the reusable `build` and `audit` workflows, pointing build at the Next.js output.
+
+ACCEPTANCE CRITERIA
+- Build workflow produces and caches the .next output
+- Audit workflow fails on a seeded high-severity advisory
+- Both are referenced from pr-gate",1,M0.17,Task
+M0.18 — Build and publish the base Postgres image to GHCR,M0 · CI pipeline port,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want one database image shared by CI and local development so that every environment starts from an identical Postgres in seconds.
+
+DESCRIPTION
+Workflow building a Postgres 17 image with required extensions enabled and an empty `sorrel_template` database, published to GHCR. Tag by content hash of `src/db/**` plus `latest`; rebuild only when that path changes. Migrations and seed are baked into the template by M1.27, once they exist — this task deliberately ships the image before there is a schema to put in it.
+
+ACCEPTANCE CRITERIA
+- Image publishes to GHCR and is pullable by other workflows and locally
+- Extensions are enabled at build time, not at container start
+- An empty sorrel_template database exists in the image
+- Tag changes when src/db changes and does not when it does not
+- Rebuild is skipped for PRs that do not touch src/db",2,M0.18,Task
+M0.19 — Consume the preseeded image in CI and compose,M0 · CI pipeline port,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want CI and local development to use the same database image so that a data-layer bug reproduces identically in both.
+
+DESCRIPTION
+Point the CI job `services:` and the compose Postgres service at the published GHCR tag. Cache the pull between jobs.
+
+ACCEPTANCE CRITERIA
+- A `SELECT 1` succeeds from inside the job container
+- Compose and CI reference the same tag from one place, not two literals
+- Pull is cached between jobs in a run
+- Health check gates the test step",1,M0.19,Task
+M0.20 — Port pr-gate.yml,M0 · CI pipeline port,"M0 — Repo, tooling & environment","USER STORY
+As a reviewer, I want one gate aggregating every check so that a PR's mergeability is a single signal.
+
+DESCRIPTION
+Copy `pr-gate.yml` and wire it to the reusable workflows ported so far. Leave vitest and playwright references stubbed until M1.
+
+ACCEPTANCE CRITERIA
+- Opening a PR triggers the gate
+- Gate fails if any child check fails
+- Stubbed references do not break the run",1,M0.20,Task
+M0.21 — Port merge-queue.yml and enable the queue on both branches,M0 · CI pipeline port,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want a merge queue so that main and staging never receive an untested merge combination.
+
+DESCRIPTION
+Copy `merge-queue.yml`. Manually enable Require merge queue in Settings → Branches on both `main` and `staging` — without this the workflow never fires.
+
+ACCEPTANCE CRITERIA
+- Merge queue enabled on main and staging
+- A queued PR triggers the workflow
+- Setup step documented in claude-docs",1,M0.21,Task
+M0.22 — Port gitflow workflow and branch rulesets,M0 · CI pipeline port,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want the Gitflow rules enforced so that branch discipline does not depend on memory.
+
+DESCRIPTION
+Copy the `gitflow` reusable workflow. Mirror branch rulesets onto `main` and `staging`. Confirm `feature/*` → `staging`, `release/MAJOR.MINOR.PATCH` promotion, `hotfix/*` opening both PRs, and `main-sync/YYYY-MM-DD-HH-MM-SS`. Configure Dependabot to target `staging`, exempt by author.
+
+ACCEPTANCE CRITERIA
+- A feature branch PR targeting main is rejected
+- Release branch naming is validated
+- Dependabot PRs target staging and skip the author-exempt check
+- Rulesets identical on both branches",2,M0.22,Task
+M0.23 — Port .actrc and make act-* targets,M0 · CI pipeline port,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want to run workflows locally so that CI debugging does not require pushing commits.
+
+DESCRIPTION
+Copy `.actrc` and the `make act-*` targets, adjusting image references if needed.
+
+ACCEPTANCE CRITERIA
+- `make act-lint` runs the lint workflow locally
+- At least one act target completes green
+- Image references resolve without manual pulls",1,M0.23,Task
+M0.24 — Port build-image.yml with new GHCR tag,M0 · CI pipeline port,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want the application container image published so that CI and the devcontainer pull a prebuilt image instead of rebuilding.
+
+DESCRIPTION
+Copy `build-image.yml`, changing the GHCR tag to the Sorrel-and-Salt repo. Distinct from the database image in M0.18.
+
+ACCEPTANCE CRITERIA
+- Image publishes to ghcr.io under the new repo name
+- CI workflows pull the published tag
+- No resume-2026 tag references remain",1,M0.24,Task
+M0 · Vercel setup,,"M0 — Repo, tooling & environment",Feature grouping. 4 tasks.,,,Feature
+M0.25 — Connect repo to Vercel and restrict branch deploys,M0 · Vercel setup,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want only main and staging to deploy so that build minutes and function meters are not spent on every feature branch.
+
+DESCRIPTION
+Connect the repo to a Vercel Hobby project. Add `vercel.json` with `git.deploymentEnabled` set true for `main` and `staging` only.
+
+ACCEPTANCE CRITERIA
+- A push to a feature branch produces no deployment
+- A push to staging deploys
+- vercel.json is committed, not configured only in the dashboard",1,M0.25,Task
+M0.26 — Disable deploy previews and alias staging,M0 · Vercel setup,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want a stable staging URL so that OAuth callbacks and manual testing have a fixed target.
+
+DESCRIPTION
+Turn off deploy previews in project settings. Map the `staging` branch to a stable Preview alias.
+
+ACCEPTANCE CRITERIA
+- Deploy previews are off
+- Staging resolves at a fixed URL across deploys
+- Production alias points at main",1,M0.26,Task
+M0.27 — Define environment variable and secrets matrix,M0 · Vercel setup,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want every secret named and scoped up front so that no environment is discovered to be missing one mid-deploy.
+
+DESCRIPTION
+Document and set: the production and staging Neon connection strings, `BETTER_AUTH_SECRET`, Google and GitHub OAuth client id and secret, admin bootstrap email. Record which are Vercel-managed versus GitHub Actions secrets.
+
+ACCEPTANCE CRITERIA
+- Matrix table committed to claude-docs
+- Production and staging connection strings differ and point at different Neon branches
+- All variables set for Production and Preview
+- GitHub Actions secrets set for the migrate workflow
+- No credentials required to run tests locally",1,M0.27,Task
+M0.28 — Deploy hello-world from staging and promote to production,M0 · Vercel setup,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want the whole pipeline proven end to end before any feature work so that deploy problems surface while the app is trivial.
+
+DESCRIPTION
+Merge a trivial page to `staging`, confirm the Preview deploy, then run a `release/0.0.1` promotion to `main` and confirm Production.
+
+ACCEPTANCE CRITERIA
+- Staging URL serves the page
+- Release branch promotion succeeds through the merge queue
+- Production URL serves the page
+- Build time recorded in claude-docs as a baseline",2,M0.28,Task
+M1 · Neon and Drizzle,,M1 — Database foundation,Feature grouping. 6 tasks.,,,Feature
+M1.1 — Create Neon project and wire the Vercel integration,M1 · Neon and Drizzle,M1 — Database foundation,"USER STORY
+As a developer, I want deployment databases provisioned so that staging and production have isolated data from the first migration.
+
+DESCRIPTION
+Create one Neon project with `production` as the default branch and `staging` as a child branch of it, so staging can be reset from production data without a second project. Install the Neon Vercel integration so `DATABASE_URL` is injected per environment. Neon is deployment-only — tests never touch it.
+
+ACCEPTANCE CRITERIA
+- Two branches in one project: production and staging
+- Staging and production connection strings exist and differ
+- Branch and storage usage checked against the current free-tier limits
+- DATABASE_URL resolves in both Vercel environments
+- Scale-to-zero behaviour noted in claude-docs with the ~1s resume expectation
+- No Neon credentials are needed to run tests",1,M1.1,Task
+M1.2 — Install Drizzle and add the connection module,M1 · Neon and Drizzle,M1 — Database foundation,"USER STORY
+As a developer, I want a single typed database client so that every query path goes through one configured connection.
+
+DESCRIPTION
+Add `drizzle-orm`, `drizzle-kit` and the Postgres driver. Write `drizzle.config.ts` and a connection module that reads `DATABASE_URL`. Export nothing that bypasses the repository layer.
+
+ACCEPTANCE CRITERIA
+- A trivial query runs against local Postgres
+- The same code connects to Neon when DATABASE_URL points there
+- Connection module is the only place the driver is instantiated",2,M1.2,Task
+M1.3 — Add database npm scripts and the first migration,M1 · Neon and Drizzle,M1 — Database foundation,"USER STORY
+As a developer, I want migration commands wired before any schema exists so that every table arrives through the same mechanism.
+
+DESCRIPTION
+Implement `db:generate`, `db:migrate`, `db:seed`, `db:reset`. Generate and apply an initial migration enabling required extensions.
+
+ACCEPTANCE CRITERIA
+- `npm run db:migrate` applies cleanly to an empty database
+- Re-running is idempotent
+- Migration files are committed, not generated at deploy time",2,M1.3,Task
+M1.4 — Add migrate.yml for staging and production,M1 · Neon and Drizzle,M1 — Database foundation,"USER STORY
+As a developer, I want migrations applied automatically on merge so that a deploy never runs against an older schema.
+
+DESCRIPTION
+Workflow applying migrations to staging on merge to `staging` and to production on merge to `main`. Migrations run before the new deploy goes live, which is only safe because every migration is additive under the M1.5 policy.
+
+ACCEPTANCE CRITERIA
+- Merge to staging applies pending migrations
+- Merge to main applies them to production
+- Workflow fails loudly and blocks the deploy on a migration error
+- Completes before the Vercel deploy is promoted
+- Concurrent runs are serialised so two merges cannot migrate at once",2,M1.4,Task
+M1.5 — Adopt expand/contract and add a destructive-DDL check,M1 · Neon and Drizzle,M1 — Database foundation,"USER STORY
+As a developer, I want the schema to stay compatible with the previous app version so that reverting a bad release is a deploy rollback and never a database rollback.
+
+DESCRIPTION
+Drizzle generates no down migrations, and writing them by hand is a reliable way to lose data. Instead, adopt expand/contract: every migration must work against both the old and new application code. Adding a column is additive; renaming one is add, backfill, dual-write, then drop in a later release. Add a CI check that flags DROP COLUMN, DROP TABLE, RENAME, type narrowing and NOT NULL additions, failing unless the PR body carries an explicit acknowledgement line. Document the policy and the forward-fix convention in claude-docs.
+
+ACCEPTANCE CRITERIA
+- Policy documented with a worked rename example across two releases
+- CI check flags each destructive DDL form
+- Check passes when the acknowledgement line is present, fails when it is not
+- Reverting the app one version leaves it working against the migrated schema
+- No down-migration files exist anywhere in the repo",2,M1.5,Task
+M1.6 — Snapshot before production migrations and drill the restore,M1 · Neon and Drizzle,M1 — Database foundation,"USER STORY
+As an operator, I want a known-good point to return to so that a migration that corrupts data is recoverable rather than merely regrettable.
+
+DESCRIPTION
+Before migrating production, the workflow creates a Neon branch from the current production state, named by commit sha. Write the recovery runbook: how to promote that branch back, what the data-loss window is, and who decides. Then actually rehearse it once against staging rather than assuming it works.
+
+ACCEPTANCE CRITERIA
+- A snapshot branch is created before every production migration
+- Branch name identifies the commit it precedes
+- Runbook states the exact promotion steps and the data-loss window
+- Restore has been performed once against staging and the result recorded
+- Old snapshot branches are pruned on a schedule so the branch quota is not exhausted",2,M1.6,Task
+M1 · Test harness,,M1 — Database foundation,Feature grouping. 8 tasks.,,,Feature
+M1.7 — Configure Vitest with unit and db projects,M1 · Test harness,M1 — Database foundation,"USER STORY
+As a developer, I want two test projects so that pure logic runs fast in jsdom while data-layer tests get a real Postgres connection.
+
+DESCRIPTION
+`vitest.config.ts` with a `unit` project (jsdom) and a `db` project (node, local Postgres). Keep the 80% threshold on lines, branches, functions and statements. Upload coverage artifacts.
+
+ACCEPTANCE CRITERIA
+- `npm run test:coverage` runs both projects
+- Thresholds fail the run when coverage drops below 80%
+- db project connects to the compose Postgres, not Neon
+- Coverage artifact uploads in CI",2,M1.7,Task
+M1.8 — Port vitest.setup.ts,M1 · Test harness,M1 — Database foundation,"USER STORY
+As a developer, I want the existing test setup carried over so that RTL and jsdom quirks are already solved.
+
+DESCRIPTION
+Port `afterEach(cleanup)` and the localStorage polyfill — Node's native global still shadows jsdom's — plus MSW server lifecycle hooks.
+
+ACCEPTANCE CRITERIA
+- Components unmount between tests
+- localStorage is writable in jsdom tests
+- MSW starts and resets around each test",1,M1.8,Task
+M1.9 — Clone a per-worker test database from the baked template,M1 · Test harness,M1 — Database foundation,"USER STORY
+As a developer, I want isolated databases per Vitest worker so that parallel data-layer tests cannot interfere, without maintaining a test-database harness to get it.
+
+DESCRIPTION
+A `globalSetup` helper of roughly ten lines: each worker runs `CREATE DATABASE sorrel_test_${VITEST_WORKER_ID} TEMPLATE sorrel_template` and drops it on teardown, with a drop-if-exists first so a crashed run self-heals. Postgres copies template files directly, so this is fast enough to need no further optimisation. Rejected alternative, with the reasoning recorded in claude-docs: wrapping each test in a transaction that rolls back. It reads cleaner but breaks here, because `withAudit` opens its own transaction and `SET LOCAL app.current_user_id` would escape the savepoint into the outer wrapper, leaking one test user's identity into the next assertion — precisely the thing these tests exist to verify.
+
+ACCEPTANCE CRITERIA
+- Two workers writing the same table do not collide
+- No migrations run at test time
+- A crashed previous run leaves nothing to clean up by hand
+- Setup is small enough to read in one screen
+- The rejected transaction-rollback approach and its reason are recorded",1,M1.9,Task
+M1.10 — MSW server and GraphQL handler stub,M1 · Test harness,M1 — Database foundation,"USER STORY
+As a developer, I want component tests to mock the GraphQL endpoint so that they never require a running server.
+
+DESCRIPTION
+Set up the MSW node server with a stub handler for `/api/graphql`, and a helper for per-test response overrides.
+
+ACCEPTANCE CRITERIA
+- A component test can override a single operation's response
+- Unhandled requests fail loudly rather than silently
+- Handlers reset between tests",1,M1.10,Task
+M1.11 — Configure Playwright on port 8001 with local Postgres,M1 · Test harness,M1 — Database foundation,"USER STORY
+As a developer, I want e2e runs against a production build and a real database so that they catch what component tests cannot.
+
+DESCRIPTION
+`playwright.config.ts` with `webServer` running `npm run build && npm run start` on 8001, preserving separation from the dev server on 8000. `globalSetup` prepares `sorrel_e2e`; specs truncate and reseed between files.
+
+ACCEPTANCE CRITERIA
+- A smoke spec passes locally and in CI
+- Dev server on 8000 can run simultaneously
+- sorrel_e2e is reseeded between spec files
+- No Neon connection involved",2,M1.11,Task
+M1.12 — Wire axe-core into Playwright,M1 · Test harness,M1 — Database foundation,"USER STORY
+As a user relying on assistive technology, I want the app to meet accessibility standards so that I can use every page and modal.
+
+DESCRIPTION
+Add `@axe-core/playwright` and a reusable scan helper. Assert accessibility here rather than via vitest-axe, matching the resume-2026 pattern.
+
+ACCEPTANCE CRITERIA
+- Scan helper is callable from any spec
+- A seeded violation fails the run
+- Smoke spec scans at least one page",1,M1.12,Task
+M1.13 — Wire monocart coverage for e2e,M1 · Test harness,M1 — Database foundation,"USER STORY
+As a developer, I want e2e coverage reported so that the two suites' contributions are visible separately.
+
+DESCRIPTION
+Configure `monocart-coverage-reports` for the Playwright run and upload the artifact.
+
+ACCEPTANCE CRITERIA
+- Coverage report generated after an e2e run
+- Artifact uploads in CI
+- Report is separate from the Vitest report",1,M1.13,Task
+M1.14 — Port vitest and playwright CI workflows with path filters,M1 · Test harness,M1 — Database foundation,"USER STORY
+As a developer, I want test jobs skipped for docs-only changes so that trivial PRs are not slowed by the full suite.
+
+DESCRIPTION
+Port the two reusable workflows, add the Postgres service, and path-filter so documentation-only changes skip them.
+
+ACCEPTANCE CRITERIA
+- Both workflows run green on a code PR
+- A docs-only PR skips them and still satisfies the gate
+- Both use the CI Postgres service",2,M1.14,Task
+M1 · Audit and repository,,M1 — Database foundation,Feature grouping. 6 tasks.,,,Feature
+M1.15 — Implement auditColumns and applyAudit with unit tests,M1 · Audit and repository,M1 — Database foundation,"USER STORY
+As an owner, I want every record to carry who created and last changed it so that a shared workspace has an accountable history.
+
+DESCRIPTION
+Write `src/db/audit.ts` exporting the six-column spread. Implement `applyAudit()` covering insert, update and soft delete. Unit test each case.
+
+ACCEPTANCE CRITERIA
+- Insert sets created_at, created_by, updated_at, updated_by
+- Update leaves created_at and created_by untouched
+- Soft delete sets deleted_at and deleted_by only
+- Ids in the payload are ignored in favour of session ids",2,M1.15,Task
+M1.16 — Implement repository.ts with withAudit,M1 · Audit and repository,M1 — Database foundation,"USER STORY
+As a developer, I want one write path so that audit stamping cannot be skipped by a new call site.
+
+DESCRIPTION
+Implement `withAudit(session, fn)` as the only exported write mechanism. It opens the transaction, injects audit ids, and is the sole module importing the database client.
+
+ACCEPTANCE CRITERIA
+- A write outside withAudit is impossible through the public API
+- Audit ids come from the session, never the request body
+- Transaction rolls back cleanly on error",2,M1.16,Task
+M1.17 — Add lint rule banning db imports outside repository.ts,M1 · Audit and repository,M1 — Database foundation,"USER STORY
+As a reviewer, I want the choke point enforced mechanically so that I do not have to catch violations by eye.
+
+DESCRIPTION
+Add an Oxlint restriction on importing the database client anywhere except `src/db/repository.ts`.
+
+ACCEPTANCE CRITERIA
+- A deliberate violation fails `npm run lint`
+- repository.ts itself is exempt
+- Rule runs in pr-gate",1,M1.17,Task
+M1.18 — Add updated_at trigger migration,M1 · Audit and repository,M1 — Database foundation,"USER STORY
+As an owner, I want updated_at to be correct even after a manual database fix so that the audit trail cannot be quietly bypassed.
+
+DESCRIPTION
+Migration adding a trigger function and attaching it to every audited table, so `updated_at` is set by the database rather than application code.
+
+ACCEPTANCE CRITERIA
+- A raw psql UPDATE still stamps updated_at
+- Application updates are not double-stamped inconsistently
+- Trigger attaches automatically for tables added later, or the pattern is documented",1,M1.18,Task
+M1.19 — Set app.current_user_id GUC per transaction,M1 · Audit and repository,M1 — Database foundation,"USER STORY
+As a developer, I want the current user available to the database so that RLS policies can enforce access independently of application code.
+
+DESCRIPTION
+Inside `withAudit`, issue `SET LOCAL app.current_user_id = '<uuid>'` at transaction start.
+
+ACCEPTANCE CRITERIA
+- current_setting('app.current_user_id') returns the acting user inside a transaction
+- The value does not leak across pooled connections
+- A write without a session is rejected",1,M1.19,Task
+M1.20 — Repository-level soft-delete filtering and the partial-index convention,M1 · Audit and repository,M1 — Database foundation,"USER STORY
+As a user, I want deleted records to stay recoverable but invisible so that a mistaken delete is not permanent and does not clutter my lists.
+
+DESCRIPTION
+Every exported finder applies `deleted_at IS NULL`. No call site does its own filtering. Document the partial unique index convention: without the WHERE clause, deleting a record permanently blocks reusing its name.
+
+ACCEPTANCE CRITERIA
+- No exported query can return a soft-deleted row
+- A dedicated escape hatch exists for admin restore paths and is clearly named
+- Convention documented in claude-docs with an example index",2,M1.20,Task
+M1 · Seed and acceptance harness,,M1 — Database foundation,Feature grouping. 8 tasks.,,,Feature
+M1.21 — Seed module with the minimal scenario,M1 · Seed and acceptance harness,M1 — Database foundation,"USER STORY
+As a developer, I want one seed module used by Docker, Vitest and Playwright so that a bug reproduces identically in all three.
+
+DESCRIPTION
+`src/db/seed/index.ts` exporting `seed(db, { scenario })`. Implement `minimal`: one admin, one user, empty compendium.
+
+ACCEPTANCE CRITERIA
+- Seed runs from a script, a test, and the Docker init hook
+- Re-running is idempotent or explicitly truncates first
+- minimal produces exactly one admin and one user",2,M1.21,Task
+M1.22 — Standard scenario with fixture users A–E,M1 · Seed and acceptance harness,M1 — Database foundation,"USER STORY
+As a developer, I want a fixed cast of users and workspaces so that authorization tests read clearly and consistently.
+
+DESCRIPTION
+Implement `standard`: A owner of W, B member of W, C viewer in W, D member of unrelated X, E site admin in no workspace. Populated compendium.
+
+ACCEPTANCE CRITERIA
+- All five users exist with the documented roles
+- Workspaces W and X exist and share no members
+- E belongs to no workspace
+- Compendium has enough entries to exercise search",2,M1.22,Task
+M1.23 — Demo scenario with spells,M1 · Seed and acceptance harness,M1 — Database foundation,"USER STORY
+As a developer, I want realistic seeded content so that manual testing and screenshots show the app as a user would see it.
+
+DESCRIPTION
+Implement `demo`: standard plus spells in W's grimoire with ingredients and layer order.
+
+ACCEPTANCE CRITERIA
+- At least two spells with ingredients and layer order
+- Spells reference a mix of compendium and workspace-local ingredients
+- Reseeding does not duplicate rows",2,M1.23,Task
+M1.24 — Docker seed hook and make db-reset,M1 · Seed and acceptance harness,M1 — Database foundation,"USER STORY
+As a developer, I want a one-command reset so that a corrupted local database is never a blocker.
+
+DESCRIPTION
+Wire the seed module into the Postgres init script and add `make db-reset` to drop, migrate and reseed.
+
+ACCEPTANCE CRITERIA
+- `make db-reset` completes from a broken state
+- First `make docker-up` on a clean volume seeds automatically
+- Scenario is selectable by environment variable",1,M1.24,Task
+M1.25 — Fixture factories,M1 · Seed and acceptance harness,M1 — Database foundation,"USER STORY
+As a developer, I want factories with sensible defaults so that tests state only what they are actually testing.
+
+DESCRIPTION
+Add `fixtures/` factories — `makeIngredient`, `makeNote`, `makeSpell`, `makeWorkspace` — with overrides, so tests read `makeIngredient({ categories: ['protection'] })`.
+
+ACCEPTANCE CRITERIA
+- Each factory works with zero arguments
+- Overrides merge rather than replace nested defaults
+- Factories are used by at least one existing test",2,M1.25,Task
+M1.26 — asUser helper and Forbidden error type,M1 · Seed and acceptance harness,M1 — Database foundation,"USER STORY
+As a developer, I want a uniform way to act as a fixture user so that authorization tests are one line rather than five.
+
+DESCRIPTION
+Implement `asUser(A)` returning a session context, and a `Forbidden` error the services throw so tests can assert on the type rather than a message string.
+
+ACCEPTANCE CRITERIA
+- asUser works for all five fixture users
+- Forbidden is distinguishable from a not-found error
+- A denied call rejects rather than returning empty",1,M1.26,Task
+M1.27 — Bake migrations and the standard seed into the database image,M1 · Seed and acceptance harness,M1 — Database foundation,"USER STORY
+As a developer, I want the shared image to carry a ready-to-clone template so that no environment spends time migrating or seeding before it can run a test.
+
+DESCRIPTION
+Extend the M0.18 image build: apply migrations and the standard scenario into `sorrel_template` at build time. This closes the dependency that M0.18 deliberately left open, and is what makes M1.7 a clone rather than a setup routine.
+
+ACCEPTANCE CRITERIA
+- Template contains the full schema and the standard scenario
+- Image tag changes when migrations or seed change
+- A cloned database is immediately usable with no further setup
+- CI and compose both pick up the new tag from one place
+- Local and CI clones are byte-identical in content",2,M1.27,Task
+M1.28 — make test-stories with a per-story checklist,M1 · Seed and acceptance harness,M1 — Database foundation,"USER STORY
+As a product owner, I want a live checklist of which user stories pass so that progress is measured against requirements rather than coverage percentage.
+
+DESCRIPTION
+Add the `tests/acceptance/` directory and a `make test-stories` target running only that suite and printing story ids with pass or fail. Track acceptance coverage separately from the 80% line threshold.
+
+ACCEPTANCE CRITERIA
+- Target runs only the acceptance suite
+- Output lists story ids and status
+- Acceptance coverage reported separately from unit coverage
+- Suite runs in CI but does not double-count toward thresholds",2,M1.28,Task
+M2 · Better Auth,,M2 — Auth and users,Feature grouping. 9 tasks.,,,Feature
+M2.1 — Acceptance test scaffold for stories 1–2,M2 · Better Auth,M2 — Auth and users,"USER STORY
+Stories 1–2 — As a developer, I want the account stories expressed as failing tests before implementation, so that done is measured against the specification rather than my own reading of it.
+
+DESCRIPTION
+Create `tests/acceptance/01-accounts.test.ts` with failing tests naming stories 1 and 2. This PR intentionally lands red — it is the definition of done for the milestone.
+
+ACCEPTANCE CRITERIA
+- Both tests exist and fail for the right reason
+- Each describe block names its story number and text
+- make test-stories lists them as failing
+- CI is configured to tolerate the acceptance suite failing until the milestone closes",2,M2.1,Task
+M2.2 — Install Better Auth with the Drizzle adapter,M2 · Better Auth,M2 — Auth and users,"USER STORY
+As a developer, I want auth running in-process so that there is no extra service, no extra deploy and no extra cost.
+
+DESCRIPTION
+Install Better Auth, configure the Drizzle adapter against Neon, and generate the auth tables migration. Mount the route handlers at `/api/auth/*`. This is the one deliberate exception to the GraphQL-only rule and it is not really an exception: OAuth callbacks are browser redirects from Google and GitHub carrying query params, and the session cookie is set on an HTTP response. None of that can travel over a GraphQL POST. The rule governs application data access — every query and mutation about ingredients, workspaces and spells — not the protocol handshake that establishes who you are.
+
+ACCEPTANCE CRITERIA
+- Auth tables created by migration, not by runtime bootstrapping
+- Route handlers respond at /api/auth/*
+- BETTER_AUTH_SECRET read from the environment
+- No application data is readable or writable through the auth endpoints
+- The exception and its boundary are recorded in claude-docs
+- No separate service or container added",2,M2.2,Task
+"M2.3 — Users table with role, creation rights and admin bootstrap",M2 · Better Auth,M2 — Auth and users,"USER STORY
+Story 18 precondition — As the site owner, I want admin rights to exist on a real account, so that someone can curate the compendium before anyone depends on it.
+
+DESCRIPTION
+Add `users` with id, email, displayName, avatarUrl, role (`user` | `admin`), canCreateWorkspace and audit columns. Promote the first user matching the bootstrap env email. `canCreateWorkspace` defaults to false: signing in with Google or GitHub earns an account and nothing more. The flag turns true by one of two routes — accepting a workspace invitation (M7.5) or an admin granting it (M5.8) — and once true it stays true, so an established user can create as many workspaces as they like.
+
+ACCEPTANCE CRITERIA
+- A user matching the bootstrap email becomes admin on first sign-in
+- All other users default to role user with canCreateWorkspace false
+- Admins can create workspaces regardless of the flag
+- Nothing in the OAuth flow sets the flag
+- No API or UI path grants admin
+- Role and creation rights are columns, not separate tables",1,M2.3,Task
+M2.4 — Configure the Google OAuth provider,M2 · Better Auth,M2 — Auth and users,"USER STORY
+Story 1 — As a new user, I want to sign in with Google, so that I don't have to manage another password.
+
+DESCRIPTION
+Register the OAuth client, configure callback URLs for local, staging and production, and add the provider to Better Auth.
+
+ACCEPTANCE CRITERIA
+- Sign-in completes on local and staging
+- Callback URLs registered for all three environments
+- Client secret stored as a secret, not committed",1,M2.4,Task
+M2.5 — Configure the GitHub OAuth provider,M2 · Better Auth,M2 — Auth and users,"USER STORY
+Story 1 — As a new user, I want to sign in with GitHub, so that I don't have to manage another password.
+
+DESCRIPTION
+Same as the Google provider, for GitHub.
+
+ACCEPTANCE CRITERIA
+- Sign-in completes on local and staging
+- An existing account is matched by email rather than duplicated
+- Callback URLs registered for all three environments",1,M2.5,Task
+M2.6 — Build the sign-in page,M2 · Better Auth,M2 — Auth and users,"USER STORY
+Story 1 — As a new user, I want one sign-in page offering Google and GitHub, so that I can get in without managing another password.
+
+DESCRIPTION
+`/sign-in` with both OAuth buttons, an error state for a failed callback, and a redirect to the intended destination after success. Component test with role and label queries only.
+
+ACCEPTANCE CRITERIA
+- Both providers reachable by keyboard
+- Failed callback shows a readable error, not a stack trace
+- Post-sign-in redirect honours the original destination
+- axe scan passes",2,M2.6,Task
+M2.7 — Session helper and route protection,M2 · Better Auth,M2 — Auth and users,"USER STORY
+As a user, I want unauthenticated access blocked so that my grimoire is not reachable by anyone with the URL.
+
+DESCRIPTION
+Server-side session helper used by layouts and services. Protect all authed segments, redirecting to `/sign-in` with the return path preserved.
+
+ACCEPTANCE CRITERIA
+- An unauthenticated request to a protected route redirects
+- The return path survives the round trip
+- Sign-in and invite acceptance remain publicly reachable
+- Services receive the session rather than reading it themselves",2,M2.7,Task
+M2.8 — Post-signup landing for a user with no workspace,M2 · Better Auth,M2 — Auth and users,"USER STORY
+Story 2 — As a newly signed-in user, I want to be told plainly what I can do next, so that an empty account does not look like a broken one.
+
+DESCRIPTION
+The site is invite-gated, so a new user does not get a workspace automatically. Three states to handle after sign-in: they accepted an invitation and are already a member, so send them there; they hold creation rights from a previous invitation or an admin grant, so offer the create form; they have neither, so explain that Sorrel and Salt is invite-only and that they need a link from someone who already uses it, or an admin's approval. The third state is what decides whether the product reads as exclusive or broken, so write it carefully and do not leave it as a bare empty page.
+
+ACCEPTANCE CRITERIA
+- An invited user lands in the workspace they were invited to
+- A user with creation rights is offered the create form
+- A user with neither sees a clear explanation, not an empty dashboard or an error
+- The explanation says how to get in, and does not imply the account is faulty or pending review
+- No workspace is created implicitly by signing in
+- Story 2 acceptance test passes",2,M2.8,Task
+M2.9 — Scope a UI for granting admin,M2 · Better Auth,M2 — Auth and users,"USER STORY
+As the site owner, I want a considered plan for granting admin rights so that promoting a second admin does not mean editing an environment variable and redeploying.
+
+DESCRIPTION
+Scoping task, not an implementation. Bootstrapping by env email works for exactly one admin and stops there. Write up the options — admin-grants-admin, invitation-based, or a break-glass CLI — with the risks of each, what audit trail a grant needs, whether admin can be revoked and by whom, and what happens if the last admin is removed. Output is a short decision doc in claude-docs plus a follow-up task with acceptance criteria, sized like every other task here.
+
+ACCEPTANCE CRITERIA
+- At least three approaches described with their failure modes
+- Covers granting, revoking, and the last-admin case
+- States what the audit trail must record
+- Ends with a written follow-up task ready to schedule
+- No implementation in this PR",2,M2.9,Task
+M3 · GraphQL server,,M3 — GraphQL foundation,Feature grouping. 6 tasks.,,,Feature
+M3.1 — Mount GraphQL Yoga at /api/graphql,M3 · GraphQL server,M3 — GraphQL foundation,"USER STORY
+As a developer, I want a single GraphQL endpoint in-process so that the API adds no hosting cost and no separate deploy.
+
+DESCRIPTION
+Yoga as a Next.js route handler, exported from `src/app/api/graphql/route.ts`. No Apollo integration shim.
+
+ACCEPTANCE CRITERIA
+- Endpoint responds to a trivial query
+- Runs in the existing process, no new service
+- GraphiQL available on local development only, not on staging",2,M3.1,Task
+M3.2 — Pothos builder and request context,M3 · GraphQL server,M3 — GraphQL foundation,"USER STORY
+As a developer, I want a typed code-first schema so that a resolver returning the wrong shape is a compile error.
+
+DESCRIPTION
+Set up the Pothos builder with the Drizzle plugin and an auth-scopes plugin. Context carries the session and per-request DataLoader instances.
+
+ACCEPTANCE CRITERIA
+- Schema builds and types are inferred from Drizzle tables
+- Context exposes session and loaders
+- Loaders are constructed per request, never module-level
+- A wrong return shape fails typecheck",2,M3.2,Task
+M3.3 — Apply graphql-armor protections in staging and production,M3 · GraphQL server,M3 — GraphQL foundation,"USER STORY
+As an operator, I want expensive or probing queries rejected everywhere the app is reachable so that a client cannot burn my compute budget or map the schema, and so the protections are exercised before they matter.
+
+DESCRIPTION
+Add graphql-armor with a depth limit of 7 and a cost limit. Introspection and field suggestions are off in staging as well as production — staging is a public URL and gets real protections. `NODE_ENV` is the right signal: Vercel sets it to production for Preview builds, so staging is covered automatically and the rule reads as 'on only where the environment is not publicly reachable'.
+
+ACCEPTANCE CRITERIA
+- A query nested past depth 7 is rejected in every environment
+- An expensive composed query is rejected by cost in every environment
+- Introspection is off in staging and production, on under `next dev`
+- Field suggestions are off in staging and production
+- Verified against the deployed staging URL, not only in a test
+- Noted that a local production build also disables them, which is correct and occasionally surprising",2,M3.3,Task
+M3.4 — Schema snapshot test,M3 · GraphQL server,M3 — GraphQL foundation,"USER STORY
+As a reviewer, I want schema changes to be visible in the diff so that a contract change is never silent.
+
+DESCRIPTION
+Write the SDL out on every run and snapshot it. This and design tokens are the only permitted snapshots.
+
+ACCEPTANCE CRITERIA
+- SDL file is committed and regenerated by the test
+- An unintended schema change fails CI
+- Snapshot update is a deliberate, reviewable step",1,M3.4,Task
+M3.5 — graphql-codegen and the staleness check,M3 · GraphQL server,M3 — GraphQL foundation,"USER STORY
+As a developer, I want generated client types to match the schema so that the client cannot drift from the server.
+
+DESCRIPTION
+Configure graphql-codegen for typed documents. Add `codegen.yml` to CI, failing if generated output is stale.
+
+ACCEPTANCE CRITERIA
+- Codegen produces typed documents and hooks
+- CI fails when generated files are stale
+- Generated files are committed",2,M3.5,Task
+M3.6 — Cursor pagination helper with a hard maximum page size,M3 · GraphQL server,M3 — GraphQL foundation,"USER STORY
+As an operator, I want every list bounded by one shared rule so that no query can ask for the whole table, and no future list query can forget to say so.
+
+DESCRIPTION
+Build the connection helper every list query uses: cursor-based, stable across inserts, with a default page size of 25 and a hard server-side maximum of 100. A client asking for more gets the maximum, not an error and not what it asked for. Cursors encode a stable sort key plus id, never an offset, so inserting a row does not shift a page under a reader. This pairs with the cost limit in M3.3: without a bound on list size the cost calculation has nothing to multiply, and depth limiting alone will not save you from one query for every ingredient with every category and spell attached.
+
+ACCEPTANCE CRITERIA
+- One helper used by every list query in the project
+- Default 25, maximum 100, enforced server-side
+- Requesting more than the maximum returns the maximum, silently and consistently
+- Cursors encode sort key plus id, never an offset
+- Pagination is stable when rows are inserted or soft-deleted mid-traversal
+- Cost limit accounts for the requested page size
+- A test walks a full multi-page traversal and asserts no row is skipped or repeated",2,M3.6,Task
+M3 · GraphQL client,,M3 — GraphQL foundation,Feature grouping. 4 tasks.,,,Feature
+M3.7 — Wire graphql-request with TanStack Query,M3 · GraphQL client,M3 — GraphQL foundation,"USER STORY
+As a developer, I want a light client so that the bundle does not carry a second normalized cache duplicating TanStack Query.
+
+DESCRIPTION
+Set up the provider, a typed request function, and sensible defaults for staleness and retries. Not Apollo — its cache duplicates TanStack Query and adds roughly 40 kB.
+
+ACCEPTANCE CRITERIA
+- A client component can run a typed query
+- Provider is mounted once at the root
+- Errors surface to the nearest error boundary
+- No Apollo dependency present",2,M3.7,Task
+M3.8 — React cache() wrapper and the server read path,M3 · GraphQL client,M3 — GraphQL foundation,"USER STORY
+As a developer, I want server components to read through services directly so that a server-rendered page does not pay to serialize a GraphQL round trip to itself.
+
+DESCRIPTION
+Wrap read-side service functions in React `cache()`, request-scoped so there is no staleness risk. This task also fixes the access boundary for the project, so write it down rather than leaving it to be inferred: server components read through `cache()`-wrapped services; everything the browser initiates — every mutation, and every read that happens without a navigation — goes through GraphQL. Services are the real authorization boundary and both paths end there, so a permission enforced once holds for both. Two transports, one set of rules.
+
+ACCEPTANCE CRITERIA
+- A layout and page requesting the same workspace hit Postgres once
+- Cache does not persist across requests
+- Mutations are never wrapped, and never take the server read path
+- The boundary is documented in claude-docs with an example of each path
+- Every service used by a server component enforces authorization itself, not relying on the caller
+- A test proves the same denial occurs through both paths for one representative service",1,M3.8,Task
+M3.9 — Lint rules enforcing the access boundary,M3 · GraphQL client,M3 — GraphQL foundation,"USER STORY
+As a reviewer, I want the two access paths enforced mechanically so that the boundary does not erode one convenient import at a time.
+
+DESCRIPTION
+Extend the lint restrictions so `src/graphql/**` cannot import the database client or the repository directly, and neither can `src/app/**` — server components reach services and nothing below them. Combined with M1.17, this leaves services as the only route to the database from anywhere.
+
+ACCEPTANCE CRITERIA
+- A resolver importing the client or repository fails lint
+- A server component importing the client or repository fails lint
+- Services remain importable from both
+- Client components cannot import services at all
+- Rules run in pr-gate",1,M3.9,Task
+"M3.10 — me query, User type and field-level auth scope",M3 · GraphQL client,M3 — GraphQL foundation,"USER STORY
+As a user, I want my own profile available to the client so that the shell can render my identity and memberships.
+
+DESCRIPTION
+Add the `me` query and `User` type. Apply a Pothos auth scope to `User.email` as the second check behind the service layer.
+
+ACCEPTANCE CRITERIA
+- me returns the signed-in user
+- Unauthenticated me is rejected
+- Another user's email is not exposed
+- Memberships resolve through a loader",2,M3.10,Task
+M4 · Schema and seed,,M4 — Compendium data layer,Feature grouping. 5 tasks.,,,Feature
+M4.1 — Ingredients schema with both partial unique indexes,M4 · Schema and seed,M4 — Compendium data layer,"USER STORY
+As a user, I want one ingredient table covering the shared reference and my own additions so that spells point at a single kind of thing.
+
+DESCRIPTION
+Add `ingredients` with nullable workspaceId, name, folkNames[], form, description, element, planet, zodiac, deities[], color, safetyNotes, substitutes[] and audit. Two partial unique indexes: global on lower(name) where workspace_id is null, and per-workspace on (workspace_id, lower(name)).
+
+ACCEPTANCE CRITERIA
+- Global uniqueness enforced only among compendium entries
+- Two workspaces may each hold a local ingredient of the same name
+- Both indexes carry WHERE deleted_at IS NULL
+- form and element accept only the documented value sets",2,M4.1,Task
+M4.2 — Categories schema with the group field,M4 · Schema and seed,M4 — Compendium data layer,"USER STORY
+As a user on a phone, I want categories grouped so that selecting from 52 chips is manageable.
+
+DESCRIPTION
+Add `categories` with id, name, slug, color, description, group and audit. Global only, admin-curated.
+
+ACCEPTANCE CRITERIA
+- Slug unique among non-deleted rows
+- group is required
+- No workspace scoping on this table",1,M4.2,Task
+M4.3 — Seed all 52 categories across 8 groups,M4 · Schema and seed,M4 — Compendium data layer,"USER STORY
+As a user, I want a rich category vocabulary on day one so that I am not building the taxonomy myself before I can use the app.
+
+DESCRIPTION
+Seed every category from §6 with name, slug, colour drawn from its group token, description and group.
+
+ACCEPTANCE CRITERIA
+- All 52 present, matching §6 exactly
+- Each group has its 8-group colour applied
+- Every category has a non-empty description
+- Reseeding does not duplicate rows",2,M4.3,Task
+M4.4 — ingredient_categories join table,M4 · Schema and seed,M4 — Compendium data layer,"USER STORY
+Story 22 — As a workspace member, I want ingredients to carry several categories, so that I can find things that are both protective and cleansing.
+
+DESCRIPTION
+Join table with audit columns and indexes supporting lookup in both directions.
+
+ACCEPTANCE CRITERIA
+- Composite key prevents duplicate assignment
+- Indexed for both ingredient-to-category and category-to-ingredient
+- Carries the audit spread",1,M4.4,Task
+M4.5 — Zod schemas for ingredient and category,M4 · Schema and seed,M4 — Compendium data layer,"USER STORY
+As a developer, I want one validation definition shared by client and server so that the two cannot disagree about what is valid.
+
+DESCRIPTION
+Write Zod schemas covering both models, exported for form validation and service-level parsing. Only `name` is required on an ingredient.
+
+ACCEPTANCE CRITERIA
+- Same schema imported by form and service
+- Only name is required; a stub ingredient validates
+- Enum fields reject values outside the documented sets
+- Unit tests cover valid and invalid cases",2,M4.5,Task
+M4 · Duplicate detection,,M4 — Compendium data layer,Feature grouping. 2 tasks.,,,Feature
+M4.6 — Enable pg_trgm and add the gin index,M4 · Duplicate detection,M4 — Compendium data layer,"USER STORY
+Story 16 precondition — As a developer, I want trigram matching available in the database, so that near-duplicate names can be detected before they multiply.
+
+DESCRIPTION
+Migration enabling the extension and creating the gin index on ingredient name.
+
+ACCEPTANCE CRITERIA
+- Extension enabled on local and Neon
+- Index created and used by the planner
+- Migration is idempotent",1,M4.6,Task
+M4.7 — Fuzzy duplicate service,M4 · Duplicate detection,M4 — Compendium data layer,"USER STORY
+Story 16 — As a workspace member, I want to be warned when a name resembles something that already exists, so that I don't end up with three spellings of mugwort.
+
+DESCRIPTION
+Return compendium and in-workspace matches above roughly 0.4 similarity on name or any folkNames element. Non-blocking by design.
+
+ACCEPTANCE CRITERIA
+- Near-misses above threshold are returned
+- Below-threshold names return nothing
+- Folk names are matched, not only the primary name
+- Results span compendium and current workspace only",2,M4.7,Task
+M4 · Batching,,M4 — Compendium data layer,Feature grouping. 1 tasks.,,,Feature
+M4.8 — DataLoader base plus categoriesByIngredient,M4 · Batching,M4 — Compendium data layer,"USER STORY
+As an operator, I want related data batched so that a 50-ingredient page does not fire 101 queries and spend compute on nothing.
+
+DESCRIPTION
+Implement the loader factory and `categoriesByIngredient`. Test by asserting query count, not just correctness.
+
+ACCEPTANCE CRITERIA
+- A 50-ingredient fetch with categories issues a bounded number of queries
+- Test asserts query count explicitly
+- Loaders are per-request
+- Batching preserves result ordering",2,M4.8,Task
+M5 · Compendium service,,M5 — Admin curation tool,Feature grouping. 3 tasks.,,,Feature
+M5.1 — Acceptance test scaffold for stories 17–18,M5 · Compendium service,M5 — Admin curation tool,"USER STORY
+Stories 17–18 — As a developer, I want the admin stories expressed as failing tests before implementation, so that the tool everything else is entered through is verified as it is built.
+
+DESCRIPTION
+Create `tests/acceptance/07-admin.test.ts` with failing tests naming stories 17 and 18. Landing this first means the admin tool is verified as it is built, which matters more than usual here because everything downstream will be entered through it.
+
+ACCEPTANCE CRITERIA
+- Two failing tests, one per story
+- Each names its story number and text
+- make test-stories reports them",1,M5.1,Task
+M5.2 — Compendium service with admin-only writes,M5 · Compendium service,M5 — Admin curation tool,"USER STORY
+Story 17 — As a workspace member, I want to be prevented from editing compendium entries, so that shared reference data stays trustworthy for everyone.
+
+DESCRIPTION
+Read path open to every signed-in user; write path restricted to `users.role = admin`. Authorization lives here, not in resolvers, and the tests confirm the mutation surface offers no bypass on update or delete.
+
+ACCEPTANCE CRITERIA
+- Any signed-in user can read the compendium
+- A non-admin update is rejected with Forbidden
+- A non-admin delete is rejected with Forbidden
+- An admin write succeeds and stamps updated_by
+- Story 17 acceptance test passes",2,M5.2,Task
+M5.3 — Soft-delete a compendium entry and prove the name can be reused,M5 · Compendium service,M5 — Admin curation tool,"USER STORY
+Story 25 — As a workspace member, I want deletions to be recoverable, so that a mistake costs a request for help rather than my data.
+
+DESCRIPTION
+Admin soft delete stamping deletedAt and deletedBy, plus the test that proves the partial unique index from M4.1 allows re-adding the same name afterwards. Separate from M5.2 because it exercises the index behaviour rather than the authorization rule — without the WHERE clause, deleting an entry would permanently reserve its name.
+
+ACCEPTANCE CRITERIA
+- Deleted ingredient vanishes from all finders
+- Re-adding the same name succeeds
+- deletedBy records who deleted it
+- Row is still present in the table",1,M5.3,Task
+M5 · Admin surface,,M5 — Admin curation tool,Feature grouping. 5 tasks.,,,Feature
+M5.4 — Admin route guard and layout,M5 · Admin surface,M5 — Admin curation tool,"USER STORY
+Story 18 — As a site admin, I want an admin area only I can reach, so that I can curate shared data without exposing the surface to anyone else.
+
+DESCRIPTION
+`/admin` layout asserting `users.role = admin`. A signed-in non-admin gets a clear 'not authorized' page, not a 404 — `/admin` is a guessable path on every site ever built, so pretending it does not exist buys no secrecy and only makes the app look broken to someone who typed it out of curiosity. This differs from `/coven/[slug]` in M6.11, where the existence of a workspace is genuinely private and 404 is the right answer. Admin follows the same access boundary as the rest of the site: server-rendered reads through services, every mutation through GraphQL.
+
+ACCEPTANCE CRITERIA
+- Admins see the layout
+- Signed-in non-admins get a styled not-authorized page explaining they lack rights
+- Signed-out visitors are sent to sign-in with the return path preserved
+- Guard is server-side, not a client redirect
+- The page does not name who the admins are or offer a way to request access
+- Admin mutations go through /api/graphql like every other mutation
+- Nav entry appears only for admins",1,M5.4,Task
+M5.5 — Admin compendium CRUD,M5 · Admin surface,M5 — Admin curation tool,"USER STORY
+Story 18 — As a site admin, I want to add, edit and soft-delete compendium entries, so that the shared reference can grow without a deploy.
+
+DESCRIPTION
+`/admin/compendium` reusing IngredientForm in editable mode, with create, edit and soft delete over the global entries. Reads and writes go through GraphQL queries and mutations.
+
+ACCEPTANCE CRITERIA
+- Admin can create, edit and soft-delete compendium entries
+- Audit columns record the admin
+- Soft-deleted entries vanish from the public compendium
+- Fuzzy duplicate warning applies here too",2,M5.5,Task
+M5.6 — Admin categories CRUD,M5 · Admin surface,M5 — Admin curation tool,"USER STORY
+Story 18 — As a site admin, I want to add, edit and soft-delete categories, so that the taxonomy can change without a migration.
+
+DESCRIPTION
+`/admin/categories` with create, edit and soft delete, including the group assignment that drives chip grouping. Reads and writes go through GraphQL queries and mutations.
+
+ACCEPTANCE CRITERIA
+- Admin can manage categories including their group
+- Slug uniqueness enforced with a readable error
+- Deleting a category in use is handled explicitly, not by cascade surprise
+- Colour picks from the group palette",2,M5.6,Task
+M5.7 — Gate admin mutations by role,M5 · Admin surface,M5 — Admin curation tool,"USER STORY
+Stories 18 and 19 — As a workspace owner, I want admin rights to cover shared reference data and nothing else, so that an admin cannot reach into my workspace.
+
+DESCRIPTION
+Apply the role check at the service layer for every admin mutation, with tests for each entry point, and add a Pothos auth scope on the admin mutation fields as the second check — the same belt-and-braces pattern used for `User.email`.
+
+ACCEPTANCE CRITERIA
+- Every admin mutation rejects non-admins at the service layer
+- Pothos auth scope rejects them at the schema layer independently
+- Rejection is Forbidden, not a silent no-op
+- Tests cover each mutation individually
+- No admin capability outside compendium and categories",2,M5.7,Task
+M5.8 — Approve a user for workspace creation,M5 · Admin surface,M5 — Admin curation tool,"USER STORY
+As a site admin, I want to approve someone who has no invitation, so that a person starting a coven of their own can get in without knowing an existing user.
+
+DESCRIPTION
+Admin control setting `canCreateWorkspace` on a user, with the change audited. This is the approval route; the invitation route is M7.5. Revoking does not touch workspaces the person already created — they remain owner of those, since the flag governs creating, not keeping.
+
+ACCEPTANCE CRITERIA
+- Admin can grant and revoke the flag
+- The change records who made it and when
+- Revoking leaves existing workspaces and their ownership untouched
+- Users awaiting approval are findable, so an admin can act without being sent an id
+- A non-admin cannot reach the control or the mutation",1,M5.8,Task
+M5 · Entry form,,M5 — Admin curation tool,Feature grouping. 2 tasks.,,,Feature
+M5.9 — IngredientForm — fields and inline validation,M5 · Entry form,M5 — Admin curation tool,"USER STORY
+Stories 29 and 31 — As a workspace member, I want to save an ingredient with only a name and see errors beside the field that caused them, so that I can capture something quickly and fix mistakes without hunting.
+
+DESCRIPTION
+Form covering every ingredient property, validating with the shared Zod schema, showing errors inline next to their field.
+
+ACCEPTANCE CRITERIA
+- Saving with only a name succeeds
+- Errors appear beside the offending field
+- Errors are announced to assistive technology
+- Array fields (folkNames, deities, substitutes) are editable",2,M5.9,Task
+M5.10 — IngredientForm — Did you mean warning,M5 · Entry form,M5 — Admin curation tool,"USER STORY
+Story 16 — As a workspace member, I want a warning when the name I'm typing resembles an existing one, so that I can reuse an entry instead of duplicating it.
+
+DESCRIPTION
+Debounced fuzzy lookup on the name field rendering a non-blocking suggestion with a link to the match, alongside a Create Anyway action.
+
+ACCEPTANCE CRITERIA
+- Warning appears for a near-match and does not block submission
+- Link navigates to the suggested ingredient
+- Create Anyway proceeds
+- No warning below threshold
+- Story 16 acceptance test passes",2,M5.10,Task
+M6 · Schema and authorization,,M6 — Workspaces and membership,Feature grouping. 6 tasks.,,,Feature
+M6.1 — Acceptance test scaffold for stories 3–13,M6 · Schema and authorization,M6 — Workspaces and membership,"USER STORY
+Stories 3–13 — As a developer, I want the workspace stories expressed as failing tests before implementation, so that authorization is verified against the specification.
+
+DESCRIPTION
+Extend `01-accounts.test.ts` with failing tests for stories 3 through 13, each naming its story.
+
+ACCEPTANCE CRITERIA
+- Eleven failing tests, one per story
+- Each names its story number and text
+- make test-stories reports them",2,M6.1,Task
+M6.2 — Workspaces and workspace_members schema,M6 · Schema and authorization,M6 — Workspaces and membership,"USER STORY
+As a user, I want workspaces with members so that a coven or household can share one inventory.
+
+DESCRIPTION
+Add `workspaces` (id, name, slug, audit) and `workspace_members` (workspaceId, userId, role, joinedAt, audit) with a composite primary key. Unique slug on a partial index. No kind column — every workspace behaves identically.
+
+ACCEPTANCE CRITERIA
+- Migration applies cleanly
+- Slug is unique among non-deleted workspaces
+- Composite primary key on the membership pair
+- No column distinguishes one class of workspace from another
+- Both tables carry the full audit spread",2,M6.2,Task
+M6.3 — assertMembership and the role hierarchy,M6 · Schema and authorization,M6 — Workspaces and membership,"USER STORY
+Story 12 — As a viewer, I want to read everything in a workspace but change nothing, so that I can be included without putting shared records at risk.
+
+DESCRIPTION
+Implement `assertMembership(userId, workspaceId, minRole)` with the ordering viewer < member < owner, called inside `withAudit` for every workspace-scoped operation. Unit test every role and threshold combination.
+
+ACCEPTANCE CRITERIA
+- Every role/threshold pair is covered by a test
+- A non-member is rejected with Forbidden
+- The check runs inside the same transaction as the write
+- No service bypasses it",2,M6.3,Task
+M6.4 — Row-Level Security policies for workspace-scoped tables,M6 · Schema and authorization,M6 — Workspaces and membership,"USER STORY
+As an owner, I want the database itself to enforce workspace boundaries so that an application bug cannot leak my grimoire.
+
+DESCRIPTION
+Migration adding Row-Level Security policies to every workspace-scoped table. RLS is a Postgres feature that attaches a rule to a table so the database itself filters which rows a query may read or change — enforcement below the application, so a bug in a service cannot leak another workspace's data. The policies need to know who is asking, which comes from the GUC set in M1.17. A GUC is Postgres's name for a runtime setting; `SET LOCAL app.current_user_id = '<uuid>'` defines a custom one scoped to the transaction, and a policy reads it back with `current_setting('app.current_user_id')`. Transaction-scoped matters: it cannot leak to the next request sharing a pooled connection.
+
+ACCEPTANCE CRITERIA
+- RLS enabled on each workspace-scoped table
+- Policies read the user from current_setting('app.current_user_id'), not from anywhere else
+- Migrations and seeds still run under the policies
+- The setting does not survive past the transaction that set it
+- Policy names follow one convention
+- RLS and GUC are explained once in claude-docs so the next reader need not look them up",2,M6.4,Task
+M6.5 — Prove RLS holds with the service check disabled,M6 · Schema and authorization,M6 — Workspaces and membership,"USER STORY
+Story 19 — As a workspace owner, I want the database to block cross-workspace access even if the application forgets to, so that one missed check in a service is not a data breach.
+
+DESCRIPTION
+M6.3 is the application-layer check and M6.4 is the database-layer one. They look redundant and that is the point: this task proves the second works without the first. Stub out `assertMembership` for the duration of one test, attempt a cross-workspace read, and assert the database refuses it. Without this test the RLS policies are decoration — every passing test would pass on the service check alone, and a broken policy would go unnoticed for months.
+
+ACCEPTANCE CRITERIA
+- Test passes only because RLS blocks the read
+- Stub is scoped to the single test and cannot leak into others
+- The test fails if RLS is disabled on the table, proving it tests what it claims
+- Comment explains why the bypass is deliberate",1,M6.5,Task
+M6.6 — Cross-boundary denial tests for non-members and site admins,M6 · Schema and authorization,M6 — Workspaces and membership,"USER STORY
+Story 19 — As a workspace owner, I want both outsiders and site admins refused access to my workspace, so that neither a stranger nor a curator can read what my coven records.
+
+DESCRIPTION
+Automated tests in the `db` suite, not a manual pass. Two actors, one harness: D, a member of an unrelated workspace, and E, a site admin belonging to no workspace. Assert both are refused W's ingredients and grimoire — by direct id, not merely absent from list results, since filtering a list is easy to get right while leaving a direct fetch wide open. Writes must throw Forbidden rather than silently no-op.
+
+ACCEPTANCE CRITERIA
+- Direct-id reads rejected for both D and E, not just filtered from lists
+- Writes throw Forbidden rather than returning success
+- Covers ingredients and grimoire
+- E's admin capabilities over the compendium remain intact
+- Failure messages do not reveal whether the record exists
+- Story 19 acceptance test passes",2,M6.6,Task
+M6 · Workspace UI,,M6 — Workspaces and membership,Feature grouping. 12 tasks.,,,Feature
+M6.7 — Create a workspace,M6 · Workspace UI,M6 — Workspaces and membership,"USER STORY
+Story 3 — As a signed-in user, I want to create a workspace, so that my coven or household has a shared place to work.
+
+DESCRIPTION
+Service and mutation creating a workspace with the creator as owner, gated on canCreateWorkspace or the admin role. Slug generated from the name with collision handling. The gate lives in the service, so it holds for the GraphQL mutation and any future path equally.
+
+ACCEPTANCE CRITERIA
+- Creator is owner on creation
+- A user without creation rights is rejected with Forbidden
+- An admin can create without holding the flag
+- Slug collisions resolve deterministically
+- A user with rights may own more than one workspace
+- Creation rights are not consumed by creating a workspace unless the invite said single-use
+- Story 3 acceptance test passes",2,M6.7,Task
+M6.8 — Last-owner guard on demotion and removal,M6 · Workspace UI,M6 — Workspaces and membership,"USER STORY
+Story 11 — As a workspace owner, I want to be blocked from removing the last owner, so that a workspace cannot be orphaned by one careless click.
+
+DESCRIPTION
+Reject any demotion or removal that would leave a workspace with zero owners, at the service layer. The rejection must carry enough information for the interface to offer the remedy — which member could be promoted, or whether the owner is the only member and should delete the workspace instead. A bare Forbidden here is what makes M6.16 impossible to build well.
+
+ACCEPTANCE CRITERIA
+- Demoting the only owner is rejected
+- Removing the only owner is rejected
+- The owner leaving voluntarily is also rejected
+- The error distinguishes 'other members exist, promote one' from 'you are the only member'
+- Two owners can each be demoted down to one",1,M6.8,Task
+M6.9 — WorkspaceSwitcher component,M6 · Workspace UI,M6 — Workspaces and membership,"USER STORY
+Story 8 — As a member of several workspaces, I want to switch between them without losing my place, so that moving between my own notes and a coven's is quick.
+
+DESCRIPTION
+Component listing the user's memberships and navigating on select. Workspace comes from the URL, never session state — two tabs must be able to disagree safely.
+
+ACCEPTANCE CRITERIA
+- Lists every workspace the user belongs to
+- Selecting navigates to the equivalent route in the new workspace
+- Two tabs in different workspaces do not interfere
+- Keyboard operable, axe clean",2,M6.9,Task
+"M6.10 — Coven layout, slug resolution and non-member 404",M6 · Workspace UI,M6 — Workspaces and membership,"USER STORY
+As a user, I want a workspace-scoped layout so that every page below it knows which workspace it is in without guessing.
+
+DESCRIPTION
+`/coven/[slug]` layout resolving the slug to a workspace and asserting membership. Non-members get 404, not 403, so workspace existence is not disclosed — the opposite call to `/admin` in M5.5, and for a reason: a slug is a guess about someone's private data, whereas `/admin` is a fixed path everyone already knows.
+
+ACCEPTANCE CRITERIA
+- Members see the layout
+- Non-members receive 404
+- Unknown slug also receives 404, indistinguishable from the above
+- Workspace is read from the URL segment only",2,M6.10,Task
+M6.11 — membersByWorkspace loader,M6 · Workspace UI,M6 — Workspaces and membership,"USER STORY
+As an operator, I want membership lookups batched so that a members page does not issue one query per row.
+
+DESCRIPTION
+Add the `membersByWorkspace` loader with a query-count assertion. Sits here rather than in the GraphQL foundation because it cannot exist before workspaces do.
+
+ACCEPTANCE CRITERIA
+- Loader batches correctly across a multi-workspace request
+- Query-count assertion in place
+- Loader is per-request, never module-level
+- Ordering of batched results is preserved",2,M6.11,Task
+M6.12 — MemberList component,M6 · Workspace UI,M6 — Workspaces and membership,"USER STORY
+Story 9 — As a workspace member, I want each member shown with their role and joining date, so that the membership list is readable at a glance.
+
+DESCRIPTION
+Presentational component showing display name, role and joined date, with an action slot supplied by the page. Component tests using role and label queries.
+
+ACCEPTANCE CRITERIA
+- Renders all three roles distinctly
+- Action slot is absent when no actions are passed
+- Own row is identifiable
+- No test ids for anything a user can see",2,M6.12,Task
+M6.13 — Members page with owner-gated controls,M6 · Workspace UI,M6 — Workspaces and membership,"USER STORY
+Story 9 — As a workspace member, I want to see who is in the workspace and their roles, so that I know who can read what I write.
+
+DESCRIPTION
+`/coven/[slug]/members` listing members and roles. Role controls and the invite action are rendered only for owners. This page is the only route to ownership: invitations cannot grant it, so an owner promotes an existing member here, after they have signed up and can be recognised. Composes the MemberList component and reads through the membersByWorkspace loader, both of which land immediately before it.
+
+ACCEPTANCE CRITERIA
+- All members can view the list
+- Role controls hidden for non-owners and rejected server-side too
+- An owner can promote an existing member to owner from this page
+- Promotion targets an existing member only, never a pending invitation
+- axe scan passes
+- Every workspace shows the page, including one with a single member",2,M6.13,Task
+M6.14 — Delete a workspace,M6 · Workspace UI,M6 — Workspaces and membership,"USER STORY
+As an owner, I want to delete a workspace I no longer use so that abandoned covens do not clutter my switcher forever.
+
+DESCRIPTION
+Owner-only soft delete, with a confirmation naming the workspace and stating what becomes inaccessible — its ingredients and its grimoire. Members lose access immediately. Deletion is soft, so nothing is destroyed and a workspace deleted in error can be restored by hand.
+
+ACCEPTANCE CRITERIA
+- Only an owner can delete
+- Confirmation names the workspace and states what is lost
+- Deletion is soft; nothing is destroyed
+- All members lose access immediately, including other owners
+- Deleted workspaces disappear from the switcher",2,M6.14,Task
+M6.15 — Remove member and leave workspace,M6 · Workspace UI,M6 — Workspaces and membership,"USER STORY
+Story 10 — As a workspace owner, I want to remove a member, and as a member I want to leave, so that membership reflects who is actually involved.
+
+DESCRIPTION
+Owner-initiated removal and self-initiated leave, both soft, both subject to the last-owner guard. This task covers the ordinary cases; the blocked last-owner case and its remedy are M6.16.
+
+ACCEPTANCE CRITERIA
+- Owner can remove a member
+- A member can leave without owner action
+- Last-owner guard applies to both paths
+- Removed user immediately loses access",1,M6.15,Task
+M6.16 — Guided exit for the last owner,M6 · Workspace UI,M6 — Workspaces and membership,"USER STORY
+Story 10 — As the only owner of a workspace I no longer want, I want to be shown how to hand it over or close it, so that I am not left believing I am stuck in it forever.
+
+DESCRIPTION
+The last-owner guard in M6.8 is correct and will read as a bug unless the refusal explains itself. Keep the Leave control visible and enabled rather than hidden or greyed out — a disabled control with no explanation is exactly what makes someone conclude they are trapped. On click, offer both ways out, never only one. If other members exist: promote one of them and leave, with a picker and a single action that does both; or delete the workspace entirely, since an owner may simply be done with it and should not have to install a successor to get there. If the owner is the only member, promotion is impossible and deletion is the whole answer. Deletion always routes into the M6.14 confirmation, which already names what becomes inaccessible — that confirmation is what stops 'delete instead' from being a foot-gun when other people's records are in there. Also surface it before it is urgent: the members page shows a quiet note whenever a workspace has exactly one owner, saying that if that person loses access nobody can manage members.
+
+ACCEPTANCE CRITERIA
+- Leave stays visible and enabled; the explanation comes on click, not as a disabled tooltip
+- Both remedies are offered together: hand it over, or delete it entirely
+- With other members present, the dialog lists them and offers promote-then-leave as one action
+- Deletion is offered in both branches, not only when the owner is the only member
+- Deletion routes into the M6.14 confirmation rather than deleting from this dialog
+- The deletion option states that other members lose access, before it is chosen
+- Neither path can leave a workspace ownerless, and the guard still refuses if the UI is bypassed
+- The members page notes when a workspace has exactly one owner
+- Wording avoids blame and states the remedies first
+- Both paths are keyboard operable and axe clean",2,M6.16,Task
+M6.17 — Viewer read-only enforcement across services,M6 · Workspace UI,M6 — Workspaces and membership,"USER STORY
+Story 12 — As a workspace owner, I want viewers to be unable to change shared records, so that I can share our ingredient records without risking them.
+
+DESCRIPTION
+Apply the `member` minimum to every mutating workspace service. With notes deferred to v2 there is no exception: a viewer reads everything in the workspace and writes nothing.
+
+ACCEPTANCE CRITERIA
+- Viewer writes to ingredients and grimoire are rejected
+- Viewer reads succeed everywhere within the workspace
+- No mutating service accepts a viewer
+- Story 12 acceptance test passes",2,M6.17,Task
+M6.18 — Last-edited-by display on ingredient rows,M6 · Workspace UI,M6 — Workspaces and membership,"USER STORY
+Story 13 — As a workspace member, I want to see who last edited an ingredient and when, so that I know who to ask about a change.
+
+DESCRIPTION
+Surface `updatedBy` and `updatedAt` on the row, resolved to display name, formatted relative with an absolute tooltip.
+
+ACCEPTANCE CRITERIA
+- Row shows who and when
+- Display name resolves without an N+1 query
+- Absolute timestamp available on hover and to screen readers
+- Story 13 acceptance test passes",1,M6.18,Task
+M7 · Invitations,,M7 — Invitations,Feature grouping. 7 tasks.,,,Feature
+M7.1 — workspace_invitations schema,M7 · Invitations,M7 — Invitations,"USER STORY
+As an owner, I want invitations stored safely so that a leaked database row cannot be redeemed.
+
+DESCRIPTION
+Add the table with id, workspaceId, email, role, tokenHash, expiresAt, acceptedAt, acceptedBy, revokedAt and audit columns. Only the hash is stored. The role column accepts `viewer` or `member` only — owner is deliberately not invitable, and the constraint lives in the database so no future code path can widen it by accident.
+
+ACCEPTANCE CRITERIA
+- No column holds the plaintext token
+- A check constraint rejects an invitation with role owner
+- Expiry has a sensible default
+- Indexed for lookup by token hash
+- Full audit spread present",1,M7.1,Task
+M7.2 — Token generation and hash-only storage,M7 · Invitations,M7 — Invitations,"USER STORY
+Story 4 — As a workspace owner, I want an invitation link shown once and stored only as a hash, so that a leaked database row cannot be redeemed.
+
+DESCRIPTION
+Service generating an invitation token, storing only its hash, and returning the plaintext exactly once to the caller. Generate it with a CSPRNG — a cryptographically secure pseudorandom number generator, meaning `crypto.randomBytes()` from Node's crypto module, never `Math.random()`. The difference matters: `Math.random()` is a fast, predictable generator, so anyone who collects a few tokens can work out the internal state and compute the next ones. A CSPRNG draws from the operating system's entropy pool and gives no such foothold. Unit tests cover generation, hashing and single-return.
+
+ACCEPTANCE CRITERIA
+- Token is generated with crypto.randomBytes(), not Math.random()
+- Token carries at least 128 bits of entropy
+- Only the hash reaches the database
+- Plaintext is returned once and is never retrievable afterwards
+- Holding one token gives no way to guess another
+- CSPRNG is explained once in claude-docs so the next reader need not look it up",2,M7.2,Task
+M7.3 — createInvitation mutation returning the URL once,M7 · Invitations,M7 — Invitations,"USER STORY
+Story 4 — As a workspace owner, I want to generate an invitation link with a chosen role, so that I control what a new member can do before they arrive.
+
+DESCRIPTION
+Owner-only mutation returning `InvitationResult` with the invitation and the full URL. The URL appears in that response body and nowhere else. The invitable roles are viewer and member; ownership cannot be granted by link. Someone holding a URL has proved only that they received it, and an invitation can be forwarded, so ownership is granted afterwards by an existing owner on the members page, once there is an identifiable account to point at.
+
+ACCEPTANCE CRITERIA
+- Only owners can call it
+- Role must be viewer or member; owner is rejected with a clear error
+- Role is chosen at creation and honoured on acceptance
+- URL is absent from any subsequent query
+- Any workspace can be invited into, including a user's first one
+- Rejection happens at the service, not only in the schema enum",2,M7.3,Task
+M7.4 — InviteDialog component,M7 · Invitations,M7 — Invitations,"USER STORY
+Story 4 — As a workspace owner, I want to copy the invitation link and be told plainly that it will not be shown again, so that I do not lose it silently.
+
+DESCRIPTION
+Dialog with role selection, a copy-to-clipboard field, and an unmistakable warning that this is the only time the link is shown. The role selector offers viewer and member only, with a line explaining that ownership is granted after the person joins. Component tests for copy behaviour and the warning.
+
+ACCEPTANCE CRITERIA
+- Warning is present and visible before the link is dismissed
+- Role selector offers viewer and member, and never owner
+- Explains in one line where ownership is granted instead
+- Copy control works and confirms success
+- Link is not re-rendered after the dialog closes
+- Focus trap, Escape to close, focus restored, axe clean",2,M7.4,Task
+M7.5 — Invitation acceptance page,M7 · Invitations,M7 — Invitations,"USER STORY
+Story 6 — As an invited person, I want to accept an invitation and land in the workspace, so that joining takes one click and a sign-in.
+
+DESCRIPTION
+`/invite/[token]` — reachable unauthenticated, prompting sign-in first if needed, then adding membership at the invited role and redirecting into the workspace. Accepting also sets `canCreateWorkspace`: someone vouched for by an existing member is an established user, and this is the main route through the invite gate.
+
+ACCEPTANCE CRITERIA
+- Signed-out users can start the flow and complete it after sign-in
+- Membership is created at the invited role
+- Accepting sets canCreateWorkspace, and the change is audited
+- A viewer invitation grants creation rights too — the gate is about the site, not the role
+- A tampered token claiming owner is rejected, not honoured
+- Redirect lands in the workspace ingredients page
+- acceptedAt and acceptedBy are stamped",2,M7.5,Task
+M7.6 — Revoke a pending invitation,M7 · Invitations,M7 — Invitations,"USER STORY
+Story 5 — As a workspace owner, I want to revoke a pending invitation, so that I can undo an invite sent in error.
+
+DESCRIPTION
+The owner-facing half: an owner-only mutation stamping revokedAt, plus the list of pending invitations on the members page so there is something to revoke from. This task creates the revoked state; M7.7 is what honours it when someone tries to redeem the link. Already-accepted invitations cannot be revoked — removing that person is a membership action, not an invitation one.
+
+ACCEPTANCE CRITERIA
+- Owner can revoke a pending invitation
+- Revoking an already-accepted invitation is rejected, with a pointer to member removal
+- Non-owners cannot revoke
+- Pending invitations are listed on the members page with their role and expiry
+- revokedAt is stamped and the row is retained for audit",1,M7.6,Task
+"M7.7 — Reject expired, revoked and reused tokens",M7 · Invitations,M7 — Invitations,"USER STORY
+Story 7 — As a workspace owner, I want expired, revoked and already-used links rejected, so that an old link in someone's inbox is not a way in.
+
+DESCRIPTION
+The redeemer-facing half: everything that can make a link unusable, checked in one place on the acceptance path. Three separate conditions, three distinct messages — expired (the clock ran out), revoked (the owner withdrew it, the state M7.6 creates), and already accepted (someone used it). One generic 'invalid link' would leave the recipient unable to tell whether to ask for a new invitation or check whether they are already a member. Messages must not name the workspace, since the reader is by definition not a member of it.
+
+ACCEPTANCE CRITERIA
+- Expired token rejected, with a message saying so
+- Revoked token rejected, distinctly from expired
+- Already-accepted token rejected, distinctly from both
+- A token that is both expired and revoked reports one reason, deterministically
+- No message reveals the workspace name to a non-member
+- Story 7 acceptance test passes",2,M7.7,Task
+M8 · Services and search,,M8 — Compendium browsing and local ingredients,Feature grouping. 8 tasks.,,,Feature
+M8.1 — Acceptance test scaffold for stories 14–16,M8 · Services and search,M8 — Compendium browsing and local ingredients,"USER STORY
+Stories 14–16 — As a developer, I want the compendium browsing stories expressed as failing tests before implementation, so that done is measured against the specification.
+
+DESCRIPTION
+Create `tests/acceptance/02-compendium.test.ts` with failing tests naming stories 14 through 16. Stories 17 and 18 are covered by the admin scaffold in M4; story 19 by the workspace isolation tests in M5.
+
+ACCEPTANCE CRITERIA
+- Three failing tests, one per story
+- Each names its story number and text
+- No overlap with the admin or workspace scaffolds
+- make test-stories reports them",2,M8.1,Task
+M8.2 — Workspace-local ingredient service,M8 · Services and search,M8 — Compendium browsing and local ingredients,"USER STORY
+Story 15 — As a workspace member, I want to create an ingredient local to my workspace when the compendium lacks it, so that my practice is not limited to someone else's list.
+
+DESCRIPTION
+Create, update and read local ingredients scoped by workspaceId, writable by owners and members. Invisible to every other workspace.
+
+ACCEPTANCE CRITERIA
+- Owners and members can create; viewers cannot
+- A local ingredient is unreadable from another workspace, including by direct id
+- No path promotes a local ingredient to global
+- Story 15 acceptance test passes",2,M8.2,Task
+M8.3 — Local-beats-compendium name resolution,M8 · Services and search,M8 — Compendium browsing and local ingredients,"USER STORY
+As a user who disagrees with an admin's correspondences, I want my own version to win in my workspace so that curation does not override my practice.
+
+DESCRIPTION
+When a workspace-local ingredient shares a name with a compendium entry, the local entry wins in that workspace's search results and is badged as local.
+
+ACCEPTANCE CRITERIA
+- Local entry appears and compendium entry is suppressed for that name
+- Other workspaces still see the compendium entry
+- The badge distinguishes the two
+- Two locals in one workspace may not share a name",2,M8.3,Task
+M8.4 — filterIngredients() library function,M8 · Services and search,M8 — Compendium browsing and local ingredients,"USER STORY
+Story 21 — As a workspace member, I want to search by name or folk name, so that I can find Devil's Shoestring without remembering it is honeysuckle root.
+
+DESCRIPTION
+Pure function handling name and folk-name matching, AND versus OR across categories, case and accent insensitivity, and empty query returning all. Heaviest unit coverage in the project.
+
+ACCEPTANCE CRITERIA
+- Matches on folk names as well as names
+- AND is the default across categories; OR is opt-in
+- Accent and case insensitive
+- Empty query returns everything
+- No database access — pure function",2,M8.4,Task
+M8.5 — compendium and ingredient GraphQL queries,M8 · Services and search,M8 — Compendium browsing and local ingredients,"USER STORY
+Story 14 — As a workspace member, I want to browse the compendium, so that I can add shared entries to my own ingredients.
+
+DESCRIPTION
+Add both queries with search, categoryIds and form arguments, delegating to services. Categories resolve through the DataLoader.
+
+ACCEPTANCE CRITERIA
+- Both queries return correct results for each argument combination
+- Resolvers contain no database access
+- Category resolution is batched
+- List query paginates through the M3.6 helper, with its default and maximum",2,M8.5,Task
+M8.6 — Cache the compendium with tag invalidation,M8 · Services and search,M8 — Compendium browsing and local ingredients,"USER STORY
+As an operator, I want the compendium served from cache so that the most-read data on the site does not hit Postgres on every page.
+
+DESCRIPTION
+Wrap the compendium and category reads in `unstable_cache` with the `compendium` tag and an hour's revalidation. Viewer-independent data only — never cache anything workspace-scoped.
+
+ACCEPTANCE CRITERIA
+- Repeat reads do not hit Postgres
+- Only viewer-independent data is cached
+- Tag name is a shared constant, not a literal
+- Cache is bypassed correctly in tests",2,M8.6,Task
+M8.7 — Fire revalidateTag on admin mutations,M8 · Services and search,M8 — Compendium browsing and local ingredients,"USER STORY
+As a user, I want compendium edits to appear promptly so that the cache does not serve me an admin's outdated correspondences for an hour.
+
+DESCRIPTION
+Call `revalidateTag('compendium')` after every admin mutation touching ingredients or categories.
+
+ACCEPTANCE CRITERIA
+- An admin edit is visible on the next page load
+- Tag constant is shared, not a string literal per call site
+- Every admin mutation path is covered",1,M8.7,Task
+M8.8 — createWorkspaceIngredient and updateIngredient mutations,M8 · Services and search,M8 — Compendium browsing and local ingredients,"USER STORY
+Stories 15 and 34 — As a workspace member, I want my edits saved and reflected in the list immediately, so that I can trust what I am looking at.
+
+DESCRIPTION
+Both mutations delegating to services, with Zod validation and audit stamping. Return the updated entity for cache reconciliation.
+
+ACCEPTANCE CRITERIA
+- Validation errors return field-level detail
+- Audit columns stamped from the session
+- Returned entity lets the client update without a refetch
+- Viewers are rejected",2,M8.8,Task
+M8 · Search UI,,M8 — Compendium browsing and local ingredients,Feature grouping. 6 tasks.,,,Feature
+M8.9 — Acceptance test scaffold for stories 28–34,M8 · Search UI,M8 — Compendium browsing and local ingredients,"USER STORY
+Stories 28–34 — As a developer, I want the add and edit modal stories expressed as failing tests before implementation, so that the form's behaviour is specified rather than discovered.
+
+DESCRIPTION
+Create `tests/acceptance/04-modals.test.tsx` with failing tests naming each of stories 28 through 34.
+
+ACCEPTANCE CRITERIA
+- Seven failing tests, one per story
+- Each names its story number and text
+- make test-stories reports them",2,M8.9,Task
+M8.10 — IngredientSearch — debounced text matching,M8 · Search UI,M8 — Compendium browsing and local ingredients,"USER STORY
+Story 21 — As a workspace member, I want to type a name or folk name and see the list narrow, so that finding something is faster than scrolling.
+
+DESCRIPTION
+The search component's text input, debounced, matching name and folk names via `filterIngredients()`. Shared later by compendium, workspace ingredients and spell builder.
+
+ACCEPTANCE CRITERIA
+- Typing filters results after the debounce, not on every keystroke
+- Folk names match
+- Debounce tested with fake timers
+- Clear control resets the query",2,M8.10,Task
+M8.11 — IngredientSearch — grouped category chips,M8 · Search UI,M8 — Compendium browsing and local ingredients,"USER STORY
+Stories 22 and 30 — As a workspace member, I want to filter by several categories from grouped chips, so that I can narrow 52 categories on a phone without scrolling forever.
+
+DESCRIPTION
+Multi-select chips grouped by the category `group` field, collapsible by group so 52 chips are usable on a phone. AND semantics by default.
+
+ACCEPTANCE CRITERIA
+- Chips are grouped and each group collapses
+- Multiple selections combine with AND
+- Selected state is visually and programmatically distinguishable
+- Usable at a 375px viewport, axe clean",2,M8.11,Task
+M8.12 — IngredientSearch — OR toggle,M8 · Search UI,M8 — Compendium browsing and local ingredients,"USER STORY
+Story 22 — As a workspace member, I want to combine categories with 'any' as well as 'all', so that I can search broadly when nothing matches every term.
+
+DESCRIPTION
+Toggle switching category combination between AND and OR, with a label that makes the current mode obvious.
+
+ACCEPTANCE CRITERIA
+- Toggle switches modes and results update
+- Current mode is announced to assistive technology
+- Mode persists in URL state",1,M8.12,Task
+M8.13 — IngredientSearch — secondary filters and URL state,M8 · Search UI,M8 — Compendium browsing and local ingredients,"USER STORY
+Story 27 — As a workspace member, I want to filter to only our own ingredients or only compendium ones, so that I can review what we have added ourselves.
+
+DESCRIPTION
+Form, element and in-stock-only filters, plus local-versus-compendium. All filter state lives in the URL query string so a filtered view is shareable and survives reload.
+
+ACCEPTANCE CRITERIA
+- Every filter is reflected in the URL
+- Reloading restores the exact view
+- Back button steps through filter changes
+- Filters combine correctly with search text",2,M8.13,Task
+M8.14 — IngredientCard with safety and low-stock badges,M8 · Search UI,M8 — Compendium browsing and local ingredients,"USER STORY
+Stories 23 and 53 — As a workspace member, I want stock and safety flagged on the card, so that I notice a toxic ingredient or an empty jar without opening it.
+
+DESCRIPTION
+Card component using the `badge()` mixin, showing safety warnings and stock state. Badges convey meaning by text and shape, not colour alone.
+
+ACCEPTANCE CRITERIA
+- Safety badge appears when safetyNotes is present
+- Low and out-of-stock states are distinct
+- Meaning does not depend on colour alone
+- axe clean, keyboard reachable",2,M8.14,Task
+M8 · Modals and pages,,M8 — Compendium browsing and local ingredients,Feature grouping. 5 tasks.,,,Feature
+M8.15 — IngredientForm — read-only mode for compendium entries,M8 · Modals and pages,M8 — Compendium browsing and local ingredients,"USER STORY
+Story 17 — As a workspace member, I want compendium entries shown as read-only with a reason, so that I understand why I cannot edit rather than assuming it is broken.
+
+DESCRIPTION
+Render fields read-only for non-admins viewing a compendium entry, with an explanation rather than disabled controls that look broken.
+
+ACCEPTANCE CRITERIA
+- Non-admin sees read-only fields and a reason
+- Admin sees the editable form
+- Read-only state is conveyed to assistive technology",1,M8.15,Task
+M8.16 — AddIngredientModal,M8 · Modals and pages,M8 — Compendium browsing and local ingredients,"USER STORY
+Story 28 — As a workspace member, I want to open the add form from anywhere via the nav, so that recording something does not cost me my place.
+
+DESCRIPTION
+Modal wrapper around IngredientForm, reachable from the main nav on any page. Focus trap, Escape to close, focus restored to the trigger. Closing with unsaved input warns first, matching the edit modal in M8.17 — a half-filled new ingredient is as easy to lose as an edit, and losing it to a stray Escape key is worse because there is nothing to go back to.
+
+ACCEPTANCE CRITERIA
+- Opens from nav on every page
+- Focus is trapped while open and restored on close
+- Submit payload matches the schema
+- axe scan passes with the modal open
+- Closing with unsaved input prompts before discarding
+- Escape and the close control both route through the same prompt
+- Closing an untouched form does not prompt",2,M8.16,Task
+M8.17 — EditIngredientModal with dirty-discard warning,M8 · Modals and pages,M8 — Compendium browsing and local ingredients,"USER STORY
+Stories 32 and 33 — As a workspace member, I want the edit form pre-filled and a warning before discarding changes, so that I do not lose work by closing a dialog.
+
+DESCRIPTION
+Modal pre-populated from the selected ingredient, reachable from the nav picker and from a row. Warn before discarding unsaved edits.
+
+ACCEPTANCE CRITERIA
+- Fields pre-populate correctly
+- Closing with unsaved changes prompts first
+- Closing with no changes does not prompt
+- Reachable from both entry points
+- Story 34: the list reflects the edit immediately on save",2,M8.17,Task
+M8.18 — Compendium page,M8 · Modals and pages,M8 — Compendium browsing and local ingredients,"USER STORY
+Story 14 — As a workspace member, I want a browsable compendium page, so that I can find shared entries and add them to my ingredients.
+
+DESCRIPTION
+`/compendium` composing IngredientSearch with an Add to my ingredients action slot. Read-only for non-admins. Server-rendered with the cached data.
+
+ACCEPTANCE CRITERIA
+- Search, filters and chips all function
+- Add to my ingredients is present for members, absent for viewers
+- Page is server-rendered and uses the cached compendium
+- axe clean, usable at 375px",2,M8.18,Task
+M8.19 — Ingredient detail page shell,M8 · Modals and pages,M8 — Compendium browsing and local ingredients,"USER STORY
+As a user, I want a page per ingredient so that correspondences have a permanent home I can link to.
+
+DESCRIPTION
+`/ingredients/[id]` showing every correspondence field, safety notes and substitutes. Built so a notes section can be added below without restructuring the page, since notes are the first thing planned for v2.
+
+ACCEPTANCE CRITERIA
+- All properties rendered with sensible empty states
+- Works for both compendium and local ingredients
+- Local entries are badged
+- Empty states read as intentional, not broken",2,M8.19,Task
+M9 · Workspace ingredients,,M9 — Workspace ingredients,Feature grouping. 12 tasks.,,,Feature
+M9.1 — Acceptance test scaffold for stories 20–27,M9 · Workspace ingredients,M9 — Workspace ingredients,"USER STORY
+Stories 20–27 — As a developer, I want the workspace ingredient stories expressed as failing tests before implementation, so that stock behaviour is specified rather than discovered.
+
+DESCRIPTION
+Create `tests/acceptance/03-ingredients.test.ts` with failing tests naming each of stories 20 through 27.
+
+ACCEPTANCE CRITERIA
+- Eight failing tests, one per story
+- Each names its story number and text
+- make test-stories reports them",2,M9.1,Task
+M9.2 — inventory_items schema,M9 · Workspace ingredients,M9 — Workspace ingredients,"USER STORY
+Story 20 — As a workspace member, I want our ingredients and quantities recorded, so that I can see everything we hold in one list.
+
+DESCRIPTION
+Add the table with workspaceId, ingredientId, quantityOnHand, unit, unitDimension, lowStockThreshold, source, acquiredDate and audit. Unique on (workspaceId, ingredientId) where not deleted. Units cover three dimensions, metric and imperial in each: weight — mg, g, kg, oz, lb; volume — ml, l, tsp, tbsp, fl oz, cup; count — piece, drop, pinch. Store the dimension alongside the unit rather than deriving it at every call site, so a query can filter or group by it and M9.5 has something to check against. One shared module owns the unit-to-dimension map and both the Zod schema and the conversion library import it, so the list cannot drift in two places.
+
+ACCEPTANCE CRITERIA
+- A workspace cannot hold two stock rows for one ingredient
+- Re-adding after soft delete succeeds
+- Unit enum covers weight, volume and count, metric and imperial
+- unitDimension is stored and always consistent with the unit
+- A row whose dimension contradicts its unit cannot be written
+- Adding a unit means editing one module, not three
+- Audit spread present",1,M9.2,Task
+M9.3 — Workspace ingredients service with authorization tests,M9 · Workspace ingredients,M9 — Workspace ingredients,"USER STORY
+Story 12 — As a workspace owner, I want members to change stock and viewers only to read it, so that stock records match who is responsible for them.
+
+DESCRIPTION
+CRUD service scoped by workspace, going through assertMembership and withAudit. Tests cover each fixture user against each operation.
+
+ACCEPTANCE CRITERIA
+- Members can add, update and delete stock
+- Viewers are rejected on writes and permitted on reads
+- D cannot touch W's stock by direct id
+- Admin E has no access",2,M9.3,Task
+M9.4 — workspace ingredients query and stock mutations,M9 · Workspace ingredients,M9 — Workspace ingredients,"USER STORY
+Story 14 — As a workspace member, I want to add a compendium entry to our ingredients, so that I do not re-type what is already described.
+
+DESCRIPTION
+Add the `workspaceIngredients` query and `addIngredientToWorkspace` plus stock update mutations, delegating to services with batched ingredient and category resolution. The Ingredient list paginates through the M3.6 helper.
+
+ACCEPTANCE CRITERIA
+- Query supports search and category filters
+- addIngredientToWorkspace is idempotent against an existing row
+- Ingredient and category resolution is batched
+- Mutations return the updated item
+- Ingredient list paginates through the M3.6 helper, not an unbounded fetch",2,M9.4,Task
+M9.5 — unitConvert() within a single dimension,M9 · Workspace ingredients,M9 — Workspace ingredients,"USER STORY
+Story 24 — As a workspace member, I want quantities compared across units of the same kind, so that a recipe in teaspoons can be checked against a jar measured in millilitres.
+
+DESCRIPTION
+Pure function converting only within one dimension: weight to weight, volume to volume. Cross-dimension conversion is refused outright rather than attempted — grams to teaspoons depends on what is being measured, and a wrong answer here silently doubles or halves an ingredient in a working. Count converts to nothing at all; three pinches is not a quantity of millilitres. The refusal is an explicit result the caller must handle, never a null or a best guess.
+
+ACCEPTANCE CRITERIA
+- Weight to weight and volume to volume convert exactly, to a defined precision
+- Weight to volume is refused, in both directions
+- Any conversion involving count is refused
+- Refusal is a distinguishable result the caller must handle, not null or NaN
+- Round-tripping a value returns the original within the defined precision
+- No density table exists anywhere in the codebase
+- Unit tested across every pair within each dimension, and a sample of refused pairs",2,M9.5,Task
+M9.6 — Workspace ingredients page,M9 · Workspace ingredients,M9 — Workspace ingredients,"USER STORY
+Story 20 — As a workspace member, I want one page listing everything we hold, so that I do not have to look in two places.
+
+DESCRIPTION
+`/coven/[slug]/ingredients` — one page covering both local ingredients and compendium-sourced stock, composing IngredientSearch with an edit/delete action slot.
+
+ACCEPTANCE CRITERIA
+- Lists local and compendium-sourced entries together
+- Search and filters function identically to the compendium page
+- Server-rendered shell, no workspace data cached across requests
+- axe clean, usable at 375px",2,M9.6,Task
+M9.7 — Local versus compendium filter chip,M9 · Workspace ingredients,M9 — Workspace ingredients,"USER STORY
+Story 27 — As a workspace member, I want to filter my ingredients by where an entry came from, so that I can review what we added ourselves.
+
+DESCRIPTION
+Filter chip distinguishing the two sources, reflected in URL state. This is what makes one page correct rather than two.
+
+ACCEPTANCE CRITERIA
+- Three states: all, local only, compendium only
+- Reflected in the URL
+- Local entries are badged in every state
+- Story 27 acceptance test passes",1,M9.7,Task
+M9.8 — Low and out-of-stock badges with a sensible default threshold,M9 · Workspace ingredients,M9 — Workspace ingredients,"USER STORY
+Story 23 — As a workspace member, I want low and empty stock flagged, so that I know what to replace before I start a working.
+
+DESCRIPTION
+Compare quantityOnHand against lowStockThreshold and render the appropriate badge, with a filter for low stock. Nobody wants to set a threshold on every one of two hundred jars, so supply one at add time by dimension: 3 for count, 10 g for weight, 15 ml for volume, converted into whatever unit the row uses. A flat number across dimensions would be useless — 5 is a reasonable count of candles and an invisible quantity of dried herb. Write the default onto the row when it is created rather than leaving the column null and applying a constant at read time: it stays visible and editable, and changing the constant later does not silently reinterpret every existing row.
+
+ACCEPTANCE CRITERIA
+- Low stock triggers at or below the threshold
+- Zero renders as out of stock, distinctly from low
+- A new row gets a dimension-appropriate default without the member choosing one
+- The default is written to the row, not applied at read time
+- The threshold is visible and editable on the row
+- Setting a threshold of zero disables the warning rather than meaning 'always low'
+- Meaning does not depend on colour alone
+- Story 23 acceptance test passes",1,M9.8,Task
+M9.9 — Inline row editing,M9 · Workspace ingredients,M9 — Workspace ingredients,"USER STORY
+Story 24 — As a workspace member, I want to edit quantities from the row, so that updating stock after a working takes seconds.
+
+DESCRIPTION
+Edit quantity, unit and threshold in place, with optimistic update and rollback on failure.
+
+ACCEPTANCE CRITERIA
+- Edit and save without navigation
+- Failed save rolls back and explains why
+- Keyboard operable end to end
+- Story 24 acceptance test passes",2,M9.9,Task
+M9.10 — Soft delete with confirmation,M9 · Workspace ingredients,M9 — Workspace ingredients,"USER STORY
+Story 25 — As a workspace member, I want deletion to ask first and be recoverable, so that a mis-tap does not lose a record.
+
+DESCRIPTION
+Confirmation dialog naming the item, then a soft delete that removes it from the list immediately.
+
+ACCEPTANCE CRITERIA
+- Confirmation names the specific item
+- Cancel leaves everything unchanged
+- Row disappears without a full page reload
+- Record is soft-deleted, not removed",1,M9.10,Task
+M9.11 — Empty state,M9 · Workspace ingredients,M9 — Workspace ingredients,"USER STORY
+Story 26 — As a new workspace member, I want an empty ingredient list to prompt my first addition, so that I know what to do next.
+
+DESCRIPTION
+Distinguish a genuinely empty ingredient list from a filtered-to-nothing view — the first offers an add action, the second offers to clear filters.
+
+ACCEPTANCE CRITERIA
+- An empty ingredient list prompts the first add
+- No-results-from-filters offers to clear them
+- The two states are not confused
+- Story 26 acceptance test passes",1,M9.11,Task
+M9.12 — Add-from-compendium flow,M9 · Workspace ingredients,M9 — Workspace ingredients,"USER STORY
+Story 14 — As a workspace member, I want to add a compendium entry to our ingredients with a quantity, so that browsing leads directly to a stocked item.
+
+DESCRIPTION
+Wire the compendium page's action slot to addIngredientToWorkspace, with quantity and unit capture and a confirmation that links to the new ingredient row.
+
+ACCEPTANCE CRITERIA
+- Adding from the compendium creates the stock row
+- Adding something already held is handled gracefully
+- Confirmation links through to the ingredient list
+- Story 14 acceptance test passes",2,M9.12,Task
+M10 · Grimoire data layer,,M10 — Grimoire,Feature grouping. 10 tasks.,,,Feature
+M10.1 — Acceptance test scaffold for stories 47–56,M10 · Grimoire data layer,M10 — Grimoire,"USER STORY
+Stories 47–56 — As a developer, I want the grimoire stories expressed as failing tests before implementation, so that spell behaviour is specified rather than discovered.
+
+DESCRIPTION
+Create `tests/acceptance/06-grimoire.test.ts` with failing tests naming each of stories 47 through 56.
+
+ACCEPTANCE CRITERIA
+- Ten failing tests, one per story
+- Each names its story number and text
+- make test-stories reports them",2,M10.1,Task
+M10.2 — spells and spell_ingredients schema,M10 · Grimoire data layer,M10 — Grimoire,"USER STORY
+Stories 47 and 50 — As a workspace member, I want a spell recorded with its intent and its ingredients, so that I can repeat a working exactly.
+
+DESCRIPTION
+Add `spells` (workspaceId, title, intent, jarSize, sealWaxColor, moonPhase, dayOfWeek, instructions, status draft|complete, audit) and `spell_ingredients` (spellId, ingredientId, quantity, unit, layerOrder, note, audit). The join references the ingredient, not the inventory item, so a saved spell survives running out.
+
+ACCEPTANCE CRITERIA
+- Migration applies cleanly
+- spell_ingredients references ingredients, not inventory_items
+- layerOrder is stored and unique within a spell
+- status accepts only draft and complete in v1",2,M10.2,Task
+M10.3 — Spell visibility column and policy,M10 · Grimoire data layer,M10 — Grimoire,"USER STORY
+As a workspace member, I want to keep a spell to myself, so that I can record a working that is nobody else's business without leaving the workspace.
+
+DESCRIPTION
+Add `visibility` (`private` | `workspace`) to spells, defaulting to workspace, and extend the RLS policy so the database filters private spells to their author. Two layers again: the service decides and the database backstops it, exactly as M6.3 and M6.4 do for membership.
+
+ACCEPTANCE CRITERIA
+- Column added with a default of workspace and no nulls
+- RLS policy admits a private spell only to its author
+- The policy is proved with the service check stubbed, as in M6.5
+- Existing seeded spells migrate to workspace visibility",1,M10.3,Task
+M10.4 — spell_categories join table,M10 · Grimoire data layer,M10 — Grimoire,"USER STORY
+Story 48 — As a workspace member, I want to assign categories describing what a spell is meant to do, so that intent is recorded alongside contents.
+
+DESCRIPTION
+Join table mirroring ingredient_categories, with audit columns and both-direction indexes.
+
+ACCEPTANCE CRITERIA
+- Composite key prevents duplicates
+- Indexed both ways
+- Audit spread present",1,M10.4,Task
+M10.5 — Spell service with member and viewer rules,M10 · Grimoire data layer,M10 — Grimoire,"USER STORY
+Story 56 — As a workspace member including a viewer, I want to read every spell in the grimoire, so that shared knowledge is actually shared.
+
+DESCRIPTION
+Owners and members create and edit; viewers read and never write. Spells carry a visibility of `private` or `workspace`: a private spell is readable only by its author, a workspace spell by every member including viewers.
+
+ACCEPTANCE CRITERIA
+- Members and owners can create and edit
+- Viewers can read workspace spells and create nothing, including private spells
+- A private spell is invisible to every other member, including owners
+- D cannot read W's spells by direct id at either visibility
+- Story 56 acceptance test passes",2,M10.5,Task
+M10.6 — resolveSpellVisibility() and the one-way rule,M10 · Grimoire data layer,M10 — Grimoire,"USER STORY
+As a workspace member, I want a spell I shared to stay shared, so that nobody can quietly withdraw something the rest of us have been working from.
+
+DESCRIPTION
+Pure function deciding who may read a spell, plus the transition rule: private may be widened to workspace, and workspace may never be narrowed to private. The asymmetry is deliberate. Once a spell is part of the shared grimoire the others have read it, may have built on it, and hiding it afterwards would remove something they were relying on while pretending it never existed. Widening is a gift and narrowing is a retraction, so only one of them is allowed. Exhaustively unit tested, both the read decision and every transition.
+
+ACCEPTANCE CRITERIA
+- Every combination of viewer relationship and visibility is tested
+- Private resolves to the author only, including against owners
+- private to workspace is permitted
+- workspace to private is rejected with an error that explains why, not a bare Forbidden
+- The rule is enforced in the service, not only absent from the UI
+- Deleting a shared spell is still possible — this rule governs visibility, not existence
+- No database access; pure function",2,M10.6,Task
+M10.7 — summarizeSpellCategories(),M10 · Grimoire data layer,M10 — Grimoire,"USER STORY
+Story 52 precondition — As a workspace member, I want the categories of a spell's ingredients gathered into one set, so that I can compare what is in the jar against what I intended.
+
+DESCRIPTION
+Pure function returning the deduped union of categories across a spell's ingredients. Unit tested including empty and duplicate cases.
+
+ACCEPTANCE CRITERIA
+- Union is deduped
+- Empty ingredient list returns empty
+- Order is stable
+- No database access",1,M10.7,Task
+M10.8 — compareSpellCategories(),M10 · Grimoire data layer,M10 — Grimoire,"USER STORY
+Story 52 — As a workspace member, I want gaps shown in both directions between intent and ingredients, so that I can see what is missing and what I did not plan for.
+
+DESCRIPTION
+Pure function returning intended-not-present and present-not-intended. These are two distinct concepts and conflating them would be a bug.
+
+ACCEPTANCE CRITERIA
+- Intent categories with no ingredient backing are reported
+- Ingredient categories outside the stated intent are reported
+- Both empty when the sets match
+- Unit tested in both directions",2,M10.8,Task
+M10.9 — grimoire and spell queries with derived fields,M10 · Grimoire data layer,M10 — Grimoire,"USER STORY
+Story 52 — As a workspace member, I want the comparison available from the API, so that it is computed once rather than reimplemented in each view.
+
+DESCRIPTION
+Add the queries exposing categories, derivedCategories and categoryGaps, with batched ingredient and category resolution. The grimoire list paginates through the M3.6 helper. Visibility filtering happens in the query, not after fetching — the same trap the note loader had, and the reason a private spell must never reach the resolver in the first place.
+
+ACCEPTANCE CRITERIA
+- derivedCategories computed from ingredients
+- categoryGaps reports both directions
+- Resolution is batched, asserted by query count
+- Resolvers contain no database access
+- Grimoire list paginates through the M3.6 helper, not an unbounded fetch
+- Private spells are excluded in SQL, never fetched and filtered in the resolver",2,M10.9,Task
+M10.10 — createSpell and updateSpell mutations,M10 · Grimoire data layer,M10 — Grimoire,"USER STORY
+Stories 47, 50 and 55 — As a workspace member, I want to create a spell, add ingredients and save it as a draft, so that I can build it over more than one sitting.
+
+DESCRIPTION
+Both mutations with Zod validation, ingredient list handling and layer order assignment.
+
+ACCEPTANCE CRITERIA
+- A spell can be created with only a title
+- Ingredients can be added and removed in one update
+- layerOrder is assigned and preserved
+- Viewers are rejected",2,M10.10,Task
+M10 · Grimoire UI,,M10 — Grimoire,Feature grouping. 12 tasks.,,,Feature
+M10.11 — Grimoire list page,M10 · Grimoire UI,M10 — Grimoire,"USER STORY
+Story 56 — As a workspace member, I want to browse our spells, so that I can find and reuse past workings.
+
+DESCRIPTION
+`/coven/[slug]/grimoire` listing spells with title, intent, status and category chips. Searchable by title and intent text, and filterable by category and status. A grimoire is the thing you go back to, so finding a spell from six months ago by half-remembering its name is the primary use of this page, not browsing.
+
+ACCEPTANCE CRITERIA
+- Every spell in the workspace is listed for every member
+- Search matches title and intent text, debounced
+- Search combines with category and status filters rather than replacing them
+- Draft and complete are visually distinct
+- Search and filters persist in the URL
+- axe clean, usable at 375px
+- List is paginated; a workspace with hundreds of spells does not render them all
+- Search, filters and pagination all respect visibility; a private spell never appears in another member's count or page",2,M10.11,Task
+"M10.12 — SpellBuilder — title, intent and jar fields",M10 · Grimoire UI,M10 — Grimoire,"USER STORY
+Story 47 — As a workspace member, I want to name a spell and state its intent, so that I know what it was for months later.
+
+DESCRIPTION
+`/coven/[slug]/grimoire/new` with the spell-level fields: title, intent, jarSize, sealWaxColor, moonPhase, dayOfWeek, instructions.
+
+ACCEPTANCE CRITERIA
+- Only title is required
+- All jar fields are editable and persist
+- Validation errors appear inline
+- Story 47 acceptance test passes",2,M10.12,Task
+M10.13 — Visibility control in the spell builder,M10 · Grimoire UI,M10 — Grimoire,"USER STORY
+As a workspace member, I want to choose whether a spell is mine or ours while I build it, so that I decide before anyone has seen it rather than afterwards.
+
+DESCRIPTION
+Visibility control on the builder, defaulting to workspace. Private spells are badged in the grimoire list so the author can tell at a glance which of their spells the others can see. Once a spell is workspace-visible the control becomes read-only with a line explaining that sharing is permanent — better stated plainly than discovered by a rejected mutation.
+
+ACCEPTANCE CRITERIA
+- Visibility is set at creation and defaults to workspace
+- A private spell can be shared to the workspace in one action, with confirmation
+- A workspace spell shows the control as read-only, with the reason
+- Private spells are badged in the grimoire list for their author
+- The badge is not colour-only
+- Attempting to narrow through the API is still rejected, per M10.6",2,M10.13,Task
+M10.14 — SpellBuilder — assign intent categories,M10 · Grimoire UI,M10 — Grimoire,"USER STORY
+Story 48 — As a workspace member, I want to tag a spell with intent categories, so that I can find it by purpose.
+
+DESCRIPTION
+Grouped category chips reused from IngredientSearch, bound to the spell's own categories rather than a filter.
+
+ACCEPTANCE CRITERIA
+- Chips select and deselect spell categories
+- Grouping and collapsing behave as on the search component
+- Selections persist on save
+- Story 48 acceptance test passes",2,M10.14,Task
+M10.15 — SpellBuilder — add and remove ingredients,M10 · Grimoire UI,M10 — Grimoire,"USER STORY
+Stories 49 and 50 — As a workspace member, I want the same search controls as my ingredients page and to add ingredients with a quantity, so that building a spell uses tools I already know.
+
+DESCRIPTION
+Compose IngredientSearch with an Add to jar action slot, plus quantity and unit capture per ingredient and a remove control.
+
+ACCEPTANCE CRITERIA
+- Search behaves identically to the workspace ingredients page
+- Quantity and unit are captured per ingredient
+- Removing an ingredient updates derived categories immediately
+- Story 49 and 50 acceptance tests pass",2,M10.15,Task
+M10.16 — SpellBuilder — reorder for layer order,M10 · Grimoire UI,M10 — Grimoire,"USER STORY
+Story 51 — As a workspace member, I want to reorder ingredients, so that layering sequence is recorded as part of the recipe.
+
+DESCRIPTION
+Reordering with both pointer and keyboard affordances, persisting layerOrder.
+
+ACCEPTANCE CRITERIA
+- Order can be changed by keyboard alone
+- New order persists on save
+- Order is announced to assistive technology
+- Story 51 acceptance test passes",2,M10.16,Task
+M10.17 — Intent versus derived category comparison panel,M10 · Grimoire UI,M10 — Grimoire,"USER STORY
+Story 52 — As a workspace member, I want to see where intent and contents disagree while I build, so that I can correct the jar rather than discover it later.
+
+DESCRIPTION
+Sidebar showing assigned intent alongside the derived union, flagging both directions — tagged for prosperity with nothing carrying it, and mugwort adding psychic work that was not intended. Weight the second list by whether the ingredient is pulling its weight elsewhere. An ingredient contributing an intended category and one stray one is doing its job and the stray is a footnote; an ingredient contributing nothing intended is the one worth looking at. Same list, two levels of emphasis, so the eye lands on the ingredient that has no reason to be in the jar.
+
+ACCEPTANCE CRITERIA
+- Both gap directions are shown with distinct wording
+- An unintended category from an ingredient that also carries an intended one is de-emphasised
+- An ingredient contributing nothing intended is emphasised
+- Emphasis is conveyed by more than colour or weight alone, so it survives a screen reader
+- Panel updates as ingredients change
+- No gaps renders a clear matched state
+- Story 52 acceptance test passes",2,M10.17,Task
+M10.18 — Safety warning for toxic ingredients,M10 · Grimoire UI,M10 — Grimoire,"USER STORY
+Story 53 — As a workspace member, I want a warning when an ingredient is toxic or unsafe to burn, so that I do not harm myself or someone I give it to.
+
+DESCRIPTION
+Surface safetyNotes prominently when such an ingredient is added, without blocking the addition.
+
+ACCEPTANCE CRITERIA
+- Warning appears on add and remains visible in the list
+- Warning does not block the action
+- Announced to assistive technology
+- Story 53 acceptance test passes",1,M10.18,Task
+M10.19 — Out-of-stock indicator while building,M10 · Grimoire UI,M10 — Grimoire,"USER STORY
+Story 54 — As a workspace member, I want to see when I am adding something we have none of, so that I know what to gather before starting.
+
+DESCRIPTION
+Compare against the workspace's stock and flag ingredients with none on hand, or held below the quantity called for.
+
+ACCEPTANCE CRITERIA
+- Zero stock is flagged on add
+- Insufficient quantity is flagged distinctly from zero
+- Compendium ingredients not in the workspace's ingredients are flagged as not held
+- Story 54 acceptance test passes",1,M10.19,Task
+M10.20 — Save as draft and mark complete,M10 · Grimoire UI,M10 — Grimoire,"USER STORY
+Story 55 — As a workspace member, I want to save a spell as a draft and mark it complete later, so that an unfinished spell is not mistaken for a finished one.
+
+DESCRIPTION
+Status control with draft as the default, and completion as an explicit action.
+
+ACCEPTANCE CRITERIA
+- New spells default to draft
+- Marking complete is explicit and reversible
+- Status is visible in the grimoire list
+- Story 55 acceptance test passes",1,M10.20,Task
+M10.21 — Spell survives a soft-deleted inventory item,M10 · Grimoire UI,M10 — Grimoire,"USER STORY
+As a user, I want a saved spell to remain intact after I run out of something so that my record of a working is not damaged by stock changes.
+
+DESCRIPTION
+Test that soft-deleting an inventory item leaves the spell's ingredient list intact, since spell_ingredients references the ingredient, not the stock row.
+
+ACCEPTANCE CRITERIA
+- Spell renders fully after the stock row is deleted
+- Ingredient shows as not held rather than disappearing
+- No foreign key error occurs",1,M10.21,Task
+M10.22 — Spell recipe print layout,M10 · Grimoire UI,M10 — Grimoire,"USER STORY
+As a user, I want a printable recipe so that I can work from paper without a screen beside the jar.
+
+DESCRIPTION
+Create `_print.scss` — this is the only view in v1 that gets print styling. Spell layout: ingredients in layer order with quantities, instructions, and correspondences. Navigation and controls suppressed. Add a visible print control on the spell page: nobody thinks to reach for a browser menu on a phone, and a print stylesheet with no way to invoke it is a feature only its author knows about.
+
+ACCEPTANCE CRITERIA
+- A print control is visible on the spell page and triggers the print dialog
+- The control is keyboard reachable and labelled
+- The control does not itself appear in the printed output
+- Prints on one page for a typical spell
+- Layer order and quantities are legible
+- Interactive chrome is hidden
+- Print styles are scoped to this view and do not leak into others",2,M10.22,Task
+M11 · End-to-end suite,,M11 — Hardening and launch,Feature grouping. 7 tasks.,,,Feature
+M11.1 — E2E: admin adds a compendium entry,M11 · End-to-end suite,M11 — Hardening and launch,"USER STORY
+Story 18 — As a site admin, I want compendium curation to work through the real interface against a production build, so that the path users take is the path that is tested.
+
+DESCRIPTION
+Playwright spec signing in as E, creating a compendium entry, and verifying it appears for a non-admin user.
+
+ACCEPTANCE CRITERIA
+- Spec passes against the production build on 8001
+- Runs against sorrel_e2e, reseeded beforehand
+- axe scan on each page visited",2,M11.1,Task
+M11.2 — E2E: add a compendium ingredient to a workspace,M11 · End-to-end suite,M11 — Hardening and launch,"USER STORY
+Story 14 — As a workspace member, I want adding a compendium entry to our ingredients to work end to end, so that the core daily loop is verified.
+
+DESCRIPTION
+As A, add the compendium entry created in M11.1 to W's ingredients with a quantity, and confirm it appears with its stock and default threshold.
+
+ACCEPTANCE CRITERIA
+- Stock row appears in W's ingredients
+- Quantity and unit are as entered
+- Default low-stock threshold is applied and visible
+- Survives a page reload
+- axe scan clean",2,M11.2,Task
+M11.3 — E2E: build a spell and check the category comparison,M11 · End-to-end suite,M11 — Hardening and launch,"USER STORY
+Stories 47–52 — As a workspace member, I want spell building and the category comparison to work end to end, so that the most complex screen is verified as a whole.
+
+DESCRIPTION
+As A, build a spell with intent categories and ingredients, and assert the comparison panel reports the expected gaps in both directions.
+
+ACCEPTANCE CRITERIA
+- Spell saves with ingredients in layer order
+- Comparison panel shows both gap directions
+- Spell appears in the grimoire list
+- axe scan clean with the builder open",2,M11.3,Task
+"M11.4 — E2E: invite, accept, and land in the workspace",M11 · End-to-end suite,M11 — Hardening and launch,"USER STORY
+Stories 4 and 6 — As a workspace owner, I want inviting a member to work end to end, so that sharing behaves as promised.
+
+DESCRIPTION
+As A, generate an invite link at member role; as B, accept it, sign in, and land in W with the ingredient list visible.
+
+ACCEPTANCE CRITERIA
+- Invite link is copyable and single-use
+- B lands in W at the invited role
+- B sees W's ingredients and grimoire
+- Reusing the link afterwards is rejected",2,M11.4,Task
+M11.5 — E2E: viewer reads but cannot edit,M11 · End-to-end suite,M11 — Hardening and launch,"USER STORY
+Story 12 — As a viewer, I want my read-only access verified end to end, so that the role means what it says.
+
+DESCRIPTION
+As C, read the ingredients and grimoire, and confirm no write controls are rendered anywhere.
+
+ACCEPTANCE CRITERIA
+- No write controls rendered for C
+- C can read every spell
+- A direct mutation attempt is rejected",1,M11.5,Task
+M11.6 — E2E: outsider sees nothing,M11 · End-to-end suite,M11 — Hardening and launch,"USER STORY
+Story 19 — As a workspace owner, I want isolation from other workspaces verified end to end, so that privacy is proven rather than assumed.
+
+DESCRIPTION
+As D, attempt to reach W's ingredients and grimoire by URL and confirm 404 throughout.
+
+ACCEPTANCE CRITERIA
+- Every W route returns 404 for D
+- No workspace name or content leaks in the response
+- D's own workspace X is unaffected",1,M11.6,Task
+M11.7 — E2E: soft delete disappears from the list,M11 · End-to-end suite,M11 — Hardening and launch,"USER STORY
+Story 25 — As a workspace member, I want soft delete verified end to end, so that removal behaves the same way in the browser as in the service tests.
+
+DESCRIPTION
+As A, soft-delete an ingredient, confirm it leaves the list, and confirm the same name can be added again.
+
+ACCEPTANCE CRITERIA
+- Item disappears without reload
+- Re-adding the same name succeeds
+- Record remains in the database",1,M11.7,Task
+M11 · Launch readiness,,M11 — Hardening and launch,Feature grouping. 7 tasks.,,,Feature
+M11.8 — axe scans across every page and modal,M11 · Launch readiness,M11 — Hardening and launch,"USER STORY
+As a user relying on assistive technology, I want every page and modal to meet the standard so that no part of the app is closed to me.
+
+DESCRIPTION
+Extend the e2e specs to scan each route and each open modal. Accessibility is asserted here, not via vitest-axe.
+
+ACCEPTANCE CRITERIA
+- Every route in §9 is scanned
+- Every modal is scanned while open
+- Zero violations at the configured level
+- Scan list is maintained alongside the route table",2,M11.8,Task
+M11.9 — Cold-start skeleton states,M11 · Launch readiness,M11 — Hardening and launch,"USER STORY
+As a user returning after a quiet week, I want the first paint to be immediate so that Neon's resume is invisible rather than looking broken.
+
+DESCRIPTION
+Add skeletons for the first paint on every data-backed route. No assumption that the first query returns in under 50ms.
+
+ACCEPTANCE CRITERIA
+- Every data-backed route has a skeleton
+- Skeletons match final layout closely enough to avoid a jump
+- Tested with an artificially delayed first query
+- Respects prefers-reduced-motion",2,M11.9,Task
+M11.10 — Error boundaries and 404/500 pages,M11 · Launch readiness,M11 — Hardening and launch,"USER STORY
+As a user, I want failures to be legible so that an error is a message rather than a blank screen.
+
+DESCRIPTION
+Route-level error boundaries plus styled 404 and 500 pages, with a route back to somewhere useful.
+
+ACCEPTANCE CRITERIA
+- A thrown error renders the boundary, not a blank page
+- 404 and 500 are styled and offer a way onward
+- No stack traces reach production output
+- Boundaries do not swallow authorization redirects",2,M11.10,Task
+M11.11 — Verify coverage thresholds and acceptance reporting,M11 · Launch readiness,M11 — Hardening and launch,"USER STORY
+As a developer, I want the gates proven before release so that the first post-launch PR is not the one that discovers they were misconfigured.
+
+DESCRIPTION
+Confirm the 80% thresholds hold on both suites and that acceptance coverage reports separately from line coverage.
+
+ACCEPTANCE CRITERIA
+- Both suites report at or above 80% on all four metrics
+- A deliberate coverage drop fails CI
+- Acceptance coverage is reported separately
+- Coverage artifacts upload on every run",1,M11.11,Task
+M11.12 — claude-docs completeness pass,M11 · Launch readiness,M11 — Hardening and launch,"USER STORY
+As a future maintainer, I want each subsystem and component documented so that the design decisions survive the people who made them.
+
+DESCRIPTION
+Write the subsystem summaries and one doc per component, and bring the append-only transcript up to date.
+
+ACCEPTANCE CRITERIA
+- A summary exists for auth, data, GraphQL, ingredients, grimoire and CI
+- Every component in src/components has a doc
+- Transcript is current
+- Vocabulary is used consistently throughout",2,M11.12,Task
+M11.13 — Full story checklist green,M11 · Launch readiness,M11 — Hardening and launch,"USER STORY
+As a product owner, I want every one of the 44 stories passing so that done is measured against the specification.
+
+DESCRIPTION
+Run `make test-stories` and confirm all 44 pass. Any deferral is recorded explicitly rather than left silently failing.
+
+ACCEPTANCE CRITERIA
+- All 44 stories report pass
+- Output is captured in claude-docs as the release record
+- No test is skipped to achieve the result",1,M11.13,Task
+M11.14 — Promote release/1.0.0 to main,M11 · Launch readiness,M11 — Hardening and launch,"USER STORY
+As a developer, I want v1 released through the standard Gitflow path so that the first production deploy exercises the same process as every later one.
+
+DESCRIPTION
+Cut `release/1.0.0` from staging, promote through the merge queue, confirm migrations applied and the production deploy is healthy.
+
+ACCEPTANCE CRITERIA
+- Release branch passes the full gate
+- Migrations applied to production before traffic
+- Production smoke check passes
+- main-sync branch opened to bring main back down",1,M11.14,Task

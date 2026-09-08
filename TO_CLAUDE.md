@@ -1,0 +1,8 @@
+- [ ] Make sure to use Lexend and choose font.
+- [ ] Design, design, design.
+- [ ] Choose colors.
+- [ ] V3
+  - [ ] Add label printing.
+  - [ ] Add wikipedia.
+- [ ] V Public
+  - [ ] Add WAF
