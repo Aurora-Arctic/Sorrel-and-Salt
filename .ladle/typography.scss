@@ -1,0 +1,34 @@
+// Document prose in the workshop (M0.32).
+//
+// M0.30/M0.31 kept _typography.scss out of the workshop: it emitted bare
+// element selectors (`h1`, `p`, `a`, `ul li::before { content: '◆' }`, …) that,
+// pulled in globally, landed on Ladle's own sidebar and toolbar chrome as much
+// as on a story. M0.32 brings it in the way it belongs — scoped to the story
+// frame, so a story renders headings, body copy and lists exactly as a page
+// does, and Ladle's chrome (which lives outside .ladle-story-frame) is
+// untouched.
+//
+// Same `typography-base` mixin the app's globals.scss uses; the only difference
+// is the selector it hangs off. .ladle-story-frame is the wrapper
+// .ladle/components.tsx puts around every story.
+
+@use '../src/scss/variables' as *;
+@use '../src/scss/mixins' as *;
+@use '../src/scss/typography' as *;
+
+// src/app/fonts.ts defines these on <html> via next/font; the workshop has no
+// next/font. Point them at the plain family names .ladle/head.html loads from
+// Google Fonts. Without this, `$font-body` / `$font-heading` start with a bare
+// `var(--font-body)` / `var(--font-display)` that resolves to nothing — and
+// with no fallback inside the var(), that takes the entire `font-family`
+// declaration down with it (invalid at computed-value time; it does NOT fall
+// through to the quoted `'Lexend'` / `'Cormorant Unicase'` next in the stack),
+// so every element renders in Ladle's default font.
+:root {
+  --font-body: 'Lexend';
+  --font-display: 'Cormorant Unicase';
+}
+
+.ladle-story-frame {
+  @include typography-base;
+}

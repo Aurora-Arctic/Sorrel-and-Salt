@@ -1,0 +1,22 @@
+<!--
+  Ladle injects this file's contents just before </head> (see
+  node_modules/@ladle/react/lib/cli/vite-plugin/vite-plugin.js).
+
+  The app self-hosts Cormorant Unicase + Lexend through next/font (src/app/fonts.ts)
+  and exposes them to Sass as `var(--font-display)` / `var(--font-body)`. The
+  workshop has no next/font, so `$font-heading` / `$font-body` fall through to the
+  named `'Cormorant Unicase'` / `'Lexend'` entries in their stacks — which only
+  render if the faces are actually loaded. This <link> loads them by name from
+  Google Fonts so the workshop's type looks like the app's. Weights match
+  src/app/fonts.ts: Cormorant Unicase 500/600/700, Lexend variable.
+
+  Dev-workshop only. The app never talks to fonts.googleapis.com — that's the
+  whole point of next/font — and `workshop:build` output is gitignored and
+  CI-only, never shipped.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Cormorant+Unicase:wght@500;600;700&family=Lexend:wght@100..900&display=swap"
+/>

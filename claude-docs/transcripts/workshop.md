@@ -98,3 +98,101 @@ Full reasoning:
   build). In `npm run workshop`: the toolbar control switches the frame and the toggle's
   facet together, first load leaves `<html>` with no `data-theme`, and the corner toggle
   no longer scrolls the page.
+
+## 2026-09-08 — M0.32 · Stories for every component in the tree
+
+Full reasoning:
+[`../design-decisions/m0.32-component-stories.md`](../design-decisions/m0.32-component-stories.md).
+
+- The tree held one component — `ThemeToggle` (M0.29) — so this task is
+  `src/components/ThemeToggle/index.stories.tsx`, grown from M0.30's single `Default`
+  render to four: `Default`, `Light`, `Dark`, `ReducedMotion`.
+- **Per-story theme pin.** `Light` / `Dark` set `.meta = { theme: 'light' | 'dark' }`.
+  Ladle passes a story's `.meta` to the `Provider` as `storyMeta`; the M0.31 decorator
+  now reads `storyMeta?.theme` and, when it's `light`/`dark`, uses it over
+  `globalState.theme` for both the `applyTheme()` call and the remount `key`. ~3 lines in
+  `.ladle/components.tsx` — the "opt-in per-story parameter" M0.31's decision doc had
+  already named as the extension point. `Default` / `ReducedMotion` set no `.meta` and
+  follow the toolbar.
+- **`ReducedMotion` renders like `Default`** — `prefers-reduced-motion: reduce` is a media
+  feature a story can't force (OS or DevTools only). Its reason for being a separate,
+  linkable story is in the source comment (Ladle's source addon shows it). It renders
+  **no** `<p>` — that would reopen M0.31's "keep `_typography.scss` out" call, so M0.32
+  keeps prose out of the DOM and the decision settled.
+- **No test ids, no snapshots, no assertions.** The stories only render; `ThemeToggle`'s
+  behaviour is already covered by `index.test.tsx` with role/label queries.
+- `claude-docs/components/theme-toggle.md` gets a **Stories** section linking the file.
+
+Then, on the same task and at the user's direction (they disagreed with M0.31's
+"keep `_typography.scss` out" call and wanted a design-language reference in the repo):
+
+- **`_typography.scss` into the workshop, scoped.** Its rules became a `typography-base`
+  mixin — the file emits nothing on `@use` now. `src/app/globals.scss` `@include`s it in
+  `body` (same rules, one `body` ancestor deeper: `h1` → `body h1`, 0,0,1 → 0,0,2;
+  component classes still win). `.ladle/typography.scss` (new) `@include`s it in
+  `.ladle-story-frame`, so every story renders prose like a page and Ladle's own chrome —
+  the `<ul>`/`<li>`/`<a>` the bare rules used to bleed onto — is outside the frame and
+  untouched.
+- **`.ladle/head.html`** (new) — Ladle injects it into `<head>`; loads Cormorant Unicase +
+  Lexend by name from Google Fonts (weights matched to `src/app/fonts.ts`) so the
+  workshop's type looks like the app's. The app self-hosts via `next/font`; the workshop
+  had no equivalent and was rendering in Arial. Dev-workshop only — the app never contacts
+  `fonts.googleapis.com` and `build/` is gitignored/CI-only.
+- **Design-language reference page** — `.ladle/design-language.{tsx,scss,stories.tsx}`,
+  titled `Design language`. Renders the type scale, `--surface-*`/`--text-*`/`--accent-*`
+  swatches, the eight `--group-*` colours as `chip()`'s two states, both `badge()`
+  palettes, `modal-surface()`, `focus-ring()`, and an "everything at once" ingredient-card
+  specimen — every value read from the real partials, none re-typed. The in-repo successor
+  to the throwaway M0.6/M0.7 exploration artifacts.
+  - **In `.ladle/`, not `src/components/`** — the app never imports it, so it isn't a
+    component. `config.mjs`'s `stories` became an array (`+ '.ladle/*.stories.tsx'`), which
+    **reverses M0.30's AC** "stories are discovered only at
+    `src/components/**/index.stories.tsx`". M0.33's gate stays "a component dir needs a
+    story"; the `.ladle/` path is the known exception. `.oxlintrc.json`'s browser-env
+    override widened `.ladle/components.tsx` → `.ladle/*.tsx`.
+  - **`design-language.scss` holds nothing the app needs** — reference chrome plus a
+    hand-rolled `.dl-btn` (buttons are a deliberate future redesign). Everything shared is
+    `@include`d from `src/scss/`. No test file: static page, no behaviour; `workshop:build`
+    in CI is the smoke test.
+  - Three stories: `Default` (follows the toolbar), `Light` / `Dark` (pin a theme via
+    `.meta`, reusing M0.32's per-story pin).
+- Verified: `workshop:build` exits 0; `build/meta.json` lists `themetoggle--default`,
+  `--light`, `--dark`, `--reduced-motion` **and** `design-language--default`, `--light`,
+  `--dark`; the story bundles carry `theme:"light"` / `"dark"`. Built CSS shows
+  `.ladle-story-frame h1 { … }` and the `◆` list marker scoped to the frame (no leak to
+  Ladle chrome), and `.dl-chip--protection` / `.dl-badge--safety` resolved through the M0.8
+  mixins. `globals.scss` recompiles; app prose rules unchanged apart from the `body`
+  prefix. lint, format:check, typecheck pass (`tsc` doesn't reach `.ladle/`; oxlint lints
+  it, clean).
+- Fonts: `$font-heading`/`$font-body` open with a bare `var(--font-*)` that `next/font`
+  fills on `<html>` in the app; the workshop had no equivalent, so the whole `font-family`
+  went invalid-at-computed-value (no fallback in the `var()` → doesn't fall through to the
+  quoted name). `.ladle/typography.scss` now defines `:root { --font-body; --font-display }`
+  to the plain family names `.ladle/head.html` loads.
+- Weight tuning (in this PR, at the user's request — the mixin/partial changes are shared,
+  so app-wide): all four heading levels go to `font-weight: 700` — Cormorant Unicase's
+  heaviest (no variable axis). A size-ramp (h1/h2 600, h3/h4 700) was tried first and wasn't
+  enough on the dark theme at h3/h4; flattened to 700. Nothing above 700 exists for this
+  face. `badge()` **and** `chip()` gain `font-weight: 500` (Lexend 300 is too thin at their
+  label sizes; M0.7's exploration had badges at 500). On the design-language page the
+  token-name labels (`.dl-swatch__name`, `.dl-group-slug`) and `.dl-btn` also go to 500.
+- Colour coverage: the page now opens with a **raw palette** section — the eight hand-picked
+  hues from `_variables.scss` with fixed hex and a purpose line — ahead of the **runtime
+  tokens** section (retitled, now carrying a purpose per `var(--token)` and `--text-on-color`
+  added). Between them they name every colour and what it's for.
+- `design-language.scss` is now wholly nested under `.dl`. `.ladle/typography.scss` scopes
+  `_typography.scss` to `.ladle-story-frame`, making a bare `p` on the page
+  `.ladle-story-frame p` (0,1,1) — which beats a plain `.dl-eyebrow` (0,1,0), so the
+  eyebrows, swatch captions and the binomial were silently rendering at body size/weight.
+  Nesting lifts every rule to (0,2,x).
+- Pulling styling back into the app partials (user: "styling should come from the app .scss,
+  not be hard-coded in ladle"): `$font-mono` added to `_variables.scss`, a `code`/`kbd`/`samp`
+  rule to `typography-base`. The page's token-name / hex / slug spans are now `<code>` styled
+  by the app, not hand-rolled monospace in `design-language.scss`. What's left local there is
+  layout lengths (no spacing/radius token) and `.dl-eyebrow` / `.dl-btn` / `.dl-binomial` —
+  treatments the app has no primitive for and M0.6–M0.8 didn't build.
+- Ingredient-card specimen: `.dl-specimen__top` is `align-items: flex-start` so the badge
+  cluster hugs its content instead of stretching to the name+binomial height; the binomial
+  matches the M0.7 artifact — italic, `0.84rem`, `opacity: 0.7` on the inherited
+  `--text-primary` (not the `--text-muted` token); the stock line splits into "on hand" /
+  "threshold" at `opacity: 0.85`.

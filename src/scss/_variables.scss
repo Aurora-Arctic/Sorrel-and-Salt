@@ -238,10 +238,16 @@ $badge-palettes: (
   // +30% lift an earlier pass used made it readable and washed out; at +18% it
   // keeps its chroma. Saturation matches the light ink's, which is what holds
   // the two halves of the palette recognisably the same red.
+  //
+  // Saturation dialled back 36% → 22% (dark) and 35% → 22% (light) so the fill
+  // reads as a deep sealing-wax red rather than a near-fluorescent one. Only
+  // saturation moves — the +18% dark lightness lift is untouched, because the
+  // label ($soot, near-black) has little contrast headroom on the fill and
+  // darkening it would break 4.5:1.
   'safety': (
       treatment: solid,
-      dark: color.adjust($wax, $saturation: 36%, $lightness: 18%),
-      light: color.adjust($wax, $saturation: 35%),
+      dark: color.adjust($wax, $saturation: 22%, $lightness: 18%),
+      light: color.adjust($wax, $saturation: 22%),
     ),
   'low-stock': (
     treatment: tinted,
@@ -373,6 +379,13 @@ $text-on-color: var(--surface-page);
 // this file without pulling in _typography.scss's global rules.
 $font-body: var(--font-body), 'Lexend', Arial, Helvetica, sans-serif;
 $font-heading: var(--font-display), 'Cormorant Unicase', Georgia, 'Times New Roman', serif;
+
+// Monospace for `<code>`, token names and tabular figures. No webfont on
+// purpose — this is for incidental inline code, not typeset code blocks, and
+// every platform ships a good UI monospace. `_typography.scss` styles `code`
+// from this; components that need it (token references, error detail) `@use`
+// the variable.
+$font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
 
 // ---------------------------------------------------------------------------
 // Motion and layout
