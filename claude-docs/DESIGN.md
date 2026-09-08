@@ -495,7 +495,7 @@ Component folders follow the `resume-2026` convention exactly — `src/component
 
 ### Componentized Sass
 
-Every component folder carries its own `index.scss`, imported by its `index.tsx`. No global stylesheet beyond the shared partials.
+Every component folder carries its own `index.scss`, imported by its `index.tsx`. One global stylesheet, `src/app/globals.scss`, imported once by the root layout — nothing component-specific in it. It exists because two things must be emitted exactly once: `_typography.scss`'s global element rules, and the theme token assignments (M0.6). Each component's `index.scss` is its own compilation unit, so a shared partial that emitted CSS would duplicate it into every compiled stylesheet — which is why `_variables.scss` and `_mixins.scss` stay declaration-only.
 
 ```
 src/components/IngredientCard/
