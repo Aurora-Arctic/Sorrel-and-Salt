@@ -1,0 +1,67 @@
+@use 'sass:color';
+
+// Ported from resume-2026's src/scss/_variables.scss. The values below are
+// that project's palette, carried over so the shared partials resolve and
+// styling can start — M0.6 is the task that picks this project's own
+// typefaces and base palette and replaces them. Names, structure and the
+// derive-don't-hand-pick discipline are the parts meant to survive.
+//
+// Not ported: the print color pair ($print-bg/$print-text) and the
+// paper-card/theme-toggle tuning knobs ($texture-dim, $theme-toggle-icon-arc,
+// $shadow-tooltip). Print styling belongs to exactly one view here and is
+// written there (M10.22); the rest described resume components that do not
+// exist in this project.
+
+// Screen colors — two independently-tunable backgrounds so the outer page
+// and the raised card surface can be recolored separately.
+$wine-dark: #110011; // outer page background
+$silver-oxide: #211d28; // card background (dark mode)
+$lavender-oxide: #a29cab; // card background (light mode)
+$wine: #6a2854; // accent color
+// Derived from $wine, not hand-picked — a "pressed" state should read as the
+// same color family just punchier, not a different hue/lightness. Uses the
+// modern sass:color module, not the deprecated global saturate().
+$grape-press: color.adjust(color.adjust($wine, $saturation: 15%), $lightness: -10%);
+// $wine lightened for dark-mode links — $wine itself doesn't have enough
+// contrast against the dark card background. Chosen for how it reads, not
+// for hitting a number: 25% only reaches ~3.86:1 against $silver-oxide,
+// short of WCAG AA's 4.5:1 (30%+ would clear it) — accepted deliberately,
+// since @media (prefers-contrast: more) in _typography.scss covers users who
+// need the stricter ratio via $text/$silver-oxide instead.
+$wine-stained: color.adjust($wine, $lightness: 25%);
+$wine-drenched: color.adjust($wine, $lightness: 10%);
+// Dark-mode-only hover state for $wine-stained text. Can't follow the usual
+// "hover = darker/punchier" convention ($grape-press, above) here — on a
+// near-black card, going darker only reduces contrast further — so this
+// differentiates via extra saturation at $wine-stained's own lightness
+// instead, keeping it above the 4.5:1 floor.
+$wine-glow: color.adjust(color.adjust($wine, $saturation: 15%), $lightness: 30%);
+// Light-mode base link color. Unlike dark mode, going darker on the
+// light-ish $lavender-oxide card *increases* contrast, so this can stay on
+// the existing darker-is-punchier convention — bare $wine alone falls short
+// of 4.5:1 against $lavender-oxide, this clears it.
+$wine-deep: color.adjust($wine, $lightness: -6%);
+$text: #e6ddf4;
+$shadow: rgba(8, 7, 9, 0.8);
+// Two shadow depths built off $shadow, reused across every drop-shadowed
+// surface rather than each spelling out its own offset/blur: elevated (the
+// card-like surfaces) and floating (small fixed-position UI chrome).
+$shadow-elevated: 0 20px 45px $shadow;
+$shadow-floating: 0 2px 8px $shadow;
+
+// Shared timing for the theme-toggle color fades, kept in one place so the
+// speed can be tuned without hunting through component stylesheets.
+$theme-transition-duration: 400ms;
+$theme-transition-easing: ease-in-out;
+
+// Font stacks — kept as plain variables (rather than only inside
+// _typography.scss) so components that just need a font-family can `@use`
+// them without also pulling in _typography.scss's global body/heading CSS
+// rules and duplicating that output into their own compiled stylesheet.
+// M0.6 replaces the families; the two-stack shape stays.
+$font-body: 'Lexend', Arial, Helvetica, sans-serif;
+$font-heading: 'Syne', Arial, Helvetica, sans-serif;
+
+// First width-based breakpoint in the project. Everything else keys off
+// `prefers-reduced-motion`/`prefers-contrast` rather than viewport width.
+$breakpoint-desktop: 1024px;

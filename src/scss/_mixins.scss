@@ -1,0 +1,49 @@
+@use 'sass:list';
+@use './variables' as *;
+
+// Ported from resume-2026's src/scss/_mixins.scss, minus the mixins that
+// described resume components rather than shared behaviour: card-surface
+// (this project's raised surfaces come from M0.8's modal-surface mixin),
+// tooltip-arrow, and print-note-heading-style (print styling is scoped to
+// the spell recipe view, M10.22).
+
+// transition: color $theme-transition-duration $theme-transition-easing,
+// background-color $theme-transition-duration $theme-transition-easing, ...
+// Every color/background/opacity fade in the app rides the same
+// duration/easing pair (see $theme-transition-duration/-easing in
+// _variables.scss) so the theme toggle and every element reacting to it stay
+// in visual lockstep — this just saves re-spelling that pair per property.
+@mixin theme-transition($props...) {
+  $transitions: ();
+
+  @each $prop in $props {
+    $transitions: list.append(
+      $transitions,
+      #{$prop} $theme-transition-duration $theme-transition-easing,
+      comma
+    );
+  }
+
+  transition: $transitions;
+}
+
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+// Shared focus-visible outline for interactive elements.
+@mixin focus-ring($color: $text) {
+  outline: 2px solid $color;
+  outline-offset: 2px;
+}
+
+// Dark mode (the default) needs antialiased/grayscale font smoothing since
+// light text on a dark background renders heavier than the reverse — see
+// html[data-theme='light'] in _typography.scss, which reverts to the
+// browser default for light mode specifically.
+@mixin font-smoothing-antialiased {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
