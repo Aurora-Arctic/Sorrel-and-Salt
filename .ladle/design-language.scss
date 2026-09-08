@@ -1,0 +1,330 @@
+@use '../src/scss/variables' as *;
+@use '../src/scss/mixins' as *;
+
+// Styles for the design-language reference page (.ladle/design-language.tsx).
+//
+// What comes from the app, not from here:
+//   - all prose — h1–h4, p, a, ul, and now `code` — from _typography.scss, via
+//     .ladle/typography.scss (which @includes the same `typography-base` mixin
+//     the app's globals.scss does)
+//   - every colour: `$surface-card` / `$text-muted` / `$accent` / … from
+//     _variables.scss
+//   - every primitive: chip() / badge() / modal-surface() / focus-ring() /
+//     theme-transition() from _mixins.scss
+//
+// What's local, and why:
+//   - layout lengths (max-width, gaps, grid tracks, padding, radii) — there is
+//     no spacing or radius token; M0.6–M0.8 are colour + type only, and
+//     CLAUDE.md says not to build styling past the tokens and mixins
+//   - `.dl-eyebrow` (an overline treatment) and `.dl-btn` (a button) — the app
+//     has no primitive for either yet; inventing one here would be unspecced
+//     design work. Flagged for the PR.
+//   - `.dl-binomial` — the italic-metadata look an IngredientCard will define
+//     later (M8.x); it borrows the M0.7 artifact's values until then
+//
+// The whole file nests under `.dl`. .ladle/typography.scss scopes
+// _typography.scss's rules to `.ladle-story-frame`, so a bare `p` on this page
+// is `.ladle-story-frame p` at (0,1,1) — which beats a plain `.dl-eyebrow`
+// (0,1,0). Nesting under `.dl` lifts every rule here to (0,2,x) so the page's
+// own captions win.
+
+$dl-groups:
+  'protection', 'cleansing', 'prosperity', 'love', 'mind', 'wellbeing', 'craft', 'practice';
+
+.dl {
+  max-width: 60rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .dl-eyebrow {
+    margin: 0;
+    font-family: $font-body;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
+
+  .dl-note {
+    max-width: 62ch;
+    color: $text-muted;
+  }
+
+  .dl-masthead,
+  .dl-sec-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .dl-foot {
+    border-top: 1px solid $text-muted;
+    padding-top: 1.5rem;
+  }
+
+  // A plain framed box on the raised surface — the neutral ground the specimens
+  // sit on. Not modal-surface(): that carries a shadow and a bigger radius
+  // meant for a floating panel, which would read as "these swatches are a
+  // dialog".
+  .dl-panel {
+    background-color: $surface-card;
+    border: 1px solid $text-muted;
+    border-radius: 0.25rem;
+    padding: 1.5rem;
+    @include theme-transition(background-color, border-color);
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
+
+  // --- type -----------------------------------------------------------------
+  // The rules come from _typography.scss (scoped in via .ladle/typography.scss);
+  // this only trims the specimen headings' bottom margin when they're stacked
+  // as samples rather than leading paragraphs.
+  .dl-type {
+    h1,
+    h2,
+    h3,
+    h4 {
+      margin-bottom: 0.25rem;
+    }
+  }
+
+  // --- swatches -----------------------------------------------------------
+  .dl-swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    gap: 1rem 1.5rem;
+  }
+
+  .dl-swatch {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .dl-swatch__bar {
+    height: 2.5rem;
+    border-radius: 0.125rem;
+    border: 1px solid $text-muted;
+  }
+
+  // `<code>` elements — the monospace family and size come from _typography.scss.
+  .dl-swatch__name {
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .dl-swatch__hex {
+    font-size: 0.8rem;
+    color: $text-muted;
+    text-transform: uppercase;
+  }
+
+  .dl-swatch__role {
+    font-size: 0.75rem;
+    color: $text-muted;
+  }
+
+  .dl-shadows {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .dl-shadow {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.25rem;
+    min-width: 14rem;
+    min-height: 5rem;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+    background-color: $surface-card;
+  }
+
+  .dl-shadow--elevated {
+    box-shadow: $shadow-elevated;
+  }
+
+  .dl-shadow--floating {
+    box-shadow: $shadow-floating;
+  }
+
+  // --- category-group chips ---------------------------------------------
+  .dl-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .dl-group-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  // `<code>` — mono family/size from _typography.scss.
+  .dl-group-slug {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: $text-muted;
+  }
+
+  @each $slug in $dl-groups {
+    .dl-chip--#{$slug} {
+      @include chip($slug);
+    }
+
+    .dl-chip--#{$slug}.is-selected {
+      @include chip($slug, selected);
+    }
+  }
+
+  // --- badges -----------------------------------------------------------
+  .dl-badges {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .dl-badge--safety {
+    @include badge('safety');
+  }
+
+  .dl-badge--low-stock {
+    @include badge('low-stock');
+  }
+
+  // --- raised panel + buttons -----------------------------------------
+  .dl-modal-demo {
+    display: flex;
+    // A distinct ground so the raised panel's shadow and lift actually read.
+    padding: 2rem;
+    border-radius: 0.25rem;
+    background-color: $surface-page;
+    border: 1px solid $text-muted;
+  }
+
+  .dl-modal {
+    @include modal-surface;
+    max-width: 24rem;
+    padding: 1.5rem;
+
+    h4 {
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  .dl-modal__actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .dl-btn {
+    font-family: $font-body;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.375rem 0.875rem;
+    border-radius: 0.25rem;
+    border: 1px solid $accent;
+    background-color: transparent;
+    color: $accent;
+    cursor: pointer;
+    @include theme-transition(background-color, border-color, color);
+
+    &:hover {
+      background-color: $accent;
+      color: $text-on-color;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
+
+  .dl-btn--secondary {
+    border-color: $secondary;
+    color: $secondary;
+
+    &:hover {
+      background-color: $secondary;
+    }
+  }
+
+  .dl-focus {
+    display: flex;
+  }
+
+  // --- specimen card --------------------------------------------------
+  .dl-specimen {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .dl-specimen__top {
+    display: flex;
+    justify-content: space-between;
+    // Top-align, so the badge cluster hugs its own content instead of
+    // stretching to the height of the name + binomial beside it.
+    align-items: flex-start;
+    gap: 1rem;
+
+    h4 {
+      margin-bottom: 0;
+    }
+  }
+
+  // Scientific name. Matches the M0.7 artifact: the body ink at 70% rather than
+  // the --text-muted token, kept italic (a binomial is always italicised), one
+  // step down in size.
+  .dl-binomial {
+    margin: 0;
+    font-style: italic;
+    font-size: 0.84rem;
+    opacity: 0.7;
+  }
+
+  .dl-specimen__badges,
+  .dl-specimen__chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .dl-specimen__stock {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0;
+    padding-top: 0.5rem;
+    border-top: 1px solid $text-muted;
+    font-size: 0.8rem;
+    color: $text-muted;
+    opacity: 0.85;
+  }
+
+  // `<code>` — mono family from _typography.scss.
+  .dl-specimen__threshold {
+    white-space: nowrap;
+  }
+}

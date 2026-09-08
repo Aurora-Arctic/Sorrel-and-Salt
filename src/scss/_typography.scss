@@ -14,122 +14,150 @@
 // light and system-preference. Nothing here should name a palette colour
 // directly — if a rule needs a hue that isn't a token yet, the token is the
 // thing to add.
+//
+// M0.32 turned the file's rules into a mixin. The app still gets them at the
+// document `<body>` (globals.scss `@include`s it there — same rules, one `body`
+// ancestor deeper), and the Ladle workshop gets the identical set scoped to its
+// story frame (.ladle/typography.scss), so a story renders prose exactly as a
+// page does without `_typography.scss`'s bare element selectors bleeding onto
+// Ladle's own `<ul>`/`<li>`/`<a>` chrome. The rules live in exactly one place;
+// only the selector they hang off differs between the two callers.
 
-body {
+// Document prose. `@include` this on the element that stands in for the page
+// body — `body` in the app, `.ladle-story-frame` in the workshop. The bare
+// declarations at the top land on that element; everything else is a
+// descendant rule.
+@mixin typography-base {
   font-family: $font-body;
   font-weight: 300;
-}
 
-h1,
-h2,
-h3,
-h4 {
-  font-family: $font-heading;
-  // Cormorant Unicase is a high-contrast display serif whose unicase forms all
-  // sit at cap height; at 500 its thin strokes go weedy on a dark ground, so
-  // headings run one step heavier than the resume-2026 port did.
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  margin: 0 0 1rem;
-  text-wrap: balance;
-}
-
-h1 {
-  font-size: clamp(2rem, 4vw, 3rem);
-  line-height: 1.1;
-}
-
-h2 {
-  font-size: 1.75rem;
-  line-height: 1.2;
-}
-
-h3 {
-  font-size: 1.375rem;
-  line-height: 1.3;
-}
-
-h4 {
-  font-size: 1.125rem;
-  line-height: 1.4;
-}
-
-p {
-  margin: 0.5rem 0;
-  font-size: 1rem;
-  line-height: 1.5;
-  font-weight: 300;
-}
-
-p,
-a,
-dt,
-dd {
-  letter-spacing: 0.02em;
-}
-
-a {
-  color: $accent;
-  transition: color 200ms $theme-transition-easing;
-
-  &:visited {
-    color: $text-primary;
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: $font-heading;
+    // Cormorant Unicase is a high-contrast display serif — delicate hairlines
+    // that thin out the smaller it's set and the darker the ground. All four
+    // levels run at 700, its heaviest weight (the face has no variable axis;
+    // src/app/fonts.ts loads 500/600/700), because 600 was hard to read at h3
+    // (1.375rem) and h4 (1.125rem) on the dark theme. There's nothing above
+    // 700 for this face — if it still reads light, the display face itself is
+    // the lever (an M0.6 decision), not the weight.
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    margin: 0 0 1rem;
+    text-wrap: balance;
   }
 
-  &:hover {
-    color: $accent-hover;
+  // Scale anchored at h4 = 1.5rem and stepped up by roughly a 1.2 ratio. The
+  // display face carries size well and the old scale (h4 1.125rem) set the
+  // smallest headings too close to body copy — see the M0.32 weight work.
+  h1 {
+    font-size: clamp(2.5rem, 5vw, 3.75rem);
+    line-height: 1.1;
   }
 
-  &:focus-visible {
-    @include focus-ring($accent);
+  h2 {
+    font-size: 2.15rem;
+    line-height: 1.15;
   }
-}
 
-// Reuse the body ink (already ≥13:1 in both themes) rather than pushing the
-// sorrel hue further with another derived token, and add an underline so links
-// don't depend on the colour difference at all — WCAG's "don't rely on colour
-// alone", for users who have explicitly asked for more contrast than the
-// baseline above already provides.
-@media (prefers-contrast: more) {
+  h3 {
+    font-size: 1.8rem;
+    line-height: 1.2;
+  }
+
+  h4 {
+    font-size: 1.5rem;
+    line-height: 1.25;
+  }
+
+  p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+    line-height: 1.5;
+    font-weight: 300;
+  }
+
+  p,
+  a,
+  dt,
+  dd {
+    letter-spacing: 0.02em;
+  }
+
+  code,
+  kbd,
+  samp {
+    font-family: $font-mono;
+    // Platform monospace runs large next to Lexend; nudge it down so an inline
+    // `code` span sits on the same visual line as the prose around it.
+    font-size: 0.9em;
+  }
+
   a {
-    color: $text-primary;
-    text-decoration: underline;
+    color: $accent;
+    transition: color 200ms $theme-transition-easing;
 
-    &:hover {
+    &:visited {
       color: $text-primary;
     }
-  }
-}
 
-header {
-  margin-bottom: 1rem;
-}
+    &:hover {
+      color: $accent-hover;
+    }
 
-section {
-  margin: 1rem 0;
-}
-
-ul {
-  margin: 0;
-  padding-left: 1.25rem;
-  list-style: none;
-
-  li {
-    position: relative;
-    margin: 0.25rem 0;
-
-    &::before {
-      content: '◆';
-      position: absolute;
-      left: -1.25rem;
-      top: -0.125rem;
-      color: $accent;
+    &:focus-visible {
+      @include focus-ring($accent);
     }
   }
-}
 
-@include reduced-motion {
-  a {
-    transition: none;
+  // Reuse the body ink (already ≥13:1 in both themes) rather than pushing the
+  // sorrel hue further with another derived token, and add an underline so
+  // links don't depend on the colour difference at all — WCAG's "don't rely on
+  // colour alone", for users who have explicitly asked for more contrast than
+  // the baseline above already provides.
+  @media (prefers-contrast: more) {
+    a {
+      color: $text-primary;
+      text-decoration: underline;
+
+      &:hover {
+        color: $text-primary;
+      }
+    }
+  }
+
+  header {
+    margin-bottom: 1rem;
+  }
+
+  section {
+    margin: 1rem 0;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    list-style: none;
+
+    li {
+      position: relative;
+      margin: 0.25rem 0;
+
+      &::before {
+        content: '◆';
+        position: absolute;
+        left: -1.25rem;
+        top: -0.125rem;
+        color: $accent;
+      }
+    }
+  }
+
+  @include reduced-motion {
+    a {
+      transition: none;
+    }
   }
 }
