@@ -1,0 +1,53 @@
+@use '../scss/variables' as *;
+@use '../scss/mixins' as *;
+@use '../scss/typography';
+
+// The single global stylesheet, imported once by the root layout. Everything
+// else is componentized Sass (§9) — this file exists because two things have
+// to be emitted exactly once and nowhere else:
+//
+//   1. _typography.scss's global element rules.
+//   2. The theme token assignments below.
+//
+// Both would be duplicated into every compiled stylesheet if a shared partial
+// emitted them, since each component's index.scss is its own compilation unit.
+// Nothing component-specific belongs here.
+
+// M0.6 — three theme states, not two. Dark is the default, and a system that
+// asks for light gets light.
+//
+//   :root                        dark — the default, and what a system with no
+//                                preference or a dark preference gets
+//   prefers-color-scheme: light  light, but only while no explicit choice
+//                                overrides it — hence the :not()
+//   [data-theme='light']         an explicit choice, which beats the system
+//
+// The :not([data-theme='dark']) guard is what lets a future theme toggle
+// (nothing sets the attribute yet) pin dark on a light-preference system. Both
+// light blocks include the same mixin so the two spellings cannot drift.
+:root {
+  @include theme-dark;
+}
+
+@media (prefers-color-scheme: light) {
+  html:not([data-theme='dark']) {
+    @include theme-light;
+  }
+}
+
+html[data-theme='light'] {
+  @include theme-light;
+}
+
+body {
+  margin: 0;
+  background-color: $surface-page;
+  color: $text-primary;
+  @include theme-transition(background-color, color);
+}
+
+@include reduced-motion {
+  body {
+    transition: none;
+  }
+}
