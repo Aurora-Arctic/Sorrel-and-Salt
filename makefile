@@ -14,9 +14,10 @@
 #   act-*                             M0.23
 #   workshop, workshop-build          M0.30
 #
-# The db-*, codegen and workshop targets below are placeholders: the script
-# names exist so nothing has to be renamed later, but they exit non-zero until
-# M1.x wires them to Drizzle, M3.x to graphql-codegen and M0.30 to Ladle.
+# The db-* and codegen targets below are placeholders: the script names exist
+# so nothing has to be renamed later, but they exit non-zero until M1.x wires
+# them to Drizzle and M3.x to graphql-codegen. The workshop targets are live as
+# of M0.30 — they run Ladle.
 
 .DEFAULT_GOAL := help
 
@@ -92,10 +93,10 @@ db-reset:
 codegen:
 	npm run codegen
 
-## Ladle component workshop dev server on 61000 (placeholder until M0.30)
+## Ladle component workshop dev server on 61000
 workshop:
 	npm run workshop
 
-## Build the static component workshop (placeholder until M0.30)
+## Build the static component workshop to ./build
 workshop-build:
 	npm run workshop:build

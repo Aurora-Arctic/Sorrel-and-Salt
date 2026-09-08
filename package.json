@@ -17,8 +17,8 @@
     "db:seed": "echo 'db:seed is not wired up yet — see M1.x' && exit 1",
     "db:reset": "echo 'db:reset is not wired up yet — see M1.x' && exit 1",
     "codegen": "echo 'codegen is not wired up yet — see M3.x' && exit 1",
-    "workshop": "echo 'workshop is not wired up yet — see M0.30' && exit 1",
-    "workshop:build": "echo 'workshop:build is not wired up yet — see M0.30' && exit 1"
+    "workshop": "ladle serve",
+    "workshop:build": "ladle build"
   },
   "pre-commit": [
     "lint",
@@ -31,6 +31,7 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@ladle/react": "^5.1.1",
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
@@ -38,7 +39,8 @@
     "pre-commit": "^2.0.0",
     "prettier": "^3.9.6",
     "sass": "^1.104.0",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vite": "^6.4.3"
   },
   "allowScripts": {
     "pre-commit@2.0.0": true
