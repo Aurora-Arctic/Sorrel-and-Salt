@@ -11,7 +11,12 @@
     "lint:fix": "oxlint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "pre-commit": "npm run lint && npm run format:check && npm run typecheck"
+    "pre-commit": "npm run lint && npm run format:check && npm run typecheck",
+    "db:generate": "echo 'db:generate is not wired up yet — see M1.x' && exit 1",
+    "db:migrate": "echo 'db:migrate is not wired up yet — see M1.x' && exit 1",
+    "db:seed": "echo 'db:seed is not wired up yet — see M1.x' && exit 1",
+    "db:reset": "echo 'db:reset is not wired up yet — see M1.x' && exit 1",
+    "codegen": "echo 'codegen is not wired up yet — see M3.x' && exit 1"
   },
   "pre-commit": [
     "lint",
