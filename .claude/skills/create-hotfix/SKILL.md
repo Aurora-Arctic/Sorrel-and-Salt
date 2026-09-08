@@ -33,7 +33,7 @@ Start a new Gitflow hotfix branch off the latest `main`, asking what to call it 
    - Skip this step entirely if step 2 produced no task ID.
    - The hotfix branch now exists and work is starting — exactly the `Not Started → In Progress` trigger in [`CLAUDE.md`](../../../CLAUDE.md)'s Asana section. Do it now, in this same turn.
    - Find the task: `asana_search_tasks` with `projects.any` = `1218257926462425` and `text` = the task ID, then match a result whose `Task ID` custom field equals it exactly (the text search is fuzzy — don't rely on it alone).
-   - If exactly one task matches: `asana_update_task` with `custom_fields` = `{"1218259502689548": "1218259502689550"}` (the `In Progress` option), then `asana_create_task_story` with a short note — e.g. "Branch `hotfix/<slug>` created off `origin/main`; work started."
+   - If exactly one task matches: add a short progress note with `asana_create_task_story` — e.g. "Branch `hotfix/<slug>` created off `origin/main`; work started." — and, **only if its current `Status` is `Not Started`**, `asana_update_task` with `custom_fields` = `{"1218259502689548": "1218259502689550"}` (the `In Progress` option). Status moves forward only: if it's already `In Progress` or later, leave it.
    - If zero or more than one task matches, don't guess — tell the user you couldn't uniquely identify the task and that they'll need to move it to `In Progress` themselves.
 
 8. **Report the result.**
