@@ -51,6 +51,127 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+// ---------------------------------------------------------------------------
+// UI primitives — M0.8
+// ---------------------------------------------------------------------------
+//
+// Three shapes, settled in M0.7's decision doc against the real colours rather
+// than invented here: a raised panel, a pill, a square-cornered badge. Each one
+// sets colour, edge and geometry and nothing else — no width, no margin, no
+// cursor, no layout. The design will change (CLAUDE.md); what these hold is the
+// part that is contrast-checked and must not be re-picked per component.
+//
+// All three name tokens through the M0.6/M0.7 accessors, so a typo is a compile
+// error and a theme swap needs no rule of its own.
+
+// The raised surface behind a modal panel. Elevation is an argument because a
+// nested surface — a confirm sitting over an already-open modal — wants the
+// floating shadow rather than a second full-strength one; the default is the
+// elevated shadow and most call sites pass nothing.
+//
+// Deliberately not here: padding, width, position, and the backdrop. A modal is
+// centred, sized and dimmed by the component that owns it (M3.x), and a mixin
+// that positioned its caller could only ever fit one modal.
+@mixin modal-surface($shadow: $shadow-elevated) {
+  background-color: $surface-card;
+  color: $text-primary;
+  border-radius: 0.5rem;
+  box-shadow: $shadow;
+
+  @include theme-transition(background-color, color);
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+// A category chip: a pill, always edged in its group's colour, in one of two
+// states. `unselected` leaves the ground transparent and lets the label wear
+// the colour; `selected` fills solid with it and inverts the label onto
+// $text-on-color.
+//
+// Solid is not decoration. M0.7 tried the obvious loud treatment — the group
+// colour as a low-opacity wash behind a coloured label — and it cannot hold
+// 4.5:1: the eight were tuned to land just above the floor, so washing the
+// ground with the same colour closes exactly the gap they were tuned for. A
+// solid fill sidesteps it and needs no new arithmetic, because the inverted
+// label *is* the page surface and its ratio is the `vs page` column already
+// tabulated. Worst pairing in the set is 4.74:1.
+//
+// Both states carry the same 1px edge and the same padding, so a row can mix
+// them without the selected ones jumping half a pixel out of rhythm.
+@mixin chip($group, $state: unselected) {
+  $color: category-group($group);
+
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1875rem 0.6875rem;
+  border: 1px solid $color;
+  border-radius: 999px;
+  font-family: $font-body;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  white-space: nowrap;
+
+  @if $state == selected {
+    background-color: $color;
+    color: $text-on-color;
+  } @else if $state == unselected {
+    background-color: transparent;
+    color: $color;
+  } @else {
+    @error 'Unknown chip state "#{$state}". Expected selected or unselected.';
+  }
+
+  @include theme-transition(background-color, border-color, color);
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+// A badge, taking a $badge-palettes key — 'safety' or 'low-stock' — rather than
+// a colour, so the two badges cannot be drawn in each other's ink.
+//
+// The palette's own declared treatment decides the drawing, which is why there
+// is no variant argument: `safety` is solid because its ink only works solid,
+// and asking for it tinted is already a compile error from badge-token(). A
+// solid badge draws no border — a solid fill is its own boundary, clearing 3:1
+// against both surfaces on its own account.
+//
+// Square-cornered, which is what keeps a badge from reading as a chip now that
+// chips are pills.
+@mixin badge($palette) {
+  $parts: badge-parts($palette);
+
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.4375rem;
+  border-radius: 2px;
+  font-family: $font-body;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  white-space: nowrap;
+
+  @if list.index($parts, 'fill') {
+    background-color: badge-token($palette, 'fill');
+    color: $text-on-color;
+    // Geometry, not an edge: it keeps a solid badge the same height as a tinted
+    // one sitting beside it on the same IngredientCard.
+    border: 1px solid transparent;
+  } @else {
+    background-color: badge-token($palette, 'bg');
+    color: badge-token($palette, 'fg');
+    border: 1px solid badge-token($palette, 'border');
+  }
+
+  @include theme-transition(background-color, border-color, color);
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
 // M0.7. The eight category-group and four badge custom properties, generated
 // from the maps in _variables.scss rather than spelled out per theme. Both
 // theme mixins call this with their own name, so the two halves cannot drift:
