@@ -30,7 +30,7 @@ Three domain nouns, each meaning exactly one thing. Used consistently in routes,
 
 | Decision | Choice | Why |
 |---|---|---|
-| Framework | Next.js 15, App Router | Needs a server runtime for sessions and audit stamping |
+| Framework | Next.js 16, App Router | Needs a server runtime for sessions and audit stamping. Was 15; moved to 16 at M0.1 because Next 15 transpiles `next.config.ts` through the TypeScript 5 JS API (`ts.sys`), which TypeScript 7 no longer exposes. `resume-2026` is on TypeScript 7 and keeping the toolchains aligned matters more than the framework minor. |
 | Database | Neon Postgres | Supabase free tier pauses after 7 days; Neon scales to zero and resumes itself |
 | ORM | Drizzle | Plain-TS schema, raw SQL where needed, no engine binary |
 | Auth | Better Auth, in-process | Organization plugin matches the workspace model; no extra service |
