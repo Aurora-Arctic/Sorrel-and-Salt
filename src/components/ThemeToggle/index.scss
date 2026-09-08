@@ -17,7 +17,7 @@ $theme-toggle-icon-arc: 130deg;
 // Radius of the quarter-circle backdrop, measured from the corner it's
 // centered on — also doubles as the button's own width/height, since a
 // square exactly that size is the smallest box the circle needs.
-$theme-toggle-corner-radius: 3rem;
+$theme-toggle-corner-radius: 3.9rem;
 
 .theme-toggle {
   position: fixed;
@@ -42,7 +42,13 @@ $theme-toggle-corner-radius: 3rem;
   background-color: $accent;
   color: $text-on-color;
   cursor: pointer;
-  @include theme-transition(background-color, color);
+  // Grow on hover from the pinned corner, the same pivot everything else in
+  // this file turns on. The $accent -> $accent-hover step is barely a shade
+  // apart on the dark theme, so colour alone can't carry the hover; the
+  // scale gives it a reading that lands the same in both themes without a
+  // second, theme-forked hover colour.
+  transform-origin: 100% 0;
+  @include theme-transition(background-color, color, transform);
 
   &:focus-visible {
     @include focus-ring($text-on-color);
@@ -50,14 +56,15 @@ $theme-toggle-corner-radius: 3rem;
 
   &:hover {
     background-color: $accent-hover;
+    transform: scale(1.07);
   }
 }
 
 .theme-toggle__facets {
   position: relative;
   display: block;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.95rem;
+  height: 1.95rem;
   overflow: visible;
   pointer-events: none;
 }
@@ -74,6 +81,32 @@ $theme-toggle-corner-radius: 3rem;
   transform-origin: 100% 0;
   @include theme-transition(transform);
   transform: rotate(0deg);
+
+  // The knotwork is not themed: the crescent is always the near-black ground
+  // ink and the sun always parchment, whichever theme is active. Only the
+  // rotate swaps them, so there is no `fill` transition to fall out of step
+  // with the button's — raw palette values, not the runtime tokens.
+  // The crescent's knotwork carries less visual weight than the sun's at the
+  // same box size, so nudge the two apart: the moon gets a 5% larger box, the
+  // sun a 5% smaller one. The sun grows/shrinks along its left and bottom
+  // edges so its top-right pivot corner stays put; the moon is deliberately
+  // let off that corner a touch, its box pushed up and right so the crescent
+  // rides slightly higher and further into the corner. Sized via the box
+  // rather than `transform: scale()` because --out / --pre-enter overwrite
+  // `transform` wholesale for the rotate choreography.
+  &--dark {
+    fill: $soot;
+    inset: -6% auto auto 6%;
+    width: 102%;
+    height: 102%;
+  }
+
+  &--light {
+    fill: $parchment;
+    inset: 0 0 5% 5%;
+    width: 95%;
+    height: 95%;
+  }
 
   &--out {
     transform: rotate($theme-toggle-icon-arc);
