@@ -3,6 +3,7 @@ import { type GlobalProvider, ThemeState } from '@ladle/react';
 import { STORAGE_KEY, applyTheme } from '../src/components/ThemeToggle';
 import './theme.scss';
 import './story-frame.scss';
+import './typography.scss';
 
 // Ladle loads this file once, ahead of every story. M0.31 grows it from M0.30's
 // passthrough into the workshop decorator. Everything it does was spotted while
@@ -22,14 +23,14 @@ import './story-frame.scss';
 //      place a theme is applied — and remount the story on every switch,
 //      because ThemeToggle reads data-theme only on mount.
 //
-// _typography.scss stays out of the workshop (M0.30 left this open). It emits
-// bare element rules — `li::before { content: '◆' }`, the `ul`/`a` resets,
-// `section`/`header` margins — that a `@use` can't scope to the story frame, so
-// pulling it in either bleeds onto Ladle's own `<ul>`/`<li>`/`<a>` chrome (the
-// reason M0.30 pulled it) or needs _typography.scss restructured to nest under
-// a selector, which is out of proportion to this task. Components style from
-// tokens and mixins, not prose (CLAUDE.md), so a story doesn't need it yet;
-// M0.32 revisits if one that renders prose arrives.
+// _typography.scss is in the workshop as of M0.32, via ./typography.scss. M0.30
+// and M0.31 had kept it out: imported globally it dropped bare element rules
+// (`li::before { content: '◆' }`, the `ul`/`a` resets, `section`/`header`
+// margins) onto Ladle's own `<ul>`/`<li>`/`<a>` chrome. The fix was to make
+// _typography.scss's rules a `typography-base` mixin and `@include` it scoped —
+// to `<body>` in the app, to `.ladle-story-frame` here — so a story renders
+// prose exactly as a page does and Ladle's chrome, outside the frame, is left
+// alone. See claude-docs/design-decisions/m0.32-component-stories.md.
 
 // Ladle hands the toolbar control's state as one of 'light' | 'dark' | 'auto'.
 // 'light'/'dark' are an explicit choice; 'auto' is the unset position.
@@ -53,8 +54,16 @@ const syncTheme = (theme: ThemeState): void => {
   }
 };
 
-export const Provider: GlobalProvider = ({ children, globalState }) => {
-  const { theme } = globalState;
+export const Provider: GlobalProvider = ({ children, globalState, storyMeta }) => {
+  // A story can pin its own theme with `MyStory.meta = { theme: 'light' | 'dark' }`
+  // — M0.31's decision doc left per-story parameters as the extension path, and
+  // M0.32's ThemeToggle `Light` / `Dark` stories are the first to use it. A
+  // pinned theme wins over the toolbar for that story (so the toolbar does
+  // nothing while it's open, which is the point); an unpinned story follows the
+  // toolbar exactly as before.
+  const pinned = storyMeta?.theme;
+  const theme =
+    pinned === ThemeState.Light || pinned === ThemeState.Dark ? pinned : globalState.theme;
 
   // Runs before paint, and — because child effects fire before a parent's —
   // Ladle's own toolbar handler has already set data-theme synchronously by the

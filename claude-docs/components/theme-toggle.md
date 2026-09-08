@@ -78,6 +78,23 @@ track the toolbar. Any future component that renders `ThemeToggle`
 indirectly and needs it to react to an external theme change would need the
 same remount, or `ThemeToggle` would need a real subscription.
 
+### Stories
+
+[`src/components/ThemeToggle/index.stories.tsx`](../../src/components/ThemeToggle/index.stories.tsx)
+(M0.32). Four renders, no test ids and no snapshots — behaviour is asserted in
+`index.test.tsx`, not here:
+
+- **Default** — follows the toolbar theme control.
+- **Light** / **Dark** — pin their theme with `.meta = { theme: '…' }`, which
+  the M0.31 decorator honours over the toolbar (see
+  [`../design-decisions/m0.32-component-stories.md`](../design-decisions/m0.32-component-stories.md)).
+  Light shows the solar-disc facet and `aria-pressed="true"`; Dark the crescent
+  and `aria-pressed="false"`.
+- **ReducedMotion** — renders like Default; a linkable home for checking the
+  component with the OS/browser `prefers-reduced-motion: reduce` setting on,
+  which a story can't force. No prose is rendered, so the workshop's
+  no-`_typography.scss` decision stays put.
+
 ## Styling
 
 Only M0.6/M0.7/M0.8 tokens and mixins: `$text-primary`, `$accent`,
