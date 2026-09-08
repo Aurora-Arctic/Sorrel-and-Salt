@@ -12,16 +12,18 @@
 #   docker-*                          M0.11–M0.13
 #   test-stories                      M1.28
 #   act-*                             M0.23
+#   workshop, workshop-build          M0.30
 #
-# The db-* and codegen targets below are placeholders: the script names exist
-# so nothing has to be renamed later, but they exit non-zero until M1.x wires
-# them to Drizzle and M3.x to graphql-codegen.
+# The db-*, codegen and workshop targets below are placeholders: the script
+# names exist so nothing has to be renamed later, but they exit non-zero until
+# M1.x wires them to Drizzle, M3.x to graphql-codegen and M0.30 to Ladle.
 
 .DEFAULT_GOAL := help
 
 .PHONY: help install dev build start \
 	lint lint-fix format format-check typecheck pre-commit \
-	db-generate db-migrate db-seed db-reset codegen
+	db-generate db-migrate db-seed db-reset codegen \
+	workshop workshop-build
 
 ## Print this list of targets
 help:
@@ -89,3 +91,11 @@ db-reset:
 ## Run graphql-codegen (placeholder until M3.x)
 codegen:
 	npm run codegen
+
+## Ladle component workshop dev server on 61000 (placeholder until M0.30)
+workshop:
+	npm run workshop
+
+## Build the static component workshop (placeholder until M0.30)
+workshop-build:
+	npm run workshop:build
