@@ -205,19 +205,62 @@ $category-groups: (
 // keeps exactly one loud badge in the app, and spends no hue — which matters,
 // because every hue not already reserved now belongs to one of the eight groups.
 //
-// Each palette is one ink per theme. Fill and edge are that ink mixed back into
-// the card surface, so a badge tints the surface it actually sits on instead of
-// carrying a hardcoded panel colour.
-$badge-palettes: (
-  'safety': (
-    dark: color.adjust($wax, $saturation: 30%, $lightness: 30%),
-    light: color.adjust($wax, $saturation: 35%),
-  ),
-  'low-stock': (
-    dark: $chalk-muted,
-    light: $ink-muted,
+// Each palette is one ink per theme plus the treatment it is drawn in, and the
+// treatment decides which parts it emits:
+//
+//   solid  — the ink fills the badge and the label inverts onto it
+//            ($text-on-color). One part, `fill`. A solid fill is its own
+//            boundary, so it needs no edge.
+//   tinted — the ink mixed back into the card surface, so the badge tints the
+//            surface it actually sits on instead of carrying a hardcoded panel
+//            colour. Three parts, `fg` / `bg` / `border`.
+//
+// A palette emits *only* its treatment's parts, which is not tidiness. The two
+// treatments want opposite things from an ink: solid wants it saturated and
+// close to mid-lightness, tinted wants it far enough from the surface to still
+// read at 12–14% strength. Safety's ink satisfies the first and fails the
+// second — `fg` on `bg` would measure 3.85 and its edge 2.78 — so those parts
+// do not exist for it, and asking for one is a compile error rather than a
+// token that quietly fails WCAG.
+$badge-treatments: (
+  solid: ('fill'),
+  tinted: (
+    'fg',
+    'bg',
+    'border',
   ),
 );
+
+$badge-palettes: (
+  // The dark ink is lifted far less in lightness than a *text* colour on soot
+  // would need, because the safety badge is drawn as a solid fill and the
+  // contrast that matters is its label's, not its own against the card. The
+  // +30% lift an earlier pass used made it readable and washed out; at +18% it
+  // keeps its chroma. Saturation matches the light ink's, which is what holds
+  // the two halves of the palette recognisably the same red.
+  'safety': (
+      treatment: solid,
+      dark: color.adjust($wax, $saturation: 36%, $lightness: 18%),
+      light: color.adjust($wax, $saturation: 35%),
+    ),
+  'low-stock': (
+    treatment: tinted,
+    dark: $chalk-muted,
+    light: $ink-muted,
+  )
+);
+
+// The parts one palette emits. Named once so the mixin's loop and the
+// accessor's validation cannot fall out of step.
+@function badge-parts($palette) {
+  $spec: map.get($badge-palettes, $palette);
+
+  @if $spec == null {
+    @error 'Unknown badge palette "#{$palette}". The palettes are: #{map.keys($badge-palettes)}.';
+  }
+
+  @return map.get($badge-treatments, map.get($spec, treatment));
+}
 
 // Mix weights, per theme rather than per palette: a tint over near-black needs
 // slightly more ink to register than the same tint over parchment. The edge
@@ -231,31 +274,34 @@ $badge-edge-weight: (
   light: 75%,
 );
 
-// $part is 'fg', 'bg' or 'border'. As with category-group-color(), only the
-// theme mixins call this.
+// There is deliberately no part for the inverted label a solid badge or chip
+// needs — see $text-on-color below. That colour is the theme's page surface
+// whatever it sits on, so it is one alias rather than a property per palette
+// and per group.
+//
+// As with category-group-color(), only the theme mixins call this.
 @function badge-palette-color($palette, $theme, $part) {
   $theme: _assert-theme($theme);
-  $inks: map.get($badge-palettes, $palette);
+  $parts: badge-parts($palette);
 
-  @if $inks == null {
-    @error 'Unknown badge palette "#{$palette}". The palettes are: #{map.keys($badge-palettes)}.';
+  @if not list.index($parts, $part) {
+    @error 'Badge palette "#{$palette}" has no part "#{$part}". It is drawn ' +
+      '#{map.get(map.get($badge-palettes, $palette), treatment)}, so its parts are: #{$parts}.';
   }
 
-  $ink: map.get($inks, $theme);
+  $ink: map.get(map.get($badge-palettes, $palette), $theme);
   $surface: $parchment-raised;
 
   @if $theme == dark {
     $surface: $soot-raised;
   }
 
-  @if $part == 'fg' {
+  @if $part == 'fill' or $part == 'fg' {
     @return $ink;
   } @else if $part == 'bg' {
     @return color.mix($ink, $surface, map.get($badge-fill-weight, $theme));
-  } @else if $part == 'border' {
-    @return color.mix($ink, $surface, map.get($badge-edge-weight, $theme));
   } @else {
-    @error 'Unknown badge part "#{$part}". Expected fg, bg or border.';
+    @return color.mix($ink, $surface, map.get($badge-edge-weight, $theme));
   }
 }
 
@@ -277,7 +323,19 @@ $secondary-hover: var(--secondary-hover);
 $shadow-elevated: var(--shadow-elevated);
 $shadow-floating: var(--shadow-floating);
 
-// The M0.7 tokens are functions rather than one variable each: there are 8 + 6
+// M0.7. The label colour for anything drawn as a *solid* fill of a group colour
+// or a badge ink — the loud chip and the safety badge. It is an alias for the
+// page surface rather than a token of its own because the answer is the same
+// whatever the fill: on dark the fill is the light thing and the label goes
+// dark, on light the reverse.
+//
+// It needs no contrast table. A solid fill's label sits on the fill, and the
+// fill's ratio against the page surface is exactly the `vs page` column already
+// published for every group and every ink — the two questions have the same
+// arithmetic. Worst pairing in the set is 4.74:1.
+$text-on-color: var(--surface-page);
+
+// The M0.7 tokens are functions rather than one variable each: there are 8 + 4
 // of them, they are always reached by name, and a function can reject a typo at
 // compile time where `var(--group-protectoin)` would fail silently in the
 // browser. Same contract as the aliases above — a component names a group or a
@@ -291,11 +349,11 @@ $shadow-floating: var(--shadow-floating);
 }
 
 @function badge-token($palette, $part) {
-  @if not map.has-key($badge-palettes, $palette) {
-    @error 'Unknown badge palette "#{$palette}". The palettes are: #{map.keys($badge-palettes)}.';
-  }
-  @if not list.index(('fg', 'bg', 'border'), $part) {
-    @error 'Unknown badge part "#{$part}". Expected fg, bg or border.';
+  $parts: badge-parts($palette);
+
+  @if not list.index($parts, $part) {
+    @error 'Badge palette "#{$palette}" has no part "#{$part}". It is drawn ' +
+      '#{map.get(map.get($badge-palettes, $palette), treatment)}, so its parts are: #{$parts}.';
   }
 
   @return var(--badge-#{$palette}-#{$part});
