@@ -32,15 +32,18 @@ choreography kept and its chrome dropped.
 ## Icons
 
 The two facets are redrawn, not ported: resume-2026's faceted polygon icons
-are replaced with Celtic knotwork — smooth interlaced curves, with an
-over-under weave that reads at the rendered size, not only zoomed in. The
-moon facet contains a crow perched in the crescent, drawn in the same
-knotwork line rather than as separate art layered on top.
+are replaced with Celtic knotwork — a woven crescent for the dark facet and
+an interlaced solar disc for the light facet, smooth curves with an
+over-under weave that reads at the rendered size, not only zoomed in. This
+is filled artwork, not stroked line icons (the resume-2026 placeholders
+were), so the `<svg>` elements carry no `stroke`. The crescent has no crow —
+the earlier plan for a perched crow was dropped.
 
-Icons are inline SVG on `currentColor`: no raster, no external asset, and no
-per-theme variant — the same two paths render in both themes because they
-inherit the button's `color`, which already changes with the theme via
-`$text-primary`/`$accent`.
+The fill is **not themed**. The crescent is always `$soot` (the near-black
+ground ink) and the sun always `$parchment`, in both themes — set per facet
+in `index.scss` from the raw palette, not the runtime tokens. Only the
+rotate swaps which one is showing; nothing about the icons transitions on a
+theme change. Icons are inline SVG, no raster and no external asset.
 
 ## Pre-paint init script
 
@@ -68,6 +71,20 @@ Only M0.6/M0.7/M0.8 tokens and mixins: `$text-primary`, `$accent`,
 colour. `$theme-toggle-icon-arc` is the one component-local constant — it
 describes the facet swap's rotation geometry, not a colour or duration the
 rest of the app shares, so it isn't a token.
+
+The facets set a fixed `fill` per modifier class — `--dark` gets `$soot`,
+`--light` gets `$parchment` — raw palette values rather than tokens, since
+they must stay the same colour in both themes. `fill` is deliberately **not**
+in the facet's `theme-transition()`: only `transform` is, so the swap is
+purely the rotate.
+
+Hover is `background-color: $accent-hover` **plus** `transform: scale(1.12)`
+from the pinned corner. On the dark theme `$accent` and `$accent-hover` are
+only a shade apart, so the colour step alone reads as almost nothing; the
+scale carries the hover and lands the same in both themes without forking a
+second hover colour per theme. It rides the shared `theme-transition()`
+duration/easing alongside the background, and `reduced-motion` zeroes it
+with the rest.
 
 ## Testing
 
