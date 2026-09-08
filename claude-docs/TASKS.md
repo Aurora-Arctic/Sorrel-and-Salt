@@ -1,6 +1,6 @@
 # Sorrel and Salt — Work Breakdown
 
-186 tasks across 12 milestones, 302 estimated hours. Every task is one PR, sized 1–2 hours, reviewable in under 15 minutes.
+190 tasks across 12 milestones, 308 estimated hours. Every task is one PR, sized 1–2 hours, reviewable in under 15 minutes.
 
 Story references point at the numbered user stories in §10 of the design doc. Infrastructure tasks carry developer-facing stories instead.
 
@@ -27,11 +27,12 @@ Also deferred: edit history, viewer spell approval, compendium suggestions and m
 
 ## M0 — Repo, tooling & environment
 
-_29 tasks · 39 hours_
+_33 tasks · 45 hours_
 
 **Sequencing**
 
 - M0.6 blocks M0.7, M0.8 and M0.29 — the semantic tokens, the mixins and the theme toggle all derive from the base palette, so picking it late means redoing them.
+- M0.30 stands up the component workshop and blocks M0.31, M0.32 and M0.33. It needs M0.5's Sass partials; the theme decorator (M0.31) and the first stories (M0.32) also need M0.29. The workshop numbers sit after M0.29 for the same reason it does — added after the original breakdown.
 - M0.18 blocks M0.19 and the final image tag in M0.13.
 - M0.18 ships an image with extensions and an empty template only. Migrations and seed are baked in later, by M1.27. Do not try to bake a schema that does not exist yet.
 
@@ -193,6 +194,72 @@ _Acceptance criteria:_
 - Every ported skill references commands that actually exist in this repo
 - Gatsby-specific skills are excluded, not copied and edited into uselessness
 - CLAUDE.md lists the available skills and their triggers
+
+### Component workshop
+
+_Added after the original breakdown, alongside M0.29. Ladle rather than Storybook — see M0.30 for the reasoning. Depends on M0.5 and M0.6; the decorator and the first stories also depend on M0.29. Nothing later depends on these._
+
+**M0.30 — Stand up Ladle as the component workshop** · 2h
+
+_Story:_ As a developer, I want every component to render in isolation so that I can build and review it against the tokens without routing a page to it.
+
+Greenfield tooling choice, not a port — resume-2026 has no workshop. Add `@ladle/react` and the `vite` it needs as devDependencies. **Ladle, not Storybook or Histoire:** it is Vite + React only, so it never couples the workshop to a Next.js major — this lands mid-Next-16, ahead of Storybook's Next framework; it installs an order of magnitude lighter; and its config is one file. Storybook's one real advantage here, running stories through the planned Vitest projects, is thin — the repo already fixes component testing on role and label queries and accessibility on Playwright + `@axe-core/playwright`, neither of which wants a story runner. Histoire's React plugin trails its Vue one and is not a safe bet on React 19.
+
+- `.ladle/config.mjs` points `stories` at `src/components/**/index.stories.tsx` — one file per component directory, beside `index.tsx` and `index.test.tsx`, imported the same way.
+- A Ladle Vite config wires `css.preprocessorOptions.scss` so `@use '../../scss/variables' as *;` resolves exactly as it does under `next dev`. The workshop and the app must not disagree on Sass.
+- `npm run workshop` serves on port **61000**; `npm run workshop:build` writes a static build to a gitignored `build/`. The backlog PR that added this task already left both script names in `package.json` and `makefile` as failing placeholders; this task points them at Ladle.
+- `make workshop` and `make workshop-build` wrap the scripts, and both show in `make help`.
+
+_Acceptance criteria:_
+
+- `npm run workshop` and `make workshop` both serve the workshop on 61000
+- `npm run workshop:build` exits zero and writes a gitignored static build
+- A story using `@use '../../scss/...' as *` compiles with the same resolution as `next dev`
+- `make help` lists `workshop` and `workshop-build`, and no workshop script is still a placeholder
+- Stories are discovered only at `src/components/**/index.stories.tsx`
+- The choice of Ladle over Storybook and Histoire, with reasoning, is recorded in `claude-docs/`
+
+**M0.31 — Theme and token decorator for the workshop** · 1h
+
+_Story:_ As a developer, I want stories to render on the real surface in both themes so that what I see in the workshop is what ships.
+
+Add a global Ladle decorator that wraps every story in the app surface — the `globals.scss` body background, `$text-primary`, and the M0.7/M0.8 tokens in scope — and a light/dark control in the Ladle toolbar that stamps `html[data-theme]` through the **same** helper M0.29 ships, not a second copy. With the control unset, nothing is written and `prefers-color-scheme` decides, matching M0.29's rule that an absent attribute is a valid state. Depends on M0.6, M0.29 and M0.30.
+
+_Acceptance criteria:_
+
+- Every story renders against the `globals.scss` body surface with no per-story setup
+- A toolbar control switches the story frame between light and dark
+- The switch calls the M0.29 helper; there is no duplicate theme-setting code
+- With the control unset, no `data-theme` is written and `prefers-color-scheme` decides
+- The decorator uses only M0.6/M0.7/M0.8 tokens and mixins
+
+**M0.32 — Stories for every component already in the tree** · 1h
+
+_Story:_ As a developer, I want the components that already exist to be in the workshop the day it lands, not eventually.
+
+Add `index.stories.tsx` for every directory under `src/components/` that exists when this task starts — the task is "whatever is in `src/components/`", not a fixed list. Today that is `ThemeToggle` (M0.29); anything merged in the meantime is in scope too. Each story covers the component's meaningful states — for `ThemeToggle`: light selected, dark selected, and reduced-motion. Role and label queries only if a story asserts anything; no test ids; no snapshots. Depends on M0.29 and M0.30.
+
+_Acceptance criteria:_
+
+- Every `src/components/<Name>/` directory has an `index.stories.tsx`
+- `ThemeToggle` has stories for light, dark and reduced-motion
+- `npm run workshop:build` builds them with no errors
+- No test ids and no snapshots in the story files
+- Each component's `claude-docs/components/` doc links its story
+
+**M0.33 — Gate: no standalone component without a story** · 2h
+
+_Story:_ As a developer, I want CI to fail when a component ships without a workshop entry so that "every future component is in the workshop" is enforced, not remembered.
+
+Add a check that fails when any `src/components/<Name>/index.tsx` has no sibling `index.stories.tsx` — an Oxlint rule if it can express "directory has `index.tsx` ⇒ directory has `index.stories.tsx`", otherwise a small script under `scripts/` run from `pre-commit` and CI. Add `npm run workshop:build` to the CI build job (M0.17) and the PR gate (M0.20) so a story that throws fails the PR. Record the rule in CLAUDE.md next to the component-layout convention; if the M0.10 component-documentation skill has landed, its checklist names the story file as a required part of a component PR. Depends on M0.30; touches the M0.17 and M0.20 workflows.
+
+_Acceptance criteria:_
+
+- A component directory with `index.tsx` and no `index.stories.tsx` fails the check locally and in CI
+- The check runs in `pre-commit` and in the PR gate
+- `workshop:build` runs in CI and a throwing story fails the build
+- CLAUDE.md Conventions states the one-story-per-standalone-component rule
+- If M0.10 has landed, its component checklist names the story file
 
 ### Local dev environment
 

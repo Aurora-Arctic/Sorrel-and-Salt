@@ -2,7 +2,7 @@
 
 Guidance for Claude Code working in this repository.
 
-`claude-docs/DESIGN.md` is the specification and `claude-docs/TASKS.md` is the work breakdown (186 tasks, 12 milestones; `TASKS.csv` beside it is the same breakdown exported for a project tracker). This file carries the rules that apply to _every_ task; the section references below (§n) point into `DESIGN.md`, and milestone references (M0.1) into `TASKS.md`. When this file and the design doc disagree, the design doc wins — and fix this file.
+`claude-docs/DESIGN.md` is the specification and `claude-docs/TASKS.md` is the work breakdown (190 tasks, 12 milestones; `TASKS.csv` beside it is the same breakdown exported for a project tracker). This file carries the rules that apply to _every_ task; the section references below (§n) point into `DESIGN.md`, and milestone references (M0.1) into `TASKS.md`. When this file and the design doc disagree, the design doc wins — and fix this file.
 
 **Status: pre-scaffold.** The repo currently contains documentation only. Nothing under "Commands" exists until the milestone that creates it lands (M0.1–M0.4 for the toolchain, M1.3 for the database scripts). Do not assume a command runs; check first.
 
@@ -28,18 +28,20 @@ The schema entity is `workspaces`; the URL prefix is `/coven/`. This divergence 
 
 Once M0.4 lands, `make help` lists every target. Expected surface:
 
-| Command                                                       | Purpose                                                       |
-| ------------------------------------------------------------- | ------------------------------------------------------------- |
-| `npm run dev`                                                 | Next.js dev server on **8000**                                |
-| `npm run build` / `npm run start`                             | Production build; e2e runs it on **8001**                     |
-| `npm run lint` / `format:check` / `typecheck`                 | The pre-commit trio                                           |
-| `npm run test:coverage`                                       | Vitest, both projects (`unit` jsdom + `db` node/Postgres)     |
-| `make test-stories`                                           | Acceptance suite only; prints a pass/fail line per user story |
-| `make docker-up`                                              | App + Postgres 17 locally, no Neon connection needed          |
-| `make db-reset`                                               | Drop, migrate, reseed local                                   |
-| `npm run db:generate` / `db:migrate` / `db:seed` / `db:reset` | Drizzle migrations and seed                                   |
-| `npm run codegen`                                             | graphql-codegen; CI fails if output is stale                  |
-| `make act-*`                                                  | Run a CI workflow locally via act                             |
+| Command                                                       | Purpose                                                           |
+| ------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `npm run dev`                                                 | Next.js dev server on **8000**                                    |
+| `npm run build` / `npm run start`                             | Production build; e2e runs it on **8001**                         |
+| `npm run lint` / `format:check` / `typecheck`                 | The pre-commit trio                                               |
+| `npm run test:coverage`                                       | Vitest, both projects (`unit` jsdom + `db` node/Postgres)         |
+| `make test-stories`                                           | Acceptance suite only; prints a pass/fail line per user story     |
+| `make docker-up`                                              | App + Postgres 17 locally, no Neon connection needed              |
+| `make db-reset`                                               | Drop, migrate, reseed local                                       |
+| `npm run db:generate` / `db:migrate` / `db:seed` / `db:reset` | Drizzle migrations and seed                                       |
+| `npm run codegen`                                             | graphql-codegen; CI fails if output is stale                      |
+| `npm run workshop` / `workshop:build`                         | Ladle component workshop; `:build` is the static export CI checks |
+| `make workshop`                                               | Ladle component workshop on **61000**                             |
+| `make act-*`                                                  | Run a CI workflow locally via act                                 |
 
 **Verify with the `:coverage` variants.** A plain `npm run test` pass can still fail CI on the 80% threshold (lines, branches, functions, statements) alone. Carried over from `resume-2026`.
 
@@ -114,6 +116,7 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 - A task is done when every acceptance criterion is demonstrably met — not when the code appears to work.
 - **Port, don't rewrite from memory.** The source repo for all ports is `resume-2026`.
 - **Components:** `src/components/<Name>/` with `index.tsx`, `index.scss`, `index.test.tsx`, imported `from '../components/IngredientCard'`.
+- **Every standalone component ships an `index.stories.tsx`** in the same directory. The Ladle workshop (M0.30) discovers components by that file, and CI (M0.33) fails a component that has `index.tsx` without it. Stories carry no test ids and no snapshots.
 - **Sass:** modern module system only — `@use '../../scss/variables' as *;`, never `@import`. Shared partials in `src/scss/` are `@use`'d directly by whichever component needs them, never routed through a parent.
 - **The design will change.** Do not build component styling beyond the tokens (M0.7) and mixins (M0.8).
 - **No print styles anywhere except the spell recipe view** (M10.22). `_print.scss` is created by that task and scoped to it.

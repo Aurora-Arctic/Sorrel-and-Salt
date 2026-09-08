@@ -16,7 +16,9 @@
     "db:migrate": "echo 'db:migrate is not wired up yet — see M1.x' && exit 1",
     "db:seed": "echo 'db:seed is not wired up yet — see M1.x' && exit 1",
     "db:reset": "echo 'db:reset is not wired up yet — see M1.x' && exit 1",
-    "codegen": "echo 'codegen is not wired up yet — see M3.x' && exit 1"
+    "codegen": "echo 'codegen is not wired up yet — see M3.x' && exit 1",
+    "workshop": "echo 'workshop is not wired up yet — see M0.30' && exit 1",
+    "workshop:build": "echo 'workshop:build is not wired up yet — see M0.30' && exit 1"
   },
   "pre-commit": [
     "lint",
