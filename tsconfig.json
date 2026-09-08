@@ -31,5 +31,13 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    // *.test.tsx imports `vitest` and `@testing-library/react`, neither
+    // installed until M1.7. ThemeToggle (M0.29) is the only component before
+    // then that ships a test file per the TDD convention — narrow and
+    // temporary; M1.7 removes this exclusion when it adds the real
+    // dependencies and wires up the runner.
+    "src/**/*.test.tsx"
+  ]
 }
