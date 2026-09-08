@@ -8,8 +8,16 @@
     "start": "next start --hostname 0.0.0.0 --port \"${PORT:-8000}\"",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint .",
-    "lint:fix": "oxlint . --fix"
+    "lint:fix": "oxlint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "pre-commit": "npm run lint && npm run format:check && npm run typecheck"
   },
+  "pre-commit": [
+    "lint",
+    "format:check",
+    "typecheck"
+  ],
   "dependencies": {
     "next": "^16.3.4",
     "react": "^19.2.8",
@@ -20,6 +28,11 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "oxlint": "^1.82.0",
+    "pre-commit": "^2.0.0",
+    "prettier": "^3.9.6",
     "typescript": "^7.0.2"
+  },
+  "allowScripts": {
+    "pre-commit@2.0.0": true
   }
 }
