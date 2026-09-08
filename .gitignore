@@ -1,0 +1,75 @@
+# Dependencies
+node_modules
+
+# Next.js
+.next
+out
+next-env.d.ts
+.vercel
+
+# Build output
+dist
+build
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Tests and coverage
+coverage
+coverage-e2e
+playwright-report
+blob-report
+test-results
+playwright/.cache
+playwright/.auth
+.vitest
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment — commit .env.example, never a real one
+.env
+.env.*
+!.env.example
+.env*.local
+Docker/.env
+
+# Local database and container state
+Docker/claude-home
+pgdata
+docker-data
+*.dump
+*.sql.gz
+
+# act (local CI runs)
+.actrc.local
+.secrets
+
+# Editors and IDEs
+.idea
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+*~
+
+# Claude Code — shared config is tracked, per-developer overrides are not
+.claude/settings.local.json
+.claude/*.local.json
+
+# OS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+
+# Scratch
+.scratch**.**
+tmp
+.cache

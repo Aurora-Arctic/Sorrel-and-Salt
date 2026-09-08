@@ -1,5 +1,5 @@
 Name,Subtask of,Section/Column,Notes,Estimate (hrs),Task ID,Type
-M0 · Repo bootstrap,,"M0 — Repo, tooling & environment",Feature grouping. 10 tasks.,,,Feature
+M0 · Repo bootstrap,,"M0 — Repo, tooling & environment",Feature grouping. 11 tasks.,,,Feature
 M0.1 — Scaffold Next.js 15 App Router with strict TypeScript,M0 · Repo bootstrap,"M0 — Repo, tooling & environment","USER STORY
 As a developer, I want a running Next.js 15 App Router project with strict TypeScript so that every later task builds on the framework the design doc chose.
 
@@ -108,6 +108,91 @@ ACCEPTANCE CRITERIA
 - Every ported skill references commands that actually exist in this repo
 - Gatsby-specific skills are excluded, not copied and edited into uselessness
 - CLAUDE.md lists the available skills and their triggers",2,M0.10,Task
+M0.29 — Port the ThemeToggle component from resume-2026,M0 · Repo bootstrap,"M0 — Repo, tooling & environment","USER STORY
+As a user, I want to choose light or dark for myself so that the app matches the room I am in rather than the preference my operating system happens to carry.
+
+DESCRIPTION
+Port src/components/ThemeToggle/ from resume-2026 — the button, the two SVG facets (moon and sun) and the rotate-through-the-top facet swap, including the transitionend reset to --pre-enter that keeps a fast double-click from stranding a facet out of view. Drive it off the M0.6 tokens ($text-primary, $accent, theme-transition(), reduced-motion) and nothing else: the resume-2026 stylesheet's folded-corner chrome, its $silver-oxide / $lavender-oxide borders, its _buttons.scss base and its print-hidden all stay behind — the first two are that design's, and the last two are files this repo does not have and will not get outside M10.22.
+
+ICONS — redraw, do not port
+The two facets are the one part of resume-2026 that does not come across as-is. Redraw both in Celtic knotwork: smooth interlaced curves rather than the faceted polygons the source uses, with the over-under weave reading at the rendered size and not only when zoomed. The moon facet gains a crow — perched in or sitting within the crescent, its lines continuing the same knotwork rather than sitting on top of it as separate art. Generating the SVG paths with a Claude model is fine and expected; what lands still has to be hand-checked as inline single-path-set SVG on currentColor, with no raster, no external asset and no per-theme variant.
+
+Drop the Tooltip wrapper. It is a separate component that is not ported, and the button's aria-label already names the action.
+
+Add the pre-paint init script to the root layout in place of resume-2026's gatsby-ssr.ts, with one deliberate behavioural change: set data-theme only when a stored choice exists. M0.6's globals.scss resolves an absent attribute through prefers-color-scheme, so stamping the resolved theme on every load would dead-end that tier and force the script to grow the matchMedia change listener that resume-2026 carries. Storage writes stay in a try/catch — a blocked localStorage costs persistence, not the toggle.
+
+Added after the original breakdown, which is why the number sits out of sequence. Depends on M0.6 and on nothing later.
+
+ACCEPTANCE CRITERIA
+- Clicking toggles html[data-theme] between light and dark and persists the choice under the theme key
+- With no stored choice, no data-theme attribute is set and the system preference still decides
+- aria-pressed reflects the current mode, and the button is reachable and operable by keyboard
+- No flash of the wrong theme on first paint with a stored choice, JS enabled
+- Facets survive a click mid-transition — neither is left parked out of view
+- Both facets are smooth knotwork curves, not the resume-2026 polygons, and the weave reads at the rendered size
+- The moon facet contains a crow, drawn in the same knotwork line
+- Icons are inline SVG on currentColor — no raster, no external asset, no per-theme variant
+- The whole toggle respects prefers-reduced-motion
+- Component tests query by role and name only, per the repo convention
+- Styling uses only M0.6/M0.7/M0.8 tokens and mixins; no _buttons.scss, no _print.scss, no new hand-picked colour
+- Documented in claude-docs/components/",2,M0.29,Task
+M0 · Component workshop,,"M0 — Repo, tooling & environment",Feature grouping. 4 tasks.,,,Feature
+M0.30 — Stand up Ladle as the component workshop,M0 · Component workshop,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want every component to render in isolation so that I can build and review it against the tokens without routing a page to it.
+
+DESCRIPTION
+Greenfield tooling choice, not a port — resume-2026 has no workshop. Add @ladle/react and the vite it needs as devDependencies. Ladle, not Storybook or Histoire: it is Vite + React only, so it never couples the workshop to a Next.js major — this lands mid-Next-16, ahead of Storybook's Next framework; it installs an order of magnitude lighter; and its config is one file. Storybook's one real advantage here, running stories through the planned Vitest projects, is thin — the repo already fixes component testing on role and label queries and accessibility on Playwright + @axe-core/playwright, neither of which wants a story runner. Histoire's React plugin trails its Vue one and is not a safe bet on React 19.
+
+- .ladle/config.mjs points stories at src/components/**/index.stories.tsx — one file per component directory, beside index.tsx and index.test.tsx, imported the same way.
+- A Ladle Vite config wires css.preprocessorOptions.scss so @use '../../scss/variables' as *; resolves exactly as it does under next dev. The workshop and the app must not disagree on Sass.
+- npm run workshop serves on port 61000; npm run workshop:build writes a static build to a gitignored build/. The backlog PR that added this task already left both script names in package.json and makefile as failing placeholders; this task points them at Ladle.
+- make workshop and make workshop-build wrap the scripts, and both show in make help.
+
+Added after the original breakdown, alongside M0.29. Depends on M0.5 and M0.6.
+
+ACCEPTANCE CRITERIA
+- npm run workshop and make workshop both serve the workshop on 61000
+- npm run workshop:build exits zero and writes a gitignored static build
+- A story using @use '../../scss/...' as * compiles with the same resolution as next dev
+- make help lists workshop and workshop-build, and no workshop script is still a placeholder
+- Stories are discovered only at src/components/**/index.stories.tsx
+- The choice of Ladle over Storybook and Histoire, with reasoning, is recorded in claude-docs/",2,M0.30,Task
+M0.31 — Theme and token decorator for the workshop,M0 · Component workshop,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want stories to render on the real surface in both themes so that what I see in the workshop is what ships.
+
+DESCRIPTION
+Add a global Ladle decorator that wraps every story in the app surface — the globals.scss body background, $text-primary, and the M0.7/M0.8 tokens in scope — and a light/dark control in the Ladle toolbar that stamps html[data-theme] through the same helper M0.29 ships, not a second copy. With the control unset, nothing is written and prefers-color-scheme decides, matching M0.29's rule that an absent attribute is a valid state. Depends on M0.6, M0.29 and M0.30.
+
+ACCEPTANCE CRITERIA
+- Every story renders against the globals.scss body surface with no per-story setup
+- A toolbar control switches the story frame between light and dark
+- The switch calls the M0.29 helper; there is no duplicate theme-setting code
+- With the control unset, no data-theme is written and prefers-color-scheme decides
+- The decorator uses only M0.6/M0.7/M0.8 tokens and mixins",1,M0.31,Task
+M0.32 — Stories for every component already in the tree,M0 · Component workshop,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want the components that already exist to be in the workshop the day it lands, not eventually.
+
+DESCRIPTION
+Add index.stories.tsx for every directory under src/components/ that exists when this task starts — the task is ""whatever is in src/components/"", not a fixed list. Today that is ThemeToggle (M0.29); anything merged in the meantime is in scope too. Each story covers the component's meaningful states — for ThemeToggle: light selected, dark selected, and reduced-motion. Role and label queries only if a story asserts anything; no test ids; no snapshots. Depends on M0.29 and M0.30.
+
+ACCEPTANCE CRITERIA
+- Every src/components/<Name>/ directory has an index.stories.tsx
+- ThemeToggle has stories for light, dark and reduced-motion
+- npm run workshop:build builds them with no errors
+- No test ids and no snapshots in the story files
+- Each component's claude-docs/components/ doc links its story",1,M0.32,Task
+M0.33 — Gate: no standalone component without a story,M0 · Component workshop,"M0 — Repo, tooling & environment","USER STORY
+As a developer, I want CI to fail when a component ships without a workshop entry so that ""every future component is in the workshop"" is enforced, not remembered.
+
+DESCRIPTION
+Add a check that fails when any src/components/<Name>/index.tsx has no sibling index.stories.tsx — an Oxlint rule if it can express ""directory has index.tsx implies directory has index.stories.tsx"", otherwise a small script under scripts/ run from pre-commit and CI. Add npm run workshop:build to the CI build job (M0.17) and the PR gate (M0.20) so a story that throws fails the PR. Record the rule in CLAUDE.md next to the component-layout convention; if the M0.10 component-documentation skill has landed, its checklist names the story file as a required part of a component PR. Depends on M0.30; touches the M0.17 and M0.20 workflows.
+
+ACCEPTANCE CRITERIA
+- A component directory with index.tsx and no index.stories.tsx fails the check locally and in CI
+- The check runs in pre-commit and in the PR gate
+- workshop:build runs in CI and a throwing story fails the build
+- CLAUDE.md Conventions states the one-story-per-standalone-component rule
+- If M0.10 has landed, its component checklist names the story file",2,M0.33,Task
 M0 · Local dev environment,,"M0 — Repo, tooling & environment",Feature grouping. 4 tasks.,,,Feature
 M0.11 — Slim two-stage Dockerfile.node,M0 · Local dev environment,"M0 — Repo, tooling & environment","USER STORY
 As a developer, I want a small image so that pulls, CI cold starts and rebuilds stay fast.

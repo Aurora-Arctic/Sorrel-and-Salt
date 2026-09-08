@@ -1,0 +1,16 @@
+# Dependencies
+node_modules
+
+# Next.js build output and generated types
+.next
+out
+next-env.d.ts
+
+# Machine-generated lockfile
+package-lock.json
+
+# Test output
+coverage
+coverage-e2e
+playwright-report
+test-results
