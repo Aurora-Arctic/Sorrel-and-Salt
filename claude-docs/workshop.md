@@ -66,3 +66,25 @@ component in the tree got its stories in M0.32; the CI gate is M0.33.
   holds only reference-page chrome. `Default` follows the toolbar; `Light` / `Dark` pin a theme.
   The in-repo successor to the M0.6 / M0.7 exploration artifacts. Reasoning:
   [`design-decisions/m0.32-component-stories.md`](design-decisions/m0.32-component-stories.md).
+
+## Stopgaps to unwind
+
+The workshop's font plumbing is a Vite-side substitute for what `next/font` +
+`src/app/layout.tsx` do at runtime — the app never defines `--font-body` /
+`--font-display` in a stylesheet, so there is nothing to import. Until the app
+grows a shared source for the font families:
+
+- **`--font-body` / `--font-display` are redefined in `.ladle/typography.scss`'s
+  `:root` block.** When the app exposes these values in a shared partial (a Sass
+  map, or a dedicated sheet the app `@use`s rather than next/font-generated
+  classes), delete the `.ladle/` copy and `@use` that. The family names
+  (`'Lexend'`, `'Cormorant Unicase'`) are currently written in three places that
+  must agree: the `$font-*` fallback stacks in `src/scss/_variables.scss`, the
+  Google Fonts URL in `.ladle/head.html`, and this `:root` override.
+- **`.ladle/head.html` pulls the faces from `fonts.googleapis.com`** — the one
+  place in the project that does, against the app's self-hosting rule. Switch to
+  self-hosted `@fontsource` so `workshop:build` needs no network access to Google.
+- **The `:root` override lives in `.ladle/typography.scss`** (prose rules).
+  Move it to its own `.ladle/fonts.scss` alongside the `head.html` concern.
+
+Introduced in M0.32.
