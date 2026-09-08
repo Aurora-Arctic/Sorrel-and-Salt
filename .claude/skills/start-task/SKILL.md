@@ -35,7 +35,7 @@ The `Type` field is `1218257926462440`; its options are `Feature` (`121825792646
    - `Type` unset, or some value not in that list → don't assume: tell the user what the field holds and ask (AskUserQuestion) whether to run `create-feature` or `create-hotfix`.
 
 5. **Hand off.**
-   - Follow the chosen skill's `SKILL.md` from its step 1, with one change: its step 2 asks for both a branch name and the Asana Task ID — the Task ID is already known from step 1 here, so don't re-ask it, only ask for the branch name. Offer a slug suggestion drawn from the task name (the part after the `M0.x — ` prefix), but let the user override it.
+   - Follow the chosen skill's `SKILL.md` from its step 1, with one change: its step 2 asks for both a branch name and the Asana Task ID — both are already known here, so skip that question entirely. The Task ID came from step 1; derive the branch slug automatically from the task name — take the part after the `M0.x — ` prefix, slugify it per the chosen skill's step 3, drop leading filler verbs/articles (`add`, `create`, `stand up`, `the`, `a`), keep at most the first 6 words, and prefix the lowercased milestone id (e.g. `M0.30 — Stand up Ladle as the component workshop` → `m0.30-ladle-component-workshop`). Don't ask the user to confirm or override it; just state the branch name you're using.
    - Everything else in that skill runs unchanged — including its step 7, which moves this task to `In Progress`.
 
 ## Notes
