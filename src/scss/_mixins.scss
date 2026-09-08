@@ -51,7 +51,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-// M0.7. The eight category-group and six badge custom properties, generated
+// M0.7. The eight category-group and four badge custom properties, generated
 // from the maps in _variables.scss rather than spelled out per theme. Both
 // theme mixins call this with their own name, so the two halves cannot drift:
 // adding a group or changing a mix weight is one edit in one place.
@@ -61,7 +61,7 @@
   }
 
   @each $palette in map.keys($badge-palettes) {
-    @each $part in ('fg', 'bg', 'border') {
+    @each $part in badge-parts($palette) {
       --badge-#{$palette}-#{$part}: #{badge-palette-color($palette, $theme, $part)};
     }
   }
