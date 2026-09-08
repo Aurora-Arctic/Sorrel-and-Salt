@@ -33,17 +33,65 @@
   }
 }
 
-// Shared focus-visible outline for interactive elements.
-@mixin focus-ring($color: $text) {
+// Shared focus-visible outline for interactive elements. Defaults to the body
+// ink token, so the ring re-colours with the theme without the call site
+// naming a theme.
+@mixin focus-ring($color: $text-primary) {
   outline: 2px solid $color;
   outline-offset: 2px;
 }
 
 // Dark mode (the default) needs antialiased/grayscale font smoothing since
-// light text on a dark background renders heavier than the reverse — see
-// html[data-theme='light'] in _typography.scss, which reverts to the
-// browser default for light mode specifically.
+// light text on a dark background renders heavier than the reverse. Light mode
+// reverts to the browser default — see theme-dark/theme-light below, which are
+// the only two callers.
 @mixin font-smoothing-antialiased {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+// M0.6. The two halves of the palette, as the custom properties named by the
+// token aliases in _variables.scss.
+//
+// These are mixins rather than plain rules because globals.scss has to emit
+// the light half twice — once for `prefers-color-scheme: light` and once for
+// an explicit `data-theme='light'` — and a palette that can drift between
+// those two spellings is a bug waiting to happen. Only globals.scss includes
+// them; a component that includes one is re-theming a subtree, which nothing
+// in this project does.
+@mixin theme-dark {
+  // Tells the browser which way round the theme runs, so form controls,
+  // scrollbars and the canvas behind the page match it without being styled.
+  color-scheme: dark;
+
+  --surface-page: #{$soot};
+  --surface-card: #{$soot-raised};
+  --text-primary: #{$chalk};
+  --text-muted: #{$chalk-muted};
+  --accent: #{$sorrel-bright};
+  --accent-hover: #{$sorrel-glow};
+  --secondary: #{$wax-warm};
+  --secondary-hover: #{$wax-glow};
+  --shadow-elevated: 0 20px 45px #{$shadow-dark};
+  --shadow-floating: 0 2px 8px #{$shadow-dark};
+
+  @include font-smoothing-antialiased;
+}
+
+@mixin theme-light {
+  color-scheme: light;
+
+  --surface-page: #{$parchment};
+  --surface-card: #{$parchment-raised};
+  --text-primary: #{$iron-gall};
+  --text-muted: #{$ink-muted};
+  --accent: #{$sorrel};
+  --accent-hover: #{$sorrel-deep};
+  --secondary: #{$wax};
+  --secondary-hover: #{$wax-deep};
+  --shadow-elevated: 0 20px 45px #{$shadow-light};
+  --shadow-floating: 0 2px 8px #{$shadow-light};
+
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
 }
