@@ -2,7 +2,7 @@
 
 Guidance for Claude Code working in this repository.
 
-`claude-docs/DESIGN.md` is the specification and `claude-docs/TASKS.md` is the work breakdown (185 tasks, 12 milestones; `TASKS.csv` beside it is the same breakdown exported for a project tracker). This file carries the rules that apply to _every_ task; the section references below (§n) point into `DESIGN.md`, and milestone references (M0.1) into `TASKS.md`. When this file and the design doc disagree, the design doc wins — and fix this file.
+`claude-docs/DESIGN.md` is the specification and `claude-docs/TASKS.md` is the work breakdown (186 tasks, 12 milestones; `TASKS.csv` beside it is the same breakdown exported for a project tracker). This file carries the rules that apply to _every_ task; the section references below (§n) point into `DESIGN.md`, and milestone references (M0.1) into `TASKS.md`. When this file and the design doc disagree, the design doc wins — and fix this file.
 
 **Status: pre-scaffold.** The repo currently contains documentation only. Nothing under "Commands" exists until the milestone that creates it lands (M0.1–M0.4 for the toolchain, M1.3 for the database scripts). Do not assume a command runs; check first.
 

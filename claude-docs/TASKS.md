@@ -1,6 +1,6 @@
 # Sorrel and Salt — Work Breakdown
 
-185 tasks across 12 milestones, 300 estimated hours. Every task is one PR, sized 1–2 hours, reviewable in under 15 minutes.
+186 tasks across 12 milestones, 302 estimated hours. Every task is one PR, sized 1–2 hours, reviewable in under 15 minutes.
 
 Story references point at the numbered user stories in §10 of the design doc. Infrastructure tasks carry developer-facing stories instead.
 
@@ -27,11 +27,11 @@ Also deferred: edit history, viewer spell approval, compendium suggestions and m
 
 ## M0 — Repo, tooling & environment
 
-_28 tasks · 37 hours_
+_29 tasks · 39 hours_
 
 **Sequencing**
 
-- M0.6 blocks M0.7 and M0.8 — the semantic tokens and mixins derive from the base palette, so picking it late means redoing them.
+- M0.6 blocks M0.7, M0.8 and M0.29 — the semantic tokens, the mixins and the theme toggle all derive from the base palette, so picking it late means redoing them.
 - M0.18 blocks M0.19 and the final image tag in M0.13.
 - M0.18 ships an image with extensions and an empty template only. Migrations and seed are baked in later, by M1.27. Do not try to bake a schema that does not exist yet.
 
@@ -138,6 +138,35 @@ _Acceptance criteria:_
 - `chip()` supports selected and unselected states
 - `badge()` accepts a palette argument for safety vs low-stock
 - All three respect prefers-reduced-motion
+
+**M0.29 — Port the ThemeToggle component from resume-2026** · 2h
+
+_Added after the original breakdown, which is why the number sits out of sequence. Placed here because it depends on M0.6 and on nothing later._
+
+_Story:_ As a user, I want to choose light or dark for myself so that the app matches the room I am in rather than the preference my operating system happens to carry.
+
+Port `src/components/ThemeToggle/` from resume-2026 — the button, the two SVG facets (moon and sun) and the rotate-through-the-top facet swap, including the `transitionend` reset to `--pre-enter` that keeps a fast double-click from stranding a facet out of view. Drive it off the M0.6 tokens (`$text-primary`, `$accent`, `theme-transition()`, `reduced-motion`) and nothing else: the resume-2026 stylesheet's folded-corner chrome, its `$silver-oxide` / `$lavender-oxide` borders, its `_buttons.scss` base and its `print-hidden` all stay behind — the first two are that design's, and the last two are files this repo does not have and will not get outside M10.22.
+
+**Icons — redraw, do not port.** The two facets are the one part of resume-2026 that does not come across as-is. Redraw both in Celtic knotwork: smooth interlaced curves rather than the faceted polygons the source uses, with the over-under weave reading at the rendered size and not only when zoomed. The moon facet gains a crow — perched in or sitting within the crescent, its lines continuing the same knotwork rather than sitting on top of it as separate art. Generating the SVG paths with a Claude model is fine and expected; what lands still has to be hand-checked as inline single-path-set SVG on currentColor, with no raster, no external asset and no per-theme variant.
+
+Drop the `Tooltip` wrapper. It is a separate component that is not ported, and the button's `aria-label` already names the action.
+
+Add the pre-paint init script to the root layout in place of resume-2026's `gatsby-ssr.ts`, with one deliberate behavioural change: **set `data-theme` only when a stored choice exists.** M0.6's globals.scss resolves an absent attribute through `prefers-color-scheme`, so stamping the resolved theme on every load would dead-end that tier and force the script to grow the `matchMedia` change listener that resume-2026 carries. Storage writes stay in a `try`/`catch` — a blocked `localStorage` costs persistence, not the toggle.
+
+_Acceptance criteria:_
+
+- Clicking toggles `html[data-theme]` between `light` and `dark` and persists the choice under the `theme` key
+- With no stored choice, no `data-theme` attribute is set and the system preference still decides
+- `aria-pressed` reflects the current mode, and the button is reachable and operable by keyboard
+- No flash of the wrong theme on first paint with a stored choice, JS enabled
+- Facets survive a click mid-transition — neither is left parked out of view
+- Both facets are smooth knotwork curves, not the resume-2026 polygons, and the weave reads at the rendered size
+- The moon facet contains a crow, drawn in the same knotwork line
+- Icons are inline SVG on currentColor — no raster, no external asset, no per-theme variant
+- The whole toggle respects prefers-reduced-motion
+- Component tests query by role and name only, per the repo convention
+- Styling uses only M0.6/M0.7/M0.8 tokens and mixins; no `_buttons.scss`, no `_print.scss`, no new hand-picked colour
+- Documented in `claude-docs/components/`
 
 **M0.9 — Scaffold claude-docs, README and CLAUDE.md** · 1h
 
