@@ -5,7 +5,7 @@ Decisions: [`design-decisions/`](design-decisions/)
 
 Where every standalone component renders in isolation, against the real tokens, without a
 page routed to it. Stood up in M0.30; the theme + token decorator landed in M0.31; every
-component in the tree got its stories in M0.32; the CI gate is M0.33.
+component in the tree got its stories in M0.32; M0.33 added the gate that keeps it that way.
 
 - **Ladle**, not Storybook or Histoire — Vite + React only, so it never couples the
   workshop to a Next.js major; one dependency; one config file. Reasoning:
@@ -49,6 +49,15 @@ component in the tree got its stories in M0.32; the CI gate is M0.33.
   `index.tsx` and `index.test.tsx`, imported the same way. The M0.33 gate is written against
   that shape. The `stories` glob is an array as of M0.32: it also picks up `.ladle/*.stories.tsx`
   for workshop-only pages that aren't components — currently just the design-language reference.
+- **The M0.33 gate — `npm run check:stories`** (`scripts/check-component-stories.ts`) — walks
+  `src/components/` and exits non-zero if any directory with an `index.tsx` has no sibling
+  `index.stories.tsx`, printing each missing path. It runs in pre-commit (the `pre-commit`
+  array in `package.json`) and is a plain npm script so the M0.17 build job and the M0.20 PR
+  gate can call it once they land — together with `npm run workshop:build`, which fails the
+  run on a story that throws. Not an Oxlint rule: Oxlint has no custom-rule API and the check
+  is a cross-file filesystem assertion. `.ladle/*.stories.tsx` is out of scope by design — the
+  gate only polices `src/components/`. Reasoning:
+  [`design-decisions/m0.33-component-story-gate.md`](design-decisions/m0.33-component-story-gate.md).
 - `npm run workshop` / `make workshop` — dev server on **61000**.
 - `npm run workshop:build` / `make workshop-build` — static build to gitignored `./build`.
 - `*.stories.tsx` is excluded from `tsc` (mirroring `*.test.tsx`) while `@ladle/react`'s
