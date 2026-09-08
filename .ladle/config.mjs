@@ -10,9 +10,35 @@
 /** @type {import('@ladle/react').UserConfig} */
 export default {
   // One story file per component directory, beside index.tsx and
-  // index.test.tsx, imported the same way. Nothing outside a component
-  // directory is a story — the M0.33 gate is written against this exact shape.
-  stories: 'src/components/**/index.stories.tsx',
+  // index.test.tsx, imported the same way — that's where every component's
+  // stories live, and the M0.33 gate is written against that shape.
+  //
+  // The second glob is for workshop-only pages that aren't components and the
+  // app never imports — currently just the design-language reference
+  // (.ladle/design-language.stories.tsx). M0.32 added it; see
+  // claude-docs/design-decisions/m0.32-component-stories.md. M0.33's gate stays
+  // "a component dir needs a story", and this location is the known exception.
+  stories: ['src/components/**/index.stories.tsx', '.ladle/*.stories.tsx'],
+  // Force the `Default` story to the top of every component's group; leave the
+  // order of the rest as Ladle sorted them (alphabetical, folders before
+  // leaves). Ladle's `storyOrder` is a global-config hook only — there is no
+  // per-story-file equivalent — and it hands us the fully-sorted list of story
+  // ids (`themetoggle--default`, `forms--input--default`, …). Must stay a
+  // self-contained function: Ladle serializes it with `.toString()`.
+  storyOrder: (stories) => {
+    const groupOf = (id) => id.split('--').slice(0, -1).join('--');
+    const isDefault = (id) => id.split('--').pop() === 'default';
+    const seen = new Set();
+    const ordered = [];
+    for (const id of stories) {
+      const group = groupOf(id);
+      if (seen.has(group)) continue;
+      seen.add(group);
+      const inGroup = stories.filter((s) => groupOf(s) === group);
+      ordered.push(...inGroup.filter(isDefault), ...inGroup.filter((s) => !isDefault(s)));
+    }
+    return ordered;
+  },
   // `npm run workshop` serves here; `npm run workshop:build` writes ./build.
   // Both match Ladle's own defaults — stated anyway, because these two numbers
   // are named in the acceptance criteria and in the makefile targets.
@@ -45,7 +71,7 @@ export default {
     // lives in globals.scss (`:root { @include theme-dark }`), not here.
     theme: {
       enabled: true,
-      defaultState: 'auto',
+      defaultState: 'dark',
     },
   },
 };

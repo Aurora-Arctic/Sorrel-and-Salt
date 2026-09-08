@@ -27,7 +27,7 @@
       }
     },
     {
-      "files": ["src/**/*.{ts,tsx}", ".ladle/components.tsx"],
+      "files": ["src/**/*.{ts,tsx}", ".ladle/*.tsx"],
       "env": {
         "browser": true
       }
