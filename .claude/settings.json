@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "ask": [
+      "Bash(git push origin *)",
+      "Bash(git push -u origin *)",
+      "Bash(gh pr create *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr comment *)",
+      "Bash(gh pr list *)"
+    ]
+  }
+}
