@@ -2,7 +2,7 @@
 
 Guidance for Claude Code working in this repository.
 
-`claude-docs/DESIGN.md` is the specification and `claude-docs/TASKS.md` is the work breakdown (185 tasks, 12 milestones; `TASKS.csv` beside it is the same breakdown exported for a project tracker). This file carries the rules that apply to *every* task; the section references below (§n) point into `DESIGN.md`, and milestone references (M0.1) into `TASKS.md`. When this file and the design doc disagree, the design doc wins — and fix this file.
+`claude-docs/DESIGN.md` is the specification and `claude-docs/TASKS.md` is the work breakdown (190 tasks, 12 milestones; `TASKS.csv` beside it is the same breakdown exported for a project tracker). This file carries the rules that apply to _every_ task; the section references below (§n) point into `DESIGN.md`, and milestone references (M0.1) into `TASKS.md`. When this file and the design doc disagree, the design doc wins — and fix this file.
 
 **Status: pre-scaffold.** The repo currently contains documentation only. Nothing under "Commands" exists until the milestone that creates it lands (M0.1–M0.4 for the toolchain, M1.3 for the database scripts). Do not assume a command runs; check first.
 
@@ -12,15 +12,15 @@ Guidance for Claude Code working in this repository.
 
 Three domain nouns, each meaning exactly one thing. Use them consistently in routes, components, tests, commits, and conversation.
 
-| Term | Meaning |
-|---|---|
-| **Compendium** | The global, admin-curated ingredient reference. What exists. |
-| **Ingredients** | A workspace's own ingredients and stock. What you have. |
-| **Grimoire** | A workspace's spells. What you make. |
+| Term            | Meaning                                                      |
+| --------------- | ------------------------------------------------------------ |
+| **Compendium**  | The global, admin-curated ingredient reference. What exists. |
+| **Ingredients** | A workspace's own ingredients and stock. What you have.      |
+| **Grimoire**    | A workspace's spells. What you make.                         |
 
 Never write "catalog" — it was the old word for the compendium and it is gone.
 
-The schema entity is `workspaces`; the URL prefix is `/coven/`. This divergence is deliberate (§5). Code, schema, and prose say *workspace*. Only the URL segment says *coven*.
+The schema entity is `workspaces`; the URL prefix is `/coven/`. This divergence is deliberate (§5). Code, schema, and prose say _workspace_. Only the URL segment says _coven_.
 
 ---
 
@@ -28,18 +28,20 @@ The schema entity is `workspaces`; the URL prefix is `/coven/`. This divergence 
 
 Once M0.4 lands, `make help` lists every target. Expected surface:
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Next.js dev server on **8000** |
-| `npm run build` / `npm run start` | Production build; e2e runs it on **8001** |
-| `npm run lint` / `format:check` / `typecheck` | The pre-commit trio |
-| `npm run test:coverage` | Vitest, both projects (`unit` jsdom + `db` node/Postgres) |
-| `make test-stories` | Acceptance suite only; prints a pass/fail line per user story |
-| `make docker-up` | App + Postgres 17 locally, no Neon connection needed |
-| `make db-reset` | Drop, migrate, reseed local |
-| `npm run db:generate` / `db:migrate` / `db:seed` / `db:reset` | Drizzle migrations and seed |
-| `npm run codegen` | graphql-codegen; CI fails if output is stale |
-| `make act-*` | Run a CI workflow locally via act |
+| Command                                                       | Purpose                                                           |
+| ------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `npm run dev`                                                 | Next.js dev server on **8000**                                    |
+| `npm run build` / `npm run start`                             | Production build; e2e runs it on **8001**                         |
+| `npm run lint` / `format:check` / `typecheck`                 | The pre-commit trio                                               |
+| `npm run test:coverage`                                       | Vitest, both projects (`unit` jsdom + `db` node/Postgres)         |
+| `make test-stories`                                           | Acceptance suite only; prints a pass/fail line per user story     |
+| `make docker-up`                                              | App + Postgres 17 locally, no Neon connection needed              |
+| `make db-reset`                                               | Drop, migrate, reseed local                                       |
+| `npm run db:generate` / `db:migrate` / `db:seed` / `db:reset` | Drizzle migrations and seed                                       |
+| `npm run codegen`                                             | graphql-codegen; CI fails if output is stale                      |
+| `npm run workshop` / `workshop:build`                         | Ladle component workshop; `:build` is the static export CI checks |
+| `make workshop`                                               | Ladle component workshop on **61000**                             |
+| `make act-*`                                                  | Run a CI workflow locally via act                                 |
 
 **Verify with the `:coverage` variants.** A plain `npm run test` pass can still fail CI on the 80% threshold (lines, branches, functions, statements) alone. Carried over from `resume-2026`.
 
@@ -54,7 +56,7 @@ Server components call services directly (wrapped in React `cache()`); everythin
 Enforced by lint (M1.17, M3.9). `src/graphql/**` and `src/app/**` may not import the client or the repository — they reach services and nothing below.
 
 **3. All writes go through `withAudit(session, fn)`.**
-It opens the transaction, injects the audit ids from the *session* (never from a request body), and issues `SET LOCAL app.current_user_id = '<uuid>'`. Every table carries the six-column `...auditColumns` spread, join tables included.
+It opens the transaction, injects the audit ids from the _session_ (never from a request body), and issues `SET LOCAL app.current_user_id = '<uuid>'`. Every table carries the six-column `...auditColumns` spread, join tables included.
 
 **4. Soft-delete filtering happens in the repository, never at call sites.**
 No exported finder can return a `deleted_at IS NOT NULL` row. Every unique index is partial (`WHERE deleted_at IS NULL`) — without it, deleting a record permanently reserves its name.
@@ -78,14 +80,14 @@ A private spell must never reach a resolver. Same for cross-workspace rows.
 
 ## Domain invariants that are easy to get wrong
 
-- **The site is invite-gated.** Signing in with Google or GitHub earns an account and *nothing else*. `canCreateWorkspace` defaults to `false` and turns true only by accepting an invitation (M7.5) or an admin grant (M5.8). Once true it stays true. Nothing in the OAuth flow sets it.
+- **The site is invite-gated.** Signing in with Google or GitHub earns an account and _nothing else_. `canCreateWorkspace` defaults to `false` and turns true only by accepting an invitation (M7.5) or an admin grant (M5.8). Once true it stays true. Nothing in the OAuth flow sets it.
 - **There are no personal workspaces.** No `kind` column; every workspace can take members and be deleted by an owner.
 - **Admins curate the compendium and global categories, and nothing else.** A site admin has no access to any workspace's ingredients or grimoire — asserted by test (M6.6).
 - **Invitations grant `viewer` or `member` only.** A DB check constraint rejects `owner`. Ownership is granted afterwards by an existing owner on the members page.
-- **Spell visibility widens only.** `private → workspace` is allowed; `workspace → private` is rejected with an explaining error, not a bare `Forbidden`. Widening is a gift, narrowing is a retraction. Enforced in the service *and* backstopped by RLS — not merely absent from the UI. The rule governs visibility, not existence: a shared spell can still be deleted.
+- **Spell visibility widens only.** `private → workspace` is allowed; `workspace → private` is rejected with an explaining error, not a bare `Forbidden`. Widening is a gift, narrowing is a retraction. Enforced in the service _and_ backstopped by RLS — not merely absent from the UI. The rule governs visibility, not existence: a shared spell can still be deleted.
 - **Viewers write nothing.** With notes deferred to v2, there is no exception.
 - **Unit conversion is within one dimension only.** weight↔weight and volume↔volume; anything crossing dimensions, and anything involving `count`, is refused as an explicit result the caller must handle — never null, NaN, or a guess. **No density table exists anywhere in the codebase.**
-- **Two kinds of spell category.** Assigned categories are what the spell *intends*; derived categories are the union of its ingredients'. Conflating them is a bug.
+- **Two kinds of spell category.** Assigned categories are what the spell _intends_; derived categories are the union of its ingredients'. Conflating them is a bug.
 - **Invitation tokens** use `crypto.randomBytes()`, never `Math.random()`. Only the hash is stored; the URL is returned once, in the mutation response.
 - **`/admin` returns a styled "not authorized" page** to a signed-in non-admin. `/coven/[slug]` returns **404** to a non-member — workspace existence is private, `/admin` is a path everyone already knows.
 
@@ -114,11 +116,46 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 - A task is done when every acceptance criterion is demonstrably met — not when the code appears to work.
 - **Port, don't rewrite from memory.** The source repo for all ports is `resume-2026`.
 - **Components:** `src/components/<Name>/` with `index.tsx`, `index.scss`, `index.test.tsx`, imported `from '../components/IngredientCard'`.
+- **Every standalone component ships an `index.stories.tsx`** in the same directory. The Ladle workshop (M0.30) discovers components by that file, and CI (M0.33) fails a component that has `index.tsx` without it. Stories carry no test ids and no snapshots.
 - **Sass:** modern module system only — `@use '../../scss/variables' as *;`, never `@import`. Shared partials in `src/scss/` are `@use`'d directly by whichever component needs them, never routed through a parent.
 - **The design will change.** Do not build component styling beyond the tokens (M0.7) and mixins (M0.8).
 - **No print styles anywhere except the spell recipe view** (M10.22). `_print.scss` is created by that task and scoped to it.
 - Gitflow: `feature/*` → `staging`; `staging` → `main` via `release/MAJOR.MINOR.PATCH`; `hotfix/*` opens both; `main-sync/YYYY-MM-DD-HH-MM-SS` brings `main` back down. Staging carries the same protections as production; local development is the only relaxed environment.
 - Document as you go in `claude-docs/` — a summary per subsystem, an append-only transcript, one doc per component. Several tasks name it as an acceptance criterion.
+
+---
+
+## Asana task tracking
+
+The Asana board **Sorrel & Salt** is the source of truth for what to work on — not `TASKS.md`, which is the frozen original breakdown. Board sections are the milestones (M0–M11); the `Task ID` text field carries the `M0.1`-style identifier.
+
+| Object          | GID                |
+| --------------- | ------------------ |
+| Project         | `1218257926462425` |
+| `Status` field  | `1218259502689548` |
+| → `Not Started` | `1218259502689549` |
+| → `In Progress` | `1218259502689550` |
+| → `In Review`   | `1218259502689551` |
+| → `Completed`   | `1218259502689552` |
+
+Set it with `asana_update_task`, passing `custom_fields` as `{"1218259502689548": "<option gid>"}`. The field reaches subtasks even though they are not project members, so no task needs adding to the project first.
+
+**Every task carries a `Status` single-select**, and it moves in one direction only:
+
+| Status        | Set it when                                                                                                |
+| ------------- | ---------------------------------------------------------------------------------------------------------- |
+| `Not Started` | The default. Every task starts here and stays there until work actually begins.                            |
+| `In Progress` | The feature branch for the task exists and work has started — not when the task is merely read or planned. |
+| `In Review`   | The PR is open. Set it in the same turn the PR is created, alongside the comment carrying the PR link.     |
+| `Completed`   | The PR is **merged**. Never before — a green CI run is not a merge.                                        |
+
+Rules that follow from this:
+
+- **Set the status through the Asana MCP tools, in the same turn as the event.** A status left stale is worse than no status: it says work is happening that is not.
+- `Completed` and the task's completed checkbox move together. Both happen on merge, never earlier.
+- Do not skip states. A task that goes `Not Started` → `Completed` hides the review step that the one-task-per-PR rule exists to make visible.
+- Status is not a substitute for the progress comment. Comment on the task as work proceeds; the status field is the at-a-glance summary of those comments, not a replacement.
+- If a PR is closed without merging, the task returns to `In Progress` — not `Completed`, not `Not Started`.
 
 ---
 
@@ -135,3 +172,13 @@ The one v1 concession to v2: the ingredient detail page (M8.19) is built so a no
 ## Skills
 
 No Claude skills are ported into this repo yet. **M0.10** ports the applicable ones from `resume-2026` (testing conventions, component documentation, commit and PR conventions, CI debugging) and requires listing them here with their triggers. Update this section when that task lands.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

@@ -1,0 +1,238 @@
+@use 'sass:list';
+@use 'sass:map';
+@use './variables' as *;
+
+// Ported from resume-2026's src/scss/_mixins.scss, minus the mixins that
+// described resume components rather than shared behaviour: card-surface
+// (this project's raised surfaces come from M0.8's modal-surface mixin),
+// tooltip-arrow, and print-note-heading-style (print styling is scoped to
+// the spell recipe view, M10.22).
+
+// transition: color $theme-transition-duration $theme-transition-easing,
+// background-color $theme-transition-duration $theme-transition-easing, ...
+// Every color/background/opacity fade in the app rides the same
+// duration/easing pair (see $theme-transition-duration/-easing in
+// _variables.scss) so the theme toggle and every element reacting to it stay
+// in visual lockstep — this just saves re-spelling that pair per property.
+@mixin theme-transition($props...) {
+  $transitions: ();
+
+  @each $prop in $props {
+    $transitions: list.append(
+      $transitions,
+      #{$prop} $theme-transition-duration $theme-transition-easing,
+      comma
+    );
+  }
+
+  transition: $transitions;
+}
+
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+// Shared focus-visible outline for interactive elements. Defaults to the body
+// ink token, so the ring re-colours with the theme without the call site
+// naming a theme.
+@mixin focus-ring($color: $text-primary) {
+  outline: 2px solid $color;
+  outline-offset: 2px;
+}
+
+// Dark mode (the default) needs antialiased/grayscale font smoothing since
+// light text on a dark background renders heavier than the reverse. Light mode
+// reverts to the browser default — see theme-dark/theme-light below, which are
+// the only two callers.
+@mixin font-smoothing-antialiased {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// ---------------------------------------------------------------------------
+// UI primitives — M0.8
+// ---------------------------------------------------------------------------
+//
+// Three shapes, settled in M0.7's decision doc against the real colours rather
+// than invented here: a raised panel, a pill, a square-cornered badge. Each one
+// sets colour, edge and geometry and nothing else — no width, no margin, no
+// cursor, no layout. The design will change (CLAUDE.md); what these hold is the
+// part that is contrast-checked and must not be re-picked per component.
+//
+// All three name tokens through the M0.6/M0.7 accessors, so a typo is a compile
+// error and a theme swap needs no rule of its own.
+
+// The raised surface behind a modal panel. Elevation is an argument because a
+// nested surface — a confirm sitting over an already-open modal — wants the
+// floating shadow rather than a second full-strength one; the default is the
+// elevated shadow and most call sites pass nothing.
+//
+// Deliberately not here: padding, width, position, and the backdrop. A modal is
+// centred, sized and dimmed by the component that owns it (M3.x), and a mixin
+// that positioned its caller could only ever fit one modal.
+@mixin modal-surface($shadow: $shadow-elevated) {
+  background-color: $surface-card;
+  color: $text-primary;
+  border-radius: 0.5rem;
+  box-shadow: $shadow;
+
+  @include theme-transition(background-color, color);
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+// A category chip: a pill, always edged in its group's colour, in one of two
+// states. `unselected` leaves the ground transparent and lets the label wear
+// the colour; `selected` fills solid with it and inverts the label onto
+// $text-on-color.
+//
+// Solid is not decoration. M0.7 tried the obvious loud treatment — the group
+// colour as a low-opacity wash behind a coloured label — and it cannot hold
+// 4.5:1: the eight were tuned to land just above the floor, so washing the
+// ground with the same colour closes exactly the gap they were tuned for. A
+// solid fill sidesteps it and needs no new arithmetic, because the inverted
+// label *is* the page surface and its ratio is the `vs page` column already
+// tabulated. Worst pairing in the set is 4.74:1.
+//
+// Both states carry the same 1px edge and the same padding, so a row can mix
+// them without the selected ones jumping half a pixel out of rhythm.
+@mixin chip($group, $state: unselected) {
+  $color: category-group($group);
+
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1875rem 0.6875rem;
+  border: 1px solid $color;
+  border-radius: 999px;
+  font-family: $font-body;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  white-space: nowrap;
+
+  @if $state == selected {
+    background-color: $color;
+    color: $text-on-color;
+  } @else if $state == unselected {
+    background-color: transparent;
+    color: $color;
+  } @else {
+    @error 'Unknown chip state "#{$state}". Expected selected or unselected.';
+  }
+
+  @include theme-transition(background-color, border-color, color);
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+// A badge, taking a $badge-palettes key — 'safety' or 'low-stock' — rather than
+// a colour, so the two badges cannot be drawn in each other's ink.
+//
+// The palette's own declared treatment decides the drawing, which is why there
+// is no variant argument: `safety` is solid because its ink only works solid,
+// and asking for it tinted is already a compile error from badge-token(). A
+// solid badge draws no border — a solid fill is its own boundary, clearing 3:1
+// against both surfaces on its own account.
+//
+// Square-cornered, which is what keeps a badge from reading as a chip now that
+// chips are pills.
+@mixin badge($palette) {
+  $parts: badge-parts($palette);
+
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.4375rem;
+  border-radius: 2px;
+  font-family: $font-body;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  white-space: nowrap;
+
+  @if list.index($parts, 'fill') {
+    background-color: badge-token($palette, 'fill');
+    color: $text-on-color;
+    // Geometry, not an edge: it keeps a solid badge the same height as a tinted
+    // one sitting beside it on the same IngredientCard.
+    border: 1px solid transparent;
+  } @else {
+    background-color: badge-token($palette, 'bg');
+    color: badge-token($palette, 'fg');
+    border: 1px solid badge-token($palette, 'border');
+  }
+
+  @include theme-transition(background-color, border-color, color);
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+// M0.7. The eight category-group and four badge custom properties, generated
+// from the maps in _variables.scss rather than spelled out per theme. Both
+// theme mixins call this with their own name, so the two halves cannot drift:
+// adding a group or changing a mix weight is one edit in one place.
+@mixin semantic-tokens($theme) {
+  @each $slug in map.keys($category-groups) {
+    --group-#{$slug}: #{category-group-color($slug, $theme)};
+  }
+
+  @each $palette in map.keys($badge-palettes) {
+    @each $part in badge-parts($palette) {
+      --badge-#{$palette}-#{$part}: #{badge-palette-color($palette, $theme, $part)};
+    }
+  }
+}
+
+// M0.6. The two halves of the palette, as the custom properties named by the
+// token aliases in _variables.scss.
+//
+// These are mixins rather than plain rules because globals.scss has to emit
+// the light half twice — once for `prefers-color-scheme: light` and once for
+// an explicit `data-theme='light'` — and a palette that can drift between
+// those two spellings is a bug waiting to happen. Only globals.scss includes
+// them; a component that includes one is re-theming a subtree, which nothing
+// in this project does.
+@mixin theme-dark {
+  // Tells the browser which way round the theme runs, so form controls,
+  // scrollbars and the canvas behind the page match it without being styled.
+  color-scheme: dark;
+
+  --surface-page: #{$soot};
+  --surface-card: #{$soot-raised};
+  --text-primary: #{$chalk};
+  --text-muted: #{$chalk-muted};
+  --accent: #{$sorrel-bright};
+  --accent-hover: #{$sorrel-glow};
+  --secondary: #{$wax-warm};
+  --secondary-hover: #{$wax-glow};
+  --shadow-elevated: 0 20px 45px #{$shadow-dark};
+  --shadow-floating: 0 2px 8px #{$shadow-dark};
+
+  @include semantic-tokens(dark);
+  @include font-smoothing-antialiased;
+}
+
+@mixin theme-light {
+  color-scheme: light;
+
+  --surface-page: #{$parchment};
+  --surface-card: #{$parchment-raised};
+  --text-primary: #{$iron-gall};
+  --text-muted: #{$ink-muted};
+  --accent: #{$sorrel};
+  --accent-hover: #{$sorrel-deep};
+  --secondary: #{$wax};
+  --secondary-hover: #{$wax-deep};
+  --shadow-elevated: 0 20px 45px #{$shadow-light};
+  --shadow-floating: 0 2px 8px #{$shadow-light};
+
+  @include semantic-tokens(light);
+
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+}
