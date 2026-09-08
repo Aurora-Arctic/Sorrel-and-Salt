@@ -61,8 +61,22 @@ The script and the component share one `applyTheme()` function and one
 `STORAGE_KEY` — the pre-paint script re-implements the read half of the
 same contract (`localStorage.getItem('theme')` → `setAttribute`) inline
 (it has to run before any JS module loads), and the component's
-`applyTheme()` is exported so M0.31's Ladle theme decorator can drive the
-same attribute without a second copy of the write half.
+`applyTheme()` and `STORAGE_KEY` are exported so the M0.31 Ladle theme
+decorator drives the same attribute and storage key without a second copy
+of the write half. See
+[`../design-decisions/m0.31-workshop-theme-decorator.md`](../design-decisions/m0.31-workshop-theme-decorator.md).
+
+## In the workshop
+
+`ThemeToggle` sets its facet and `aria-pressed` from `data-theme` **only in
+mount effects** — it has no subscription to a later attribute change. In the
+app that is fine: the attribute changes only when _this_ component's own
+click handler changes it. In the Ladle workshop the theme also changes from
+the toolbar control, so the M0.31 decorator remounts the story on every
+theme change (a `key` on the frame wrapper) — that is what makes the facet
+track the toolbar. Any future component that renders `ThemeToggle`
+indirectly and needs it to react to an external theme change would need the
+same remount, or `ThemeToggle` would need a real subscription.
 
 ## Styling
 

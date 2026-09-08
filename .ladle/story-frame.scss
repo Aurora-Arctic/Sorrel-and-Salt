@@ -1,0 +1,51 @@
+// The app-surface frame the M0.31 decorator (.ladle/components.tsx) wraps every
+// story in. Two jobs, both spotted while standing up M0.30
+// (claude-docs/design-decisions/m0.30-ladle-component-workshop.md):
+//
+//   1. Carry the globals.scss <body> surface — $surface-page / $text-primary,
+//      on the same M0.6 tokens the app uses — to the story, edge to edge, with
+//      no per-story setup. Ladle's .ladle-main gutter is cancelled just below
+//      so the surface reaches the chrome rather than floating in it.
+//   2. Establish a containing block, so a `position: fixed` component —
+//      ThemeToggle pins itself to a corner — lands in this frame instead of
+//      escaping to Ladle's own toolbar and sidebar.
+//
+// Colour and motion come only from M0.6/M0.8 tokens and mixins. The one plain
+// length is the padding: M0.6–M0.8 are colour and type, there is no spacing
+// scale to name, and this gutter is workshop chrome, not component design
+// (CLAUDE.md: build no component styling beyond the tokens and mixins).
+
+@use '../src/scss/variables' as *;
+@use '../src/scss/mixins' as *;
+
+// Ladle renders a non-iframed story straight into .ladle-main, which carries a
+// 3em gutter (--ladle-main-padding). The frame supplies its own, so zero
+// Ladle's and let the app surface reach every edge of the story area.
+.ladle-main {
+  padding: 0;
+}
+
+.ladle-story-frame {
+  box-sizing: border-box;
+  min-height: 100%;
+  // Restores the gutter the cancelled .ladle-main padding gave the story.
+  padding: 3rem;
+  // Any non-`none` transform makes this element the containing block for a
+  // descendant `position: fixed`. ThemeToggle then pins to this frame's corner
+  // instead of the viewport, where it would float over Ladle's chrome.
+  transform: translateZ(0);
+  // The frame stands in for the app viewport, so it clips like one: a
+  // corner-pinned component (ThemeToggle parks a rotated facet past the top
+  // and right edges) is trimmed to the frame instead of adding a page
+  // scrollbar. A taller-than-frame story scrolls within it, never sideways.
+  overflow: hidden;
+  background-color: $surface-page;
+  color: $text-primary;
+  @include theme-transition(background-color, color);
+}
+
+@include reduced-motion {
+  .ladle-story-frame {
+    transition: none;
+  }
+}

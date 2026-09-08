@@ -50,3 +50,51 @@ Append-only. Newest entry at the bottom. Summary:
   present and per-theme (`--accent` = `$sorrel-bright` dark / `$sorrel` light), with **no**
   `_typography.scss` output in the bundle; `make help` lists both targets; lint,
   format:check and typecheck pass.
+
+## 2026-09-08 — M0.31 · Theme + token decorator
+
+Full reasoning:
+[`../design-decisions/m0.31-workshop-theme-decorator.md`](../design-decisions/m0.31-workshop-theme-decorator.md).
+
+- **`.ladle/components.tsx`** grew from M0.30's passthrough into the decorator. It reads
+  Ladle's own toolbar theme control (`globalState.theme`, one of `light`/`dark`/`auto`) —
+  no second control built — and re-applies it: `light`/`dark` through `applyTheme()`
+  imported from `src/components/ThemeToggle` (M0.29), so the `data-theme` write and the
+  persisted `localStorage['theme']` choice have exactly one implementation; `auto` (the
+  unset position) clears the attribute and the key so `.ladle/theme.scss` resolves the
+  theme through `prefers-color-scheme`, same as `globals.scss` for a viewer who never
+  clicked the toggle.
+- **Remount on theme change.** The story is wrapped in
+  `<div className="ladle-story-frame" key={theme}>`; changing `key` remounts the subtree so
+  `ThemeToggle` — which reads `data-theme` only in mount effects — re-reads and its facet /
+  `aria-pressed` follow the control. A parent effect runs after its children's, so the
+  decorator's `useLayoutEffect` can't beat the remounted child's mount read; it doesn't
+  need to, because Ladle's toolbar handler sets `data-theme` synchronously before it
+  dispatches. `useLayoutEffect` keeps the persisted write and the `auto` clear pre-paint.
+- **`.ladle/config.mjs`** — `addons.theme.defaultState` `'dark'` → `'auto'`, so the
+  workshop opens in the unset state. The app stays dark-first via `globals.scss`, not this
+  file.
+- **`.ladle/story-frame.scss`** (new, kept out of `theme.scss` whose theme blocks are a
+  verbatim `globals.scss` copy) — the app-surface frame: `background-color: $surface-page`
+  / `color: $text-primary` (the M0.6 `<body>` tokens, no per-story setup);
+  `transform: translateZ(0)` to make the frame the containing block for a `position: fixed`
+  child, so `ThemeToggle` pins to the frame's corner not Ladle's chrome;
+  `.ladle-main { padding: 0 }` to drop Ladle's 3em gutter and `padding: 3rem` on the frame
+  to give it back (the one plain length — no spacing scale in M0.6–M0.8, and a workshop
+  gutter is chrome).
+- **`overflow: hidden` on the frame** — added after the first pass: with the new
+  `transform` containing block, `ThemeToggle`'s rotated parked facet overflowing past the
+  top/right edges started adding a horizontal **page scrollbar in Ladle** (the app doesn't
+  show it). The frame stands in for the app viewport, so it clips like one; a tall story
+  scrolls within the frame, never sideways.
+- **`_typography.scss` stays out** (M0.30 left this open). It emits bare element selectors
+  a `@use` can't scope to the story frame; folding it in either bleeds onto Ladle's list
+  chrome or needs the app's one global prose stylesheet restructured — out of proportion
+  here, and no story renders prose yet. M0.32 revisits.
+- Verified: `workshop:build` exits 0; built CSS carries `.ladle-story-frame` with the
+  surface tokens, the `transform`, `overflow: hidden` and the `.ladle-main` reset; lint,
+  format:check, typecheck pass (`tsconfig.json` doesn't include `.ladle/`, so `tsc` skips
+  `components.tsx` — the `@ladle/react` value import is bundled by Vite and covered by the
+  build). In `npm run workshop`: the toolbar control switches the frame and the toggle's
+  facet together, first load leaves `<html>` with no `data-theme`, and the corner toggle
+  no longer scrolls the page.
