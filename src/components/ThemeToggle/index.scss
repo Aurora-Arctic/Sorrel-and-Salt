@@ -14,27 +14,42 @@
 // or duration the rest of the app shares.
 $theme-toggle-icon-arc: 130deg;
 
+// Radius of the quarter-circle backdrop, measured from the corner it's
+// centered on — also doubles as the button's own width/height, since a
+// square exactly that size is the smallest box the circle needs.
+$theme-toggle-corner-radius: 3rem;
+
 .theme-toggle {
-  position: relative;
-  display: inline-flex;
+  position: fixed;
+  top: 0;
+  right: 0;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  padding: 0;
+  width: $theme-toggle-corner-radius;
+  height: $theme-toggle-corner-radius;
+  // Pulls the icon down and left off the pivot corner, so it doesn't sit
+  // flush against the two edges it rotates around.
+  padding: 0 0 0.75rem 1rem;
   border: none;
-  background: none;
-  color: $text-primary;
+  // Circle centered on the box's own top-right corner — with the box pinned
+  // to the page's top-right corner too, only the quarter of the circle that
+  // falls inside the viewport ever paints.
+  clip-path: circle($theme-toggle-corner-radius at 100% 0%);
+  // Sorrel, the accent — M0.7's $text-on-color is the token for a label
+  // sitting on a solid fill of a colour like this one, already worked out to
+  // clear contrast on both themes rather than re-deriving it here.
+  background-color: $accent;
+  color: $text-on-color;
   cursor: pointer;
-  border-radius: 50%;
-  @include theme-transition(color);
+  @include theme-transition(background-color, color);
 
   &:focus-visible {
-    @include focus-ring($accent);
+    @include focus-ring($text-on-color);
   }
 
   &:hover {
-    color: $accent;
+    background-color: $accent-hover;
   }
 }
 
@@ -52,10 +67,11 @@ $theme-toggle-icon-arc: 130deg;
   inset: 0;
   width: 100%;
   height: 100%;
-  // Pivot at the icon's own top-center so rotate() swings each facet through
-  // an arc centered on the top of the button, matching the "rotate through
-  // the top" choreography the acceptance criteria name.
-  transform-origin: 50% 0;
+  // Pivot at the icon's own top-right corner — the same corner the button
+  // itself is pinned to and rotates its quarter-circle backdrop around — so
+  // rotate() swings each facet through an arc centered there, matching the
+  // "rotate through the top" choreography the acceptance criteria name.
+  transform-origin: 100% 0;
   @include theme-transition(transform);
   transform: rotate(0deg);
 
