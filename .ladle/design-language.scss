@@ -77,7 +77,6 @@ $dl-groups:
   // dialog".
   .dl-panel {
     background-color: $surface-card;
-    border: 1px solid $text-muted;
     border-radius: 0.25rem;
     padding: 1.5rem;
     @include theme-transition(background-color, border-color);
@@ -215,7 +214,6 @@ $dl-groups:
     padding: 2rem;
     border-radius: 0.25rem;
     background-color: $surface-page;
-    border: 1px solid $text-muted;
   }
 
   .dl-modal {
