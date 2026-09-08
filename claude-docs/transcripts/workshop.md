@@ -196,3 +196,34 @@ Then, on the same task and at the user's direction (they disagreed with M0.31's
   matches the M0.7 artifact — italic, `0.84rem`, `opacity: 0.7` on the inherited
   `--text-primary` (not the `--text-muted` token); the stock line splits into "on hand" /
   "threshold" at `opacity: 0.85`.
+
+## 2026-09-08 — M0.33 · Gate: no standalone component without a story
+
+- **A script, not an Oxlint rule.** Oxlint v1 has no custom-rule API, and the check is a
+  cross-file filesystem assertion ("a dir with `index.tsx` must have `index.stories.tsx`
+  beside it") — the wrong unit of work for a single-file linter. The task named the script
+  as the fallback and this is it: `scripts/check-component-stories.ts`, Node native TS
+  (`node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON …`, matching `resume-2026/scripts/`),
+  with `scripts/package.json` = `{ "type": "module" }`.
+- **What it does.** Recursively walks `src/components/` (recursion so a nested
+  `Forms/Input/` component is covered, matching M0.32's anticipated `forms--input--default`
+  ids); every directory with an `index.tsx` must have `index.stories.tsx`. Clean → one-line
+  count, exit 0. Missing → each path printed, exit 1. No `src/components/` → exit 0. Green on
+  landing — `ThemeToggle` got its story in M0.32.
+- **Scope is `src/components/` only.** `.ladle/*.stories.tsx` (design-language reference, any
+  future workshop-only page) is the known non-component location from M0.32 and is not
+  walked.
+- **Where it runs.** Added to the `pre-commit` array in `package.json` (and the chained
+  `pre-commit` script); `make check-stories` / `make pre-commit` wrap it. CI: `.github/` is
+  not in the tree yet (M0.14–M0.21 unstarted), so `check:stories` and `workshop:build` stay
+  plain npm scripts for the M0.17 build job and M0.20 PR gate to call when they land —
+  `check:stories` for the missing-file gate, `workshop:build` so a _throwing_ story fails
+  the run. No workflow file to edit in this PR.
+- **M0.10 checklist criterion is N/A** — M0.10 ported only the six Gitflow skills; there is
+  no component-documentation skill. `claude-docs/components/README.md` already lists the
+  story file as part of a complete component; CLAUDE.md's Conventions bullet updated to name
+  `check:stories`, where it runs, and the `.ladle/` exception.
+- Verified: clean tree exit 0; seeded `src/components/_GateFixture/index.tsx` with no story →
+  exit 1 naming the missing path, removed → exit 0; `npm run pre-commit` runs it last and
+  passes; lint / format:check / typecheck pass; `workshop:build` still exits 0.
+  Reasoning: [`../design-decisions/m0.33-component-story-gate.md`](../design-decisions/m0.33-component-story-gate.md).

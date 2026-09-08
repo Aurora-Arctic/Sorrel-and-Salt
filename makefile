@@ -13,6 +13,7 @@
 #   test-stories                      M1.28
 #   act-*                             M0.23
 #   workshop, workshop-build          M0.30
+#   check-stories                     M0.33
 #
 # The db-* and codegen targets below are placeholders: the script names exist
 # so nothing has to be renamed later, but they exit non-zero until M1.x wires
@@ -22,7 +23,7 @@
 .DEFAULT_GOAL := help
 
 .PHONY: help install dev build start \
-	lint lint-fix format format-check typecheck pre-commit \
+	lint lint-fix format format-check typecheck check-stories pre-commit \
 	db-generate db-migrate db-seed db-reset codegen \
 	workshop workshop-build
 
@@ -69,7 +70,11 @@ format-check:
 typecheck:
 	npm run typecheck
 
-## The pre-commit trio: lint, format:check, typecheck
+## Fail if a src/components/ directory has index.tsx without index.stories.tsx
+check-stories:
+	npm run check:stories
+
+## The pre-commit checks: lint, format:check, typecheck, check:stories
 pre-commit:
 	npm run pre-commit
 

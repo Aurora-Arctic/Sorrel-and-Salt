@@ -11,7 +11,8 @@
     "lint:fix": "oxlint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "pre-commit": "npm run lint && npm run format:check && npm run typecheck",
+    "check:stories": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-component-stories.ts",
+    "pre-commit": "npm run lint && npm run format:check && npm run typecheck && npm run check:stories",
     "db:generate": "echo 'db:generate is not wired up yet — see M1.x' && exit 1",
     "db:migrate": "echo 'db:migrate is not wired up yet — see M1.x' && exit 1",
     "db:seed": "echo 'db:seed is not wired up yet — see M1.x' && exit 1",
@@ -23,7 +24,8 @@
   "pre-commit": [
     "lint",
     "format:check",
-    "typecheck"
+    "typecheck",
+    "check:stories"
   ],
   "dependencies": {
     "next": "^16.3.4",

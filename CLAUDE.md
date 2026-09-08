@@ -116,7 +116,7 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 - A task is done when every acceptance criterion is demonstrably met — not when the code appears to work.
 - **Port, don't rewrite from memory.** The source repo for all ports is `resume-2026`.
 - **Components:** `src/components/<Name>/` with `index.tsx`, `index.scss`, `index.test.tsx`, imported `from '../components/IngredientCard'`.
-- **Every standalone component ships an `index.stories.tsx`** in the same directory. The Ladle workshop (M0.30) discovers components by that file, and CI (M0.33) fails a component that has `index.tsx` without it. Stories carry no test ids and no snapshots.
+- **Every standalone component ships an `index.stories.tsx`** in the same directory — no exceptions, `index.tsx` without a sibling story is a broken build. The Ladle workshop (M0.30) discovers components by that file. `npm run check:stories` (M0.33; `scripts/check-component-stories.ts`) enforces it — in pre-commit and, once the CI workflows land, in the build job and the PR gate — and `npm run workshop:build` there fails a story that throws. The gate is scoped to `src/components/`; `.ladle/*.stories.tsx` is the one known non-component location (§M0.32). Stories carry no test ids and no snapshots.
 - **Sass:** modern module system only — `@use '../../scss/variables' as *;`, never `@import`. Shared partials in `src/scss/` are `@use`'d directly by whichever component needs them, never routed through a parent.
 - **The design will change.** Do not build component styling beyond the tokens (M0.7) and mixins (M0.8).
 - **No print styles anywhere except the spell recipe view** (M10.22). `_print.scss` is created by that task and scoped to it.
