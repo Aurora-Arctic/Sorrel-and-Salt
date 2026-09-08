@@ -1,0 +1,159 @@
+@use './variables' as *;
+@use './mixins' as *;
+
+// Ported from resume-2026's src/scss/_typography.scss. The `@media print` and
+// `html[data-print-mode='...']` tiers are deliberately not carried over —
+// this project has no print styles outside the spell recipe view (M10.22).
+//
+// Font files are self-hosted rather than pulled from fonts.googleapis.com /
+// fonts.gstatic.com, and never by a CSS at-import here — that avoids adding
+// an external DNS/connection/CSS/woff2 request chain to the critical path
+// rather than just making it non-blocking. M0.6 picks the families and the
+// loading strategy that goes with them.
+
+html {
+  @include font-smoothing-antialiased;
+}
+
+body {
+  font-family: $font-body;
+  font-weight: 300;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: $font-heading;
+  font-weight: 500;
+  margin: 0 0 1rem;
+}
+
+h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+h3 {
+  font-size: 1.375rem;
+  line-height: 1.3;
+}
+
+h4 {
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+
+p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 300;
+}
+
+p,
+a,
+dt,
+dd {
+  letter-spacing: 0.02em;
+}
+
+a {
+  color: $wine-stained;
+  transition: color 200ms $theme-transition-easing;
+
+  &:visited {
+    color: $text;
+  }
+
+  &:hover {
+    color: $wine-glow;
+  }
+}
+
+html[data-theme='light'] a {
+  color: $wine-deep;
+
+  &:visited {
+    color: $silver-oxide;
+  }
+
+  &:hover {
+    color: $grape-press;
+  }
+}
+
+// Reuse the body-text colors (already ≥6:1) rather than pushing the wine
+// hue further with another derived token, and add an underline so links
+// don't depend on the color difference at all — WCAG's "don't rely on
+// color alone" guidance, for users who've explicitly asked for more
+// contrast than the baseline above already provides.
+@media (prefers-contrast: more) {
+  a {
+    color: $text;
+    text-decoration: underline;
+
+    &:hover {
+      color: $text;
+    }
+  }
+
+  html[data-theme='light'] a {
+    color: $silver-oxide;
+    text-decoration: underline;
+
+    &:hover {
+      color: $silver-oxide;
+    }
+  }
+}
+
+// Dark mode (the default) needs antialiased/grayscale font smoothing since
+// light text on a dark background renders heavier than the reverse; light
+// mode reverts to the browser default.
+html[data-theme='light'] {
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+}
+
+header {
+  margin-bottom: 1rem;
+}
+
+section {
+  margin: 1rem 0;
+}
+
+ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  list-style: none;
+
+  li {
+    position: relative;
+    margin: 0.25rem 0;
+
+    &::before {
+      content: '◆';
+      position: absolute;
+      left: -1.25rem;
+      top: -0.125rem;
+      color: $wine;
+    }
+  }
+}
+
+html[data-theme='light'] ul li::before {
+  color: $grape-press;
+}
+
+@include reduced-motion {
+  a {
+    transition: none;
+  }
+}
