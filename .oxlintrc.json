@@ -17,6 +17,7 @@
         "drizzle.config.ts",
         "vitest.config.ts",
         "playwright.config.ts",
+        ".ladle/*.{ts,mjs}",
         "e2e/**/*.ts",
         "Docker/clean.js",
         "scripts/**/*.ts"
@@ -26,7 +27,7 @@
       }
     },
     {
-      "files": ["src/**/*.{ts,tsx}"],
+      "files": ["src/**/*.{ts,tsx}", ".ladle/components.tsx"],
       "env": {
         "browser": true
       }
