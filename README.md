@@ -36,6 +36,12 @@ variants — a plain `npm run test` pass can still fail CI's 80% threshold.
 same branch protections as production. One task per PR. See
 [`CLAUDE.md`](CLAUDE.md) for the full workflow.
 
+Deploys are CI-only:
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) deploys through
+the Vercel CLI on a push to `main` (production) or `staging` (preview), and on a
+`hotfix/*` → `main` PR (preview URL commented on the PR). `vercel.json` disables
+Vercel's own Git integration; nothing else deploys.
+
 ## Documentation
 
 - [`CLAUDE.md`](CLAUDE.md) — architecture rules, domain invariants, conventions.
