@@ -14,11 +14,13 @@ import './design-language.scss';
 //   - the swatches are `var(--token)` straight from M0.6's theme mixins
 //   - the chips, badges, raised panel and focus ring are M0.8's `chip()`,
 //     `badge()`, `modal-surface()` and `focus-ring()` mixins
+//   - `.panel`, `.badge`/`.chip`/`.modal`/`.btn`/`.specimen*` are
+//     `_primitives.scss`'s `primitives-base`, scoped in by .ladle/primitives.scss
 //
 // design-language.scss's header lists the few things that are local (layout
-// lengths, the `.dl-eyebrow` overline, `.dl-btn`, `.dl-binomial`) and why the
-// app has no home for them yet. "The design will change" (CLAUDE.md) — this is
-// a reference for the tokens and mixins, not a candidate layout.
+// lengths, the demo backdrop/width, `.dl-binomial`) and why the app has no
+// home for them yet. "The design will change" (CLAUDE.md) — this is a
+// reference for the tokens and mixins, not a candidate layout.
 
 // §6's eight category groups, slug → the group name the category seed uses.
 // The hue behind each is in _variables.scss ($category-groups) and derived, not
@@ -104,8 +106,8 @@ function SectionHead({
   children: ReactNode;
 }): ReactElement {
   return (
-    <div className="dl-sec-head">
-      <p className="dl-eyebrow">{eyebrow}</p>
+    <div className="header">
+      <p className="eyebrow">{eyebrow}</p>
       <h2>{title}</h2>
       <p className="dl-note">{children}</p>
     </div>
@@ -115,8 +117,8 @@ function SectionHead({
 export default function DesignLanguage(): ReactElement {
   return (
     <div className="dl">
-      <header className="dl-masthead">
-        <p className="dl-eyebrow">Sorrel &amp; Salt · design language</p>
+      <header className="header">
+        <p className="eyebrow">Sorrel &amp; Salt · design language</p>
         <h1>The pieces every screen is built from</h1>
         <p className="dl-note">
           Type, colour tokens, category-group colours, chips, badges, the raised panel and the focus
@@ -135,7 +137,7 @@ export default function DesignLanguage(): ReactElement {
           these; nothing downstream is chosen by eye. Fixed values, so these swatches don&#8217;t
           move with the theme.
         </SectionHead>
-        <div className="dl-panel dl-swatches">
+        <div className="panel dl-swatches">
           {RAW_PALETTE.map(([name, hex, purpose]) => (
             <PaletteSwatch key={name} name={name} hex={hex} purpose={purpose} />
           ))}
@@ -149,7 +151,7 @@ export default function DesignLanguage(): ReactElement {
           small sizes on a dark ground. The scale is anchored at h4 = 1.5rem and stepped up by ~1.2.
           These are the document rules themselves, scoped into the workshop as of M0.32.
         </SectionHead>
-        <div className="dl-panel dl-type">
+        <div className="panel tight-headings">
           <h1>Heading one — clamp(2.5rem, 5vw, 3.75rem)</h1>
           <h2>Heading two — 2.15rem</h2>
           <h3>Heading three — 1.8rem</h3>
@@ -178,7 +180,7 @@ export default function DesignLanguage(): ReactElement {
           <code>claude-docs/design-decisions/m0.6-typography-and-palette.md</code>). These swatches
           re-paint when the toolbar control changes.
         </SectionHead>
-        <div className="dl-panel dl-swatches">
+        <div className="panel dl-swatches">
           {RUNTIME_TOKENS.map(([token, purpose]) => (
             <Swatch key={token} token={token} purpose={purpose} />
           ))}
@@ -202,11 +204,11 @@ export default function DesignLanguage(): ReactElement {
           unselected (the label wears the colour) and selected (solid fill, label inverted onto the
           page surface).
         </SectionHead>
-        <div className="dl-panel dl-groups">
+        <div className="panel dl-groups">
           {CATEGORY_GROUPS.map(([slug, name]) => (
             <div className="dl-group-row" key={slug}>
-              <span className={`dl-chip dl-chip--${slug}`}>{name}</span>
-              <span className={`dl-chip dl-chip--${slug} is-selected`}>{name}</span>
+              <span className={`chip chip--${slug}`}>{name}</span>
+              <span className={`chip chip--${slug} is-selected`}>{name}</span>
               <code className="dl-group-slug">--group-{slug}</code>
             </div>
           ))}
@@ -220,9 +222,9 @@ export default function DesignLanguage(): ReactElement {
           so it takes the muted ink tinted into the surface, not a hue of its own. Square-cornered,
           which is what keeps a badge from reading as a chip.
         </SectionHead>
-        <div className="dl-panel dl-badges">
-          <span className="dl-badge dl-badge--safety">Toxic</span>
-          <span className="dl-badge dl-badge--low-stock">Low stock</span>
+        <div className="panel badges">
+          <span className="badge badge--safety">Toxic</span>
+          <span className="badge badge--low-stock">Low stock</span>
         </div>
       </section>
 
@@ -233,14 +235,14 @@ export default function DesignLanguage(): ReactElement {
           and dims it.
         </SectionHead>
         <div className="dl-modal-demo">
-          <div className="dl-modal">
+          <div className="modal">
             <h4>Delete this spell?</h4>
             <p>The Hearth Warding Jar and its six ingredients will be removed from the grimoire.</p>
-            <div className="dl-modal__actions">
-              <button type="button" className="dl-btn dl-btn--secondary">
+            <div className="modal__actions">
+              <button type="button" className="btn btn--secondary">
                 Delete
               </button>
-              <button type="button" className="dl-btn">
+              <button type="button" className="btn">
                 Keep it
               </button>
             </div>
@@ -253,8 +255,8 @@ export default function DesignLanguage(): ReactElement {
           One outline for every interactive element — 2px of the body ink, offset 2px, so it
           re-colours with the theme without a call site naming one. Tab to the button.
         </SectionHead>
-        <div className="dl-panel dl-focus">
-          <button type="button" className="dl-btn dl-focus__target">
+        <div className="panel dl-focus">
+          <button type="button" className="btn dl-focus__target">
             Focus me
           </button>
         </div>
@@ -266,39 +268,39 @@ export default function DesignLanguage(): ReactElement {
           — which is what the safety badge is for.
         </SectionHead>
         <div className="dl-modal-demo">
-          <article className="dl-modal dl-specimen">
-            <div className="dl-specimen__top">
+          <article className="modal specimen">
+            <div className="specimen__top">
               <div>
                 <h4>Foxglove</h4>
                 <p className="dl-binomial">Digitalis purpurea</p>
               </div>
-              <div className="dl-specimen__badges">
-                <span className="dl-badge dl-badge--safety">Toxic</span>
-                <span className="dl-badge dl-badge--low-stock">Low stock</span>
+              <div className="specimen__badges">
+                <span className="badge badge--safety">Toxic</span>
+                <span className="badge badge--low-stock">Low stock</span>
               </div>
             </div>
-            <div className="dl-specimen__chips">
-              <span className="dl-chip dl-chip--protection is-selected">
-                Protection &amp; defense
-              </span>
-              <span className="dl-chip dl-chip--mind">Mind &amp; spirit</span>
-              <span className="dl-chip dl-chip--craft">Craft &amp; change</span>
+            <div className="specimen__chips">
+              <span className="chip chip--protection is-selected">Protection &amp; defense</span>
+              <span className="chip chip--mind">Mind &amp; spirit</span>
+              <span className="chip chip--craft">Craft &amp; change</span>
             </div>
-            <p className="dl-specimen__stock">
+            <p className="specimen__stock">
               <span>Dried leaf · 4&nbsp;g on hand</span>
-              <code className="dl-specimen__threshold">threshold 10&nbsp;g</code>
+              <code className="specimen__threshold">threshold 10&nbsp;g</code>
             </p>
           </article>
         </div>
       </section>
 
-      <footer className="dl-foot">
+      <footer className="footer">
         <p className="dl-note">
           Source of every value on this page: <code>src/scss/_variables.scss</code> (raw palette,{' '}
           <code>$category-groups</code>, <code>$badge-palettes</code>, the type stacks),{' '}
           <code>src/scss/_mixins.scss</code> (<code>chip()</code>, <code>badge()</code>,{' '}
-          <code>modal-surface()</code>, <code>focus-ring()</code>, <code>theme-transition()</code>)
-          and <code>src/scss/_typography.scss</code>. Reasoning in{' '}
+          <code>modal-surface()</code>, <code>focus-ring()</code>, <code>theme-transition()</code>),{' '}
+          <code>src/scss/_typography.scss</code> and <code>src/scss/_primitives.scss</code> (the{' '}
+          <code>.panel</code>/<code>.badge</code>/<code>.chip</code>/<code>.modal</code>/
+          <code>.btn</code>/<code>.specimen</code> classes). Reasoning in{' '}
           <code>claude-docs/design-decisions/</code> — M0.6, M0.7, M0.8.
         </p>
       </footer>

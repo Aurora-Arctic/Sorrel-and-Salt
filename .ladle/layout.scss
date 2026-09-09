@@ -1,0 +1,17 @@
+// Document structure in the workshop.
+//
+// Same reasoning as ./typography.scss: `layout-base`'s bare `section` selector,
+// pulled in globally, would land on Ladle's own chrome as much as on a story.
+// Scoped to the story frame instead, so a story gets the same section/header/
+// footer structure a page does, and Ladle's chrome (outside
+// .ladle-story-frame) is untouched.
+//
+// Same `layout-base` mixin the app's globals.scss uses; the only difference is
+// the selector it hangs off. .ladle-story-frame is the wrapper
+// .ladle/components.tsx puts around every story.
+
+@use '../src/scss/layout' as *;
+
+.ladle-story-frame {
+  @include layout-base;
+}
