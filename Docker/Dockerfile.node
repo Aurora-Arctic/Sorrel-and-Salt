@@ -55,6 +55,17 @@ CMD ["npm", "run", "dev"]
 # ---------------------------------------------------------------------------
 FROM development AS testing
 
+# The reusable check workflows (lint/format/typecheck/build, M0.16) force
+# `shell: bash` and `set -o pipefail`, and their `checkout-to-app` composite
+# step runs `bash` too — none of which the Node alpine base ships. `git` is
+# what actions/checkout uses to fetch the tree (it falls back to a slow, and
+# offline-unusable, tarball download otherwise). Both are test/CI-only, so
+# they land in this stage rather than `development`. Surfaced by `make act-*`
+# (M0.23) — see claude-docs/design-decisions/m0.23-act-local-ci.md.
+USER root
+RUN apk add --no-cache bash git
+USER node
+
 ENV NODE_ENV=test
 # The `db` vitest project needs a reachable Postgres; compose/CI provide it.
 CMD ["npx", "vitest", "run"]
