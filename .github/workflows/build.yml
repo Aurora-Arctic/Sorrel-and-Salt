@@ -1,0 +1,66 @@
+name: Build
+
+# Reusable check that runs the production Next.js build. Called via
+# workflow_call from pr-gate and merge-queue, never triggered directly.
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: Testing image ref to run against (from build-image.yml)
+        required: true
+        type: string
+      should-run:
+        description: >-
+          Set false to skip the actual build while still completing this job under
+          its normal name. pr-gate passes this from its path-filter output instead of
+          putting an `if:` on the calling job — a job-level `if:` makes GitHub report
+          a differently-named, bare check run ("build" instead of "build / build")
+          when skipped, which never satisfies the "build / build" required status
+          check and leaves the PR stuck. Defaults true so merge-queue (no path
+          filtering) is unaffected.
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # The image's default user (node, non-root) can't write to the runner's
+      # bind-mounted _temp/_runner_file_commands dir, which actions/checkout (and
+      # any JS action using core.saveState/setOutput) needs — EACCES otherwise.
+      options: --user root
+    defaults:
+      run:
+        working-directory: /app
+    steps:
+      - name: Checkout into /app
+        if: inputs.should-run
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      # Next.js persists an incremental build cache to .next/cache — see
+      # https://nextjs.org/docs/app/guides/ci-build-caching. checkout-to-app
+      # populates both $GITHUB_WORKSPACE (what hashFiles reads) and /app
+      # (where npm run build actually writes .next/cache), so the cache path
+      # below is the absolute /app location, same reasoning as the log-file
+      # paths lint.yml/format.yml/typecheck.yml pass to job-summary/pr-comment.
+      - name: Cache Next.js build cache
+        if: inputs.should-run
+        uses: actions/cache@v6
+        with:
+          path: /app/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
+
+      - name: Run build
+        if: inputs.should-run
+        run: npm run build
