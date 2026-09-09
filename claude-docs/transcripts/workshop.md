@@ -221,7 +221,7 @@ Then, on the same task and at the user's direction (they disagreed with M0.31's
 - Cross-checked `_typography.scss` / `_layout.scss` / `_primitives.scss` against their own
   boundaries (type · document structure · component shapes) and found one leftover split:
   `_typography.scss` still had bare `header { margin-bottom: 1rem; }` / `section { margin:
-  1rem 0; }` even though `_layout.scss` already owns `section`'s flex treatment and `.header`.
+1rem 0; }` even though `_layout.scss` already owns `section`'s flex treatment and `.header`.
   Moved both into `layout-base`, merging the `section` margin into its existing flex rule;
   `header`'s stays a separate bare-element rule next to `.header` (same asymmetry as
   typography's bare `p`/`ul` vs a component's own classes — an unclassed `<header>` still
