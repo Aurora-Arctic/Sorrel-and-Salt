@@ -393,3 +393,71 @@ lint`/`format:check`/`typecheck`/`check:stories` all exit 0. **Not
   unverifiable until the queue is enabled (M7.A.1).
 - Reasoning:
   [`../design-decisions/m0.24-build-image.md`](../design-decisions/m0.24-build-image.md).
+
+## 2026-09-09 — M0.26 · CLI-driven Vercel deploys
+
+- Started as "disable deploy previews, alias staging". Hit the Vercel Hobby
+  wall: a named `staging` environment on `staging.sorrelandsalt.com` needs
+  Pro (Custom Environments are Pro/Enterprise). Rather than take the bare
+  `…-git-staging-<scope>.vercel.app` alias, switched the whole deploy model
+  from Vercel's Git integration to CLI-driven deploys from CI. Larger than
+  the 1h estimate and supersedes M0.25 — done deliberately, user-directed.
+- New `.github/workflows/deploy.yml`. Triggers: **push** to `main` / `staging`,
+  and **`pull_request` into `main` from a `hotfix/**` head** (types
+  opened/synchronize/reopened/closed). One `deploy` job + one `teardown` job,
+  bare `ubuntu-latest` (needs the Vercel CLI and writes `.vercel/output` —
+  the shared `testing` image is not built for that; same call
+  `composite-actions-check.yml` made). `deploy` steps: `actions/checkout@v7`,
+  `actions/setup-node@v4` (Node 22, npm cache), `npm ci`,
+  `npm i -g vercel@59`, resolve target from event/ref/head-ref, `timer-start`,
+  `vercel pull --yes --environment=<production|preview>`,
+  `vercel build [--prod]`, `vercel deploy --prebuilt [--prod]`
+  (stdout→`deploy-url.txt`, stderr→`deploy.log`, per Vercel's CI example),
+  `vercel alias set` for the preview targets, `timer-elapsed`, `job-summary`,
+  and — on `pull_request` events — `pr-comment` (`success-mode: comment`)
+  posting the preview URL. `teardown` runs on a closed hotfix PR:
+  `vercel alias rm hotfix-<slug>.sorrelandsalt.com`.
+- Target resolution: `pull_request` (hotfix) → preview +
+  `hotfix-<slug>.sorrelandsalt.com`, `<slug>` = head ref after `hotfix/`,
+  lowercased and reduced to a DNS label (≤56 chars so `hotfix-` + label ≤63);
+  push `main` → `--prod`, no alias (prod deploy assigns `sorrelandsalt.com`);
+  push `staging` → preview + `staging.sorrelandsalt.com`.
+- Hotfix deploys on the PR, not push: reviewers want a click-through preview
+  at review time, and the fix reaches prod via its own `main` PR anyway.
+  `create-pr` opens hotfix PRs into both `main` and `staging`; the trigger's
+  `branches: [main]` means only one deploys. `pull_request` (not
+  `pull_request_target`) is safe — hotfix branches are never forks, so the
+  run gets the `VERCEL_*` secrets with no untrusted checkout.
+- Per-hotfix domains (`hotfix-<slug>.sorrelandsalt.com`) need a wildcard
+  `*.sorrelandsalt.com` on the project. Wildcards are Hobby-OK but require
+  the domain on **Vercel nameservers** (`/docs/domains/.../add-a-domain`).
+  That's the one manual prerequisite for the hotfix path; `main`/`staging`
+  work with plain CNAME/A. `teardown` prunes aliases so they don't hit the
+  Hobby 50-domain cap.
+- `vercel.json`: `git.deploymentEnabled` allow-list (`main`/`staging`/
+  `hotfix/*` → `true`, M0.25) collapsed to `{ "**": false }` — the Git
+  integration ships nothing regardless of whether it stays connected.
+- Guard step: if `VERCEL_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` are
+  absent it emits a `::warning::` and every real step is `if:`-skipped, so
+  the job is green until M0.27 adds those secrets (plus `VERCEL_SCOPE` for
+  `vercel alias`). Same stub-now/wire-later shape as `pr-gate.yml`'s
+  `vitest`/`playwright` jobs.
+- `--prebuilt` means System Environment Variables are missing at build time;
+  fine here — nothing in the Next build reads them.
+- Docs: DESIGN.md §4 "Configuration" rewritten for the CLI model; §12 table
+  gains a `deploy.yml` row and notes `migrate.yml` (M1.4) must run ahead of
+  it and that `vercel.json` no longer drives deploys. README + CLAUDE.md get
+  a one-line deploy note.
+- Verified without pushing: `npx js-yaml` parses `deploy.yml` (`actionlint`
+  unavailable via `npx`, as in M0.24); `vercel.json` valid JSON;
+  `npm run lint`/`format:check`/`typecheck`/`check:stories` all exit 0;
+  command sequence checked against `/docs/cli/deploy`, `/docs/cli/alias`,
+  `/kb/guide/how-to-alias-a-preview-deployment-using-the-cli` (2026-08).
+  **Not verifiable pre-merge:** the first real run needs M0.27's `VERCEL_*`
+  secrets, the live project, and `*.sorrelandsalt.com` on Vercel nameservers
+  — push to `staging` serving `staging.sorrelandsalt.com`, push to `main`
+  serving `sorrelandsalt.com`, a `hotfix/** → main` PR serving
+  `hotfix-<slug>.sorrelandsalt.com` and commenting it, PR close removing the
+  alias, no deploy anywhere else.
+- Reasoning:
+  [`../design-decisions/m0.26-disable-previews-and-alias-staging.md`](../design-decisions/m0.26-disable-previews-and-alias-staging.md).
