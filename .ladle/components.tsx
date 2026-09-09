@@ -4,6 +4,8 @@ import { STORAGE_KEY, applyTheme } from '../src/components/ThemeToggle';
 import './theme.scss';
 import './story-frame.scss';
 import './typography.scss';
+import './layout.scss';
+import './primitives.scss';
 
 // Ladle loads this file once, ahead of every story. M0.31 grows it from M0.30's
 // passthrough into the workshop decorator. Everything it does was spotted while
@@ -31,6 +33,16 @@ import './typography.scss';
 // to `<body>` in the app, to `.ladle-story-frame` here — so a story renders
 // prose exactly as a page does and Ladle's chrome, outside the frame, is left
 // alone. See claude-docs/design-decisions/m0.32-component-stories.md.
+//
+// _layout.scss's `layout-base` (the `section`/`.header`/`.footer` structure
+// pages build on) gets the same treatment via ./layout.scss, for the same
+// reason: a bare `section` selector imported globally would land on Ladle's
+// own chrome too.
+//
+// _primitives.scss's `primitives-base` (`.panel`, `.badge--*`, `.chip--*`,
+// `.modal`, `.btn`, `.specimen*`) is scoped the same way via ./primitives.scss
+// — these are classes rather than bare elements, but the same story-frame
+// scoping keeps every mixin's output in one consistent place.
 
 // Ladle hands the toolbar control's state as one of 'light' | 'dark' | 'auto'.
 // 'light'/'dark' are an explicit choice; 'auto' is the unset position.

@@ -1,6 +1,8 @@
 @use '../scss/variables' as *;
 @use '../scss/mixins' as *;
 @use '../scss/typography' as *;
+@use '../scss/layout' as *;
+@use '../scss/primitives' as *;
 
 // The single global stylesheet, imported once by the root layout. Everything
 // else is componentized Sass (§9) — this file exists because two things have
@@ -46,6 +48,8 @@ html[data-theme='light'] {
 
 body {
   @include typography-base;
+  @include layout-base;
+  @include primitives-base;
   margin: 0;
   background-color: $surface-page;
   color: $text-primary;

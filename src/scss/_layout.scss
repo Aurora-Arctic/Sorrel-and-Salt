@@ -1,0 +1,30 @@
+@use './variables' as *;
+@use './mixins' as *;
+
+@mixin layout-base {
+  // The bare elements carry document-rhythm spacing regardless of class, the
+  // same way _typography.scss's bare `p`/`ul` do — a `<section>`/`<header>`
+  // authored with no class still reads as a section. `.header`/`.footer`
+  // opt a specific element into the flex treatment on top of that.
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+
+  header {
+    margin-bottom: 1rem;
+  }
+
+  .header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .footer {
+    border-top: 1px solid $text-muted;
+    padding-top: 1.5rem;
+  }
+}
