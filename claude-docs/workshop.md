@@ -10,7 +10,11 @@ component in the tree got its stories in M0.32; M0.33 added the gate that keeps 
 - **Ladle**, not Storybook or Histoire — Vite + React only, so it never couples the
   workshop to a Next.js major; one dependency; one config file. Reasoning:
   [`design-decisions/m0.30-ladle-component-workshop.md`](design-decisions/m0.30-ladle-component-workshop.md).
-- `.ladle/config.mjs` — `stories` glob, `port` 61000, `outDir` `build`, pinned `hmrPort` 61002.
+- `.ladle/config.mjs` — `stories` glob, `port` 61000, `previewPort` 61001 (`ladle preview`),
+  `outDir` `build`, pinned `hmrPort` 61002. `storyOrder` forces each component's `Default`
+  story to sort first within its group, leaving the rest in Ladle's own order; it's a
+  global-config hook only (no per-story-file equivalent) and must stay a self-contained
+  function since Ladle serializes it with `.toString()`.
   `addons.theme.defaultState: 'dark'` — the workshop opens dark, matching the app's dark-first
   default in `globals.scss`. M0.30 set `'dark'`, M0.31 moved it to `'auto'` (the control's unset
   position, letting `prefers-color-scheme` decide), and M0.32 moved it back; `'dark'` is the
@@ -44,6 +48,13 @@ component in the tree got its stories in M0.32; M0.33 added the gate that keeps 
   nothing on `@use`); the app `@include`s it in `body`, this file `@include`s it in
   `.ladle-story-frame`. Every story renders prose exactly as a page does; Ladle's own
   `<ul>`/`<li>`/`<a>` chrome, outside the frame, is untouched — which is what blocked it before.
+- `.ladle/layout.scss` and `.ladle/primitives.scss` (M0.32) — the same pattern for
+  `src/scss/_layout.scss`'s `layout-base` mixin (bare `section`/`header` structure,
+  `.header`/`.footer`) and `_primitives.scss`'s `primitives-base` mixin (`.panel`,
+  `.badge--*`, `.chip--*`, `.modal`, `.btn`, `.specimen*`, …): each `@include`s its
+  `*-base` mixin into `.ladle-story-frame`, so a story gets the identical document
+  structure and class layer a page does. Both imported globally in `.ladle/components.tsx`,
+  alongside `.ladle/typography.scss` above.
 - `.ladle/head.html` — injected into `<head>`; loads Cormorant Unicase + Lexend by name from
   Google Fonts so the workshop's type matches the app's (the app self-hosts them via `next/font`,
   which the workshop has no equivalent of). Dev-workshop only.
