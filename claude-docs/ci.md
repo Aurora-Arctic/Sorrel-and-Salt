@@ -83,7 +83,23 @@ with `pr-gate.yml` (M0.20).
   trigger only, since its `pr-number` input is required and used unguarded
   (unlike `lint`/`format`/`typecheck`'s optional one) and would break on
   `workflow_dispatch`, which has no PR number.
-- **Not yet ported:** the base Postgres image (M0.18) and its consumption in
-  CI/compose (M0.19), `pr-gate.yml` (M0.20), `merge-queue.yml` (M0.21),
-  `gitflow.yml` and branch rulesets (M0.22), `.actrc`/`make act-*` (M0.23),
-  `build-image.yml` (M0.24).
+- **`Docker/Dockerfile.postgres`** (M0.18) — `FROM postgres:17`, with
+  `pg_trgm` (the only extension DESIGN.md §5 names) and an empty
+  `sorrel_template` database baked into the image at _build_ time by running
+  the official image's own first-boot init (`docker-entrypoint.sh`) inside a
+  `RUN` step, instead of leaving it for a container's first start. No schema
+  or seed data yet — `src/db/schema` is still empty; M1.27 extends this same
+  image once there is one.
+- **`.github/workflows/build-db-image.yml`** (M0.18) — builds that Dockerfile
+  and publishes it to GHCR, tagged with a `hashFiles()` hash of
+  `src/db/**`/`Docker/Dockerfile.postgres`/`Docker/postgres-init/**` plus
+  `latest` (only moved on `push` to `staging`/`main`, never from a PR). The
+  same path list gates the trigger, so an unrelated PR never runs this
+  workflow — "rebuild is skipped" is the trigger itself, not a no-op job.
+  Runs on `pull_request` too, since the content-addressed tag makes a PR
+  build reusable rather than throwaway. Not yet consumed anywhere — that's
+  M0.19. Reasoning:
+  [`design-decisions/m0.18-build-db-image.md`](design-decisions/m0.18-build-db-image.md).
+- **Not yet ported:** consuming the preseeded image in CI/compose (M0.19),
+  `pr-gate.yml` (M0.20), `merge-queue.yml` (M0.21), `gitflow.yml` and branch
+  rulesets (M0.22), `.actrc`/`make act-*` (M0.23), `build-image.yml` (M0.24).
