@@ -19,7 +19,7 @@
     "db:reset": "echo 'db:reset is not wired up yet — see M1.x' && exit 1",
     "codegen": "echo 'codegen is not wired up yet — see M3.x' && exit 1",
     "workshop": "ladle serve",
-    "workshop:build": "ladle build"
+    "workshop:build": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/build-workshop.ts"
   },
   "pre-commit": [
     "lint",

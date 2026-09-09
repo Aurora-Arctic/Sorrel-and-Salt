@@ -66,7 +66,13 @@ consumes them for real, alongside `build`/`audit` (M0.17).
   (`Docker/Dockerfile.node`'s `testing` stage — the image `build.yml` runs
   against — bakes in `NODE_ENV=test`, and Turbopack crashes prerendering
   `/_global-error` under anything but `production`/unset; without the fix
-  every real `build / build` CI run would fail). `audit` runs `npm audit
+  every real `build / build` CI run would fail). **M0.36** added two more
+  steps after `npm run build`, gated by the same `should-run`: `npm run
+check:stories` (M0.33's gate) and `npm run workshop:build` (now wrapped by
+  `scripts/build-workshop.ts` — bare `ladle build` never exits non-zero, an
+  upstream `@ladle/react` 5.1.1 gap; see
+  [`design-decisions/m0.36-ci-story-gate.md`](design-decisions/m0.36-ci-story-gate.md)).
+  `audit` runs `npm audit
 --json`, always exits clean
   (`continue-on-error` + `|| true`), and comments a severity/package
   breakdown on the PR — deliberately non-blocking and never a required
