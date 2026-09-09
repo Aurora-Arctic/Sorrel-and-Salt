@@ -64,3 +64,18 @@ jobs:
       - name: Run build
         if: inputs.should-run
         run: npm run build
+
+      # M0.33's gate (missing index.stories.tsx) and M0.36's wrapper around
+      # `ladle build` (a story that fails to bundle) — both plain npm scripts,
+      # per M0.33's decision record. Here rather than a new workflow: this job
+      # already runs on every push that could touch a component, and adding a
+      # sixth reusable check just for two fast scripts (see their own timings)
+      # would cost a `changes` filter category and a build-image dependency
+      # for no benefit.
+      - name: Check every component has a story
+        if: inputs.should-run
+        run: npm run check:stories
+
+      - name: Build the component workshop
+        if: inputs.should-run
+        run: npm run workshop:build

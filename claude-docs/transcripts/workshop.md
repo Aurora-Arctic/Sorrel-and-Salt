@@ -263,3 +263,34 @@ Then, on the same task and at the user's direction (they disagreed with M0.31's
   exit 1 naming the missing path, removed → exit 0; `npm run pre-commit` runs it last and
   passes; lint / format:check / typecheck pass; `workshop:build` still exits 0.
   Reasoning: [`../design-decisions/m0.33-component-story-gate.md`](../design-decisions/m0.33-component-story-gate.md).
+
+## 2026-09-09 — M0.36 · Wire check:stories and workshop:build into CI
+
+- **Both scripts added to `.github/workflows/build.yml`**, right after
+  `npm run build`, gated by the same `should-run` input the build step
+  already uses — no new reusable workflow, since `build.yml` already runs on
+  every push that could touch a component.
+- **Real finding: `ladle build` never fails, for any reason.** A runtime
+  throw (render-time or module-eval-time) is never even executed — Ladle
+  code-splits stories into browser-only chunks — but even the one thing the
+  static build genuinely can catch, an unresolvable import, prints Vite's own
+  `✗ Build failed` and still exits 0. Traced to `@ladle/react` 5.1.1's
+  `lib/cli/vite-prod.js` catching the Vite build exception and returning
+  `false`, which `lib/cli/build.js` never checks. No CLI flag fixes it, no
+  newer version exists (5.1.1 is latest), and the build function isn't
+  reachable via a supported import (`lib/cli/build.js` isn't in the
+  package's `exports` map).
+- **Fix: `scripts/build-workshop.ts`**, a wrapper — not a change to
+  `scripts/check-component-stories.ts`, which the task's acceptance criteria
+  left untouched. Spawns `ladle build`, relays its output unchanged, and
+  turns Vite's own `Build failed` marker into a real `process.exit(1)`.
+  `package.json`'s `workshop:build` script now points here instead of
+  `ladle build` directly.
+- Verified: seeded `src/components/_GateFixture/` with a story importing a
+  nonexistent module → bare `ladle build` exits 0, the wrapper exits 1;
+  fixture removed → wrapper exits 0, real `./build` output unchanged.
+  `check:stories` regression re-run (missing-story fixture → exit 1, removed
+  → exit 0) to confirm this task didn't touch the gate itself. lint /
+  format:check / typecheck pass. `npx js-yaml build.yml` parses.
+  Reasoning:
+  [`../design-decisions/m0.36-ci-story-gate.md`](../design-decisions/m0.36-ci-story-gate.md).

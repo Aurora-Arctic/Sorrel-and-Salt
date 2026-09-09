@@ -55,14 +55,18 @@ component in the tree got its stories in M0.32; M0.33 added the gate that keeps 
   for workshop-only pages that aren't components — currently just the design-language reference.
 - **The M0.33 gate — `npm run check:stories`** (`scripts/check-component-stories.ts`) — walks
   `src/components/` and exits non-zero if any directory with an `index.tsx` has no sibling
-  `index.stories.tsx`, printing each missing path. It runs in pre-commit (the `pre-commit`
-  array in `package.json`) and nowhere else: M0.33 left it a plain npm script for the M0.17
-  build job and the M0.20 PR gate to call, but both workflows landed without picking it up, so
-  neither `check:stories` nor `npm run workshop:build` runs in CI today — a missing story, or
-  one that throws, will not fail a PR. Not an Oxlint rule: Oxlint has no custom-rule API and the check
-  is a cross-file filesystem assertion. `.ladle/*.stories.tsx` is out of scope by design — the
-  gate only polices `src/components/`. Reasoning:
+  `index.stories.tsx`, printing each missing path. Not an Oxlint rule: Oxlint has no
+  custom-rule API and the check is a cross-file filesystem assertion. `.ladle/*.stories.tsx`
+  is out of scope by design — the gate only polices `src/components/`. Reasoning:
   [`design-decisions/m0.33-component-story-gate.md`](design-decisions/m0.33-component-story-gate.md).
+- **CI enforcement (M0.36)** — `check:stories` and `workshop:build` both run in pre-commit
+  (the `pre-commit` array in `package.json`) **and** in the build job
+  (`.github/workflows/build.yml`), right after `npm run build`, gated by the same
+  `should-run` (`src/**` changed) as the build step itself. `workshop:build` no longer runs
+  `ladle build` directly: @ladle/react 5.1.1's own CLI always exits 0, even when the
+  underlying Vite/Rollup build fails, so `scripts/build-workshop.ts` shells out to it,
+  mirrors its output, and turns Vite's own `✗ Build failed` marker into a real non-zero
+  exit. Reasoning: [`design-decisions/m0.36-ci-story-gate.md`](design-decisions/m0.36-ci-story-gate.md).
 - `npm run workshop` / `make workshop` — dev server on **61000**.
 - `npm run workshop:build` / `make workshop-build` — static build to gitignored `./build`.
 - `*.stories.tsx` is excluded from `tsc` (mirroring `*.test.tsx`) while `@ladle/react`'s
