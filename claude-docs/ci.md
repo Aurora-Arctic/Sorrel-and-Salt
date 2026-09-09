@@ -138,5 +138,23 @@ true` where each reusable workflow supports it. Same three gaps as
   flips that branch-protection setting, once there's more than one
   contributor. Reasoning:
   [`design-decisions/m0.21-merge-queue.md`](design-decisions/m0.21-merge-queue.md).
-- **Not yet ported:** `gitflow.yml` and branch rulesets (M0.22),
-  `.actrc`/`make act-*` (M0.23), `build-image.yml` (M0.24).
+- **`.github/workflows/gitflow.yml`** (M0.22) — reusable `workflow_call`
+  check enforcing which source branches may PR into which target branch
+  (`feature/*` → `staging`; `release/MAJOR.MINOR.PATCH` or `hotfix/*` →
+  `main`; `staging` or `hotfix/*` → `release/*`; `main-sync/YYYY-MM-DD-HH-MM-SS`
+  → `staging`), plus a standing exception letting Dependabot's PRs into
+  `staging` through regardless of branch name (checked by PR author,
+  `dependabot[bot]`, not by branch pattern — a naming exception would let
+  anyone claim it). Ported byte-for-byte, no repo-specific paths to fix.
+  `pr-gate.yml` and `merge-queue.yml` both now `needs: gitflow` on every
+  other job (`merge-queue.yml` calls it with `should-run: false`, since
+  `merge_group` events expose only a synthetic head ref, not a PR's real
+  source branch — see the file's own header comment). Branch rulesets:
+  `Main`/`Staging` (already existed) each gained `gitflow / gitflow` as a
+  required status check; a new `Release Branches` ruleset
+  (`refs/heads/release/**`, delete/force-push protection only, no required
+  checks) matches resume-2026's. `.github/dependabot.yml` targets `staging`
+  on all three ecosystems (`npm`, `github-actions`, `docker`). Reasoning:
+  [`design-decisions/m0.22-gitflow-rulesets.md`](design-decisions/m0.22-gitflow-rulesets.md).
+- **Not yet ported:** `.actrc`/`make act-*` (M0.23), `build-image.yml`
+  (M0.24).
