@@ -528,3 +528,20 @@ the .vercel directory and deploy again.`
   string remains in `.github/` or the docs. The re-run is the real check.
 - Reasoning:
   [`../design-decisions/m0.28-pipeline-proof-and-node-26.md`](../design-decisions/m0.28-pipeline-proof-and-node-26.md).
+
+## 2026-09-09 — M0.36 · Wire check:stories and workshop:build into CI
+
+- `.github/workflows/build.yml` gains two steps after `npm run build`:
+  `npm run check:stories` and `npm run workshop:build`, both gated by the
+  existing `should-run` input — no new reusable workflow or `changes` filter
+  category, since `build.yml` already runs on every push that could touch a
+  component.
+- The `workshop:build` half needed a real fix, not just a wire-up: bare
+  `ladle build` exits 0 even on a genuine build failure (`@ladle/react`
+  5.1.1's `vite-prod.js` swallows the Vite exception and never propagates
+  it). `scripts/build-workshop.ts` wraps the CLI call and turns Vite's own
+  `Build failed` marker into a real exit 1. Full trail:
+  [`../design-decisions/m0.36-ci-story-gate.md`](../design-decisions/m0.36-ci-story-gate.md).
+- Verified locally (`npx js-yaml build.yml` parses; both scripts behave
+  correctly against seeded fixtures) — the real CI run is this PR's own
+  first `build / build` execution.
