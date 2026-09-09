@@ -811,7 +811,7 @@ Specs: admin adds a compendium entry; A adds it to W's ingredients with a quanti
 | **New** `codegen.yml` check | Fails if generated GraphQL types are stale relative to the schema                                                                                                                                   |
 | **New** `deploy.yml`        | CLI-driven Vercel deploy on push to `main`/`staging`/`hotfix/**` (§4). Not ported — `resume-2026` deployed via Netlify's own Git integration with no workflow file                                  |
 | **New** `migrate.yml`       | Applies migrations to staging on merge to `staging`, production on merge to `main`; must complete before `deploy.yml` ships the new deployment (a `needs:` job or a `workflow_run` predecessor)     |
-| Secrets                     | `DATABASE_URL` per environment, `BETTER_AUTH_SECRET`, Google and GitHub OAuth client credentials, `VERCEL_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` / `VERCEL_SCOPE` for `deploy.yml`          |
+| Secrets                     | `DATABASE_URL` per environment, `BETTER_AUTH_SECRET`, Google and GitHub OAuth client credentials, `VERCEL_DEPLOY_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` / `VERCEL_SCOPE` for `deploy.yml`   |
 
 `make docker-up` gives a working local database with no Neon connection at all.
 

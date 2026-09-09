@@ -205,7 +205,7 @@ true` where each reusable workflow supports it. Same three gaps as
   writes `.vercel/output`), `actions/setup-node@v4` pinned to **Node 26.6.0**
   (matches `Docker/Dockerfile.node`; see M0.28), and the `timer-start` /
   `timer-elapsed` / `job-summary` / `pr-comment` composite actions. A guard
-  step skips every real step unless `VERCEL_TOKEN` / `VERCEL_ORG_ID` /
+  step skips every real step unless `VERCEL_DEPLOY_TOKEN` / `VERCEL_ORG_ID` /
   `VERCEL_PROJECT_ID` / `VERCEL_SCOPE` are set — added as repo secrets
   2026-09-09, so the deploy now runs for real. `migrate.yml` (M1.4) will run
   ahead of the deploy step.
