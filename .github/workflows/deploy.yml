@@ -85,7 +85,10 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # Match Docker/Dockerfile.node and local dev. Node 22 ships npm 10,
+          # which can't reconcile the npm-11-generated package-lock.json for
+          # typescript@7's per-platform optional deps and fails `npm ci`.
+          node-version: 26.6.0
           cache: npm
 
       - name: Install dependencies
@@ -245,7 +248,7 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 26.6.0
 
       - name: Install Vercel CLI
         if: steps.guard.outputs.enabled == 'true'

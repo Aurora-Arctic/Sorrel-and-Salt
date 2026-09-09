@@ -202,10 +202,18 @@ true` where each reusable workflow supports it. Same three gaps as
   `pull_request` not `pull_request_target` — hotfix branches are never forks.
   The per-hotfix domains need a wildcard `*.sorrelandsalt.com` (Vercel
   nameservers, Hobby-OK). Bare `ubuntu-latest` runner (needs the Vercel CLI,
-  writes `.vercel/output`), `actions/setup-node@v4`, and the `timer-start` /
+  writes `.vercel/output`), `actions/setup-node@v4` pinned to **Node 26.6.0**
+  (matches `Docker/Dockerfile.node`; see M0.28), and the `timer-start` /
   `timer-elapsed` / `job-summary` / `pr-comment` composite actions. A guard
-  step skips every real step until M0.27 provides `VERCEL_TOKEN` /
-  `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` / `VERCEL_SCOPE`, so the job is green
-  in the meantime. `migrate.yml` (M1.4) will run ahead of the deploy step.
+  step skips every real step unless `VERCEL_TOKEN` / `VERCEL_ORG_ID` /
+  `VERCEL_PROJECT_ID` / `VERCEL_SCOPE` are set — added as repo secrets
+  2026-09-09, so the deploy now runs for real. `migrate.yml` (M1.4) will run
+  ahead of the deploy step.
   Reasoning:
   [`design-decisions/m0.26-disable-previews-and-alias-staging.md`](design-decisions/m0.26-disable-previews-and-alias-staging.md).
+- **M0.28** proved the pipeline end to end on the trivial page and, in doing
+  so, caught `deploy.yml`'s `npm ci` failing under its ported Node 22 (npm 10
+  can't read the npm-11 lockfile for `typescript@7`'s per-platform deps) —
+  fixed by the Node 26.6.0 pin above. Build-time baseline recorded there.
+  Reasoning:
+  [`design-decisions/m0.28-pipeline-proof-and-node-26.md`](design-decisions/m0.28-pipeline-proof-and-node-26.md).
