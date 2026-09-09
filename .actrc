@@ -1,0 +1,8 @@
+# act — https://github.com/nektos/act. Ported from resume-2026 (M0.23).
+#
+# catthehacker/ubuntu:act-latest is the closest public match to GitHub's real
+# ubuntu-latest runner and ships multi-arch (amd64 + arm64), so it also runs
+# unmodified on Apple Silicon. --pull=false leaves the first-use pull to
+# docker and skips a redundant registry round-trip on every later run.
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+--pull=false

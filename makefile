@@ -27,7 +27,8 @@
 	db-generate db-migrate db-seed db-reset codegen \
 	workshop workshop-build \
 	docker-build docker-up docker-workshop docker-down docker-rebuild docker-logs \
-	docker-update-token
+	docker-update-token \
+	act-image act-cache-checkout act-lint act-format act-typecheck act-test
 
 COMPOSE := docker compose -f Docker/docker-compose.yaml
 
@@ -146,3 +147,52 @@ docker-logs:
 ## Refresh the devcontainer's Claude Code OAuth token in Docker/.env
 docker-update-token:
 	./Docker/update-token.sh
+
+# Local CI via act (M0.23). Runs the real reusable per-check workflows
+# (.github/workflows/{lint,format,typecheck}.yml) against a locally-built
+# testing image, so a failing check surfaces here instead of only in pr-gate.
+# Ported from resume-2026; act-vitest / act-playwright arrive with their
+# workflows. act-build needs actions/cache@v6 pre-cached the way
+# act-cache-checkout pre-caches checkout-to-app — deferred with them. audit
+# and the published build-image are deliberately left out.
+#
+# Each per-check workflow is workflow_call-only with a required `image` input
+# (normally build-image.yml's GHCR push). `act-image` builds the same
+# Dockerfile.node `testing` target locally under the tag the job asks for, so
+# `docker run` never reaches GHCR and the container `credentials:` block is a
+# no-op — hence the dummy GITHUB_TOKEN. Every job's first step resolves
+# checkout-to-app by a remote owner/repo/path@main ref (not ./), so act needs a
+# real clone of this repo's main at its cache path; --action-offline-mode then
+# keeps act from re-fetching it. The clone only runs the first time per machine
+# (or whenever ~/.cache/act is cleared).
+#
+# `--input should-run=true` on lint/typecheck: both gate every real step
+# behind `if: inputs.should-run`, whose `default: true` GitHub applies for a
+# workflow_call but act (invoked with -W on the file directly) does not —
+# without it the job "passes" having run nothing. format.yml has no such input.
+ACT_IMAGE := sorrel-and-salt-testing:local
+ACT_CHECKOUT_CACHE := $(HOME)/.cache/act/Aurora-Arctic-Sorrel-and-Salt-.github-actions-checkout-to-app@main
+
+## Build the Dockerfile.node testing image act runs the checks in
+act-image:
+	docker build -f Docker/Dockerfile.node --target testing -t $(ACT_IMAGE) .
+
+## Clone this repo's main to act's cache so checkout-to-app resolves offline
+act-cache-checkout:
+	@[ -d "$(ACT_CHECKOUT_CACHE)" ] || \
+		git clone --branch main https://github.com/Aurora-Arctic/Sorrel-and-Salt "$(ACT_CHECKOUT_CACHE)"
+
+## Run the lint workflow locally via act
+act-lint: act-image act-cache-checkout
+	act -W .github/workflows/lint.yml -j lint --input image=$(ACT_IMAGE) --input should-run=true -s GITHUB_TOKEN=dummy-token --action-offline-mode
+
+## Run the format-check workflow locally via act
+act-format: act-image act-cache-checkout
+	act -W .github/workflows/format.yml -j format --input image=$(ACT_IMAGE) -s GITHUB_TOKEN=dummy-token --action-offline-mode
+
+## Run the typecheck workflow locally via act
+act-typecheck: act-image act-cache-checkout
+	act -W .github/workflows/typecheck.yml -j typecheck --input image=$(ACT_IMAGE) --input should-run=true -s GITHUB_TOKEN=dummy-token --action-offline-mode
+
+## Run every act-* check target in sequence
+act-test: act-lint act-format act-typecheck
