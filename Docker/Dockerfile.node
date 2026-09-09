@@ -1,0 +1,60 @@
+# syntax=docker/dockerfile:1
+
+# Sorrel & Salt — Node image for local development and CI test runs.
+#
+# Two stages, both on the musl/alpine Node base. This is a deliberate slimming
+# of the three-stage resume-2026 file (`builder` -> `testing` -> `devcontainer`,
+# on the full Debian `node` image): there is no separate `devcontainer` stage,
+# the devcontainer (M0.14) builds `development` directly, and Playwright's
+# system libraries and browser download are left out entirely — e2e is not run
+# from this image.
+#
+#   development  Dependencies + source. The interactive image the compose `app`
+#                service and the devcontainer both build (M0.12-M0.14).
+#   testing      `development` plus a test-only default command. What CI builds
+#                to run vitest against a Postgres service.
+#
+# Dependencies are installed in their own layer from the manifests alone,
+# before any source is copied, so editing a source file never invalidates the
+# `npm ci` layer. Requires BuildKit (default in modern Docker) for the
+# `# syntax` directive above.
+
+# Pinned to the same tag resume-2026 uses, so the image-size comparison in
+# claude-docs/design-decisions/m0.11-slim-dockerfile-node.md is like-for-like.
+ARG NODE_VERSION=26.6.0
+
+# ---------------------------------------------------------------------------
+# development — deps + source, runs `npm run dev` on 8000
+# ---------------------------------------------------------------------------
+FROM node:${NODE_VERSION}-alpine AS development
+
+# glibc shim for the occasional prebuilt native addon that assumes it (Next's
+# SWC binary ships a musl build, but this keeps `npm ci` robust). ~1 MB.
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+RUN chown node:node /app
+USER node
+
+# Dependency layer: only the manifests, so `npm ci` stays cached until they
+# change. `--include=dev` is the default; vitest and the rest of the toolchain
+# land here once they are added to package.json.
+COPY --chown=node:node package.json package-lock.json ./
+RUN npm ci
+
+# Source layer: everything not excluded by .dockerignore. A change here reuses
+# every layer above.
+COPY --chown=node:node . .
+
+ENV NODE_ENV=development
+EXPOSE 8000
+CMD ["npm", "run", "dev"]
+
+# ---------------------------------------------------------------------------
+# testing — development + a vitest default command
+# ---------------------------------------------------------------------------
+FROM development AS testing
+
+ENV NODE_ENV=test
+# The `db` vitest project needs a reachable Postgres; compose/CI provide it.
+CMD ["npx", "vitest", "run"]

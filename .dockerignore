@@ -1,0 +1,57 @@
+# Build context excludes for Docker/Dockerfile.node (context is the repo root —
+# see docker-compose.yaml, M0.12). Keeps the image slim and, by leaving the
+# host's platform-specific node_modules out, keeps the container's `npm ci`
+# result from being overwritten by `COPY . .`.
+
+# Dependencies — reinstalled inside the image
+node_modules
+
+# Next.js / build output
+.next
+out
+.vercel
+build
+dist
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Tests and coverage
+coverage
+coverage-e2e
+playwright-report
+blob-report
+test-results
+playwright/.cache
+.vitest
+
+# Version control and CI
+.git
+.github
+.gitignore
+
+# Local env and container state — never bake these in
+.env
+.env.*
+!.env.example
+Docker/.env
+Docker/claude-home
+pgdata
+docker-data
+*.dump
+*.sql.gz
+
+# Editors / OS / scratch
+.idea
+.vscode
+*.swp
+*.swo
+*~
+.DS_Store
+._*
+.scratch*
+tmp
+.cache
+
+# Logs
+*.log
+npm-debug.log*
