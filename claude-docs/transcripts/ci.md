@@ -9,7 +9,7 @@ Append-only. Newest entry at the bottom. Summary: [`../ci.md`](../ci.md).
   no drift. None of the five hardcode a repo name internally, so nothing in
   them needed changing.
 - The hardcoded reference the task description warned about turned out to
-  live in the *callers*, not the actions: resume-2026's per-check workflows
+  live in the _callers_, not the actions: resume-2026's per-check workflows
   invoke `checkout-to-app` as
   `mjoynes-wombat-web/resume-2026/.github/actions/checkout-to-app@main`
   (a full `owner/repo` path, not `./...`) because it runs before the repo is
@@ -33,3 +33,31 @@ Append-only. Newest entry at the bottom. Summary: [`../ci.md`](../ci.md).
   end-to-end demonstration.
 - Reasoning:
   [`../design-decisions/m0.15-composite-actions.md`](../design-decisions/m0.15-composite-actions.md).
+
+## 2026-09-09 — M0.16 · lint, format and typecheck workflows ported
+
+- `.github/workflows/{lint,format,typecheck}.yml` copied from `resume-2026`
+  with only the same `checkout-to-app` repo-path fix M0.15 made — `diff`
+  against the source (post-substitution) is empty for all three. Each is a
+  `workflow_call`-only reusable workflow, unconsumed until `pr-gate.yml`
+  (M0.20) exists.
+- Added `.github/workflows/lint-format-typecheck-check.yml` to actually
+  invoke the three, since neither of their real callers (`pr-gate.yml`,
+  `merge-queue.yml`) exists yet — same reasoning as
+  `composite-actions-check.yml` for M0.15. It also builds the `image` input
+  they require (`Docker/Dockerfile.node`'s `testing` target) ad hoc and
+  pushes it to GHCR under a run-scoped tag, rather than porting
+  `build-image.yml` (M0.24) early to get a real one.
+- Found and fixed pre-existing Prettier drift in three `claude-docs/*.md`
+  files (left over from M0.15) that would have made the new `format` check
+  fail red with no change of its own — `npx prettier --write` on exactly
+  those three, content otherwise untouched.
+- Verified without pushing: `npx js-yaml` parses all four new/changed
+  workflow files; `diff` against the fetched resume-2026 originals is empty
+  for the three ported workflows; `grep -rn 'resume-2026\|mjoynes-wombat-web'
+.github/` finds nothing; `npm run lint`/`format:check`/`typecheck` all
+  exit 0 on the host. The container runs, and the deliberately-broken-check
+  failure case, are the PR's job — `lint-format-typecheck-check.yml`
+  triggers on this same diff.
+- Reasoning:
+  [`../design-decisions/m0.16-lint-format-typecheck-workflows.md`](../design-decisions/m0.16-lint-format-typecheck-workflows.md).

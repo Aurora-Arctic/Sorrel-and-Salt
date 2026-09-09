@@ -1,0 +1,148 @@
+name: Typecheck
+
+# Reusable check that runs `tsc --noEmit` to surface type errors. Called
+# via workflow_call from pr-gate and merge-queue, never triggered directly.
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: Testing image ref to run against (from build-image.yml)
+        required: true
+        type: string
+      pr-number:
+        description: Pull request number to comment on (omit to skip PR commenting)
+        required: false
+        type: string
+      merge-queue:
+        description: Set true when called from merge-queue.yml — uses a separate, merge-queue-labeled comment thread and posts only on failure (no minimize-on-success)
+        required: false
+        type: boolean
+        default: false
+      should-run:
+        description: >-
+          Set false to skip the actual typecheck run while still completing this job
+          under its normal name. pr-gate passes this from its path-filter output
+          instead of putting an `if:` on the calling job — a job-level `if:` makes
+          GitHub report a differently-named, bare check run ("typecheck" instead of
+          "typecheck / typecheck") when skipped, which never satisfies the
+          "typecheck / typecheck" required status check and leaves the PR stuck.
+          Defaults true so merge-queue (no path filtering) is unaffected.
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  packages: read
+  pull-requests: write
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # The image's default user (node, non-root) can't write to the runner's
+      # bind-mounted _temp/_runner_file_commands dir, which actions/checkout (and
+      # any JS action using core.saveState/setOutput) needs — EACCES otherwise.
+      options: --user root
+    defaults:
+      run:
+        working-directory: /app
+        # container: jobs default to sh, not bash, unlike normal runs-on jobs —
+        # https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/run-jobs-in-a-container
+        # sh (dash) doesn't support `set -o pipefail`, used below.
+        shell: bash
+    steps:
+      - name: Checkout into /app
+        if: inputs.should-run
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      - name: Start timer
+        id: timer-start
+        if: inputs.should-run
+        uses: ./.github/actions/timer-start
+
+      - name: Run typecheck
+        id: run
+        if: inputs.should-run
+        run: |
+          set -o pipefail
+          npm run typecheck 2>&1 | tee /app/output.log
+
+      - name: Compute duration
+        id: timer
+        if: always() && inputs.should-run
+        uses: ./.github/actions/timer-elapsed
+        with:
+          start: ${{ steps.timer-start.outputs.start }}
+
+      # tsc prints one line per error (`<file>(<line>,<col>): error TS<code>: ...`)
+      # and no trailing summary of its own — count errors/files ourselves.
+      - name: Summarize output
+        id: summarize
+        if: always() && inputs.should-run
+        run: |
+          errors=$(grep -cE '^[^(]+\([0-9]+,[0-9]+\): error TS[0-9]+:' /app/output.log || true)
+          files=$(grep -E '^[^(]+\([0-9]+,[0-9]+\): error TS[0-9]+:' /app/output.log | sed -E 's/\([0-9]+,[0-9]+\).*$//' | sort -u | wc -l | tr -d ' ' || true)
+          if [ "$errors" -eq 0 ]; then
+            summary="0 errors"
+          else
+            error_word="errors"; [ "$errors" -eq 1 ] && error_word="error"
+            file_word="files"; [ "$files" -eq 1 ] && file_word="file"
+            summary="$errors $error_word across $files $file_word"
+          fi
+          echo "summary=$summary" >> "$GITHUB_OUTPUT"
+
+          # Collapsible, per-error breakdown (capped, with a pointer to the
+          # full raw log below for anything past the cap).
+          max=15
+          matches=$(grep -E '^[^(]+\([0-9]+,[0-9]+\): error TS[0-9]+:' /app/output.log || true)
+          delim="ghadelim_$RANDOM$RANDOM"
+          {
+            echo "details<<$delim"
+            if [ -n "$matches" ]; then
+              total=$(echo "$matches" | wc -l | tr -d ' ')
+              echo '<details><summary>Issues</summary>'
+              echo ''
+              echo "$matches" | head -n "$max" | sed -E 's/^([^(]+)\(([0-9]+),([0-9]+)\): error (TS[0-9]+): (.*)$/- **\1:\2:\3** — ❌ \4: \5/'
+              if [ "$total" -gt "$max" ]; then
+                echo ''
+                echo "*…and $((total - max)) more — see full output below.*"
+              fi
+              echo ''
+              echo '</details>'
+            fi
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Write job summary
+        if: always() && inputs.should-run
+        uses: ./.github/actions/job-summary
+        with:
+          check-name: Typecheck
+          outcome: ${{ steps.run.outcome }}
+          log-file: /app/output.log
+          duration: ${{ steps.timer.outputs.duration }}
+          summary: ${{ steps.summarize.outputs.summary }}
+          details: ${{ steps.summarize.outputs.details }}
+
+      # Fail-only from pr-gate (resolves a prior failure comment on success),
+      # fail-only on a separate merge-queue-labeled thread from merge-queue
+      # (no action at all on success) — see .github/actions/pr-comment.
+      - name: Comment on PR
+        if: always() && inputs.pr-number && inputs.should-run
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Typecheck
+          marker-slug: typecheck
+          pr-number: ${{ inputs.pr-number }}
+          merge-queue: ${{ inputs.merge-queue }}
+          outcome: ${{ steps.run.outcome }}
+          log-file: /app/output.log
+          success-mode: minimize
+          duration: ${{ steps.timer.outputs.duration }}
+          summary: ${{ steps.summarize.outputs.summary }}
+          details: ${{ steps.summarize.outputs.details }}
