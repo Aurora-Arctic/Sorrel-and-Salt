@@ -1,0 +1,154 @@
+@use 'sass:map';
+@use './variables' as *;
+@use './mixins' as *;
+
+// Structural UI primitives promoted from the .ladle/ design-language reference
+// page: a raised panel, badges, chips, a raised modal + its action row, a
+// button, and the ingredient-card "specimen" layout. Colour/edge/geometry for
+// the badge and chip shapes still come from M0.8's badge()/chip() mixins in
+// _mixins.scss — this partial is the class layer a component applies directly
+// instead of re-deriving them, plus the shapes M0.8 didn't cover (panel,
+// button, modal actions, specimen layout).
+//
+// Emitted once via this mixin, the same way typography-base/layout-base are:
+// `body { @include primitives-base; }` in the app's globals.scss, and
+// `.ladle-story-frame { @include primitives-base; }` in the workshop
+// (.ladle/primitives.scss), so a story gets identical classes to a page.
+@mixin primitives-base {
+  // A plain framed box on the raised surface — the neutral ground a specimen
+  // or a set of swatches sits on. Not modal-surface(): that carries a shadow
+  // and a bigger radius meant for a floating panel, which would read as "this
+  // is a dialog".
+  .panel {
+    background-color: $surface-card;
+    border-radius: 0.25rem;
+    padding: 1.5rem;
+    @include theme-transition(background-color, border-color);
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
+
+  .badges {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  @each $palette in map.keys($badge-palettes) {
+    .badge--#{$palette} {
+      @include badge($palette);
+    }
+  }
+
+  @each $slug in map.keys($category-groups) {
+    .chip--#{$slug} {
+      @include chip($slug);
+
+      &.is-selected {
+        @include chip($slug, selected);
+      }
+    }
+  }
+
+  // The raised surface behind a modal or an "everything at once" card.
+  // modal-surface() deliberately excludes width/padding/position — the
+  // component that owns a real modal (M3.x) decides those; this class adds
+  // only the padding and heading trim every instance of the shape wants.
+  .modal {
+    @include modal-surface;
+    padding: 1.5rem;
+
+    h4 {
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  .modal__actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .btn {
+    font-family: $font-body;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.375rem 0.875rem;
+    border-radius: 0.25rem;
+    border: 1px solid $accent;
+    background-color: transparent;
+    color: $accent;
+    cursor: pointer;
+    @include theme-transition(background-color, border-color, color);
+
+    &:hover {
+      background-color: $accent;
+      color: $text-on-color;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
+
+  .btn--secondary {
+    border-color: $secondary;
+    color: $secondary;
+
+    &:hover {
+      background-color: $secondary;
+    }
+  }
+
+  // An "everything at once" card — chips and badges laid out the way an
+  // IngredientCard (M8.x) will need. `.specimen` composes with `.modal` for
+  // the raised surface; it adds only the internal layout.
+  .specimen {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .specimen__top {
+    display: flex;
+    justify-content: space-between;
+    // Top-align, so the badge cluster hugs its own content instead of
+    // stretching to the height of the name + binomial beside it.
+    align-items: flex-start;
+    gap: 1rem;
+
+    h4 {
+      margin-bottom: 0;
+    }
+  }
+
+  .specimen__badges,
+  .specimen__chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .specimen__stock {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0;
+    padding-top: 0.5rem;
+    border-top: 1px solid $text-muted;
+    font-size: 0.8rem;
+    color: $text-muted;
+    opacity: 0.85;
+  }
+
+  .specimen__threshold {
+    white-space: nowrap;
+  }
+}
