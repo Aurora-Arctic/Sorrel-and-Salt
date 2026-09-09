@@ -9,13 +9,6 @@ name: PR Gate
 #
 # One thing resume-2026's own pr-gate.yml assumes isn't ported yet:
 #
-# - the real `build-image.yml` (M0.24) doesn't exist, so the image these jobs
-#   run against is built ad hoc instead of via
-#   `uses: ./.github/workflows/build-image.yml` — the same "build the
-#   testing target ourselves, tagged per run, never reused" pattern
-#   `lint-format-typecheck-check.yml`/`build-audit-check.yml` established in
-#   M0.16/M0.17 for the identical reason. M0.24 replaces this job with the
-#   real, content-addressed one.
 # - `vitest` and `playwright` (both M1) are stub jobs — they exist under
 #   their real names so branch protection can eventually require them
 #   without a rename, but run one no-op step instead of calling a
@@ -115,52 +108,22 @@ jobs:
               - 'package.json'
               - 'package-lock.json'
 
-  # Ad hoc, run-scoped stand-in for build-image.yml (M0.24) — see the header
-  # comment above. cancel-in-progress is false, matching upstream's own
-  # build-image job: this pushes to a shared GHA layer cache
-  # (cache-to: type=gha,mode=max), and cancelling mid-push can freeze a
-  # half-written layer into that cache for every later run to reuse. The
-  # jobs below are cheap to rerun and don't share mutable state, so they get
-  # their own cancellable concurrency groups instead. Always runs
-  # unconditionally (not gated on `changes`) since format always needs its
-  # image output regardless of what changed.
+  # build-image pushes to a shared, content-addressed GHCR tag and GHA layer
+  # cache (cache-to: type=gha,mode=max) keyed off Dockerfile.node +
+  # package-lock.json. Cancelling it mid-push can freeze a half-written layer
+  # into that cache/tag, which every later run with the same hash would then
+  # keep reusing — a corruption that doesn't self-heal on retry. So
+  # cancel-in-progress is false here: a superseded run's build-image queues
+  # behind the one in flight instead of being killed. The jobs below are
+  # cheap to rerun and don't share mutable state, so they get their own
+  # cancellable concurrency groups instead. Always runs unconditionally (not
+  # gated on `changes`) since format always needs its image output regardless
+  # of what changed.
   build-image:
-    runs-on: ubuntu-latest
     concurrency:
       group: pr-gate-build-image-${{ github.event.pull_request.number }}
       cancel-in-progress: false
-    outputs:
-      image: ${{ steps.tag.outputs.image }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Compute scoped image tag
-        id: tag
-        run: |
-          repo_lower=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "image=ghcr.io/${repo_lower}/testing:pr-gate-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Build and push testing image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: Docker/Dockerfile.node
-          target: testing
-          push: true
-          tags: ${{ steps.tag.outputs.image }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+    uses: ./.github/workflows/build-image.yml
 
   lint:
     needs: [build-image, changes, gitflow]

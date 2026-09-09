@@ -120,20 +120,22 @@ consumes them for real, alongside `build`/`audit` (M0.17).
   `dorny/paths-filter` (`format` always runs), calls all five existing
   reusable checks, and carries stub `vitest`/`playwright` jobs (real job
   names, one no-op step) so M1 can wire them in without a required-check
-  rename. Still missing two upstream dependencies that are later tasks:
-  `gitflow` (M0.22, dropped from every job's `needs:` for now) and the real
-  `build-image.yml` (M0.24, stood in for by the same ad hoc run-scoped image
-  build the two smoke workflows above use — tag
-  `ghcr.io/.../testing:pr-gate-<run id>`). Reasoning:
+  rename. Shipped with two upstream dependencies stubbed that later tasks
+  filled: `gitflow` (M0.22) and the real `build-image.yml` (M0.24) — the
+  `build-image` job is now `uses: ./.github/workflows/build-image.yml`,
+  keeping its `pr-gate-build-image-<pr number>` / `cancel-in-progress: false`
+  concurrency group on the caller. Reasoning:
   [`design-decisions/m0.20-pr-gate.md`](design-decisions/m0.20-pr-gate.md).
 - **`.github/workflows/merge-queue.yml`** (M0.21) — the `merge_group`-triggered
   counterpart to `pr-gate.yml`, calling the same `lint`/`format`/`typecheck`/
   `build` (no `audit` — PR-only, never a required check) with `merge-queue:
 true` where each reusable workflow supports it. Same three gaps as
-  `pr-gate.yml`, filled the same way: `gitflow` (M0.22) dropped entirely, the
-  ad hoc run-scoped image build stands in for `build-image.yml` (M0.24, tag
-  `ghcr.io/.../testing:merge-queue-<run id>`), `vitest`/`playwright` (M1) are
-  stub jobs. **"Require merge queue" is deliberately left OFF** on `main` and
+  `pr-gate.yml`: `gitflow` (M0.22) and `build-image.yml` (M0.24) since
+  filled — `build-image` is now `uses: ./.github/workflows/build-image.yml`
+  with no caller-side concurrency group (unlike `pr-gate.yml`, this caller
+  has no sibling jobs to shield from a mid-push cancel) — and
+  `vitest`/`playwright` (M1) are still stub jobs. **"Require merge queue" is
+  deliberately left OFF** on `main` and
   `staging` — the workflow exists but `merge_group` never fires until M7.A.1
   flips that branch-protection setting, once there's more than one
   contributor. Reasoning:
@@ -170,4 +172,19 @@ true` where each reusable workflow supports it. Same three gaps as
   `workflow_call` input defaults). `act-build`/`act-vitest`/`act-playwright`
   wait on their `act-cache-*` prerequisites and later workflows. Reasoning:
   [`design-decisions/m0.23-act-local-ci.md`](design-decisions/m0.23-act-local-ci.md).
-- **Not yet ported:** `build-image.yml` (M0.24).
+- **`.github/workflows/build-image.yml`** (M0.24) — the reusable
+  `workflow_call` job `pr-gate.yml` and `merge-queue.yml` now call first to
+  build the shared `testing` container image once and expose its ref as an
+  `image` output. Ported byte-for-byte from resume-2026: the tag is
+  `ghcr.io/${github.repository,,}/testing:${{ hashFiles('Docker/Dockerfile.node',
+'package-lock.json') }}`, so it lands under
+  `ghcr.io/aurora-arctic/sorrel-and-salt/` with nothing hardcoded to change
+  (same `github.repository`-derived scheme as `build-db-image.yml`'s `/db`
+  image), and a `docker buildx imagetools inspect` check skips the build
+  entirely when that content hash already has a pushed image. This replaces
+  the ad hoc `testing:pr-gate-<run id>` / `testing:merge-queue-<run id>`
+  builds M0.20/M0.21 stood in with; the two smoke workflows
+  (`lint-format-typecheck-check.yml`, `build-audit-check.yml`) keep their own
+  `smoke-<run id>` builds, being independent regression checks by design.
+  Reasoning:
+  [`design-decisions/m0.24-build-image.md`](design-decisions/m0.24-build-image.md).

@@ -33,52 +33,15 @@ jobs:
           number=$(echo "$ref" | grep -oP 'pr-\K[0-9]+')
           echo "number=$number" >> "$GITHUB_OUTPUT"
 
-  # Ad hoc, run-scoped stand-in for build-image.yml (M0.24) — same pattern
-  # pr-gate.yml's own build-image job uses (M0.20), which in turn copied it
-  # from lint-format-typecheck-check.yml/build-audit-check.yml (M0.16/M0.17).
-  # Tagged merge-queue-<run id>, distinct from pr-gate's pr-gate-<run id> and
-  # the smoke workflows' smoke-<run id>, so a queue entry never collides with
-  # a concurrently running PR gate on a GHCR tag. cancel-in-progress is false
-  # for the same reason as pr-gate's: this pushes to a shared GHA layer
-  # cache, and cancelling mid-push can freeze a half-written layer into that
-  # cache for every later run to reuse.
+  # Same content-addressed testing image pr-gate.yml builds — a queue entry
+  # and a concurrent PR gate on the same Dockerfile.node/package-lock.json
+  # hash share the one GHCR tag and layer cache rather than each pushing
+  # their own. No job-level concurrency group here: unlike pr-gate's, this
+  # caller has no sibling jobs it needs to shield from a mid-push cancel, and
+  # the reusable workflow's own "skip build if the tag already exists" check
+  # keeps a superseded queue run cheap.
   build-image:
-    runs-on: ubuntu-latest
-    concurrency:
-      group: merge-queue-build-image-${{ github.run_id }}
-      cancel-in-progress: false
-    outputs:
-      image: ${{ steps.tag.outputs.image }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Compute scoped image tag
-        id: tag
-        run: |
-          repo_lower=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "image=ghcr.io/${repo_lower}/testing:merge-queue-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Build and push testing image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: Docker/Dockerfile.node
-          target: testing
-          push: true
-          tags: ${{ steps.tag.outputs.image }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+    uses: ./.github/workflows/build-image.yml
 
   # No real validation happens here — merge_group only exposes a synthetic
   # head ref, not the PR's actual source branch (see gitflow.yml). This job
