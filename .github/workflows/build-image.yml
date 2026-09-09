@@ -1,0 +1,85 @@
+name: Build Testing Image
+
+# Builds (or reuses, if unchanged) the shared testing container image used
+# by every other job workflow, and publishes its ref as an output. Called
+# via workflow_call as the first job from both pr-gate and merge-queue.
+#
+# The tag is content-addressed off `github.repository` (lowercased) plus a
+# hash of the only two files that determine the image's contents, so it
+# lands under this repo's own GHCR namespace
+# (ghcr.io/aurora-arctic/sorrel-and-salt/testing:<hash>) with nothing to
+# change when ported — identical inputs always produce the identical tag,
+# and an unrelated push reuses a prior build rather than rebuilding. The
+# ad hoc `testing:<scope>-<run id>` builds in
+# lint-format-typecheck-check.yml / build-audit-check.yml (M0.16/M0.17) are
+# the deliberately un-cached, run-scoped stand-ins this replaces for real
+# callers; build-db-image.yml (M0.18) tags the Postgres image the same way
+# under `/db`.
+on:
+  workflow_call:
+    outputs:
+      image:
+        description: Fully qualified, content-addressed testing image ref
+        value: ${{ jobs.build-image.outputs.image }}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.tag.outputs.image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Compute content-addressed image tag
+        id: tag
+        run: |
+          repo_lower=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          hash="${{ hashFiles('Docker/Dockerfile.node', 'package-lock.json') }}"
+          echo "image=ghcr.io/${repo_lower}/testing:${hash}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      # Most pushes to a PR don't touch Dockerfile.node or package-lock.json, so
+      # the content-addressed tag from a prior run (this PR or main) usually
+      # already exists — skip the build entirely rather than re-running buildx
+      # just to re-push the same content. This keeps the job to a few-second
+      # read with nothing mutable in flight, so it's safe to cancel/supersede
+      # freely and never needs to queue behind another run (see pr-gate.yml's
+      # build-image concurrency comment, which only guards the real-build path
+      # below).
+      - name: Check if image already exists
+        id: check
+        run: |
+          if docker buildx imagetools inspect ${{ steps.tag.outputs.image }} > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Layers (apt-get, npm i, playwright install) are cached via GHA cache, so this
+      # is fast even on a rebuild. Only runs when the tag doesn't exist yet, i.e.
+      # Dockerfile.node or package-lock.json actually changed.
+      - name: Build and push testing image
+        if: steps.check.outputs.exists != 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Docker/Dockerfile.node
+          target: testing
+          push: true
+          tags: ${{ steps.tag.outputs.image }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

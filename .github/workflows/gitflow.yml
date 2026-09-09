@@ -1,0 +1,152 @@
+name: Gitflow Rules
+
+# Reusable check that enforces which source branches may PR into which target
+# branches, mirroring https://medium.com/@ariifischbein/automate-gitflow-branching-rules-with-github-actions-d672f80d335b
+# with this repo's `staging` branch standing in for the article's `develop`:
+#
+#   target `main`        <- `release/MAJOR.MINOR.PATCH` or `hotfix/*`
+#   target `staging`     <- `feature/*`, `release/MAJOR.MINOR.PATCH`, `hotfix/*`,
+#                           `main-sync/YYYY-MM-DD-HH-MM-SS`, or any branch
+#                           when the PR author is `dependabot[bot]`
+#   target `release/*`   <- `staging` or `hotfix/*`
+#
+# `release/*` branches must follow the precise `release/MAJOR.MINOR.PATCH`
+# semver naming (e.g. `release/1.2.3`) to be accepted as a source into
+# `main`/`staging` — see .claude/skills/create-release, which is the intended
+# way to cut one and always produces a name matching this pattern.
+#
+# `main-sync/*` branches exist to bring commits that landed straight on
+# `main` (e.g. a hotfix merged there but not yet ported to `staging`) back
+# down into `staging`. They must follow the precise
+# `main-sync/YYYY-MM-DD-HH-MM-SS` timestamp naming to be accepted as a
+# source into `staging` — see .claude/skills/create-main-sync, which always
+# produces a name matching this pattern.
+#
+# Dependabot is a standing exception to the `staging` rule above: its
+# branches (e.g. `dependabot/npm_and_yarn/foo`) never match the
+# `feature`/`release`/`hotfix` patterns, but `.github/dependabot.yml` targets
+# `staging` on every ecosystem, same as human PRs. Checked by PR author
+# (`dependabot[bot]`) rather than by branch name, since a naming exception
+# would let anyone bypass the rule just by naming a branch `dependabot/...`.
+#
+# Branch protection/rulesets can gate a target branch (required checks, no
+# force-push, etc.) but can't express "only branch X may merge into target
+# Y" — this check fills that gap. Called via workflow_call from both
+# pr-gate and merge-queue — merge_group events only expose a synthetic head
+# ref (refs/heads/gh-readonly-queue/<base>/pr-<n>-<sha>), not the PR's real
+# source branch, so there's nothing to actually validate there; but the
+# same repo ruleset that requires "gitflow / gitflow" for a PR also gates
+# the merge queue, so the job still has to run and report success under
+# that name or a queued merge stalls forever waiting on a check that never
+# posts. merge-queue.yml calls this with should-run: false for that reason
+# — see should-run below, same pattern lint/typecheck/vitest/build/
+# playwright already use for path-filtered skips. Doesn't need the testing
+# container or a checkout when it does run for real — it only reads the
+# PR's head/base ref names, no npm/build tooling involved.
+on:
+  workflow_call:
+    inputs:
+      pr-number:
+        description: Pull request number to comment on (omit to skip PR commenting)
+        required: false
+        type: string
+      merge-queue:
+        description: Set true when called from merge-queue.yml — uses a separate, merge-queue-labeled comment thread and posts only on failure (no minimize-on-success)
+        required: false
+        type: boolean
+        default: false
+      should-run:
+        description: >-
+          Set false to skip the actual source->target validation while still completing
+          this job under its normal name. merge-queue.yml passes false — merge_group
+          events have no real PR source branch to validate, but the job still needs to
+          report success so the "gitflow / gitflow" required status check isn't left
+          permanently pending. Defaults true so pr-gate (which has a real PR to check)
+          is unaffected.
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  gitflow:
+    runs-on: ubuntu-latest
+    steps:
+      # Local action references (./.github/actions/...) below resolve against
+      # $GITHUB_WORKSPACE, so a checkout is needed even though this job never
+      # reads repo content itself. No container/checkout-to-app needed since
+      # nothing here runs npm — a plain checkout is enough.
+      - name: Checkout
+        if: inputs.should-run
+        uses: actions/checkout@v7
+
+      - name: Start timer
+        id: timer-start
+        if: inputs.should-run
+        uses: ./.github/actions/timer-start
+
+      - name: Validate source -> target branch
+        id: run
+        if: inputs.should-run
+        run: |
+          HEAD_REF="${{ github.event.pull_request.head.ref }}"
+          BASE_REF="${{ github.event.pull_request.base.ref }}"
+          ACTOR="${{ github.event.pull_request.user.login }}"
+
+          case "$BASE_REF" in
+            main)      pattern='^(release/[0-9]+\.[0-9]+\.[0-9]+|hotfix/.+)$' ;;
+            staging)   pattern='^(feature/.+|release/[0-9]+\.[0-9]+\.[0-9]+|hotfix/.+|main-sync/[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2})$' ;;
+            release/*) pattern='^(staging|hotfix/.+)$' ;;
+            *)         pattern='' ;;
+          esac
+
+          {
+            echo "Source branch: $HEAD_REF"
+            echo "Target branch: $BASE_REF"
+          } | tee output.log
+
+          if [ "$BASE_REF" = "staging" ] && [ "$ACTOR" = "dependabot[bot]" ]; then
+            echo "Dependabot exception: allowing '$HEAD_REF' -> '$BASE_REF'." | tee -a output.log
+          elif [ -n "$pattern" ] && ! [[ "$HEAD_REF" =~ $pattern ]]; then
+            echo "::error::PRs into '$BASE_REF' must come from a branch matching /$pattern/ (got '$HEAD_REF')." | tee -a output.log
+            exit 1
+          else
+            echo "No Gitflow violation for '$HEAD_REF' -> '$BASE_REF'." | tee -a output.log
+          fi
+
+      - name: Compute duration
+        id: timer
+        if: always() && inputs.should-run
+        uses: ./.github/actions/timer-elapsed
+        with:
+          start: ${{ steps.timer-start.outputs.start }}
+
+      - name: Write job summary
+        if: always() && inputs.should-run
+        uses: ./.github/actions/job-summary
+        with:
+          check-name: Gitflow Rules
+          outcome: ${{ steps.run.outcome }}
+          log-file: output.log
+          duration: ${{ steps.timer.outputs.duration }}
+          summary: ${{ github.event.pull_request.head.ref }} -> ${{ github.event.pull_request.base.ref }}
+
+      # Fail-only from pr-gate (resolves a prior failure comment on success),
+      # fail-only on a separate merge-queue-labeled thread from merge-queue
+      # (no action at all on success) — see .github/actions/pr-comment.
+      - name: Comment on PR
+        if: always() && inputs.pr-number && inputs.should-run
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Gitflow Rules
+          marker-slug: gitflow
+          pr-number: ${{ inputs.pr-number }}
+          merge-queue: ${{ inputs.merge-queue }}
+          outcome: ${{ steps.run.outcome }}
+          log-file: output.log
+          success-mode: minimize
+          duration: ${{ steps.timer.outputs.duration }}
+          summary: ${{ github.event.pull_request.head.ref }} -> ${{ github.event.pull_request.base.ref }}

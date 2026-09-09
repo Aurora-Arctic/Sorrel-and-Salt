@@ -120,12 +120,71 @@ consumes them for real, alongside `build`/`audit` (M0.17).
   `dorny/paths-filter` (`format` always runs), calls all five existing
   reusable checks, and carries stub `vitest`/`playwright` jobs (real job
   names, one no-op step) so M1 can wire them in without a required-check
-  rename. Still missing two upstream dependencies that are later tasks:
-  `gitflow` (M0.22, dropped from every job's `needs:` for now) and the real
-  `build-image.yml` (M0.24, stood in for by the same ad hoc run-scoped image
-  build the two smoke workflows above use — tag
-  `ghcr.io/.../testing:pr-gate-<run id>`). Reasoning:
+  rename. Shipped with two upstream dependencies stubbed that later tasks
+  filled: `gitflow` (M0.22) and the real `build-image.yml` (M0.24) — the
+  `build-image` job is now `uses: ./.github/workflows/build-image.yml`,
+  keeping its `pr-gate-build-image-<pr number>` / `cancel-in-progress: false`
+  concurrency group on the caller. Reasoning:
   [`design-decisions/m0.20-pr-gate.md`](design-decisions/m0.20-pr-gate.md).
-- **Not yet ported:** `merge-queue.yml` (M0.21), `gitflow.yml` and branch
-  rulesets (M0.22), `.actrc`/`make act-*` (M0.23), `build-image.yml`
-  (M0.24).
+- **`.github/workflows/merge-queue.yml`** (M0.21) — the `merge_group`-triggered
+  counterpart to `pr-gate.yml`, calling the same `lint`/`format`/`typecheck`/
+  `build` (no `audit` — PR-only, never a required check) with `merge-queue:
+true` where each reusable workflow supports it. Same three gaps as
+  `pr-gate.yml`: `gitflow` (M0.22) and `build-image.yml` (M0.24) since
+  filled — `build-image` is now `uses: ./.github/workflows/build-image.yml`
+  with no caller-side concurrency group (unlike `pr-gate.yml`, this caller
+  has no sibling jobs to shield from a mid-push cancel) — and
+  `vitest`/`playwright` (M1) are still stub jobs. **"Require merge queue" is
+  deliberately left OFF** on `main` and
+  `staging` — the workflow exists but `merge_group` never fires until M7.A.1
+  flips that branch-protection setting, once there's more than one
+  contributor. Reasoning:
+  [`design-decisions/m0.21-merge-queue.md`](design-decisions/m0.21-merge-queue.md).
+- **`.github/workflows/gitflow.yml`** (M0.22) — reusable `workflow_call`
+  check enforcing which source branches may PR into which target branch
+  (`feature/*` → `staging`; `release/MAJOR.MINOR.PATCH` or `hotfix/*` →
+  `main`; `staging` or `hotfix/*` → `release/*`; `main-sync/YYYY-MM-DD-HH-MM-SS`
+  → `staging`), plus a standing exception letting Dependabot's PRs into
+  `staging` through regardless of branch name (checked by PR author,
+  `dependabot[bot]`, not by branch pattern — a naming exception would let
+  anyone claim it). Ported byte-for-byte, no repo-specific paths to fix.
+  `pr-gate.yml` and `merge-queue.yml` both now `needs: gitflow` on every
+  other job (`merge-queue.yml` calls it with `should-run: false`, since
+  `merge_group` events expose only a synthetic head ref, not a PR's real
+  source branch — see the file's own header comment). Branch rulesets:
+  `Main`/`Staging` (already existed) each gained `gitflow / gitflow` as a
+  required status check; a new `Release Branches` ruleset
+  (`refs/heads/release/**`, delete/force-push protection only, no required
+  checks) matches resume-2026's. `.github/dependabot.yml` targets `staging`
+  on all three ecosystems (`npm`, `github-actions`, `docker`). Reasoning:
+  [`design-decisions/m0.22-gitflow-rulesets.md`](design-decisions/m0.22-gitflow-rulesets.md).
+- **`.actrc` + `make act-*`** (M0.23) — run the reusable check workflows
+  locally through [`act`](https://github.com/nektos/act), against a
+  locally-built `Docker/Dockerfile.node` `testing` image (`act-image`), so a
+  failing check surfaces before pushing. `.actrc` is resume-2026's two
+  directives (`-P ubuntu-latest=catthehacker/ubuntu:act-latest`,
+  `--pull=false`). `make act-lint`, `act-format`, `act-typecheck` (and
+  `act-test` for all three) are green on the host; `act-cache-checkout`
+  pre-clones this repo's `main` so the remote `checkout-to-app@main` ref
+  resolves offline. Needed `bash`/`git` added to the `testing` stage (the
+  alpine base ships neither, and the workflows force `shell: bash`) and
+  `--input should-run=true` on lint/typecheck (act doesn't apply
+  `workflow_call` input defaults). `act-build`/`act-vitest`/`act-playwright`
+  wait on their `act-cache-*` prerequisites and later workflows. Reasoning:
+  [`design-decisions/m0.23-act-local-ci.md`](design-decisions/m0.23-act-local-ci.md).
+- **`.github/workflows/build-image.yml`** (M0.24) — the reusable
+  `workflow_call` job `pr-gate.yml` and `merge-queue.yml` now call first to
+  build the shared `testing` container image once and expose its ref as an
+  `image` output. Ported byte-for-byte from resume-2026: the tag is
+  `ghcr.io/${github.repository,,}/testing:${{ hashFiles('Docker/Dockerfile.node',
+'package-lock.json') }}`, so it lands under
+  `ghcr.io/aurora-arctic/sorrel-and-salt/` with nothing hardcoded to change
+  (same `github.repository`-derived scheme as `build-db-image.yml`'s `/db`
+  image), and a `docker buildx imagetools inspect` check skips the build
+  entirely when that content hash already has a pushed image. This replaces
+  the ad hoc `testing:pr-gate-<run id>` / `testing:merge-queue-<run id>`
+  builds M0.20/M0.21 stood in with; the two smoke workflows
+  (`lint-format-typecheck-check.yml`, `build-audit-check.yml`) keep their own
+  `smoke-<run id>` builds, being independent regression checks by design.
+  Reasoning:
+  [`design-decisions/m0.24-build-image.md`](design-decisions/m0.24-build-image.md).
