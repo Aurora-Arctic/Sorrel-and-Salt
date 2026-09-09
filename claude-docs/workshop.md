@@ -10,9 +10,14 @@ component in the tree got its stories in M0.32; M0.33 added the gate that keeps 
 - **Ladle**, not Storybook or Histoire — Vite + React only, so it never couples the
   workshop to a Next.js major; one dependency; one config file. Reasoning:
   [`design-decisions/m0.30-ladle-component-workshop.md`](design-decisions/m0.30-ladle-component-workshop.md).
-- `.ladle/config.mjs` — `stories` glob, `port` 61000, `outDir` `build`, pinned `hmrPort` 61002. `addons.theme.defaultState: 'auto'` — the theme control's unset position, so the
-  workshop opens letting `prefers-color-scheme` decide (the app's dark-first default lives
-  in `globals.scss`, not here).
+- `.ladle/config.mjs` — `stories` glob, `port` 61000, `outDir` `build`, pinned `hmrPort` 61002.
+  `addons.theme.defaultState` is **meant to be `'auto'`** — the theme control's unset position,
+  so the workshop opens letting `prefers-color-scheme` decide (the app's dark-first default
+  lives in `globals.scss`, not here). M0.31 set it to `'auto'` deliberately and wrote the
+  comment above it explaining why. **The file currently reads `'dark'`**: M0.32 flipped it back
+  with no mention in any decision record or transcript, so code and comment now contradict each
+  other and the workshop opens dark. Treat the code as the defect — do not "correct" this doc
+  or that comment to match it.
 - `.ladle/vite.config.ts` — Sass API pinned to `modern-compiler`. Resolution is left at
   Vite/Sass defaults **because** that is what `next dev` does: relative `@use`, empty load
   paths. This file is the seam for keeping the two aligned if Next ever gains `sassOptions`.
@@ -52,9 +57,10 @@ component in the tree got its stories in M0.32; M0.33 added the gate that keeps 
 - **The M0.33 gate — `npm run check:stories`** (`scripts/check-component-stories.ts`) — walks
   `src/components/` and exits non-zero if any directory with an `index.tsx` has no sibling
   `index.stories.tsx`, printing each missing path. It runs in pre-commit (the `pre-commit`
-  array in `package.json`) and is a plain npm script so the M0.17 build job and the M0.20 PR
-  gate can call it once they land — together with `npm run workshop:build`, which fails the
-  run on a story that throws. Not an Oxlint rule: Oxlint has no custom-rule API and the check
+  array in `package.json`) and nowhere else: M0.33 left it a plain npm script for the M0.17
+  build job and the M0.20 PR gate to call, but both workflows landed without picking it up, so
+  neither `check:stories` nor `npm run workshop:build` runs in CI today — a missing story, or
+  one that throws, will not fail a PR. Not an Oxlint rule: Oxlint has no custom-rule API and the check
   is a cross-file filesystem assertion. `.ladle/*.stories.tsx` is out of scope by design — the
   gate only polices `src/components/`. Reasoning:
   [`design-decisions/m0.33-component-story-gate.md`](design-decisions/m0.33-component-story-gate.md).
