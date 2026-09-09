@@ -35,15 +35,19 @@ FROM postgres:17
 
 ENV PGDATA=/var/lib/postgresql/data
 ENV POSTGRES_DB=sorrel_template
-# Only used to get past initdb's auth setup during this build — every real
-# container built from this image already has PGDATA populated, so the
-# entrypoint skips initialization entirely and this value is never read at
-# runtime. Not a secret; nothing is reachable while it would apply.
-ENV POSTGRES_PASSWORD=sorrel_build_only
 
 COPY Docker/postgres-init/enable-extensions.sql /docker-entrypoint-initdb.d/
 
+# initdb needs *some* superuser password (or POSTGRES_HOST_AUTH_METHOD=trust,
+# which would instead bake passwordless auth into every container run from
+# this image — worse). Generated fresh in-shell and exported for this one
+# RUN only, never a Dockerfile ARG/ENV, so it never becomes an image layer a
+# secrets scanner (rightly) flags: it's discarded the moment this step ends,
+# and every real container built from this image already has PGDATA
+# populated, so the entrypoint skips initialization — and reading this
+# value — entirely.
 RUN set -eux; \
+	export POSTGRES_PASSWORD="$(head -c 32 /dev/urandom | base64)"; \
 	sed -ri 's/^[[:blank:]]*exec "\$@"[[:blank:]]*$/echo "sorrel: build-time init complete, not starting postgres"/' /usr/local/bin/docker-entrypoint.sh; \
 	/usr/local/bin/docker-entrypoint.sh postgres; \
 	sed -ri 's/^echo "sorrel: build-time init complete, not starting postgres"$/\texec "$@"/' /usr/local/bin/docker-entrypoint.sh; \

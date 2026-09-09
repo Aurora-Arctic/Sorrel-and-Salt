@@ -158,5 +158,16 @@ build` before any fix, confirmed clean after. Fixed by pinning
   `buildx` run and the resulting image — this sandbox has no `docker`
   daemon. Opening the PR (path-filtered on the Dockerfile, the init script,
   and this workflow) triggers `build-db-image.yml` for real.
+- GitHub's build checks flagged the first version's `ENV
+POSTGRES_PASSWORD=...` (`SecretsUsedInArgOrEnv`) once the PR was open —
+  correct as a matter of policy, since a static scanner can't tell a
+  throwaway build-time placeholder from a real one just by reading the
+  instruction. Fixed by generating the password with `export` inside the
+  `RUN` step itself instead of a Dockerfile `ARG`/`ENV`, so there's no image
+  instruction for the scanner to flag and the value is discarded the moment
+  the step ends. Considered and rejected `POSTGRES_HOST_AUTH_METHOD=trust`
+  as the alternative fix — it dodges the same warning but bakes
+  _passwordless_ auth into `pg_hba.conf` inside the image, which every real
+  container then inherits since PGDATA is already populated at that point.
 - Reasoning:
   [`../design-decisions/m0.18-build-db-image.md`](../design-decisions/m0.18-build-db-image.md).
