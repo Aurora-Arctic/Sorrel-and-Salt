@@ -243,3 +243,33 @@ repos/Aurora-Arctic/resume-2026/contents/.github/workflows/pr-gate.yml` and
   `pr-gate.yml` for the first time.
 - Reasoning:
   [`../design-decisions/m0.20-pr-gate.md`](../design-decisions/m0.20-pr-gate.md).
+
+## 2026-09-09 — M0.21 · merge-queue.yml ported (queue left off)
+
+- Fetched resume-2026's `merge-queue.yml` via `gh api
+repos/Aurora-Arctic/resume-2026/contents/.github/workflows/merge-queue.yml`
+  and wired it to the same four reusable checks `pr-gate.yml` (M0.20) already
+  consumes (`lint`, `format`, `typecheck`, `build` — no `audit`, matching
+  upstream). Same three gaps as `pr-gate.yml`, filled the same way: `gitflow`
+  (M0.22) dropped entirely rather than stood in for with `should-run: false`
+  (nothing requires that check name yet, since no branch ruleset exists
+  either); the real `build-image.yml` (M0.24) replaced by an ad hoc,
+  run-scoped image build tagged `ghcr.io/.../testing:merge-queue-<run id>`;
+  `vitest`/`playwright` (M1) as bare stub jobs under their real names.
+- The live Asana task (M0.21, not `TASKS.md`'s frozen original) explicitly
+  defers enabling "Require merge queue" in Settings → Branches to a new task,
+  M7.A.1 — solo development gets nothing from queue serialization yet, and
+  the switch forces every merge through the full suite. Left off on both
+  `main` and `staging`; nothing in this diff touches branch protection.
+- Kept no `changes`/path-filter job — upstream doesn't have one either, and
+  `lint.yml`/`typecheck.yml`/`build.yml`'s `should-run` inputs already
+  default `true` specifically so merge-queue call sites run everything
+  unfiltered (documented in each since M0.16/M0.17, ahead of this task).
+- Verified without pushing: `npx js-yaml` parses the new file; `grep -rn
+'resume-2026|mjoynes-wombat-web' .github/` finds nothing new; `npm run
+lint`/`format:check`/`typecheck`/`check:stories` all exit 0. **Not
+  verifiable pre-push, and not verifiable at all until M7.A.1**: a real
+  `merge_group` run — that event only fires once the queue is enabled on a
+  branch's ruleset, which this task deliberately leaves off.
+- Reasoning:
+  [`../design-decisions/m0.21-merge-queue.md`](../design-decisions/m0.21-merge-queue.md).
