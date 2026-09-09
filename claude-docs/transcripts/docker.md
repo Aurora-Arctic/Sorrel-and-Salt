@@ -102,3 +102,74 @@ Append-only. Newest entry at the bottom. Summary: [`../docker.md`](../docker.md)
   `--services` = `postgres,app`, `--volumes` = `postgres_data,node_modules_app`.
 - Reasoning:
   [`../design-decisions/m0.13-postgres-service.md`](../design-decisions/m0.13-postgres-service.md).
+
+## 2026-09-08 — M0.14 · `.devcontainer/` ported against the `development` stage
+
+- **Two files.** `.devcontainer/devcontainer.json` + a
+  `.devcontainer/docker-compose.yml` overlay. `dockerComposeFile` lists
+  `../Docker/docker-compose.yaml` then the overlay.
+- **Path base = `Docker/`, confirmed against the extension source.** VS Code
+  Remote-Containers (`devContainersSpecCLI.js`) runs `docker compose -f … up`
+  with no `--project-directory`, so Compose uses the first `-f` file's dir,
+  `Docker/`. Hence in the overlay `context: ..` = repo root, `./claude-home` =
+  `Docker/claude-home`, and `Docker/.env` is the auto-loaded env file — the
+  resume-2026 layout, unchanged. (Earlier probing with `--project-directory`
+  set gave different bases; the extension never sets it.)
+- **Overlay adds one service, `devcontainer`, mirroring `app`** — build
+  `target: development` (no `devcontainer` image stage; M0.11), `..:/app:cached`
+  bind mount, same `DATABASE_URL`, same
+  `depends_on: { postgres: { condition: service_healthy } }`. Differences:
+  its own `node_modules_devcontainer` volume (a shared fresh volume races,
+  per M0.12), **no published ports** (the editor forwards), and
+  `command: ["sleep", "infinity"]` with `overrideCommand: false` so it idles
+  instead of running the `development` stage's `npm run dev` `CMD`.
+- **`forwardPorts: [8000, 8001]`** — 8000 `next dev`, 8001 the production
+  build. resume-2026 forwarded only 8001. `portsAttributes` labels both.
+- **zsh via the `common-utils` feature, `gh` via `postCreateCommand`**, not
+  the image — resume-2026 installed both in the deleted `devcontainer`
+  Dockerfile stage; the slim `development` image has neither.
+  `ghcr.io/devcontainers/features/common-utils:2` (`installZsh` /
+  `installOhMyZsh` / `configureZshAsDefaultShell`, `username: node`) handles
+  zsh + oh-my-zsh. `ghcr.io/devcontainers/features/github-cli:1` was tried for
+  `gh` but it is Debian-only (no `apk` branch in its `install.sh`) and failed
+  the Alpine build with exit 127; replaced with
+  `postCreateCommand: "sudo apk add --no-cache github-cli"` (Alpine's
+  `community` repo carries it; `sudo` is passwordless via `common-utils`). The
+  `terminal.integrated` zsh profile in `devcontainer.json` is kept.
+- **`.devcontainer/devcontainer-lock.json`** committed — the devcontainer CLI
+  writes it on first build, pinning the `common-utils` feature to a resolved
+  digest for reproducible rebuilds (analogous to `package-lock.json`).
+- **Claude + GitHub auth ported from resume-2026 (same PR, project owner's
+  call).** `Docker/update-token.sh` (`make docker-update-token`) runs
+  `claude setup-token` on the host and upserts `CLAUDE_CODE_OAUTH_TOKEN` into
+  git-ignored `Docker/.env`; `Docker/.env.example` is the committed template.
+  The overlay passes `CLAUDE_CODE_OAUTH_TOKEN`, `GITHUB_PERSONAL_ACCESS_TOKEN`,
+  and `GH_TOKEN` (= the PAT, the name `gh` reads) through with `${…:-}` so
+  `config` stays warning-free when `Docker/.env` is absent. `Docker/.env` is
+  auto-loaded as the project-dir env file — no `env_file:`/`--env-file`.
+- **`claude-home` persistence.** `./claude-home:/home/node/.claude:cached`
+  (→ git-ignored `Docker/claude-home`) — a bind mount so it survives
+  `make docker-rebuild`'s `down -v`. `devcontainer.json` `initializeCommand`
+  does the host-side `mkdir -p` so Compose doesn't create it root-owned.
+- Extension list ported as-is minus the duplicate `ms-playwright.playwright`.
+- **Verified:** `docker compose -f Docker/docker-compose.yaml -f
+.devcontainer/docker-compose.yml config` validates; `devcontainer` resolves
+  `context` to the repo root, `./claude-home` → `Docker/claude-home`,
+  `target: development`, `depends_on.postgres.condition: service_healthy`,
+  `node_modules_devcontainer`. `… up -d --build devcontainer` from clean:
+  `postgres Healthy` → `devcontainer Starting`. Inside: `whoami` → `node`,
+  `pwd` → `/app`, `DATABASE_URL` set, `node_modules` has 359 entries with
+  `.bin/next` + `.bin/tsc`, `require('next/package.json').version` → `16.3.4`,
+  `net.connect(5432, 'postgres')` connects. With a throwaway `Docker/.env`:
+  `CLAUDE_CODE_OAUTH_TOKEN` / `GH_TOKEN` / `GITHUB_PERSONAL_ACCESS_TOKEN` all
+  present in `printenv`; `touch /home/node/.claude/x` as `node` writes through
+  to host `Docker/claude-home/`. `devcontainer.json` parses as strict JSON.
+  `make docker-up` unaffected (names only `Docker/docker-compose.yaml`).
+  The `common-utils` feature, `postCreateCommand`, and `initializeCommand`
+  only run under the editor — not exercised by plain `docker compose`.
+- **Editor run (2026-09-08):** first "Reopen in Container" failed building the
+  `github-cli` feature (exit 127, Debian-only). Dropped that feature, moved
+  `gh` to `postCreateCommand` (`sudo apk add --no-cache github-cli`); rebuild
+  succeeded. `devcontainer-lock.json` written for the remaining feature.
+- Reasoning:
+  [`../design-decisions/m0.14-devcontainer.md`](../design-decisions/m0.14-devcontainer.md).

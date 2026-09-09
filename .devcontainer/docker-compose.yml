@@ -1,0 +1,86 @@
+# Sorrel & Salt — devcontainer overlay for Docker/docker-compose.yaml.
+#
+# M0.14. The devcontainer CLI / VS Code merges this on top of
+# ../Docker/docker-compose.yaml (both are listed, in this order, in
+# devcontainer.json's `dockerComposeFile`).
+#
+# Path resolution: the VS Code Remote-Containers extension runs
+# `docker compose -f ../Docker/docker-compose.yaml -f docker-compose.yml up`
+# with no `--project-directory`, so Compose uses its default — the *first*
+# `-f` file's directory, `Docker/`. Every relative path below is therefore
+# resolved against `Docker/`, and `Docker/.env` is auto-loaded for `${...}`
+# interpolation. `context: ..` is the repo root; `./claude-home` is
+# `Docker/claude-home` — the same layout resume-2026 used.
+#
+# Why the service lives here and not in Docker/docker-compose.yaml: M0.12
+# dropped resume-2026's `devcontainer` compose service from that file so a
+# bare `make docker-up` carries nothing editor-specific. It moves here
+# instead, still building `Docker/Dockerfile.node`'s `development` stage
+# directly — there is no `devcontainer` image stage (M0.11) and no dedicated
+# devcontainer service in the main stack.
+#
+# `devcontainer` mirrors `app`: same build target, same bind mount, same
+# `DATABASE_URL`, the same `depends_on: postgres` health gate. So "a fresh
+# clone is productive immediately" (the story) means Postgres is already up
+# and reachable by service name the moment the editor finishes attaching.
+# Its own `node_modules_devcontainer` volume — not `node_modules_app` — keeps
+# the two services from racing to populate one fresh volume from their image
+# on first mount, the same split resume-2026 kept as
+# `node_modules_development` / `node_modules_devcontainer`.
+
+name: sorrel-and-salt
+
+volumes:
+  # The container's `npm ci` result, shadowing the host's platform-specific
+  # `node_modules` under the bind mount. Same lifecycle as the other
+  # `node_modules_*` volumes: only `make docker-rebuild` (`down -v`) clears it.
+  node_modules_devcontainer:
+
+services:
+  devcontainer:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.node
+      target: development
+    image: sorrel-node:development
+    working_dir: /app
+    volumes:
+      - ..:/app:cached
+      - node_modules_devcontainer:/app/node_modules
+      # Claude Code's per-user state (session history, plans, shell snapshots,
+      # settings) persisted to a git-ignored host directory — resolves to
+      # `Docker/claude-home`. A bind mount, deliberately, not a named volume:
+      # it then survives `make docker-rebuild` (`docker compose down -v`), so
+      # context isn't lost on every rebuild. `Docker/claude-home` is created
+      # host-side by devcontainer.json's `initializeCommand` so Compose does
+      # not auto-create it root-owned.
+      - ./claude-home:/home/node/.claude:cached
+    init: true
+    tty: true
+    # Idle PID 1. The editor opens shells into this container and runs
+    # `npm run dev` (8000) or the production build (`npm run start`, 8001)
+    # itself when it wants them. Without this the container would run the
+    # Dockerfile CMD (`npm run dev`) and the devcontainer's lifecycle would
+    # be pinned to the dev server's.
+    command: ['sleep', 'infinity']
+    environment:
+      NODE_ENV: development
+      # Same value as `app` in Docker/docker-compose.yaml: reach Postgres by
+      # its compose service name, no Neon connection anywhere.
+      DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
+      # Pre-authenticate the in-container Claude Code CLI. Long-lived OAuth
+      # token generated on the host by `Docker/update-token.sh`
+      # (`make docker-update-token`) and written to git-ignored `Docker/.env`,
+      # which Compose auto-loads. `:-` keeps `docker compose config` quiet
+      # when `Docker/.env` is absent — the CLI just falls back to `/login`.
+      CLAUDE_CODE_OAUTH_TOKEN: ${CLAUDE_CODE_OAUTH_TOKEN:-}
+      # `gh` CLI auth (`gh` is installed by devcontainer.json's
+      # postCreateCommand: `apk add github-cli`).
+      # `GH_TOKEN` is what `gh` reads; `GITHUB_PERSONAL_ACCESS_TOKEN` is kept
+      # under its resume-2026 name for anything else that expects it. Set the
+      # value manually in `Docker/.env` (see `Docker/.env.example`).
+      GH_TOKEN: ${GITHUB_PERSONAL_ACCESS_TOKEN:-}
+      GITHUB_PERSONAL_ACCESS_TOKEN: ${GITHUB_PERSONAL_ACCESS_TOKEN:-}
+    depends_on:
+      postgres:
+        condition: service_healthy

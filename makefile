@@ -26,7 +26,8 @@
 	lint lint-fix format format-check typecheck check-stories pre-commit \
 	db-generate db-migrate db-seed db-reset codegen \
 	workshop workshop-build \
-	docker-build docker-up docker-workshop docker-down docker-rebuild docker-logs
+	docker-build docker-up docker-workshop docker-down docker-rebuild docker-logs \
+	docker-update-token
 
 COMPOSE := docker compose -f Docker/docker-compose.yaml
 
@@ -113,9 +114,10 @@ workshop-build:
 # Postgres 17 (M0.13), waiting for the database health check before the app
 # starts; the Ladle workshop (61000) is behind the `workshop` compose profile,
 # so it only comes up with `docker-workshop`. No Neon connection and no local
-# Node version juggling. resume-2026's `docker-up` also ran an `update-token`
-# step for the devcontainer's Claude CLI; there is no devcontainer service here
-# (M0.11/M0.14), so that step is gone.
+# Node version juggling. Unlike resume-2026, `docker-up` does not run
+# `update-token` — the devcontainer (M0.14) is its own compose overlay under
+# `.devcontainer/`, started by the editor, not by `make docker-up`. Refresh
+# its Claude token explicitly with `make docker-update-token`.
 
 ## Build the local dev images (app + workshop)
 docker-build:
@@ -140,3 +142,7 @@ docker-rebuild:
 ## Follow the local stack logs
 docker-logs:
 	$(COMPOSE) logs -f
+
+## Refresh the devcontainer's Claude Code OAuth token in Docker/.env
+docker-update-token:
+	./Docker/update-token.sh
