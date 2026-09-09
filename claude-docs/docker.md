@@ -56,11 +56,37 @@ Postgres, no Neon connection and no host Node-version juggling.
   - `make docker-rebuild` — `down -v` (drops the `node_modules` volumes) then
     rebuild and start the app.
   - `make docker-logs` — follow.
-  - No `update-token` prerequisite — resume-2026 had one for the devcontainer's
-    Claude CLI; there is no devcontainer service here.
+  - `make docker-update-token` — run `Docker/update-token.sh` to refresh the
+    devcontainer's `CLAUDE_CODE_OAUTH_TOKEN` in `Docker/.env`. Standalone, not
+    a prerequisite of `docker-up` (resume-2026 chained it there) — `docker-up`
+    no longer starts the devcontainer.
 - **`.dockerignore`** (repo root, M0.11) — excludes `node_modules`, `.next`,
   `.git`, `build`, coverage and local env/state from the build context.
-- **`.devcontainer/`** (M0.14) builds `Docker/Dockerfile.node`
-  `target: development` directly — there is no `devcontainer` image stage or
-  compose service to point at. It sets the same `DATABASE_URL` as `app` and
-  adds `depends_on: postgres` with the health condition.
+- **`.devcontainer/`** (M0.14) — `devcontainer.json` plus a
+  `docker-compose.yml` overlay merged on top of `Docker/docker-compose.yaml`.
+  The overlay adds one service, `devcontainer`, that mirrors `app`: builds
+  `Docker/Dockerfile.node` `target: development` (no `devcontainer` image
+  stage or main-stack service), same `..:/app` bind mount, same
+  `DATABASE_URL`, same `depends_on: postgres` health gate — but its own
+  `node_modules_devcontainer` volume, no published ports, and
+  `command: sleep infinity` so it idles instead of running `npm run dev`.
+  `devcontainer.json` forwards **8000** (`next dev`) and **8001** (production
+  build), and adds zsh + oh-my-zsh (`common-utils` feature) at create time plus
+  `gh` via `postCreateCommand: sudo apk add --no-cache github-cli` — the slim
+  `development` image has neither, and the `github-cli` devcontainer feature is
+  Debian-only so it fails the build on Alpine.
+  - **Path base is `Docker/`.** VS Code Remote-Containers runs `docker compose`
+    with no `--project-directory`, so relative paths in the overlay resolve
+    against the first `-f` file's dir. Hence `./claude-home` → `Docker/claude-home`
+    and `Docker/.env` is the auto-loaded env file — the resume-2026 layout.
+  - **Auth.** `CLAUDE_CODE_OAUTH_TOKEN` (from `make docker-update-token` →
+    `Docker/.env`) pre-authenticates the in-container Claude CLI;
+    `GITHUB_PERSONAL_ACCESS_TOKEN` (set by hand in `Docker/.env`, also passed
+    as `GH_TOKEN`) authenticates `gh`. Template: `Docker/.env.example`. All
+    `${…:-}` so a missing `Docker/.env` is not an error.
+  - **`claude-home`.** `Docker/claude-home` (git-ignored) bind-mounts to
+    `/home/node/.claude` so Claude's context survives `make docker-rebuild`
+    (`down -v`); `initializeCommand` `mkdir`s it host-side first.
+  - `make docker-up` is untouched: it names only `Docker/docker-compose.yaml`.
+    Reasoning:
+    [`design-decisions/m0.14-devcontainer.md`](design-decisions/m0.14-devcontainer.md).

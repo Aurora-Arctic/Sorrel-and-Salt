@@ -1,0 +1,59 @@
+{
+  "name": "sorrel-and-salt",
+  "dockerComposeFile": ["../Docker/docker-compose.yaml", "docker-compose.yml"],
+  "service": "devcontainer",
+  "workspaceFolder": "/app",
+  "shutdownAction": "stopCompose",
+  "overrideCommand": false,
+  "initializeCommand": "mkdir -p \"${localWorkspaceFolder}/Docker/claude-home\"",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "installOhMyZsh": true,
+      "configureZshAsDefaultShell": true,
+      "username": "node",
+      "upgradePackages": false
+    }
+  },
+  "postCreateCommand": "sudo apk add --no-cache github-cli",
+  "forwardPorts": [8000, 8001],
+  "portsAttributes": {
+    "8000": { "label": "next dev" },
+    "8001": { "label": "next start (production build)" }
+  },
+  "remoteUser": "node",
+  "containerUser": "node",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "/bin/zsh"
+          }
+        },
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.oxc": "explicit"
+        },
+        "oxc.enable.oxfmt": false
+      },
+      "extensions": [
+        "oxc.oxc-vscode",
+        "esbenp.prettier-vscode",
+        "Anthropic.claude-code",
+        "vitest.explorer",
+        "ms-playwright.playwright",
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml",
+        "GraphQL.vscode-graphql-syntax",
+        "usernamehw.errorlens",
+        "christian-kohler.path-intellisense",
+        "streetsidesoftware.code-spell-checker",
+        "eamodio.gitlens",
+        "github.vscode-github-actions"
+      ]
+    }
+  }
+}
