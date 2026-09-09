@@ -182,15 +182,51 @@ Then, on the same task and at the user's direction (they disagreed with M0.31's
   added). Between them they name every colour and what it's for.
 - `design-language.scss` is now wholly nested under `.dl`. `.ladle/typography.scss` scopes
   `_typography.scss` to `.ladle-story-frame`, making a bare `p` on the page
-  `.ladle-story-frame p` (0,1,1) — which beats a plain `.dl-eyebrow` (0,1,0), so the
+  `.ladle-story-frame p` (0,1,1) — which beats a plain `.eyebrow` (0,1,0), so the
   eyebrows, swatch captions and the binomial were silently rendering at body size/weight.
   Nesting lifts every rule to (0,2,x).
 - Pulling styling back into the app partials (user: "styling should come from the app .scss,
   not be hard-coded in ladle"): `$font-mono` added to `_variables.scss`, a `code`/`kbd`/`samp`
   rule to `typography-base`. The page's token-name / hex / slug spans are now `<code>` styled
   by the app, not hand-rolled monospace in `design-language.scss`. What's left local there is
-  layout lengths (no spacing/radius token) and `.dl-eyebrow` / `.dl-btn` / `.dl-binomial` —
-  treatments the app has no primitive for and M0.6–M0.8 didn't build.
+  layout lengths (no spacing/radius token) and `.dl-btn` / `.dl-binomial` — treatments the
+  app has no primitive for and M0.6–M0.8 didn't build.
+- Same direction, later: `section`/`.header`/`.footer` (was `.dl-masthead` / `.dl-sec-head` /
+  `.dl-foot`) moved into a new `layout-base` mixin (`src/scss/_layout.scss`), `@include`d by
+  `globals.scss` on `body` alongside `typography-base`, and by a new `.ladle/layout.scss` —
+  mirroring `.ladle/typography.scss` — scoped to `.ladle-story-frame` and imported globally
+  in `.ladle/components.tsx`, rather than `@include`d ad hoc from `design-language.scss`
+  itself. The eyebrow overline (`.dl-eyebrow` → `.eyebrow`) moved into `typography-base` the
+  same way. `design-language.scss` no longer needs `@use '../src/scss/layout'` at all.
+- Further, at the user's explicit direction (these primitives "will be used throughout the
+  site", ahead of the milestones that would otherwise define them): the panel, badge, chip,
+  modal (+ its action row), button and specimen-card shapes moved out of
+  `design-language.scss` into a new `primitives-base` mixin (`src/scss/_primitives.scss`),
+  wired up the same way as typography/layout — `body { @include primitives-base; }` in
+  `globals.scss`, `.ladle-story-frame { @include primitives-base; }` in a new
+  `.ladle/primitives.scss`. Renamed `dl-` → bare on the way over: `.dl-panel` → `.panel`,
+  `.dl-badges`/`.dl-badge--*` → `.badges`/`.badge--*`, `.dl-chip--*` → `.chip--*` (now
+  generated from `map.keys($category-groups)` instead of the page's own `$dl-groups` list),
+  `.dl-modal`/`.dl-modal__actions` → `.modal`/`.modal__actions`, `.dl-btn`/`.dl-btn--secondary`
+  → `.btn`/`.btn--secondary`, `.dl-specimen*` → `.specimen*`. `.dl-type`'s heading-margin trim
+  became `.tight-headings` in `typography-base` instead (it's a type-scale pattern, not a
+  primitive shape). `badge()`/`chip()` are still the only source of colour/edge/geometry for
+  the badge and chip classes — `_primitives.scss` is the class layer that wraps them, plus the
+  shapes M0.8 never covered (panel, button, modal padding/actions, specimen layout).
+  `modal-surface()`'s and the mixin file's own "no width, no layout — the component that owns
+  it decides" reasoning still holds for `.modal`: its 24rem width stays a page-local override
+  in `design-language.scss` (`.modal { max-width: 24rem; }`), same as the demo backdrop
+  (`.dl-modal-demo`) and `.dl-binomial`, which are still local — the binomial is explicitly
+  IngredientCard's (M8.x) to define, not this page's.
+- Cross-checked `_typography.scss` / `_layout.scss` / `_primitives.scss` against their own
+  boundaries (type · document structure · component shapes) and found one leftover split:
+  `_typography.scss` still had bare `header { margin-bottom: 1rem; }` / `section { margin:
+  1rem 0; }` even though `_layout.scss` already owns `section`'s flex treatment and `.header`.
+  Moved both into `layout-base`, merging the `section` margin into its existing flex rule;
+  `header`'s stays a separate bare-element rule next to `.header` (same asymmetry as
+  typography's bare `p`/`ul` vs a component's own classes — an unclassed `<header>` still
+  gets the spacing, `.header` opts into the flex column on top of it). No compiled-output
+  change, just one owner per selector instead of two files defining the same element.
 - Ingredient-card specimen: `.dl-specimen__top` is `align-items: flex-start` so the badge
   cluster hugs its content instead of stretching to the name+binomial height; the binomial
   matches the M0.7 artifact — italic, `0.84rem`, `opacity: 0.7` on the inherited
