@@ -173,3 +173,44 @@ Append-only. Newest entry at the bottom. Summary: [`../docker.md`](../docker.md)
   succeeded. `devcontainer-lock.json` written for the remaining feature.
 - Reasoning:
   [`../design-decisions/m0.14-devcontainer.md`](../design-decisions/m0.14-devcontainer.md).
+
+## 2026-09-09 — M0.19 · docker-compose builds the preseeded Postgres image
+
+- `postgres` service changed from `image: postgres:17` to `build: {
+context: .., dockerfile: Docker/Dockerfile.postgres }` — M0.18's preseeded
+  image, built locally the same way `app`/`workshop` build `Dockerfile.node`.
+  First draft pulled the GHCR tag `build-db-image.yml` publishes instead;
+  user feedback: this file is local dev only, so it should build the
+  Dockerfile directly rather than round-trip through the registry. The GHCR
+  image remains what CI (`verify-db-image`) and deployment consume.
+- Discovered mid-task: this image bakes `PGDATA` at _build_ time (M0.18), so
+  a real container from it ignores every `POSTGRES_*` env var entirely —
+  `docker-entrypoint.sh` only reads them during first-boot init, which never
+  runs again once `PG_VERSION` already exists. Neither a `sorrel` role nor a
+  `sorrel` database exist in the image; only the baked-in `postgres`
+  superuser and the empty `sorrel_template`. Left `POSTGRES_USER`/
+  `POSTGRES_PASSWORD`/`POSTGRES_DB`/`DATABASE_URL` as `sorrel`/`sorrel`/
+  `sorrel` anyway, now flagged with a comment as inert — `app` doesn't query
+  the database yet (`src/db/schema` is still empty), and M1.27 is the task
+  that has to give the image real, known-password credentials.
+- Healthcheck changed from `pg_isready -U sorrel -d sorrel` to
+  `-U postgres -d sorrel_template` — the former named things that don't
+  exist in the image; `pg_isready` doesn't actually validate them (it only
+  checks that the server accepts a connection), so it wasn't broken, just
+  describing something false.
+- User ran it and hit `FATAL: role "postgres" does not exist` in the
+  Postgres logs. Root cause: their local `postgres_data` volume was
+  populated earlier by the _old_ plain `postgres:17` image, which created
+  `sorrel`/`sorrel` from `POSTGRES_*` env vars — switching `image:`/`build:`
+  doesn't reset an already-populated named volume, so it keeps serving that
+  old data. `make docker-rebuild` (`down -v`) fixes it. Not a bug in the
+  Dockerfile: a fresh volume from the new image only ever has `postgres`/
+  `sorrel_template`. Documented as an expected rough edge (with a comment in
+  the compose file) for anyone else who already had `postgres_data`
+  populated before this task — the FATAL log line itself is benign either
+  way, since `pg_isready` doesn't require the role it names to be valid.
+- First draft tagged the locally built image `sorrel-postgres:local`,
+  mirroring `sorrel-node:development`. User feedback: unnecessary — dropped
+  to plain `sorrel-postgres`.
+- Reasoning:
+  [`../design-decisions/m0.19-consume-db-image.md`](../design-decisions/m0.19-consume-db-image.md).

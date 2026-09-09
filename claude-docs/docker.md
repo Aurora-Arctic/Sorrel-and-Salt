@@ -28,16 +28,30 @@ Postgres, no Neon connection and no host Node-version juggling.
     `make docker-up` does not start it. Builds the same stage, runs
     `npm run workshop -- --host 0.0.0.0` (`ladle serve` binds `localhost`
     otherwise), publishes **61000** (serve) and **61002** (pinned HMR socket).
-  - **`postgres`** (M0.13) — `image: postgres:17` (plain upstream; M0.18
-    publishes a preseeded GHCR image and M0.19 repoints this service and CI at
-    that one tag). Named volume `postgres_data` at
-    `/var/lib/postgresql/data`. Health check `pg_isready -U sorrel -d sorrel`;
-    `app` has `depends_on: { postgres: { condition: service_healthy } }`, so
+  - **`postgres`** (M0.13) — `build:`s straight from
+    `Docker/Dockerfile.postgres` (M0.18), the same way `app`/`workshop`
+    build from `Dockerfile.node` (M0.19; this file is local dev only, so it
+    builds rather than pulling the GHCR image `build-db-image.yml` publishes
+    for CI/deployment). Named volume `postgres_data` at
+    `/var/lib/postgresql/data`. Health check
+    `pg_isready -U postgres -d sorrel_template` — not `sorrel`/`sorrel`,
+    since neither exist in this image yet, only the baked-in `postgres`
+    superuser and the empty `sorrel_template`. `app` has
+    `depends_on: { postgres: { condition: service_healthy } }`, so
     `make docker-up` blocks on `postgres Healthy` before `app Starting`.
-    `DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel` is set on
-    `app` (throwaway `sorrel`/`sorrel` creds, no secret) — the app reaches the
-    DB by compose service name, no Neon. Port `5432` is published for the
-    host-side Vitest `db` project. `workshop` does not depend on it.
+    `DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel` is still
+    set on `app` but inert — every `POSTGRES_*` env var is ignored by a real
+    container from this image, since PGDATA is already populated at build
+    time (M0.18) and `docker-entrypoint.sh` only reads them on first boot.
+    Harmless today since `app` doesn't query the database yet; M1.27 is what
+    gives the image real, known-password credentials. A `postgres_data`
+    volume left over from the old plain `postgres:17` image only has the
+    `sorrel` role/database that image's own init created — switching
+    `image:`/`build:` doesn't reset an existing volume, so it keeps serving
+    that old data; `make docker-rebuild` (`down -v`) gets a fresh one.
+    Port `5432` is
+    published for the host-side Vitest `db` project. `workshop` does not
+    depend on it.
   - **Volumes** — one `node_modules` volume per service (`node_modules_app`,
     `node_modules_workshop`); a single shared volume makes the two services
     race to populate it from their images on first mount. Plus `postgres_data`

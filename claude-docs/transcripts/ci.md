@@ -171,3 +171,44 @@ POSTGRES_PASSWORD=...` (`SecretsUsedInArgOrEnv`) once the PR was open —
   container then inherits since PGDATA is already populated at that point.
 - Reasoning:
   [`../design-decisions/m0.18-build-db-image.md`](../design-decisions/m0.18-build-db-image.md).
+
+## 2026-09-09 — M0.19 · consume the preseeded image in CI
+
+- Added `verify-db-image` to `build-db-image.yml`: `needs: build-db-image`,
+  a job-level `services:` postgres container pinned to
+  `needs.build-db-image.outputs.image` (the hash tag, not `latest` — a
+  `pull_request` run's `latest` hasn't moved yet, so it would verify old
+  content instead of what this run just built). Actions gates every step on
+  the service's `pg_isready` health check before running; the one step is
+  `docker exec ${{ job.services.postgres.id }} psql -U postgres -d
+sorrel_template -c 'SELECT 1'`.
+- First draft used `actions/cache` plus a manual `docker save`/`docker load`
+  step so a cache-restore could run before the container started, avoiding
+  the job-level `services:` keyword entirely — motivated by wanting to
+  literally cache the image pull between separate job runs. User feedback:
+  overkill for a 1h task. Replaced with the plain `services:` block —
+  Actions pulls that image before any step regardless, so there was nothing
+  the cache step could actually intercept; the real cost (rebuilding on top
+  of the `postgres:17` base) is already covered by the build job's existing
+  `cache-from`/`cache-to: type=gha`.
+- `docker exec`, not a TCP connection: `Docker/Dockerfile.postgres`'s
+  build-time init run configures `pg_hba.conf`'s `host` (network) auth using
+  a superuser password generated randomly and discarded before the image is
+  even pushed (M0.18) — nothing can authenticate over TCP with a known
+  credential. The `local` (Unix-socket) rule stays `trust`, which is what
+  `docker exec` uses. This is also why the acceptance criterion says "from
+  inside the job container" rather than just "succeeds".
+- User also asked whether verification was worth doing at all, since a
+  broken image would eventually surface once M1's real test jobs depend on
+  it. Kept it: M1 is a full milestone away, and two of M0.19's four
+  acceptance criteria (SELECT 1 succeeds, health check gates the test step)
+  would otherwise go unmet. Documented `verify-db-image` explicitly as
+  scaffolding — delete it once a real M1 test job exercises the same
+  `services:` pattern for real, the same way M0.16/M0.17's smoke-image
+  workflows are documented as stand-ins for `pr-gate.yml`.
+- Verified without pushing: `npx js-yaml` parses `build-db-image.yml`.
+  **Not verifiable pre-push:** the actual job run (`job.services.postgres.id`
+  resolution, the health check, `docker exec`/`psql`) — this sandbox has no
+  `docker` daemon, same limitation M0.18 hit.
+- Reasoning:
+  [`../design-decisions/m0.19-consume-db-image.md`](../design-decisions/m0.19-consume-db-image.md).
