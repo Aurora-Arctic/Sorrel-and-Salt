@@ -5,8 +5,8 @@ Decisions: [`design-decisions/`](design-decisions/)
 
 `.github/` — GitHub Actions workflows and the composite actions they share,
 ported from `resume-2026`. `lint`/`format`/`typecheck` (M0.16) are the first
-real per-check workflows; nothing consumes them for real yet — that starts
-with `pr-gate.yml` (M0.20).
+real per-check workflows; `pr-gate.yml` (M0.20) is the real gate that now
+consumes them for real, alongside `build`/`audit` (M0.17).
 
 - **`.github/actions/`** — five composite actions, copied byte-for-byte from
   resume-2026 (none hardcode a repo name internally):
@@ -114,6 +114,18 @@ with `pr-gate.yml` (M0.20).
     once a real M1 test job exercises the same `services:` pattern for
     real. Reasoning:
     [`design-decisions/m0.19-consume-db-image.md`](design-decisions/m0.19-consume-db-image.md).
-- **Not yet ported:** `pr-gate.yml` (M0.20), `merge-queue.yml` (M0.21),
-  `gitflow.yml` and branch rulesets (M0.22), `.actrc`/`make act-*` (M0.23),
-  `build-image.yml` (M0.24).
+- **`.github/workflows/pr-gate.yml`** (M0.20) — the real aggregating gate
+  `lint-format-typecheck-check.yml`/`build-audit-check.yml` were always
+  stand-ins for. Path-filters `lint`/`typecheck`/`build` via
+  `dorny/paths-filter` (`format` always runs), calls all five existing
+  reusable checks, and carries stub `vitest`/`playwright` jobs (real job
+  names, one no-op step) so M1 can wire them in without a required-check
+  rename. Still missing two upstream dependencies that are later tasks:
+  `gitflow` (M0.22, dropped from every job's `needs:` for now) and the real
+  `build-image.yml` (M0.24, stood in for by the same ad hoc run-scoped image
+  build the two smoke workflows above use — tag
+  `ghcr.io/.../testing:pr-gate-<run id>`). Reasoning:
+  [`design-decisions/m0.20-pr-gate.md`](design-decisions/m0.20-pr-gate.md).
+- **Not yet ported:** `merge-queue.yml` (M0.21), `gitflow.yml` and branch
+  rulesets (M0.22), `.actrc`/`make act-*` (M0.23), `build-image.yml`
+  (M0.24).
