@@ -61,3 +61,53 @@ Append-only. Newest entry at the bottom. Summary: [`../ci.md`](../ci.md).
   triggers on this same diff.
 - Reasoning:
   [`../design-decisions/m0.16-lint-format-typecheck-workflows.md`](../design-decisions/m0.16-lint-format-typecheck-workflows.md).
+
+## 2026-09-09 — M0.17 · build and audit workflows ported
+
+- `.github/workflows/audit.yml` copied from `resume-2026` with only the same
+  `checkout-to-app` repo-path fix — `diff` against the source
+  (post-substitution) is empty. Its raw `actions/github-script`
+  comment-rendering is upstream's own design (confirmed against the live
+  resume-2026 `lint.yml`, which does use the ported `job-summary`/`pr-comment`
+  composite actions), so it isn't rerouted through them here.
+- `.github/workflows/build.yml` copied the same way, plus a comment update
+  ("Gatsby build" → "Next.js build") and one real addition: an
+  `actions/cache` step for `.next/cache`, following
+  `node_modules/next/dist/docs/01-app/02-guides/ci-build-caching.md`'s
+  GitHub Actions recipe — resume-2026's own `build.yml` has no equivalent to
+  carry over, since Gatsby's build isn't cached this way.
+- Found that `Docker/Dockerfile.node`'s `testing` stage — the exact image
+  `build.yml`'s container job runs against — bakes in `ENV NODE_ENV=test`
+  (M0.11, for vitest), and that Turbopack's production build crashes
+  prerendering `/_global-error` (`null` `useContext`) under any `NODE_ENV`
+  other than `production`/unset. Reproduced with `NODE_ENV=test npm run
+build` before any fix, confirmed clean after. Fixed by pinning
+  `package.json`'s `build` script to `NODE_ENV=production next build` — not
+  a local-only quirk, every real `build / build` CI run would otherwise fail
+  unconditionally the first time this workflow executes.
+- Added `.github/workflows/build-audit-check.yml` to actually invoke the two,
+  mirroring `lint-format-typecheck-check.yml`'s ad hoc smoke-image pattern
+  (same run-scoped GHCR tag, same deferral of `build-image.yml`/M0.24). Its
+  `audit` job is gated `if: github.event_name == 'pull_request'` — unlike
+  `lint`/`format`/`typecheck`'s optional, guarded `pr-number`, `audit.yml`
+  declares it required and interpolates it unguarded into its PR-comment
+  script, which would be a syntax error on a `workflow_dispatch` run with no
+  PR number.
+- Read "audit workflow fails on a seeded high-severity advisory" as the PR
+  comment surfacing the finding, not the job or gate turning red — audit is
+  deliberately, doubly non-blocking in resume-2026 (`continue-on-error` and
+  `|| true` on the one step that can fail), its own `pr-gate.yml` says so
+  explicitly, and `DESIGN.md` §12 lists `audit` as ported verbatim. Verified
+  by extracting the comment-rendering script and running it against a seeded
+  fixture with one `high`-severity finding — renders the expected ⚠️ WARNING
+  callout, severity table, and package row.
+- Verified without pushing: `npx js-yaml` parses all three new/changed
+  workflow files; `diff` against the fetched resume-2026 originals matches
+  the intended changes exactly; `grep -rn 'resume-2026\|mjoynes-wombat-web'
+.github/` finds nothing; `npm run build` succeeds and populates
+  `.next/cache` (first time this script has run in the repo's CI-adjacent
+  history); `npm run lint`/`format:check`/`typecheck` all exit 0. The
+  container runs are the PR's job — `build-audit-check.yml` triggers on this
+  same diff.
+- Reasoning:
+  [`../design-decisions/m0.17-build-audit-workflows.md`](../design-decisions/m0.17-build-audit-workflows.md).
