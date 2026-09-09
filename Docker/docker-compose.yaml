@@ -1,0 +1,97 @@
+# Sorrel & Salt — local development stack.
+#
+# Ported from resume-2026/Docker/docker-compose.yaml (M0.12) with the
+# Gatsby-specific pieces removed:
+#
+#   - The LMDB cache volume (`gatsby_cache_*`, mounted at `/app/.cache`) is
+#     gone — Gatsby's on-disk data store does not exist here. Nothing replaces
+#     it: `next dev` writes `.next/` into the bind-mounted tree, which is fine
+#     (it is git- and docker-ignored). A dedicated `.next` volume would also
+#     need the Dockerfile to pre-create and chown the mount point the way
+#     resume-2026 did for `/app/.cache`; that is a change to M0.11's file, so
+#     it waits for a task that needs it.
+#   - The `/gatsby-public` volume and the `link-public.js` symlink workaround
+#     are gone.
+#   - The `devcontainer` service is gone. `Docker/Dockerfile.node` (M0.11) has
+#     only `development` and `testing` stages; M0.14 points `.devcontainer/` at
+#     the `development` stage directly rather than at a service here. With no
+#     devcontainer service there is no Claude/GitHub token to inject, so
+#     `docker-up` no longer runs an `update-token` step.
+#
+# The `postgres` service arrives in M0.13.
+#
+# The `workshop` service is behind the `workshop` compose profile, so
+# `make docker-up` starts only the app (and, from M0.13, Postgres).
+# `make docker-workshop` brings the Ladle workshop up alongside it.
+#
+#   make docker-up        build if needed, then start the app detached
+#   make docker-workshop   also start the workshop (profile: workshop)
+#   make docker-down      stop and remove everything, profiles included
+#   make docker-logs      follow
+#
+# Build context is the repo root (`..`); `Docker/Dockerfile.node` reads it
+# through the root `.dockerignore`.
+#
+# `name` is pinned rather than derived from this file's parent directory:
+# without it the project would be `docker`, which resume-2026's compose file
+# (also under a `Docker/` directory) already claims on the same machine — the
+# two would then share the `node_modules` volume and clobber each other.
+
+name: sorrel-and-salt
+
+volumes:
+  # The container's `npm ci` result, shadowing the host's platform-specific
+  # `node_modules` under the bind mount below. Persists across restarts and
+  # `docker compose down`; only `make docker-rebuild` (`down -v`) clears it.
+  #
+  # One volume per service, exactly as the port keeps them separate
+  # (`node_modules_development` / `node_modules_devcontainer` in resume-2026): a
+  # freshly-created named volume is populated from the mounting image on first
+  # use, so two services sharing a single fresh volume race to write the same
+  # files.
+  node_modules_app:
+  node_modules_workshop:
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.node
+      target: development
+    image: sorrel-node:development
+    working_dir: /app
+    volumes:
+      - ..:/app:cached
+      - node_modules_app:/app/node_modules
+    init: true
+    tty: true
+    ports:
+      - '8000:8000'
+    environment:
+      NODE_ENV: development
+    # Command comes from the Dockerfile `CMD` (`npm run dev`), which already
+    # binds 0.0.0.0:8000 — see the `dev` script in package.json.
+
+  workshop:
+    # Opt-in: only started by `docker compose --profile workshop up` (i.e.
+    # `make docker-workshop`), never by a bare `make docker-up`.
+    profiles: ['workshop']
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.node
+      target: development
+    image: sorrel-node:development
+    working_dir: /app
+    volumes:
+      - ..:/app:cached
+      - node_modules_workshop:/app/node_modules
+    init: true
+    tty: true
+    ports:
+      - '61000:61000' # ladle serve (.ladle/config.mjs)
+      - '61002:61002' # ladle HMR socket (.ladle/config.mjs)
+    environment:
+      NODE_ENV: development
+    # `npm run workshop` is `ladle serve`, which binds localhost by default;
+    # `--host 0.0.0.0` makes it reachable through the port mapping.
+    command: ['npm', 'run', 'workshop', '--', '--host', '0.0.0.0']
