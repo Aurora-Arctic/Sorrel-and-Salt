@@ -18,13 +18,18 @@
 #     devcontainer service there is no Claude/GitHub token to inject, so
 #     `docker-up` no longer runs an `update-token` step.
 #
-# The `postgres` service arrives in M0.13.
+# The `postgres` service (M0.13) gives local development and local tests a
+# real Postgres 17 — RLS, triggers, `pg_trgm`, array columns — with no Neon
+# connection anywhere. `app` waits for it to pass its health check and reaches
+# it by service name through `DATABASE_URL`. The `image:` is plain
+# `postgres:17` for now; M0.18 publishes a preseeded image to GHCR and M0.19
+# points this service (and CI) at that one tag from a single place.
 #
 # The `workshop` service is behind the `workshop` compose profile, so
-# `make docker-up` starts only the app (and, from M0.13, Postgres).
-# `make docker-workshop` brings the Ladle workshop up alongside it.
+# `make docker-up` starts only the app and Postgres.
+# `make docker-workshop` brings the Ladle workshop up alongside them.
 #
-#   make docker-up        build if needed, then start the app detached
+#   make docker-up        build if needed, then start the app + Postgres detached
 #   make docker-workshop   also start the workshop (profile: workshop)
 #   make docker-down      stop and remove everything, profiles included
 #   make docker-logs      follow
@@ -52,7 +57,34 @@ volumes:
   node_modules_app:
   node_modules_workshop:
 
+  # Postgres data directory. Persists across `docker compose restart` and
+  # `make docker-down`; only `make docker-rebuild` (`down -v`) clears it.
+  postgres_data:
+
 services:
+  postgres:
+    # Plain upstream image until M0.18 publishes the preseeded one to GHCR;
+    # M0.19 replaces this literal and the CI `services:` tag with one shared
+    # reference. Postgres 17 specifically — DESIGN.md §11 pins the major.
+    image: postgres:17
+    environment:
+      POSTGRES_USER: sorrel
+      POSTGRES_PASSWORD: sorrel
+      POSTGRES_DB: sorrel
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # Published so the host-side Vitest `db` project (M0.7) can reach it at
+      # localhost:5432; inside the compose network services use the `postgres`
+      # hostname instead.
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sorrel -d sorrel']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
   app:
     build:
       context: ..
@@ -69,6 +101,12 @@ services:
       - '8000:8000'
     environment:
       NODE_ENV: development
+      # Reaches Postgres by its compose service name; no Neon connection is
+      # used for local work. M0.14's devcontainer sets the same value.
+      DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
+    depends_on:
+      postgres:
+        condition: service_healthy
     # Command comes from the Dockerfile `CMD` (`npm run dev`), which already
     # binds 0.0.0.0:8000 — see the `dev` script in package.json.
 

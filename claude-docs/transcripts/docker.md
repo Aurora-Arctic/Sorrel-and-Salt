@@ -65,3 +65,40 @@ Append-only. Newest entry at the bottom. Summary: [`../docker.md`](../docker.md)
   `docker compose config` validates.
 - Reasoning:
   [`../design-decisions/m0.12-docker-compose.md`](../design-decisions/m0.12-docker-compose.md).
+
+## 2026-09-08 — M0.13 · `postgres` service added
+
+- **Built from DESIGN.md §11, not ported** — `resume-2026` has no database.
+- **`postgres` service on `image: postgres:17`** (plain upstream). DESIGN.md
+  §11 pins only the major. M0.18 publishes a preseeded Postgres 17 image
+  (extensions + empty `sorrel_template`) to GHCR; M0.19 repoints this service
+  and the CI `services:` block at that one tag "from one place". The literal
+  ships now with a comment naming its successor — no indirection with no image
+  to point at.
+- **Named volume `postgres_data:/var/lib/postgresql/data`**, same lifecycle
+  contract as `node_modules_*`: survives `restart` and `docker-down`, cleared
+  only by `docker-rebuild` (`down -v`).
+- **Health check `pg_isready -U sorrel -d sorrel`** (`interval 5s`,
+  `retries 10`, `start_period 10s`). `app` gets
+  `depends_on: { postgres: { condition: service_healthy } }`, so
+  `make docker-up` blocks on `postgres Healthy` before `app Starting` —
+  visible in the `up` output, not just eventually true.
+- **`DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel` on `app`** —
+  reaches the DB by compose service name; throwaway `sorrel`/`sorrel` creds
+  via `POSTGRES_USER`/`_PASSWORD`/`_DB`, no secret. M0.14's devcontainer sets
+  the same value; no `devcontainer` compose service exists to carry it.
+- **Port `5432:5432` published** for the host-side Vitest `db` project;
+  in-network services use the `postgres` hostname. `workshop` gets no
+  `DATABASE_URL` and no `depends_on` — it never touches a database.
+- **`makefile`** — `docker-up` comment updated (starts app + Postgres, waits
+  on the health check); no target changes.
+- **Verified:** `make docker-up` from clean → compose output
+  `postgres Started` → `Waiting` → `Healthy` → `app Starting`;
+  `docker compose ps` shows `postgres` `Up (healthy)`, `select version()` →
+  `PostgreSQL 17.11`. From inside `app`: `DATABASE_URL` set, Node TCP connect
+  to `postgres:5432` succeeds. Persistence: insert `42`, restart the
+  `postgres` container, wait healthy, `select` still returns `42`; the volume
+  also survives `down` (no `-v`). `docker compose config` validates;
+  `--services` = `postgres,app`, `--volumes` = `postgres_data,node_modules_app`.
+- Reasoning:
+  [`../design-decisions/m0.13-postgres-service.md`](../design-decisions/m0.13-postgres-service.md).
