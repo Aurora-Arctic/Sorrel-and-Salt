@@ -8,26 +8,33 @@ Next.js 16 · React 19 · TypeScript · PostgreSQL 17 + Drizzle · GraphQL.
 The specification is [`claude-docs/DESIGN.md`](claude-docs/DESIGN.md); the rules
 every change follows are in [`CLAUDE.md`](CLAUDE.md).
 
-> **Status: early scaffold.** Most of the commands below arrive with the
-> milestone that builds them — see the header of the [`makefile`](makefile) for
-> the schedule. What works today: `install`, `dev`, `build`, and the
-> lint / format / typecheck trio.
+> **Status: M0 complete.** The toolchain, styling foundation, component
+> workshop, Docker stack and CI/CD pipeline are in place. The database, the
+> GraphQL layer and the product features themselves begin at M1 — see the
+> header of the [`makefile`](makefile) for the schedule.
 
 ## Local setup
 
-1. Install [Node.js](https://nodejs.org/) 22 or newer (with npm).
+1. Install [Node.js](https://nodejs.org/) **26.6.0** — the version
+   [`Docker/Dockerfile.node`](Docker/Dockerfile.node) and the deploy workflow
+   pin. Node 22 ships npm 10, which cannot read this repo's lockfile.
 2. Clone the repo and `cd sorrel-and-salt`.
 3. `npm install`
 4. `npm run dev` — Next.js dev server on <http://localhost:8000>.
 5. `make help` — lists every make target and marks the ones that are still
    placeholders.
-6. Before every commit: `npm run pre-commit` (lint, `format:check`, typecheck).
+6. Before every commit: `npm run pre-commit` (lint, `format:check`, typecheck,
+   `check:stories`).
 
-The database, Docker stack, seed data, GraphQL codegen and the component
-workshop are not wired up yet: `npm run db:*`, `npm run codegen` and
-`npm run workshop` exit non-zero until their milestones land (M1.x, M3.x,
-M0.30). Once Vitest is wired (M1.7), verify with the **`:coverage`** script
-variants — a plain `npm run test` pass can still fail CI's 80% threshold.
+The Docker stack (`make docker-up`) and the component workshop
+(`npm run workshop`, on 61000) both work today. Still to come: the database and
+seed data (M1.3) and GraphQL codegen (M3.5) — `npm run db:*` and
+`npm run codegen` exit non-zero until then. Once Vitest is wired (M1.7), verify
+with the **`:coverage`** script variants — a plain `npm run test` pass can
+still fail CI's 80% threshold.
+
+`make` and `docker` are host-level; the devcontainer has neither, so run the
+npm scripts directly inside it.
 
 ## Gitflow
 

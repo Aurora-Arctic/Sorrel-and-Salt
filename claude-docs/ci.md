@@ -30,9 +30,8 @@ consumes them for real, alongside `build`/`audit` (M0.17).
   five composite actions together and proves they resolve, independent of
   whatever real checks come to depend on them. Runs on `pull_request` for
   changes under `.github/actions/**` (plus itself) and on `workflow_dispatch`.
-  Runs on the bare `ubuntu-latest` runner, not a container — the "testing"
-  GHCR image the real check workflows will use doesn't exist until M0.24 —
-  so it adds its own "Prepare /app" step ahead of `checkout-to-app`.
+  Runs on the bare `ubuntu-latest` runner rather than the shared `testing`
+  image, so it adds its own "Prepare /app" step ahead of `checkout-to-app`.
 - **`.github/workflows/{lint,format,typecheck}.yml`** (M0.16) — reusable
   `workflow_call` workflows, copied from resume-2026 with the same
   `checkout-to-app` repo-path fix as the composite actions. Each runs its
@@ -44,16 +43,16 @@ consumes them for real, alongside `build`/`audit` (M0.17).
   `typecheck` carry a `should-run` input for `pr-gate.yml`'s (M0.20)
   path-filtering; `format` doesn't — Prettier covers non-code files too, so
   it always runs regardless of what changed. None are triggered directly;
-  they wait for a caller (`pr-gate.yml`/`merge-queue.yml`, both later tasks).
-- **`.github/workflows/lint-format-typecheck-check.yml`** (M0.16) — the
-  workflow that actually calls the three above, since `pr-gate.yml` doesn't
-  exist yet. Builds `Docker/Dockerfile.node`'s `testing` target ad hoc and
+  `pr-gate.yml` and `merge-queue.yml` call them.
+- **`.github/workflows/lint-format-typecheck-check.yml`** (M0.16) — an
+  independent regression check on the three reusable workflows above,
+  exercising them on their own rather than through `pr-gate.yml`'s aggregate
+  run. Builds `Docker/Dockerfile.node`'s `testing` target ad hoc and
   pushes it to GHCR under a tag scoped to the run
-  (`ghcr.io/.../testing:smoke-<run id>`, never reused across runs) — the
-  real `build-image.yml` (M0.24) content-addresses and caches this properly
-  for every caller to share, but porting it early would leave M0.24 redoing
-  work against its own acceptance criteria, the same call M0.15 made for
-  `composite-actions-check.yml`. Triggers on `pull_request` (paths: the three
+  (`ghcr.io/.../testing:smoke-<run id>`, never reused across runs) instead of
+  sharing `build-image.yml`'s (M0.24) content-addressed image — deliberate, so
+  the smoke check stays independent of the thing it would otherwise test
+  through. Triggers on `pull_request` (paths: the three
   check workflows, this workflow, `.github/actions/**`, `Docker/Dockerfile.node`,
   and each check's own config/manifest files) and `workflow_dispatch`.
   Reasoning: [`design-decisions/m0.16-lint-format-typecheck-workflows.md`](design-decisions/m0.16-lint-format-typecheck-workflows.md).
@@ -75,7 +74,7 @@ consumes them for real, alongside `build`/`audit` (M0.17).
   reporting (unlike `lint`/`format`/`typecheck`, it doesn't route through the
   `job-summary`/`pr-comment` composite actions — that's upstream's own
   design, confirmed against the live resume-2026 source). Neither is
-  triggered directly; both wait for a caller (`pr-gate.yml`, a later task).
+  triggered directly; `pr-gate.yml` calls both.
   Reasoning: [`design-decisions/m0.17-build-audit-workflows.md`](design-decisions/m0.17-build-audit-workflows.md).
 - **`.github/workflows/build-audit-check.yml`** (M0.17) — the workflow that
   actually calls the two above, mirroring `lint-format-typecheck-check.yml`'s
@@ -109,32 +108,28 @@ consumes them for real, alongside `build`/`audit` (M0.17).
 'SELECT 1'` — `docker exec`, not a TCP connection, because the image's
     `host` (network) auth rules require a password that was generated
     randomly and discarded at build time (M0.18), while the `local`
-    (Unix-socket) rule `docker exec` uses stays `trust`. Scaffolding, same
-    as `lint-format-typecheck-check.yml`/`build-audit-check.yml`: delete it
-    once a real M1 test job exercises the same `services:` pattern for
+    (Unix-socket) rule `docker exec` uses stays `trust`. Scaffolding: delete
+    it once a real M1 test job exercises the same `services:` pattern for
     real. Reasoning:
     [`design-decisions/m0.19-consume-db-image.md`](design-decisions/m0.19-consume-db-image.md).
-- **`.github/workflows/pr-gate.yml`** (M0.20) — the real aggregating gate
-  `lint-format-typecheck-check.yml`/`build-audit-check.yml` were always
-  stand-ins for. Path-filters `lint`/`typecheck`/`build` via
-  `dorny/paths-filter` (`format` always runs), calls all five existing
-  reusable checks, and carries stub `vitest`/`playwright` jobs (real job
-  names, one no-op step) so M1 can wire them in without a required-check
-  rename. Shipped with two upstream dependencies stubbed that later tasks
-  filled: `gitflow` (M0.22) and the real `build-image.yml` (M0.24) — the
-  `build-image` job is now `uses: ./.github/workflows/build-image.yml`,
-  keeping its `pr-gate-build-image-<pr number>` / `cancel-in-progress: false`
+- **`.github/workflows/pr-gate.yml`** (M0.20) — the aggregating gate the two
+  smoke workflows above originally stood in for. Path-filters
+  `lint`/`typecheck`/`build` via `dorny/paths-filter` (`format` always runs),
+  calls all five reusable checks, and carries stub `vitest`/`playwright` jobs
+  (real job names, one no-op step) so M1 can wire them in without a
+  required-check rename. Its `build-image` job is
+  `uses: ./.github/workflows/build-image.yml` (M0.24), keeping its
+  `pr-gate-build-image-<pr number>` / `cancel-in-progress: false`
   concurrency group on the caller. Reasoning:
   [`design-decisions/m0.20-pr-gate.md`](design-decisions/m0.20-pr-gate.md).
 - **`.github/workflows/merge-queue.yml`** (M0.21) — the `merge_group`-triggered
   counterpart to `pr-gate.yml`, calling the same `lint`/`format`/`typecheck`/
   `build` (no `audit` — PR-only, never a required check) with `merge-queue:
-true` where each reusable workflow supports it. Same three gaps as
-  `pr-gate.yml`: `gitflow` (M0.22) and `build-image.yml` (M0.24) since
-  filled — `build-image` is now `uses: ./.github/workflows/build-image.yml`
-  with no caller-side concurrency group (unlike `pr-gate.yml`, this caller
-  has no sibling jobs to shield from a mid-push cancel) — and
-  `vitest`/`playwright` (M1) are still stub jobs. **"Require merge queue" is
+true` where each reusable workflow supports it. Its `build-image` job is
+  `uses: ./.github/workflows/build-image.yml` (M0.24) with no caller-side
+  concurrency group (unlike `pr-gate.yml`, this caller has no sibling jobs to
+  shield from a mid-push cancel); `vitest`/`playwright` (M1) are still stub
+  jobs. **"Require merge queue" is
   deliberately left OFF** on `main` and
   `staging` — the workflow exists but `merge_group` never fires until M7.A.1
   flips that branch-protection setting, once there's more than one
@@ -170,7 +165,9 @@ true` where each reusable workflow supports it. Same three gaps as
   alpine base ships neither, and the workflows force `shell: bash`) and
   `--input should-run=true` on lint/typecheck (act doesn't apply
   `workflow_call` input defaults). `act-build`/`act-vitest`/`act-playwright`
-  wait on their `act-cache-*` prerequisites and later workflows. Reasoning:
+  do not exist as targets yet: `act-build` needs `actions/cache` pre-cached
+  the way `act-cache-checkout` pre-caches `checkout-to-app`, and the other
+  two wait on their M1 workflows. Reasoning:
   [`design-decisions/m0.23-act-local-ci.md`](design-decisions/m0.23-act-local-ci.md).
 - **`.github/workflows/build-image.yml`** (M0.24) — the reusable
   `workflow_call` job `pr-gate.yml` and `merge-queue.yml` now call first to
