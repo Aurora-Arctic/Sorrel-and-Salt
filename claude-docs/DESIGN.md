@@ -151,30 +151,31 @@ That's a design lever. Every read moved from a client GraphQL query into the ser
 
 ### Configuration
 
+Deploys are **CLI-driven from CI**, not Vercel's Git integration. `.github/workflows/deploy.yml` does `vercel pull` → `vercel build` → `vercel deploy --prebuilt` → (for a preview) `vercel alias`. It runs on a **push** to `main` (production) or `staging` (preview), and on a **pull request** from a `hotfix/**` branch into `main` (preview) — a hotfix gets a review-time preview URL, posted as a PR comment, and its alias is removed when the PR closes. The Git integration is turned off entirely:
+
 ```json
 // vercel.json
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": {
-      "**": false,
-      "main": true,
-      "staging": true,
-      "hotfix/*": true
+      "**": false
     }
   }
 }
 ```
 
-Vercel treats any branch key it isn't given as `true`, so `{ "main": true, "staging": true }` alone would still deploy every feature branch. The `"**": false` catch-all (minimatch, matches names with and without slashes) turns them all off; `main`, `staging`, and `hotfix/*` each match a second rule that is `true`, and "at least one `true` wins" re-enables just those. `hotfix/*` deploys so an urgent fix can be verified on a real deployment before it promotes to production.
+`"**": false` (minimatch, matches names with and without slashes) disables an automatic deployment for every branch, so CI is the only path that ships code — even if the Git integration is left connected. This replaces M0.25's allow-list of `main`/`staging`/`hotfix/*`; the reason is Vercel Hobby (see `claude-docs/design-decisions/m0.26-disable-previews-and-alias-staging.md`): a named `staging` environment on `staging.sorrelandsalt.com` needs Pro, whereas `vercel alias` from CI puts staging on that hostname for free.
 
-| Item            | Setting                                                          |
-| --------------- | ---------------------------------------------------------------- |
-| Branch deploys  | `main`, `staging`, and `hotfix/*` only; all others off           |
-| Deploy previews | Disabled                                                         |
-| Environments    | `main` → Production; `staging` → Preview on a stable alias       |
-| Database        | Neon's Vercel integration injects `DATABASE_URL` per environment |
-| Build cache     | On by default                                                    |
+| Item            | Setting                                                                                                                                                             |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deploys         | `deploy.yml`: push to `main` (prod) / `staging` (preview); `hotfix/** → main` PR (preview). Nothing else                                                            |
+| Git integration | Off — `vercel.json` `deploymentEnabled: { "**": false }`                                                                                                            |
+| Staging URL     | `staging.sorrelandsalt.com`, re-pointed by `vercel alias` after each `staging` deploy                                                                               |
+| Production      | `vercel deploy --prebuilt --prod` auto-assigns `sorrelandsalt.com` / `www`                                                                                          |
+| Hotfix URL      | per-PR `hotfix-<slug>.sorrelandsalt.com`, posted as a PR comment, removed on PR close. Needs `*.sorrelandsalt.com` (wildcard domain, Vercel nameservers — Hobby-OK) |
+| Database        | Neon's Vercel integration populates the project's per-environment vars; `vercel pull` fetches them into the CI build                                                |
+| Build cache     | Vercel remote build cache, used by `vercel build`                                                                                                                   |
 
 ### Recorded risks
 
@@ -806,10 +807,11 @@ Specs: admin adds a compendium entry; A adds it to W's ingredients with a quanti
 | `vitest.config.ts`          | Two projects — `unit` (jsdom) and `db` (node, local Postgres); keep 80% thresholds                                                                                                                  |
 | `.oxlintrc.json`            | Node-globals override swaps `gatsby-*.ts` for `next.config.ts`, `drizzle.config.ts`, `src/db/**`, `src/app/**/route.ts`                                                                             |
 | `docker-compose.yaml`       | Drop the Gatsby LMDB volume; keep `node_modules`; **add `postgres` service** with seed init script; `devcontainer` depends on it                                                                    |
-| `netlify.toml`              | Replaced by `vercel.json`                                                                                                                                                                           |
+| `netlify.toml`              | Replaced by `vercel.json` — config only; `vercel.json` disables the Git integration and does not drive deploys (see below)                                                                          |
 | **New** `codegen.yml` check | Fails if generated GraphQL types are stale relative to the schema                                                                                                                                   |
-| **New** `migrate.yml`       | Applies migrations to staging on merge to `staging`, production on merge to `main`                                                                                                                  |
-| Secrets                     | `DATABASE_URL` per environment, `BETTER_AUTH_SECRET`, Google and GitHub OAuth client credentials                                                                                                    |
+| **New** `deploy.yml`        | CLI-driven Vercel deploy on push to `main`/`staging`/`hotfix/**` (§4). Not ported — `resume-2026` deployed via Netlify's own Git integration with no workflow file                                  |
+| **New** `migrate.yml`       | Applies migrations to staging on merge to `staging`, production on merge to `main`; must complete before `deploy.yml` ships the new deployment (a `needs:` job or a `workflow_run` predecessor)     |
+| Secrets                     | `DATABASE_URL` per environment, `BETTER_AUTH_SECRET`, Google and GitHub OAuth client credentials, `VERCEL_DEPLOY_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` / `VERCEL_SCOPE` for `deploy.yml`   |
 
 `make docker-up` gives a working local database with no Neon connection at all.
 
