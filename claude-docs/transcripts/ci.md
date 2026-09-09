@@ -345,3 +345,51 @@ lint`/`format:check`/`typecheck`/`check:stories` all exit 0. **Not
   the merge button).
 - Reasoning:
   [`../design-decisions/m0.22-gitflow-rulesets.md`](../design-decisions/m0.22-gitflow-rulesets.md).
+
+## 2026-09-09 — M0.24 · build-image.yml ported, callers rewired
+
+- Copied resume-2026's `build-image.yml` byte-for-byte into
+  `.github/workflows/`. It's the reusable `workflow_call` job that builds the
+  shared `testing` target once and returns its ref as an `image` output.
+  Nothing in it is repo-specific: the tag is
+  `ghcr.io/${github.repository,,}/testing:${{ hashFiles('Docker/Dockerfile.node',
+'package-lock.json') }}`, so it publishes under
+  `ghcr.io/aurora-arctic/sorrel-and-salt/` on its own — the same
+  `github.repository`-derived scheme `build-db-image.yml` (M0.18) already
+  uses for `/db`. "Change the GHCR tag to the new repo" was therefore a
+  no-op edit; "no resume-2026 tag references remain" holds because there were
+  never any literal ones. Header comment lightly reworded to point at this
+  repo's own M0.16/M0.17 smoke workflows instead of resume-2026 context.
+- `pr-gate.yml`: replaced the inline `build-image` job M0.20 stood in with
+  (`runs-on: ubuntu-latest`, tag `testing:pr-gate-<run id>`, never reused) by
+  `uses: ./.github/workflows/build-image.yml`. Kept the job-level
+  `concurrency: { group: pr-gate-build-image-<pr number>, cancel-in-progress:
+false }` on the caller — matches resume-2026's own `pr-gate.yml`, which
+  keeps that group because `build-image` writes a shared `type=gha` layer
+  cache a mid-push cancel can corrupt. Dropped the now-obsolete
+  build-image bullet from the file's header comment.
+- `merge-queue.yml`: same swap, no caller-side concurrency group — again
+  matching upstream. M0.21's stand-in had a `merge-queue-build-image-<run id>`
+  group only so its throwaway tag wouldn't collide with a concurrent PR
+  gate's; with both callers on the one content-addressed tag that shared
+  hit is the point, and the reusable workflow's `imagetools inspect`
+  skip-if-exists check keeps a superseded queue run cheap.
+- Left alone deliberately: `lint-format-typecheck-check.yml` /
+  `build-audit-check.yml` keep their `smoke-<run id>` ad hoc image builds
+  (independent regression checks for the per-check workflows, per M0.16's
+  "Rules this sets"), and `makefile`'s `act-*` targets (local `act` builds
+  the `testing` target directly and never calls this workflow or GHCR).
+- Verified without pushing: `npx js-yaml` parses `build-image.yml`,
+  `pr-gate.yml`, `merge-queue.yml`; `grep -rn
+'resume-2026|mjoynes-wombat-web'` over the three finds only the
+  pre-existing prose mention in `pr-gate.yml`'s header; `npm run
+lint`/`format:check`/`typecheck`/`check:stories` all exit 0. **Not
+  verifiable pre-merge:** the first `pr-gate.yml` run actually calling the
+  reusable `build-image.yml` — opening this PR triggers it (the diff touches
+  the workflow files), confirming the job builds and pushes
+  `ghcr.io/aurora-arctic/sorrel-and-salt/testing:<hash>`, every downstream
+  check pulls that exact tag via `needs.build-image.outputs.image`, and a
+  re-run with the same hash skips the build. `merge-queue.yml`'s path stays
+  unverifiable until the queue is enabled (M7.A.1).
+- Reasoning:
+  [`../design-decisions/m0.24-build-image.md`](../design-decisions/m0.24-build-image.md).
