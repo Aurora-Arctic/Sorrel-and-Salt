@@ -57,7 +57,33 @@ with `pr-gate.yml` (M0.20).
   check workflows, this workflow, `.github/actions/**`, `Docker/Dockerfile.node`,
   and each check's own config/manifest files) and `workflow_dispatch`.
   Reasoning: [`design-decisions/m0.16-lint-format-typecheck-workflows.md`](design-decisions/m0.16-lint-format-typecheck-workflows.md).
-- **Not yet ported:** `build`/`audit` (M0.17), the base Postgres image
-  (M0.18) and its consumption in CI/compose (M0.19), `pr-gate.yml` (M0.20),
-  `merge-queue.yml` (M0.21), `gitflow.yml` and branch rulesets (M0.22),
-  `.actrc`/`make act-*` (M0.23), `build-image.yml` (M0.24).
+- **`.github/workflows/{build,audit}.yml`** (M0.17) — reusable `workflow_call`
+  workflows, copied from resume-2026 with the same `checkout-to-app`
+  repo-path fix. `build` runs `npm run build` (`next build`) inside a
+  `container: image: ${{ inputs.image }}` job and now also caches
+  `.next/cache` via `actions/cache`, per Next's own CI-caching guide — the
+  one substantive change from upstream, since Gatsby's `build.yml` cached
+  nothing. `package.json`'s `build` script now forces `NODE_ENV=production`
+  (`Docker/Dockerfile.node`'s `testing` stage — the image `build.yml` runs
+  against — bakes in `NODE_ENV=test`, and Turbopack crashes prerendering
+  `/_global-error` under anything but `production`/unset; without the fix
+  every real `build / build` CI run would fail). `audit` runs `npm audit
+--json`, always exits clean
+  (`continue-on-error` + `|| true`), and comments a severity/package
+  breakdown on the PR — deliberately non-blocking and never a required
+  status check, ported verbatim including its raw `actions/github-script`
+  reporting (unlike `lint`/`format`/`typecheck`, it doesn't route through the
+  `job-summary`/`pr-comment` composite actions — that's upstream's own
+  design, confirmed against the live resume-2026 source). Neither is
+  triggered directly; both wait for a caller (`pr-gate.yml`, a later task).
+  Reasoning: [`design-decisions/m0.17-build-audit-workflows.md`](design-decisions/m0.17-build-audit-workflows.md).
+- **`.github/workflows/build-audit-check.yml`** (M0.17) — the workflow that
+  actually calls the two above, mirroring `lint-format-typecheck-check.yml`'s
+  ad hoc smoke-image pattern. `audit`'s job is gated to the `pull_request`
+  trigger only, since its `pr-number` input is required and used unguarded
+  (unlike `lint`/`format`/`typecheck`'s optional one) and would break on
+  `workflow_dispatch`, which has no PR number.
+- **Not yet ported:** the base Postgres image (M0.18) and its consumption in
+  CI/compose (M0.19), `pr-gate.yml` (M0.20), `merge-queue.yml` (M0.21),
+  `gitflow.yml` and branch rulesets (M0.22), `.actrc`/`make act-*` (M0.23),
+  `build-image.yml` (M0.24).
