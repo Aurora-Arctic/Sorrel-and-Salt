@@ -21,9 +21,30 @@
 # The `postgres` service (M0.13) gives local development and local tests a
 # real Postgres 17 — RLS, triggers, `pg_trgm`, array columns — with no Neon
 # connection anywhere. `app` waits for it to pass its health check and reaches
-# it by service name through `DATABASE_URL`. The `image:` is plain
-# `postgres:17` for now; M0.18 publishes a preseeded image to GHCR and M0.19
-# points this service (and CI) at that one tag from a single place.
+# it by service name through `DATABASE_URL`. It `build:`s straight from
+# `Docker/Dockerfile.postgres` (M0.18), the same way `app`/`workshop` build
+# from `Dockerfile.node` — this file is purely local dev, so there's no
+# reason to pull the GHCR image `build-db-image.yml` (M0.19) publishes for CI
+# and deployment; that would mean network + registry auth for something a
+# local build handles directly.
+#
+# No `sorrel` role or `sorrel` database exist in this image yet — only the
+# baked-in `postgres` superuser and the empty `sorrel_template` used to clone
+# each Vitest worker's database (CLAUDE.md's Testing section). The
+# `POSTGRES_*`/`DATABASE_URL` values below are inert until M1.27 bakes a real
+# schema, seed, and workspace credentials into this same image; nothing in
+# `app` queries the database yet for them to matter.
+#
+# A `postgres_data` volume populated by the *old* `postgres:17` image (i.e.
+# from before this file switched images) still only has the `sorrel`
+# role/database that image's own first-boot init created from the
+# `POSTGRES_*` env vars — a named volume isn't reset just because `image:`
+# changed. `make docker-rebuild` (`down -v`) clears it so the next start
+# populates fresh from this image instead. Until then, expect a `FATAL:
+# role "postgres" does not exist` log line on every health check tick —
+# `pg_isready` always names a role, and Postgres logs any rejected
+# connection attempt regardless; it's not a failing check (`pg_isready`
+# doesn't require the role to be valid, only that the server responds).
 #
 # The `workshop` service is behind the `workshop` compose profile, so
 # `make docker-up` starts only the app and Postgres.
@@ -63,10 +84,13 @@ volumes:
 
 services:
   postgres:
-    # Plain upstream image until M0.18 publishes the preseeded one to GHCR;
-    # M0.19 replaces this literal and the CI `services:` tag with one shared
-    # reference. Postgres 17 specifically — DESIGN.md §11 pins the major.
-    image: postgres:17
+    # Built locally from the same Dockerfile build-db-image.yml publishes to
+    # GHCR for CI/deployment (M0.18) — see the comment above for why this
+    # file builds rather than pulls.
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.postgres
+    image: sorrel-postgres
     environment:
       POSTGRES_USER: sorrel
       POSTGRES_PASSWORD: sorrel
@@ -79,7 +103,12 @@ services:
       # hostname instead.
       - '5432:5432'
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U sorrel -d sorrel']
+      # Not `-U sorrel -d sorrel`: that role/database don't exist in this
+      # image yet (see above). `pg_isready` only checks that the server
+      # accepts connections, not that a given user/database is valid, but
+      # `postgres`/`sorrel_template` are at least real so the check reads
+      # true rather than aspirational.
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d sorrel_template']
       interval: 5s
       timeout: 5s
       retries: 10
