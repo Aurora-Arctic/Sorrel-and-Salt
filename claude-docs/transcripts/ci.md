@@ -212,3 +212,34 @@ sorrel_template -c 'SELECT 1'`.
   `docker` daemon, same limitation M0.18 hit.
 - Reasoning:
   [`../design-decisions/m0.19-consume-db-image.md`](../design-decisions/m0.19-consume-db-image.md).
+
+## 2026-09-09 — M0.20 · pr-gate.yml ported
+
+- Fetched resume-2026's `pr-gate.yml` via `gh api
+repos/Aurora-Arctic/resume-2026/contents/.github/workflows/pr-gate.yml` and
+  wired it to the five reusable checks that exist so far (`lint`, `format`,
+  `typecheck`, `build`, `audit`), dropping everything that doesn't: `gitflow`
+  (M0.22) is removed from every job's `needs:` outright, the real
+  `build-image.yml` (M0.24) is replaced by the same ad hoc, run-scoped image
+  build M0.16/M0.17 already established (tag
+  `ghcr.io/.../testing:pr-gate-<run id>`, distinct from those two workflows'
+  `smoke-<run id>` so a PR touching both never collides), and `vitest`/
+  `playwright` (M1) become bare stub jobs — real job names, one no-op `echo`
+  step, so M1 swaps in the real `uses:` without ever renaming a required
+  status check.
+- The `changes` path-filter job keeps only the three categories that both
+  exist and actually take a `should-run` input (`lint`, `typecheck`,
+  `build`) — upstream's `audit` and `vitest`/`playwright` categories aren't
+  carried over since nothing would consume their output (`audit.yml` has no
+  `should-run` input, same as `format.yml`).
+- `build`'s filter swaps Gatsby's globs (`gatsby-config.ts` etc.,
+  `static/**`) for Next.js's (`next.config.ts`, `public/**`); `lint`/
+  `typecheck`'s globs needed no change.
+- Verified without pushing: `npx js-yaml` parses the new file; `grep -rn
+'resume-2026|mjoynes-wombat-web' .github/` finds nothing (the one
+  `resume-2026` hit is prose in this task's own design-decision doc, not a
+  workflow); `npm run lint`/`format:check`/`typecheck` all exit 0.
+  **Not verifiable pre-push:** the real gate run — opening the PR triggers
+  `pr-gate.yml` for the first time.
+- Reasoning:
+  [`../design-decisions/m0.20-pr-gate.md`](../design-decisions/m0.20-pr-gate.md).

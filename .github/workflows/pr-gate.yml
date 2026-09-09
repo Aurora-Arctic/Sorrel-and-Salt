@@ -1,0 +1,239 @@
+name: PR Gate
+
+# Runs on every pull request targeting `main`, `staging`, or `release/*`. Fans
+# out to the checks ported so far (lint, format, typecheck, build) plus a
+# non-blocking npm audit, gating the PR before it can be merged. format
+# always runs; the rest are path-filtered by the `changes` job below so a PR
+# only pays for the checks its changed files could actually affect.
+#
+# Two things resume-2026's own pr-gate.yml assumes aren't ported yet:
+#
+# - `gitflow` (M0.22) and the real `build-image.yml` (M0.24) don't exist, so
+#   there's no `needs: gitflow` anywhere below and the image these jobs run
+#   against is built ad hoc instead of via `uses: ./.github/workflows/build-image.yml`
+#   — the same "build the testing target ourselves, tagged per run, never
+#   reused" pattern `lint-format-typecheck-check.yml`/`build-audit-check.yml`
+#   established in M0.16/M0.17 for the identical reason. M0.24 replaces this
+#   job with the real, content-addressed one; M0.22 adds `gitflow` back as a
+#   dependency of every job below, same as upstream.
+# - `vitest` and `playwright` (both M1) are stub jobs — they exist under
+#   their real names so branch protection can eventually require them
+#   without a rename, but run one no-op step instead of calling a
+#   `workflow_call` file that doesn't exist yet.
+#
+# lint/typecheck/build/format are required status checks in branch
+# protection (as "<job> / <job>", the name GitHub gives a job inside a
+# called reusable workflow) — audit is deliberately not among them; it's
+# PR-only and never gates a merge (see the audit job below). Filtering must
+# therefore never skip the calling job itself for those four — a job-level
+# `if:` makes GitHub report the check under a different, bare name ("lint"
+# instead of "lint / lint") instead of not reporting it at all, and that
+# bare name never satisfies the "lint / lint" required check, permanently
+# blocking the PR. So those jobs (audit included, for the same
+# consistent-naming reason even though it isn't required) always run and
+# instead pass their filter result through as a `should-run` workflow_call
+# input — see e.g. lint.yml — which skips the actual work internally but
+# keeps the job (and its check name) the same either way.
+#
+# `edited` (in addition to the default opened/synchronize/reopened) is kept
+# from upstream even though nothing here reacts to it yet — M0.22's gitflow
+# job is what actually needs a retarget to re-trigger source->target
+# validation.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+    branches:
+      - main
+      - staging
+      - 'release/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+  pull-requests: write
+
+jobs:
+  # Determines which downstream checks a given push actually needs to run,
+  # so e.g. a docs-only edit doesn't pay for lint/typecheck/build/audit.
+  # format is deliberately NOT gated by this — Prettier covers .md/.json too,
+  # and "did formatting change" is cheap and universal enough that it should
+  # just run on every push rather than be filtered. Each filter also matches
+  # its own reusable workflow file plus pr-gate.yml and .github/actions/**,
+  # so editing the check's own workflow (or a shared composite action it
+  # depends on) always reruns it rather than silently going unverified.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      lint: ${{ steps.filter.outputs.lint }}
+      typecheck: ${{ steps.filter.outputs.typecheck }}
+      build: ${{ steps.filter.outputs.build }}
+    steps:
+      - name: Determine changed-file categories
+        uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            shared: &shared
+              - '.github/workflows/pr-gate.yml'
+              - '.github/actions/**'
+            lint:
+              - *shared
+              - '.github/workflows/lint.yml'
+              - '.oxlintrc.json'
+              - '**/*.ts'
+              - '**/*.tsx'
+              - '**/*.js'
+              - '**/*.jsx'
+              - '**/*.mjs'
+              - '**/*.cjs'
+              - 'package.json'
+              - 'package-lock.json'
+            typecheck:
+              - *shared
+              - '.github/workflows/typecheck.yml'
+              - '**/*.ts'
+              - '**/*.tsx'
+              - 'tsconfig.json'
+              - 'package-lock.json'
+            build:
+              - *shared
+              - '.github/workflows/build.yml'
+              - 'src/**'
+              - 'public/**'
+              - 'next.config.ts'
+              - 'tsconfig.json'
+              - 'package.json'
+              - 'package-lock.json'
+
+  # Ad hoc, run-scoped stand-in for build-image.yml (M0.24) — see the header
+  # comment above. cancel-in-progress is false, matching upstream's own
+  # build-image job: this pushes to a shared GHA layer cache
+  # (cache-to: type=gha,mode=max), and cancelling mid-push can freeze a
+  # half-written layer into that cache for every later run to reuse. The
+  # jobs below are cheap to rerun and don't share mutable state, so they get
+  # their own cancellable concurrency groups instead. Always runs
+  # unconditionally (not gated on `changes`) since format always needs its
+  # image output regardless of what changed.
+  build-image:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pr-gate-build-image-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    outputs:
+      image: ${{ steps.tag.outputs.image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Compute scoped image tag
+        id: tag
+        run: |
+          repo_lower=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "image=ghcr.io/${repo_lower}/testing:pr-gate-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push testing image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Docker/Dockerfile.node
+          target: testing
+          push: true
+          tags: ${{ steps.tag.outputs.image }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  lint:
+    needs: [build-image, changes]
+    concurrency:
+      group: pr-gate-lint-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    uses: ./.github/workflows/lint.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+      pr-number: ${{ github.event.pull_request.number }}
+      # No job-level `if:` here on purpose — see lint.yml's should-run input for why.
+      should-run: ${{ needs.changes.outputs.lint == 'true' }}
+
+  # Deliberately ungated on `changes` — runs on every push regardless of what
+  # changed.
+  format:
+    needs: build-image
+    concurrency:
+      group: pr-gate-format-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    uses: ./.github/workflows/format.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+      pr-number: ${{ github.event.pull_request.number }}
+
+  typecheck:
+    needs: [build-image, changes]
+    concurrency:
+      group: pr-gate-typecheck-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    uses: ./.github/workflows/typecheck.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+      pr-number: ${{ github.event.pull_request.number }}
+      # No job-level `if:` here on purpose — see typecheck.yml's should-run input for why.
+      should-run: ${{ needs.changes.outputs.typecheck == 'true' }}
+
+  build:
+    needs: [build-image, changes]
+    concurrency:
+      group: pr-gate-build-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    uses: ./.github/workflows/build.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+      # No job-level `if:` here on purpose — see build.yml's should-run input for why.
+      should-run: ${{ needs.changes.outputs.build == 'true' }}
+
+  # Non-blocking and PR-only — not a required status check. Gated on the
+  # trigger itself (always true here since pr-gate only runs on
+  # pull_request) rather than assuming it, per the rule M0.17 set: a
+  # reusable check whose input is used unguarded downstream (audit.yml's
+  # `pr-number`) must not be reachable from a trigger where that input could
+  # be empty.
+  audit:
+    needs: build-image
+    if: github.event_name == 'pull_request'
+    concurrency:
+      group: pr-gate-audit-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    uses: ./.github/workflows/audit.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+      pr-number: ${{ github.event.pull_request.number }}
+
+  # Stub — M1 replaces this with `uses: ./.github/workflows/vitest.yml`,
+  # keeping the job name so an eventual required-status-check rule never
+  # needs renaming. Runs unconditionally and trivially so it never blocks a
+  # merge before the real check exists.
+  vitest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stub — wired for real in M1
+        run: echo "vitest is stubbed until M1 ports the real workflow_call check"
+
+  # Stub — M1 replaces this with `uses: ./.github/workflows/playwright.yml`,
+  # same reasoning as vitest above.
+  playwright:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stub — wired for real in M1
+        run: echo "playwright is stubbed until M1 ports the real workflow_call check"
