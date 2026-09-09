@@ -1,0 +1,29 @@
+name: Compute Duration
+description: >-
+  Formats the elapsed time since a timer-start output as e.g. "12s" or
+  "1m 34s".
+
+inputs:
+  start:
+    description: Epoch seconds from timer-start's output
+    required: true
+
+outputs:
+  duration:
+    description: Formatted elapsed duration, e.g. "12s" or "1m 34s"
+    value: ${{ steps.elapsed.outputs.duration }}
+
+runs:
+  using: composite
+  steps:
+    - name: Compute duration
+      id: elapsed
+      shell: bash
+      run: |
+        elapsed=$(( $(date +%s) - ${{ inputs.start }} ))
+        if [ "$elapsed" -lt 60 ]; then
+          duration="${elapsed}s"
+        else
+          duration="$((elapsed / 60))m $((elapsed % 60))s"
+        fi
+        echo "duration=$duration" >> "$GITHUB_OUTPUT"
