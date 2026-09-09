@@ -1,0 +1,271 @@
+name: Deploy
+
+# CLI-driven Vercel deploys. Replaces Vercel's Git integration (which
+# vercel.json now disables for every branch) as the thing that ships code —
+# see claude-docs/design-decisions/m0.26-*.md.
+#
+#   push to main            -> vercel deploy --prebuilt --prod (assigns sorrelandsalt.com)
+#   push to staging         -> preview deploy, aliased to staging.sorrelandsalt.com
+#   PR from hotfix/** -> main -> preview deploy, aliased to a per-hotfix domain
+#                          hotfix-<slug>.sorrelandsalt.com, URL posted as a PR
+#                          comment; the alias is removed when the PR closes.
+#
+# Hotfixes deploy on the PR, not on push: an urgent fix wants a review-time
+# preview URL its reviewers can click, and it reaches production through its
+# own main PR anyway. The hotfix->staging PR the create-pr skill also opens
+# is ignored here (trigger is `branches: [main]`) so a hotfix deploys once.
+#
+# Nothing else deploys: no other branch/PR is in the trigger and the Git
+# integration is off. Feature branches are covered by local dev + pr-gate.
+#
+# pull_request (not pull_request_target) is safe here: hotfix branches live in
+# this repo, never a fork, so the secrets below are available and no
+# untrusted checkout runs with them.
+#
+# The VERCEL_* secrets are defined in M0.27's env/secrets matrix and do not
+# exist yet. Until they do, the "Check secrets" gate skips every real step and
+# the workflow still completes green — the same stub-now/wire-later shape
+# pr-gate.yml uses for its vitest/playwright jobs. Once M1.4 lands its
+# migrate.yml, that must run (and pass) ahead of the deploy step here.
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
+
+concurrency:
+  # One run per branch (push) or per PR (hotfix); never cancel one mid-flight
+  # — a half-run `vercel deploy`/`alias` can leave an alias pointing at a dead
+  # deployment.
+  group: deploy-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  deploy:
+    # push to main/staging, or an open hotfix -> main PR (not its close event).
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' &&
+        github.event.action != 'closed' &&
+        startsWith(github.head_ref, 'hotfix/'))
+    runs-on: ubuntu-latest
+    # Bare runner, not the `testing` GHCR image the check workflows use: this
+    # job needs the Vercel CLI and writes .vercel/output, neither of which the
+    # test image is built for. Same call composite-actions-check.yml made.
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Check secrets
+        id: guard
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::warning::Vercel secrets not configured yet (M0.27) — skipping deploy."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.guard.outputs.enabled == 'true'
+        uses: actions/checkout@v7
+
+      - name: Set up Node
+        if: steps.guard.outputs.enabled == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.guard.outputs.enabled == 'true'
+        run: npm ci
+
+      - name: Install Vercel CLI
+        if: steps.guard.outputs.enabled == 'true'
+        run: npm install --global vercel@59
+
+      - name: Resolve deploy target
+        id: target
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            # hotfix/<slug> -> hotfix-<sanitised slug>.sorrelandsalt.com, kept
+            # inside the 63-char DNS label limit (7 for the "hotfix-" prefix).
+            raw="${HEAD_REF#hotfix/}"
+            slug="$(printf '%s' "$raw" \
+              | tr '[:upper:]' '[:lower:]' \
+              | sed -E 's/[^a-z0-9-]+/-/g; s/-+/-/g; s/^-//; s/-$//')"
+            slug="${slug:0:56}"
+            slug="${slug%-}"
+            echo "environment=preview" >> "$GITHUB_OUTPUT"
+            echo "prod_flag=" >> "$GITHUB_OUTPUT"
+            echo "alias=hotfix-${slug}.sorrelandsalt.com" >> "$GITHUB_OUTPUT"
+          elif [ "$REF_NAME" = "main" ]; then
+            echo "environment=production" >> "$GITHUB_OUTPUT"
+            echo "prod_flag=--prod" >> "$GITHUB_OUTPUT"
+            echo "alias=" >> "$GITHUB_OUTPUT"
+          else
+            echo "environment=preview" >> "$GITHUB_OUTPUT"
+            echo "prod_flag=" >> "$GITHUB_OUTPUT"
+            echo "alias=staging.sorrelandsalt.com" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Start timer
+        id: start
+        if: steps.guard.outputs.enabled == 'true'
+        uses: ./.github/actions/timer-start
+
+      - name: Pull Vercel environment
+        if: steps.guard.outputs.enabled == 'true'
+        run: vercel pull --yes --environment=${{ steps.target.outputs.environment }} --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build
+        if: steps.guard.outputs.enabled == 'true'
+        run: vercel build ${{ steps.target.outputs.prod_flag }} --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy
+        id: deploy
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          PROD_FLAG: ${{ steps.target.outputs.prod_flag }}
+        run: |
+          # stdout is always the deployment URL; stderr carries build/progress
+          # logs — keep them apart (Vercel's own CI example does this).
+          if vercel deploy --prebuilt $PROD_FLAG --token="$VERCEL_TOKEN" \
+              > deploy-url.txt 2> deploy.log; then
+            url="$(cat deploy-url.txt)"
+            echo "url=$url" >> "$GITHUB_OUTPUT"
+            echo "Deployed: $url"
+            cat deploy.log
+          else
+            echo "Deploy failed:"
+            cat deploy.log
+            exit 1
+          fi
+
+      - name: Alias
+        id: alias
+        if: steps.guard.outputs.enabled == 'true' && steps.target.outputs.alias != ''
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_SCOPE: ${{ secrets.VERCEL_SCOPE }}
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+          ALIAS: ${{ steps.target.outputs.alias }}
+        run: |
+          set -o pipefail
+          scope_arg=""
+          [ -n "$VERCEL_SCOPE" ] && scope_arg="--scope=$VERCEL_SCOPE"
+          if vercel alias set "$DEPLOY_URL" "$ALIAS" --token="$VERCEL_TOKEN" $scope_arg 2>&1 | tee -a deploy.log; then
+            echo "url=https://$ALIAS" >> "$GITHUB_OUTPUT"
+            echo "Aliased $ALIAS -> $DEPLOY_URL"
+          else
+            echo "::error::vercel alias set failed for $ALIAS"
+            exit 1
+          fi
+
+      - name: Compute duration
+        id: timer
+        if: always() && steps.guard.outputs.enabled == 'true'
+        uses: ./.github/actions/timer-elapsed
+        with:
+          start: ${{ steps.start.outputs.start }}
+
+      - name: Write job summary
+        if: always() && steps.guard.outputs.enabled == 'true'
+        uses: ./.github/actions/job-summary
+        with:
+          check-name: Deploy (${{ steps.target.outputs.environment }})
+          outcome: ${{ steps.deploy.outcome }}
+          log-file: deploy.log
+          duration: ${{ steps.timer.outputs.duration }}
+          summary: ${{ steps.deploy.outputs.url && format('Deployed {0}', steps.deploy.outputs.url) || 'Deploy did not complete' }}
+          details: "${{ steps.alias.outputs.url && format('Preview: {0}', steps.alias.outputs.url) || '' }}"
+
+      - name: Comment preview URL on PR
+        if: >-
+          always() && steps.guard.outputs.enabled == 'true' &&
+          github.event_name == 'pull_request'
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Hotfix preview
+          marker-slug: hotfix-preview
+          pr-number: ${{ github.event.pull_request.number }}
+          outcome: ${{ steps.deploy.outcome }}
+          log-file: deploy.log
+          success-mode: comment
+          duration: ${{ steps.timer.outputs.duration }}
+          summary: ${{ steps.alias.outputs.url || steps.deploy.outputs.url || 'deploy failed' }}
+
+  teardown:
+    # A closed hotfix -> main PR (merged or abandoned): drop its preview alias
+    # so stale per-hotfix domains don't pile up against the Hobby 50-domain cap.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      startsWith(github.head_ref, 'hotfix/')
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Check secrets
+        id: guard
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::warning::Vercel secrets not configured yet (M0.27) — skipping teardown."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node
+        if: steps.guard.outputs.enabled == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Vercel CLI
+        if: steps.guard.outputs.enabled == 'true'
+        run: npm install --global vercel@59
+
+      - name: Remove preview alias
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_SCOPE: ${{ secrets.VERCEL_SCOPE }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          raw="${HEAD_REF#hotfix/}"
+          slug="$(printf '%s' "$raw" \
+            | tr '[:upper:]' '[:lower:]' \
+            | sed -E 's/[^a-z0-9-]+/-/g; s/-+/-/g; s/^-//; s/-$//')"
+          slug="${slug:0:56}"
+          slug="${slug%-}"
+          scope_arg=""
+          [ -n "$VERCEL_SCOPE" ] && scope_arg="--scope=$VERCEL_SCOPE"
+          vercel alias rm "hotfix-${slug}.sorrelandsalt.com" --yes --token="$VERCEL_TOKEN" $scope_arg || {
+            echo "::notice::alias hotfix-${slug}.sorrelandsalt.com already gone"
+          }
