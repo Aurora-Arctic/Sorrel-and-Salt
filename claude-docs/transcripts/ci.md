@@ -111,3 +111,52 @@ build` before any fix, confirmed clean after. Fixed by pinning
   same diff.
 - Reasoning:
   [`../design-decisions/m0.17-build-audit-workflows.md`](../design-decisions/m0.17-build-audit-workflows.md).
+
+## 2026-09-09 — M0.18 · base Postgres image built and published to GHCR
+
+- Confirmed there is nothing to port: `resume-2026` has no database at all
+  (already established while building `m0.13-postgres-service.md`), so
+  `Docker/Dockerfile.postgres` and `.github/workflows/build-db-image.yml` are
+  both new, built directly from `DESIGN.md`/`TASKS.md` rather than copied.
+- `Docker/Dockerfile.postgres`, `FROM postgres:17`, bakes in `pg_trgm` (the
+  one extension `DESIGN.md` §5 names) and an empty `sorrel_template` database
+  at _build_ time — read "enabled at build time, not at container start" as
+  the literal acceptance criterion it is, since
+  `docker-entrypoint-initdb.d/*.sql` scripts only run on a container's first
+  start against an empty volume, which is not what "enabled at build time"
+  says.
+- Fetched `docker-library/postgres`'s real `17/bookworm/docker-entrypoint.sh`
+  via `gh api` to confirm the exact mechanism: its `_main` already does
+  initdb → temp server → run `/docker-entrypoint-initdb.d/*` → stop server,
+  then unconditionally `exec "$@"`s into a foreground `postgres` server. One
+  `RUN` step disables that one line (`sed`, matched as the unique,
+  single-tab-indented `exec "$@"` at the true end of the file), runs
+  `docker-entrypoint.sh postgres` (now returns instead of hanging the build),
+  restores the line, then `grep`s for it — a build-time assertion that fails
+  loudly rather than shipping an image whose containers can't start postgres.
+- `Docker/postgres-init/enable-extensions.sql` holds exactly the one
+  `CREATE EXTENSION IF NOT EXISTS pg_trgm` statement — nothing else is named
+  in the design, so nothing else is enabled speculatively.
+- `.github/workflows/build-db-image.yml` tags the published image with a
+  `hashFiles()` hash over `src/db/**`, `Docker/Dockerfile.postgres`, and
+  `Docker/postgres-init/**`, plus `latest`. Content-addressing makes "tag
+  changes when src/db changes and does not when it does not" true by
+  construction, and the same path list gates the trigger, so "rebuild is
+  skipped for PRs that do not touch src/db" is the trigger itself rather
+  than a job that runs and no-ops. Runs on `pull_request` as well as `push`
+  (a PR build is reusable, not throwaway, since the tag is branch-agnostic);
+  `latest` only moves on `push` to `staging`/`main`, so a PR can never
+  repoint the floating tag other workflows will default to once M0.19 wires
+  it up.
+- Deliberately left out of scope: no schema or seed data baked in (M1.27,
+  once `src/db/schema` has content), and no change to `docker-compose.yaml`
+  or a CI `services:` block yet (M0.19 — this task only has to make the
+  image exist and publish correctly).
+- Verified without pushing: `npx js-yaml` parses `build-db-image.yml`;
+  `docker-library/postgres`'s real entrypoint script confirmed the exact
+  `sed` target line. **Not verifiable pre-push:** the actual `docker build`/
+  `buildx` run and the resulting image — this sandbox has no `docker`
+  daemon. Opening the PR (path-filtered on the Dockerfile, the init script,
+  and this workflow) triggers `build-db-image.yml` for real.
+- Reasoning:
+  [`../design-decisions/m0.18-build-db-image.md`](../design-decisions/m0.18-build-db-image.md).
