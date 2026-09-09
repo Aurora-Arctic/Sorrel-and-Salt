@@ -11,13 +11,12 @@ component in the tree got its stories in M0.32; M0.33 added the gate that keeps 
   workshop to a Next.js major; one dependency; one config file. Reasoning:
   [`design-decisions/m0.30-ladle-component-workshop.md`](design-decisions/m0.30-ladle-component-workshop.md).
 - `.ladle/config.mjs` — `stories` glob, `port` 61000, `outDir` `build`, pinned `hmrPort` 61002.
-  `addons.theme.defaultState` is **meant to be `'auto'`** — the theme control's unset position,
-  so the workshop opens letting `prefers-color-scheme` decide (the app's dark-first default
-  lives in `globals.scss`, not here). M0.31 set it to `'auto'` deliberately and wrote the
-  comment above it explaining why. **The file currently reads `'dark'`**: M0.32 flipped it back
-  with no mention in any decision record or transcript, so code and comment now contradict each
-  other and the workshop opens dark. Treat the code as the defect — do not "correct" this doc
-  or that comment to match it.
+  `addons.theme.defaultState: 'dark'` — the workshop opens dark, matching the app's dark-first
+  default in `globals.scss`. M0.30 set `'dark'`, M0.31 moved it to `'auto'` (the control's unset
+  position, letting `prefers-color-scheme` decide), and M0.32 moved it back; `'dark'` is the
+  confirmed intent. **The comment above it, lines 66-71, still describes the `'auto'` behaviour
+  M0.31 wrote it for** and contradicts the value beneath it — stale comment, correct code.
+  Tracked as M0.35.
 - `.ladle/vite.config.ts` — Sass API pinned to `modern-compiler`. Resolution is left at
   Vite/Sass defaults **because** that is what `next dev` does: relative `@use`, empty load
   paths. This file is the seam for keeping the two aligned if Next ever gains `sassOptions`.
