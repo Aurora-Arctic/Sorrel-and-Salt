@@ -1,0 +1,45 @@
+// Workshop surface — the token layer of src/app/globals.scss, and only that.
+//
+// The app imports globals.scss whole. The workshop can't: globals.scss pulls
+// _typography.scss's document-wide element rules (`li::before { content: '◆' }`,
+// the `ul` padding reset, the `a` recolour, `section`/`header` margins, …), and
+// Ladle's own sidebar and list controls are `<ul>`/`<li>`/`<a>`, so those rules
+// bleed straight onto Ladle's chrome. Components style themselves from tokens
+// and mixins (CLAUDE.md), so the global prose rules aren't what a story needs
+// anyway — the token custom properties are, and this file carries exactly those
+// plus the body surface.
+//
+// The three theme blocks below are copied from globals.scss verbatim (minus its
+// `@use './typography'`) and must stay in step with it. M0.31's decorator
+// revisits whether _typography.scss belongs in the workshop at all, scoped to
+// the story frame rather than the document.
+
+@use '../src/scss/variables' as *;
+@use '../src/scss/mixins' as *;
+
+:root {
+  @include theme-dark;
+}
+
+@media (prefers-color-scheme: light) {
+  html:not([data-theme='dark']) {
+    @include theme-light;
+  }
+}
+
+html[data-theme='light'] {
+  @include theme-light;
+}
+
+body {
+  margin: 0;
+  background-color: $surface-page;
+  color: $text-primary;
+  @include theme-transition(background-color, color);
+}
+
+@include reduced-motion {
+  body {
+    transition: none;
+  }
+}

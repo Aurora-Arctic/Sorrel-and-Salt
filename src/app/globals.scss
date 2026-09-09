@@ -1,6 +1,8 @@
 @use '../scss/variables' as *;
 @use '../scss/mixins' as *;
-@use '../scss/typography';
+@use '../scss/typography' as *;
+@use '../scss/layout' as *;
+@use '../scss/primitives' as *;
 
 // The single global stylesheet, imported once by the root layout. Everything
 // else is componentized Sass (§9) — this file exists because two things have
@@ -12,6 +14,11 @@
 // Both would be duplicated into every compiled stylesheet if a shared partial
 // emitted them, since each component's index.scss is its own compilation unit.
 // Nothing component-specific belongs here.
+//
+// M0.32: _typography.scss's rules are now a `typography-base` mixin rather than
+// bare top-level rules; `@include`ing it inside `body` below is what emits
+// them. The output is the same set of rules, one `body` ancestor deeper. The
+// Ladle workshop `@include`s the same mixin scoped to its story frame.
 
 // M0.6 — three theme states, not two. Dark is the default, and a system that
 // asks for light gets light.
@@ -40,6 +47,9 @@ html[data-theme='light'] {
 }
 
 body {
+  @include typography-base;
+  @include layout-base;
+  @include primitives-base;
   margin: 0;
   background-color: $surface-page;
   color: $text-primary;

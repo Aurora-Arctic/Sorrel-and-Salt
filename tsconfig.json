@@ -31,5 +31,20 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    // *.test.tsx imports `vitest` and `@testing-library/react`, neither
+    // installed until M1.7. ThemeToggle (M0.29) is the only component before
+    // then that ships a test file per the TDD convention — narrow and
+    // temporary; M1.7 removes this exclusion when it adds the real
+    // dependencies and wires up the runner.
+    "src/**/*.test.tsx",
+    // *.stories.tsx pull @ladle/react's types, whose bundled app sources
+    // (typings-for-build/**/*.tsx) don't survive this repo's `strict` on their
+    // own and aren't reached by `skipLibCheck` because they ship as .tsx, not
+    // .d.ts. The workshop compiles stories through Vite/esbuild, which strips
+    // types, so `ladle build` still exercises them; only `tsc` steps back.
+    // M0.32 revisits when it adds the first real stories.
+    "src/**/*.stories.tsx"
+  ]
 }
