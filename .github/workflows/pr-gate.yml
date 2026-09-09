@@ -1,31 +1,33 @@
 name: PR Gate
 
 # Runs on every pull request targeting `main`, `staging`, or `release/*`. Fans
-# out to the checks ported so far (lint, format, typecheck, build) plus a
-# non-blocking npm audit, gating the PR before it can be merged. format
-# always runs; the rest are path-filtered by the `changes` job below so a PR
-# only pays for the checks its changed files could actually affect.
+# out to the checks ported so far (lint, format, typecheck, build, gitflow)
+# plus a non-blocking npm audit, gating the PR before it can be merged.
+# format and gitflow always run; the rest are path-filtered by the `changes`
+# job below so a PR only pays for the checks its changed files could
+# actually affect.
 #
-# Two things resume-2026's own pr-gate.yml assumes aren't ported yet:
+# One thing resume-2026's own pr-gate.yml assumes isn't ported yet:
 #
-# - `gitflow` (M0.22) and the real `build-image.yml` (M0.24) don't exist, so
-#   there's no `needs: gitflow` anywhere below and the image these jobs run
-#   against is built ad hoc instead of via `uses: ./.github/workflows/build-image.yml`
-#   — the same "build the testing target ourselves, tagged per run, never
-#   reused" pattern `lint-format-typecheck-check.yml`/`build-audit-check.yml`
-#   established in M0.16/M0.17 for the identical reason. M0.24 replaces this
-#   job with the real, content-addressed one; M0.22 adds `gitflow` back as a
-#   dependency of every job below, same as upstream.
+# - the real `build-image.yml` (M0.24) doesn't exist, so the image these jobs
+#   run against is built ad hoc instead of via
+#   `uses: ./.github/workflows/build-image.yml` — the same "build the
+#   testing target ourselves, tagged per run, never reused" pattern
+#   `lint-format-typecheck-check.yml`/`build-audit-check.yml` established in
+#   M0.16/M0.17 for the identical reason. M0.24 replaces this job with the
+#   real, content-addressed one.
 # - `vitest` and `playwright` (both M1) are stub jobs — they exist under
 #   their real names so branch protection can eventually require them
 #   without a rename, but run one no-op step instead of calling a
-#   `workflow_call` file that doesn't exist yet.
+#   `workflow_call` file that doesn't exist yet. Both still `needs: gitflow`,
+#   same as their upstream real-job counterparts, so the dependency graph is
+#   already correct once M1 swaps in the real `uses:`.
 #
-# lint/typecheck/build/format are required status checks in branch
+# lint/typecheck/build/format/gitflow are required status checks in branch
 # protection (as "<job> / <job>", the name GitHub gives a job inside a
 # called reusable workflow) — audit is deliberately not among them; it's
 # PR-only and never gates a merge (see the audit job below). Filtering must
-# therefore never skip the calling job itself for those four — a job-level
+# therefore never skip the calling job itself for those five — a job-level
 # `if:` makes GitHub report the check under a different, bare name ("lint"
 # instead of "lint / lint") instead of not reporting it at all, and that
 # bare name never satisfies the "lint / lint" required check, permanently
@@ -36,9 +38,13 @@ name: PR Gate
 # keeps the job (and its check name) the same either way.
 #
 # `edited` (in addition to the default opened/synchronize/reopened) is kept
-# from upstream even though nothing here reacts to it yet — M0.22's gitflow
-# job is what actually needs a retarget to re-trigger source->target
-# validation.
+# from upstream so retargeting a PR's base branch re-triggers gitflow's
+# source->target validation even without a new push.
+#
+# lint/format/typecheck/build/playwright/vitest also `needs: gitflow`, so a
+# PR from the wrong source/target branch never burns CI time on them — see
+# the gitflow job below for why the actual check only makes sense here
+# (merge-queue.yml calls it with should-run: false instead).
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
@@ -157,7 +163,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   lint:
-    needs: [build-image, changes]
+    needs: [build-image, changes, gitflow]
     concurrency:
       group: pr-gate-lint-${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -169,9 +175,9 @@ jobs:
       should-run: ${{ needs.changes.outputs.lint == 'true' }}
 
   # Deliberately ungated on `changes` — runs on every push regardless of what
-  # changed.
+  # changed, but still gated on gitflow below.
   format:
-    needs: build-image
+    needs: [build-image, gitflow]
     concurrency:
       group: pr-gate-format-${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -181,7 +187,7 @@ jobs:
       pr-number: ${{ github.event.pull_request.number }}
 
   typecheck:
-    needs: [build-image, changes]
+    needs: [build-image, changes, gitflow]
     concurrency:
       group: pr-gate-typecheck-${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -193,7 +199,7 @@ jobs:
       should-run: ${{ needs.changes.outputs.typecheck == 'true' }}
 
   build:
-    needs: [build-image, changes]
+    needs: [build-image, changes, gitflow]
     concurrency:
       group: pr-gate-build-${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -223,8 +229,11 @@ jobs:
   # Stub — M1 replaces this with `uses: ./.github/workflows/vitest.yml`,
   # keeping the job name so an eventual required-status-check rule never
   # needs renaming. Runs unconditionally and trivially so it never blocks a
-  # merge before the real check exists.
+  # merge before the real check exists. Still `needs: gitflow`, matching
+  # upstream's real vitest job, so the dependency graph doesn't change shape
+  # when M1 swaps in the real `uses:`.
   vitest:
+    needs: gitflow
     runs-on: ubuntu-latest
     steps:
       - name: Stub — wired for real in M1
@@ -233,7 +242,21 @@ jobs:
   # Stub — M1 replaces this with `uses: ./.github/workflows/playwright.yml`,
   # same reasoning as vitest above.
   playwright:
+    needs: gitflow
     runs-on: ubuntu-latest
     steps:
       - name: Stub — wired for real in M1
         run: echo "playwright is stubbed until M1 ports the real workflow_call check"
+
+  # Deliberately ungated — runs on every push regardless of what changed, and
+  # doesn't need build-image since it never touches the testing container.
+  # merge-queue.yml also calls gitflow.yml, but with should-run: false — see
+  # that file for why the actual check only makes sense here, against a
+  # PR's real source branch.
+  gitflow:
+    concurrency:
+      group: pr-gate-gitflow-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    uses: ./.github/workflows/gitflow.yml
+    with:
+      pr-number: ${{ github.event.pull_request.number }}
