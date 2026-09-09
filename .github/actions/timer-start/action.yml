@@ -1,0 +1,17 @@
+name: Start Timer
+description: >-
+  Records the current time in epoch seconds, for later elapsed-duration
+  measurement by timer-elapsed.
+
+outputs:
+  start:
+    description: Current time in epoch seconds
+    value: ${{ steps.start.outputs.start }}
+
+runs:
+  using: composite
+  steps:
+    - name: Record start time
+      id: start
+      shell: bash
+      run: echo "start=$(date +%s)" >> "$GITHUB_OUTPUT"
