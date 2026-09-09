@@ -1,0 +1,109 @@
+name: Merge Queue
+
+# Requires "Require merge queue" to be enabled in branch protection for `main`
+# and `staging` (Settings -> Branches, or each branch's repo ruleset) — that
+# setting is what activates merge_group events; this workflow file alone does
+# not turn the merge queue itself on. Deferred to M7.A: solo development with
+# no other contributors gets no benefit from queue serialization, and turning
+# it on forces every merge through the full CI suite. Applies to both
+# branches unconditionally since merge_group carries the target branch
+# itself, with no `branches:` filter to update here.
+on:
+  merge_group:
+
+permissions:
+  contents: read
+  packages: write
+  pull-requests: write
+
+jobs:
+  # merge_group events don't carry a plain PR number the way pull_request
+  # events do — it's embedded in the merge group's ref instead
+  # (refs/heads/gh-readonly-queue/<base>/pr-<number>-<sha>), so pull it out
+  # here once for every job below to use for PR commenting.
+  pr-number:
+    runs-on: ubuntu-latest
+    outputs:
+      number: ${{ steps.extract.outputs.number }}
+    steps:
+      - name: Extract PR number from merge group ref
+        id: extract
+        run: |
+          ref="${{ github.event.merge_group.head_ref }}"
+          number=$(echo "$ref" | grep -oP 'pr-\K[0-9]+')
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+
+  # Same content-addressed testing image pr-gate.yml builds — a queue entry
+  # and a concurrent PR gate on the same Dockerfile.node/package-lock.json
+  # hash share the one GHCR tag and layer cache rather than each pushing
+  # their own. No job-level concurrency group here: unlike pr-gate's, this
+  # caller has no sibling jobs it needs to shield from a mid-push cancel, and
+  # the reusable workflow's own "skip build if the tag already exists" check
+  # keeps a superseded queue run cheap.
+  build-image:
+    uses: ./.github/workflows/build-image.yml
+
+  # No real validation happens here — merge_group only exposes a synthetic
+  # head ref, not the PR's actual source branch (see gitflow.yml). This job
+  # exists purely so the "gitflow / gitflow" required status check (the same
+  # repo ruleset requires it for both PR merges and the merge queue) reports
+  # success instead of never posting, which would leave a queued merge stuck
+  # waiting on a check that can never complete. Every other job below
+  # `needs: gitflow` too (mirroring pr-gate.yml) — harmless here since
+  # should-run: false always makes this job succeed trivially, but it keeps
+  # the dependency graph identical between pr-gate and the merge queue.
+  gitflow:
+    uses: ./.github/workflows/gitflow.yml
+    with:
+      should-run: false
+
+  lint:
+    needs: [build-image, pr-number, gitflow]
+    uses: ./.github/workflows/lint.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+      pr-number: ${{ needs.pr-number.outputs.number }}
+      merge-queue: true
+
+  # Deliberately ungated on path filtering, matching pr-gate.yml — runs on
+  # every queue entry regardless of what changed.
+  format:
+    needs: [build-image, pr-number, gitflow]
+    uses: ./.github/workflows/format.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+      pr-number: ${{ needs.pr-number.outputs.number }}
+      merge-queue: true
+
+  typecheck:
+    needs: [build-image, pr-number, gitflow]
+    uses: ./.github/workflows/typecheck.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+      pr-number: ${{ needs.pr-number.outputs.number }}
+      merge-queue: true
+
+  build:
+    needs: [build-image, gitflow]
+    uses: ./.github/workflows/build.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+
+  # Stub — M1 replaces this with `uses: ./.github/workflows/vitest.yml`,
+  # matching pr-gate.yml's own stub (M0.20) so both required checks come
+  # online for the queue and the gate at the same time.
+  vitest:
+    needs: gitflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stub — wired for real in M1
+        run: echo "vitest is stubbed until M1 ports the real workflow_call check"
+
+  # Stub — M1 replaces this with `uses: ./.github/workflows/playwright.yml`,
+  # same reasoning as vitest above.
+  playwright:
+    needs: gitflow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stub — wired for real in M1
+        run: echo "playwright is stubbed until M1 ports the real workflow_call check"
