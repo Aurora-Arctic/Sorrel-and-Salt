@@ -31,7 +31,7 @@
 # and Docker copies that content into a container's named volume the first
 # time it mounts an empty one over PGDATA — exactly what happens the first
 # time docker-compose.yaml's `postgres_data` volume is created.
-FROM postgres:17
+FROM postgres:18
 
 ENV PGDATA=/var/lib/postgresql/data
 ENV POSTGRES_DB=sorrel_template
