@@ -42,7 +42,7 @@
     "prettier": "^3.9.6",
     "sass": "^1.104.0",
     "typescript": "^7.0.2",
-    "vite": "^6.4.3"
+    "vite": "^8.2.2"
   },
   "allowScripts": {
     "pre-commit@2.0.0": true
