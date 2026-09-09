@@ -156,5 +156,18 @@ true` where each reusable workflow supports it. Same three gaps as
   checks) matches resume-2026's. `.github/dependabot.yml` targets `staging`
   on all three ecosystems (`npm`, `github-actions`, `docker`). Reasoning:
   [`design-decisions/m0.22-gitflow-rulesets.md`](design-decisions/m0.22-gitflow-rulesets.md).
-- **Not yet ported:** `.actrc`/`make act-*` (M0.23), `build-image.yml`
-  (M0.24).
+- **`.actrc` + `make act-*`** (M0.23) — run the reusable check workflows
+  locally through [`act`](https://github.com/nektos/act), against a
+  locally-built `Docker/Dockerfile.node` `testing` image (`act-image`), so a
+  failing check surfaces before pushing. `.actrc` is resume-2026's two
+  directives (`-P ubuntu-latest=catthehacker/ubuntu:act-latest`,
+  `--pull=false`). `make act-lint`, `act-format`, `act-typecheck` (and
+  `act-test` for all three) are green on the host; `act-cache-checkout`
+  pre-clones this repo's `main` so the remote `checkout-to-app@main` ref
+  resolves offline. Needed `bash`/`git` added to the `testing` stage (the
+  alpine base ships neither, and the workflows force `shell: bash`) and
+  `--input should-run=true` on lint/typecheck (act doesn't apply
+  `workflow_call` input defaults). `act-build`/`act-vitest`/`act-playwright`
+  wait on their `act-cache-*` prerequisites and later workflows. Reasoning:
+  [`design-decisions/m0.23-act-local-ci.md`](design-decisions/m0.23-act-local-ci.md).
+- **Not yet ported:** `build-image.yml` (M0.24).

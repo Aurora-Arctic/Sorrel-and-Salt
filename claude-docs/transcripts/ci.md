@@ -339,7 +339,7 @@ lint`/`format:check`/`typecheck`/`check:stories` all exit 0. **Not
   branch-mismatch (`gitflow / gitflow` failing) or a Dependabot PR
   exercising the author exception — both need a real PR against the pushed
   branch. **Not verifiable at all until the manual ruleset step above is
-  done:** a feature-branch-into-`main` PR being *blocked from merging* by
+  done:** a feature-branch-into-`main` PR being _blocked from merging_ by
   branch protection specifically (the check will report failure either way;
   only the required-status-check wiring makes that failure actually block
   the merge button).
