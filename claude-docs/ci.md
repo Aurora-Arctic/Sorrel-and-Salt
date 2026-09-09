@@ -97,9 +97,23 @@ with `pr-gate.yml` (M0.20).
   same path list gates the trigger, so an unrelated PR never runs this
   workflow — "rebuild is skipped" is the trigger itself, not a no-op job.
   Runs on `pull_request` too, since the content-addressed tag makes a PR
-  build reusable rather than throwaway. Not yet consumed anywhere — that's
-  M0.19. Reasoning:
+  build reusable rather than throwaway. Reasoning:
   [`design-decisions/m0.18-build-db-image.md`](design-decisions/m0.18-build-db-image.md).
-- **Not yet ported:** consuming the preseeded image in CI/compose (M0.19),
-  `pr-gate.yml` (M0.20), `merge-queue.yml` (M0.21), `gitflow.yml` and branch
-  rulesets (M0.22), `.actrc`/`make act-*` (M0.23), `build-image.yml` (M0.24).
+  - **`verify-db-image`** (M0.19) — a second job, `needs: build-db-image`,
+    consuming the image the same way DESIGN.md §11 says a real M1 test job
+    eventually will: a job-level `services:` postgres container, keyed to
+    `needs.build-db-image.outputs.image` (the hash tag, never
+    reconstructed). Actions blocks every step until the service's
+    `pg_isready` health check passes, then one step runs
+    `docker exec <service-id> psql -U postgres -d sorrel_template -c
+'SELECT 1'` — `docker exec`, not a TCP connection, because the image's
+    `host` (network) auth rules require a password that was generated
+    randomly and discarded at build time (M0.18), while the `local`
+    (Unix-socket) rule `docker exec` uses stays `trust`. Scaffolding, same
+    as `lint-format-typecheck-check.yml`/`build-audit-check.yml`: delete it
+    once a real M1 test job exercises the same `services:` pattern for
+    real. Reasoning:
+    [`design-decisions/m0.19-consume-db-image.md`](design-decisions/m0.19-consume-db-image.md).
+- **Not yet ported:** `pr-gate.yml` (M0.20), `merge-queue.yml` (M0.21),
+  `gitflow.yml` and branch rulesets (M0.22), `.actrc`/`make act-*` (M0.23),
+  `build-image.yml` (M0.24).
