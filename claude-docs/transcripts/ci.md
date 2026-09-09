@@ -393,3 +393,138 @@ lint`/`format:check`/`typecheck`/`check:stories` all exit 0. **Not
   unverifiable until the queue is enabled (M7.A.1).
 - Reasoning:
   [`../design-decisions/m0.24-build-image.md`](../design-decisions/m0.24-build-image.md).
+
+## 2026-09-09 — M0.26 · CLI-driven Vercel deploys
+
+- Started as "disable deploy previews, alias staging". Hit the Vercel Hobby
+  wall: a named `staging` environment on `staging.sorrelandsalt.com` needs
+  Pro (Custom Environments are Pro/Enterprise). Rather than take the bare
+  `…-git-staging-<scope>.vercel.app` alias, switched the whole deploy model
+  from Vercel's Git integration to CLI-driven deploys from CI. Larger than
+  the 1h estimate and supersedes M0.25 — done deliberately, user-directed.
+- New `.github/workflows/deploy.yml`. Triggers: **push** to `main` / `staging`,
+  and **`pull_request` into `main` from a `hotfix/**` head** (types
+  opened/synchronize/reopened/closed). One `deploy` job + one `teardown` job,
+  bare `ubuntu-latest` (needs the Vercel CLI and writes `.vercel/output` —
+  the shared `testing` image is not built for that; same call
+  `composite-actions-check.yml` made). `deploy` steps: `actions/checkout@v7`,
+  `actions/setup-node@v4` (Node 22, npm cache), `npm ci`,
+  `npm i -g vercel@59`, resolve target from event/ref/head-ref, `timer-start`,
+  `vercel pull --yes --environment=<production|preview>`,
+  `vercel build [--prod]`, `vercel deploy --prebuilt [--prod]`
+  (stdout→`deploy-url.txt`, stderr→`deploy.log`, per Vercel's CI example),
+  `vercel alias set` for the preview targets, `timer-elapsed`, `job-summary`,
+  and — on `pull_request` events — `pr-comment` (`success-mode: comment`)
+  posting the preview URL. `teardown` runs on a closed hotfix PR:
+  `vercel alias rm hotfix-<slug>.sorrelandsalt.com`.
+- Target resolution: `pull_request` (hotfix) → preview +
+  `hotfix-<slug>.sorrelandsalt.com`, `<slug>` = head ref after `hotfix/`,
+  lowercased and reduced to a DNS label (≤56 chars so `hotfix-` + label ≤63);
+  push `main` → `--prod`, no alias (prod deploy assigns `sorrelandsalt.com`);
+  push `staging` → preview + `staging.sorrelandsalt.com`.
+- Hotfix deploys on the PR, not push: reviewers want a click-through preview
+  at review time, and the fix reaches prod via its own `main` PR anyway.
+  `create-pr` opens hotfix PRs into both `main` and `staging`; the trigger's
+  `branches: [main]` means only one deploys. `pull_request` (not
+  `pull_request_target`) is safe — hotfix branches are never forks, so the
+  run gets the `VERCEL_*` secrets with no untrusted checkout.
+- Per-hotfix domains (`hotfix-<slug>.sorrelandsalt.com`) need a wildcard
+  `*.sorrelandsalt.com` on the project. Wildcards are Hobby-OK but require
+  the domain on **Vercel nameservers** (`/docs/domains/.../add-a-domain`).
+  That's the one manual prerequisite for the hotfix path; `main`/`staging`
+  work with plain CNAME/A. `teardown` prunes aliases so they don't hit the
+  Hobby 50-domain cap.
+- `vercel.json`: `git.deploymentEnabled` allow-list (`main`/`staging`/
+  `hotfix/*` → `true`, M0.25) collapsed to `{ "**": false }` — the Git
+  integration ships nothing regardless of whether it stays connected.
+- Guard step: if `VERCEL_DEPLOY_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` are
+  absent it emits a `::warning::` and every real step is `if:`-skipped, so
+  the job is green until M0.27 adds those secrets (plus `VERCEL_SCOPE` for
+  `vercel alias`). Same stub-now/wire-later shape as `pr-gate.yml`'s
+  `vitest`/`playwright` jobs.
+- `--prebuilt` means System Environment Variables are missing at build time;
+  fine here — nothing in the Next build reads them.
+- Docs: DESIGN.md §4 "Configuration" rewritten for the CLI model; §12 table
+  gains a `deploy.yml` row and notes `migrate.yml` (M1.4) must run ahead of
+  it and that `vercel.json` no longer drives deploys. README + CLAUDE.md get
+  a one-line deploy note.
+- Verified without pushing: `npx js-yaml` parses `deploy.yml` (`actionlint`
+  unavailable via `npx`, as in M0.24); `vercel.json` valid JSON;
+  `npm run lint`/`format:check`/`typecheck`/`check:stories` all exit 0;
+  command sequence checked against `/docs/cli/deploy`, `/docs/cli/alias`,
+  `/kb/guide/how-to-alias-a-preview-deployment-using-the-cli` (2026-08).
+  **Not verifiable pre-merge:** the first real run needs M0.27's `VERCEL_*`
+  secrets, the live project, and `*.sorrelandsalt.com` on Vercel nameservers
+  — push to `staging` serving `staging.sorrelandsalt.com`, push to `main`
+  serving `sorrelandsalt.com`, a `hotfix/** → main` PR serving
+  `hotfix-<slug>.sorrelandsalt.com` and commenting it, PR close removing the
+  alias, no deploy anywhere else.
+- Reasoning:
+  [`../design-decisions/m0.26-disable-previews-and-alias-staging.md`](../design-decisions/m0.26-disable-previews-and-alias-staging.md).
+
+## 2026-09-09 — M0.28 · pipeline proof; deploy.yml moved to Node 26
+
+- The point of M0.28: run the deploy pipeline end to end once, on a trivial
+  page, before feature work. It immediately caught a real problem.
+- M0.26's `deploy.yml` merged to `staging` (PR #40); its first real run
+  ([34388520913](https://github.com/Aurora-Arctic/Sorrel-and-Salt/actions/runs/34388520913))
+  **failed at `npm ci`** — "package.json and package-lock.json not in sync —
+  Missing: typescript@5.9.3 from lock file" — before Vercel was contacted.
+- Cause: `deploy.yml`'s `Set up Node` steps used `node-version: 22` (the M0.15
+  transcript note above records the ported default). Node 22 → npm 10.9.8;
+  the lockfile was generated by npm 11 (Node 26). `typescript@^7.0.2` (the Go
+  compiler) ships ~20 per-platform optional deps plus a `typescript@5.9.3` JS
+  fallback; npm 11 records that tree in a shape npm 10's `npm ci` sync check
+  rejects. Reproduced in Docker: fails on `node:22-slim`, clean on
+  `node:26-slim` with the same committed manifests.
+- Fix: both `Set up Node` steps (the `deploy` and `teardown` jobs) pinned to
+  `26.6.0`, matching `Docker/Dockerfile.node` and local dev. No lockfile
+  edit — the lockfile is fine, the runner was the odd one out. Supersedes the
+  "Node 22, npm cache" line in the M0.15/M0.26 entries above and the "Bare
+  runner" bullet of the M0.26 decision doc.
+- Build-time baseline (acceptance criterion): local `next build` on Node
+  26.7.0 is ~2.5 s wall (compile 454 ms / TS 172 ms / static gen 137 ms).
+  The staging-preview and production `deploy.yml` durations get recorded from
+  the first green runs, once this branch reaches `staging` then `main` via
+  `release/0.0.2` (`0.0.1` is already used — tag `v0.0.1`, PR #37).
+- Verified without pushing: `npx js-yaml` parses `deploy.yml`; `npm ci`
+  succeeds under `node:26-slim` in Docker; `npm run lint` / `format:check` /
+  `typecheck` / `check:stories` exit 0.
+- Reasoning:
+  [`../design-decisions/m0.28-pipeline-proof-and-node-26.md`](../design-decisions/m0.28-pipeline-proof-and-node-26.md).
+
+## 2026-09-09 — M0.28 · second failure: `vercel pull` scope; token renamed
+
+- The Node 26 pin (PR #41) merged to `staging`; deploy run
+  [34390137712](https://github.com/Aurora-Arctic/Sorrel-and-Salt/actions/runs/34390137712)
+  cleared `npm ci` — log shows `Vercel CLI 59.14.0 (Node.js 26.6.0)` — and
+  failed two steps later at `Pull Vercel environment`:
+  `Error: Could not retrieve Project Settings. To link your Project, remove
+the .vercel directory and deploy again.`
+- Diagnosis by local reproduction against the live `aurora-arctic/sorrel-and-salt`
+  project (canonical link: `orgId team_YA8GrwB8bqvQ1sOemBC9H9T7`,
+  `projectId prj_TNdoYllyiKqxkWrnZAE4qFQeQAoz`, scope `aurora-arctic`):
+  - the exact CI invocation — `vercel pull --yes --environment=preview` with
+    only `VERCEL_ORG_ID` + `VERCEL_PROJECT_ID` in env, no `.vercel` dir, no
+    `--scope` — **succeeds** with valid credentials. So the workflow shape is
+    correct; nothing in `deploy.yml`'s command sequence to change.
+  - error-message space: an invalid token → "token … is not valid"; a wrong
+    `prj_…` id or an org _slug_ in place of the `team_…` id → "Project not
+    found (…)". The message this run hit is the CLI's "project resolved but
+    the settings fetch was refused" path — a **valid token that lacks access
+    to the team**, i.e. the token was minted against the wrong Vercel scope
+    (personal account instead of Aurora Arctic).
+- Fix (this branch): the deploy token secret is renamed
+  `VERCEL_TOKEN` → `VERCEL_DEPLOY_TOKEN` — a fresh, Aurora-Arctic-scoped
+  token under a distinct name so it can't be confused with anything the
+  Vercel GitHub integration manages. All eight references in `deploy.yml`
+  (both `guard` steps, `pull`/`build`/`deploy`/`alias`, teardown) and the doc
+  mentions (DESIGN.md §12 secrets row, `ci.md`, the M0.26 decision doc)
+  updated. The internal step env var is renamed to match; `--token=` is still
+  passed explicitly on every `vercel` call.
+- `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` / `VERCEL_SCOPE` keep their names; the
+  canonical values above are the ones to hold in the secrets.
+- Verified without pushing: `npx js-yaml` parses `deploy.yml`; no `VERCEL_TOKEN`
+  string remains in `.github/` or the docs. The re-run is the real check.
+- Reasoning:
+  [`../design-decisions/m0.28-pipeline-proof-and-node-26.md`](../design-decisions/m0.28-pipeline-proof-and-node-26.md).
