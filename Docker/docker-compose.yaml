@@ -1,0 +1,164 @@
+# Sorrel & Salt — local development stack.
+#
+# Ported from resume-2026/Docker/docker-compose.yaml (M0.12) with the
+# Gatsby-specific pieces removed:
+#
+#   - The LMDB cache volume (`gatsby_cache_*`, mounted at `/app/.cache`) is
+#     gone — Gatsby's on-disk data store does not exist here. Nothing replaces
+#     it: `next dev` writes `.next/` into the bind-mounted tree, which is fine
+#     (it is git- and docker-ignored). A dedicated `.next` volume would also
+#     need the Dockerfile to pre-create and chown the mount point the way
+#     resume-2026 did for `/app/.cache`; that is a change to M0.11's file, so
+#     it waits for a task that needs it.
+#   - The `/gatsby-public` volume and the `link-public.js` symlink workaround
+#     are gone.
+#   - The `devcontainer` service is gone. `Docker/Dockerfile.node` (M0.11) has
+#     only `development` and `testing` stages; M0.14 points `.devcontainer/` at
+#     the `development` stage directly rather than at a service here. With no
+#     devcontainer service there is no Claude/GitHub token to inject, so
+#     `docker-up` no longer runs an `update-token` step.
+#
+# The `postgres` service (M0.13) gives local development and local tests a
+# real Postgres 17 — RLS, triggers, `pg_trgm`, array columns — with no Neon
+# connection anywhere. `app` waits for it to pass its health check and reaches
+# it by service name through `DATABASE_URL`. It `build:`s straight from
+# `Docker/Dockerfile.postgres` (M0.18), the same way `app`/`workshop` build
+# from `Dockerfile.node` — this file is purely local dev, so there's no
+# reason to pull the GHCR image `build-db-image.yml` (M0.19) publishes for CI
+# and deployment; that would mean network + registry auth for something a
+# local build handles directly.
+#
+# No `sorrel` role or `sorrel` database exist in this image yet — only the
+# baked-in `postgres` superuser and the empty `sorrel_template` used to clone
+# each Vitest worker's database (CLAUDE.md's Testing section). The
+# `POSTGRES_*`/`DATABASE_URL` values below are inert until M1.27 bakes a real
+# schema, seed, and workspace credentials into this same image; nothing in
+# `app` queries the database yet for them to matter.
+#
+# A `postgres_data` volume populated by the *old* `postgres:17` image (i.e.
+# from before this file switched images) still only has the `sorrel`
+# role/database that image's own first-boot init created from the
+# `POSTGRES_*` env vars — a named volume isn't reset just because `image:`
+# changed. `make docker-rebuild` (`down -v`) clears it so the next start
+# populates fresh from this image instead. Until then, expect a `FATAL:
+# role "postgres" does not exist` log line on every health check tick —
+# `pg_isready` always names a role, and Postgres logs any rejected
+# connection attempt regardless; it's not a failing check (`pg_isready`
+# doesn't require the role to be valid, only that the server responds).
+#
+# The `workshop` service is behind the `workshop` compose profile, so
+# `make docker-up` starts only the app and Postgres.
+# `make docker-workshop` brings the Ladle workshop up alongside them.
+#
+#   make docker-up        build if needed, then start the app + Postgres detached
+#   make docker-workshop   also start the workshop (profile: workshop)
+#   make docker-down      stop and remove everything, profiles included
+#   make docker-logs      follow
+#
+# Build context is the repo root (`..`); `Docker/Dockerfile.node` reads it
+# through the root `.dockerignore`.
+#
+# `name` is pinned rather than derived from this file's parent directory:
+# without it the project would be `docker`, which resume-2026's compose file
+# (also under a `Docker/` directory) already claims on the same machine — the
+# two would then share the `node_modules` volume and clobber each other.
+
+name: sorrel-and-salt
+
+volumes:
+  # The container's `npm ci` result, shadowing the host's platform-specific
+  # `node_modules` under the bind mount below. Persists across restarts and
+  # `docker compose down`; only `make docker-rebuild` (`down -v`) clears it.
+  #
+  # One volume per service, exactly as the port keeps them separate
+  # (`node_modules_development` / `node_modules_devcontainer` in resume-2026): a
+  # freshly-created named volume is populated from the mounting image on first
+  # use, so two services sharing a single fresh volume race to write the same
+  # files.
+  node_modules_app:
+  node_modules_workshop:
+
+  # Postgres data directory. Persists across `docker compose restart` and
+  # `make docker-down`; only `make docker-rebuild` (`down -v`) clears it.
+  postgres_data:
+
+services:
+  postgres:
+    # Built locally from the same Dockerfile build-db-image.yml publishes to
+    # GHCR for CI/deployment (M0.18) — see the comment above for why this
+    # file builds rather than pulls.
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.postgres
+    image: sorrel-postgres
+    environment:
+      POSTGRES_USER: sorrel
+      POSTGRES_PASSWORD: sorrel
+      POSTGRES_DB: sorrel
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # Published so the host-side Vitest `db` project (M0.7) can reach it at
+      # localhost:5432; inside the compose network services use the `postgres`
+      # hostname instead.
+      - '5432:5432'
+    healthcheck:
+      # Not `-U sorrel -d sorrel`: that role/database don't exist in this
+      # image yet (see above). `pg_isready` only checks that the server
+      # accepts connections, not that a given user/database is valid, but
+      # `postgres`/`sorrel_template` are at least real so the check reads
+      # true rather than aspirational.
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d sorrel_template']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  app:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.node
+      target: development
+    image: sorrel-node:development
+    working_dir: /app
+    volumes:
+      - ..:/app:cached
+      - node_modules_app:/app/node_modules
+    init: true
+    tty: true
+    ports:
+      - '8000:8000'
+    environment:
+      NODE_ENV: development
+      # Reaches Postgres by its compose service name; no Neon connection is
+      # used for local work. M0.14's devcontainer sets the same value.
+      DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Command comes from the Dockerfile `CMD` (`npm run dev`), which already
+    # binds 0.0.0.0:8000 — see the `dev` script in package.json.
+
+  workshop:
+    # Opt-in: only started by `docker compose --profile workshop up` (i.e.
+    # `make docker-workshop`), never by a bare `make docker-up`.
+    profiles: ['workshop']
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.node
+      target: development
+    image: sorrel-node:development
+    working_dir: /app
+    volumes:
+      - ..:/app:cached
+      - node_modules_workshop:/app/node_modules
+    init: true
+    tty: true
+    ports:
+      - '61000:61000' # ladle serve (.ladle/config.mjs)
+      - '61002:61002' # ladle HMR socket (.ladle/config.mjs)
+    environment:
+      NODE_ENV: development
+    # `npm run workshop` is `ladle serve`, which binds localhost by default;
+    # `--host 0.0.0.0` makes it reachable through the port mapping.
+    command: ['npm', 'run', 'workshop', '--', '--host', '0.0.0.0']

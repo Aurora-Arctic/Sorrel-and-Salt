@@ -1,0 +1,84 @@
+name: Build & Audit Check
+
+# Exercises the two newly-ported reusable check workflows (build, audit)
+# end-to-end, independent of pr-gate.yml (M0.20) — which doesn't exist yet —
+# and of the published testing image (build-image.yml, M0.24), which doesn't
+# either. Same reasoning as lint-format-typecheck-check.yml (M0.16): this
+# workflow builds the same `testing` target from Docker/Dockerfile.node
+# directly, ad hoc, and pushes it to GHCR under a tag scoped to this
+# workflow run — never reused across runs, unlike the real build-image.yml's
+# content-addressed caching.
+#
+# audit.yml's `pr-number` input is required and used unguarded (unlike
+# lint/format/typecheck's optional, `if`-guarded one) — it comments on a real
+# PR, so the audit job only runs for the `pull_request` trigger, where
+# `github.event.pull_request.number` is guaranteed to be set. build has no
+# such dependency and runs on both triggers, matching lint-format-typecheck-check.yml.
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/build.yml'
+      - '.github/workflows/audit.yml'
+      - '.github/workflows/build-audit-check.yml'
+      - '.github/actions/**'
+      - 'Docker/Dockerfile.node'
+      - 'next.config.ts'
+      - 'tsconfig.json'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  pull-requests: write
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.tag.outputs.image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Compute scoped image tag
+        id: tag
+        run: |
+          repo_lower=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "image=ghcr.io/${repo_lower}/testing:smoke-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push testing image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Docker/Dockerfile.node
+          target: testing
+          push: true
+          tags: ${{ steps.tag.outputs.image }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build:
+    needs: build-image
+    uses: ./.github/workflows/build.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+
+  audit:
+    if: github.event_name == 'pull_request'
+    needs: build-image
+    uses: ./.github/workflows/audit.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+      pr-number: ${{ github.event.pull_request.number }}

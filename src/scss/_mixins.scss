@@ -110,6 +110,10 @@
   border-radius: 999px;
   font-family: $font-body;
   font-size: 0.8125rem;
+  // A step over Lexend's 300 body weight so the label holds its colour at chip
+  // size — the unselected state especially, where the label *is* the group
+  // hue. Matches badge().
+  font-weight: 500;
   line-height: 1.4;
   white-space: nowrap;
 
@@ -149,7 +153,10 @@
   padding: 0.125rem 0.4375rem;
   border-radius: 2px;
   font-family: $font-body;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
+  // A step over Lexend's 300 body weight: a badge is a small, assertive label
+  // (M0.7's exploration drew it at 500) and 300 goes thin at this size.
+  font-weight: 500;
   line-height: 1.4;
   white-space: nowrap;
 

@@ -1,0 +1,85 @@
+name: Composite Actions Check
+
+# Exercises every shared composite action end-to-end on its own, independent
+# of any per-check workflow (lint/format/typecheck land in M0.16, build/audit
+# in M0.17, etc.) so a change to .github/actions/** is verified even before a
+# real check depends on it.
+#
+# checkout-to-app must run before the repo is checked out, so — unlike the
+# other four actions below, which resolve fine as local ./.github/actions/...
+# paths against the already-checked-out $GITHUB_WORKSPACE — it's referenced
+# by its full owner/repo path instead. That path names this repo — the one
+# hardcoded reference the port had to change from the source it was copied
+# from.
+#
+# Runs on the bare runner rather than the "testing" container image
+# (published by M0.24, which hasn't landed yet): checkout-to-app always
+# copies into /app regardless of container or not, so a "Prepare /app" step
+# stands in for the container image's baked-in /app WORKDIR here.
+on:
+  pull_request:
+    paths:
+      - '.github/actions/**'
+      - '.github/workflows/composite-actions-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare /app
+        run: |
+          sudo mkdir -p /app
+          sudo chown "$(id -u):$(id -g)" /app
+
+      - name: Checkout into /app
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      - name: Start timer
+        id: timer-start
+        uses: ./.github/actions/timer-start
+
+      - name: Confirm the composite actions copied into /app
+        id: run
+        run: |
+          set -o pipefail
+          {
+            for action in checkout-to-app job-summary pr-comment timer-elapsed timer-start; do
+              test -f "/app/.github/actions/$action/action.yml"
+              echo "found $action/action.yml"
+            done
+          } 2>&1 | tee /app/output.log
+
+      - name: Compute duration
+        id: timer
+        if: always()
+        uses: ./.github/actions/timer-elapsed
+        with:
+          start: ${{ steps.timer-start.outputs.start }}
+
+      - name: Write job summary
+        if: always()
+        uses: ./.github/actions/job-summary
+        with:
+          check-name: Composite Actions
+          outcome: ${{ steps.run.outcome }}
+          log-file: /app/output.log
+          duration: ${{ steps.timer.outputs.duration }}
+          summary: all five actions resolved and ran
+
+      - name: Comment on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Composite Actions
+          marker-slug: composite-actions
+          pr-number: ${{ github.event.pull_request.number }}
+          outcome: ${{ steps.run.outcome }}
+          log-file: /app/output.log
+          success-mode: comment
+          duration: ${{ steps.timer.outputs.duration }}
+          summary: all five actions resolved and ran
