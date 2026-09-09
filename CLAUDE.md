@@ -45,6 +45,8 @@ Once M0.4 lands, `make help` lists every target. Expected surface:
 
 **Verify with the `:coverage` variants.** A plain `npm run test` pass can still fail CI on the 80% threshold (lines, branches, functions, statements) alone. Carried over from `resume-2026`.
 
+**Deploys are CI-only (M0.26).** `.github/workflows/deploy.yml` deploys via the Vercel CLI (`vercel pull`/`build`/`deploy --prebuilt`/`alias`) on a push to `main` (production) or `staging` (preview → `staging.sorrelandsalt.com`), and on a `hotfix/** → main` PR (preview → per-PR `hotfix-<slug>.sorrelandsalt.com`, commented on the PR, torn down on close). `vercel.json` sets `deploymentEnabled: { "**": false }` — Vercel's Git integration deploys nothing; the workflow is the only path. There is no local deploy command.
+
 ---
 
 ## Non-negotiable architecture rules
