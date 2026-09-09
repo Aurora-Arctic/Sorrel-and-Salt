@@ -3,10 +3,10 @@
 Full history: [`transcripts/docker.md`](transcripts/docker.md) ·
 Decisions: [`design-decisions/`](design-decisions/)
 
-The local development stack: one image, `docker compose`, no Neon connection
-and no host Node-version juggling. `Docker/Dockerfile.node` (M0.11) is the
-image; `Docker/docker-compose.yaml` (M0.12) is the stack; the `postgres`
-service arrives in M0.13.
+The local development stack: one image, `docker compose`, a real local
+Postgres, no Neon connection and no host Node-version juggling.
+`Docker/Dockerfile.node` (M0.11) is the image; `Docker/docker-compose.yaml`
+(M0.12, M0.13) is the stack.
 
 - **`Docker/Dockerfile.node`** — two stages on `node:26.6.0-alpine`:
   `development` (deps + source, `CMD ["npm","run","dev"]`) and `testing`
@@ -28,14 +28,26 @@ service arrives in M0.13.
     `make docker-up` does not start it. Builds the same stage, runs
     `npm run workshop -- --host 0.0.0.0` (`ladle serve` binds `localhost`
     otherwise), publishes **61000** (serve) and **61002** (pinned HMR socket).
+  - **`postgres`** (M0.13) — `image: postgres:17` (plain upstream; M0.18
+    publishes a preseeded GHCR image and M0.19 repoints this service and CI at
+    that one tag). Named volume `postgres_data` at
+    `/var/lib/postgresql/data`. Health check `pg_isready -U sorrel -d sorrel`;
+    `app` has `depends_on: { postgres: { condition: service_healthy } }`, so
+    `make docker-up` blocks on `postgres Healthy` before `app Starting`.
+    `DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel` is set on
+    `app` (throwaway `sorrel`/`sorrel` creds, no secret) — the app reaches the
+    DB by compose service name, no Neon. Port `5432` is published for the
+    host-side Vitest `db` project. `workshop` does not depend on it.
   - **Volumes** — one `node_modules` volume per service (`node_modules_app`,
     `node_modules_workshop`); a single shared volume makes the two services
-    race to populate it from their images on first mount. They persist across
-    `docker compose restart` and `make docker-down`; only `make docker-rebuild`
-    (`down -v`) clears them. No LMDB / `.cache` / `gatsby_*` volume.
+    race to populate it from their images on first mount. Plus `postgres_data`
+    for the database. All persist across `docker compose restart` and
+    `make docker-down`; only `make docker-rebuild` (`down -v`) clears them. No
+    LMDB / `.cache` / `gatsby_*` volume.
 - **`makefile`** targets, each a `docker compose -f Docker/docker-compose.yaml`
   wrapper (via the `COMPOSE` variable):
-  - `make docker-up` — start the app on 8000, detached.
+  - `make docker-up` — start the app on 8000 and Postgres, detached; waits
+    for the Postgres health check before the app starts.
   - `make docker-workshop` — also start the workshop on 61000
     (`--profile workshop up`).
   - `make docker-build` — build both images (`--profile workshop build`).
@@ -50,4 +62,5 @@ service arrives in M0.13.
   `.git`, `build`, coverage and local env/state from the build context.
 - **`.devcontainer/`** (M0.14) builds `Docker/Dockerfile.node`
   `target: development` directly — there is no `devcontainer` image stage or
-  compose service to point at.
+  compose service to point at. It sets the same `DATABASE_URL` as `app` and
+  adds `depends_on: postgres` with the health condition.

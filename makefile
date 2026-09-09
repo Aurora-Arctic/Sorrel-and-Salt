@@ -109,18 +109,19 @@ workshop:
 workshop-build:
 	npm run workshop:build
 
-# Host-level docker compose wrappers. `docker-up` starts the app on 8000; the
-# Ladle workshop (61000) is behind the `workshop` compose profile, so it only
-# comes up with `docker-workshop`. No Neon connection and no local Node version
-# juggling. resume-2026's `docker-up` also ran an `update-token` step for the
-# devcontainer's Claude CLI; there is no devcontainer service here
-# (M0.11/M0.14), so that step is gone. Postgres joins the stack in M0.13.
+# Host-level docker compose wrappers. `docker-up` starts the app on 8000 and
+# Postgres 17 (M0.13), waiting for the database health check before the app
+# starts; the Ladle workshop (61000) is behind the `workshop` compose profile,
+# so it only comes up with `docker-workshop`. No Neon connection and no local
+# Node version juggling. resume-2026's `docker-up` also ran an `update-token`
+# step for the devcontainer's Claude CLI; there is no devcontainer service here
+# (M0.11/M0.14), so that step is gone.
 
 ## Build the local dev images (app + workshop)
 docker-build:
 	$(COMPOSE) --profile workshop build
 
-## Start the app detached on 8000
+## Start the app (8000) and Postgres detached
 docker-up:
 	$(COMPOSE) up -d
 
