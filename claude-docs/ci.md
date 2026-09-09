@@ -126,6 +126,17 @@ consumes them for real, alongside `build`/`audit` (M0.17).
   build the two smoke workflows above use — tag
   `ghcr.io/.../testing:pr-gate-<run id>`). Reasoning:
   [`design-decisions/m0.20-pr-gate.md`](design-decisions/m0.20-pr-gate.md).
-- **Not yet ported:** `merge-queue.yml` (M0.21), `gitflow.yml` and branch
-  rulesets (M0.22), `.actrc`/`make act-*` (M0.23), `build-image.yml`
-  (M0.24).
+- **`.github/workflows/merge-queue.yml`** (M0.21) — the `merge_group`-triggered
+  counterpart to `pr-gate.yml`, calling the same `lint`/`format`/`typecheck`/
+  `build` (no `audit` — PR-only, never a required check) with `merge-queue:
+true` where each reusable workflow supports it. Same three gaps as
+  `pr-gate.yml`, filled the same way: `gitflow` (M0.22) dropped entirely, the
+  ad hoc run-scoped image build stands in for `build-image.yml` (M0.24, tag
+  `ghcr.io/.../testing:merge-queue-<run id>`), `vitest`/`playwright` (M1) are
+  stub jobs. **"Require merge queue" is deliberately left OFF** on `main` and
+  `staging` — the workflow exists but `merge_group` never fires until M7.A.1
+  flips that branch-protection setting, once there's more than one
+  contributor. Reasoning:
+  [`design-decisions/m0.21-merge-queue.md`](design-decisions/m0.21-merge-queue.md).
+- **Not yet ported:** `gitflow.yml` and branch rulesets (M0.22),
+  `.actrc`/`make act-*` (M0.23), `build-image.yml` (M0.24).
