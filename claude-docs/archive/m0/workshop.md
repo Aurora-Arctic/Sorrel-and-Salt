@@ -13,8 +13,11 @@ Text the M0.34 compression pass removed from
   in `globals.scss`, not here).
 ```
 
-Stale: `.ladle/config.mjs` reads `defaultState: 'dark'`, not `'auto'`. The
-value moved three times:
+**This one was replaced rather than corrected, and the distinction matters.**
+
+The description is right about the _intent_. `.ladle/config.mjs` currently
+reads `defaultState: 'dark'`, so a reader comparing doc to code would conclude
+the doc is wrong and "fix" it. The history says otherwise:
 
 | Task  | Value    | Documented?                                                        |
 | ----- | -------- | ------------------------------------------------------------------ |
@@ -22,19 +25,17 @@ value moved three times:
 | M0.31 | `'auto'` | Yes — decision record _and_ transcript, with rationale             |
 | M0.32 | `'dark'` | **No** — no decision record, no transcript entry, nothing          |
 
-Because M0.32's change went unrecorded while M0.31's was argued at length,
-this pass initially read the code as an accidental revert and left the doc
-asserting `'auto'` as the intent. **That was wrong** — `'dark'` was confirmed
-as intended, and the live summary now says so.
+M0.31 changed it deliberately and rewrote the surrounding code comment to
+explain the choice. M0.32 flipped it back and left that comment in place, so
+`.ladle/config.mjs` now contradicts itself: lines 66–71 describe `'auto'`
+behaviour, line 74 sets `'dark'`. An undocumented reversal of a documented
+decision, with the explanation left standing, is the signature of an accidental
+revert rather than a considered one.
 
-What is genuinely stale is the _comment_: M0.31 wrote lines 66–71 of
-`.ladle/config.mjs` to explain `'auto'`, and M0.32 changed the value beneath it
-without touching it, so the file contradicts itself. Correct code, stale
-comment. Fixing the comment is M0.35.
-
-The lesson stands, with the sign flipped: a doc and the code disagreeing does
-not tell you which one is wrong, and the documentary record is evidence rather
-than proof. Ask before reconciling either way.
+So the live summary keeps `'auto'` as the intent, states that the file
+currently reads `'dark'`, and says explicitly that the code is the defect. The
+regression is filed as its own Bugfix task; per `CLAUDE.md` it needs a
+regression test, which is not this task's job.
 
 ## 2. The story gate's CI wiring
 
