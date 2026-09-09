@@ -25,7 +25,10 @@
 .PHONY: help install dev build start \
 	lint lint-fix format format-check typecheck check-stories pre-commit \
 	db-generate db-migrate db-seed db-reset codegen \
-	workshop workshop-build
+	workshop workshop-build \
+	docker-build docker-up docker-workshop docker-down docker-rebuild docker-logs
+
+COMPOSE := docker compose -f Docker/docker-compose.yaml
 
 ## Print this list of targets
 help:
@@ -105,3 +108,34 @@ workshop:
 ## Build the static component workshop to ./build
 workshop-build:
 	npm run workshop:build
+
+# Host-level docker compose wrappers. `docker-up` starts the app on 8000; the
+# Ladle workshop (61000) is behind the `workshop` compose profile, so it only
+# comes up with `docker-workshop`. No Neon connection and no local Node version
+# juggling. resume-2026's `docker-up` also ran an `update-token` step for the
+# devcontainer's Claude CLI; there is no devcontainer service here
+# (M0.11/M0.14), so that step is gone. Postgres joins the stack in M0.13.
+
+## Build the local dev images (app + workshop)
+docker-build:
+	$(COMPOSE) --profile workshop build
+
+## Start the app detached on 8000
+docker-up:
+	$(COMPOSE) up -d
+
+## Also start the Ladle workshop on 61000 (compose profile: workshop)
+docker-workshop:
+	$(COMPOSE) --profile workshop up -d
+
+## Stop and remove the local stack, workshop profile included (named volumes kept)
+docker-down:
+	$(COMPOSE) --profile workshop down
+
+## Tear down including volumes, then rebuild and start the app
+docker-rebuild:
+	$(COMPOSE) --profile workshop down -v && $(COMPOSE) up --build -d
+
+## Follow the local stack logs
+docker-logs:
+	$(COMPOSE) logs -f
