@@ -68,9 +68,9 @@ jobs:
       - name: Check secrets
         id: guard
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
         run: |
-          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+          if [ -z "$VERCEL_DEPLOY_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
             echo "::warning::Vercel secrets not configured yet (M0.27) — skipping deploy."
             echo "enabled=false" >> "$GITHUB_OUTPUT"
           else
@@ -136,26 +136,26 @@ jobs:
 
       - name: Pull Vercel environment
         if: steps.guard.outputs.enabled == 'true'
-        run: vercel pull --yes --environment=${{ steps.target.outputs.environment }} --token="$VERCEL_TOKEN"
+        run: vercel pull --yes --environment=${{ steps.target.outputs.environment }} --token="$VERCEL_DEPLOY_TOKEN"
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
       - name: Build
         if: steps.guard.outputs.enabled == 'true'
-        run: vercel build ${{ steps.target.outputs.prod_flag }} --token="$VERCEL_TOKEN"
+        run: vercel build ${{ steps.target.outputs.prod_flag }} --token="$VERCEL_DEPLOY_TOKEN"
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
       - name: Deploy
         id: deploy
         if: steps.guard.outputs.enabled == 'true'
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
           PROD_FLAG: ${{ steps.target.outputs.prod_flag }}
         run: |
           # stdout is always the deployment URL; stderr carries build/progress
           # logs — keep them apart (Vercel's own CI example does this).
-          if vercel deploy --prebuilt $PROD_FLAG --token="$VERCEL_TOKEN" \
+          if vercel deploy --prebuilt $PROD_FLAG --token="$VERCEL_DEPLOY_TOKEN" \
               > deploy-url.txt 2> deploy.log; then
             url="$(cat deploy-url.txt)"
             echo "url=$url" >> "$GITHUB_OUTPUT"
@@ -171,7 +171,7 @@ jobs:
         id: alias
         if: steps.guard.outputs.enabled == 'true' && steps.target.outputs.alias != ''
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
           VERCEL_SCOPE: ${{ secrets.VERCEL_SCOPE }}
           DEPLOY_URL: ${{ steps.deploy.outputs.url }}
           ALIAS: ${{ steps.target.outputs.alias }}
@@ -179,7 +179,7 @@ jobs:
           set -o pipefail
           scope_arg=""
           [ -n "$VERCEL_SCOPE" ] && scope_arg="--scope=$VERCEL_SCOPE"
-          if vercel alias set "$DEPLOY_URL" "$ALIAS" --token="$VERCEL_TOKEN" $scope_arg 2>&1 | tee -a deploy.log; then
+          if vercel alias set "$DEPLOY_URL" "$ALIAS" --token="$VERCEL_DEPLOY_TOKEN" $scope_arg 2>&1 | tee -a deploy.log; then
             echo "url=https://$ALIAS" >> "$GITHUB_OUTPUT"
             echo "Aliased $ALIAS -> $DEPLOY_URL"
           else
@@ -235,9 +235,9 @@ jobs:
       - name: Check secrets
         id: guard
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
         run: |
-          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+          if [ -z "$VERCEL_DEPLOY_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
             echo "::warning::Vercel secrets not configured yet (M0.27) — skipping teardown."
             echo "enabled=false" >> "$GITHUB_OUTPUT"
           else
@@ -257,7 +257,7 @@ jobs:
       - name: Remove preview alias
         if: steps.guard.outputs.enabled == 'true'
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
           VERCEL_SCOPE: ${{ secrets.VERCEL_SCOPE }}
           HEAD_REF: ${{ github.head_ref }}
         run: |
@@ -269,6 +269,6 @@ jobs:
           slug="${slug%-}"
           scope_arg=""
           [ -n "$VERCEL_SCOPE" ] && scope_arg="--scope=$VERCEL_SCOPE"
-          vercel alias rm "hotfix-${slug}.sorrelandsalt.com" --yes --token="$VERCEL_TOKEN" $scope_arg || {
+          vercel alias rm "hotfix-${slug}.sorrelandsalt.com" --yes --token="$VERCEL_DEPLOY_TOKEN" $scope_arg || {
             echo "::notice::alias hotfix-${slug}.sorrelandsalt.com already gone"
           }
