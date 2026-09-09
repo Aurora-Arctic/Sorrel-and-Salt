@@ -1,0 +1,81 @@
+name: Job Summary
+description: >-
+  Writes a pass/fail section to $GITHUB_STEP_SUMMARY for a check step,
+  including a trailing log excerpt on failure.
+
+inputs:
+  check-name:
+    description: Human-readable check name for the summary heading, e.g. "Vitest"
+    required: true
+  outcome:
+    description: Outcome of the check step (e.g. steps.run.outcome) — anything other than 'success' is treated as a failure
+    required: true
+  log-file:
+    description: Path to the check's captured output log, tailed for the failure summary
+    required: true
+  summary:
+    description: Short single-line markdown stat (e.g. "3 errors across 2 files"), rendered inline in the callout
+    required: false
+    default: ''
+  details:
+    description: Optional longer markdown block (e.g. failing-test list or table), rendered between the callout and the log
+    required: false
+    default: ''
+  duration:
+    description: Pre-formatted job duration (e.g. "12s", "1m 34s")
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Write job summary
+      shell: bash
+      env:
+        OUTCOME: ${{ inputs.outcome }}
+        CHECK_NAME: ${{ inputs.check-name }}
+        SUMMARY: ${{ inputs.summary }}
+        DURATION: ${{ inputs.duration }}
+        DETAILS: ${{ inputs.details }}
+        LOG_FILE: ${{ inputs.log-file }}
+      run: |
+        if [ "$OUTCOME" = "success" ]; then
+          callout="[!NOTE]"
+          emoji="✅"
+          verb="passed"
+        else
+          callout="[!CAUTION]"
+          emoji="❌"
+          verb="failed"
+        fi
+
+        stat_line=""
+        if [ -n "$SUMMARY" ]; then
+          stat_line=" — $SUMMARY"
+        fi
+
+        meta=""
+        if [ -n "$DURATION" ]; then
+          meta=" · $DURATION"
+        fi
+
+        {
+          echo "> $callout"
+          echo "> $emoji **$CHECK_NAME $verb**$stat_line$meta"
+        } >> "$GITHUB_STEP_SUMMARY"
+
+        if [ -n "$DETAILS" ]; then
+          {
+            echo ""
+            echo "$DETAILS"
+          } >> "$GITHUB_STEP_SUMMARY"
+        fi
+
+        if [ "$OUTCOME" != "success" ]; then
+          {
+            echo ""
+            echo '```'
+            tail -n 100 "$LOG_FILE"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+        fi
