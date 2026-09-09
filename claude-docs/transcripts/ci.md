@@ -273,3 +273,75 @@ lint`/`format:check`/`typecheck`/`check:stories` all exit 0. **Not
   branch's ruleset, which this task deliberately leaves off.
 - Reasoning:
   [`../design-decisions/m0.21-merge-queue.md`](../design-decisions/m0.21-merge-queue.md).
+
+## 2026-09-09 — M0.22 · gitflow.yml ported, branch rulesets wired
+
+- Fetched resume-2026's `gitflow.yml` via `gh api
+repos/Aurora-Arctic/resume-2026/contents/.github/workflows/gitflow.yml` and
+  copied it byte-for-byte — no repo-specific path or checkout-to-app fix
+  needed, since the file only reads the PR's own head/base refs and calls
+  the four composite actions by their generic `./.github/actions/<name>`
+  relative path.
+- Added `gitflow` back to `pr-gate.yml` and `merge-queue.yml`'s job graphs,
+  exactly as both files' own header/design-decision comments said M0.22
+  would: a new `gitflow` job in each (`pr-gate.yml` passes the real PR
+  number; `merge-queue.yml` passes `should-run: false`, matching upstream,
+  since `merge_group` only exposes a synthetic head ref
+  `refs/heads/gh-readonly-queue/<base>/pr-<n>-<sha>`, not the PR's actual
+  source branch), and `needs: gitflow` added to every other job in both
+  files (`lint`, `format`, `typecheck`, `build`, and the `vitest`/`playwright`
+  stubs) — `audit` excluded, matching upstream, since it's PR-only and never
+  a required check.
+- **Branch rulesets — found unexpected pre-existing state first.** The repo
+  already had three rulesets (`Deploy Branches` combining `main`+`staging`,
+  plus separate near-duplicate `Main`/`Staging` ones, none with required
+  status checks) that predate this task and aren't documented anywhere in
+  `claude-docs` — the M0.21 design doc, written the day before, says "no
+  ruleset exists yet." Asked the user rather than guessing how to reconcile
+  upstream's three-ruleset shape (`Main`, `Staging`, `Release Branches`, no
+  combined one) against this undocumented state. The user had already
+  removed `Deploy Branches` and added a `Release Branches` ruleset
+  (`refs/heads/release/**`, delete/force-push protection only — matches
+  resume-2026's exactly) before answering, and asked to leave `Main`/
+  `Staging` otherwise untouched.
+- **Required status checks — added `gitflow / gitflow` only**, per the
+  user's explicit choice, to both the `Main` and `Staging` rulesets'
+  existing `pull_request` rule (neither had a `required_status_checks` rule
+  at all before this). `lint`/`format`/`typecheck`/`build` — already real
+  checks — and `vitest`/`playwright`/`build-image` — stubs or nonexistent —
+  are deliberately left out of branch protection for now; a future task can
+  add them once M1/M0.24 land, per the user's answer.
+- **Blocked: could not apply the ruleset update via the API.**
+  `gh api -X PUT repos/.../rulesets/<id>` returned `403 Resource not
+accessible by personal access token` for both `Main` and `Staging` — this
+  session's fine-grained PAT lacks the `Administration` repository
+  permission rulesets require. Read access (listing/fetching rulesets)
+  works fine; only the write is blocked. Reported to the user as a manual
+  follow-up: add `gitflow / gitflow` as a required status check to both
+  rulesets via the GitHub UI (Settings → Rules → Rulesets → Main/Staging →
+  add a "Require status checks to pass" rule, or add to the existing one).
+- `.github/dependabot.yml` created — didn't exist before. Three
+  `package-ecosystem` entries (`npm`, `github-actions`, `docker` at
+  `/Docker`, matching this repo's actual Docker directory name/location
+  rather than resume-2026's `/Docker` — same path, no change needed), all
+  `target-branch: staging`, weekly schedule — ported verbatim from
+  resume-2026's file. The "exempt by author" half of the acceptance
+  criteria is `gitflow.yml`'s own `dependabot[bot]` actor check, already
+  covered by the workflow port above — there's no separate Dependabot-side
+  setting for it.
+- Verified without pushing: `npx js-yaml` parses all four touched/new files
+  (`gitflow.yml`, `pr-gate.yml`, `merge-queue.yml`, `dependabot.yml`); `grep
+-rn 'resume-2026|mjoynes-wombat-web' .github/` finds nothing new (one
+  `resume-2026` hit is this task's own prose in `pr-gate.yml`'s header
+  comment, not a workflow reference); `npm run
+lint`/`format:check`/`typecheck`/`check:stories` all exit 0. **Not
+  verifiable pre-push:** a live PR actually being rejected for a
+  branch-mismatch (`gitflow / gitflow` failing) or a Dependabot PR
+  exercising the author exception — both need a real PR against the pushed
+  branch. **Not verifiable at all until the manual ruleset step above is
+  done:** a feature-branch-into-`main` PR being *blocked from merging* by
+  branch protection specifically (the check will report failure either way;
+  only the required-status-check wiring makes that failure actually block
+  the merge button).
+- Reasoning:
+  [`../design-decisions/m0.22-gitflow-rulesets.md`](../design-decisions/m0.22-gitflow-rulesets.md).
