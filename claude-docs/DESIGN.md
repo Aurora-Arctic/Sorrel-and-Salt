@@ -154,15 +154,23 @@ That's a design lever. Every read moved from a client GraphQL query into the ser
 ```json
 // vercel.json
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
-    "deploymentEnabled": { "main": true, "staging": true }
+    "deploymentEnabled": {
+      "**": false,
+      "main": true,
+      "staging": true,
+      "hotfix/*": true
+    }
   }
 }
 ```
 
+Vercel treats any branch key it isn't given as `true`, so `{ "main": true, "staging": true }` alone would still deploy every feature branch. The `"**": false` catch-all (minimatch, matches names with and without slashes) turns them all off; `main`, `staging`, and `hotfix/*` each match a second rule that is `true`, and "at least one `true` wins" re-enables just those. `hotfix/*` deploys so an urgent fix can be verified on a real deployment before it promotes to production.
+
 | Item            | Setting                                                          |
 | --------------- | ---------------------------------------------------------------- |
-| Branch deploys  | `main` and `staging` only; all others off                        |
+| Branch deploys  | `main`, `staging`, and `hotfix/*` only; all others off           |
 | Deploy previews | Disabled                                                         |
 | Environments    | `main` → Production; `staging` → Preview on a stable alias       |
 | Database        | Neon's Vercel integration injects `DATABASE_URL` per environment |
