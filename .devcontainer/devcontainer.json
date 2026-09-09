@@ -13,7 +13,8 @@
       "configureZshAsDefaultShell": true,
       "username": "node",
       "upgradePackages": false
-    }
+    },
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
   },
   "postCreateCommand": "sudo apk add --no-cache github-cli",
   "forwardPorts": [8000, 8001],
