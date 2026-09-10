@@ -42,7 +42,13 @@ on:
 
 permissions:
   contents: read
-  packages: read
+  # write, not read like lint.yml/typecheck.yml's copy of this block — the
+  # build-db-image job below calls build-db-image.yml, which pushes to GHCR
+  # and needs packages: write for itself. A reusable workflow can't grant a
+  # nested call broader permissions than it was itself given, so `read` here
+  # made that inner call a startup_failure (zero jobs even created) the
+  # first time pr-gate.yml actually exercised this path.
+  packages: write
   pull-requests: write
 
 jobs:
