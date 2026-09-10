@@ -21,10 +21,23 @@ Vite's native config loader this file is ESM instead of warning about it).
     read a sibling `.scss` file, as `ThemeToggle`'s does) needs
     `path.join(process.cwd(), …)` instead of
     `fileURLToPath(new URL('./x', import.meta.url))`.
-  - **RTL cleanup here is the `globals: true` side effect, not a hand-written
-    `afterEach(cleanup)`.** A future `vitest.setup.ts` (M1.8 — also adds a
-    `localStorage` polyfill and MSW lifecycle) can still add one; it isn't
-    required for cleanup specifically.
+  - **`setupFiles` also runs `./vitest.setup.ts`** (M1.8, ported from
+    `resume-2026`), which adds three global hooks on top of the RTL
+    `cleanup()` that `globals: true` already registers on its own:
+    - a second, explicit `afterEach(cleanup())` — redundant with the
+      `globals: true` side effect above, but that's what the source repo
+      does and it's harmless to call twice;
+    - a `localStorage` polyfill (`Object.defineProperty(window,
+'localStorage', …)` with a minimal in-memory `Storage` class),
+      because Node's own native `localStorage` global shadows jsdom's once
+      Vitest merges jsdom's `window` into the global scope;
+    - MSW lifecycle — `beforeAll(() => server.listen({ onUnhandledRequest:
+'error' }))`, `afterEach(() => server.resetHandlers())`,
+      `afterAll(() => server.close())` — against the `server` exported from
+      `src/test/msw/server.ts` (`setupServer()`, no handlers yet; the
+      `/api/graphql` stub and its per-test override helper land in M1.10).
+    - Covered by `src/test/vitest-setup.test.tsx`, which asserts each hook's
+      effect directly rather than testing `vitest.setup.ts` itself.
 - **`db`** — `environment: 'node'`. `include`s `src/db/**/*.test.ts` and
   `src/services/**/*.test.ts` — empty today (no `repository.ts` or
   `src/services/` yet), so `passWithNoTests: true` keeps that from failing
