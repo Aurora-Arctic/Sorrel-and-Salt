@@ -294,3 +294,23 @@ Then, on the same task and at the user's direction (they disagreed with M0.31's
   format:check / typecheck pass. `npx js-yaml build.yml` parses.
   Reasoning:
   [`../design-decisions/m0.36-ci-story-gate.md`](../design-decisions/m0.36-ci-story-gate.md).
+
+## 2026-09-10 — M0.35 · Fix the stale 'auto' comment above defaultState: 'dark'
+
+- **Confirmed (again) that `'dark'` is the intended value.** Filed by M0.34's
+  documentation audit after that audit's own earlier, wrong conclusion (that
+  the code was an accidental revert) was corrected — see
+  [`../design-decisions/m0.34-doc-archive-and-compression-pass.md`](../design-decisions/m0.34-doc-archive-and-compression-pass.md).
+  This task changes the comment at `.ladle/config.mjs:66-71`, not line 74.
+- **Regression coverage: `scripts/check-workshop-theme-default.ts`**, a
+  standalone script in the `check-component-stories.ts` mould rather than a
+  Vitest test — Vitest hasn't landed yet (M1.7). Imports `.ladle/config.mjs`
+  and exits 1 if `addons.theme.defaultState` isn't `'dark'`. Wired into
+  `npm run pre-commit` and the `package.json` `pre-commit` array, after
+  `check:stories`.
+- `claude-docs/workshop.md`'s `.ladle/config.mjs` bullet no longer points at
+  this task as outstanding — it now states the comment was fixed.
+- Verified: flipped `defaultState` to `'auto'` locally → `check:theme-default`
+  exits 1 naming the mismatch; reverted → exits 0; `npm run pre-commit` passes
+  end to end (lint, format:check, typecheck, check:stories,
+  check:theme-default).
