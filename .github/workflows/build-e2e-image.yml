@@ -1,0 +1,75 @@
+name: Build E2E Image
+
+# Builds (or reuses, if unchanged) the dedicated Playwright e2e image
+# (Docker/Dockerfile.e2e, M1.14) and publishes its ref as an output. Called
+# via workflow_call, the same shape as build-image.yml (shared `testing`
+# image) — the split into its own file/workflow, rather than a job in
+# build-image.yml, mirrors how build-db-image.yml is its own file: a
+# different base image entirely (Microsoft's Playwright image, not
+# Dockerfile.node), so there's nothing to share with build-image.yml beyond
+# the tagging convention.
+#
+# The tag is content-addressed off `github.repository` (lowercased) plus a
+# hash of the two files that determine the image's contents, so identical
+# inputs always produce the identical tag and an unrelated push reuses a
+# prior build rather than rebuilding — same reasoning as build-image.yml.
+on:
+  workflow_call:
+    outputs:
+      image:
+        description: Fully qualified, content-addressed e2e image ref
+        value: ${{ jobs.build-e2e-image.outputs.image }}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-e2e-image:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.tag.outputs.image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Compute content-addressed image tag
+        id: tag
+        run: |
+          repo_lower=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          hash="${{ hashFiles('Docker/Dockerfile.e2e', 'package-lock.json') }}"
+          echo "image=ghcr.io/${repo_lower}/e2e:${hash}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      # Most pushes to a PR don't touch Dockerfile.e2e or package-lock.json, so
+      # the content-addressed tag from a prior run (this PR or main) usually
+      # already exists — skip the build entirely rather than re-running buildx
+      # (and re-downloading Chromium) just to re-push the same content.
+      - name: Check if image already exists
+        id: check
+        run: |
+          if docker buildx imagetools inspect ${{ steps.tag.outputs.image }} > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build and push e2e image
+        if: steps.check.outputs.exists != 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Docker/Dockerfile.e2e
+          push: true
+          tags: ${{ steps.tag.outputs.image }}
+          cache-from: type=gha,scope=e2e-image
+          cache-to: type=gha,mode=max,scope=e2e-image

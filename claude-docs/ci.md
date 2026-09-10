@@ -68,7 +68,49 @@ archived and are not required reading.
   ref as an `image` output. Tag is content-addressed:
   `ghcr.io/${github.repository,,}/testing:${{ hashFiles('Docker/Dockerfile.node', 'package-lock.json') }}`,
   and a `docker buildx imagetools inspect` check skips the build entirely when
-  that hash already has a pushed image.
+  that hash already has a pushed image. **This image excludes Playwright
+  entirely** — it's Alpine/musl-based and Playwright's Chromium build has no
+  official musl support — so `lint`/`typecheck`/`build`/`vitest` consume it,
+  but `playwright` does not; see `build-e2e-image.yml` below.
+- **`vitest.yml`** (M1.14) — `npm run test:coverage` in the same container
+  shape as `lint`/`typecheck`/`build` (`inputs.image` from `build-image.yml`),
+  plus its own `build-db-image` job (`uses: ./.github/workflows/build-db-image.yml`)
+  feeding a `services: postgres:` block on the `vitest` job — reachable by
+  service name since `vitest` runs inside its own `container:`, per
+  DESIGN.md §11's CI table. `DATABASE_URL` is
+  `postgres://sorrel:sorrel@postgres:5432/sorrel`, the same credentials
+  `Docker/docker-compose.yaml`'s `app` service uses locally;
+  `src/test/db-global-setup.ts`/`db-setup.ts` rewrite the database name per
+  worker from there. Coverage JSON (`--reporter=json`) and the `vitest`
+  project's `json-summary` coverage reporter feed
+  `.github/scripts/summarize-vitest.mjs` (ported from resume-2026, alongside
+  `summarize-playwright.mjs` and shared `lib/coverage-table.mjs` — this repo
+  had no `.github/scripts/` before this task) for the PR comment's stat line
+  and coverage table. `should-run` path-filters the same way `lint`/
+  `typecheck` do.
+- **`playwright.yml`** (M1.14) — `npm run e2e` against the app
+  `webServer` already builds and serves on 8001 (see `testing.md`'s E2E
+  section). Runs in `build-e2e-image.yml`'s dedicated image, **not**
+  `build-image.yml`'s — same `build-db-image`/`services: postgres:` shape as
+  `vitest.yml`. Uploads `playwright-report/`/`test-results/` on failure and
+  `coverage-e2e/` always (parallel to `vitest.yml`'s `coverage/` upload).
+  `should-run` path-filters the same way. `next.config.ts`'s
+  `productionBrowserSourceMaps: true` and `e2e/coverage.config.ts`'s
+  `sourceFilter` (JS-only coverage, `src/**` only) apply here since it's the
+  same production build both `npm run e2e` locally and this job exercise —
+  see `testing.md`'s Coverage section for why, and for the
+  `fullyParallel`/`test.describe.configure({ mode: 'serial' })` fix the CI
+  Postgres service surfaced (a real race, not CI-only flakiness).
+- **`build-e2e-image.yml`** (M1.14) — same content-addressed-tag /
+  skip-if-exists shape as `build-image.yml`, but for `Docker/Dockerfile.e2e`:
+  `FROM mcr.microsoft.com/playwright:v1.63.0-noble` (Microsoft's own image,
+  which bundles a matching Node runtime, every OS dep Chromium needs, and
+  the browser itself, all pinned together) — pinned to
+  `@playwright/test`'s resolved `package-lock.json` version; bump both
+  together. `Docker/docker-compose.yaml`'s opt-in `e2e` service (profile
+  `e2e`, `make docker-e2e`) builds this same file for local use, so a
+  devcontainer session (still Alpine-based itself, via `Docker/Dockerfile.node`)
+  can run the full e2e suite without a base-distro change of its own.
 - **`gitflow.yml`** — enforces which source branch may PR into which target:
   `feature/*` → `staging`; `release/MAJOR.MINOR.PATCH` or `hotfix/*` → `main`;
   `staging` or `hotfix/*` → `release/*`; `main-sync/YYYY-MM-DD-HH-MM-SS` →
@@ -79,18 +121,20 @@ archived and are not required reading.
 
 ## Aggregating workflows
 
-- **`pr-gate.yml`** — path-filters `lint`/`typecheck`/`build`/`destructive-ddl`
-  via `dorny/paths-filter` (`format` always runs), calls every reusable check, and
-  carries stub `vitest`/`playwright` jobs (real job names, one no-op step) so M1
-  can wire them in without renaming a required check. Its `build-image` job
-  keeps a `pr-gate-build-image-<pr number>` / `cancel-in-progress: false`
-  concurrency group on the caller.
+- **`pr-gate.yml`** — path-filters `lint`/`typecheck`/`build`/`destructive-ddl`/
+  `vitest`/`playwright` via `dorny/paths-filter` (`format` always runs), and
+  calls every reusable check — `vitest`/`playwright` (M1.14) are real
+  `workflow_call` jobs now, same job names the M0-era stubs used so no
+  required-status-check rename was ever needed. Its `build-image` job keeps a
+  `pr-gate-build-image-<pr number>` / `cancel-in-progress: false` concurrency
+  group on the caller; `build-e2e-image` (feeding `playwright`, not
+  `build-image`) does the same under its own group.
 - **`merge-queue.yml`** — the `merge_group` counterpart, calling the same
-  `lint`/`format`/`typecheck`/`build` (no `audit` — PR-only) with
-  `merge-queue: true`, and no caller-side concurrency group. Also calls
-  `destructive-ddl` (`should-run: false`, no `merge-queue: true` — see that
-  workflow's own bullet above) for the same required-check-name reason it
-  calls `gitflow` below. **"Require merge
+  `lint`/`format`/`typecheck`/`build`/`vitest`/`playwright` (no `audit` —
+  PR-only) with `merge-queue: true`, and no caller-side concurrency group.
+  Also calls `destructive-ddl` (`should-run: false`, no `merge-queue: true` —
+  see that workflow's own bullet above) for the same required-check-name
+  reason it calls `gitflow` below. **"Require merge
   queue" is deliberately OFF** on `main` and `staging`: the workflow exists but
   `merge_group` never fires until M7.A.1 flips that setting, once there is more
   than one contributor.
@@ -108,8 +152,8 @@ archived and are not required reading.
   nothing**.
 - **A required-check job must never carry a job-level `if:`.** GitHub then
   reports a bare, unqualified check name that `job / job` protection can never
-  match. That is why the `vitest`/`playwright` stubs are unconditional no-ops
-  and why skipping is done through `should-run` inputs instead.
+  match. That is why skipping is always done through `should-run` inputs
+  instead — every calling job itself runs unconditionally.
 - **Live GitHub settings are confirmed with the user before being changed**, and
   a permissions-blocked write is reported rather than routed around.
 
@@ -151,14 +195,20 @@ regression check never runs through the thing it is testing.
   **It deliberately has no skip-if-exists check** (unlike `build-image.yml`) —
   its trigger paths are exactly its hash inputs, so the trigger already does it.
 
-- **`verify-db-image`** — a second job consuming that image the way §11 says a
-  real M1 test job will: a job-level `services:` postgres container keyed to
-  `needs.build-db-image.outputs.image` (the hash tag, never reconstructed),
-  then `docker exec <service-id> psql -U postgres -d sorrel_template -c 'SELECT 1'`.
-  **`docker exec`, not a TCP connection** — the image's `host` auth rules need a
-  password that was generated randomly and discarded at build time, while the
-  `local` (Unix-socket) rule stays `trust`. Scaffolding: delete it once a real
-  M1 test job exercises the same pattern.
+- **`build-db-image.yml` also carries a `workflow_call` trigger** (M1.14,
+  alongside its existing `push`/`pull_request`/`workflow_dispatch`
+  triggers — a `workflow_call` invocation bypasses `pull_request`'s path
+  filter entirely, so it always runs when `vitest.yml`/`playwright.yml` call
+  it, regardless of whether the calling PR touched `src/db/**`), exposing
+  the same `image` output those two now consume via their own
+  `build-db-image` job + `services: postgres:` block. The `verify-db-image`
+  job that used to prove this pattern out standalone (job-level `services:` +
+  `docker exec ... psql -c 'SELECT 1'`, since the image's `host`/TCP auth
+  rules need a password generated and discarded at build time while the
+  `local`/Unix-socket rule stays `trust`) is gone — `vitest`/`playwright` are
+  the real M1 consumer it was scaffolding for, connecting over TCP as the
+  `sorrel` role instead (a real, non-discarded password — see
+  `Docker/postgres-init/enable-extensions.sql`).
 
 ## Deploy
 
@@ -230,8 +280,18 @@ nothing and this workflow is the only path.
   substitute for `npm run check:destructive-ddl -- --self-test`, which
   exercises the ack-line gating logic directly against fixtures under
   `scripts/__fixtures__/destructive-ddl/`.
-- **`act-build` / `act-vitest` / `act-playwright` do not exist.** `act-build`
-  needs `actions/cache` pre-cached the way `act-cache-checkout` pre-caches
-  `checkout-to-app`; the other two wait on their M1 workflows.
+- **`act-build` / `act-vitest` / `act-playwright` still do not exist**, even
+  though `vitest.yml`/`playwright.yml` landed in M1.14. `act-build` needs
+  `actions/cache` pre-cached the way `act-cache-checkout` pre-caches
+  `checkout-to-app`. `act-vitest`/`act-playwright` are blocked on something
+  new: unlike `lint`/`format`/`typecheck` (single job, every input passed
+  directly), both now have a real `needs: build-db-image` job in the same
+  workflow file (and `playwright.yml`'s caller has a real
+  `build-e2e-image` dependency too) — `act -W ... -j vitest` would have to
+  either execute `build-db-image.yml` for real (a genuine GHCR push, not
+  something `--action-offline-mode` supports) or act needs new local-only
+  plumbing this repo doesn't have a pattern for yet. Left unresolved rather
+  than shipped in a form nobody could verify actually works.
 - **Every new reusable check workflow ships its `act-<name>` target in the same
-  PR**, plus an `act-cache-*` pre-clone for any action that isn't cached yet.
+  PR**, plus an `act-cache-*` pre-clone for any action that isn't cached yet
+  — except where that isn't possible yet, as above.
