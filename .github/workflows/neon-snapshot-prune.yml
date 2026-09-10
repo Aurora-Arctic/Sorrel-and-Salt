@@ -1,0 +1,100 @@
+name: Neon Snapshot Prune
+
+# Scheduled cleanup for the pre-migration snapshot branches migrate.yml
+# creates (M1.6). Neon's free tier caps a project at 10 branches total —
+# `production`, `staging`, one snapshot per production migration, and one
+# ephemeral branch per open hotfix preview all draw from the same quota — so
+# `snapshot-*` branches can't just accumulate. Keeps the newest
+# KEEP_SNAPSHOTS (below) and deletes the rest; runs weekly and can also be
+# triggered by hand. Never triggered from another workflow — this is the one
+# workflow in the repo that runs on a schedule rather than push/PR/call.
+#
+# Guarded the same stub-now/wire-later way as migrate.yml's own Neon step:
+# NEON_API_KEY/NEON_PROJECT_ID don't exist until M0.27 wires up the secrets
+# matrix, so a run before then warns and exits green instead of failing.
+
+on:
+  schedule:
+    # Sundays at 06:00 UTC — outside any deploy window, and infrequent
+    # enough that a week of production migrations (rare, per CLAUDE.md's
+    # one-task-per-PR cadence) won't outrun it.
+    - cron: '0 6 * * 0'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+env:
+  # How many of the most recent snapshot-* branches to keep. Comfortably
+  # under the 10-branch quota once production, staging, and any in-flight
+  # hotfix previews are accounted for.
+  KEEP_SNAPSHOTS: 3
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Neon secrets
+        id: guard
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+        run: |
+          if [ -z "$NEON_API_KEY" ] || [ -z "$NEON_PROJECT_ID" ]; then
+            echo "::warning::Neon secrets not configured yet (M0.27) — skipping prune."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Start timer
+        id: start
+        if: steps.guard.outputs.enabled == 'true'
+        uses: ./.github/actions/timer-start
+
+      - name: Prune old snapshot branches
+        id: prune
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+        run: |
+          set -eo pipefail
+          {
+            echo "Listing branches..."
+            to_delete=$(curl -sf "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches" \
+              -H "Authorization: Bearer ${NEON_API_KEY}" \
+              | jq -r --argjson keep "${KEEP_SNAPSHOTS}" '
+                  [.branches[] | select(.name | startswith("snapshot-"))]
+                  | sort_by(.created_at) | reverse
+                  | .[$keep:]
+                  | .[] | "\(.id) \(.name)"
+                ')
+
+            if [ -z "$to_delete" ]; then
+              echo "Nothing to prune — ${KEEP_SNAPSHOTS} or fewer snapshot branches exist."
+            else
+              echo "$to_delete" | while read -r id name; do
+                echo "Deleting ${name} (${id})..."
+                curl -sf -X DELETE "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches/${id}" \
+                  -H "Authorization: Bearer ${NEON_API_KEY}"
+                echo
+              done
+            fi
+          } 2>&1 | tee prune.log
+
+      - name: Compute duration
+        id: timer
+        if: always() && steps.guard.outputs.enabled == 'true'
+        uses: ./.github/actions/timer-elapsed
+        with:
+          start: ${{ steps.start.outputs.start }}
+
+      - name: Write job summary
+        if: always() && steps.guard.outputs.enabled == 'true'
+        uses: ./.github/actions/job-summary
+        with:
+          check-name: Neon snapshot prune
+          outcome: ${{ steps.prune.outcome }}
+          log-file: prune.log
+          duration: ${{ steps.timer.outputs.duration }}
