@@ -1,3 +1,11 @@
+<!--
+Archived 2026-09-10 by the doc consolidation pass over M0's working docs.
+Verbatim pre-pass copy of CLAUDE.md. What the pass cut: port provenance,
+the change-by-change narrative of how each rule was reached, and superseded
+intermediate states. Current truth is the live CLAUDE.md; this file is
+write-once and is allowed to be out of date.
+-->
+
 # CLAUDE.md
 
 Guidance for Claude Code working in this repository.
@@ -26,21 +34,21 @@ The schema entity is `workspaces`; the URL prefix is `/coven/`. This divergence 
 
 `make help` lists every target — from the **host**. Neither `make` nor `docker` is installed in the devcontainer, so a session running inside it calls the npm scripts directly; the `make` column below is the host equivalent.
 
-| Command                                                                                                        | Purpose                                                                                                                               |
-| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev` (`make dev`)                                                                                     | Next.js dev server on **8000**                                                                                                        |
-| `npm run build` / `start` (`make build` / `start`)                                                             | Production build; e2e runs it on **8001**                                                                                             |
-| `npm run lint` / `format:check` / `typecheck` / `check:stories` / `check:theme-default` (`npm run pre-commit`) | The pre-commit checks                                                                                                                 |
-| `make docker-up`                                                                                               | App + Postgres 17 locally, no Neon connection needed                                                                                  |
-| `make docker-workshop`                                                                                         | Also brings up the Ladle workshop, on **61000**                                                                                       |
-| `npm run workshop` / `workshop:build` (`make workshop` / `workshop-build`)                                     | Ladle component workshop on **61000**; `:build` is the static export, wrapped so a story that fails to bundle actually exits non-zero |
-| `make act-lint` / `act-format` / `act-typecheck`                                                               | Run that reusable CI workflow locally via `act`; `make act-test` chains all three                                                     |
-| `npm run db:generate` / `db:migrate` / `db:seed` / `db:reset` (`make db-*`)                                    | **Not wired up yet.** Script and target names exist and exit non-zero until M1.3 wires them to Drizzle                                |
-| `npm run codegen`                                                                                              | **Not wired up yet.** Exits non-zero until M3.5 wires it to graphql-codegen                                                           |
-| `npm run test:coverage`                                                                                        | **Doesn't exist yet.** Arrives with Vitest in M1.7 — `unit` (jsdom) + `db` (node/Postgres) projects, 80% threshold                    |
-| `make test-stories`                                                                                            | **Doesn't exist yet.** Arrives in M1.28 — acceptance suite only, prints a pass/fail line per user story                               |
+| Command                                                                                | Purpose                                                                                                                                       |
+| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev` (`make dev`)                                                             | Next.js dev server on **8000**                                                                                                                |
+| `npm run build` / `start` (`make build` / `start`)                                     | Production build; e2e runs it on **8001**                                                                                                     |
+| `npm run lint` / `format:check` / `typecheck` / `check:stories` (`npm run pre-commit`) | The pre-commit checks                                                                                                                         |
+| `make docker-up`                                                                       | App + Postgres 17 locally, no Neon connection needed                                                                                          |
+| `make docker-workshop`                                                                 | Also brings up the Ladle workshop, on **61000**                                                                                               |
+| `npm run workshop` / `workshop:build` (`make workshop` / `workshop-build`)             | Ladle component workshop on **61000**; `:build` is the static export, wrapped (M0.36) so a story that fails to bundle actually exits non-zero |
+| `make act-lint` / `act-format` / `act-typecheck`                                       | Run that reusable CI workflow locally via `act`; `make act-test` chains all three                                                             |
+| `npm run db:generate` / `db:migrate` / `db:seed` / `db:reset` (`make db-*`)            | **Not wired up yet.** Script and target names exist and exit non-zero until M1.3 wires them to Drizzle                                        |
+| `npm run codegen`                                                                      | **Not wired up yet.** Exits non-zero until M3.5 wires it to graphql-codegen                                                                   |
+| `npm run test:coverage`                                                                | **Doesn't exist yet.** Arrives with Vitest in M1.7 — `unit` (jsdom) + `db` (node/Postgres) projects, 80% threshold                            |
+| `make test-stories`                                                                    | **Doesn't exist yet.** Arrives in M1.28 — acceptance suite only, prints a pass/fail line per user story                                       |
 
-**Once `test:coverage` lands (M1.7), verify with it.** A plain `npm run test` pass will still be able to fail CI on the 80% threshold (lines, branches, functions, statements) alone.
+**Once `test:coverage` lands (M1.7), verify with it.** A plain `npm run test` pass will still be able to fail CI on the 80% threshold (lines, branches, functions, statements) alone. Carried over from `resume-2026`.
 
 **Deploys are CI-only (M0.26).** `.github/workflows/deploy.yml` deploys via the Vercel CLI (`vercel pull`/`build`/`deploy --prebuilt`/`alias`) on a push to `main` (production) or `staging` (preview → `staging.sorrelandsalt.com`), and on a `hotfix/** → main` PR (preview → per-PR `hotfix-<slug>.sorrelandsalt.com`, commented on the PR, torn down on close). `vercel.json` sets `deploymentEnabled: { "**": false }` — Vercel's Git integration deploys nothing; the workflow is the only path. There is no local deploy command.
 
@@ -115,16 +123,13 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 - A task is done when every acceptance criterion is demonstrably met — not when the code appears to work.
 - **Port, don't rewrite from memory.** The source repo for all ports is `resume-2026`.
 - **Components:** `src/components/<Name>/` with `index.tsx`, `index.scss`, `index.test.tsx`, imported `from '../components/IngredientCard'`.
-- **Every standalone component ships an `index.stories.tsx`** in the same directory — no exceptions; the Ladle workshop discovers components by that file. `check:stories` catches a missing story, `workshop:build` catches one that fails to bundle, and both run in pre-commit **and** in CI's build job, so a PR can't skip either by skipping the local hook. The gate is scoped to `src/components/`; `.ladle/*.stories.tsx` is the one non-component location. Stories carry no test ids and no snapshots. Detail: [`claude-docs/workshop.md`](claude-docs/workshop.md).
+- **Every standalone component ships an `index.stories.tsx`** in the same directory — no exceptions. The Ladle workshop (M0.30) discovers components by that file. `npm run check:stories` (M0.33; `scripts/check-component-stories.ts`) enforces the missing-file case; `npm run workshop:build` (M0.36; `ladle build` wrapped by `scripts/build-workshop.ts` — @ladle/react 5.1.1's own CLI always exits 0, even on a build failure) enforces the story-that-fails-to-bundle case. Both run in pre-commit **and** in CI, from the build job (`.github/workflows/build.yml`), so a PR can't skip either by skipping the local hook. The gate is scoped to `src/components/`; `.ladle/*.stories.tsx` is the one known non-component location (M0.32). Stories carry no test ids and no snapshots.
 - **Sass:** modern module system only — `@use '../../scss/variables' as *;`, never `@import`. Shared partials in `src/scss/` are `@use`'d directly by whichever component needs them, never routed through a parent.
 - **The design will change.** Do not build component styling beyond the tokens (M0.7) and mixins (M0.8).
 - **No print styles anywhere except the spell recipe view** (M10.22). `_print.scss` is created by that task and scoped to it.
 - Gitflow: `feature/*` → `staging`; `staging` → `main` via `release/MAJOR.MINOR.PATCH`; `hotfix/*` opens both; `main-sync/YYYY-MM-DD-HH-MM-SS` brings `main` back down. Staging carries the same protections as production; local development is the only relaxed environment.
 - Document as you go in `claude-docs/` — a summary per subsystem, an append-only transcript, one doc per component. Several tasks name it as an acceptance criterion. [`claude-docs/README.md`](claude-docs/README.md) describes the layout.
-- **Run the compression pass at the end of every milestone.** Rewrite this file so every statement is true as of that milestone's end, and re-trim the subsystem summaries the same way. Text leaving a live doc moves to `claude-docs/archive/<mN>/` — never deleted, and an already-archived file is never edited (a repeat pass writes a dated subdirectory instead). At the end of a milestone its transcripts and decision records move there too.
-  - **The test is "is this statement out of date?", not "is this narrative?"** Two things are never cut for being old: a forward-looking rule that still binds later work, and history that is still true. Trimming a rule because it reads like background is how a rule gets lost.
-  - **Nothing may end up living only in the archive.** The archive is written, not read — before a transcript or decision record moves there, every settled decision and binding constraint in it must already be stated in a live doc. A summary that sends the reader into `archive/` to understand the system has failed.
-  - **When a doc and the code disagree, establish which one is wrong before reconciling them.** Editing the doc to match the code launders a bug into documented behaviour. A documentary asymmetry — one change argued at length, its reversal recorded nowhere — is evidence of intent, not proof of it. Ask.
+- **Run the compression pass at the end of every milestone.** Rewrite this file so every statement is true as of that milestone's end, and re-trim the subsystem summaries the same way. Text leaving a live doc moves to `claude-docs/archive/<mN>/<same filename>` — never deleted. Transcripts are never rewritten, only copied there once a subsystem is finished. See [`claude-docs/archive/README.md`](claude-docs/archive/README.md).
 
 ---
 
@@ -174,7 +179,7 @@ The one v1 concession to v2: the ingredient detail page (M8.19) is built so a no
 
 ## Skills
 
-Skills live in `.claude/skills/<name>/SKILL.md` and are invoked as `/<name>`. The table below is the trigger reference; [`claude-docs/agent-skills.md`](claude-docs/agent-skills.md) carries the shape and the hedges inside the skill files that are still stale.
+Skills live in `.claude/skills/<name>/SKILL.md` and are invoked as `/<name>`. Six were ported from `resume-2026` in M0.10; `start-task` was written here afterwards. The table below is the trigger reference — [`claude-docs/agent-skills.md`](claude-docs/agent-skills.md) carries the shape, what was deliberately not ported, and which port-time hedges inside the skill files are still stale.
 
 | Skill              | Trigger                                                                                                                                                                                                                                                           |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

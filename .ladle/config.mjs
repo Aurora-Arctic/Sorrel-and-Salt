@@ -63,12 +63,13 @@ export default {
     // the one place a theme is applied — so the workshop and the app agree on
     // what a theme swap does.
     //
-    // `defaultState: 'auto'` is the control's unset position: on load the
-    // decorator writes no attribute and .ladle/theme.scss resolves the theme
-    // through `prefers-color-scheme`, exactly as globals.scss does in the app
-    // for a viewer who has never touched the toggle. One click on the control
-    // pins light or dark from there. The app itself is still dark-first — that
-    // lives in globals.scss (`:root { @include theme-dark }`), not here.
+    // `defaultState: 'dark'` matches the app's dark-first default in
+    // globals.scss (`:root { @include theme-dark }`) — the workshop opens
+    // dark, same as a viewer who has never touched the toggle. M0.31 moved
+    // this to 'auto' (the control's unset position, letting
+    // prefers-color-scheme decide); M0.32 moved it back to 'dark', which is
+    // the confirmed intent — see
+    // claude-docs/design-decisions/m0.34-doc-archive-and-compression-pass.md.
     theme: {
       enabled: true,
       defaultState: 'dark',
