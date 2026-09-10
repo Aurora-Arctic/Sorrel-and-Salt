@@ -167,6 +167,31 @@ comment for the regex and the reasoning. There's no such line format
 elsewhere in the repo to stay consistent with; this is the one place it's
 defined, so `claude-docs/ci.md` and the script both point back here.
 
+## Audit columns and `applyAudit` (M1.15)
+
+`src/db/audit.ts` exports `auditColumns` — the six-column object (`createdAt`,
+`createdBy`, `updatedAt`, `updatedBy`, `deletedAt`, `deletedBy`) every table
+spreads in as `...auditColumns`. `createdBy`/`updatedBy`/`deletedBy` are plain
+`uuid` columns for now, not `.references(() => users.id)` as DESIGN.md §5
+shows: `users` doesn't exist until M2.1. Whichever table lands first with a
+row that needs the FK enforced should add it there; `auditColumns` itself
+can't reference a table that doesn't exist yet.
+
+`applyAudit(operation, payload, session)` is the pure helper `withAudit`
+(M1.16) will call before every write — it takes `'insert' | 'update' |
+'delete'`, a payload, and `{ userId }`, and returns the payload with any
+audit fields the caller supplied stripped out and replaced with the correct
+ones for that operation:
+
+- `insert` sets `createdAt`/`createdBy`/`updatedAt`/`updatedBy` from `session`
+- `update` sets only `updatedAt`/`updatedBy`, leaving `createdAt`/`createdBy` absent from the returned payload so the `UPDATE` never touches them
+- `delete` (soft delete) sets only `deletedAt`/`deletedBy`
+
+Audit ids never come from the caller: `applyAudit` deletes any of the six
+audit keys off the incoming payload before setting the ones the operation
+calls for, so a payload smuggling `createdBy` from a request body is ignored
+in favour of `session.userId`, per CLAUDE.md rule 3.
+
 ## Snapshot before production migrations, and the restore runbook (M1.6)
 
 Expand/contract keeps a bad _release_ recoverable by rolling the app back.
