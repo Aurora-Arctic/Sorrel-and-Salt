@@ -106,21 +106,24 @@ jobs:
       image: ${{ needs.build-image.outputs.image }}
       should-run: false
 
-  # Stub — M1 replaces this with `uses: ./.github/workflows/vitest.yml`,
-  # matching pr-gate.yml's own stub (M0.20) so both required checks come
-  # online for the queue and the gate at the same time.
   vitest:
-    needs: gitflow
-    runs-on: ubuntu-latest
-    steps:
-      - name: Stub — wired for real in M1
-        run: echo "vitest is stubbed until M1 ports the real workflow_call check"
+    needs: [build-image, pr-number, gitflow]
+    uses: ./.github/workflows/vitest.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+      pr-number: ${{ needs.pr-number.outputs.number }}
+      merge-queue: true
 
-  # Stub — M1 replaces this with `uses: ./.github/workflows/playwright.yml`,
-  # same reasoning as vitest above.
+  # Same dedicated e2e image reasoning as pr-gate.yml's build-e2e-image job
+  # — build-image.yml's shared `testing` image excludes Playwright's browser
+  # and system deps.
+  build-e2e-image:
+    uses: ./.github/workflows/build-e2e-image.yml
+
   playwright:
-    needs: gitflow
-    runs-on: ubuntu-latest
-    steps:
-      - name: Stub — wired for real in M1
-        run: echo "playwright is stubbed until M1 ports the real workflow_call check"
+    needs: [build-e2e-image, pr-number, gitflow]
+    uses: ./.github/workflows/playwright.yml
+    with:
+      image: ${{ needs.build-e2e-image.outputs.image }}
+      pr-number: ${{ needs.pr-number.outputs.number }}
+      merge-queue: true

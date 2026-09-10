@@ -1,0 +1,49 @@
+# syntax=docker/dockerfile:1
+
+# Sorrel & Salt — dedicated Playwright e2e image (M1.14).
+#
+# Docker/Dockerfile.node's `testing` stage deliberately excludes Playwright's
+# system libraries and browser download (see that file's header comment) —
+# it's built on Alpine/musl, and Playwright's Chromium build has no official
+# Alpine/musl support at all, so bolting it on there isn't an option. The
+# `playwright` CI job (.github/workflows/playwright.yml) gets its own image
+# instead, mirroring the pattern `build-image.yml` (shared `testing` image)
+# and `build-db-image.yml` (preseeded Postgres image) already establish:
+# built and published by `build-e2e-image.yml` under a content-addressed
+# GHCR tag.
+#
+# Based on Microsoft's own Playwright image rather than hand-rolling
+# `apt-get`/`playwright install --with-deps` on a plain Debian base — it
+# already bundles a matching Node.js runtime, every OS library Chromium
+# needs, and the Chromium build itself, all pinned together for one exact
+# Playwright release. That pin must move in lockstep with `@playwright/test`
+# in package.json/package-lock.json (currently 1.63.0) — a mismatched
+# browser/library version is Playwright's single most common "browser not
+# found" / "host system is missing dependencies" failure, and this Dockerfile
+# is the one place that version is duplicated outside package-lock.json.
+#
+# `Docker/docker-compose.yaml`'s opt-in `e2e` service (profile: e2e) builds
+# this same file for local use, so a devcontainer session can run the full
+# e2e suite without switching its own Alpine base image — see that file's
+# comment for why sharing the image beats duplicating the install steps
+# across two different base distros.
+ARG PLAYWRIGHT_VERSION=1.63.0
+FROM mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble
+
+WORKDIR /app
+
+# Dependency layer first, same as Dockerfile.node, so an unrelated source
+# change never invalidates `npm ci`.
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+
+# Fast no-op in the normal case — the base image already ships this exact
+# version's Chromium build. Real insurance against the version-drift failure
+# mode described above: if PLAYWRIGHT_VERSION above and package-lock.json's
+# resolved @playwright/test version ever disagree, this is what surfaces it
+# as a build-time failure instead of a confusing CI test failure later.
+RUN npx playwright install --with-deps chromium
+
+ENV NODE_ENV=test

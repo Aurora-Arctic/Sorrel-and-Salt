@@ -69,9 +69,14 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # Layers (apt-get, npm i, playwright install) are cached via GHA cache, so this
-      # is fast even on a rebuild. Only runs when the tag doesn't exist yet, i.e.
-      # Dockerfile.node or package-lock.json actually changed.
+      # Layers (apk add, npm ci) are cached via GHA cache, so this is fast even
+      # on a rebuild. Only runs when the tag doesn't exist yet, i.e.
+      # Dockerfile.node or package-lock.json actually changed. No `playwright
+      # install` here — this stage deliberately excludes Playwright's browser
+      # and system deps (see Dockerfile.node's header comment); the dedicated
+      # e2e image (Dockerfile.e2e, build-e2e-image.yml, M1.14) carries those
+      # instead. This comment used to say otherwise, left over from before
+      # M0.11 slimmed this file down from resume-2026's three-stage original.
       - name: Build and push testing image
         if: steps.check.outputs.exists != 'true'
         uses: docker/build-push-action@v7
