@@ -1,6 +1,8 @@
 # Sorrel and Salt — Work Breakdown
 
-190 tasks across 12 milestones, 308 estimated hours. Every task is one PR, sized 1–2 hours, reviewable in under 15 minutes.
+Every task is one PR, sized 1–2 hours, reviewable in under 15 minutes. Task IDs are immutable: they identify a task, they do not schedule it. Execution order is the wave order in the next section.
+
+The Asana board **Sorrel & Salt** is the source of truth for what to work on. This file is the reasoning behind the breakdown — corrected in place when it is wrong, never re-scoped to chase the board.
 
 Story references point at the numbered user stories in §10 of the design doc. Infrastructure tasks carry developer-facing stories instead.
 
@@ -24,6 +26,73 @@ Story references point at the numbered user stories in §10 of the design doc. I
 Notes are out of scope for v1. That removes stories 35–46 and the whole notes data layer, UI and visibility model — 17 tasks and 29 hours. Two consequences carried into the tasks below: viewers are now strictly read-only, since their own private notes were the sole exception; and the ingredient detail page (M8.19) is built so a notes section can be added beneath it without restructuring the page.
 
 Also deferred: edit history, viewer spell approval, compendium suggestions and merge tooling, GraphQL response caching, and email/password sign-in.
+
+## Execution order
+
+The milestone numbers below are **identifiers, not a schedule**. Tasks are executed in the wave order in this section; a task keeps its ID wherever it runs. M1.21 stays `M1.21` even when it runs eighteenth.
+
+**Why the original order does not work.** The breakdown was written feature-first: each milestone creates its own tables. But every table spreads `...auditColumns`, whose three `*_by` columns reference `users`, created in M2.3. An FK target must exist before the FK, so `users` is the first node of the only valid creation order — and in the original numbering it sits behind ten other tables. That is not a narrow edge case: it already forced three workarounds into shipped code (M1.9 clones an empty template, M1.11 reseeds because `seed()` throws for every scenario, and M1.15 shipped `auditColumns` without the FKs §5 mandates). The wave order below retires all three, and costs no rework, because `src/db/schema/` still contains only `.gitkeep` — no table exists yet, so no retrofit migration is needed.
+
+### The core move: land the DDL early, the policies late
+
+|            | **DDL** (moves early)                                              | **Policies and behaviour** (stays late)                                       |
+| ---------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| Statements | `CREATE TABLE`, columns, types, NOT NULL, CHECK, FKs, indexes, PKs | `ENABLE ROW LEVEL SECURITY`, `CREATE POLICY`, and the service rules they back |
+| Answers    | _What shape is the data?_                                          | _Who may see and change which row?_                                           |
+| Tasks      | M6.2, M4.1, M4.2, M4.4, M4.6, M7.1, M9.2, M10.2, M10.4             | M6.3, M6.4, M6.5, M6.6, M10.3                                                 |
+
+They separate cleanly because they are already different migrations and different tasks. Postgres will happily create a table in one migration and attach a policy in a later one, and nothing about creating `spells` commits you to a visibility model.
+
+The DDL is safe early because §5 already specifies every column, type, enum set and index predicate — writing it in Drizzle is transcription, not design. Additive DDL is inert: a table nobody queries yet changes no behaviour, and under expand/contract this is the free direction. Empty tables are also the cheapest moment for constraints, so land every constraint §5 specifies at **full strength** — NOT NULL, CHECK, enum sets, both partial unique indexes on `ingredients`, composite PKs. Tightening later needs a backfill, an M1.5 acknowledgement line, and can fail on rows that already exist.
+
+The policies must not come early for the opposite reason. A policy written before its service tends not to match it: M6.4's RLS mirrors the role hierarchy `assertMembership` (M6.3) defines and reads the user id from the GUC (M1.19), and the two-layer design only works if both layers agree. Behaviour is also where the real uncertainty lives — whether an owner can read a member's private spell is worth deciding with the service in front of you; column types are not. And RLS actively interferes with seeding: a policy on an empty table is harmless, but a policy on a table you are about to seed will filter your seed. The wave order dodges this deliberately — tables (W3), then seeds run unimpeded (W4), then policies land and are proved against real seeded rows (W5).
+
+### The waves
+
+| Wave                         | Tasks                                                                                                                                       | Why here                                                                                                                                                                    |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1 — FK root**              | M2.2 · M2.3 · MB.5 · MW.1                                                                                                                   | `users` first, because the whole graph roots on it. M2.2 leads so Better Auth's adapter table ownership is settled before anything references `users`.                      |
+| **2 — Write path**           | M1.16 · M1.19 · M1.17 · M1.20 · MW.2                                                                                                        | Needs exactly one table. M1.20 is re-scoped to the finder builder plus its guard, not "edit N finders".                                                                     |
+| **3 — Schema block**         | M6.2 · M4.1 · M4.2 · M4.4 · M4.6 · M7.1 · M9.2 · M10.2 · M10.4 · M1.18 · MW.3                                                               | FK order. M1.18's trigger closes the wave, attaching to every audited table at once. **M10.3 is deliberately excluded** — see below.                                        |
+| **4 — Seed and harness**     | M1.21 · M4.3 · M1.22 · M1.26 · M1.23 · M1.25 · M1.24 · M1.27 · M1.28 · MW.4                                                                 | The payoff wave: retires all three workarounds. M4.3 is pulled ahead of M1.22, which consumes its 52 categories.                                                            |
+| **5 — Authorization**        | M6.3 · M6.4 · M10.3 · M6.5 · M6.6 · MW.5                                                                                                    | All seven workspace-scoped tables now exist, so M6.4's RLS sweep is complete rather than partial.                                                                           |
+| **6 — Auth surface**         | M2.1 · M2.4 · M2.5 · M2.6 · M2.7 · M2.9 · M2.10 · MW.6                                                                                      | M2.8 defers to Wave 10. M2.10 needs M2.7's session helper and M0.30's Ladle build, both of which exist by the end of this wave.                                             |
+| **7 — GraphQL**              | M3.1 → M3.10, internal order unchanged · MW.7                                                                                               | M3.8's "representative service" and M3.10's `me` both have real targets now.                                                                                                |
+| **8 — Compendium + admin**   | M4.5 · M4.7 · M4.8 · M8.2 · M8.5 · M8.8 · MB.11 · M5.1 · M5.2 · M5.3 · M5.4 · M5.9 · M5.10 · M5.5 · M5.6 · M5.7 · M5.8 · M8.6 · M8.7 · MW.8 | M5.5/M5.6 read and write through GraphQL, which is M8.5/M8.8 — so those move ahead of M5.5. M5.9/M5.10 build `IngredientForm`, which M5.5 consumes, so they precede it too. |
+| **9 — Workspaces**           | M6.1 · M6.7 · M6.8 · M6.9 · M6.10 · M6.11 · M6.12 · M6.13 · M6.14 · M6.15 · M6.16 · MB.10 · M6.18 · MW.9                                    | M6.18 needs MB.10's display-name loader to resolve without an N+1.                                                                                                          |
+| **10 — Invitations**         | M7.2 → M7.7 · M2.8 · MW.10                                                                                                                  | M2.8 moves here: "an invited user lands in the workspace they were invited to" is unmeetable before M7.5.                                                                   |
+| **11 — Ingredient services** | M8.1 · M8.3 · M8.4 · M9.1 · M9.3 · M9.4 · M9.5 · MB.9 · MW.11                                                                               | M9's data layer moves ahead of M8's UI. This is what fixes M8.13, M8.14 and M8.18.                                                                                          |
+| **12 — Ingredient UI**       | M8.9 → M8.12 · M8.13 · M8.13a · M9.7 · M9.8 · M8.14 · M8.15 → M8.19 · M9.6 · M9.9 → M9.12 · MB.7 · MW.12                                    | M8.13a lands before its three consumers. M9.7 and M9.8 land before M8.14, which consumes both — see the ownership table below.                                              |
+| **13 — Grimoire**            | M10.1 · M10.5 → M10.22 · MB.6 · MB.8 · MW.13                                                                                                | MB.8's Zod schema precedes M10.10; MB.6's recipe view precedes M10.22's print layout.                                                                                       |
+| **14 — Sweep close-out**     | M6.17 · MW.14                                                                                                                               | "Every mutating service" is a finite existing set only now.                                                                                                                 |
+| **15 — Launch**              | M11.1 → M11.14 · MW.15                                                                                                                      | Unchanged.                                                                                                                                                                  |
+
+**Unscheduled by design:** M7.A.1 (require merge queue) is trigger-based, not wave-based — do it when a second contributor arrives or PR volume makes untested merge combinations a real risk, whichever comes first. It is not a prerequisite for anything.
+
+### Breaking the M1.23 ↔ M10.3 cycle
+
+There is no cycle at task granularity, only at milestone granularity: M1.23 needs the `spells` **table** (M10.2), while M10.3 adds the `visibility` **column**. Splitting across waves linearises it — M10.2 (W3) → M1.23 (W4) → M10.3 (W5) — and M10.3's criterion "existing seeded spells migrate to workspace visibility" becomes genuinely testable, which is the signal it wanted this order all along.
+
+M10.3 stays whole in Wave 5 rather than moving its column into Wave 3. Its PR needs the M1.5 destructive-DDL acknowledgement line, because it adds NOT NULL to a table that now has rows. That is the deliberate price of keeping the migration criterion meaningful, and it makes M10.3 the first migration to exercise expand/contract for real — worth rehearsing once on seed data rather than discovering it later on production rows.
+
+### The sweep-task rule
+
+> A sweep that attaches to **database objects** lands once, immediately after the last object it covers, protected by a catalogue-introspection test — never by a later "re-assert" task. A sweep that attaches to **code** lands as a mechanism plus a mechanical guard, as early as the mechanism can be written, and is adopted by each later task in that task's own PR — never retrofitted.
+
+The tell is whether the thing can be made _impossible_ or only _absent_. DDL can only be added retroactively, so wait for the objects; code conventions can be made impossible prospectively, so land the guard first.
+
+- M1.18's trigger → end of Wave 3, guarded by a `pg_trigger` coverage test
+- M6.4's RLS → Wave 5, guarded by a `pg_class`/`pg_policy` test asserting every table with a `workspace_id` has RLS enabled and at least one policy
+- M1.20 soft-delete, M1.17/M3.9 lint, M3.6 pagination → land the mechanism early, guard via lint fixture and the M3.4 SDL snapshot
+- M6.17 is the one exception: it is a _census_, not an enforcer — M6.3 does the enforcing, adopted per-PR — and a census of an incomplete set is worthless, so it closes at Wave 14
+
+### A table task, then a behaviour task
+
+The ordering bug was never really a scheduling mistake; it was a **granularity** mistake that scheduling exposed. Milestones were treated as the unit of dependency when the task is. So: **split every table from the behaviour attached to it, and schedule them separately.** The breakdown already cleaves at the right boundaries almost everywhere — M10.2 and M10.3 are already two tasks, M6.2 and M6.4 likewise. The one genuine bundle is M9.2, which carries `inventory_items` _and_ the shared unit-to-dimension module; that module is behaviour riding along with DDL, and is called out here as the exception rather than silently split.
+
+### Wave close-out and the MW namespace
+
+CLAUDE.md requires a compression pass at the end of every milestone. Under the wave order a milestone is no longer a contiguous block of work — M4's tasks land in waves 3, 4, 8 and 11 — so a pass anchored to a milestone would compress documentation for work that shipped many weeks apart. The pass is therefore anchored to the **wave**: `MW.<n>` closes wave _n_, compressing the live docs and archiving that wave's transcripts and decision records. This replaces the eleven milestone-anchored compression tasks (M1.29, M2.11, M3.11, M4.9, M5.11, M6.19, M7.8, M8.20, M9.13, M10.23, M11.15), which are retired.
 
 ## M0 — Repo, tooling & environment
 
@@ -416,7 +485,7 @@ _Acceptance criteria:_
 - Dependabot PRs target staging and skip the author-exempt check
 - Rulesets identical on both branches
 
-_*M0.23 — Port .actrc and make act-* targets_* · 1h
+**M0.23 — Port .actrc and make act-\* targets** · 1h
 
 _Story:_ As a developer, I want to run workflows locally so that CI debugging does not require pushing commits.
 
@@ -493,6 +562,54 @@ _Acceptance criteria:_
 - Production URL serves the page
 - Build time recorded in claude-docs as a baseline
 
+### Doc archive and workshop gates
+
+Added after the original breakdown, once the docs and the workshop had enough in them to need gating.
+
+**M0.34 — Stand up the doc archive and compress the working docs** · 2h
+
+_Story:_ As a developer, I want a write-once archive and a compressed set of live docs so that a stale statement cannot outlive the milestone that made it true.
+
+Create `claude-docs/archive/<mN>/` and run the first compression pass. The archive is written, not read: nothing may end up living only in it, so every settled decision and binding constraint moves into a live doc before its transcript is archived.
+
+_Acceptance criteria:_
+
+- `claude-docs/archive/` exists with the M0 pass inside it
+- Every live doc statement is true as of M0's end
+- No live doc sends the reader into the archive to understand the system
+- An already-archived file is never edited; a repeat pass writes a dated subdirectory
+
+**M0.35 — Fix the stale 'auto' comment above defaultState: 'dark'** · 1h
+
+_Story:_ As a developer, I want comments to match the code beneath them so that the next reader is not misled about the default.
+
+_Acceptance criteria:_
+
+- The comment describes the actual default
+- No other comment in the file contradicts the code
+
+**M0.36 — Wire check:stories and workshop:build into CI** · 2h
+
+_Story:_ As a developer, I want the story gates enforced in CI so that a PR cannot skip them by skipping the local hook.
+
+Both checks run in pre-commit **and** in CI's build job. `check:stories` catches a missing story; `workshop:build` catches one that fails to bundle.
+
+_Acceptance criteria:_
+
+- Both run in CI's build job
+- A component without a story fails CI
+- A story that fails to bundle exits non-zero
+- The gate is scoped to `src/components/`
+
+**M0.37 — Document the undocumented styling and workshop files** · 2h
+
+_Story:_ As a developer, I want every styling and workshop file to have a doc so that the conventions are discoverable without reading the source.
+
+_Acceptance criteria:_
+
+- Each styling and workshop file is covered in `claude-docs/`
+- The docs match the files as they exist
+
 ## M1 — Database foundation
 
 _28 tasks · 45 hours_
@@ -501,8 +618,8 @@ _28 tasks · 45 hours_
 
 - M1.5 must land before any migration touching an existing column. It is the reason no down migrations exist in this repo.
 - M1.21 and M1.22 block M1.27, which is in turn what makes M1.9 a clone rather than a setup routine.
-- M1.16 blocks every service from M2 onward. No feature code writes to the database before the choke point exists, or audit columns start rotting immediately.
-- This milestone gates the entire project. Nothing in M2+ should start before it closes.
+- M1.16 blocks every service that writes. No feature code writes to the database before the choke point exists, or audit columns start rotting immediately.
+- This milestone does not execute as a block. Its write path (M1.16, M1.19, M1.17, M1.20) runs in Wave 2 on one table; its seed and harness tasks (M1.21 through M1.28) cannot run until Wave 4, because every one of them writes rows into tables that Wave 3 creates. M1.18’s trigger closes Wave 3 so it attaches to every audited table at once.
 
 ### Neon and Drizzle
 
@@ -756,11 +873,12 @@ _Acceptance criteria:_
 
 _Story:_ As a user, I want deleted records to stay recoverable but invisible so that a mistaken delete is not permanent and does not clutter my lists.
 
-Every exported finder applies `deleted_at IS NULL`. No call site does its own filtering. Document the partial unique index convention: without the WHERE clause, deleting a record permanently blocks reusing its name.
+Build the finder **builder** that applies `deleted_at IS NULL`, plus the mechanical guard that fails a finder written without it. This is a code sweep, so it lands as a mechanism early and each later task adopts it in that task’s own PR — not as a retrofit pass over N finders that do not exist yet. At Wave 2 there is exactly one table, which is the point: the guard exists before there is anything to forget. Document the partial unique index convention too — without the WHERE clause, deleting a record permanently blocks reusing its name.
 
 _Acceptance criteria:_
 
 - No exported query can return a soft-deleted row
+- A finder written without the builder fails the guard, not review
 - A dedicated escape hatch exists for admin restore paths and is clearly named
 - Convention documented in claude-docs with an example index
 
@@ -777,6 +895,7 @@ _Acceptance criteria:_
 - Seed runs from a script, a test, and the Docker init hook
 - Re-running is idempotent or explicitly truncates first
 - minimal produces exactly one admin and one user
+- The bootstrap user is inserted with the fixed UUID MB.5 defines, as a single self-satisfying statement, not a second generated id
 
 **M1.22 — Standard scenario with fixture users A–E** · 2h
 
@@ -819,7 +938,7 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want factories with sensible defaults so that tests state only what they are actually testing.
 
-Add `fixtures/` factories — `makeIngredient`, `makeNote`, `makeSpell`, `makeWorkspace` — with overrides, so tests read `makeIngredient({ categories: ['protection'] })`.
+Add `fixtures/` factories — `makeIngredient`, `makeSpell`, `makeWorkspace` — with overrides, so tests read `makeIngredient({ categories: ['protection'] })`.
 
 _Acceptance criteria:_
 
@@ -1002,18 +1121,35 @@ _Acceptance criteria:_
 - Ends with a written follow-up task ready to schedule
 - No implementation in this PR
 
+**M2.10 — Enable Ladle on staging, gated behind auth** · 2h
+
+_Story:_ As a developer, I want the component workshop reachable on staging so that reviewers can see real component states without pulling the branch, without turning Ladle into a public, unauthenticated surface.
+
+`workshop:build` (M0.30) writes only a gitignored static build today; nothing publishes it anywhere reachable outside CI. Deploy that build to a staging URL and gate it behind the session check M2.7 introduces — an unauthenticated visitor redirects to `/sign-in` exactly like any other protected route. Admin only. Staging carries the same protections as production; local development stays the only relaxed environment, so `npm run workshop` on 61000 stays unauthenticated. Needs M0.30 and M2.7.
+
+_Acceptance criteria:_
+
+- The static build deploys to a reachable staging URL on every staging deploy
+- An unauthenticated request redirects to `/sign-in`, same as any other protected route
+- Only admins reach it once authenticated
+- Local `npm run workshop` and `make workshop` remain unauthenticated
+- No application data or GraphQL access is reachable through the workshop route
+- The gating mechanism is recorded in claude-docs beside the Ladle setup notes
+
+_A developer/product user type that can view this without full admin rights is v2, not this task._
+
 ## M3 — GraphQL foundation
 
 _10 tasks · 17 hours_
 
 **Sequencing**
 
-- Sits ahead of all feature work so that every request in the app — admin included — uses one endpoint, one context and one auth path. There is no second access convention anywhere in this project.
+- Sits ahead of all feature work so that every request in the app — admin included — uses one endpoint, one context and one auth path. There is no second access convention anywhere in this project. It runs whole, in Wave 7, after the schema and the auth surface exist and before any resolver needs them.
 - M3.2 (Pothos builder and context) blocks every resolver from M4 onward.
 - M3.5 (codegen) must land before any client-side query work.
 - M3.6 (pagination helper) blocks every list query in the project. Landing it late means retrofitting bounds onto queries already written without them.
 - M3.8 fixes the access boundary for the whole project and M3.9 enforces it. Land both before feature work, or the boundary erodes one convenient import at a time.
-- The three DataLoaders are deliberately not here. Each sits with the schema it loads: M4.8, M6.17 and M10.10.
+- The DataLoaders are deliberately not here. Each sits with the schema it loads: M4.8 (categoriesByIngredient), M6.11 (membersByWorkspace), MB.9 (ingredientsById) and MB.10 (usersById).
 
 ### GraphQL server
 
@@ -1161,9 +1297,10 @@ _8 tasks · 13 hours_
 **Sequencing**
 
 - M4.1 through M4.5 block the compendium service in M5.
-- M4.6 blocks M4.7, which blocks the duplicate warning in M5.9. Hand-entering a large compendium without duplicate detection is how you end up with three spellings of mugwort.
+- M4.6 blocks M4.7, which blocks the duplicate warning in M5.10. Hand-entering a large compendium without duplicate detection is how you end up with three spellings of mugwort.
 - M4.8 (categoriesByIngredient loader) needs the schema from M4.1 and the builder from M3.2, which is why it sits here rather than in the GraphQL milestone.
-- Nothing here is workspace-scoped, so it does not wait on M6.
+- This milestone splits across three waves. Its tables (M4.1, M4.2, M4.4, M4.6) land in Wave 3; its category seed (M4.3) opens Wave 4 because M1.22 consumes its 52 categories; its services and loader (M4.5, M4.7, M4.8) wait for Wave 8.
+- It is not true that nothing here is workspace-scoped: M4.1 declares `workspaceId` and M4.7 scopes its search to the current workspace, so the services half genuinely depends on M6.
 
 ### Schema and seed
 
@@ -1280,8 +1417,9 @@ _10 tasks · 16 hours_
 
 - This milestone exists to give you a manual data-entry and testing surface early. Once it closes you can populate the compendium by hand instead of editing seed files.
 - Admin uses the same GraphQL endpoint, context and session handling as every other page. No server actions, no bespoke route handlers.
-- M5.8 and M5.9 (IngredientForm) are reused by the modals in M8. Build the form standalone and wrap it later, rather than building it inside a modal.
-- Depends on M2.3, all of M3 and all of M4. Depends on nothing in M6 or later.
+- M5.9 and M5.10 (IngredientForm) are reused by the modals in M8. Build the form standalone and wrap it later, rather than building it inside a modal.
+- Depends on M2.3, all of M3, and M4’s schema and services. It does **not** stand clear of M6: M5.4’s admin guard reads the role M2.3 adds, and M5.5/M5.6 read and write through the GraphQL surface M8.5 and M8.8 build, so those precede M5.5 within Wave 8.
+- Within the milestone, M5.9 and M5.10 build `IngredientForm` and M5.5 consumes it, so the form is built before the page that wraps it — the reverse of the original numbering.
 
 ### Compendium service
 
@@ -1330,7 +1468,7 @@ _Acceptance criteria:_
 
 _Story 18 — As a site admin, I want an admin area only I can reach, so that I can curate shared data without exposing the surface to anyone else._
 
-`/admin` layout asserting `users.role = admin`. A signed-in non-admin gets a clear 'not authorized' page, not a 404 — `/admin` is a guessable path on every site ever built, so pretending it does not exist buys no secrecy and only makes the app look broken to someone who typed it out of curiosity. This differs from `/coven/[slug]` in M6.11, where the existence of a workspace is genuinely private and 404 is the right answer. Admin follows the same access boundary as the rest of the site: server-rendered reads through services, every mutation through GraphQL.
+`/admin` layout asserting `users.role = admin`. A signed-in non-admin gets a clear 'not authorized' page, not a 404 — `/admin` is a guessable path on every site ever built, so pretending it does not exist buys no secrecy and only makes the app look broken to someone who typed it out of curiosity. This differs from `/coven/[slug]` in M6.10, where the existence of a workspace is genuinely private and 404 is the right answer. Admin follows the same access boundary as the rest of the site: server-rendered reads through services, every mutation through GraphQL.
 
 _Acceptance criteria:_
 
@@ -1433,7 +1571,9 @@ _18 tasks · 32 hours_
 
 - M6.2 (schema) blocks everything else in this milestone.
 - M6.3 (assertMembership) blocks every workspace-scoped service from M8 onward. Land it before any workspace feature work.
-- M6.4 and M6.5 should follow M6.3 immediately, while the authorization model is fresh. RLS written months later tends not to match the service layer.
+- M6.4 and M6.5 follow M6.3 immediately, while the authorization model is fresh. RLS written months later tends not to match the service layer — and the inverse holds too, which is why the policies wait for Wave 5 rather than shipping with the tables in Wave 3.
+- M6.4’s sweep is complete rather than partial only because it runs in Wave 5, after all seven workspace-scoped tables exist. Run at its original position it would have covered whichever tables happened to exist that week.
+- M6.4 lands **after** the seeds. A policy on a table you are about to seed will filter your seed, so the mechanism — a `BYPASSRLS` seed role, or setting `app.current_user_id` to the bootstrap user around the seed — must be decided when M6.4 is written, not discovered when it breaks.
 - M6.3, M6.4 and M6.5 are three different things: the application check, the database check, and the proof that the second works without the first. None is redundant.
 - M6.11 and M6.12 land before M6.13 because the members page composes both.
 - M6.8 must return a reason, not a bare refusal, or M6.16 cannot offer the right remedy.
@@ -1483,13 +1623,14 @@ _Acceptance criteria:_
 
 _Story:_ As an owner, I want the database itself to enforce workspace boundaries so that an application bug cannot leak my grimoire.
 
-Migration adding Row-Level Security policies to every workspace-scoped table. RLS is a Postgres feature that attaches a rule to a table so the database itself filters which rows a query may read or change — enforcement below the application, so a bug in a service cannot leak another workspace's data. The policies need to know who is asking, which comes from the GUC set in M1.17. A GUC is Postgres's name for a runtime setting; `SET LOCAL app.current_user_id = '<uuid>'` defines a custom one scoped to the transaction, and a policy reads it back with `current_setting('app.current_user_id')`. Transaction-scoped matters: it cannot leak to the next request sharing a pooled connection.
+Migration adding Row-Level Security policies to every workspace-scoped table. RLS is a Postgres feature that attaches a rule to a table so the database itself filters which rows a query may read or change — enforcement below the application, so a bug in a service cannot leak another workspace's data. The policies need to know who is asking, which comes from the GUC set in M1.19. A GUC is Postgres's name for a runtime setting; `SET LOCAL app.current_user_id = '<uuid>'` defines a custom one scoped to the transaction, and a policy reads it back with `current_setting('app.current_user_id')`. Transaction-scoped matters: it cannot leak to the next request sharing a pooled connection.
 
 _Acceptance criteria:_
 
 - RLS enabled on each workspace-scoped table
 - Policies read the user from current_setting('app.current_user_id'), not from anywhere else
 - Migrations and seeds still run under the policies
+- The full seed runs green under RLS, by a mechanism chosen when this task is written — a BYPASSRLS seed role, or setting app.current_user_id to the bootstrap user around the seed — not discovered when it breaks
 - The setting does not survive past the transaction that set it
 - Policy names follow one convention
 - RLS and GUC are explained once in claude-docs so the next reader need not look them up
@@ -1571,7 +1712,7 @@ _Acceptance criteria:_
 
 _Story:_ As a user, I want a workspace-scoped layout so that every page below it knows which workspace it is in without guessing.
 
-`/coven/[slug]` layout resolving the slug to a workspace and asserting membership. Non-members get 404, not 403, so workspace existence is not disclosed — the opposite call to `/admin` in M5.5, and for a reason: a slug is a guess about someone's private data, whereas `/admin` is a fixed path everyone already knows.
+`/coven/[slug]` layout resolving the slug to a workspace and asserting membership. Non-members get 404, not 403, so workspace existence is not disclosed — the opposite call to `/admin` in M5.4, and for a reason: a slug is a guess about someone's private data, whereas `/admin` is a fixed path everyone already knows.
 
 _Acceptance criteria:_
 
@@ -1828,7 +1969,7 @@ _19 tasks · 35 hours_
 
 _Stories 14–16 — As a developer, I want the compendium browsing stories expressed as failing tests before implementation, so that done is measured against the specification._
 
-Create `tests/acceptance/02-compendium.test.ts` with failing tests naming stories 14 through 16. Stories 17 and 18 are covered by the admin scaffold in M4; story 19 by the workspace isolation tests in M5.
+Create `tests/acceptance/02-compendium.test.ts` with failing tests naming stories 14 through 16. Stories 17 and 18 are covered by the admin scaffold in M5.1; story 19 by the workspace isolation tests in M6.6.
 
 _Acceptance criteria:_
 
@@ -1984,7 +2125,7 @@ _Acceptance criteria:_
 
 _Story 27 — As a workspace member, I want to filter to only our own ingredients or only compendium ones, so that I can review what we have added ourselves._
 
-Form, element and in-stock-only filters, plus local-versus-compendium. All filter state lives in the URL query string so a filtered view is shareable and survives reload.
+Form and element filters, plus the URL-state mechanism every other filter chip plugs into. All filter state lives in the URL query string so a filtered view is shareable and survives reload. Source (local versus compendium) and in-stock-only are **not** here — both need M9 data, so M9.7 owns source and M9.8 owns stock, each adopting this task’s URL-state mechanism.
 
 _Acceptance criteria:_
 
@@ -1992,17 +2133,34 @@ _Acceptance criteria:_
 - Reloading restores the exact view
 - Back button steps through filter changes
 - Filters combine correctly with search text
+- The URL-state mechanism is reusable by a filter this task does not itself define
+
+**M8.13a — SafetyNote component for ingredient caution text** · 1h
+
+_Stories 23 and 53 — As a workspace member, I want an ingredient's caution text set apart from ordinary description copy, so that I notice a safety warning instead of skimming past it._
+
+Standalone presentational component (`src/components/SafetyNote/`) rendering `safetyNotes` as a labelled caution block — border-accent treatment with a CAUTION kicker, per the M0.6 palette decision's `.safety` styling. Extracted as its own component because three call sites need the identical treatment: the card badge (M8.14), the detail page's safety-notes field (M8.19), and the spell-builder toxic-ingredient warning (M10.18). Without it, each would restyle the same warning independently. **This task owns safety presentation for the whole project.**
+
+_Acceptance criteria:_
+
+- Renders nothing when safetyNotes is empty or absent
+- Meaning conveyed by text and a caution label, not colour alone
+- Semantic markup so assistive tech announces it as distinct from surrounding body text
+- axe clean, keyboard reachable
+- `index.stories.tsx` present per component convention
+- Adopted by M8.14, M8.19 and M10.18 in place of any ad hoc safety-note rendering
 
 **M8.14 — IngredientCard with safety and low-stock badges** · 2h
 
 _Stories 23 and 53 — As a workspace member, I want stock and safety flagged on the card, so that I notice a toxic ingredient or an empty jar without opening it._
 
-Card component using the `badge()` mixin, showing safety warnings and stock state. Badges convey meaning by text and shape, not colour alone.
+Card shell composing the safety and stock treatments the two tasks before it own: `SafetyNote` from M8.13a for the caution block, and M9.8’s low and out-of-stock badges. This task owns the card layout and nothing else — it must not restyle either treatment. Badges convey meaning by text and shape, not colour alone.
 
 _Acceptance criteria:_
 
-- Safety badge appears when safetyNotes is present
-- Low and out-of-stock states are distinct
+- The card renders M8.13a’s SafetyNote when safetyNotes is present, unmodified
+- The card renders M9.8’s stock badges, unmodified
+- No safety or stock styling is redefined in this component
 - Meaning does not depend on colour alone
 - axe clean, keyboard reachable
 
@@ -2178,12 +2336,13 @@ _Acceptance criteria:_
 
 _Story 27 — As a workspace member, I want to filter my ingredients by where an entry came from, so that I can review what we added ourselves._
 
-Filter chip distinguishing the two sources, reflected in URL state. This is what makes one page correct rather than two.
+Filter chip distinguishing the two sources, plus the in-stock-only filter, both reflected in URL state through the mechanism M8.13 builds. This task owns source and stock filtering because both need M9 data; M8.13 owns form and element and the URL-state mechanism itself. This is what makes one page correct rather than two.
 
 _Acceptance criteria:_
 
 - Three states: all, local only, compendium only
-- Reflected in the URL
+- In-stock-only filters against M9.2’s quantities
+- Both reflected in the URL, through M8.13’s mechanism rather than a second one
 - Local entries are badged in every state
 - Story 27 acceptance test passes
 
@@ -2262,7 +2421,7 @@ _22 tasks · 37 hours_
 
 **Sequencing**
 
-- M10.2 through M10.4 (schema and visibility) first. Visibility is a column and a policy, not a filter added later.
+- Schema first is true only within this milestone. Across the project M10.2 and M10.4 land in Wave 3 with the rest of the tables, and M10.3 waits for Wave 5 with the rest of the policies. Visibility is a column and a policy, not a filter added later — but the column and the policy do not have to ship together, and here they deliberately do not.
 - M10.6 (visibility rules) blocks M10.9, M10.11 and M10.13. Every list, search and page must filter in SQL, never after fetching.
 - M10.7 and M10.8 (pure comparison functions) block the comparison panel in M10.17.
 - M10.15 reuses IngredientSearch from M8. If it needs changes, change it there rather than forking it.
@@ -2306,6 +2465,7 @@ _Acceptance criteria:_
 - RLS policy admits a private spell only to its author
 - The policy is proved with the service check stubbed, as in M6.5
 - Existing seeded spells migrate to workspace visibility
+- The PR carries the M1.5 destructive-DDL acknowledgement line: this adds NOT NULL to a table that now holds seeded rows
 
 **M10.4 — spell_categories join table** · 1h
 
@@ -2379,7 +2539,7 @@ _Acceptance criteria:_
 
 _Story 52 — As a workspace member, I want the comparison available from the API, so that it is computed once rather than reimplemented in each view._
 
-Add the queries exposing categories, derivedCategories and categoryGaps, with batched ingredient and category resolution. The grimoire list paginates through the M3.6 helper. Visibility filtering happens in the query, not after fetching — the same trap the note loader had, and the reason a private spell must never reach the resolver in the first place.
+Add the queries exposing categories, derivedCategories and categoryGaps, with batched ingredient and category resolution. The grimoire list paginates through the M3.6 helper. Visibility filtering happens in the query, not after fetching. Fetching every spell and dropping the private ones in the resolver is the trap here: it is invisible in the response and wrong only when someone inspects the rows the resolver actually loaded, which is why a private spell must never reach the resolver in the first place.
 
 _Acceptance criteria:_
 
@@ -2509,7 +2669,7 @@ _Acceptance criteria:_
 
 _Story 53 — As a workspace member, I want a warning when an ingredient is toxic or unsafe to burn, so that I do not harm myself or someone I give it to._
 
-Surface safetyNotes prominently when such an ingredient is added, without blocking the addition.
+Surface safetyNotes prominently when such an ingredient is added, without blocking the addition. Reuse M8.13a’s `SafetyNote` component rather than restyling the warning — this is a different surface from the ingredient card (M8.14), not a duplicate of it, and the treatment must stay identical across both.
 
 _Acceptance criteria:_
 
@@ -2578,7 +2738,7 @@ _14 tasks · 22 hours_
 
 **Sequencing**
 
-- Every other milestone must be complete. This is verification, not construction.
+- Every other wave must be complete. This is mostly verification, but not purely: M11.9 and M11.10 build net-new UI, so do not schedule them as if they were a checklist pass.
 - M11.8 (axe sweep) depends on every page existing.
 - M11.13 (full story checklist green) gates M11.14 (release).
 
@@ -2763,3 +2923,159 @@ _Acceptance criteria:_
 - Migrations applied to production before traffic
 - Production smoke check passes
 - main-sync branch opened to bring main back down
+
+## M7.A — PR gates
+
+_1 task · 1 hour · unscheduled by design_
+
+Not a wave. This gate is trigger-based: do it when a second contributor arrives, or when PR volume makes an untested merge combination a real risk. Nothing depends on it.
+
+**M7.A.1 — Enable Require merge queue on main and staging** · 1h
+
+_Story:_ As a developer, once other people are contributing, I want a merge queue so that `main` and `staging` never receive an untested merge combination.
+
+Split off from M0.21, which ports `merge-queue.yml` but deliberately leaves the branch-protection switch off during solo development — a required queue forces the full CI suite before every merge, which is wasted time with one developer and no users. Enable **Require merge queue** in Settings → Branches on both `main` and `staging`.
+
+_Acceptance criteria:_
+
+- Merge queue enabled on `main` and `staging`
+- A queued PR triggers the workflow
+- The additional required checks from M0.22 are in place
+- Setup step documented in claude-docs
+
+## MB — Bugfixes and gap tasks
+
+Work that was not in the original breakdown. `MB.*` exists so a defect or a missing dependency can be scheduled without renumbering an immutable ID. MB.1 through MB.4 are merged; MB.5 through MB.11 were minted by the re-sequencing audit.
+
+| ID    | Task                                                      | Status  | Needed by    |
+| ----- | --------------------------------------------------------- | ------- | ------------ |
+| MB.1  | Fix prefers-reduced-motion facet swap in ThemeToggle      | merged  | —            |
+| MB.2  | Fix sun facet swinging in on first paint in light mode    | merged  | —            |
+| MB.3  | Fix Prettier formatting in `m1.1-neon-branch-strategy.md` | merged  | —            |
+| MB.4  | Stop destructive-ddl scanning non-migration changed files | merged  | —            |
+| MB.5  | Restore `users` FKs on `auditColumns`                     | Wave 1  | every table  |
+| MB.6  | Spell recipe view page                                    | Wave 13 | M10.22       |
+| MB.7  | Application nav shell                                     | Wave 12 | M8.16, M8.17 |
+| MB.8  | Zod schema for spells                                     | Wave 13 | M10.10       |
+| MB.9  | `ingredientsById` DataLoader                              | Wave 11 | M8.5, M9.4   |
+| MB.10 | `usersById` display-name DataLoader                       | Wave 9  | M6.18        |
+| MB.11 | GraphQL field exposing the fuzzy duplicate service        | Wave 8  | M5.10        |
+
+**MB.5 — Restore `users` foreign keys on `auditColumns`** · 2h
+
+_Story:_ As a developer, I want the audit columns to actually reference `users` so that an audit id cannot point at a user who never existed.
+
+M1.15 shipped `auditColumns` **without** the `.references(() => users.id)` FKs that §5 mandates, because `users` did not exist yet. It lands in Wave 1, between M2.3 and every other table: under the original order this would have needed roughly ten FK-adding migrations and backfills, and under the wave order it is a one-file edit whose FKs every Wave 3 table then generates natively.
+
+Three things make this harder than it looks:
+
+- **Circular module init.** `audit.ts` imports `users`; `schema/users.ts` spreads `auditColumns`. Drizzle's `() => users.id` thunk is lazy so this works at runtime, but TypeScript needs the explicit annotation `.references((): AnyPgColumn => users.id)` or it errors with "circularly references itself". If the ESM cycle proves fragile, the fallback is an `auditForeignKeys(t)` helper called from each table's extra-config argument — same DDL, no cycle.
+- **`users` self-references.** `users.created_by → users.id` needs the same annotation.
+- **The root row.** The first user has no pre-existing creator. Postgres checks FKs at statement end, so `INSERT INTO users (id, created_by, updated_by) VALUES ($1,$1,$1)` is self-satisfying.
+
+_Acceptance criteria:_
+
+- All three `*_by` columns reference `users.id`
+- `users` self-reference compiles without a circularity error
+- The bootstrap user inserts successfully as a single self-satisfying statement
+- The bootstrap UUID is fixed and shared with M1.21, not generated twice
+- The stale comment at `src/db/audit.ts:3-5` is corrected — it cites M2.1, and `users` lands in M2.3
+- No retrofit migration is needed for any table created after this task
+
+**MB.6 — Spell recipe view page** · 2h
+
+_Story 56 — As a workspace member, I want to read a saved spell on its own page, so that I can follow it without opening the builder._
+
+`/coven/[slug]/grimoire/[id]`, added to §9's route table by this audit. M10.22 and CLAUDE.md both reference "the spell recipe view" and story 56 is about _reading_ a spell, but §9 had no spell detail route — `/grimoire/new` is the builder, and you cannot print a saved spell from it. This is the page M10.22 attaches print styles to.
+
+_Acceptance criteria:_
+
+- Route resolves a spell by id within the workspace
+- Visibility is enforced in SQL: a private spell is reachable only by its author
+- A non-member receives 404, consistent with the rest of `/coven/[slug]`
+- Ingredients render in layer order with quantities
+- The page is the only view M10.22 styles for print
+
+**MB.7 — Application nav shell** · 2h
+
+_Story:_ As a user, I want one persistent navigation frame so that every page is reachable from every other page.
+
+`AppShell`, added to §9's Components list by this audit. M8.16 and M8.17 require the add and edit modals to be "reachable from the main nav on any page", but no task and no route built an app-wide nav — `WorkspaceSwitcher` (M6.9) and the coven layout (M6.10) do not cover it, and both compendium and ingredient detail sit outside `/coven/` entirely.
+
+_Acceptance criteria:_
+
+- Wraps every signed-in page, inside and outside `/coven/`
+- Carries the primary nav, the `WorkspaceSwitcher` and the global add/edit affordances
+- The coven layout nests inside it and adds only workspace-scoped chrome
+- Nav survives navigation between workspace-scoped and global pages
+- Admin entry appears only for admins
+- axe clean, keyboard navigable
+
+**MB.8 — Zod schema for spells** · 1h
+
+_Story:_ As a developer, I want one validation schema for spells so that the builder and the mutation cannot disagree about what is valid.
+
+M4.5 covers ingredient and category only. M10.10 needs the spell equivalent.
+
+_Acceptance criteria:_
+
+- One schema shared by client and server
+- Covers title, visibility, layers, quantities and units
+- Unit validation imports M9.2's shared unit-to-dimension module rather than keeping its own list
+- Rejects a visibility value outside `private` and `workspace`
+
+**MB.9 — `ingredientsById` DataLoader** · 1h
+
+_Story:_ As an operator, I want ingredient resolution batched so that a list query costs one round trip rather than one per row.
+
+M8.5 and M9.4 both assume batched ingredient resolution; no task built the loader. Constructed per request, never at module level.
+
+_Acceptance criteria:_
+
+- One query per batch, asserted by query count
+- Constructed per request
+- Soft-deleted rows are not returned
+- A missing id resolves to null rather than throwing
+
+**MB.10 — `usersById` display-name DataLoader** · 1h
+
+_Story:_ As a workspace member, I want the last-edited-by name resolved efficiently so that a long list does not issue one query per row.
+
+M6.18 requires the display name to resolve "without an N+1" and no loader existed.
+
+_Acceptance criteria:_
+
+- One query per batch, asserted by query count
+- Constructed per request
+- Returns display name only, never the email address
+- A deleted user still resolves to a stable display value
+
+**MB.11 — GraphQL field exposing the fuzzy duplicate service** · 1h
+
+_Story 16 — As a workspace member, I want the duplicate check available from the client, so that the form can warn me as I type._
+
+M4.7 builds the service; M5.10's debounced client lookup needs it exposed through GraphQL. Without this field M5.10 has nothing to call.
+
+_Acceptance criteria:_
+
+- Field returns compendium and current-workspace matches only
+- Threshold matches M4.7's, not a second constant
+- Bounded by the M3.6 pagination helper
+- Authorization is enforced in the service, not the resolver
+
+## MW — Wave close-out
+
+_15 tasks · 1 hour each_
+
+One per wave. Each compresses the live docs so every statement is true as of that wave's end, and moves that wave's transcripts and decision records into `claude-docs/archive/`.
+
+These replace the eleven milestone-anchored compression tasks (M1.29, M2.11, M3.11, M4.9, M5.11, M6.19, M7.8, M8.20, M9.13, M10.23, M11.15), which are retired: a milestone no longer executes as a contiguous block, so a pass anchored to one would compress documentation for work that shipped weeks apart.
+
+Each `MW.<n>` carries the same acceptance criteria:
+
+- Every statement in every live doc is true as of wave _n_'s end
+- Forward-looking rules that still bind later work are kept, not trimmed for reading like background
+- History that is still true is kept
+- Nothing ends up living only in the archive
+- Text leaving a live doc moves to `claude-docs/archive/`; an already-archived file is never edited
+- Where a doc and the code disagree, which one is wrong is established before they are reconciled

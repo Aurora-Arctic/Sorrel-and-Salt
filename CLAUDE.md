@@ -2,7 +2,7 @@
 
 Guidance for Claude Code working in this repository.
 
-`claude-docs/DESIGN.md` is the specification and `claude-docs/TASKS.md` is the work breakdown (190 tasks, 12 milestones; `TASKS.csv` beside it is the same breakdown exported for a project tracker). This file carries the rules that apply to _every_ task; the section references below (§n) point into `DESIGN.md`, and milestone references (M0.1) into `TASKS.md`. When this file and the design doc disagree, the design doc wins — and fix this file.
+`claude-docs/DESIGN.md` is the specification and `claude-docs/TASKS.md` is the work breakdown (`TASKS.csv` beside it is the same breakdown exported for a project tracker). TASKS.md is corrected in place when it is wrong — "frozen" means not re-scoped, not never-corrected. Its **Execution order** section, not its milestone numbering, is the schedule: task IDs are immutable identifiers and several milestones deliberately execute split across waves. This file carries the rules that apply to _every_ task; the section references below (§n) point into `DESIGN.md`, and milestone references (M0.1) into `TASKS.md`. When this file and the design doc disagree, the design doc wins — and fix this file.
 
 ---
 
@@ -112,16 +112,18 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 ## Conventions
 
 - **One task per PR.** Do not combine tasks, even small adjacent ones. Every task is sized 1–2h and reviewable in under 15 minutes.
+- **A table task, then a behaviour task.** Never bundle `CREATE TABLE` with the policy or service that governs it. DDL is fully specified by §5, is inert until something queries it, and is cheapest to constrain while the table is empty — so it lands early. Policies and services carry the real uncertainty and must be written against each other, so they land late. The unit of dependency is the task, not the milestone; treating the milestone as the unit is what produced the original ordering bug.
+- **The sweep-task rule.** A sweep that attaches to **database objects** lands once, immediately after the last object it covers, protected by a catalogue-introspection test — never by a later "re-assert" task. A sweep that attaches to **code** lands as a mechanism plus a mechanical guard, as early as the mechanism can be written, and is adopted by each later task in that task's own PR — never retrofitted. The tell: can the thing be made _impossible_, or only _absent_?
 - A task is done when every acceptance criterion is demonstrably met — not when the code appears to work.
 - **Port, don't rewrite from memory.** The source repo for all ports is `resume-2026`.
 - **Components:** `src/components/<Name>/` with `index.tsx`, `index.scss`, `index.test.tsx`, imported `from '../components/IngredientCard'`.
 - **Every standalone component ships an `index.stories.tsx`** in the same directory — no exceptions; the Ladle workshop discovers components by that file. `check:stories` catches a missing story, `workshop:build` catches one that fails to bundle, and both run in pre-commit **and** in CI's build job, so a PR can't skip either by skipping the local hook. The gate is scoped to `src/components/`; `.ladle/*.stories.tsx` is the one non-component location. Stories carry no test ids and no snapshots. Detail: [`claude-docs/workshop.md`](claude-docs/workshop.md).
 - **Sass:** modern module system only — `@use '../../scss/variables' as *;`, never `@import`. Shared partials in `src/scss/` are `@use`'d directly by whichever component needs them, never routed through a parent.
 - **The design will change.** Do not build component styling beyond the tokens (M0.7) and mixins (M0.8).
-- **No print styles anywhere except the spell recipe view** (M10.22). `_print.scss` is created by that task and scoped to it.
+- **No print styles anywhere except the spell recipe view** — the page is MB.6, the print layout is M10.22. `_print.scss` is created by M10.22 and scoped to that one view.
 - Gitflow: `feature/*` → `staging`; `staging` → `main` via `release/MAJOR.MINOR.PATCH`; `hotfix/*` opens both; `main-sync/YYYY-MM-DD-HH-MM-SS` brings `main` back down. Staging carries the same protections as production; local development is the only relaxed environment.
 - Document as you go in `claude-docs/` — a summary per subsystem, an append-only transcript, one doc per component. Several tasks name it as an acceptance criterion. [`claude-docs/README.md`](claude-docs/README.md) describes the layout.
-- **Run the compression pass at the end of every milestone.** Rewrite this file so every statement is true as of that milestone's end, and re-trim the subsystem summaries the same way. Text leaving a live doc moves to `claude-docs/archive/<mN>/` — never deleted, and an already-archived file is never edited (a repeat pass writes a dated subdirectory instead). At the end of a milestone its transcripts and decision records move there too.
+- **Run the compression pass at the end of every wave**, as that wave’s `MW.<n>` task. Rewrite this file so every statement is true as of that wave’s end, and re-trim the subsystem summaries the same way. Text leaving a live doc moves to `claude-docs/archive/` — never deleted, and an already-archived file is never edited (a repeat pass writes a dated subdirectory instead). That wave’s transcripts and decision records move there too. The pass is anchored to the wave rather than the milestone because a milestone no longer executes as a contiguous block.
   - **The test is "is this statement out of date?", not "is this narrative?"** Two things are never cut for being old: a forward-looking rule that still binds later work, and history that is still true. Trimming a rule because it reads like background is how a rule gets lost.
   - **Nothing may end up living only in the archive.** The archive is written, not read — before a transcript or decision record moves there, every settled decision and binding constraint in it must already be stated in a live doc. A summary that sends the reader into `archive/` to understand the system has failed.
   - **When a doc and the code disagree, establish which one is wrong before reconciling them.** Editing the doc to match the code launders a bug into documented behaviour. A documentary asymmetry — one change argued at length, its reversal recorded nowhere — is evidence of intent, not proof of it. Ask.
@@ -130,7 +132,7 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 
 ## Asana task tracking
 
-The Asana board **Sorrel & Salt** is the source of truth for what to work on — not `TASKS.md`, which is the frozen original breakdown. Board sections are the milestones (M0–M11); the `Task ID` text field carries the `M0.1`-style identifier.
+The Asana board **Sorrel & Salt** is the source of truth for what to work on. `TASKS.md` is the reasoning behind the breakdown, and the two are expected to agree — when a task is added to the board, add it to `TASKS.md` and `TASKS.csv` in the same pass, or the docs silently fall behind. Board sections are the milestones (M0–M11); the `Task ID` text field carries the `M0.1`-style identifier.
 
 | Object          | GID                |
 | --------------- | ------------------ |
