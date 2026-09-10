@@ -9,14 +9,19 @@
 #
 #   - the extensions the design actually names (today just pg_trgm, for the
 #     fuzzy duplicate warning in DESIGN.md §5 — nothing else is specified
-#     anywhere, so nothing else is enabled), and
+#     anywhere, so nothing else is enabled),
 #   - an empty `sorrel_template` database with those extensions already
 #     applied, ready for `CREATE DATABASE ... TEMPLATE sorrel_template` to
-#     clone (each Vitest worker's database, per CLAUDE.md's Testing section).
+#     clone (each Vitest worker's database, per CLAUDE.md's Testing section),
+#     and
+#   - the `sorrel` role/database that `app`/`devcontainer` connect to
+#     (Docker/docker-compose.yaml's DATABASE_URL), also with pg_trgm applied.
 #
 # No schema and no seed data are baked in here — src/db/schema is still empty
-# (M1.x). M1.27 extends this same image once there is one; baking a schema
-# now would mean guessing at one that doesn't exist yet.
+# (M1.x), so `sorrel` is an empty database with only extensions applied, just
+# like `sorrel_template`. M1.27 extends this same image once there is a real
+# schema and seed data to bake in; doing that now would mean guessing at a
+# schema that doesn't exist yet.
 #
 # The extensions/database are created by running the official image's own
 # first-boot initialization (docker-entrypoint.sh, which starts a temporary
