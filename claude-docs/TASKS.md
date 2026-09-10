@@ -3069,6 +3069,8 @@ _15 tasks · 1 hour each_
 
 One per wave. Each compresses the live docs so every statement is true as of that wave's end, and moves that wave's transcripts and decision records into `claude-docs/archive/`.
 
+**MW.15 additionally carries the v1 close-out** that M11.15 held: rewrite CLAUDE.md as a description of the shipped system rather than of the work, turn the "Out of scope for v1" list into the v2 backlog it always was, and fold the per-wave archives into a v1 archive with an index naming what was compressed out and where it went. The test of that pass is that nothing a v2 task still needs to read has left CLAUDE.md.
+
 These replace the eleven milestone-anchored compression tasks (M1.29, M2.11, M3.11, M4.9, M5.11, M6.19, M7.8, M8.20, M9.13, M10.23, M11.15), which are retired: a milestone no longer executes as a contiguous block, so a pass anchored to one would compress documentation for work that shipped weeks apart.
 
 Each `MW.<n>` carries the same acceptance criteria:
