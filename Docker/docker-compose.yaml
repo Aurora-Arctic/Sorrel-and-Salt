@@ -101,7 +101,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      # Published so the host-side Vitest `db` project (M0.7) can reach it at
+      # Published so the host-side Vitest `db` project (M1.7) can reach it at
       # localhost:5432; inside the compose network services use the `postgres`
       # hostname instead.
       - '5432:5432'

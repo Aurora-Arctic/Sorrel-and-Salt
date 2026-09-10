@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import ThemeToggle from '.';
@@ -163,7 +163,11 @@ describe('ThemeToggle', () => {
   // attribute the layout.tsx init script stamps before the browser paints
   // anything — so a future edit can't quietly drop it back to effect-only.
   it('settles both facets pre-paint via CSS keyed off data-theme, not just the mount effect', () => {
-    const scssPath = fileURLToPath(new URL('./index.scss', import.meta.url));
+    // Not `fileURLToPath(new URL('./index.scss', import.meta.url))`: Vitest's
+    // jsdom environment resolves `import.meta.url` against the mocked
+    // browser `location` (matching real-browser semantics), not a `file:`
+    // URL, so that pattern resolves to the wrong path here.
+    const scssPath = join(process.cwd(), 'src/components/ThemeToggle/index.scss');
     const scss = readFileSync(scssPath, 'utf-8');
     const lightRuleBlock = scss.slice(scss.indexOf("html[data-theme='light']"));
 
