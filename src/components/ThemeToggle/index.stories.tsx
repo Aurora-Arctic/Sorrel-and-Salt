@@ -30,10 +30,13 @@ Light.meta = { theme: 'light' };
 export const Dark: Story = () => <ThemeToggle />;
 Dark.meta = { theme: 'dark' };
 
-// Reduced motion can't be forced from a story — it keys off the OS/browser
-// `prefers-reduced-motion: reduce` setting. Turn it on (macOS: System Settings →
-// Accessibility → Display → Reduce motion; or DevTools → Rendering → Emulate CSS
-// media feature prefers-reduced-motion) and the facet swap and the hover scale
-// drop to instant, per the `reduced-motion` mixin in index.scss. This story is a
-// linkable home for checking that; it renders like Default otherwise.
+// `prefers-reduced-motion: reduce` normally keys off the OS/browser setting,
+// which a story can't flip — `.meta = { reducedMotion: true }` gets it
+// simulated instead (.ladle/components.tsx: window.matchMedia patched to
+// match, every transition in the frame zeroed by story-frame.scss), so this
+// story renders exactly as it would under the real setting: the facet swap
+// and the hover scale drop to instant, and a toggle click parks the outgoing
+// facet immediately rather than waiting on a transitionend that reduced
+// motion never fires (MB.1).
 export const ReducedMotion: Story = () => <ThemeToggle />;
+ReducedMotion.meta = { reducedMotion: true };

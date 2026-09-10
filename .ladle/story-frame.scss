@@ -49,3 +49,17 @@
     transition: none;
   }
 }
+
+// A story pins `.meta = { reducedMotion: true }` (components.tsx) to simulate
+// `prefers-reduced-motion: reduce` — Ladle runs in a real browser, so there is
+// no toolbar equivalent of the theme control that can force the actual media
+// feature. The real setting turns off every transition on the page, not just
+// the one component a story happens to render, so this mirrors that scope
+// rather than special-casing whichever component is pinning it — a `!important`
+// blanket rather than the app's own `reduced-motion` mixin, which only reaches
+// call sites that opted in. components.tsx's `useSimulatedReducedMotion` is the
+// other half: it makes `window.matchMedia` agree with what this rule shows.
+.ladle-story-frame--reduced-motion,
+.ladle-story-frame--reduced-motion * {
+  transition: none !important;
+}

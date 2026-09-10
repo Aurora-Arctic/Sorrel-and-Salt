@@ -7,6 +7,8 @@ import './typography.scss';
 import './layout.scss';
 import './primitives.scss';
 
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+
 // Ladle loads this file once, ahead of every story. M0.31 grows it from M0.30's
 // passthrough into the workshop decorator. Everything it does was spotted while
 // standing up M0.30 — see
@@ -66,6 +68,49 @@ const syncTheme = (theme: ThemeState): void => {
   }
 };
 
+// Ladle serves a real browser, so `prefers-reduced-motion: reduce` reflects
+// the actual OS/browser setting — there is no toolbar control that can force
+// it the way the theme control forces `data-theme`. A story pins
+// `.meta = { reducedMotion: true }` (ThemeToggle's `ReducedMotion` is the
+// first) to get it simulated instead, and simulating it takes two parts, both
+// needed:
+//
+//   1. Patch `window.matchMedia` so the query reports a match — the same
+//      check MB.1 added to ThemeToggle's click handler to park a facet
+//      immediately when no transitionend is coming. Without this, the story
+//      would run the app's real logic against a `false` result no OS setting
+//      produced, and MB.1's fix would look untested.
+//   2. `./story-frame.scss`'s `.ladle-story-frame--reduced-motion` rule zeroes
+//      every transition inside the frame, the same as the real media feature
+//      does app-wide (not just the `reduced-motion` mixin's own call sites) —
+//      so a transition genuinely doesn't run and doesn't produce a
+//      `transitionend` the way it wouldn't under the real setting either.
+//
+// The patch is undone on cleanup so it never leaks into a story that follows
+// without the pin.
+const useSimulatedReducedMotion = (enabled: boolean): void => {
+  useLayoutEffect(() => {
+    if (!enabled || typeof window.matchMedia !== 'function') return;
+    const original = window.matchMedia.bind(window);
+    window.matchMedia = (query: string): MediaQueryList =>
+      query === REDUCED_MOTION_QUERY
+        ? ({
+            matches: true,
+            media: query,
+            onchange: null,
+            addListener: () => {},
+            removeListener: () => {},
+            addEventListener: () => {},
+            removeEventListener: () => {},
+            dispatchEvent: () => false,
+          } as MediaQueryList)
+        : original(query);
+    return () => {
+      window.matchMedia = original;
+    };
+  }, [enabled]);
+};
+
 export const Provider: GlobalProvider = ({ children, globalState, storyMeta }) => {
   // A story can pin its own theme with `MyStory.meta = { theme: 'light' | 'dark' }`
   // — M0.31's decision doc left per-story parameters as the extension path, and
@@ -85,11 +130,20 @@ export const Provider: GlobalProvider = ({ children, globalState, storyMeta }) =
     syncTheme(theme);
   }, [theme]);
 
+  // A story pins `.meta = { reducedMotion: true }` the same way `Light`/`Dark`
+  // pin `theme` — see useSimulatedReducedMotion above for what pinning it does.
+  const reducedMotion = storyMeta?.reducedMotion === true;
+  useSimulatedReducedMotion(reducedMotion);
+
+  const frameClassName = reducedMotion
+    ? 'ladle-story-frame ladle-story-frame--reduced-motion'
+    : 'ladle-story-frame';
+
   // `key` remounts the story subtree on every theme change, so a component that
   // reads data-theme once — on mount, like ThemeToggle's facet and
   // aria-pressed — follows the switch instead of freezing at its first value.
   return (
-    <div className="ladle-story-frame" key={theme}>
+    <div className={frameClassName} key={theme}>
       {children}
     </div>
   );
