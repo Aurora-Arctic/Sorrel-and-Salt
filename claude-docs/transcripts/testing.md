@@ -30,3 +30,33 @@ untested files — that's not this task. CI wiring (a real `vitest.yml`,
 coverage-artifact upload) stays out per the M1.14 stub comments in
 `pr-gate.yml`/`merge-queue.yml`; confirmed with the user before proceeding
 rather than assuming either scope.
+
+## 2026-09-10 — M1.8: Port vitest.setup.ts
+
+Ported `vitest.setup.ts` from `resume-2026`, scoped to exactly what the task
+names: `afterEach(cleanup)`, the `localStorage` polyfill, and MSW server
+lifecycle hooks. Left `resume-2026`'s fourth hook (a `webcrypto` polyfill for
+jsdom's missing `crypto.subtle`) behind — it exists there for that repo's
+`src/utils/crypto.ts` AES-GCM calls, and this repo has no `crypto.ts` and no
+task naming it.
+
+MSW had no home here yet (`resume-2026` is fully static, no backend, so it
+never used MSW either — this repo's use, mocking `/api/graphql`, is new).
+Added `msw` as a devDependency and `src/test/msw/server.ts`
+(`setupServer()`, no handlers) so the lifecycle hooks have something to
+start/reset/close; the actual `/api/graphql` stub handler and its per-test
+override helper are M1.10, not this task.
+
+Wrote `src/test/vitest-setup.test.tsx` first and watched it fail before
+wiring `vitest.setup.ts` into `vitest.config.mts`'s `unit` project
+`setupFiles` — the RTL-cleanup and localStorage assertions passed
+incidentally even unwired (nothing in this environment currently exercises
+the Node-`localStorage`-shadow failure mode the polyfill exists for), but the
+MSW assertion failed for the right reason (`ENOTFOUND`, no listening server)
+until the hooks were wired in. All three acceptance criteria are exercised
+by behavior, not by inspecting `vitest.setup.ts`'s source.
+
+Confirmed the pre-existing `test:coverage` threshold failure (M1.7) is
+unrelated to this task — same failure, same files, on the M1.7 merge commit
+checked out clean in a worktree, coverage percentage unchanged in kind
+(marginally higher only because the new files themselves are covered).
