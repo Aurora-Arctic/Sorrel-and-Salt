@@ -74,12 +74,16 @@ archived and are not required reading.
   but `playwright` does not; see `build-e2e-image.yml` below.
 - **`vitest.yml`** (M1.14) — `npm run test:coverage` in the same container
   shape as `lint`/`typecheck`/`build` (`inputs.image` from `build-image.yml`),
-  plus its own `build-db-image` job (`uses: ./.github/workflows/build-db-image.yml`)
-  feeding a `services: postgres:` block on the `vitest` job — reachable by
-  service name since `vitest` runs inside its own `container:`, per
-  DESIGN.md §11's CI table. `DATABASE_URL` is
-  `postgres://sorrel:sorrel@postgres:5432/sorrel`, the same credentials
-  `Docker/docker-compose.yaml`'s `app` service uses locally;
+  plus a `services: postgres:` block on the `vitest` job keyed off its
+  `inputs.db-image` — reachable by service name since `vitest` runs inside
+  its own `container:`, per DESIGN.md §11's CI table. `db-image` comes in
+  from the caller (`pr-gate.yml`/`merge-queue.yml`'s own top-level
+  `build-db-image` job, `uses: ./.github/workflows/build-db-image.yml`,
+  same shape as `build-image`); `vitest.yml` doesn't call `build-db-image.yml`
+  itself — it used to, and so did `playwright.yml` separately, which meant
+  building the same content-addressed image twice per run for no reason.
+  `DATABASE_URL` is `postgres://sorrel:sorrel@postgres:5432/sorrel`, the same
+  credentials `Docker/docker-compose.yaml`'s `app` service uses locally;
   `src/test/db-global-setup.ts`/`db-setup.ts` rewrite the database name per
   worker from there. Coverage JSON (`--reporter=json`) and the `vitest`
   project's `json-summary` coverage reporter feed
@@ -91,8 +95,10 @@ archived and are not required reading.
 - **`playwright.yml`** (M1.14) — `npm run e2e` against the app
   `webServer` already builds and serves on 8001 (see `testing.md`'s E2E
   section). Runs in `build-e2e-image.yml`'s dedicated image, **not**
-  `build-image.yml`'s — same `build-db-image`/`services: postgres:` shape as
-  `vitest.yml`. Uploads `playwright-report/`/`test-results/` on failure and
+  `build-image.yml`'s — same `inputs.db-image`/`services: postgres:` shape
+  as `vitest.yml`, fed by the same caller-built `build-db-image` job (one
+  build, shared by both — see `vitest.yml`'s entry above). Uploads
+  `playwright-report/`/`test-results/` on failure and
   `coverage-e2e/` always (parallel to `vitest.yml`'s `coverage/` upload).
   `should-run` path-filters the same way. `next.config.ts`'s
   `productionBrowserSourceMaps: true` and `e2e/coverage.config.ts`'s
@@ -198,16 +204,23 @@ regression check never runs through the thing it is testing.
 - **`build-db-image.yml` also carries a `workflow_call` trigger** (M1.14,
   alongside its existing `push`/`pull_request`/`workflow_dispatch`
   triggers — a `workflow_call` invocation bypasses `pull_request`'s path
-  filter entirely, so it always runs when `vitest.yml`/`playwright.yml` call
-  it, regardless of whether the calling PR touched `src/db/**`), exposing
-  the same `image` output those two now consume via their own
-  `build-db-image` job + `services: postgres:` block. The `verify-db-image`
-  job that used to prove this pattern out standalone (job-level `services:` +
-  `docker exec ... psql -c 'SELECT 1'`, since the image's `host`/TCP auth
-  rules need a password generated and discarded at build time while the
-  `local`/Unix-socket rule stays `trust`) is gone — `vitest`/`playwright` are
-  the real M1 consumer it was scaffolding for, connecting over TCP as the
-  `sorrel` role instead (a real, non-discarded password — see
+  filter entirely, so it always runs when called, regardless of whether the
+  calling PR touched `src/db/**`), exposing an `image` output. The caller is
+  `pr-gate.yml`/`merge-queue.yml`'s own top-level `build-db-image` job —
+  built once there and passed down as a `db-image` input to both
+  `vitest.yml` and `playwright.yml`, each keying their own
+  `services: postgres:` block off it. **Not** `vitest.yml`/`playwright.yml`
+  calling `build-db-image.yml` themselves: that was the original M1.14 shape
+  and it meant two independent nested `workflow_call`s (each its own
+  checkout/docker-login/buildx-setup) for an image the content-addressed tag
+  makes identical either way — caught and fixed after the first real
+  `pr-gate.yml` run. The `verify-db-image` job that used to prove this
+  pattern out standalone (job-level `services:` + `docker exec ... psql -c
+'SELECT 1'`, since the image's `host`/TCP auth rules need a password
+  generated and discarded at build time while the `local`/Unix-socket rule
+  stays `trust`) is gone — `vitest`/`playwright` are the real M1 consumer it
+  was scaffolding for, connecting over TCP as the `sorrel` role instead (a
+  real, non-discarded password — see
   `Docker/postgres-init/enable-extensions.sql`).
 
 ## Deploy
@@ -285,11 +298,12 @@ nothing and this workflow is the only path.
   `actions/cache` pre-cached the way `act-cache-checkout` pre-caches
   `checkout-to-app`. `act-vitest`/`act-playwright` are blocked on something
   new: unlike `lint`/`format`/`typecheck` (single job, every input passed
-  directly), both now have a real `needs: build-db-image` job in the same
-  workflow file (and `playwright.yml`'s caller has a real
-  `build-e2e-image` dependency too) — `act -W ... -j vitest` would have to
-  either execute `build-db-image.yml` for real (a genuine GHCR push, not
-  something `--action-offline-mode` supports) or act needs new local-only
+  directly), both take a `db-image` input that only exists because their
+  caller (`pr-gate.yml`/`merge-queue.yml`) has its own real
+  `build-db-image`/`build-e2e-image` jobs upstream of them — `act -W ... -j
+vitest` would have to either execute `build-db-image.yml` for real (a
+  genuine GHCR push, not something `--action-offline-mode` supports) or
+  fabricate a `db-image`/`image` input by hand, and act needs new local-only
   plumbing this repo doesn't have a pattern for yet. Left unresolved rather
   than shipped in a form nobody could verify actually works.
 - **Every new reusable check workflow ships its `act-<name>` target in the same
