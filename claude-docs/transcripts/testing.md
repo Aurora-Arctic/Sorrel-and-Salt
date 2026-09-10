@@ -131,3 +131,38 @@ drop-if-exists self-heals rather than erroring on a database the previous
 run's teardown already cleaned up. Silenced the expected "does not exist,
 skipping" `NOTICE`s (`onnotice: () => {}`) once they turned out to be loud
 enough on every run to risk burying a real failure in CI log noise.
+
+## 2026-09-10 — M1.10: MSW server and GraphQL handler stub
+
+Added `src/test/msw/graphql.ts`: `graphqlLink = graphql.link('/api/graphql')`
+scopes msw's `graphql` handler factory to that one route, and
+`mockGraphQLQuery(operationName, resolveData)` /
+`mockGraphQLMutation(operationName, resolveData)` wrap
+`server.use(graphqlLink.query(...))` / `.mutation(...)` so a component test
+registers a one-off response for a single named operation in one call rather
+than reaching into msw's handler API directly.
+
+Deliberately no base/catch-all handler for `/api/graphql`: the DESIGN.md
+client (`graphql-request` + TanStack Query, M3.x) isn't installed yet, so
+there's nothing to stub a realistic default response as. An operation with no
+per-test override just falls through to `vitest.setup.ts`'s (M1.8)
+`onUnhandledRequest: 'error'` and fails loudly — that already satisfies the
+"unhandled requests fail loudly" acceptance criterion without a stub handler
+duplicating it, and `afterEach(() => server.resetHandlers())` (also M1.8)
+already satisfies "handlers reset between tests." Both are exercised by
+`src/test/msw/graphql.test.ts` via plain `fetch('/api/graphql', { method:
+'POST', body: JSON.stringify({ query }) })` — no `graphql-request` client
+call — since msw's graphql matcher parses the operation name straight out of
+the `query` document string, no `operationName` field required.
+
+First run of that test used an absolute `http://localhost/api/graphql` and
+got "intercepted a request without a matching request handler" even with the
+override registered — `graphqlLink`'s relative `/api/graphql` resolves
+against jsdom's default `http://localhost:3000` location, a different origin
+than the one the test fetched. Fixed by fetching the relative path instead;
+documented in `../testing.md` so the next test hitting this route doesn't
+rediscover it.
+
+`mockGraphQLQuery`/`mockGraphQLMutation`'s generics needed to extend msw's own
+`GraphQLQuery`/`GraphQLVariables` constraints (not a bare `Record<string,
+unknown>`) — `tsc --noEmit` caught the mismatch before it shipped.
