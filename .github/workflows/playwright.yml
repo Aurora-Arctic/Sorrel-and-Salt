@@ -53,7 +53,11 @@ on:
 
 permissions:
   contents: read
-  packages: read
+  # write, not read — same reasoning as vitest.yml's identical comment: the
+  # build-db-image job below calls build-db-image.yml, which needs
+  # packages: write to push to GHCR, and a nested reusable-workflow call
+  # can't be granted more than its caller has.
+  packages: write
   pull-requests: write
 
 jobs:
