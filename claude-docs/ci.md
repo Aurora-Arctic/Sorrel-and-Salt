@@ -169,7 +169,23 @@ nothing and this workflow is the only path.
 - A guard step skips every real step unless `VERCEL_DEPLOY_TOKEN` /
   `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` / `VERCEL_SCOPE` are set. All four are
   set as repo secrets, so the deploy runs for real.
-- `migrate.yml` (M1.4) will run ahead of the deploy step.
+- **`migrate.yml` (M1.4)** — reusable (`workflow_call`-only) workflow, applying
+  `npm run db:migrate` against the environment's `DATABASE_URL`. `deploy.yml`
+  splits its old single `deploy` job into three: `resolve-target` (the old
+  "Resolve deploy target" step, now standalone since both later jobs need its
+  output), `migrate` (`needs: resolve-target`, calls this workflow with
+  `secrets: inherit`, and carries its own `group: migrate` /
+  `cancel-in-progress: false` concurrency lock so two merges never migrate at
+  once), and `deploy` (`needs: [resolve-target, migrate]`, `if: success()` —
+  required because a job-level `if:` overrides the implicit "needs succeeded"
+  check, so without it a failed migration would not actually block the
+  deploy). Same guard-skip stub as `deploy.yml` when the `VERCEL_*` secrets
+  are absent. `vercel pull --environment=<preview|production>` resolves the
+  right `DATABASE_URL` for each target the same way `deploy.yml`'s own pull
+  does — the branch-scoped override for `staging`, the integration's
+  per-deployment ephemeral Neon branch for a hotfix preview (see
+  `claude-docs/design-decisions/m1.1-neon-branch-strategy.md`) — read from
+  `.vercel/.env.<environment>.local` and masked before use.
 
 ## Running CI locally
 
