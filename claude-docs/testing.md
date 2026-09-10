@@ -97,11 +97,16 @@ defect; coverage rises as later milestones add tests.
 (`vitest run --coverage`) both run every project. Neither is wired into
 `pre-commit` — CLAUDE.md's pre-commit list is unchanged by this task.
 
-**Not yet wired: CI.** `pr-gate.yml`/`merge-queue.yml`'s `vitest` jobs are
-still the M0-era stub (`echo "vitest is stubbed until M1 ports the real
-workflow_call check"`); M1.14 ("Port vitest and playwright CI workflows with
-path filters") replaces them with a real `uses: ./.github/workflows/vitest.yml`
-and adds the coverage-artifact upload. `vitest.yml` does not exist yet.
+**Wired into CI (M1.14).** `pr-gate.yml`/`merge-queue.yml`'s `vitest` jobs
+call the real `.github/workflows/vitest.yml`, path-filtered off `src/**`,
+`vitest.config.mts`, `vitest.setup.ts`, and `package{,-lock}.json`. It runs
+in `build-image.yml`'s shared `testing` container plus its own `services:
+postgres:` (a `build-db-image` job feeding
+`postgres://sorrel:sorrel@postgres:5432/sorrel`, reachable by service name —
+see `claude-docs/ci.md`), and uploads `coverage/` as an artifact on every
+run. `vitest.config.mts`'s coverage `reporter` also gained `json-summary`
+alongside its existing `text`/`lcov`/`html`, so the PR comment can show a
+coverage table (`.github/scripts/summarize-vitest.mjs`).
 
 ## E2E — Playwright (M1.11)
 
@@ -130,6 +135,15 @@ EXISTS` / `CREATE DATABASE ... TEMPLATE sorrel_template` M1.9 already does
   therefore what "reseed" resolves to today; once M1.27 lands, the same call
   picks up real seeded content with no change needed here. Full reasoning in
   [`design-decisions/m1.11-e2e-reseed-without-seed.md`](design-decisions/m1.11-e2e-reseed-without-seed.md).
+  **Every db-touching spec file must open with
+  `test.describe.configure({ mode: 'serial' })`** (M1.14) — `playwright.config.ts`
+  sets `fullyParallel: true`, which lets Playwright split one file's tests
+  across multiple workers, and `beforeAll` then runs once _per worker_
+  handling that file rather than once for the file. Two workers both
+  reaching `smoke.spec.ts` both ran `DROP`/`CREATE DATABASE sorrel_e2e`
+  concurrently and threw `duplicate key value violates unique constraint
+"pg_database_datname_index"` before this was added. `serial` pins the
+  whole file to one worker, so the reset genuinely happens once.
 - **`next.config.ts`'s `distDir`** reads `NEXT_DIST_DIR`, defaulting to
   `.next`. `webServer.env` sets it to `.next-e2e` so a concurrent `next dev`
   on 8000 (CLAUDE.md's Commands table promises both can run at once) never
@@ -139,8 +153,18 @@ EXISTS` / `CREATE DATABASE ... TEMPLATE sorrel_template` M1.9 already does
   local `postgres` Docker service exactly as Vitest's does.
 
 `npm run e2e` (`playwright test`) runs the suite. Browser binaries
-(`npx playwright install chromium`) are a one-time local step; CI's image
-install is M1.14's concern, same as the workflow wiring below.
+(`npx playwright install chromium`) are a one-time local step. CI (M1.14)
+does not reuse `build-image.yml`'s shared `testing` image for this — that
+image is Alpine/musl-based and explicitly excludes Playwright's browser/
+system deps (see `Docker/Dockerfile.node`'s header comment; Playwright's
+Chromium build has no official musl support at all). Instead
+`.github/workflows/playwright.yml` runs in a dedicated image
+(`Docker/Dockerfile.e2e`, built `FROM mcr.microsoft.com/playwright:v1.63.0-noble`
+and published by `build-e2e-image.yml`) with browsers already baked in — see
+`claude-docs/ci.md`. `Docker/docker-compose.yaml`'s opt-in `e2e` service
+(`make docker-e2e`) builds that same image for local use, so a devcontainer
+session can run the full suite without installing browsers into its own
+Alpine-based image.
 
 ## Accessibility — axe-core (M1.12)
 
@@ -157,28 +181,64 @@ violations are returned; a page with zero violations resolves silently.
   `<img>` missing `alt`) and asserts the helper's promise rejects — proof the
   scan actually fails a run instead of passing vacuously.
 
-**Not yet wired: CI.** `pr-gate.yml`/`merge-queue.yml`'s `playwright` jobs
-are the same kind of M0-era stub as `vitest`'s, replaced by M1.14 — which is
-also where the coverage artifact upload step lands, matching the M1.11/M1.12
-precedent of configuring the local run first and wiring CI later.
+**Wired into CI (M1.14).** `pr-gate.yml`/`merge-queue.yml`'s `playwright`
+jobs call the real `.github/workflows/playwright.yml`, path-filtered off
+`src/**`, `e2e/**`, `playwright.config.ts`, `next.config.ts`, and
+`package{,-lock}.json` — matching the M1.11/M1.12 precedent of configuring
+the local run first and wiring CI later.
 
 ## Coverage — monocart-coverage-reports (M1.13)
 
 **`e2e/coverage.config.ts`** exports the shared `CoverageReportOptions`:
 `outputDir: './coverage-e2e'` (separate from Vitest's `coverage/`, so the two
 suites' contributions stay visible independently — both already carved out
-in `.gitignore`), reports `['v8', 'console-details']`.
+in `.gitignore`), reports `['v8', 'console-details', 'json-summary']` (the
+last added in M1.14, so `.github/scripts/summarize-playwright.mjs` has an
+istanbul-style `coverage-summary.json` to build the PR comment's coverage
+table from — same shape Vitest's own `json-summary` reporter emits).
+
+**JS coverage only — CSS is deliberately never collected** (M1.14). Playwright's
+`page.coverage.startCSSCoverage()` reports raw bundled-stylesheet byte ranges
+with no sourcemap path back to Sass — unlike JS (see below), Next's CSS
+pipeline doesn't reliably produce a servable, browser-accessible `.css.map`
+for the final bundled output, only internal sourcemaps `sass-loader`/
+`resolve-url-loader` use mid-build to resolve `url()` paths. Even if it did,
+CSS coverage has no statements/branches/functions concept, so it can't feed
+the same 80% threshold model the rest of this project's coverage uses. Decided
+not worth chasing for v1 — `e2e/fixtures.ts`'s auto fixture starts/stops only
+`page.coverage.startJSCoverage`/`stopJSCoverage`.
+
+**Source maps.** `next.config.ts` sets `productionBrowserSourceMaps: true` so
+the e2e build's `.next-e2e/` output ships `.js.map` files — without them MCR
+can only attribute V8 coverage to minified chunk names (`0cegfsgm6lvdz.js`),
+not real `src/**` files. `next dev` never reads this flag, so it costs
+nothing outside the e2e build. `sourceFilter` on `coverageOptions` then scopes
+the resolved source paths to this repo's own code — mirroring
+`vitest.config.mts`'s `include: ['src/**/*.{ts,tsx}']` — but as an
+**order-sensitive object**, not a bare `'**/src/**'` string:
+
+```ts
+sourceFilter: {
+  '**/node_modules/**': false,
+  '**/src/**': true,
+},
+```
+
+Patterns are checked in order and the first match wins; plenty of npm
+packages ship their own `src/` directory in their own sourcemaps, so a bare
+`'**/src/**'` matches those too and pulls dependency internals into the
+report unless `node_modules` is excluded first.
 
 - **`e2e/fixtures.ts`** re-exports `test`/`expect`; every spec imports from
   here instead of `@playwright/test` directly. It adds an auto fixture
   (`scope: 'test'`, `auto: true`) that starts `page.coverage.startJSCoverage`
-  /`startCSSCoverage` on every page the test's `context` opens (Chromium
-  only — the coverage API doesn't exist on Firefox/WebKit, checked via
-  `test.info().project.name`), stops both at the end of the test, and calls
-  `MCR(coverageOptions).add(...)` with the flattened result. A test that
-  never navigates (`e2e/axe.spec.ts`'s `page.setContent` case) collects an
-  empty array, which is skipped rather than handed to `add()` — an empty
-  array logs a spurious `MCR` warning otherwise.
+  on every page the test's `context` opens (Chromium only — the coverage API
+  doesn't exist on Firefox/WebKit, checked via `test.info().project.name`),
+  stops it at the end of the test, and calls `MCR(coverageOptions).add(...)`
+  with the result. A test that never navigates (`e2e/axe.spec.ts`'s
+  `page.setContent` case) collects an empty array, which is skipped rather
+  than handed to `add()` — an empty array logs a spurious `MCR` warning
+  otherwise.
 - **`e2e/global-setup.ts`** additionally calls `MCR(coverageOptions).cleanCache()`
   after `recreateE2eDatabase()`, so a crashed previous run's cached coverage
   data never leaks into this run's report.
@@ -188,5 +248,6 @@ in `.gitignore`), reports `['v8', 'console-details']`.
   (the native V8 report) plus a `console-details` table printed at the end
   of the run.
 
-Local verification only — the artifact upload step is M1.14's, once
-`playwright.yml` exists to upload it from.
+**Wired into CI (M1.14).** `playwright.yml`'s "Upload coverage artifact" step
+uploads `coverage-e2e/` on every run (pass or fail), parallel to
+`vitest.yml`'s `coverage/` upload.

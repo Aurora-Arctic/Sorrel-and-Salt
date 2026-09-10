@@ -55,8 +55,22 @@
 #
 #   make docker-up        build if needed, then start the app + Postgres detached
 #   make docker-workshop   also start the workshop (profile: workshop)
+#   make docker-e2e        run the Playwright suite once (profile: e2e)
 #   make docker-down      stop and remove everything, profiles included
 #   make docker-logs      follow
+#
+# The `e2e` service (M1.14, profile: e2e) is how a devcontainer session runs
+# the full Playwright suite locally: it builds `Docker/Dockerfile.e2e`, the
+# same dedicated image `.github/workflows/build-e2e-image.yml` publishes for
+# CI's `playwright` job, rather than duplicating its `apt`/`playwright
+# install --with-deps` steps into `Dockerfile.node`. That image is
+# Debian-based (Microsoft's own Playwright base) where `Dockerfile.node` is
+# Alpine — Playwright's Chromium build has no official musl support at all,
+# so the devcontainer's own `development`/`testing` stages, which the
+# `app`/`workshop`/`devcontainer` services all build, stay Alpine and simply
+# don't run e2e directly; `e2e` is a separate, one-shot service instead of a
+# long-running one (see `command: ['npm', 'run', 'e2e']` below), started
+# on demand from inside (or alongside) the devcontainer with `make docker-e2e`.
 #
 # Build context is the repo root (`..`); `Docker/Dockerfile.node` reads it
 # through the root `.dockerignore`.
@@ -80,6 +94,7 @@ volumes:
   # files.
   node_modules_app:
   node_modules_workshop:
+  node_modules_e2e:
 
   # Postgres data directory. Persists across `docker compose restart` and
   # `make docker-down`; only `make docker-rebuild` (`down -v`) clears it.
@@ -165,3 +180,31 @@ services:
     # `npm run workshop` is `ladle serve`, which binds localhost by default;
     # `--host 0.0.0.0` makes it reachable through the port mapping.
     command: ['npm', 'run', 'workshop', '--', '--host', '0.0.0.0']
+
+  e2e:
+    # Opt-in and one-shot, unlike `workshop`: `make docker-e2e` runs
+    # `docker compose --profile e2e run --rm e2e`, which builds this image
+    # if needed, runs the suite once, and exits — there's no long-running
+    # server to leave up the way `workshop`'s `ladle serve` is.
+    profiles: ['e2e']
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.e2e
+    image: sorrel-e2e
+    working_dir: /app
+    volumes:
+      - ..:/app:cached
+      - node_modules_e2e:/app/node_modules
+    init: true
+    ports:
+      - '8001:8001' # next start (production build), matching playwright.config.ts
+    environment:
+      NODE_ENV: test
+      CI: 'true'
+      # Reaches Postgres by its compose service name, same as `app`.
+      # e2e/database.ts swaps the pathname to sorrel_e2e.
+      DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ['npm', 'run', 'e2e']
