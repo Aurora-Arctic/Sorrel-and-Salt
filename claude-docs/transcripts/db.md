@@ -31,3 +31,26 @@ deliberate, documented sequencing (real credentials arrive with M1.27), not a
 defect in `connection.ts` or in the Postgres image as it stands today —
 flagged on both the M1.2 and M1.27 Asana tasks rather than worked around
 here. Full query verification against the local stack waits on M1.27.
+
+## 2026-09-10 — M1.15: `auditColumns` and `applyAudit`
+
+Added `src/db/audit.ts`: the `auditColumns` six-column spread and
+`applyAudit(operation, payload, session)`, a pure function with no database
+access, TDD'd against `src/db/audit.test.ts` (five cases — insert, update,
+soft delete, and two covering payload-supplied audit ids being ignored).
+
+`auditColumns`'s `createdBy`/`updatedBy`/`deletedBy` are plain `uuid` columns
+rather than the `.references(() => users.id)` DESIGN.md §5 shows — `users`
+isn't created until M2.1, so nothing exists yet to reference. Whichever table
+lands first with a real FK requirement adds it there.
+
+The test file lives under `src/db/`, which routes it to Vitest's `db`
+project (`vitest.config.mts`, M1.7) rather than `unit` — `db`'s include glob
+is path-based (`src/db/**/*.test.ts`) and doesn't distinguish a pure test
+from one that touches Postgres. DESIGN.md §10 lists `applyAudit()` under
+"Unit — Vitest, no DOM," but the file has to live at `src/db/audit.ts` per
+the task, so its test runs through `db`'s `globalSetup` (which clones a
+`sorrel_test_<n>` database) even though the test itself never opens a
+connection. Confirmed this doesn't fail in the devcontainer — `postgres` and
+`sorrel_template` are both reachable there — but it does mean this
+particular unit test can't run in an environment with no Postgres at all.
