@@ -54,6 +54,14 @@ no silent fallback.
   all: `PGDATA` is already populated at image build time, so the entrypoint's
   usual first-boot "create `POSTGRES_USER`/`POSTGRES_DB` from env" step never
   runs for it. Still no schema or seed data — that's M1.27.
+- **`sorrel` holds `CREATEDB` and owns `sorrel_template`** (M1.9), granted in
+  the same init script. `postgres`'s own password is generated and discarded
+  within that build step (`Dockerfile.postgres`), so `sorrel` is the only
+  role any runtime connection can ever authenticate as — and cloning a
+  database as a template requires either owning it or being a superuser.
+  This is what lets the Vitest `db` project's `globalSetup` (`src/test/
+db-global-setup.ts`) run `CREATE DATABASE sorrel_test_<n> TEMPLATE
+sorrel_template` as `sorrel`. See `testing.md`.
 
 ## Expand/contract and the destructive-DDL check (M1.5)
 

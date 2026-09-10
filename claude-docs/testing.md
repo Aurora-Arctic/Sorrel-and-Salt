@@ -39,16 +39,33 @@ Vite's native config loader this file is ESM instead of warning about it).
     - Covered by `src/test/vitest-setup.test.tsx`, which asserts each hook's
       effect directly rather than testing `vitest.setup.ts` itself.
 - **`db`** — `environment: 'node'`. `include`s `src/db/**/*.test.ts` and
-  `src/services/**/*.test.ts` — empty today (no `repository.ts` or
+  `src/services/**/*.test.ts` — nearly empty today (no `repository.ts` or
   `src/services/` yet), so `passWithNoTests: true` keeps that from failing
-  `npm run test:coverage`. No `DATABASE_URL` is set here: `connection.ts`
-  throws if it's unset, and nothing in this project's config ever points at
-  Neon (`Docker/docker-compose.yaml`'s `postgres` service publishes
-  **5432** for exactly this — "the host-side Vitest `db` project"). M1.9
-  wires the actual per-worker `sorrel_test_${VITEST_WORKER_ID}` database
-  (cloned from the baked `sorrel_template`) via `globalSetup`; until then, a
-  `db` test run locally needs `DATABASE_URL` set by hand against the compose
-  `postgres` service.
+  `npm run test:coverage`. Nothing in this project's config ever points at
+  Neon (`Docker/docker-compose.yaml`'s `postgres` service publishes **5432**
+  for exactly this — "the host-side Vitest `db` project").
+  - **`globalSetup: ['./src/test/db-global-setup.ts']`** (M1.9) runs once,
+    before any worker starts, and clones `sorrel_test_1` through
+    `sorrel_test_<maxWorkers>` from `sorrel_template` with
+    `CREATE DATABASE ... TEMPLATE`, dropping each one first (`DROP DATABASE
+IF EXISTS`) so a crashed previous run self-heals instead of erroring on a
+    stale database. `maxWorkers` comes off the `TestProject` Vitest hands the
+    setup function — `VITEST_WORKER_ID` itself is only set inside a worker
+    process, so globalSetup (which runs once, outside any worker) can't read
+    it directly; it pre-clones one database per possible worker instead. The
+    returned teardown drops all of them. Requires `sorrel` to own
+    `sorrel_template` and hold `CREATEDB` — both granted in
+    `Docker/postgres-init/enable-extensions.sql` (M1.9) — since `postgres`'s
+    own password is generated and discarded at image build time (M0.18) and
+    so can never authenticate a real connection.
+  - **`setupFiles: ['./src/test/db-setup.ts']`** points each worker's
+    `DATABASE_URL` at its own `sorrel_test_${VITEST_WORKER_ID}` clone before
+    any test file imports `connection.ts` — this one does read
+    `VITEST_WORKER_ID`, since `setupFiles` (unlike `globalSetup`) run inside
+    the worker process.
+  - Rejected alternative — wrapping each test in a rolled-back transaction —
+    and the reason, is recorded in
+    [`design-decisions/m1.9-test-db-isolation.md`](design-decisions/m1.9-test-db-isolation.md).
 
 **Coverage** (`test.coverage`, provider `v8`): thresholds are 80% on lines,
 branches, functions, and statements, `include: ['src/**/*.{ts,tsx}']`,
