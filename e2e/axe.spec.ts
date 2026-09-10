@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 
 test('a seeded violation fails the scan', async ({ page }) => {
