@@ -4,8 +4,6 @@ Guidance for Claude Code working in this repository.
 
 `claude-docs/DESIGN.md` is the specification and `claude-docs/TASKS.md` is the work breakdown (190 tasks, 12 milestones; `TASKS.csv` beside it is the same breakdown exported for a project tracker). This file carries the rules that apply to _every_ task; the section references below (§n) point into `DESIGN.md`, and milestone references (M0.1) into `TASKS.md`. When this file and the design doc disagree, the design doc wins — and fix this file.
 
-**Status: pre-scaffold.** The repo currently contains documentation only. Nothing under "Commands" exists until the milestone that creates it lands (M0.1–M0.4 for the toolchain, M1.3 for the database scripts). Do not assume a command runs; check first.
-
 ---
 
 ## Vocabulary
@@ -26,24 +24,23 @@ The schema entity is `workspaces`; the URL prefix is `/coven/`. This divergence 
 
 ## Commands
 
-Once M0.4 lands, `make help` lists every target. Expected surface:
+`make help` lists every target — from the **host**. Neither `make` nor `docker` is installed in the devcontainer, so a session running inside it calls the npm scripts directly; the `make` column below is the host equivalent.
 
-| Command                                                       | Purpose                                                           |
-| ------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `npm run dev`                                                 | Next.js dev server on **8000**                                    |
-| `npm run build` / `npm run start`                             | Production build; e2e runs it on **8001**                         |
-| `npm run lint` / `format:check` / `typecheck`                 | The pre-commit trio                                               |
-| `npm run test:coverage`                                       | Vitest, both projects (`unit` jsdom + `db` node/Postgres)         |
-| `make test-stories`                                           | Acceptance suite only; prints a pass/fail line per user story     |
-| `make docker-up`                                              | App + Postgres 17 locally, no Neon connection needed              |
-| `make db-reset`                                               | Drop, migrate, reseed local                                       |
-| `npm run db:generate` / `db:migrate` / `db:seed` / `db:reset` | Drizzle migrations and seed                                       |
-| `npm run codegen`                                             | graphql-codegen; CI fails if output is stale                      |
-| `npm run workshop` / `workshop:build`                         | Ladle component workshop; `:build` is the static export CI checks |
-| `make workshop`                                               | Ladle component workshop on **61000**                             |
-| `make act-*`                                                  | Run a CI workflow locally via act                                 |
+| Command                                                                                                        | Purpose                                                                                                                               |
+| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev` (`make dev`)                                                                                     | Next.js dev server on **8000**                                                                                                        |
+| `npm run build` / `start` (`make build` / `start`)                                                             | Production build; e2e runs it on **8001**                                                                                             |
+| `npm run lint` / `format:check` / `typecheck` / `check:stories` / `check:theme-default` (`npm run pre-commit`) | The pre-commit checks                                                                                                                 |
+| `make docker-up`                                                                                               | App + Postgres 17 locally, no Neon connection needed                                                                                  |
+| `make docker-workshop`                                                                                         | Also brings up the Ladle workshop, on **61000**                                                                                       |
+| `npm run workshop` / `workshop:build` (`make workshop` / `workshop-build`)                                     | Ladle component workshop on **61000**; `:build` is the static export, wrapped so a story that fails to bundle actually exits non-zero |
+| `make act-lint` / `act-format` / `act-typecheck`                                                               | Run that reusable CI workflow locally via `act`; `make act-test` chains all three                                                     |
+| `npm run db:generate` / `db:migrate` / `db:seed` / `db:reset` (`make db-*`)                                    | **Not wired up yet.** Script and target names exist and exit non-zero until M1.3 wires them to Drizzle                                |
+| `npm run codegen`                                                                                              | **Not wired up yet.** Exits non-zero until M3.5 wires it to graphql-codegen                                                           |
+| `npm run test:coverage`                                                                                        | **Doesn't exist yet.** Arrives with Vitest in M1.7 — `unit` (jsdom) + `db` (node/Postgres) projects, 80% threshold                    |
+| `make test-stories`                                                                                            | **Doesn't exist yet.** Arrives in M1.28 — acceptance suite only, prints a pass/fail line per user story                               |
 
-**Verify with the `:coverage` variants.** A plain `npm run test` pass can still fail CI on the 80% threshold (lines, branches, functions, statements) alone. Carried over from `resume-2026`.
+**Once `test:coverage` lands (M1.7), verify with it.** A plain `npm run test` pass will still be able to fail CI on the 80% threshold (lines, branches, functions, statements) alone.
 
 **Deploys are CI-only (M0.26).** `.github/workflows/deploy.yml` deploys via the Vercel CLI (`vercel pull`/`build`/`deploy --prebuilt`/`alias`) on a push to `main` (production) or `staging` (preview → `staging.sorrelandsalt.com`), and on a `hotfix/** → main` PR (preview → per-PR `hotfix-<slug>.sorrelandsalt.com`, commented on the PR, torn down on close). `vercel.json` sets `deploymentEnabled: { "**": false }` — Vercel's Git integration deploys nothing; the workflow is the only path. There is no local deploy command.
 
@@ -55,7 +52,7 @@ Once M0.4 lands, `make help` lists every target. Expected surface:
 Server components call services directly (wrapped in React `cache()`); everything the browser initiates — every mutation, and every read without a navigation — goes through `/api/graphql`. Two transports, one set of rules, because both end at the same service function. There is no third access path: no server actions, no bespoke route handlers, and admin is not an exception (M3.8).
 
 **2. Only `src/db/repository.ts` may import the database client.**
-Enforced by lint (M1.17, M3.9). `src/graphql/**` and `src/app/**` may not import the client or the repository — they reach services and nothing below.
+M1.17 and M3.9 add the lint rules that enforce this; until they land it holds by convention. `src/graphql/**` and `src/app/**` may not import the client or the repository — they reach services and nothing below.
 
 **3. All writes go through `withAudit(session, fn)`.**
 It opens the transaction, injects the audit ids from the _session_ (never from a request body), and issues `SET LOCAL app.current_user_id = '<uuid>'`. Every table carries the six-column `...auditColumns` spread, join tables included.
@@ -76,7 +73,7 @@ A private spell must never reach a resolver. Same for cross-workspace rows.
 
 **9. DataLoader is not optional.** Compute has a dollar cost on Vercel, so an N+1 is a billing bug as well as a slow one. Loaders are constructed per request, never at module level.
 
-**10. Migrations are expand/contract and forward-only.** No down migrations exist in this repo. Destructive DDL (DROP, RENAME, type narrowing, NOT NULL additions) is flagged by CI and needs an explicit acknowledgement line in the PR body.
+**10. Migrations are expand/contract and forward-only.** No down migrations exist in this repo. Destructive DDL (DROP, RENAME, type narrowing, NOT NULL additions) needs an explicit acknowledgement line in the PR body; M1.5 adds the CI check that flags it.
 
 ---
 
@@ -118,12 +115,16 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 - A task is done when every acceptance criterion is demonstrably met — not when the code appears to work.
 - **Port, don't rewrite from memory.** The source repo for all ports is `resume-2026`.
 - **Components:** `src/components/<Name>/` with `index.tsx`, `index.scss`, `index.test.tsx`, imported `from '../components/IngredientCard'`.
-- **Every standalone component ships an `index.stories.tsx`** in the same directory — no exceptions, `index.tsx` without a sibling story is a broken build. The Ladle workshop (M0.30) discovers components by that file. `npm run check:stories` (M0.33; `scripts/check-component-stories.ts`) enforces it — in pre-commit and, once the CI workflows land, in the build job and the PR gate — and `npm run workshop:build` there fails a story that throws. The gate is scoped to `src/components/`; `.ladle/*.stories.tsx` is the one known non-component location (§M0.32). Stories carry no test ids and no snapshots.
+- **Every standalone component ships an `index.stories.tsx`** in the same directory — no exceptions; the Ladle workshop discovers components by that file. `check:stories` catches a missing story, `workshop:build` catches one that fails to bundle, and both run in pre-commit **and** in CI's build job, so a PR can't skip either by skipping the local hook. The gate is scoped to `src/components/`; `.ladle/*.stories.tsx` is the one non-component location. Stories carry no test ids and no snapshots. Detail: [`claude-docs/workshop.md`](claude-docs/workshop.md).
 - **Sass:** modern module system only — `@use '../../scss/variables' as *;`, never `@import`. Shared partials in `src/scss/` are `@use`'d directly by whichever component needs them, never routed through a parent.
 - **The design will change.** Do not build component styling beyond the tokens (M0.7) and mixins (M0.8).
 - **No print styles anywhere except the spell recipe view** (M10.22). `_print.scss` is created by that task and scoped to it.
 - Gitflow: `feature/*` → `staging`; `staging` → `main` via `release/MAJOR.MINOR.PATCH`; `hotfix/*` opens both; `main-sync/YYYY-MM-DD-HH-MM-SS` brings `main` back down. Staging carries the same protections as production; local development is the only relaxed environment.
 - Document as you go in `claude-docs/` — a summary per subsystem, an append-only transcript, one doc per component. Several tasks name it as an acceptance criterion. [`claude-docs/README.md`](claude-docs/README.md) describes the layout.
+- **Run the compression pass at the end of every milestone.** Rewrite this file so every statement is true as of that milestone's end, and re-trim the subsystem summaries the same way. Text leaving a live doc moves to `claude-docs/archive/<mN>/` — never deleted, and an already-archived file is never edited (a repeat pass writes a dated subdirectory instead). At the end of a milestone its transcripts and decision records move there too.
+  - **The test is "is this statement out of date?", not "is this narrative?"** Two things are never cut for being old: a forward-looking rule that still binds later work, and history that is still true. Trimming a rule because it reads like background is how a rule gets lost.
+  - **Nothing may end up living only in the archive.** The archive is written, not read — before a transcript or decision record moves there, every settled decision and binding constraint in it must already be stated in a live doc. A summary that sends the reader into `archive/` to understand the system has failed.
+  - **When a doc and the code disagree, establish which one is wrong before reconciling them.** Editing the doc to match the code launders a bug into documented behaviour. A documentary asymmetry — one change argued at length, its reversal recorded nowhere — is evidence of intent, not proof of it. Ask.
 
 ---
 
@@ -173,7 +174,7 @@ The one v1 concession to v2: the ingredient detail page (M8.19) is built so a no
 
 ## Skills
 
-Skills live in `.claude/skills/<name>/SKILL.md` and are invoked as `/<name>`. M0.10 ported the six Gitflow branch/PR skills from `resume-2026` — the only skills that repo has. All six were portable as-is (nothing Gatsby-specific to leave behind); repo-specific references were adjusted: the enforcing `gitflow` CI check does not exist until M0.17/M0.20, so the skills name `CLAUDE.md`'s Gitflow convention as the current source of truth; `.claude/settings.json` now carries the `permissions.ask` entries the skills rely on; test-plan guidance points at this repo's check surface. The "testing conventions / component documentation / CI debugging" the original breakdown anticipated are **not** skills in `resume-2026` — that guidance lives in its `claude-docs/` and `CLAUDE.md`, and the equivalents are already carried here (Testing section above, `claude-docs/`). See [`claude-docs/agent-skills.md`](claude-docs/agent-skills.md). `start-task` was added later — it's a thin Asana-aware dispatcher that reads a task's `Type` and delegates to `create-feature` or `create-hotfix`.
+Skills live in `.claude/skills/<name>/SKILL.md` and are invoked as `/<name>`. The table below is the trigger reference; [`claude-docs/agent-skills.md`](claude-docs/agent-skills.md) carries the shape and the hedges inside the skill files that are still stale.
 
 | Skill              | Trigger                                                                                                                                                                                                                                                           |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

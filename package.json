@@ -12,23 +12,28 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:stories": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-component-stories.ts",
-    "pre-commit": "npm run lint && npm run format:check && npm run typecheck && npm run check:stories",
-    "db:generate": "echo 'db:generate is not wired up yet — see M1.x' && exit 1",
-    "db:migrate": "echo 'db:migrate is not wired up yet — see M1.x' && exit 1",
-    "db:seed": "echo 'db:seed is not wired up yet — see M1.x' && exit 1",
-    "db:reset": "echo 'db:reset is not wired up yet — see M1.x' && exit 1",
+    "check:destructive-ddl": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-destructive-ddl.ts",
+    "check:theme-default": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-workshop-theme-default.ts",
+    "pre-commit": "npm run lint && npm run format:check && npm run typecheck && npm run check:stories && npm run check:theme-default",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/db-seed.ts",
+    "db:reset": "npm run db:migrate && npm run db:seed",
     "codegen": "echo 'codegen is not wired up yet — see M3.x' && exit 1",
     "workshop": "ladle serve",
-    "workshop:build": "ladle build"
+    "workshop:build": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/build-workshop.ts"
   },
   "pre-commit": [
     "lint",
     "format:check",
     "typecheck",
-    "check:stories"
+    "check:stories",
+    "check:theme-default"
   ],
   "dependencies": {
+    "drizzle-orm": "^0.45.2",
     "next": "^16.3.4",
+    "postgres": "^3.4.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
@@ -37,12 +42,13 @@
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
+    "drizzle-kit": "^0.31.10",
     "oxlint": "^1.82.0",
     "pre-commit": "^2.0.0",
     "prettier": "^3.9.6",
     "sass": "^1.104.0",
     "typescript": "^7.0.2",
-    "vite": "^6.4.3"
+    "vite": "^8.2.2"
   },
   "allowScripts": {
     "pre-commit@2.0.0": true

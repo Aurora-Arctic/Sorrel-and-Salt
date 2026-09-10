@@ -1,0 +1,202 @@
+<!--
+Archived 2026-09-10 by the doc consolidation pass over M0's working docs.
+Verbatim pre-pass copy of CLAUDE.md. What the pass cut: port provenance,
+the change-by-change narrative of how each rule was reached, and superseded
+intermediate states. Current truth is the live CLAUDE.md; this file is
+write-once and is allowed to be out of date.
+-->
+
+# CLAUDE.md
+
+Guidance for Claude Code working in this repository.
+
+`claude-docs/DESIGN.md` is the specification and `claude-docs/TASKS.md` is the work breakdown (190 tasks, 12 milestones; `TASKS.csv` beside it is the same breakdown exported for a project tracker). This file carries the rules that apply to _every_ task; the section references below (§n) point into `DESIGN.md`, and milestone references (M0.1) into `TASKS.md`. When this file and the design doc disagree, the design doc wins — and fix this file.
+
+---
+
+## Vocabulary
+
+Three domain nouns, each meaning exactly one thing. Use them consistently in routes, components, tests, commits, and conversation.
+
+| Term            | Meaning                                                      |
+| --------------- | ------------------------------------------------------------ |
+| **Compendium**  | The global, admin-curated ingredient reference. What exists. |
+| **Ingredients** | A workspace's own ingredients and stock. What you have.      |
+| **Grimoire**    | A workspace's spells. What you make.                         |
+
+Never write "catalog" — it was the old word for the compendium and it is gone.
+
+The schema entity is `workspaces`; the URL prefix is `/coven/`. This divergence is deliberate (§5). Code, schema, and prose say _workspace_. Only the URL segment says _coven_.
+
+---
+
+## Commands
+
+`make help` lists every target — from the **host**. Neither `make` nor `docker` is installed in the devcontainer, so a session running inside it calls the npm scripts directly; the `make` column below is the host equivalent.
+
+| Command                                                                                | Purpose                                                                                                                                       |
+| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev` (`make dev`)                                                             | Next.js dev server on **8000**                                                                                                                |
+| `npm run build` / `start` (`make build` / `start`)                                     | Production build; e2e runs it on **8001**                                                                                                     |
+| `npm run lint` / `format:check` / `typecheck` / `check:stories` (`npm run pre-commit`) | The pre-commit checks                                                                                                                         |
+| `make docker-up`                                                                       | App + Postgres 17 locally, no Neon connection needed                                                                                          |
+| `make docker-workshop`                                                                 | Also brings up the Ladle workshop, on **61000**                                                                                               |
+| `npm run workshop` / `workshop:build` (`make workshop` / `workshop-build`)             | Ladle component workshop on **61000**; `:build` is the static export, wrapped (M0.36) so a story that fails to bundle actually exits non-zero |
+| `make act-lint` / `act-format` / `act-typecheck`                                       | Run that reusable CI workflow locally via `act`; `make act-test` chains all three                                                             |
+| `npm run db:generate` / `db:migrate` / `db:seed` / `db:reset` (`make db-*`)            | **Not wired up yet.** Script and target names exist and exit non-zero until M1.3 wires them to Drizzle                                        |
+| `npm run codegen`                                                                      | **Not wired up yet.** Exits non-zero until M3.5 wires it to graphql-codegen                                                                   |
+| `npm run test:coverage`                                                                | **Doesn't exist yet.** Arrives with Vitest in M1.7 — `unit` (jsdom) + `db` (node/Postgres) projects, 80% threshold                            |
+| `make test-stories`                                                                    | **Doesn't exist yet.** Arrives in M1.28 — acceptance suite only, prints a pass/fail line per user story                                       |
+
+**Once `test:coverage` lands (M1.7), verify with it.** A plain `npm run test` pass will still be able to fail CI on the 80% threshold (lines, branches, functions, statements) alone. Carried over from `resume-2026`.
+
+**Deploys are CI-only (M0.26).** `.github/workflows/deploy.yml` deploys via the Vercel CLI (`vercel pull`/`build`/`deploy --prebuilt`/`alias`) on a push to `main` (production) or `staging` (preview → `staging.sorrelandsalt.com`), and on a `hotfix/** → main` PR (preview → per-PR `hotfix-<slug>.sorrelandsalt.com`, commented on the PR, torn down on close). `vercel.json` sets `deploymentEnabled: { "**": false }` — Vercel's Git integration deploys nothing; the workflow is the only path. There is no local deploy command.
+
+---
+
+## Non-negotiable architecture rules
+
+**1. Authorization lives in `src/services/`. Never in resolvers, never in pages.**
+Server components call services directly (wrapped in React `cache()`); everything the browser initiates — every mutation, and every read without a navigation — goes through `/api/graphql`. Two transports, one set of rules, because both end at the same service function. There is no third access path: no server actions, no bespoke route handlers, and admin is not an exception (M3.8).
+
+**2. Only `src/db/repository.ts` may import the database client.**
+M1.17 and M3.9 add the lint rules that enforce this; until they land it holds by convention. `src/graphql/**` and `src/app/**` may not import the client or the repository — they reach services and nothing below.
+
+**3. All writes go through `withAudit(session, fn)`.**
+It opens the transaction, injects the audit ids from the _session_ (never from a request body), and issues `SET LOCAL app.current_user_id = '<uuid>'`. Every table carries the six-column `...auditColumns` spread, join tables included.
+
+**4. Soft-delete filtering happens in the repository, never at call sites.**
+No exported finder can return a `deleted_at IS NOT NULL` row. Every unique index is partial (`WHERE deleted_at IS NULL`) — without it, deleting a record permanently reserves its name.
+
+**5. Two authorization layers, deliberately.**
+`assertMembership(userId, workspaceId, minRole)` in the service, and an RLS policy reading `current_setting('app.current_user_id')` in the database. They look redundant; that is the point. M6.5 and M10.3 prove the database layer holds with the service check stubbed out.
+
+**6. Never cache anything not keyed by viewer identity.**
+The compendium and categories are cacheable (`unstable_cache`, tag `compendium`, `revalidateTag` on every admin mutation). Anything workspace-scoped is not.
+
+**7. Filter in SQL, not after fetching.**
+A private spell must never reach a resolver. Same for cross-workspace rows.
+
+**8. Every list paginates through the M3.6 cursor helper.** Default 25, hard server maximum 100, cursors encode sort key + id and never an offset.
+
+**9. DataLoader is not optional.** Compute has a dollar cost on Vercel, so an N+1 is a billing bug as well as a slow one. Loaders are constructed per request, never at module level.
+
+**10. Migrations are expand/contract and forward-only.** No down migrations exist in this repo. Destructive DDL (DROP, RENAME, type narrowing, NOT NULL additions) needs an explicit acknowledgement line in the PR body; M1.5 adds the CI check that flags it.
+
+---
+
+## Domain invariants that are easy to get wrong
+
+- **The site is invite-gated.** Signing in with Google or GitHub earns an account and _nothing else_. `canCreateWorkspace` defaults to `false` and turns true only by accepting an invitation (M7.5) or an admin grant (M5.8). Once true it stays true. Nothing in the OAuth flow sets it.
+- **There are no personal workspaces.** No `kind` column; every workspace can take members and be deleted by an owner.
+- **Admins curate the compendium and global categories, and nothing else.** A site admin has no access to any workspace's ingredients or grimoire — asserted by test (M6.6).
+- **Invitations grant `viewer` or `member` only.** A DB check constraint rejects `owner`. Ownership is granted afterwards by an existing owner on the members page.
+- **Spell visibility widens only.** `private → workspace` is allowed; `workspace → private` is rejected with an explaining error, not a bare `Forbidden`. Widening is a gift, narrowing is a retraction. Enforced in the service _and_ backstopped by RLS — not merely absent from the UI. The rule governs visibility, not existence: a shared spell can still be deleted.
+- **Viewers write nothing.** With notes deferred to v2, there is no exception.
+- **Unit conversion is within one dimension only.** weight↔weight and volume↔volume; anything crossing dimensions, and anything involving `count`, is refused as an explicit result the caller must handle — never null, NaN, or a guess. **No density table exists anywhere in the codebase.**
+- **Two kinds of spell category.** Assigned categories are what the spell _intends_; derived categories are the union of its ingredients'. Conflating them is a bug.
+- **Invitation tokens** use `crypto.randomBytes()`, never `Math.random()`. Only the hash is stored; the URL is returned once, in the mutation response.
+- **`/admin` returns a styled "not authorized" page** to a signed-in non-admin. `/coven/[slug]` returns **404** to a non-member — workspace existence is private, `/admin` is a path everyone already knows.
+
+---
+
+## Testing
+
+TDD throughout: write the failing test, watch it fail, write the minimum, refactor. Each milestone opens with an acceptance-test scaffold PR that intentionally lands red.
+
+- **Tests never touch Neon.** Neon is deployment-only. Local Postgres 17 in Docker everywhere else — SQLite cannot run RLS, triggers, `pg_trgm`, or array columns, which are exactly what needs testing.
+- Each Vitest worker clones `sorrel_test_${VITEST_WORKER_ID}` from the baked `sorrel_template`. Playwright uses `sorrel_e2e`. Do not wrap tests in a rolled-back transaction — `withAudit` opens its own, and `SET LOCAL` would leak one test user's identity into the next assertion.
+- One seed module (`src/db/seed/index.ts`), three consumers (Docker, Vitest, Playwright), three scenarios: `minimal`, `standard`, `demo`.
+- Fixture users: **A** owner of W · **B** member of W · **C** viewer in W · **D** member of unrelated X · **E** site admin in no workspace. `asUser(A)` gives a session; services throw `Forbidden`.
+- Acceptance tests name their story (`describe('Story 12: ...')`) so a failure points at a requirement. Acceptance coverage is tracked separately from the 80% line threshold — they measure different things.
+- **Accessibility is asserted in Playwright** via `@axe-core/playwright`, not `vitest-axe`.
+- Component tests use role and label queries only. No test ids for anything a user can see.
+- **No snapshots** except design tokens and the GraphQL SDL.
+- Bug fixes start with a regression test.
+- Authorization tests must assert **direct-id** access is refused, not merely that a row is absent from a list.
+
+---
+
+## Conventions
+
+- **One task per PR.** Do not combine tasks, even small adjacent ones. Every task is sized 1–2h and reviewable in under 15 minutes.
+- A task is done when every acceptance criterion is demonstrably met — not when the code appears to work.
+- **Port, don't rewrite from memory.** The source repo for all ports is `resume-2026`.
+- **Components:** `src/components/<Name>/` with `index.tsx`, `index.scss`, `index.test.tsx`, imported `from '../components/IngredientCard'`.
+- **Every standalone component ships an `index.stories.tsx`** in the same directory — no exceptions. The Ladle workshop (M0.30) discovers components by that file. `npm run check:stories` (M0.33; `scripts/check-component-stories.ts`) enforces the missing-file case; `npm run workshop:build` (M0.36; `ladle build` wrapped by `scripts/build-workshop.ts` — @ladle/react 5.1.1's own CLI always exits 0, even on a build failure) enforces the story-that-fails-to-bundle case. Both run in pre-commit **and** in CI, from the build job (`.github/workflows/build.yml`), so a PR can't skip either by skipping the local hook. The gate is scoped to `src/components/`; `.ladle/*.stories.tsx` is the one known non-component location (M0.32). Stories carry no test ids and no snapshots.
+- **Sass:** modern module system only — `@use '../../scss/variables' as *;`, never `@import`. Shared partials in `src/scss/` are `@use`'d directly by whichever component needs them, never routed through a parent.
+- **The design will change.** Do not build component styling beyond the tokens (M0.7) and mixins (M0.8).
+- **No print styles anywhere except the spell recipe view** (M10.22). `_print.scss` is created by that task and scoped to it.
+- Gitflow: `feature/*` → `staging`; `staging` → `main` via `release/MAJOR.MINOR.PATCH`; `hotfix/*` opens both; `main-sync/YYYY-MM-DD-HH-MM-SS` brings `main` back down. Staging carries the same protections as production; local development is the only relaxed environment.
+- Document as you go in `claude-docs/` — a summary per subsystem, an append-only transcript, one doc per component. Several tasks name it as an acceptance criterion. [`claude-docs/README.md`](claude-docs/README.md) describes the layout.
+- **Run the compression pass at the end of every milestone.** Rewrite this file so every statement is true as of that milestone's end, and re-trim the subsystem summaries the same way. Text leaving a live doc moves to `claude-docs/archive/<mN>/<same filename>` — never deleted. Transcripts are never rewritten, only copied there once a subsystem is finished. See [`claude-docs/archive/README.md`](claude-docs/archive/README.md).
+
+---
+
+## Asana task tracking
+
+The Asana board **Sorrel & Salt** is the source of truth for what to work on — not `TASKS.md`, which is the frozen original breakdown. Board sections are the milestones (M0–M11); the `Task ID` text field carries the `M0.1`-style identifier.
+
+| Object          | GID                |
+| --------------- | ------------------ |
+| Project         | `1218257926462425` |
+| `Status` field  | `1218259502689548` |
+| → `Not Started` | `1218259502689549` |
+| → `In Progress` | `1218259502689550` |
+| → `In Review`   | `1218259502689551` |
+| → `Completed`   | `1218259502689552` |
+
+Set it with `asana_update_task`, passing `custom_fields` as `{"1218259502689548": "<option gid>"}`. The field reaches subtasks even though they are not project members, so no task needs adding to the project first.
+
+**Every task carries a `Status` single-select**, and it moves in one direction only:
+
+| Status        | Set it when                                                                                                |
+| ------------- | ---------------------------------------------------------------------------------------------------------- |
+| `Not Started` | The default. Every task starts here and stays there until work actually begins.                            |
+| `In Progress` | The feature branch for the task exists and work has started — not when the task is merely read or planned. |
+| `In Review`   | The PR is open. Set it in the same turn the PR is created, alongside the comment carrying the PR link.     |
+| `Completed`   | The PR is **merged**. Never before — a green CI run is not a merge.                                        |
+
+Rules that follow from this:
+
+- **Set the status through the Asana MCP tools, in the same turn as the event.** A status left stale is worse than no status: it says work is happening that is not.
+- `Completed` and the task's completed checkbox move together. Both happen on merge, never earlier.
+- Do not skip states. A task that goes `Not Started` → `Completed` hides the review step that the one-task-per-PR rule exists to make visible.
+- Status is not a substitute for the progress comment. Comment on the task as work proceeds; the status field is the at-a-glance summary of those comments, not a replacement.
+- If a PR is closed without merging, the task returns to `In Progress` — not `Completed`, not `Not Started`.
+
+---
+
+## Out of scope for v1
+
+Do not build, and do not leave hooks for beyond what the design doc names: the **entire notes subsystem** (stories 35–46; §13), edit history, viewer spell approval, compendium/category suggestions, duplicate merge tooling, bulk add from the compendium, GraphQL response caching, email/password sign-in, note moderation.
+
+Story numbers 35–46 are **not reused** — v1 is 44 stories, numbered 1–34 and 47–56.
+
+The one v1 concession to v2: the ingredient detail page (M8.19) is built so a notes section can be added beneath it without restructuring.
+
+---
+
+## Skills
+
+Skills live in `.claude/skills/<name>/SKILL.md` and are invoked as `/<name>`. Six were ported from `resume-2026` in M0.10; `start-task` was written here afterwards. The table below is the trigger reference — [`claude-docs/agent-skills.md`](claude-docs/agent-skills.md) carries the shape, what was deliberately not ported, and which port-time hedges inside the skill files are still stale.
+
+| Skill              | Trigger                                                                                                                                                                                                                                                           |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start-task`       | "start M0.31", "start a task", `/start-task` — asks for an Asana Task ID, reads its `Type`, then runs `create-feature` (`Feature`/`Task`/`Bugfix`) or `create-hotfix` (`Hotfix`), passing the task through.                                                       |
+| `create-feature`   | "start a feature branch", "new feature", `/create-feature` — asks for a name and the Asana task ID, branches `feature/<slug>` off latest `origin/staging`, moves the task to `In Progress`.                                                                       |
+| `create-hotfix`    | "start a hotfix", "hotfix branch", `/create-hotfix` — asks for a name and the Asana task ID, branches `hotfix/<slug>` off latest `origin/main`, moves the task to `In Progress`.                                                                                  |
+| `create-pr`        | "open a PR", "create a pull request", "get this reviewed" — commits (after asking), pushes, opens a PR against the Gitflow-appropriate target, moves the Asana task to `In Review` and comments the PR link. `hotfix/*` opens PRs into both `main` and `staging`. |
+| `create-release`   | "cut a release", "create a release branch", `/create-release` — bumps semver, branches `release/<version>` off `staging`, tags `v<version>`, opens a PR into `main`.                                                                                              |
+| `create-main-sync` | "sync main into staging", "bring the hotfix back to staging", `/create-main-sync` — branches `main-sync/<timestamp>` off `main`, opens a PR into `staging`.                                                                                                       |
+| `prune-branches`   | "clean up my branches", "prune stale branches", "delete branches gone on remote" — deletes merged/gone local branches, asks about never-pushed ones. Never touches `main`/`staging`.                                                                              |
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
