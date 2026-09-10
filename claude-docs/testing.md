@@ -142,7 +142,22 @@ EXISTS` / `CREATE DATABASE ... TEMPLATE sorrel_template` M1.9 already does
 (`npx playwright install chromium`) are a one-time local step; CI's image
 install is M1.14's concern, same as the workflow wiring below.
 
-**Not yet wired: CI, a11y, coverage.** `pr-gate.yml`/`merge-queue.yml`'s
+## Accessibility — axe-core (M1.12)
+
+**`e2e/axe.ts`** exports `assertNoAccessibilityViolations(page)`, the one
+scan helper every spec imports — matching the `resume-2026` pattern of
+asserting accessibility in Playwright, not via `vitest-axe`. It runs
+`@axe-core/playwright`'s `AxeBuilder` against the current page and fails the
+test with a per-rule summary (rule id, help text, node count) if any
+violations are returned; a page with zero violations resolves silently.
+
+- **`e2e/smoke.spec.ts`** calls it after `page.goto('/')`, so the home page
+  is scanned as part of the existing smoke spec.
+- **`e2e/axe.spec.ts`** seeds a violation directly (`page.setContent` with an
+  `<img>` missing `alt`) and asserts the helper's promise rejects — proof the
+  scan actually fails a run instead of passing vacuously.
+
+**Not yet wired: CI, coverage.** `pr-gate.yml`/`merge-queue.yml`'s
 `playwright` jobs are the same kind of M0-era stub as `vitest`'s, replaced by
-M1.14. `@axe-core/playwright` (M1.12) and `monocart-coverage-reports` (M1.13)
-are separate, later tasks — this config has neither yet.
+M1.14. `monocart-coverage-reports` (M1.13) is a separate, later task — this
+config has no coverage reporting yet.
