@@ -157,7 +157,36 @@ violations are returned; a page with zero violations resolves silently.
   `<img>` missing `alt`) and asserts the helper's promise rejects — proof the
   scan actually fails a run instead of passing vacuously.
 
-**Not yet wired: CI, coverage.** `pr-gate.yml`/`merge-queue.yml`'s
-`playwright` jobs are the same kind of M0-era stub as `vitest`'s, replaced by
-M1.14. `monocart-coverage-reports` (M1.13) is a separate, later task — this
-config has no coverage reporting yet.
+**Not yet wired: CI.** `pr-gate.yml`/`merge-queue.yml`'s `playwright` jobs
+are the same kind of M0-era stub as `vitest`'s, replaced by M1.14 — which is
+also where the coverage artifact upload step lands, matching the M1.11/M1.12
+precedent of configuring the local run first and wiring CI later.
+
+## Coverage — monocart-coverage-reports (M1.13)
+
+**`e2e/coverage.config.ts`** exports the shared `CoverageReportOptions`:
+`outputDir: './coverage-e2e'` (separate from Vitest's `coverage/`, so the two
+suites' contributions stay visible independently — both already carved out
+in `.gitignore`), reports `['v8', 'console-details']`.
+
+- **`e2e/fixtures.ts`** re-exports `test`/`expect`; every spec imports from
+  here instead of `@playwright/test` directly. It adds an auto fixture
+  (`scope: 'test'`, `auto: true`) that starts `page.coverage.startJSCoverage`
+  /`startCSSCoverage` on every page the test's `context` opens (Chromium
+  only — the coverage API doesn't exist on Firefox/WebKit, checked via
+  `test.info().project.name`), stops both at the end of the test, and calls
+  `MCR(coverageOptions).add(...)` with the flattened result. A test that
+  never navigates (`e2e/axe.spec.ts`'s `page.setContent` case) collects an
+  empty array, which is skipped rather than handed to `add()` — an empty
+  array logs a spurious `MCR` warning otherwise.
+- **`e2e/global-setup.ts`** additionally calls `MCR(coverageOptions).cleanCache()`
+  after `recreateE2eDatabase()`, so a crashed previous run's cached coverage
+  data never leaks into this run's report.
+- **`e2e/global-teardown.ts`** (new; wired via `playwright.config.ts`'s
+  `globalTeardown`) calls `MCR(coverageOptions).generate()` once after every
+  spec's fixture has added its entries, producing `coverage-e2e/index.html`
+  (the native V8 report) plus a `console-details` table printed at the end
+  of the run.
+
+Local verification only — the artifact upload step is M1.14's, once
+`playwright.yml` exists to upload it from.
