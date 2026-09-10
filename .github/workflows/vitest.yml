@@ -6,16 +6,27 @@ name: Vitest
 # workflow_call inputs, container/checkout/timer/summarize/job-summary/
 # pr-comment steps, and the coverage-threshold-is-the-exit-code reasoning
 # all transfer directly. What's new here, since resume-2026 has no database
-# at all, is the `build-db-image` job and the `services: postgres:` block —
-# see DESIGN.md §11's CI table ("Actions services: postgres:17, reachable by
-# service name from the existing job container:") and
+# at all, is the `services: postgres:` block — see DESIGN.md §11's CI table
+# ("Actions services: postgres:17, reachable by service name from the
+# existing job container:") and
 # claude-docs/design-decisions/m1.9-test-db-isolation.md for why the `db`
-# project needs a real Postgres rather than SQLite.
+# project needs a real Postgres rather than SQLite. The image itself comes in
+# as `inputs.db-image` — built once by the caller (pr-gate.yml/
+# merge-queue.yml both have their own top-level `build-db-image` job, same
+# shape as `build-image`) rather than this workflow calling build-db-image.yml
+# itself. playwright.yml needs the identical image and used to call it too —
+# two independent nested `workflow_call`s to the same file, each paying for
+# its own checkout/docker-login/buildx-setup, when the caller already builds
+# it once for `vitest`'s sibling `build-image`/`build-e2e-image` jobs anyway.
 on:
   workflow_call:
     inputs:
       image:
         description: Testing image ref to run against (from build-image.yml)
+        required: true
+        type: string
+      db-image:
+        description: Postgres service image ref to run against (from build-db-image.yml, built once by the caller)
         required: true
         type: string
       pr-number:
@@ -42,28 +53,15 @@ on:
 
 permissions:
   contents: read
-  # write, not read like lint.yml/typecheck.yml's copy of this block — the
-  # build-db-image job below calls build-db-image.yml, which pushes to GHCR
-  # and needs packages: write for itself. A reusable workflow can't grant a
-  # nested call broader permissions than it was itself given, so `read` here
-  # made that inner call a startup_failure (zero jobs even created) the
-  # first time pr-gate.yml actually exercised this path.
-  packages: write
+  # read, not write — this job only pulls an already-built, already-pushed
+  # image (inputs.db-image) into its `services:` block; it doesn't push
+  # anything itself, so it never needs more than lint.yml/typecheck.yml's
+  # own packages: read.
+  packages: read
   pull-requests: write
 
 jobs:
-  # Publishes (or reuses, if content-addressed and unchanged) the preseeded
-  # Postgres 17 image build-db-image.yml owns, so `vitest`'s `services:`
-  # block below always has a real, current image to pull — regardless of
-  # whether this specific PR touched src/db/**. Runs unconditionally
-  # (not gated on `should-run`) for the same reason pr-gate.yml's
-  # `build-image` job does: cheap, and the check below needs its output
-  # either way to complete under its normal name.
-  build-db-image:
-    uses: ./.github/workflows/build-db-image.yml
-
   vitest:
-    needs: build-db-image
     runs-on: ubuntu-latest
     container:
       image: ${{ inputs.image }}
@@ -76,16 +74,15 @@ jobs:
       options: --user root
     services:
       # Reachable by service name ("postgres") from this job's own
-      # `container:`, per DESIGN.md §11's CI table. `needs.build-db-image.
-      # outputs.image` is the hash tag build-db-image.yml computed and
-      # pushed — never reconstructed here. `POSTGRES_*` env vars are inert
-      # the same way they are in Docker/docker-compose.yaml's `postgres`
-      # service (PGDATA is already populated at image build time, so the
-      # entrypoint's first-boot init never runs) — kept only as
-      # documentation of the credentials actually baked in
-      # (Docker/postgres-init/enable-extensions.sql).
+      # `container:`, per DESIGN.md §11's CI table. `inputs.db-image` is the
+      # hash tag the caller's own build-db-image job computed and pushed —
+      # never reconstructed here. `POSTGRES_*` env vars are inert the same
+      # way they are in Docker/docker-compose.yaml's `postgres` service
+      # (PGDATA is already populated at image build time, so the entrypoint's
+      # first-boot init never runs) — kept only as documentation of the
+      # credentials actually baked in (Docker/postgres-init/enable-extensions.sql).
       postgres:
-        image: ${{ needs.build-db-image.outputs.image }}
+        image: ${{ inputs.db-image }}
         env:
           POSTGRES_USER: sorrel
           POSTGRES_PASSWORD: sorrel

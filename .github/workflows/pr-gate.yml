@@ -11,10 +11,13 @@ name: PR Gate
 # the M0-era no-op stubs — job names are unchanged from the stubs, so no
 # required-status-check rename was ever needed. `playwright` runs in its own
 # dedicated e2e image (`build-e2e-image` below), not `build-image`'s shared
-# `testing` image — see playwright.yml's header comment for why. Both
-# `vitest.yml` and `playwright.yml` additionally depend on `build-db-image`
-# internally (not from here) for the CI Postgres service — see their own
-# header comments.
+# `testing` image — see playwright.yml's header comment for why. Both also
+# need the CI Postgres image — `build-db-image` below builds it once (same
+# shape as `build-image`/`build-e2e-image`) and both `vitest`/`playwright`
+# take it as their `db-image` input, rather than each independently calling
+# build-db-image.yml itself: two nested `workflow_call`s to the same file
+# would each pay for their own checkout/docker-login/buildx-setup for a
+# result the content-addressed tag makes identical either way.
 #
 # lint/typecheck/build/format/destructive-ddl/gitflow are required status
 # checks in branch protection (as "<job> / <job>", the name GitHub gives a
@@ -122,11 +125,12 @@ jobs:
               - '.github/workflows/destructive-ddl.yml'
               - 'src/db/migrations/**'
             # vitest also matches build-db-image.yml/Dockerfile.postgres/
-            # postgres-init — vitest.yml's own build-db-image job is what
-            # actually consumes that image, so a change there needs vitest
-            # to rerun even though `changes` filters by build.yml/lint.yml's
-            # own narrower conventions. vitest.config.mts and vitest.setup.ts
-            # aren't under src/**, so they're listed explicitly.
+            # postgres-init — the build-db-image job below (its `db-image`
+            # input) is what actually consumes that image, so a change there
+            # needs vitest to rerun even though `changes` filters by
+            # build.yml/lint.yml's own narrower conventions. vitest.config.mts
+            # and vitest.setup.ts aren't under src/**, so they're listed
+            # explicitly.
             vitest:
               - *shared
               - '.github/workflows/vitest.yml'
@@ -258,14 +262,30 @@ jobs:
       image: ${{ needs.build-image.outputs.image }}
       pr-number: ${{ github.event.pull_request.number }}
 
+  # Publishes (or reuses, if content-addressed and unchanged) the preseeded
+  # Postgres 17 image both vitest and playwright below need for their
+  # `services: postgres:` block — built once here, same shape as
+  # build-image/build-e2e-image, rather than each of vitest.yml/
+  # playwright.yml separately calling build-db-image.yml as a nested
+  # workflow_call (which used to mean two independent checkout/docker-login/
+  # buildx-setup sequences for what the content-addressed tag makes an
+  # identical result either way). Unconditional, like build-image, for the
+  # same "the jobs below need its output either way" reasoning.
+  build-db-image:
+    concurrency:
+      group: pr-gate-build-db-image-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    uses: ./.github/workflows/build-db-image.yml
+
   vitest:
-    needs: [build-image, changes, gitflow]
+    needs: [build-image, build-db-image, changes, gitflow]
     concurrency:
       group: pr-gate-vitest-${{ github.event.pull_request.number }}
       cancel-in-progress: true
     uses: ./.github/workflows/vitest.yml
     with:
       image: ${{ needs.build-image.outputs.image }}
+      db-image: ${{ needs.build-db-image.outputs.image }}
       pr-number: ${{ github.event.pull_request.number }}
       # No job-level `if:` here on purpose — see vitest.yml's should-run input for why.
       should-run: ${{ needs.changes.outputs.vitest == 'true' }}
@@ -283,13 +303,14 @@ jobs:
     uses: ./.github/workflows/build-e2e-image.yml
 
   playwright:
-    needs: [build-e2e-image, changes, gitflow]
+    needs: [build-e2e-image, build-db-image, changes, gitflow]
     concurrency:
       group: pr-gate-playwright-${{ github.event.pull_request.number }}
       cancel-in-progress: true
     uses: ./.github/workflows/playwright.yml
     with:
       image: ${{ needs.build-e2e-image.outputs.image }}
+      db-image: ${{ needs.build-db-image.outputs.image }}
       pr-number: ${{ github.event.pull_request.number }}
       # No job-level `if:` here on purpose — see playwright.yml's should-run input for why.
       should-run: ${{ needs.changes.outputs.playwright == 'true' }}

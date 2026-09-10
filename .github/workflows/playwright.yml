@@ -29,6 +29,10 @@ on:
         description: E2E testing image ref to run against (from build-e2e-image.yml)
         required: true
         type: string
+      db-image:
+        description: Postgres service image ref to run against (from build-db-image.yml, built once by the caller — same image vitest.yml uses)
+        required: true
+        type: string
       pr-number:
         description: Pull request number to comment on (omit to skip PR commenting)
         required: false
@@ -53,23 +57,14 @@ on:
 
 permissions:
   contents: read
-  # write, not read — same reasoning as vitest.yml's identical comment: the
-  # build-db-image job below calls build-db-image.yml, which needs
-  # packages: write to push to GHCR, and a nested reusable-workflow call
-  # can't be granted more than its caller has.
-  packages: write
+  # read, not write — same reasoning as vitest.yml's identical comment: this
+  # job only pulls inputs.db-image, an already-built, already-pushed image,
+  # into its services: block. It never pushes anything itself.
+  packages: read
   pull-requests: write
 
 jobs:
-  # Same reasoning as vitest.yml's build-db-image job — publishes (or
-  # reuses) the preseeded Postgres image so the services: block below always
-  # has a real, current image, regardless of whether this PR touched
-  # src/db/**. Runs unconditionally, same as vitest.yml's.
-  build-db-image:
-    uses: ./.github/workflows/build-db-image.yml
-
   playwright:
-    needs: build-db-image
     runs-on: ubuntu-latest
     container:
       image: ${{ inputs.image }}
@@ -87,15 +82,14 @@ jobs:
     services:
       # Reachable by service name ("postgres") from this job's own
       # `container:`, per DESIGN.md §11's CI table — same shape as
-      # vitest.yml's service. `needs.build-db-image.outputs.image` is the
-      # hash tag build-db-image.yml computed and pushed — never
-      # reconstructed here. `POSTGRES_*` env vars are inert the same way
-      # they are in Docker/docker-compose.yaml's `postgres` service (PGDATA
-      # is already populated at image build time) — kept only as
-      # documentation of the credentials actually baked in
-      # (Docker/postgres-init/enable-extensions.sql).
+      # vitest.yml's service. `inputs.db-image` is the hash tag the caller's
+      # own build-db-image job computed and pushed — never reconstructed
+      # here. `POSTGRES_*` env vars are inert the same way they are in
+      # Docker/docker-compose.yaml's `postgres` service (PGDATA is already
+      # populated at image build time) — kept only as documentation of the
+      # credentials actually baked in (Docker/postgres-init/enable-extensions.sql).
       postgres:
-        image: ${{ needs.build-db-image.outputs.image }}
+        image: ${{ inputs.db-image }}
         env:
           POSTGRES_USER: sorrel
           POSTGRES_PASSWORD: sorrel

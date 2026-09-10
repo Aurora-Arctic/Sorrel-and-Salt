@@ -106,11 +106,18 @@ jobs:
       image: ${{ needs.build-image.outputs.image }}
       should-run: false
 
+  # Same reasoning as pr-gate.yml's build-db-image job — built once here so
+  # vitest/playwright below take it as an input rather than each
+  # independently calling build-db-image.yml themselves.
+  build-db-image:
+    uses: ./.github/workflows/build-db-image.yml
+
   vitest:
-    needs: [build-image, pr-number, gitflow]
+    needs: [build-image, build-db-image, pr-number, gitflow]
     uses: ./.github/workflows/vitest.yml
     with:
       image: ${{ needs.build-image.outputs.image }}
+      db-image: ${{ needs.build-db-image.outputs.image }}
       pr-number: ${{ needs.pr-number.outputs.number }}
       merge-queue: true
 
@@ -121,9 +128,10 @@ jobs:
     uses: ./.github/workflows/build-e2e-image.yml
 
   playwright:
-    needs: [build-e2e-image, pr-number, gitflow]
+    needs: [build-e2e-image, build-db-image, pr-number, gitflow]
     uses: ./.github/workflows/playwright.yml
     with:
       image: ${{ needs.build-e2e-image.outputs.image }}
+      db-image: ${{ needs.build-db-image.outputs.image }}
       pr-number: ${{ needs.pr-number.outputs.number }}
       merge-queue: true

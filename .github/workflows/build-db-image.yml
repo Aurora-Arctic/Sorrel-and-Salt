@@ -6,8 +6,7 @@ name: Build DB Image
 # purely a local-dev concern. Content-addressed: the image is tagged with a
 # hash of everything that actually determines its contents — src/db/**, the
 # Dockerfile, and its init script — plus `latest`, so identical inputs always
-# produce the identical tag and this workflow's own `verify-db-image` job
-# (M0.19) can pin to it exactly.
+# produce the identical tag and every caller pins to it exactly.
 #
 # The path filter below *is* "rebuild is skipped for PRs that do not touch
 # src/db": an unrelated PR never triggers this workflow at all, rather than
@@ -33,15 +32,20 @@ on:
   pull_request:
     paths: *db-image-paths
   workflow_dispatch:
-  # M1.14's `vitest.yml`/`playwright.yml` are the real consumer §11 always
-  # pointed at — `needs: build-db-image` + `uses:
-  # ./.github/workflows/build-db-image.yml`, then a `services: postgres:`
-  # block keyed to this output, same shape `verify-db-image` below used to
-  # prove out. workflow_call coexists with the triggers above on the same
-  # `on:` block; a call bypasses `pull_request`'s path filter entirely (that
-  # filter only gates *this* workflow's own direct triggers), so every
-  # vitest/playwright run gets a real, current image regardless of whether
-  # this specific PR touched `src/db/**`.
+  # M1.14's `pr-gate.yml`/`merge-queue.yml` are the real consumers §11 always
+  # pointed at — each has its own top-level `build-db-image` job
+  # (`uses: ./.github/workflows/build-db-image.yml`), built once and passed
+  # as a `db-image` input to both `vitest.yml` and `playwright.yml`, which
+  # each key their own `services: postgres:` block off it — same shape
+  # `verify-db-image` below used to prove out. `vitest.yml`/`playwright.yml`
+  # deliberately don't call this workflow themselves: they used to, each as
+  # its own nested `workflow_call`, which meant two independent checkout/
+  # docker-login/buildx-setup sequences for what the content-addressed tag
+  # makes an identical image either way. workflow_call coexists with the
+  # triggers above on the same `on:` block; a call bypasses `pull_request`'s
+  # path filter entirely (that filter only gates *this* workflow's own direct
+  # triggers), so every vitest/playwright run gets a real, current image
+  # regardless of whether this specific PR touched `src/db/**`.
   workflow_call:
     outputs:
       image:
@@ -107,8 +111,9 @@ jobs:
   # design-decisions/m0.18-build-db-image.md). It was always scaffolding —
   # ci.md said so directly — standing in for the real M1 consumer DESIGN.md
   # §11 describes. `vitest.yml`/`playwright.yml` (M1.14) are that consumer
-  # now: they pull this same `needs.build-db-image.outputs.image` into their
-  # own `services: postgres:` block (reachable by service name from their
+  # now, via `pr-gate.yml`/`merge-queue.yml`'s own `build-db-image` job and
+  # the `db-image` input each passes down: they pull it into their own
+  # `services: postgres:` block (reachable by service name from their
   # `container:`), connecting over TCP as the `sorrel` role — which does
   # have a known, non-discarded password (`Docker/postgres-init/enable-extensions.sql`)
   # — so every real vitest/playwright run now proves the image works, and
