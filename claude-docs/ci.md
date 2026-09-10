@@ -32,6 +32,24 @@ archived and are not required reading.
   `lint` and `typecheck` take a `should-run` input for path-filtering;
   **`format` has none and always runs**, since Prettier covers non-code files.
 
+- **`destructive-ddl.yml`** (M1.5) — flags destructive DDL (`DROP COLUMN`,
+  `DROP TABLE`, `RENAME`, `ALTER COLUMN ... TYPE`, `SET NOT NULL`/
+  `ADD COLUMN ... NOT NULL` without a default) in migration files new or
+  changed in the PR, via `scripts/check-destructive-ddl.ts`, and fails unless
+  the PR body carries a `Destructive DDL acknowledged: <reason>` line — see
+  `claude-docs/db.md`'s Migrations section for the policy. Blocking, like
+  `lint`/`typecheck`. Unlike them it needs two things `workflow_call` can't
+  read off its own trigger — the changed-migration-file list and the PR body
+  — so both are passed in as string inputs: the file list from `changes`'s
+  `dorny/paths-filter` step (`list-files: json`, reused rather than adding a
+  second changed-files action), the body straight from
+  `github.event.pull_request.body` at the `pr-gate.yml` call site.
+  `merge-queue.yml` calls it too, but with `should-run: false` (same reason
+  as its `gitflow` call — `merge_group` has no real PR body or diffable
+  source ref, so it can only trust that `pr-gate.yml` already gated the PR
+  before it reached the queue) purely so the check name reports success there
+  instead of never posting.
+
 - **`build.yml`** — `npm run build` (`next build`) in the same container shape,
   caching `.next/cache` via `actions/cache`. Then, gated by the same
   `should-run`: `npm run check:stories` and `npm run workshop:build`.
@@ -61,15 +79,18 @@ archived and are not required reading.
 
 ## Aggregating workflows
 
-- **`pr-gate.yml`** — path-filters `lint`/`typecheck`/`build` via
-  `dorny/paths-filter` (`format` always runs), calls every reusable check, and
+- **`pr-gate.yml`** — path-filters `lint`/`typecheck`/`build`/`destructive-ddl`
+  via `dorny/paths-filter` (`format` always runs), calls every reusable check, and
   carries stub `vitest`/`playwright` jobs (real job names, one no-op step) so M1
   can wire them in without renaming a required check. Its `build-image` job
   keeps a `pr-gate-build-image-<pr number>` / `cancel-in-progress: false`
   concurrency group on the caller.
 - **`merge-queue.yml`** — the `merge_group` counterpart, calling the same
   `lint`/`format`/`typecheck`/`build` (no `audit` — PR-only) with
-  `merge-queue: true`, and no caller-side concurrency group. **"Require merge
+  `merge-queue: true`, and no caller-side concurrency group. Also calls
+  `destructive-ddl` (`should-run: false`, no `merge-queue: true` — see that
+  workflow's own bullet above) for the same required-check-name reason it
+  calls `gitflow` below. **"Require merge
   queue" is deliberately OFF** on `main` and `staging`: the workflow exists but
   `merge_group` never fires until M7.A.1 flips that setting, once there is more
   than one contributor.
@@ -194,11 +215,21 @@ nothing and this workflow is the only path.
 `Docker/Dockerfile.node` `testing` image (`act-image`). `.actrc` carries
 `-P ubuntu-latest=catthehacker/ubuntu:act-latest` and `--pull=false`.
 
-- `make act-lint`, `act-format`, `act-typecheck`, and `act-test` for all three.
+- `make act-lint`, `act-format`, `act-typecheck`, `act-destructive-ddl`, and
+  `act-test` for all four.
 - `make act-cache-checkout` pre-clones this repo's `main` so the remote
   `checkout-to-app@main` ref resolves offline.
-- lint/typecheck need `--input should-run=true` — act does not apply
-  `workflow_call` input defaults.
+- lint/typecheck/destructive-ddl need `--input should-run=true` — act does not
+  apply `workflow_call` input defaults.
+- **`act-destructive-ddl` can't exercise the PR-body/changed-files inputs** —
+  those come from `pr-gate.yml`'s `changes` job and the real
+  `github.event.pull_request.body`, neither of which exists under a bare
+  `act -W ... -j destructive-ddl` invocation. It always falls back to the
+  script's no-args behavior (scan every committed migration, no ack line to
+  find) — good for catching a broken workflow/script wiring, not a
+  substitute for `npm run check:destructive-ddl -- --self-test`, which
+  exercises the ack-line gating logic directly against fixtures under
+  `scripts/__fixtures__/destructive-ddl/`.
 - **`act-build` / `act-vitest` / `act-playwright` do not exist.** `act-build`
   needs `actions/cache` pre-cached the way `act-cache-checkout` pre-caches
   `checkout-to-app`; the other two wait on their M1 workflows.

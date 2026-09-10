@@ -89,6 +89,23 @@ jobs:
     with:
       image: ${{ needs.build-image.outputs.image }}
 
+  # No real scanning happens here, same reasoning as gitflow above: a
+  # merge_group entry has already passed pr-gate.yml's real destructive-ddl
+  # run (with the real changed-file list and PR body) before it could ever
+  # be queued, and merge_group exposes neither of those — no PR body, and no
+  # cheap way to diff the queue's synthetic ref against the target branch
+  # for "which migrations changed" the way pr-gate's `changes` job does. This
+  # job exists purely so "destructive-ddl / destructive-ddl" (if/when it's
+  # added as a required status check) reports success here too instead of
+  # never posting, which would leave a queued merge stuck waiting on a check
+  # that can never complete — see gitflow's note above, same failure mode.
+  destructive-ddl:
+    needs: [build-image, gitflow]
+    uses: ./.github/workflows/destructive-ddl.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+      should-run: false
+
   # Stub — M1 replaces this with `uses: ./.github/workflows/vitest.yml`,
   # matching pr-gate.yml's own stub (M0.20) so both required checks come
   # online for the queue and the gate at the same time.

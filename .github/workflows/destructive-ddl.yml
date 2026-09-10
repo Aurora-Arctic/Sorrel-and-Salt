@@ -1,0 +1,164 @@
+name: Destructive DDL
+
+# Reusable check (M1.5) enforcing CLAUDE.md rule 10: migrations are
+# expand/contract and forward-only, so reverting a bad release is a deploy
+# rollback, never a database rollback. That only holds if every migration
+# stays compatible with the *previous* app version — this flags DROP COLUMN,
+# DROP TABLE, RENAME, ALTER COLUMN ... TYPE (possible narrowing — see the
+# script for why this can't be judged more precisely from raw SQL) and new
+# NOT NULL constraints in any migration file that's new or changed in this
+# PR, and fails unless the PR body carries an explicit acknowledgement line
+# (see scripts/check-destructive-ddl.ts's header for the exact wording, and
+# claude-docs/db.md for the policy and a worked rename example). Called via
+# workflow_call from pr-gate.yml (and, should-run: false, from
+# merge-queue.yml — see the note on that job below); never triggered
+# directly.
+#
+# Unlike lint/typecheck/build, this check needs two things a `workflow_call`
+# file cannot read off its own trigger context: which migration files
+# changed, and the PR's body text. `workflow_call` workflows have no
+# `pull_request` event of their own — only the caller sees the real
+# `github.event.pull_request`, so both are passed in as plain string inputs.
+# The changed-file list comes from pr-gate.yml's `changes` job, which already
+# runs dorny/paths-filter for lint/typecheck/build — this reuses that same
+# step (with `list-files: json` added) rather than adding a second
+# changed-files action to the repo. The PR body comes straight from
+# `github.event.pull_request.body` at the pr-gate.yml call site.
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: Testing image ref to run against (from build-image.yml)
+        required: true
+        type: string
+      pr-number:
+        description: Pull request number to comment on (omit to skip PR commenting)
+        required: false
+        type: string
+      merge-queue:
+        description: Set true when called from merge-queue.yml — uses a separate, merge-queue-labeled comment thread and posts only on failure (no minimize-on-success)
+        required: false
+        type: boolean
+        default: false
+      should-run:
+        description: >-
+          Set false to skip the actual scan while still completing this job under its
+          normal name. pr-gate passes this from its path-filter output instead of
+          putting an `if:` on the calling job — a job-level `if:` makes GitHub report
+          a differently-named, bare check run ("destructive-ddl" instead of
+          "destructive-ddl / destructive-ddl") when skipped, which never satisfies the
+          required status check and leaves the PR stuck. Defaults true so
+          merge-queue's should-run: false call is explicit rather than incidental.
+        required: false
+        type: boolean
+        default: true
+      changed-files:
+        description: >-
+          JSON array (string) of migration files new/changed in this PR, from
+          pr-gate.yml's dorny/paths-filter `list-files: json` output. An empty
+          array/string means no migration files changed — the script then checks
+          nothing rather than falling back to a full scan (that fallback is only
+          for a bare local `npm run check:destructive-ddl` with no env var set at
+          all — see the script header). Omit (merge-queue's call) when there's no
+          real changed-file list to give it.
+        required: false
+        type: string
+        default: ''
+      pr-body:
+        description: >-
+          The PR's body text, for the "Destructive DDL acknowledged: <reason>" line.
+          Omit (merge-queue's call) when there's no real PR body available —
+          merge_group events carry a synthetic head ref, not the PR itself.
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+  packages: read
+  pull-requests: write
+
+jobs:
+  destructive-ddl:
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # The image's default user (node, non-root) can't write to the runner's
+      # bind-mounted _temp/_runner_file_commands dir, which actions/checkout (and
+      # any JS action using core.saveState/setOutput) needs — EACCES otherwise.
+      options: --user root
+    defaults:
+      run:
+        working-directory: /app
+        # container: jobs default to sh, not bash, unlike normal runs-on jobs —
+        # https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/run-jobs-in-a-container
+        # sh (dash) doesn't support `set -o pipefail`, used below.
+        shell: bash
+    steps:
+      - name: Checkout into /app
+        if: inputs.should-run
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      - name: Start timer
+        id: timer-start
+        if: inputs.should-run
+        uses: ./.github/actions/timer-start
+
+      # changed-files arrives as a JSON array string (dorny/paths-filter's
+      # list-files: json) — turn it into the newline-separated list the
+      # script's DESTRUCTIVE_DDL_FILES env var expects. An empty string input
+      # (should-run: true but nothing matched the filter — shouldn't happen in
+      # practice since should-run is itself derived from that same filter, but
+      # cheap to guard) parses to an empty array, which is still "set" as far
+      # as the script cares, so it correctly checks nothing rather than
+      # falling back to a full scan.
+      - name: Run destructive DDL check
+        id: run
+        if: inputs.should-run
+        env:
+          CHANGED_FILES_JSON: ${{ inputs.changed-files }}
+          DESTRUCTIVE_DDL_PR_BODY: ${{ inputs.pr-body }}
+        run: |
+          set -o pipefail
+          export DESTRUCTIVE_DDL_FILES=$(node -e "
+            const raw = process.env.CHANGED_FILES_JSON || '[]';
+            let files = [];
+            try { files = JSON.parse(raw); } catch { files = []; }
+            process.stdout.write(files.join('\n'));
+          ")
+          npm run check:destructive-ddl 2>&1 | tee /app/output.log
+
+      - name: Compute duration
+        id: timer
+        if: always() && inputs.should-run
+        uses: ./.github/actions/timer-elapsed
+        with:
+          start: ${{ steps.timer-start.outputs.start }}
+
+      - name: Write job summary
+        if: always() && inputs.should-run
+        uses: ./.github/actions/job-summary
+        with:
+          check-name: Destructive DDL
+          outcome: ${{ steps.run.outcome }}
+          log-file: /app/output.log
+          duration: ${{ steps.timer.outputs.duration }}
+
+      # Fail-only from pr-gate (resolves a prior failure comment on success),
+      # fail-only on a separate merge-queue-labeled thread from merge-queue
+      # (no action at all on success) — see .github/actions/pr-comment.
+      - name: Comment on PR
+        if: always() && inputs.pr-number && inputs.should-run
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Destructive DDL
+          marker-slug: destructive-ddl
+          pr-number: ${{ inputs.pr-number }}
+          merge-queue: ${{ inputs.merge-queue }}
+          outcome: ${{ steps.run.outcome }}
+          log-file: /app/output.log
+          success-mode: minimize
+          duration: ${{ steps.timer.outputs.duration }}

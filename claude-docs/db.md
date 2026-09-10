@@ -14,7 +14,7 @@ no silent fallback.
   `?sslmode=require` turns on TLS automatically and a local URL with no
   `sslmode` stays plaintext — `connection.ts` never branches on environment.
 - **`drizzle.config.ts`** (repo root) drives `drizzle-kit`: `dialect:
-  'postgresql'`, schema at `src/db/schema`, migrations output to
+'postgresql'`, schema at `src/db/schema`, migrations output to
   `src/db/migrations`. It reads the same `DATABASE_URL` and throws under the
   same condition.
 
@@ -54,3 +54,107 @@ no silent fallback.
   all: `PGDATA` is already populated at image build time, so the entrypoint's
   usual first-boot "create `POSTGRES_USER`/`POSTGRES_DB` from env" step never
   runs for it. Still no schema or seed data — that's M1.27.
+
+## Expand/contract and the destructive-DDL check (M1.5)
+
+Drizzle generates no down migrations, and hand-writing them is a reliable way
+to lose data — so none exist in this repo, and none should ever be added.
+The only rollback path for a bad release is a **deploy rollback**: redeploy
+the previous app version against the database as it stands. That only works
+if every migration leaves the schema compatible with both the app version
+that shipped it _and_ the one before it — the expand/contract pattern:
+
+1. **Expand** — a migration that only adds (a column, a table, an index) is
+   always safe: old code that doesn't know about the new column simply
+   ignores it.
+2. **Migrate the app** — ship code that uses the new shape, typically
+   alongside the old one for a transition period (dual-write, read-with-fallback).
+3. **Contract** — once nothing depends on the old shape any more (usually one
+   release later, after the transition period has had a chance to run in
+   production), a later migration removes it.
+
+Renaming a column is the canonical case that goes wrong if done directly —
+`ALTER TABLE ... RENAME COLUMN` is atomic in Postgres, but it isn't atomic
+across a _deploy_: for the seconds-to-minutes it takes Vercel to roll traffic
+from the old app version to the new one, both are reading and writing the
+same row, and the old version's query for the old column name starts erroring
+mid-rollout. Never do it in one step. Instead:
+
+**Worked example: renaming `spells.name` to `spells.title` across two releases**
+
+- **Release N — expand.** A migration adds the new column and backfills it;
+  the app writes both and reads with a fallback.
+
+  ```sql
+  -- src/db/migrations/00NN_add-spells-title.sql
+  ALTER TABLE spells ADD COLUMN title text;
+  UPDATE spells SET title = name WHERE title IS NULL;
+  ```
+
+  In `src/db/schema` (Drizzle), both columns exist on the table for this
+  release:
+
+  ```ts
+  export const spells = pgTable('spells', {
+    // ...
+    name: text('name'), // deprecated — still written, read as a fallback only
+    title: text('title'), // canonical as of Release N
+    // ...
+  });
+  ```
+
+  And the write path (inside `withAudit`, in `src/services/`) writes both;
+  the read path prefers `title`, falling back to `name` for any row a
+  same-release backfill or an in-flight write hasn't caught yet:
+
+  ```ts
+  // write
+  await tx.update(spells).set({ name: input.title, title: input.title }).where(...);
+
+  // read
+  const displayTitle = row.title ?? row.name;
+  ```
+
+  This is safe to deploy and, just as importantly, safe to **roll back** —
+  the previous app version (Release N-1, which only knows `name`) still
+  works fine against this schema, since `name` is still present and still
+  kept up to date.
+
+- **Release N+1 — contract.** Once Release N has been running in production
+  long enough that nothing reads `name` any more (every row has been
+  written under Release N's dual-write, and no older app version is still
+  deployed anywhere), a later migration drops it:
+
+  ```sql
+  -- src/db/migrations/00MM_drop-spells-name.sql
+  ALTER TABLE spells DROP COLUMN name;
+  ```
+
+  and the schema/service code drops the fallback and the dual-write, reading
+  and writing `title` only. **This migration is destructive** — it needs the
+  acknowledgement line below in its PR body, precisely because a same-release
+  rollback of Release N+1 back to Release N would otherwise break (Release
+  N's dual-write still tries to write `name`, which no longer exists). That
+  tradeoff — Release N+1 can no longer safely roll back to Release N, only
+  forward-fixed — is exactly what the acknowledgement line is for: a human
+  has to say out loud "yes, this is the point where we give up the old
+  column," not have it happen silently.
+
+**The CI check (`destructive-ddl.yml` / `scripts/check-destructive-ddl.ts`,
+M1.5)** scans migration files new or changed in a PR for `DROP COLUMN`,
+`DROP TABLE`, `RENAME` (column or table), `ALTER COLUMN ... TYPE` (flagged
+for review whenever present — telling narrowing apart from widening reliably
+needs a real SQL parser and the column's previous definition, not just
+regexes over the new migration's text), and a `NOT NULL` addition
+(`SET NOT NULL`, or `ADD COLUMN ... NOT NULL` with no `DEFAULT`). It passes
+automatically when none of those appear. When one does, the PR body must
+contain a line of the exact form:
+
+```
+Destructive DDL acknowledged: <reason>
+```
+
+(case-insensitive, a non-empty reason required) — see the script's own header
+comment for the regex and the reasoning. There's no such line format
+elsewhere in the repo to stay consistent with; this is the one place it's
+defined, so `claude-docs/ci.md` and the script both point back here.
