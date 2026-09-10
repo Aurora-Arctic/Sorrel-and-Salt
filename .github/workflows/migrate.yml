@@ -1,0 +1,182 @@
+name: Migrate
+
+# Reusable workflow that applies pending Drizzle migrations to a target
+# database ahead of a Vercel deploy. Called via workflow_call from
+# deploy.yml with a `needs:` dependency so `deploy` never promotes a build
+# against a schema its own migrations haven't reached yet — DESIGN.md §12,
+# "New migrate.yml" row.
+#
+# `environment` matches deploy.yml's own resolved target: `production` for
+# a push to main, `preview` for a push to staging and for a hotfix -> main
+# PR. `vercel pull` resolves the right DATABASE_URL for each — the
+# branch-scoped override for staging, the integration's per-deployment
+# ephemeral Neon branch for a hotfix preview — see
+# claude-docs/design-decisions/m1.1-neon-branch-strategy.md. Never
+# triggered directly, same as lint.yml/format.yml/etc.
+#
+# Production only (M1.6): before applying migrations, branch the `production`
+# Neon branch as `snapshot-<short sha>` — a known-good point the restore
+# runbook (claude-docs/db.md, "Snapshot before production migrations") can
+# promote back to if the migration corrupts data. Guarded the same
+# stub-now/wire-later way as the Vercel secrets above: NEON_API_KEY /
+# NEON_PROJECT_ID don't exist until M0.27 wires up the secrets matrix, so
+# the step warns and skips rather than failing the job. Preview never
+# snapshots — staging/hotfix databases are already disposable.
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Vercel environment to pull DATABASE_URL for (preview or production)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    # Bare runner, not the `testing` GHCR image the check workflows use:
+    # this job needs the Vercel CLI, same call deploy.yml makes.
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Check secrets
+        id: guard
+        env:
+          VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_DEPLOY_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::warning::Vercel secrets not configured yet (M0.27) — skipping migrate."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.guard.outputs.enabled == 'true'
+        uses: actions/checkout@v7
+
+      - name: Set up Node
+        if: steps.guard.outputs.enabled == 'true'
+        uses: actions/setup-node@v4
+        with:
+          # Match Docker/Dockerfile.node, local dev, and deploy.yml.
+          node-version: 26.6.0
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.guard.outputs.enabled == 'true'
+        run: npm ci
+
+      - name: Install Vercel CLI
+        if: steps.guard.outputs.enabled == 'true'
+        run: npm install --global vercel@59
+
+      - name: Start timer
+        id: start
+        if: steps.guard.outputs.enabled == 'true'
+        uses: ./.github/actions/timer-start
+
+      - name: Pull Vercel environment
+        if: steps.guard.outputs.enabled == 'true'
+        run: vercel pull --yes --environment=${{ inputs.environment }} --token="$VERCEL_DEPLOY_TOKEN"
+        env:
+          VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
+
+      - name: Load DATABASE_URL from pulled environment
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          env_file=".vercel/.env.${{ inputs.environment }}.local"
+          if [ ! -f "$env_file" ]; then
+            echo "::error::$env_file not found after vercel pull"
+            exit 1
+          fi
+          db_url=$(grep -m1 '^DATABASE_URL=' "$env_file" | cut -d '=' -f2- | sed -e 's/^"//' -e 's/"$//')
+          if [ -z "$db_url" ]; then
+            echo "::error::DATABASE_URL not present in $env_file"
+            exit 1
+          fi
+          echo "::add-mask::$db_url"
+          echo "DATABASE_URL=$db_url" >> "$GITHUB_ENV"
+
+      - name: Check Neon secrets
+        id: neon-guard
+        if: steps.guard.outputs.enabled == 'true' && inputs.environment == 'production'
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+        run: |
+          if [ -z "$NEON_API_KEY" ] || [ -z "$NEON_PROJECT_ID" ]; then
+            echo "::warning::Neon secrets not configured yet (M0.27) — skipping pre-migration snapshot."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Snapshot production before migrating
+        id: snapshot
+        if: steps.neon-guard.outputs.enabled == 'true'
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+        run: |
+          set -eo pipefail
+          branch_name="snapshot-${GITHUB_SHA:0:7}"
+
+          {
+            echo "Resolving 'production' branch id..."
+            parent_id=$(curl -sf "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches" \
+              -H "Authorization: Bearer ${NEON_API_KEY}" \
+              | jq -r '.branches[] | select(.name == "production") | .id')
+
+            if [ -z "$parent_id" ]; then
+              echo "No Neon branch named 'production' found in project ${NEON_PROJECT_ID}"
+              exit 1
+            fi
+            echo "production branch id: ${parent_id}"
+
+            echo "Creating snapshot branch ${branch_name}..."
+            curl -sf -X POST "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches" \
+              -H "Authorization: Bearer ${NEON_API_KEY}" \
+              -H "Content-Type: application/json" \
+              -d "{\"branch\": {\"name\": \"${branch_name}\", \"parent_id\": \"${parent_id}\"}}"
+            echo
+            echo "Snapshot branch ${branch_name} created from production, preceding commit ${GITHUB_SHA}."
+          } 2>&1 | tee snapshot.log
+
+          echo "branch_name=${branch_name}" >> "$GITHUB_OUTPUT"
+
+      - name: Write snapshot job summary
+        if: always() && steps.neon-guard.outputs.enabled == 'true'
+        uses: ./.github/actions/job-summary
+        with:
+          check-name: Neon snapshot (production)
+          outcome: ${{ steps.snapshot.outcome }}
+          log-file: snapshot.log
+          summary: ${{ steps.snapshot.outcome == 'success' && format('Created {0}', steps.snapshot.outputs.branch_name) || 'Snapshot failed' }}
+
+      - name: Apply pending migrations
+        id: migrate
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          set -o pipefail
+          npm run db:migrate 2>&1 | tee migrate.log
+
+      - name: Compute duration
+        id: timer
+        if: always() && steps.guard.outputs.enabled == 'true'
+        uses: ./.github/actions/timer-elapsed
+        with:
+          start: ${{ steps.start.outputs.start }}
+
+      - name: Write job summary
+        if: always() && steps.guard.outputs.enabled == 'true'
+        uses: ./.github/actions/job-summary
+        with:
+          check-name: Migrate (${{ inputs.environment }})
+          outcome: ${{ steps.migrate.outcome }}
+          log-file: migrate.log
+          duration: ${{ steps.timer.outputs.duration }}
+          summary: ${{ steps.migrate.outcome == 'success' && 'Migrations applied' || 'Migration failed' }}

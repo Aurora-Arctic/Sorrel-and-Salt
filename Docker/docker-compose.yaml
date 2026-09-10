@@ -28,12 +28,15 @@
 # and deployment; that would mean network + registry auth for something a
 # local build handles directly.
 #
-# No `sorrel` role or `sorrel` database exist in this image yet — only the
-# baked-in `postgres` superuser and the empty `sorrel_template` used to clone
-# each Vitest worker's database (CLAUDE.md's Testing section). The
-# `POSTGRES_*`/`DATABASE_URL` values below are inert until M1.27 bakes a real
-# schema, seed, and workspace credentials into this same image; nothing in
-# `app` queries the database yet for them to matter.
+# The `sorrel` role/database (M1.3) and the empty `sorrel_template` used to
+# clone each Vitest worker's database (CLAUDE.md's Testing section) are both
+# baked into the image at build time — see Docker/postgres-init's comment for
+# why it has to happen there rather than at a container's first boot. The
+# `POSTGRES_*` env vars below are inert either way (PGDATA is already
+# populated by build time, so the entrypoint's own first-boot init never
+# runs); they're kept here only as documentation that matches the baked-in
+# credentials. `sorrel` has no schema and no seed data until M1.27 bakes
+# those into this same image.
 #
 # A `postgres_data` volume populated by the *old* `postgres:17` image (i.e.
 # from before this file switched images) still only has the `sorrel`

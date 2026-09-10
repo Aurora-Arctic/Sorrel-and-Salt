@@ -1,17 +1,15 @@
 # Agent skills
 
-Transcript: [`transcripts/agent-skills.md`](transcripts/agent-skills.md).
+This summary is self-contained — M0's transcripts and decision records are
+archived and are not required reading.
 
-Claude skills packaged for this repo. They live in `.claude/skills/<name>/SKILL.md`
-and are invoked as `/<name>`. `CLAUDE.md`'s Skills section is the short reference —
-the table of triggers — and this page holds the shape and the reasoning.
-
-## What is here
-
-Six Gitflow branch/PR skills, ported from `resume-2026` in M0.10:
+Claude skills for this repo, at `.claude/skills/<name>/SKILL.md`, invoked as
+`/<name>`. [`CLAUDE.md`](../CLAUDE.md)'s Skills section is the trigger table;
+this page holds the shape.
 
 | Skill              | Does                                                                                                                                                                          |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start-task`       | Reads an Asana task's `Type` and dispatches to `create-feature` (`Feature`/`Task`/`Bugfix`) or `create-hotfix` (`Hotfix`), passing the task through.                          |
 | `create-feature`   | Branches `feature/<slug>` off latest `origin/staging`, asking for the name first.                                                                                             |
 | `create-hotfix`    | Branches `hotfix/<slug>` off latest `origin/main`, asking for the name first.                                                                                                 |
 | `create-pr`        | Commits (after asking), pushes, opens a PR against the Gitflow-appropriate target. `hotfix/*` opens PRs into both `main` and `staging` — see `create-pr/reference-hotfix.md`. |
@@ -19,42 +17,25 @@ Six Gitflow branch/PR skills, ported from `resume-2026` in M0.10:
 | `create-main-sync` | Branches `main-sync/<timestamp>` off `main`, opens a PR bringing `main`-only commits back into `staging`.                                                                     |
 | `prune-branches`   | Deletes merged/gone local branches automatically, asks about never-pushed ones. Never touches `main`/`staging`.                                                               |
 
-These implement the Gitflow lane described in `CLAUDE.md` → Conventions:
-`feature/*` → `staging`; `staging` → `main` via `release/MAJOR.MINOR.PATCH`;
-`hotfix/*` opens both; `main-sync/YYYY-MM-DD-HH-MM-SS` brings `main` back down.
+All but `start-task` implement the Gitflow lane in `CLAUDE.md` → Conventions.
 
-## What is not here, and why
+- **`.claude/settings.json` is shared, committed config** — it carries the
+  `permissions.ask` entries (`git push origin *`,
+  `gh pr create/view/comment/list`) the skills tell the reader to expect a
+  prompt on. **Personal permission grants and MCP configuration belong in
+  `.claude/settings.local.json`**, which is not committed.
+- **Adding a skill means adding its row to `CLAUDE.md`'s Skills table** and an
+  entry in the agent-skills transcript, in the same PR.
 
-- **No Gatsby-specific skills to exclude.** `resume-2026` has exactly these six
-  skills and every one is toolchain-agnostic Git/GitHub workflow.
-- **No "testing conventions", "component documentation", or "CI debugging"
-  skill.** The M0.10 breakdown anticipated these, but they are not skills in
-  `resume-2026` — that guidance lives in its `claude-docs/` (`CI-SETUP.md`,
-  `ACCESSIBILITY.md`, `components/`) and `CLAUDE.md`. The equivalents are already
-  carried in this repo: the Testing section of `CLAUDE.md`, and `claude-docs/`.
-  Porting empty skill shells for them would add indirection without content.
+There are deliberately **no** "testing conventions", "component documentation"
+or "CI debugging" skills: that guidance lives in `CLAUDE.md` and `claude-docs/`,
+and an empty skill shell would add indirection without content.
 
-## Adjustments made on the way in
+## Hedges still to tighten
 
-The skill text is otherwise `resume-2026`'s, verbatim. Only repo-specific
-references changed:
-
-- **The `gitflow` CI check does not exist yet.** It arrives with M0.17/M0.20
-  (`.github/workflows/gitflow.yml`). Until then the skills name `CLAUDE.md`'s
-  Gitflow convention as the source of truth for branch-source rules, and say so.
-- **`.claude/settings.json` created** with the `permissions.ask` entries
-  (`git push origin *`, `gh pr create/view/comment/list`) the skills tell the
-  reader to expect a prompt on. Without the file the note was describing nothing.
-- **`create-pr` test-plan guidance** points at this repo's real check surface:
-  `npm run pre-commit` today; `npm run test:coverage`, `make test-stories`, and
-  Playwright e2e once the M1+ tasks wire them. The skill warns that the repo is
-  pre-scaffold and a script must be confirmed real before it is cited.
-- **`prune-branches` protects `staging`** alongside `main` (and keeps `master`
-  defensively), replacing `resume-2026`'s `develop`.
-
-## When the CI workflow lands
-
-M0.17/M0.20 add `.github/workflows/gitflow.yml`. When it does, that file becomes
-the source of truth for the branch-source table, and the "until then" hedges in
-`create-pr`, `create-release`, `create-main-sync` and `create-pr/reference-hotfix.md`
-should be tightened to point at it.
+`create-pr`, `create-release`, `create-main-sync` and
+`create-pr/reference-hotfix.md` still say the `gitflow` CI check is yet to land
+(naming M0.17/M0.20) and treat `CLAUDE.md` as the source of truth for
+branch-source rules. It landed as `.github/workflows/gitflow.yml`, which is now
+that source of truth. `create-pr` also still cautions that the repo is
+pre-scaffold. Both are stale and due for a skill-focused pass.

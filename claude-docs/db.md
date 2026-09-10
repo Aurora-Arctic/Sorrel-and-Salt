@@ -1,0 +1,227 @@
+# Database — summary
+
+`src/db/connection.ts` is the only place the Postgres driver is instantiated.
+It exports `db`, a Drizzle client, built with `drizzle-orm/postgres-js` over
+the `postgres` package (pure JS, no native binary). `db` reads `DATABASE_URL`
+from the environment at module load and throws if it is unset — no default,
+no silent fallback.
+
+- **One driver call site.** Nothing outside `connection.ts` calls `postgres(...)`.
+  `src/db/repository.ts` (M1.16) will be the only module that imports `db` from
+  here — everything else reaches the database through the repository.
+- **Local Postgres and Neon use the same code path.** `postgres` (the driver)
+  parses `sslmode` off the connection string itself, so a Neon URL's
+  `?sslmode=require` turns on TLS automatically and a local URL with no
+  `sslmode` stays plaintext — `connection.ts` never branches on environment.
+- **`drizzle.config.ts`** (repo root) drives `drizzle-kit`: `dialect:
+'postgresql'`, schema at `src/db/schema`, migrations output to
+  `src/db/migrations`. It reads the same `DATABASE_URL` and throws under the
+  same condition.
+
+## Migrations and scripts (M1.3)
+
+- **`npm run db:generate`** is `drizzle-kit generate` — diffs `src/db/schema`
+  against `src/db/migrations` and writes a new migration for any change.
+  With no schema tables yet, it currently has nothing to generate; the first
+  migration (`0000_enable-extensions.sql`) was written by hand with
+  `drizzle-kit generate --custom`, since enabling an extension isn't
+  something schema-diffing can express.
+- **`npm run db:migrate`** is `drizzle-kit migrate` — applies every migration
+  under `src/db/migrations` not yet recorded in the `drizzle` schema's
+  `__drizzle_migrations` table it creates on first run. That table is what
+  makes re-running idempotent: a migration already recorded is skipped, not
+  reapplied.
+- **`0000_enable-extensions.sql`** runs `CREATE EXTENSION IF NOT EXISTS pg_trgm`
+  — the only extension DESIGN.md §5 names (the fuzzy duplicate-name
+  warning's `gin_trgm_ops` index). `IF NOT EXISTS` also makes it a no-op
+  against `sorrel`/`sorrel_template`, which already have `pg_trgm` baked in
+  at the Postgres image's build time (`Docker/postgres-init/`) — the
+  migration is what makes a from-scratch database (e.g. Neon) match.
+- **Migration files are committed**, not generated at deploy/build time —
+  `src/db/migrations/**` is real source, reviewed like any other change.
+- **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
+  `seed(db, { scenario: 'minimal' })` from `src/db/seed/index.ts`. That
+  function exists only as an interface for now — it throws for every
+  scenario, since there's no schema yet for it to populate. Scenario content
+  arrives scenario-by-scenario in M1.21 (`minimal`), M1.22 (`standard`), and
+  M1.23 (`demo`); scenario selection by environment variable is M1.24.
+- **`npm run db:reset`** is `db:migrate` then `db:seed` — real plumbing, but
+  it fails until `db:seed` has something to do. The Docker-level reset (init
+  hook, `make db-reset`, drop-and-recreate from a broken state) is M1.24.
+- **`Docker/postgres-init/enable-extensions.sql`** also creates the `sorrel`
+  role and database now, not just `pg_trgm`. Without it, a container built
+  from `Dockerfile.postgres` would never get a `sorrel` role/database at
+  all: `PGDATA` is already populated at image build time, so the entrypoint's
+  usual first-boot "create `POSTGRES_USER`/`POSTGRES_DB` from env" step never
+  runs for it. Still no schema or seed data — that's M1.27.
+
+## Expand/contract and the destructive-DDL check (M1.5)
+
+Drizzle generates no down migrations, and hand-writing them is a reliable way
+to lose data — so none exist in this repo, and none should ever be added.
+The only rollback path for a bad release is a **deploy rollback**: redeploy
+the previous app version against the database as it stands. That only works
+if every migration leaves the schema compatible with both the app version
+that shipped it _and_ the one before it — the expand/contract pattern:
+
+1. **Expand** — a migration that only adds (a column, a table, an index) is
+   always safe: old code that doesn't know about the new column simply
+   ignores it.
+2. **Migrate the app** — ship code that uses the new shape, typically
+   alongside the old one for a transition period (dual-write, read-with-fallback).
+3. **Contract** — once nothing depends on the old shape any more (usually one
+   release later, after the transition period has had a chance to run in
+   production), a later migration removes it.
+
+Renaming a column is the canonical case that goes wrong if done directly —
+`ALTER TABLE ... RENAME COLUMN` is atomic in Postgres, but it isn't atomic
+across a _deploy_: for the seconds-to-minutes it takes Vercel to roll traffic
+from the old app version to the new one, both are reading and writing the
+same row, and the old version's query for the old column name starts erroring
+mid-rollout. Never do it in one step. Instead:
+
+**Worked example: renaming `spells.name` to `spells.title` across two releases**
+
+- **Release N — expand.** A migration adds the new column and backfills it;
+  the app writes both and reads with a fallback.
+
+  ```sql
+  -- src/db/migrations/00NN_add-spells-title.sql
+  ALTER TABLE spells ADD COLUMN title text;
+  UPDATE spells SET title = name WHERE title IS NULL;
+  ```
+
+  In `src/db/schema` (Drizzle), both columns exist on the table for this
+  release:
+
+  ```ts
+  export const spells = pgTable('spells', {
+    // ...
+    name: text('name'), // deprecated — still written, read as a fallback only
+    title: text('title'), // canonical as of Release N
+    // ...
+  });
+  ```
+
+  And the write path (inside `withAudit`, in `src/services/`) writes both;
+  the read path prefers `title`, falling back to `name` for any row a
+  same-release backfill or an in-flight write hasn't caught yet:
+
+  ```ts
+  // write
+  await tx.update(spells).set({ name: input.title, title: input.title }).where(...);
+
+  // read
+  const displayTitle = row.title ?? row.name;
+  ```
+
+  This is safe to deploy and, just as importantly, safe to **roll back** —
+  the previous app version (Release N-1, which only knows `name`) still
+  works fine against this schema, since `name` is still present and still
+  kept up to date.
+
+- **Release N+1 — contract.** Once Release N has been running in production
+  long enough that nothing reads `name` any more (every row has been
+  written under Release N's dual-write, and no older app version is still
+  deployed anywhere), a later migration drops it:
+
+  ```sql
+  -- src/db/migrations/00MM_drop-spells-name.sql
+  ALTER TABLE spells DROP COLUMN name;
+  ```
+
+  and the schema/service code drops the fallback and the dual-write, reading
+  and writing `title` only. **This migration is destructive** — it needs the
+  acknowledgement line below in its PR body, precisely because a same-release
+  rollback of Release N+1 back to Release N would otherwise break (Release
+  N's dual-write still tries to write `name`, which no longer exists). That
+  tradeoff — Release N+1 can no longer safely roll back to Release N, only
+  forward-fixed — is exactly what the acknowledgement line is for: a human
+  has to say out loud "yes, this is the point where we give up the old
+  column," not have it happen silently.
+
+**The CI check (`destructive-ddl.yml` / `scripts/check-destructive-ddl.ts`,
+M1.5)** scans migration files new or changed in a PR for `DROP COLUMN`,
+`DROP TABLE`, `RENAME` (column or table), `ALTER COLUMN ... TYPE` (flagged
+for review whenever present — telling narrowing apart from widening reliably
+needs a real SQL parser and the column's previous definition, not just
+regexes over the new migration's text), and a `NOT NULL` addition
+(`SET NOT NULL`, or `ADD COLUMN ... NOT NULL` with no `DEFAULT`). It passes
+automatically when none of those appear. When one does, the PR body must
+contain a line of the exact form:
+
+```
+Destructive DDL acknowledged: <reason>
+```
+
+(case-insensitive, a non-empty reason required) — see the script's own header
+comment for the regex and the reasoning. There's no such line format
+elsewhere in the repo to stay consistent with; this is the one place it's
+defined, so `claude-docs/ci.md` and the script both point back here.
+
+## Snapshot before production migrations, and the restore runbook (M1.6)
+
+Expand/contract keeps a bad _release_ recoverable by rolling the app back.
+It says nothing about a migration that runs cleanly but corrupts or loses
+data outright (a backfill with a wrong predicate, an errant `UPDATE`) — the
+app rollback in that case just points working code at a damaged database.
+The snapshot exists for that failure mode.
+
+**What happens automatically.** `migrate.yml` (M1.4), immediately before it
+applies pending migrations against `production`, branches the current
+`production` Neon branch as `snapshot-<short sha>` — the seven-character
+short SHA of the commit whose migrations are about to run, so the branch
+name identifies exactly the change it precedes. Preview (`staging`, hotfix)
+migrations never snapshot; those databases are already disposable per
+[`m1.1-neon-branch-strategy.md`](design-decisions/m1.1-neon-branch-strategy.md).
+The step is guarded on `NEON_API_KEY`/`NEON_PROJECT_ID` the same
+stub-now/wire-later way `deploy.yml` guards on the Vercel secrets — both are
+part of the M0.27 secrets matrix and don't exist yet, so until then the step
+warns and skips rather than failing the job.
+
+A weekly scheduled workflow, `neon-snapshot-prune.yml`, keeps the newest
+`KEEP_SNAPSHOTS` (3) `snapshot-*` branches and deletes the rest — Neon's free
+tier caps a project at 10 branches total, shared with `production`,
+`staging`, and one ephemeral branch per open hotfix preview, so snapshots
+can't be left to accumulate.
+
+**Promotion (the restore procedure).** Deciding to promote a snapshot is a
+production-incident call, made by a human operator with deploy access — never
+automatic, and never made by CI. The steps:
+
+1. Identify the bad commit and its snapshot branch, `snapshot-<short sha>`.
+2. In the Neon console, create a compute endpoint on that snapshot branch
+   (a branch has no connection string until an endpoint exists on it) and
+   copy its connection string.
+3. Set that connection string as the `production`-scoped `DATABASE_URL`
+   Vercel environment variable, overwriting the current value (dashboard, or
+   `vercel env rm DATABASE_URL production` then `vercel env add DATABASE_URL
+production`).
+4. Redeploy production (push to `main`, or `vercel deploy --prebuilt --prod`
+   directly) so the running app picks up the new `DATABASE_URL`.
+5. Leave the old, now-corrupted `production` branch in place under a
+   renamed, obviously-incident label (e.g. `production-incident-<date>`) for
+   forensics — don't delete it as part of the recovery itself.
+6. Rename the promoted branch to `production` once the incident is
+   confirmed resolved, so the next `migrate.yml` run's "find the branch
+   named `production`" lookup keeps working, and so `staging`'s Neon
+   parentage (a child of `production`, per M1.1) still points at the branch
+   that's actually live.
+
+**The data-loss window is real and unavoidable**: every write `production`
+accepted between the snapshot's creation (the start of that `migrate.yml`
+run) and the moment the redeployed app in step 4 starts using the promoted
+branch is gone — the snapshot is a point-in-time branch, not a replica that
+keeps catching up. That window is normally seconds to a few minutes (however
+long the migration + promotion takes), not the time since the last release.
+
+**Restore drill.** This procedure must be rehearsed once against `staging`
+before it's trusted for a real `production` incident — a runbook nobody has
+followed is a guess, not a plan. Drill it by: taking a snapshot branch of
+`staging` (the same API call `migrate.yml` makes, with `staging` as the
+parent instead of `production`), promoting it per the steps above, and
+confirming the app comes back up reading the promoted branch. Record the
+result here — date, who ran it, what (if anything) didn't match the written
+steps.
+
+_Not yet drilled as of this record._
