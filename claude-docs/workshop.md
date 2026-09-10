@@ -48,11 +48,29 @@ without a page routed to it.
   follows the switch. A story pins its own theme with
   `MyStory.meta = { theme: 'light' | 'dark' }`, which the `Provider` reads over
   the toolbar.
+  - **`reducedMotion` pin (MB.1).** `prefers-reduced-motion: reduce` is a real
+    OS/browser setting Ladle can't expose a toolbar control for — there's
+    nothing to dispatch the way the theme control dispatches `data-theme`. A
+    story pins `.meta = { reducedMotion: true }` (ThemeToggle's `ReducedMotion`
+    is the first) to get it simulated instead of merely documented: the
+    `Provider` patches `window.matchMedia` so the reduced-motion query reports
+    a match — the same check ThemeToggle's click handler makes to park a
+    facet immediately when no `transitionend` is coming — and
+    adds `ladle-story-frame--reduced-motion` to the frame, whose rule in
+    `story-frame.scss` zeroes every transition inside it. Both halves are
+    needed: the CSS alone doesn't touch the click-time check the fix added,
+    and the `matchMedia` patch alone doesn't stop a real transition from
+    running and firing its own `transitionend`. The patch is undone on
+    cleanup so it can't leak into the next story.
 - **`story-frame.scss`** — the app-surface frame: `$surface-page` /
   `$text-primary` so a story needs no per-story setup; `transform`, making the
   frame the containing block so a `position: fixed` child pins to the story
   rather than Ladle's chrome; `overflow: hidden` so it clips like a viewport;
-  `.ladle-main` gutter zeroed and re-added on the frame.
+  `.ladle-main` gutter zeroed and re-added on the frame. Also carries the
+  `.ladle-story-frame--reduced-motion` rule the `reducedMotion` pin above
+  toggles — a `!important` blanket over every transition in the frame, not
+  just the ones the app's own `reduced-motion` mixin reaches, since the real
+  media feature zeroes transitions app-wide too.
 - **`typography.scss`, `layout.scss`, `primitives.scss`** — each `@include`s
   its `src/scss/` `*-base` mixin into `.ladle-story-frame`, so a story gets the
   identical prose, document structure and class layer a page does while Ladle's

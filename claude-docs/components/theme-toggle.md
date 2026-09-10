@@ -37,6 +37,17 @@ the outgoing facet back to `theme-toggle__facet--pre-enter` once its `transform`
 transition completes. The fast-double-click guard clears both classes explicitly
 rather than assuming either facet is at rest before toggling.
 
+**Under `prefers-reduced-motion: reduce` the click handler parks the outgoing
+facet itself** rather than waiting for a `transitionend` that never comes — the
+`reduced-motion` block in `index.scss` sets `transition: none`, so no transition
+runs and no event fires. Left to the listener, the outgoing facet stayed stuck
+holding `--out`: rotated by `$theme-toggle-icon-arc` and still opaque, on top of
+the facet that had just entered, compounding on every further toggle. The
+preference is read live at click time (`window.matchMedia`), not cached at
+mount, so changing the OS setting mid-session takes effect without a reload.
+Any future change to the reduced-motion CSS has to keep this pairing in mind:
+zeroing a transition also removes the event something was waiting on.
+
 `aria-label` is "Toggle light and dark mode"; there is no tooltip, since the
 label already names the action for sighted and screen-reader users alike.
 
@@ -79,9 +90,12 @@ four renders, no test ids and no snapshots; behaviour is asserted in
 - **Light** / **Dark** — pin their theme with `.meta = { theme: '…' }`, which the
   decorator honours over the toolbar. Light shows the solar-disc facet and
   `aria-pressed="true"`; Dark the crescent and `aria-pressed="false"`.
-- **ReducedMotion** — renders like Default; a linkable home for checking the
-  component with the OS/browser `prefers-reduced-motion: reduce` setting on,
-  which a story cannot force.
+- **ReducedMotion** — `.meta = { reducedMotion: true }`, which the workshop
+  decorator (`.ladle/components.tsx`) reads to simulate
+  `prefers-reduced-motion: reduce`: it patches `window.matchMedia` to match and
+  the frame's `--reduced-motion` class zeroes every transition, so this story
+  reproduces the real setting rather than only linking to it — see
+  [`workshop.md`](../workshop.md)'s `reducedMotion` pin entry.
 
 ## Testing
 
@@ -90,6 +104,12 @@ with storage persistence, `aria-pressed`, the correct initial facet classes when
 mounted already in light mode, the `transitionend` park back to `--pre-enter`, a
 non-`transform` `transitionend` being ignored, and listener cleanup on unmount.
 All queries are by role and accessible name.
+
+Three of them cover the reduced-motion park (MB.1): the immediate park on a
+single click, both facets still correct after two toggles, and — the other side
+of the branch — the facet still waiting on `transitionend` when motion is not
+reduced. They stub `window.matchMedia` via `vi.stubGlobal`, since jsdom's own
+implementation always answers `false` for `(prefers-reduced-motion: reduce)`.
 
 **Not yet run through the repo's own runner.** Vitest is not wired up until
 M1.7; this suite was verified against an ad-hoc Vitest + Testing Library harness
