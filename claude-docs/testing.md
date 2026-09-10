@@ -46,7 +46,7 @@ Vite's native config loader this file is ESM instead of warning about it).
     (`server.use(graphqlLink.query(...))` / `.mutation(...)` under the hood).
     No client library is wired up yet (`graphql-request` lands with the
     client in a later milestone), so a test posts a plain `fetch('/api/graphql',
-    { method: 'POST', body: JSON.stringify({ query }) })` — msw's graphql
+{ method: 'POST', body: JSON.stringify({ query }) })` — msw's graphql
     matcher parses the operation name out of the `query` document itself, no
     explicit `operationName` field required. A request against
     `http://localhost/...` rather than the relative `/api/graphql` will not
@@ -102,3 +102,47 @@ still the M0-era stub (`echo "vitest is stubbed until M1 ports the real
 workflow_call check"`); M1.14 ("Port vitest and playwright CI workflows with
 path filters") replaces them with a real `uses: ./.github/workflows/vitest.yml`
 and adds the coverage-artifact upload. `vitest.yml` does not exist yet.
+
+## E2E — Playwright (M1.11)
+
+`playwright.config.ts` (repo root) runs specs under `e2e/` against a
+**production build**, not `next dev` — `webServer.command` is `npm run build
+&& npm run start`, on **8001** (`PORT` env override; `start` defaults to
+8000). Distinct from Vitest's `db` project, which clones one database per
+worker — Playwright needs only one, `sorrel_e2e`, since `webServer` is a
+single shared server.
+
+- **`e2e/database.ts`** — `e2eDatabaseUrl()` swaps `DATABASE_URL`'s pathname
+  to `/sorrel_e2e` (handed to `webServer.env.DATABASE_URL` so the built app
+  reads from it instead of the dev database); `recreateE2eDatabase()`
+  connects as the `sorrel` admin role and does the same `DROP DATABASE IF
+EXISTS` / `CREATE DATABASE ... TEMPLATE sorrel_template` M1.9 already does
+  per Vitest worker.
+- **`globalSetup: './e2e/global-setup.ts'`** calls `recreateE2eDatabase()`
+  once, before `webServer` starts — `sorrel_e2e` has to exist before the
+  built app can connect to it.
+- **Reseeding between spec files** is each spec file's own `test.beforeAll`,
+  not a Playwright hook that runs implicitly — see `e2e/smoke.spec.ts`. It
+  calls the same `recreateE2eDatabase()`, not `src/db/seed`: `seed()` throws
+  for every scenario until M1.21-23, and `sorrel_template` itself carries no
+  schema or seed data until M1.27 bakes them into the Postgres image
+  (`Docker/docker-compose.yaml`'s comment). Recreating from the template is
+  therefore what "reseed" resolves to today; once M1.27 lands, the same call
+  picks up real seeded content with no change needed here. Full reasoning in
+  [`design-decisions/m1.11-e2e-reseed-without-seed.md`](design-decisions/m1.11-e2e-reseed-without-seed.md).
+- **`next.config.ts`'s `distDir`** reads `NEXT_DIST_DIR`, defaulting to
+  `.next`. `webServer.env` sets it to `.next-e2e` so a concurrent `next dev`
+  on 8000 (CLAUDE.md's Commands table promises both can run at once) never
+  shares — and can't corrupt — the production build e2e is serving from.
+- **No Neon connection anywhere** — `e2eDatabaseUrl()`/`adminUrl()` only ever
+  rewrite the pathname of the ambient `DATABASE_URL`, which points at the
+  local `postgres` Docker service exactly as Vitest's does.
+
+`npm run e2e` (`playwright test`) runs the suite. Browser binaries
+(`npx playwright install chromium`) are a one-time local step; CI's image
+install is M1.14's concern, same as the workflow wiring below.
+
+**Not yet wired: CI, a11y, coverage.** `pr-gate.yml`/`merge-queue.yml`'s
+`playwright` jobs are the same kind of M0-era stub as `vitest`'s, replaced by
+M1.14. `@axe-core/playwright` (M1.12) and `monocart-coverage-reports` (M1.13)
+are separate, later tasks — this config has neither yet.
