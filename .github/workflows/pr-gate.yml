@@ -1,11 +1,11 @@
 name: PR Gate
 
 # Runs on every pull request targeting `main`, `staging`, or `release/*`. Fans
-# out to the checks ported so far (lint, format, typecheck, build, gitflow)
-# plus a non-blocking npm audit, gating the PR before it can be merged.
-# format and gitflow always run; the rest are path-filtered by the `changes`
-# job below so a PR only pays for the checks its changed files could
-# actually affect.
+# out to the checks ported so far (lint, format, typecheck, build,
+# destructive-ddl, gitflow) plus a non-blocking npm audit, gating the PR
+# before it can be merged. format and gitflow always run; the rest are
+# path-filtered by the `changes` job below so a PR only pays for the checks
+# its changed files could actually affect.
 #
 # One thing resume-2026's own pr-gate.yml assumes isn't ported yet:
 #
@@ -16,15 +16,15 @@ name: PR Gate
 #   same as their upstream real-job counterparts, so the dependency graph is
 #   already correct once M1 swaps in the real `uses:`.
 #
-# lint/typecheck/build/format/gitflow are required status checks in branch
-# protection (as "<job> / <job>", the name GitHub gives a job inside a
-# called reusable workflow) — audit is deliberately not among them; it's
-# PR-only and never gates a merge (see the audit job below). Filtering must
-# therefore never skip the calling job itself for those five — a job-level
-# `if:` makes GitHub report the check under a different, bare name ("lint"
-# instead of "lint / lint") instead of not reporting it at all, and that
-# bare name never satisfies the "lint / lint" required check, permanently
-# blocking the PR. So those jobs (audit included, for the same
+# lint/typecheck/build/format/destructive-ddl/gitflow are required status
+# checks in branch protection (as "<job> / <job>", the name GitHub gives a
+# job inside a called reusable workflow) — audit is deliberately not among
+# them; it's PR-only and never gates a merge (see the audit job below).
+# Filtering must therefore never skip the calling job itself for those six —
+# a job-level `if:` makes GitHub report the check under a different, bare
+# name ("lint" instead of "lint / lint") instead of not reporting it at all,
+# and that bare name never satisfies the "lint / lint" required check,
+# permanently blocking the PR. So those jobs (audit included, for the same
 # consistent-naming reason even though it isn't required) always run and
 # instead pass their filter result through as a `should-run` workflow_call
 # input — see e.g. lint.yml — which skips the actual work internally but
@@ -34,10 +34,10 @@ name: PR Gate
 # from upstream so retargeting a PR's base branch re-triggers gitflow's
 # source->target validation even without a new push.
 #
-# lint/format/typecheck/build/playwright/vitest also `needs: gitflow`, so a
-# PR from the wrong source/target branch never burns CI time on them — see
-# the gitflow job below for why the actual check only makes sense here
-# (merge-queue.yml calls it with should-run: false instead).
+# lint/format/typecheck/build/destructive-ddl/playwright/vitest also
+# `needs: gitflow`, so a PR from the wrong source/target branch never burns
+# CI time on them — see the gitflow job below for why the actual check only
+# makes sense here (merge-queue.yml calls it with should-run: false instead).
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
@@ -70,11 +70,19 @@ jobs:
       lint: ${{ steps.filter.outputs.lint }}
       typecheck: ${{ steps.filter.outputs.typecheck }}
       build: ${{ steps.filter.outputs.build }}
+      destructive_ddl: ${{ steps.filter.outputs.destructive_ddl }}
+      destructive_ddl_files: ${{ steps.filter.outputs.destructive_ddl_files }}
     steps:
       - name: Determine changed-file categories
         uses: dorny/paths-filter@v4
         id: filter
         with:
+          # list-files: json adds a `<filter>_files` output (JSON array
+          # string) alongside every filter's boolean — only destructive-ddl.yml
+          # needs it (which migration files to scan), but it's a step-level
+          # setting, not per-filter, so it applies uniformly; the other
+          # filters' _files outputs are simply unused.
+          list-files: json
           filters: |
             shared: &shared
               - '.github/workflows/pr-gate.yml'
@@ -107,6 +115,10 @@ jobs:
               - 'tsconfig.json'
               - 'package.json'
               - 'package-lock.json'
+            destructive_ddl:
+              - *shared
+              - '.github/workflows/destructive-ddl.yml'
+              - 'src/db/migrations/**'
 
   # build-image pushes to a shared, content-addressed GHCR tag and GHA layer
   # cache (cache-to: type=gha,mode=max) keyed off Dockerfile.node +
@@ -171,6 +183,26 @@ jobs:
       image: ${{ needs.build-image.outputs.image }}
       # No job-level `if:` here on purpose — see build.yml's should-run input for why.
       should-run: ${{ needs.changes.outputs.build == 'true' }}
+
+  # Blocking, unlike audit below — this gates a merge, since a destructive
+  # migration slipping through breaks the "revert is a deploy rollback"
+  # guarantee CLAUDE.md rule 10 exists for. Needs the real PR body (for the
+  # acknowledgement line) as well as a file list, neither of which
+  # `workflow_call` can read off its own trigger — both are passed in
+  # explicitly. See destructive-ddl.yml's own header comment for why.
+  destructive-ddl:
+    needs: [build-image, changes, gitflow]
+    concurrency:
+      group: pr-gate-destructive-ddl-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    uses: ./.github/workflows/destructive-ddl.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+      pr-number: ${{ github.event.pull_request.number }}
+      # No job-level `if:` here on purpose — see destructive-ddl.yml's should-run input for why.
+      should-run: ${{ needs.changes.outputs.destructive_ddl == 'true' }}
+      changed-files: ${{ needs.changes.outputs.destructive_ddl_files }}
+      pr-body: ${{ github.event.pull_request.body }}
 
   # Non-blocking and PR-only — not a required status check. Gated on the
   # trigger itself (always true here since pr-gate only runs on

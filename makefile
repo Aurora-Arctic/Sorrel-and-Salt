@@ -23,12 +23,12 @@
 .DEFAULT_GOAL := help
 
 .PHONY: help install dev build start \
-	lint lint-fix format format-check typecheck check-stories pre-commit \
+	lint lint-fix format format-check typecheck check-stories check-destructive-ddl pre-commit \
 	db-generate db-migrate db-seed db-reset codegen \
 	workshop workshop-build \
 	docker-build docker-up docker-workshop docker-down docker-rebuild docker-logs \
 	docker-update-token \
-	act-image act-cache-checkout act-lint act-format act-typecheck act-test
+	act-image act-cache-checkout act-lint act-format act-typecheck act-destructive-ddl act-test
 
 COMPOSE := docker compose -f Docker/docker-compose.yaml
 
@@ -78,6 +78,10 @@ typecheck:
 ## Fail if a src/components/ directory has index.tsx without index.stories.tsx
 check-stories:
 	npm run check:stories
+
+## Flag destructive DDL (DROP/RENAME/type narrowing/NOT NULL additions) in migrations (M1.5)
+check-destructive-ddl:
+	npm run check:destructive-ddl
 
 ## The pre-commit checks: lint, format:check, typecheck, check:stories
 pre-commit:
@@ -194,5 +198,19 @@ act-format: act-image act-cache-checkout
 act-typecheck: act-image act-cache-checkout
 	act -W .github/workflows/typecheck.yml -j typecheck --input image=$(ACT_IMAGE) --input should-run=true -s GITHUB_TOKEN=dummy-token --action-offline-mode
 
+# destructive-ddl.yml's `changed-files`/`pr-body` inputs come from pr-gate.yml
+# reading dorny/paths-filter's list-files output and github.event.pull_request.body
+# — neither exists under act's local `-j` invocation (no real PR, no paths-filter
+# job to feed it), so both are left unset here. That means this local run always
+# exercises the "no explicit file list" fallback (scans every committed migration
+# under src/db/migrations/*.sql — see the script's own header) rather than the
+# real PR's changed-file set, and never has a real ack line to find. Good enough
+# to catch "does the workflow/script wiring itself work"; not a substitute for
+# the self-test (`npm run check:destructive-ddl -- --self-test`), which is what
+# actually exercises the ack-line gating logic.
+## Run the destructive-ddl workflow locally via act
+act-destructive-ddl: act-image act-cache-checkout
+	act -W .github/workflows/destructive-ddl.yml -j destructive-ddl --input image=$(ACT_IMAGE) --input should-run=true -s GITHUB_TOKEN=dummy-token --action-offline-mode
+
 ## Run every act-* check target in sequence
-act-test: act-lint act-format act-typecheck
+act-test: act-lint act-format act-typecheck act-destructive-ddl
