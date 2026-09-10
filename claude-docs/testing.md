@@ -34,10 +34,28 @@ Vite's native config loader this file is ESM instead of warning about it).
     - MSW lifecycle — `beforeAll(() => server.listen({ onUnhandledRequest:
 'error' }))`, `afterEach(() => server.resetHandlers())`,
       `afterAll(() => server.close())` — against the `server` exported from
-      `src/test/msw/server.ts` (`setupServer()`, no handlers yet; the
-      `/api/graphql` stub and its per-test override helper land in M1.10).
+      `src/test/msw/server.ts` (`setupServer()`, no base handlers — every
+      operation is registered per test, see below).
     - Covered by `src/test/vitest-setup.test.tsx`, which asserts each hook's
       effect directly rather than testing `vitest.setup.ts` itself.
+  - **`src/test/msw/graphql.ts`** (M1.10) scopes MSW's `graphql` helper to
+    `/api/graphql` with `graphql.link('/api/graphql')`, and exports
+    `mockGraphQLQuery(operationName, resolveData)` /
+    `mockGraphQLMutation(operationName, resolveData)` for a component test to
+    register a one-off response for a single named operation
+    (`server.use(graphqlLink.query(...))` / `.mutation(...)` under the hood).
+    No client library is wired up yet (`graphql-request` lands with the
+    client in a later milestone), so a test posts a plain `fetch('/api/graphql',
+    { method: 'POST', body: JSON.stringify({ query }) })` — msw's graphql
+    matcher parses the operation name out of the `query` document itself, no
+    explicit `operationName` field required. A request against
+    `http://localhost/...` rather than the relative `/api/graphql` will not
+    match, since jsdom's default location is `http://localhost:3000`.
+    Because no base handler answers an un-overridden operation, it falls
+    through to `onUnhandledRequest: 'error'` and fails loudly instead of
+    hitting the network; `afterEach(() => server.resetHandlers())` means an
+    override from one test never leaks into the next.
+    Covered by `src/test/msw/graphql.test.ts`.
 - **`db`** — `environment: 'node'`. `include`s `src/db/**/*.test.ts` and
   `src/services/**/*.test.ts` — nearly empty today (no `repository.ts` or
   `src/services/` yet), so `passWithNoTests: true` keeps that from failing
