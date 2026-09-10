@@ -22,6 +22,14 @@ export const Default: Story = () => <ThemeToggle />;
 // Pinned light: the toggle once the viewer has chosen light — the interlaced
 // solar-disc facet showing, `aria-pressed="true"`. The toolbar control has no
 // effect while this story is open.
+//
+// Also the manual regression check for MB.2 (the sun facet swinging in on
+// first paint in light mode): Ladle's own theme decorator sets `data-theme`
+// pre-paint the same way the app's init script does (.ladle/components.tsx),
+// so reopening this story reproduces the timing the bug depended on. There's
+// no automated coverage for the paint-timing itself — that needs a real
+// browser and this repo has no visual/e2e tooling yet (Playwright arrives in
+// M1.28) — index.test.tsx instead guards the CSS rule that fixes it.
 export const Light: Story = () => <ThemeToggle />;
 Light.meta = { theme: 'light' };
 

@@ -75,6 +75,15 @@ const ThemeToggle = (): ReactElement => {
     };
   }, []);
 
+  // MB.2: this used to be the only place a light starting theme got
+  // corrected, which ran after the first paint and let the sun visibly swing
+  // in from its parked position. index.scss now settles the *visible* state
+  // pre-paint via a `html[data-theme='light']` rule, keyed off the same
+  // attribute the pre-paint init script (src/app/layout.tsx) stamps before
+  // the browser paints anything — so by the time this runs, the classes below
+  // only need to match what's already showing. It still has to run: a later
+  // click reads these real classes, not the CSS override, to know which facet
+  // is primed to animate in.
   useEffect(() => {
     const isLight = document.documentElement.getAttribute('data-theme') === 'light';
     buttonRef.current?.setAttribute('aria-pressed', String(isLight));
