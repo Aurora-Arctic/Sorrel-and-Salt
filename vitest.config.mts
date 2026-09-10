@@ -29,7 +29,7 @@ export default defineConfig({
           globals: true,
           include: ['src/**/*.test.{ts,tsx}'],
           exclude: ['src/db/**', 'src/services/**'],
-          setupFiles: ['@testing-library/jest-dom/vitest'],
+          setupFiles: ['@testing-library/jest-dom/vitest', './vitest.setup.ts'],
         },
       },
       {
