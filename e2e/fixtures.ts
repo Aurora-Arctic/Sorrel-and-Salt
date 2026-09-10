@@ -10,11 +10,13 @@ export const test = base.extend<{ coverageAutoFixture: string }>({
     async ({ context }, use) => {
       const isChromium = test.info().project.name === 'chromium';
 
+      // JS only — CSS coverage has no sourcemap path back to its Sass
+      // source (unlike next.config.ts's productionBrowserSourceMaps for JS),
+      // so it can only ever report against opaque bundled chunk names.
+      // There's no Sass test story to hold accountable to a line-coverage
+      // number, so it's not collected rather than reported and ignored.
       const startCoverage = async (page: Page) => {
-        await Promise.all([
-          page.coverage.startJSCoverage({ resetOnNavigation: false }),
-          page.coverage.startCSSCoverage({ resetOnNavigation: false }),
-        ]);
+        await page.coverage.startJSCoverage({ resetOnNavigation: false });
       };
 
       if (isChromium) {
@@ -26,13 +28,7 @@ export const test = base.extend<{ coverageAutoFixture: string }>({
       if (isChromium) {
         context.off('page', startCoverage);
         const coverageList = await Promise.all(
-          context.pages().map(async (page) => {
-            const [jsCoverage, cssCoverage] = await Promise.all([
-              page.coverage.stopJSCoverage(),
-              page.coverage.stopCSSCoverage(),
-            ]);
-            return [...jsCoverage, ...cssCoverage];
-          }),
+          context.pages().map((page) => page.coverage.stopJSCoverage()),
         );
         const flatCoverage = coverageList.flat();
         // A test that never navigates (e.g. `page.setContent`) collects no

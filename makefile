@@ -26,7 +26,7 @@
 	lint lint-fix format format-check typecheck check-stories check-destructive-ddl pre-commit \
 	db-generate db-migrate db-seed db-reset codegen \
 	workshop workshop-build \
-	docker-build docker-up docker-workshop docker-down docker-rebuild docker-logs \
+	docker-build docker-up docker-workshop docker-e2e docker-down docker-rebuild docker-logs \
 	docker-update-token \
 	act-image act-cache-checkout act-lint act-format act-typecheck act-destructive-ddl act-test
 
@@ -117,16 +117,17 @@ workshop-build:
 
 # Host-level docker compose wrappers. `docker-up` starts the app on 8000 and
 # Postgres 17 (M0.13), waiting for the database health check before the app
-# starts; the Ladle workshop (61000) is behind the `workshop` compose profile,
-# so it only comes up with `docker-workshop`. No Neon connection and no local
-# Node version juggling. Unlike resume-2026, `docker-up` does not run
+# starts; the Ladle workshop (61000) and the Playwright e2e runner (M1.14)
+# are behind the `workshop`/`e2e` compose profiles, so they only come up with
+# `docker-workshop`/`docker-e2e`. No Neon connection and no local Node
+# version juggling. Unlike resume-2026, `docker-up` does not run
 # `update-token` — the devcontainer (M0.14) is its own compose overlay under
 # `.devcontainer/`, started by the editor, not by `make docker-up`. Refresh
 # its Claude token explicitly with `make docker-update-token`.
 
-## Build the local dev images (app + workshop)
+## Build the local dev images (app + workshop + e2e)
 docker-build:
-	$(COMPOSE) --profile workshop build
+	$(COMPOSE) --profile workshop --profile e2e build
 
 ## Start the app (8000) and Postgres detached
 docker-up:
@@ -136,13 +137,17 @@ docker-up:
 docker-workshop:
 	$(COMPOSE) --profile workshop up -d
 
-## Stop and remove the local stack, workshop profile included (named volumes kept)
+## Run the Playwright e2e suite once, against the dedicated e2e image (compose profile: e2e)
+docker-e2e:
+	$(COMPOSE) --profile e2e run --rm e2e
+
+## Stop and remove the local stack, workshop/e2e profiles included (named volumes kept)
 docker-down:
-	$(COMPOSE) --profile workshop down
+	$(COMPOSE) --profile workshop --profile e2e down
 
 ## Tear down including volumes, then rebuild and start the app
 docker-rebuild:
-	$(COMPOSE) --profile workshop down -v && $(COMPOSE) up --build -d
+	$(COMPOSE) --profile workshop --profile e2e down -v && $(COMPOSE) up --build -d
 
 ## Follow the local stack logs
 docker-logs:

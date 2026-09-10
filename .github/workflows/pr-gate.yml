@@ -1,20 +1,23 @@
 name: PR Gate
 
 # Runs on every pull request targeting `main`, `staging`, or `release/*`. Fans
-# out to the checks ported so far (lint, format, typecheck, build,
-# destructive-ddl, gitflow) plus a non-blocking npm audit, gating the PR
-# before it can be merged. format and gitflow always run; the rest are
+# out to every check ported so far (lint, format, typecheck, build, vitest,
+# playwright, destructive-ddl, gitflow) plus a non-blocking npm audit, gating
+# the PR before it can be merged. format and gitflow always run; the rest are
 # path-filtered by the `changes` job below so a PR only pays for the checks
 # its changed files could actually affect.
 #
-# One thing resume-2026's own pr-gate.yml assumes isn't ported yet:
-#
-# - `vitest` and `playwright` (both M1) are stub jobs — they exist under
-#   their real names so branch protection can eventually require them
-#   without a rename, but run one no-op step instead of calling a
-#   `workflow_call` file that doesn't exist yet. Both still `needs: gitflow`,
-#   same as their upstream real-job counterparts, so the dependency graph is
-#   already correct once M1 swaps in the real `uses:`.
+# `vitest` and `playwright` (M1.14) are real `workflow_call` checks now, not
+# the M0-era no-op stubs — job names are unchanged from the stubs, so no
+# required-status-check rename was ever needed. `playwright` runs in its own
+# dedicated e2e image (`build-e2e-image` below), not `build-image`'s shared
+# `testing` image — see playwright.yml's header comment for why. Both also
+# need the CI Postgres image — `build-db-image` below builds it once (same
+# shape as `build-image`/`build-e2e-image`) and both `vitest`/`playwright`
+# take it as their `db-image` input, rather than each independently calling
+# build-db-image.yml itself: two nested `workflow_call`s to the same file
+# would each pay for their own checkout/docker-login/buildx-setup for a
+# result the content-addressed tag makes identical either way.
 #
 # lint/typecheck/build/format/destructive-ddl/gitflow are required status
 # checks in branch protection (as "<job> / <job>", the name GitHub gives a
@@ -72,6 +75,8 @@ jobs:
       build: ${{ steps.filter.outputs.build }}
       destructive_ddl: ${{ steps.filter.outputs.destructive_ddl }}
       destructive_ddl_files: ${{ steps.filter.outputs.destructive_ddl_files }}
+      vitest: ${{ steps.filter.outputs.vitest }}
+      playwright: ${{ steps.filter.outputs.playwright }}
     steps:
       - name: Determine changed-file categories
         uses: dorny/paths-filter@v4
@@ -119,6 +124,42 @@ jobs:
               - *shared
               - '.github/workflows/destructive-ddl.yml'
               - 'src/db/migrations/**'
+            # vitest also matches build-db-image.yml/Dockerfile.postgres/
+            # postgres-init — the build-db-image job below (its `db-image`
+            # input) is what actually consumes that image, so a change there
+            # needs vitest to rerun even though `changes` filters by
+            # build.yml/lint.yml's own narrower conventions. vitest.config.mts
+            # and vitest.setup.ts aren't under src/**, so they're listed
+            # explicitly.
+            vitest:
+              - *shared
+              - '.github/workflows/vitest.yml'
+              - '.github/workflows/build-db-image.yml'
+              - '.github/scripts/summarize-vitest.mjs'
+              - '.github/scripts/lib/**'
+              - 'src/**'
+              - 'vitest.config.mts'
+              - 'vitest.setup.ts'
+              - 'package.json'
+              - 'package-lock.json'
+            # playwright also matches build-e2e-image.yml/Dockerfile.e2e —
+            # the image playwright.yml's container actually runs in — and
+            # build-db-image.yml/Dockerfile.postgres/postgres-init, same
+            # reasoning as vitest's filter above.
+            playwright:
+              - *shared
+              - '.github/workflows/playwright.yml'
+              - '.github/workflows/build-e2e-image.yml'
+              - '.github/workflows/build-db-image.yml'
+              - '.github/scripts/summarize-playwright.mjs'
+              - '.github/scripts/lib/**'
+              - 'Docker/Dockerfile.e2e'
+              - 'src/**'
+              - 'e2e/**'
+              - 'playwright.config.ts'
+              - 'next.config.ts'
+              - 'package.json'
+              - 'package-lock.json'
 
   # build-image pushes to a shared, content-addressed GHCR tag and GHA layer
   # cache (cache-to: type=gha,mode=max) keyed off Dockerfile.node +
@@ -221,27 +262,58 @@ jobs:
       image: ${{ needs.build-image.outputs.image }}
       pr-number: ${{ github.event.pull_request.number }}
 
-  # Stub — M1 replaces this with `uses: ./.github/workflows/vitest.yml`,
-  # keeping the job name so an eventual required-status-check rule never
-  # needs renaming. Runs unconditionally and trivially so it never blocks a
-  # merge before the real check exists. Still `needs: gitflow`, matching
-  # upstream's real vitest job, so the dependency graph doesn't change shape
-  # when M1 swaps in the real `uses:`.
-  vitest:
-    needs: gitflow
-    runs-on: ubuntu-latest
-    steps:
-      - name: Stub — wired for real in M1
-        run: echo "vitest is stubbed until M1 ports the real workflow_call check"
+  # Publishes (or reuses, if content-addressed and unchanged) the preseeded
+  # Postgres 17 image both vitest and playwright below need for their
+  # `services: postgres:` block — built once here, same shape as
+  # build-image/build-e2e-image, rather than each of vitest.yml/
+  # playwright.yml separately calling build-db-image.yml as a nested
+  # workflow_call (which used to mean two independent checkout/docker-login/
+  # buildx-setup sequences for what the content-addressed tag makes an
+  # identical result either way). Unconditional, like build-image, for the
+  # same "the jobs below need its output either way" reasoning.
+  build-db-image:
+    concurrency:
+      group: pr-gate-build-db-image-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    uses: ./.github/workflows/build-db-image.yml
 
-  # Stub — M1 replaces this with `uses: ./.github/workflows/playwright.yml`,
-  # same reasoning as vitest above.
+  vitest:
+    needs: [build-image, build-db-image, changes, gitflow]
+    concurrency:
+      group: pr-gate-vitest-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    uses: ./.github/workflows/vitest.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+      db-image: ${{ needs.build-db-image.outputs.image }}
+      pr-number: ${{ github.event.pull_request.number }}
+      # No job-level `if:` here on purpose — see vitest.yml's should-run input for why.
+      should-run: ${{ needs.changes.outputs.vitest == 'true' }}
+
+  # build-e2e-image (M1.14) publishes the dedicated Playwright image —
+  # build-image.yml's shared `testing` image deliberately excludes
+  # Playwright's browser/system deps (see Docker/Dockerfile.node's header
+  # comment), so playwright.yml runs in this image instead. Unconditional,
+  # like build-image above, for the same "the job below needs its output
+  # either way" reasoning.
+  build-e2e-image:
+    concurrency:
+      group: pr-gate-build-e2e-image-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    uses: ./.github/workflows/build-e2e-image.yml
+
   playwright:
-    needs: gitflow
-    runs-on: ubuntu-latest
-    steps:
-      - name: Stub — wired for real in M1
-        run: echo "playwright is stubbed until M1 ports the real workflow_call check"
+    needs: [build-e2e-image, build-db-image, changes, gitflow]
+    concurrency:
+      group: pr-gate-playwright-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    uses: ./.github/workflows/playwright.yml
+    with:
+      image: ${{ needs.build-e2e-image.outputs.image }}
+      db-image: ${{ needs.build-db-image.outputs.image }}
+      pr-number: ${{ github.event.pull_request.number }}
+      # No job-level `if:` here on purpose — see playwright.yml's should-run input for why.
+      should-run: ${{ needs.changes.outputs.playwright == 'true' }}
 
   # Deliberately ungated — runs on every push regardless of what changed, and
   # doesn't need build-image since it never touches the testing container.

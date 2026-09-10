@@ -19,9 +19,21 @@ export default defineConfig({
   test: {
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'lcov', 'html'],
+      // 'json-summary' (M1.14) is read by .github/scripts/summarize-vitest.mjs
+      // to build the PR comment's coverage stat/table — the other three are
+      // for local/human consumption and untouched by CI.
+      reporter: ['text', 'lcov', 'html', 'json-summary'],
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.test.{ts,tsx}', 'src/**/*.stories.tsx', 'src/db/migrations/**'],
+      // src/db/seed and src/test are fixture/harness code that runs test
+      // infrastructure rather than product logic — a bug there fails the
+      // tests that consume it, so it doesn't need its own coverage.
+      exclude: [
+        'src/**/*.test.{ts,tsx}',
+        'src/**/*.stories.tsx',
+        'src/db/migrations/**',
+        'src/db/seed/**',
+        'src/test/**',
+      ],
       thresholds: {
         lines: 80,
         branches: 80,
