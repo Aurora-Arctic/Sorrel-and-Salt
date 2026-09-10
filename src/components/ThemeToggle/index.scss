@@ -119,6 +119,35 @@ $theme-toggle-corner-radius: 3.9rem;
   }
 }
 
+// MB.2: the light facet's --pre-enter class above is baked into the
+// server-rendered markup (index.tsx's JSX), so it's what paints first no
+// matter which theme the visitor actually has — including light, where the
+// sun should already be resting instead of parked. index.tsx's mount effect
+// used to be the only place that corrected this, which ran after that first
+// paint and let the facet visibly swing from parked to resting.
+//
+// The pre-paint init script (src/app/layout.tsx) stamps `data-theme` on
+// `<html>` before the browser paints anything, so keying off it here settles
+// both facets' *visible* resting state at that same first paint — the mount
+// effect still flips the real --pre-enter class between facets afterward
+// (index.tsx), but only to keep the class list correct for the next click;
+// by then these rules already show the settled values, so nothing animates.
+html[data-theme='light'] {
+  .theme-toggle__facet--light.theme-toggle__facet--pre-enter {
+    transform: rotate(0deg);
+    opacity: 1;
+  }
+
+  // The dark facet carries no --pre-enter class in the markup — it's the
+  // default-visible one — so it needs the equivalent parked look applied
+  // directly rather than via that class.
+  .theme-toggle__facet--dark {
+    transform: rotate(-$theme-toggle-icon-arc);
+    opacity: 0;
+    transition: none;
+  }
+}
+
 @include reduced-motion {
   .theme-toggle,
   .theme-toggle__facet {
