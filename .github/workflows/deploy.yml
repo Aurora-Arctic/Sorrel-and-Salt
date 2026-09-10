@@ -25,8 +25,11 @@ name: Deploy
 # The VERCEL_* secrets are defined in M0.27's env/secrets matrix and do not
 # exist yet. Until they do, the "Check secrets" gate skips every real step and
 # the workflow still completes green — the same stub-now/wire-later shape
-# pr-gate.yml uses for its vitest/playwright jobs. Once M1.4 lands its
-# migrate.yml, that must run (and pass) ahead of the deploy step here.
+# pr-gate.yml uses for its vitest/playwright jobs.
+#
+# `deploy` needs: [resolve-target, migrate] — migrate.yml (M1.4) applies
+# pending migrations to the same environment before `deploy` is allowed to
+# run, so a failed migration blocks the promotion instead of racing it.
 
 on:
   push:
@@ -50,13 +53,71 @@ permissions:
   pull-requests: write
 
 jobs:
-  deploy:
+  # Pure string computation shared by `migrate` (needs the target
+  # environment) and `deploy` (needs environment, prod_flag, and alias) —
+  # split out so migrate.yml can run, and complete, before the deploy job
+  # below. No secrets needed here, so it always runs even when the VERCEL_*
+  # guard downstream would skip the real work.
+  resolve-target:
     # push to main/staging, or an open hotfix -> main PR (not its close event).
     if: >-
       github.event_name == 'push' ||
       (github.event_name == 'pull_request' &&
         github.event.action != 'closed' &&
         startsWith(github.head_ref, 'hotfix/'))
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.target.outputs.environment }}
+      prod_flag: ${{ steps.target.outputs.prod_flag }}
+      alias: ${{ steps.target.outputs.alias }}
+    steps:
+      - name: Resolve deploy target
+        id: target
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            # hotfix/<slug> -> hotfix-<sanitised slug>.sorrelandsalt.com, kept
+            # inside the 63-char DNS label limit (7 for the "hotfix-" prefix).
+            raw="${HEAD_REF#hotfix/}"
+            slug="$(printf '%s' "$raw" \
+              | tr '[:upper:]' '[:lower:]' \
+              | sed -E 's/[^a-z0-9-]+/-/g; s/-+/-/g; s/^-//; s/-$//')"
+            slug="${slug:0:56}"
+            slug="${slug%-}"
+            echo "environment=preview" >> "$GITHUB_OUTPUT"
+            echo "prod_flag=" >> "$GITHUB_OUTPUT"
+            echo "alias=hotfix-${slug}.sorrelandsalt.com" >> "$GITHUB_OUTPUT"
+          elif [ "$REF_NAME" = "main" ]; then
+            echo "environment=production" >> "$GITHUB_OUTPUT"
+            echo "prod_flag=--prod" >> "$GITHUB_OUTPUT"
+            echo "alias=" >> "$GITHUB_OUTPUT"
+          else
+            echo "environment=preview" >> "$GITHUB_OUTPUT"
+            echo "prod_flag=" >> "$GITHUB_OUTPUT"
+            echo "alias=staging.sorrelandsalt.com" >> "$GITHUB_OUTPUT"
+          fi
+
+  migrate:
+    needs: resolve-target
+    concurrency:
+      # One migration at a time, full stop — never let two merges (staging
+      # and main, or two rapid staging pushes) apply migrations concurrently.
+      group: migrate
+      cancel-in-progress: false
+    uses: ./.github/workflows/migrate.yml
+    with:
+      environment: ${{ needs.resolve-target.outputs.environment }}
+    secrets: inherit
+
+  deploy:
+    needs: [resolve-target, migrate]
+    # `success()` here because a custom `if:` on a job with `needs:`
+    # overrides the implicit "needs all succeeded" check — without it, a
+    # failed migrate wouldn't actually block deploy.
+    if: success()
     runs-on: ubuntu-latest
     # Bare runner, not the `testing` GHCR image the check workflows use: this
     # job needs the Vercel CLI and writes .vercel/output, neither of which the
@@ -99,36 +160,6 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         run: npm install --global vercel@59
 
-      - name: Resolve deploy target
-        id: target
-        if: steps.guard.outputs.enabled == 'true'
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          REF_NAME: ${{ github.ref_name }}
-          HEAD_REF: ${{ github.head_ref }}
-        run: |
-          if [ "$EVENT_NAME" = "pull_request" ]; then
-            # hotfix/<slug> -> hotfix-<sanitised slug>.sorrelandsalt.com, kept
-            # inside the 63-char DNS label limit (7 for the "hotfix-" prefix).
-            raw="${HEAD_REF#hotfix/}"
-            slug="$(printf '%s' "$raw" \
-              | tr '[:upper:]' '[:lower:]' \
-              | sed -E 's/[^a-z0-9-]+/-/g; s/-+/-/g; s/^-//; s/-$//')"
-            slug="${slug:0:56}"
-            slug="${slug%-}"
-            echo "environment=preview" >> "$GITHUB_OUTPUT"
-            echo "prod_flag=" >> "$GITHUB_OUTPUT"
-            echo "alias=hotfix-${slug}.sorrelandsalt.com" >> "$GITHUB_OUTPUT"
-          elif [ "$REF_NAME" = "main" ]; then
-            echo "environment=production" >> "$GITHUB_OUTPUT"
-            echo "prod_flag=--prod" >> "$GITHUB_OUTPUT"
-            echo "alias=" >> "$GITHUB_OUTPUT"
-          else
-            echo "environment=preview" >> "$GITHUB_OUTPUT"
-            echo "prod_flag=" >> "$GITHUB_OUTPUT"
-            echo "alias=staging.sorrelandsalt.com" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Start timer
         id: start
         if: steps.guard.outputs.enabled == 'true'
@@ -136,13 +167,13 @@ jobs:
 
       - name: Pull Vercel environment
         if: steps.guard.outputs.enabled == 'true'
-        run: vercel pull --yes --environment=${{ steps.target.outputs.environment }} --token="$VERCEL_DEPLOY_TOKEN"
+        run: vercel pull --yes --environment=${{ needs.resolve-target.outputs.environment }} --token="$VERCEL_DEPLOY_TOKEN"
         env:
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
       - name: Build
         if: steps.guard.outputs.enabled == 'true'
-        run: vercel build ${{ steps.target.outputs.prod_flag }} --token="$VERCEL_DEPLOY_TOKEN"
+        run: vercel build ${{ needs.resolve-target.outputs.prod_flag }} --token="$VERCEL_DEPLOY_TOKEN"
         env:
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
@@ -151,7 +182,7 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         env:
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
-          PROD_FLAG: ${{ steps.target.outputs.prod_flag }}
+          PROD_FLAG: ${{ needs.resolve-target.outputs.prod_flag }}
         run: |
           # stdout is always the deployment URL; stderr carries build/progress
           # logs — keep them apart (Vercel's own CI example does this).
@@ -169,12 +200,12 @@ jobs:
 
       - name: Alias
         id: alias
-        if: steps.guard.outputs.enabled == 'true' && steps.target.outputs.alias != ''
+        if: steps.guard.outputs.enabled == 'true' && needs.resolve-target.outputs.alias != ''
         env:
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
           VERCEL_SCOPE: ${{ secrets.VERCEL_SCOPE }}
           DEPLOY_URL: ${{ steps.deploy.outputs.url }}
-          ALIAS: ${{ steps.target.outputs.alias }}
+          ALIAS: ${{ needs.resolve-target.outputs.alias }}
         run: |
           set -o pipefail
           scope_arg=""
@@ -198,7 +229,7 @@ jobs:
         if: always() && steps.guard.outputs.enabled == 'true'
         uses: ./.github/actions/job-summary
         with:
-          check-name: Deploy (${{ steps.target.outputs.environment }})
+          check-name: Deploy (${{ needs.resolve-target.outputs.environment }})
           outcome: ${{ steps.deploy.outcome }}
           log-file: deploy.log
           duration: ${{ steps.timer.outputs.duration }}
