@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:stories": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-component-stories.ts",
+    "check:destructive-ddl": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-destructive-ddl.ts",
     "check:theme-default": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-workshop-theme-default.ts",
     "pre-commit": "npm run lint && npm run format:check && npm run typecheck && npm run check:stories && npm run check:theme-default",
     "db:generate": "drizzle-kit generate",
