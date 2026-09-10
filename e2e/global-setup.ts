@@ -1,0 +1,9 @@
+import { recreateE2eDatabase } from './database';
+
+// Runs once for the whole Playwright run, before `webServer` starts —
+// `sorrel_e2e` has to exist before the app can connect to it. Per-file
+// reseeding between spec files is each spec's own responsibility (see
+// e2e/smoke.spec.ts), not this hook's.
+export default async function globalSetup(): Promise<void> {
+  await recreateE2eDatabase();
+}
