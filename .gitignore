@@ -73,3 +73,4 @@ desktop.ini
 .scratch**.**
 tmp
 .cache
+.env*
