@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import ThemeToggle from '.';
 
 // Ported from resume-2026's ThemeToggle test suite. The aria-label changed
@@ -7,10 +7,26 @@ import ThemeToggle from '.';
 // wrapper is gone, so queries target the new label and there's no tooltip
 // assertion to port — everything else (toggle behaviour, facet class
 // choreography, listener cleanup) carries over unchanged.
+// Stubs `matchMedia` so `(prefers-reduced-motion: reduce)` reports `matches`.
+// jsdom's own `matchMedia` always answers `false`, so reduced motion can only
+// be exercised by replacing it.
+const stubReducedMotion = (matches: boolean): void => {
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: matches && query === '(prefers-reduced-motion: reduce)',
+    media: query,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  }));
+};
+
 describe('ThemeToggle', () => {
   beforeEach(() => {
     document.documentElement.setAttribute('data-theme', 'dark');
     window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('renders an accessible toggle button', () => {
@@ -84,6 +100,51 @@ describe('ThemeToggle', () => {
 
     fireEvent.click(button);
     fireEvent.transitionEnd(darkFacet, { propertyName: 'opacity' });
+
+    expect(darkFacet).toHaveClass('theme-toggle__facet--out');
+    expect(darkFacet).not.toHaveClass('theme-toggle__facet--pre-enter');
+  });
+
+  // Regression: index.scss zeroes the facet transition under reduced motion,
+  // so no transitionend arrives and the outgoing facet used to stay stuck
+  // holding --out — rotated askew and still opaque over the entering facet.
+  it('parks an outgoing facet immediately under prefers-reduced-motion, with no transitionend', () => {
+    stubReducedMotion(true);
+    render(<ThemeToggle />);
+    const button = screen.getByRole('button', { name: 'Toggle light and dark mode' });
+    const darkFacet = document.querySelector('.theme-toggle__facet--dark') as SVGSVGElement;
+
+    fireEvent.click(button);
+
+    expect(darkFacet).not.toHaveClass('theme-toggle__facet--out');
+    expect(darkFacet).toHaveClass('theme-toggle__facet--pre-enter');
+  });
+
+  it('keeps both facets correct across repeated toggles under prefers-reduced-motion', () => {
+    stubReducedMotion(true);
+    render(<ThemeToggle />);
+    const button = screen.getByRole('button', { name: 'Toggle light and dark mode' });
+    const darkFacet = document.querySelector('.theme-toggle__facet--dark') as SVGSVGElement;
+    const lightFacet = document.querySelector('.theme-toggle__facet--light') as SVGSVGElement;
+
+    fireEvent.click(button);
+    fireEvent.click(button);
+
+    // Back in dark mode: the crescent rests and the sun is parked, exactly as
+    // on first render. Neither facet is left holding --out.
+    expect(darkFacet).not.toHaveClass('theme-toggle__facet--out');
+    expect(darkFacet).not.toHaveClass('theme-toggle__facet--pre-enter');
+    expect(lightFacet).not.toHaveClass('theme-toggle__facet--out');
+    expect(lightFacet).toHaveClass('theme-toggle__facet--pre-enter');
+  });
+
+  it('waits for transitionend to park a facet when motion is not reduced', () => {
+    stubReducedMotion(false);
+    render(<ThemeToggle />);
+    const button = screen.getByRole('button', { name: 'Toggle light and dark mode' });
+    const darkFacet = document.querySelector('.theme-toggle__facet--dark') as SVGSVGElement;
+
+    fireEvent.click(button);
 
     expect(darkFacet).toHaveClass('theme-toggle__facet--out');
     expect(darkFacet).not.toHaveClass('theme-toggle__facet--pre-enter');

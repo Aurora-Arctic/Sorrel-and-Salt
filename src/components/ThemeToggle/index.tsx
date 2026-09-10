@@ -29,11 +29,25 @@ export const applyTheme = (theme: 'light' | 'dark'): void => {
 const OUT_CLASS = 'theme-toggle__facet--out';
 const PRE_ENTER_CLASS = 'theme-toggle__facet--pre-enter';
 
+// Move a facet that has finished exiting from --out back to --pre-enter —
+// instant, since that class carries its own zero-duration transition — so
+// it's parked and ready for its next entrance rather than retracing back down
+// through the top it just exited through.
+const parkFacet = (facet: Element): void => {
+  facet.classList.remove(OUT_CLASS);
+  facet.classList.add(PRE_ENTER_CLASS);
+};
+
+// index.scss zeroes this component's transitions under
+// `prefers-reduced-motion: reduce`, which means no transition runs and
+// `transitionend` never fires — so the exit has to be parked by hand instead
+// of being waited on. Read live at click time rather than at mount, so
+// changing the OS setting mid-session takes effect without a reload.
+const prefersReducedMotion = (): boolean =>
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+
 // When a facet finishes animating out (rotate 0 -> arc, through the top),
-// reset it straight back to --pre-enter — instant, since that class carries
-// its own zero-duration transition — so it's parked and ready for its next
-// entrance rather than retracing back down through the top it just exited
-// through.
+// park it back where its next entrance starts.
 const handleFacetTransitionEnd = (event: TransitionEvent): void => {
   const facet = event.target;
   if (
@@ -41,8 +55,7 @@ const handleFacetTransitionEnd = (event: TransitionEvent): void => {
     facet instanceof SVGElement &&
     facet.classList.contains(OUT_CLASS)
   ) {
-    facet.classList.remove(OUT_CLASS);
-    facet.classList.add(PRE_ENTER_CLASS);
+    parkFacet(facet);
   }
 };
 
@@ -85,6 +98,13 @@ const ThemeToggle = (): ReactElement => {
     outgoingFacet?.classList.remove(PRE_ENTER_CLASS);
     outgoingFacet?.classList.add(OUT_CLASS);
     enteringFacet?.classList.remove(OUT_CLASS, PRE_ENTER_CLASS);
+    // With transitions zeroed there's no `transitionend` coming to park the
+    // outgoing facet, and it would stay stuck holding --out: rotated askew and
+    // still opaque, on top of the facet that just entered. Park it now, which
+    // is the same jump-cut the reduced-motion rules ask for anyway.
+    if (outgoingFacet && prefersReducedMotion()) {
+      parkFacet(outgoingFacet);
+    }
     applyTheme(isLight ? 'dark' : 'light');
     buttonRef.current?.setAttribute('aria-pressed', String(!isLight));
   };
