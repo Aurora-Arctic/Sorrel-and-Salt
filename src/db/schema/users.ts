@@ -1,21 +1,41 @@
 import { sql } from 'drizzle-orm';
-import { pgTable, text, timestamp, boolean, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, boolean, uuid, pgEnum, uniqueIndex } from 'drizzle-orm/pg-core';
+import { auditColumns } from '../audit';
 
-// Better Auth's own adapter table (M2.2) — id, name, email, emailVerified,
-// image, createdAt, updatedAt. M2.3 adds role/canCreateWorkspace and renames
-// name/image to displayName/avatarUrl per DESIGN.md §5; MB.5 adds the
-// auditColumns self-reference once every column exists.
-export const users = pgTable('users', {
-  id: uuid('id')
-    .default(sql`pg_catalog.gen_random_uuid()`)
-    .primaryKey(),
-  name: text('name').notNull(),
-  email: text('email').notNull().unique(),
-  emailVerified: boolean('email_verified').default(false).notNull(),
-  image: text('image'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at')
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-});
+// DESIGN.md §5: admins curate the compendium and global categories, and
+// nothing else — no granular platform permissions, so a column is enough.
+export const userRole = pgEnum('user_role', ['user', 'admin']);
+
+// Better Auth's own adapter table (M2.2) plus DESIGN.md §5's app columns
+// (M2.3): role/canCreateWorkspace. `name`/`image` stay Better Auth's own
+// names rather than DESIGN.md §5's displayName/avatarUrl — renaming them
+// would need a `user.fields` mapping in src/lib/auth.ts for no real
+// benefit, so the design doc was corrected to match instead. `auditColumns`
+// is spread per CLAUDE.md rule 3 even though it can't carry
+// `.references(() => users.id)` yet — `users` is its own FK target, and
+// MB.5 adds that self-reference once the circular-import annotation it
+// needs is worked out. src/lib/auth.ts's `databaseHooks` stamps
+// createdBy/updatedBy with the new user's own id on sign-up, the same
+// self-satisfying pattern MB.5 documents for the seed bootstrap user.
+export const users = pgTable(
+  'users',
+  {
+    id: uuid('id')
+      .default(sql`pg_catalog.gen_random_uuid()`)
+      .primaryKey(),
+    name: text('name').notNull(),
+    email: text('email').notNull(),
+    emailVerified: boolean('email_verified').default(false).notNull(),
+    image: text('image'),
+    role: userRole('role').notNull().default('user'),
+    canCreateWorkspace: boolean('can_create_workspace').notNull().default(false),
+    ...auditColumns,
+  },
+  (table) => [
+    // Partial per CLAUDE.md rule 4 — a plain unique constraint would
+    // permanently reserve a soft-deleted user's email.
+    uniqueIndex('users_email_unique')
+      .on(table.email)
+      .where(sql`${table.deletedAt} is null`),
+  ],
+);

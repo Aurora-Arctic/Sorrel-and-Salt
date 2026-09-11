@@ -1031,7 +1031,7 @@ _Acceptance criteria:_
 
 _Story 18 precondition — As the site owner, I want admin rights to exist on a real account, so that someone can curate the compendium before anyone depends on it._
 
-Add `users` with id, email, displayName, avatarUrl, role (`user` | `admin`), canCreateWorkspace and audit columns. Promote the first user matching the bootstrap env email. `canCreateWorkspace` defaults to false: signing in with Google or GitHub earns an account and nothing more. The flag turns true by one of two routes — accepting a workspace invitation (M7.5) or an admin granting it (M5.8) — and once true it stays true, so an established user can create as many workspaces as they like.
+Add `users` with id, email, name, image, role (`user` | `admin`), canCreateWorkspace and audit columns. `name`/`image` (not `displayName`/`avatarUrl`, corrected post-implementation) are Better Auth's own core `User` field names — renaming them would need a `user.fields` mapping in `src/lib/auth.ts` for no real benefit. Promote the first user matching the bootstrap env email. `canCreateWorkspace` defaults to false: signing in with Google or GitHub earns an account and nothing more. The flag turns true by one of two routes — accepting a workspace invitation (M7.5) or an admin granting it (M5.8) — and once true it stays true, so an established user can create as many workspaces as they like.
 
 _Acceptance criteria:_
 
