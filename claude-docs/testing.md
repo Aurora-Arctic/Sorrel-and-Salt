@@ -8,12 +8,25 @@ Vite's native config loader this file is ESM instead of warning about it).
 - **`unit`** — `environment: 'jsdom'`, `globals: true` (enables
   `@testing-library/react`'s automatic post-test `cleanup()`, which hooks
   itself onto the global `afterEach` at import time). `include`s
-  `src/**/*.test.{ts,tsx}`, excluding `src/db/**` and `src/services/**`.
-  `setupFiles: ['@testing-library/jest-dom/vitest']` registers the jest-dom
-  matchers (`toBeInTheDocument`, `toHaveClass`, …); `src/vitest-env.d.ts`
-  (`/// <reference types="@testing-library/jest-dom/vitest" />`) gives `tsc`
-  the same augmentation, since a `setupFiles` entry only affects the Vitest
-  runtime, not the separate `typecheck` pass.
+  `src/**/*.test.{ts,tsx}`, excluding `src/db/**` and `src/services/**`. That
+  glob does reach a test inside a directory literally named `[...all]`
+  (`src/app/api/auth/[...all]/route.test.ts`) — `[...]` is glob metacharacter
+  syntax, so it was worth confirming rather than assuming.
+  - **A `unit` test that opens a connection gets the plain `sorrel` database,
+    not a clone.** The per-worker `sorrel_test_<n>` rewrite is `db`-only — it
+    lives in that project's `setupFiles` (below) and nothing rewrites
+    `DATABASE_URL` for `unit`. So a `unit` test that reaches Postgres needs
+    schema that is actually in `sorrel`, and M1.27's template bake will not
+    help it: the template is never in its path. This is a real trap — it is
+    what made a `POST /api/auth/sign-in/social` test pass locally (a
+    hand-run `drizzle-kit migrate` had left `sorrel` migrated) and fail in
+    CI, where `sorrel` was empty. Keep database-touching tests in the `db`
+    project.
+    `setupFiles: ['@testing-library/jest-dom/vitest']` registers the jest-dom
+    matchers (`toBeInTheDocument`, `toHaveClass`, …); `src/vitest-env.d.ts`
+    (`/// <reference types="@testing-library/jest-dom/vitest" />`) gives `tsc`
+    the same augmentation, since a `setupFiles` entry only affects the Vitest
+    runtime, not the separate `typecheck` pass.
   - **Vitest's jsdom environment resolves `import.meta.url` against the
     mocked browser `location`, not a real `file://` URL** — matching real
     browser semantics (a bundled ES module's `import.meta.url` is an `http(s)`
@@ -57,9 +70,12 @@ Vite's native config loader this file is ESM instead of warning about it).
     override from one test never leaks into the next.
     Covered by `src/test/msw/graphql.test.ts`.
 - **`db`** — `environment: 'node'`. `include`s `src/db/**/*.test.ts` and
-  `src/services/**/*.test.ts` — nearly empty today (no `repository.ts` or
-  `src/services/` yet), so `passWithNoTests: true` keeps that from failing
-  `npm run test:coverage`. Nothing in this project's config ever points at
+  `src/services/**/*.test.ts`. The `src/db/**` half is real as of Wave 1
+  (`audit`, `bootstrap`, `users-schema`, `test-database-isolation`), though
+  the schema tests are Drizzle `getTableConfig()` introspection rather than
+  queries — `sorrel_template` carries no tables until M1.27. `src/services/`
+  doesn't exist yet, so `passWithNoTests: true` stays. Nothing in this
+  project's config ever points at
   Neon (`Docker/docker-compose.yaml`'s `postgres` service publishes **5432**
   for exactly this — "the host-side Vitest `db` project").
   - **`globalSetup: ['./src/test/db-global-setup.ts']`** (M1.9) runs once,
@@ -87,9 +103,10 @@ IF EXISTS`) so a crashed previous run self-heals instead of erroring on a
 
 **Coverage** (`test.coverage`, provider `v8`): thresholds are 80% on lines,
 branches, functions, and statements, `include: ['src/**/*.{ts,tsx}']`,
-excluding test files, `*.stories.tsx`, and `src/db/migrations/**`. Today's
-coverage sits below that (most of `src/` — `app/`, `db/`, `db/seed/` — has no
-tests yet), so `npm run test:coverage` currently exits non-zero on the
+excluding test files, `*.stories.tsx`, `src/db/migrations/**`,
+`src/db/seed/**`, and `src/test/**`. Today's coverage sits below that (much
+of `src/app/` still has no tests; `src/db/` gained real coverage in Wave 1),
+so `npm run test:coverage` currently exits non-zero on the
 threshold, not on a test failure — that's the threshold doing its job, not a
 defect; coverage rises as later milestones add tests.
 

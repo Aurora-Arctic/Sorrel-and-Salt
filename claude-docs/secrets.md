@@ -13,12 +13,16 @@ secrets so `deploy.yml`/`migrate.yml` could exist and stub-skip cleanly
 (M0.26/M0.28). Resumed and this doc written on 2026-09-11, alongside
 M2.2/M2.4/M2.5's auth code.
 
-**Status as of this writing:** only the three deploy secrets above are set.
-Nothing else in the tables below exists in Vercel or GitHub yet — no real
-staging or production deploy can complete auth (or, for `DATABASE_URL`,
-anything at all) until those rows are filled in. See "How to set each row"
-for the exact manual steps — none of them can be done from this repo or by
-an agent without your Vercel/Neon/Google/GitHub accounts.
+**Status as of MW.1 (2026-09-11):** the three deploy secrets above are set,
+and the Google/GitHub OAuth apps are registered with their four client
+id/secret variables set locally and in Vercel. Four rows are still
+outstanding — `ADMIN_BOOTSTRAP_EMAIL`, `VERCEL_SCOPE`, `NEON_API_KEY`,
+`NEON_PROJECT_ID` — so no account can be promoted to admin and
+`migrate.yml` still stub-skips instead of applying migrations. **MB.12 owns
+closing those rows and confirming a real browser sign-in**, and it waits on
+M2.6's sign-in page. See "How to set each row" for the exact manual steps —
+none can be done from this repo or by an agent without your
+Vercel/Neon/Google/GitHub accounts.
 
 ## Vercel environment variables
 
