@@ -649,7 +649,7 @@ M1.25 — Fixture factories,M1 · Seed and acceptance harness,M1 — Database fo
 As a developer, I want factories with sensible defaults so that tests state only what they are actually testing.
 
 DESCRIPTION
-Add `fixtures/` factories — `makeIngredient`, `makeNote`, `makeSpell`, `makeWorkspace` — with overrides, so tests read `makeIngredient({ categories: ['protection'] })`.
+Add `fixtures/` factories — `makeIngredient`, `makeSpell`, `makeWorkspace` — with overrides, so tests read `makeIngredient({ categories: ['protection'] })`.
 
 ACCEPTANCE CRITERIA
 - Each factory works with zero arguments
@@ -1037,7 +1037,7 @@ M5.4 — Admin route guard and layout,M5 · Admin surface,M5 — Admin curation 
 Story 18 — As a site admin, I want an admin area only I can reach, so that I can curate shared data without exposing the surface to anyone else.
 
 DESCRIPTION
-`/admin` layout asserting `users.role = admin`. A signed-in non-admin gets a clear 'not authorized' page, not a 404 — `/admin` is a guessable path on every site ever built, so pretending it does not exist buys no secrecy and only makes the app look broken to someone who typed it out of curiosity. This differs from `/coven/[slug]` in M6.11, where the existence of a workspace is genuinely private and 404 is the right answer. Admin follows the same access boundary as the rest of the site: server-rendered reads through services, every mutation through GraphQL.
+`/admin` layout asserting `users.role = admin`. A signed-in non-admin gets a clear 'not authorized' page, not a 404 — `/admin` is a guessable path on every site ever built, so pretending it does not exist buys no secrecy and only makes the app look broken to someone who typed it out of curiosity. This differs from `/coven/[slug]` in M6.10, where the existence of a workspace is genuinely private and 404 is the right answer. Admin follows the same access boundary as the rest of the site: server-rendered reads through services, every mutation through GraphQL.
 
 ACCEPTANCE CRITERIA
 - Admins see the layout
@@ -1155,7 +1155,7 @@ M6.4 — Row-Level Security policies for workspace-scoped tables,M6 · Schema an
 As an owner, I want the database itself to enforce workspace boundaries so that an application bug cannot leak my grimoire.
 
 DESCRIPTION
-Migration adding Row-Level Security policies to every workspace-scoped table. RLS is a Postgres feature that attaches a rule to a table so the database itself filters which rows a query may read or change — enforcement below the application, so a bug in a service cannot leak another workspace's data. The policies need to know who is asking, which comes from the GUC set in M1.17. A GUC is Postgres's name for a runtime setting; `SET LOCAL app.current_user_id = '<uuid>'` defines a custom one scoped to the transaction, and a policy reads it back with `current_setting('app.current_user_id')`. Transaction-scoped matters: it cannot leak to the next request sharing a pooled connection.
+Migration adding Row-Level Security policies to every workspace-scoped table. RLS is a Postgres feature that attaches a rule to a table so the database itself filters which rows a query may read or change — enforcement below the application, so a bug in a service cannot leak another workspace's data. The policies need to know who is asking, which comes from the GUC set in M1.19. A GUC is Postgres's name for a runtime setting; `SET LOCAL app.current_user_id = '<uuid>'` defines a custom one scoped to the transaction, and a policy reads it back with `current_setting('app.current_user_id')`. Transaction-scoped matters: it cannot leak to the next request sharing a pooled connection.
 
 ACCEPTANCE CRITERIA
 - RLS enabled on each workspace-scoped table
@@ -1230,7 +1230,7 @@ ACCEPTANCE CRITERIA
 As a user, I want a workspace-scoped layout so that every page below it knows which workspace it is in without guessing.
 
 DESCRIPTION
-`/coven/[slug]` layout resolving the slug to a workspace and asserting membership. Non-members get 404, not 403, so workspace existence is not disclosed — the opposite call to `/admin` in M5.5, and for a reason: a slug is a guess about someone's private data, whereas `/admin` is a fixed path everyone already knows.
+`/coven/[slug]` layout resolving the slug to a workspace and asserting membership. Non-members get 404, not 403, so workspace existence is not disclosed — the opposite call to `/admin` in M5.4, and for a reason: a slug is a guess about someone's private data, whereas `/admin` is a fixed path everyone already knows.
 
 ACCEPTANCE CRITERIA
 - Members see the layout
@@ -1430,7 +1430,7 @@ M8.1 — Acceptance test scaffold for stories 14–16,M8 · Services and search,
 Stories 14–16 — As a developer, I want the compendium browsing stories expressed as failing tests before implementation, so that done is measured against the specification.
 
 DESCRIPTION
-Create `tests/acceptance/02-compendium.test.ts` with failing tests naming stories 14 through 16. Stories 17 and 18 are covered by the admin scaffold in M4; story 19 by the workspace isolation tests in M5.
+Create `tests/acceptance/02-compendium.test.ts` with failing tests naming stories 14 through 16. Stories 17 and 18 are covered by the admin scaffold in M5.1; story 19 by the workspace isolation tests in M6.6.
 
 ACCEPTANCE CRITERIA
 - Three failing tests, one per story
@@ -1876,7 +1876,7 @@ M10.9 — grimoire and spell queries with derived fields,M10 · Grimoire data la
 Story 52 — As a workspace member, I want the comparison available from the API, so that it is computed once rather than reimplemented in each view.
 
 DESCRIPTION
-Add the queries exposing categories, derivedCategories and categoryGaps, with batched ingredient and category resolution. The grimoire list paginates through the M3.6 helper. Visibility filtering happens in the query, not after fetching — the same trap the note loader had, and the reason a private spell must never reach the resolver in the first place.
+Add the queries exposing categories, derivedCategories and categoryGaps, with batched ingredient and category resolution. The grimoire list paginates through the M3.6 helper. Visibility filtering happens in the query, not after fetching. Fetching every spell and dropping the private ones in the resolver is the trap here: it is invisible in the response and wrong only when someone inspects the rows the resolver actually loaded, which is why a private spell must never reach the resolver in the first place.
 
 ACCEPTANCE CRITERIA
 - derivedCategories computed from ingredients
@@ -2192,3 +2192,36 @@ ACCEPTANCE CRITERIA
 - Migrations applied to production before traffic
 - Production smoke check passes
 - main-sync branch opened to bring main back down",1,M11.14,Task
+"M0.34 — Stand up the doc archive and compress the working docs",,"M0 — Repo, tooling & environment","Create claude-docs/archive/<mN>/ and run the first compression pass. Nothing may end up living only in the archive.",2,"M0.34","Task"
+"M0.35 — Fix the stale 'auto' comment above defaultState: 'dark'",,"M0 — Repo, tooling & environment","Comment must describe the actual default.",1,"M0.35","Bugfix"
+"M0.36 — Wire check:stories and workshop:build into CI",,"M0 — Repo, tooling & environment","Both gates run in pre-commit AND in CI's build job, so a PR cannot skip them by skipping the local hook.",2,"M0.36","Task"
+"M0.37 — Document the undocumented styling and workshop files",,"M0 — Repo, tooling & environment","Every styling and workshop file covered in claude-docs.",2,"M0.37","Task"
+"M2.10 — Enable Ladle on staging, gated behind auth",,"M2 — Auth and users","Deploy the workshop:build static export to staging behind M2.7's session check, admin only. Local workshop stays unauthenticated. Needs M0.30 and M2.7. Wave 6.",2,"M2.10","Task"
+"M7.A.1 — Enable Require merge queue on main and staging",,"M7.A PR Gates Enabled","Split off from M0.21. Trigger-based, not wave-based: do it at a second contributor or when PR volume makes untested merge combinations a real risk.",1,"M7.A.1","Task"
+"M8.13a — SafetyNote component for ingredient caution text","M8 · Search UI","M8 — Compendium browsing and local ingredients","Owns safety presentation project-wide. Three consumers adopt it: M8.14, M8.19, M10.18. Wave 12, before all three.",1,"M8.13a","Task"
+"MB.1 - Fix prefers-reduced-motion facet swap in ThemeToggle",,"Bugfixes","Merged.",1,"MB.1","Bugfix"
+"MB.2 - Fix sun facet swinging in on first paint in light mode",,"Bugfixes","Merged.",1,"MB.2","Bugfix"
+"MB.3 - Fix Prettier formatting in m1.1-neon-branch-strategy.md",,"Bugfixes","Merged.",1,"MB.3","Bugfix"
+"MB.4 - Stop destructive-ddl scanning non-migration changed files",,"Bugfixes","Merged.",1,"MB.4","Bugfix"
+"MB.5 — Restore users FKs on auditColumns",,"Bugfixes","M1.15 shipped auditColumns without the FKs DESIGN.md 5 mandates. Wave 1, between M2.3 and every other table. Needs AnyPgColumn annotations for the module cycle and a fixed bootstrap UUID shared with M1.21.",2,"MB.5","Bugfix"
+"MB.6 — Spell recipe view page",,"Bugfixes","/coven/[slug]/grimoire/[id], added to DESIGN.md 9 by the re-sequencing audit. The page M10.22 attaches print styles to. Wave 13.",2,"MB.6","Feature"
+"MB.7 — Application nav shell",,"Bugfixes","AppShell, added to DESIGN.md 9 Components by the audit. M8.16/M8.17 require nav reachability that no task built. Wave 12.",2,"MB.7","Feature"
+"MB.8 — Zod schema for spells",,"Bugfixes","M4.5 covers ingredient and category only; M10.10 needs the spell equivalent. Wave 13.",1,"MB.8","Task"
+"MB.9 — ingredientsById DataLoader",,"Bugfixes","M8.5 and M9.4 assume batched ingredient resolution; no task built the loader. Wave 11.",1,"MB.9","Task"
+"MB.10 — usersById display-name DataLoader",,"Bugfixes","M6.18 requires display name to resolve without an N+1. Wave 9.",1,"MB.10","Task"
+"MB.11 — GraphQL field exposing the fuzzy duplicate service",,"Bugfixes","M4.7 builds the service; M5.10's debounced lookup needs it exposed. Wave 8.",1,"MB.11","Task"
+"MW.1 — Compress and archive the working docs for Wave 1",,"MW — Wave close-out","Close-out for Wave 1. Every live doc statement true as of the wave's end; that wave's transcripts and decision records move to claude-docs/archive/. Replaces the retired milestone-anchored compression tasks.",1,"MW.1","Task"
+"MW.2 — Compress and archive the working docs for Wave 2",,"MW — Wave close-out","Close-out for Wave 2. Every live doc statement true as of the wave's end; that wave's transcripts and decision records move to claude-docs/archive/. Replaces the retired milestone-anchored compression tasks.",1,"MW.2","Task"
+"MW.3 — Compress and archive the working docs for Wave 3",,"MW — Wave close-out","Close-out for Wave 3. Every live doc statement true as of the wave's end; that wave's transcripts and decision records move to claude-docs/archive/. Replaces the retired milestone-anchored compression tasks.",1,"MW.3","Task"
+"MW.4 — Compress and archive the working docs for Wave 4",,"MW — Wave close-out","Close-out for Wave 4. Every live doc statement true as of the wave's end; that wave's transcripts and decision records move to claude-docs/archive/. Replaces the retired milestone-anchored compression tasks.",1,"MW.4","Task"
+"MW.5 — Compress and archive the working docs for Wave 5",,"MW — Wave close-out","Close-out for Wave 5. Every live doc statement true as of the wave's end; that wave's transcripts and decision records move to claude-docs/archive/. Replaces the retired milestone-anchored compression tasks.",1,"MW.5","Task"
+"MW.6 — Compress and archive the working docs for Wave 6",,"MW — Wave close-out","Close-out for Wave 6. Every live doc statement true as of the wave's end; that wave's transcripts and decision records move to claude-docs/archive/. Replaces the retired milestone-anchored compression tasks.",1,"MW.6","Task"
+"MW.7 — Compress and archive the working docs for Wave 7",,"MW — Wave close-out","Close-out for Wave 7. Every live doc statement true as of the wave's end; that wave's transcripts and decision records move to claude-docs/archive/. Replaces the retired milestone-anchored compression tasks.",1,"MW.7","Task"
+"MW.8 — Compress and archive the working docs for Wave 8",,"MW — Wave close-out","Close-out for Wave 8. Every live doc statement true as of the wave's end; that wave's transcripts and decision records move to claude-docs/archive/. Replaces the retired milestone-anchored compression tasks.",1,"MW.8","Task"
+"MW.9 — Compress and archive the working docs for Wave 9",,"MW — Wave close-out","Close-out for Wave 9. Every live doc statement true as of the wave's end; that wave's transcripts and decision records move to claude-docs/archive/. Replaces the retired milestone-anchored compression tasks.",1,"MW.9","Task"
+"MW.10 — Compress and archive the working docs for Wave 10",,"MW — Wave close-out","Close-out for Wave 10. Every live doc statement true as of the wave's end; that wave's transcripts and decision records move to claude-docs/archive/. Replaces the retired milestone-anchored compression tasks.",1,"MW.10","Task"
+"MW.11 — Compress and archive the working docs for Wave 11",,"MW — Wave close-out","Close-out for Wave 11. Every live doc statement true as of the wave's end; that wave's transcripts and decision records move to claude-docs/archive/. Replaces the retired milestone-anchored compression tasks.",1,"MW.11","Task"
+"MW.12 — Compress and archive the working docs for Wave 12",,"MW — Wave close-out","Close-out for Wave 12. Every live doc statement true as of the wave's end; that wave's transcripts and decision records move to claude-docs/archive/. Replaces the retired milestone-anchored compression tasks.",1,"MW.12","Task"
+"MW.13 — Compress and archive the working docs for Wave 13",,"MW — Wave close-out","Close-out for Wave 13. Every live doc statement true as of the wave's end; that wave's transcripts and decision records move to claude-docs/archive/. Replaces the retired milestone-anchored compression tasks.",1,"MW.13","Task"
+"MW.14 — Compress and archive the working docs for Wave 14",,"MW — Wave close-out","Close-out for Wave 14. Every live doc statement true as of the wave's end; that wave's transcripts and decision records move to claude-docs/archive/. Replaces the retired milestone-anchored compression tasks.",1,"MW.14","Task"
+"MW.15 — Compress and archive the working docs for Wave 15",,"MW — Wave close-out","Close-out for Wave 15. Every live doc statement true as of the wave's end; that wave's transcripts and decision records move to claude-docs/archive/. Replaces the retired milestone-anchored compression tasks.",1,"MW.15","Task"
