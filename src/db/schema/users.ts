@@ -11,10 +11,9 @@ export const userRole = pgEnum('user_role', ['user', 'admin']);
 // names rather than DESIGN.md §5's displayName/avatarUrl — renaming them
 // would need a `user.fields` mapping in src/lib/auth.ts for no real
 // benefit, so the design doc was corrected to match instead. `auditColumns`
-// is spread per CLAUDE.md rule 3 even though it can't carry
-// `.references(() => users.id)` yet — `users` is its own FK target, and
-// MB.5 adds that self-reference once the circular-import annotation it
-// needs is worked out. src/lib/auth.ts's `databaseHooks` stamps
+// is spread per CLAUDE.md rule 3; its `*_by` columns reference `users.id`
+// (src/db/audit.ts, MB.5) including here, where that's a self-reference —
+// `users` is its own FK target. src/lib/auth.ts's `databaseHooks` stamps
 // createdBy/updatedBy with the new user's own id on sign-up, the same
 // self-satisfying pattern MB.5 documents for the seed bootstrap user.
 export const users = pgTable(

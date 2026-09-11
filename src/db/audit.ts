@@ -1,15 +1,28 @@
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { timestamp, uuid } from 'drizzle-orm/pg-core';
+import { users } from './schema/users';
 
-// The `users` table doesn't exist until M2.1, so `createdBy`/`updatedBy`/
-// `deletedBy` can't carry `.references(() => users.id)` yet. Each table that
-// spreads `...auditColumns` will need the FK added once `users` lands.
+// DESIGN.md §5: every audit id references users.id. audit.ts and
+// schema/users.ts import each other — users.ts spreads auditColumns, and
+// auditColumns points back at users.id, including for users' own rows
+// (users.created_by -> users.id). Drizzle's `() => users.id` thunk defers
+// evaluation until the FK is actually built (migration generation, not
+// module load), so the runtime cycle resolves fine; TypeScript still needs
+// the explicit `AnyPgColumn` return annotation below or it reports "audit.ts
+// circularly references itself", because it can't otherwise infer the
+// thunk's return type without first fully resolving users.ts, which is
+// still resolving audit.ts.
 export const auditColumns = {
   createdAt: timestamp('created_at').notNull().defaultNow(),
-  createdBy: uuid('created_by').notNull(),
+  createdBy: uuid('created_by')
+    .notNull()
+    .references((): AnyPgColumn => users.id),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-  updatedBy: uuid('updated_by').notNull(),
+  updatedBy: uuid('updated_by')
+    .notNull()
+    .references((): AnyPgColumn => users.id),
   deletedAt: timestamp('deleted_at'),
-  deletedBy: uuid('deleted_by'),
+  deletedBy: uuid('deleted_by').references((): AnyPgColumn => users.id),
 };
 
 export type AuditOperation = 'insert' | 'update' | 'delete';
