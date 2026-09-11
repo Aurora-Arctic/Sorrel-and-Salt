@@ -58,8 +58,22 @@ convention) and split across two schema files:
   above are ordinary Drizzle `pgTable` definitions; `npm run db:generate`
   (`drizzle-kit generate`) diffed them the same way it would any other
   table and wrote `src/db/migrations/0001_lucky_centennial.sql`
-  (M2.2) and `0002_solid_marauders.sql` (M2.3). Better Auth never pushes or
+  (M2.2), `0002_solid_marauders.sql` (M2.3) and
+  `0003_sweet_madame_masque.sql` (MB.5). Better Auth never pushes or
   alters schema at request time.
+- **Don't regenerate this schema with `@better-auth/cli`.** The documented
+  path (`npx @better-auth/cli generate`) is the wrong one here: that package
+  is still on 1.4.x/1.5.0-beta, behind the installed 1.7.4 core, so it emits
+  a schema for a different major. M2.2 instead used the generator the
+  installed `@better-auth/drizzle-adapter` bundles internally
+  (`generateDrizzleSchema`, in its `generate-drizzle-schema-*.mjs` — not in
+  the package's public `exports`, reachable only by direct file path), run
+  as a one-off script against this project's real config. Its output also
+  carries a `relations-v2` block (`defineRelationsPart`) that the installed
+  `drizzle-orm` 0.45.2 has no API for — drop it. Nothing needs it: Better
+  Auth's adapter reads plain schema tables, not the relational query API.
+  The two schema files are hand-maintained from here; only the SQL is
+  generated.
 - **`users` spreads `...auditColumns` (M2.3); the other three tables still
   don't.** `sessions`/`accounts`/`verifications` are Better Auth's own
   adapter tables, not application data CLAUDE.md rule 3 governs, so they
@@ -67,11 +81,12 @@ convention) and split across two schema files:
   moved from a plain unique constraint to a partial index (`WHERE
 deleted_at IS NULL`, CLAUDE.md rule 4) in the same migration that added
   the column.
-- **`auditColumns` still can't carry `.references(() => users.id)`.**
-  M1.15 shipped it FK-less because `users` didn't exist yet; M2.3 doesn't
-  change that (MB.5 does — see its entry in `claude-docs/TASKS.md`), so
-  `created_by`/`updated_by`/`deleted_by` are plain `uuid` columns today,
-  not yet real foreign keys.
+- **`auditColumns` carries `.references(() => users.id)` as of MB.5.**
+  M1.15 shipped it FK-less because `users` didn't exist yet; MB.5 restored
+  the three FKs in `0003_sweet_madame_masque.sql` once every `users` column
+  existed, including `users`' own self-reference. The mechanics — the
+  `AnyPgColumn` annotation the module cycle needs, and the self-satisfying
+  bootstrap insert — are in `claude-docs/db.md`.
 
 ## Config (`src/lib/auth.ts`)
 
@@ -149,11 +164,10 @@ evil.example.com` — the first two resolve correctly, the third falls
 when **both** halves of a pair (`GOOGLE_CLIENT_ID`+`GOOGLE_CLIENT_SECRET`,
 `GITHUB_CLIENT_ID`+`GITHUB_CLIENT_SECRET`) are set as non-empty strings —
 never with an empty string, which Better Auth would treat as a configured
-but broken provider rather than an absent one. Neither var pair is set
-anywhere yet (`claude-docs/secrets.md`), so today `/api/auth/sign-in/social`
-would 400 for an unrecognized provider — the code is ready, but there is no
-real OAuth client to sign in with until the manual registration steps in
-that doc happen.
+but broken provider rather than an absent one. Both pairs now hold real
+registered credentials locally (`.env.local`) and in Vercel; what is still
+unset is `ADMIN_BOOTSTRAP_EMAIL` and three CI secrets, which MB.12 owns
+(`claude-docs/secrets.md`).
 
 Verified with fake credentials (`GOOGLE_CLIENT_ID=test-google-id`, etc.,
 never real ones) against a running `next dev`: `POST
@@ -167,12 +181,13 @@ on a verified email, enabled out of the box) rather than anything this
 repo added. `src/app/api/auth/[...all]/route.test.ts` automates the Google
 half of that same check.
 
-**Not yet demonstrable, and not claimed as done:** M2.4/M2.5's actual
-acceptance criteria ("sign-in completes on local and staging") need a real
-registered OAuth client and a live callback round-trip — neither is
-possible from this session. The code is written and tested with fake
-credentials; verifying a real sign-in is the manual step in
-`claude-docs/secrets.md`.
+**Not yet demonstrated, and not claimed as done:** M2.4/M2.5's actual
+acceptance criteria ("sign-in completes on local and staging") need a live
+callback round-trip through a real browser and consent screen. Real
+credentials are now registered and the live authorization endpoints accept
+them, but nobody has completed an interactive sign-in — and nobody can until
+M2.6 builds the sign-in page. MB.12 carries that verification, which is why
+it sits in Wave 6 behind M2.6 rather than with the rest of Wave 1.
 
 `/api/auth/ok` (Better Auth's built-in health endpoint, no database access)
 is what `route.test.ts`'s other case uses to confirm the route is mounted
@@ -229,10 +244,11 @@ Nothing else grants admin in v1 — no UI, no other API path.
 
 Every variable this subsystem needs, and the manual steps to set each one,
 is `claude-docs/secrets.md` (M0.27) — not duplicated here. Short version:
-code-wise, `src/lib/auth.ts` is ready for real credentials the moment
-they're set (see "Social providers" below); nothing in Vercel or GitHub
-Actions has them yet, so a deploy today builds and serves `/api/auth/ok`
-but cannot complete a real sign-in or apply migrations.
+`src/lib/auth.ts` is wired and the OAuth credentials are set (see "Social
+providers" above). Still unset, all owned by MB.12: `ADMIN_BOOTSTRAP_EMAIL`,
+so no account can become admin yet; and `VERCEL_SCOPE`/`NEON_API_KEY`/
+`NEON_PROJECT_ID`, so `migrate.yml` still skips rather than applying
+migrations.
 
 ## Tests
 
@@ -275,12 +291,16 @@ generate` fails trying to `require()` a file that imports Vitest.
   reason as the introspection gap below.** A `POST /api/auth/sign-in/social`
   case lived in `route.test.ts` briefly and broke CI: unlike `/ok`, that
   endpoint persists a `verifications` row (PKCE state) before redirecting,
-  so — same as any db-project test — it needs real schema `sorrel_test_<n>`
-  doesn't have pre-M1.27. It happened to pass locally only because this
-  session had separately run `drizzle-kit migrate` by hand against its own
-  `sorrel`. The Google/GitHub redirect shape (real authorization URL, PKCE
-  params, correct callback path per environment) was verified by hand
-  against a running server instead — `claude-docs/transcripts/auth.md`.
+  so it needs schema that is really there. `route.test.ts` is a **`unit`**
+  test, so it reads the plain `sorrel` database — the per-worker
+  `sorrel_test_<n>` clone is `db`-project-only and was never in this test's
+  path, which also means M1.27's template bake would not have fixed it. It
+  passed locally only because this session had separately run
+  `drizzle-kit migrate` by hand against its own `sorrel`; CI's was empty.
+  See `claude-docs/testing.md`. The Google/GitHub redirect shape (real
+  authorization URL, PKCE params, correct callback path per environment)
+  was verified by hand against a running server instead, and the
+  "Config" section above records what that verification established.
 - **No db-project introspection test for these tables yet.** `sorrel_template`
   has no schema baked in until M1.27 (`claude-docs/db.md`), so a test
   asserting these tables exist in a cloned `sorrel_test_<n>` database would

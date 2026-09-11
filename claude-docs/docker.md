@@ -36,16 +36,20 @@ no Neon connection and no host Node-version juggling.
     than pulling the GHCR image `build-db-image.yml` publishes for CI; this file
     is local dev only. Named volume `postgres_data` at
     `/var/lib/postgresql/data`; health check
-    `pg_isready -U postgres -d sorrel_template` (only the `postgres` superuser
-    and the empty `sorrel_template` exist in the image today). `app` has
+    `pg_isready -U postgres -d sorrel_template` — it probes `postgres`/
+    `sorrel_template` because that pair proves the server is up, not because
+    `sorrel` is missing (`Docker/postgres-init/enable-extensions.sql` creates
+    the `sorrel` role and database at image build time). `app` has
     `depends_on: { postgres: { condition: service_healthy } }`, so
     `make docker-up` blocks on `postgres Healthy` before `app Starting`. Port
     **5432** is published for the host-side Vitest `db` project.
-    - **Every `POSTGRES_*` env var is ignored**, and `DATABASE_URL` on `app` is
-      inert: PGDATA is populated at image _build_ time, and
-      `docker-entrypoint.sh` only reads those vars on first boot. Harmless until
-      the app queries the database; M1.27 gives the image real, known-password
-      credentials.
+    - **Every `POSTGRES_*` env var is ignored**: PGDATA is populated at image
+      _build_ time, and `docker-entrypoint.sh` only reads those vars on first
+      boot. The credentials the image really has (`sorrel`/`sorrel`) come from
+      its own init script instead. `DATABASE_URL` on `app` is **not** inert as
+      of Wave 1 — `src/db/connection.ts` throws when it is unset, and the
+      Better Auth route handlers query through that client. M1.27 adds schema
+      and seed data to the image; the credentials are already real.
     - **Switching `image:`/`build:` never resets an existing named volume** — a
       stale `postgres_data` keeps serving whatever the previous image's init
       created. `make docker-rebuild` (`down -v`) is what gets a fresh one.
