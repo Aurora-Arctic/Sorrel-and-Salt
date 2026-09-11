@@ -102,12 +102,27 @@ build`), `.github/workflows/playwright.yml` and `Docker/docker-compose.yaml`'s
 'hotfix-*.sorrelandsalt.com']`, `protocol: 'https'` (forced rather than
   trusting `x-forwarded-proto`, since `advanced.trustedProxyHeaders` isn't
   enabled), `fallback: 'https://sorrelandsalt.com'` for any other `Host`.
-  Scoped to `NODE_ENV=production` only, same as `authSecret()` — `next
-dev`/Vitest keep Better Auth's permissive per-request default. Verified
-  against a built server with `Host: staging.sorrelandsalt.com`, `Host:
-hotfix-foo-bar.sorrelandsalt.com`, and a spoofed `Host: evil.example.com`
-  — the first two resolve correctly, the third falls back to the
-  production URL rather than being reflected into the redirect.
+  Verified against a built server with `Host: staging.sorrelandsalt.com`,
+  `Host: hotfix-foo-bar.sorrelandsalt.com`, and a spoofed `Host:
+evil.example.com` — the first two resolve correctly, the third falls
+  back to the production URL rather than being reflected into the
+  redirect.
+- **Outside production, a fixed `http://localhost:8000` — not Better
+  Auth's own per-request default.** `next dev --hostname 0.0.0.0` (this
+  repo's fixed `dev` script, every environment) computes the request's
+  origin from its own bind address, not the client's `Host` header:
+  confirmed by curling a running dev server with `localhost`, `127.0.0.1`,
+  and a spoofed `Host` header and getting `http://0.0.0.0:8000` back every
+  time, regardless. Left to Better Auth's default, every local OAuth
+  `redirect_uri` would be `0.0.0.0:8000` — not `http://localhost:8000/...`,
+  what's actually registered with Google/GitHub (`claude-docs/secrets.md`)
+  — and sign-in would fail with `redirect_uri_mismatch`. `next dev`'s port
+  is fixed at 8000 (no `PORT` override, unlike `start`), so this is safe
+  to hardcode. Verified with real credentials against a running dev
+  server: the resulting authorization URLs (fetched directly) show a real
+  Google sign-in screen and GitHub correctly resolving the registered
+  app's name and scopes — not a `redirect_uri_mismatch`/`invalid_client`
+  error.
 - **This doesn't make hotfix sign-in actually work.** `allowedHosts` only
   fixes what URL this app tells Google/GitHub to send a user back to —
   Google and GitHub still require that URL to be a pre-registered
@@ -170,8 +185,9 @@ but cannot complete a real sign-in or apply migrations.
   `BETTER_AUTH_SECRET` is unset at `NODE_ENV=production`, and doesn't
   throw when unset outside it; asserts `socialProviders()` registers a
   provider only once both its client id and secret are set; asserts
-  `baseURL()` is `undefined` outside production and resolves to the exact
-  `allowedHosts`/`fallback`/`protocol` config at `NODE_ENV=production`.
+  `baseURL()` is the fixed `http://localhost:8000` outside production and
+  resolves to the exact `allowedHosts`/`fallback`/`protocol` config at
+  `NODE_ENV=production`.
   Uses `vi.resetModules()`/`vi.stubEnv()` throughout: ESM caches a module
   (including one that threw during evaluation) after its first import, so
   reusing one `import('./auth')` across cases in the same test file would

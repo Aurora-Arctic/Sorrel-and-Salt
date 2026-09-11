@@ -74,13 +74,19 @@ describe('baseURL', () => {
     vi.unstubAllEnvs();
   });
 
-  it("is unset outside production, leaving Better Auth's per-request default", async () => {
+  it('is a fixed http://localhost:8000 outside production', async () => {
+    // Not left to Better Auth's own per-request default: `next dev
+    // --hostname 0.0.0.0` computes the request origin from its bind
+    // address, not the client's Host header, which would otherwise send
+    // every local OAuth redirect_uri to 0.0.0.0:8000 instead of the
+    // localhost:8000 registered with Google/GitHub — confirmed by curling
+    // a running dev server with a spoofed Host and seeing no change.
     vi.stubEnv('NODE_ENV', 'development');
     vi.resetModules();
 
     const { auth } = await import('./auth');
 
-    expect(auth.options.baseURL).toBeUndefined();
+    expect(auth.options.baseURL).toBe('http://localhost:8000');
   });
 
   it('allows sorrelandsalt.com, the staging alias, and any hotfix-* preview at production', async () => {

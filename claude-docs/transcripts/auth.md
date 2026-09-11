@@ -217,3 +217,55 @@ wiring it was partially redundant with is already covered by
 already verified by hand in the M2.4/M2.5 pass above and recorded here,
 not just asserted in a test that couldn't reliably run. Confirmed the fix
 by running the full suite and `pre-commit` locally before pushing again.
+
+## 2026-09-11 — real credentials expose a second bug: `next dev` lies about its own origin
+
+User added the real Google/GitHub credentials from the walkthrough to
+`.env.local` and asked to check what's checkable. Beyond the CI fix
+above, ran a real `next dev` locally with those credentials and hit
+`/api/auth/sign-in/social` for both providers — the `redirect_uri` in
+each response came back as `http://0.0.0.0:8000/api/auth/callback/...`,
+not `http://localhost:8000/...`, the value actually registered with
+Google/GitHub per the walkthrough. That mismatch would fail as
+`redirect_uri_mismatch` the moment anyone tried a real interactive
+sign-in.
+
+Isolated the cause before trusting it: curled the same endpoint via
+`localhost:8000`, `127.0.0.1:8000`, and with an explicit spoofed `Host:
+totallyfakehost:9999` header — all three produced the identical
+`0.0.0.0:8000` `redirect_uri`. That rules out anything client-controlled;
+`next dev --hostname 0.0.0.0` (this repo's fixed `dev` script, used
+identically by the bare devcontainer and every docker-compose variant)
+computes the request's origin from its own bind address rather than the
+incoming `Host` header at all. Confirmed this is specifically the
+_undefined-baseURL_ code path (`getOrigin(request.url)` in Better Auth's
+`getBaseURL`) by noting the earlier `NODE_ENV=production` verification
+never hit this bug — that path uses the _dynamic_ `allowedHosts` config,
+which reads the `Host` header directly and had already been confirmed
+correct against real and spoofed hosts.
+
+Fixed by giving `baseURL()` an explicit branch for non-production too,
+instead of returning `undefined` and trusting Better Auth's own
+derivation: a hardcoded `'http://localhost:8000'`, safe because `next
+dev`'s port is fixed (no `PORT` override in that script, unlike `start`).
+Re-verified against a fresh dev server: `redirect_uri` now correctly reads
+`localhost:8000` for both providers. Went one step further than curling —
+fetched the real, live Google and GitHub authorization URLs directly
+(`WebFetch`) to check whether the providers themselves accept the
+`client_id`/`redirect_uri` pair: Google renders a genuine sign-in screen
+with no `redirect_uri_mismatch`/`invalid_client` error; GitHub correctly
+resolves the `client_id` to "Sorrel & Salt (local)" requesting `read:user
+user:email` and shows its normal login form — the "error while loading"
+text on that page is GitHub's generic no-JS fallback banner (`WebFetch`
+doesn't execute JavaScript), not an OAuth-specific rejection, and an
+invalid client or redirect URI would have shown a 404 or an explicit
+"redirect_uri is not associated with this application" instead. This is
+the strongest verification possible without a real browser completing an
+actual login and consent screen.
+
+Updated `src/lib/auth.test.ts`'s "outside production" case to assert the
+new fixed value instead of `undefined`, and `claude-docs/auth.md`'s
+`baseURL()` bullet to match. `claude-docs/secrets.md`'s local redirect URI
+guidance (`http://localhost:8000/api/auth/callback/{provider}`) turns out
+to have been correct all along — it was the code, not the doc, that had
+been wrong.
