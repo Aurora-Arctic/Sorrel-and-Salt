@@ -1,4 +1,4 @@
-import type { SQL } from 'drizzle-orm';
+import { sql, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { applyAudit, auditColumns, type AuditSession } from './audit';
 import { db } from './connection';
@@ -10,9 +10,8 @@ import { db } from './connection';
 // transaction itself either: they get the narrow `AuditWriter` below, whose
 // three methods each run their payload through `applyAudit` first.
 //
-// Read-side finders (and their `deleted_at IS NULL` builder) are M1.20, and
-// the `SET LOCAL app.current_user_id` this transaction will also issue is
-// M1.19 — both land on top of this choke point rather than beside it.
+// Read-side finders (and their `deleted_at IS NULL` builder) are M1.20 —
+// they land on top of this choke point rather than beside it.
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -64,9 +63,10 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
 }
 
 /**
- * The only write path. Opens one transaction, hands `fn` a writer that
- * stamps every statement's audit columns from `session` — never from a
- * request body — and rolls the whole transaction back if `fn` throws.
+ * The only write path. Opens one transaction, publishes the acting user to
+ * the database as `app.current_user_id`, hands `fn` a writer that stamps
+ * every statement's audit columns from `session` — never from a request
+ * body — and rolls the whole transaction back if `fn` throws.
  */
 export async function withAudit<T>(
   session: AuditSession,
@@ -76,5 +76,17 @@ export async function withAudit<T>(
     throw new Error('withAudit requires a session with an acting user id');
   }
 
-  return db.transaction((tx) => fn(writerFor(tx, session)));
+  return db.transaction(async (tx) => {
+    // DESIGN.md §5 / §10: the acting user, published to the database so an
+    // RLS policy (M6.4) can read it back with
+    // `current_setting('app.current_user_id')` and enforce access without
+    // trusting application code. `SET LOCAL` takes no bind parameters —
+    // it would mean interpolating a user id into SQL text — so this uses
+    // `set_config(name, value, is_local => true)`, its parameterised
+    // equivalent with identical transaction-scoped semantics: the value is
+    // discarded at COMMIT or ROLLBACK and so can never ride a pooled
+    // connection into the next request.
+    await tx.execute(sql`select set_config('app.current_user_id', ${session.userId}, true)`);
+    return fn(writerFor(tx, session));
+  });
 }
