@@ -7,7 +7,7 @@ from the environment at module load and throws if it is unset — no default,
 no silent fallback.
 
 - **One driver call site.** Nothing outside `connection.ts` calls `postgres(...)`.
-  `src/db/repository.ts` (M1.16) will be the only module that imports `db` from
+  `src/db/repository.ts` (M1.16) is the only module that imports `db` from
   here — everything else reaches the database through the repository.
 - **Local Postgres and Neon use the same code path.** `postgres` (the driver)
   parses `sslmode` off the connection string itself, so a Neon URL's
@@ -193,7 +193,7 @@ transaction and confirming both the self-referencing insert and the
 rejection of a nonexistent `created_by` uuid.
 
 `applyAudit(operation, payload, session)` is the pure helper `withAudit`
-(M1.16) will call before every write — it takes `'insert' | 'update' |
+(M1.16) calls before every write — it takes `'insert' | 'update' |
 'delete'`, a payload, and `{ userId }`, and returns the payload with any
 audit fields the caller supplied stripped out and replaced with the correct
 ones for that operation:
@@ -206,6 +206,52 @@ Audit ids never come from the caller: `applyAudit` deletes any of the six
 audit keys off the incoming payload before setting the ones the operation
 calls for, so a payload smuggling `createdBy` from a request body is ignored
 in favour of `session.userId`, per CLAUDE.md rule 3.
+
+## The write path — `repository.ts` and `withAudit` (M1.16)
+
+`src/db/repository.ts` is the only module that imports `db` from
+`connection.ts` (CLAUDE.md rule 2, DESIGN.md §5), and it exports exactly one
+thing: `withAudit(session, fn)`. `db` is not re-exported, and `fn` is not
+handed the Drizzle transaction — it gets a narrow `AuditWriter` whose three
+methods each run their payload through `applyAudit` first. That is what makes
+"a write outside `withAudit`" impossible through the public API rather than
+merely discouraged: there is no exported handle to write with.
+
+```ts
+const [spell] = await withAudit(session, (write) =>
+  write.insert(spells, { workspaceId, title: input.title }),
+);
+```
+
+- **`write.insert(table, values)`** — stamps `createdAt`/`createdBy`/
+  `updatedAt`/`updatedBy`, returns the inserted rows.
+- **`write.update(table, values, where)`** — stamps `updatedAt`/`updatedBy`
+  only; `createdAt`/`createdBy` are never in the `SET` list, so an update
+  cannot rewrite who created a row.
+- **`write.softDelete(table, where)`** — stamps `deletedAt`/`deletedBy` and
+  leaves the row in place (CLAUDE.md rule 4). There is no hard delete here.
+
+`values` is typed as the table's insert model **minus** the six audit
+columns, so a call site can't even name `createdBy` without a cast — and if
+one casts anyway, `applyAudit` strips it: audit ids come from the session,
+never from a request body.
+
+Everything inside one `withAudit` call runs in one transaction: if `fn`
+throws, the whole transaction rolls back (including writes that already
+succeeded before the failing one) and the error propagates to the caller
+unchanged. A session with no `userId` is rejected before the transaction
+opens, rather than stamping a blank acting user.
+
+Two things deliberately land on top of this rather than beside it:
+`SET LOCAL app.current_user_id` at transaction start is M1.19, and the
+read-side finder builder that applies `deleted_at IS NULL` is M1.20.
+
+**Testing against a scratch table.** `src/db/repository.test.ts` runs in the
+`db` project against this worker's `sorrel_test_<n>` clone, which carries no
+application tables until M1.27 — so it creates its own
+`repository_probe_herbs` table spreading the real `auditColumns` (minus the
+FKs to a `users` table that doesn't exist yet) and drops it afterwards. The
+six columns exercised are the ones every real table will carry.
 
 ## Snapshot before production migrations, and the restore runbook (M1.6)
 
