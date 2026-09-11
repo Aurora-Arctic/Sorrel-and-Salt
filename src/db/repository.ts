@@ -1,14 +1,20 @@
 import { sql, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { applyAudit, auditColumns, type AuditSession } from './audit';
+// M1.17: this module is the choke point the no-restricted-imports rule exists
+// to protect, so it is the one application module allowed to import the client.
+// oxlint-disable-next-line no-restricted-imports
 import { db } from './connection';
 
-// DESIGN.md §5 / CLAUDE.md rule 2: this is the only module that imports the
-// database client. `db` is deliberately not re-exported — the sole exported
-// write mechanism is `withAudit`, so there is no public API through which a
-// write can skip audit stamping (M1.16). Callers never see the Drizzle
-// transaction itself either: they get the narrow `AuditWriter` below, whose
-// three methods each run their payload through `applyAudit` first.
+// DESIGN.md §5 / CLAUDE.md rule 2: this is the only application module that
+// imports the database client — the three infrastructure exemptions are listed
+// in claude-docs/db.md, "Who may import the client", and the boundary is
+// enforced by lint as of M1.17. `db` is deliberately not re-exported — the
+// sole exported write mechanism is `withAudit`, so there is no public API
+// through which a write can skip audit stamping (M1.16). Callers never see
+// the Drizzle transaction itself either: they get the narrow `AuditWriter`
+// below, whose three methods each run their payload through `applyAudit`
+// first.
 //
 // Read-side finders (and their `deleted_at IS NULL` builder) are M1.20 —
 // they land on top of this choke point rather than beside it.

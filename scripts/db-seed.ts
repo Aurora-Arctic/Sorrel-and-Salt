@@ -7,6 +7,10 @@
 //
 // Usage: npm run db:seed
 
+// M1.17: the seed CLI hands a client to seed(), which writes as the bootstrap
+// user rather than through a session — claude-docs/db.md, "Who may import the
+// client".
+// oxlint-disable-next-line no-restricted-imports
 import { db } from '../src/db/connection.ts';
 import { seed } from '../src/db/seed/index.ts';
 
