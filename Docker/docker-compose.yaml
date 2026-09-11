@@ -155,7 +155,9 @@ services:
       postgres:
         condition: service_healthy
     # Command comes from the Dockerfile `CMD` (`npm run dev`), which already
-    # binds 0.0.0.0:8000 — see the `dev` script in package.json.
+    # binds 0.0.0.0:8000 — see the `dev` script in package.json. `next dev`
+    # runs at NODE_ENV=development, so Better Auth's own BETTER_AUTH_SECRET
+    # policy (src/lib/auth.ts) never requires one here.
 
   workshop:
     # Opt-in: only started by `docker compose --profile workshop up` (i.e.
@@ -204,6 +206,12 @@ services:
       # Reaches Postgres by its compose service name, same as `app`.
       # e2e/database.ts swaps the pathname to sorrel_e2e.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
+      # Unlike `app` (`next dev`), `npm run e2e` runs `npm run build &&
+      # npm run start` (playwright.config.ts's webServer.command), and the
+      # `build` script's own `NODE_ENV=production` prefix overrides the
+      # `NODE_ENV: test` above for that one process — so Better Auth's
+      # production-only check (src/lib/auth.ts) does apply here.
+      BETTER_AUTH_SECRET: local-dev-not-a-real-secret
     depends_on:
       postgres:
         condition: service_healthy
