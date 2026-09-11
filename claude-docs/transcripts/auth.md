@@ -129,3 +129,58 @@ by hand (per M0.27's carve-out comment) couldn't have been set from here
 either. Recorded which secrets are already set (the three deploy ones) vs.
 still missing (`NEON_API_KEY`/`NEON_PROJECT_ID` and everything Vercel-side)
 rather than presenting the whole matrix as uniformly undone.
+
+## 2026-09-11 — correcting `BETTER_AUTH_URL`: no single Preview value is right
+
+User asked what the `BETTER_AUTH_URL` values should be per environment —
+a direct question about what `secrets.md` had just documented (a fixed
+`Preview (staging + hotfix)` value, `https://staging.sorrelandsalt.com`).
+Answering it surfaced that the doc's own recommendation was wrong: `staging`
+and a hotfix preview are both `Preview`-scoped in Vercel, but a hotfix gets
+its own ephemeral `hotfix-<slug>.sorrelandsalt.com` domain per open PR
+(`deploy.yml`). A single Preview-scoped `BETTER_AUTH_URL` set to staging's
+URL would have leaked into every hotfix preview's OAuth `redirect_uri`,
+sending Google/GitHub's callback to the wrong origin.
+
+Fixed properly rather than just correcting the doc: Better Auth's `baseURL`
+option supports a dynamic config (`allowedHosts`, wildcard-capable, plus a
+`fallback` and `protocol`) built for exactly this "one app, several real
+domains" shape. Added `baseURL()` to `src/lib/auth.ts`, scoped to
+`NODE_ENV=production` only (same reasoning as `authSecret()`) —
+`allowedHosts: ['sorrelandsalt.com', 'staging.sorrelandsalt.com',
+'hotfix-*.sorrelandsalt.com']`, `protocol: 'https'` (forced explicitly
+rather than trusting `x-forwarded-proto`, since
+`advanced.trustedProxyHeaders` isn't enabled), `fallback:
+'https://sorrelandsalt.com'`. This removes `BETTER_AUTH_URL` as an env var
+entirely — nothing to set in Vercel for it.
+
+Verified against a real built-and-started server (`npm run build && npm run
+start`, `NODE_ENV=production`), curling `/api/auth/sign-in/social` with a
+spoofed `Host` header for each case: `sorrelandsalt.com` and
+`staging.sorrelandsalt.com` resolved correctly, `hotfix-foo-bar
+.sorrelandsalt.com` matched the wildcard correctly, and an untrusted `Host:
+evil.example.com` fell back to the production URL rather than being
+reflected into the OAuth `redirect_uri` — the actual security property
+`allowedHosts` exists for, not just a config nicety. Caught one real bug in
+the process of that verification: the first attempt still showed `http://`
+in the redirect after adding `protocol: 'https'`, traced to a stale
+`next start` process left running from an earlier build on the same port,
+serving old code — killed by PID and re-verified against a fresh
+build+start to confirm the fix actually took effect.
+
+**Still true regardless of this fix**: a hotfix preview can't complete a
+real Google/GitHub sign-in, because both require a pre-registered redirect
+URI and a hotfix slug doesn't exist to register ahead of time.
+`allowedHosts` only makes this app's own half of that handshake correct
+and safe against Host header spoofing — it can't make an external OAuth
+provider accept a URI it was never told about. Documented as a real,
+permanent limitation in `claude-docs/secrets.md`, not something to fix
+later.
+
+Updated `src/lib/auth.test.ts` (asserts `baseURL()` is `undefined` outside
+production and resolves to the exact allowedHosts/fallback/protocol object
+at `NODE_ENV=production`), `claude-docs/auth.md`, and `claude-docs/secrets
+.md` (removed the `BETTER_AUTH_URL` row, added the branch-scoped
+`DATABASE_URL` override detail from `design-decisions/m1.1-neon-branch
+-strategy.md` while in there, since the Vercel table was already wrong
+about that row treating `staging`/hotfix identically too).

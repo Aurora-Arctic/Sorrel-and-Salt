@@ -62,3 +62,42 @@ describe('social providers', () => {
     });
   });
 });
+
+// A single BETTER_AUTH_URL env var can't cover production — it spans three
+// real origins (sorrelandsalt.com, the staging alias, one hotfix-<slug>
+// domain per open PR) that Vercel's Preview scope can't tell apart. This
+// asserts the allowedHosts config resolves each correctly, and that an
+// untrusted Host falls back to the production URL rather than being
+// reflected into an OAuth redirect_uri.
+describe('baseURL', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("is unset outside production, leaving Better Auth's per-request default", async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.resetModules();
+
+    const { auth } = await import('./auth');
+
+    expect(auth.options.baseURL).toBeUndefined();
+  });
+
+  it('allows sorrelandsalt.com, the staging alias, and any hotfix-* preview at production', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('BETTER_AUTH_SECRET', 'production-test-secret-at-least-32-characters-long');
+    vi.resetModules();
+
+    const { auth } = await import('./auth');
+
+    expect(auth.options.baseURL).toEqual({
+      allowedHosts: [
+        'sorrelandsalt.com',
+        'staging.sorrelandsalt.com',
+        'hotfix-*.sorrelandsalt.com',
+      ],
+      fallback: 'https://sorrelandsalt.com',
+      protocol: 'https',
+    });
+  });
+});
