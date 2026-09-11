@@ -191,7 +191,10 @@ regression check never runs through the thing it is testing.
   extension §5 names) and an empty `sorrel_template` database baked in at
   _build_ time, by running the official image's own `docker-entrypoint.sh`
   inside a `RUN` step instead of leaving it to first boot. No schema or seed
-  data yet; M1.27 extends this image once `src/db/schema` exists.
+  data is baked in yet; M1.27 extends the image to bake in the migrated
+  schema. (`src/db/schema/` itself is no longer empty — Wave 1 added
+  `users.ts`/`auth.ts` and migrations `0001`–`0003` — the image just doesn't
+  carry them.)
 - **`build-db-image.yml`** — builds and publishes it to GHCR, tagged with a
   `hashFiles()` hash of `src/db/**` / `Docker/Dockerfile.postgres` /
   `Docker/postgres-init/**`, plus `latest` (moved only on push to

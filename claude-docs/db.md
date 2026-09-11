@@ -43,9 +43,11 @@ no silent fallback.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
   `seed(db, { scenario: 'minimal' })` from `src/db/seed/index.ts`. That
   function exists only as an interface for now — it throws for every
-  scenario, since there's no schema yet for it to populate. Scenario content
-  arrives scenario-by-scenario in M1.21 (`minimal`), M1.22 (`standard`), and
-  M1.23 (`demo`); scenario selection by environment variable is M1.24.
+  scenario. The tables it will populate mostly don't exist yet either: Wave 1
+  created `users` and Better Auth's three adapter tables, and everything else
+  §5 specifies lands in Wave 3. Scenario content arrives scenario-by-scenario
+  in M1.21 (`minimal`), M1.22 (`standard`), and M1.23 (`demo`); scenario
+  selection by environment variable is M1.24.
 - **`npm run db:reset`** is `db:migrate` then `db:seed` — real plumbing, but
   it fails until `db:seed` has something to do. The Docker-level reset (init
   hook, `make db-reset`, drop-and-recreate from a broken state) is M1.24.
@@ -221,9 +223,10 @@ name identifies exactly the change it precedes. Preview (`staging`, hotfix)
 migrations never snapshot; those databases are already disposable per
 [`m1.1-neon-branch-strategy.md`](design-decisions/m1.1-neon-branch-strategy.md).
 The step is guarded on `NEON_API_KEY`/`NEON_PROJECT_ID` the same
-stub-now/wire-later way `deploy.yml` guards on the Vercel secrets — both are
-part of the M0.27 secrets matrix and don't exist yet, so until then the step
-warns and skips rather than failing the job.
+stub-now/wire-later way `deploy.yml` guards on the Vercel secrets. M0.27
+wrote the secrets matrix (`claude-docs/secrets.md`), but these two rows are
+still unset — MB.12 owns setting them — so until then the step warns and
+skips rather than failing the job.
 
 A weekly scheduled workflow, `neon-snapshot-prune.yml`, keeps the newest
 `KEEP_SNAPSHOTS` (3) `snapshot-*` branches and deletes the rest — Neon's free
