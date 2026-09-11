@@ -34,13 +34,14 @@ The schema entity is `workspaces`; the URL prefix is `/coven/`. This divergence 
 | `make docker-up`                                                                                               | App + Postgres 17 locally, no Neon connection needed                                                                                  |
 | `make docker-workshop`                                                                                         | Also brings up the Ladle workshop, on **61000**                                                                                       |
 | `npm run workshop` / `workshop:build` (`make workshop` / `workshop-build`)                                     | Ladle component workshop on **61000**; `:build` is the static export, wrapped so a story that fails to bundle actually exits non-zero |
-| `make act-lint` / `act-format` / `act-typecheck`                                                               | Run that reusable CI workflow locally via `act`; `make act-test` chains all three                                                     |
-| `npm run db:generate` / `db:migrate` / `db:seed` / `db:reset` (`make db-*`)                                    | **Not wired up yet.** Script and target names exist and exit non-zero until M1.3 wires them to Drizzle                                |
+| `make act-lint` / `act-format` / `act-typecheck` / `act-destructive-ddl`                                       | Run that reusable CI workflow locally via `act`; `make act-test` chains all four                                                      |
+| `npm run db:generate` / `db:migrate` (`make db-*`)                                                             | `drizzle-kit generate` / `migrate`, wired in M1.3                                                                                     |
+| `npm run db:seed` / `db:reset` (`make db-*`)                                                                   | Wired, but `seed()` throws for every scenario until M1.21–M1.23 fill them in, so `db:reset` fails at its seed step                    |
 | `npm run codegen`                                                                                              | **Not wired up yet.** Exits non-zero until M3.5 wires it to graphql-codegen                                                           |
-| `npm run test:coverage`                                                                                        | **Doesn't exist yet.** Arrives with Vitest in M1.7 — `unit` (jsdom) + `db` (node/Postgres) projects, 80% threshold                    |
+| `npm run test:coverage`                                                                                        | `vitest run --coverage` — `unit` (jsdom) + `db` (node/Postgres) projects, 80% threshold                                               |
 | `make test-stories`                                                                                            | **Doesn't exist yet.** Arrives in M1.28 — acceptance suite only, prints a pass/fail line per user story                               |
 
-**Once `test:coverage` lands (M1.7), verify with it.** A plain `npm run test` pass will still be able to fail CI on the 80% threshold (lines, branches, functions, statements) alone.
+**Verify with `test:coverage`, not `test`.** A plain `npm run test` pass can still fail CI on the 80% threshold (lines, branches, functions, statements) alone.
 
 **Deploys are CI-only (M0.26).** `.github/workflows/deploy.yml` deploys via the Vercel CLI (`vercel pull`/`build`/`deploy --prebuilt`/`alias`) on a push to `main` (production) or `staging` (preview → `staging.sorrelandsalt.com`), and on a `hotfix/** → main` PR (preview → per-PR `hotfix-<slug>.sorrelandsalt.com`, commented on the PR, torn down on close). `vercel.json` sets `deploymentEnabled: { "**": false }` — Vercel's Git integration deploys nothing; the workflow is the only path. There is no local deploy command.
 
@@ -94,10 +95,10 @@ A private spell must never reach a resolver. Same for cross-workspace rows.
 
 ## Testing
 
-TDD throughout: write the failing test, watch it fail, write the minimum, refactor. Each milestone opens with an acceptance-test scaffold PR that intentionally lands red.
+TDD throughout: write the failing test, watch it fail, write the minimum, refactor. Each wave opens with an acceptance-test scaffold PR that intentionally lands red — anchored to the wave for the same reason the compression pass is, since a milestone no longer opens as a block.
 
 - **Tests never touch Neon.** Neon is deployment-only. Local Postgres 17 in Docker everywhere else — SQLite cannot run RLS, triggers, `pg_trgm`, or array columns, which are exactly what needs testing.
-- Each Vitest worker clones `sorrel_test_${VITEST_WORKER_ID}` from the baked `sorrel_template`. Playwright uses `sorrel_e2e`. Do not wrap tests in a rolled-back transaction — `withAudit` opens its own, and `SET LOCAL` would leak one test user's identity into the next assertion.
+- Each Vitest **`db`-project** worker clones `sorrel_test_${VITEST_WORKER_ID}` from the baked `sorrel_template`; the `unit` project gets no such rewrite and sees the plain `sorrel` database, so anything touching Postgres belongs in `db`. Playwright uses `sorrel_e2e`. Do not wrap tests in a rolled-back transaction — `withAudit` opens its own, and `SET LOCAL` would leak one test user's identity into the next assertion.
 - One seed module (`src/db/seed/index.ts`), three consumers (Docker, Vitest, Playwright), three scenarios: `minimal`, `standard`, `demo`.
 - Fixture users: **A** owner of W · **B** member of W · **C** viewer in W · **D** member of unrelated X · **E** site admin in no workspace. `asUser(A)` gives a session; services throw `Forbidden`.
 - Acceptance tests name their story (`describe('Story 12: ...')`) so a failure points at a requirement. Acceptance coverage is tracked separately from the 80% line threshold — they measure different things.
