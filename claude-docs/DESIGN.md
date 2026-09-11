@@ -480,25 +480,28 @@ Belt and braces is warranted: an application bug here leaks one person's grimoir
 
 **Workspace lives in the URL, not the session.** Session-held workspace state produces the classic bug where two tabs disagree about context and a write lands in the wrong workspace.
 
-| Route                        | Page                                                                                                                                                   |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/`                          | Post-sign-in landing: into their workspace if they have one; the create form if they hold creation rights; otherwise a plain "invite-only" explanation |
-| `/compendium`                | Global ingredient reference, read-only for non-admins                                                                                                  |
-| `/ingredients/[id]`          | Detail — correspondences, safety notes, substitutes (built to take a v2 notes section beneath)                                                         |
-| `/coven/[slug]/ingredients`  | Workspace ingredients and stock                                                                                                                        |
-| `/coven/[slug]/grimoire`     | Workspace spells (plus the viewer's own private spells)                                                                                                |
-| `/coven/[slug]/grimoire/new` | Spell builder                                                                                                                                          |
-| `/coven/[slug]/members`      | Members and invitations (owner only)                                                                                                                   |
-| `/admin/compendium`          | Admin CRUD on global ingredients                                                                                                                       |
-| `/admin/categories`          | Admin CRUD on global categories                                                                                                                        |
-| `/invite/[token]`            | Accept invitation                                                                                                                                      |
-| `/sign-in`                   | OAuth                                                                                                                                                  |
+| Route                         | Page                                                                                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/`                           | Post-sign-in landing: into their workspace if they have one; the create form if they hold creation rights; otherwise a plain "invite-only" explanation |
+| `/compendium`                 | Global ingredient reference, read-only for non-admins                                                                                                  |
+| `/ingredients/[id]`           | Detail — correspondences, safety notes, substitutes (built to take a v2 notes section beneath)                                                         |
+| `/coven/[slug]/ingredients`   | Workspace ingredients and stock                                                                                                                        |
+| `/coven/[slug]/grimoire`      | Workspace spells (plus the viewer's own private spells)                                                                                                |
+| `/coven/[slug]/grimoire/new`  | Spell builder                                                                                                                                          |
+| `/coven/[slug]/grimoire/[id]` | Spell recipe view — the read surface for a saved spell, and the only page carrying print styles                                                        |
+| `/coven/[slug]/members`       | Members and invitations (owner only)                                                                                                                   |
+| `/admin/compendium`           | Admin CRUD on global ingredients                                                                                                                       |
+| `/admin/categories`           | Admin CRUD on global categories                                                                                                                        |
+| `/invite/[token]`             | Accept invitation                                                                                                                                      |
+| `/sign-in`                    | OAuth                                                                                                                                                  |
 
 Workspace ingredients and stock are **one page**, not two. A filter chip distinguishes local entries from compendium entries; a separate page would be a distinction without a difference.
 
 ### Components
 
 Component folders follow the `resume-2026` convention exactly — `src/components/IngredientCard/` with `index.tsx`, `index.scss`, `index.test.tsx`, imported `from '../components/IngredientCard'`.
+
+**`AppShell`** is the application-wide navigation frame, not a route. It wraps every signed-in page — compendium and ingredient detail included, which sit outside `/coven/` — and carries the primary nav, the `WorkspaceSwitcher`, and the global affordances for adding and editing an ingredient from any page. It is a layout component rather than a route because the nav must persist across navigation between workspace-scoped and global pages; the coven layout nests inside it and adds only workspace-scoped chrome.
 
 **`IngredientSearch`** is shared by compendium, ingredients, and spell builder. Debounced text match on `name` and `folkNames`; multi-select category chips grouped by §6's `group` field, AND by default with an OR toggle; secondary filters for form, element, in-stock-only; filter state in the URL query string. Each consumer supplies the action slot — Compendium passes "Add ingredient," Ingredients passes Edit/Delete, Spell Builder passes "Add to jar."
 
