@@ -60,7 +60,7 @@ Turn the current branch's work into a pull request against a Gitflow-appropriate
 6. **Push automatically if there's anything to push.**
    - Check whether the current branch has an upstream and whether local commits are ahead of it (`git status -sb` or `git rev-list @{u}..HEAD` if an upstream exists).
    - Run `git log <target>..HEAD --oneline` to confirm there are commits ahead of the target. If there's nothing to push (no commits ahead even after steps 4-5), stop and tell the user there's no work to open a PR for.
-   - Otherwise, push right away without asking first — run `git push` (or `git push -u origin <branch>` if no upstream is set yet) whenever step 4 or step 5 produced a new commit, or whenever the branch already has commits that aren't on `origin`. Never push to `main` directly — this pushes the source branch, not the target.
+   - Otherwise, push right away without asking first — run `git push -u origin <source>`, naming the source branch explicitly, whenever step 4 or step 5 produced a new commit, or whenever the branch already has commits that aren't on `origin`. Never a bare `git push`: a branch created before MB.13 added `--no-track` to the branch skills has its **base** branch as upstream, so a bare push sends the work straight at `staging` or `main`. Naming the branch makes that impossible rather than unlikely. Never push to `main` directly — this pushes the source branch, not the target.
 
 7. **Gather context for the summary, and identify the Asana task.**
    - Run `git diff <target>...HEAD` and `git log <target>..HEAD` (note the triple-dot vs double-dot: diff against the merge base, log of all commits on the branch) to see the full set of changes that PR will contain, not just the latest commit.
