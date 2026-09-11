@@ -58,19 +58,36 @@ function socialProviders(): BetterAuthOptions['socialProviders'] {
 // staging's own value would leak into every hotfix preview's OAuth
 // callbacks. `allowedHosts` (wildcards supported) is Better Auth's own
 // answer to exactly this; `fallback` only matters if a request arrives
-// with a Host outside all three patterns. Scoped to production only, same
-// as `authSecret()` above — `next dev`/Vitest keep Better Auth's default
-// permissive per-request origin, no allowlist friction locally.
+// with a Host outside all three patterns.
+//
+// Outside production, an explicit `http://localhost:8000` — not left
+// unset for Better Auth's own per-request derivation — because `next dev
+// --hostname 0.0.0.0` (this repo's fixed `dev` script, every environment)
+// computes the request's origin from its own bind address rather than the
+// client's `Host` header: confirmed by curling a running dev server with
+// `localhost`, `127.0.0.1`, and a spoofed `Host` header and getting
+// `http://0.0.0.0:8000` back every time. Left as Better Auth's default,
+// every local OAuth `redirect_uri` would be `0.0.0.0:8000`, which doesn't
+// match `http://localhost:8000/...` — what's actually registered with
+// Google/GitHub (`claude-docs/secrets.md`) — and sign-in would fail with
+// `redirect_uri_mismatch`. `next dev`'s port is fixed at 8000 (no `PORT`
+// override in that script, unlike `start`), so this is safe to hardcode.
 function baseURL(): BetterAuthOptions['baseURL'] {
-  if (process.env.NODE_ENV !== 'production') return undefined;
-  return {
-    allowedHosts: ['sorrelandsalt.com', 'staging.sorrelandsalt.com', 'hotfix-*.sorrelandsalt.com'],
-    fallback: 'https://sorrelandsalt.com',
-    // Every real deployment is Vercel-fronted HTTPS; forcing this avoids
-    // depending on x-forwarded-proto / advanced.trustedProxyHeaders (unset
-    // here) to get the scheme right, rather than trusting 'auto'.
-    protocol: 'https',
-  };
+  if (process.env.NODE_ENV === 'production') {
+    return {
+      allowedHosts: [
+        'sorrelandsalt.com',
+        'staging.sorrelandsalt.com',
+        'hotfix-*.sorrelandsalt.com',
+      ],
+      fallback: 'https://sorrelandsalt.com',
+      // Every real deployment is Vercel-fronted HTTPS; forcing this avoids
+      // depending on x-forwarded-proto / advanced.trustedProxyHeaders
+      // (unset here) to get the scheme right, rather than trusting 'auto'.
+      protocol: 'https',
+    };
+  }
+  return 'http://localhost:8000';
 }
 
 // The OAuth handshake this mounts at /api/auth/* is the one exception to the
