@@ -242,9 +242,47 @@ succeeded before the failing one) and the error propagates to the caller
 unchanged. A session with no `userId` is rejected before the transaction
 opens, rather than stamping a blank acting user.
 
-Two things deliberately land on top of this rather than beside it:
-`SET LOCAL app.current_user_id` at transaction start is M1.19, and the
-read-side finder builder that applies `deleted_at IS NULL` is M1.20.
+The read-side finder builder that applies `deleted_at IS NULL` (M1.20)
+deliberately lands on top of this rather than beside it.
+
+### `app.current_user_id`, published per transaction (M1.19)
+
+Before it calls `fn`, `withAudit` publishes the session's acting user to
+the database itself:
+
+```sql
+select set_config('app.current_user_id', $1, true)
+```
+
+That is the second of CLAUDE.md's two authorization layers. The service
+layer's `assertMembership` runs in application code; the RLS policies of
+M6.4 run below it and read the acting user back with
+`current_setting('app.current_user_id')`, so a service that forgets its
+check still cannot reach another workspace's rows. The same GUC is what a v2
+history trigger would read for `changed_by` (DESIGN.md §14), which is why
+it is set now rather than when RLS arrives — it makes history a one-migration
+addition instead of a re-audit of every write path.
+
+**Why `set_config(.., true)` and not `SET LOCAL`.** They have identical
+semantics — the third argument `is_local => true` _is_ `LOCAL` — but
+`SET LOCAL` accepts no bind parameters, so writing it literally would mean
+interpolating a user id into SQL text. `set_config` takes the value as a
+parameter.
+
+Transaction scoping is the whole point of `LOCAL`: the value is discarded
+at `COMMIT` or `ROLLBACK`, so it cannot ride a pooled connection into the
+next request that reuses it. `repository.test.ts` asserts this directly —
+24 concurrent `withAudit` calls with distinct user ids each see their own,
+and a connection outside any `withAudit` transaction sees the setting
+unset. Since the GUC is only ever set _inside_ the transaction, and a session
+with no `userId` is rejected before the transaction opens, there is no path
+that writes with the setting stale or absent.
+
+This is also the reason CLAUDE.md forbids wrapping tests in a rolled-back
+transaction: `withAudit`'s `set_config` would be local to that outer
+wrapper rather than to its own statement scope, and one test user's identity
+would survive into the next assertion — see
+[`m1.9-test-db-isolation.md`](design-decisions/m1.9-test-db-isolation.md).
 
 **Testing against a scratch table.** `src/db/repository.test.ts` runs in the
 `db` project against this worker's `sorrel_test_<n>` clone, which carries no
@@ -252,6 +290,14 @@ application tables until M1.27 — so it creates its own
 `repository_probe_herbs` table spreading the real `auditColumns` (minus the
 FKs to a `users` table that doesn't exist yet) and drops it afterwards. The
 six columns exercised are the ones every real table will carry.
+
+That table carries one extra column no real table will:
+`acting_user text default current_setting('app.current_user_id', true)`.
+It records what the GUC held _inside_ the transaction that inserted the row,
+which is how the M1.19 tests observe a setting the narrow `AuditWriter`
+gives them no other way to read — without widening the write API for the
+benefit of a test. The `missing_ok` second argument is what makes it null,
+rather than an error, when the setting was never set.
 
 ## Snapshot before production migrations, and the restore runbook (M1.6)
 

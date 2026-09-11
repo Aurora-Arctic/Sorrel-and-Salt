@@ -14,6 +14,12 @@ import { withAudit } from './repository';
 const herbs = pgTable('repository_probe_herbs', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
+  // Defaulted from the GUC rather than written by the writer: it records what
+  // `app.current_user_id` held *inside* the transaction that inserted the row,
+  // which is how M1.19's tests observe a setting the narrow `AuditWriter` gives
+  // them no other way to read. `current_setting(.., true)` is the missing_ok
+  // form — null when the setting was never set, rather than an error.
+  actingUser: text('acting_user'),
   ...auditColumns,
 });
 
@@ -28,6 +34,7 @@ beforeAll(async () => {
     create table repository_probe_herbs (
       id uuid primary key default gen_random_uuid(),
       name text not null,
+      acting_user text default current_setting('app.current_user_id', true),
       created_at timestamp not null default now(),
       created_by uuid not null,
       updated_at timestamp not null default now(),
@@ -134,6 +141,64 @@ describe('withAudit', () => {
   it('rejects a write with no acting user rather than stamping a blank id', async () => {
     await expect(
       withAudit({ userId: '' }, (write) => write.insert(herbs, { name: 'Nightshade' })),
+    ).rejects.toThrow(/session/i);
+
+    const rows = await sql`select id from repository_probe_herbs`;
+    expect(rows).toHaveLength(0);
+  });
+});
+
+describe('app.current_user_id (M1.19)', () => {
+  it('exposes the acting user to SQL running inside the transaction', async () => {
+    const [row] = await withAudit(session, (write) => write.insert(herbs, { name: 'Vervain' }));
+
+    expect(row.actingUser).toBe(session.userId);
+  });
+
+  it('scopes the setting to the transaction, so it does not leak to a later one', async () => {
+    await withAudit(session, (write) => write.insert(herbs, { name: 'Elder' }));
+
+    const [second] = await withAudit(impostor, (write) => write.insert(herbs, { name: 'Rue' }));
+
+    expect(second.actingUser).toBe(impostor.userId);
+  });
+
+  it('does not leak across pooled connections under concurrency', async () => {
+    // More callers than the pool has connections, all at once: each must see
+    // its own id, never a neighbour's left behind on a reused connection.
+    // Transaction-scoped `set_config(.., true)` is what makes that true — a
+    // session-level `SET` would fail this.
+    const actors = Array.from({ length: 24 }, (_, index) => ({
+      userId: `00000000-0000-0000-0000-${String(index).padStart(12, '0')}`,
+    }));
+
+    const rows = await Promise.all(
+      actors.map(async (actor) => {
+        const [row] = await withAudit(actor, (write) =>
+          write.insert(herbs, { name: `Herb ${actor.userId}` }),
+        );
+        return row;
+      }),
+    );
+
+    for (const [index, row] of rows.entries()) {
+      expect(row.actingUser).toBe(actors[index].userId);
+      expect(row.createdBy).toBe(actors[index].userId);
+    }
+  });
+
+  it('leaves the setting unset on a connection outside any withAudit transaction', async () => {
+    await withAudit(session, (write) => write.insert(herbs, { name: 'Betony' }));
+
+    const [{ value }] = await sql`
+      select current_setting('app.current_user_id', true) as value
+    `;
+    expect(value ?? null).toBeNull();
+  });
+
+  it('never opens a transaction at all when there is no acting user', async () => {
+    await expect(
+      withAudit({ userId: '' }, (write) => write.insert(herbs, { name: 'Hemlock' })),
     ).rejects.toThrow(/session/i);
 
     const rows = await sql`select id from repository_probe_herbs`;
