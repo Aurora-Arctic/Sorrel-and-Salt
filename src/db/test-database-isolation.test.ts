@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import postgres from 'postgres';
+// M1.17: the connection itself is this test's subject — it asserts which
+// database db points at.
+// oxlint-disable-next-line no-restricted-imports
 import { db } from './connection';
 
 // Exercises M1.9's globalSetup wiring: db-setup.ts points this worker's

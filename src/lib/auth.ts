@@ -1,5 +1,9 @@
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+// M1.17: Better Auth's drizzleAdapter takes the client itself rather than a
+// writer, so this cannot go through withAudit — claude-docs/db.md, "Who may
+// import the client".
+// oxlint-disable-next-line no-restricted-imports
 import { db } from '../db/connection';
 import { users } from '../db/schema/users';
 import { sessions, accounts, verifications } from '../db/schema/auth';
