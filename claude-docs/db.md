@@ -21,11 +21,12 @@ no silent fallback.
 ## Migrations and scripts (M1.3)
 
 - **`npm run db:generate`** is `drizzle-kit generate` — diffs `src/db/schema`
-  against `src/db/migrations` and writes a new migration for any change.
-  With no schema tables yet, it currently has nothing to generate; the first
-  migration (`0000_enable-extensions.sql`) was written by hand with
+  against `src/db/migrations` and writes a new migration for any change. The
+  first migration (`0000_enable-extensions.sql`) was written by hand with
   `drizzle-kit generate --custom`, since enabling an extension isn't
-  something schema-diffing can express.
+  something schema-diffing can express; `0001_lucky_centennial.sql` (M2.2) is
+  the first one it actually generated, from `src/db/schema/{users,auth}.ts`
+  — see `claude-docs/auth.md`.
 - **`npm run db:migrate`** is `drizzle-kit migrate` — applies every migration
   under `src/db/migrations` not yet recorded in the `drizzle` schema's
   `__drizzle_migrations` table it creates on first run. That table is what
