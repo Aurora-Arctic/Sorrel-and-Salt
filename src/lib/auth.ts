@@ -51,11 +51,34 @@ function socialProviders(): BetterAuthOptions['socialProviders'] {
   return providers;
 }
 
+// Production spans three actual origins — sorrelandsalt.com, the fixed
+// staging.sorrelandsalt.com alias, and one hotfix-<slug>.sorrelandsalt.com
+// per open hotfix PR (deploy.yml) — so a single BETTER_AUTH_URL env var
+// can't cover all of them: Vercel's Preview scope applies uniformly, and
+// staging's own value would leak into every hotfix preview's OAuth
+// callbacks. `allowedHosts` (wildcards supported) is Better Auth's own
+// answer to exactly this; `fallback` only matters if a request arrives
+// with a Host outside all three patterns. Scoped to production only, same
+// as `authSecret()` above — `next dev`/Vitest keep Better Auth's default
+// permissive per-request origin, no allowlist friction locally.
+function baseURL(): BetterAuthOptions['baseURL'] {
+  if (process.env.NODE_ENV !== 'production') return undefined;
+  return {
+    allowedHosts: ['sorrelandsalt.com', 'staging.sorrelandsalt.com', 'hotfix-*.sorrelandsalt.com'],
+    fallback: 'https://sorrelandsalt.com',
+    // Every real deployment is Vercel-fronted HTTPS; forcing this avoids
+    // depending on x-forwarded-proto / advanced.trustedProxyHeaders (unset
+    // here) to get the scheme right, rather than trusting 'auto'.
+    protocol: 'https',
+  };
+}
+
 // The OAuth handshake this mounts at /api/auth/* is the one exception to the
 // GraphQL-only access rule (CLAUDE.md rule 1) — see claude-docs/auth.md for
 // the boundary.
 export const auth = betterAuth({
   secret: authSecret(),
+  baseURL: baseURL(),
   socialProviders: socialProviders(),
   database: drizzleAdapter(db, {
     provider: 'pg',

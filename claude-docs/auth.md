@@ -90,6 +90,30 @@ build`), `.github/workflows/playwright.yml` and `Docker/docker-compose.yaml`'s
   convention as the `sorrel`/`sorrel` Postgres credentials already there).
   Production and staging get a real value via M0.27's secrets matrix
   (`claude-docs/secrets.md`).
+- **`baseURL()` resolves the right origin per request, in code, with no
+  `BETTER_AUTH_URL` env var at all.** Production actually spans three real
+  origins — `sorrelandsalt.com`, the fixed `staging.sorrelandsalt.com`
+  alias, and one `hotfix-<slug>.sorrelandsalt.com` per open hotfix PR
+  (`deploy.yml`) — and a single Vercel Preview-scoped env var can't tell
+  `staging` and a hotfix preview apart, so it would leak staging's URL
+  into every hotfix preview's OAuth `redirect_uri`. Better Auth's own
+  `allowedHosts` (wildcard-capable, `src/lib/auth.ts`) solves exactly
+  this: `['sorrelandsalt.com', 'staging.sorrelandsalt.com',
+'hotfix-*.sorrelandsalt.com']`, `protocol: 'https'` (forced rather than
+  trusting `x-forwarded-proto`, since `advanced.trustedProxyHeaders` isn't
+  enabled), `fallback: 'https://sorrelandsalt.com'` for any other `Host`.
+  Scoped to `NODE_ENV=production` only, same as `authSecret()` — `next
+dev`/Vitest keep Better Auth's permissive per-request default. Verified
+  against a built server with `Host: staging.sorrelandsalt.com`, `Host:
+hotfix-foo-bar.sorrelandsalt.com`, and a spoofed `Host: evil.example.com`
+  — the first two resolve correctly, the third falls back to the
+  production URL rather than being reflected into the redirect.
+- **This doesn't make hotfix sign-in actually work.** `allowedHosts` only
+  fixes what URL this app tells Google/GitHub to send a user back to —
+  Google and GitHub still require that URL to be a pre-registered
+  redirect URI, and a hotfix slug doesn't exist to register ahead of
+  time. Real sign-in only completes on `staging` and Production;
+  `claude-docs/secrets.md` covers this in more depth.
 
 ## Social providers (M2.4/M2.5)
 
@@ -145,8 +169,10 @@ but cannot complete a real sign-in or apply migrations.
 - `src/lib/auth.test.ts` — asserts importing `./auth` throws when
   `BETTER_AUTH_SECRET` is unset at `NODE_ENV=production`, and doesn't
   throw when unset outside it; asserts `socialProviders()` registers a
-  provider only once both its client id and secret are set. Uses
-  `vi.resetModules()`/`vi.stubEnv()` throughout: ESM caches a module
+  provider only once both its client id and secret are set; asserts
+  `baseURL()` is `undefined` outside production and resolves to the exact
+  `allowedHosts`/`fallback`/`protocol` config at `NODE_ENV=production`.
+  Uses `vi.resetModules()`/`vi.stubEnv()` throughout: ESM caches a module
   (including one that threw during evaluation) after its first import, so
   reusing one `import('./auth')` across cases in the same test file would
   otherwise replay the first result instead of re-evaluating against new

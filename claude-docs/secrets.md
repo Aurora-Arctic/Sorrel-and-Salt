@@ -23,16 +23,39 @@ an agent without your Vercel/Neon/Google/GitHub accounts.
 ## Vercel environment variables
 
 Set per Vercel **Environment** (Production, Preview), not per branch —
-`staging` and any `hotfix/**` preview both resolve through Preview.
+`staging` and any `hotfix/**` preview both resolve through Preview, unless
+a row below says otherwise.
 
-| Variable                       | Production                                     | Preview (staging + hotfix)                                                                                                    | Read by                                                                                                |
-| ------------------------------ | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `DATABASE_URL`                 | `main`-backed Neon branch connection string    | `staging`-backed Neon branch (hotfix previews get their own ephemeral branch via the Neon/Vercel integration)                 | `src/db/connection.ts` — throws if unset, always                                                       |
-| `BETTER_AUTH_SECRET`           | real, high-entropy (`openssl rand -base64 32`) | a separate real value (safer than reusing Production's)                                                                       | `src/lib/auth.ts` — required whenever `NODE_ENV=production`, which every Vercel build is               |
-| `BETTER_AUTH_URL`              | `https://sorrelandsalt.com`                    | `https://staging.sorrelandsalt.com`                                                                                           | Better Auth reads this env var itself (`getBaseURL`) — unset today, and a build already warns about it |
-| `GOOGLE_CLIENT_ID` / `_SECRET` | Production OAuth client                        | a separate client registered with the Preview callback URL, or the same client with both callback URLs registered (see below) | `src/lib/auth.ts`'s `socialProviders()` — omitted entirely, not broken, if unset                       |
-| `GITHUB_CLIENT_ID` / `_SECRET` | Production OAuth client                        | same as Google                                                                                                                | same                                                                                                   |
-| Admin bootstrap email          | the real admin's email                         | can differ from Production's                                                                                                  | M2.3, not built yet — reads it to promote the first matching sign-in to `admin`                        |
+| Variable                       | Production                                     | Preview (staging + hotfix)                                                                                                                                                                                                                                                                          | Read by                                                                                  |
+| ------------------------------ | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                 | `main`-backed Neon branch connection string    | `staging`-backed Neon branch, pinned with a **branch-scoped** override (`vercel env add DATABASE_URL preview staging`) — see `design-decisions/m1.1-neon-branch-strategy.md`. A hotfix preview gets its own ephemeral branch from the Neon/Vercel integration instead, unaffected by that override. | `src/db/connection.ts` — throws if unset, always                                         |
+| `BETTER_AUTH_SECRET`           | real, high-entropy (`openssl rand -base64 32`) | a separate real value (safer than reusing Production's)                                                                                                                                                                                                                                             | `src/lib/auth.ts` — required whenever `NODE_ENV=production`, which every Vercel build is |
+| `GOOGLE_CLIENT_ID` / `_SECRET` | Production OAuth client                        | reuse the same client registered for `staging` below                                                                                                                                                                                                                                                | `src/lib/auth.ts`'s `socialProviders()` — omitted entirely, not broken, if unset         |
+| `GITHUB_CLIENT_ID` / `_SECRET` | Production OAuth client                        | reuse the same client registered for `staging` below                                                                                                                                                                                                                                                | same                                                                                     |
+| Admin bootstrap email          | the real admin's email                         | can differ from Production's                                                                                                                                                                                                                                                                        | M2.3, not built yet — reads it to promote the first matching sign-in to `admin`          |
+
+**No `BETTER_AUTH_URL` row — deliberately.** A single Preview-scoped value
+can't be correct for both `staging` (a fixed alias) and a hotfix preview
+(its own ephemeral `hotfix-<slug>.sorrelandsalt.com` domain per open PR,
+`deploy.yml`'s own aliasing): Vercel's Preview scope applies to both
+uniformly, so staging's URL would leak into every hotfix preview's OAuth
+`redirect_uri` if this were an env var. Handled in code instead —
+`src/lib/auth.ts`'s `baseURL()` uses Better Auth's `allowedHosts`
+(wildcard-capable) to resolve the right origin per request, scoped to
+`NODE_ENV=production` only. An unrecognized `Host` header resolves to the
+production URL rather than being reflected into a redirect — verified by
+curling a built server with a spoofed `Host: evil.example.com`. Nothing to
+set in Vercel for this one.
+
+**Hotfix previews still can't complete a real Google/GitHub sign-in.**
+`allowedHosts` above only fixes what URL this app _tells_ Google/GitHub to
+redirect back to — it can't make Google or GitHub accept a redirect URI
+that was never registered. Both require an exact, pre-registered URI, and
+there's no way to register one for a hotfix slug that doesn't exist yet.
+The sign-in flow only works end-to-end on `staging` and Production, whose
+domains are known ahead of time. If a hotfix build ever needs to exercise
+a real sign-in, do it against `staging`'s URL rather than the hotfix
+preview's own.
 
 `vercel pull` (`migrate.yml`) resolves `DATABASE_URL` per environment
 automatically once Preview/Production have it — no separate GitHub Actions
@@ -63,18 +86,21 @@ Google Cloud, or GitHub-OAuth-app access, and the `gh` token this repo's
 devcontainer carries isn't scoped to manage Actions secrets/variables
 (confirmed — `gh secret list`/`gh variable list` both 403 here).
 
-1. **Vercel env vars** (`DATABASE_URL`, `BETTER_AUTH_SECRET`,
-   `BETTER_AUTH_URL`, the four OAuth vars, admin email): Vercel dashboard →
-   Project → Settings → Environment Variables, or `vercel env add <NAME>
-production` / `vercel env add <NAME> preview` from a machine with the
-   Vercel CLI installed and linked to this project (this devcontainer
-   doesn't have the CLI — the Vercel plugin session hint at the start of
-   this conversation already flagged that).
+1. **Vercel env vars** (`DATABASE_URL`, `BETTER_AUTH_SECRET`, the four
+   OAuth vars, admin email): Vercel dashboard → Project → Settings →
+   Environment Variables, or `vercel env add <NAME> production` /
+   `vercel env add <NAME> preview` from a machine with the Vercel CLI
+   installed and linked to this project (this devcontainer doesn't have
+   the CLI — the Vercel plugin session hint at the start of this
+   conversation already flagged that). `DATABASE_URL` for `staging`
+   specifically needs the branch-scoped form above, not the plain
+   `preview` one.
 2. **Neon connection strings**: Neon console → the project → each branch
    (`main`, `staging`) → Connection Details.
 3. **Google OAuth client**: Google Cloud Console → APIs & Services →
    Credentials → Create OAuth client ID (Web application). Authorized
-   redirect URIs, one row per environment:
+   redirect URIs — one client, two real rows (see above for why hotfix
+   isn't a third):
    - Local: `http://localhost:8000/api/auth/callback/google`
    - Staging: `https://staging.sorrelandsalt.com/api/auth/callback/google`
    - Production: `https://sorrelandsalt.com/api/auth/callback/google`
@@ -94,11 +120,11 @@ production` / `vercel env add <NAME> preview` from a machine with the
    off, `staging` aliased to `staging.sorrelandsalt.com`; M0.26 is
    Completed in Asana). Recorded here for completeness: Project → Settings
    → Git (deploy previews) and → Domains (the staging alias). Nothing in
-   this repo drives that — `vercel.json`'s `deploymentEnabled: false` already
-   stops the Git integration from deploying anything itself (CLI-driven
-   `deploy.yml` is the only path, per that file's own header comment), but
-   the staging alias and turning previews off in the dashboard are
-   separate settings this doesn't touch.
+   this repo drives that — `vercel.json`'s `deploymentEnabled: false`
+   already stops the Git integration from deploying anything itself
+   (CLI-driven `deploy.yml` is the only path, per that file's own header
+   comment), but the staging alias and turning previews off in the
+   dashboard are separate settings this doesn't touch.
 
 ## What's already true without any of the above
 
@@ -109,8 +135,10 @@ production` / `vercel env add <NAME> preview` from a machine with the
   a production-mode build needs one at all (`claude-docs/auth.md`).
 - `src/lib/auth.ts` already reads all four OAuth env var names
   (`GOOGLE_CLIENT_ID`/`_SECRET`, `GITHUB_CLIENT_ID`/`_SECRET`) and a
-  provider is registered the moment both halves of a pair are set — no
-  further code change is needed once real credentials land in Vercel.
+  provider is registered the moment both halves of a pair are set, and
+  already resolves the right `baseURL` for Production/staging/any hotfix
+  preview with no env var at all — no further code change is needed once
+  real credentials land in Vercel.
 - `deploy.yml`/`migrate.yml` already guard on every secret above being
   absent and skip cleanly rather than failing (`claude-docs/ci.md`
   describes the guard-skip steps) — setting these rows turns those jobs
