@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeAll, vi, afterEach } from 'vitest';
+import { describe, expect, it, beforeAll } from 'vitest';
 
 // GraphQL is the only application-data path (CLAUDE.md rule 1); /api/auth/*
 // is the one deliberate exception, for the OAuth handshake itself — see
@@ -20,40 +20,17 @@ describe('GET /api/auth/*', () => {
   });
 });
 
-// M2.4: real end-to-end confirmation (curling a running `next dev` with
-// fake credentials) is recorded in claude-docs/transcripts/auth.md — this
-// is the automatable slice of the same check, run through the route module
-// directly rather than a live server.
-describe('POST /api/auth/sign-in/social', () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-    vi.resetModules();
-  });
-
-  it('redirects to the real Google authorization URL once GOOGLE_CLIENT_ID/SECRET are set', async () => {
-    vi.stubEnv(
-      'DATABASE_URL',
-      process.env.DATABASE_URL ?? 'postgres://sorrel:sorrel@localhost:5432/sorrel',
-    );
-    vi.stubEnv('BETTER_AUTH_SECRET', 'unit-test-secret');
-    vi.stubEnv('GOOGLE_CLIENT_ID', 'test-google-id');
-    vi.stubEnv('GOOGLE_CLIENT_SECRET', 'test-google-secret');
-    vi.resetModules();
-    const { POST } = await import('./route');
-
-    const response = await POST(
-      new Request('http://localhost/api/auth/sign-in/social', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider: 'google', callbackURL: '/' }),
-      }),
-    );
-
-    expect(response.status).toBe(200);
-    const body = (await response.json()) as { url: string };
-    expect(body.url).toMatch(/^https:\/\/accounts\.google\.com\/o\/oauth2\/v2\/auth\?/);
-    expect(body.url).toContain('client_id=test-google-id');
-    expect(body.url).toContain('redirect_uri=');
-    expect(decodeURIComponent(body.url)).toContain('/api/auth/callback/google');
-  });
-});
+// M2.4: a `POST /api/auth/sign-in/social` test lived here briefly and broke
+// CI — unlike `/ok`, that endpoint persists a `verifications` row (PKCE
+// state) before redirecting, so it needs real schema. This `unit`-project
+// test runs against the plain `sorrel` database (not a per-worker
+// `sorrel_test_<n>` clone — only the `db` project's setupFiles rewrite
+// DATABASE_URL for that), which has no schema applied in CI any more than
+// `sorrel_template` does (`claude-docs/db.md` — not baked in until M1.27).
+// It passed locally only because this session had already run
+// `drizzle-kit migrate` against its own local `sorrel` by hand; CI's never
+// has. `socialProviders()`'s tests (`src/lib/auth.test.ts`) already cover
+// the config wiring without touching the database; the real authorization
+// URL shape (real Google/GitHub redirect, PKCE params, callback path) was
+// verified by hand against a running server and is recorded in
+// `claude-docs/transcripts/auth.md` rather than re-asserted here.

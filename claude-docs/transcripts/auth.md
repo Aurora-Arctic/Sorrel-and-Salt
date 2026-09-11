@@ -184,3 +184,36 @@ at `NODE_ENV=production`), `claude-docs/auth.md`, and `claude-docs/secrets
 `DATABASE_URL` override detail from `design-decisions/m1.1-neon-branch
 -strategy.md` while in there, since the Vercel table was already wrong
 about that row treating `staging`/hotfix identically too).
+
+## 2026-09-11 — CI catches a real gap: the sign-in test needed schema
+
+User set the real Google/GitHub OAuth credentials and Vercel env vars per
+the walkthrough above, then asked to check what's checkable from here.
+`gh pr checks 71` turned up a genuine failure — `vitest` — that hadn't
+shown up locally: `POST /api/auth/sign-in/social redirects to the real
+Google authorization URL...` returned `500`, not `200`.
+
+The CI job's own Postgres service log had the answer directly: `ERROR:
+relation "verifications" does not exist`. That test's endpoint isn't
+side-effect-free the way `/ok` is — Better Auth's `signInSocial` persists
+a `verifications` row (PKCE state) before it ever returns the redirect
+URL, so it needs the migration's schema actually applied. It passed
+locally purely by accident: this session had run `npx drizzle-kit migrate`
+against its own local `sorrel` database hours earlier (to verify the
+migration itself), so that table happened to exist here. CI's `sorrel` has
+no such history — and more fundamentally, `unit`-project tests (this one
+included) run against the plain `sorrel` database, not a per-worker
+`sorrel_test_<n>` clone (only `db`-project tests get that rewrite, via
+`src/test/db-setup.ts`'s `setupFiles`), so there's no clone-from-template
+step to even consider baking schema into for this one.
+
+This is the exact gap already documented for db-project introspection
+tests (`sorrel_template` has no schema until M1.27) — just missed at
+write time because the endpoint didn't look like a "database test" the
+way querying `information_schema` obviously would. Removed the test
+rather than working around it (e.g. mocking the adapter): the config
+wiring it was partially redundant with is already covered by
+`socialProviders()`'s tests, and the actual authorization-URL shape was
+already verified by hand in the M2.4/M2.5 pass above and recorded here,
+not just asserted in a test that couldn't reliably run. Confirmed the fix
+by running the full suite and `pre-commit` locally before pushing again.
