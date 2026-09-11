@@ -119,6 +119,11 @@ jobs:
       # e2e/database.ts and playwright.config.ts's webServer.env both derive
       # sorrel_e2e's URL from this.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
+      # This job's webServer runs `npm run build && npm run start`
+      # (playwright.config.ts), which runs at NODE_ENV=production — Better
+      # Auth's production-only check (src/lib/auth.ts) requires a real value
+      # there, even though it's just this fixed, non-secret placeholder.
+      BETTER_AUTH_SECRET: local-dev-not-a-real-secret
     steps:
       - name: Checkout into /app
         if: inputs.should-run

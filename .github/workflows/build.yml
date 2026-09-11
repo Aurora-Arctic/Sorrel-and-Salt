@@ -41,6 +41,17 @@ jobs:
     defaults:
       run:
         working-directory: /app
+    env:
+      # `npm run build` traces /api/auth/[...all] (M2.2), which imports
+      # src/lib/auth.ts and, through it, src/db/connection.ts.
+      # DATABASE_URL: connection.ts throws at import if unset, always — no
+      # `services: postgres:` needed, since the driver connects lazily and
+      # the build never issues a query, only a syntactically valid URL.
+      # BETTER_AUTH_SECRET: `npm run build` runs at NODE_ENV=production,
+      # where Better Auth's own check (src/lib/auth.ts) requires a real
+      # value — this fixed, non-secret placeholder satisfies it.
+      DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
+      BETTER_AUTH_SECRET: local-dev-not-a-real-secret
     steps:
       - name: Checkout into /app
         if: inputs.should-run
