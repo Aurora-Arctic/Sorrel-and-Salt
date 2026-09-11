@@ -2945,7 +2945,7 @@ _Acceptance criteria:_
 
 ## MB — Bugfixes and gap tasks
 
-Work that was not in the original breakdown. `MB.*` exists so a defect or a missing dependency can be scheduled without renumbering an immutable ID. MB.1 through MB.4 are merged; MB.5 through MB.11 were minted by the re-sequencing audit.
+Work that was not in the original breakdown. `MB.*` exists so a defect or a missing dependency can be scheduled without renumbering an immutable ID. MB.1 through MB.4 are merged; MB.5 through MB.11 were minted by the re-sequencing audit; MB.12 was minted after M2.2/M2.4/M2.5/M0.27 merged with real verification still outstanding.
 
 | ID    | Task                                                      | Status  | Needed by    |
 | ----- | --------------------------------------------------------- | ------- | ------------ |
@@ -2960,6 +2960,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.9  | `ingredientsById` DataLoader                              | Wave 11 | M8.5, M9.4   |
 | MB.10 | `usersById` display-name DataLoader                       | Wave 9  | M6.18        |
 | MB.11 | GraphQL field exposing the fuzzy duplicate service        | Wave 8  | M5.10        |
+| MB.12 | Finish the secrets matrix and verify real OAuth sign-in   | Wave 1  | M2.3         |
 
 **MB.5 — Restore `users` foreign keys on `auditColumns`** · 2h
 
@@ -3062,6 +3063,21 @@ _Acceptance criteria:_
 - Threshold matches M4.7's, not a second constant
 - Bounded by the M3.6 pagination helper
 - Authorization is enforced in the service, not the resolver
+
+**MB.12 — Finish the secrets matrix and verify real OAuth sign-in** · 1h
+
+_Story:_ As a developer, I want the remaining M0.27 secrets set and a real sign-in confirmed, so that the auth work merged in M2.2/M2.4/M2.5 is actually exercised end-to-end, not just verified against live provider endpoints without a completed login.
+
+PR #71 (M2.2/M2.4/M2.5/M0.27, merged 2026-09-11) landed real Google/GitHub OAuth credentials and most of the secrets matrix, verified by fetching the live `accounts.google.com`/`github.com` authorization endpoints directly — real evidence the client id/secret pairs and `redirect_uri` are correct, but no one has completed an actual interactive sign-in through a browser and consent screen. Four rows of `claude-docs/secrets.md` are also still unset.
+
+_Acceptance criteria:_
+
+- A real browser completes Google sign-in on `http://localhost:8000`
+- A real browser completes GitHub sign-in on `http://localhost:8000`
+- Same for staging, once a staging deploy carries this code
+- `VERCEL_SCOPE`, `NEON_API_KEY`, `NEON_PROJECT_ID` set as GitHub Actions secrets
+- Admin bootstrap email set as a Vercel env var (Production + Preview) — unblocks M2.3
+- `claude-docs/secrets.md` updated to reflect every row set
 
 ## MW — Wave close-out
 
