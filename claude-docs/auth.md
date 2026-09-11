@@ -177,9 +177,16 @@ but cannot complete a real sign-in or apply migrations.
   reusing one `import('./auth')` across cases in the same test file would
   otherwise replay the first result instead of re-evaluating against new
   env vars.
-- `src/app/api/auth/[...all]/route.test.ts`'s second case exercises the
-  same Google sign-in redirect described above, through the route module
-  rather than a live server.
+- **No automated test for the sign-in redirect, and not for the same
+  reason as the introspection gap below.** A `POST /api/auth/sign-in/social`
+  case lived in `route.test.ts` briefly and broke CI: unlike `/ok`, that
+  endpoint persists a `verifications` row (PKCE state) before redirecting,
+  so — same as any db-project test — it needs real schema `sorrel_test_<n>`
+  doesn't have pre-M1.27. It happened to pass locally only because this
+  session had separately run `drizzle-kit migrate` by hand against its own
+  `sorrel`. The Google/GitHub redirect shape (real authorization URL, PKCE
+  params, correct callback path per environment) was verified by hand
+  against a running server instead — `claude-docs/transcripts/auth.md`.
 - **No db-project introspection test for these tables yet.** `sorrel_template`
   has no schema baked in until M1.27 (`claude-docs/db.md`), so a test
   asserting these tables exist in a cloned `sorrel_test_<n>` database would
