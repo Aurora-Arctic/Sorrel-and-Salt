@@ -52,4 +52,22 @@ describe('users schema', () => {
     expect(emailIndex?.config.unique).toBe(true);
     expect(emailIndex?.config.where).toBeDefined();
   });
+
+  // MB.5: auditColumns' *_by columns reference users.id, including here,
+  // where that's a self-reference (users.created_by -> users.id).
+  it('references users.id from created_by, updated_by and deleted_by (MB.5)', () => {
+    const { foreignKeys } = getTableConfig(users);
+    const byColumn = Object.fromEntries(
+      foreignKeys.map((fk) => {
+        const { columns, foreignColumns, foreignTable } = fk.reference();
+        return [columns[0].name, { foreignColumnName: foreignColumns[0].name, foreignTable }];
+      }),
+    );
+
+    for (const column of ['created_by', 'updated_by', 'deleted_by']) {
+      expect(byColumn[column]).toBeDefined();
+      expect(byColumn[column].foreignColumnName).toBe('id');
+      expect(byColumn[column].foreignTable).toBe(users);
+    }
+  });
 });

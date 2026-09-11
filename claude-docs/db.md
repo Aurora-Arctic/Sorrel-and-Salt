@@ -168,15 +168,27 @@ comment for the regex and the reasoning. There's no such line format
 elsewhere in the repo to stay consistent with; this is the one place it's
 defined, so `claude-docs/ci.md` and the script both point back here.
 
-## Audit columns and `applyAudit` (M1.15)
+## Audit columns and `applyAudit` (M1.15, FKs restored MB.5)
 
 `src/db/audit.ts` exports `auditColumns` — the six-column object (`createdAt`,
 `createdBy`, `updatedAt`, `updatedBy`, `deletedAt`, `deletedBy`) every table
-spreads in as `...auditColumns`. `createdBy`/`updatedBy`/`deletedBy` are plain
-`uuid` columns for now, not `.references(() => users.id)` as DESIGN.md §5
-shows: `users` doesn't exist until M2.1. Whichever table lands first with a
-row that needs the FK enforced should add it there; `auditColumns` itself
-can't reference a table that doesn't exist yet.
+spreads in as `...auditColumns`. `createdBy`/`updatedBy`/`deletedBy` carry
+`.references((): AnyPgColumn => users.id)` per DESIGN.md §5. `audit.ts` and
+`schema/users.ts` import each other — `users.ts` spreads `auditColumns`, and
+`auditColumns` points back at `users.id`, including for `users`' own rows
+(`users.created_by -> users.id`, a genuine self-reference). Drizzle's thunk
+defers evaluation past module load, so the runtime cycle is fine; the
+explicit `AnyPgColumn` return annotation is what stops TypeScript reporting
+"audit.ts circularly references itself" trying to infer it. `src/db/bootstrap.ts`
+exports `BOOTSTRAP_USER_ID`, a fixed UUID shared between M1.21's seed and
+anything that needs to identify that row — the bootstrap user has no
+pre-existing creator, so it inserts itself as its own `created_by`/
+`updated_by` in one statement (`INSERT INTO users (id, created_by,
+updated_by) VALUES ($1,$1,$1)`), which Postgres accepts because a `FOREIGN
+KEY` is checked at statement end, not before the row exists — verified
+against a live Postgres by applying MB.5's migration in a rolled-back
+transaction and confirming both the self-referencing insert and the
+rejection of a nonexistent `created_by` uuid.
 
 `applyAudit(operation, payload, session)` is the pure helper `withAudit`
 (M1.16) will call before every write — it takes `'insert' | 'update' |
