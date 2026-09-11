@@ -107,3 +107,89 @@ describe('baseURL', () => {
     });
   });
 });
+
+// M2.3: role/canCreateWorkspace don't exist on Better Auth's own core User
+// shape — `user.additionalFields` registers them with `input: false` so no
+// client request can ever set them (CLAUDE.md's "No API or UI path grants
+// admin"). `name`/`image` stay Better Auth's own names (no `user.fields`
+// mapping) — DESIGN.md §5 was corrected to match rather than renaming them.
+describe('user field mapping', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('registers role and canCreateWorkspace as not settable from client input', async () => {
+    vi.resetModules();
+    const { auth } = await import('./auth');
+
+    expect(auth.options.user?.additionalFields?.role).toMatchObject({ input: false });
+    expect(auth.options.user?.additionalFields?.canCreateWorkspace).toMatchObject({ input: false });
+  });
+});
+
+// M2.3: `createdBy`/`updatedBy` are NOT NULL with no database default
+// (src/db/audit.ts), and a brand-new OAuth user has no pre-existing
+// creator — so the new user is its own, same self-satisfying pattern
+// MB.5 documents for the seed bootstrap row. This is the one write to
+// `users` that doesn't go through withAudit(session, fn) (CLAUDE.md rule
+// 3): there is no session yet, because this *is* how one comes to exist.
+describe('admin bootstrap', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  async function beforeCreateHook() {
+    vi.resetModules();
+    const { auth } = await import('./auth');
+    const hook = auth.options.databaseHooks?.user?.create?.before;
+    if (!hook) throw new Error('databaseHooks.user.create.before is not configured');
+    return hook;
+  }
+
+  it('stamps a new user as its own creator and updater', async () => {
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', '');
+    const before = await beforeCreateHook();
+
+    const result = await before({ email: 'new.member@example.com', name: 'New Member' } as never);
+
+    expect(result).toBeTruthy();
+    const data = (result as { data: Record<string, unknown> }).data;
+    expect(data.id).toEqual(expect.any(String));
+    expect(data.createdBy).toBe(data.id);
+    expect(data.updatedBy).toBe(data.id);
+    expect(data.role).toBeUndefined();
+  });
+
+  it('promotes the user matching ADMIN_BOOTSTRAP_EMAIL to admin', async () => {
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'owner@sorrelandsalt.com');
+    const before = await beforeCreateHook();
+
+    const result = await before({ email: 'owner@sorrelandsalt.com', name: 'Site Owner' } as never);
+
+    const data = (result as { data: Record<string, unknown> }).data;
+    expect(data.role).toBe('admin');
+  });
+
+  it('matches the bootstrap email case-insensitively', async () => {
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'Owner@SorrelAndSalt.com');
+    const before = await beforeCreateHook();
+
+    const result = await before({ email: 'owner@sorrelandsalt.com', name: 'Site Owner' } as never);
+
+    const data = (result as { data: Record<string, unknown> }).data;
+    expect(data.role).toBe('admin');
+  });
+
+  it('leaves every other user at the column default (no role set) when unset', async () => {
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', '');
+    const before = await beforeCreateHook();
+
+    const result = await before({
+      email: 'someone.else@example.com',
+      name: 'Someone Else',
+    } as never);
+
+    const data = (result as { data: Record<string, unknown> }).data;
+    expect(data.role).toBeUndefined();
+  });
+});

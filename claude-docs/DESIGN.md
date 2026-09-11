@@ -227,7 +227,7 @@ Code, schema, and prose use _workspace_. Only the URL segment says _coven_.
 
 ### Tables
 
-**`users`** — `id`, `email`, `displayName`, `avatarUrl`, `role` (`user` | `admin`), `canCreateWorkspace` (boolean, default `false`), + audit.
+**`users`** — `id`, `email`, `name`, `image`, `role` (`user` | `admin`), `canCreateWorkspace` (boolean, default `false`), + audit. `name`/`image` (not `displayName`/`avatarUrl`) deliberately — they're Better Auth's own core `User` field names (§2, §8), and renaming them would need a `user.fields` mapping in `src/lib/auth.ts` for no real benefit.
 
 `role` is a column, not a table; v1 needs no granular platform permissions. Admins can write the global compendium and global categories, and **nothing else** — an admin has no access to any workspace's ingredients or grimoire. Bootstrap promotes the first user by email via env var; there is no UI for granting admin in v1 (M2.9 scopes one).
 
@@ -858,7 +858,7 @@ Nullable FKs with a check constraint rather than a polymorphic `subject_type`/`s
 | ----------- | ---------------------------------------------------- |
 | `private`   | Author only, always                                  |
 | `workspace` | Every member of `note.workspaceId`, viewers included |
-| `public`    | Every signed-in user, attributed by `displayName`    |
+| `public`    | Every signed-in user, attributed by `name`           |
 
 Default is `workspace` in the authoring workspace — co-members seeing what you wrote is the useful default — with one click to `private`.
 

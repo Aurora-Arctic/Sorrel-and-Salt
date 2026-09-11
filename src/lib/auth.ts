@@ -90,6 +90,14 @@ function baseURL(): BetterAuthOptions['baseURL'] {
   return 'http://localhost:8000';
 }
 
+// M2.3: DESIGN.md §5's admin bootstrap. Compared case-insensitively since
+// email providers don't treat casing as significant; unset means no sign-in
+// is ever promoted, which is the correct state for `next dev` and tests.
+function isAdminBootstrapEmail(email: string): boolean {
+  const bootstrapEmail = process.env.ADMIN_BOOTSTRAP_EMAIL;
+  return !!bootstrapEmail && email.toLowerCase() === bootstrapEmail.toLowerCase();
+}
+
 // The OAuth handshake this mounts at /api/auth/* is the one exception to the
 // GraphQL-only access rule (CLAUDE.md rule 1) — see claude-docs/auth.md for
 // the boundary.
@@ -107,6 +115,52 @@ export const auth = betterAuth({
   advanced: {
     database: {
       generateId: 'uuid',
+    },
+  },
+  user: {
+    additionalFields: {
+      // `input: false` on all four — CLAUDE.md's "No API or UI path
+      // grants admin" and "Nothing in the OAuth flow sets the flag":
+      // Better Auth drops any client-supplied value for a field with
+      // input disabled, so only the server-side hook below can set them.
+      // No `defaultValue` here on purpose — an unset value is omitted
+      // from the INSERT entirely, leaving Postgres's own column default
+      // (`user`/`false`, src/db/schema/users.ts) to apply for the
+      // ordinary case instead of duplicating it in two places.
+      role: { type: 'string', input: false },
+      canCreateWorkspace: { type: 'boolean', input: false },
+      // NOT NULL with no database default (src/db/audit.ts) — every
+      // insert must supply these, so unlike role/canCreateWorkspace they
+      // can't be left for Postgres to default.
+      createdBy: { type: 'string', input: false, returned: false },
+      updatedBy: { type: 'string', input: false, returned: false },
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        // A new user has no pre-existing creator to stamp createdBy/
+        // updatedBy with — there is no session yet, because this *is* how
+        // one comes to exist, so it can't go through withAudit(session,
+        // fn) like every other write (CLAUDE.md rule 3). It's its own
+        // creator instead, the same self-satisfying pattern MB.5 uses for
+        // the seed bootstrap row. `forceAllowId` (Better Auth's own
+        // createWithHooks) lets a uuid generated here become the row's
+        // real id instead of Postgres's default, so createdBy/updatedBy
+        // can reference it before the row exists.
+        before: async (user) => {
+          const id = crypto.randomUUID();
+          return {
+            data: {
+              ...user,
+              id,
+              createdBy: id,
+              updatedBy: id,
+              ...(isAdminBootstrapEmail(user.email) ? { role: 'admin' } : {}),
+            },
+          };
+        },
+      },
     },
   },
 });
