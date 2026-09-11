@@ -2945,7 +2945,7 @@ _Acceptance criteria:_
 
 ## MB — Bugfixes and gap tasks
 
-Work that was not in the original breakdown. `MB.*` exists so a defect or a missing dependency can be scheduled without renumbering an immutable ID. MB.1 through MB.4 are merged; MB.5 through MB.11 were minted by the re-sequencing audit; MB.12 was minted after M2.2/M2.4/M2.5/M0.27 merged with real verification still outstanding.
+Work that was not in the original breakdown. `MB.*` exists so a defect or a missing dependency can be scheduled without renumbering an immutable ID. MB.1 through MB.4 are merged; MB.5 through MB.11 were minted by the re-sequencing audit; MB.12 was minted after M2.2/M2.4/M2.5/M0.27 merged with real verification still outstanding. MB.13 was minted during M1.16, when `/create-pr` nearly pushed a feature branch straight at `staging`.
 
 | ID    | Task                                                      | Status  | Needed by    |
 | ----- | --------------------------------------------------------- | ------- | ------------ |
@@ -2961,6 +2961,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.10 | `usersById` display-name DataLoader                       | Wave 9  | M6.18        |
 | MB.11 | GraphQL field exposing the fuzzy duplicate service        | Wave 8  | M5.10        |
 | MB.12 | Finish the secrets matrix and verify real OAuth sign-in   | Wave 6  | M2.3         |
+| MB.13 | Stop branch skills setting the base branch as upstream    | Wave 2  | —            |
 
 **MB.5 — Restore `users` foreign keys on `auditColumns`** · 2h
 
@@ -3080,6 +3081,21 @@ _Acceptance criteria:_
 - `VERCEL_SCOPE`, `NEON_API_KEY`, `NEON_PROJECT_ID` set as GitHub Actions secrets
 - Admin bootstrap email set as a Vercel env var (Production + Preview) — unblocks M2.3
 - `claude-docs/secrets.md` updated to reflect every row set
+
+**MB.13 — Stop branch skills setting the base branch as upstream** · 1h
+
+_Story:_ As a developer, I want a new branch to have no upstream, so that a bare `git push` cannot push my work straight at `staging` or `main`.
+
+`/create-feature`'s `git checkout -b feature/<slug> origin/staging` set the new branch's upstream to `origin/staging`, so a later bare `git push` targeted the protected base branch rather than the feature branch. `/create-hotfix` had the same shape against `origin/main`, which is worse. Caught during M1.16, where the push was redirected by hand.
+
+Fixed by adding `--no-track` to the `checkout -b` in all four branch skills — note the flag must precede `-b`, since `git checkout -b --no-track <name>` parses `--no-track` as the branch name — and by making `/create-pr` push the source branch by name instead of trusting the configured upstream. `/create-release` and `/create-main-sync` were less exposed, since each pushes with `-u` immediately, but take the same flag for consistency.
+
+_Acceptance criteria:_
+
+- A branch made by /create-feature or /create-hotfix has no upstream until it is first pushed
+- /create-pr pushes the source branch by name, never relying on the configured upstream
+- The four branch skills and /create-pr agree on the pattern
+- Protected-branch push is impossible by accident, not merely unlikely
 
 ## MW — Wave close-out
 

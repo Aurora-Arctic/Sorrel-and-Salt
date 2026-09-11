@@ -39,7 +39,7 @@ Cut a new Gitflow release: compute the next semver version, branch off the lates
    - `git rev-parse --verify --quiet refs/heads/release/<version>`, `git ls-remote --exit-code --heads origin release/<version>`, and `git tag --list v<version>` (local; already fetched remote tags in step 3). Any hit means version computation is out of sync with reality — stop and tell the user rather than guessing.
 
 9. **Create the release branch off the latest `staging`.**
-   - `git checkout -b release/<version> origin/staging`.
+   - `git checkout --no-track -b release/<version> origin/staging` — `--no-track` so the branch’s upstream is its own remote branch once step 10 pushes it, never `origin/staging` (MB.13).
 
 10. **Tag the cut point.**
     - `git tag -a v<version> -m "Release <version>
