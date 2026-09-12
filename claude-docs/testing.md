@@ -84,19 +84,33 @@ Vite's native config loader this file is ESM instead of warning about it).
     `CREATE DATABASE ... TEMPLATE`, dropping each one first (`DROP DATABASE
 IF EXISTS`) so a crashed previous run self-heals instead of erroring on a
     stale database. `maxWorkers` comes off the `TestProject` Vitest hands the
-    setup function — `VITEST_WORKER_ID` itself is only set inside a worker
-    process, so globalSetup (which runs once, outside any worker) can't read
-    it directly; it pre-clones one database per possible worker instead. The
+    setup function — no per-worker variable is set inside the single setup
+    process, so it pre-clones one database per possible worker instead. It
+    `provide`s that list as `workerDatabases`, which
+    `test-database-isolation.test.ts` asserts its own database is a member of
+    (MB.14) — the point being that a worker's name is checked against what was
+    actually created, not against a bound the test recomputed. The
     returned teardown drops all of them. Requires `sorrel` to own
     `sorrel_template` and hold `CREATEDB` — both granted in
     `Docker/postgres-init/enable-extensions.sql` (M1.9) — since `postgres`'s
     own password is generated and discarded at image build time (M0.18) and
     so can never authenticate a real connection.
   - **`setupFiles: ['./src/test/db-setup.ts']`** points each worker's
-    `DATABASE_URL` at its own `sorrel_test_${VITEST_WORKER_ID}` clone before
-    any test file imports `connection.ts` — this one does read
-    `VITEST_WORKER_ID`, since `setupFiles` (unlike `globalSetup`) run inside
-    the worker process.
+    `DATABASE_URL` at its own `sorrel_test_${VITEST_POOL_ID}` clone before
+    any test file imports `connection.ts` — it can read the variable at all
+    because `setupFiles` (unlike `globalSetup`) run inside the worker
+    process.
+    - **The slot is `VITEST_POOL_ID`, not `VITEST_WORKER_ID`** (MB.14).
+      Vitest sets both, and only the first is bounded by `maxWorkers`
+      ("Value is between 1-`maxWorkers`", per its own typedef);
+      `VITEST_WORKER_ID` is a counter incremented once per test file across
+      the whole run, both projects, so it passes `maxWorkers` as soon as
+      there are more test files than workers. Keying the name off it worked
+      until the repo had eleven test files and CI had three workers, at which
+      point the isolation spec asked for a `sorrel_test_4` nobody had cloned.
+      Both halves now share `src/test/worker-database.ts`, which is also
+      where a missing `DATABASE_URL`/`VITEST_POOL_ID` is turned into a named
+      harness error rather than a `sorrel_test_undefined` connection failure.
   - Rejected alternative — wrapping each test in a rolled-back transaction —
     and the reason, is recorded in
     [`design-decisions/m1.9-test-db-isolation.md`](design-decisions/m1.9-test-db-isolation.md).
