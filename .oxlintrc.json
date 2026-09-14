@@ -7,7 +7,18 @@
     }
   },
   "rules": {
-    "no-console": "warn"
+    "no-console": "warn",
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["**/db/connection", "**/db/connection.ts", "./connection", "./connection.ts"],
+            "message": "Import the database client only in src/db/repository.ts (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
+          }
+        ]
+      }
+    ]
   },
   "ignorePatterns": ["public", ".next", "out"],
   "overrides": [
