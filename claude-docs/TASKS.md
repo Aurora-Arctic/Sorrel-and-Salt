@@ -52,7 +52,7 @@ The policies must not come early for the opposite reason. A policy written befor
 | Wave                         | Tasks                                                                                                                                       | Why here                                                                                                                                                                                                                                           |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **1 — FK root**              | M2.2 · M2.3 · MB.5 · MW.1                                                                                                                   | `users` first, because the whole graph roots on it. M2.2 leads so Better Auth's adapter table ownership is settled before anything references `users`.                                                                                             |
-| **2 — Write path**           | M1.16 · M1.19 · M1.17 · M1.20 · MW.2                                                                                                        | Needs exactly one table. M1.20 is re-scoped to the finder builder plus its guard, not "edit N finders".                                                                                                                                            |
+| **2 — Write path**           | M1.16 · M1.19 · M1.17 · MB.14 · M1.20 · MW.2                                                                                                | Needs exactly one table. M1.20 is re-scoped to the finder builder plus its guard, not "edit N finders".                                                                                                                                            |
 | **3 — Schema block**         | M6.2 · M4.1 · M4.2 · M4.4 · M4.6 · M7.1 · M9.2 · M10.2 · M10.4 · M1.18 · MW.3                                                               | FK order. M1.18's trigger closes the wave, attaching to every audited table at once. **M10.3 is deliberately excluded** — see below.                                                                                                               |
 | **4 — Seed and harness**     | M1.21 · M4.3 · M1.22 · M1.26 · M1.23 · M1.25 · M1.24 · M1.27 · M1.28 · MW.4                                                                 | The payoff wave: retires all three workarounds. M4.3 is pulled ahead of M1.22, which consumes its 52 categories.                                                                                                                                   |
 | **5 — Authorization**        | M6.3 · M6.4 · M10.3 · M6.5 · M6.6 · MW.5                                                                                                    | All seven workspace-scoped tables now exist, so M6.4's RLS sweep is complete rather than partial.                                                                                                                                                  |
@@ -2945,7 +2945,7 @@ _Acceptance criteria:_
 
 ## MB — Bugfixes and gap tasks
 
-Work that was not in the original breakdown. `MB.*` exists so a defect or a missing dependency can be scheduled without renumbering an immutable ID. MB.1 through MB.4 are merged; MB.5 through MB.11 were minted by the re-sequencing audit; MB.12 was minted after M2.2/M2.4/M2.5/M0.27 merged with real verification still outstanding. MB.13 was minted during M1.16, when `/create-pr` nearly pushed a feature branch straight at `staging`.
+Work that was not in the original breakdown. `MB.*` exists so a defect or a missing dependency can be scheduled without renumbering an immutable ID. MB.1 through MB.4 are merged; MB.5 through MB.11 were minted by the re-sequencing audit; MB.12 was minted after M2.2/M2.4/M2.5/M0.27 merged with real verification still outstanding. MB.13 was minted during M1.16, when `/create-pr` nearly pushed a feature branch straight at `staging`. MB.14 was minted during M1.17, when its eleventh test file tipped M1.9's per-worker database naming past the set of clones that exist.
 
 | ID    | Task                                                      | Status  | Needed by    |
 | ----- | --------------------------------------------------------- | ------- | ------------ |
@@ -2962,6 +2962,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.11 | GraphQL field exposing the fuzzy duplicate service        | Wave 8  | M5.10        |
 | MB.12 | Finish the secrets matrix and verify real OAuth sign-in   | Wave 6  | M2.3         |
 | MB.13 | Stop branch skills setting the base branch as upstream    | Wave 2  | —            |
+| MB.14 | Key the per-worker test database off `VITEST_POOL_ID`     | Wave 2  | —            |
 
 **MB.5 — Restore `users` foreign keys on `auditColumns`** · 2h
 
@@ -3096,6 +3097,22 @@ _Acceptance criteria:_
 - /create-pr pushes the source branch by name, never relying on the configured upstream
 - The four branch skills and /create-pr agree on the pattern
 - Protected-branch push is impossible by accident, not merely unlikely
+
+**MB.14 — Key the per-worker test database off `VITEST_POOL_ID`** · 1h
+
+_Story:_ As a developer, I want each `db`-project worker to connect to a database `globalSetup` actually created, so that a green suite does not depend on how many test files the repo happens to have.
+
+`src/test/db-global-setup.ts` clones `sorrel_test_1` through `sorrel_test_<maxWorkers>`, but `src/test/db-setup.ts` pointed the worker at `sorrel_test_${VITEST_WORKER_ID}`. Those index different things: `VITEST_POOL_ID` is the pool slot, which Vitest documents as "between 1-`maxWorkers`", while `VITEST_WORKER_ID` is a counter incremented once per test file across the whole run — both projects — and so passes `maxWorkers` as soon as there are more test files than workers. Latent since M1.9 and a coin flip on file count and sort order; M1.17's eleventh test file made it land, and three tests failed on PR #78 with `database "sorrel_test_4" does not exist` on the three-worker CI runner.
+
+Both halves now share `src/test/worker-database.ts`, which owns the name and throws by name when `DATABASE_URL` or `VITEST_POOL_ID` is missing rather than connecting to `sorrel_test_undefined`. `globalSetup` `provide`s the list of databases it cloned and `test-database-isolation.test.ts` asserts membership of it — the regression this needed, since asserting the name's shape is what passed while the two halves disagreed.
+
+_Acceptance criteria:_
+
+- The database a `db`-project worker connects to is always one `globalSetup` created, whatever the test file count
+- A missing `DATABASE_URL` or `VITEST_POOL_ID` fails as a harness error, not as a Postgres error
+- The isolation spec asserts membership of the created set, not a name it recomputed
+- Every doc naming `VITEST_WORKER_ID` for this purpose is corrected
+- M1.9's decision — a real database per worker, never a rolled-back transaction — still stands
 
 ## MW — Wave close-out
 
