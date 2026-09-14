@@ -53,7 +53,7 @@ The schema entity is `workspaces`; the URL prefix is `/coven/`. This divergence 
 Server components call services directly (wrapped in React `cache()`); everything the browser initiates — every mutation, and every read without a navigation — goes through `/api/graphql`. Two transports, one set of rules, because both end at the same service function. There is no third access path: no server actions, no bespoke route handlers, and admin is not an exception (M3.8).
 
 **2. Only `src/db/repository.ts` may import the database client.**
-M1.17 and M3.9 add the lint rules that enforce this; until they land it holds by convention. `src/graphql/**` and `src/app/**` may not import the client or the repository — they reach services and nothing below.
+M1.17's `no-restricted-imports` rule enforces it — a new importer fails `npm run lint`. Three files are exempt besides the repository, each by a named `oxlint-disable-next-line` at the import and each because it needs a client rather than a writer: `src/lib/auth.ts` (Better Auth's `drizzleAdapter`), `scripts/db-seed.ts`, and `src/db/test-database-isolation.test.ts`. That set is pinned by test — a fourth exemption is a decision, not a convenience. M3.9 still has to add the rule that stops `src/graphql/**` and `src/app/**` importing the _repository_; until it lands that half holds by convention. Either way they reach services and nothing below.
 
 **3. All writes go through `withAudit(session, fn)`.**
 It opens the transaction, injects the audit ids from the _session_ (never from a request body), and issues `SET LOCAL app.current_user_id = '<uuid>'`. Every table carries the six-column `...auditColumns` spread, join tables included.
