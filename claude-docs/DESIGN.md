@@ -619,7 +619,7 @@ Every story becomes a failing test first: **write test → watch it fail → min
 
 **Using local Postgres instead of Neon branches is a net simplification.** It removes the `NEON_API_KEY` secret, `globalSetup` branch creation, the 10-branch-per-project limit, the CU-hour budget, and the branch-reaper workflow. Neon becomes deployment-only infrastructure. Tests get faster too — a local socket beats a network round trip per query.
 
-**Isolation.** Each Vitest worker gets `sorrel_test_${VITEST_WORKER_ID}`, created from a template database with migrations pre-applied, so setup is a fast `CREATE DATABASE ... TEMPLATE` rather than a full migration run. Playwright gets `sorrel_e2e`, truncated and reseeded between spec files.
+**Isolation.** Each Vitest worker gets `sorrel_test_${VITEST_POOL_ID}` (the pool slot — `VITEST_WORKER_ID` counts test files, not workers, and outruns the clones that exist; MB.14), created from a template database with migrations pre-applied, so setup is a fast `CREATE DATABASE ... TEMPLATE` rather than a full migration run. Playwright gets `sorrel_e2e`, truncated and reseeded between spec files.
 
 ### Seed data — one module, three consumers
 
