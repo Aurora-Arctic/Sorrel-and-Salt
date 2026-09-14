@@ -119,7 +119,12 @@ describe('CLAUDE.md rule 2 — the db client import boundary', () => {
   // one has to be argued for here, in the diff, rather than appearing quietly
   // beside an import.
   it('has exactly four files carrying the exemption, and no others', () => {
-    const tracked = execFileSync('git', ['ls-files', '*.ts', '*.tsx'], {
+    // `-c safe.directory=*`, because the vitest job runs its container as root
+    // over a checkout owned by uid 1000 and git refuses that as "dubious
+    // ownership" — the bare call fails in CI while passing locally. Still
+    // `git ls-files` rather than a filesystem walk: tracked files are what
+    // "and no others" means, and a walk would go red on untracked scratch.
+    const tracked = execFileSync('git', ['-c', 'safe.directory=*', 'ls-files', '*.ts', '*.tsx'], {
       cwd: repoRoot,
       encoding: 'utf8',
     })
