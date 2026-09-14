@@ -7,13 +7,21 @@ import { defineConfig } from 'vitest/config';
 // `db` has no test files yet (repository/service layers land from M1.16
 // onward), so `passWithNoTests` keeps an empty suite from failing the run.
 // `globalSetup`/`setupFiles` wire each worker to its own
-// `sorrel_test_${VITEST_WORKER_ID}` clone of `sorrel_template` (M1.9).
+// `sorrel_test_${VITEST_POOL_ID}` clone of `sorrel_template` (M1.9) — the pool
+// *slot*, not `VITEST_WORKER_ID`; see src/test/worker-database.ts (MB.14).
 
 // Vitest only resolves its actual worker count internally — `project.config
 // .maxWorkers` is `undefined` unless set explicitly here — so `db`'s
 // `globalSetup` (which needs a real number to know how many clones to make)
-// gets one pinned in config instead. Mirrors Vitest's own default thread
-// count (`os.availableParallelism() - 1`, floored at 1).
+// gets one pinned in config instead.
+//
+// It must keep mirroring Vitest's own default (`os.availableParallelism() - 1`,
+// floored at 1), and not merely as a courtesy: both projects' specs land in the
+// same pool group (neither sets `sequence.groupOrder`), the group's `maxWorkers`
+// comes from whichever project's spec sorts first, and Vitest throws outright if
+// two projects in one group disagree. That throw is what makes
+// `VITEST_POOL_ID <= dbMaxWorkers` — every slot has a clone (MB.14) — true
+// rather than hopeful: diverge from the default and the run fails loudly.
 const dbMaxWorkers = Math.max((os.availableParallelism?.() ?? os.cpus().length) - 1, 1);
 export default defineConfig({
   test: {

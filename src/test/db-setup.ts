@@ -1,11 +1,9 @@
+import { workerDatabaseUrl } from './worker-database';
+
 // Points each worker's connection.ts import at the database db-global-setup
-// cloned for it — VITEST_WORKER_ID is only set inside a worker process, so
-// this can't be folded into globalSetup itself, which runs once up front.
-// Rewrites DATABASE_URL in place, keeping its host/credentials (`postgres`
-// inside the devcontainer, `localhost` on a bare host) and swapping only the
-// database name.
-const base = process.env.DATABASE_URL;
-if (!base) throw new Error('DATABASE_URL is not set');
-const url = new URL(base);
-url.pathname = `/sorrel_test_${process.env.VITEST_WORKER_ID}`;
-process.env.DATABASE_URL = url.toString();
+// cloned for its pool slot, rewriting DATABASE_URL in place before any test
+// file imports connection.ts. This runs inside the worker process, which is
+// why it can read the slot at all — `globalSetup`, running once up front,
+// cannot. worker-database.ts holds the naming and the reason the slot comes
+// from VITEST_POOL_ID rather than VITEST_WORKER_ID (MB.14).
+process.env.DATABASE_URL = workerDatabaseUrl(process.env);
