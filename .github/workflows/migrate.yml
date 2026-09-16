@@ -60,7 +60,7 @@ jobs:
 
       - name: Set up Node
         if: steps.guard.outputs.enabled == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           # Match Docker/Dockerfile.node, local dev, and deploy.yml.
           node-version: 26.6.0
