@@ -1,8 +1,9 @@
 # Debugging — summary
 
-This summary is self-contained (MB.22) — nothing here requires opening
-`package.json`, `makefile`, `Docker/docker-compose.yaml`, `.devcontainer/`,
-or `playwright.config.ts` to follow.
+This summary is self-contained (MB.22, extended by MB.23) — nothing here
+requires opening `package.json`, `makefile`, `Docker/docker-compose.yaml`,
+`.devcontainer/`, `Docker/Dockerfile.e2e`, or `playwright.config.ts` to
+follow.
 
 Before this task there was no debugging story at all: no Node inspector
 wired anywhere in the container, no `.vscode/` directory, no way to step
@@ -61,19 +62,20 @@ attached at all.
 
 ## Port map
 
-| Port  | What                                        | Where it's forwarded/published                                                                                            |
-| ----- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| 8000  | `next dev`                                  | devcontainer.json, `app` service (Docker/docker-compose.yaml)                                                             |
-| 8001  | `next start` (production build, e2e target) | devcontainer.json                                                                                                         |
-| 4983  | Drizzle Studio (MB.21)                      | devcontainer.json, `studio` service                                                                                       |
-| 9229  | Node inspector — `next dev --inspect`       | devcontainer.json, `app` service                                                                                          |
-| 9230  | Node inspector — `vitest --inspect-brk`     | devcontainer.json only (no long-running compose service serves this)                                                      |
-| 9231  | Node inspector — Playwright runner (manual) | devcontainer.json only — reserved, nothing listens by default                                                             |
-| 9323  | Playwright trace viewer                     | devcontainer.json only                                                                                                    |
-| 9324  | Playwright UI mode                          | devcontainer.json only                                                                                                    |
-| 51204 | Vitest UI (`@vitest/ui` default port)       | devcontainer.json only                                                                                                    |
-| 61000 | Ladle workshop                              | pre-existing (M0.30), `workshop` service                                                                                  |
-| 4444  | `playwright run-server` (remote browser)    | `playwright-server` service (Docker/docker-compose.yaml, profile `e2e`) — dialed by the runner, never opened in a browser |
+| Port  | What                                                 | Where it's forwarded/published                                                                                            |
+| ----- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 8000  | `next dev`                                           | devcontainer.json, `app` service (Docker/docker-compose.yaml)                                                             |
+| 8001  | `next start` (production build, e2e target)          | devcontainer.json                                                                                                         |
+| 4983  | Drizzle Studio (MB.21)                               | devcontainer.json, `studio` service                                                                                       |
+| 9229  | Node inspector — `next dev --inspect`                | devcontainer.json, `app` service                                                                                          |
+| 9230  | Node inspector — `vitest --inspect-brk`              | devcontainer.json only (no long-running compose service serves this)                                                      |
+| 9231  | Node inspector — Playwright runner (manual)          | devcontainer.json only — reserved, nothing listens by default                                                             |
+| 9323  | Playwright trace viewer                              | devcontainer.json only                                                                                                    |
+| 9324  | Playwright UI mode                                   | devcontainer.json only                                                                                                    |
+| 51204 | Vitest UI (`@vitest/ui` default port)                | devcontainer.json only                                                                                                    |
+| 61000 | Ladle workshop                                       | pre-existing (M0.30), `workshop` service                                                                                  |
+| 4444  | `playwright run-server` (remote browser)             | `playwright-server` service (Docker/docker-compose.yaml, profile `e2e`) — dialed by the runner, never opened in a browser |
+| 7900  | Playwright display — codegen, `page.pause()` (MB.23) | `playwright-server` service — a page you open, unlike 4444                                                                |
 
 Every port above 8001 that isn't 4444 or 61000 is new to this task. All the
 `devcontainer.json`-only rows are forwarded because the process that opens
@@ -172,12 +174,13 @@ _do_ open in a host browser are the forwarded ports: 9323 for the trace
 viewer, 9324 for UI mode. Both work the same over a remote browser as over a
 local one, because both are the _runner's_ own UI, not the browser's.
 
-**Known limitation, not a bug**: headed/interactive features that expect to
-draw directly on the browser window — `page.pause()`'s Inspector overlay,
-UI mode's live locator picker — don't work well against a remote browser,
-because there's no local window for them to draw into. Trace viewer and
-UI mode's step-by-step replay (both reading recorded/streamed state rather
-than needing a live window) are unaffected.
+**Headed/interactive Playwright now has somewhere to draw (MB.23).**
+`playwright-server` carries a virtual display (Xvfb + a window manager),
+reachable from an ordinary host browser tab at **`http://localhost:7900`**
+over noVNC — `page.pause()`'s Inspector overlay and UI mode's live locator
+picker both render there. This is also what `make docker-codegen` (below)
+opens. Trace viewer and UI mode's step-by-step replay don't need a live
+window at all and are unaffected either way.
 
 Debugging a **specific spec** under `--inspect-brk` (port 9231) has no
 dedicated npm script — run it by hand:
@@ -191,6 +194,46 @@ deliberate simplification rather than a gap: a scripted version would need
 a hardcoded spec path or argument-plumbing that serves exactly one
 debugging session's worth of value. Port 9231 is still reserved and
 forwarded for when you need it.
+
+### Recording a spec (MB.23)
+
+`make docker-codegen NAME=<spec>` (host) starts `playwright-server` if it
+isn't already up, then `exec`s `playwright codegen` into it as your own
+uid — so the file it writes, `e2e/<spec>.spec.ts`, is owned by you rather
+than root. Open **`http://localhost:7900`** in a host browser: a headed,
+interactive Chromium on the app's home page (`http://sorrel-app:8000` —
+**not** `http://app:8000`: `.app` is a real, HSTS-preloaded gTLD in every
+major browser, so a genuine Chrome navigating to the bare `app` compose
+service gets silently upgraded to `https://` and fails with
+`ERR_SSL_PROTOCOL_ERROR` against a plain-HTTP dev server — no launch flag
+turns this off, since the preload list is compiled into the browser binary.
+`sorrel-app` is a second DNS alias for the exact same `app` container,
+added to `docker-compose.yaml` for this reason — `make docker-up` needs to
+be running either way), and the Playwright Inspector beside it with its
+record button already armed. Both windows are draggable by their title
+bars; if they're frozen and overlapping, the window manager didn't start.
+Click around, then close the Chromium window to end the session.
+
+A recorded spec is a draft, not something to open a PR with as-is:
+
+1. Import `test`/`expect` from `./fixtures`, never `@playwright/test` — the
+   coverage auto-fixture only runs through `./fixtures` (`e2e/fixtures.ts`).
+2. Rewrite the absolute `http://sorrel-app:8000/...` URL codegen wrote to a
+   `baseURL`-relative path — `sorrel-app` only exists to dodge the HSTS
+   preload issue above and has no meaning outside a manually-recorded spec;
+   every other e2e URL in this repo is already `baseURL`-relative or uses
+   `devcontainer`/`localhost`, never `sorrel-app`.
+3. If it touches the database, add `test.describe.configure({ mode: 'serial'
+})` and a `beforeAll` calling `recreateE2eDatabase()` from `./database` —
+   see the comment atop `e2e/smoke.spec.ts` for why parallel workers racing
+   `DROP/CREATE DATABASE` isn't theoretical.
+4. Consider `assertNoAccessibilityViolations` from `./axe` for any new page.
+5. Strip codegen's redundant assertions and any brittle `nth()`-match
+   locator it fell back to.
+
+Sign-in is OAuth-only, so an authenticated flow can't be recorded
+end-to-end yet — record unauthenticated pages for now; `--save-storage`
+wiring waits on seeded sessions (M1.21–M1.23).
 
 ## Database debugging
 
@@ -223,11 +266,6 @@ inferring them from terminal output.
 
 ## What doesn't work in the container, and why
 
-- **Headed/interactive Playwright against the remote browser** (see above)
-  — `page.pause()`'s Inspector, UI mode's live locator picker. There's no
-  local browser window inside the container for either to draw into; trace
-  viewer and UI mode's own replay UI (the runner's UI, not the browser's)
-  are the supported paths instead.
 - **No client-side (Chrome/Edge) VS Code launch config.** There's no browser
   running inside the container to attach a client-side debugger to. Debug
   client-side (React/browser) code with host Chrome DevTools against the
