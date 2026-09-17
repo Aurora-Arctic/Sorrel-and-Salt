@@ -45,13 +45,14 @@ Three domain nouns, each meaning exactly one thing. Used consistently in routes,
 
 The audit requirement decided it. `auditColumns` is a plain TypeScript object spread into every table — six columns, one line per table, no codegen step. Prisma would need those six fields written into all twelve models in its DSL, or a generator plugin, plus `prisma generate` after every change.
 
-Three more reasons:
+Two more reasons:
 
 - **Raw SQL where needed.** Partial unique indexes, `num_nonnulls` check constraints, `pg_trgm` similarity, RLS policies, and the v2 PL/pgSQL trigger all live inside typed migrations. Prisma's schema language can't express most of them.
 - **No engine binary.** Prisma ships a Rust query engine as a separate process — cold-start weight and deployment size for nothing on serverless.
-- **Pothos has a first-class Drizzle plugin**, which is how §7's resolvers stay thin.
 
-Trade-off: Prisma Studio is nicer than Drizzle Studio and Prisma's errors are friendlier. Kysely is the other reasonable pick, but has no GraphQL plugin story.
+A third reason — that Pothos has a first-class Drizzle plugin — **no longer applies**: the plugin is not used (MB.20, `design-decisions/mb.20-pothos-without-drizzle-plugin.md`), because its primary capability is resolver-level database access, which §3's rule 1 forbids. The ORM choice now rests on the two reasons above alone, and is correspondingly easier to revisit: `drizzle-orm` is reachable only from `src/db/repository.ts`.
+
+Trade-off: Prisma Studio is nicer than Drizzle Studio and Prisma's errors are friendlier. Kysely remains the other reasonable pick — its lack of a GraphQL plugin no longer counts against it, but it is still `0.x` and so no steadier than what is here.
 
 ### Why Yoga + Pothos
 
@@ -61,7 +62,9 @@ Two separate decisions.
 
 **Pothos over SDL-first or Nexus.** Code-first means the schema is TypeScript, so a resolver returning the wrong shape is a compile error rather than a runtime one. SDL-first requires codegen to link schema and resolvers, and the link can silently break. Nexus has been effectively unmaintained for a while.
 
-Pothos specifically: its **auth-scopes plugin** gives declarative field-level guards, and its **Drizzle plugin** derives GraphQL types from table definitions, so `auditColumns` flows into the graph without retyping.
+Pothos specifically: its **auth-scopes plugin** gives declarative field-level guards.
+
+Its **Drizzle plugin is deliberately not used** (MB.20). That plugin's purpose is to let a resolver query the database from the GraphQL selection set, which §3's rule 1 forbids outright — and the graph does not mirror the tables anyway, so there is little to derive: audit columns surface as one nested `AuditInfo` object rather than six flat fields, and `Ingredient.isGlobal`, `Spell.derivedCategories` and `Spell.categoryGaps` are computed rather than stored. Object types are declared by hand against the row type the service returns, so a column whose type changes still fails the build. Keeping it out is also what leaves the GraphQL layer independent of `drizzle-orm`'s version.
 
 Trade-off: the schema isn't readable as a document without codegen. §11's schema snapshot test writes the SDL out on every run, so the file exists and diffs are visible in PRs.
 
@@ -338,7 +341,7 @@ Each carries `name`, `slug`, `color`, `description`, and `group`.
 
 Single route handler at `/api/graphql`. No separate service, no additional hosting cost.
 
-**Stack:** GraphQL Yoga (server), Pothos with the Drizzle plugin (code-first schema), DataLoader, graphql-codegen for client types.
+**Stack:** GraphQL Yoga (server), Pothos (code-first schema, no ORM plugin — §2), DataLoader, graphql-codegen for client types.
 
 **Client:** `graphql-request` plus TanStack Query, not Apollo. Apollo's normalized cache duplicates what TanStack Query already does here and adds ~40 kB. Codegen generates typed document nodes and hooks.
 
