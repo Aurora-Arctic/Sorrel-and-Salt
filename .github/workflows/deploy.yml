@@ -144,7 +144,7 @@ jobs:
 
       - name: Set up Node
         if: steps.guard.outputs.enabled == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           # Match Docker/Dockerfile.node and local dev. Node 22 ships npm 10,
           # which can't reconcile the npm-11-generated package-lock.json for
@@ -277,7 +277,7 @@ jobs:
 
       - name: Set up Node
         if: steps.guard.outputs.enabled == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 26.6.0
 
