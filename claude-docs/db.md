@@ -102,6 +102,18 @@ a query builder behind a choke point rather than an architectural commitment.
   This is what lets the Vitest `db` project's `globalSetup` (`src/test/
 db-global-setup.ts`) run `CREATE DATABASE sorrel_test_<n> TEMPLATE
 sorrel_template` as `sorrel`. See `testing.md`.
+- **`npm run db:studio`** (`make db-studio`, MB.21) is `drizzle-kit studio
+--host 0.0.0.0 --port 4983`. It reads the same `drizzle.config.ts` as
+  `db:generate`/`db:migrate` — no separate configuration — and needs no
+  schema or seed data to work, it just shows empty tables until M1.21–M1.23
+  land. The UI itself is hosted at `https://local.drizzle.studio`; the page
+  connects from the browser back to `127.0.0.1:4983`, so the server only
+  ever needs to serve data, never a UI bundle. From the devcontainer, run
+  `npm run db:studio` directly (no `make`/`docker` there) — port 4983 is
+  forwarded by `.devcontainer/devcontainer.json`. From the host, `make
+docker-studio` starts it as a profiled compose service (`studio`), the
+  same shape as `workshop`; `make docker-all` brings up every long-running
+  service, studio included.
 
 ## Expand/contract and the destructive-DDL check (M1.5)
 
