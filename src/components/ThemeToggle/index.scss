@@ -132,7 +132,16 @@ $theme-toggle-corner-radius: 3.9rem;
 // effect still flips the real --pre-enter class between facets afterward
 // (index.tsx), but only to keep the class list correct for the next click;
 // by then these rules already show the settled values, so nothing animates.
-html[data-theme='light'] {
+// MB.23: keyed off the attribute alone, this only covered a *stored* light
+// choice — the one case the init script stamps. A light system preference
+// with nothing stored paints the page light (globals.scss) while leaving the
+// attribute absent, so the crescent sat on a light page until the mount
+// effect swapped it after first paint: the exact swing MB.2 removed, still
+// happening for anyone who had never clicked the toggle. Both tiers include
+// this mixin, and they mirror globals.scss's own light tiers selector for
+// selector — including the `:not([data-theme='dark'])` guard that lets an
+// explicit dark choice beat a light system.
+@mixin theme-toggle-light-facets {
   .theme-toggle__facet--light.theme-toggle__facet--pre-enter {
     transform: rotate(0deg);
     opacity: 1;
@@ -146,6 +155,16 @@ html[data-theme='light'] {
     opacity: 0;
     transition: none;
   }
+}
+
+@media (prefers-color-scheme: light) {
+  html:not([data-theme='dark']) {
+    @include theme-toggle-light-facets;
+  }
+}
+
+html[data-theme='light'] {
+  @include theme-toggle-light-facets;
 }
 
 @include reduced-motion {

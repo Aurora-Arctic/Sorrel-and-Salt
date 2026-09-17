@@ -20,8 +20,21 @@ places drive the same attribute and key:
   branch clears **both** `data-theme` and `localStorage['theme']` — clearing
   only the attribute leaves a stale pin that reasserts itself on reload.
 
-**The component reads `data-theme` only in mount effects** — it has no
-subscription to a later attribute change. In the app that is fine: the attribute
+**Reading the theme back is `resolveCurrentTheme()`, not a bare attribute
+read** (MB.23). Because the attribute is absent unless a choice is stored, it
+cannot by itself say what is on screen: on a light system with nothing stored
+the page is light and the attribute is missing. So the component mirrors
+`globals.scss`'s cascade — `data-theme` when present, else
+`matchMedia('(prefers-color-scheme: light)')`, else dark. It asks for `light`
+rather than `dark` deliberately: "no preference" has to resolve to dark to
+match the `:root` default. Reading the attribute alone made the first click on
+such a system apply `light`, the theme already showing, so it visibly did
+nothing. `index.scss` mirrors the same two light tiers through the
+`theme-toggle-light-facets` mixin, for the same reason and with the same
+selectors; if that cascade is ever restructured, all three move together.
+
+**The component reads the theme only in mount effects and its own click
+handler** — it has no subscription to a later attribute change. In the app that is fine: the attribute
 changes only when this component's own click handler changes it. The workshop
 gets around it by remounting the story on theme change (a `key` on the frame
 wrapper). Any future component that renders `ThemeToggle` indirectly and needs
