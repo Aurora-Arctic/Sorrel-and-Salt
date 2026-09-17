@@ -49,23 +49,23 @@ The policies must not come early for the opposite reason. A policy written befor
 
 ### The waves
 
-| Wave                         | Tasks                                                                                                                                       | Why here                                                                                                                                                                                                                                           |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1 — FK root**              | M2.2 · M2.3 · MB.5 · MW.1                                                                                                                   | `users` first, because the whole graph roots on it. M2.2 leads so Better Auth's adapter table ownership is settled before anything references `users`.                                                                                             |
-| **2 — Write path**           | M1.16 · M1.19 · M1.17 · MB.14 · M1.20 · MB.15 · MW.2                                                                                        | Needs exactly one table. M1.20 is re-scoped to the finder builder plus its guard, not "edit N finders". MB.15 is CI-only and depends on nothing in the wave; it sits before MW.2 so the compression pass sees the corrected `ci.md`.               |
-| **3 — Schema block**         | M6.2 · M4.1 · M4.2 · M4.4 · M4.6 · M7.1 · M9.2 · M10.2 · M10.4 · M1.18 · MW.3                                                               | FK order. M1.18's trigger closes the wave, attaching to every audited table at once. **M10.3 is deliberately excluded** — see below.                                                                                                               |
-| **4 — Seed and harness**     | M1.21 · M4.3 · M1.22 · M1.26 · M1.23 · M1.25 · M1.24 · M1.27 · M1.28 · MW.4                                                                 | The payoff wave: retires all three workarounds. M4.3 is pulled ahead of M1.22, which consumes its 52 categories.                                                                                                                                   |
-| **5 — Authorization**        | M6.3 · M6.4 · M10.3 · M6.5 · M6.6 · MW.5                                                                                                    | All seven workspace-scoped tables now exist, so M6.4's RLS sweep is complete rather than partial.                                                                                                                                                  |
-| **6 — Auth surface**         | M2.1 · M2.4 · M2.5 · M2.6 · M2.7 · M2.9 · M2.10 · MB.12 · MW.6                                                                              | M2.8 defers to Wave 10. M2.10 needs M2.7's session helper and M0.30's Ladle build, both of which exist by the end of this wave. MB.12 closes the wave: "a real browser completes sign-in" is unmeetable before M2.6 builds the page to sign in on. |
-| **7 — GraphQL**              | M3.1 → M3.10, internal order unchanged · MW.7                                                                                               | M3.8's "representative service" and M3.10's `me` both have real targets now.                                                                                                                                                                       |
-| **8 — Compendium + admin**   | M4.5 · M4.7 · M4.8 · M8.2 · M8.5 · M8.8 · MB.11 · M5.1 · M5.2 · M5.3 · M5.4 · M5.9 · M5.10 · M5.5 · M5.6 · M5.7 · M5.8 · M8.6 · M8.7 · MW.8 | M5.5/M5.6 read and write through GraphQL, which is M8.5/M8.8 — so those move ahead of M5.5. M5.9/M5.10 build `IngredientForm`, which M5.5 consumes, so they precede it too.                                                                        |
-| **9 — Workspaces**           | M6.1 · M6.7 · M6.8 · M6.9 · M6.10 · M6.11 · M6.12 · M6.13 · M6.14 · M6.15 · M6.16 · MB.10 · M6.18 · MW.9                                    | M6.18 needs MB.10's display-name loader to resolve without an N+1.                                                                                                                                                                                 |
-| **10 — Invitations**         | M7.2 → M7.7 · M2.8 · MW.10                                                                                                                  | M2.8 moves here: "an invited user lands in the workspace they were invited to" is unmeetable before M7.5.                                                                                                                                          |
-| **11 — Ingredient services** | M8.1 · M8.3 · M8.4 · M9.1 · M9.3 · M9.4 · M9.5 · MB.9 · MW.11                                                                               | M9's data layer moves ahead of M8's UI. This is what fixes M8.13, M8.14 and M8.18.                                                                                                                                                                 |
-| **12 — Ingredient UI**       | M8.9 → M8.12 · M8.13 · M8.13a · M9.7 · M9.8 · M8.14 · M8.15 → M8.19 · M9.6 · M9.9 → M9.12 · MB.7 · MW.12                                    | M8.13a lands before its three consumers. M9.7 and M9.8 land before M8.14, which consumes both — see the ownership table below.                                                                                                                     |
-| **13 — Grimoire**            | M10.1 · M10.5 → M10.22 · MB.6 · MB.8 · MW.13                                                                                                | MB.8's Zod schema precedes M10.10; MB.6's recipe view precedes M10.22's print layout.                                                                                                                                                              |
-| **14 — Sweep close-out**     | M6.17 · MW.14                                                                                                                               | "Every mutating service" is a finite existing set only now.                                                                                                                                                                                        |
-| **15 — Launch**              | M11.1 → M11.14 · MW.15                                                                                                                      | Unchanged.                                                                                                                                                                                                                                         |
+| Wave                         | Tasks                                                                                                                                       | Why here                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1 — FK root**              | M2.2 · M2.3 · MB.5 · MW.1                                                                                                                   | `users` first, because the whole graph roots on it. M2.2 leads so Better Auth's adapter table ownership is settled before anything references `users`.                                                                                                                                                                                                                                                                                                         |
+| **2 — Write path**           | M1.16 · M1.19 · M1.17 · MB.14 · M1.20 · MB.15 · MB.16 · MB.17 · MB.18 · MB.19 · MW.2                                                        | Needs exactly one table. M1.20 is re-scoped to the finder builder plus its guard, not "edit N finders". MB.15 through MB.18 are CI- and doc-only and depend on nothing in the wave; they sit before MW.2 so the compression pass sees the corrected `ci.md`. MB.18 depends on MB.17 — both edit the same header comment. MB.19 is a devDependency bump and depends on nothing else in the wave; it sits last so MW.2 records that it pins a release candidate. |
+| **3 — Schema block**         | M6.2 · M4.1 · M4.2 · M4.4 · M4.6 · M7.1 · M9.2 · M10.2 · M10.4 · M1.18 · MW.3                                                               | FK order. M1.18's trigger closes the wave, attaching to every audited table at once. **M10.3 is deliberately excluded** — see below.                                                                                                                                                                                                                                                                                                                           |
+| **4 — Seed and harness**     | M1.21 · M4.3 · M1.22 · M1.26 · M1.23 · M1.25 · M1.24 · M1.27 · M1.28 · MW.4                                                                 | The payoff wave: retires all three workarounds. M4.3 is pulled ahead of M1.22, which consumes its 52 categories.                                                                                                                                                                                                                                                                                                                                               |
+| **5 — Authorization**        | M6.3 · M6.4 · M10.3 · M6.5 · M6.6 · MW.5                                                                                                    | All seven workspace-scoped tables now exist, so M6.4's RLS sweep is complete rather than partial.                                                                                                                                                                                                                                                                                                                                                              |
+| **6 — Auth surface**         | M2.1 · M2.4 · M2.5 · M2.6 · M2.7 · M2.9 · M2.10 · MB.12 · MW.6                                                                              | M2.8 defers to Wave 10. M2.10 needs M2.7's session helper and M0.30's Ladle build, both of which exist by the end of this wave. MB.12 closes the wave: "a real browser completes sign-in" is unmeetable before M2.6 builds the page to sign in on.                                                                                                                                                                                                             |
+| **7 — GraphQL**              | M3.1 → M3.10, internal order unchanged · MW.7                                                                                               | M3.8's "representative service" and M3.10's `me` both have real targets now.                                                                                                                                                                                                                                                                                                                                                                                   |
+| **8 — Compendium + admin**   | M4.5 · M4.7 · M4.8 · M8.2 · M8.5 · M8.8 · MB.11 · M5.1 · M5.2 · M5.3 · M5.4 · M5.9 · M5.10 · M5.5 · M5.6 · M5.7 · M5.8 · M8.6 · M8.7 · MW.8 | M5.5/M5.6 read and write through GraphQL, which is M8.5/M8.8 — so those move ahead of M5.5. M5.9/M5.10 build `IngredientForm`, which M5.5 consumes, so they precede it too.                                                                                                                                                                                                                                                                                    |
+| **9 — Workspaces**           | M6.1 · M6.7 · M6.8 · M6.9 · M6.10 · M6.11 · M6.12 · M6.13 · M6.14 · M6.15 · M6.16 · MB.10 · M6.18 · MW.9                                    | M6.18 needs MB.10's display-name loader to resolve without an N+1.                                                                                                                                                                                                                                                                                                                                                                                             |
+| **10 — Invitations**         | M7.2 → M7.7 · M2.8 · MW.10                                                                                                                  | M2.8 moves here: "an invited user lands in the workspace they were invited to" is unmeetable before M7.5.                                                                                                                                                                                                                                                                                                                                                      |
+| **11 — Ingredient services** | M8.1 · M8.3 · M8.4 · M9.1 · M9.3 · M9.4 · M9.5 · MB.9 · MW.11                                                                               | M9's data layer moves ahead of M8's UI. This is what fixes M8.13, M8.14 and M8.18.                                                                                                                                                                                                                                                                                                                                                                             |
+| **12 — Ingredient UI**       | M8.9 → M8.12 · M8.13 · M8.13a · M9.7 · M9.8 · M8.14 · M8.15 → M8.19 · M9.6 · M9.9 → M9.12 · MB.7 · MW.12                                    | M8.13a lands before its three consumers. M9.7 and M9.8 land before M8.14, which consumes both — see the ownership table below.                                                                                                                                                                                                                                                                                                                                 |
+| **13 — Grimoire**            | M10.1 · M10.5 → M10.22 · MB.6 · MB.8 · MW.13                                                                                                | MB.8's Zod schema precedes M10.10; MB.6's recipe view precedes M10.22's print layout.                                                                                                                                                                                                                                                                                                                                                                          |
+| **14 — Sweep close-out**     | M6.17 · MW.14                                                                                                                               | "Every mutating service" is a finite existing set only now.                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **15 — Launch**              | M11.1 → M11.14 · MW.15                                                                                                                      | Unchanged.                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 **Unscheduled by design:** M7.A.1 (require merge queue) is trigger-based, not wave-based — do it when a second contributor arrives or PR volume makes untested merge combinations a real risk, whichever comes first. It is not a prerequisite for anything.
 
@@ -365,7 +365,7 @@ Add the Postgres service with a named volume and a health check, wired to the sa
 
 _Acceptance criteria:_
 
-- `make docker-up` starts Postgres 17 and reports healthy
+- `make docker-up` starts Postgres 18 and reports healthy
 - App container connects using the service name
 - Data survives `docker compose restart`
 - No Neon connection is required for local work
@@ -425,7 +425,7 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want one database image shared by CI and local development so that every environment starts from an identical Postgres in seconds.
 
-Workflow building a Postgres 17 image with required extensions enabled and an empty `sorrel_template` database, published to GHCR. Tag by content hash of `src/db/**` plus `latest`; rebuild only when that path changes. Migrations and seed are baked into the template by M1.27, once they exist — this task deliberately ships the image before there is a schema to put in it.
+Workflow building a Postgres 18 image with required extensions enabled and an empty `sorrel_template` database, published to GHCR. Tag by content hash of `src/db/**` plus `latest`; rebuild only when that path changes. Migrations and seed are baked into the template by M1.27, once they exist — this task deliberately ships the image before there is a schema to put in it.
 
 _Acceptance criteria:_
 
@@ -2945,25 +2945,29 @@ _Acceptance criteria:_
 
 ## MB — Bugfixes and gap tasks
 
-Work that was not in the original breakdown. `MB.*` exists so a defect or a missing dependency can be scheduled without renumbering an immutable ID. MB.1 through MB.4 are merged; MB.5 through MB.11 were minted by the re-sequencing audit; MB.12 was minted after M2.2/M2.4/M2.5/M0.27 merged with real verification still outstanding. MB.13 was minted during M1.16, when `/create-pr` nearly pushed a feature branch straight at `staging`. MB.14 was minted during M1.17, when its eleventh test file tipped M1.9's per-worker database naming past the set of clones that exist. MB.15 was minted during M1.20, on noticing that the two smoke-check workflows still built their own copy of the testing image that M0.24 had since made shared; collapsing them onto the shared image showed they were a strict subset of `pr-gate.yml`, and the task was re-scoped in place to deleting them.
+Work that was not in the original breakdown. `MB.*` exists so a defect or a missing dependency can be scheduled without renumbering an immutable ID. MB.1 through MB.4 are merged; MB.5 through MB.11 were minted by the re-sequencing audit; MB.12 was minted after M2.2/M2.4/M2.5/M0.27 merged with real verification still outstanding. MB.13 was minted during M1.16, when `/create-pr` nearly pushed a feature branch straight at `staging`. MB.14 was minted during M1.17, when its eleventh test file tipped M1.9's per-worker database naming past the set of clones that exist. MB.15 was minted during M1.20, on noticing that the two smoke-check workflows still built their own copy of the testing image that M0.24 had since made shared; collapsing them onto the shared image showed they were a strict subset of `pr-gate.yml`, and the task was re-scoped in place to deleting them. MB.16 through MB.18 were minted together, also during M1.20, when tracing why `build-db-image.yml` runs on a push to `staging` turned up three separate things: a Dependabot base-image bump no prose ever followed (MB.16), a `latest` tag nothing consumes standing in the docs as the push trigger's whole purpose (MB.17), and — on comparing the three image-build workflows side by side — a skip-if-exists check that only `build-db-image.yml` lacks, for a documented reason that holds on the `push` path and fails on the `workflow_call` path every PR actually takes (MB.18). MB.19 was minted on request, after `npm audit` was found to carry a standing moderate advisory (GHSA-67mh-4wv8-2f99) reached only through `drizzle-kit`'s devDependency chain, with no fix available on its stable dist-tag.
 
-| ID    | Task                                                      | Status  | Needed by    |
-| ----- | --------------------------------------------------------- | ------- | ------------ |
-| MB.1  | Fix prefers-reduced-motion facet swap in ThemeToggle      | merged  | —            |
-| MB.2  | Fix sun facet swinging in on first paint in light mode    | merged  | —            |
-| MB.3  | Fix Prettier formatting in `m1.1-neon-branch-strategy.md` | merged  | —            |
-| MB.4  | Stop destructive-ddl scanning non-migration changed files | merged  | —            |
-| MB.5  | Restore `users` FKs on `auditColumns`                     | merged  | every table  |
-| MB.6  | Spell recipe view page                                    | Wave 13 | M10.22       |
-| MB.7  | Application nav shell                                     | Wave 12 | M8.16, M8.17 |
-| MB.8  | Zod schema for spells                                     | Wave 13 | M10.10       |
-| MB.9  | `ingredientsById` DataLoader                              | Wave 11 | M8.5, M9.4   |
-| MB.10 | `usersById` display-name DataLoader                       | Wave 9  | M6.18        |
-| MB.11 | GraphQL field exposing the fuzzy duplicate service        | Wave 8  | M5.10        |
-| MB.12 | Finish the secrets matrix and verify real OAuth sign-in   | Wave 6  | M2.3         |
-| MB.13 | Stop branch skills setting the base branch as upstream    | Wave 2  | —            |
-| MB.14 | Key the per-worker test database off `VITEST_POOL_ID`     | Wave 2  | —            |
-| MB.15 | Delete the redundant smoke-check workflows                | Wave 2  | —            |
+| ID    | Task                                                             | Status  | Needed by    |
+| ----- | ---------------------------------------------------------------- | ------- | ------------ |
+| MB.1  | Fix prefers-reduced-motion facet swap in ThemeToggle             | merged  | —            |
+| MB.2  | Fix sun facet swinging in on first paint in light mode           | merged  | —            |
+| MB.3  | Fix Prettier formatting in `m1.1-neon-branch-strategy.md`        | merged  | —            |
+| MB.4  | Stop destructive-ddl scanning non-migration changed files        | merged  | —            |
+| MB.5  | Restore `users` FKs on `auditColumns`                            | merged  | every table  |
+| MB.6  | Spell recipe view page                                           | Wave 13 | M10.22       |
+| MB.7  | Application nav shell                                            | Wave 12 | M8.16, M8.17 |
+| MB.8  | Zod schema for spells                                            | Wave 13 | M10.10       |
+| MB.9  | `ingredientsById` DataLoader                                     | Wave 11 | M8.5, M9.4   |
+| MB.10 | `usersById` display-name DataLoader                              | Wave 9  | M6.18        |
+| MB.11 | GraphQL field exposing the fuzzy duplicate service               | Wave 8  | M5.10        |
+| MB.12 | Finish the secrets matrix and verify real OAuth sign-in          | Wave 6  | M2.3         |
+| MB.13 | Stop branch skills setting the base branch as upstream           | Wave 2  | —            |
+| MB.14 | Key the per-worker test database off `VITEST_POOL_ID`            | Wave 2  | —            |
+| MB.15 | Delete the redundant smoke-check workflows                       | Wave 2  | —            |
+| MB.16 | Correct the Postgres version across the live docs                | Wave 2  | —            |
+| MB.17 | Drop the dead `latest` tag from `build-db-image`                 | Wave 2  | MB.18        |
+| MB.18 | Give `build-db-image` the skip-if-exists check                   | Wave 2  | —            |
+| MB.19 | Move `drizzle-kit`/`drizzle-orm` off the `@esbuild-kit` advisory | Wave 2  | —            |
 
 **MB.5 — Restore `users` foreign keys on `auditColumns`** · 2h
 
@@ -3146,6 +3150,89 @@ _Acceptance criteria:_
 - `pr-gate.yml`'s `lint`/`typecheck`/`build` filters list `Docker/Dockerfile.node`; `*shared` does not
 - `build-db-image.yml` has no `pull_request` trigger, and its `latest` tag still moves only on a push to `staging`/`main`
 - No live doc or workflow still references either deleted workflow; `claude-docs/archive/**` is untouched
+
+**MB.16 — Correct the Postgres version across the live docs** · 1h
+
+_Story:_ As a developer, I want the docs to name the Postgres version the image actually builds from, so that nobody reasons about the wrong major.
+
+Dependabot commit `44d2175` ("Bump postgres from 17 to 18 in /Docker") changed exactly one line of `Docker/Dockerfile.postgres` and nothing else. No prose followed it, so the Dockerfile says `postgres:18` while CLAUDE.md, DESIGN.md §11, this file, `TASKS.csv`, `ci.md`, `docker-compose.yaml` and three workflow header comments all still say 17. Confirmed with the user that the code is right before touching anything, per CLAUDE.md's rule on reconciling a doc against the code — a version bump argued nowhere and reversed nowhere is a bump, not a mistake.
+
+Purely textual; `Docker/Dockerfile.postgres` is not touched.
+
+Two deliberate non-changes, recorded so they are not re-litigated:
+
+- `docker-compose.yaml`'s note about "a `postgres_data` volume populated by the _old_ `postgres:17` image" is about M0.19 switching that file from `image:` to `build:`, **not** about the version bump, and the literal is still historically accurate. It is clarified rather than changed, because with the base now on 18 it had started to read as though it meant the bump.
+- `claude-docs/archive/**` is write-once and is left alone wherever it says 17.
+
+This task also carries the `TASKS.md`/`TASKS.csv` entries for MB.16, MB.17 and MB.18, since all three were added to the board in one pass and CLAUDE.md requires the board and these files to move together.
+
+_Acceptance criteria:_
+
+- `grep -rn "postgres 17\|postgres:17" --exclude-dir=node_modules --exclude-dir=archive .` returns only the intentional `docker-compose.yaml` history line
+- `Docker/Dockerfile.postgres` is unchanged
+- `claude-docs/archive/**` is untouched
+- `npm run pre-commit` passes
+
+**MB.17 — Drop the dead `latest` tag from `build-db-image`** · 1h
+
+_Story:_ As a developer, I want the reason a workflow runs on `staging` to be the reason written next to it, so that the next person to read it can act on what it says.
+
+`build-db-image.yml`'s header and `ci.md` both say the `push` trigger on `staging`/`main` exists to move the `latest` tag. Nothing consumes `latest`: `docker-compose.yaml` builds `Dockerfile.postgres` locally (M0.19) and every CI caller pins the content-addressed hash tag. Meanwhile the trigger does do something neither doc mentions — it is the only thing that writes a GHA layer-cache entry another branch can read, because `cache-to: type=gha` entries are branch-scoped and a `pull_request` run writes only to its own merge-ref scope.
+
+Measured on the real runs: a fully cold build step is 25s, a warm one 6–8s. Fresh feature branches that had never built the image got 6–8s, which is only possible via the cross-branch restore those push runs seed. Worth ~17s on each new branch's first CI run, on a job that gates `vitest` and `playwright`, at no dollar cost — the repo is public and the push run is post-merge, off the PR critical path.
+
+So the trigger stays and the tag goes. MB.15's own entry above, which records "moving `latest` is its real job", is corrected in the same pass.
+
+`src/db/**` is in the tag hash and the path filter but **not** in the build context — `Dockerfile.postgres` only `COPY`s `Docker/postgres-init/enable-extensions.sql` — so a `src/db`-only change republishes byte-identical layers under a new tag. M1.27 changes that by baking the schema in. Recorded here because it is what makes MB.18's cache argument work.
+
+_Acceptance criteria:_
+
+- `ghcr.io/<repo>/db:latest` is no longer pushed; only the hash tag is
+- The `image` job output is unchanged, and `pr-gate.yml`/`merge-queue.yml` still consume it
+- The build step on the task's own PR run is still ~6–8s, proving the cache restore is intact
+- `build-db-image.yml`, `ci.md` and MB.15's entry above all state the cache-seeding reason, and no live doc still claims the trigger exists to move `latest`
+
+**MB.18 — Give `build-db-image` the skip-if-exists check** · 1h
+
+_Story:_ As a developer, I want a PR that changes nothing about the database image to skip rebuilding it, the same way the other two image builds already do.
+
+`build-image.yml` and `build-e2e-image.yml` both gate their build on `docker buildx imagetools inspect` finding the content-addressed tag already published. `build-db-image.yml` is the only one that does not, and `ci.md` says that is deliberate: "its trigger paths are exactly its hash inputs, so the trigger already does it". That holds for the `push` trigger and fails for `workflow_call`, which bypasses the path filter entirely and is the path every PR takes. On that path nothing does the skipping and buildx runs every time.
+
+The two mechanisms are alternatives, and the siblings picked the better one: skip-if-exists reuses work via GHCR tag existence, which is global, where the GHA layer cache is branch-scoped. Adding the check does **not** make MB.17's push trigger redundant — `src/db/**` is in the hash but not the build context, so through Wave 1 the tag misses constantly while the content does not change, which is exactly when a warm layer cache still pays. Both mechanisms stay.
+
+Three things differ from the siblings and are easy to get wrong: the tag step here is `id: tags` with output `hash-tag`, not `id: tag` with output `image`, so a copied expression would gate on an empty string and silently never skip; the `image` job output must keep coming from `hash-tag`, which is computed before the check and unconditionally, because `vitest.yml` and `playwright.yml` key their `services: postgres:` block off it; and after MB.17 `tags` and `hash-tag` are the same value.
+
+`pr-gate.yml` already gives this job `cancel-in-progress: false`, so the mid-push corruption hazard `build-image.yml`'s comment describes is guarded. No concurrency change.
+
+_Acceptance criteria:_
+
+- On the task's own PR: `exists=false`, the build runs, `vitest`/`playwright` green — the build path still yields a correct `image` output. This PR **cannot** prove the skip path: editing the workflow changes the hash, so its own run is a guaranteed miss.
+- On the next unrelated PR after merge: `exists=true`, the build step is skipped, `vitest`/`playwright` still green — the `image` output survives the skip path. The task is not done until a post-merge PR has exercised this.
+- Skip-path job duration ~13–15s against ~24s before
+- `ci.md` no longer claims the path filter makes the check unnecessary, and states that `workflow_call` bypasses it
+
+**MB.19 — Move `drizzle-kit`/`drizzle-orm` off the `@esbuild-kit` advisory** · 2h
+
+_Story:_ As a developer, I want `npm audit` clean of the standing `drizzle-kit` advisory so a known vulnerability doesn't sit in the tree indefinitely just because it's moderate rather than high.
+
+`npm audit` reports a moderate advisory (GHSA-67mh-4wv8-2f99, CVSS 5.3 — esbuild's dev server accepts cross-origin requests) reached only through `drizzle-kit@0.31.10` → `@esbuild-kit/esm-loader@2.6.5` → `@esbuild-kit/core-utils@3.3.2`, which pins its own nested `esbuild` to `~0.18.20` regardless of the `esbuild@^0.25.4` `drizzle-kit` depends on directly. `@esbuild-kit` is archived upstream — folded into `tsx`, which `drizzle-kit@0.31.10` already depends on separately but does not yet use to replace the esm-loader. `0.31.10` is the newest version on the stable dist-tag; there is no patched `0.3x` release to move to; M0.17's audit workflow does not catch this because it only fails CI on a high-severity advisory.
+
+The only version line that drops `@esbuild-kit` is `drizzle-kit`'s `1.0.0-rc.*` prerelease, which depends directly on `esbuild@^0.25.10` via `jiti` instead. `drizzle-orm` has a matching `1.0.0-rc.*` line that must move with it — confirmed compatible with what's installed here: `@better-auth/drizzle-adapter@1.7.4`'s own peer range is already `^0.45.2 || >=1.0.0-rc.1 <2.0.0`, so `src/lib/auth.ts`'s `drizzleAdapter` accepts either. `drizzle-orm@1.0.0-rc.1`'s release notes carry one breaking change relevant to a Postgres/Drizzle Kit project — the `casing: "camel"` config option was replaced by `snakeCase`/`camelCase` table wrappers — which does not apply here: `drizzle.config.ts` sets no `casing` key (confirmed by grep) and no schema file uses it either.
+
+An `overrides` entry forcing `esbuild` up inside `@esbuild-kit/core-utils` without touching `drizzle-kit`'s version was considered and rejected: `@esbuild-kit/core-utils` is unmaintained and pins `~0.18.20` deliberately, so overriding it to `^0.25` would run its code against an esbuild two majors newer than anything it was tested against, with no upstream fix if that broke — trading a documented, understood advisory for an undocumented one.
+
+Both packages are still on release candidates, not a GA `1.0` — `npm view drizzle-kit versions` / `npm view drizzle-orm versions` should be re-checked at implementation time rather than assuming today's newest `rc.5-<hash>` is still the newest, and the PR should say plainly that it pins a prerelease so it's easy to find and revisit once `1.0` goes stable.
+
+_Acceptance criteria:_
+
+- `drizzle-kit` and `drizzle-orm` upgraded together to matching `1.0.0-rc.*` versions (re-verify the newest available rc, or a GA `1.0`, at implementation time)
+- `npm audit` no longer reports the `@esbuild-kit/esm-loader` → `esbuild` advisory chain
+- `npm run db:generate` against the current `src/db/schema` produces no diff versus the existing migrations in `src/db/migrations`
+- `npm run db:migrate` (`make db-migrate`) still applies cleanly against a fresh `sorrel_template`
+- `npm run db:seed` / `db:reset` still fail at the same known M1.21–M1.23 seed-scenario point, not earlier
+- `src/lib/auth.ts`'s `drizzleAdapter` initializes with no peer-dependency warning
+- `drizzle.config.ts` needs no changes beyond what the new major documents; any that are needed are recorded in the PR
+- The PR body states this pins a `drizzle-kit`/`drizzle-orm` release candidate, not a GA release
 
 ## MW — Wave close-out
 

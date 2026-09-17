@@ -19,7 +19,7 @@
 #     `docker-up` no longer runs an `update-token` step.
 #
 # The `postgres` service (M0.13) gives local development and local tests a
-# real Postgres 17 — RLS, triggers, `pg_trgm`, array columns — with no Neon
+# real Postgres 18 — RLS, triggers, `pg_trgm`, array columns — with no Neon
 # connection anywhere. `app` waits for it to pass its health check and reaches
 # it by service name through `DATABASE_URL`. It `build:`s straight from
 # `Docker/Dockerfile.postgres` (M0.18), the same way `app`/`workshop` build
@@ -38,9 +38,11 @@
 # credentials. `sorrel` has no schema and no seed data until M1.27 bakes
 # those into this same image.
 #
-# A `postgres_data` volume populated by the *old* `postgres:17` image (i.e.
-# from before this file switched images) still only has the `sorrel`
-# role/database that image's own first-boot init created from the
+# A `postgres_data` volume populated by the *old* stock `postgres:17` image
+# (i.e. from before M0.19 switched this file from `image:` to `build:`; that
+# `17` is history, not the current base — Dockerfile.postgres is on 18) still
+# only has the `sorrel` role/database that image's own first-boot init
+# created from the
 # `POSTGRES_*` env vars — a named volume isn't reset just because `image:`
 # changed. `make docker-rebuild` (`down -v`) clears it so the next start
 # populates fresh from this image instead. Until then, expect a `FATAL:
