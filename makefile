@@ -14,19 +14,21 @@
 #   act-*                             M0.23
 #   workshop, workshop-build          M0.30
 #   check-stories                     M0.33
+#   db-studio, docker-studio          MB.21
 #
-# The db-* and codegen targets below are placeholders: the script names exist
-# so nothing has to be renamed later, but they exit non-zero until M1.x wires
-# them to Drizzle and M3.x to graphql-codegen. The workshop targets are live as
-# of M0.30 — they run Ladle.
+# The db-seed/db-reset and codegen targets below are placeholders: the script
+# names exist so nothing has to be renamed later, but they exit non-zero until
+# M1.21–M1.23 fill in the seed scenarios and M3.x wires graphql-codegen. The
+# workshop targets are live as of M0.30 — they run Ladle — db-generate and
+# db-migrate as of M1.3, and db-studio as of MB.21.
 
 .DEFAULT_GOAL := help
 
 .PHONY: help install dev build start \
 	lint lint-fix format format-check typecheck check-stories check-destructive-ddl pre-commit \
-	db-generate db-migrate db-seed db-reset codegen \
+	db-generate db-migrate db-seed db-reset db-studio codegen \
 	workshop workshop-build \
-	docker-build docker-up docker-workshop docker-e2e docker-down docker-rebuild docker-logs \
+	docker-build docker-up docker-workshop docker-studio docker-all docker-e2e docker-down docker-rebuild docker-logs \
 	docker-update-token \
 	act-image act-cache-checkout act-lint act-format act-typecheck act-destructive-ddl act-test
 
@@ -103,6 +105,10 @@ db-seed:
 db-reset:
 	npm run db:reset
 
+## Drizzle Studio on 4983 — browse the local database (MB.21)
+db-studio:
+	npm run db:studio
+
 ## Run graphql-codegen (placeholder until M3.x)
 codegen:
 	npm run codegen
@@ -117,17 +123,19 @@ workshop-build:
 
 # Host-level docker compose wrappers. `docker-up` starts the app on 8000 and
 # Postgres 17 (M0.13), waiting for the database health check before the app
-# starts; the Ladle workshop (61000) and the Playwright e2e runner (M1.14)
-# are behind the `workshop`/`e2e` compose profiles, so they only come up with
-# `docker-workshop`/`docker-e2e`. No Neon connection and no local Node
-# version juggling. Unlike resume-2026, `docker-up` does not run
-# `update-token` — the devcontainer (M0.14) is its own compose overlay under
-# `.devcontainer/`, started by the editor, not by `make docker-up`. Refresh
-# its Claude token explicitly with `make docker-update-token`.
+# starts; the Ladle workshop (61000), Drizzle Studio (4983, MB.21) and the
+# Playwright e2e runner (M1.14) are behind the `workshop`/`studio`/`e2e`
+# compose profiles, so they only come up with
+# `docker-workshop`/`docker-studio`/`docker-e2e` (or all of them via
+# `docker-all`). No Neon connection and no local Node version juggling.
+# Unlike resume-2026, `docker-up` does not run `update-token` — the
+# devcontainer (M0.14) is its own compose overlay under `.devcontainer/`,
+# started by the editor, not by `make docker-up`. Refresh its Claude token
+# explicitly with `make docker-update-token`.
 
-## Build the local dev images (app + workshop + e2e)
+## Build the local dev images (app + workshop + studio + e2e)
 docker-build:
-	$(COMPOSE) --profile workshop --profile e2e build
+	$(COMPOSE) --profile workshop --profile studio --profile e2e build
 
 ## Start the app (8000) and Postgres detached
 docker-up:
@@ -137,17 +145,25 @@ docker-up:
 docker-workshop:
 	$(COMPOSE) --profile workshop up -d
 
+## Also start Drizzle Studio on 4983 (compose profile: studio)
+docker-studio:
+	$(COMPOSE) --profile studio up -d
+
+## Start every long-running service: app, Postgres, workshop and studio
+docker-all:
+	$(COMPOSE) --profile workshop --profile studio up -d
+
 ## Run the Playwright e2e suite once, against the dedicated e2e image (compose profile: e2e)
 docker-e2e:
 	$(COMPOSE) --profile e2e run --rm e2e
 
 ## Stop and remove the local stack, workshop/e2e profiles included (named volumes kept)
 docker-down:
-	$(COMPOSE) --profile workshop --profile e2e down
+	$(COMPOSE) --profile workshop --profile studio --profile e2e down
 
 ## Tear down including volumes, then rebuild and start the app
 docker-rebuild:
-	$(COMPOSE) --profile workshop --profile e2e down -v && $(COMPOSE) up --build -d
+	$(COMPOSE) --profile workshop --profile studio --profile e2e down -v && $(COMPOSE) up --build -d
 
 ## Follow the local stack logs
 docker-logs:
