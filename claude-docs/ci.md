@@ -220,13 +220,29 @@ merge queue verifying the merged result, which is the point of one.
   carry them.)
 - **`build-db-image.yml`** — builds and publishes it to GHCR, tagged with a
   `hashFiles()` hash of `src/db/**` / `Docker/Dockerfile.postgres` /
-  `Docker/postgres-init/**`, plus `latest`. Its only direct triggers are
-  `push` on `staging`/`main` — whose real job is moving `latest`, which is why
-  a PR never repoints it — and `workflow_dispatch`. The same path list gates
-  the `push` trigger, so "rebuild is skipped" is the trigger itself, not a
-  no-op job. **It deliberately has no skip-if-exists check** (unlike
-  `build-image.yml`) — its trigger paths are exactly its hash inputs, so the
-  trigger already does it.
+  `Docker/postgres-init/**`. No `latest` tag (MB.17) — nothing in the repo
+  ever read it: `docker-compose.yaml` builds the Dockerfile locally rather
+  than pulling any tag, and every CI caller pins the hash tag. Its only
+  direct triggers are `push` on `staging`/`main` and `workflow_dispatch`. The
+  same path list gates the `push` trigger, so "rebuild is skipped" is the
+  trigger itself, not a no-op job.
+
+  The `push` trigger's real job is seeding the GHA layer cache
+  (`cache-to: type=gha,mode=max,scope=db-image`) for branches that haven't
+  built this image yet. That cache is branch-isolated — a `pull_request` run
+  writes only to its own merge-ref scope, and reads fall back to the PR's
+  base branch and the repo's default branch — so only a push to `staging`
+  (every `feature/*` branch's base) or `main` (the default branch) writes an
+  entry another branch can restore. Measured: a fully cold build step is
+  ~25s, a warm one (including a brand-new feature branch's very first run)
+  ~6–8s. `src/db/**` sits in the hash and the path filter but not in the
+  build context — `Dockerfile.postgres` only `COPY`s
+  `Docker/postgres-init`'s SQL — so through Wave 1 a `src/db/**` change
+  republishes byte-identical layers under a new tag far more often than the
+  image's actual contents change, which is exactly when the warm cache still
+  earns its keep. M1.27 baking the schema in changes that. **It deliberately
+  has no skip-if-exists check** (unlike `build-image.yml`) — its trigger
+  paths are exactly its hash inputs, so the trigger already does it.
 
 - **`build-db-image.yml` also carries a `workflow_call` trigger** (M1.14,
   alongside its `push`/`workflow_dispatch` triggers — a `workflow_call`
