@@ -240,9 +240,18 @@ merge queue verifying the merged result, which is the point of one.
   `Docker/postgres-init`'s SQL — so through Wave 1 a `src/db/**` change
   republishes byte-identical layers under a new tag far more often than the
   image's actual contents change, which is exactly when the warm cache still
-  earns its keep. M1.27 baking the schema in changes that. **It deliberately
-  has no skip-if-exists check** (unlike `build-image.yml`) — its trigger
-  paths are exactly its hash inputs, so the trigger already does it.
+  earns its keep. M1.27 baking the schema in changes that.
+
+  Two separate mechanisms skip redundant work, one per trigger (MB.18). The
+  `push` path filter above is a workflow-level skip — it only gates this
+  workflow's own direct triggers, so it protects `push` but not
+  `workflow_call`, which bypasses it entirely and is the path every PR takes
+  (see below). For that path, `build-db-image.yml` carries the same
+  `Check if image already exists` / `docker buildx imagetools inspect`
+  step `build-image.yml` and `build-e2e-image.yml` use, skipping
+  `Build and push db image` whenever the hash tag is already published.
+  Between the path filter and the skip-if-exists check, buildx only actually
+  runs when the tag is a genuine miss — on either trigger.
 
 - **`build-db-image.yml` also carries a `workflow_call` trigger** (M1.14,
   alongside its `push`/`workflow_dispatch` triggers — a `workflow_call`
