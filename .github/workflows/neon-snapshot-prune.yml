@@ -47,11 +47,6 @@ jobs:
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Start timer
-        id: start
-        if: steps.guard.outputs.enabled == 'true'
-        uses: ./.github/actions/timer-start
-
       - name: Prune old snapshot branches
         id: prune
         if: steps.guard.outputs.enabled == 'true'
@@ -83,13 +78,6 @@ jobs:
             fi
           } 2>&1 | tee prune.log
 
-      - name: Compute duration
-        id: timer
-        if: always() && steps.guard.outputs.enabled == 'true'
-        uses: ./.github/actions/timer-elapsed
-        with:
-          start: ${{ steps.start.outputs.start }}
-
       - name: Write job summary
         if: always() && steps.guard.outputs.enabled == 'true'
         uses: ./.github/actions/job-summary
@@ -97,4 +85,3 @@ jobs:
           check-name: Neon snapshot prune
           outcome: ${{ steps.prune.outcome }}
           log-file: prune.log
-          duration: ${{ steps.timer.outputs.duration }}

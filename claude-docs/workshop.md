@@ -111,7 +111,7 @@ without a page routed to it.
 - **`tsconfig` does not reach `.ladle/` or `scripts/`.** Oxlint and the build
   are the only checks covering those files; `tsc --noEmit` will not flag them.
 - `check:stories` and `workshop:build` run in pre-commit **and** in CI's build
-  job (`.github/workflows/build.yml`), so a PR can't skip them by skipping the
+  job (`checks.yml`'s `build` leg), so a PR can't skip them by skipping the
   local hook; `check:theme-default` runs in pre-commit only.
 
 ## Stopgaps to unwind
