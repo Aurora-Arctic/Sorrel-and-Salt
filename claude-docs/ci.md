@@ -314,8 +314,11 @@ nothing and this workflow is the only path.
   the tiebreak. Re-enabling a branch means adding a key, never loosening the
   catch-all.
 - A guard step skips every real step unless `VERCEL_DEPLOY_TOKEN` /
-  `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` / `VERCEL_SCOPE` are set. All four are
-  set as repo secrets, so the deploy runs for real.
+  `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` / `VERCEL_SCOPE` are set. The first
+  three are set as repo secrets; **`VERCEL_SCOPE` is not**, so the guard still
+  skips and no deploy has run for real yet. MB.12 owns setting it, alongside
+  `NEON_API_KEY`/`NEON_PROJECT_ID` for `migrate.yml` — `claude-docs/secrets.md`
+  is the matrix and the source of truth for which rows are set.
 - **`migrate.yml` (M1.4)** — reusable (`workflow_call`-only) workflow, applying
   `npm run db:migrate` against the environment's `DATABASE_URL`. `deploy.yml`
   splits its old single `deploy` job into three: `resolve-target` (the old

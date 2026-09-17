@@ -128,9 +128,12 @@ NAME=<spec>` (MB.23) — starts `playwright-server` if needed, then `exec`s
   `node_modules` volume, no published ports, and `command: sleep infinity` —
   which only sticks because `devcontainer.json` sets **`overrideCommand: false`**;
   without that the lifecycle re-pins the container to `npm run dev`.
-  `devcontainer.json` forwards **8000** (`next dev`), **8001** (production
-  build) and **4983** (Drizzle Studio, MB.21 — `npm run db:studio` run
-  directly, since `make`/`docker` aren't in the devcontainer), and adds
+  `devcontainer.json` forwards ten ports — **8000** (`next dev`), **8001**
+  (production build), **4983** (Drizzle Studio, MB.21 — `npm run db:studio`
+  run directly, since `make`/`docker` aren't in the devcontainer), and the
+  seven debugging ports MB.22/MB.23 added (9229, 9230, 9231, 9323, 9324,
+  51204, 7900); `claude-docs/debugging.md`'s port map is the annotated
+  version. It also adds
   zsh + oh-my-zsh (`common-utils` feature) plus `gh` via
   `postCreateCommand: sudo apk add --no-cache github-cli` — the slim image has
   neither, and the `github-cli` feature is Debian-only, so it fails to build on
