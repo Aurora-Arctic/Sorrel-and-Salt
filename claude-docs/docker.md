@@ -27,6 +27,19 @@ no Neon connection and no host Node-version juggling.
     `command:`; `package.json`'s `dev` script already binds `0.0.0.0:8000` and
     is the Dockerfile `CMD`. `.next/` is written into the bind mount (git- and
     docker-ignored); there is no `.next` volume.
+    - **Second DNS alias `sorrel-app` (MB.23), for browser-facing URLs only.**
+      `.app` is a Google-registered gTLD, and every major browser ships a
+      hard-coded HSTS-preload entry for the bare domain `app` — a real
+      Chrome navigating to `http://app:8000` gets silently upgraded to
+      `https://` and fails with `ERR_SSL_PROTOCOL_ERROR`, and no launch flag
+      can disable it (the preload list is compiled into the binary, not
+      loaded at runtime). Nothing else in this repo hits `app` from a real
+      browser — the remote-browser e2e path's `baseURL` is
+      `http://devcontainer:8001` — so this only bit `make docker-codegen`
+      (`claude-docs/debugging.md`), which is what surfaced it. Every
+      non-browser reference (`DATABASE_URL`-style service-to-service
+      traffic) keeps using bare `app`; `sorrel-app` exists solely for URLs a
+      real browser will load.
   - **`workshop`** — behind the **`workshop` compose profile**, so a bare
     `make docker-up` does not start it. Same build stage; runs
     `npm run workshop -- --host 0.0.0.0` (`ladle serve` binds `localhost`
@@ -73,19 +86,39 @@ no Neon connection and no host Node-version juggling.
       (a `.next` volume, say) without that fails silently.
   - **Ladle's preview port 61001 is deliberately not published** — only 61000
     (serve) and 61002 (HMR) are.
+  - **`Docker/Dockerfile.e2e`** has two stages as of MB.23:
+    `e2e` (named, previously the file's only stage — Microsoft's Playwright
+    base plus `npm ci`, headless, what CI and `make docker-e2e` build) and
+    `FROM e2e AS headed` (adds Xvfb, openbox and an x11vnc/noVNC bridge for a
+    display). Because an unqualified `docker build` picks the _last_ stage,
+    both `.github/workflows/build-e2e-image.yml` and the `e2e` compose
+    service pin `target: e2e` explicitly. The `playwright-server` compose
+    service (MB.22, profile `e2e`) builds `target: headed` instead, and — to
+    avoid a last-build-wins collision with the `e2e` service's `sorrel-e2e`
+    tag — takes its own image, `sorrel-e2e-headed`. It publishes **7900**
+    (noVNC) alongside its existing 4444 (the runner's WebSocket); see
+    `claude-docs/debugging.md` for what runs behind it.
 
 - **`makefile`** — each target wraps
   `docker compose -f Docker/docker-compose.yaml` (via the `COMPOSE` variable):
   `docker-up` (app + Postgres, detached), `docker-workshop` (adds the workshop
   on 61000), `docker-studio` (adds Drizzle Studio on 4983, MB.21), `docker-all`
-  (app + Postgres + workshop + studio together), `docker-build`, `docker-down`
-  (keeps named volumes), `docker-rebuild` (`down -v`, then rebuild and start),
-  `docker-logs`, and **`docker-build` / `docker-down` / `docker-rebuild` all
-  pass `--profile workshop --profile studio`** so they still reach every
-  profiled service; a new profiled service that forgets one of these three
-  targets is left orphaned by `docker-down`. Plus `docker-update-token`
+  (app + Postgres + workshop + studio + the Playwright browser server
+  together — `--profile e2e up -d` is scoped to name `playwright-server`
+  explicitly rather than every service that profile enables, since `e2e`
+  itself is a one-shot suite run, not a service to leave up; MB.23),
+  `docker-build`, `docker-down` (keeps named volumes), `docker-rebuild`
+  (`down -v`, then rebuild and start), `docker-logs`, and **`docker-build` /
+  `docker-down` / `docker-rebuild` all pass
+  `--profile workshop --profile studio --profile e2e`** so they still reach
+  every profiled service; a new profiled service that forgets one of these
+  three targets is left orphaned by `docker-down`. Plus `docker-update-token`
   (refreshes the devcontainer's `CLAUDE_CODE_OAUTH_TOKEN` in `Docker/.env` —
-  standalone, not a prerequisite of `docker-up`).
+  standalone, not a prerequisite of `docker-up`), and `docker-codegen
+NAME=<spec>` (MB.23) — starts `playwright-server` if needed, then `exec`s
+  `playwright codegen` into it as the caller's uid, writing
+  `e2e/<spec>.spec.ts`; see `claude-docs/debugging.md` for the recording
+  workflow itself.
 - **`.dockerignore`** (repo root) — excludes `node_modules`, `.next`, `.git`,
   `build`, coverage and local env/state from the build context.
 - **`.devcontainer/`** — `devcontainer.json` plus a `docker-compose.yml` overlay

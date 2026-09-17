@@ -18,6 +18,7 @@
 #   dev-debug, test-debug, test-ui,
 #     e2e-ui, e2e-trace, db-psql,
 #     playwright-server-up/-down      MB.22
+#   docker-codegen                    MB.23
 #
 # The db-seed/db-reset and codegen targets below are placeholders: the script
 # names exist so nothing has to be renamed later, but they exit non-zero until
@@ -33,7 +34,7 @@
 	db-generate db-migrate db-seed db-reset db-studio db-psql codegen \
 	workshop workshop-build \
 	docker-build docker-up docker-workshop docker-studio docker-all docker-e2e docker-down docker-rebuild docker-logs \
-	docker-update-token playwright-server-up playwright-server-down \
+	docker-update-token playwright-server-up playwright-server-down docker-codegen \
 	act-image act-cache-checkout act-lint act-format act-typecheck act-destructive-ddl act-test
 
 COMPOSE := docker compose -f Docker/docker-compose.yaml
@@ -152,10 +153,12 @@ workshop-build:
 # Host-level docker compose wrappers. `docker-up` starts the app on 8000 and
 # Postgres 17 (M0.13), waiting for the database health check before the app
 # starts; the Ladle workshop (61000), Drizzle Studio (4983, MB.21) and the
-# Playwright e2e runner (M1.14) are behind the `workshop`/`studio`/`e2e`
-# compose profiles, so they only come up with
-# `docker-workshop`/`docker-studio`/`docker-e2e` (or all of them via
-# `docker-all`). No Neon connection and no local Node version juggling.
+# Playwright browser server (4444/7900, MB.22/MB.23) are behind the
+# `workshop`/`studio`/`e2e` compose profiles, so they only come up with
+# `docker-workshop`/`docker-studio`/`docker-all` (`playwright-server`) or
+# `make playwright-server-up` directly. The one-shot Playwright suite run
+# (`docker-e2e`) is never part of `docker-all` — it's a job, not a service to
+# leave running. No Neon connection and no local Node version juggling.
 # Unlike resume-2026, `docker-up` does not run `update-token` — the
 # devcontainer (M0.14) is its own compose overlay under `.devcontainer/`,
 # started by the editor, not by `make docker-up`. Refresh its Claude token
@@ -177,9 +180,13 @@ docker-workshop:
 docker-studio:
 	$(COMPOSE) --profile studio up -d
 
-## Start every long-running service: app, Postgres, workshop and studio
+## Start every long-running service: app, Postgres, workshop, studio and the
+## Playwright browser server (MB.23 gave it a display at :7900). `e2e` itself
+## is excluded on purpose — it's a one-shot suite run (`docker compose run
+## --rm`), not a service to leave up, so it's named out even though enabling
+## its profile is what makes `playwright-server` startable here.
 docker-all:
-	$(COMPOSE) --profile workshop --profile studio up -d
+	$(COMPOSE) --profile workshop --profile studio --profile e2e up -d app postgres workshop studio playwright-server
 
 ## Run the Playwright e2e suite once, against the dedicated e2e image (compose profile: e2e)
 docker-e2e:
@@ -209,6 +216,18 @@ playwright-server-up:
 ## Stop the Playwright browser server
 playwright-server-down:
 	$(COMPOSE) --profile e2e stop playwright-server
+
+## Record a Playwright spec on the browser server's display — see :7900 (MB.23)
+## Pass NAME=<spec-name>; writes e2e/<name>.spec.ts
+## `sorrel-app`, not `app`: `.app` is an HSTS-preloaded gTLD in every real
+## browser, so a genuine Chrome navigating to plain http://app:8000 gets
+## silently upgraded to https and fails — see docker-compose.yaml's `app`
+## service for the full explanation. `sorrel-app` is the same container
+## under a second, non-reserved DNS alias.
+docker-codegen: playwright-server-up
+	$(COMPOSE) exec -u $$(id -u):$$(id -g) playwright-server \
+		npx playwright codegen --target playwright-test \
+		--output e2e/$(NAME).spec.ts http://sorrel-app:8000
 
 # Local CI via act (M0.23). Runs the real reusable per-check workflows
 # (.github/workflows/{lint,format,typecheck}.yml) against a locally-built
