@@ -5,8 +5,12 @@ name: Build DB Image
 # the same Dockerfile locally instead of pulling this (M0.19), since it's
 # purely a local-dev concern. Content-addressed: the image is tagged with a
 # hash of everything that actually determines its contents — src/db/**, the
-# Dockerfile, and its init script — plus `latest`, so identical inputs always
-# produce the identical tag and every caller pins to it exactly.
+# Dockerfile, and its init script — so identical inputs always produce the
+# identical tag and every caller pins to it exactly. There is deliberately no
+# `latest` tag (MB.17): nothing in the repo ever reads it — docker-compose.yaml
+# builds the Dockerfile locally instead of pulling any tag, and every CI
+# caller below pins the hash tag — so publishing it was pure upkeep with no
+# reader.
 #
 # The `push` path filter below *is* "rebuild is skipped when nothing that
 # determines the image changed": an unrelated push never triggers this
@@ -16,10 +20,26 @@ name: Build DB Image
 # unchanged) or is new (content changed) — there is no separate "did anything
 # change" check to get wrong.
 #
-# The `push` trigger's real job is moving `latest`, which only happens on
-# `staging`/`main`. There is deliberately no `pull_request` trigger: this
-# workflow used to carry one, path-filtered the same way, on the argument that
-# a content-addressed PR build is free reuse rather than throwaway work. That
+# The `push` trigger's real job is seeding the GHA layer cache
+# (cache-to: type=gha,mode=max,scope=db-image below) for branches that
+# haven't built this image yet. That cache is branch-isolated — a
+# `pull_request` run writes only to its own merge-ref scope, and reads fall
+# back to the PR's base branch and the repo's default branch. So only a push
+# to `staging` (the base every `feature/*` branch forks from) or `main` (the
+# default branch) writes an entry any other branch can restore; without one,
+# a fresh branch's first build pays the full cold-build cost instead of
+# restoring a warm cache. Measured on this repo: a fully cold build step is
+# ~25s, a warm one (including a brand-new feature branch's very first run)
+# ~6-8s. `src/db/**` is in the hash and the path filter but not in the build
+# context — Dockerfile.postgres only COPYs Docker/postgres-init's SQL — so
+# through Wave 1 a `src/db/**` change republishes byte-identical layers under
+# a new tag far more often than the image's actual contents change, which is
+# exactly when a warm cache still earns its keep. M1.27 baking the schema in
+# changes that.
+#
+# There is deliberately no `pull_request` trigger: this workflow used to
+# carry one, path-filtered the same way, on the argument that a
+# content-addressed PR build is free reuse rather than throwaway work. That
 # was written before M1.14 gave `pr-gate.yml` and `merge-queue.yml` each an
 # unconditional `build-db-image` job of their own. Those jobs now do the early
 # build on every PR, so the trigger bought a second workflow run pushing the
@@ -74,16 +94,6 @@ jobs:
           hash_tag="ghcr.io/${repo_lower}/db:${hash}"
           echo "hash-tag=${hash_tag}" >> "$GITHUB_OUTPUT"
 
-          tags="$hash_tag"
-          if [ "${{ github.event_name }}" = 'push' ]; then
-            tags=$(printf '%s\n%s' "$tags" "ghcr.io/${repo_lower}/db:latest")
-          fi
-          {
-            echo "tags<<EOF"
-            echo "$tags"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-
       - name: Log in to GHCR
         uses: docker/login-action@v4
         with:
@@ -100,7 +110,7 @@ jobs:
           context: .
           file: Docker/Dockerfile.postgres
           push: true
-          tags: ${{ steps.tags.outputs.tags }}
+          tags: ${{ steps.tags.outputs.hash-tag }}
           cache-from: type=gha,scope=db-image
           cache-to: type=gha,mode=max,scope=db-image
 
