@@ -2,19 +2,17 @@ name: Build Testing Image
 
 # Builds (or reuses, if unchanged) the shared testing container image used
 # by every other job workflow, and publishes its ref as an output. Called
-# via workflow_call as the first job from both pr-gate and merge-queue.
+# via workflow_call as the first job from pr-gate, merge-queue, and both
+# smoke checks (lint-format-typecheck-check, build-audit-check).
 #
 # The tag is content-addressed off `github.repository` (lowercased) plus a
 # hash of the only two files that determine the image's contents, so it
 # lands under this repo's own GHCR namespace
 # (ghcr.io/aurora-arctic/sorrel-and-salt/testing:<hash>) with nothing to
 # change when ported — identical inputs always produce the identical tag,
-# and an unrelated push reuses a prior build rather than rebuilding. The
-# ad hoc `testing:<scope>-<run id>` builds in
-# lint-format-typecheck-check.yml / build-audit-check.yml (M0.16/M0.17) are
-# the deliberately un-cached, run-scoped stand-ins this replaces for real
-# callers; build-db-image.yml (M0.18) tags the Postgres image the same way
-# under `/db`.
+# and an unrelated push reuses a prior build rather than rebuilding.
+# build-db-image.yml (M0.18) tags the Postgres image the same way under
+# `/db`.
 on:
   workflow_call:
     outputs:

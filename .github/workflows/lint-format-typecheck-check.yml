@@ -1,20 +1,17 @@
 name: Lint, Format & Typecheck Check
 
-# Exercises the three newly-ported reusable check workflows (lint, format,
-# typecheck) end-to-end, independent of pr-gate.yml (M0.20) — which doesn't
-# exist yet — and of the published testing image (build-image.yml, M0.24),
-# which doesn't either.
+# Exercises the three reusable check workflows (lint, format, typecheck)
+# end-to-end, independent of pr-gate.yml — so a change to one of them can be
+# validated on its own, without waiting on the full gate.
 #
 # Each of lint.yml/format.yml/typecheck.yml requires an `image` input to run
-# its container: job against — normally build-image.yml's content-addressed
-# GHCR push, consumed by every caller via `needs.build-image.outputs.image`.
-# Reaching ahead to port that reusable workflow here would mean M0.24 either
-# redoes this work or inherits a workflow it didn't write against its own
-# acceptance criteria (the same reasoning composite-actions-check.yml
-# recorded for M0.15). So this workflow builds the same `testing` target
-# from Docker/Dockerfile.node directly, ad hoc, and pushes it to GHCR under
-# a tag scoped to this workflow run — never reused across runs, unlike the
-# real build-image.yml's content-addressed caching.
+# its container: job against, and this workflow supplies the same one every
+# real caller does, by calling build-image.yml. Until MB.15 it built the
+# `testing` target ad hoc instead, under a `testing:smoke-<run id>` tag
+# never reused across runs — written that way at M0.16 only because
+# build-image.yml (M0.24) did not exist yet. It does now, so this workflow
+# inherits its content-addressed tag and skips the build entirely whenever
+# Docker/Dockerfile.node and package-lock.json are unchanged.
 on:
   pull_request:
     paths:
@@ -38,40 +35,15 @@ permissions:
   pull-requests: write
 
 jobs:
+  # No caller-side concurrency group, unlike pr-gate.yml's build-image job. A
+  # PR touching Dockerfile.node can have this workflow, build-audit-check.yml
+  # and pr-gate.yml all racing to push the same content-addressed tag from
+  # three separate workflow runs — which is harmless, since identical inputs
+  # produce identical content under an identical tag and the shared GHA layer
+  # cache makes the losers near-free. A concurrency group would not help
+  # anyway: it does not reach across workflow runs.
   build-image:
-    runs-on: ubuntu-latest
-    outputs:
-      image: ${{ steps.tag.outputs.image }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Compute scoped image tag
-        id: tag
-        run: |
-          repo_lower=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "image=ghcr.io/${repo_lower}/testing:smoke-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Build and push testing image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: Docker/Dockerfile.node
-          target: testing
-          push: true
-          tags: ${{ steps.tag.outputs.image }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+    uses: ./.github/workflows/build-image.yml
 
   lint:
     needs: build-image
