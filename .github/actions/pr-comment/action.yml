@@ -16,7 +16,7 @@ inputs:
     required: true
   merge-queue:
     description: >-
-      'true' when called from merge-queue.yml — uses a separate marker/thread
+      'true' when called for a merge queue — uses a separate marker/thread
       from the pr-gate comment for the same check, and comments only on
       failure (a success takes no action at all, not even resolving a prior
       open failure comment).

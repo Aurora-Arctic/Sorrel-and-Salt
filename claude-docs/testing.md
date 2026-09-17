@@ -128,8 +128,8 @@ defect; coverage rises as later milestones add tests.
 (`vitest run --coverage`) both run every project. Neither is wired into
 `pre-commit` — CLAUDE.md's pre-commit list is unchanged by this task.
 
-**Wired into CI (M1.14).** `pr-gate.yml`/`merge-queue.yml`'s `vitest` jobs
-call the real `.github/workflows/vitest.yml`, path-filtered off `src/**`,
+**Wired into CI (M1.14).** `pr-gate.yml`'s `vitest` job
+calls the real `.github/workflows/vitest.yml`, path-filtered off `src/**`,
 `vitest.config.mts`, `vitest.setup.ts`, and `package{,-lock}.json`. It runs
 in `build-image.yml`'s shared `testing` container plus its own `services:
 postgres:` (a `build-db-image` job feeding
@@ -212,8 +212,8 @@ violations are returned; a page with zero violations resolves silently.
   `<img>` missing `alt`) and asserts the helper's promise rejects — proof the
   scan actually fails a run instead of passing vacuously.
 
-**Wired into CI (M1.14).** `pr-gate.yml`/`merge-queue.yml`'s `playwright`
-jobs call the real `.github/workflows/playwright.yml`, path-filtered off
+**Wired into CI (M1.14).** `pr-gate.yml`'s `playwright`
+job calls the real `.github/workflows/playwright.yml`, path-filtered off
 `src/**`, `e2e/**`, `playwright.config.ts`, `next.config.ts`, and
 `package{,-lock}.json` — matching the M1.11/M1.12 precedent of configuring
 the local run first and wiring CI later.

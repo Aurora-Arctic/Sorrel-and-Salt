@@ -10,11 +10,9 @@ name: Destructive DDL
 # PR, and fails unless the PR body carries an explicit acknowledgement line
 # (see scripts/check-destructive-ddl.ts's header for the exact wording, and
 # claude-docs/db.md for the policy and a worked rename example). Called via
-# workflow_call from pr-gate.yml (and, should-run: false, from
-# merge-queue.yml — see the note on that job below); never triggered
-# directly.
+# workflow_call from pr-gate.yml; never triggered directly.
 #
-# Unlike lint/typecheck/build, this check needs two things a `workflow_call`
+# Unlike the checks.yml legs, this check needs two things a `workflow_call`
 # file cannot read off its own trigger context: which migration files
 # changed, and the PR's body text. `workflow_call` workflows have no
 # `pull_request` event of their own — only the caller sees the real
@@ -36,7 +34,7 @@ on:
         required: false
         type: string
       merge-queue:
-        description: Set true when called from merge-queue.yml — uses a separate, merge-queue-labeled comment thread and posts only on failure (no minimize-on-success)
+        description: Set true when called for a merge queue — uses a separate, merge-queue-labeled comment thread and posts only on failure (no minimize-on-success). Nothing passes it today — merge-queue.yml was deleted with the five check workflows (MB.32) and is restored from git history when M7.A.1 turns the merge queue on.
         required: false
         type: boolean
         default: false
@@ -47,8 +45,8 @@ on:
           putting an `if:` on the calling job — a job-level `if:` makes GitHub report
           a differently-named, bare check run ("destructive-ddl" instead of
           "destructive-ddl / destructive-ddl") when skipped, which never satisfies the
-          required status check and leaves the PR stuck. Defaults true so
-          merge-queue's should-run: false call is explicit rather than incidental.
+          required status check and leaves the PR stuck. Defaults true so a caller
+          that skips the scan does so explicitly rather than incidentally.
         required: false
         type: boolean
         default: true
@@ -59,16 +57,16 @@ on:
           array/string means no migration files changed — the script then checks
           nothing rather than falling back to a full scan (that fallback is only
           for a bare local `npm run check:destructive-ddl` with no env var set at
-          all — see the script header). Omit (merge-queue's call) when there's no
-          real changed-file list to give it.
+          all — see the script header). Omit when there's no real changed-file
+          list to give it.
         required: false
         type: string
         default: ''
       pr-body:
         description: >-
           The PR's body text, for the "Destructive DDL acknowledged: <reason>" line.
-          Omit (merge-queue's call) when there's no real PR body available —
-          merge_group events carry a synthetic head ref, not the PR itself.
+          Omit when there's no real PR body available — a merge_group event, for
+          one, carries a synthetic head ref rather than the PR itself.
         required: false
         type: string
         default: ''
@@ -102,11 +100,6 @@ jobs:
         if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
-      - name: Start timer
-        id: timer-start
-        if: inputs.should-run
-        uses: ./.github/actions/timer-start
-
       # changed-files arrives as a JSON array string (dorny/paths-filter's
       # list-files: json) — turn it into the newline-separated list the
       # script's DESTRUCTIVE_DDL_FILES env var expects. An empty string input
@@ -131,13 +124,6 @@ jobs:
           ")
           npm run check:destructive-ddl 2>&1 | tee /app/output.log
 
-      - name: Compute duration
-        id: timer
-        if: always() && inputs.should-run
-        uses: ./.github/actions/timer-elapsed
-        with:
-          start: ${{ steps.timer-start.outputs.start }}
-
       - name: Write job summary
         if: always() && inputs.should-run
         uses: ./.github/actions/job-summary
@@ -145,10 +131,9 @@ jobs:
           check-name: Destructive DDL
           outcome: ${{ steps.run.outcome }}
           log-file: /app/output.log
-          duration: ${{ steps.timer.outputs.duration }}
 
       # Fail-only from pr-gate (resolves a prior failure comment on success),
-      # fail-only on a separate merge-queue-labeled thread from merge-queue
+      # fail-only on a separate merge-queue-labeled thread when merge-queue: true
       # (no action at all on success) — see .github/actions/pr-comment.
       - name: Comment on PR
         if: always() && inputs.pr-number && inputs.should-run
@@ -161,4 +146,3 @@ jobs:
           outcome: ${{ steps.run.outcome }}
           log-file: /app/output.log
           success-mode: minimize
-          duration: ${{ steps.timer.outputs.duration }}
