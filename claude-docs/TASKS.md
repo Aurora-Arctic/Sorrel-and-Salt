@@ -2945,7 +2945,7 @@ _Acceptance criteria:_
 
 ## MB — Bugfixes and gap tasks
 
-Work that was not in the original breakdown. `MB.*` exists so a defect or a missing dependency can be scheduled without renumbering an immutable ID. MB.1 through MB.4 are merged; MB.5 through MB.11 were minted by the re-sequencing audit; MB.12 was minted after M2.2/M2.4/M2.5/M0.27 merged with real verification still outstanding. MB.13 was minted during M1.16, when `/create-pr` nearly pushed a feature branch straight at `staging`. MB.14 was minted during M1.17, when its eleventh test file tipped M1.9's per-worker database naming past the set of clones that exist. MB.15 was minted during M1.20, on noticing that the two smoke-check workflows still built their own copy of the testing image that M0.24 had since made shared.
+Work that was not in the original breakdown. `MB.*` exists so a defect or a missing dependency can be scheduled without renumbering an immutable ID. MB.1 through MB.4 are merged; MB.5 through MB.11 were minted by the re-sequencing audit; MB.12 was minted after M2.2/M2.4/M2.5/M0.27 merged with real verification still outstanding. MB.13 was minted during M1.16, when `/create-pr` nearly pushed a feature branch straight at `staging`. MB.14 was minted during M1.17, when its eleventh test file tipped M1.9's per-worker database naming past the set of clones that exist. MB.15 was minted during M1.20, on noticing that the two smoke-check workflows still built their own copy of the testing image that M0.24 had since made shared; collapsing them onto the shared image showed they were a strict subset of `pr-gate.yml`, and the task was re-scoped in place to deleting them.
 
 | ID    | Task                                                      | Status  | Needed by    |
 | ----- | --------------------------------------------------------- | ------- | ------------ |
@@ -2963,7 +2963,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.12 | Finish the secrets matrix and verify real OAuth sign-in   | Wave 6  | M2.3         |
 | MB.13 | Stop branch skills setting the base branch as upstream    | Wave 2  | —            |
 | MB.14 | Key the per-worker test database off `VITEST_POOL_ID`     | Wave 2  | —            |
-| MB.15 | Collapse the smoke-check workflows onto `build-image.yml` | Wave 2  | —            |
+| MB.15 | Delete the redundant smoke-check workflows                | Wave 2  | —            |
 
 **MB.5 — Restore `users` foreign keys on `auditColumns`** · 2h
 
@@ -3115,25 +3115,37 @@ _Acceptance criteria:_
 - Every doc naming `VITEST_WORKER_ID` for this purpose is corrected
 - M1.9's decision — a real database per worker, never a rolled-back transaction — still stands
 
-**MB.15 — Collapse the smoke-check workflows onto `build-image.yml`** · 1h
+**MB.15 — Delete the redundant smoke-check workflows** · 1h
 
-_Story:_ As a developer, I want a CI run to build the testing image once, so that a PR touching `Docker/Dockerfile.node` does not pay for three identical builds of the same `testing` stage.
+_Story:_ As a developer, I want one push to fire one CI run, so that no status-check context is published by two workflows at once.
 
-`lint-format-typecheck-check.yml` and `build-audit-check.yml` each defined their own inline `build-image` job, tagged `testing:smoke-<run id>`, unconditional and never reused across runs. Both headers said why: they were written at M0.16/M0.17, before `build-image.yml` landed at M0.24, and reaching ahead would have made M0.24 either redo the work or inherit a workflow written outside its own acceptance criteria. M0.24 merged long since, so the rationale had expired and the duplication was pure cost — a PR touching `Dockerfile.node` fired all three builds at once.
+Re-scoped mid-task, which is why the title no longer matches the branch name. It began as "collapse the smoke-check workflows onto `build-image.yml`": `lint-format-typecheck-check.yml` and `build-audit-check.yml` each defined their own inline `build-image` job, tagged `testing:smoke-<run id>`, unconditional and never reused across runs. Both headers said why — they were written at M0.16/M0.17, before `build-image.yml` landed at M0.24, and reaching ahead would have made M0.24 either redo the work or inherit a workflow written outside its own acceptance criteria. That rationale expired when M0.24 merged, so both became `uses: ./.github/workflows/build-image.yml`.
 
-`claude-docs/ci.md` had meanwhile grown a second, different rationale: that these build ad hoc "so a regression check never runs through the thing it is testing". That is not a rule anyone adopted — it was already false for `composite-actions-check.yml`, which builds no image at all — and it is the doc that was corrected, not the code. Confirmed with the user before touching either, per CLAUDE.md's rule on a documentary asymmetry.
+Doing that is what exposed the real defect. Once both consumed the same image build and the same `lint.yml`/`format.yml`/`typecheck.yml`/`build.yml`/`audit.yml` with the same inputs as `pr-gate.yml`, they were a strict subset of the gate. One push to the task's own PR fired three workflow runs and reported `lint / lint`, `typecheck / typecheck`, `format / format`, `build / build` and `audit / audit` twice each, `build-image / build-image` three times. Duplicate contexts under one `job / job` name make it ambiguous which run a branch ruleset gates on. Both workflows are deleted.
 
-Both inline jobs are now `uses: ./.github/workflows/build-image.yml`. No downstream job changed: each already read `needs.build-image.outputs.image`, and `build-image.yml` exposes `image` as a `workflow_call` output.
+`composite-actions-check.yml` stays: it asserts `checkout-to-app` lands all five `action.yml` files in `/app`, which nothing in `pr-gate.yml` does, and it builds no image.
 
-Explicitly **not** in scope, and recorded so it is not re-litigated: `build-e2e-image.yml` cannot share `build-image.yml`'s work. `Docker/Dockerfile.node` is `node:alpine` (musl); `Docker/Dockerfile.e2e` is `mcr.microsoft.com/playwright:v<version>-noble` (Debian, glibc). An `npm ci` tree is not portable across libc — SWC and the other native addons are per-platform binaries — so the e2e image cannot `COPY --from` the testing image's `node_modules`, and Playwright's Chromium has no Alpine/musl build to unify the bases with. The two `npm ci` runs are structural; both already skip on an unchanged content hash.
+One thing the deleted workflows did cover that the gate did not: their path filters listed `Docker/Dockerfile.node`. `pr-gate.yml`'s `changes` job now lists it on `lint`, `typecheck` and `build` — the three checks that run inside that image — and deliberately **not** in the `*shared` anchor, which also feeds `destructive_ddl` and would hand `destructive-ddl.yml` an empty changed-files list for nothing.
+
+`build-db-image.yml`'s standalone `pull_request` trigger is the same defect from the other direction — it is also an unconditional job in both `pr-gate.yml` and `merge-queue.yml`, so any PR touching `src/db/**` ran it twice. The trigger is dropped; `push` on `staging`/`main` stays, since moving `latest` is its real job. Folded into this task at the user's direction rather than minted as a separate `MB.*`, against CLAUDE.md's one-task-per-PR rule and with the rule shown first.
+
+The merge queue was never affected: neither deleted workflow declared `merge_group:`, and `merge-queue.yml` builds each image once and passes it down.
+
+`claude-docs/ci.md` had meanwhile grown a second, different rationale for the ad hoc builds: "so a regression check never runs through the thing it is testing". That is not a rule anyone adopted — already false for `composite-actions-check.yml` — and it is the doc that was corrected, not the code. Confirmed with the user first, per CLAUDE.md's rule on a documentary asymmetry.
+
+Explicitly **not** in scope, and recorded so it is not re-litigated:
+
+- `build-e2e-image.yml` cannot share `build-image.yml`'s work. `Docker/Dockerfile.node` is `node:alpine` (musl); `Docker/Dockerfile.e2e` is `mcr.microsoft.com/playwright:v<version>-noble` (Debian, glibc). An `npm ci` tree is not portable across libc — SWC and the other native addons are per-platform binaries — so the e2e image cannot `COPY --from` the testing image's `node_modules`, and Playwright's Chromium has no Alpine/musl build to unify the bases with. The two `npm ci` runs are structural; both already skip on an unchanged content hash.
+- `.github/workflows/build-image.yml` is absent from every `changes` filter. Not a regression — the deleted workflows never listed it either, and `pr-gate.yml`'s own `build-image` job is unconditional, so it is exercised on every PR regardless.
+- `ci.md` records (verified 2026-09-10) that no ruleset requires any status check yet, while `pr-gate.yml`'s header speaks of six as required. That discrepancy is real and is left alone here.
 
 _Acceptance criteria:_
 
-- Neither smoke-check workflow contains an inline image-build job
-- Both consume the same content-addressed `testing:<hash>` tag every real caller uses
-- A push leaving `Dockerfile.node` and `package-lock.json` alone skips the build in both
-- The stale M0.24 rationale is gone from both headers and from `build-image.yml`'s own
-- `ci.md` describes what the three smoke checks actually do, including that `composite-actions-check.yml` builds no image
+- `lint-format-typecheck-check.yml` and `build-audit-check.yml` are deleted
+- One push to a PR produces exactly one workflow run, and `gh pr checks` reports every context exactly once
+- `pr-gate.yml`'s `lint`/`typecheck`/`build` filters list `Docker/Dockerfile.node`; `*shared` does not
+- `build-db-image.yml` has no `pull_request` trigger, and its `latest` tag still moves only on a push to `staging`/`main`
+- No live doc or workflow still references either deleted workflow; `claude-docs/archive/**` is untouched
 
 ## MW — Wave close-out
 

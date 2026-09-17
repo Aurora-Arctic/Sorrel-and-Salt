@@ -93,9 +93,20 @@ jobs:
             shared: &shared
               - '.github/workflows/pr-gate.yml'
               - '.github/actions/**'
+            # `Docker/Dockerfile.node` is listed on lint/typecheck/build (and
+            # only those three) because it defines the `testing` image every
+            # one of them runs inside — a change to it can break the check
+            # without touching a single source file. It is deliberately NOT in
+            # `*shared` above: that anchor also feeds destructive_ddl, and
+            # flipping its should-run true on a Dockerfile change would hand
+            # destructive-ddl.yml an empty changed-files list for nothing.
+            # Until MB.15 this coverage came from the two smoke-check
+            # workflows, which listed the Dockerfile and have since been
+            # deleted as strict subsets of this gate.
             lint:
               - *shared
               - '.github/workflows/lint.yml'
+              - 'Docker/Dockerfile.node'
               - '.oxlintrc.json'
               - '**/*.ts'
               - '**/*.tsx'
@@ -108,6 +119,7 @@ jobs:
             typecheck:
               - *shared
               - '.github/workflows/typecheck.yml'
+              - 'Docker/Dockerfile.node'
               - '**/*.ts'
               - '**/*.tsx'
               - 'tsconfig.json'
@@ -115,6 +127,7 @@ jobs:
             build:
               - *shared
               - '.github/workflows/build.yml'
+              - 'Docker/Dockerfile.node'
               - 'src/**'
               - 'public/**'
               - 'next.config.ts'
