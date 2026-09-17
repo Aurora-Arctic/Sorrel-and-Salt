@@ -89,10 +89,11 @@ export async function withAudit<T>(
   }
 
   return db.transaction(async (tx) => {
-    // DESIGN.md §5 / §10: the acting user, published to the database so an
-    // RLS policy (M6.4) can read it back with
-    // `current_setting('app.current_user_id')` and enforce access without
-    // trusting application code. `SET LOCAL` takes no bind parameters —
+    // DESIGN.md §5 / §10: the acting user, published to the database. Nothing
+    // reads it back in v1 — it is here for the v2 history trigger and for the
+    // policies MB.29 deferred to the public launch, either of which then costs
+    // one migration rather than a re-audit of every write path. Do not remove
+    // it as unused. `SET LOCAL` takes no bind parameters —
     // it would mean interpolating a user id into SQL text — so this uses
     // `set_config(name, value, is_local => true)`, its parameterised
     // equivalent with identical transaction-scoped semantics: the value is

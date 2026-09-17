@@ -155,7 +155,7 @@ order, which is the hierarchy M6.3's `assertMembership` implements).
   ownership is granted afterwards by an existing owner on the members page.
 - Both tables carry the full six-column audit spread, and every `*_by` column
   references `users.id` as MB.5 specifies. The tables are inert at Wave 3 —
-  nothing queries them until M6.3's service and M6.4's RLS policies land in
+  nothing queries them until M6.3's service and its `Membership` proof land in
   Wave 5, which is the point of CLAUDE.md's table-task-then-behaviour-task
   rule.
 
@@ -460,25 +460,25 @@ the database itself:
 select set_config('app.current_user_id', $1, true)
 ```
 
-That is the foundation of CLAUDE.md's second authorization layer. The service
-layer's `assertMembership` runs in application code; the RLS policies of
-M6.4 will run below it and read the acting user back through
-`app.current_user_id()`, so a service that forgets its check still cannot
-reach another workspace's rows. The same GUC is what a v2
-history trigger would read for `changed_by` (DESIGN.md §14), which is why
-it is set now rather than when RLS arrives — it makes history a one-migration
-addition instead of a re-audit of every write path.
+**Nothing reads this back, and that is expected.** It is published for two
+readers that do not exist yet: the v2 history trigger's `changed_by`
+(DESIGN.md §13), and the RLS policies MB.29 deferred to the public launch
+(DESIGN.md §8). Setting it now is what makes either one a single migration
+rather than a re-audit of every write path — so do not remove it on the
+grounds that it is unused, and do not describe it as protecting anything
+today.
 
-**The GUC alone does not give you that second layer**, and MB.24 found two
-reasons why. The application currently connects as `sorrel`, which owns every
-table, and Postgres skips a table's policies for its owner — so policies
-written today would be inert. And this GUC is published only inside
-`withAudit`, the write path: reads go through `selectFrom` on the bare client
-with no transaction, and a `LOCAL` setting exists nowhere else, so a policy
-reading it on a read would find it unset or empty. MB.25 splits the roles and
-MB.26 adds `withViewer` before M6.4 writes a single policy. Until all three
-land, treat `assertMembership` as the only layer that is actually load-bearing.
-Full reasoning: [`mb.24-rls-role-split.md`](design-decisions/mb.24-rls-role-split.md).
+**The second authorization layer is not here.** It is CLAUDE.md rule 5's
+branded `Membership` — the value `assertMembership` returns, which every
+workspace-scoped finder and `AuditWriter` method demands as its first argument
+so the omission is a compile error rather than a missing runtime check. M6.3
+builds it. Until then `assertMembership` does not exist either, so treat the
+service check as the only layer, and a workspace-scoped query as unguarded
+until it takes a proof. The specification for the eventual policies —
+the role split they need, `FORCE`, the `security definer` helper, and why a
+policy test connected as the table owner proves nothing — is
+[`mb.24-rls-role-split.md`](design-decisions/mb.24-rls-role-split.md),
+superseded as a plan for v1 and intact as a plan for then.
 
 **Why `set_config(.., true)` and not `SET LOCAL`.** They have identical
 semantics — the third argument `is_local => true` _is_ `LOCAL` — but
