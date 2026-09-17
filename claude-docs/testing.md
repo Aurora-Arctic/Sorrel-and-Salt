@@ -282,3 +282,17 @@ report unless `node_modules` is excluded first.
 **Wired into CI (M1.14).** `playwright.yml`'s "Upload coverage artifact" step
 uploads `coverage-e2e/` on every run (pass or fail), parallel to
 `vitest.yml`'s `coverage/` upload.
+
+## Debugging tests (MB.22)
+
+`npm run test:debug` runs Vitest single-worker under `--inspect-brk`, halted
+on 9230 until a debugger attaches — single-worker specifically, so the
+breakpoint lands inside a known `sorrel_test_${VITEST_POOL_ID}` clone rather
+than an arbitrary one. `npm run test:ui` opens `@vitest/ui`. For Playwright,
+`npm run e2e:ui` and `npm run e2e:trace` cover interactive and
+recorded-run debugging respectively, and a local (non-CI) run now captures a
+trace/screenshot/video on failure by default — see `playwright.config.ts`'s
+comments. Running `npm run e2e` from inside the devcontainer at all needs a
+remote browser; that mechanism and its trade-offs are
+[`design-decisions/mb.22-playwright-in-devcontainer.md`](design-decisions/mb.22-playwright-in-devcontainer.md).
+Full setup, including VS Code attach configs: `claude-docs/debugging.md`.
