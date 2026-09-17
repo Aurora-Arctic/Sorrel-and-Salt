@@ -8,8 +8,7 @@ follow.
 Before this task there was no debugging story at all: no Node inspector
 wired anywhere in the container, no `.vscode/` directory, no way to step
 into a service, a repository call, or a test, and no way to watch what
-`withAudit`'s `SET LOCAL app.current_user_id` and RLS actually do to a query
-beyond reading its output. This is tooling only — no table, no service, no
+`withAudit` actually does to a query beyond reading its output. This is tooling only — no table, no service, no
 page.
 
 ## Getting set up
@@ -302,14 +301,14 @@ wiring waits on seeded sessions (M1.21–M1.23).
 - **`DEBUG_SQL=1`** — set on any process reading `src/db/connection.ts`
   (`DEBUG_SQL=1 npm run dev`, `DEBUG_SQL=1 npm run test:coverage`, etc.) to
   print every SQL statement the repository emits, `withAudit`'s
-  `SET LOCAL app.current_user_id` included. Off by default, so ordinary test
-  output and CI are unaffected. This is the fastest way to tell a row
-  missing to RLS apart from a row missing to soft-delete filtering — both
-  produce "not there," and only the statement log shows which filter
-  actually excluded it.
+  `set_config('app.current_user_id', …)` included. Off by default, so ordinary
+  test output and CI are unaffected. This is the fastest way to tell a row
+  missing to the workspace predicate a `Membership` proof adds apart from a row
+  missing to soft-delete filtering — both produce "not there," and only the
+  statement log shows which filter actually excluded it.
 - **`make db-psql`** (host) — `docker compose exec postgres psql -U sorrel
 sorrel` against the running compose Postgres: a raw SQL prompt for poking
-  at RLS policies, indexes, or data directly, alongside whatever the app or
+  at indexes, constraints, or data directly, alongside whatever the app or
   a test is doing.
 - **Drizzle Studio** (`npm run db:studio` / `make db-studio` /
   `make docker-studio`, port 4983) — a visual browser for the local

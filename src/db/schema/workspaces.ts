@@ -44,8 +44,8 @@ export const workspaces = pgTable(
 
 // DESIGN.md §5: `workspaceId`, `userId`, `role`, `joinedAt`, + audit, keyed on
 // the pair. The composite primary key is the membership's identity — a
-// surrogate id would let the same user join the same workspace twice. M6.4's
-// RLS policies read this table to decide who may see a workspace's rows.
+// surrogate id would let the same user join the same workspace twice. M6.3's
+// `assertMembership` reads this table to decide who may see a workspace's rows.
 export const workspaceMembers = pgTable(
   'workspace_members',
   {
