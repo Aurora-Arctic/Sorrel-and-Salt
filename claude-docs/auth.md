@@ -108,7 +108,7 @@ default secret...]` but still answers `200`, live, using the well-known
   regardless of which Vercel environment (or local/CI job) triggers them —
   Next.js sets it internally, and this repo's own `build` script pins it
   explicitly (`NODE_ENV=production next build`). So it's required wherever
-  one of those actually runs: `.github/workflows/build.yml` (`npm run
+  one of those actually runs: `checks.yml`'s `build` leg (`npm run
 build`), `.github/workflows/playwright.yml` and `Docker/docker-compose.yaml`'s
   `e2e` service (both run `npm run build && npm run start` via
   `playwright.config.ts`'s `webServer`). It is **not** required by `app`

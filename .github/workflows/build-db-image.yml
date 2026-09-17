@@ -15,8 +15,8 @@ name: Build DB Image
 # Two separate mechanisms skip redundant work, one per trigger. The `push`
 # path filter below is a workflow-level skip: an unrelated push never
 # triggers this workflow at all, rather than triggering a job that runs and
-# no-ops. But `workflow_call` — the path every PR takes, via pr-gate.yml/
-# merge-queue.yml's own `build-db-image` job — bypasses that path filter
+# no-ops. But `workflow_call` — the path every PR takes, via pr-gate.yml's
+# own `build-db-image` job — bypasses that path filter
 # entirely, so it needed its own job-level skip: the `Check if image already
 # exists` step below inspects GHCR directly and short-circuits `Build and
 # push db image` when the content-addressed tag is already published
@@ -43,8 +43,8 @@ name: Build DB Image
 # There is deliberately no `pull_request` trigger: this workflow used to
 # carry one, path-filtered the same way, on the argument that a
 # content-addressed PR build is free reuse rather than throwaway work. That
-# was written before M1.14 gave `pr-gate.yml` and `merge-queue.yml` each an
-# unconditional `build-db-image` job of their own. Those jobs now do the early
+# was written before M1.14 gave `pr-gate.yml` an unconditional
+# `build-db-image` job of its own. That job now does the early
 # build on every PR, so the trigger bought a second workflow run pushing the
 # identical tag — a duplicate status check, not extra coverage (MB.15).
 on:
@@ -56,8 +56,8 @@ on:
       - 'Docker/postgres-init/**'
       - '.github/workflows/build-db-image.yml'
   workflow_dispatch:
-  # M1.14's `pr-gate.yml`/`merge-queue.yml` are the real consumers §11 always
-  # pointed at — each has its own top-level `build-db-image` job
+  # M1.14's `pr-gate.yml` is the real consumer §11 always
+  # pointed at — it has its own top-level `build-db-image` job
   # (`uses: ./.github/workflows/build-db-image.yml`), built once and passed
   # as a `db-image` input to both `vitest.yml` and `playwright.yml`, which
   # each key their own `services: postgres:` block off it — same shape
@@ -142,8 +142,8 @@ jobs:
   # design-decisions/m0.18-build-db-image.md). It was always scaffolding —
   # ci.md said so directly — standing in for the real M1 consumer DESIGN.md
   # §11 describes. `vitest.yml`/`playwright.yml` (M1.14) are that consumer
-  # now, via `pr-gate.yml`/`merge-queue.yml`'s own `build-db-image` job and
-  # the `db-image` input each passes down: they pull it into their own
+  # now, via `pr-gate.yml`'s own `build-db-image` job and
+  # the `db-image` input it passes down: they pull it into their own
   # `services: postgres:` block (reachable by service name from their
   # `container:`), connecting over TCP as the `sorrel` role — which does
   # have a known, non-discarded password (`Docker/postgres-init/enable-extensions.sql`)
