@@ -1,6 +1,12 @@
 # MB.24 — RLS role split, `FORCE`, and identity on the read path
 
-**Status:** decided · **Date:** 2026-09-17
+**Status:** superseded by MB.29 · **Date:** 2026-09-17
+
+> MB.29 defers RLS to the public launch and makes the second authorization
+> layer a branded `Membership` proof instead, so nothing below is scheduled for
+> v1: MB.25, MB.26, M6.4 and M6.5 are retired. The findings stand — this record
+> is the specification for the migration that adds policies when that launch
+> comes, and it is deliberately left otherwise untouched.
 
 The question that started this was whether RLS is overkill for a project this
 size. It is not — the failure mode it guards is one workspace's grimoire
