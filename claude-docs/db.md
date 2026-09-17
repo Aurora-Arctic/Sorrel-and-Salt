@@ -126,6 +126,39 @@ docker-studio` starts it as a profiled compose service (`studio`), the
   same shape as `workshop`; `make docker-all` brings up every long-running
   service, studio included.
 
+## Workspaces and membership (M6.2)
+
+`src/db/schema/workspaces.ts` holds DESIGN.md §5's two workspace tables and
+the `workspace_role` enum (`viewer`, `member`, `owner` — declared in that
+order, which is the hierarchy M6.3's `assertMembership` implements).
+`0004_black_slyde.sql` is the migration.
+
+- **`workspaces`** — `id`, `name`, `slug`, + audit, and **nothing else**.
+  There is no `kind` column and no automatically created workspace: every
+  workspace behaves identically, taking members and being deleted by an owner.
+  `workspaces-schema.test.ts` pins the whole column set rather than asserting
+  the absence of one name, so a later `kind`/`type`/`personal` column turns it
+  red instead of going unnoticed. The entity is `workspaces` even though it
+  routes under `/coven/[slug]`; only the URL segment says coven (§5's naming
+  note).
+- **`workspaces_slug_unique`** is partial on `deleted_at IS NULL`, per the
+  convention above — the slug is what `/coven/[slug]` routes on, so a plain
+  unique constraint would let a deleted workspace hold a name hostage forever.
+- **`workspace_members`** — `workspaceId`, `userId`, `role`, `joinedAt`, +
+  audit, with a composite primary key on the pair and no surrogate `id`. The
+  pair _is_ the membership's identity: a surrogate key would let the same user
+  join the same workspace twice, with two rows disagreeing about their role.
+  `joinedAt` is deliberately distinct from `created_at` — a role change
+  rewrites the row without changing when the person joined.
+- **`owner` is a role here but not an invitable one.** That narrowing belongs
+  to `workspace_invitations` (M7.1), whose check constraint rejects it;
+  ownership is granted afterwards by an existing owner on the members page.
+- Both tables carry the full six-column audit spread, and every `*_by` column
+  references `users.id` as MB.5 specifies. The tables are inert at Wave 3 —
+  nothing queries them until M6.3's service and M6.4's RLS policies land in
+  Wave 5, which is the point of CLAUDE.md's table-task-then-behaviour-task
+  rule.
+
 ## Expand/contract and the destructive-DDL check (M1.5)
 
 Drizzle generates no down migrations, and hand-writing them is a reliable way
