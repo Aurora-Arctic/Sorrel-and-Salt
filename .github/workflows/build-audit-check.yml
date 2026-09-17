@@ -1,13 +1,13 @@
 name: Build & Audit Check
 
-# Exercises the two newly-ported reusable check workflows (build, audit)
-# end-to-end, independent of pr-gate.yml (M0.20) — which doesn't exist yet —
-# and of the published testing image (build-image.yml, M0.24), which doesn't
-# either. Same reasoning as lint-format-typecheck-check.yml (M0.16): this
-# workflow builds the same `testing` target from Docker/Dockerfile.node
-# directly, ad hoc, and pushes it to GHCR under a tag scoped to this
-# workflow run — never reused across runs, unlike the real build-image.yml's
-# content-addressed caching.
+# Exercises the two reusable check workflows (build, audit) end-to-end,
+# independent of pr-gate.yml — so a change to either can be validated on its
+# own, without waiting on the full gate. Same shape as
+# lint-format-typecheck-check.yml, including its `build-image` job: both call
+# build-image.yml for the same content-addressed `testing` image every real
+# caller uses. Until MB.15 each built that target ad hoc instead, under a
+# `testing:smoke-<run id>` tag never reused across runs — written
+# that way at M0.17 only because build-image.yml (M0.24) did not exist yet.
 #
 # audit.yml's `pr-number` input is required and used unguarded (unlike
 # lint/format/typecheck's optional, `if`-guarded one) — it comments on a real
@@ -34,40 +34,10 @@ permissions:
   pull-requests: write
 
 jobs:
+  # No caller-side concurrency group — see lint-format-typecheck-check.yml's
+  # build-image job for why racing to push an identical tag is harmless.
   build-image:
-    runs-on: ubuntu-latest
-    outputs:
-      image: ${{ steps.tag.outputs.image }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Compute scoped image tag
-        id: tag
-        run: |
-          repo_lower=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "image=ghcr.io/${repo_lower}/testing:smoke-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Build and push testing image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: Docker/Dockerfile.node
-          target: testing
-          push: true
-          tags: ${{ steps.tag.outputs.image }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+    uses: ./.github/workflows/build-image.yml
 
   build:
     needs: build-image

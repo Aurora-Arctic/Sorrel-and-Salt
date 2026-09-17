@@ -52,7 +52,7 @@ The policies must not come early for the opposite reason. A policy written befor
 | Wave                         | Tasks                                                                                                                                       | Why here                                                                                                                                                                                                                                           |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **1 — FK root**              | M2.2 · M2.3 · MB.5 · MW.1                                                                                                                   | `users` first, because the whole graph roots on it. M2.2 leads so Better Auth's adapter table ownership is settled before anything references `users`.                                                                                             |
-| **2 — Write path**           | M1.16 · M1.19 · M1.17 · MB.14 · M1.20 · MW.2                                                                                                | Needs exactly one table. M1.20 is re-scoped to the finder builder plus its guard, not "edit N finders".                                                                                                                                            |
+| **2 — Write path**           | M1.16 · M1.19 · M1.17 · MB.14 · M1.20 · MB.15 · MW.2                                                                                        | Needs exactly one table. M1.20 is re-scoped to the finder builder plus its guard, not "edit N finders". MB.15 is CI-only and depends on nothing in the wave; it sits before MW.2 so the compression pass sees the corrected `ci.md`.               |
 | **3 — Schema block**         | M6.2 · M4.1 · M4.2 · M4.4 · M4.6 · M7.1 · M9.2 · M10.2 · M10.4 · M1.18 · MW.3                                                               | FK order. M1.18's trigger closes the wave, attaching to every audited table at once. **M10.3 is deliberately excluded** — see below.                                                                                                               |
 | **4 — Seed and harness**     | M1.21 · M4.3 · M1.22 · M1.26 · M1.23 · M1.25 · M1.24 · M1.27 · M1.28 · MW.4                                                                 | The payoff wave: retires all three workarounds. M4.3 is pulled ahead of M1.22, which consumes its 52 categories.                                                                                                                                   |
 | **5 — Authorization**        | M6.3 · M6.4 · M10.3 · M6.5 · M6.6 · MW.5                                                                                                    | All seven workspace-scoped tables now exist, so M6.4's RLS sweep is complete rather than partial.                                                                                                                                                  |
@@ -2945,7 +2945,7 @@ _Acceptance criteria:_
 
 ## MB — Bugfixes and gap tasks
 
-Work that was not in the original breakdown. `MB.*` exists so a defect or a missing dependency can be scheduled without renumbering an immutable ID. MB.1 through MB.4 are merged; MB.5 through MB.11 were minted by the re-sequencing audit; MB.12 was minted after M2.2/M2.4/M2.5/M0.27 merged with real verification still outstanding. MB.13 was minted during M1.16, when `/create-pr` nearly pushed a feature branch straight at `staging`. MB.14 was minted during M1.17, when its eleventh test file tipped M1.9's per-worker database naming past the set of clones that exist.
+Work that was not in the original breakdown. `MB.*` exists so a defect or a missing dependency can be scheduled without renumbering an immutable ID. MB.1 through MB.4 are merged; MB.5 through MB.11 were minted by the re-sequencing audit; MB.12 was minted after M2.2/M2.4/M2.5/M0.27 merged with real verification still outstanding. MB.13 was minted during M1.16, when `/create-pr` nearly pushed a feature branch straight at `staging`. MB.14 was minted during M1.17, when its eleventh test file tipped M1.9's per-worker database naming past the set of clones that exist. MB.15 was minted during M1.20, on noticing that the two smoke-check workflows still built their own copy of the testing image that M0.24 had since made shared.
 
 | ID    | Task                                                      | Status  | Needed by    |
 | ----- | --------------------------------------------------------- | ------- | ------------ |
@@ -2963,6 +2963,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.12 | Finish the secrets matrix and verify real OAuth sign-in   | Wave 6  | M2.3         |
 | MB.13 | Stop branch skills setting the base branch as upstream    | Wave 2  | —            |
 | MB.14 | Key the per-worker test database off `VITEST_POOL_ID`     | Wave 2  | —            |
+| MB.15 | Collapse the smoke-check workflows onto `build-image.yml` | Wave 2  | —            |
 
 **MB.5 — Restore `users` foreign keys on `auditColumns`** · 2h
 
@@ -3113,6 +3114,26 @@ _Acceptance criteria:_
 - The isolation spec asserts membership of the created set, not a name it recomputed
 - Every doc naming `VITEST_WORKER_ID` for this purpose is corrected
 - M1.9's decision — a real database per worker, never a rolled-back transaction — still stands
+
+**MB.15 — Collapse the smoke-check workflows onto `build-image.yml`** · 1h
+
+_Story:_ As a developer, I want a CI run to build the testing image once, so that a PR touching `Docker/Dockerfile.node` does not pay for three identical builds of the same `testing` stage.
+
+`lint-format-typecheck-check.yml` and `build-audit-check.yml` each defined their own inline `build-image` job, tagged `testing:smoke-<run id>`, unconditional and never reused across runs. Both headers said why: they were written at M0.16/M0.17, before `build-image.yml` landed at M0.24, and reaching ahead would have made M0.24 either redo the work or inherit a workflow written outside its own acceptance criteria. M0.24 merged long since, so the rationale had expired and the duplication was pure cost — a PR touching `Dockerfile.node` fired all three builds at once.
+
+`claude-docs/ci.md` had meanwhile grown a second, different rationale: that these build ad hoc "so a regression check never runs through the thing it is testing". That is not a rule anyone adopted — it was already false for `composite-actions-check.yml`, which builds no image at all — and it is the doc that was corrected, not the code. Confirmed with the user before touching either, per CLAUDE.md's rule on a documentary asymmetry.
+
+Both inline jobs are now `uses: ./.github/workflows/build-image.yml`. No downstream job changed: each already read `needs.build-image.outputs.image`, and `build-image.yml` exposes `image` as a `workflow_call` output.
+
+Explicitly **not** in scope, and recorded so it is not re-litigated: `build-e2e-image.yml` cannot share `build-image.yml`'s work. `Docker/Dockerfile.node` is `node:alpine` (musl); `Docker/Dockerfile.e2e` is `mcr.microsoft.com/playwright:v<version>-noble` (Debian, glibc). An `npm ci` tree is not portable across libc — SWC and the other native addons are per-platform binaries — so the e2e image cannot `COPY --from` the testing image's `node_modules`, and Playwright's Chromium has no Alpine/musl build to unify the bases with. The two `npm ci` runs are structural; both already skip on an unchanged content hash.
+
+_Acceptance criteria:_
+
+- Neither smoke-check workflow contains an inline image-build job
+- Both consume the same content-addressed `testing:<hash>` tag every real caller uses
+- A push leaving `Dockerfile.node` and `package-lock.json` alone skips the build in both
+- The stale M0.24 rationale is gone from both headers and from `build-image.yml`'s own
+- `ci.md` describes what the three smoke checks actually do, including that `composite-actions-check.yml` builds no image
 
 ## MW — Wave close-out
 

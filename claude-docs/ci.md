@@ -163,15 +163,26 @@ archived and are not required reading.
 - **Live GitHub settings are confirmed with the user before being changed**, and
   a permissions-blocked write is reported rather than routed around.
 
-## Independent smoke checks
+## Reusable-workflow smoke checks
 
-These build their own ad hoc image (`ghcr.io/.../testing:smoke-<run id>`, never
-reused across runs) rather than consuming `build-image.yml` — deliberate, so a
-regression check never runs through the thing it is testing.
+These exercise the reusable workflows on their own, so a change to one can be
+validated without waiting on the full `pr-gate.yml` run. They are independent of
+the gate, **not** of the testing image: both image-consuming checks call
+`build-image.yml` and get the same content-addressed tag every real caller uses,
+so an unchanged `Docker/Dockerfile.node` / `package-lock.json` skips the build.
+Until MB.15 each built its own ad hoc `testing:smoke-<run id>` image, never
+reused across runs — scaffolding from M0.16/M0.17, when `build-image.yml` (M0.24)
+did not exist yet, and not the isolation rule it was once documented as.
+
+None of them carries a caller-side concurrency group. A PR touching
+`Dockerfile.node` can have both smoke checks and `pr-gate.yml` racing to push the
+same tag from three separate workflow runs; identical inputs produce identical
+content under an identical tag, and a concurrency group does not reach across
+workflow runs in any case.
 
 - **`composite-actions-check.yml`** — exercises all five composite actions
-  together. Runs on the bare `ubuntu-latest` runner, so it adds its own
-  "Prepare /app" step ahead of `checkout-to-app`.
+  together. Builds **no** image: it runs on the bare `ubuntu-latest` runner, so
+  it adds its own "Prepare /app" step ahead of `checkout-to-app`.
 - **`lint-format-typecheck-check.yml`** — exercises the three reusable checks
   directly. Triggers on `pull_request` (paths: those workflows, this workflow,
   `.github/actions/**`, `Docker/Dockerfile.node`, each check's own config) and
