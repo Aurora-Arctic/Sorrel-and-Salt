@@ -21,6 +21,21 @@ export const applyTheme = (theme: 'light' | 'dark'): void => {
   }
 };
 
+// globals.scss resolves three theme states, not two: `data-theme` when it's
+// there, else a light *system* preference, else dark. Only a stored choice
+// ever puts the attribute on `<html>` (the layout.tsx init script), so the
+// attribute alone can't answer "what is showing right now" — on a light
+// system with nothing stored it reads as absent while the page is light.
+// Mirrors that cascade exactly, including asking for `light` rather than
+// `dark`: "no preference" resolves to dark, matching the `:root` default.
+const resolveCurrentTheme = (): 'light' | 'dark' => {
+  const stated = document.documentElement.getAttribute('data-theme');
+  if (stated === 'light' || stated === 'dark') {
+    return stated;
+  }
+  return window.matchMedia?.('(prefers-color-scheme: light)').matches === true ? 'light' : 'dark';
+};
+
 // The dark (moon) facet starts resting/visible and the light (sun) facet
 // starts parked off to the side (--pre-enter), matching this component's
 // dark-mode-by-default markup. If the real starting theme turns out to be
@@ -85,7 +100,7 @@ const ThemeToggle = (): ReactElement => {
   // click reads these real classes, not the CSS override, to know which facet
   // is primed to animate in.
   useEffect(() => {
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const isLight = resolveCurrentTheme() === 'light';
     buttonRef.current?.setAttribute('aria-pressed', String(isLight));
     if (isLight) {
       lightFacetRef.current?.classList.remove(PRE_ENTER_CLASS);
@@ -94,7 +109,7 @@ const ThemeToggle = (): ReactElement => {
   }, []);
 
   const handleToggle = (): void => {
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const isLight = resolveCurrentTheme() === 'light';
     const outgoingFacet = isLight ? lightFacetRef.current : darkFacetRef.current;
     const enteringFacet = isLight ? darkFacetRef.current : lightFacetRef.current;
     // Don't assume either facet is in its "normal" resting class state — a

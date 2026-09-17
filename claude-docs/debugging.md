@@ -214,6 +214,29 @@ record button already armed. Both windows are draggable by their title
 bars; if they're frozen and overlapping, the window manager didn't start.
 Click around, then close the Chromium window to end the session.
 
+**If the page renders but nothing responds to a click**, the app didn't
+hydrate — check `allowedDevOrigins` in `next.config.ts`. `next dev` rejects
+cross-origin requests to `/_next/*` from any host but `localhost` unless
+it's listed there, and the rejected request is the HMR websocket the
+Turbopack client runtime boots through. Static chunks still return 200 and
+the console stays clean, so the only tell is a websocket error and a page
+where every handler is silently missing. `sorrel-app` is listed for exactly
+this reason; any _new_ hostname a real browser uses to reach `next dev`
+needs adding too.
+
+**One hydration error while recording is expected and is not an app bug.**
+The dev overlay reports a mismatch on `<body data-pw-cursor="pointer">` —
+that attribute is the recorder's own, set by Playwright to drive the
+crosshair/pointer styling it paints over the page
+(`body[data-pw-cursor=pointer] * { cursor: pointer }`). It mutates the DOM
+before React loads, which is the "a browser extension messed with the HTML"
+case Next's own error text names. Only that attribute goes unpatched;
+hydration completes and the page is fully interactive. It is deliberately
+**not** silenced with `suppressHydrationWarning` on `<body>`: that would
+mask genuine body-level mismatches everywhere, permanently, to quiet a tool
+artifact that only appears while the recorder is attached. `layout.tsx`
+scopes its one suppression to `<html>` for the same reason.
+
 A recorded spec is a draft, not something to open a PR with as-is:
 
 1. Import `test`/`expect` from `./fixtures`, never `@playwright/test` — the

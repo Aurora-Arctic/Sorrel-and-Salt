@@ -218,3 +218,63 @@ makefile summary are updated to match; `TASKS.md`'s MB.21 prose (which
 described `docker-all`'s original scope) gets a forward-pointer rather than
 a rewrite, since it was accurate as of MB.21 and CLAUDE.md's convention is
 to correct what's wrong, not erase what was true.
+
+Manual verification then turned up a fourth bug, and the most instructive
+one. With the display working and the recorder up, the recorded page was
+inert: it rendered correctly and no click did anything. Driving the same
+remote browser from the devcontainer (connect to
+`ws://playwright-server:4444`, load `http://sorrel-app:8000`, look for
+React's `__react*` keys on the button) confirmed the app was never
+hydrating — every chunk returned 200, no page error, no failed request,
+and no fiber on the DOM node.
+
+The cause is `next dev`'s cross-origin block
+(`next/dist/server/lib/router-utils/block-cross-site-dev.js`): requests to
+`/_next/*` from a host outside `localhost` are 403'd unless the host is in
+`allowedDevOrigins`. A `<script src>` sends no `Origin` header and counts
+as same-origin, so the static chunks sail through — but the **HMR
+websocket upgrade** does send one and gets rejected, and under Turbopack
+that connection is what boots the client runtime. Correct SSR HTML, clean
+console apart from one websocket error, zero interactivity. Fixed with
+`allowedDevOrigins: ['sorrel-app']` in `next.config.ts`, verified by
+re-running the same probe (hydrated, `data-theme` cycling
+`null → light → dark`, background colour changing with it). Scoped to
+`sorrel-app` alone rather than also listing `app`, since `app` can never be
+loaded by a real browser anyway (the HSTS gTLD problem above) — listing it
+would document a path that cannot work. The block is gated on
+`development`, so `next start` on 8001 — the e2e suite's server — was never
+affected, which is exactly why MB.22's remote-browser path never surfaced
+it.
+
+Recording against a working page then exposed a genuine app bug, folded
+into this task on request rather than split out: with nothing stored and a
+light OS preference, the first click on `ThemeToggle` was a visual no-op.
+`globals.scss` resolves three theme states — `data-theme` when present,
+else a light system preference, else dark — but only a _stored_ choice ever
+stamps that attribute, so `handleToggle` read an absent attribute as "not
+light" and applied `light`: the theme already showing. `index.scss` had the
+same gap, keying its settled-facet rules off `html[data-theme='light']`
+alone, so the crescent sat on a light page until the mount effect swapped
+it a paint later — the exact swing MB.2 removed, still happening for anyone
+who had never clicked the toggle.
+
+Fixed by resolving the current theme the way the stylesheet does rather
+than reading the attribute alone (`resolveCurrentTheme()`: attribute, then
+`matchMedia('(prefers-color-scheme: light)')`, then dark — asking for
+`light` and not `dark`, since "no preference" has to resolve to dark to
+match the `:root` default), and by lifting the settled-facet rules into a
+mixin included from both light tiers, mirroring `globals.scss` selector for
+selector. Four tests added, three of which failed first. Verified in the
+real browser: `aria-pressed` now reads `true` on a light system at mount,
+and the first click actually changes the background.
+
+One thing deliberately left alone: while the recorder is attached, the dev
+overlay reports a hydration mismatch on `<body data-pw-cursor="pointer">`.
+That attribute is Playwright's own, set to drive the pointer styling it
+paints over the page, and it lands before React loads — the "browser
+extension messed with the HTML" case Next's error text names. Hydration
+still completes. Silencing it would mean `suppressHydrationWarning` on
+`<body>`, masking real body-level mismatches everywhere and permanently to
+quiet a tool artifact that only appears under the recorder, and would
+contradict `layout.tsx`'s documented reason for scoping its one suppression
+to `<html>`. Documented in `debugging.md` as expected instead.
