@@ -605,13 +605,13 @@ Every story becomes a failing test first: **write test → watch it fail → min
 
 ### Test database: local Postgres, not Neon, not SQLite
 
-**Postgres 17 in Docker, everywhere except deployment.**
+**Postgres 18 in Docker, everywhere except deployment.**
 
 | Context              | How                                                                                           |
 | -------------------- | --------------------------------------------------------------------------------------------- |
 | Local dev            | `postgres` service in `docker-compose.yaml`, seeded on first boot                             |
 | Local tests          | Same container, separate database per Vitest worker                                           |
-| CI unit + db         | Actions `services: postgres:17`, reachable by service name from the existing job `container:` |
+| CI unit + db         | Actions `services: postgres:18`, reachable by service name from the existing job `container:` |
 | CI e2e               | Same service container                                                                        |
 | Staging + production | Neon                                                                                          |
 
