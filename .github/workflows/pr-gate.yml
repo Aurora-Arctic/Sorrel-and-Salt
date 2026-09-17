@@ -289,7 +289,7 @@ jobs:
       pr-number: ${{ github.event.pull_request.number }}
 
   # Publishes (or reuses, if content-addressed and unchanged) the preseeded
-  # Postgres 17 image both vitest and playwright below need for their
+  # Postgres 18 image both vitest and playwright below need for their
   # `services: postgres:` block — built once here, same shape as
   # build-image/build-e2e-image, rather than each of vitest.yml/
   # playwright.yml separately calling build-db-image.yml as a nested
