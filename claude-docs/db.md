@@ -159,6 +159,118 @@ order, which is the hierarchy M6.3's `assertMembership` implements).
   Wave 5, which is the point of CLAUDE.md's table-task-then-behaviour-task
   rule.
 
+## The ingredient identity model (MB.28)
+
+DESIGN.md §5 specifies three tables that land in Wave 3: M4.1 creates
+`ingredients` (the enum, columns, generated key, and CHECKs), M4.1a adds its
+three partial unique indexes, M4.2a creates `ingredient_forms`, and M4.4a
+creates `ingredient_folk_names`. MB.28 records the model here first, ahead of
+that DDL, so M4.1 is transcription rather than design — the same reasoning
+as CLAUDE.md's table-then-behaviour rule, one step earlier: cheapest to get
+right before anything depends on it.
+
+- **`ingredients`** — `id`, `workspaceId` (nullable: `NULL` is the compendium
+  tier, non-null is a workspace's own ingredient), `name`, `canonicalName`,
+  `nomenclature`, `form`, the generated `canonicalKey`, + audit. `name` is the
+  display label — what it's called here — and stays freely relabellable,
+  because identity moved off it onto `canonicalName`/`nomenclature`/`form`.
+- **`ingredient_folk_names`** — `id`, `ingredientId` (FK to `ingredients`),
+  `name`, + audit. Common names, one row each, scoped to the ingredient that
+  claims them.
+- **`ingredient_forms`** — `id`, `name`, `slug`, `group`, `description`, +
+  audit. Shaped like `categories`: global, admin-curated, no workspace
+  scoping. This is the third resource admins curate globally, alongside the
+  compendium and categories (CLAUDE.md).
+
+**`nomenclature`** is a seven-value `pgEnum`, `NOT NULL` with no default:
+`botanical`, `fungal`, `zoological`, `mineral`, `chemical`, `unknown`, `none`.
+It names _which naming system_ a formal name belongs to, not which rank
+within that system — `Quartz var. amethyst` and `Lapis lazuli` are both
+`mineral` even though one is an IMA variety and the other a rock. `unknown`
+and `none` are both answers, not the absence of one: `unknown` means a formal
+name exists in some system but nobody has looked it up yet (`WHERE
+nomenclature = 'unknown'` is a findable curation to-do list); `none` is the
+positive claim that no naming system names this thing at all (graveyard
+dirt, moon water, black salt). A CHECK ties the two together —
+`(nomenclature IN ('none','unknown')) = (canonical_name IS NULL)`, enforced
+in both directions, so the enum value and the presence of a formal name can
+never disagree.
+
+**`canonical_key`**, the generated identity column:
+
+```sql
+canonical_key text NOT NULL GENERATED ALWAYS AS (
+  lower(COALESCE(canonical_name, name))
+  || COALESCE(' :: ' || lower(btrim(form)), '')
+) STORED
+```
+
+Every function in that expression — `lower`, `btrim`, `||`, `COALESCE` — is
+IMMUTABLE, which Postgres requires of anything inside a `GENERATED ALWAYS AS
+(...) STORED` column (the same requirement applies to expression indexes).
+That's also why `form` had to lose its `pgEnum`: casting to an enum type
+raises an immutability question a plain `text` column doesn't, so relaxing
+`form` to text is what makes this generated column legal at all. Folding
+`form` into the key, rather than keying on the formal name alone, is what
+lets _Valeriana officinalis_ root and leaf exist as two separate identities.
+
+**Three partial unique indexes, not two, and indexes rather than
+constraints:**
+
+```sql
+CREATE UNIQUE INDEX ingredients_compendium_identity_unique
+  ON ingredients (canonical_key)
+  WHERE workspace_id IS NULL AND deleted_at IS NULL;
+
+CREATE UNIQUE INDEX ingredients_workspace_identity_unique
+  ON ingredients (workspace_id, canonical_key)
+  WHERE workspace_id IS NOT NULL AND deleted_at IS NULL;
+
+CREATE UNIQUE INDEX ingredients_workspace_label_unique
+  ON ingredients (workspace_id, lower(name))
+  WHERE workspace_id IS NOT NULL AND deleted_at IS NULL;
+```
+
+All three carry `WHERE deleted_at IS NULL`, per the partial-index convention
+above — deleting a row must not permanently reserve its identity or its
+label (CLAUDE.md rule 4). The label index is workspace-tier only: inside one
+workspace an ambiguous label is a mistake, but the compendium deliberately
+allows several rows to display the same label (four unrelated "Cat's Claw"
+entries) as long as they're different identities. They're indexes rather
+than unique constraints because Drizzle's `nullsNotDistinct()` exists only
+on constraints, and a constraint can't carry a `WHERE` predicate at all —
+since every unique index in this schema must be partial, the constraint form
+was never on the table regardless.
+
+**`ingredients.form` is `text`, and deliberately not a foreign key to
+`ingredient_forms`.** The curated table is an autofill vocabulary, not a
+constraint: a foreign key would force identity to key on a surrogate id and
+make an uncurated value like `rhizome` unwritable until an admin curates it
+first. M4.2a asserts the absence of that foreign key by test, since it's the
+property the whole free-text design rests on.
+
+**Folk names got their own table instead of staying `folkNames text[]`
+because of one verified fact.** On this repo's live PostgreSQL 18.6,
+`array_to_string` is **STABLE** (`pg_proc.provolatile = 's'`), not IMMUTABLE,
+so it's legal in neither a generated column nor an expression index — a
+trigram index over a `text[]` column would have needed a hand-written
+IMMUTABLE wrapper. As a normalized table, `ingredient_folk_names` carries a
+plain `gin_trgm_ops` index on `name` directly, plus a unique index on
+`(ingredient_id, lower(name))` partial on `deleted_at IS NULL` —
+uniqueness is per ingredient, deliberately not global, since several
+unrelated ingredients claiming the same common name is exactly what's being
+documented, not an error. `lower`, `btrim`, and `similarity`, by contrast,
+are all IMMUTABLE and used freely throughout this model.
+
+**Accent insensitivity is client-side only.** `unaccent` is not installed in
+this database (only `pg_trgm` is, per the migrations section above), so
+there's no server-side normalization path to lean on — a deliberate scope
+limit, not a gap left for later.
+
+Full column list, the CHECK constraints' exact text, and the
+local-beats-compendium resolution query that reads these indexes: DESIGN.md
+§5.
+
 ## Expand/contract and the destructive-DDL check (M1.5)
 
 Drizzle generates no down migrations, and hand-writing them is a reliable way
