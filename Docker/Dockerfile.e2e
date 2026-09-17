@@ -71,15 +71,26 @@ FROM e2e AS headed
 
 USER root
 
-# `xvfb` is installed unconditionally rather than assumed present —
-# `playwright install --with-deps` above covers Chromium's own libraries,
-# not a display server, and this apt-get is a no-op if it's already there.
-# Verify with `which Xvfb` in a shell on this stage if that ever needs
-# confirming. `x11vnc` + `novnc` + `websockify` make the display reachable
-# from an ordinary browser tab at :7900 (Docker/docker-compose.yaml
-# publishes it). `openbox` is not optional: without a window manager the
-# Chromium and Inspector windows are unmovable and overlap, which is the
-# single most likely thing to go wrong when testing this stage.
+# Two of these five are deliberately redundant, and both stay.
+#
+# `xvfb` already ships in the base image: Playwright's own Dockerfile.noble
+# runs `playwright-core install-deps`, whose `tools` target begins with
+# `xvfb` (verified against the v1.63.0 tag, not assumed). Listing it here
+# installs nothing — but dropping the line wouldn't shrink the image either,
+# and it's free insurance against that transitive guarantee moving in a
+# future base image. `websockify` is the same case: the `novnc` package
+# Depends on it, so it arrives regardless; naming it says out loud what the
+# entrypoint actually invokes.
+#
+# The three that carry weight: `x11vnc` + `novnc` make the display reachable
+# from an ordinary browser tab at :7900 (Docker/docker-compose.yaml publishes
+# it), and `openbox` is not optional — without a window manager the Chromium
+# and Inspector windows are unmovable and overlap, which is the single most
+# likely thing to go wrong when testing this stage. `openbox` (297 kB) was
+# weighed against jwm/twm (smaller, but need placement config), matchbox
+# (one fullscreen window at a time) and i3 (tiling, no mouse drag-move);
+# swapping Xvfb + x11vnc for tigervnc-standalone-server was also considered
+# and rejected, since it loses `xvfb-run` and pulls more than it replaces.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     xvfb \
     x11vnc \
