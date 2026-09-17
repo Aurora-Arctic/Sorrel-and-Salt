@@ -26,6 +26,8 @@ The schema entity is `workspaces`; the URL prefix is `/coven/`. This divergence 
 
 `make help` lists every target — from the **host**. Neither `make` nor `docker` is installed in the devcontainer, so a session running inside it calls the npm scripts directly; the `make` column below is the host equivalent.
 
+**There is no Python in the devcontainer.** Neither `python3` nor `python` exists — reaching for one to do quick scripting, JSON munging, or arithmetic fails with `command not found`. Use Node (`node -e`), the npm scripts, or plain shell tooling (`jq`, `grep`, `sed`) instead.
+
 | Command                                                                                                        | Purpose                                                                                                                               |
 | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `npm run dev` (`make dev`)                                                                                     | Next.js dev server on **8000**                                                                                                        |

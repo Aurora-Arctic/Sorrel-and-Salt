@@ -163,22 +163,45 @@ archived and are not required reading.
 - **Live GitHub settings are confirmed with the user before being changed**, and
   a permissions-blocked write is reported rather than routed around.
 
-## Independent smoke checks
+## Smoke checks
 
-These build their own ad hoc image (`ghcr.io/.../testing:smoke-<run id>`, never
-reused across runs) rather than consuming `build-image.yml` — deliberate, so a
-regression check never runs through the thing it is testing.
+One remains.
 
 - **`composite-actions-check.yml`** — exercises all five composite actions
-  together. Runs on the bare `ubuntu-latest` runner, so it adds its own
-  "Prepare /app" step ahead of `checkout-to-app`.
-- **`lint-format-typecheck-check.yml`** — exercises the three reusable checks
-  directly. Triggers on `pull_request` (paths: those workflows, this workflow,
-  `.github/actions/**`, `Docker/Dockerfile.node`, each check's own config) and
-  `workflow_dispatch`.
-- **`build-audit-check.yml`** — the same for `build`/`audit`. `audit`'s job is
-  gated to the `pull_request` trigger only: its `pr-number` input is required
-  and used unguarded, so it would break on `workflow_dispatch`.
+  together, asserting each `action.yml` lands in `/app`. Builds **no** image: it
+  runs on the bare `ubuntu-latest` runner, so it adds its own "Prepare /app"
+  step ahead of `checkout-to-app`. Nothing in `pr-gate.yml` makes that
+  assertion, so it is not redundant with the gate.
+
+**A workflow must never publish a status-check context `pr-gate.yml` also
+publishes.** `lint-format-typecheck-check.yml` (M0.16) and
+`build-audit-check.yml` (M0.17) did, and MB.15 deleted them. They were written
+before `pr-gate.yml` (M0.20) existed, each building its own ad hoc
+`testing:smoke-<run id>` image; MB.15 first collapsed both onto
+`build-image.yml`, which made the rest plain — they then called the same image
+build and the same `lint.yml` / `format.yml` / `typecheck.yml` / `build.yml` /
+`audit.yml` with the same inputs as the gate, a strict subset of it. One push to
+PR #87 fired three workflow runs and reported `lint / lint`, `typecheck /
+typecheck`, `format / format`, `build / build` and `audit / audit` **twice**
+each, `build-image / build-image` three times. Duplicate contexts under one
+`job / job` name make it ambiguous which run a branch ruleset is gating on —
+the cost is the ambiguity, not the minutes.
+
+Deleting them moved one thing that was not duplicated: their path filters listed
+`Docker/Dockerfile.node`, and `pr-gate.yml`'s did not. It now lists it on
+`lint`, `typecheck` and `build` — the three checks that run _inside_ that image
+— and deliberately not in the `*shared` anchor, which also feeds
+`destructive_ddl`.
+
+`build-db-image.yml` had the same defect from the other direction: its own
+`pull_request` trigger _plus_ an unconditional `build-db-image` job in both
+`pr-gate.yml` and `merge-queue.yml`, so any PR touching `src/db/**` ran it
+twice. MB.15 dropped the trigger.
+
+The merge queue was never affected. Neither deleted workflow declared
+`merge_group:`, and `merge-queue.yml` builds each of the three images exactly
+once and passes them down as inputs. Its re-running of the gate's checks is a
+merge queue verifying the merged result, which is the point of one.
 
 ## Database image
 
@@ -197,18 +220,19 @@ regression check never runs through the thing it is testing.
   carry them.)
 - **`build-db-image.yml`** — builds and publishes it to GHCR, tagged with a
   `hashFiles()` hash of `src/db/**` / `Docker/Dockerfile.postgres` /
-  `Docker/postgres-init/**`, plus `latest` (moved only on push to
-  `staging`/`main`, never from a PR). The same path list gates the trigger, so
-  "rebuild is skipped" is the trigger itself, not a no-op job. Runs on
-  `pull_request` too, since the content-addressed tag makes a PR build reusable.
-  **It deliberately has no skip-if-exists check** (unlike `build-image.yml`) —
-  its trigger paths are exactly its hash inputs, so the trigger already does it.
+  `Docker/postgres-init/**`, plus `latest`. Its only direct triggers are
+  `push` on `staging`/`main` — whose real job is moving `latest`, which is why
+  a PR never repoints it — and `workflow_dispatch`. The same path list gates
+  the `push` trigger, so "rebuild is skipped" is the trigger itself, not a
+  no-op job. **It deliberately has no skip-if-exists check** (unlike
+  `build-image.yml`) — its trigger paths are exactly its hash inputs, so the
+  trigger already does it.
 
 - **`build-db-image.yml` also carries a `workflow_call` trigger** (M1.14,
-  alongside its existing `push`/`pull_request`/`workflow_dispatch`
-  triggers — a `workflow_call` invocation bypasses `pull_request`'s path
-  filter entirely, so it always runs when called, regardless of whether the
-  calling PR touched `src/db/**`), exposing an `image` output. The caller is
+  alongside its `push`/`workflow_dispatch` triggers — a `workflow_call`
+  invocation bypasses `push`'s path filter entirely, so it always runs when
+  called, regardless of whether the calling PR touched `src/db/**`), exposing
+  an `image` output. The caller is
   `pr-gate.yml`/`merge-queue.yml`'s own top-level `build-db-image` job —
   built once there and passed down as a `db-image` input to both
   `vitest.yml` and `playwright.yml`, each keying their own
