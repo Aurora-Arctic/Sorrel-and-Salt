@@ -12,13 +12,16 @@ name: Build DB Image
 # caller below pins the hash tag — so publishing it was pure upkeep with no
 # reader.
 #
-# The `push` path filter below *is* "rebuild is skipped when nothing that
-# determines the image changed": an unrelated push never triggers this
-# workflow at all, rather than triggering a job that runs and no-ops. Because
-# the tag is a hash of those same paths, a run that does trigger always
-# produces a tag that either matches an already-published one (content
-# unchanged) or is new (content changed) — there is no separate "did anything
-# change" check to get wrong.
+# Two separate mechanisms skip redundant work, one per trigger. The `push`
+# path filter below is a workflow-level skip: an unrelated push never
+# triggers this workflow at all, rather than triggering a job that runs and
+# no-ops. But `workflow_call` — the path every PR takes, via pr-gate.yml/
+# merge-queue.yml's own `build-db-image` job — bypasses that path filter
+# entirely, so it needed its own job-level skip: the `Check if image already
+# exists` step below inspects GHCR directly and short-circuits `Build and
+# push db image` when the content-addressed tag is already published
+# (MB.18). Between the two, buildx only actually runs when the tag is a
+# genuine miss.
 #
 # The `push` trigger's real job is seeding the GHA layer cache
 # (cache-to: type=gha,mode=max,scope=db-image below) for branches that
@@ -104,7 +107,24 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
+      # Most pushes to a PR don't touch anything in the hash (src/db/**,
+      # Dockerfile.postgres, postgres-init/**), so the content-addressed tag
+      # from a prior run (this PR, staging, or main) usually already exists —
+      # skip the build entirely rather than re-running buildx just to
+      # re-push the same content. This only matters on the workflow_call
+      # path: the push trigger above is already gated by its own path
+      # filter, so a push run that fires here is always a genuine miss.
+      - name: Check if image already exists
+        id: check
+        run: |
+          if docker buildx imagetools inspect ${{ steps.tags.outputs.hash-tag }} > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build and push db image
+        if: steps.check.outputs.exists != 'true'
         uses: docker/build-push-action@v7
         with:
           context: .
