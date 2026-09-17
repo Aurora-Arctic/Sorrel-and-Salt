@@ -17,10 +17,11 @@
     "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
   },
   "postCreateCommand": "sudo apk add --no-cache github-cli",
-  "forwardPorts": [8000, 8001],
+  "forwardPorts": [8000, 8001, 4983],
   "portsAttributes": {
     "8000": { "label": "next dev" },
-    "8001": { "label": "next start (production build)" }
+    "8001": { "label": "next start (production build)" },
+    "4983": { "label": "drizzle studio" }
   },
   "remoteUser": "node",
   "containerUser": "node",

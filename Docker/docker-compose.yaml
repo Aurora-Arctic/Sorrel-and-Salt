@@ -51,12 +51,14 @@
 # connection attempt regardless; it's not a failing check (`pg_isready`
 # doesn't require the role to be valid, only that the server responds).
 #
-# The `workshop` service is behind the `workshop` compose profile, so
-# `make docker-up` starts only the app and Postgres.
-# `make docker-workshop` brings the Ladle workshop up alongside them.
+# The `workshop` and `studio` services are behind compose profiles of the same
+# name, so `make docker-up` starts only the app and Postgres.
+# `make docker-workshop` brings the Ladle workshop up alongside them, and
+# `make docker-studio` does the same for Drizzle Studio.
 #
 #   make docker-up        build if needed, then start the app + Postgres detached
 #   make docker-workshop   also start the workshop (profile: workshop)
+#   make docker-studio     also start Drizzle Studio (profile: studio)
 #   make docker-e2e        run the Playwright suite once (profile: e2e)
 #   make docker-down      stop and remove everything, profiles included
 #   make docker-logs      follow
@@ -69,7 +71,7 @@
 # Debian-based (Microsoft's own Playwright base) where `Dockerfile.node` is
 # Alpine — Playwright's Chromium build has no official musl support at all,
 # so the devcontainer's own `development`/`testing` stages, which the
-# `app`/`workshop`/`devcontainer` services all build, stay Alpine and simply
+# `app`/`workshop`/`studio`/`devcontainer` services all build, stay Alpine and simply
 # don't run e2e directly; `e2e` is a separate, one-shot service instead of a
 # long-running one (see `command: ['npm', 'run', 'e2e']` below), started
 # on demand from inside (or alongside) the devcontainer with `make docker-e2e`.
@@ -97,6 +99,7 @@ volumes:
   node_modules_app:
   node_modules_workshop:
   node_modules_e2e:
+  node_modules_studio:
 
   # Postgres data directory. Persists across `docker compose restart` and
   # `make docker-down`; only `make docker-rebuild` (`down -v`) clears it.
@@ -184,6 +187,46 @@ services:
     # `npm run workshop` is `ladle serve`, which binds localhost by default;
     # `--host 0.0.0.0` makes it reachable through the port mapping.
     command: ['npm', 'run', 'workshop', '--', '--host', '0.0.0.0']
+
+  studio:
+    # Opt-in, same shape as `workshop`: only started by
+    # `docker compose --profile studio up` (i.e. `make docker-studio`), never
+    # by a bare `make docker-up`. A database browser is a thing you reach for
+    # occasionally, not a thing that should be running all day.
+    #
+    # `drizzle-kit studio` (MB.21) serves data only — the UI itself is hosted
+    # at https://local.drizzle.studio, and the browser connects back to
+    # 127.0.0.1:4983 through the port mapping below. Nothing is served from
+    # this container to look at directly.
+    #
+    # It reads the repo's `drizzle.config.ts`, which takes its connection
+    # string from `DATABASE_URL`, so this service needs the same value `app`
+    # has and the same health-gated `depends_on`. `drizzle.config.ts` throws
+    # when `DATABASE_URL` is unset rather than falling back to anything.
+    profiles: ['studio']
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.node
+      target: development
+    image: sorrel-node:development
+    working_dir: /app
+    volumes:
+      - ..:/app:cached
+      - node_modules_studio:/app/node_modules
+    init: true
+    tty: true
+    ports:
+      - '4983:4983' # drizzle-kit studio (the `db:studio` script pins it)
+    environment:
+      NODE_ENV: development
+      # Reaches Postgres by its compose service name, same as `app`.
+      DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # `npm run db:studio` passes `--host 0.0.0.0` explicitly so the server is
+    # reachable through the port mapping rather than only inside the container.
+    command: ['npm', 'run', 'db:studio']
 
   e2e:
     # Opt-in and one-shot, unlike `workshop`: `make docker-e2e` runs
