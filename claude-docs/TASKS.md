@@ -35,37 +35,37 @@ The milestone numbers below are **identifiers, not a schedule**. Tasks are execu
 
 ### The core move: land the DDL early, the policies late
 
-|            | **DDL** (moves early)                                              | **Policies and behaviour** (stays late)                                       |
-| ---------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| Statements | `CREATE TABLE`, columns, types, NOT NULL, CHECK, FKs, indexes, PKs | `ENABLE ROW LEVEL SECURITY`, `CREATE POLICY`, and the service rules they back |
-| Answers    | _What shape is the data?_                                          | _Who may see and change which row?_                                           |
-| Tasks      | M6.2, M4.1, M4.2, M4.4, M4.6, M7.1, M9.2, M10.2, M10.4             | M6.3, M6.4, M6.5, M6.6, M10.3                                                 |
+|            | **DDL** (moves early)                                                       | **Policies and behaviour** (stays late)                                       |
+| ---------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Statements | `CREATE TABLE`, columns, types, NOT NULL, CHECK, FKs, indexes, PKs          | `ENABLE ROW LEVEL SECURITY`, `CREATE POLICY`, and the service rules they back |
+| Answers    | _What shape is the data?_                                                   | _Who may see and change which row?_                                           |
+| Tasks      | M6.2, M4.1, M4.1a, M4.2, M4.2a, M4.4, M4.4a, M4.6, M7.1, M9.2, M10.2, M10.4 | M6.3, M6.4, M6.5, M6.6, M10.3                                                 |
 
 They separate cleanly because they are already different migrations and different tasks. Postgres will happily create a table in one migration and attach a policy in a later one, and nothing about creating `spells` commits you to a visibility model.
 
-The DDL is safe early because §5 already specifies every column, type, enum set and index predicate — writing it in Drizzle is transcription, not design. Additive DDL is inert: a table nobody queries yet changes no behaviour, and under expand/contract this is the free direction. Empty tables are also the cheapest moment for constraints, so land every constraint §5 specifies at **full strength** — NOT NULL, CHECK, enum sets, both partial unique indexes on `ingredients`, composite PKs. Tightening later needs a backfill, an M1.5 acknowledgement line, and can fail on rows that already exist.
+The DDL is safe early because §5 already specifies every column, type, enum set and index predicate — writing it in Drizzle is transcription, not design. Additive DDL is inert: a table nobody queries yet changes no behaviour, and under expand/contract this is the free direction. Empty tables are also the cheapest moment for constraints, so land every constraint §5 specifies at **full strength** — NOT NULL, CHECK, enum sets, three partial unique indexes on `ingredients`, composite PKs. Tightening later needs a backfill, an M1.5 acknowledgement line, and can fail on rows that already exist.
 
 The policies must not come early for the opposite reason. A policy written before its service tends not to match it: M6.4's RLS mirrors the role hierarchy `assertMembership` (M6.3) defines and reads the user id from the GUC (M1.19), and the two-layer design only works if both layers agree. Behaviour is also where the real uncertainty lives — whether an owner can read a member's private spell is worth deciding with the service in front of you; column types are not. And RLS actively interferes with seeding: a policy on an empty table is harmless, but a policy on a table you are about to seed will filter your seed. The wave order dodges this deliberately — tables (W3), then seeds run unimpeded (W4), then policies land and are proved against real seeded rows (W5).
 
 ### The waves
 
-| Wave                         | Tasks                                                                                                                                       | Why here                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **1 — FK root**              | M2.2 · M2.3 · MB.5 · MW.1                                                                                                                   | `users` first, because the whole graph roots on it. M2.2 leads so Better Auth's adapter table ownership is settled before anything references `users`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| **2 — Write path**           | M1.16 · M1.19 · M1.17 · MB.14 · M1.20 · MB.15 · MB.16 · MB.17 · MB.18 · MB.20 · MB.21 · MB.22 · MB.23 · MW.2                                | Needs exactly one table. M1.20 is re-scoped to the finder builder plus its guard, not "edit N finders". MB.15 through MB.18 are CI- and doc-only and depend on nothing in the wave; they sit before MW.2 so the compression pass sees the corrected `ci.md`. MB.18 depends on MB.17 — both edit the same header comment. MB.20 is documentation and scoping only, depends on nothing else in the wave, and sits last so MW.2 records the standing decision to leave the ORM on `0.45.2`. It replaces MB.19, which was retired without being done. MB.21 depends on nothing else in the wave either — it wires `drizzle-kit studio` against the same pinned `0.31.10` MB.20 settled on — and sits last for the same reason. MB.22 depends on nothing else in the wave and closes it: it is tooling only, touches no table and no service, and sits last so MW.2 documents the debugging setup rather than leaving `claude-docs/` behind. MB.23 was minted after MB.22 merged, needs it merged first, and sits directly after it for the same dependency reason — MW.2 now documents the recorder alongside the rest of the debugging story. |
-| **3 — Schema block**         | M6.2 · M4.1 · M4.2 · M4.4 · M4.6 · M7.1 · M9.2 · M10.2 · M10.4 · M1.18 · MB.24 · MB.25 · MW.3                                               | FK order. M1.18's trigger closes the wave, attaching to every audited table at once. **M10.3 is deliberately excluded** — see below. MB.24 and MB.25 depend on nothing in the wave and sit before MW.3 for the same reason MB.15–MB.18 sat before MW.2: the compression pass has to see the corrected docs. MB.25 must also precede Wave 4's M1.27, which bakes the Postgres image the new roles live in.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| **4 — Seed and harness**     | M1.21 · M4.3 · M1.22 · M1.26 · M1.23 · M1.25 · M1.24 · M1.27 · M1.28 · MB.26 · MB.27 · MW.4                                                 | The payoff wave: retires all three workarounds. M4.3 is pulled ahead of M1.22, which consumes its 52 categories. MB.26 lands the read-side identity wrapper one wave before M6.4's policies need it — the mechanism ahead of its first caller, per the sweep-task rule. MB.27 is CI-only and depends on nothing here.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| **5 — Authorization**        | M6.3 · M6.4 · M10.3 · M6.5 · M6.6 · MW.5                                                                                                    | All seven workspace-scoped tables now exist, so M6.4's RLS sweep is complete rather than partial.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| **6 — Auth surface**         | M2.1 · M2.4 · M2.5 · M2.6 · M2.7 · M2.9 · M2.10 · MB.12 · MW.6                                                                              | M2.8 defers to Wave 10. M2.10 needs M2.7's session helper and M0.30's Ladle build, both of which exist by the end of this wave. MB.12 closes the wave: "a real browser completes sign-in" is unmeetable before M2.6 builds the page to sign in on.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| **7 — GraphQL**              | M3.1 → M3.10, internal order unchanged · MW.7                                                                                               | M3.8's "representative service" and M3.10's `me` both have real targets now.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| **8 — Compendium + admin**   | M4.5 · M4.7 · M4.8 · M8.2 · M8.5 · M8.8 · MB.11 · M5.1 · M5.2 · M5.3 · M5.4 · M5.9 · M5.10 · M5.5 · M5.6 · M5.7 · M5.8 · M8.6 · M8.7 · MW.8 | M5.5/M5.6 read and write through GraphQL, which is M8.5/M8.8 — so those move ahead of M5.5. M5.9/M5.10 build `IngredientForm`, which M5.5 consumes, so they precede it too.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| **9 — Workspaces**           | M6.1 · M6.7 · M6.8 · M6.9 · M6.10 · M6.11 · M6.12 · M6.13 · M6.14 · M6.15 · M6.16 · MB.10 · M6.18 · MW.9                                    | M6.18 needs MB.10's display-name loader to resolve without an N+1.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| **10 — Invitations**         | M7.2 → M7.7 · M2.8 · MW.10                                                                                                                  | M2.8 moves here: "an invited user lands in the workspace they were invited to" is unmeetable before M7.5.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| **11 — Ingredient services** | M8.1 · M8.3 · M8.4 · M9.1 · M9.3 · M9.4 · M9.5 · MB.9 · MW.11                                                                               | M9's data layer moves ahead of M8's UI. This is what fixes M8.13, M8.14 and M8.18.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| **12 — Ingredient UI**       | M8.9 → M8.12 · M8.13 · M8.13a · M9.7 · M9.8 · M8.14 · M8.15 → M8.19 · M9.6 · M9.9 → M9.12 · MB.7 · MW.12                                    | M8.13a lands before its three consumers. M9.7 and M9.8 land before M8.14, which consumes both — see the ownership table below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| **13 — Grimoire**            | M10.1 · M10.5 → M10.22 · MB.6 · MB.8 · MW.13                                                                                                | MB.8's Zod schema precedes M10.10; MB.6's recipe view precedes M10.22's print layout.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| **14 — Sweep close-out**     | M6.17 · MW.14                                                                                                                               | "Every mutating service" is a finite existing set only now.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| **15 — Launch**              | M11.1 → M11.14 · MW.15                                                                                                                      | Unchanged. MW.15 closes the project, and is the one close-out pass sized at 3h — see the MW section.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Wave                         | Tasks                                                                                                                                                                | Why here                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **1 — FK root**              | M2.2 · M2.3 · MB.5 · MW.1                                                                                                                                            | `users` first, because the whole graph roots on it. M2.2 leads so Better Auth's adapter table ownership is settled before anything references `users`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **2 — Write path**           | M1.16 · M1.19 · M1.17 · MB.14 · M1.20 · MB.15 · MB.16 · MB.17 · MB.18 · MB.20 · MB.21 · MB.22 · MB.23 · MW.2                                                         | Needs exactly one table. M1.20 is re-scoped to the finder builder plus its guard, not "edit N finders". MB.15 through MB.18 are CI- and doc-only and depend on nothing in the wave; they sit before MW.2 so the compression pass sees the corrected `ci.md`. MB.18 depends on MB.17 — both edit the same header comment. MB.20 is documentation and scoping only, depends on nothing else in the wave, and sits last so MW.2 records the standing decision to leave the ORM on `0.45.2`. It replaces MB.19, which was retired without being done. MB.21 depends on nothing else in the wave either — it wires `drizzle-kit studio` against the same pinned `0.31.10` MB.20 settled on — and sits last for the same reason. MB.22 depends on nothing else in the wave and closes it: it is tooling only, touches no table and no service, and sits last so MW.2 documents the debugging setup rather than leaving `claude-docs/` behind. MB.23 was minted after MB.22 merged, needs it merged first, and sits directly after it for the same dependency reason — MW.2 now documents the recorder alongside the rest of the debugging story. |
+| **3 — Schema block**         | M6.2 · MB.28 · M4.1 · M4.1a · M4.2 · M4.2a · M4.4 · M4.4a · M4.6 · M7.1 · M9.2 · M10.2 · M10.4 · M1.18 · MB.24 · MB.25 · MW.3                                        | FK order. **MB.28 precedes M4.1**, since M4.1 transcribes DESIGN.md §5 and §5 must be correct first. **M4.2a and M4.4a land before M1.18** so the trigger sweep covers both new tables in one pass — the hard ordering constraint in the whole change, since the sweep-task rule forbids a later "re-assert" task. M1.18's trigger closes the wave, attaching to every audited table at once. **M10.3 is deliberately excluded** — see below. MB.24 and MB.25 depend on nothing in the wave and sit before MW.3 for the same reason MB.15–MB.18 sat before MW.2: the compression pass has to see the corrected docs. MB.25 must also precede Wave 4's M1.27, which bakes the Postgres image the new roles live in.                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **4 — Seed and harness**     | M1.21 · M4.3 · M4.3a · M1.22 · M1.26 · M1.23 · M1.25 · M1.24 · M1.27 · M1.28 · MB.26 · MB.27 · MW.4                                                                  | The payoff wave: retires all three workarounds. M4.3 is pulled ahead of M1.22, which consumes its 52 categories; **M4.3a is pulled ahead of M1.22 for the same reason**, since M1.22 also consumes its form vocabulary. MB.26 lands the read-side identity wrapper one wave before M6.4's policies need it — the mechanism ahead of its first caller, per the sweep-task rule. MB.27 is CI-only and depends on nothing here.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **5 — Authorization**        | M6.3 · M6.4 · M10.3 · M6.5 · M6.6 · MW.5                                                                                                                             | All seven workspace-scoped tables now exist, so M6.4's RLS sweep is complete rather than partial.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **6 — Auth surface**         | M2.1 · M2.4 · M2.5 · M2.6 · M2.7 · M2.9 · M2.10 · MB.12 · MW.6                                                                                                       | M2.8 defers to Wave 10. M2.10 needs M2.7's session helper and M0.30's Ladle build, both of which exist by the end of this wave. MB.12 closes the wave: "a real browser completes sign-in" is unmeetable before M2.6 builds the page to sign in on.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **7 — GraphQL**              | M3.1 → M3.10, internal order unchanged · MW.7                                                                                                                        | M3.8's "representative service" and M3.10's `me` both have real targets now.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **8 — Compendium + admin**   | M4.5 · M4.7 · M4.7a · M4.8 · M8.2 · M8.5 · M8.8 · MB.11 · M5.1 · M5.2 · M5.3 · M5.4 · M5.9 · M5.10 · M5.10a · M5.5 · M5.6 · M5.6a · M5.7 · M5.8 · M8.6 · M8.7 · MW.8 | M5.5/M5.6 read and write through GraphQL, which is M8.5/M8.8 — so those move ahead of M5.5. M5.9/M5.10 build `IngredientForm`, which M5.5 consumes, so they precede it too. **M5.10a joins M5.9/M5.10 ahead of M5.5** because M5.5 consumes `IngredientForm`; **M5.6a follows M5.6 but precedes M5.7**, which gates it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **9 — Workspaces**           | M6.1 · M6.7 · M6.8 · M6.9 · M6.10 · M6.11 · M6.12 · M6.13 · M6.14 · M6.15 · M6.16 · MB.10 · M6.18 · MW.9                                                             | M6.18 needs MB.10's display-name loader to resolve without an N+1.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **10 — Invitations**         | M7.2 → M7.7 · M2.8 · MW.10                                                                                                                                           | M2.8 moves here: "an invited user lands in the workspace they were invited to" is unmeetable before M7.5.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **11 — Ingredient services** | M8.1 · M8.3 · M8.3a · M8.4 · M9.1 · M9.3 · M9.4 · M9.5 · MB.9 · MW.11                                                                                                | M9's data layer moves ahead of M8's UI. This is what fixes M8.13, M8.14 and M8.18.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **12 — Ingredient UI**       | M8.9 → M8.12 · M8.13 · M8.13a · M9.7 · M9.8 · M8.14 · M8.15 → M8.19 · M9.6 · M9.9 → M9.12 · MB.7 · MW.12                                                             | M8.13a lands before its three consumers. M9.7 and M9.8 land before M8.14, which consumes both — see the ownership table below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **13 — Grimoire**            | M10.1 · M10.5 → M10.22 · MB.6 · MB.8 · MW.13                                                                                                                         | MB.8's Zod schema precedes M10.10; MB.6's recipe view precedes M10.22's print layout.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **14 — Sweep close-out**     | M6.17 · MW.14                                                                                                                                                        | "Every mutating service" is a finite existing set only now.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **15 — Launch**              | M11.1 → M11.14 · MW.15                                                                                                                                               | Unchanged. MW.15 closes the project, and is the one close-out pass sized at 3h — see the MW section.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 **Unscheduled by design:** M7.A.1 (require merge queue) is trigger-based, not wave-based — do it when a second contributor arrives or PR volume makes untested merge combinations a real risk, whichever comes first. It is not a prerequisite for anything.
 
@@ -901,7 +901,7 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want a fixed cast of users and workspaces so that authorization tests read clearly and consistently.
 
-Implement `standard`: A owner of W, B member of W, C viewer in W, D member of unrelated X, E site admin in no workspace. Populated compendium.
+Implement `standard`: A owner of W, B member of W, C viewer in W, D member of unrelated X, E site admin in no workspace. Populated compendium whose entries declare `nomenclature`, deliberately including the awkward cases the identity model exists for: one `none` entry, one `unknown` entry, one mineral _variety_ (`Quartz var. amethyst`), the full Cat's Claw set including _Felis catus_, and one in-use `form` value outside the curated vocabulary — so M4.7/M4.7a and M8.3/M8.3a have real ambiguity to resolve against, not just clean data.
 
 _Acceptance criteria:_
 
@@ -909,6 +909,10 @@ _Acceptance criteria:_
 - Workspaces W and X exist and share no members
 - E belongs to no workspace
 - Compendium has enough entries to exercise search
+- Every compendium entry declares a `nomenclature`
+- At least one seeded entry is `none`, one is `unknown`, and one is a mineral variety
+- The Cat's Claw set is seeded, including the _Felis catus_ entry
+- At least one seeded `form` value falls outside the curated vocabulary
 
 **M1.23 — Demo scenario with spells** · 2h
 
@@ -938,13 +942,14 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want factories with sensible defaults so that tests state only what they are actually testing.
 
-Add `fixtures/` factories — `makeIngredient`, `makeSpell`, `makeWorkspace` — with overrides, so tests read `makeIngredient({ categories: ['protection'] })`.
+Add `fixtures/` factories — `makeIngredient`, `makeSpell`, `makeWorkspace` — with overrides, so tests read `makeIngredient({ categories: ['protection'] })`. `makeIngredient()`'s default supplies a valid `nomenclature`/`canonicalName` pair rather than leaving every fixture to silently default to `none`, and an override lets a test opt into any other kind.
 
 _Acceptance criteria:_
 
 - Each factory works with zero arguments
 - Overrides merge rather than replace nested defaults
 - Factories are used by at least one existing test
+- `makeIngredient()` defaults to a valid `nomenclature`/`canonicalName` pair; overriding `nomenclature` still produces a valid row
 
 **M1.26 — asUser helper and Forbidden error type** · 1h
 
@@ -1294,7 +1299,7 @@ _Acceptance criteria:_
 
 ## M4 — Compendium data layer
 
-_8 tasks · 13 hours_
+_13 tasks · 19 hours_
 
 **Sequencing**
 
@@ -1306,18 +1311,36 @@ _8 tasks · 13 hours_
 
 ### Schema and seed
 
-**M4.1 — Ingredients schema with both partial unique indexes** · 2h
+**M4.1 — Ingredients schema with nomenclature and the generated identity key** · 2h
 
 _Story:_ As a user, I want one ingredient table covering the shared reference and my own additions so that spells point at a single kind of thing.
 
-Add `ingredients` with nullable workspaceId, name, folkNames[], form, description, element, planet, zodiac, deities[], color, safetyNotes, substitutes[] and audit. Two partial unique indexes: global on lower(name) where workspace_id is null, and per-workspace on (workspace_id, lower(name)).
+Add `ingredients` with nullable workspaceId, name, nomenclature (enum, no database default), canonicalName, form (free text, no longer an enum), description, element, planet, zodiac, deities[], color, safetyNotes, substitutes[] and audit. `folkNames[]` moves to its own `ingredient_folk_names` table (M4.4a). `canonicalKey` is a stored generated column — `lower(coalesce(canonical_name, name))` plus the normalised `form` — carrying three CHECK constraints: the nomenclature/canonicalName biconditional, and non-blank checks on `canonicalName` and `form`. The three partial unique indexes over `canonicalKey` and the label move to M4.1a, which keeps both tasks inside the 1–2h sizing without paying for a later `ALTER`.
 
 _Acceptance criteria:_
 
-- Global uniqueness enforced only among compendium entries
-- Two workspaces may each hold a local ingredient of the same name
-- Both indexes carry WHERE deleted_at IS NULL
-- form and element accept only the documented value sets
+- `nomenclature` has no database default — an insert omitting it fails
+- The biconditional holds both ways: `none`/`unknown` **with** a formal name is rejected, and any other kind **without** one is rejected
+- A blank-but-present formal name or form is rejected; `form` otherwise accepts any text, including a value absent from the curated vocabulary
+- `canonical_key` cannot be inserted or updated directly — Postgres refuses, and the column is absent from `$inferInsert` so TypeScript refuses first
+- Changing `name` leaves `canonical_key` unchanged on a row with a formal name and recomputes it on a row without one; changing `form` always recomputes it
+- `Root Bark` and `root bark` produce the same key; `element` accepts only its documented value set
+- (Uniqueness criteria move to M4.1a)
+
+**M4.1a — Ingredient identity and label unique indexes** · 1h
+
+_Story:_ As a user, I want two ingredients that share a display label but not a formal identity to both exist in the compendium, so that "Cat's Claw" can name four different things without the database picking one.
+
+Add the three partial unique indexes over `ingredients`: global identity on `canonical_key` where `workspace_id IS NULL`, per-workspace identity on `(workspace_id, canonical_key)`, and per-workspace label uniqueness on `(workspace_id, lower(name))`. Split from M4.1 to keep both tasks inside CLAUDE.md's 1–2h sizing without paying for an `ALTER` later — `CREATE INDEX` is purely additive, and nothing queries `ingredients` until Wave 8.
+
+_Acceptance criteria:_
+
+- All three partial unique indexes exist, each carrying `WHERE deleted_at IS NULL`
+- Two compendium entries may share a label but not a formal name, and both persist
+- _Valeriana officinalis_ root and leaf both persist as distinct compendium rows
+- Two workspaces may each hold a local ingredient with the same formal name
+- Inside one workspace, two locals may not share either a label or an identity
+- A `pg_indexes`/`pg_index.indpred` catalogue-introspection test asserts all three predicates
 
 **M4.2 — Categories schema with the group field** · 1h
 
@@ -1330,6 +1353,21 @@ _Acceptance criteria:_
 - Slug unique among non-deleted rows
 - group is required
 - No workspace scoping on this table
+
+**M4.2a — ingredient_forms schema** · 1h
+
+_Story:_ As an admin, I want a curated vocabulary of ingredient forms shaped like categories, so that the autofill on the entry form has something to offer.
+
+Add `ingredient_forms` — global, admin-curated, shaped like `categories` — with `name`, `slug`, `group` (organism part / preparation / matter) and a required `description`, so a curated value like `rootBark` can explain itself. Same shape as M4.2, adjacent task. Deliberately **not** a foreign key target for `ingredients.form`, which stays free text — the curated table is a vocabulary, not a constraint.
+
+_Acceptance criteria:_
+
+- `name` unique among non-deleted rows on a partial index; `slug` unique the same way
+- `group` is required
+- `description` is required and non-empty
+- No workspace scoping
+- Carries the audit spread
+- A test asserts `ingredients` carries no foreign key to `ingredient_forms`
 
 **M4.3 — Seed all 52 categories across 8 groups** · 2h
 
@@ -1344,6 +1382,20 @@ _Acceptance criteria:_
 - Every category has a non-empty description
 - Reseeding does not duplicate rows
 
+**M4.3a — Seed the ingredient form vocabulary** · 1h
+
+_Story:_ As an admin, I want a starter set of ingredient forms already curated, so that the form autofill has real options before anyone types the first uncurated value.
+
+Seed `ingredient_forms` with §5's original twelve values plus the additions the identity model surfaces — leaf, seed, fruit, peel, stem, wood, sap, pollen, bone, claw, feather, shell, tooth, fur, shed, wax, whole — each grouped as organism part, preparation or matter. Pulled ahead of M1.22 for the same reason M4.3 already is: M1.22 consumes this vocabulary.
+
+_Acceptance criteria:_
+
+- §5's twelve original values are present
+- The animal-derived and whole-organism additions are present
+- Every row is grouped as organism part, preparation or matter
+- Every row carries a non-empty description
+- Reseeding does not duplicate rows
+
 **M4.4 — ingredient_categories join table** · 1h
 
 _Story 22 — As a workspace member, I want ingredients to carry several categories, so that I can find things that are both protective and cleansing._
@@ -1356,16 +1408,35 @@ _Acceptance criteria:_
 - Indexed for both ingredient-to-category and category-to-ingredient
 - Carries the audit spread
 
+**M4.4a — ingredient_folk_names table** · 1h
+
+_Story 21 — As a workspace member, I want an ingredient's common names stored and searchable, so that I can find Devil's Shoestring without remembering it is honeysuckle root._
+
+Add `ingredient_folk_names` — `ingredientId`, `name`, audit — with a per-ingredient partial unique index on `(ingredient_id, lower(name))` and a trigram GIN index on `name`. Normalises what `folkNames text[]` used to hold; uniqueness is per ingredient, deliberately not global, since several unrelated plants sharing a common name is the thing being documented. Lands before M1.18 so the trigger sweep covers it in the same pass as `ingredient_forms`.
+
+_Acceptance criteria:_
+
+- Carries the audit spread
+- Unique per `(ingredient_id, lower(name))` on a partial index excluding soft-deleted rows
+- Two different ingredients may both claim the same common name
+- Foreign key to `ingredients`
+- Re-adding a folk name after soft delete succeeds
+- Lands before M1.18 so the trigger sweep covers it in one pass
+
 **M4.5 — Zod schemas for ingredient and category** · 2h
 
 _Story:_ As a developer, I want one validation definition shared by client and server so that the two cannot disagree about what is valid.
 
-Write Zod schemas covering both models, exported for form validation and service-level parsing. Only `name` is required on an ingredient.
+Write Zod schemas covering both models, exported for form validation and service-level parsing. Two variants for `ingredient`: a workspace-local schema where only `name` is required and `nomenclature` defaults to `none` when no formal name is given, and a compendium schema that makes the admin answer `nomenclature` explicitly. Both couple `nomenclature` to `canonicalName` in Zod — `none`/`unknown` forbid it, every other kind requires it — so the database CHECK is never what a user sees. `canonicalName` and `form` trim and reject a blank-but-present value with **no format regex**; `form` validates against nothing but trim/non-empty, never against the curated vocabulary, since that vocabulary is an autofill, not a constraint. `name` must not also appear among the ingredient's own folk names.
 
 _Acceptance criteria:_
 
 - Same schema imported by form and service
-- Only name is required; a stub ingredient validates
+- Only name is required on the local variant; a stub ingredient validates, with `nomenclature: 'none'` supplied automatically
+- The compendium variant requires `nomenclature` explicitly
+- The kind↔name coupling is enforced in both directions, matching the database CHECK
+- `canonicalName` and `form` reject a blank-but-present value; neither is checked against a format regex or the curated vocabulary
+- `name` is rejected if it duplicates one of the ingredient's own folk names
 - Enum fields reject values outside the documented sets
 - Unit tests cover valid and invalid cases
 
@@ -1375,26 +1446,48 @@ _Acceptance criteria:_
 
 _Story 16 precondition — As a developer, I want trigram matching available in the database, so that near-duplicate names can be detected before they multiply._
 
-Migration enabling the extension and creating the gin index on ingredient name.
+Migration enabling the extension and creating one multicolumn gin index over `name` and `canonical_name` on `ingredients` — a multicolumn `gin_trgm_ops` index serves a query on either column alone, so one index suffices rather than two. `ingredient_folk_names`' own trigram index is M4.4a's, created with that table. Matching must use the `%` operator with an explicit per-transaction `SET LOCAL pg_trgm.similarity_threshold`, never a bare `similarity(...)` comparison — `similarity()` cannot use the index even with sequential scans disabled, and the two forms return identical-looking results until the query is slow.
 
 _Acceptance criteria:_
 
 - Extension enabled on local and Neon
-- Index created and used by the planner
+- The multicolumn index covers both `name` and `canonical_name`, and the planner uses it for a predicate on either column alone
+- `ingredient_folk_names_trgm` (M4.4a) exists and is used independently
+- Matching sets the similarity threshold explicitly per transaction and is written with the `%` operator, not a `similarity(...)` comparison
 - Migration is idempotent
 
 **M4.7 — Fuzzy duplicate service** · 2h
 
 _Story 16 — As a workspace member, I want to be warned when a name resembles something that already exists, so that I don't end up with three spellings of mugwort._
 
-Return compendium and in-workspace matches above roughly 0.4 similarity on name or any folkNames element. Non-blocking by design.
+Return compendium and in-workspace matches on `name`, `canonicalName`, or any folk name, filtered with the `%` operator against an explicit `SET LOCAL pg_trgm.similarity_threshold = 0.4` per transaction — never a bare `similarity(...) > 0.4` comparison, which cannot use the trigram index and returns identical-looking results while sequentially scanning. Each result carries its formal name — a "Did you mean Cat's Claw?" that could mean five different plants is useless without it. Non-blocking by design.
 
 _Acceptance criteria:_
 
 - Near-misses above threshold are returned
 - Below-threshold names return nothing
-- Folk names are matched, not only the primary name
+- Folk names and the formal name are matched, not only the display name
+- Every result carries its formal name
+- The threshold is set explicitly per transaction and the match is written with the `%` operator, not a `similarity()` comparison
+- `EXPLAIN` on the query shows the trigram index is used, not a sequential scan
 - Results span compendium and current workspace only
+
+**M4.7a — Scoped suggestion service for common names and forms** · 2h
+
+_Story:_ As a workspace member, I want the common-name and form fields to suggest from what already exists, so that I don't invent a fourth spelling of a name three ingredients already share.
+
+Service plus GraphQL field suggesting values as someone types a folk name or a form: the curated `ingredient_forms` vocabulary first, then in-scope values already in use but not in it, visibly distinguishable — the admin's curation to-do list. Shares M4.7's trigram machinery and permission scoping, including its threshold rule. Suggestions are scoped to the compendium and the current workspace only, on both the suggested strings and their attribution — a naive implementation scopes only the attribution list and leaks the strings themselves.
+
+_Acceptance criteria:_
+
+- The curated vocabulary is returned first and in-use values outside it second, distinguishable by the caller
+- Suggestions of in-use values span the compendium and the current workspace only
+- A folk name or in-use form present only in unrelated workspace X never appears, asserted by direct query and not merely by absence from a list
+- Filtering happens in SQL, not after fetching
+- Each suggestion carries the formal names of the in-scope ingredients already claiming it
+- Soft-deleted rows are excluded
+- Bounded by the M3.6 pagination helper
+- The similarity threshold is set explicitly per transaction and the match is written with the `%` operator, same as M4.7, so the trigram index is actually used
 
 ### Batching
 
@@ -1402,18 +1495,19 @@ _Acceptance criteria:_
 
 _Story:_ As an operator, I want related data batched so that a 50-ingredient page does not fire 101 queries and spend compute on nothing.
 
-Implement the loader factory and `categoriesByIngredient`. Test by asserting query count, not just correctness.
+Implement the loader factory, `categoriesByIngredient`, and `folkNamesByIngredient` — same base, same shape, landing together as one task. Test by asserting query count, not just correctness.
 
 _Acceptance criteria:_
 
 - A 50-ingredient fetch with categories issues a bounded number of queries
+- A 50-ingredient fetch with folk names issues a bounded number of queries
 - Test asserts query count explicitly
 - Loaders are per-request
 - Batching preserves result ordering
 
 ## M5 — Admin curation tool
 
-_10 tasks · 16 hours_
+_12 tasks · 20 hours_
 
 **Sequencing**
 
@@ -1441,7 +1535,7 @@ _Acceptance criteria:_
 
 _Story 17 — As a workspace member, I want to be prevented from editing compendium entries, so that shared reference data stays trustworthy for everyone._
 
-Read path open to every signed-in user; write path restricted to `users.role = admin`. Authorization lives here, not in resolvers, and the tests confirm the mutation surface offers no bypass on update or delete.
+Read path open to every signed-in user; write path restricted to `users.role = admin`. Authorization lives here, not in resolvers, and the tests confirm the mutation surface offers no bypass on update or delete. A write that omits `nomenclature` is rejected before it reaches the database, and the partial-unique-index violation on `canonical_key` is translated into a readable error naming the colliding entry rather than surfacing the raw constraint name.
 
 _Acceptance criteria:_
 
@@ -1449,18 +1543,20 @@ _Acceptance criteria:_
 - A non-admin update is rejected with Forbidden
 - A non-admin delete is rejected with Forbidden
 - An admin write succeeds and stamps updated_by
+- A compendium write omitting `nomenclature` is rejected
+- A colliding write surfaces a readable error naming the existing entry, not the raw constraint name
 - Story 17 acceptance test passes
 
 **M5.3 — Soft-delete a compendium entry and prove the name can be reused** · 1h
 
 _Story 25 — As a workspace member, I want deletions to be recoverable, so that a mistake costs a request for help rather than my data._
 
-Admin soft delete stamping deletedAt and deletedBy, plus the test that proves the partial unique index from M4.1 allows re-adding the same name afterwards. Separate from M5.2 because it exercises the index behaviour rather than the authorization rule — without the WHERE clause, deleting an entry would permanently reserve its name.
+Admin soft delete stamping deletedAt and deletedBy, plus the test that proves the partial unique index from M4.1a allows re-adding the same **formal name** afterwards. Separate from M5.2 because it exercises the index behaviour rather than the authorization rule — without the WHERE clause, deleting an entry would permanently reserve its identity. The assertion must be on the formal name, not the display label: two compendium entries may already share a label without deletion being involved, so a label-reuse assertion alone would still pass even with the WHERE clause removed.
 
 _Acceptance criteria:_
 
 - Deleted ingredient vanishes from all finders
-- Re-adding the same name succeeds
+- Re-adding the same **formal name** (not merely the same display label) succeeds
 - deletedBy records who deleted it
 - Row is still present in the table
 
@@ -1470,7 +1566,7 @@ _Acceptance criteria:_
 
 _Story 18 — As a site admin, I want an admin area only I can reach, so that I can curate shared data without exposing the surface to anyone else._
 
-`/admin` layout asserting `users.role = admin`. A signed-in non-admin gets a clear 'not authorized' page, not a 404 — `/admin` is a guessable path on every site ever built, so pretending it does not exist buys no secrecy and only makes the app look broken to someone who typed it out of curiosity. This differs from `/coven/[slug]` in M6.10, where the existence of a workspace is genuinely private and 404 is the right answer. Admin follows the same access boundary as the rest of the site: server-rendered reads through services, every mutation through GraphQL.
+`/admin` layout asserting `users.role = admin`. A signed-in non-admin gets a clear 'not authorized' page, not a 404 — `/admin` is a guessable path on every site ever built, so pretending it does not exist buys no secrecy and only makes the app look broken to someone who typed it out of curiosity. This differs from `/coven/[slug]` in M6.10, where the existence of a workspace is genuinely private and 404 is the right answer. Admin follows the same access boundary as the rest of the site: server-rendered reads through services, every mutation through GraphQL. The nav and layout list `/admin/forms` beside `/admin/compendium` and `/admin/categories`, since curating the form vocabulary is now a third admin resource.
 
 _Acceptance criteria:_
 
@@ -1481,19 +1577,22 @@ _Acceptance criteria:_
 - The page does not name who the admins are or offer a way to request access
 - Admin mutations go through /api/graphql like every other mutation
 - Nav entry appears only for admins
+- Nav lists `/admin/forms` alongside `/admin/compendium` and `/admin/categories`
 
 **M5.5 — Admin compendium CRUD** · 2h
 
 _Story 18 — As a site admin, I want to add, edit and soft-delete compendium entries, so that the shared reference can grow without a deploy._
 
-`/admin/compendium` reusing IngredientForm in editable mode, with create, edit and soft delete over the global entries. Reads and writes go through GraphQL queries and mutations.
+`/admin/compendium` reusing IngredientForm in editable mode, with create, edit and soft delete over the global entries. Reads and writes go through GraphQL queries and mutations. The form covers `nomenclature`, `canonicalName` and `form` alongside the existing fields.
 
 _Acceptance criteria:_
 
-- Admin can create, edit and soft-delete compendium entries
+- Admin can create, edit and soft-delete compendium entries, including `nomenclature`, `canonicalName` and `form`
 - Audit columns record the admin
 - Soft-deleted entries vanish from the public compendium
 - Fuzzy duplicate warning applies here too
+- A colliding write surfaces a readable duplicate error naming the existing entry
+- Admin can filter to entries still `nomenclature = 'unknown'` — the curation to-do list
 
 **M5.6 — Admin categories CRUD** · 2h
 
@@ -1508,19 +1607,33 @@ _Acceptance criteria:_
 - Deleting a category in use is handled explicitly, not by cascade surprise
 - Colour picks from the group palette
 
+**M5.6a — Admin forms CRUD** · 2h
+
+_Story 18 — As a site admin, I want to add, edit and soft-delete ingredient forms, so that the vocabulary can grow without a deploy._
+
+`/admin/forms`, reusing M5.6's page shape. Admins manage the curated vocabulary, including the group; soft-deleting a value in use does not rewrite any ingredient — the value stays on the rows and moves into the uncurated bucket — and the page lists in-use values outside the vocabulary as a curation to-do list with a one-click add. Lands after M5.6, before M5.7, which gates it.
+
+_Acceptance criteria:_
+
+- Admin can create, edit and soft-delete vocabulary rows, including the group
+- Slug uniqueness surfaces a readable error
+- Soft-deleting a value in use does not rewrite any ingredient; the page says so
+- The page lists in-use values outside the vocabulary as a to-do list with a one-click add
+- Non-admins cannot reach the page or the mutations
+
 **M5.7 — Gate admin mutations by role** · 2h
 
 _Stories 18 and 19 — As a workspace owner, I want admin rights to cover shared reference data and nothing else, so that an admin cannot reach into my workspace._
 
-Apply the role check at the service layer for every admin mutation, with tests for each entry point, and add a Pothos auth scope on the admin mutation fields as the second check — the same belt-and-braces pattern used for `User.email`.
+Apply the role check at the service layer for every admin mutation, with tests for each entry point, and add a Pothos auth scope on the admin mutation fields as the second check — the same belt-and-braces pattern used for `User.email`. `ingredient_forms` mutations (M5.6a) are admin mutations too, and join the per-mutation rejection tests here — left out, this task would fail by design the moment the form vocabulary exists.
 
 _Acceptance criteria:_
 
 - Every admin mutation rejects non-admins at the service layer
 - Pothos auth scope rejects them at the schema layer independently
 - Rejection is Forbidden, not a silent no-op
-- Tests cover each mutation individually
-- No admin capability outside compendium and categories
+- Tests cover each mutation individually, including every `ingredient_forms` mutation
+- No admin capability outside compendium, categories and the form vocabulary
 
 **M5.8 — Approve a user for workspace creation** · 1h
 
@@ -1542,28 +1655,47 @@ _Acceptance criteria:_
 
 _Stories 29 and 31 — As a workspace member, I want to save an ingredient with only a name and see errors beside the field that caused them, so that I can capture something quickly and fix mistakes without hunting._
 
-Form covering every ingredient property, validating with the shared Zod schema, showing errors inline next to their field.
+Form covering every ingredient property, validating with the shared Zod schema, showing errors inline next to their field. Gains a formal-name field and a nomenclature-kind selector wired to the kind↔name coupling rule, and `form` becomes a free-text field rather than a fixed selector.
 
 _Acceptance criteria:_
 
-- Saving with only a name succeeds
+- Saving with only a name succeeds — the workspace-local variant still supplies `nomenclature: 'none'` automatically
 - Errors appear beside the offending field
 - Errors are announced to assistive technology
+- The nomenclature selector and formal-name field enforce the coupling rule inline
+- `form` is a free-text field, not a fixed selector
 - Array fields (folkNames, deities, substitutes) are editable
 
 **M5.10 — IngredientForm — Did you mean warning** · 2h
 
 _Story 16 — As a workspace member, I want a warning when the name I'm typing resembles an existing one, so that I can reuse an entry instead of duplicating it._
 
-Debounced fuzzy lookup on the name field rendering a non-blocking suggestion with a link to the match, alongside a Create Anyway action.
+Debounced fuzzy lookup on the name field rendering a non-blocking suggestion with a link to the match, alongside a Create Anyway action. The suggestion renders the matched entry's formal name beside its display label, so a "Did you mean Cat's Claw?" warning is disambiguated at the point of entry.
 
 _Acceptance criteria:_
 
 - Warning appears for a near-match and does not block submission
 - Link navigates to the suggested ingredient
+- The suggestion shows the matched entry's formal name beside its label
 - Create Anyway proceeds
 - No warning below threshold
 - Story 16 acceptance test passes
+
+**M5.10a — Common-name and form lookups in IngredientForm** · 2h
+
+_Story 16 — As a workspace member, I want the common-name and form fields to suggest from what already exists, so that I don't duplicate what three other entries already call the same thing._
+
+Adopts M4.7a. Both fields debounce and suggest, with curated values visibly distinguished from in-use uncurated ones and each suggestion showing which ingredients already claim it, by formal name. Picking one fills the text and links nothing; free text outside the vocabulary is accepted without a warning. Lands after M5.10, before M5.5, which consumes `IngredientForm`.
+
+_Acceptance criteria:_
+
+- Both fields debounce and suggest
+- Curated values are visibly distinguished from in-use uncurated ones
+- A suggestion shows which ingredients already claim it, with their formal names
+- Picking a suggestion fills the text field and links nothing
+- Free text outside the vocabulary is accepted without a warning
+- Keyboard operable end to end and announced to assistive technology
+- axe clean, usable at 375px
 
 ## M6 — Workspaces and membership
 
@@ -1633,6 +1765,7 @@ Migration adding Row-Level Security policies to every workspace-scoped table. RL
 - **Two `sorrel`-owned helpers in an `app` schema.** `app.current_user_id()` (`stable`) returns `nullif(current_setting('app.current_user_id', true), '')::uuid`, so an unset GUC denies rather than raises. `app.is_member(uuid, workspace_role)` is `security definer` with an explicit `search_path`, `execute` revoked from `public` and granted to `sorrel_app`. The `security definer` part is not a convenience: a policy on `workspace_members` written in §8's shape subqueries `workspace_members`, which is infinite policy recursion and Postgres rejects it outright. It also puts the role hierarchy in one place rather than one per policy.
 - **`ingredients.workspace_id` is nullable**, and `NULL` means the global compendium. A policy without `workspace_id IS NULL OR …` deletes the compendium from every signed-in user's view.
 - **`spell_ingredients` and `spell_categories` carry no `workspace_id`.** They are workspace-scoped only through `spells`, so they need policies joining through it — and the catalogue guard must enumerate the workspace-scoped set rather than infer it from a column name, or it silently exempts the two tables holding what a spell is made of.
+- **`ingredient_folk_names` and `ingredient_forms` are new tables from the ingredient identity model (M4.4a, M4.2a), minted after this task was originally scoped.** Verify — do not assume — that the catalogue guard treats `ingredient_folk_names` the way it already treats `ingredient_categories` (both child tables carrying no `workspace_id` of their own, reached only through their parent ingredient), and `ingredient_forms` the way it already treats `categories` (both global and admin-curated, no per-workspace policy needed).
 
 _Acceptance criteria:_
 
@@ -1645,6 +1778,7 @@ _Acceptance criteria:_
 - The setting does not survive past the transaction that set it
 - Policy names follow one convention
 - A `pg_class`/`pg_policy` guard test asserts every table in the enumerated workspace-scoped set has RLS enabled, forced, and at least one policy
+- Confirmed by test, not assumed: `ingredient_folk_names` is covered the way `ingredient_categories` is, and `ingredient_forms` is covered the way `categories` is
 - RLS and GUC are explained once in claude-docs so the next reader need not look them up
 
 **M6.5 — Prove RLS holds with the service check disabled** · 1h
@@ -1827,13 +1961,14 @@ _Acceptance criteria:_
 
 _Story 12 — As a workspace owner, I want viewers to be unable to change shared records, so that I can share our ingredient records without risking them._
 
-Apply the `member` minimum to every mutating workspace service. With notes deferred to v2 there is no exception: a viewer reads everything in the workspace and writes nothing.
+Apply the `member` minimum to every mutating workspace service. With notes deferred to v2 there is no exception: a viewer reads everything in the workspace and writes nothing. As a census task, verify — do not assume — that a folk-name write on a workspace-local ingredient inherits the `member` minimum through its parent ingredient's service, the same way an `ingredient_categories` write does.
 
 _Acceptance criteria:_
 
 - Viewer writes to ingredients and grimoire are rejected
 - Viewer reads succeed everywhere within the workspace
 - No mutating service accepts a viewer
+- Confirmed by test: a folk-name write on a local ingredient inherits the `member` minimum through its parent ingredient's service
 - Story 12 acceptance test passes
 
 **M6.18 — Last-edited-by display on ingredient rows** · 1h
@@ -1968,7 +2103,7 @@ _Acceptance criteria:_
 
 ## M8 — Compendium browsing and local ingredients
 
-_19 tasks · 35 hours_
+_20 tasks · 37 hours_
 
 **Sequencing**
 
@@ -1997,37 +2132,59 @@ _Acceptance criteria:_
 
 _Story 15 — As a workspace member, I want to create an ingredient local to my workspace when the compendium lacks it, so that my practice is not limited to someone else's list._
 
-Create, update and read local ingredients scoped by workspaceId, writable by owners and members. Invisible to every other workspace.
+Create, update and read local ingredients scoped by workspaceId, writable by owners and members. Invisible to every other workspace. Writing an ingredient — including its folk names — happens inside one `withAudit` transaction, so a folk name is never written or updated independently of its parent row.
 
 _Acceptance criteria:_
 
 - Owners and members can create; viewers cannot
 - A local ingredient is unreadable from another workspace, including by direct id
 - No path promotes a local ingredient to global
+- Creating or updating an ingredient's folk names happens inside the same `withAudit` transaction as the ingredient write
 - Story 15 acceptance test passes
 
 **M8.3 — Local-beats-compendium name resolution** · 2h
 
 _Story:_ As a user who disagrees with an admin's correspondences, I want my own version to win in my workspace so that curation does not override my practice.
 
-When a workspace-local ingredient shares a name with a compendium entry, the local entry wins in that workspace's search results and is badged as local.
+A compendium row is suppressed in a workspace's results when a non-deleted local row in that workspace matches it on `canonicalKey`, **or — only when the local row declares no formal name — on the display label**, case-insensitively. Implemented as a single SQL anti-join (`NOT EXISTS`), never fetch-then-filter in the resolver. The `canonicalName IS NULL` gate is the crux: a local that declared an identity must not suppress a differently-identified compendium row for merely sharing a label, while a local that declared nothing has only its label to go on.
 
 _Acceptance criteria:_
 
-- Local entry appears and compendium entry is suppressed for that name
-- Other workspaces still see the compendium entry
-- The badge distinguishes the two
+- A local with no formal name ("Mugwort") suppresses a compendium entry sharing its label ("Mugwort / _A. vulgaris_")
+- A local with a different label but the same identity ("Cronewort / _A. vulgaris_") suppresses the compendium entry sharing that identity ("Mugwort / _A. vulgaris_")
+- A local and a compendium entry sharing a label but declaring different identities ("Mugwort / _A. vulgaris_" vs. "Mugwort / _A. absinthium_") are **both shown**
+- A `none` local suppresses only a `none` compendium row with the identical label
+- A single unidentified local "Cat's Claw" suppresses all four Cat's Claw compendium rows — over-suppression, and exactly the case M4.7/M5.10 warn about before the stub is created
+- Other workspaces still see every compendium entry
+- The badge distinguishes local from compendium
 - Two locals in one workspace may not share a name
+- Suppression is a single SQL anti-join, not a fetch-then-filter in the resolver
+
+**M8.3a — Promote a folk name to the display name** · 2h
+
+_Story:_ As a workspace member, I want to promote a common name to an ingredient's display name, so that the label I see matches what I actually call it.
+
+One server-side transaction swapping `ingredients.name` with an `ingredient_folk_names` row: the old display name becomes a folk name exactly once and the promoted one leaves the folk names, deduped case-insensitively. Depends on M8.3's identity rule. Carries the display-name requirement, which no existing task owns.
+
+_Acceptance criteria:_
+
+- One server-side transaction; no client round-trip of the folk-name list
+- The old name becomes a folk name exactly once; the promoted name leaves the folk names
+- Deduplication is case-insensitive
+- `canonicalKey` is unchanged for a row that declares a formal name
+- For a row with no formal name (`none`), the key changes, and a collision surfaces as a readable error naming the other entry
+- Admins may promote on compendium rows; owners and members on local rows; viewers are `Forbidden`
+- A compendium swap is global, and the UI states that
 
 **M8.4 — filterIngredients() library function** · 2h
 
 _Story 21 — As a workspace member, I want to search by name or folk name, so that I can find Devil's Shoestring without remembering it is honeysuckle root._
 
-Pure function handling name and folk-name matching, AND versus OR across categories, case and accent insensitivity, and empty query returning all. Heaviest unit coverage in the project.
+Pure function handling name, folk-name and formal-name matching, AND versus OR across categories, case and accent insensitivity, and empty query returning all. Heaviest unit coverage in the project.
 
 _Acceptance criteria:_
 
-- Matches on folk names as well as names
+- Matches on folk names and the formal name as well as the display name
 - AND is the default across categories; OR is opt-in
 - Accent and case insensitive
 - Empty query returns everything
@@ -2037,25 +2194,30 @@ _Acceptance criteria:_
 
 _Story 14 — As a workspace member, I want to browse the compendium, so that I can add shared entries to my own ingredients._
 
-Add both queries with search, categoryIds and form arguments, delegating to services. Categories resolve through the DataLoader.
+Add both queries with search, categoryIds and `form` arguments, delegating to services. `Ingredient` gains `canonicalName`, `nomenclature` and `folkNames`; `form` becomes a `String` argument rather than the retired `Form` enum. Add an `ingredientFormValues` query returning `IngredientFormValue`, the curated-vocabulary type — named apart from the `IngredientForm` React component (M5.9/M5.10) so the two cannot be confused. Categories and folk names resolve through DataLoaders. The M3.4 SDL snapshot moves to cover the new shape.
 
 _Acceptance criteria:_
 
 - Both queries return correct results for each argument combination
 - Resolvers contain no database access
-- Category resolution is batched
+- `Ingredient` exposes `canonicalName`, `nomenclature` and `folkNames`
+- `form` is a `String` argument, not the retired `Form` enum
+- `ingredientFormValues` query returns the curated vocabulary as `IngredientFormValue`
+- Category and folk-name resolution are both batched
 - List query paginates through the M3.6 helper, with its default and maximum
+- The M3.4 SDL snapshot is updated for the new shape
 
 **M8.6 — Cache the compendium with tag invalidation** · 2h
 
 _Story:_ As an operator, I want the compendium served from cache so that the most-read data on the site does not hit Postgres on every page.
 
-Wrap the compendium and category reads in `unstable_cache` with the `compendium` tag and an hour's revalidation. Viewer-independent data only — never cache anything workspace-scoped.
+Wrap the compendium and category reads in `unstable_cache` with the `compendium` tag and an hour's revalidation. Viewer-independent data only — never cache anything workspace-scoped. The `ingredient_forms` vocabulary is viewer-independent too, and caches under this same `compendium` tag rather than a new one.
 
 _Acceptance criteria:_
 
 - Repeat reads do not hit Postgres
 - Only viewer-independent data is cached
+- `ingredientFormValues` reads are cached under the same `compendium` tag
 - Tag name is a shared constant, not a literal
 - Cache is bypassed correctly in tests
 
@@ -2063,25 +2225,26 @@ _Acceptance criteria:_
 
 _Story:_ As a user, I want compendium edits to appear promptly so that the cache does not serve me an admin's outdated correspondences for an hour.
 
-Call `revalidateTag('compendium')` after every admin mutation touching ingredients or categories.
+Call `revalidateTag('compendium')` after every admin mutation touching ingredients, categories or the form vocabulary.
 
 _Acceptance criteria:_
 
 - An admin edit is visible on the next page load
 - Tag constant is shared, not a string literal per call site
-- Every admin mutation path is covered
+- Every admin mutation path is covered, including every `ingredient_forms` mutation
 
 **M8.8 — createWorkspaceIngredient and updateIngredient mutations** · 2h
 
 _Stories 15 and 34 — As a workspace member, I want my edits saved and reflected in the list immediately, so that I can trust what I am looking at._
 
-Both mutations delegating to services, with Zod validation and audit stamping. Return the updated entity for cache reconciliation.
+Both mutations delegating to services, with Zod validation and audit stamping. Return the updated entity for cache reconciliation. Folk-name child rows are written in the same `withAudit` transaction as the ingredient itself, not a separate round trip.
 
 _Acceptance criteria:_
 
 - Validation errors return field-level detail
 - Audit columns stamped from the session
 - Returned entity lets the client update without a refetch
+- Folk-name writes are transactional with the ingredient write, not a separate round trip
 - Viewers are rejected
 
 ### Search UI
@@ -2102,12 +2265,12 @@ _Acceptance criteria:_
 
 _Story 21 — As a workspace member, I want to type a name or folk name and see the list narrow, so that finding something is faster than scrolling._
 
-The search component's text input, debounced, matching name and folk names via `filterIngredients()`. Shared later by compendium, workspace ingredients and spell builder.
+The search component's text input, debounced, matching name, folk names and the formal name via `filterIngredients()`. Shared later by compendium, workspace ingredients and spell builder.
 
 _Acceptance criteria:_
 
 - Typing filters results after the debounce, not on every keystroke
-- Folk names match
+- Folk names and the formal name match
 - Debounce tested with fake timers
 - Clear control resets the query
 
@@ -2140,7 +2303,7 @@ _Acceptance criteria:_
 
 _Story 27 — As a workspace member, I want to filter to only our own ingredients or only compendium ones, so that I can review what we have added ourselves._
 
-Form and element filters, plus the URL-state mechanism every other filter chip plugs into. All filter state lives in the URL query string so a filtered view is shareable and survives reload. Source (local versus compendium) and in-stock-only are **not** here — both need M9 data, so M9.7 owns source and M9.8 owns stock, each adopting this task’s URL-state mechanism.
+Form and element filters, plus the URL-state mechanism every other filter chip plugs into. All filter state lives in the URL query string so a filtered view is shareable and survives reload. Source (local versus compendium) and in-stock-only are **not** here — both need M9 data, so M9.7 owns source and M9.8 owns stock, each adopting this task’s URL-state mechanism. The form filter’s options come from the curated `ingredient_forms` vocabulary plus in-use values outside it, not a fixed chip set — `element` stays a fixed enum.
 
 _Acceptance criteria:_
 
@@ -2148,6 +2311,7 @@ _Acceptance criteria:_
 - Reloading restores the exact view
 - Back button steps through filter changes
 - Filters combine correctly with search text
+- Form filter options are drawn from the curated vocabulary plus in-use values outside it, not a hardcoded list
 - The URL-state mechanism is reusable by a filter this task does not itself define
 
 **M8.13a — SafetyNote component for ingredient caution text** · 1h
@@ -2169,13 +2333,15 @@ _Acceptance criteria:_
 
 _Stories 23 and 53 — As a workspace member, I want stock and safety flagged on the card, so that I notice a toxic ingredient or an empty jar without opening it._
 
-Card shell composing the safety and stock treatments the two tasks before it own: `SafetyNote` from M8.13a for the caution block, and M9.8’s low and out-of-stock badges. This task owns the card layout and nothing else — it must not restyle either treatment. Badges convey meaning by text and shape, not colour alone.
+Card shell composing the safety and stock treatments the two tasks before it own: `SafetyNote` from M8.13a for the caution block, and M9.8’s low and out-of-stock badges. This task owns the card layout and nothing else — it must not restyle either treatment. Badges convey meaning by text and shape, not colour alone. The card also renders the formal name and form as a secondary line beneath the display label — required, not decorative, now that two rows can share a label — and lists sort on `(lower(name), canonical_key, id)` so identically labelled rows keep a stable, disambiguating order.
 
 _Acceptance criteria:_
 
 - The card renders M8.13a’s SafetyNote when safetyNotes is present, unmodified
 - The card renders M9.8’s stock badges, unmodified
 - No safety or stock styling is redefined in this component
+- The formal name and form render as a secondary line beneath the display label
+- Lists sort on `(lower(name), canonical_key, id)`, so identically labelled rows keep a stable order
 - Meaning does not depend on colour alone
 - axe clean, keyboard reachable
 
@@ -2227,26 +2393,28 @@ _Acceptance criteria:_
 
 _Story 14 — As a workspace member, I want a browsable compendium page, so that I can find shared entries and add them to my ingredients._
 
-`/compendium` composing IngredientSearch with an Add to my ingredients action slot. Read-only for non-admins. Server-rendered with the cached data.
+`/compendium` composing IngredientSearch with an Add to my ingredients action slot. Read-only for non-admins. Server-rendered with the cached data. Cards disambiguate two compendium entries sharing a label via M8.14's secondary line.
 
 _Acceptance criteria:_
 
 - Search, filters and chips all function
 - Add to my ingredients is present for members, absent for viewers
 - Page is server-rendered and uses the cached compendium
+- Two entries sharing a label are visibly distinguished on the page
 - axe clean, usable at 375px
 
 **M8.19 — Ingredient detail page shell** · 2h
 
 _Story:_ As a user, I want a page per ingredient so that correspondences have a permanent home I can link to.
 
-`/ingredients/[id]` showing every correspondence field, safety notes and substitutes. Built so a notes section can be added below without restructuring the page, since notes are the first thing planned for v2.
+`/ingredients/[id]` showing every correspondence field, safety notes and substitutes. Built so a notes section can be added below without restructuring the page, since notes are the first thing planned for v2. The formal name, nomenclature and form render beside the display label, with a deliberate empty state for entries still `none` or `unknown` rather than a blank field.
 
 _Acceptance criteria:_
 
 - All properties rendered with sensible empty states
 - Works for both compendium and local ingredients
 - Local entries are badged
+- A `none`/`unknown` entry shows a deliberate empty state for its formal name, not a blank field
 - Empty states read as intentional, not broken
 
 ## M9 — Workspace ingredients
@@ -2338,7 +2506,7 @@ _Acceptance criteria:_
 
 _Story 20 — As a workspace member, I want one page listing everything we hold, so that I do not have to look in two places._
 
-`/coven/[slug]/ingredients` — one page covering both local ingredients and compendium-sourced stock, composing IngredientSearch with an edit/delete action slot.
+`/coven/[slug]/ingredients` — one page covering both local ingredients and compendium-sourced stock, composing IngredientSearch with an edit/delete action slot. No structural change from the identity model — it inherits M8.14's formal-name/form disambiguation and sort order through the composed `IngredientCard`, deliberately rather than by accident.
 
 _Acceptance criteria:_
 
@@ -2351,7 +2519,7 @@ _Acceptance criteria:_
 
 _Story 27 — As a workspace member, I want to filter my ingredients by where an entry came from, so that I can review what we added ourselves._
 
-Filter chip distinguishing the two sources, plus the in-stock-only filter, both reflected in URL state through the mechanism M8.13 builds. This task owns source and stock filtering because both need M9 data; M8.13 owns form and element and the URL-state mechanism itself. This is what makes one page correct rather than two.
+Filter chip distinguishing the two sources, plus the in-stock-only filter, both reflected in URL state through the mechanism M8.13 builds. This task owns source and stock filtering because both need M9 data; M8.13 owns form and element and the URL-state mechanism itself. This is what makes one page correct rather than two. No structural change from the identity model — it inherits M8.14's disambiguation the same way M9.6 does.
 
 _Acceptance criteria:_
 
@@ -2738,7 +2906,7 @@ _Acceptance criteria:_
 
 _Story:_ As a user, I want a printable recipe so that I can work from paper without a screen beside the jar.
 
-Create `_print.scss` — this is the only view in v1 that gets print styling. Spell layout: ingredients in layer order with quantities, instructions, and correspondences. Navigation and controls suppressed. Add a visible print control on the spell page: nobody thinks to reach for a browser menu on a phone, and a print stylesheet with no way to invoke it is a feature only its author knows about.
+Create `_print.scss` — this is the only view in v1 that gets print styling. Spell layout: ingredients in layer order with quantities, instructions, and correspondences. Navigation and controls suppressed. Add a visible print control on the spell page: nobody thinks to reach for a browser menu on a phone, and a print stylesheet with no way to invoke it is a feature only its author knows about. Two ingredients sharing a display label print with their formal name alongside it, since on paper there is no hover to disambiguate them.
 
 _Acceptance criteria:_
 
@@ -2747,6 +2915,7 @@ _Acceptance criteria:_
 - The control does not itself appear in the printed output
 - Prints on one page for a typical spell
 - Layer order and quantities are legible
+- Two ingredients sharing a label are distinguishable on the printed page by their formal name
 - Interactive chrome is hidden
 - Print styles are scoped to this view and do not leak into others
 
@@ -2963,7 +3132,7 @@ _Acceptance criteria:_
 
 ## MB — Bugfixes and gap tasks
 
-Work that was not in the original breakdown. `MB.*` exists so a defect or a missing dependency can be scheduled without renumbering an immutable ID. MB.1 through MB.4 are merged; MB.5 through MB.11 were minted by the re-sequencing audit; MB.12 was minted after M2.2/M2.4/M2.5/M0.27 merged with real verification still outstanding. MB.13 was minted during M1.16, when `/create-pr` nearly pushed a feature branch straight at `staging`. MB.14 was minted during M1.17, when its eleventh test file tipped M1.9's per-worker database naming past the set of clones that exist. MB.15 was minted during M1.20, on noticing that the two smoke-check workflows still built their own copy of the testing image that M0.24 had since made shared; collapsing them onto the shared image showed they were a strict subset of `pr-gate.yml`, and the task was re-scoped in place to deleting them. MB.16 through MB.18 were minted together, also during M1.20, when tracing why `build-db-image.yml` runs on a push to `staging` turned up three separate things: a Dependabot base-image bump no prose ever followed (MB.16), a `latest` tag nothing consumes standing in the docs as the push trigger's whole purpose (MB.17), and — on comparing the three image-build workflows side by side — a skip-if-exists check that only `build-db-image.yml` lacks, for a documented reason that holds on the `push` path and fails on the `workflow_call` path every PR actually takes (MB.18). MB.19 was minted on request, after `npm audit` was found to carry a standing moderate advisory (GHSA-67mh-4wv8-2f99) reached only through `drizzle-kit`'s devDependency chain, with no fix available on its stable dist-tag. MB.19 was then **retired without being done** — it is the first task to be retired rather than completed or re-scoped — when re-examining it showed the advisory has no runtime path and that the upgrade traded a frozen stable dependency for a prerelease one; its ID and analysis are kept because task IDs are immutable, and the standing decision now lives in `db.md`. MB.20 was minted in the same pass: tracing what would eventually force that upgrade anyway identified `@pothos/plugin-drizzle`, a `0.x` package that tracks `drizzle-orm`'s version and whose primary capability — resolver-level database access — CLAUDE.md rule 1 forbids. Dropping it before M3 is written is what makes staying on `0.45.2` sustainable. MB.21 was minted on request: there was no way to browse the local database without `psql`, and `drizzle-kit` — pinned at `0.31.10` by MB.20's decision — already ships a `studio` subcommand that needs only wiring, not a new dependency. MB.22 was minted on request, for the same reason as MB.21 but broader: there was no debugging story at all — no Node inspector wired anywhere in the container, no `.vscode/` directory, no way to step into a service, a repository call, or a test, and no way to watch what `withAudit`'s `SET LOCAL app.current_user_id` and RLS actually do to a query beyond reading its output. It is scoped and sized as a single task rather than split across several, as an explicit exception to the normal 1–2h task sizing: the work is uniformly tooling-only (no table, no service, no page), lands as one coherent developer-experience change, and the user asked for it as one PR. MB.23 was minted on request immediately after MB.22 merged: writing an e2e spec by hand means hand-guessing role and label queries against a page nobody has inspected, and `playwright codegen` records a real interaction and emits exactly the query style CLAUDE.md mandates — but MB.22's `playwright-server` service has no display for the recorder to open, a limitation its own design record names. MB.23 gives that service a display (Xvfb, a window manager, and a noVNC tab at `:7900`) rather than standing up a second service, which as a side effect also delivers `page.pause()` and UI mode's locator picker that MB.22 wrote off. MB.24 through MB.26 were minted together, out of the question of whether RLS was worth its cost at all. Checking §8 against the code answered it twice over: the policies M6.4 was about to write would have been **inert**, because `drizzle-kit migrate` and the application share one `DATABASE_URL` and so the app owns every table it would be filtered by — Postgres exempts a table's owner from its own policies unless `FORCE` is set, and `FORCE` appears nowhere in this repo; and fixing only that would have broken **every read**, because the GUC is published inside `withAudit` and the read path never opens a transaction for it to be local to. The two defects concealed each other, which is why neither had surfaced: the first kept the policies from applying, so the second could not yet bite. MB.24 is the decision and the doc correction, MB.25 the role split, MB.26 the read-side wrapper. MB.27 was minted in the same pass from a separate defect found while tracing how `DATABASE_URL` resolves per branch: `deploy.yml` calls `vercel pull` without `--git-branch`, so M1.1's branch-scoped `staging` override has never reached a build.
+Work that was not in the original breakdown. `MB.*` exists so a defect or a missing dependency can be scheduled without renumbering an immutable ID. MB.1 through MB.4 are merged; MB.5 through MB.11 were minted by the re-sequencing audit; MB.12 was minted after M2.2/M2.4/M2.5/M0.27 merged with real verification still outstanding. MB.13 was minted during M1.16, when `/create-pr` nearly pushed a feature branch straight at `staging`. MB.14 was minted during M1.17, when its eleventh test file tipped M1.9's per-worker database naming past the set of clones that exist. MB.15 was minted during M1.20, on noticing that the two smoke-check workflows still built their own copy of the testing image that M0.24 had since made shared; collapsing them onto the shared image showed they were a strict subset of `pr-gate.yml`, and the task was re-scoped in place to deleting them. MB.16 through MB.18 were minted together, also during M1.20, when tracing why `build-db-image.yml` runs on a push to `staging` turned up three separate things: a Dependabot base-image bump no prose ever followed (MB.16), a `latest` tag nothing consumes standing in the docs as the push trigger's whole purpose (MB.17), and — on comparing the three image-build workflows side by side — a skip-if-exists check that only `build-db-image.yml` lacks, for a documented reason that holds on the `push` path and fails on the `workflow_call` path every PR actually takes (MB.18). MB.19 was minted on request, after `npm audit` was found to carry a standing moderate advisory (GHSA-67mh-4wv8-2f99) reached only through `drizzle-kit`'s devDependency chain, with no fix available on its stable dist-tag. MB.19 was then **retired without being done** — it is the first task to be retired rather than completed or re-scoped — when re-examining it showed the advisory has no runtime path and that the upgrade traded a frozen stable dependency for a prerelease one; its ID and analysis are kept because task IDs are immutable, and the standing decision now lives in `db.md`. MB.20 was minted in the same pass: tracing what would eventually force that upgrade anyway identified `@pothos/plugin-drizzle`, a `0.x` package that tracks `drizzle-orm`'s version and whose primary capability — resolver-level database access — CLAUDE.md rule 1 forbids. Dropping it before M3 is written is what makes staying on `0.45.2` sustainable. MB.21 was minted on request: there was no way to browse the local database without `psql`, and `drizzle-kit` — pinned at `0.31.10` by MB.20's decision — already ships a `studio` subcommand that needs only wiring, not a new dependency. MB.22 was minted on request, for the same reason as MB.21 but broader: there was no debugging story at all — no Node inspector wired anywhere in the container, no `.vscode/` directory, no way to step into a service, a repository call, or a test, and no way to watch what `withAudit`'s `SET LOCAL app.current_user_id` and RLS actually do to a query beyond reading its output. It is scoped and sized as a single task rather than split across several, as an explicit exception to the normal 1–2h task sizing: the work is uniformly tooling-only (no table, no service, no page), lands as one coherent developer-experience change, and the user asked for it as one PR. MB.23 was minted on request immediately after MB.22 merged: writing an e2e spec by hand means hand-guessing role and label queries against a page nobody has inspected, and `playwright codegen` records a real interaction and emits exactly the query style CLAUDE.md mandates — but MB.22's `playwright-server` service has no display for the recorder to open, a limitation its own design record names. MB.23 gives that service a display (Xvfb, a window manager, and a noVNC tab at `:7900`) rather than standing up a second service, which as a side effect also delivers `page.pause()` and UI mode's locator picker that MB.22 wrote off. MB.24 through MB.26 were minted together, out of the question of whether RLS was worth its cost at all. Checking §8 against the code answered it twice over: the policies M6.4 was about to write would have been **inert**, because `drizzle-kit migrate` and the application share one `DATABASE_URL` and so the app owns every table it would be filtered by — Postgres exempts a table's owner from its own policies unless `FORCE` is set, and `FORCE` appears nowhere in this repo; and fixing only that would have broken **every read**, because the GUC is published inside `withAudit` and the read path never opens a transaction for it to be local to. The two defects concealed each other, which is why neither had surfaced: the first kept the policies from applying, so the second could not yet bite. MB.24 is the decision and the doc correction, MB.25 the role split, MB.26 the read-side wrapper. MB.27 was minted in the same pass from a separate defect found while tracing how `DATABASE_URL` resolves per branch: `deploy.yml` calls `vercel pull` without `--git-branch`, so M1.1's branch-scoped `staging` override has never reached a build. MB.28 was minted while designing the ingredient identity model: `lower(name)` uniqueness cannot express an admin-curated compendium holding several unrelated things under one ambiguous common name, and DESIGN.md §5 needs that fix recorded before M4.1 can treat the `CREATE TABLE` as transcription rather than design.
 
 | ID    | Task                                                                                         | Status  | Needed by    |
 | ----- | -------------------------------------------------------------------------------------------- | ------- | ------------ |
@@ -2994,6 +3163,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.25 | Split the database roles so RLS applies to the app                                           | Wave 3  | M6.4         |
 | MB.26 | `withViewer`, the read-side identity wrapper                                                 | Wave 4  | M6.3, M6.4   |
 | MB.27 | `vercel pull` ignores branch-scoped variables                                                | Wave 4  | —            |
+| MB.28 | Record the ingredient identity model in the design docs                                      | Wave 3  | M4.1         |
 
 **MB.5 — Restore `users` foreign keys on `auditColumns`** · 2h
 
@@ -3020,7 +3190,7 @@ _Acceptance criteria:_
 
 _Story 56 — As a workspace member, I want to read a saved spell on its own page, so that I can follow it without opening the builder._
 
-`/coven/[slug]/grimoire/[id]`, added to §9's route table by this audit. M10.22 and CLAUDE.md both reference "the spell recipe view" and story 56 is about _reading_ a spell, but §9 had no spell detail route — `/grimoire/new` is the builder, and you cannot print a saved spell from it. This is the page M10.22 attaches print styles to.
+`/coven/[slug]/grimoire/[id]`, added to §9's route table by this audit. M10.22 and CLAUDE.md both reference "the spell recipe view" and story 56 is about _reading_ a spell, but §9 had no spell detail route — `/grimoire/new` is the builder, and you cannot print a saved spell from it. This is the page M10.22 attaches print styles to. Two ingredients sharing a display label render with their formal name alongside it, since the page has no hover affordance to disambiguate them the way a card's tooltip can.
 
 _Acceptance criteria:_
 
@@ -3028,6 +3198,7 @@ _Acceptance criteria:_
 - Visibility is enforced in SQL: a private spell is reachable only by its author
 - A non-member receives 404, consistent with the rest of `/coven/[slug]`
 - Ingredients render in layer order with quantities
+- Two ingredients sharing a label are disambiguated by their formal name, not by hover
 - The page is the only view M10.22 styles for print
 
 **MB.7 — Application nav shell** · 2h
@@ -3479,6 +3650,23 @@ _Acceptance criteria:_
 - `m1.1-neon-branch-strategy.md` gains a dated amendment recording what the live behaviour actually is
 - `claude-docs/ci.md` records the `--git-branch` requirement so the next reader does not drop it again
 - `npm run pre-commit` is green
+
+**MB.28 — Record the ingredient identity model in the design docs** · 1h
+
+_Story:_ As a developer, I want the ingredient identity model fully specified in the design docs before M4.1 writes the table, so that the `CREATE TABLE` is transcription, not design.
+
+DESIGN.md §5 currently models an ingredient's identity as `lower(name)` alone, with `folkNames text[]` beside it. That cannot express three things the domain contains: common names are regional and ambiguous — "Cat's Claw" names four unrelated species and a literal cat's claw — a safety note attached to an ambiguous name is dangerous, and global `lower(name)` uniqueness forbids the compendium holding more than one of them at all. `MB` is the namespace for a missing dependency scheduled without renumbering an immutable ID; MB.16 ("Correct the Postgres version across the live docs") is the doc-only precedent. This is its own task, ahead of M4.1, because M4.1 is transcription of §5 and the DDL must be fully specified before it is written.
+
+_Acceptance criteria:_
+
+- DESIGN.md §5 gains `nomenclature`, `canonicalName` and the generated `canonicalKey`; `folkNames[]` moves to its own `ingredient_folk_names` table; `form` becomes free text backed by the new `ingredient_forms` vocabulary rather than an enum, and its SQL block carries three partial unique indexes rather than two
+- DESIGN.md §7, §9 and §11 are amended per the identity-model plan, including the note that the M3.4 SDL snapshot moves
+- DESIGN.md §14 gains its decision-log rows, and the SQLite array-column example is corrected from `folkNames` to `deities[]`/`substitutes[]`
+- DESIGN.md §15 is adjudicated — reworded to distinguish identity from correspondence — rather than silently rewritten
+- Both CLAUDE.md invariants are updated: admins curate the form vocabulary too, and a new paragraph states the identity rule
+- `claude-docs/db.md` carries the identity model
+- `grep -n "catalog" claude-docs/DESIGN.md` still returns nothing
+- TASKS.md and TASKS.csv carry every amendment this redesign requires, in the same pass
 
 ## MW — Wave close-out
 
