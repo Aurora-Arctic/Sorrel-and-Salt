@@ -348,14 +348,25 @@ the database itself:
 select set_config('app.current_user_id', $1, true)
 ```
 
-That is the second of CLAUDE.md's two authorization layers. The service
+That is the foundation of CLAUDE.md's second authorization layer. The service
 layer's `assertMembership` runs in application code; the RLS policies of
-M6.4 run below it and read the acting user back with
-`current_setting('app.current_user_id')`, so a service that forgets its
-check still cannot reach another workspace's rows. The same GUC is what a v2
+M6.4 will run below it and read the acting user back through
+`app.current_user_id()`, so a service that forgets its check still cannot
+reach another workspace's rows. The same GUC is what a v2
 history trigger would read for `changed_by` (DESIGN.md §14), which is why
 it is set now rather than when RLS arrives — it makes history a one-migration
 addition instead of a re-audit of every write path.
+
+**The GUC alone does not give you that second layer**, and MB.24 found two
+reasons why. The application currently connects as `sorrel`, which owns every
+table, and Postgres skips a table's policies for its owner — so policies
+written today would be inert. And this GUC is published only inside
+`withAudit`, the write path: reads go through `selectFrom` on the bare client
+with no transaction, and a `LOCAL` setting exists nowhere else, so a policy
+reading it on a read would find it unset or empty. MB.25 splits the roles and
+MB.26 adds `withViewer` before M6.4 writes a single policy. Until all three
+land, treat `assertMembership` as the only layer that is actually load-bearing.
+Full reasoning: [`mb.24-rls-role-split.md`](design-decisions/mb.24-rls-role-split.md).
 
 **Why `set_config(.., true)` and not `SET LOCAL`.** They have identical
 semantics — the third argument `is_local => true` _is_ `LOCAL` — but
