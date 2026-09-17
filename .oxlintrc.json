@@ -15,6 +15,11 @@
           {
             "group": ["**/db/connection", "**/db/connection.ts", "./connection", "./connection.ts"],
             "message": "Import the database client only in src/db/repository.ts (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
+          },
+          {
+            "group": ["drizzle-orm", "drizzle-orm/*"],
+            "allowTypeImports": true,
+            "message": "Build queries only in src/db/repository.ts (CLAUDE.md rule 4) — a Drizzle query cannot be built without importing drizzle-orm at runtime, so this is that rule rather than a style. Reach the database through a service; `import type` is allowed everywhere, which is how the GraphQL layer names Drizzle types (DESIGN.md §7)."
           }
         ]
       }
@@ -53,6 +58,27 @@
       "files": ["scripts/**/*.ts"],
       "rules": {
         "no-console": "off"
+      }
+    },
+    {
+      "files": ["src/db/**/*.ts", "scripts/**/*.ts", "drizzle.config.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "**/db/connection",
+                  "**/db/connection.ts",
+                  "./connection",
+                  "./connection.ts"
+                ],
+                "message": "Import the database client only in src/db/repository.ts (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
+              }
+            ]
+          }
+        ]
       }
     }
   ]
