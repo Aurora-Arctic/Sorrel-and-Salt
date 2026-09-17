@@ -75,9 +75,10 @@ attached at all.
 | 51204 | Vitest UI (`@vitest/ui` default port)                | devcontainer.json only                                                                                                    |
 | 61000 | Ladle workshop                                       | pre-existing (M0.30), `workshop` service                                                                                  |
 | 4444  | `playwright run-server` (remote browser)             | `playwright-server` service (Docker/docker-compose.yaml, profile `e2e`) — dialed by the runner, never opened in a browser |
-| 7900  | Playwright display — codegen, `page.pause()` (MB.23) | `playwright-server` service — a page you open, unlike 4444                                                                |
+| 7900  | Playwright display — codegen, `page.pause()` (MB.23) | devcontainer.json, `playwright-server` service — a page you open, unlike 4444                                             |
 
-Every port above 8001 that isn't 4444 or 61000 is new to this task. All the
+Everything in that table except 8000, 8001, 4983, 4444 and 61000 is new to
+MB.22; 7900 is MB.23's. All the
 `devcontainer.json`-only rows are forwarded because the process that opens
 them runs inside the devcontainer and is started from an editor terminal or
 a `tasks.json` task, not by a long-running compose service — there is
@@ -154,16 +155,35 @@ live or just examined after the fact:
 **Why a remote browser exists at all, and what it costs**: this devcontainer
 is Alpine/musl (`Docker/Dockerfile.node`), and Chromium has no official musl
 build, so Playwright cannot launch a local browser here — full stop. The
+runner itself is plain Node with no native browser dependency, so only the
+_browser_ moves: rebasing the devcontainer (and `workshop`, and `studio`)
+off Debian was considered and rejected, since it reverses M0.11's Alpine
+slimming for the sake of the one process that actually needs glibc. The
 `playwright-server` compose service (profile `e2e`, same `Docker/Dockerfile.e2e`
 image the `e2e` service and CI's `playwright` job already use, so no version
 drift) runs `playwright run-server --host 0.0.0.0 --port 4444`, a long-lived
 Chromium a runner can dial into over Playwright's own remote-browser
 protocol. Bring it up/down independently with
 `make playwright-server-up` / `make playwright-server-down` from the host.
-`.devcontainer/docker-compose.yml` sets `PLAYWRIGHT_WS_ENDPOINT: ws://playwright-server:4444/`
-on the `devcontainer` service only — `make docker-e2e` and CI never set it,
-so both keep launching Chromium locally inside the one-shot `e2e` container,
-unaffected.
+
+**`PLAYWRIGHT_WS_ENDPOINT` must stay scoped to the `devcontainer` compose
+service** (`.devcontainer/docker-compose.yml` sets
+`ws://playwright-server:4444/` there and nowhere else). It must never be
+baked into an npm script or set unconditionally in `playwright.config.ts`:
+`make docker-e2e` and CI's `playwright` job both launch Chromium locally
+inside the one-shot `e2e` container, and setting the variable anywhere
+broader would silently make both depend on `playwright-server` being up,
+which it never is in either context.
+
+**The remote branch also moves `baseURL`, and deliberately not the readiness
+check.** When `PLAYWRIGHT_WS_ENDPOINT` is set, `playwright.config.ts`
+switches `baseURL` to `http://devcontainer:8001` — a remote browser cannot
+resolve the runner's own `localhost`, and `next start --hostname 0.0.0.0`
+already binds every interface, so the compose service name works. The
+`webServer.url` readiness poll stays on `http://localhost:8001`
+unconditionally, because that poll runs in the runner's own process no
+matter where the browser lives. The asymmetry is correct; making both sides
+match breaks one of them.
 
 **`ws://playwright-server:4444/` is a WebSocket address, not a URL you open
 in a browser.** It's what `playwright.config.ts` passes as
@@ -181,6 +201,25 @@ over noVNC — `page.pause()`'s Inspector overlay and UI mode's live locator
 picker both render there. This is also what `make docker-codegen` (below)
 opens. Trace viewer and UI mode's step-by-step replay don't need a live
 window at all and are unaffected either way.
+
+There is exactly **one display per `playwright-server` container**, so one
+headed session at a time, and what you get is a containerised Chromium
+streamed over noVNC into a host tab — slightly laggy, and not your own
+profile or extensions. A native host recorder was rejected for needing a
+host Node install and a separate Chromium download, recording against
+whatever version that resolves to rather than the one `PLAYWRIGHT_VERSION`
+pins. **Worth revisiting if Playwright ever adds recording to UI mode**: UI
+mode needs no display because its "Pick locator" works against the trace
+viewer's DOM snapshot, and as of 1.63 it has no recorder at all — a release
+that added one would genuinely retire this display.
+
+**The display is declared on the compose service, not just in the
+entrypoint.** `playwright-entrypoint.sh` raises Xvfb and exports
+`DISPLAY=:99`, but that export lives only in the entrypoint's own process;
+`docker compose exec` (what `make docker-codegen` uses) starts a fresh
+process from the container's initial environment and would fail with
+`Missing X server or $DISPLAY`. `environment: DISPLAY: ':99'` on the
+`playwright-server` service is what makes it reach every process. Keep both.
 
 Debugging a **specific spec** under `--inspect-brk` (port 9231) has no
 dedicated npm script — run it by hand:

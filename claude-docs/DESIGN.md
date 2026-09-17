@@ -50,7 +50,7 @@ Two more reasons:
 - **Raw SQL where needed.** Partial unique indexes, `num_nonnulls` check constraints, `pg_trgm` similarity, RLS policies, and the v2 PL/pgSQL trigger all live inside typed migrations. Prisma's schema language can't express most of them.
 - **No engine binary.** Prisma ships a Rust query engine as a separate process — cold-start weight and deployment size for nothing on serverless.
 
-A third reason — that Pothos has a first-class Drizzle plugin — **no longer applies**: the plugin is not used (MB.20, `design-decisions/mb.20-pothos-without-drizzle-plugin.md`), because its primary capability is resolver-level database access, which §3's rule 1 forbids. The ORM choice now rests on the two reasons above alone, and is correspondingly easier to revisit: `drizzle-orm` is reachable only from `src/db/repository.ts`.
+A third reason — that Pothos has a first-class Drizzle plugin — **no longer applies**: the plugin is not used (MB.20), because its primary capability is resolver-level database access, which §3's rule 1 forbids. The ORM choice now rests on the two reasons above alone, and is correspondingly easier to revisit: `drizzle-orm` is reachable only from `src/db/repository.ts`. §7 carries the rules that decision sets for the GraphQL layer.
 
 Trade-off: Prisma Studio is nicer than Drizzle Studio and Prisma's errors are friendlier. Kysely remains the other reasonable pick — its lack of a GraphQL plugin no longer counts against it, but it is still `0.x` and so no steadier than what is here.
 
@@ -168,7 +168,7 @@ Deploys are **CLI-driven from CI**, not Vercel's Git integration. `.github/workf
 }
 ```
 
-`"**": false` (minimatch, matches names with and without slashes) disables an automatic deployment for every branch, so CI is the only path that ships code — even if the Git integration is left connected. This replaces M0.25's allow-list of `main`/`staging`/`hotfix/*`; the reason is Vercel Hobby (see `claude-docs/design-decisions/m0.26-disable-previews-and-alias-staging.md`): a named `staging` environment on `staging.sorrelandsalt.com` needs Pro, whereas `vercel alias` from CI puts staging on that hostname for free.
+`"**": false` (minimatch, matches names with and without slashes) disables an automatic deployment for every branch, so CI is the only path that ships code — even if the Git integration is left connected. This replaces M0.25's allow-list of `main`/`staging`/`hotfix/*`; the reason is Vercel Hobby (M0.26): a named `staging` environment on `staging.sorrelandsalt.com` needs Pro, whereas `vercel alias` from CI puts staging on that hostname for free.
 
 | Item            | Setting                                                                                                                                                             |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -216,7 +216,7 @@ Spread as `...auditColumns` into every table, including join tables.
 2. **`updated_at` is a database trigger**, so a manual `psql` fix still stamps it.
 3. **Soft-delete filtering happens in the repository**, never at call sites. There is no exported query that can forget `deleted_at IS NULL`.
 
-Every transaction sets `SET LOCAL app.current_user_id = '<uuid>'`. This serves RLS today and the v2 history trigger later — putting it in now is what makes history a one-migration addition rather than a re-audit of every write path.
+Every transaction publishes the acting user as a transaction-local GUC, `app.current_user_id`. The statement is `select set_config('app.current_user_id', $1, true)` rather than a literal `SET LOCAL` — `is_local => true` _is_ `LOCAL`, and `SET LOCAL` accepts no bind parameters, so writing it literally would mean interpolating a user id into SQL text. This serves RLS today and the v2 history trigger later — putting it in now is what makes history a one-migration addition rather than a re-audit of every write path.
 
 **Partial indexes only, everywhere.** Without the `WHERE deleted_at IS NULL`, deleting a record permanently blocks reusing its name.
 
@@ -344,6 +344,15 @@ Single route handler at `/api/graphql`. No separate service, no additional hosti
 **Stack:** GraphQL Yoga (server), Pothos (code-first schema, no ORM plugin — §2), DataLoader, graphql-codegen for client types.
 
 **Client:** `graphql-request` plus TanStack Query, not Apollo. Apollo's normalized cache duplicates what TanStack Query already does here and adds ~40 kB. Codegen generates typed document nodes and hooks.
+
+**Four rules follow from dropping the Drizzle plugin (MB.20), and bind every M3 task:**
+
+- **Object types are declared by hand**, against the row type the service returns (`typeof ingredients.$inferSelect` and friends) — never a table-derived object type. TypeScript still fails the build when a column's type changes under a field.
+- **`auditColumns` maps to one shared `AuditInfo` object type, defined once.** A per-table audit shape is a bug.
+- **Every Pothos package in the stack is a stable major.** A `0.x` Pothos plugin entering the dependency tree is a decision argued for in the diff, not a convenience.
+- **The GraphQL layer imports `drizzle-orm` for _types_ only.** Runtime query building stays behind `src/db/repository.ts` (§3's rule 2).
+
+None of this rules the plugin out permanently — it is additive, and re-adopting it once it reaches a stable major is a contained change.
 
 ### Resolvers are thin
 
