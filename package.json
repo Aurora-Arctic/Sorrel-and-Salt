@@ -22,6 +22,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/db-seed.ts",
     "db:reset": "npm run db:migrate && npm run db:seed",
+    "db:studio": "drizzle-kit studio --host 0.0.0.0 --port 4983",
     "codegen": "echo 'codegen is not wired up yet — see M3.x' && exit 1",
     "workshop": "ladle serve",
     "workshop:build": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/build-workshop.ts"

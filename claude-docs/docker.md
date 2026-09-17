@@ -32,6 +32,14 @@ no Neon connection and no host Node-version juggling.
     `npm run workshop -- --host 0.0.0.0` (`ladle serve` binds `localhost`
     otherwise) and publishes **61000** (serve) and **61002** (pinned HMR socket).
     Does not depend on `postgres`.
+  - **`studio`** (MB.21) — behind the **`studio` compose profile**, same
+    build stage; runs `npm run db:studio` (`drizzle-kit studio --host
+0.0.0.0 --port 4983`, reading `drizzle.config.ts`) and publishes
+    **4983**. Unlike `workshop`, it **does** depend on `postgres` (health
+    gated) — there is nothing to browse without a database connection. The
+    Studio UI is hosted externally at `https://local.drizzle.studio`; the
+    browser connects from there back to `127.0.0.1:4983`, so this service
+    serves data only, never a page.
   - **`postgres`** — `build:`s straight from `Docker/Dockerfile.postgres` rather
     than pulling the GHCR image `build-db-image.yml` publishes for CI; this file
     is local dev only. Named volume `postgres_data` at
@@ -54,7 +62,8 @@ no Neon connection and no host Node-version juggling.
       stale `postgres_data` keeps serving whatever the previous image's init
       created. `make docker-rebuild` (`down -v`) is what gets a fresh one.
   - **Volumes** — one `node_modules` volume per service
-    (`node_modules_app`, `node_modules_workshop`, `node_modules_devcontainer`);
+    (`node_modules_app`, `node_modules_workshop`, `node_modules_studio`,
+    `node_modules_devcontainer`);
     a single shared volume makes the services race to populate it from their
     images on first mount. All persist across `docker compose restart` and
     `make docker-down`; only `make docker-rebuild` clears them.
@@ -68,13 +77,15 @@ no Neon connection and no host Node-version juggling.
 - **`makefile`** — each target wraps
   `docker compose -f Docker/docker-compose.yaml` (via the `COMPOSE` variable):
   `docker-up` (app + Postgres, detached), `docker-workshop` (adds the workshop
-  on 61000), `docker-build`, `docker-down` (keeps named volumes), `docker-rebuild`
-  (`down -v`, then rebuild and start), `docker-logs`, and
-  **`docker-build` / `docker-down` / `docker-rebuild` all pass
-  `--profile workshop`** so they still reach the profiled service; a new target
-  that forgets it leaves the workshop container orphaned. Plus
-  `docker-update-token` (refreshes the devcontainer's `CLAUDE_CODE_OAUTH_TOKEN`
-  in `Docker/.env` — standalone, not a prerequisite of `docker-up`).
+  on 61000), `docker-studio` (adds Drizzle Studio on 4983, MB.21), `docker-all`
+  (app + Postgres + workshop + studio together), `docker-build`, `docker-down`
+  (keeps named volumes), `docker-rebuild` (`down -v`, then rebuild and start),
+  `docker-logs`, and **`docker-build` / `docker-down` / `docker-rebuild` all
+  pass `--profile workshop --profile studio`** so they still reach every
+  profiled service; a new profiled service that forgets one of these three
+  targets is left orphaned by `docker-down`. Plus `docker-update-token`
+  (refreshes the devcontainer's `CLAUDE_CODE_OAUTH_TOKEN` in `Docker/.env` —
+  standalone, not a prerequisite of `docker-up`).
 - **`.dockerignore`** (repo root) — excludes `node_modules`, `.next`, `.git`,
   `build`, coverage and local env/state from the build context.
 - **`.devcontainer/`** — `devcontainer.json` plus a `docker-compose.yml` overlay
@@ -84,8 +95,10 @@ no Neon connection and no host Node-version juggling.
   `node_modules` volume, no published ports, and `command: sleep infinity` —
   which only sticks because `devcontainer.json` sets **`overrideCommand: false`**;
   without that the lifecycle re-pins the container to `npm run dev`.
-  `devcontainer.json` forwards **8000** (`next dev`) and **8001** (production
-  build), and adds zsh + oh-my-zsh (`common-utils` feature) plus `gh` via
+  `devcontainer.json` forwards **8000** (`next dev`), **8001** (production
+  build) and **4983** (Drizzle Studio, MB.21 — `npm run db:studio` run
+  directly, since `make`/`docker` aren't in the devcontainer), and adds
+  zsh + oh-my-zsh (`common-utils` feature) plus `gh` via
   `postCreateCommand: sudo apk add --no-cache github-cli` — the slim image has
   neither, and the `github-cli` feature is Debian-only, so it fails to build on
   Alpine. `make docker-up` is unaffected: it names only
