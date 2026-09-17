@@ -1,17 +1,17 @@
 name: Playwright E2E
 
 # Reusable check (M1.14) that runs the Playwright e2e suite against a built
-# and served site. Called via workflow_call from pr-gate and merge-queue,
-# never triggered directly. Ported from resume-2026's playwright.yml for the
+# and served site. Called via workflow_call from pr-gate, never triggered
+# directly. Ported from resume-2026's playwright.yml for the
 # parts that transfer directly — workflow_call inputs, container/checkout/
-# timer/summarize/job-summary/pr-comment steps, webServer building the app
+# summarize/job-summary/pr-comment steps, webServer building the app
 # itself so no separate build step is needed here, and the coverage artifact
 # upload. `secrets.RESUME_CONTACT_KEY` does not transfer — that decrypts a
 # resume-2026-only contact-encryption fixture with no Sorrel & Salt
 # equivalent.
 #
 # One deliberate divergence from resume-2026 (and from this repo's own
-# lint/typecheck/build/vitest pattern): this job's `container:` is NOT
+# checks.yml/vitest pattern): this job's `container:` is NOT
 # build-image.yml's shared `testing` image. Docker/Dockerfile.node's own
 # header comment says why directly — "Playwright's system libraries and
 # browser download are left out entirely — e2e is not run from this image"
@@ -38,7 +38,7 @@ on:
         required: false
         type: string
       merge-queue:
-        description: Set true when called from merge-queue.yml — uses a separate, merge-queue-labeled comment thread and posts only on failure, instead of always commenting pass/fail
+        description: Set true when called for a merge queue — uses a separate, merge-queue-labeled comment thread and posts only on failure, instead of always commenting pass/fail. Nothing passes it today — merge-queue.yml was deleted with the five check workflows (MB.32) and is restored from git history when M7.A.1 turns the merge queue on.
         required: false
         type: boolean
         default: false
@@ -50,7 +50,7 @@ on:
           a differently-named, bare check run ("playwright" instead of
           "playwright / playwright") when skipped, which never satisfies the
           "playwright / playwright" required status check and leaves the PR stuck.
-          Defaults true so merge-queue (no path filtering) is unaffected.
+          Defaults true so a caller that does no path filtering is unaffected.
         required: false
         type: boolean
         default: true
@@ -129,11 +129,6 @@ jobs:
         if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
-      - name: Start timer
-        id: timer-start
-        if: inputs.should-run
-        uses: ./.github/actions/timer-start
-
       # playwright.config.ts's webServer runs `npm run build && npm run
       # start` itself, so no separate build step is needed here. Browsers
       # and OS deps are already baked into `inputs.image` — no install step
@@ -144,13 +139,6 @@ jobs:
         run: |
           set -o pipefail
           npm run e2e -- --reporter=list,json,html 2>&1 | tee /app/output.log
-
-      - name: Compute duration
-        id: timer
-        if: always() && inputs.should-run
-        uses: ./.github/actions/timer-elapsed
-        with:
-          start: ${{ steps.timer-start.outputs.start }}
 
       - name: Upload Playwright report
         if: failure()
@@ -185,12 +173,11 @@ jobs:
           check-name: Playwright E2E
           outcome: ${{ steps.run.outcome }}
           log-file: /app/output.log
-          duration: ${{ steps.timer.outputs.duration }}
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
 
       # Always comments pass/fail from pr-gate, same convention as vitest.yml;
-      # fail-only on a separate merge-queue-labeled thread from merge-queue
+      # fail-only on a separate merge-queue-labeled thread when merge-queue: true
       # (no action at all on success) — see .github/actions/pr-comment.
       - name: Comment on PR
         if: always() && inputs.pr-number && inputs.should-run
@@ -203,6 +190,5 @@ jobs:
           outcome: ${{ steps.run.outcome }}
           log-file: /app/output.log
           success-mode: comment
-          duration: ${{ steps.timer.outputs.duration }}
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}

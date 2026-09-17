@@ -9,14 +9,16 @@ archived and are not required reading.
 
 ## Composite actions
 
-`.github/actions/` — five actions.
+`.github/actions/` — three actions. `timer-start` and `timer-elapsed` were a
+fourth and fifth until MB.32 deleted them: 46 lines across twelve workflows to
+print an elapsed time into a job summary. `duration` stays an **optional**
+input on `job-summary` and `pr-comment`, so restoring a timer would need no
+edit at any call site; nothing passes it today.
 
 - **`checkout-to-app`** — `actions/checkout` + `cp -a "$GITHUB_WORKSPACE"/. /app/`.
   Every other local action resolves as `./.github/actions/<name>` once checked
   out; this one runs _before_ that checkout exists, so **callers must reference
   it by full `Aurora-Arctic/Sorrel-and-Salt/...@main` path**.
-- **`timer-start`** / **`timer-elapsed`** — epoch-seconds start output,
-  formatted `12s` / `1m 34s` duration output.
 - **`job-summary`** — a pass/fail `$GITHUB_STEP_SUMMARY` callout, with a tailed
   log excerpt on failure.
 - **`pr-comment`** — upserts one marked comment per check (`<!-- ci-<slug> -->`),
@@ -25,12 +27,62 @@ archived and are not required reading.
 
 ## Reusable checks (`workflow_call`, never triggered directly)
 
-- **`{lint,format,typecheck}.yml`** — each runs its `npm run <check>` in a
-  `container: image: ${{ inputs.image }}` job (`options: --user root`),
-  summarizes the tool's raw output into a one-line stat plus a capped
-  collapsible breakdown, and reports through `job-summary` / `pr-comment`.
-  `lint` and `typecheck` take a `should-run` input for path-filtering;
-  **`format` has none and always runs**, since Prettier covers non-code files.
+- **`checks.yml`** (MB.32) — one matrix job running `lint`, `format`,
+  `typecheck`, `build` and `audit`, each reporting as `checks / <name>`. These
+  were five near-identical workflows until MB.32: the same
+  `image`/`pr-number`/`merge-queue`/`should-run` inputs, the same
+  `container: image: ${{ inputs.image }}` job (`options: --user root`), the
+  same checkout, `job-summary` and `pr-comment` scaffolding, differing in one
+  npm script and one summarising step.
+  - Every leg runs its command under `set -o pipefail` inside a brace group,
+    teeing the output to `/app/output.log`, then turns that log into a
+    one-line stat and a capped collapsible breakdown through its own script in
+    `.github/scripts/` — `summarize-lint.sh`, `summarize-format.sh`,
+    `summarize-typecheck.sh`, each moved there verbatim from the workflow it
+    came from, so what a PR comment says did not change. The brace group is
+    what keeps `2>&1 | tee` applying to the whole command rather than to the
+    last thing in it.
+  - **`fail-fast: false` is load-bearing.** A cancelled leg reports a
+    cancelled check, which required-status-check protection treats as
+    unsatisfied — so one failing leg would otherwise block the PR on four
+    checks that never got to run.
+  - **`run-lint` / `run-typecheck` / `run-build` are the path-filter inputs**,
+    one per filtered leg, in place of the single `should-run` each workflow
+    used to take. `format` has none and always runs, since Prettier covers
+    non-code files; `audit` has none because it is non-blocking and PR-only.
+    The first step resolves the three down to one flag for the leg it is
+    running, and treats an empty flag as true — so `act`, which applies no
+    `workflow_call` input defaults, cannot report a check it never ran.
+  - **`build`'s extras all survive the collapse**: the `/app/.next/cache`
+    restore through `actions/cache`, `DATABASE_URL`/`BETTER_AUTH_SECRET`, and
+    `npm run check:stories` / `npm run workshop:build` chained onto
+    `npm run build` with `&&`, which short-circuits the same way three
+    separate steps did. It posts no PR comment, as `build.yml` didn't.
+    - **The cache `path` is the absolute `/app/.next/cache`**, not a
+      workspace-relative path: `hashFiles()` reads `$GITHUB_WORKSPACE`, but
+      the job's working directory is `/app`.
+    - **`package.json`'s `build` script forces `NODE_ENV=production`.** The
+      `testing` image bakes in `NODE_ENV=test`, and Turbopack crashes
+      prerendering `/_global-error` under anything but `production`/unset —
+      without the force, every real build run fails.
+    - The two env vars sit at job level and are inert in the other four legs.
+      `npm run build` traces `/api/auth/[...all]` (M2.2), which reaches
+      `src/db/connection.ts` (throws at import without a syntactically valid
+      `DATABASE_URL`, though it never issues a query) and `src/lib/auth.ts`
+      (Better Auth requires a real `BETTER_AUTH_SECRET` at
+      `NODE_ENV=production`).
+  - **`audit`** — `npm audit --json`, which cannot fail the gate (a trailing
+    `|| true`), deliberately non-blocking and **never a required status
+    check**. It is the one leg that builds its own comment, through
+    `.github/scripts/audit-comment.cjs` under `actions/github-script` rather
+    than `pr-comment`: a severity table and a package breakdown reported as a
+    `[!WARNING]` on a step that passed, which `pr-comment`'s pass/fail
+    vocabulary has no way to say. It writes no job summary, for the same
+    reason — "Dependency Audit passed" directly above a warning about three
+    vulnerabilities is worse than nothing.
+  - **`vitest` and `playwright` are deliberately not legs.** Each brings a
+    `services: postgres:` block, a `db-image` input and its own artifact
+    uploads — a different job shape, not a different npm script.
 
 - **`destructive-ddl.yml`** (M1.5) — flags destructive DDL (`DROP COLUMN`,
   `DROP TABLE`, `RENAME`, `ALTER COLUMN ... TYPE`, `SET NOT NULL`/
@@ -44,40 +96,26 @@ archived and are not required reading.
   `dorny/paths-filter` step (`list-files: json`, reused rather than adding a
   second changed-files action), the body straight from
   `github.event.pull_request.body` at the `pr-gate.yml` call site.
-  `merge-queue.yml` calls it too, but with `should-run: false` (same reason
-  as its `gitflow` call — `merge_group` has no real PR body or diffable
-  source ref, so it can only trust that `pr-gate.yml` already gated the PR
-  before it reached the queue) purely so the check name reports success there
-  instead of never posting.
+  Its `should-run: false` path exists for a merge-queue caller (same reason
+  as `gitflow`'s — `merge_group` has no real PR body or diffable source ref,
+  so it can only trust that `pr-gate.yml` already gated the PR before it
+  reached the queue) purely so the check name reports success there instead of
+  never posting. `merge-queue.yml` was that caller until MB.32 deleted it.
 
-- **`build.yml`** — `npm run build` (`next build`) in the same container shape,
-  caching `.next/cache` via `actions/cache`. Then, gated by the same
-  `should-run`: `npm run check:stories` and `npm run workshop:build`.
-  - **The cache `path` is the absolute `/app/.next/cache`**, not a
-    workspace-relative path: `hashFiles()` reads `$GITHUB_WORKSPACE`, but the
-    job's working directory is `/app`.
-  - **`package.json`'s `build` script forces `NODE_ENV=production`.** The
-    `testing` image bakes in `NODE_ENV=test`, and Turbopack crashes prerendering
-    `/_global-error` under anything but `production`/unset — without the force,
-    every real `build / build` run fails.
-- **`audit.yml`** — `npm audit --json`, always exits clean (`continue-on-error`
-  plus a trailing `|| true`), comments a severity/package breakdown on the PR.
-  Deliberately non-blocking and **never a required status check**. Reports
-  through raw `actions/github-script` rather than the composite actions.
 - **`build-image.yml`** — builds the shared `testing` image once and exposes its
   ref as an `image` output. Tag is content-addressed:
   `ghcr.io/${github.repository,,}/testing:${{ hashFiles('Docker/Dockerfile.node', 'package-lock.json') }}`,
   and a `docker buildx imagetools inspect` check skips the build entirely when
   that hash already has a pushed image. **This image excludes Playwright
   entirely** — it's Alpine/musl-based and Playwright's Chromium build has no
-  official musl support — so `lint`/`typecheck`/`build`/`vitest` consume it,
+  official musl support — so every `checks.yml` leg and `vitest` consume it,
   but `playwright` does not; see `build-e2e-image.yml` below.
 - **`vitest.yml`** (M1.14) — `npm run test:coverage` in the same container
-  shape as `lint`/`typecheck`/`build` (`inputs.image` from `build-image.yml`),
+  shape as `checks.yml`'s legs (`inputs.image` from `build-image.yml`),
   plus a `services: postgres:` block on the `vitest` job keyed off its
   `inputs.db-image` — reachable by service name since `vitest` runs inside
   its own `container:`, per DESIGN.md §11's CI table. `db-image` comes in
-  from the caller (`pr-gate.yml`/`merge-queue.yml`'s own top-level
+  from the caller (`pr-gate.yml`'s own top-level
   `build-db-image` job, `uses: ./.github/workflows/build-db-image.yml`,
   same shape as `build-image`); `vitest.yml` doesn't call `build-db-image.yml`
   itself — it used to, and so did `playwright.yml` separately, which meant
@@ -89,7 +127,8 @@ archived and are not required reading.
   project's `json-summary` coverage reporter feed
   `.github/scripts/summarize-vitest.mjs` (ported from resume-2026, alongside
   `summarize-playwright.mjs` and shared `lib/coverage-table.mjs` — this repo
-  had no `.github/scripts/` before this task) for the PR comment's stat line
+  had no `.github/scripts/` before that task; MB.32 added the four `checks.yml`
+  scripts beside them) for the PR comment's stat line
   and coverage table. `should-run` path-filters the same way `lint`/
   `typecheck` do.
 - **`playwright.yml`** (M1.14) — `npm run e2e` against the app
@@ -138,51 +177,75 @@ archived and are not required reading.
 
 ## Aggregating workflows
 
-- **`pr-gate.yml`** — path-filters `lint`/`typecheck`/`build`/`destructive-ddl`/
-  `vitest`/`playwright` via `dorny/paths-filter` (`format` always runs), and
-  calls every reusable check — `vitest`/`playwright` (M1.14) are real
-  `workflow_call` jobs now, same job names the M0-era stubs used so no
-  required-status-check rename was ever needed. Its `build-image` job keeps a
+- **`pr-gate.yml`** — path-filters `lint`/`typecheck`/`build` (passed to
+  `checks.yml` as its three `run-*` inputs), `destructive-ddl`, `vitest` and
+  `playwright` via `dorny/paths-filter`; `format`, `audit` and `gitflow` always
+  run. It calls `checks.yml` **once**, as the `checks` job, where lint, format,
+  typecheck, build and audit used to be five jobs calling five workflows — so a
+  change to `checks.yml` now flips the lint, typecheck and build filters
+  together, which is what sharing one workflow costs. `vitest`/`playwright`
+  (M1.14) are real `workflow_call` jobs now, same job names the M0-era stubs
+  used so no required-status-check rename was ever needed. Its `build-image` job keeps a
   `pr-gate-build-image-<pr number>` / `cancel-in-progress: false` concurrency
   group on the caller; `build-e2e-image` (feeding `playwright`, not
   `build-image`) does the same under its own group.
-- **`merge-queue.yml`** — the `merge_group` counterpart, calling the same
-  `lint`/`format`/`typecheck`/`build`/`vitest`/`playwright` (no `audit` —
-  PR-only) with `merge-queue: true`, and no caller-side concurrency group.
-  Also calls `destructive-ddl` (`should-run: false`, no `merge-queue: true` —
-  see that workflow's own bullet above) for the same required-check-name
-  reason it calls `gitflow` below. **"Require merge
-  queue" is deliberately OFF** on `main` and `staging`: the workflow exists but
-  `merge_group` never fires until M7.A.1 flips that setting, once there is more
-  than one contributor.
-- Both `needs: gitflow` on every other job. `merge-queue.yml` calls it with
-  `should-run: false`, since `merge_group` events expose only a synthetic head
-  ref, not the PR's real source branch.
+- **`merge-queue.yml` was deleted by MB.32, and is restored from git history
+  when M7.A.1 fires.** It was the `merge_group` counterpart, re-expressing this
+  entire job graph — the same checks with `merge-queue: true`, plus
+  `destructive-ddl` and `gitflow` with `should-run: false` so their check names
+  reported rather than hung — for a queue that has never run. **"Require merge
+  queue" is deliberately OFF** on `main` and `staging`, so `merge_group` never
+  fires until M7.A.1 flips that setting, once there is more than one
+  contributor; M7.A.1 is trigger-based and a prerequisite for nothing. The
+  `merge-queue` input it fed survives on `checks.yml`, `vitest.yml`,
+  `playwright.yml`, `destructive-ddl.yml` and `gitflow.yml`, and `pr-comment`'s
+  fail-only merge-queue thread with it, so bringing the file back is a revert
+  rather than a redesign. Nothing passes it today.
+- Every check job `needs: gitflow`, so a PR from the wrong source branch burns
+  no CI time on the rest. `gitflow.yml`'s own `should-run: false` path is there
+  for a merge-queue caller, which sees only a synthetic head ref rather than
+  the PR's real source branch.
 - **Branch rulesets** — `Main`, `Staging` and `Release Branches`
   (`refs/heads/release/**`) exist and carry delete/force-push protection.
   `.github/dependabot.yml` targets `staging` on all three ecosystems (`npm`,
   `github-actions`, `docker`).
 - ⚠️ **No ruleset currently requires any status check** — verified against the
-  live API 2026-09-10. Adding `gitflow / gitflow` to `Main` and `Staging` needs
+  live API 2026-09-10, and still deliberately true: enabling branch protection
+  is not part of MB.32. Adding `gitflow / gitflow` to `Main` and `Staging` needs
   a PAT with `Administration` scope (the write returns `403` without it) or the
   GitHub UI, and until it is done the gitflow workflow reports but **blocks
   nothing**.
+- **MB.32 renamed five check contexts.** `lint / lint`, `format / format`,
+  `typecheck / typecheck`, `build / build` and `audit / audit` are now
+  `checks / lint`, `checks / format`, `checks / typecheck`, `checks / build`
+  and `checks / audit`; `vitest / vitest`, `playwright / playwright`,
+  `destructive-ddl / destructive-ddl` and `gitflow / gitflow` are unchanged.
+  Nothing had to be updated, because no ruleset required the old names and the
+  old names will never report again — but whatever enables protection must use
+  the new ones. A required check that no workflow publishes is permanently
+  pending, and blocks every PR after it.
 - **A required-check job must never carry a job-level `if:`.** GitHub then
   reports a bare, unqualified check name that `job / job` protection can never
-  match. That is why skipping is always done through `should-run` inputs
-  instead — every calling job itself runs unconditionally.
+  match. That is why skipping is always done through inputs instead —
+  `run-lint`/`run-typecheck`/`run-build` on `checks.yml`, `should-run`
+  elsewhere — and every calling job itself runs unconditionally. A matrix does
+  not change this: `checks.yml` runs all five legs on every push and each one
+  decides internally whether to do the work.
 - **Live GitHub settings are confirmed with the user before being changed**, and
   a permissions-blocked write is reported rather than routed around.
 
 ## Smoke checks
 
-One remains.
+None remain.
 
-- **`composite-actions-check.yml`** — exercises all five composite actions
-  together, asserting each `action.yml` lands in `/app`. Builds **no** image: it
-  runs on the bare `ubuntu-latest` runner, so it adds its own "Prepare /app"
-  step ahead of `checkout-to-app`. Nothing in `pr-gate.yml` makes that
-  assertion, so it is not redundant with the gate.
+`composite-actions-check.yml` was the last one, and MB.32 deleted it: a
+workflow testing the composite actions that exist to de-duplicate the
+workflows. It asserted that each `action.yml` lands in `/app` on the bare
+`ubuntu-latest` runner, with its own "Prepare /app" step ahead of
+`checkout-to-app`. Every action it covered is now exercised by the checks that
+use it on the same push — a broken `job-summary` or `pr-comment` fails
+`checks`, `vitest` and `playwright` at once — and `checkout-to-app` is the
+first step of nearly every job in the repo.
 
 **A workflow must never publish a status-check context `pr-gate.yml` also
 publishes.** `lint-format-typecheck-check.yml` (M0.16) and
@@ -210,9 +273,10 @@ Deleting them moved one thing that was not duplicated: their path filters listed
 twice. MB.15 dropped the trigger.
 
 The merge queue was never affected. Neither deleted workflow declared
-`merge_group:`, and `merge-queue.yml` builds each of the three images exactly
-once and passes them down as inputs. Its re-running of the gate's checks is a
-merge queue verifying the merged result, which is the point of one.
+`merge_group:`, and `merge-queue.yml` built each of the three images exactly
+once and passed them down as inputs. Its re-running of the gate's checks was a
+merge queue verifying the merged result, which is the point of one. That file is
+itself gone now (MB.32) until M7.A.1 restores it.
 
 ## Database image
 
@@ -269,7 +333,7 @@ merge queue verifying the merged result, which is the point of one.
   invocation bypasses `push`'s path filter entirely, so it always runs when
   called, regardless of whether the calling PR touched `src/db/**`), exposing
   an `image` output. The caller is
-  `pr-gate.yml`/`merge-queue.yml`'s own top-level `build-db-image` job —
+  `pr-gate.yml`'s own top-level `build-db-image` job —
   built once there and passed down as a `db-image` input to both
   `vitest.yml` and `playwright.yml`, each keying their own
   `services: postgres:` block off it. **Not** `vitest.yml`/`playwright.yml`
@@ -344,12 +408,24 @@ nothing and this workflow is the only path.
 `Docker/Dockerfile.node` `testing` image (`act-image`). `.actrc` carries
 `-P ubuntu-latest=catthehacker/ubuntu:act-latest` and `--pull=false`.
 
-- `make act-lint`, `act-format`, `act-typecheck`, `act-destructive-ddl`, and
-  `act-test` for all four.
+- **One target covers every `checks.yml` leg** (MB.32), where there was one per
+  check workflow before the collapse: `make act-check` runs lint,
+  `make act-check CHECK=typecheck` runs typecheck, and so on through `format`,
+  `build` and `audit`. `--matrix name:<leg>` is what keeps `act` from running
+  all five. `make act-destructive-ddl` stays its own target — a different
+  workflow, with its own inputs — and `make act-test` chains lint, format,
+  typecheck and destructive-ddl.
 - `make act-cache-checkout` pre-clones this repo's `main` so the remote
   `checkout-to-app@main` ref resolves offline.
-- lint/typecheck/destructive-ddl need `--input should-run=true` — act does not
-  apply `workflow_call` input defaults.
+- **act does not apply `workflow_call` input defaults**, which is why
+  `act-destructive-ddl` passes `--input should-run=true` — without it the job
+  "passes" having run nothing. `act-check` needs no such flag: `checks.yml`
+  resolves an empty flag to true precisely so a local run cannot quietly skip
+  the work it was asked to do.
+- **`CHECK=build` and `CHECK=audit` are expected to fail locally**, and neither
+  is in `act-test`. The build leg wants `actions/cache@v6` pre-cached the way
+  `act-cache-checkout` pre-caches `checkout-to-app`; the audit leg wants a real
+  PR to comment on.
 - **`act-destructive-ddl` can't exercise the PR-body/changed-files inputs** —
   those come from `pr-gate.yml`'s `changes` job and the real
   `github.event.pull_request.body`, neither of which exists under a bare
@@ -359,13 +435,10 @@ nothing and this workflow is the only path.
   substitute for `npm run check:destructive-ddl -- --self-test`, which
   exercises the ack-line gating logic directly against fixtures under
   `scripts/__fixtures__/destructive-ddl/`.
-- **`act-build` / `act-vitest` / `act-playwright` still do not exist**, even
-  though `vitest.yml`/`playwright.yml` landed in M1.14. `act-build` needs
-  `actions/cache` pre-cached the way `act-cache-checkout` pre-caches
-  `checkout-to-app`. `act-vitest`/`act-playwright` are blocked on something
-  new: unlike `lint`/`format`/`typecheck` (single job, every input passed
-  directly), both take a `db-image` input that only exists because their
-  caller (`pr-gate.yml`/`merge-queue.yml`) has its own real
+- **`act-vitest` / `act-playwright` still do not exist**, even though
+  `vitest.yml`/`playwright.yml` landed in M1.14. Unlike the `checks.yml` legs
+  (single job, every input passed directly), both take a `db-image` input that
+  only exists because their caller (`pr-gate.yml`) has its own real
   `build-db-image`/`build-e2e-image` jobs upstream of them — `act -W ... -j
 vitest` would have to either execute `build-db-image.yml` for real (a
   genuine GHCR push, not something `--action-offline-mode` supports) or
@@ -374,4 +447,5 @@ vitest` would have to either execute `build-db-image.yml` for real (a
   than shipped in a form nobody could verify actually works.
 - **Every new reusable check workflow ships its `act-<name>` target in the same
   PR**, plus an `act-cache-*` pre-clone for any action that isn't cached yet
-  — except where that isn't possible yet, as above.
+  — except where that isn't possible yet, as above. A new `checks.yml` leg
+  needs no new target: it is `make act-check CHECK=<leg>` the day it lands.
