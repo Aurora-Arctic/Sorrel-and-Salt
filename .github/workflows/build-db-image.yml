@@ -8,29 +8,30 @@ name: Build DB Image
 # Dockerfile, and its init script — plus `latest`, so identical inputs always
 # produce the identical tag and every caller pins to it exactly.
 #
-# The path filter below *is* "rebuild is skipped for PRs that do not touch
-# src/db": an unrelated PR never triggers this workflow at all, rather than
-# triggering a job that runs and no-ops. Because the tag is a hash of those
-# same paths, a run that does trigger always produces a tag that either
-# matches an already-published one (content unchanged) or is new (content
-# changed) — there is no separate "did anything change" check to get wrong.
+# The `push` path filter below *is* "rebuild is skipped when nothing that
+# determines the image changed": an unrelated push never triggers this
+# workflow at all, rather than triggering a job that runs and no-ops. Because
+# the tag is a hash of those same paths, a run that does trigger always
+# produces a tag that either matches an already-published one (content
+# unchanged) or is new (content changed) — there is no separate "did anything
+# change" check to get wrong.
 #
-# Runs on pull_request too, not just push: the tag is content-addressed and
-# branch-agnostic, so a PR branch and staging producing the same src/db
-# content get the same tag and the same image — building early on a PR is
-# free reuse, not throwaway work. `latest` only moves on a push to `staging`
-# or `main`, so a PR's build never repoints the floating tag other workflows
-# default to.
+# The `push` trigger's real job is moving `latest`, which only happens on
+# `staging`/`main`. There is deliberately no `pull_request` trigger: this
+# workflow used to carry one, path-filtered the same way, on the argument that
+# a content-addressed PR build is free reuse rather than throwaway work. That
+# was written before M1.14 gave `pr-gate.yml` and `merge-queue.yml` each an
+# unconditional `build-db-image` job of their own. Those jobs now do the early
+# build on every PR, so the trigger bought a second workflow run pushing the
+# identical tag — a duplicate status check, not extra coverage (MB.15).
 on:
   push:
     branches: [staging, main]
-    paths: &db-image-paths
+    paths:
       - 'src/db/**'
       - 'Docker/Dockerfile.postgres'
       - 'Docker/postgres-init/**'
       - '.github/workflows/build-db-image.yml'
-  pull_request:
-    paths: *db-image-paths
   workflow_dispatch:
   # M1.14's `pr-gate.yml`/`merge-queue.yml` are the real consumers §11 always
   # pointed at — each has its own top-level `build-db-image` job
@@ -42,8 +43,8 @@ on:
   # its own nested `workflow_call`, which meant two independent checkout/
   # docker-login/buildx-setup sequences for what the content-addressed tag
   # makes an identical image either way. workflow_call coexists with the
-  # triggers above on the same `on:` block; a call bypasses `pull_request`'s
-  # path filter entirely (that filter only gates *this* workflow's own direct
+  # triggers above on the same `on:` block; a call bypasses `push`'s path
+  # filter entirely (that filter only gates *this* workflow's own direct
   # triggers), so every vitest/playwright run gets a real, current image
   # regardless of whether this specific PR touched `src/db/**`.
   workflow_call:
