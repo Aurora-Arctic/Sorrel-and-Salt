@@ -19,7 +19,7 @@
 #     `docker-up` no longer runs an `update-token` step.
 #
 # The `postgres` service (M0.13) gives local development and local tests a
-# real Postgres 18 — RLS, triggers, `pg_trgm`, array columns — with no Neon
+# real Postgres 18 — triggers, `pg_trgm`, generated columns, array columns — with no Neon
 # connection anywhere. `app` waits for it to pass its health check and reaches
 # it by service name through `DATABASE_URL`. It `build:`s straight from
 # `Docker/Dockerfile.postgres` (M0.18), the same way `app`/`workshop` build
