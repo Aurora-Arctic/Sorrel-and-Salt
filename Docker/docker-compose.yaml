@@ -100,6 +100,7 @@ volumes:
   node_modules_workshop:
   node_modules_e2e:
   node_modules_studio:
+  node_modules_playwright_server:
 
   # Postgres data directory. Persists across `docker compose restart` and
   # `make docker-down`; only `make docker-rebuild` (`down -v`) clears it.
@@ -151,6 +152,12 @@ services:
     tty: true
     ports:
       - '8000:8000'
+      # Node inspector (MB.22). Only listens when the container's process is
+      # started with `npm run dev:debug` (`next dev --inspect=0.0.0.0:9229`,
+      # next's own native flag) — the Dockerfile CMD (`npm run dev`) below
+      # opens no inspector, so this publish is a no-op for a bare
+      # `make docker-up`.
+      - '9229:9229'
     environment:
       NODE_ENV: development
       # Reaches Postgres by its compose service name; no Neon connection is
@@ -261,3 +268,42 @@ services:
       postgres:
         condition: service_healthy
     command: ['npm', 'run', 'e2e']
+
+  playwright-server:
+    # MB.22 — a long-lived browser for the devcontainer to drive remotely.
+    # `Docker/Dockerfile.node`'s `development` stage is Alpine/musl, and
+    # Chromium has no musl build (see that Dockerfile's header comment), so
+    # a devcontainer session cannot launch a local browser. The Playwright
+    # *runner* has no such constraint — it is plain Node — so instead of
+    # rebasing the devcontainer off Debian, this service runs `playwright
+    # run-server` from the same `Docker/Dockerfile.e2e` image `build-e2e-
+    # image.yml` already publishes for CI, and the runner (wherever it
+    # starts) dials in over Playwright's own remote-browser protocol.
+    #
+    # `ws://playwright-server:4444/` is not a page — it is the WebSocket
+    # address `connectOptions.wsEndpoint` in playwright.config.ts reads from
+    # `PLAYWRIGHT_WS_ENDPOINT`. `.devcontainer/docker-compose.yml` sets that
+    # variable on the `devcontainer` service only, so a run started from the
+    # editor takes this path and `make docker-e2e` / CI (which never set it)
+    # keep launching Chromium locally in the one-shot `e2e` service above —
+    # same image, same Playwright/browser version pin, no drift between the
+    # two paths.
+    #
+    # Opt-in and long-running, unlike `e2e`: behind the `e2e` profile (so
+    # `make docker-e2e`'s `--profile e2e` still builds it, and `docker-down`/
+    # `docker-rebuild` still tear it down), but started and stopped on its
+    # own via `make playwright-server-up` / `-down`, the way `studio` is
+    # started independently of a bare `make docker-up`.
+    profiles: ['e2e']
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.e2e
+    image: sorrel-e2e
+    working_dir: /app
+    volumes:
+      - ..:/app:cached
+      - node_modules_playwright_server:/app/node_modules
+    init: true
+    ports:
+      - '4444:4444' # playwright run-server — dialed by the runner, never opened in a browser
+    command: ['npx', 'playwright', 'run-server', '--host', '0.0.0.0', '--port', '4444']

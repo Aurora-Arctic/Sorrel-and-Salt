@@ -15,6 +15,9 @@
 #   workshop, workshop-build          M0.30
 #   check-stories                     M0.33
 #   db-studio, docker-studio          MB.21
+#   dev-debug, test-debug, test-ui,
+#     e2e-ui, e2e-trace, db-psql,
+#     playwright-server-up/-down      MB.22
 #
 # The db-seed/db-reset and codegen targets below are placeholders: the script
 # names exist so nothing has to be renamed later, but they exit non-zero until
@@ -24,12 +27,13 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev build start \
+.PHONY: help install dev dev-debug build start \
 	lint lint-fix format format-check typecheck check-stories check-destructive-ddl pre-commit \
-	db-generate db-migrate db-seed db-reset db-studio codegen \
+	test-debug test-ui e2e-ui e2e-trace \
+	db-generate db-migrate db-seed db-reset db-studio db-psql codegen \
 	workshop workshop-build \
 	docker-build docker-up docker-workshop docker-studio docker-all docker-e2e docker-down docker-rebuild docker-logs \
-	docker-update-token \
+	docker-update-token playwright-server-up playwright-server-down \
 	act-image act-cache-checkout act-lint act-format act-typecheck act-destructive-ddl act-test
 
 COMPOSE := docker compose -f Docker/docker-compose.yaml
@@ -48,6 +52,10 @@ install:
 ## Next.js dev server on port 8000
 dev:
 	npm run dev
+
+## Next.js dev server with the Node inspector on 9229 (MB.22)
+dev-debug:
+	npm run dev:debug
 
 ## Next.js production build
 build:
@@ -89,6 +97,22 @@ check-destructive-ddl:
 pre-commit:
 	npm run pre-commit
 
+## Vitest under --inspect-brk, single-worker, halted until a debugger attaches on 9230 (MB.22)
+test-debug:
+	npm run test:debug
+
+## Vitest UI on its default port, forwarded via devcontainer.json (MB.22)
+test-ui:
+	npm run test:ui
+
+## Playwright UI mode on 9324 (MB.22)
+e2e-ui:
+	npm run e2e:ui
+
+## Serve a written Playwright trace on 9323 — pass TRACE=path/to/trace.zip (MB.22)
+e2e-trace:
+	npm run e2e:trace -- $(TRACE)
+
 ## Generate a Drizzle migration from the schema (placeholder until M1.x)
 db-generate:
 	npm run db:generate
@@ -108,6 +132,10 @@ db-reset:
 ## Drizzle Studio on 4983 — browse the local database (MB.21)
 db-studio:
 	npm run db:studio
+
+## psql against the compose postgres service (MB.22)
+db-psql:
+	$(COMPOSE) exec postgres psql -U sorrel sorrel
 
 ## Run graphql-codegen (placeholder until M3.x)
 codegen:
@@ -172,6 +200,15 @@ docker-logs:
 ## Refresh the devcontainer's Claude Code OAuth token in Docker/.env
 docker-update-token:
 	./Docker/update-token.sh
+
+## Start the long-lived Playwright browser server (compose profile: e2e) — MB.22, so `npm run e2e`
+## can run from inside the (Alpine, browser-less) devcontainer against a Chromium in the Debian e2e image
+playwright-server-up:
+	$(COMPOSE) --profile e2e up -d playwright-server
+
+## Stop the Playwright browser server
+playwright-server-down:
+	$(COMPOSE) --profile e2e stop playwright-server
 
 # Local CI via act (M0.23). Runs the real reusable per-check workflows
 # (.github/workflows/{lint,format,typecheck}.yml) against a locally-built

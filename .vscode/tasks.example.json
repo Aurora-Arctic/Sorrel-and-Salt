@@ -1,0 +1,108 @@
+{
+  // MB.22 — copy this file to .vscode/tasks.json (gitignored, per-developer)
+  // to use it; see claude-docs/debugging.md for the full story.
+  //
+  // Each task below runs the corresponding npm script as a background task,
+  // so VS Code can start it from the Run Task / Run and Debug UI and know
+  // when it has finished coming up, instead of the terminal just sitting
+  // there looking busy. None of these carry a `preLaunchTask` binding to
+  // launch.example.json's attach configs — starting the task and then
+  // attaching are two separate, deliberate steps here, since e2e:ui in
+  // particular is useful on its own with no debugger attached at all.
+  //
+  // `problemMatcher.pattern.regexp` in each task is a deliberate non-match
+  // (`__no_problems__` never appears in any of these commands' output).
+  // None of dev:debug/test:debug/e2e:ui produce compiler-style
+  // file:line:message diagnostics worth wiring into VS Code's Problems
+  // panel — oxlint/tsc already own that job (see .vscode's usual
+  // editor.codeActionsOnSave wiring in devcontainer.json) — so the pattern
+  // exists only because `isBackground: true` requires a `problemMatcher`
+  // with a `background.beginsPattern`/`endsPattern` pair to know when the
+  // task has finished starting; VS Code's task schema has no way to supply
+  // just the background block on its own.
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dev:debug",
+      "type": "npm",
+      "script": "dev:debug",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": {
+          "regexp": "^__no_problems__$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          // Node's inspector line ("Debugger listening on
+          // ws://0.0.0.0:9229/...") comes first; Next.js's own
+          // "✓ Ready in <n>ms" is the actual readiness signal.
+          "activeOnStart": true,
+          "beginsPattern": "Debugger listening on ws://",
+          "endsPattern": "Ready in \\d+"
+        }
+      }
+    },
+    {
+      "label": "test:debug",
+      "type": "npm",
+      "script": "test:debug",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": {
+          "regexp": "^__no_problems__$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          // --inspect-brk halts before running anything, so "started" here
+          // means "halted and waiting for a debugger", not "tests ran".
+          // Node prints the "For help, see" line right after the listening
+          // line and then blocks, which is as close to a stable end marker
+          // as --inspect-brk output gets.
+          "activeOnStart": true,
+          "beginsPattern": "Debugger listening on ws://",
+          "endsPattern": "For help, see:"
+        }
+      }
+    },
+    {
+      "label": "e2e:ui",
+      "type": "npm",
+      "script": "e2e:ui",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": {
+          "regexp": "^__no_problems__$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          // Playwright UI mode prints its own "Listening on
+          // http://0.0.0.0:9324" once the server bound to --ui-port is up.
+          "activeOnStart": true,
+          "beginsPattern": "playwright",
+          "endsPattern": "Listening on"
+        }
+      }
+    }
+  ]
+}

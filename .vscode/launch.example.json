@@ -1,0 +1,80 @@
+{
+  // MB.22 — copy this file to .vscode/launch.json (gitignored, per-developer)
+  // to use it; see claude-docs/debugging.md for the full story.
+  //
+  // Every config here is "attach", not "launch". Every debuggable process in
+  // this repo is already started from a terminal inside the devcontainer —
+  // `npm run dev:debug`, `npm run test:debug`, a manually inspector-flagged
+  // Playwright run — by a human or by a `tasks.json` background task
+  // (.vscode/tasks.example.json). VS Code (whether it's running inside the
+  // devcontainer via Dev Containers, or on the host with the workspace
+  // opened through the same container) then attaches to the inspector port
+  // that process opened, rather than owning the process's lifecycle itself.
+  // A "launch" config would start a second, unrelated process instead.
+  //
+  // `localRoot`/`remoteRoot` are both `/app` because there is only one
+  // filesystem view here: the devcontainer mounts the repo at `/app`, and
+  // VS Code (via Dev Containers) runs its debug adapter inside that same
+  // container — there's no host/container path to translate between, unlike
+  // a debug session that reaches into a *different* container.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach: Next.js server",
+      "port": 9229,
+      "address": "localhost",
+      // `npm run dev:debug` sets --inspect=0.0.0.0:9229 (next dev's own
+      // native flag — not NODE_OPTIONS, which would leak into Next's
+      // internal child processes and collide with another port) — no
+      // --brk, so the server is already serving by the time you attach.
+      // `restart: true` because Next's dev server (and Fast Refresh) can
+      // recycle the inspected process; without it, an edit that triggers a
+      // restart silently drops the debug session instead of reattaching.
+      "restart": true,
+      "skipFiles": ["<node_internals>/**"],
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "/app"
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach: Vitest",
+      "port": 9230,
+      "address": "localhost",
+      // `npm run test:debug` sets --inspectBrk=0.0.0.0:9230 (Vitest's own
+      // native flag) and runs `vitest run --no-file-parallelism
+      // --maxWorkers=1` — single-worker and halted at the first line until
+      // this config attaches. Multi-worker Vitest would open one inspector
+      // port per worker, which nothing here could address individually, so
+      // debugging trades parallelism for a single attachable process;
+      // that's the whole reason the script forces one worker instead of
+      // leaving pool options at their default.
+      "skipFiles": ["<node_internals>/**"],
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "/app"
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach: Playwright runner",
+      "port": 9231,
+      "address": "localhost",
+      // Nothing listens on 9231 by default — there is no npm script for it.
+      // Debugging a specific spec means starting it by hand from a terminal:
+      //
+      //   NODE_OPTIONS='--inspect-brk=0.0.0.0:9231' npx playwright test <file>
+      //
+      // then running this config once that terminal prints "Debugger
+      // listening on ws://0.0.0.0:9231/...". This is an intentional
+      // simplification (see claude-docs/debugging.md) rather than a missing
+      // script — a fixed script would need a hardcoded spec path or extra
+      // argument plumbing for one debugging session's worth of value. Port
+      // 9231 is still reserved and forwarded (devcontainer.json) for this.
+      "skipFiles": ["<node_internals>/**"],
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "/app"
+    }
+  ]
+}

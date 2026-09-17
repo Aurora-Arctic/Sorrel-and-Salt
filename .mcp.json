@@ -3,6 +3,10 @@
     "asana": {
       "type": "http",
       "url": "https://mcp.asana.com/mcp"
+    },
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
     }
   }
 }
