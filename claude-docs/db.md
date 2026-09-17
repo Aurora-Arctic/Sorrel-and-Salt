@@ -35,7 +35,7 @@ upgraded**. The facts, as of 2026-09-17:
   **It has no runtime exposure**: the advisory is esbuild's _dev server_
   accepting cross-origin requests, `drizzle-kit` is a devDependency and
   build-time CLI that never ships to Vercel, and nothing here runs
-  `esbuild serve`. `.github/workflows/audit.yml` is non-blocking at every
+  `esbuild serve`. `checks.yml`'s `audit` leg is non-blocking at every
   severity (`npm audit --json … || true`) and only comments on the PR.
 
 Moving to the `1.0.0-rc.*` line was scoped as MB.19 and **retired**: it would

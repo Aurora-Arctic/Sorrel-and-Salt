@@ -3846,6 +3846,25 @@ _Acceptance criteria:_
 
 **MB.32 — Collapse the five check workflows onto one matrix** · 2h
 
+> **Merged.** `checks.yml` is one matrix job — `checks / lint`,
+> `checks / format`, `checks / typecheck`, `checks / build`,
+> `checks / audit` — and `pr-gate.yml` calls it once. The summarising steps
+> moved into `.github/scripts/` byte-for-byte, proven by running the old
+> inline shell and the moved scripts against the same fixture logs and
+> diffing their `$GITHUB_OUTPUT`; the audit comment was proven the same way
+> against a stubbed API, clean, vulnerable and unparseable. Nine files went:
+> five check workflows, `merge-queue.yml`, `composite-actions-check.yml` and
+> both timer actions. `duration` was already optional on
+> `job-summary`/`pr-comment`, so the seven workflows that had timers needed
+> only their timer steps removed.
+>
+> **Branch protection was not touched, and the criterion below is corrected
+> rather than met.** No ruleset requires any status check — the state
+> `ci.md` recorded on 2026-09-10 and still true — so there was no stale
+> required name to update, and enabling protection is deliberately not part
+> of this task. `ci.md` records the five renamed contexts for whenever it is
+> enabled.
+
 _Story:_ As a developer, I want one workflow to describe how a check runs, so that changing how checks report is one edit rather than five.
 
 `lint.yml`, `format.yml`, `typecheck.yml`, `build.yml` and `audit.yml` are one workflow written five times — 133 to 154 lines each, `build.yml` leaner at 92 because its summarising step is smaller: identical `image`/`pr-number`/`merge-queue`/`should-run` inputs, identical container and root-user options, identical timer, job-summary and pr-comment scaffolding. They differ in one npm script and one summarising step. MB.15 already deleted two workflows on this reasoning; this is the same observation one level up.
@@ -3863,7 +3882,7 @@ _Acceptance criteria:_
 - `pr-gate.yml` calls `checks.yml` once, and path filtering still skips work without leaving a required check unsatisfied
 - The `act-*` targets collapse to one parameterised target
 - `claude-docs/ci.md` describes the new shape and records that `merge-queue.yml` is restored from git history when M7.A.1 fires
-- **Branch protection on `main` and `staging` is updated to the new check names in the same session as the merge** — the old names will never report again, and a stale required check blocks every later PR
+- **Any branch protection naming the old check names is updated in the same session as the merge** — the old names will never report again, and a stale required check blocks every later PR. No ruleset requires a status check today, so there is nothing to update; `ci.md` carries the new names for whenever protection is turned on
 - A deliberately broken check is confirmed to comment and then minimise on fix
 
 **MB.33 — Ban runtime `drizzle-orm` outside the repository by lint** · 1h

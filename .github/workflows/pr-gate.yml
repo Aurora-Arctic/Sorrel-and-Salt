@@ -1,11 +1,16 @@
 name: PR Gate
 
 # Runs on every pull request targeting `main`, `staging`, or `release/*`. Fans
-# out to every check ported so far (lint, format, typecheck, build, vitest,
-# playwright, destructive-ddl, gitflow) plus a non-blocking npm audit, gating
-# the PR before it can be merged. format and gitflow always run; the rest are
-# path-filtered by the `changes` job below so a PR only pays for the checks
-# its changed files could actually affect.
+# out to every check ported so far — `checks` (lint, format, typecheck, build
+# and a non-blocking npm audit, as one matrix), `vitest`, `playwright`,
+# `destructive-ddl` and `gitflow` — gating the PR before it can be merged.
+# format, audit and gitflow always run; the rest are path-filtered by the
+# `changes` job below so a PR only pays for the checks its changed files could
+# actually affect.
+#
+# `checks` is one job calling checks.yml once (MB.32), where lint, format,
+# typecheck, build and audit used to be five jobs calling five near-identical
+# reusable workflows. Each leg reports as `checks / <name>`.
 #
 # `vitest` and `playwright` (M1.14) are real `workflow_call` checks now, not
 # the M0-era no-op stubs — job names are unchanged from the stubs, so no
@@ -19,28 +24,26 @@ name: PR Gate
 # would each pay for their own checkout/docker-login/buildx-setup for a
 # result the content-addressed tag makes identical either way.
 #
-# lint/typecheck/build/format/destructive-ddl/gitflow are required status
-# checks in branch protection (as "<job> / <job>", the name GitHub gives a
-# job inside a called reusable workflow) — audit is deliberately not among
-# them; it's PR-only and never gates a merge (see the audit job below).
-# Filtering must therefore never skip the calling job itself for those six —
-# a job-level `if:` makes GitHub report the check under a different, bare
-# name ("lint" instead of "lint / lint") instead of not reporting it at all,
-# and that bare name never satisfies the "lint / lint" required check,
-# permanently blocking the PR. So those jobs (audit included, for the same
-# consistent-naming reason even though it isn't required) always run and
-# instead pass their filter result through as a `should-run` workflow_call
-# input — see e.g. lint.yml — which skips the actual work internally but
-# keeps the job (and its check name) the same either way.
+# Every check here reports as "<caller job> / <called job>", the name GitHub
+# gives a job inside a called reusable workflow — so `checks / lint`,
+# `vitest / vitest`, `gitflow / gitflow`. Those are the names a branch ruleset
+# would require (none does yet — see claude-docs/ci.md), and filtering must
+# therefore never skip a calling job itself: a job-level `if:` makes GitHub
+# report the check under a different, bare name ("checks" instead of
+# "checks / lint") instead of not reporting it at all, and that bare name never
+# satisfies the required check, permanently blocking the PR. So every job below
+# runs unconditionally and passes its filter result through as a workflow_call
+# input instead — `run-lint`/`run-typecheck`/`run-build` on checks.yml,
+# `should-run` elsewhere — which skips the actual work internally but keeps the
+# job, and its check name, the same either way.
 #
 # `edited` (in addition to the default opened/synchronize/reopened) is kept
 # from upstream so retargeting a PR's base branch re-triggers gitflow's
 # source->target validation even without a new push.
 #
-# lint/format/typecheck/build/destructive-ddl/playwright/vitest also
-# `needs: gitflow`, so a PR from the wrong source/target branch never burns
-# CI time on them — see the gitflow job below for why the actual check only
-# makes sense here (merge-queue.yml calls it with should-run: false instead).
+# checks/destructive-ddl/playwright/vitest also `needs: gitflow`, so a PR from
+# the wrong source/target branch never burns CI time on them — see the gitflow
+# job below.
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
@@ -64,9 +67,13 @@ jobs:
   # format is deliberately NOT gated by this — Prettier covers .md/.json too,
   # and "did formatting change" is cheap and universal enough that it should
   # just run on every push rather than be filtered. Each filter also matches
-  # its own reusable workflow file plus pr-gate.yml and .github/actions/**,
-  # so editing the check's own workflow (or a shared composite action it
-  # depends on) always reruns it rather than silently going unverified.
+  # the workflow that runs it — checks.yml for lint/typecheck/build, its own
+  # file for the rest — plus its summarising script where it has one, and
+  # pr-gate.yml and .github/actions/** for all of them, so editing what runs a
+  # check always reruns it rather than silently going unverified. checks.yml
+  # sits on three filters now rather than one each: a change to it reruns lint,
+  # typecheck and build together, which is what collapsing them onto one
+  # workflow costs.
   changes:
     runs-on: ubuntu-latest
     outputs:
@@ -105,7 +112,8 @@ jobs:
             # deleted as strict subsets of this gate.
             lint:
               - *shared
-              - '.github/workflows/lint.yml'
+              - '.github/workflows/checks.yml'
+              - '.github/scripts/summarize-lint.sh'
               - 'Docker/Dockerfile.node'
               - '.oxlintrc.json'
               - '**/*.ts'
@@ -118,7 +126,8 @@ jobs:
               - 'package-lock.json'
             typecheck:
               - *shared
-              - '.github/workflows/typecheck.yml'
+              - '.github/workflows/checks.yml'
+              - '.github/scripts/summarize-typecheck.sh'
               - 'Docker/Dockerfile.node'
               - '**/*.ts'
               - '**/*.tsx'
@@ -126,7 +135,7 @@ jobs:
               - 'package-lock.json'
             build:
               - *shared
-              - '.github/workflows/build.yml'
+              - '.github/workflows/checks.yml'
               - 'Docker/Dockerfile.node'
               - 'src/**'
               - 'public/**'
@@ -154,7 +163,7 @@ jobs:
             # postgres-init — the build-db-image job below (its `db-image`
             # input) is what actually consumes that image, so a change there
             # needs vitest to rerun even though `changes` filters by
-            # build.yml/lint.yml's own narrower conventions. vitest.config.mts
+            # checks.yml's own narrower conventions. vitest.config.mts
             # and vitest.setup.ts aren't under src/**, so they're listed
             # explicitly.
             vitest:
@@ -204,89 +213,31 @@ jobs:
       cancel-in-progress: false
     uses: ./.github/workflows/build-image.yml
 
-  lint:
+  # One matrix job covering lint, format, typecheck, build and audit —
+  # MB.32 collapsed five near-identical reusable workflows into
+  # checks.yml, which reports each leg as `checks / <name>`. The three
+  # path-filtered legs take their flag from `changes` below; format and audit
+  # are unfiltered inside that workflow.
+  #
+  # The audit leg now waits on gitflow and build-image with the rest, where
+  # audit.yml was its own job needing only build-image: a PR from the wrong
+  # source branch no longer pays for it. It is still non-blocking and PR-only,
+  # and `if: github.event_name == 'pull_request'` is gone with it — pr-gate only
+  # runs on pull_request, and checks.yml guards its own optional pr-number
+  # rather than assuming a caller passed one (the rule M0.17 set).
+  checks:
     needs: [build-image, changes, gitflow]
     concurrency:
-      group: pr-gate-lint-${{ github.event.pull_request.number }}
+      group: pr-gate-checks-${{ github.event.pull_request.number }}
       cancel-in-progress: true
-    uses: ./.github/workflows/lint.yml
+    uses: ./.github/workflows/checks.yml
     with:
       image: ${{ needs.build-image.outputs.image }}
       pr-number: ${{ github.event.pull_request.number }}
-      # No job-level `if:` here on purpose — see lint.yml's should-run input for why.
-      should-run: ${{ needs.changes.outputs.lint == 'true' }}
-
-  # Deliberately ungated on `changes` — runs on every push regardless of what
-  # changed, but still gated on gitflow below.
-  format:
-    needs: [build-image, gitflow]
-    concurrency:
-      group: pr-gate-format-${{ github.event.pull_request.number }}
-      cancel-in-progress: true
-    uses: ./.github/workflows/format.yml
-    with:
-      image: ${{ needs.build-image.outputs.image }}
-      pr-number: ${{ github.event.pull_request.number }}
-
-  typecheck:
-    needs: [build-image, changes, gitflow]
-    concurrency:
-      group: pr-gate-typecheck-${{ github.event.pull_request.number }}
-      cancel-in-progress: true
-    uses: ./.github/workflows/typecheck.yml
-    with:
-      image: ${{ needs.build-image.outputs.image }}
-      pr-number: ${{ github.event.pull_request.number }}
-      # No job-level `if:` here on purpose — see typecheck.yml's should-run input for why.
-      should-run: ${{ needs.changes.outputs.typecheck == 'true' }}
-
-  build:
-    needs: [build-image, changes, gitflow]
-    concurrency:
-      group: pr-gate-build-${{ github.event.pull_request.number }}
-      cancel-in-progress: true
-    uses: ./.github/workflows/build.yml
-    with:
-      image: ${{ needs.build-image.outputs.image }}
-      # No job-level `if:` here on purpose — see build.yml's should-run input for why.
-      should-run: ${{ needs.changes.outputs.build == 'true' }}
-
-  # Blocking, unlike audit below — this gates a merge, since a destructive
-  # migration slipping through breaks the "revert is a deploy rollback"
-  # guarantee CLAUDE.md rule 10 exists for. Needs the real PR body (for the
-  # acknowledgement line) as well as a file list, neither of which
-  # `workflow_call` can read off its own trigger — both are passed in
-  # explicitly. See destructive-ddl.yml's own header comment for why.
-  destructive-ddl:
-    needs: [build-image, changes, gitflow]
-    concurrency:
-      group: pr-gate-destructive-ddl-${{ github.event.pull_request.number }}
-      cancel-in-progress: true
-    uses: ./.github/workflows/destructive-ddl.yml
-    with:
-      image: ${{ needs.build-image.outputs.image }}
-      pr-number: ${{ github.event.pull_request.number }}
-      # No job-level `if:` here on purpose — see destructive-ddl.yml's should-run input for why.
-      should-run: ${{ needs.changes.outputs.destructive_ddl == 'true' }}
-      changed-files: ${{ needs.changes.outputs.destructive_ddl_migrations_files }}
-      pr-body: ${{ github.event.pull_request.body }}
-
-  # Non-blocking and PR-only — not a required status check. Gated on the
-  # trigger itself (always true here since pr-gate only runs on
-  # pull_request) rather than assuming it, per the rule M0.17 set: a
-  # reusable check whose input is used unguarded downstream (audit.yml's
-  # `pr-number`) must not be reachable from a trigger where that input could
-  # be empty.
-  audit:
-    needs: build-image
-    if: github.event_name == 'pull_request'
-    concurrency:
-      group: pr-gate-audit-${{ github.event.pull_request.number }}
-      cancel-in-progress: true
-    uses: ./.github/workflows/audit.yml
-    with:
-      image: ${{ needs.build-image.outputs.image }}
-      pr-number: ${{ github.event.pull_request.number }}
+      # No job-level `if:` here on purpose — see checks.yml's run-* inputs for why.
+      run-lint: ${{ needs.changes.outputs.lint == 'true' }}
+      run-typecheck: ${{ needs.changes.outputs.typecheck == 'true' }}
+      run-build: ${{ needs.changes.outputs.build == 'true' }}
 
   # Publishes (or reuses, if content-addressed and unchanged) the preseeded
   # Postgres 18 image both vitest and playwright below need for their
@@ -343,9 +294,9 @@ jobs:
 
   # Deliberately ungated — runs on every push regardless of what changed, and
   # doesn't need build-image since it never touches the testing container.
-  # merge-queue.yml also calls gitflow.yml, but with should-run: false — see
-  # that file for why the actual check only makes sense here, against a
-  # PR's real source branch.
+  # gitflow.yml's should-run input exists for a merge-queue caller, which
+  # passes false — see that file for why the actual check only makes sense
+  # here, against a PR's real source branch.
   gitflow:
     concurrency:
       group: pr-gate-gitflow-${{ github.event.pull_request.number }}

@@ -1,19 +1,19 @@
 name: Vitest
 
 # Reusable check (M1.14) that runs the Vitest unit/component/db test suite
-# with coverage. Called via workflow_call from pr-gate and merge-queue,
-# never triggered directly. Ported from resume-2026's vitest.yml — the
-# workflow_call inputs, container/checkout/timer/summarize/job-summary/
-# pr-comment steps, and the coverage-threshold-is-the-exit-code reasoning
+# with coverage. Called via workflow_call from pr-gate, never triggered
+# directly. Ported from resume-2026's vitest.yml — the
+# workflow_call inputs, container/checkout/summarize/job-summary/pr-comment
+# steps, and the coverage-threshold-is-the-exit-code reasoning
 # all transfer directly. What's new here, since resume-2026 has no database
 # at all, is the `services: postgres:` block — see DESIGN.md §11's CI table
 # ("Actions services: postgres:18, reachable by service name from the
 # existing job container:") and
 # claude-docs/design-decisions/m1.9-test-db-isolation.md for why the `db`
 # project needs a real Postgres rather than SQLite. The image itself comes in
-# as `inputs.db-image` — built once by the caller (pr-gate.yml/
-# merge-queue.yml both have their own top-level `build-db-image` job, same
-# shape as `build-image`) rather than this workflow calling build-db-image.yml
+# as `inputs.db-image` — built once by the caller (pr-gate.yml has its own
+# top-level `build-db-image` job, same shape as `build-image`) rather than
+# this workflow calling build-db-image.yml
 # itself. playwright.yml needs the identical image and used to call it too —
 # two independent nested `workflow_call`s to the same file, each paying for
 # its own checkout/docker-login/buildx-setup, when the caller already builds
@@ -34,7 +34,7 @@ on:
         required: false
         type: string
       merge-queue:
-        description: Set true when called from merge-queue.yml — uses a separate, merge-queue-labeled comment thread and posts only on failure, instead of always commenting pass/fail
+        description: Set true when called for a merge queue — uses a separate, merge-queue-labeled comment thread and posts only on failure, instead of always commenting pass/fail. Nothing passes it today — merge-queue.yml was deleted with the five check workflows (MB.32) and is restored from git history when M7.A.1 turns the merge queue on.
         required: false
         type: boolean
         default: false
@@ -45,8 +45,8 @@ on:
           instead of putting an `if:` on the calling job — a job-level `if:` makes
           GitHub report a differently-named, bare check run ("vitest" instead of
           "vitest / vitest") when skipped, which never satisfies the "vitest / vitest"
-          required status check and leaves the PR stuck. Defaults true so merge-queue
-          (no path filtering) is unaffected.
+          required status check and leaves the PR stuck. Defaults true so a caller
+          that does no path filtering is unaffected.
         required: false
         type: boolean
         default: true
@@ -55,8 +55,8 @@ permissions:
   contents: read
   # read, not write — this job only pulls an already-built, already-pushed
   # image (inputs.db-image) into its `services:` block; it doesn't push
-  # anything itself, so it never needs more than lint.yml/typecheck.yml's
-  # own packages: read.
+  # anything itself, so it never needs more than checks.yml's own
+  # packages: read.
   packages: read
   pull-requests: write
 
@@ -111,11 +111,6 @@ jobs:
         if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
-      - name: Start timer
-        id: timer-start
-        if: inputs.should-run
-        uses: ./.github/actions/timer-start
-
       # @vitest/coverage-v8's coverage.thresholds (vitest.config.mts) fails this
       # command itself when coverage drops below 80% — same exit-code path as a
       # failing test, so steps.run.outcome already reflects combined test+coverage
@@ -126,13 +121,6 @@ jobs:
         run: |
           set -o pipefail
           npm run test:coverage -- --reporter=default --reporter=json --outputFile=/app/vitest-results.json 2>&1 | tee /app/output.log
-
-      - name: Compute duration
-        id: timer
-        if: always() && inputs.should-run
-        uses: ./.github/actions/timer-elapsed
-        with:
-          start: ${{ steps.timer-start.outputs.start }}
 
       - name: Summarize output
         id: summarize
@@ -157,12 +145,11 @@ jobs:
           check-name: Vitest
           outcome: ${{ steps.run.outcome }}
           log-file: /app/output.log
-          duration: ${{ steps.timer.outputs.duration }}
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
 
       # Always comments pass/fail from pr-gate; fail-only on a separate
-      # merge-queue-labeled thread from merge-queue (no action at all on
+      # merge-queue-labeled thread when merge-queue: true (no action at all on
       # success) — see .github/actions/pr-comment.
       - name: Comment on PR
         if: always() && inputs.pr-number && inputs.should-run
@@ -175,6 +162,5 @@ jobs:
           outcome: ${{ steps.run.outcome }}
           log-file: /app/output.log
           success-mode: comment
-          duration: ${{ steps.timer.outputs.duration }}
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
