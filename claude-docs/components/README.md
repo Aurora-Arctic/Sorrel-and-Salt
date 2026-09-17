@@ -18,6 +18,6 @@ component that is not obvious from the code:
 - what its tests cover, and anything not yet verifiable through the repo's own
   runner.
 
-State the decision, not how it was reached. Blow-by-blow history belongs in a
-transcript, and the reasoning behind a single contested choice in a decision
-record.
+State the decision, not how it was reached. The reasoning behind a single
+contested choice belongs in a decision record; blow-by-blow history belongs in
+the PR that made it.
