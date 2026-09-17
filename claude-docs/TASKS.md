@@ -3796,6 +3796,12 @@ _Acceptance criteria:_
 
 **MB.30 — Spike Better Auth's organization plugin for workspaces and invitations** · 2h
 
+> **Merged — not adopted.** The six answers, with the code that produced each,
+> are in [`mb.30-organization-plugin.md`](design-decisions/mb.30-organization-plugin.md).
+> No follow-up task was minted: M6.2 stands, and M6.3, M6.7 → M6.15 and
+> M7.1 → M7.7 are unchanged. DESIGN.md §2's Auth row no longer names the
+> plugin as the reason Better Auth was chosen, and §14 records the rejection.
+
 _Story:_ As a developer, I want to know whether the plugin that justified choosing Better Auth can carry workspaces and invitations, so that M6 and M7 are not hand-built beside a library that already does it.
 
 A spike: code on a throwaway branch to answer six questions, then deleted. What merges is a decision record and, if the answer is yes, one follow-up task.
