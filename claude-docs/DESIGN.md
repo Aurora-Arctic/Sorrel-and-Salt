@@ -233,7 +233,7 @@ Code, schema, and prose use _workspace_. Only the URL segment says _coven_.
 
 **`users`** — `id`, `email`, `name`, `image`, `role` (`user` | `admin`), `canCreateWorkspace` (boolean, default `false`), + audit. `name`/`image` (not `displayName`/`avatarUrl`) deliberately — they're Better Auth's own core `User` field names (§2, §8), and renaming them would need a `user.fields` mapping in `src/lib/auth.ts` for no real benefit.
 
-`role` is a column, not a table; v1 needs no granular platform permissions. Admins can write the global compendium and global categories, and **nothing else** — an admin has no access to any workspace's ingredients or grimoire. Bootstrap promotes the first user by email via env var; there is no UI for granting admin in v1 (M2.9 scopes one).
+`role` is a column, not a table; v1 needs no granular platform permissions. Admins can write the global compendium, global categories, and the ingredient form vocabulary, and **nothing else** — an admin has no access to any workspace's ingredients or grimoire. Bootstrap promotes the first user by email via env var; there is no UI for granting admin in v1 (M2.9 scopes one).
 
 `canCreateWorkspace` defaults to `false`. Signing in with Google or GitHub earns an account and nothing more. The flag turns `true` by one of two routes — accepting a workspace invitation or an admin granting it — and once `true` it stays `true`, so an established user can create as many workspaces as they like. Admins can always create workspaces regardless of the flag, and nothing in the OAuth flow sets it.
 
@@ -257,25 +257,33 @@ At least one `owner` per workspace, enforced on demotion and removal.
 
 Only the hash is stored, and the token is generated with a CSPRNG (`crypto.randomBytes`, never `Math.random`). The mutation returns the full URL once, in the response body; the UI shows it in a copy field with a "this is the only time you'll see it" warning. Accepting an invitation also sets `canCreateWorkspace` on the accepting user, audited — someone vouched for by an existing member is an established user.
 
-**`ingredients`** — `id`, `workspaceId` (nullable), `name`, `folkNames[]`, `form`, `description`, `element`, `planet`, `zodiac`, `deities[]`, `color`, `safetyNotes`, `substitutes[]`, + audit.
+**`ingredients`** — `id`, `workspaceId` (nullable), `name`, `canonicalName`, `nomenclature`, `canonicalKey` (generated), `form`, `description`, `element`, `planet`, `zodiac`, `deities[]`, `color`, `safetyNotes`, `substitutes[]`, + audit. Folk names are a child table rather than an array column — see `ingredient_folk_names`.
 
 One table, two tiers, so `spell_ingredients` (and v2's `notes`) point at a single kind of thing:
 
-- `workspaceId IS NULL` — the global compendium. Everyone reads; only admins write.
-- `workspaceId` set — local to that workspace. Owners and members there write it. Invisible elsewhere.
+- `workspaceId IS NULL` — the global compendium. Everyone reads; only admins write. Every entry declares a `nomenclature`, and one naming a system carries a `canonicalName`.
+- `workspaceId` set — local to that workspace. Owners and members there write it. Invisible elsewhere. A formal name is optional here, so story 29's one-field stub still saves.
 - No user path promotes local to global. That's v2's suggestion flow.
 
+`name` is the display label and nothing more; identity is the formal name plus the form, spelled out below. `form` is free text drawn from an admin-curated vocabulary (`ingredient_forms`), not an enum.
+`element` values: earth, air, fire, water, spirit — a closed enum, and a correspondence rather than part of identity.
+
+**`ingredient_folk_names`** — `id`, `ingredientId`, `name`, + audit. The regional and common names an ingredient also answers to.
+
 ```sql
-CREATE UNIQUE INDEX ON ingredients (lower(name))
-  WHERE workspace_id IS NULL AND deleted_at IS NULL;
-CREATE UNIQUE INDEX ON ingredients (workspace_id, lower(name))
-  WHERE workspace_id IS NOT NULL AND deleted_at IS NULL;
+CREATE UNIQUE INDEX ingredient_folk_names_unique
+  ON ingredient_folk_names (ingredient_id, lower(name))
+  WHERE deleted_at IS NULL;
+
+CREATE INDEX ingredient_folk_names_trgm
+  ON ingredient_folk_names USING gin (name gin_trgm_ops);
 ```
 
-A workspace-local ingredient may share a name with a compendium entry. The local entry wins in that workspace's search, badged as local. Forbidding the collision would block someone who disagrees with an admin's correspondences from keeping their own version.
+Uniqueness is per ingredient, **deliberately not global** — several unrelated plants claiming "Cat's Claw" is precisely the thing being documented. A child table rather than the `folkNames text[]` column it replaces, because `array_to_string` is `STABLE` on Postgres 18 and so is legal in neither an expression index nor a generated column: indexing a flattened array would have needed a hand-written `IMMUTABLE` wrapper whose honesty depends on the column staying `text[]`. Folk names were unindexed under the array design; as `text` rows the trigram index is trivial. GraphQL keeps exposing them flattened as `folkNames: [String!]!` (§7), so what a client sees does not change.
 
-`form` values: herb, root, bark, resin, flower, crystal, oil, curio, salt, powder, liquid, ash.
-`element` values: earth, air, fire, water, spirit.
+**`ingredient_forms`** — `id`, `name`, `slug`, `group`, `description`, + audit. Global only, admin-curated, shaped like `categories` and managed at `/admin/forms` under the same gate as `/admin/categories`. It is the vocabulary behind `ingredients.form`: seeded with herb, root, bark, resin, flower, crystal, oil, curio, salt, powder, liquid and ash, extended for animal-derived and whole-organism ingredients (leaf, seed, fruit, peel, stem, wood, sap, pollen, bone, claw, feather, shell, tooth, fur, shed, wax, whole), and grouped as _organism part_, _preparation_ or _matter_. `description` is required and non-empty, so a curated value explains itself — `rootBark` can say "the bark of the root, not the stem".
+
+**`ingredients.form` is `text`, not a foreign key to this table**, and that is the property the whole design rests on. An FK would key identity on an id and make an unlisted value impossible to write; text lets `canonicalKey` normalise the string and lets a member write `rhizome` before anyone has curated it. The curated set is a _vocabulary_, not a constraint: the entry form's autofill offers curated values first, then in-scope values already in use that are not in it, visibly distinguished. That second bucket is the admin's curation to-do list — the same idea as `WHERE nomenclature = 'unknown'` — and `/admin/forms` surfaces it so a stray `Rhizomes` is findable and fixable rather than invisible. Soft-deleting a vocabulary row rewrites no ingredient: the value stays on the rows and moves into the uncurated bucket.
 
 **`categories`** — `id`, `name`, `slug`, `color`, `description`, `group`, + audit. Global only, admin-curated. Suggestions in v2. Seed list in §6.
 
@@ -301,6 +309,122 @@ References the ingredient, not the inventory item, so a saved spell survives run
 
 **Notes are deferred to v2.** The first-class `notes` model and its `private | workspace | public` visibility model are specified in §13. Nothing in v1 writes a note, and no v1 table references one. `notes` is the reason the ingredient detail page (§9) is built to take a section beneath it without restructuring.
 
+### Ingredient identity — the formal name plus the form
+
+Common names are regional and ambiguous. "Cat's Claw" is _Uncaria tomentosa_, _Uncaria guianensis_, _Senegalia greggii_, _Dolichandra unguis-cati_ — and a literal claw from a cat. "Snakeroot" is five unrelated plants. Story 21's own example, finding "Devil's Shoestring" without recalling it is honeysuckle root, is itself an ambiguous name. A safety note hung on an ambiguous label is the dangerous case, because comfrey and foxglove leaf are confused in the real world: `safetyNotes` is the argument for demanding a formal name in the curated tier, and uniqueness on `lower(name)` was what stopped the compendium holding the ambiguity at all. So identity moved off the label.
+
+Five columns are easy to confuse, so the division is stated once:
+
+| Column          | Answers                                                  | Constrained                                                   | Why it is that way                                                                                                                                                                                                        |
+| --------------- | -------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`          | What is this called **here**?                            | free text; unique per workspace, not unique in the compendium | The display label, freely relabellable now that identity has moved off it                                                                                                                                                 |
+| `canonicalName` | What is its **formal name**?                             | free text, no format regex                                    | Identity. Required in the compendium, optional in a workspace                                                                                                                                                             |
+| `nomenclature`  | **Which naming system** does that formal name belong to? | enum, `NOT NULL`, no default                                  | Separates "no system names this" from "one does and nobody looked it up"; drives rendering, since a scientific name is italicised and a mineral or chemical name is not; and makes the compendium requirement enforceable |
+| `form`          | What kind of thing are you **holding**?                  | free text, autofilled from `ingredient_forms`                 | Identity-bearing: valerian root and valerian leaf are different ingredients. Open-ended, so no enum and no foreign key                                                                                                    |
+| `element`       | Which classical element does it **correspond to**?       | enum, five values                                             | A **correspondence**, beside `planet`, `zodiac`, `deities[]` and `color` — not identity. Earth/air/fire/water/spirit is a closed, fixed set: the exact opposite of `form`                                                 |
+
+**`nomenclature` names which naming system the formal name belongs to, not which rank within it.** `canonicalName` is the most specific accepted name _at the granularity the entry exists at_, written in that system's conventional form. Miss that rule and the crystal drawer collapses: amethyst, citrine, rose quartz, smoky quartz, agate, carnelian and onyx are all the species _Quartz_, selenite, satin spar and desert rose are all _Gypsum_, and the compendium could hold exactly one of each set. Outside minerals, sea, kosher and Himalayan pink salt are all sodium chloride, and `'Hidcote'` and `'Munstead'` lavender are both _Lavandula angustifolia_.
+
+| Entry                                | `nomenclature` | `canonicalName`                     |
+| ------------------------------------ | -------------- | ----------------------------------- |
+| Amethyst                             | `mineral`      | `Quartz var. amethyst`              |
+| Selenite                             | `mineral`      | `Gypsum var. selenite`              |
+| Lapis lazuli — a rock, not a species | `mineral`      | `Lapis lazuli`                      |
+| Hidcote lavender                     | `botanical`    | `Lavandula angustifolia 'Hidcote'`  |
+| A cat's claw                         | `zoological`   | `Felis catus`, with `form = 'claw'` |
+| Graveyard dirt                       | `none`         | — no system names it                |
+
+Where a system genuinely gives two entries the same most-specific name — sea salt and Himalayan pink salt are both `Sodium chloride` — the form is what separates them; where the form does not separate them either, they are one identity by this model, and that is the answer rather than a bug.
+
+**No format regex on `canonicalName`.** Real names include `Artemisia spp.`, `Lavandula angustifolia 'Hidcote'`, `subsp.` and `var.` ranks, and author citations like `Salvia officinalis L.` — a binomial regex rejects valid names, which is the same silent guess §11's `unitConvert` rule already forbids. Two of the four Cat's Claws were renamed at genus level in the last two decades, which is the argument again. For related reasons there is **no external identifier column** — POWO, IPNI, GBIF, CAS, IMA — in v1: nothing reads one, taxonomic ids churn, and a nullable text column is purely additive later.
+
+`nomenclature` has seven values:
+
+| Value        | Governs                                                                | Examples                                                                                                               |
+| ------------ | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `botanical`  | ICN                                                                    | _Uncaria tomentosa_, _Laurus nobilis_, _Artemisia spp._                                                                |
+| `fungal`     | ICN — see the note below                                               | _Amanita muscaria_, _Ganoderma lingzhi_                                                                                |
+| `zoological` | ICZN                                                                   | _Apis mellifera_ (beeswax), _Felis catus_ (a claw)                                                                     |
+| `mineral`    | IMA species and varieties, plus rocks, mineraloids and natural glasses | `Quartz var. amethyst`, `Lapis lazuli`, `Moldavite`                                                                    |
+| `chemical`   | IUPAC, or the accepted chemical name                                   | `Sodium chloride`, `Potassium nitrate`, `Sulphur`                                                                      |
+| `unknown`    | —                                                                      | There **is** a formal name and nobody has looked it up. `canonicalName IS NULL`                                        |
+| `none`       | —                                                                      | No system names this: graveyard dirt, moon water, a coffin nail, black salt (a _preparation_). `canonicalName IS NULL` |
+
+**`fungal` splits on organism, not code, and that is deliberate.** Fungi are governed by the ICN alongside plants, so `fungal` is the one value that does not correspond to a nomenclatural code of its own. It is kept because curators shelve mushrooms separately from herbs. A later reader should not "correct" the departure away — it is recorded in §14 for exactly that reason.
+
+`unknown` earns its place because `none` is a **positive claim**. Without `unknown`, an admin's only truthful option for an un-researched plant is to lie into `none`, and `WHERE nomenclature = 'unknown'` is a findable curation to-do list. This is the project's own idiom: `unitConvert` refuses a cross-dimension conversion as an explicit result the caller must handle rather than guessing.
+
+```sql
+  nomenclature   nomenclature_kind NOT NULL,          -- no DEFAULT, deliberately
+  canonical_name text,
+  form           text,                                -- vocabulary, not a foreign key
+  canonical_key  text NOT NULL GENERATED ALWAYS AS (
+                   lower(COALESCE(canonical_name, name))
+                   || COALESCE(' :: ' || lower(btrim(form)), '')
+                 ) STORED,
+
+  CONSTRAINT ingredients_nomenclature_declares_canonical_name
+    CHECK ((nomenclature IN ('none','unknown')) = (canonical_name IS NULL)),
+  CONSTRAINT ingredients_canonical_name_not_blank
+    CHECK (canonical_name IS NULL OR btrim(canonical_name) <> ''),
+  CONSTRAINT ingredients_form_not_blank
+    CHECK (form IS NULL OR btrim(form) <> '')
+```
+
+The first CHECK is a biconditional and is asserted in both directions: `none` or `unknown` carrying a formal name is rejected, and any other kind carrying none is rejected too. Folding the form into the key is what makes _Valeriana officinalis_ root and leaf two identities — two entries, two sets of correspondences, two safety notes — and what separates the cat's-claw vine from the literal claw. Every function in the expression (`lower`, `btrim`, `||`, `COALESCE`) is `IMMUTABLE` and no enum cast is involved, so the generated column is legal: freeing `form` from an enum is in fact what makes the expression possible. `lower(btrim(...))` collapses `Root Bark` onto `root bark`; `rootbark` is left to the autofill, exactly as with folk names. `canonicalKey` is `GENERATED ALWAYS`, so Postgres refuses a direct write — and Drizzle omits generated columns from `$inferInsert`, so TypeScript refuses first.
+
+**The missing default binds code paths, not users.** The workspace-local Zod variant supplies `nomenclature: 'none'` when the formal-name field is blank, so story 29 and "saving with only a name succeeds" hold verbatim; the compendium variant makes the admin answer. The kind↔name coupling is enforced in Zod as well as in the database, so the CHECK is never what a user sees.
+
+Three partial unique indexes, where the label alone previously needed two:
+
+```sql
+CREATE UNIQUE INDEX ingredients_compendium_identity_unique
+  ON ingredients (canonical_key)
+  WHERE workspace_id IS NULL AND deleted_at IS NULL;
+
+CREATE UNIQUE INDEX ingredients_workspace_identity_unique
+  ON ingredients (workspace_id, canonical_key)
+  WHERE workspace_id IS NOT NULL AND deleted_at IS NULL;
+
+-- Label uniqueness survives in the workspace tier only: inside one drawer an
+-- ambiguous label is a mistake, not a distinction.
+CREATE UNIQUE INDEX ingredients_workspace_label_unique
+  ON ingredients (workspace_id, lower(name))
+  WHERE workspace_id IS NOT NULL AND deleted_at IS NULL;
+```
+
+In the compendium four rows may display "Cat's Claw", told apart by their formal names; that is what the dropped label index buys. A unique _constraint_ cannot carry `WHERE deleted_at IS NULL`, and `NULLS NOT DISTINCT` exists only on constraints, so the two tiers stay separate partial indexes rather than one index over `(workspace_id, canonical_key)`.
+
+**Relabelling is safe, with one narrow exception worth stating:** identity is stable under relabelling only for rows that _carry_ a formal name. A `none` row's key **is** its label, so relabelling such a row does change its key.
+
+One consequence of the `COALESCE` merging two namespaces into one key: a `none` entry whose _label_ equals another entry's _formal name_ collides, and the raw error names a column the admin never filled in. Rare, arguably correct, and M5.2/M5.5 must translate it into a readable message naming the colliding entry.
+
+**Display name: no new column.** `name` remains the display label in both tiers. Choosing a folk name as the display name is a **swap** between `ingredients.name` and one `ingredient_folk_names` row — a two-value exchange in one transaction, which rows make cleaner than array juggling. Absent a selection, `name` is prefilled from `canonicalName` at write time, matching `lowStockThreshold`'s idiom of writing the default onto the row rather than defaulting at read time. A swap on a compendium row is **global**: a workspace cannot hold its own display preference for a shared entry without another table, which is out of scope for v1, and the UI says so before the swap.
+
+**Local beats compendium on identity, and on the label only as a fallback.** A compendium row is suppressed in a workspace's results when a non-deleted local row in that workspace matches it on `canonical_key`, **or — only when the local row declares no formal name — on the display label**, case-insensitively. The local entry wins, badged as local. Keying purely on `canonical_key` would regress the common case, since a local stub has no formal name and local "Mugwort" would stop suppressing compendium "Mugwort / _Artemisia vulgaris_"; keying purely on the label hides the wrong plant. The `canonicalName IS NULL` gate is the crux: a local that _declared_ an identity must not suppress a differently-identified row for merely sharing a label, and a local that declared nothing has only its label to go on. Suppression is an anti-join in SQL (§3's rule 7) — never both sets fetched and filtered in the resolver — and it is served by the two workspace-tier indexes, so it needs no index of its own.
+
+```sql
+SELECT c.* FROM ingredients c
+WHERE c.workspace_id IS NULL AND c.deleted_at IS NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM ingredients l
+    WHERE l.workspace_id = $1 AND l.deleted_at IS NULL
+      AND ( l.canonical_key = c.canonical_key
+            OR (l.canonical_name IS NULL AND lower(l.name) = lower(c.name)) ) );
+```
+
+| Local (label / formal name) | Compendium                | Result                                                                                          |
+| --------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------- |
+| Mugwort / —                 | Mugwort / _A. vulgaris_   | compendium suppressed                                                                           |
+| Cronewort / _A. vulgaris_   | Mugwort / _A. vulgaris_   | suppressed — labels differ, identity matches                                                    |
+| Mugwort / _A. vulgaris_     | Mugwort / _A. absinthium_ | **both shown** — different plants                                                               |
+| Graveyard dirt / `none`     | Graveyard dirt / `none`   | compendium suppressed                                                                           |
+| Cat's Claw / —              | Cat's Claw ×4             | all four suppressed — over-suppression, and what the fuzzy warning flags before the stub exists |
+
+A workspace-local ingredient may therefore share a label, and an identity, with a compendium entry. Forbidding the collision would block someone who disagrees with an admin's correspondences from keeping their own version.
+
+**Entry-time lookups are permission-scoped, and that is a leak rather than a nicety.** When someone types a common name or a form, the field suggests from the compendium and the current workspace only, never another workspace — and both halves are scoped: the suggested **strings** as well as the attribution list of which in-scope ingredients already claim them, each shown with its formal name so the ambiguity is visible at the moment of entry. A naive implementation gathers distinct values globally and scopes only the attribution, which reveals that another workspace holds the string. `ingredient_forms` is global and admin-curated, so its rows need no scoping; the in-use values outside it do. Picking a suggestion writes the string into this ingredient's own folk-name row — it links no records, and each ingredient keeps its own list.
+
 ### Two kinds of spell category
 
 `spell.categories` is what you **intend** the spell to do. The union of its ingredients' categories is what it is **composed of**. Conflating them would be a bug.
@@ -312,10 +436,23 @@ The spell builder shows both side by side, flagging intent categories with no in
 `pg_trgm`, available on Neon:
 
 ```sql
-CREATE INDEX ON ingredients USING gin (name gin_trgm_ops);
+CREATE INDEX ON ingredients USING gin (name gin_trgm_ops, canonical_name gin_trgm_ops);
 ```
 
-Debounced on the create form's name field. Returns compendium and in-workspace matches above ~0.4 similarity on `name` or any `folkNames` element. Non-blocking — renders as "Did you mean Bay Laurel?" with a link, plus a Create Anyway button. Merge tooling is v2.
+One multicolumn index over both names, plus `ingredient_folk_names`' own trigram index (§5). A multicolumn `gin_trgm_ops` index serves a query on either column alone, so the two names need one index rather than two.
+
+Debounced on the create form's name field. Returns compendium and in-workspace matches above 0.4 similarity on `name`, on `canonicalName`, or on any of the ingredient's folk-name rows.
+
+**The threshold is set explicitly, and the match uses the `%` operator.** Those are two requirements that pull against each other, and getting the combination wrong silently discards the index: `similarity(a, b) > 0.4` is a function call the planner cannot answer from a trigram index, so a query written that way sequentially scans `ingredients` no matter what indexes exist. Only the operators — `%`, `<->` — are indexable. But `%` alone means "similar by `pg_trgm.similarity_threshold`", which defaults to **0.3**, not the 0.4 this design wants. So the threshold is set per transaction and the predicate stays an operator:
+
+```sql
+SET LOCAL pg_trgm.similarity_threshold = 0.4;
+SELECT … WHERE name % $1 ORDER BY similarity(name, $1) DESC;
+```
+
+`%` filters through the index; `similarity()` only ranks what survives, which needs no index. Leaving the threshold to the default and leaving the predicate as a bare `similarity()` comparison are both wrong, in opposite directions — one changes the meaning, the other throws away the index.
+
+Every result carries its formal name: "Did you mean Cat's Claw?" is useless when it could mean five things. Non-blocking — renders as "Did you mean Bay Laurel?" with a link, plus a Create Anyway button. Merge tooling is v2.
 
 ---
 
@@ -386,7 +523,7 @@ No database access in a resolver, ever. Same lint rule as `db`.
 
 **2. React `cache()` — per-request memoization.** Wraps service functions so a layout and a page requesting the same workspace hit Postgres once. Scoped to the request, no staleness risk.
 
-**3. Next.js data cache with tag invalidation.** The compendium and categories are read on nearly every page, mutated only by admins, and identical for every viewer. Ideal cache target.
+**3. Next.js data cache with tag invalidation.** The compendium, the categories and the form vocabulary are read on nearly every page, mutated only by admins, and identical for every viewer. Ideal cache target — all three share the `compendium` tag, and every admin mutation across the three fires `revalidateTag`.
 
 ```ts
 export const getCompendium = unstable_cache(() => compendiumService.listGlobal(), ['compendium'], {
@@ -409,8 +546,9 @@ Persistent across requests and shared across instances. Should remove most compe
 type Query {
   me: User!
   workspace(slug: String!): Workspace
-  compendium(search: String, categoryIds: [ID!], form: Form): [Ingredient!]!
+  compendium(search: String, categoryIds: [ID!], form: String): [Ingredient!]!
   ingredient(id: ID!): Ingredient
+  ingredientFormValues: [IngredientFormValue!]! # the admin-curated form vocabulary
   workspaceIngredients(workspaceId: ID!, search: String, categoryIds: [ID!]): [InventoryItem!]!
   grimoire(workspaceId: ID!): [Spell!]! # workspace-visible + own private spells
   spell(id: ID!): Spell
@@ -429,11 +567,25 @@ type Mutation {
 
 type Ingredient {
   id: ID!
-  name: String!
+  name: String! # the display label
+  canonicalName: String # the formal name; null exactly when nomenclature is none or unknown
+  nomenclature: Nomenclature!
+  folkNames: [String!]! # flattened from ingredient_folk_names
+  form: String # free text, not an enum — the vocabulary is data
   isGlobal: Boolean!
   categories: [Category!]!
   audit: AuditInfo!
   # a v2 notes section slots in here
+}
+
+enum Nomenclature {
+  botanical
+  fungal
+  zoological
+  mineral
+  chemical
+  unknown
+  none
 }
 
 type Spell {
@@ -457,6 +609,12 @@ type InvitationResult {
   url: String! # returned once, never again
 }
 ```
+
+There is no `Form` enum in the schema. `ingredients.form` is free text over an admin-curated vocabulary (§5), so an enum would rewrite the SDL every time an admin curates a value; the vocabulary is read as data through `ingredientFormValues` and the filter argument is a `String`.
+
+**The type is `IngredientFormValue`, not `IngredientForm`, deliberately.** One row is one permitted _value_ of `ingredients.form`. Naming it after its table (`ingredient_forms`) would be the conventional mapping, but `IngredientForm` is already the entry-form component (§11) — and per this project's vocabulary rule a term means exactly one thing, so the newer of the two yields. The table keeps its name; only the GraphQL type diverges from it.
+
+Adding `canonicalName`, `nomenclature` and `folkNames` moves M3.4's SDL snapshot, which is what that snapshot is for.
 
 Cursor pagination on every list that can grow — the grimoire and compendium especially — through one shared helper: default page size 25, hard server-side maximum 100, cursors encoding a stable sort key plus id, never an offset.
 
@@ -507,6 +665,7 @@ Reasoning and rejected alternatives: [`mb.24-rls-role-split.md`](design-decision
 | `/coven/[slug]/members`       | Members and invitations (owner only)                                                                                                                   |
 | `/admin/compendium`           | Admin CRUD on global ingredients                                                                                                                       |
 | `/admin/categories`           | Admin CRUD on global categories                                                                                                                        |
+| `/admin/forms`                | Admin CRUD on the ingredient form vocabulary, plus the in-use values outside it                                                                        |
 | `/invite/[token]`             | Accept invitation                                                                                                                                      |
 | `/sign-in`                    | OAuth                                                                                                                                                  |
 
@@ -518,7 +677,7 @@ Component folders follow the `resume-2026` convention exactly — `src/component
 
 **`AppShell`** is the application-wide navigation frame, not a route. It wraps every signed-in page — compendium and ingredient detail included, which sit outside `/coven/` — and carries the primary nav, the `WorkspaceSwitcher`, and the global affordances for adding and editing an ingredient from any page. It is a layout component rather than a route because the nav must persist across navigation between workspace-scoped and global pages; the coven layout nests inside it and adds only workspace-scoped chrome.
 
-**`IngredientSearch`** is shared by compendium, ingredients, and spell builder. Debounced text match on `name` and `folkNames`; multi-select category chips grouped by §6's `group` field, AND by default with an OR toggle; secondary filters for form, element, in-stock-only; filter state in the URL query string. Each consumer supplies the action slot — Compendium passes "Add ingredient," Ingredients passes Edit/Delete, Spell Builder passes "Add to jar."
+**`IngredientSearch`** is shared by compendium, ingredients, and spell builder. Debounced text match on `name`, on the folk names, and on `canonicalName` — searching the formal name is how someone who knows the binomial finds the right one of four rows labelled "Cat's Claw"; multi-select category chips grouped by §6's `group` field, AND by default with an OR toggle; secondary filters for form, element, in-stock-only, where the form filter's options come from the curated vocabulary plus the in-use values outside it (§5) rather than a fixed set; filter state in the URL query string. Each consumer supplies the action slot — Compendium passes "Add ingredient," Ingredients passes Edit/Delete, Spell Builder passes "Add to jar."
 
 ### Componentized Sass
 
@@ -630,7 +789,7 @@ Every story becomes a failing test first: **write test → watch it fail → min
 | CI e2e               | Same service container                                                                        |
 | Staging + production | Neon                                                                                          |
 
-**SQLite was considered and rejected.** It cannot run RLS policies, `num_nonnulls` check constraints, `pg_trgm` fuzzy matching, PL/pgSQL triggers, native array columns for `folkNames`, or `SET LOCAL app.current_user_id`. The RLS tests are the point: the suite deliberately stubs out `assertMembership` to prove the database layer independently blocks cross-workspace reads. Under SQLite that test cannot exist, and the failure mode it guards against is one user's grimoire visible to another.
+**SQLite was considered and rejected.** It cannot run RLS policies, `num_nonnulls` check constraints, `pg_trgm` fuzzy matching, PL/pgSQL triggers, native array columns for `deities[]` and `substitutes[]`, stored generated columns for `canonical_key`, or `SET LOCAL app.current_user_id`. The RLS tests are the point: the suite deliberately stubs out `assertMembership` to prove the database layer independently blocks cross-workspace reads. Under SQLite that test cannot exist, and the failure mode it guards against is one user's grimoire visible to another.
 
 **Using local Postgres instead of Neon branches is a net simplification.** It removes the `NEON_API_KEY` secret, `globalSetup` branch creation, the 10-branch-per-project limit, the CU-hour budget, and the branch-reaper workflow. Neon becomes deployment-only infrastructure. Tests get faster too — a local socket beats a network round trip per query.
 
@@ -706,7 +865,7 @@ Acceptance coverage is tracked separately from the 80% line threshold, because t
 
 `src/lib/` carries the heaviest coverage:
 
-- `filterIngredients()` — name and folk-name match, AND vs OR, case and accent insensitivity, empty query returns all
+- `filterIngredients()` — match on name, folk names and formal name, AND vs OR, case and accent insensitivity, empty query returns all
 - `unitConvert()` — within a single dimension only: weight↔weight, volume↔volume, to a defined precision. Weight↔volume and anything involving count are refused as an explicit result the caller must handle, never null or a guess. No density table exists anywhere in the codebase
 - `summarizeSpellCategories()` — union and dedupe across ingredients
 - `compareSpellCategories()` — intended-not-present and present-not-intended, both directions
@@ -742,14 +901,21 @@ The highest-risk tests in the project.
 - Insert stamps `created_by`/`updated_by` from session, ignoring payload ids
 - Update leaves `created_at`/`created_by` untouched
 - Soft delete sets `deleted_at`/`deleted_by`; row vanishes from finders
-- Re-adding a name after soft delete succeeds — the partial-index test
+- Re-adding a **formal** name after soft delete succeeds — the partial-index test. It must be the formal name, not the display label: display labels are no longer unique in the compendium, so a label-based assertion would pass even with the `WHERE deleted_at IS NULL` stripped off the index, and the test would silently stop testing anything. M5.3 exists to exercise that index and carries the same correction
 
 **Compendium and ingredients**
 
 - A workspace-local ingredient is invisible to every other workspace
-- A local may share a name with a compendium entry; two locals in one workspace may not
-- A local entry wins over a compendium entry of the same name in that workspace's search
-- Fuzzy match returns near-misses above threshold, nothing below
+- A compendium insert omitting `nomenclature` is rejected — the column has no database default
+- The biconditional holds both ways: `none`/`unknown` carrying a formal name is rejected, and any other kind carrying none is rejected
+- `canonical_key` cannot be written or updated directly; Postgres refuses, and the column is absent from `$inferInsert` so TypeScript refuses first
+- Two compendium entries may share a display label when their formal names differ; two may not share an identity
+- A local may share a label — and an identity — with a compendium entry; two locals in one workspace may share neither
+- Local-beats-compendium suppression, one assertion per row of §5's resolution table: an identity match suppresses across differing labels, a label match suppresses only when the local declares no formal name, and two differently-identified rows sharing a label are both returned
+- Promoting a folk name to the display name leaves `canonical_key` unchanged on a row carrying a formal name, and changes it on a `none` row
+- A folk name, or a form value in use, present only in unrelated workspace X never surfaces in W's lookup — asserted against the service directly, not merely by its absence from a list
+- Fuzzy match returns near-misses above the explicit 0.4 threshold and nothing below, and each result carries its formal name
+- The fuzzy query plan uses the trigram index rather than a sequential scan — `EXPLAIN` asserted, because a `similarity()` comparison silently cannot use one and the results look identical either way
 
 **Grimoire**
 
@@ -780,7 +946,7 @@ The highest-risk tests in the project.
 `src/components/<Name>/index.test.tsx`, importing the sibling `from '.'`. Role and label queries only; no test ids for anything a user can see.
 
 - `IngredientSearch` — filtering, chip toggle, grouped chips collapse, clear, debounce via fake timers
-- `IngredientForm` — fuzzy warning renders, Create Anyway proceeds, compendium entries read-only for non-admins
+- `IngredientForm` — fuzzy warning renders and names each match's formal name, Create Anyway proceeds, compendium entries read-only for non-admins, the formal-name and form fields suggest in scope and accept free text outside the vocabulary
 - `AddIngredientModal` / `EditIngredientModal` — validation, submit payload, Escape, focus trap, focus restore, pre-population, dirty-discard warning
 - `InviteDialog` — link shown once, copy works, warning present, role selector offers viewer and member only (never owner)
 - `MemberList` — role controls hidden from non-owners
@@ -1019,27 +1185,35 @@ The nullable `spellId` on `notes` already accommodates it.
 
 Choices made during design that a future reader might otherwise revisit.
 
-| Question                         | Answer                                    | Reason                                                                                                                                                                                                                                                                                                                                                                         |
-| -------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Gatsby, like `resume-2026`?      | No                                        | SSG has no server runtime for sessions or audit stamping                                                                                                                                                                                                                                                                                                                       |
-| Vite SPA?                        | No                                        | Neon has no browser-facing API; client-set `created_by` is forgeable                                                                                                                                                                                                                                                                                                           |
-| Supabase?                        | No                                        | Free tier pauses after 7 days and needs manual restore                                                                                                                                                                                                                                                                                                                         |
-| Render Postgres?                 | No                                        | Free instance expires 30 days after creation                                                                                                                                                                                                                                                                                                                                   |
-| SQLite for tests?                | No                                        | Cannot run RLS, triggers, `pg_trgm`, or array columns                                                                                                                                                                                                                                                                                                                          |
-| RLS as well as service checks?   | Yes — and the app owns no table           | A forgotten check in one service is the realistic bug and the blast radius is another coven's grimoire. Policies on tables the app owns are inert, so the role split is what makes the second layer real rather than declared; `FORCE` keeps it real if `DATABASE_URL` resolves to some other owner. See [`mb.24-rls-role-split.md`](design-decisions/mb.24-rls-role-split.md) |
-| Neon branches for CI?            | No                                        | Local Postgres is faster and removes the branch limit and API key                                                                                                                                                                                                                                                                                                              |
-| Netlify?                         | No                                        | Vercel Hobby has 6,000 build minutes vs 300 and native Next.js                                                                                                                                                                                                                                                                                                                 |
-| Apollo Client?                   | No                                        | Duplicates TanStack Query's cache, adds ~40 kB                                                                                                                                                                                                                                                                                                                                 |
-| Polymorphic note subject?        | No                                        | Nullable FKs plus `num_nonnulls` keeps real referential integrity                                                                                                                                                                                                                                                                                                              |
-| Shadow history tables?           | No (v2 uses generic)                      | One trigger survives schema drift; per-model tables don't                                                                                                                                                                                                                                                                                                                      |
-| Email/password in v1?            | No                                        | Copy-link reset isn't self-service; OAuth removes the subsystem                                                                                                                                                                                                                                                                                                                |
-| Bulk add: all-or-nothing?        | No — partial with a report                | Skipping an already-present entry is the expected case on a re-run, not a failure; the call only aborts on ids the user couldn't act on anyway                                                                                                                                                                                                                                 |
-| Notes in v1?                     | No — v2                                   | Cuts 17 tasks / 29 hours; the three-tier visibility model and its UI are a milestone on their own and the core loop is provable without it                                                                                                                                                                                                                                     |
-| Personal workspaces?             | No                                        | A `kind` column plus "can't gain members / can't be deleted" special-casing for a one-person space that otherwise behaves like every workspace; drop it and every workspace is identical                                                                                                                                                                                       |
-| Open sign-up?                    | No — invite-gated                         | Signing in earns an account only; `canCreateWorkspace` is granted by an invitation or an admin and persists once held. Keeps the compendium curator off the hook for unbounded sign-ups                                                                                                                                                                                        |
-| Private spells in v1?            | Yes — `private \| workspace`              | One enum column and one RLS clause; a member drafting a working unseen is a real need. `private → workspace` is one-way so shared history can't be retracted                                                                                                                                                                                                                   |
-| Invitations can grant owner?     | No — `viewer \| member` only, DB-enforced | A link only proves receipt and can be forwarded; ownership is granted by an existing owner on the members page once there's an identifiable account                                                                                                                                                                                                                            |
-| Cross-dimension unit conversion? | No                                        | g→tsp depends on the substance; a wrong factor silently doubles or halves an ingredient. Convert within weight or within volume only; count converts to nothing; no density table                                                                                                                                                                                              |
+| Question                                                     | Answer                                                                     | Reason                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Gatsby, like `resume-2026`?                                  | No                                                                         | SSG has no server runtime for sessions or audit stamping                                                                                                                                                                                                                                                                                                                       |
+| Vite SPA?                                                    | No                                                                         | Neon has no browser-facing API; client-set `created_by` is forgeable                                                                                                                                                                                                                                                                                                           |
+| Supabase?                                                    | No                                                                         | Free tier pauses after 7 days and needs manual restore                                                                                                                                                                                                                                                                                                                         |
+| Render Postgres?                                             | No                                                                         | Free instance expires 30 days after creation                                                                                                                                                                                                                                                                                                                                   |
+| SQLite for tests?                                            | No                                                                         | Cannot run RLS, triggers, `pg_trgm`, generated columns, or array columns (`deities[]`, `substitutes[]`)                                                                                                                                                                                                                                                                        |
+| RLS as well as service checks?                               | Yes — and the app owns no table                                            | A forgotten check in one service is the realistic bug and the blast radius is another coven's grimoire. Policies on tables the app owns are inert, so the role split is what makes the second layer real rather than declared; `FORCE` keeps it real if `DATABASE_URL` resolves to some other owner. See [`mb.24-rls-role-split.md`](design-decisions/mb.24-rls-role-split.md) |
+| Neon branches for CI?                                        | No                                                                         | Local Postgres is faster and removes the branch limit and API key                                                                                                                                                                                                                                                                                                              |
+| Netlify?                                                     | No                                                                         | Vercel Hobby has 6,000 build minutes vs 300 and native Next.js                                                                                                                                                                                                                                                                                                                 |
+| Apollo Client?                                               | No                                                                         | Duplicates TanStack Query's cache, adds ~40 kB                                                                                                                                                                                                                                                                                                                                 |
+| Polymorphic note subject?                                    | No                                                                         | Nullable FKs plus `num_nonnulls` keeps real referential integrity                                                                                                                                                                                                                                                                                                              |
+| Shadow history tables?                                       | No (v2 uses generic)                                                       | One trigger survives schema drift; per-model tables don't                                                                                                                                                                                                                                                                                                                      |
+| Email/password in v1?                                        | No                                                                         | Copy-link reset isn't self-service; OAuth removes the subsystem                                                                                                                                                                                                                                                                                                                |
+| Bulk add: all-or-nothing?                                    | No — partial with a report                                                 | Skipping an already-present entry is the expected case on a re-run, not a failure; the call only aborts on ids the user couldn't act on anyway                                                                                                                                                                                                                                 |
+| Notes in v1?                                                 | No — v2                                                                    | Cuts 17 tasks / 29 hours; the three-tier visibility model and its UI are a milestone on their own and the core loop is provable without it                                                                                                                                                                                                                                     |
+| Personal workspaces?                                         | No                                                                         | A `kind` column plus "can't gain members / can't be deleted" special-casing for a one-person space that otherwise behaves like every workspace; drop it and every workspace is identical                                                                                                                                                                                       |
+| Open sign-up?                                                | No — invite-gated                                                          | Signing in earns an account only; `canCreateWorkspace` is granted by an invitation or an admin and persists once held. Keeps the compendium curator off the hook for unbounded sign-ups                                                                                                                                                                                        |
+| Private spells in v1?                                        | Yes — `private \| workspace`                                               | One enum column and one RLS clause; a member drafting a working unseen is a real need. `private → workspace` is one-way so shared history can't be retracted                                                                                                                                                                                                                   |
+| Invitations can grant owner?                                 | No — `viewer \| member` only, DB-enforced                                  | A link only proves receipt and can be forwarded; ownership is granted by an existing owner on the members page once there's an identifiable account                                                                                                                                                                                                                            |
+| Cross-dimension unit conversion?                             | No                                                                         | g→tsp depends on the substance; a wrong factor silently doubles or halves an ingredient. Convert within weight or within volume only; count converts to nothing; no density table                                                                                                                                                                                              |
+| A formal name required everywhere?                           | No — in the compendium only                                                | A safety note on an ambiguous label is the dangerous case, so the curated tier must carry one; demanding it locally would break story 29's one-field stub, and salt's formal name is chemical while graveyard dirt has none in any system                                                                                                                                      |
+| Identity on the display label?                               | No — on the generated `canonicalKey`                                       | `lower(name)` uniqueness forbade the compendium holding four Cat's Claws at all, so the ambiguity could not even be documented. Moving identity onto the formal name is also what makes `name` freely relabellable                                                                                                                                                             |
+| Is `form` part of identity?                                  | Yes — folded into `canonicalKey`                                           | Valerian root and valerian leaf are different ingredients with different correspondences and different safety notes; the European Pharmacopoeia names taxon plus part for the same reason. It is also what separates the cat's-claw vine from a literal claw                                                                                                                   |
+| `form` as a pgEnum?                                          | No — free text over an admin-curated vocabulary, and **not** a foreign key | The value set must grow (animal parts, preparations) and stay writable before curation catches up. An FK would key identity on an id and make an unlisted value impossible; text lets `canonicalKey` normalise the string, and every function in that expression must be `IMMUTABLE`, which an enum cast is not                                                                |
+| Admins curate a third resource?                              | Yes — the form vocabulary                                                  | It is global, viewer-independent, and needs a description per value; a hard-coded list would need a deploy to add `rhizome`. `/admin/forms` is gated exactly like `/admin/categories`, and the invariant now reads "the compendium, global categories, and the ingredient form vocabulary — and nothing else"                                                                  |
+| `fungal` as its own nomenclature?                            | Yes — split by organism, not by code                                       | Fungi are governed by the ICN alongside plants, so this is the one value with no code of its own. Kept because curators shelve mushrooms separately from herbs. The departure is deliberate: do not "correct" it into `botanical`                                                                                                                                              |
+| A separate `displayName` column?                             | No                                                                         | `name` already is the display label. Promoting a folk name is a swap between `ingredients.name` and one `ingredient_folk_names` row in one transaction, and the fallback is a write-time prefill from `canonicalName` — the `lowStockThreshold` idiom, not a read-time default                                                                                                 |
+| External taxonomic identifiers (POWO, IPNI, GBIF, CAS, IMA)? | No — not in v1                                                             | Nothing reads one, CLAUDE.md forbids hooks for unbuilt features, and taxonomic ids churn. A nullable text column is purely additive later                                                                                                                                                                                                                                      |
 
 ---
 
@@ -1057,6 +1231,6 @@ All other prior questions resolved:
 - Invitation delivery — copy-link, viewer/member only, §5
 - Dedupe — fuzzy warn in v1, merge in v2
 - Categories — global admin-curated, 52 seeded, §6
-- Ingredient properties — confirmed complete, no additions
+- Ingredient **correspondences** — confirmed complete, no additions. Recorded here as "ingredient properties", the question closed the correspondence set: form, element, planet, zodiac, deities, colour, safety notes, substitutes. It stays closed; nothing has been added to it. **Naming is identity, not correspondence** — a separate question, opened and answered separately in §5, which added `canonicalName`, `nomenclature`, the generated `canonicalKey` and folk names as their own table. The one column those two questions share is `form`, which keeps its meaning and its place in the set and only loses its enum
 - Local dev database — Docker Postgres, shared seed, §11
 - v1 scope — notes deferred; everything else built, not deferred
