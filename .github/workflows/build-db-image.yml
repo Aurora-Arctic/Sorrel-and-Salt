@@ -1,6 +1,6 @@
 name: Build DB Image
 
-# Builds the preseeded Postgres 17 image (Docker/Dockerfile.postgres, M0.18)
+# Builds the preseeded Postgres 18 image (Docker/Dockerfile.postgres, M0.18)
 # and publishes it to GHCR for CI and deployment — docker-compose.yaml builds
 # the same Dockerfile locally instead of pulling this (M0.19), since it's
 # purely a local-dev concern. Content-addressed: the image is tagged with a

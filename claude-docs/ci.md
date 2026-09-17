@@ -210,7 +210,7 @@ merge queue verifying the merged result, which is the point of one.
   the `RUN` step instead. `POSTGRES_HOST_AUTH_METHOD=trust` was considered as
   the fix and **rejected**: it bakes passwordless auth into the shipped
   `pg_hba.conf`.
-- **`Docker/Dockerfile.postgres`** — `FROM postgres:17` with `pg_trgm` (the only
+- **`Docker/Dockerfile.postgres`** — `FROM postgres:18` with `pg_trgm` (the only
   extension §5 names) and an empty `sorrel_template` database baked in at
   _build_ time, by running the official image's own `docker-entrypoint.sh`
   inside a `RUN` step instead of leaving it to first boot. No schema or seed

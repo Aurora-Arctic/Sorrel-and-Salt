@@ -7,7 +7,7 @@ name: Vitest
 # pr-comment steps, and the coverage-threshold-is-the-exit-code reasoning
 # all transfer directly. What's new here, since resume-2026 has no database
 # at all, is the `services: postgres:` block — see DESIGN.md §11's CI table
-# ("Actions services: postgres:17, reachable by service name from the
+# ("Actions services: postgres:18, reachable by service name from the
 # existing job container:") and
 # claude-docs/design-decisions/m1.9-test-db-isolation.md for why the `db`
 # project needs a real Postgres rather than SQLite. The image itself comes in
