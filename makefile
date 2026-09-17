@@ -35,7 +35,7 @@
 	workshop workshop-build \
 	docker-build docker-up docker-workshop docker-studio docker-all docker-e2e docker-down docker-rebuild docker-logs \
 	docker-update-token playwright-server-up playwright-server-down docker-codegen \
-	act-image act-cache-checkout act-lint act-format act-typecheck act-destructive-ddl act-test
+	act-image act-cache-checkout act-check act-destructive-ddl act-test
 
 COMPOSE := docker compose -f Docker/docker-compose.yaml
 
@@ -229,15 +229,23 @@ docker-codegen: playwright-server-up
 		npx playwright codegen --target playwright-test \
 		--output e2e/$(NAME).spec.ts http://sorrel-app:8000
 
-# Local CI via act (M0.23). Runs the real reusable per-check workflows
-# (.github/workflows/{lint,format,typecheck}.yml) against a locally-built
-# testing image, so a failing check surfaces here instead of only in pr-gate.
-# Ported from resume-2026; act-vitest / act-playwright arrive with their
-# workflows. act-build needs actions/cache@v6 pre-cached the way
-# act-cache-checkout pre-caches checkout-to-app — deferred with them. audit
-# and the published build-image are deliberately left out.
+# Local CI via act (M0.23). Runs the real reusable check workflows against a
+# locally-built testing image, so a failing check surfaces here instead of only
+# in pr-gate. Ported from resume-2026; act-vitest / act-playwright arrive with
+# their workflows. The published build-image is deliberately left out.
 #
-# Each per-check workflow is workflow_call-only with a required `image` input
+# One `act-check` target covers every leg of checks.yml (MB.32), where there
+# was one target per check workflow before the collapse: `make act-check`
+# runs lint, `make act-check CHECK=typecheck` runs typecheck, and so on
+# through `format`, `build` and `audit`. `--matrix name:<leg>` is what keeps
+# act from running all five.
+#
+# `CHECK=build` still needs actions/cache@v6 pre-cached the way
+# act-cache-checkout pre-caches checkout-to-app, and `CHECK=audit` wants a real
+# PR to comment on — both are expected to fail locally, and neither is in
+# act-test below.
+#
+# Each check workflow is workflow_call-only with a required `image` input
 # (normally build-image.yml's GHCR push). `act-image` builds the same
 # Dockerfile.node `testing` target locally under the tag the job asks for, so
 # `docker run` never reaches GHCR and the container `credentials:` block is a
@@ -247,12 +255,15 @@ docker-codegen: playwright-server-up
 # keeps act from re-fetching it. The clone only runs the first time per machine
 # (or whenever ~/.cache/act is cleared).
 #
-# `--input should-run=true` on lint/typecheck: both gate every real step
-# behind `if: inputs.should-run`, whose `default: true` GitHub applies for a
-# workflow_call but act (invoked with -W on the file directly) does not —
-# without it the job "passes" having run nothing. format.yml has no such input.
+# act does not apply `workflow_call` input defaults, so a `should-run`-style
+# flag arrives empty under `-W`. destructive-ddl.yml is passed
+# `--input should-run=true` for that reason — without it the job "passes"
+# having run nothing. checks.yml needs no such flag: its "Resolve this leg's
+# should-run flag" step treats an empty flag as true, precisely so a local run
+# cannot quietly skip the work it was asked to do.
 ACT_IMAGE := sorrel-and-salt-testing:local
 ACT_CHECKOUT_CACHE := $(HOME)/.cache/act/Aurora-Arctic-Sorrel-and-Salt-.github-actions-checkout-to-app@main
+CHECK ?= lint
 
 ## Build the Dockerfile.node testing image act runs the checks in
 act-image:
@@ -263,17 +274,9 @@ act-cache-checkout:
 	@[ -d "$(ACT_CHECKOUT_CACHE)" ] || \
 		git clone --branch main https://github.com/Aurora-Arctic/Sorrel-and-Salt "$(ACT_CHECKOUT_CACHE)"
 
-## Run the lint workflow locally via act
-act-lint: act-image act-cache-checkout
-	act -W .github/workflows/lint.yml -j lint --input image=$(ACT_IMAGE) --input should-run=true -s GITHUB_TOKEN=dummy-token --action-offline-mode
-
-## Run the format-check workflow locally via act
-act-format: act-image act-cache-checkout
-	act -W .github/workflows/format.yml -j format --input image=$(ACT_IMAGE) -s GITHUB_TOKEN=dummy-token --action-offline-mode
-
-## Run the typecheck workflow locally via act
-act-typecheck: act-image act-cache-checkout
-	act -W .github/workflows/typecheck.yml -j typecheck --input image=$(ACT_IMAGE) --input should-run=true -s GITHUB_TOKEN=dummy-token --action-offline-mode
+## Run one checks.yml leg locally via act — CHECK=lint|format|typecheck|build|audit
+act-check: act-image act-cache-checkout
+	act -W .github/workflows/checks.yml -j check --matrix name:$(CHECK) --input image=$(ACT_IMAGE) -s GITHUB_TOKEN=dummy-token --action-offline-mode
 
 # destructive-ddl.yml's `changed-files`/`pr-body` inputs come from pr-gate.yml
 # reading dorny/paths-filter's list-files output and github.event.pull_request.body
@@ -289,5 +292,9 @@ act-typecheck: act-image act-cache-checkout
 act-destructive-ddl: act-image act-cache-checkout
 	act -W .github/workflows/destructive-ddl.yml -j destructive-ddl --input image=$(ACT_IMAGE) --input should-run=true -s GITHUB_TOKEN=dummy-token --action-offline-mode
 
-## Run every act-* check target in sequence
-act-test: act-lint act-format act-typecheck act-destructive-ddl
+## Run every locally runnable act check in sequence
+act-test:
+	$(MAKE) act-check CHECK=lint
+	$(MAKE) act-check CHECK=format
+	$(MAKE) act-check CHECK=typecheck
+	$(MAKE) act-destructive-ddl

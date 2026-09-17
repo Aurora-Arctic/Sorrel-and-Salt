@@ -71,7 +71,7 @@ copy of `DATABASE_URL` is needed, unlike everything below.
 Used by `deploy.yml`/`migrate.yml` to drive the Vercel CLI and, on
 production only, a pre-migration Neon snapshot (`claude-docs/db.md`,
 "Snapshot before production migrations"). None of these are read by
-`pr-gate.yml`/`merge-queue.yml`'s own build/test/lint jobs — **no
+`pr-gate.yml`'s own build/test/lint jobs — **no
 credential is required to run tests locally or in a PR check**, per
 M0.27's own acceptance criteria.
 

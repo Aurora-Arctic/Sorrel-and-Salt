@@ -160,11 +160,6 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         run: npm install --global vercel@59
 
-      - name: Start timer
-        id: start
-        if: steps.guard.outputs.enabled == 'true'
-        uses: ./.github/actions/timer-start
-
       - name: Pull Vercel environment
         if: steps.guard.outputs.enabled == 'true'
         run: vercel pull --yes --environment=${{ needs.resolve-target.outputs.environment }} --token="$VERCEL_DEPLOY_TOKEN"
@@ -218,13 +213,6 @@ jobs:
             exit 1
           fi
 
-      - name: Compute duration
-        id: timer
-        if: always() && steps.guard.outputs.enabled == 'true'
-        uses: ./.github/actions/timer-elapsed
-        with:
-          start: ${{ steps.start.outputs.start }}
-
       - name: Write job summary
         if: always() && steps.guard.outputs.enabled == 'true'
         uses: ./.github/actions/job-summary
@@ -232,7 +220,6 @@ jobs:
           check-name: Deploy (${{ needs.resolve-target.outputs.environment }})
           outcome: ${{ steps.deploy.outcome }}
           log-file: deploy.log
-          duration: ${{ steps.timer.outputs.duration }}
           summary: ${{ steps.deploy.outputs.url && format('Deployed {0}', steps.deploy.outputs.url) || 'Deploy did not complete' }}
           details: "${{ steps.alias.outputs.url && format('Preview: {0}', steps.alias.outputs.url) || '' }}"
 
@@ -248,7 +235,6 @@ jobs:
           outcome: ${{ steps.deploy.outcome }}
           log-file: deploy.log
           success-mode: comment
-          duration: ${{ steps.timer.outputs.duration }}
           summary: ${{ steps.alias.outputs.url || steps.deploy.outputs.url || 'deploy failed' }}
 
   teardown:

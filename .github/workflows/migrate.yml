@@ -12,7 +12,7 @@ name: Migrate
 # branch-scoped override for staging, the integration's per-deployment
 # ephemeral Neon branch for a hotfix preview — see
 # claude-docs/design-decisions/m1.1-neon-branch-strategy.md. Never
-# triggered directly, same as lint.yml/format.yml/etc.
+# triggered directly, same as checks.yml.
 #
 # Production only (M1.6): before applying migrations, branch the `main`
 # Neon branch as `snapshot-<short sha>` — a known-good point the restore
@@ -73,11 +73,6 @@ jobs:
       - name: Install Vercel CLI
         if: steps.guard.outputs.enabled == 'true'
         run: npm install --global vercel@59
-
-      - name: Start timer
-        id: start
-        if: steps.guard.outputs.enabled == 'true'
-        uses: ./.github/actions/timer-start
 
       - name: Pull Vercel environment
         if: steps.guard.outputs.enabled == 'true'
@@ -164,13 +159,6 @@ jobs:
           set -o pipefail
           npm run db:migrate 2>&1 | tee migrate.log
 
-      - name: Compute duration
-        id: timer
-        if: always() && steps.guard.outputs.enabled == 'true'
-        uses: ./.github/actions/timer-elapsed
-        with:
-          start: ${{ steps.start.outputs.start }}
-
       - name: Write job summary
         if: always() && steps.guard.outputs.enabled == 'true'
         uses: ./.github/actions/job-summary
@@ -178,5 +166,4 @@ jobs:
           check-name: Migrate (${{ inputs.environment }})
           outcome: ${{ steps.migrate.outcome }}
           log-file: migrate.log
-          duration: ${{ steps.timer.outputs.duration }}
           summary: ${{ steps.migrate.outcome == 'success' && 'Migrations applied' || 'Migration failed' }}

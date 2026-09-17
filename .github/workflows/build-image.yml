@@ -2,7 +2,7 @@ name: Build Testing Image
 
 # Builds (or reuses, if unchanged) the shared testing container image used
 # by every other job workflow, and publishes its ref as an output. Called
-# via workflow_call as the first job from pr-gate and merge-queue.
+# via workflow_call as the first job from pr-gate.
 #
 # The tag is content-addressed off `github.repository` (lowercased) plus a
 # hash of the only two files that determine the image's contents, so it
