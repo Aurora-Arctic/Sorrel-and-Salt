@@ -81,6 +81,16 @@ services:
       # value manually in `Docker/.env` (see `Docker/.env.example`).
       GH_TOKEN: ${GITHUB_PERSONAL_ACCESS_TOKEN:-}
       GITHUB_PERSONAL_ACCESS_TOKEN: ${GITHUB_PERSONAL_ACCESS_TOKEN:-}
+      # MB.22 — set on this service only, not in any npm script or the
+      # standalone `e2e` service. playwright.config.ts takes Playwright's
+      # `connectOptions` branch (a remote browser) only when this is set, so
+      # a run started from the editor drives Chromium in the `playwright-
+      # server` compose service (Docker/docker-compose.yaml, profile `e2e`,
+      # started separately via `make playwright-server-up`) instead of
+      # launching a local one the Alpine devcontainer cannot provide.
+      # `make docker-e2e` and CI never set this and so are unaffected — both
+      # still launch Chromium locally inside the one-shot `e2e` container.
+      PLAYWRIGHT_WS_ENDPOINT: ws://playwright-server:4444/
     depends_on:
       postgres:
         condition: service_healthy

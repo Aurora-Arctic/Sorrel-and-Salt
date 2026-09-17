@@ -54,6 +54,10 @@ docker-data
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+# Committed examples (MB.22) — copy to launch.json/tasks.json, which stay
+# per-developer and ignored above.
+!.vscode/launch.example.json
+!.vscode/tasks.example.json
 *.swp
 *.swo
 *~
