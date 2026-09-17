@@ -49,6 +49,19 @@ into the running container is strictly better: same display, same published
 port, nothing new to bind. The repo already reaches for `exec` this way in
 `make db-psql`.
 
+**Playwright's UI mode instead of a display at all.** The tempting one, and
+worth stating plainly so it isn't re-litigated: UI mode is served over plain
+HTTP (`--ui-host 0.0.0.0 --ui-port 9324`, already wired as `npm run e2e:ui`
+in MB.22), needs no display, and does have a locator picker — so it looks
+like it should make this whole stack unnecessary. It does not. UI mode's
+"Pick locator" works against the **DOM snapshot** in the trace viewer, which
+is exactly why it needs no display, and as of Playwright 1.63 UI mode has no
+recorder at all. Recording is `playwright codegen`, which opens two real
+windows — the browser and the Inspector — and `page.pause()` is the same.
+There is no display-free path to what this task exists to deliver. If a
+future Playwright release adds recording to UI mode, this decision is worth
+revisiting, because that version of it would genuinely retire the display.
+
 ## The two things this rules out
 
 **`target: e2e` must stay pinned everywhere that isn't `playwright-server`.**
@@ -106,9 +119,9 @@ loading.
 
 Neither `make` nor `docker` is available in this devcontainer session, so
 the first draft of the Dockerfile stages, entrypoint script, and compose
-wiring were reasoned through, not exercised. The first host-side manual
-verification pass caught three real bugs that reasoning alone missed — all
-fixed before this task is considered done:
+wiring were reasoned through, not exercised. Host-side manual verification
+caught four real bugs that reasoning alone missed — all fixed before this
+task is considered done:
 
 - **`http://localhost:7900` served a directory listing, not the client.**
   `websockify --web=/usr/share/novnc` serves that directory as a plain
@@ -141,11 +154,29 @@ fixed before this task is considered done:
   `docker-codegen`'s URL and the recording docs at that instead. Every
   non-browser reference to `app` (service-to-service traffic like
   `DATABASE_URL`) is unaffected and keeps using the bare name.
+- **The recorded page rendered but was completely dead — nothing
+  interactive responded to a click.** Not a recorder problem: the app was
+  never hydrating. Next's dev server 403s cross-origin requests to
+  `/_next/*` for any host outside `localhost` unless it's listed in
+  `allowedDevOrigins`, and `sorrel-app` wasn't. The static chunks survive
+  that check (a `<script src>` sends no `Origin` and counts as same-origin),
+  so every asset returned 200 and the console stayed clean apart from one
+  websocket error — but the **HMR websocket upgrade** does send an `Origin`
+  and got rejected, and under Turbopack the client runtime boots through
+  that connection. The result is the worst possible failure shape: correct
+  SSR HTML, no error, no hydration, every handler silently absent. Fixed by
+  adding `allowedDevOrigins: ['sorrel-app']` to `next.config.ts`. This is
+  dev-only (`next dev`), so the e2e suite's `next start` on 8001 was never
+  affected — which is why MB.22's remote-browser path never surfaced it.
 
-All three are now covered by the manual verification pass rather than
+All four are now covered by the manual verification pass rather than
 reasoning alone. If `make docker-codegen` or `:7900` misbehave again after
-this, treat it as a new bug, not a recurrence of any of these — all three
+this, treat it as a new bug, not a recurrence of any of these — all four
 mechanisms are now exercised, not just designed.
+
+The fourth one generalises: **any new hostname a real browser uses to reach
+`next dev` needs to be in `allowedDevOrigins`**, and the symptom will be a
+page that renders correctly and does nothing, not an error.
 
 ## Related
 

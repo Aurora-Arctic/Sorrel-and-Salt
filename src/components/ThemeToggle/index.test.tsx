@@ -21,6 +21,19 @@ const stubReducedMotion = (matches: boolean): void => {
   }));
 };
 
+// Stubs `matchMedia` so `(prefers-color-scheme: light)` reports `matches` —
+// the exact query globals.scss keys its light tier off. jsdom's own
+// `matchMedia` always answers `false`, which *is* the "system asks for
+// neither" case, so a light system can only be exercised by replacing it.
+const stubLightSystemPreference = (): void => {
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: query === '(prefers-color-scheme: light)',
+    media: query,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  }));
+};
+
 describe('ThemeToggle', () => {
   beforeEach(() => {
     document.documentElement.setAttribute('data-theme', 'dark');
@@ -169,12 +182,80 @@ describe('ThemeToggle', () => {
     // URL, so that pattern resolves to the wrong path here.
     const scssPath = join(process.cwd(), 'src/components/ThemeToggle/index.scss');
     const scss = readFileSync(scssPath, 'utf-8');
-    const lightRuleBlock = scss.slice(scss.indexOf("html[data-theme='light']"));
+    const settledFacets = scss.slice(scss.indexOf('@mixin theme-toggle-light-facets'));
 
-    expect(lightRuleBlock).toMatch(
+    expect(settledFacets).toMatch(
       /\.theme-toggle__facet--light\.theme-toggle__facet--pre-enter\s*\{[^}]*transform:\s*rotate\(0deg\)/,
     );
-    expect(lightRuleBlock).toMatch(/\.theme-toggle__facet--dark\s*\{[^}]*opacity:\s*0/);
+    expect(settledFacets).toMatch(/\.theme-toggle__facet--dark\s*\{[^}]*opacity:\s*0/);
+  });
+
+  // MB.23: and applied to *both* light tiers, not just the stored-choice one.
+  // A light system preference never stamps `data-theme`, so an attribute-only
+  // rule left the crescent showing on a light page until the mount effect
+  // swapped it a paint later. These selectors mirror globals.scss's own light
+  // tiers; if that cascade is ever restructured, both have to move together.
+  it('settles the facets for a light system preference as well as a stored light choice', () => {
+    const scssPath = join(process.cwd(), 'src/components/ThemeToggle/index.scss');
+    const scss = readFileSync(scssPath, 'utf-8');
+
+    expect(scss).toMatch(
+      /@media\s*\(prefers-color-scheme:\s*light\)\s*\{\s*html:not\(\[data-theme='dark'\]\)\s*\{\s*@include theme-toggle-light-facets/,
+    );
+    expect(scss).toMatch(/html\[data-theme='light'\]\s*\{\s*@include theme-toggle-light-facets/);
+  });
+
+  // Regression (MB.23): there are three theme states, not two (globals.scss).
+  // Dark is the `:root` default; a light *system* preference resolves through
+  // `prefers-color-scheme` without ever stamping `data-theme`, because
+  // layout.tsx's init script only stamps a *stored* choice. Reading the
+  // attribute alone therefore reported "not light" on a light system with
+  // nothing stored, so the first click applied `light` — the theme already
+  // showing — and visibly did nothing. The current theme has to be resolved
+  // the same way the stylesheet resolves it: attribute first, then the media
+  // query, then dark.
+  describe('on a light system with no stored choice', () => {
+    beforeEach(() => {
+      document.documentElement.removeAttribute('data-theme');
+      stubLightSystemPreference();
+    });
+
+    it('switches to dark on the first click, not to the light already showing', () => {
+      render(<ThemeToggle />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Toggle light and dark mode' }));
+
+      expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+      expect(window.localStorage.getItem('theme')).toBe('dark');
+    });
+
+    it('reports aria-pressed as true on mount', () => {
+      render(<ThemeToggle />);
+
+      expect(screen.getByRole('button', { name: 'Toggle light and dark mode' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+    });
+
+    it('mounts with the light facet resting and the dark facet parked', () => {
+      render(<ThemeToggle />);
+      const [darkFacet, lightFacet] = document.querySelectorAll('.theme-toggle__facet');
+
+      expect(darkFacet).toHaveClass('theme-toggle__facet--pre-enter');
+      expect(lightFacet).not.toHaveClass('theme-toggle__facet--pre-enter');
+    });
+  });
+
+  // The other half of that rule: nothing stored and no light preference is
+  // dark, per globals.scss's `:root` default — so the first click goes light.
+  it('switches to light on the first click when nothing is stored and the system asks for neither', () => {
+    document.documentElement.removeAttribute('data-theme');
+    render(<ThemeToggle />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle light and dark mode' }));
+
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light');
   });
 
   it('removes its transitionend listeners on unmount', () => {
