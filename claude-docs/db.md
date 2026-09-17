@@ -43,8 +43,9 @@ trade a stable-but-frozen dependency for a prerelease one, and the advisory it
 clears is not reachable. What makes staying put sustainable is MB.20 — dropping
 `@pothos/plugin-drizzle` removes the component that tracked the ORM's version
 and would eventually have forced the upgrade. With it gone, `drizzle-orm` is
-reachable only from `repository.ts` (see "Who may import the client"), so it is
-a query builder behind a choke point rather than an architectural commitment.
+reachable only from the database layer, and is banned by lint everywhere else
+(see "Where queries may be built"), so it is a query builder behind a choke
+point rather than an architectural commitment.
 
 **Revisit when any of these fires** — not before:
 
@@ -540,16 +541,28 @@ could reach the database through while skipping the filter — the same shape
 as `AuditWriter` gives writes no path around `applyAudit`.
 
 **The mechanical guard.** This is a code sweep (CLAUDE.md's sweep-task rule),
-so it landed as the mechanism above plus
-`src/test/soft-delete-finder-guard.test.ts`, which reads `repository.ts` and
-every other tracked source file as text and asserts: no `.select(`/`db.query.`
-call exists outside `repository.ts`; `repository.ts` builds exactly one, and
-it is inside `selectFrom`; the repository's exported surface is pinned to
+so it landed as the mechanism above plus a guard — and since MB.33 the sweep is
+divided between two of them, by what each can make impossible.
+
+`src/test/soft-delete-finder-guard.test.ts` covers the inside of the
+repository. It reads `repository.ts` as text and asserts: `repository.ts`
+builds exactly one `.select(`/`db.query.` call, and it is inside
+`selectFrom`; `selectFrom` is not exported, so no caller can reach an
+unfiltered read; the repository's exported surface is pinned to
 `findMany`/`findOne`/`findManyIncludingSoftDeleted`/`withAudit`, so a fifth
 export — a new escape hatch, or a finder that reaches the database some other
 way — turns the test red rather than merely going unreviewed; and every
 exported finder other than the escape hatch either calls `notSoftDeleted(...)`
-directly or delegates to one that does. At Wave 2 there is exactly one table
+directly or delegates to one that does.
+
+A query built _outside_ the repository is the linter's job, not this test's —
+see "Where queries may be built" below. It was this test's until MB.33, by
+reading every tracked source file as text and looking for `.select(`, which
+banned one spelling of a finder rather than the capability: `function findX()`
+was caught and `const findX = () =>` was not, the global regex carried its
+`lastIndex` between files, the brace matcher broke on a brace inside a string,
+and it spawned `git` with a `safe.directory` workaround because CI runs the
+container as root over a uid-1000 checkout. At Wave 2 there is exactly one table
 (the scratch table in `repository.test.ts`), which is the point: the guard
 exists before there is anything to forget, and each later table's finder
 adopts the mechanism in that finder's own PR rather than a retrofit pass.
@@ -602,6 +615,56 @@ oxlint skips anything matching the config's `ignorePatterns` even when the
 path is passed explicitly — `--no-ignore` does not override it — so a
 committed fixture would have to be lintable by `npm run lint`, and would then
 fail the very check it exists to prove.
+
+## Where queries may be built (MB.33)
+
+CLAUDE.md rule 4's other half — a SELECT built anywhere but the repository —
+is enforced by a second `no-restricted-imports` group in the same config
+entry, banning `drizzle-orm` and `drizzle-orm/*`. A Drizzle query cannot be
+built without importing the query builder at runtime, so banning the import
+bans the capability: `src/services`, `src/graphql`, `src/app`,
+`src/components`, `src/lib` and `e2e` fail `npm run lint` on a runtime
+import, whatever the resulting finder is named or declared as.
+
+`allowTypeImports` keeps `import type` legal everywhere, which is the point
+rather than a concession: a type import is erased at compile time and can
+build nothing, and it is how DESIGN.md §7's "the GraphQL layer imports
+`drizzle-orm` for _types_ only" is now stated in the toolchain instead of only
+in prose.
+
+The database layer is exempted by an `overrides` block matching
+`src/db/**/*.ts`, `scripts/**/*.ts` and `drizzle.config.ts`. Two oxlint 1.82
+behaviours shape it, and both are load-bearing:
+
+- A rule set to `"off"` or `"allow"` inside `overrides` is **ignored**, so the
+  exemption cannot be written as a disable. It is a narrower copy of the rule —
+  the client group alone, without the query-builder group.
+- An `overrides` block **replaces** the top-level rule config for the files it
+  matches rather than merging with it. That is why the copy restates the client
+  group verbatim: drop it and the whole database layer would silently lose rule
+  2 as the price of being allowed to build queries.
+
+That second failure mode is the one a green test suite would otherwise hide, so
+`lint-db-client-boundary.test.ts` asserts it directly — a probe importing the
+client from inside `src/db` must still draw a diagnostic. The same test covers
+both rules in one oxlint run: every probe is written, linted in a single spawn,
+and the cases partition the diagnostics by filename. The probes live in
+throwaway `__lint-probe__/` directories inside the repo (gitignored, removed in
+`afterAll`) rather than in `tmpdir`, because both rules are scoped by path and
+a file outside the tree matches no `overrides` block — it could only ever prove
+the default tier.
+
+**What each rule makes impossible, rather than merely absent:**
+
+| Rule                            | Impossible                                                                                                       |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Client ban (M1.17)              | Reaching `db` — and so a transaction, or an unaudited write — outside `repository.ts` and the four exempt files. |
+| Query-builder ban (MB.33)       | Building any query at all outside the database layer, including one that would skip `deleted_at IS NULL`.        |
+| `selectFrom` unexported (M1.20) | Reaching an unfiltered read from inside the repository.                                                          |
+
+M3.9 adds the next one: a rule stopping `src/graphql/**` and
+`src/app/**` from importing the _repository_, so those layers reach a service
+and nothing below.
 
 ## Snapshot before production migrations, and the restore runbook (M1.6)
 

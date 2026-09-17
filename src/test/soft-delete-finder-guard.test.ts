@@ -1,25 +1,32 @@
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-// M1.20's mechanical guard. CLAUDE.md rule 4 — soft-delete filtering happens
-// in the repository, never at call sites — is a code sweep, so per CLAUDE.md's
-// sweep-task rule it lands as a mechanism (the finder builder in
-// src/db/repository.ts) plus this guard, and every later finder adopts it in
-// that finder's own PR. At Wave 2 there is exactly one table, which is the
-// point: the guard exists before there is anything to forget.
+// M1.20's mechanical guard over the repository itself. CLAUDE.md rule 4 —
+// soft-delete filtering happens in the repository, never at call sites — is a
+// code sweep, so per CLAUDE.md's sweep-task rule it lands as a mechanism (the
+// finder builder in src/db/repository.ts) plus this guard, and every later
+// finder adopts it in that finder's own PR.
 //
 // What it makes impossible rather than merely absent:
 //
-//   1. A SELECT built anywhere but the repository's one private `selectFrom`.
-//   2. A finder added to the repository that skips `notSoftDeleted(...)`.
+//   1. A finder added to the repository that skips `notSoftDeleted(...)`.
+//   2. A SELECT built anywhere in the repository but its one private
+//      `selectFrom`, which is not exported.
 //   3. A second escape hatch appearing quietly — the exported surface is
 //      pinned, so widening it is an argument in the diff.
 //
-// This is a source-shape test, so it reads the files rather than importing
-// them: importing the repository would instantiate a Postgres client, which
-// the `unit` project has no business doing (CLAUDE.md's Testing section).
+// The other half of the sweep — a SELECT built *outside* the repository — is
+// no longer checked here. MB.33 moved it to a `no-restricted-imports` rule
+// banning a runtime `drizzle-orm` import outside the database layer, asserted
+// by src/test/lint-db-client-boundary.test.ts: a query cannot be built without
+// that import, so the linter bans the capability, where reading every tracked
+// file as text only ever banned one spelling of it (`function findX()`, not
+// `const findX = () =>`).
+//
+// This is a source-shape test, so it reads the file rather than importing it:
+// importing the repository would instantiate a Postgres client, which the
+// `unit` project has no business doing (CLAUDE.md's Testing section).
 
 const repoRoot = resolve(import.meta.dirname, '../..');
 const REPOSITORY = 'src/db/repository.ts';
@@ -34,25 +41,6 @@ const EXPORTED_FUNCTIONS = ['findMany', 'findManyIncludingSoftDeleted', 'findOne
 const ESCAPE_HATCH = 'findManyIncludingSoftDeleted';
 
 const source = (file: string) => readFileSync(join(repoRoot, file), 'utf8');
-
-/**
- * Tracked TypeScript that could hold a finder. Tests are excluded — they
- * assert against the database directly, which is how they prove the
- * filtering works at all — as is the seed module, which runs before any
- * finder exists (it takes a client, not this module's writer).
- */
-function sourceFiles(): string[] {
-  // `-c safe.directory=*` because the vitest CI job runs its container as
-  // root over a checkout owned by uid 1000, and git refuses that as "dubious
-  // ownership" — the bare call fails in CI while passing locally (M1.17).
-  return execFileSync('git', ['-c', 'safe.directory=*', 'ls-files', '*.ts', '*.tsx'], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-  })
-    .split('\n')
-    .filter(Boolean)
-    .filter((file) => !/\.test\.tsx?$/.test(file) && !file.startsWith('src/db/seed/'));
-}
 
 /** The body of a top-level `function name(...) { ... }`, by brace matching. */
 function functionBody(text: string, name: string): string {
@@ -73,18 +61,6 @@ function functionBody(text: string, name: string): string {
 }
 
 describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', () => {
-  it('has no SELECT anywhere but the repository', () => {
-    const offenders = sourceFiles().filter(
-      (file) => file !== REPOSITORY && SELECT_CALL.test(source(file)),
-    );
-
-    // A query outside the repository is already unreachable — only the
-    // repository may import the client (M1.17) and `db` is not re-exported —
-    // so this catches the other route in: a finder written against a client
-    // that arrived as an argument, the way the seed module gets one.
-    expect(offenders).toEqual([]);
-  });
-
   it('builds every SELECT inside the repository’s one private selectFrom', () => {
     const text = source(REPOSITORY);
     const selects = text.match(SELECT_CALL) ?? [];
