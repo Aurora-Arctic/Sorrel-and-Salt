@@ -13,7 +13,8 @@ secrets so `deploy.yml`/`migrate.yml` could exist and stub-skip cleanly
 (M0.26/M0.28). Resumed and this doc written on 2026-09-11, alongside
 M2.2/M2.4/M2.5's auth code.
 
-**Status as of MW.1 (2026-09-11):** the three deploy secrets above are set,
+**Status as of MW.2 (2026-09-17), unchanged since MW.1:** the three deploy
+secrets above are set,
 and the Google/GitHub OAuth apps are registered with their four client
 id/secret variables set locally and in Vercel. Four rows are still
 outstanding — `ADMIN_BOOTSTRAP_EMAIL`, `VERCEL_SCOPE`, `NEON_API_KEY`,

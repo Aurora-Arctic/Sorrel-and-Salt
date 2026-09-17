@@ -62,7 +62,7 @@ Server components call services directly (wrapped in React `cache()`); everythin
 M1.17's `no-restricted-imports` rule enforces it — a new importer fails `npm run lint`. Three files are exempt besides the repository, each by a named `oxlint-disable-next-line` at the import and each because it needs a client rather than a writer: `src/lib/auth.ts` (Better Auth's `drizzleAdapter`), `scripts/db-seed.ts`, and `src/db/test-database-isolation.test.ts`. That set is pinned by test — a fourth exemption is a decision, not a convenience. M3.9 still has to add the rule that stops `src/graphql/**` and `src/app/**` importing the _repository_; until it lands that half holds by convention. Either way they reach services and nothing below.
 
 **3. All writes go through `withAudit(session, fn)`.**
-It opens the transaction, injects the audit ids from the _session_ (never from a request body), and issues `SET LOCAL app.current_user_id = '<uuid>'`. Every table carries the six-column `...auditColumns` spread, join tables included.
+It opens the transaction, injects the audit ids from the _session_ (never from a request body), and publishes the acting user to the database as a transaction-local GUC — `select set_config('app.current_user_id', $1, true)`, not a literal `SET LOCAL`, which accepts no bind parameters and would mean interpolating a user id into SQL text. Every table carries the six-column `...auditColumns` spread, join tables included.
 
 **4. Soft-delete filtering happens in the repository, never at call sites.**
 No exported finder can return a `deleted_at IS NOT NULL` row. Every unique index is partial (`WHERE deleted_at IS NULL`) — without it, deleting a record permanently reserves its name.
