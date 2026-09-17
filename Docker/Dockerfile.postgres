@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# Sorrel & Salt — preseeded Postgres 17 image, published to GHCR (M0.18).
+# Sorrel & Salt — preseeded Postgres 18 image, published to GHCR (M0.18).
 #
 # Every environment — CI, docker-compose, and eventually the seeded
 # `standard`/`demo` scenarios (M1.27) — starts from this one image so a

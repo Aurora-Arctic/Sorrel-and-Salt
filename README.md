@@ -4,7 +4,7 @@ A compendium, ingredient store and grimoire — the admin-curated ingredient
 reference (**compendium**), each workspace's own stock (**ingredients**), and
 the spells a workspace makes (**grimoire**).
 
-Next.js 16 · React 19 · TypeScript · PostgreSQL 17 + Drizzle · GraphQL.
+Next.js 16 · React 19 · TypeScript · PostgreSQL 18 + Drizzle · GraphQL.
 The specification is [`claude-docs/DESIGN.md`](claude-docs/DESIGN.md); the rules
 every change follows are in [`CLAUDE.md`](CLAUDE.md).
 
@@ -53,6 +53,6 @@ Vercel's own Git integration; nothing else deploys.
 
 - [`CLAUDE.md`](CLAUDE.md) — architecture rules, domain invariants, conventions.
 - [`claude-docs/DESIGN.md`](claude-docs/DESIGN.md) — the specification.
-- [`claude-docs/`](claude-docs/) — subsystem summaries, append-only transcripts,
-  a doc per component, and per-task design decisions.
+- [`claude-docs/`](claude-docs/) — subsystem summaries, a doc per component, and
+  per-task design decisions.
   [`claude-docs/README.md`](claude-docs/README.md) explains the layout.

@@ -24,8 +24,10 @@ All but `start-task` implement the Gitflow lane in `CLAUDE.md` → Conventions.
   `gh pr create/view/comment/list`) the skills tell the reader to expect a
   prompt on. **Personal permission grants and MCP configuration belong in
   `.claude/settings.local.json`**, which is not committed.
-- **Adding a skill means adding its row to `CLAUDE.md`'s Skills table** and an
-  entry in the agent-skills transcript, in the same PR.
+- **Adding a skill means adding its row to `CLAUDE.md`'s Skills table** and
+  updating this summary, in the same PR. (Its transcript was archived by M0.34, and MB.31 retired the
+  obligation to keep writing one — a PR body carries what an entry would have
+  said.)
 
 There are deliberately **no** "testing conventions", "component documentation"
 or "CI debugging" skills: that guidance lives in `CLAUDE.md` and `claude-docs/`,
