@@ -79,3 +79,6 @@ desktop.ini
 tmp
 .cache
 .env*
+
+# Deliberate lint violations written by src/test/lint-db-client-boundary.test.ts
+__lint-probe__/

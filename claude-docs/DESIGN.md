@@ -487,7 +487,7 @@ Single route handler at `/api/graphql`. No separate service, no additional hosti
 - **Object types are declared by hand**, against the row type the service returns (`typeof ingredients.$inferSelect` and friends) — never a table-derived object type. TypeScript still fails the build when a column's type changes under a field.
 - **`auditColumns` maps to one shared `AuditInfo` object type, defined once.** A per-table audit shape is a bug.
 - **Every Pothos package in the stack is a stable major.** A `0.x` Pothos plugin entering the dependency tree is a decision argued for in the diff, not a convenience.
-- **The GraphQL layer imports `drizzle-orm` for _types_ only.** Runtime query building stays behind `src/db/repository.ts` (§3's rule 2).
+- **The GraphQL layer imports `drizzle-orm` for _types_ only.** Runtime query building stays behind `src/db/repository.ts` (§3's rule 2). A `no-restricted-imports` rule enforces it rather than leaving it to review (MB.33): a runtime import from `src/graphql` fails `npm run lint`, while `import type` — erased at compile time, and so unable to build anything — passes.
 
 None of this rules the plugin out permanently — it is additive, and re-adopting it once it reaches a stable major is a contained change.
 
