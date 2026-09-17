@@ -245,7 +245,8 @@ unchanged. A session with no `userId` is rejected before the transaction
 opens, rather than stamping a blank acting user.
 
 The read-side finder builder that applies `deleted_at IS NULL` (M1.20)
-deliberately lands on top of this rather than beside it.
+deliberately lands on top of this rather than beside it — see "Soft-delete
+filtering and the partial-index convention" below.
 
 ### `app.current_user_id`, published per transaction (M1.19)
 
@@ -300,6 +301,63 @@ which is how the M1.19 tests observe a setting the narrow `AuditWriter`
 gives them no other way to read — without widening the write API for the
 benefit of a test. The `missing_ok` second argument is what makes it null,
 rather than an error, when the setting was never set.
+
+## Soft-delete filtering and the partial-index convention (M1.20)
+
+CLAUDE.md rule 4 / DESIGN.md §5: **no exported query can return a soft-deleted
+row, and no call site does its own filtering.** `src/db/repository.ts` adds a
+private `selectFrom` beside `withAudit` — the one place a read query is
+built — and exports exactly three functions on top of it:
+
+- **`findMany(table, where?)`** — every matching row with `deleted_at IS
+NULL` ANDed onto whatever `where` the caller supplied. The default, and
+  normal-use, finder.
+- **`findOne(table, where?)`** — the first row `findMany` returns, or
+  `undefined`. There is no separate unfiltered path underneath it.
+- **`findManyIncludingSoftDeleted(table, where?)`** — the dedicated escape
+  hatch, for admin restore paths only (DESIGN.md §14's trash view / undo). Its
+  name says what it does at the call site rather than a `{ includeDeleted }`
+  flag a later edit could default the wrong way; nothing else may bypass the
+  filter, so a second bypass is a decision argued for in the diff, not a
+  convenience appearing quietly beside an import.
+
+`selectFrom` itself is not exported, so there is no public handle a finder
+could reach the database through while skipping the filter — the same shape
+as `AuditWriter` gives writes no path around `applyAudit`.
+
+**The mechanical guard.** This is a code sweep (CLAUDE.md's sweep-task rule),
+so it landed as the mechanism above plus
+`src/test/soft-delete-finder-guard.test.ts`, which reads `repository.ts` and
+every other tracked source file as text and asserts: no `.select(`/`db.query.`
+call exists outside `repository.ts`; `repository.ts` builds exactly one, and
+it is inside `selectFrom`; the repository's exported surface is pinned to
+`findMany`/`findOne`/`findManyIncludingSoftDeleted`/`withAudit`, so a fifth
+export — a new escape hatch, or a finder that reaches the database some other
+way — turns the test red rather than merely going unreviewed; and every
+exported finder other than the escape hatch either calls `notSoftDeleted(...)`
+directly or delegates to one that does. At Wave 2 there is exactly one table
+(the scratch table in `repository.test.ts`), which is the point: the guard
+exists before there is anything to forget, and each later table's finder
+adopts the mechanism in that finder's own PR rather than a retrofit pass.
+
+**The partial-index convention.** Every unique index in this schema must
+carry `WHERE deleted_at IS NULL`. Without it, a plain `UNIQUE` constraint
+still matches a soft-deleted row's value, so deleting a record permanently
+reserves its name/slug/whatever the index covers — the exact opposite of
+"deleted records stay recoverable but invisible." `users_email_unique`
+(`src/db/schema/users.ts`) is the worked example:
+
+```ts
+uniqueIndex('users_email_unique')
+  .on(table.email)
+  .where(sql`${table.deletedAt} is null`);
+```
+
+`repository.test.ts` proves the convention rather than merely stating it: a
+second scratch table (`repository_probe_charms`) carries a unique index built
+exactly this way, and the tests assert a live duplicate name is still
+rejected, while soft-deleting the original row and reinserting the same name
+succeeds — the row that comes back is a new id, and `findMany` sees only it.
 
 ## Who may import the client (M1.17)
 

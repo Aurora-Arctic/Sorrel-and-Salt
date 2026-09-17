@@ -1,5 +1,5 @@
-import { sql, type SQL } from 'drizzle-orm';
-import type { PgTable } from 'drizzle-orm/pg-core';
+import { and, sql, type SQL } from 'drizzle-orm';
+import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { applyAudit, auditColumns, type AuditSession } from './audit';
 // M1.17: this module is the choke point the no-restricted-imports rule exists
 // to protect, so it is the one application module allowed to import the client.
@@ -16,8 +16,14 @@ import { db } from './connection';
 // below, whose three methods each run their payload through `applyAudit`
 // first.
 //
-// Read-side finders (and their `deleted_at IS NULL` builder) are M1.20 —
-// they land on top of this choke point rather than beside it.
+// CLAUDE.md rule 4 / DESIGN.md §5: every exported finder applies
+// `deleted_at IS NULL` here, not at call sites — the read-side counterpart
+// to the write choke point above. `selectFrom` is the one place a read query
+// is built; it is not exported, so a caller can only reach a row through
+// `findMany`/`findOne` (filtered) or the explicitly named
+// `findManyIncludingSoftDeleted` escape hatch below. A finder written
+// without the filter fails `src/test/soft-delete-finder-guard.test.ts`
+// (M1.20), not review.
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -95,4 +101,61 @@ export async function withAudit<T>(
     await tx.execute(sql`select set_config('app.current_user_id', ${session.userId}, true)`);
     return fn(writerFor(tx, session));
   });
+}
+
+/** Every table carries `...auditColumns` (CLAUDE.md rule 3), `deletedAt` included. */
+type Auditable = { deletedAt: AnyPgColumn };
+
+/** `deleted_at IS NULL` — CLAUDE.md rule 4, built once so no finder writes it by hand. */
+function notSoftDeleted<TTable extends PgTable & Auditable>(table: TTable): SQL {
+  return sql`${table.deletedAt} is null`;
+}
+
+// The one place a read query is built. Not exported: everything reads
+// through it, but only `findMany`/`findOne`/`findManyIncludingSoftDeleted`
+// below can reach it, so there is no public handle that skips the filter —
+// the same shape as `AuditWriter` above for writes.
+function selectFrom<TTable extends PgTable>(
+  table: TTable,
+  where: SQL | undefined,
+): Promise<TTable['$inferSelect'][]> {
+  // Same shape as `writerFor` above: Drizzle's `.from()` is typed against the
+  // table's own generic parameter, which a caller-supplied `TTable` doesn't
+  // structurally satisfy — the cast is confined to this one line.
+  return db
+    .select()
+    .from(table as never)
+    .where(where) as never;
+}
+
+/** All matching, non-soft-deleted rows. The default and normal-use finder. */
+export function findMany<TTable extends PgTable & Auditable>(
+  table: TTable,
+  where?: SQL,
+): Promise<TTable['$inferSelect'][]> {
+  return selectFrom(table, where ? and(notSoftDeleted(table), where) : notSoftDeleted(table));
+}
+
+/** The first matching, non-soft-deleted row, or `undefined`. */
+export async function findOne<TTable extends PgTable & Auditable>(
+  table: TTable,
+  where?: SQL,
+): Promise<TTable['$inferSelect'] | undefined> {
+  const [row] = await findMany(table, where);
+  return row;
+}
+
+/**
+ * The escape hatch, for admin restore paths only (DESIGN.md §14's trash
+ * view / undo-a-soft-delete). Deliberately named so a reviewer sees exactly
+ * what it does at the call site, rather than a generic `{ includeDeleted }`
+ * flag a later edit could default the wrong way. Nothing else may bypass
+ * `deleted_at IS NULL` — CLAUDE.md rule 4 — so a second bypass belongs here,
+ * argued for in the diff, not as a new escape hatch beside it.
+ */
+export function findManyIncludingSoftDeleted<TTable extends PgTable>(
+  table: TTable,
+  where?: SQL,
+): Promise<TTable['$inferSelect'][]> {
+  return selectFrom(table, where);
 }
