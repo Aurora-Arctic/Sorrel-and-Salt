@@ -17,7 +17,7 @@
     "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
   },
   "postCreateCommand": "sudo apk add --no-cache github-cli",
-  "forwardPorts": [8000, 8001, 4983, 9229, 9230, 9231, 9323, 9324, 51204],
+  "forwardPorts": [8000, 8001, 4983, 9229, 9230, 9231, 9323, 9324, 51204, 7900],
   "portsAttributes": {
     "8000": { "label": "next dev" },
     "8001": { "label": "next start (production build)" },
@@ -27,7 +27,8 @@
     "9231": { "label": "node inspector (playwright runner --inspect-brk)" },
     "9323": { "label": "playwright trace viewer" },
     "9324": { "label": "playwright ui mode" },
-    "51204": { "label": "vitest ui" }
+    "51204": { "label": "vitest ui" },
+    "7900": { "label": "playwright display (codegen / page.pause)" }
   },
   "remoteUser": "node",
   "containerUser": "node",

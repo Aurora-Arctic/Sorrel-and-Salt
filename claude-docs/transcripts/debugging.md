@@ -146,3 +146,75 @@ Wrote `claude-docs/debugging.md` as the new subsystem summary and opened
 this transcript alongside it, per the sweep/compression conventions in
 CLAUDE.md — MB.22 closes Wave 2, so `MW.2`'s compression pass picks both up
 rather than leaving them behind.
+
+---
+
+**2026-09-17, MB.23 — Playwright codegen for local development.**
+
+`playwright codegen` always launches its own local browser — no
+`--ws-endpoint` flag exists — so MB.22's `playwright-server` (a headless
+remote Chromium reached over `PLAYWRIGHT_WS_ENDPOINT`) couldn't serve it.
+MB.22's own design record had already named the cause:
+`playwright-server` has no display, so `page.pause()`'s Inspector window
+had nowhere to open either.
+
+Gave `playwright-server` a display instead of standing up a second service.
+`Docker/Dockerfile.e2e`'s single, previously-unnamed stage is now `AS e2e`;
+a new `FROM e2e AS headed` stage layers on Xvfb, `openbox`, and an
+x11vnc + noVNC + websockify bridge, reachable at `:7900`. Because an
+unqualified `docker build` picks whichever stage is _last_ in the file,
+both `.github/workflows/build-e2e-image.yml` and the `e2e` compose service
+now pin `target: e2e` explicitly — without that pin either would silently
+start building `headed` instead. `playwright-server` builds `target:
+headed` and takes its own image tag, `sorrel-e2e-headed` (previously it
+shared `sorrel-e2e` with the `e2e` service, harmless only because both
+built identical content — building different stages under one tag is a
+last-build-wins bug waiting to happen). A new `Docker/playwright-entrypoint.sh`
+raises the display, then `exec "$@"`s into whatever command the service (or
+a `docker compose exec`) actually asked for, so MB.22's `run-server`
+behaviour is unchanged; `docker-compose.yaml` sets it as `entrypoint:`
+explicitly rather than relying only on the Dockerfile's own `ENTRYPOINT`.
+
+`make docker-codegen NAME=<spec>` (`makefile`, beside MB.22's
+`playwright-server-up`/`-down`) starts `playwright-server` if needed, then
+`exec`s `playwright codegen` into it as the caller's uid, so the recorded
+file lands in `e2e/` owned by a real user rather than root.
+`.devcontainer/devcontainer.json` forwards the new **7900** alongside
+MB.22's inspector ports.
+
+As a side effect, `page.pause()`'s Inspector and UI mode's live locator
+picker — both written off in MB.22's design record as not working against a
+remote browser — now work, since both just needed somewhere to draw.
+Amended `claude-docs/design-decisions/mb.22-playwright-in-devcontainer.md`
+in place with a dated note rather than rewriting its original reasoning,
+per CLAUDE.md's rule that a doc disagreeing with the code gets reconciled.
+Wrote `claude-docs/design-decisions/mb.23-codegen-needs-a-display.md` for
+the fuller reasoning (why a second service was rejected, the image-tag
+collision, the accepted browser-in-a-browser cost).
+
+Updated `claude-docs/debugging.md` (port table, the "known limitation"
+section rewritten since it's no longer one, a new "Recording a spec"
+subsection with the five-point adaptation checklist), `docker.md` (the two
+Dockerfile stages, the second image tag, `docker-codegen`), and `ci.md`
+(the `target: e2e` pin and why it now matters). `testing.md` already
+pointed to `debugging.md` for the full debugging setup, so no duplicate
+pointer was needed there.
+
+Known limitation stated plainly rather than worked around: sign-in is
+OAuth-only, so an authenticated flow still can't be recorded end-to-end —
+that waits on seeded sessions from M1.21–M1.23. No hook for
+`--save-storage` was built ahead of that.
+
+On request, also extended `make docker-all` to bring `playwright-server` up
+alongside app/Postgres/workshop/studio — it's long-running like the other
+three, and now has a display worth having by default. `e2e` stays out of
+that list on purpose: it's a one-shot suite run
+(`docker compose run --rm`), not a service to leave up, so the target names
+its five services explicitly (`up -d app postgres workshop studio
+playwright-server`) rather than blanket-enabling the `e2e` profile with no
+service list, which would also start `e2e` itself running the whole suite
+under `up -d` semantics. `CLAUDE.md`'s Commands table and `docker.md`'s
+makefile summary are updated to match; `TASKS.md`'s MB.21 prose (which
+described `docker-all`'s original scope) gets a forward-pointer rather than
+a rewrite, since it was accurate as of MB.21 and CLAUDE.md's convention is
+to correct what's wrong, not erase what was true.

@@ -69,6 +69,10 @@ jobs:
         with:
           context: .
           file: Docker/Dockerfile.e2e
+          # Explicit since MB.23: Dockerfile.e2e now has a second stage
+          # (`headed`, for playwright-server's display), and "last stage
+          # wins" would otherwise silently start publishing that one instead.
+          target: e2e
           push: true
           tags: ${{ steps.tag.outputs.image }}
           cache-from: type=gha,scope=e2e-image

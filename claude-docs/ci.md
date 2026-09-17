@@ -117,6 +117,17 @@ archived and are not required reading.
   `e2e`, `make docker-e2e`) builds this same file for local use, so a
   devcontainer session (still Alpine-based itself, via `Docker/Dockerfile.node`)
   can run the full e2e suite without a base-distro change of its own.
+  **`target: e2e` is pinned explicitly (MB.23):** `Dockerfile.e2e` gained a
+  second stage, `headed` (a display, for the `playwright-server` compose
+  service's `playwright codegen`/`page.pause()` support), and an unqualified
+  `docker build` picks whichever stage is _last_ in the file. Without the
+  pin, this workflow would silently start building and publishing `headed`
+  instead — extra weight CI never uses. The `e2e` compose service pins the
+  same target for the same reason; `playwright-server` is the one consumer
+  that deliberately builds `headed`, under its own image tag
+  (`sorrel-e2e-headed`, not `sorrel-e2e`) so the two never collide. A PR
+  touching `Dockerfile.e2e` — this one included — moves the content-addressed
+  hash and republishes the image; that's expected, not a regression.
 - **`gitflow.yml`** — enforces which source branch may PR into which target:
   `feature/*` → `staging`; `release/MAJOR.MINOR.PATCH` or `hotfix/*` → `main`;
   `staging` or `hotfix/*` → `release/*`; `main-sync/YYYY-MM-DD-HH-MM-SS` →

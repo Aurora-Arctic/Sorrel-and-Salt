@@ -49,6 +49,17 @@ runs in: `page.pause()`'s inspector window has nowhere to open, and UI mode's
 live locator picker (which needs to hover and click on the actual page as it
 renders) has nothing to point at.
 
+**Amended 2026-09-17 (MB.23):** this is no longer true. MB.23 gave
+`playwright-server` a display — Xvfb, a window manager, and a noVNC tab at
+`:7900` — so `page.pause()`'s Inspector and UI mode's live locator picker now
+work, alongside the `playwright codegen` recorder that display was actually
+built for. The reasoning above (_why_ those features need a local window to
+draw into) is kept because it's still correct and is exactly what the
+display fixes; only the conclusion that the container can't provide one is
+outdated. See
+[`mb.23-codegen-needs-a-display.md`](mb.23-codegen-needs-a-display.md) for
+the mechanism.
+
 **Trace viewer and UI mode's own web UI both work fine** — that's the whole
 trade-off. Trace viewer replays a recorded run (`npm run e2e:trace`); it
 doesn't need a live browser at all, only the trace file. UI mode's UI is
