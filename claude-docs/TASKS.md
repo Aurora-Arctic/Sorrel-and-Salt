@@ -324,7 +324,13 @@ _Acceptance criteria:_
 - No test ids and no snapshots in the story files
 - Each component's `claude-docs/components/` doc links its story
 
-**M0.33 — Gate: no standalone component without a story** · 2h
+**M0.33 — Gate: no standalone component without a story** · 2h · **merged, then superseded by MB.38**
+
+> **Superseded, not wrong.** The gate shipped as a script under `scripts/`, run
+> from pre-commit and, after M0.36, from CI's build job. MB.38 moved it into
+> `src/test/workshop-guards.test.ts` — the same assertion, as an ordinary Vitest
+> test on the `vitest` job — and took it out of pre-commit, which is test-free
+> by decision. The rule it enforces is unchanged and still stands in CLAUDE.md.
 
 _Story:_ As a developer, I want CI to fail when a component ships without a workshop entry so that "every future component is in the workshop" is enforced, not remembered.
 
@@ -587,7 +593,13 @@ _Acceptance criteria:_
 - No live doc sends the reader into the archive to understand the system
 - An already-archived file is never edited; a repeat pass writes a dated subdirectory
 
-**M0.35 — Fix the stale 'auto' comment above defaultState: 'dark'** · 1h
+**M0.35 — Fix the stale 'auto' comment above defaultState: 'dark'** · 1h · **merged, then superseded by MB.38**
+
+> **Superseded, not wrong.** The comment fix holds. The regression check M0.35
+> added beside it, `scripts/check-workshop-theme-default.ts`, said in its own
+> header that it was a script only because Vitest had not landed; MB.38 moved
+> that assertion into `src/test/workshop-guards.test.ts`, which is also the
+> first time CI has enforced it — the script ran from pre-commit alone.
 
 _Story:_ As a developer, I want comments to match the code beneath them so that the next reader is not misled about the default.
 
@@ -596,7 +608,12 @@ _Acceptance criteria:_
 - The comment describes the actual default
 - No other comment in the file contradicts the code
 
-**M0.36 — Wire check:stories and workshop:build into CI** · 2h
+**M0.36 — Wire check:stories and workshop:build into CI** · 2h · **merged, then superseded by MB.38**
+
+> **Superseded, not wrong.** Both gates still run in CI. `workshop:build` stays
+> on `checks.yml`'s `build` leg exactly as M0.36 wired it; `check:stories` left
+> that leg when MB.38 made it a Vitest test, so it runs on the `vitest` job
+> instead. Neither runs in pre-commit any more.
 
 _Story:_ As a developer, I want the story gates enforced in CI so that a PR cannot skip them by skipping the local hook.
 
@@ -4044,7 +4061,7 @@ _Acceptance criteria:_
 - The story guard is proven to bite on a fixture directory, not only to pass against a tree that already complies
 - Both scripts and both npm scripts are gone; `pre-commit` is lint, `format:check`, typecheck; the `build` leg runs `npm run build && npm run workshop:build`
 - `CLAUDE.md`, `README.md`, `workshop.md` and `ci.md` no longer name either script; M0.33/M0.35/M0.36 carry a superseded-by note rather than an edit
-- `npm run test:coverage` is green
+- Every test passes. **The usual "`npm run test:coverage` is green" is corrected rather than met**, exactly as MB.37's entry says: the run has failed its 80% _function_ threshold at 79.59% since MB.32, on `src/app`'s three untested files, which this task does not touch either — named so the red `vitest` leg on this PR is not mistaken for the moved guards failing
 
 ## MW — Wave close-out
 

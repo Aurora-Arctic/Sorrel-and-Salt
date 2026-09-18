@@ -295,8 +295,8 @@ export function currentBranch(cwd: string = REPO_ROOT): string {
 }
 
 // Every *.sql directly under src/db/migrations — drizzle-kit doesn't nest
-// migrations, so this doesn't need to recurse the way check-component-stories
-// does for src/components.
+// migrations, so this doesn't need to recurse the way the story guard in
+// src/test/workshop-guards.test.ts does for src/components.
 function allCommittedMigrations(): string[] {
   if (!existsSync(MIGRATIONS_DIR)) return [];
   return readdirSync(MIGRATIONS_DIR)
