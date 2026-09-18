@@ -30,8 +30,9 @@ name: Deploy
 # `deploy` needs: [resolve-target, migrate] — migrate.yml (M1.4) applies
 # pending migrations to the same environment before `deploy` is allowed to
 # run, so a failed migration blocks the promotion instead of racing it. It
-# also seeds DESIGN.md §6's category vocabulary (M4.3), in that same job and
-# only when the push actually changed it — see the `seed-changed` job.
+# also seeds the two reference vocabularies — DESIGN.md §6's categories (M4.3)
+# and §5's ingredient forms (M4.3a) — in that same job and only when the push
+# actually changed one of them; see the `seed-changed` job.
 
 on:
   push:
@@ -150,6 +151,7 @@ jobs:
 
           if git diff --name-only "$BEFORE" "$GITHUB_SHA" -- \
             src/db/seed/categories.ts \
+            src/db/seed/forms.ts \
             src/db/seed/bootstrap-admin.ts \
             src/lib/slugify.ts \
             scripts/db-seed.ts \
@@ -171,7 +173,7 @@ jobs:
     uses: ./.github/workflows/migrate.yml
     with:
       environment: ${{ needs.resolve-target.outputs.environment }}
-      seed-categories: ${{ needs.seed-changed.outputs.changed == 'true' }}
+      seed-reference: ${{ needs.seed-changed.outputs.changed == 'true' }}
     secrets: inherit
 
   deploy:
