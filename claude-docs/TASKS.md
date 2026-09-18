@@ -202,7 +202,7 @@ _Acceptance criteria:_
 - All new colours meet 4.5:1 contrast against their intended background
 - Derived from the M0.6 base palette rather than picked independently
 
-**Merged, and partly superseded by MB.35.** `$category-groups` is no longer the runtime lookup: groups are rows an admin can add, so a chip reads its colour from `category_groups.color` via an inline custom property, and the map survives as the **seed values** M4.3 resolves and writes onto the eight seeded rows. What that map does — the hue rotation off `$sorrel` and the per-theme lightness tuning tabulated for 4.5:1 — is exactly why the starting eight read as one family, and none of it is discarded. MB.36 does the mechanical part: `chip()` takes a colour rather than a slug, and `_primitives.scss` stops generating a `.chip--<slug>` class per key.
+**Merged, and partly superseded by MB.35.** `$category-groups` is no longer the runtime lookup: groups are rows an admin can add, so a chip reads its colour from its group's stored pair — `category_groups.colorDark` and `colorLight` — via inline custom properties, and the map survives as the **seed values** M4.3 resolves and writes onto the eight seeded rows. What that map does — the hue rotation off `$sorrel` and the per-theme lightness tuning tabulated for 4.5:1 — is exactly why the starting eight read as one family, and none of it is discarded. MB.36 does the mechanical part: `chip()` takes a colour rather than a slug, and `_primitives.scss` stops generating a `.chip--<slug>` class per key.
 
 **M0.8 — Add modal-surface, chip and badge mixins** · 2h
 
@@ -1371,7 +1371,7 @@ _Acceptance criteria:_
 
 _Story:_ As a user on a phone, I want categories grouped so that selecting from 52 chips is manageable.
 
-Add `category_groups` (id, name, slug, colorDark, colorLight, description, audit) and `categories` (id, name, slug, color, description, groupId, audit). Both global only, admin-curated. **Re-scoped by MB.35**: the group was a `category_group` pgEnum, which is right for a closed set and wrong once an admin may add a ninth — adding an enum value is DDL, and an admin mutation cannot run DDL. Both tables land in this one task because a NOT NULL foreign key is unwritable without the table it points at.
+Add `category_groups` (id, name, slug, colorDark, colorLight, description, audit) and `categories` (id, name, slug, description, groupId, audit). Both global only, admin-curated. **A category carries no colour**: MB.35 made a group's colour a pair of hexes, one per theme, which a single `color` column on a category cannot hold either half of — and M4.3 seeds the pair onto the group row, leaving nothing to seed a per-category counterpart from. Settled while writing the table; §5, §6, §14 and `db.md` are corrected in this PR. **Re-scoped by MB.35**: the group was a `category_group` pgEnum, which is right for a closed set and wrong once an admin may add a ninth — adding an enum value is DDL, and an admin mutation cannot run DDL. Both tables land in this one task because a NOT NULL foreign key is unwritable without the table it points at.
 
 _Acceptance criteria:_
 
