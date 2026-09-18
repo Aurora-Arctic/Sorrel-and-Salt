@@ -258,13 +258,40 @@ edit at any call site; nothing passes it today.
   old names will never report again — but whatever enables protection must use
   the new ones. A required check that no workflow publishes is permanently
   pending, and blocks every PR after it.
-- **A required-check job must never carry a job-level `if:`.** GitHub then
-  reports a bare, unqualified check name that `job / job` protection can never
-  match. That is why skipping is always done through inputs instead —
-  `run-lint`/`run-typecheck`/`run-build` on `checks.yml`, `should-run`
-  elsewhere — and every calling job itself runs unconditionally. A matrix does
-  not change this: `checks.yml` runs all five legs on every push and each one
-  decides internally whether to do the work.
+- **A required-check job must never carry a job-level `if:`** — the rule the
+  whole filtering design is built on, and it **has never been verified here**.
+  The claim is that GitHub then reports a bare, unqualified check name that
+  `job / job` protection can never match. It is why skipping is always done
+  through inputs instead — `run-lint`/`run-typecheck`/`run-build` on
+  `checks.yml`, `should-run` elsewhere — and every calling job itself runs
+  unconditionally.
+  - **Provenance.** It arrived at M0.16 (`258b825`) as a byte-for-byte copy of
+    `resume-2026`'s own `should-run` comments; that task's decision record
+    verified YAML parsing and a `diff` against the upstream originals, and
+    nothing about check-run naming. M0.20 (`32e0926`) re-cited it as
+    "upstream's own `should-run` comments". The doc consolidation (`b3b0dbb`)
+    lifted it into this file as a general rule, and MB.32 (`d406cff`) extended
+    it to matrix jobs. **No commit, decision record or transcript in this repo
+    describes the symptom being observed** — and none could, since no ruleset
+    here has ever required a status check.
+  - **Its scope is narrower than this bullet has been stating.** Every
+    assertion in the workflow files is written about _the job that calls a
+    reusable workflow_ — `pr-gate.yml`'s `checks`/`vitest`/`playwright`. Whether
+    an `if:` on an _inner_ job (`checks.yml`'s own `check`, `vitest.yml`'s
+    `vitest`) renames its check is a separate question nothing here answers.
+    This file previously asserted "a matrix does not change this"; that
+    sentence was an extrapolation, not a finding, and is withdrawn.
+  - **Contrary evidence sits in the repo.** `audit / audit` carried
+    `if: github.event_name == 'pull_request'` from M0.20 until MB.32 removed it
+    as redundant, and `deploy.yml`'s `resolve-target`, `deploy` and `teardown`
+    still carry job-level `if:` while reporting on `pull_request` into `main`.
+    None is a _required_ check, so none disproves the rule — but none exhibited
+    the symptom either.
+  - **The rule stays in force until MB.39 settles it.** It costs a container
+    pull per filtered-off leg (~20s on a `checks` leg, 37s on `vitest`, 46s on
+    `playwright` — the flag is resolved in the first step, which runs _after_
+    `Initialize containers`), and that is the cheaper side of the bet while the
+    naming behaviour is unknown.
 - **Live GitHub settings are confirmed with the user before being changed**, and
   a permissions-blocked write is reported rather than routed around.
 - **Runners are pinned to `ubuntu-26.04`** (MB.37), not `ubuntu-latest`.
