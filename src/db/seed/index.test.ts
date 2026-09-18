@@ -225,8 +225,10 @@ describe('seed(db, { scenario: "minimal" })', () => {
 });
 
 describe('the scenarios still to land', () => {
-  it.each(['standard', 'demo'] as const)('%s throws until its task lands', async (scenario) => {
-    await expect(seed(db, { scenario })).rejects.toThrow(/not implemented/);
+  // `standard` landed in M1.22 and is asserted in standard.test.ts; `demo` is
+  // M1.23's and still throws before touching the database.
+  it('demo throws until its task lands', async () => {
+    await expect(seed(db, { scenario: 'demo' })).rejects.toThrow(/not implemented/);
     expect(await countOf('users'), 'a scenario that throws has written nothing').toBe(0);
   });
 });

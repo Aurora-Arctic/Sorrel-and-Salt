@@ -507,12 +507,25 @@ export async function seedCategories(db: SeedDatabase): Promise<void> {
   await db.transaction(async (tx) => {
     await tx.execute(sql`select set_config('app.current_user_id', ${BOOTSTRAP_USER_ID}, true)`);
     await insertBootstrapAdmin(tx);
-
-    // Groups first: `categories.group_id` is a NOT NULL foreign key, so there
-    // is nothing for a category to point at until they exist.
-    await insertMissingGroups(tx);
-    await insertMissingCategories(tx, await groupIdByName(tx));
+    await seedCategoryVocabulary(tx);
   });
+}
+
+/**
+ * The same seed, inside a transaction the caller already opened — which is the
+ * only reason it is separate. M1.22's `standard` scenario writes the categories
+ * alongside its own users, workspaces and compendium, and a scenario that is
+ * half-applied is worse than one that is not applied at all, so the whole thing
+ * is one transaction rather than three.
+ *
+ * It assumes what `seedCategories` does for itself: the GUC is published and
+ * the bootstrap admin exists, since every row here is stamped as that user's.
+ */
+export async function seedCategoryVocabulary(tx: SeedTransaction): Promise<void> {
+  // Groups first: `categories.group_id` is a NOT NULL foreign key, so there
+  // is nothing for a category to point at until they exist.
+  await insertMissingGroups(tx);
+  await insertMissingCategories(tx, await groupIdByName(tx));
 }
 
 async function insertMissingGroups(tx: SeedTransaction): Promise<void> {
