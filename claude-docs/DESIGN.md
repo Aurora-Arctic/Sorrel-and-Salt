@@ -305,7 +305,7 @@ Uniqueness is per ingredient, **deliberately not global** — several unrelated 
 
 **`categories.groupId` and `ingredient_forms.groupId` are foreign keys, unlike `ingredients.form`** — and the asymmetry is deliberate rather than an inconsistency. `ingredients.form` stays free text because a _member_ writes it, and must be able to write `rhizome` before an admin has curated it. Only an admin writes a category or a form, and only an admin writes the groups they point at, so there is no one to be blocked by a group that does not exist yet — and the referential integrity is worth having, since a typo'd group silently empties a chip section. The rule generalises: a vocabulary a member writes is text, a vocabulary only an admin writes is a foreign key.
 
-**`ingredient_categories`** — `ingredientId`, `categoryId`, + audit stamps. Composite primary key on the pair, no `deleted_at`, hard-deleted.
+**`ingredient_categories`** — `ingredientId`, `categoryId`, + audit stamps. Composite primary key on the pair, no `deleted_at`, hard-deleted. A second, non-unique index leads on `categoryId` so the pair is readable in both directions: the key answers "what is this ingredient tagged with", and the index answers "what is in this category" without scanning every assignment.
 
 **`spell_categories`** — `spellId`, `categoryId`, + audit stamps. Composite primary key on the pair, no `deleted_at`, hard-deleted.
 
