@@ -65,7 +65,7 @@ jobs:
       (github.event_name == 'pull_request' &&
         github.event.action != 'closed' &&
         startsWith(github.head_ref, 'hotfix/'))
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       environment: ${{ steps.target.outputs.environment }}
       prod_flag: ${{ steps.target.outputs.prod_flag }}
@@ -118,7 +118,7 @@ jobs:
     # overrides the implicit "needs all succeeded" check — without it, a
     # failed migrate wouldn't actually block deploy.
     if: success()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Bare runner, not the `testing` GHCR image the check workflows use: this
     # job needs the Vercel CLI and writes .vercel/output, neither of which the
     # test image is built for. Same call composite-actions-check.yml made.
@@ -244,7 +244,7 @@ jobs:
       github.event_name == 'pull_request' &&
       github.event.action == 'closed' &&
       startsWith(github.head_ref, 'hotfix/')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

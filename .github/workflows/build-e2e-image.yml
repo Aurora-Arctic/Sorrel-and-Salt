@@ -26,7 +26,7 @@ permissions:
 
 jobs:
   build-e2e-image:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       image: ${{ steps.tag.outputs.image }}
     steps:
