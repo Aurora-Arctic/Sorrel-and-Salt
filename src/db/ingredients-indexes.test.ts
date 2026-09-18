@@ -14,14 +14,22 @@ import { ingredients } from './schema/ingredients';
 const COMPENDIUM_IDENTITY = 'ingredients_compendium_identity_unique';
 const WORKSPACE_IDENTITY = 'ingredients_workspace_identity_unique';
 const WORKSPACE_LABEL = 'ingredients_workspace_label_unique';
+// DESIGN.md §9's, not §5's, and neither unique nor partial — this file asserts
+// only that it is declared and is not one of the three above.
+// ingredients-trigram.test.ts (M4.6) owns everything else about it.
+const TRIGRAM = 'ingredients_trgm';
 
 describe('ingredients index declarations', () => {
   const { indexes } = getTableConfig(ingredients);
   const byName = Object.fromEntries(indexes.map((index) => [index.config.name, index]));
 
-  it('declares exactly the three indexes DESIGN.md §5 names', () => {
+  // §5's three, plus §9's trigram index (M4.6) — which is asserted in
+  // ingredients-trigram.test.ts and named here only so this stays an "exactly"
+  // rather than an "at least". A fourth *unique* index is the thing this list
+  // exists to catch, and the assertion below is what makes it one.
+  it('declares exactly §5’s three unique indexes and §9’s trigram one', () => {
     expect(Object.keys(byName).sort()).toEqual(
-      [COMPENDIUM_IDENTITY, WORKSPACE_IDENTITY, WORKSPACE_LABEL].sort(),
+      [COMPENDIUM_IDENTITY, WORKSPACE_IDENTITY, WORKSPACE_LABEL, TRIGRAM].sort(),
     );
   });
 
