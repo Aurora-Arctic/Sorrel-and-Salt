@@ -35,7 +35,7 @@ permissions:
 
 jobs:
   migrate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Bare runner, not the `testing` GHCR image the check workflows use:
     # this job needs the Vercel CLI, same call deploy.yml makes.
     env:

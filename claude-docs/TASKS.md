@@ -4044,6 +4044,7 @@ _Acceptance criteria:_
 - `src/test/destructive-ddl-check.test.ts` covers the rules, the file-list resolution and the branch diff, and **each guard is demonstrated to fail without its mechanism** — not merely to pass with it
 - `ci.md`, `db.md`, `CLAUDE.md` and the `Makefile` describe what the check now does, including that `make act-check CHECK=destructive-ddl` scans nothing locally, which the old `act-destructive-ddl` comment claimed otherwise
 - Every test passes. **The usual "`npm run test:coverage` is green" is corrected rather than met**: the run has failed its 80% _function_ threshold at 79.59% since MB.32, on `src/app`'s three untested files, and PRs #104–#107 each merged with a red `vitest` leg. Untouched here — it predates this task and belongs to whichever one covers `src/app` — but named so the red leg on this PR is not mistaken for MB.37's
+- Three sub-hour fixes found while reading this PR's own run ride along, named in the PR body per MB.31 and not minted as tasks: `checks / audit` now writes its report to the job summary as well as the PR comment (it wrote no summary at all since MB.32, so the audit was invisible on the run page); the build leg's Next.js cache, which had never saved once because the Alpine image's busybox `tar` rejects `--posix`, works now that the `testing` stage installs GNU `tar` and `zstd`; and every `runs-on` is pinned to `ubuntu-26.04` ahead of GitHub's 2026-10-19 move of `ubuntu-latest`, which had been annotating every job with a notice.
 
 **MB.38 — Move the two workshop guards into Vitest** · 1h
 

@@ -118,7 +118,7 @@ jobs:
     # What each leg reports as, after the caller's own job id: `checks / lint`,
     # `checks / format`, and so on. See this file's header comment.
     name: ${{ matrix.name }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     strategy:
       # Never fail-fast. A cancelled leg reports its check as cancelled, which
       # a required status check treats as unsatisfied — so one failing leg
@@ -169,8 +169,9 @@ jobs:
             comment: minimize
           # Non-blocking: `npm audit` exits non-zero when it finds
           # vulnerabilities, and the trailing `|| true` is what keeps that from
-          # failing the PR gate. It comments through its own script rather than
-          # pr-comment — see the "Comment audit results on PR" step below.
+          # failing the PR gate. It reports through its own script rather than
+          # job-summary and pr-comment — see the "Summarize and comment audit
+          # results" step below.
           - name: audit
             label: Dependency Audit
             command: 'npm audit --json > audit-results.json || true'
@@ -253,6 +254,12 @@ jobs:
       # (where npm run build actually writes .next/cache), so the cache path
       # below is the absolute /app location, same reasoning as the /app
       # log-file paths passed to job-summary and pr-comment.
+      #
+      # Restore and save both run inside the container, so the `tar` they
+      # use is the image's. The Alpine base ships only busybox tar, which has
+      # no `--posix` and exited 1 on every save — so from the day this step
+      # landed until MB.37 put GNU tar (and zstd) in the testing stage, the
+      # cache never hit once and every run carried a "Failed to save" warning.
       - name: Cache Next.js build cache
         if: matrix.name == 'build' && steps.flags.outputs.should-run == 'true'
         uses: actions/cache@v6
@@ -285,9 +292,9 @@ jobs:
         run: bash ${{ matrix.summarize }}
 
       # Skipped for audit: the step it reports on cannot fail (see the matrix
-      # entry), so this would write "Dependency Audit passed" directly above a
-      # PR comment warning about the vulnerabilities it found. That leg's own
-      # comment is its report.
+      # entry), so this would write "Dependency Audit passed" directly above
+      # the vulnerabilities the leg's own step below then reports. That step
+      # writes audit's job summary and its PR comment together.
       - name: Write job summary
         if: always() && matrix.name != 'audit' && steps.flags.outputs.should-run == 'true'
         uses: ./.github/actions/job-summary
@@ -316,18 +323,21 @@ jobs:
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
 
-      # The audit leg's own comment: a severity table and a package breakdown,
-      # reported as a [!WARNING] on a step that passed, which pr-comment's
-      # pass/fail vocabulary cannot express. Guarded on pr-number because it is
-      # optional on this workflow (it was required on audit.yml), per the rule
-      # M0.17 set — a reusable check must not use an input unguarded that its
-      # caller can leave empty.
-      - name: Comment audit results on PR
-        if: matrix.name == 'audit' && inputs.pr-number
+      # The audit leg's own report: a severity table and a package breakdown,
+      # reported as a [!WARNING] on a step that passed, which job-summary's
+      # and pr-comment's pass/fail vocabulary cannot express. Written to the
+      # job summary always (MB.37 — until then audit wrote no summary and was
+      # invisible on the run page), and to a PR comment only when the caller
+      # passed a pr-number. The script checks for one itself rather than this
+      # step being guarded on it, so the summary still appears under `act`;
+      # the rule M0.17 set still holds — a reusable check must not use an
+      # input unguarded that its caller can leave empty.
+      - name: Summarize and comment audit results
+        if: matrix.name == 'audit'
         uses: actions/github-script@v9
         env:
           PR_NUMBER: ${{ inputs.pr-number }}
         with:
           script: |
-            const comment = require('/app/.github/scripts/audit-comment.cjs');
-            await comment({ github, context });
+            const report = require('/app/.github/scripts/audit-comment.cjs');
+            await report({ github, context, core });

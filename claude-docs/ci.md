@@ -64,6 +64,12 @@ edit at any call site; nothing passes it today.
     - **The cache `path` is the absolute `/app/.next/cache`**, not a
       workspace-relative path: `hashFiles()` reads `$GITHUB_WORKSPACE`, but
       the job's working directory is `/app`.
+    - **The cache never hit before MB.37.** `actions/cache` runs inside the
+      `testing` container, and the Alpine image's busybox `tar` rejects
+      `--posix`, so every save failed with a warning and every restore missed
+      — from the step's first commit (`57d81bd`) until MB.37 added GNU `tar`
+      and `zstd` to the image's `testing` stage. The `testing` image hash
+      moved with that Dockerfile change, as it does for any.
     - **`package.json`'s `build` script forces `NODE_ENV=production`.** The
       `testing` image bakes in `NODE_ENV=test`, and Turbopack crashes
       prerendering `/_global-error` under anything but `production`/unset —
@@ -80,9 +86,13 @@ edit at any call site; nothing passes it today.
     `.github/scripts/audit-comment.cjs` under `actions/github-script` rather
     than `pr-comment`: a severity table and a package breakdown reported as a
     `[!WARNING]` on a step that passed, which `pr-comment`'s pass/fail
-    vocabulary has no way to say. It writes no job summary, for the same
-    reason — "Dependency Audit passed" directly above a warning about three
-    vulnerabilities is worse than nothing.
+    vocabulary has no way to say. The same script writes the same callout to
+    the job summary (MB.37). Until then the leg wrote no summary at all,
+    because the pass/fail `job-summary` action would have put "Dependency
+    Audit passed" directly above the table — and the audit was invisible on
+    the run's summary page as a result. The summary is written whether or not
+    a `pr-number` was passed; the PR comment only when one was, so
+    `make act-check CHECK=audit` shows the table and skips the comment.
   - **`vitest` and `playwright` are deliberately not legs.** Each brings a
     `services: postgres:` block, a `db-image` input and its own artifact
     uploads — a different job shape, not a different npm script.
@@ -257,6 +267,12 @@ edit at any call site; nothing passes it today.
   decides internally whether to do the work.
 - **Live GitHub settings are confirmed with the user before being changed**, and
   a permissions-blocked write is reported rather than routed around.
+- **Runners are pinned to `ubuntu-26.04`** (MB.37), not `ubuntu-latest`.
+  GitHub moves the floating label to 26.04 from 2026-10-19
+  (actions/runner-images#14748) and annotated every job with a notice until
+  then; pinning did the move on a PR that was watched and silenced the notice.
+  Bumping it is one `sed` across `.github/workflows/`, and `.actrc`'s `-P`
+  platform mapping must move with it.
 
 ## Smoke checks
 
@@ -390,7 +406,7 @@ nothing and this workflow is the only path.
 - `pull_request`, not `pull_request_target` — hotfix branches are never forks.
 - The per-hotfix domains need a wildcard `*.sorrelandsalt.com` (Vercel
   nameservers, Hobby-OK).
-- Bare `ubuntu-latest` runner (needs the Vercel CLI, writes `.vercel/output`),
+- Bare `ubuntu-26.04` runner (needs the Vercel CLI, writes `.vercel/output`),
   with `actions/setup-node@v4` **pinned to Node 26.6.0** to match
   `Docker/Dockerfile.node` — under Node 22, `npm ci` fails because npm 10 cannot
   read the npm-11 lockfile for `typescript@7`'s per-platform deps.
@@ -430,7 +446,7 @@ nothing and this workflow is the only path.
 **`.actrc` + `make act-*`** — run the reusable checks through
 [`act`](https://github.com/nektos/act) against a locally-built
 `Docker/Dockerfile.node` `testing` image (`act-image`). `.actrc` carries
-`-P ubuntu-latest=catthehacker/ubuntu:act-latest` and `--pull=false`.
+`-P ubuntu-26.04=catthehacker/ubuntu:act-latest` and `--pull=false`.
 
 - **One target covers every `checks.yml` leg** (MB.32), where there was one per
   check workflow before the collapse: `make act-check` runs lint,
