@@ -160,21 +160,31 @@ order, which is the hierarchy M6.3's `assertMembership` implements).
   Wave 5, which is the point of CLAUDE.md's table-task-then-behaviour-task
   rule.
 
-## The ingredient identity model (MB.28)
+## The ingredient identity model (MB.28, table M4.1)
 
 DESIGN.md §5 specifies three tables that land in Wave 3: M4.1 creates
-`ingredients` (the enum, columns, generated key, and CHECKs), M4.1a adds its
-three partial unique indexes, M4.2a creates `ingredient_forms`, and M4.4a
-creates `ingredient_folk_names`. MB.28 records the model here first, ahead of
-that DDL, so M4.1 is transcription rather than design — the same reasoning
-as CLAUDE.md's table-then-behaviour rule, one step earlier: cheapest to get
-right before anything depends on it.
+`ingredients` (the enums, columns, generated key, and CHECKs) — **merged**,
+`src/db/schema/ingredients.ts`, migration `0005_uneven_bloodstorm.sql`; M4.1a
+adds its three partial unique indexes, M4.2a creates `ingredient_forms`, and
+M4.4a creates `ingredient_folk_names`. MB.28 recorded the model here first,
+ahead of that DDL, so M4.1 was transcription rather than design — the same
+reasoning as CLAUDE.md's table-then-behaviour rule, one step earlier:
+cheapest to get right before anything depends on it. What follows describes
+`ingredients` as built and the three tables still to come.
 
 - **`ingredients`** — `id`, `workspaceId` (nullable: `NULL` is the compendium
   tier, non-null is a workspace's own ingredient), `name`, `canonicalName`,
-  `nomenclature`, `form`, the generated `canonicalKey`, + audit. `name` is the
-  display label — what it's called here — and stays freely relabellable,
-  because identity moved off it onto `canonicalName`/`nomenclature`/`form`.
+  `nomenclature`, `form`, the generated `canonicalKey`, the correspondence
+  columns (`description`, `element`, `planet`, `zodiac`, `deities[]`, `color`,
+  `safetyNotes`, `substitutes[]`), + audit. `name` is the display label —
+  what it's called here — and stays freely relabellable, because identity
+  moved off it onto `canonicalName`/`nomenclature`/`form`. Of the
+  correspondences only `element` is constrained: an `ingredient_element`
+  `pgEnum` of `earth`, `air`, `fire`, `water`, `spirit`, closed and fixed —
+  the exact opposite of `form`, and the reason the two are easy to confuse
+  but never interchangeable. `deities` and `substitutes` are native
+  `text[]` columns, one of the things SQLite could not have run (DESIGN.md
+  §14).
 - **`ingredient_folk_names`** — `id`, `ingredientId` (FK to `ingredients`),
   `name`, + audit. Common names, one row each, scoped to the ingredient that
   claims them.
@@ -215,8 +225,36 @@ raises an immutability question a plain `text` column doesn't, so relaxing
 `form` into the key, rather than keying on the formal name alone, is what
 lets _Valeriana officinalis_ root and leaf exist as two separate identities.
 
+**Three CHECKs ship with the table**, named
+`ingredients_nomenclature_declares_canonical_name` (the biconditional above),
+`ingredients_canonical_name_not_blank` and `ingredients_form_not_blank`. The
+two non-blank checks exist because `btrim(x) <> ''` is what the biconditional
+cannot say for itself: `canonical_name = '   '` satisfies "not null" while
+contributing nothing to the identity key. Their expressions, and the
+generated column's, are written as literal SQL rather than interpolated
+Drizzle columns, and transcribe DESIGN.md §5's SQL verbatim. The generated
+column has no choice — it names columns of the table whose column object is
+still being built, so there is nothing to interpolate from. Postgres itself
+would accept a table-qualified self-reference in either place (verified
+against this database on 18.6); the limitation is Drizzle's.
+
+**How the table is tested before M1.27 bakes it into the template.**
+`sorrel_template` still carries no application tables, so
+`src/db/ingredients-schema.test.ts` applies the migration that ships this
+table into the worker's own `sorrel_test_<n>` clone — locating it by
+searching `src/db/migrations` for the file that creates `ingredients`, then
+executing its statements — and drops it again afterwards. What the
+constraint assertions exercise is therefore the SQL production runs rather
+than a hand-copied paraphrase of it. `users` and `workspaces` are stubbed to
+the single `id` column the foreign keys point at rather than migrated:
+running Drizzle's migrator here would leave a `__drizzle_migrations` table
+behind in a clone the next test file in that worker expects not to have one
+(`test-database-isolation.test.ts` asserts exactly that). The shape half of
+the file needs no database at all and reads `getTableConfig`, the same as
+`workspaces-schema.test.ts`.
+
 **Three partial unique indexes, not two, and indexes rather than
-constraints:**
+constraints** — M4.1a, not yet built:
 
 ```sql
 CREATE UNIQUE INDEX ingredients_compendium_identity_unique
