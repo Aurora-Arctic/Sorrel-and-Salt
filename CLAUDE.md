@@ -191,7 +191,7 @@ Rules that follow from this:
 
 Do not build, and do not leave hooks for beyond what the design doc names: the **entire notes subsystem** (stories 35–46; §13), edit history, viewer spell approval, compendium/category suggestions, duplicate merge tooling, bulk add from the compendium, GraphQL response caching, email/password sign-in, note moderation.
 
-Story numbers 35–46 are **not reused** — v1 is 44 stories, numbered 1–34 and 47–56.
+Story numbers 35–46 are **not reused** — v1 is 45 stories, numbered 1–34 and 47–57.
 
 The one v1 concession to v2: the ingredient detail page (M8.19) is built so a notes section can be added beneath it without restructuring.
 
