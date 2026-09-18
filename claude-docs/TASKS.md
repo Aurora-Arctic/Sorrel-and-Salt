@@ -1479,11 +1479,11 @@ _Acceptance criteria:_
 
 _Story 16 precondition — As a developer, I want trigram matching available in the database, so that near-duplicate names can be detected before they multiply._
 
-Migration enabling the extension and creating one multicolumn gin index over `name` and `canonical_name` on `ingredients` — a multicolumn `gin_trgm_ops` index serves a query on either column alone, so one index suffices rather than two. `ingredient_folk_names`' own trigram index is M4.4a's, created with that table. Matching must use the `%` operator with an explicit per-transaction `SET LOCAL pg_trgm.similarity_threshold`, never a bare `similarity(...)` comparison — `similarity()` cannot use the index even with sequential scans disabled, and the two forms return identical-looking results until the query is slow.
+Migration creating one multicolumn gin index over `name` and `canonical_name` on `ingredients` — a multicolumn `gin_trgm_ops` index serves a query on either column alone, so one index suffices rather than two. The extension itself was already enabled by `0000_enable-extensions.sql`, which keeps owning that statement: this task consumes the `gin_trgm_ops` operator class rather than re-enabling it, and asserts its presence by test. `ingredient_folk_names`' own trigram index is M4.4a's, created with that table. Matching must use the `%` operator with an explicit per-transaction `SET LOCAL pg_trgm.similarity_threshold`, never a bare `similarity(...)` comparison — `similarity()` cannot use the index even with sequential scans disabled, and the two forms return identical-looking results until the query is slow.
 
 _Acceptance criteria:_
 
-- Extension enabled on local and Neon
+- Extension enabled on local and Neon — 0000's, asserted here rather than re-enabled
 - The multicolumn index covers both `name` and `canonical_name`, and the planner uses it for a predicate on either column alone
 - `ingredient_folk_names_trgm` (M4.4a) exists and is used independently
 - Matching sets the similarity threshold explicitly per transaction and is written with the `%` operator, not a `similarity(...)` comparison

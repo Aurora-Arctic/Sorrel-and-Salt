@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { check, index, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../audit';
 import { workspaces } from './workspaces';
 
@@ -145,5 +145,33 @@ export const ingredients = pgTable(
     uniqueIndex('ingredients_workspace_label_unique')
       .on(table.workspaceId, sql`lower(${table.name})`)
       .where(sql`${table.workspaceId} is not null and ${table.deletedAt} is null`),
+
+    // DESIGN.md §9's fuzzy duplicate warning, given something to use. **One**
+    // multicolumn index rather than two single-column ones: a multicolumn
+    // `gin_trgm_ops` index serves a predicate naming either column on its own,
+    // which is a property of GIN rather than a hope — asserted by EXPLAIN in
+    // ingredients-trigram.test.ts, for each column separately.
+    //
+    // Neither unique nor partial, unlike the three above. The partial predicate
+    // would be actively wrong here: those indexes *reserve* an identity, so a
+    // tombstone must fall outside them, while this one only answers "what is
+    // this called" for a finder that filters `deleted_at` itself. Same shape,
+    // and the same reasoning, as `ingredient_folk_names_trgm` (M4.4a) — which
+    // stays a separate index over a separate table, folk names being rows there
+    // rather than a column here.
+    //
+    // The index is half the rule. The other half lives at every call site and
+    // cannot be expressed here: a match must be written `name % $1` with
+    // `pg_trgm.similarity_threshold` set per transaction, never
+    // `similarity(name, $1) > 0.4`, which is a function call no trigram index
+    // can answer and which returns identical-looking rows while sequentially
+    // scanning. M4.7's service is the first caller bound by it.
+    //
+    // pg_trgm itself is enabled by migration 0000, not by this index's own.
+    index('ingredients_trgm').using(
+      'gin',
+      sql`${table.name} gin_trgm_ops`,
+      sql`${table.canonicalName} gin_trgm_ops`,
+    ),
   ],
 );
