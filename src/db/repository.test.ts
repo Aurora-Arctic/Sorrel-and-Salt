@@ -1,10 +1,16 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { eq, sql as dsql } from 'drizzle-orm';
-import { pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { auditColumns } from './audit';
+import { and, eq, sql as dsql } from 'drizzle-orm';
+import { pgTable, primaryKey, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { auditColumns, auditStampColumns } from './audit';
 import * as repository from './repository';
-import { findMany, findManyIncludingSoftDeleted, findOne, withAudit } from './repository';
+import {
+  type AuditWriter,
+  findMany,
+  findManyIncludingSoftDeleted,
+  findOne,
+  withAudit,
+} from './repository';
 
 // sorrel_template carries no tables until M1.27, so these tests write to a
 // scratch table of their own — created here in this worker's disposable
@@ -42,6 +48,20 @@ const charms = pgTable(
   ],
 );
 
+// MB.34's third scratch table: a join table in the shape `ingredient_categories`,
+// `spell_categories` and `spell_ingredients` take — the four stamp columns, a
+// composite primary key, and no delete columns at all, so a pair that is taken
+// off leaves no row and needs no partial index to be re-added.
+const pairs = pgTable(
+  'repository_probe_pairs',
+  {
+    herbId: uuid('herb_id').notNull(),
+    charmId: uuid('charm_id').notNull(),
+    ...auditStampColumns,
+  },
+  (table) => [primaryKey({ columns: [table.herbId, table.charmId] })],
+);
+
 const session = { userId: '11111111-1111-1111-1111-111111111111' };
 const impostor = { userId: '99999999-9999-9999-9999-999999999999' };
 
@@ -75,6 +95,17 @@ beforeAll(async () => {
     )
   `;
   await sql`
+    create table repository_probe_pairs (
+      herb_id uuid not null,
+      charm_id uuid not null,
+      created_at timestamp not null default now(),
+      created_by uuid not null,
+      updated_at timestamp not null default now(),
+      updated_by uuid not null,
+      primary key (herb_id, charm_id)
+    )
+  `;
+  await sql`
     create unique index repository_probe_charms_name_unique
       on repository_probe_charms (name)
       where deleted_at is null
@@ -84,12 +115,14 @@ beforeAll(async () => {
 afterAll(async () => {
   await sql`drop table if exists repository_probe_herbs`;
   await sql`drop table if exists repository_probe_charms`;
+  await sql`drop table if exists repository_probe_pairs`;
   await sql.end();
 });
 
 beforeEach(async () => {
   await sql`truncate repository_probe_herbs`;
   await sql`truncate repository_probe_charms`;
+  await sql`truncate repository_probe_pairs`;
 });
 
 describe('repository public API', () => {
@@ -317,5 +350,112 @@ describe('soft-delete filtering (M1.20)', () => {
       expect(reused.id).not.toBe(original.id);
       await expect(findMany(charms)).resolves.toEqual([expect.objectContaining({ id: reused.id })]);
     });
+  });
+});
+
+// MB.34: the three join tables — ingredient_categories, spell_categories and
+// spell_ingredients — carry the four stamp columns and no delete columns, so a
+// chip toggled off leaves no row. `write.delete` is how they are written, and
+// it is typed so it cannot be pointed at anything else.
+describe('hard delete on a table with no delete columns (MB.34)', () => {
+  const herbId = '22222222-2222-2222-2222-222222222222';
+  const charmId = '33333333-3333-3333-3333-333333333333';
+  const otherCharmId = '44444444-4444-4444-4444-444444444444';
+
+  const isPair = (herb: string, charm: string) =>
+    and(eq(pairs.herbId, herb), eq(pairs.charmId, charm)) as ReturnType<typeof eq>;
+
+  it('offers exactly four writer methods — a fifth is a decision, not a convenience', async () => {
+    const methods = await withAudit(session, async (write) => Object.keys(write).sort());
+
+    expect(methods).toEqual(['delete', 'insert', 'softDelete', 'update'].sort());
+  });
+
+  it('stamps a join row with the four stamp columns and gives it no delete columns', async () => {
+    const [row] = await withAudit(session, (write) => write.insert(pairs, { herbId, charmId }));
+
+    expect(row.createdBy).toBe(session.userId);
+    expect(row.updatedBy).toBe(session.userId);
+    expect(row.createdAt).toBeInstanceOf(Date);
+    expect(row.updatedAt).toBeInstanceOf(Date);
+    expect(row).not.toHaveProperty('deletedAt');
+    expect(row).not.toHaveProperty('deletedBy');
+  });
+
+  it('removes the row outright, leaving no tombstone behind', async () => {
+    await withAudit(session, (write) => write.insert(pairs, { herbId, charmId }));
+    await withAudit(session, (write) => write.insert(pairs, { herbId, charmId: otherCharmId }));
+
+    const [removed] = await withAudit(impostor, (write) =>
+      write.delete(pairs, isPair(herbId, charmId)),
+    );
+
+    expect(removed).toMatchObject({ herbId, charmId });
+    const rows = await sql`select charm_id from repository_probe_pairs`;
+    expect(rows.map((row) => row.charm_id)).toEqual([otherCharmId]);
+  });
+
+  it('lets the same pair be re-added afterwards, with no partial index to make it possible', async () => {
+    await withAudit(session, (write) => write.insert(pairs, { herbId, charmId }));
+    await withAudit(session, (write) => write.delete(pairs, isPair(herbId, charmId)));
+
+    const [readded] = await withAudit(session, (write) => write.insert(pairs, { herbId, charmId }));
+
+    expect(readded).toMatchObject({ herbId, charmId });
+    await expect(findMany(pairs)).resolves.toHaveLength(1);
+  });
+
+  it('rolls a delete back with the rest of its transaction', async () => {
+    await withAudit(session, (write) => write.insert(pairs, { herbId, charmId }));
+
+    await expect(
+      withAudit(session, async (write) => {
+        await write.delete(pairs, isPair(herbId, charmId));
+        throw new Error('spell fizzled');
+      }),
+    ).rejects.toThrow('spell fizzled');
+
+    const rows = await sql`select charm_id from repository_probe_pairs`;
+    expect(rows).toHaveLength(1);
+  });
+
+  it('reads a table with no deleted_at through the ordinary finders', async () => {
+    await withAudit(session, (write) => write.insert(pairs, { herbId, charmId }));
+    await withAudit(session, (write) => write.insert(pairs, { herbId, charmId: otherCharmId }));
+
+    await expect(findMany(pairs)).resolves.toHaveLength(2);
+    await expect(findMany(pairs, eq(pairs.charmId, charmId))).resolves.toEqual([
+      expect.objectContaining({ charmId }),
+    ]);
+    await expect(findOne(pairs, isPair(herbId, otherCharmId))).resolves.toMatchObject({
+      charmId: otherCharmId,
+    });
+  });
+
+  it('still filters a soft-deletable table, so the two shapes do not bleed into each other', async () => {
+    const [row] = await withAudit(session, (write) => write.insert(herbs, { name: 'Tansy' }));
+    await withAudit(session, (write) => write.softDelete(herbs, eq(herbs.id, row.id)));
+
+    await expect(findMany(herbs)).resolves.toEqual([]);
+    await expect(findManyIncludingSoftDeleted(herbs)).resolves.toHaveLength(1);
+  });
+
+  // The type-level half of the same rule, and the reason the escape hatch is a
+  // named method rather than a flag: neither body ever runs — each `@ts-expect-error`
+  // fails `npm run typecheck` the moment the constraint that rejects it is
+  // loosened, which a runtime assertion cannot see at all.
+  it('refuses the wrong table at compile time in both directions', () => {
+    const hardDeleteASoftDeletableTable = (write: AuditWriter) =>
+      // @ts-expect-error — `herbs` carries deletedAt, so it is soft-deleted or
+      // not deleted at all; write.delete cannot be pointed at it.
+      write.delete(herbs, eq(herbs.id, herbId));
+
+    const softDeleteATableWithNothingToStamp = (write: AuditWriter) =>
+      // @ts-expect-error — `pairs` has no deleted_at to stamp, so softDelete
+      // refuses it rather than writing an UPDATE that sets nothing.
+      write.softDelete(pairs, isPair(herbId, charmId));
+
+    expect(hardDeleteASoftDeletableTable).toBeInstanceOf(Function);
+    expect(softDeleteATableWithNothingToStamp).toBeInstanceOf(Function);
   });
 });
