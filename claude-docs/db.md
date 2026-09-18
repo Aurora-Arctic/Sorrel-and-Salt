@@ -696,6 +696,110 @@ The table is inert at Wave 3: nothing queries it until M9.3's service and
 M9.4's mutations land in Wave 11, which is the table-task-then-behaviour-task
 rule and the reason the DDL can be constrained now, while the table is empty.
 
+## The grimoire (M10.2)
+
+`src/db/schema/spells.ts` and `src/db/schema/spell-ingredients.ts` hold
+DESIGN.md §5's two grimoire tables; `0014_cooing_bug.sql` is the migration.
+What a workspace _makes_, as against what exists (the compendium) and what it
+holds (`inventory_items`).
+
+- **`spells`** — `id`, `workspaceId`, `title`, `intent`, `jarSize`,
+  `sealWaxColor`, `moonPhase`, `dayOfWeek`, `instructions`, `status`, + the full
+  six-column audit spread. Stories 47 and 50's table.
+- **`spell_ingredients`** — `spellId`, `ingredientId`, `quantity`, `unit`,
+  `layerOrder`, `note`, + the four audit stamps, keyed on
+  `(spell_id, ingredient_id)` and hard-deleted (MB.34).
+
+**`visibility` is not on `spells` yet, and its absence is scheduled rather than
+forgotten.** §5 lists the column and M10.3 adds it in Wave 5, after M1.23 has
+seeded spells against this table — which is what makes M10.3's criterion,
+"existing seeded spells migrate to workspace visibility", something that can
+actually be tested (TASKS.md, "Breaking the M1.23 ↔ M10.3 cycle"). Adding it
+early would quietly delete that criterion, so `spells-schema.test.ts` asserts
+the column list exactly and names the column as the one that must still be
+absent.
+
+### The join names the ingredient, never the stock row
+
+`spell_ingredients.ingredientId` references `ingredients`. Stock is what a
+workspace happens to hold today; a recipe pointing at it would be damaged by
+running out of something, and M10.21 tests exactly that. The test proves the
+target rather than asserting it twice: an id that exists only in
+`inventory_items` is refused with a foreign-key violation naming
+`spell_ingredients_ingredient_id_ingredients_id_fk`, while the same insert
+against an ingredient the workspace holds no stock of is accepted. Repoint the
+key and the pair swaps which one reddens.
+
+### Layer order, and what it costs the reorder
+
+`layerOrder` is `integer NOT NULL`, unique within a spell through
+`spell_ingredients_spell_id_layer_order_unique` on `(spell_id, layer_order)`.
+Both halves are load-bearing:
+
+- **Stored, not inferred.** Story 51 makes layering part of the recipe, and no
+  query may lean on insertion order.
+- **NOT NULL**, because a nullable column would satisfy neither half of "stored
+  and unique within a spell" — distinct NULLs collide with nothing, so an
+  unordered row would sit outside the index meant to constrain it.
+- **Leading on `spell_id`**, which both scopes the uniqueness to the one jar and
+  makes this the index that answers "read this spell's ingredients in order" —
+  every read of the table in M10.9 and MB.6.
+- **Not partial**: there is no `deleted_at` here to write a predicate against.
+
+A unique index is checked per row rather than at end of statement, so **M10.16's
+reorder cannot be a single `set layer_order = layer_order + 1` sweep** even
+though the final state is conflict-free. It rewrites the jar's rows instead,
+which a hard-deleted table makes an ordinary delete-and-insert. The schema test
+pins both directions — the sweep is refused, the rewrite succeeds — so the
+constraint the reorder has to work within is written down before the reorder is.
+
+### The rest of the calls, and the ones not made
+
+- **`status` is a `spell_status` enum defaulting to `draft`**, on the column
+  rather than in the service: M10.20's "new spells default to draft" is a
+  default that lives in one code path only if it is written where every code
+  path meets it. An enum rather than a text column with a CHECK because §13's
+  viewer-approval workflow adds `proposed` and `approved` to this same column in
+  v2 — `ALTER TYPE ... ADD VALUE` is expand-only, where widening a CHECK
+  re-validates every existing row.
+- **`title` is the only required field on a spell.** §8's acceptance example
+  creates one with a workspace and a title and nothing else, and a draft is the
+  state a spell is saved in _before_ it is finished. `intent`, `jarSize`,
+  `sealWaxColor`, `moonPhase`, `dayOfWeek` and `instructions` are all nullable
+  free text — §5's rule that a vocabulary a member writes is text, and there is
+  no curated list of moon phases or wax colours anywhere in the design to make a
+  foreign key out of.
+- **`spell_ingredients.unit` is M9.2's `inventory_unit`**, the same Postgres
+  type and not a second copy of it: a tablespoon in a spell is the tablespoon a
+  jar is measured in, and M9.5 converts between them. The type keeps its
+  `inventory_unit` name — renaming it to suit a second consumer would be a
+  `RENAME` under rule 10 for no gain. `quantity` is `numeric(12, 3)`, matching
+  `inventory_items.quantityOnHand` exactly, so "do I have enough for this spell"
+  loses no precision on the comparison. Both are nullable: a layer may name no
+  measurement at all.
+- **No `unitDimension` and no dimension CHECK on `spell_ingredients`.** §5 names
+  neither on this table, the dimension is derivable through `src/lib/units.ts`,
+  and the query that groups stock by dimension has no counterpart here.
+- **No index and no CHECK on `spells`**, beyond the primary key's. §5 names
+  none, the grimoire's own lookups are M10.9's, and a spell title is not unique
+  — two workings may share a name in one coven.
+- **No reverse index on `spell_ingredients`.** §5 asks for one on
+  `ingredient_categories` ("what is in this category") and asks for none here;
+  no v1 feature lists spells by ingredient, so the asymmetry is §5's rather than
+  an oversight.
+
+Both tables are inert at Wave 3. Nothing queries them until M10.5's service and
+M10.10's mutations land in Wave 13 — the table-task-then-behaviour-task rule,
+and the reason the DDL can be constrained now, while the tables are empty.
+
+Every guard above was verified load-bearing rather than assumed, by rebuilding
+the shipped migration with each stripped in turn: without the layer index two
+ingredients sit at depth 1, without `NOT NULL` an unordered row inserts, with
+the key repointed at `inventory_items` a stock-only id is accepted, without the
+composite key the same ingredient joins a spell twice, without the default a new
+spell's status comes back null, and without `NOT NULL` on `title` a nameless
+spell is recorded.
+
 ## Expand/contract and the destructive-DDL check (M1.5)
 
 Drizzle generates no down migrations, and hand-writing them is a reliable way
@@ -1097,13 +1201,14 @@ table in `repository.test.ts` (`repository_probe_pairs`) exercises it: a delete
 leaves no row, the same pair can be re-added afterwards with no partial index
 to make it possible, and a delete rolls back with the rest of its transaction.
 
-**The first of the three is written.** `ingredient_categories` (M4.4, migration
-`0009_amusing_ken_ellis.sql`) is the shape the other two will take, and
+**Two of the three are written.** `ingredient_categories` (M4.4, migration
+`0009_amusing_ken_ellis.sql`) is the shape the other two take, and
 `ingredient-categories-schema.test.ts` runs the same three assertions against
 the real table rather than the scratch pair: `write.delete` removes the row
 outright, the pair can be re-added afterwards — by a different member, whose
 stamps the new row carries — and an ingredient's other categories are untouched.
-`spell_categories` (M10.2) and `spell_ingredients` (M10.4) follow in Wave 3.
+`spell_ingredients` (M10.2, migration `0014_cooing_bug.sql`) is the second and
+takes the same shape; `spell_categories` (M10.4) is the last, later in Wave 3.
 
 ## `ingredient_categories` (M4.4)
 
