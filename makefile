@@ -35,7 +35,7 @@
 	workshop workshop-build \
 	docker-build docker-up docker-workshop docker-studio docker-all docker-e2e docker-down docker-rebuild docker-logs \
 	docker-update-token playwright-server-up playwright-server-down docker-codegen \
-	act-image act-cache-checkout act-check act-destructive-ddl act-test
+	act-image act-cache-checkout act-check act-test
 
 COMPOSE := docker compose -f Docker/docker-compose.yaml
 
@@ -90,7 +90,7 @@ typecheck:
 check-stories:
 	npm run check:stories
 
-## Flag destructive DDL (DROP/RENAME/type narrowing/NOT NULL additions) in migrations (M1.5)
+## Flag destructive DDL (DROP/RENAME/type change/NOT NULL additions) in migrations new on this branch (M1.5)
 check-destructive-ddl:
 	npm run check:destructive-ddl
 
@@ -237,8 +237,8 @@ docker-codegen: playwright-server-up
 # One `act-check` target covers every leg of checks.yml (MB.32), where there
 # was one target per check workflow before the collapse: `make act-check`
 # runs lint, `make act-check CHECK=typecheck` runs typecheck, and so on
-# through `format`, `build` and `audit`. `--matrix name:<leg>` is what keeps
-# act from running all five.
+# through `format`, `build`, `audit` and `destructive-ddl`. `--matrix name:<leg>`
+# is what keeps act from running all six.
 #
 # `CHECK=build` still needs actions/cache@v6 pre-cached the way
 # act-cache-checkout pre-caches checkout-to-app, and `CHECK=audit` wants a real
@@ -256,11 +256,9 @@ docker-codegen: playwright-server-up
 # (or whenever ~/.cache/act is cleared).
 #
 # act does not apply `workflow_call` input defaults, so a `should-run`-style
-# flag arrives empty under `-W`. destructive-ddl.yml is passed
-# `--input should-run=true` for that reason — without it the job "passes"
-# having run nothing. checks.yml needs no such flag: its "Resolve this leg's
-# should-run flag" step treats an empty flag as true, precisely so a local run
-# cannot quietly skip the work it was asked to do.
+# flag arrives empty under `-W`. checks.yml needs no flag passed for that: its
+# "Resolve this leg's should-run flag" step treats an empty flag as true,
+# precisely so a local run cannot quietly skip the work it was asked to do.
 ACT_IMAGE := sorrel-and-salt-testing:local
 ACT_CHECKOUT_CACHE := $(HOME)/.cache/act/Aurora-Arctic-Sorrel-and-Salt-.github-actions-checkout-to-app@main
 CHECK ?= lint
@@ -274,27 +272,23 @@ act-cache-checkout:
 	@[ -d "$(ACT_CHECKOUT_CACHE)" ] || \
 		git clone --branch main https://github.com/Aurora-Arctic/Sorrel-and-Salt "$(ACT_CHECKOUT_CACHE)"
 
-## Run one checks.yml leg locally via act — CHECK=lint|format|typecheck|build|audit
+# The destructive-ddl leg's `destructive-ddl-files`/`pr-body` inputs come from
+# pr-gate.yml reading dorny/paths-filter's list-files output and
+# github.event.pull_request.body — neither exists under act's local `-j`
+# invocation (no real PR, no paths-filter job to feed it), so both arrive
+# empty. checks.yml sets DESTRUCTIVE_DDL_FILES from the input either way, and
+# the script reads "set but empty" as "no migrations changed", so this leg
+# locally scans *nothing* and never has an ack line to find. Good enough to
+# catch "does the workflow/script wiring itself work"; the scan and the
+# ack-line gating are covered by src/test/destructive-ddl-check.test.ts and by
+# `npm run check:destructive-ddl -- --self-test`.
+## Run one checks.yml leg locally via act — CHECK=lint|format|typecheck|build|audit|destructive-ddl
 act-check: act-image act-cache-checkout
 	act -W .github/workflows/checks.yml -j check --matrix name:$(CHECK) --input image=$(ACT_IMAGE) -s GITHUB_TOKEN=dummy-token --action-offline-mode
-
-# destructive-ddl.yml's `changed-files`/`pr-body` inputs come from pr-gate.yml
-# reading dorny/paths-filter's list-files output and github.event.pull_request.body
-# — neither exists under act's local `-j` invocation (no real PR, no paths-filter
-# job to feed it), so both are left unset here. That means this local run always
-# exercises the "no explicit file list" fallback (scans every committed migration
-# under src/db/migrations/*.sql — see the script's own header) rather than the
-# real PR's changed-file set, and never has a real ack line to find. Good enough
-# to catch "does the workflow/script wiring itself work"; not a substitute for
-# the self-test (`npm run check:destructive-ddl -- --self-test`), which is what
-# actually exercises the ack-line gating logic.
-## Run the destructive-ddl workflow locally via act
-act-destructive-ddl: act-image act-cache-checkout
-	act -W .github/workflows/destructive-ddl.yml -j destructive-ddl --input image=$(ACT_IMAGE) --input should-run=true -s GITHUB_TOKEN=dummy-token --action-offline-mode
 
 ## Run every locally runnable act check in sequence
 act-test:
 	$(MAKE) act-check CHECK=lint
 	$(MAKE) act-check CHECK=format
 	$(MAKE) act-check CHECK=typecheck
-	$(MAKE) act-destructive-ddl
+	$(MAKE) act-check CHECK=destructive-ddl

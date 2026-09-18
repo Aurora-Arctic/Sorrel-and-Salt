@@ -17,6 +17,18 @@ name: Checks
 # vitest.yml and playwright.yml are deliberately NOT legs here. Both bring a
 # `services: postgres:` block, a `db-image` input and their own artifact
 # uploads, which is a different job shape rather than a different npm script.
+#
+# destructive-ddl IS a leg, as of MB.37 — it was its own workflow until MB.32
+# collapsed the other five and dropped its calling job from pr-gate.yml
+# without replacing it, so nothing ran it between PR #104 and MB.37 and two
+# migrations landed ungated. It is the one leg needing something a
+# `workflow_call` file cannot read off its own trigger: the list of migration
+# files this PR changed, and the PR's body text (for the acknowledgement
+# line). `workflow_call` workflows have no `pull_request` event of their own —
+# only the caller sees `github.event.pull_request` — so both arrive as plain
+# string inputs, the file list from pr-gate.yml's `changes` job (which already
+# runs dorny/paths-filter with `list-files: json`) and the body straight from
+# `github.event.pull_request.body` at the call site.
 on:
   workflow_call:
     inputs:
@@ -42,8 +54,8 @@ on:
         type: boolean
         default: false
       # One flag per path-filtered leg, rather than one `should-run` for the
-      # whole matrix: pr-gate.yml filters lint, typecheck and build
-      # independently. format and audit have no flag at all — format because
+      # whole matrix: pr-gate.yml filters lint, typecheck, build and
+      # destructive-ddl independently. format and audit have no flag at all — format because
       # Prettier covers .md/.json too and "did formatting change" is cheap and
       # universal, audit because it is non-blocking and PR-only.
       #
@@ -68,6 +80,33 @@ on:
         required: false
         type: boolean
         default: true
+      run-destructive-ddl:
+        description: Set false to skip the destructive-DDL scan while still completing its leg under its normal name
+        required: false
+        type: boolean
+        default: true
+      destructive-ddl-files:
+        description: >-
+          JSON array (string) of migration files new/changed in this PR, from
+          pr-gate.yml's dorny/paths-filter `list-files: json` output, passed to the
+          destructive-ddl leg as DESTRUCTIVE_DDL_FILES. An empty array/string means
+          no migration files changed — the script then checks nothing rather than
+          falling back to diffing the branch (that fallback is only for a bare local
+          `npm run check:destructive-ddl`; see the script's header). The script
+          ignores anything that is not a `*.sql` file, so the `meta/*.json` Drizzle
+          writes beside each migration cannot be scanned as SQL.
+        required: false
+        type: string
+        default: ''
+      pr-body:
+        description: >-
+          The PR's body text, for the destructive-ddl leg's
+          "Destructive DDL acknowledged: <reason>" line. Omit when there is no real
+          PR body available — a merge_group event, for one, carries a synthetic head
+          ref rather than the PR itself.
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -115,6 +154,17 @@ jobs:
             command: npm run build && npm run check:stories && npm run workshop:build
             summarize: ''
             comment: ''
+          # Blocking, unlike audit below — this gates a merge, since a
+          # destructive migration slipping through breaks the "revert is a
+          # deploy rollback" guarantee CLAUDE.md rule 10 exists for. No
+          # summarising step: the script's own output is already the report, a
+          # rule and a statement per finding, which job-summary and pr-comment
+          # render from the log.
+          - name: destructive-ddl
+            label: Destructive DDL
+            command: npm run check:destructive-ddl
+            summarize: ''
+            comment: minimize
           # Non-blocking: `npm audit` exits non-zero when it finds
           # vulnerabilities, and the trailing `|| true` is what keeps that from
           # failing the PR gate. It comments through its own script rather than
@@ -152,6 +202,16 @@ jobs:
       # value — this fixed, non-secret placeholder satisfies it.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       BETTER_AUTH_SECRET: local-dev-not-a-real-secret
+      # For the destructive-ddl leg only, and inert in the other five.
+      # Deliberately always *set*, even to an empty string: the script treats
+      # "set but empty" as "no migrations changed, check nothing" and an unset
+      # variable as "work out what this branch changed from git", and the
+      # second is a local convenience that must never be what CI does. Under
+      # `act` these arrive empty for the same reason — no PR, no paths-filter
+      # job — so a local `make act-check CHECK=destructive-ddl` proves the
+      # wiring, not the scan.
+      DESTRUCTIVE_DDL_FILES: ${{ inputs.destructive-ddl-files }}
+      DESTRUCTIVE_DDL_PR_BODY: ${{ inputs.pr-body }}
     steps:
       # Resolves the three `run-*` inputs down to one flag for this leg, so
       # every step below reads a single step output instead of re-deriving
@@ -169,11 +229,13 @@ jobs:
           RUN_LINT: ${{ inputs.run-lint }}
           RUN_TYPECHECK: ${{ inputs.run-typecheck }}
           RUN_BUILD: ${{ inputs.run-build }}
+          RUN_DESTRUCTIVE_DDL: ${{ inputs.run-destructive-ddl }}
         run: |
           case "$CHECK" in
             lint) flag="$RUN_LINT" ;;
             typecheck) flag="$RUN_TYPECHECK" ;;
             build) flag="$RUN_BUILD" ;;
+            destructive-ddl) flag="$RUN_DESTRUCTIVE_DDL" ;;
             # format and audit are deliberately unfiltered — see the inputs.
             *) flag=true ;;
           esac

@@ -39,7 +39,8 @@ The schema entity is `workspaces`; the URL prefix is `/coven/`. This divergence 
 | `make docker-all`                                                                                              | App + Postgres + workshop + studio + the Playwright browser server (`:7900`, MB.23), all at once — `e2e` itself stays opt-in via `make docker-e2e` |
 | `npm run workshop` / `workshop:build` (`make workshop` / `workshop-build`)                                     | Ladle component workshop on **61000**; `:build` is the static export, wrapped so a story that fails to bundle actually exits non-zero              |
 | `npm run db:studio` (`make db-studio`)                                                                         | Drizzle Studio on **4983**, browsing the local database via `drizzle.config.ts`; UI is `https://local.drizzle.studio`                              |
-| `make act-check` / `act-destructive-ddl`                                                                       | Run a check locally via `act`; `act-check CHECK=<leg>` picks a `checks.yml` leg, `make act-test` chains four                                       |
+| `npm run check:destructive-ddl` (`make check-destructive-ddl`)                                                 | Scans migrations new on this branch against its Gitflow base; `-- --base <ref>` picks another, `-- --all` audits every committed migration         |
+| `make act-check`                                                                                               | Run a check locally via `act`; `act-check CHECK=<leg>` picks a `checks.yml` leg, `make act-test` chains four                                       |
 | `npm run dev:debug` (`make dev-debug`)                                                                         | Next.js dev server with the Node inspector on **9229**; see [`claude-docs/debugging.md`](claude-docs/debugging.md) for the full debugging setup    |
 | `npm run db:generate` / `db:migrate` (`make db-*`)                                                             | `drizzle-kit generate` / `migrate`, wired in M1.3                                                                                                  |
 | `npm run db:seed` / `db:reset` (`make db-*`)                                                                   | Wired, but `seed()` throws for every scenario until M1.21–M1.23 fill them in, so `db:reset` fails at its seed step                                 |
@@ -84,7 +85,7 @@ A private spell must never reach a resolver. Same for cross-workspace rows.
 
 **9. DataLoader is not optional.** Compute has a dollar cost on Vercel, so an N+1 is a billing bug as well as a slow one. Loaders are constructed per request, never at module level.
 
-**10. Migrations are expand/contract and forward-only.** No down migrations exist in this repo. Destructive DDL (DROP, RENAME, type narrowing, NOT NULL additions) needs an explicit acknowledgement line in the PR body; M1.5 adds the CI check that flags it.
+**10. Migrations are expand/contract and forward-only.** No down migrations exist in this repo. Destructive DDL (DROP, RENAME, type narrowing, NOT NULL additions) needs an explicit acknowledgement line in the PR body; M1.5's check flags it, as the `checks / destructive-ddl` leg (MB.37). "DROP" means any object — column, table, type, constraint, index — and not only the two the check originally knew; `DROP NOT NULL` and `DROP DEFAULT` widen and are exempt. Run it locally with `npm run check:destructive-ddl`, which scans what your branch adds.
 
 ---
 
