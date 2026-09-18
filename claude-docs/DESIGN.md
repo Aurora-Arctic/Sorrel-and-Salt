@@ -297,7 +297,7 @@ Uniqueness is per ingredient, **deliberately not global** — several unrelated 
 
 **`ingredients.form` is `text`, not a foreign key to this table**, and that is the property the whole design rests on. An FK would key identity on an id and make an unlisted value impossible to write; text lets `canonicalKey` normalise the string and lets a member write `rhizome` before anyone has curated it. The curated set is a _vocabulary_, not a constraint: the entry form's autofill offers curated values first, each labelled with its group, then in-scope values already in use that are not in it, visibly distinguished. That second bucket is the admin's curation to-do list — the same idea as `WHERE nomenclature = 'unknown'` — and `/admin/forms` surfaces it so a stray `Rhizomes` is findable and fixable rather than invisible. Soft-deleting a vocabulary row rewrites no ingredient: the value stays on the rows and moves into the uncurated bucket.
 
-**`categories`** — `id`, `name`, `slug`, `description`, `groupId`, + audit. Global only, admin-curated. Suggestions in v2. Seed list in §6. **No colour of its own** (M4.2): MB.35 moved the chip colour onto the group as a pair of hexes, one per theme, and a single `color` column here could hold neither half of it. A category wears its group's pair — which is also what §6's grouping is for, eight families rather than 52 individually-tinted chips.
+**`categories`** — `id`, `name`, `slug`, `description`, `groupId`, + audit. Global only, admin-curated. Suggestions in v2. Seed list in §6. **No colour of its own** (M4.2): MB.35 moved the chip colour onto the group as a pair of hexes, one per theme, and a single `color` column here could hold neither half of it. A category wears its group's pair — which is also what §6's grouping is for, eight families rather than 63 individually-tinted chips.
 
 **`category_groups`** — `id`, `name`, `slug`, `colorDark`, `colorLight`, `description`, + audit. Global only, admin-curated, managed at `/admin/category-groups` under the same gate as the rest of `/admin`. §6 seeds eight; an admin may add a ninth, and groups render alphabetically by `name`. The two colours are the chip colour every category in the group wears, one per theme, stored as hexes on the row rather than looked up from a build-time token — the point of the change, since a group created at runtime cannot have a Sass variable. Two columns rather than one because the grounds differ: M0.7 already tunes every group separately per theme (a dark-theme colour is lifted, a light-theme colour is darkened), and one hex cannot clear 4.5:1 on both soot and parchment without being mud on at least one. Each is validated on write against its own ground only — `colorDark` against the dark ground, `colorLight` against the light — so the check is exact rather than a compromise, and the admin sees both swatches while picking.
 
@@ -476,18 +476,20 @@ Every result carries its formal name: "Did you mean Cat's Claw?" is useless when
 
 ## 6. Category seed
 
-52 categories in eight groups, and both are a **starting set rather than a closed one** — rows in `categories` and `category_groups`, seeded by M4.3 and editable by an admin afterwards. The grouping lets the chip selector collapse into sections rather than presenting 52 flat chips, which would be unusable on a phone; that a ninth group is addable without a migration is why the group is a table rather than an enum (§5).
+63 categories in eight groups, and both are a **starting set rather than a closed one** — rows in `categories` and `category_groups`, seeded by M4.3 and editable by an admin afterwards. The grouping lets the chip selector collapse into sections rather than presenting 63 flat chips, which would be unusable on a phone; that a ninth group is addable without a migration is why the group is a table rather than an enum (§5).
 
-| Group                | Slug         | Categories                                                                                                       |
-| -------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------- |
-| Protection & defense | `protection` | protection, warding, banishing, hex-breaking, uncrossing, reversal, nightmare protection, binding                |
-| Cleansing & release  | `cleansing`  | cleansing, purification, release, forgiveness, grief work, shadow work                                           |
-| Prosperity & work    | `prosperity` | prosperity, wealth, abundance, success, career, business, legal matters, justice, gambling                       |
-| Love & connection    | `love`       | love, attraction, lust, self-love, friendship, reconciliation, fidelity, harmony                                 |
-| Mind & spirit        | `mind`       | psychic work, divination, prophecy, dream work, intuition, wisdom, knowledge, memory, clarity, meditation, truth |
-| Wellbeing            | `wellbeing`  | healing, peace, sleep, joy, longevity, strength, courage, confidence                                             |
-| Craft & change       | `grounding`  | grounding, manifestation, transformation, creativity, inspiration, glamour                                       |
-| Practice & place     | `practice`   | ancestor work, spirit work, home blessing, safe travel, communication, fertility, familiar work                  |
+| Group                | Slug                     | Categories                                                                                                       |
+| -------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| Protection & defense | `protection-and-defense` | protection, warding, banishing, hex-breaking, uncrossing, reversal, nightmare protection, binding                |
+| Cleansing & release  | `cleansing-and-release`  | cleansing, purification, release, forgiveness, grief work, shadow work                                           |
+| Prosperity & work    | `prosperity-and-work`    | prosperity, wealth, abundance, success, career, business, legal matters, justice, gambling                       |
+| Love & connection    | `love-and-connection`    | love, attraction, lust, self-love, friendship, reconciliation, fidelity, harmony                                 |
+| Mind & spirit        | `mind-and-spirit`        | psychic work, divination, prophecy, dream work, intuition, wisdom, knowledge, memory, clarity, meditation, truth |
+| Wellbeing            | `wellbeing`              | healing, peace, sleep, joy, longevity, strength, courage, confidence                                             |
+| Craft & change       | `craft-and-change`       | grounding, manifestation, transformation, creativity, inspiration, glamour                                       |
+| Practice & place     | `practice-and-place`     | ancestor work, spirit work, home blessing, safe travel, communication, fertility, familiar work                  |
+
+**Every slug in this section is derived from the name beside it**, by the project's one slug rule (`src/lib/slugify.ts`, the `slugify` package under pinned options) rather than picked by hand — which is why seven of the eight groups read `…-and-…`: the rule expands an ampersand. M4.3 seeds them that way and M5.6's admin mutations slug a new one identically, so a category an admin adds lands in the same shape as a seeded one. The column previously named eight hand-picked short slugs, one of which — `grounding`, for "Craft & change" — collided with a category slug inside its own group.
 
 Each category carries `name`, `slug`, `description`, and `groupId`; each group carries `name`, `slug`, `colorDark`, `colorLight` and `description` — the colour lives on the group only (§5, M4.2). The table above is grouped for reading; the app lists groups alphabetically by `name`.
 
@@ -1019,18 +1021,18 @@ Specs: admin adds a compendium entry; A adds it to W's ingredients with a quanti
 
 ### Changes in the port
 
-| File                        | Change                                                                                                                                                                                              |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `package.json`              | `build`/`start`/`dev` → Next.js; drop `predevelop`/`prebuild`/`postclean` and the `link-public.js`/`clean.js` Gatsby workarounds; add `db:generate`, `db:migrate`, `db:seed`, `db:reset`, `codegen` |
-| `playwright.config.ts`      | `webServer` → `npm run build && npm run start`, port 8001; local Postgres setup in `globalSetup`                                                                                                    |
-| `vitest.config.ts`          | Two projects — `unit` (jsdom) and `db` (node, local Postgres); keep 80% thresholds                                                                                                                  |
-| `.oxlintrc.json`            | Node-globals override swaps `gatsby-*.ts` for `next.config.ts`, `drizzle.config.ts`, `src/db/**`, `src/app/**/route.ts`                                                                             |
-| `docker-compose.yaml`       | Drop the Gatsby LMDB volume; keep `node_modules`; **add `postgres` service** with seed init script; `devcontainer` depends on it                                                                    |
-| `netlify.toml`              | Replaced by `vercel.json` — config only; `vercel.json` disables the Git integration and does not drive deploys (see below)                                                                          |
-| **New** `codegen.yml` check | Fails if generated GraphQL types are stale relative to the schema                                                                                                                                   |
-| **New** `deploy.yml`        | CLI-driven Vercel deploy on push to `main`/`staging`/`hotfix/**` (§4). Not ported — `resume-2026` deployed via Netlify's own Git integration with no workflow file                                  |
-| **New** `migrate.yml`       | Applies migrations to staging on merge to `staging`, production on merge to `main`; must complete before `deploy.yml` ships the new deployment (a `needs:` job or a `workflow_run` predecessor)     |
-| Secrets                     | `DATABASE_URL` per environment, `BETTER_AUTH_SECRET`, Google and GitHub OAuth client credentials, `VERCEL_DEPLOY_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` / `VERCEL_SCOPE` for `deploy.yml`   |
+| File                        | Change                                                                                                                                                                                                                                                                                         |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `package.json`              | `build`/`start`/`dev` → Next.js; drop `predevelop`/`prebuild`/`postclean` and the `link-public.js`/`clean.js` Gatsby workarounds; add `db:generate`, `db:migrate`, `db:seed`, `db:reset`, `codegen`                                                                                            |
+| `playwright.config.ts`      | `webServer` → `npm run build && npm run start`, port 8001; local Postgres setup in `globalSetup`                                                                                                                                                                                               |
+| `vitest.config.ts`          | Two projects — `unit` (jsdom) and `db` (node, local Postgres); keep 80% thresholds                                                                                                                                                                                                             |
+| `.oxlintrc.json`            | Node-globals override swaps `gatsby-*.ts` for `next.config.ts`, `drizzle.config.ts`, `src/db/**`, `src/app/**/route.ts`                                                                                                                                                                        |
+| `docker-compose.yaml`       | Drop the Gatsby LMDB volume; keep `node_modules`; **add `postgres` service** with seed init script; `devcontainer` depends on it                                                                                                                                                               |
+| `netlify.toml`              | Replaced by `vercel.json` — config only; `vercel.json` disables the Git integration and does not drive deploys (see below)                                                                                                                                                                     |
+| **New** `codegen.yml` check | Fails if generated GraphQL types are stale relative to the schema                                                                                                                                                                                                                              |
+| **New** `deploy.yml`        | CLI-driven Vercel deploy on push to `main`/`staging`/`hotfix/**` (§4). Not ported — `resume-2026` deployed via Netlify's own Git integration with no workflow file                                                                                                                             |
+| **New** `migrate.yml`       | Applies migrations to staging on merge to `staging`, production on merge to `main`; must complete before `deploy.yml` ships the new deployment (a `needs:` job or a `workflow_run` predecessor). Also seeds §6's category vocabulary, in the same job and only when the push changed it (M4.3) |
+| Secrets                     | `DATABASE_URL` per environment, `BETTER_AUTH_SECRET`, Google and GitHub OAuth client credentials, `VERCEL_DEPLOY_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` / `VERCEL_SCOPE` for `deploy.yml`                                                                                              |
 
 `make docker-up` gives a working local database with no Neon connection at all.
 
@@ -1278,7 +1280,7 @@ All other prior questions resolved:
 - Compendium edit rights — admin only in v1, suggestions in v2
 - Invitation delivery — copy-link, viewer/member only, §5
 - Dedupe — fuzzy warn in v1, merge in v2
-- Categories — global admin-curated, 52 seeded, §6
+- Categories — global admin-curated, 63 seeded, §6
 - Ingredient **correspondences** — confirmed complete, no additions. Recorded here as "ingredient properties", the question closed the correspondence set: form, element, planet, zodiac, deities, colour, safety notes, substitutes. It stays closed; nothing has been added to it. **Naming is identity, not correspondence** — a separate question, opened and answered separately in §5, which added `canonicalName`, `nomenclature`, the generated `canonicalKey` and folk names as their own table. The one column those two questions share is `form`, which keeps its meaning and its place in the set and only loses its enum
 - Local dev database — Docker Postgres, shared seed, §11
 - v1 scope — notes deferred; everything else built, not deferred

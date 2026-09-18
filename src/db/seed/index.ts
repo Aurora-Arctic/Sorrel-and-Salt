@@ -14,6 +14,13 @@ export type SeedScenario = 'minimal' | 'standard' | 'demo';
 export type SeedDatabase = PostgresJsDatabase<Record<string, unknown>>;
 
 /**
+ * The handle inside `db.transaction()`. Named here so a seed module can take
+ * one as a parameter — M4.3's bootstrap-admin insert runs inside the caller's
+ * transaction rather than opening a second one.
+ */
+export type SeedTransaction = Parameters<Parameters<SeedDatabase['transaction']>[0]>[0];
+
+/**
  * One seed module, used by Docker, Vitest and Playwright alike (CLAUDE.md's
  * Testing section) so a bug reproduces identically in all three. Each
  * consumer hands over its own database handle, and the seed writes through
