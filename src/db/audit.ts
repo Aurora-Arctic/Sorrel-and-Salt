@@ -12,7 +12,7 @@ import { users } from './schema/users';
 // circularly references itself", because it can't otherwise infer the
 // thunk's return type without first fully resolving users.ts, which is
 // still resolving audit.ts.
-export const auditColumns = {
+export const auditStampColumns = {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   createdBy: uuid('created_by')
     .notNull()
@@ -21,6 +21,15 @@ export const auditColumns = {
   updatedBy: uuid('updated_by')
     .notNull()
     .references((): AnyPgColumn => users.id),
+};
+
+// MB.34: the six-column set is the four stamps plus the two delete columns,
+// defined here once rather than listed twice — see DESIGN.md §5 for which
+// tables take which, and CLAUDE.md rules 3 and 4 for why the three join tables
+// are the exception. `created_by` on a join row still answers "who added this
+// ingredient to this spell"; only the tombstone goes.
+export const auditColumns = {
+  ...auditStampColumns,
   deletedAt: timestamp('deleted_at'),
   deletedBy: uuid('deleted_by').references((): AnyPgColumn => users.id),
 };

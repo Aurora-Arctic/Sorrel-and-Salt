@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyAudit } from './audit';
+import { applyAudit, auditColumns, auditStampColumns } from './audit';
 
 const session = { userId: '11111111-1111-1111-1111-111111111111' };
 const impostor = { userId: '99999999-9999-9999-9999-999999999999' };
@@ -59,5 +59,30 @@ describe('applyAudit', () => {
     const result = applyAudit('delete', { deletedBy: impostor.userId }, session);
 
     expect(result.deletedBy).toBe(session.userId);
+  });
+});
+
+// MB.34: the three join tables carry the four stamps and no delete columns, so
+// the six-column set is defined as the four-column one plus the two rather than
+// listed twice — a second listing is a second thing to forget.
+describe('the two audit column sets', () => {
+  it('defines auditColumns as the stamp columns plus the two delete columns', () => {
+    expect(Object.keys(auditStampColumns)).toEqual([
+      'createdAt',
+      'createdBy',
+      'updatedAt',
+      'updatedBy',
+    ]);
+    expect(Object.keys(auditColumns)).toEqual([
+      ...Object.keys(auditStampColumns),
+      'deletedAt',
+      'deletedBy',
+    ]);
+  });
+
+  it('shares one definition of every stamp column, so the two cannot drift', () => {
+    for (const name of Object.keys(auditStampColumns) as (keyof typeof auditStampColumns)[]) {
+      expect(auditColumns[name]).toBe(auditStampColumns[name]);
+    }
   });
 });

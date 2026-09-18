@@ -1430,19 +1430,20 @@ _Acceptance criteria:_
 
 _Story 22 — As a workspace member, I want ingredients to carry several categories, so that I can find things that are both protective and cleansing._
 
-Join table with audit columns and indexes supporting lookup in both directions.
+Join table with the audit stamp columns and indexes supporting lookup in both directions. **Hard-deleted, per MB.34**: it spreads `...auditStampColumns`, not `...auditColumns`, so there is no `deleted_at`, no partial unique index, and no tombstone per chip toggle — the composite primary key is what keeps a pair unique, and re-adding one that was removed is an ordinary insert.
 
 _Acceptance criteria:_
 
-- Composite key prevents duplicate assignment
+- Composite primary key on `(ingredient_id, category_id)` prevents duplicate assignment
 - Indexed for both ingredient-to-category and category-to-ingredient
-- Carries the audit spread
+- Carries `...auditStampColumns` and no delete columns
+- A removed pair is deleted outright through `write.delete` and can be re-added
 
 **M4.4a — ingredient_folk_names table** · 1h
 
 _Story 21 — As a workspace member, I want an ingredient's common names stored and searchable, so that I can find Devil's Shoestring without remembering it is honeysuckle root._
 
-Add `ingredient_folk_names` — `ingredientId`, `name`, audit — with a per-ingredient partial unique index on `(ingredient_id, lower(name))` and a trigram GIN index on `name`. Normalises what `folkNames text[]` used to hold; uniqueness is per ingredient, deliberately not global, since several unrelated plants sharing a common name is the thing being documented. Lands before M1.18 so the trigger sweep covers it in the same pass as `ingredient_forms`.
+Add `ingredient_folk_names` — `ingredientId`, `name`, audit — with a per-ingredient partial unique index on `(ingredient_id, lower(name))` and a trigram GIN index on `name`. Normalises what `folkNames text[]` used to hold; uniqueness is per ingredient, deliberately not global, since several unrelated plants sharing a common name is the thing being documented. It keeps the full `...auditColumns` spread and the partial index that follows from it — MB.34 hard-deletes the three join tables, and this is not one of them: a folk name is content, not a link. Lands before M1.18 so the trigger sweep covers it in the same pass as `ingredient_forms`.
 
 _Acceptance criteria:_
 
@@ -2722,12 +2723,13 @@ _Acceptance criteria:_
 
 _Stories 47 and 50 — As a workspace member, I want a spell recorded with its intent and its ingredients, so that I can repeat a working exactly._
 
-Add `spells` (workspaceId, title, intent, jarSize, sealWaxColor, moonPhase, dayOfWeek, instructions, status draft|complete, audit) and `spell_ingredients` (spellId, ingredientId, quantity, unit, layerOrder, note, audit). The join references the ingredient, not the inventory item, so a saved spell survives running out.
+Add `spells` (workspaceId, title, intent, jarSize, sealWaxColor, moonPhase, dayOfWeek, instructions, status draft|complete, `...auditColumns`) and `spell_ingredients` (spellId, ingredientId, quantity, unit, layerOrder, note, `...auditStampColumns`). The join references the ingredient, not the inventory item, so a saved spell survives running out. `spell_ingredients` is hard-deleted per MB.34 — a composite primary key on `(spell_id, ingredient_id)`, no `deleted_at`, and no partial index — while `spells` itself keeps the full six-column spread.
 
 _Acceptance criteria:_
 
 - Migration applies cleanly
 - spell_ingredients references ingredients, not inventory_items
+- `spells` carries `...auditColumns`; `spell_ingredients` carries `...auditStampColumns` and a composite primary key on `(spell_id, ingredient_id)`, with no delete columns
 - layerOrder is stored and unique within a spell
 - status accepts only draft and complete in v1
 
@@ -2755,13 +2757,14 @@ _Acceptance criteria:_
 
 _Story 48 — As a workspace member, I want to assign categories describing what a spell is meant to do, so that intent is recorded alongside contents._
 
-Join table mirroring ingredient_categories, with audit columns and both-direction indexes.
+Join table mirroring ingredient_categories, with the audit stamp columns and both-direction indexes. Hard-deleted per MB.34, in the same shape M4.4 set: `...auditStampColumns`, a composite primary key, no `deleted_at` and no partial index.
 
 _Acceptance criteria:_
 
-- Composite key prevents duplicates
+- Composite primary key on `(spell_id, category_id)` prevents duplicates
 - Indexed both ways
-- Audit spread present
+- Carries `...auditStampColumns` and no delete columns
+- A removed assignment is deleted outright and can be re-added
 
 **M10.5 — Spell service with member and viewer rules** · 2h
 
