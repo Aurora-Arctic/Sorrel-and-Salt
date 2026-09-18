@@ -155,7 +155,9 @@ order, which is the hierarchy M6.3's `assertMembership` implements).
   to `workspace_invitations` (M7.1), whose check constraint rejects it;
   ownership is granted afterwards by an existing owner on the members page.
 - Both tables carry the full six-column audit spread, and every `*_by` column
-  references `users.id` as MB.5 specifies. The tables are inert at Wave 3 —
+  references `users.id` as MB.5 specifies. `workspace_members` keeps all six
+  despite being a join table — MB.34 hard-deletes three others, and this is not
+  one of them: who removed whom, and when, is worth keeping. The tables are inert at Wave 3 —
   nothing queries them until M6.3's service and its `Membership` proof land in
   Wave 5, which is the point of CLAUDE.md's table-task-then-behaviour-task
   rule.
@@ -590,11 +592,23 @@ audit rather than a gate: it stays red on `0002_solid_marauders.sql`, whose
 landed. Before MB.37 the bare command _was_ that full scan, so it was
 permanently red and told you nothing about your own branch.
 
-## Audit columns and `applyAudit` (M1.15, FKs restored MB.5)
+## Audit columns and `applyAudit` (M1.15, FKs restored MB.5, split MB.34)
 
-`src/db/audit.ts` exports `auditColumns` — the six-column object (`createdAt`,
-`createdBy`, `updatedAt`, `updatedBy`, `deletedAt`, `deletedBy`) every table
-spreads in as `...auditColumns`. `createdBy`/`updatedBy`/`deletedBy` carry
+`src/db/audit.ts` exports two column sets, one defined in terms of the other:
+
+- **`auditStampColumns`** — `createdAt`, `createdBy`, `updatedAt`, `updatedBy`.
+- **`auditColumns`** — `...auditStampColumns` plus `deletedAt` and `deletedBy`.
+
+Every table spreads `...auditColumns` **except the three join tables**:
+`ingredient_categories`, `spell_categories` and `spell_ingredients` spread
+`...auditStampColumns` and are hard-deleted (MB.34) — see "Hard delete on the
+three join tables" below for why, and note that `workspace_members` and
+`ingredient_folk_names` are _not_ in that set. Writing the six columns as the
+four plus two rather than listing them twice is what stops the two sets
+drifting, and `repository.test.ts` asserts each stamp column is literally the
+same builder object in both.
+
+`createdBy`/`updatedBy`/`deletedBy` carry
 `.references((): AnyPgColumn => users.id)` per DESIGN.md §5. `audit.ts` and
 `schema/users.ts` import each other — `users.ts` spreads `auditColumns`, and
 `auditColumns` points back at `users.id`, including for `users`' own rows
@@ -631,9 +645,9 @@ in favour of `session.userId`, per CLAUDE.md rule 3.
 
 `src/db/repository.ts` is the only module that imports `db` from
 `connection.ts` (CLAUDE.md rule 2, DESIGN.md §5), and it exports exactly one
-thing: `withAudit(session, fn)`. `db` is not re-exported, and `fn` is not
+write path: `withAudit(session, fn)`. `db` is not re-exported, and `fn` is not
 handed the Drizzle transaction — it gets a narrow `AuditWriter` whose three
-methods each run their payload through `applyAudit` first. That is what makes
+stamping methods each run their payload through `applyAudit` first. That is what makes
 "a write outside `withAudit`" impossible through the public API rather than
 merely discouraged: there is no exported handle to write with.
 
@@ -649,10 +663,13 @@ const [spell] = await withAudit(session, (write) =>
   only; `createdAt`/`createdBy` are never in the `SET` list, so an update
   cannot rewrite who created a row.
 - **`write.softDelete(table, where)`** — stamps `deletedAt`/`deletedBy` and
-  leaves the row in place (CLAUDE.md rule 4). There is no hard delete here.
+  leaves the row in place (CLAUDE.md rule 4). Typed to demand a `deletedAt`
+  column, so it cannot be pointed at a join table with nothing to stamp.
+- **`write.delete(table, where)`** — removes the rows outright, for the three
+  join tables only (MB.34). Typed to reject any table carrying `deletedAt`, so
+  it can never become the way a soft-deletable row is quietly destroyed.
 
-`values` is typed as the table's insert model **minus** the six audit
-columns, so a call site can't even name `createdBy` without a cast — and if
+`values` is typed as the table's insert model **minus** the audit columns, so a call site can't even name `createdBy` without a cast — and if
 one casts anyway, `applyAudit` strips it: audit ids come from the session,
 never from a request body.
 
@@ -739,8 +756,9 @@ private `selectFrom` beside `withAudit` — the one place a read query is
 built — and exports exactly three functions on top of it:
 
 - **`findMany(table, where?)`** — every matching row with `deleted_at IS
-NULL` ANDed onto whatever `where` the caller supplied. The default, and
-  normal-use, finder.
+NULL` ANDed onto whatever `where` the caller supplied — or the caller's
+  `where` alone on a table that carries no such column (MB.34). The default,
+  and normal-use, finder.
 - **`findOne(table, where?)`** — the first row `findMany` returns, or
   `undefined`. There is no separate unfiltered path underneath it.
 - **`findManyIncludingSoftDeleted(table, where?)`** — the dedicated escape
@@ -799,6 +817,48 @@ second scratch table (`repository_probe_charms`) carries a unique index built
 exactly this way, and the tests assert a live duplicate name is still
 rejected, while soft-deleting the original row and reinserting the same name
 succeeds — the row that comes back is a new id, and `findMany` sees only it.
+
+## Hard delete on the three join tables (MB.34)
+
+`ingredient_categories`, `spell_categories` and `spell_ingredients` spread
+`...auditStampColumns` rather than `...auditColumns`: four stamp columns, a
+composite primary key, and no `deleted_at`. A chip toggled off or an ingredient
+pulled out of a spell removes the row.
+
+**Why these three.** They are the highest-churn tables in the schema, and
+nothing in v1 reads a deleted join row — there is no restore UI, and the trash
+view is v2. Soft-deleting them would cost a tombstone per toggle forever, a
+partial unique index on each so the same pair could be re-added, and — the
+argument that actually decided it — a `deleted_at IS NULL` that every service
+joining _through_ the table has to remember by hand. That last one is the
+mistake CLAUDE.md rule 4 exists to prevent, and the one place the repository
+cannot prevent it for you: `findMany` filters the table it selects **from**, not
+the tables it joins. The v2 history trigger records a `DELETE` as readily as an
+`UPDATE`, so history is unaffected.
+
+**What stays.** The four stamp columns: `created_by` on a join row answers "who
+added this ingredient to this spell" (story 13). `workspace_members` keeps the
+full six — who removed whom, and when, is worth keeping — and so does
+`ingredient_folk_names`, which holds content rather than a link.
+
+**What makes it impossible to get wrong.** Two type constraints, both proved by
+`@ts-expect-error` lines in `repository.test.ts` (which fail `npm run typecheck`,
+not `vitest`, if either constraint is ever loosened):
+
+- `write.delete` takes `PgTable & { deletedAt?: never }` — a table carrying the
+  column does not satisfy it, so hard-deleting a soft-deletable table does not
+  compile.
+- `write.softDelete` takes `PgTable & { deletedAt: AnyPgColumn }` — so it cannot
+  be pointed at a join table, where it would emit an `UPDATE` that sets nothing.
+
+`findMany`/`findOne` read both shapes: the private `notSoftDeleted(table)`
+returns the predicate when the table has a `deleted_at` and `undefined` when it
+does not, and `and()` drops an undefined condition. The decision is made from
+the table's own columns, never from an argument a caller supplies, so there is
+nothing to pass that would skip the filter where it applies. The third scratch
+table in `repository.test.ts` (`repository_probe_pairs`) exercises it: a delete
+leaves no row, the same pair can be re-added afterwards with no partial index
+to make it possible, and a delete rolls back with the rest of its transaction.
 
 ## Who may import the client (M1.17)
 

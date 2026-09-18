@@ -13,8 +13,10 @@ import { db } from './connection';
 // sole exported write mechanism is `withAudit`, so there is no public API
 // through which a write can skip audit stamping (M1.16). Callers never see
 // the Drizzle transaction itself either: they get the narrow `AuditWriter`
-// below, whose three methods each run their payload through `applyAudit`
-// first.
+// below, whose three stamping methods each run their payload through
+// `applyAudit` first. Its fourth, `delete`, has nothing to stamp — it removes
+// the row — and is typed to reach only the tables that carry no `deleted_at`
+// (MB.34).
 //
 // CLAUDE.md rule 4 / DESIGN.md §5: every exported finder applies
 // `deleted_at IS NULL` here, not at call sites — the read-side counterpart
@@ -29,7 +31,18 @@ type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 type AuditColumnName = keyof typeof auditColumns;
 
-/** A table's own columns, with the six audit ones removed — they come from the session. */
+// The two table shapes MB.34 split the schema into. Most tables spread
+// `...auditColumns` and are soft-deleted; the three join tables
+// (`ingredient_categories`, `spell_categories`, `spell_ingredients`) spread
+// `...auditStampColumns` and are deleted outright — DESIGN.md §5, CLAUDE.md
+// rule 4. Which methods a table admits follows from its own columns, so
+// pointing the wrong one at it is a compile error rather than a review note:
+// `{ deletedAt?: never }` is satisfied by a table that has no such column and
+// by nothing else.
+type SoftDeletable = { deletedAt: AnyPgColumn };
+type HardDeletable = { deletedAt?: never };
+
+/** A table's own columns, with every audit column removed — they come from the session. */
 type Writable<TTable extends PgTable> = Omit<TTable['$inferInsert'], AuditColumnName>;
 
 export interface AuditWriter {
@@ -45,7 +58,22 @@ export interface AuditWriter {
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
   /** Soft-delete matching rows: stamps deleted_*, leaving the row in place (CLAUDE.md rule 4). */
-  softDelete<TTable extends PgTable>(table: TTable, where: SQL): Promise<TTable['$inferSelect'][]>;
+  softDelete<TTable extends PgTable & SoftDeletable>(
+    table: TTable,
+    where: SQL,
+  ): Promise<TTable['$inferSelect'][]>;
+  /**
+   * Hard-delete matching rows, for the join tables that carry no `deleted_at`
+   * (MB.34). The escape hatch from rule 4, in the shape of
+   * `findManyIncludingSoftDeleted`: named rather than a `{ hard: true }` flag a
+   * later edit could default the wrong way, and narrow rather than general —
+   * a table carrying `deletedAt` is rejected by the type, so this cannot become
+   * the way a soft-deletable row is quietly destroyed.
+   */
+  delete<TTable extends PgTable & HardDeletable>(
+    table: TTable,
+    where: SQL,
+  ): Promise<TTable['$inferSelect'][]>;
 }
 
 // Drizzle's `.values()`/`.set()` are typed against the table's own insert
@@ -71,6 +99,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
         .set(applyAudit('delete', {}, session) as never)
         .where(where)
         .returning() as never,
+    delete: (table, where) => tx.delete(table).where(where).returning() as never,
   };
 }
 
@@ -104,12 +133,15 @@ export async function withAudit<T>(
   });
 }
 
-/** Every table carries `...auditColumns` (CLAUDE.md rule 3), `deletedAt` included. */
-type Auditable = { deletedAt: AnyPgColumn };
-
-/** `deleted_at IS NULL` — CLAUDE.md rule 4, built once so no finder writes it by hand. */
-function notSoftDeleted<TTable extends PgTable & Auditable>(table: TTable): SQL {
-  return sql`${table.deletedAt} is null`;
+/**
+ * `deleted_at IS NULL` — CLAUDE.md rule 4, built once so no finder writes it by
+ * hand — or `undefined` for a table that carries no such column (MB.34). The
+ * test is the table's own shape rather than a caller-supplied flag, so a finder
+ * cannot skip the filter on a table that has one: there is nothing to pass.
+ */
+function notSoftDeleted<TTable extends PgTable>(table: TTable): SQL | undefined {
+  const deletedAt = (table as Partial<SoftDeletable>).deletedAt;
+  return deletedAt ? sql`${deletedAt} is null` : undefined;
 }
 
 // The one place a read query is built. Not exported: everything reads
@@ -130,15 +162,17 @@ function selectFrom<TTable extends PgTable>(
 }
 
 /** All matching, non-soft-deleted rows. The default and normal-use finder. */
-export function findMany<TTable extends PgTable & Auditable>(
+export function findMany<TTable extends PgTable>(
   table: TTable,
   where?: SQL,
 ): Promise<TTable['$inferSelect'][]> {
-  return selectFrom(table, where ? and(notSoftDeleted(table), where) : notSoftDeleted(table));
+  // `and` drops an undefined condition and returns undefined when every one of
+  // them is, so a join table's read is the caller's `where` alone.
+  return selectFrom(table, and(notSoftDeleted(table), where));
 }
 
 /** The first matching, non-soft-deleted row, or `undefined`. */
-export async function findOne<TTable extends PgTable & Auditable>(
+export async function findOne<TTable extends PgTable>(
   table: TTable,
   where?: SQL,
 ): Promise<TTable['$inferSelect'] | undefined> {
