@@ -1430,12 +1430,82 @@ the handle honest. The reasoning, and the alternatives it rules out, are in
 **`minimal`** (`src/db/seed/minimal.ts`): one admin, one user, empty
 compendium. The admin is the bootstrap user under the fixed
 `BOOTSTRAP_USER_ID` (`…0001`, MB.5), inserted as its own
-`created_by`/`updated_by` in a single self-satisfying statement; the plain
+`created_by`/`updated_by` in a single self-satisfying statement — that insert
+lives in `src/db/seed/bootstrap-admin.ts` since M4.3, because every seeded row
+needs a creator and the category seed runs without `minimal` having gone
+first; the plain
 user is `MINIMAL_USER_ID` (`…0002`), created by the bootstrap user. Both
 keep `canCreateWorkspace` false — a bare install has granted nothing. It is
 **idempotent by fixed id** (`ON CONFLICT (id) DO NOTHING`), not by
 truncating: a re-run adds nothing, and nothing is dropped — the reset that
 drops is M1.24's. `standard` and `demo` throw until M1.22 and M1.23.
+
+## The category seed (M4.3)
+
+`src/db/seed/categories.ts` seeds DESIGN.md §6: eight `category_groups` rows,
+then the 63 `categories` that point at them. **It is not a scenario.**
+`minimal` leaves the compendium empty by definition and M1.22's `standard`
+consumes what this writes, which is why §6's seed lands a task ahead of it.
+`npm run db:seed:categories` runs it; that is `scripts/db-seed.ts` with a
+`categories` argument rather than a script of its own, because the client
+import is one of the four pinned exemptions below and a fifth is a decision.
+
+**Idempotency keys on the slug and ignores `deleted_at`**, which is stronger
+than the partial unique index gives on its own: the index only stops a second
+_live_ row, so a slug an admin had soft-deleted would be re-inserted on the
+next run. Removing a category is a decision, and a seed that runs again on
+every deploy would keep undoing it. Nothing already present is updated either,
+so a retitled category and a retuned colour pair both survive — the point of
+MB.35 is that the colour is the admin's from here on.
+
+**The colours are resolved once, here.** MB.35 made a group's colour a pair of
+hexes on the row, so M0.7's `$category-groups` Sass map is a seed source
+rather than a runtime lookup; the sixteen hexes are written out as literals in
+`CATEGORY_GROUPS`. `categories.test.ts` compiles M0.7's own
+`category-group-color($slug, $theme)` and compares all sixteen, so retuning
+the map without reseeding fails a test instead of drifting silently, and
+recomputes the WCAG ratio for each against its own theme's ground (`$soot`
+dark, `$parchment` light) rather than trusting M0.7's published table. Worst
+pairing in the set is wellbeing's light hex at 4.74:1.
+
+**Slugs are derived, not written down.** Every slug in the seed is
+`slugify(name)` — `src/lib/slugify.ts`, the `slugify` package under pinned
+options (`lower`, `strict`, `trim`, plus one charmap extension so an
+underscore separates rather than vanishing). There is no second list to keep
+in step, and no way to seed a row whose slug and name disagree. The rule is
+shared rather than the seed's own because M4.3a's form vocabulary and M5.6's
+admin mutations slug an admin-typed name with the same function, so a category
+an admin adds lands in the same shape as a seeded one.
+
+That is now a repo-wide rule rather than this seed's habit (CLAUDE.md,
+Conventions): `src/lib/slugify.ts` is the only file that may import the
+package or name a slug character class, and `src/test/slug-rule.test.ts` is
+the mechanical half — it scans untracked files as well as tracked ones, so a
+second implementation fails in the diff that adds it rather than after it
+ships. The failure it exists to catch is quiet: two slug rules do not collide,
+they disagree, and the disagreement surfaces only as a lookup that finds
+nothing.
+
+The visible consequence is in the group slugs: the package expands `&` to
+"and", so "Protection & Defense" is `protection-and-defense`. DESIGN.md §6's
+Slug column is corrected to match — it previously named eight hand-picked
+short slugs, one of which (`grounding`, for "Craft & Change") collided with a
+category slug inside its own group. Deriving removes that class of mistake
+rather than fixing this instance of it.
+
+`SASS_TOKEN_BY_GROUP_NAME` is where §6's vocabulary and M0.7's map keys meet,
+and the only place they do. It is keyed by group _name_ rather than slug,
+because the slug is derived and a map keyed on a derived value would need
+rewriting every time the rule changed. M0.7's keys stay M0.7's words: renaming
+one moves a token and the `--group-*` custom property generated from it, for
+no gain now that nothing looks a colour up by slug (MB.35).
+
+**It reaches staging and production on its own**, unlike every other seed:
+`migrate.yml` runs `npm run db:seed:categories` against the deployed database
+as a step after its own migrations, gated on a diff so it only fires when a
+push actually changed the seed's files. Deploys are CI-only
+and there is no shell on either database, so a vocabulary nobody can run by
+hand has to arrive with the deploy that needs it. See `claude-docs/ci.md`.
 
 Two rules a later scenario inherits. Import a schema module **before**
 `audit` in a seed file: `audit.ts` and `schema/users.ts` import each other,

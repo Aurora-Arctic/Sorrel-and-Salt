@@ -39,7 +39,7 @@ function migrationStatements(): string[] {
 
 // DESIGN.md §5's compendium: the global, admin-curated reference. Every table
 // an admin curates and nothing workspace-scoped — `minimal` leaves all of them
-// empty so a test that needs a bare reference (or M4.3's own seeding of 52
+// empty so a test that needs a bare reference (or M4.3's own seeding of §6's
 // categories) starts from nothing.
 const COMPENDIUM_TABLES = [
   'categories',
