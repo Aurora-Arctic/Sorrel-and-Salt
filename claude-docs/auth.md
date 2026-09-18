@@ -240,6 +240,67 @@ Nothing else grants admin in v1 — no UI, no other API path.
   (see the "Tables" section above) since it bought nothing but a
   `user.fields` config entry to maintain.
 
+## The service-level session, and the two refusals (M1.26)
+
+`src/lib/session.ts` defines the `Session` every service takes:
+
+```ts
+export interface Session extends AuditSession {
+  role: UserRole;
+}
+```
+
+**This is not Better Auth's `sessions` row.** That row is the browser's proof
+of identity and lives behind `/api/auth`; a `Session` is what the server has
+already resolved out of it. Keeping the two apart is part of why MB.30 turned
+the organization plugin down — calling its server API from a service would have
+made every fixture user a `sessions` row and a signed cookie, and `asUser(A)`
+would have stopped being a service-level value at all. M2.7 adds the helper
+that produces one from a request; M1.26 defined the shape ahead of it so
+authorization tests could be written first, and `src/test/as-user.ts` produces
+one from a fixture user (`claude-docs/testing.md`).
+
+- **It extends `AuditSession` rather than restating `userId`.** The identity a
+  call acts under and the identity it is stamped with are one field, so
+  `withAudit(session, fn)` takes a service session directly and no test needs
+  a cast to get one in — a cast being exactly where the acting user stops
+  being the one the test named (CLAUDE.md rule 3).
+- **`role` is on the session.** M5.7 puts a Pothos auth scope on every admin
+  mutation as a second, independent check on top of the service's own, and a
+  schema-layer scope reads the context rather than running a query.
+- **`canCreateWorkspace` is deliberately not.** Accepting an invitation flips
+  the flag mid-session (M7.5), and a snapshot taken before that would deny a
+  user something they had just earned. The service that gates on it reads the
+  row.
+- **Nothing else belongs on it.** The workspace is in the URL, not the
+  session — session-held workspace context is how two tabs come to disagree
+  about where a write landed (DESIGN.md §9) — and membership is not a session
+  field but M6.3's `Membership` proof, which only `assertMembership` can
+  produce.
+
+`src/lib/errors.ts` carries the two ways a service ends a call it cannot
+perform. A service **throws**; it never answers with an empty list, a null, or
+a success that did nothing.
+
+| Error       | Means                                     |
+| ----------- | ----------------------------------------- |
+| `Forbidden` | The thing exists and you may not have it. |
+| `NotFound`  | There is nothing here under that id.      |
+
+They are two types rather than one because **the route decides which of them
+the browser is shown, and it can only decide if the service said which
+happened**: `/coven/[slug]` answers 404 to a non-member, since the existence of
+a workspace is itself private, while `/admin` answers a styled "not authorized"
+page, since everyone already knows that path exists (CLAUDE.md's domain
+invariants). Neither type carries a status code or a GraphQL error code — the
+transport renders a refusal, and a service called from a script has no use for
+one.
+
+Both take a message and default to a short one, because DESIGN.md §5's one-way
+widen requires an _explaining_ error where a bare refusal would mislead:
+narrowing a spell's visibility is refused with the reason, not with a one-word
+`Forbidden`.
+
 ## The organization plugin is not used (MB.30)
 
 Better Auth ships an organization plugin — organizations, members,
@@ -313,6 +374,12 @@ migrations.
   matching `ADMIN_BOOTSTRAP_EMAIL` (case-insensitively), and left
   `undefined` — not `'user'` — for everyone else, so the column default is
   what actually applies rather than a second copy of it in this code.
+- **`src/lib/errors.test.ts` (M1.26)** — asserts `Forbidden` and
+  `NotFound` are distinguishable by type in a `catch` and in an
+  `expect().rejects.toThrow(Class)`, and that neither an empty list nor a
+  success value satisfies an assertion written for a refusal. The last three
+  cases assert that an _inner_ expectation rejects, which is what proves the
+  assertion style can fail at all — see `claude-docs/testing.md`.
 - **`src/db/users-schema.test.ts`** — asserts `users`' shape via Drizzle's
   own `getTableConfig()` introspection: `name`/`image` columns,
   `role`'s `user`/`admin` enum and `'user'` default, `canCreateWorkspace`'s
