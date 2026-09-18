@@ -1,18 +1,20 @@
-// Moved verbatim out of .github/workflows/audit.yml's "Comment audit results on
-// PR" step when MB.32 collapsed the five check workflows onto checks.yml's one
-// matrix. It still builds and upserts its own comment body rather than going
-// through the pr-comment composite action: the audit is non-blocking, so it
-// reports the vulnerabilities it found as a [!WARNING] on a step that passed,
-// which pr-comment's pass/fail vocabulary has no way to say.
+// Moved out of .github/workflows/audit.yml's "Comment audit results on PR"
+// step when MB.32 collapsed the five check workflows onto checks.yml's one
+// matrix, then extended in MB.37 to write the same report to the job summary.
+// It builds its own report rather than going through the job-summary and
+// pr-comment composite actions: the audit is non-blocking, so it reports the
+// vulnerabilities it found as a [!WARNING] on a step that passed, which the
+// pass/fail vocabulary of both actions has no way to say. Until MB.37 the leg
+// wrote no job summary at all for that reason — "Dependency Audit passed"
+// above a table of vulnerabilities is worse than nothing — which left the
+// audit invisible on the run's summary page. Now the summary carries the same
+// callout the PR comment does.
 //
-// Two edits came with the move, both mechanical. The pull request number and
-// the duration were GitHub expressions interpolated into the inline script: the
-// number is read from the environment instead, and the duration is gone with
-// the timer-start/timer-elapsed actions MB.32 deleted.
-//
-// checks.yml calls this through actions/github-script, which supplies `github`
-// and `context`; `PR_NUMBER` arrives as an environment variable.
-module.exports = async ({ github, context }) => {
+// checks.yml calls this through actions/github-script, which supplies
+// `github`, `context` and `core`. `PR_NUMBER` arrives as an environment
+// variable and is optional: the job summary is always written, the PR comment
+// only when there is a PR to comment on (under `act` there is not).
+module.exports = async ({ github, context, core }) => {
   const fs = require('fs');
   const marker = '<!-- ci-audit -->';
   const shortSha = context.sha.slice(0, 7);
@@ -34,14 +36,14 @@ module.exports = async ({ github, context }) => {
     return 'No';
   };
 
-  let body;
+  let report;
   try {
     const data = JSON.parse(fs.readFileSync('/app/audit-results.json', 'utf8'));
     const vulns = data.metadata?.vulnerabilities ?? {};
     const total = vulns.total ?? 0;
 
     if (total === 0) {
-      body = `${marker}\n> [!NOTE]\n> ✅ **npm audit passed** — 0 vulnerabilities · ${meta}`;
+      report = `> [!NOTE]\n> ✅ **npm audit passed** — 0 vulnerabilities · ${meta}`;
     } else {
       const severityTable = [
         '| Severity | Count |',
@@ -69,17 +71,27 @@ module.exports = async ({ github, context }) => {
           : '';
 
       const label = total === 1 ? 'vulnerability' : 'vulnerabilities';
-      body =
-        `${marker}\n> [!WARNING]\n> ⚠️ **npm audit found ${total} ${label}** · ${meta}` +
+      report =
+        `> [!WARNING]\n> ⚠️ **npm audit found ${total} ${label}** · ${meta}` +
         `\n\n${severityTable}` +
         `\n\n<details><summary>Vulnerable packages</summary>\n\n${packageTable}${more}\n\n</details>`;
     }
   } catch (error) {
-    body = `${marker}\n> [!WARNING]\n> ⚠️ **npm audit: could not parse audit output** (${error.message}) · ${meta}`;
+    report = `> [!WARNING]\n> ⚠️ **npm audit: could not parse audit output** (${error.message}) · ${meta}`;
   }
 
-  const { owner, repo } = context.repo;
+  // The job summary first, unconditionally — it is the one place the audit's
+  // result is visible on a run with no PR to comment on.
+  await core.summary.addRaw(report, true).write();
+
   const prNumber = Number(process.env.PR_NUMBER);
+  if (!prNumber) {
+    core.info('No PR number — job summary written, PR comment skipped.');
+    return;
+  }
+
+  const body = `${marker}\n${report}`;
+  const { owner, repo } = context.repo;
   const comments = await github.rest.issues.listComments({ owner, repo, issue_number: prNumber });
   const existing = comments.data.find((comment) => comment.body.includes(marker));
 

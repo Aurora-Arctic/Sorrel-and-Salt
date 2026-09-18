@@ -62,8 +62,16 @@ FROM development AS testing
 # offline-unusable, tarball download otherwise). Both are test/CI-only, so
 # they land in this stage rather than `development`. Surfaced by `make act-*`
 # (M0.23) — see claude-docs/design-decisions/m0.23-act-local-ci.md.
+#
+# `tar` and `zstd` (MB.37) are for actions/cache, which runs *inside* this
+# container on checks.yml's build leg and needs GNU tar (`--posix`, among
+# other flags). busybox's, all the Alpine base ships, exited 1 on every save,
+# so the Next.js build cache never hit once between landing and MB.37 — a
+# warning on every run that read as noise. Alpine's `tar` package installs
+# /usr/bin/tar, ahead of busybox's /bin/tar on PATH. zstd is what the action
+# compresses with when it finds it, gzip otherwise.
 USER root
-RUN apk add --no-cache bash git
+RUN apk add --no-cache bash git tar zstd
 USER node
 
 ENV NODE_ENV=test
