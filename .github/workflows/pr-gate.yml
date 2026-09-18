@@ -181,7 +181,10 @@ jobs:
             # needs vitest to rerun even though `changes` filters by
             # checks.yml's own narrower conventions. vitest.config.mts
             # and vitest.setup.ts aren't under src/**, so they're listed
-            # explicitly.
+            # explicitly. So is .ladle/config.mjs: the workshop guard in
+            # src/test/ (MB.38) pins its theme default, and without the entry
+            # the one edit that guard exists to catch is the one edit that
+            # would not run it.
             vitest:
               - *shared
               - '.github/workflows/vitest.yml'
@@ -189,6 +192,7 @@ jobs:
               - '.github/scripts/summarize-vitest.mjs'
               - '.github/scripts/lib/**'
               - 'src/**'
+              - '.ladle/config.mjs'
               - 'vitest.config.mts'
               - 'vitest.setup.ts'
               - 'package.json'
