@@ -13,7 +13,6 @@
 #   test-stories                      M1.28
 #   act-*                             M0.23
 #   workshop, workshop-build          M0.30
-#   check-stories                     M0.33
 #   db-studio, docker-studio          MB.21
 #   dev-debug, test-debug, test-ui,
 #     e2e-ui, e2e-trace, db-psql,
@@ -29,7 +28,7 @@
 .DEFAULT_GOAL := help
 
 .PHONY: help install dev dev-debug build start \
-	lint lint-fix format format-check typecheck check-stories check-destructive-ddl pre-commit \
+	lint lint-fix format format-check typecheck check-destructive-ddl pre-commit \
 	test-debug test-ui e2e-ui e2e-trace \
 	db-generate db-migrate db-seed db-reset db-studio db-psql codegen \
 	workshop workshop-build \
@@ -86,15 +85,11 @@ format-check:
 typecheck:
 	npm run typecheck
 
-## Fail if a src/components/ directory has index.tsx without index.stories.tsx
-check-stories:
-	npm run check:stories
-
 ## Flag destructive DDL (DROP/RENAME/type change/NOT NULL additions) in migrations new on this branch (M1.5)
 check-destructive-ddl:
 	npm run check:destructive-ddl
 
-## The pre-commit checks: lint, format:check, typecheck, check:stories
+## The pre-commit checks: lint, format:check, typecheck
 pre-commit:
 	npm run pre-commit
 
