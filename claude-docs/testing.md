@@ -118,11 +118,11 @@ IF EXISTS`) so a crashed previous run self-heals instead of erroring on a
 **Coverage** (`test.coverage`, provider `v8`): thresholds are 80% on lines,
 branches, functions, and statements, `include: ['src/**/*.{ts,tsx}']`,
 excluding test files, `*.stories.tsx`, `src/db/migrations/**`,
-`src/db/seed/**`, and `src/test/**`. Today's coverage sits below that (much
-of `src/app/` still has no tests; `src/db/` gained real coverage in Wave 1),
-so `npm run test:coverage` currently exits non-zero on the
-threshold, not on a test failure — that's the threshold doing its job, not a
-defect; coverage rises as later milestones add tests.
+`src/db/seed/**`, and `src/test/**`. Coverage has been above the threshold
+since Wave 3's schema tests landed (~92% of lines at M1.21), so
+`npm run test:coverage` exits non-zero only on a test failure or on a change
+that pulls a metric back under 80% — which is the threshold doing its job,
+not a defect.
 
 `npm run test` (`vitest run`, no coverage) and `npm run test:coverage`
 (`vitest run --coverage`) both run every project. Neither is wired into
