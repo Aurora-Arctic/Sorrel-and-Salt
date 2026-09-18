@@ -410,12 +410,24 @@ export async function seedForms(db: SeedDatabase): Promise<void> {
   await db.transaction(async (tx) => {
     await tx.execute(sql`select set_config('app.current_user_id', ${BOOTSTRAP_USER_ID}, true)`);
     await insertBootstrapAdmin(tx);
-
-    // Groups first: `ingredient_forms.group_id` is a NOT NULL foreign key, so
-    // there is nothing for a form to point at until they exist.
-    await insertMissingGroups(tx);
-    await insertMissingForms(tx, await groupIdByName(tx));
+    await seedFormVocabulary(tx);
   });
+}
+
+/**
+ * The same seed, inside a transaction the caller already opened — separate for
+ * the reason `seedCategoryVocabulary` is: M1.22's `standard` scenario writes
+ * this vocabulary alongside its own compendium, whose `form` values are drawn
+ * from it, and applies the lot as one transaction.
+ *
+ * It assumes what `seedForms` does for itself: the GUC is published and the
+ * bootstrap admin exists, since every row here is stamped as that user's.
+ */
+export async function seedFormVocabulary(tx: SeedTransaction): Promise<void> {
+  // Groups first: `ingredient_forms.group_id` is a NOT NULL foreign key, so
+  // there is nothing for a form to point at until they exist.
+  await insertMissingGroups(tx);
+  await insertMissingForms(tx, await groupIdByName(tx));
 }
 
 async function insertMissingGroups(tx: SeedTransaction): Promise<void> {
