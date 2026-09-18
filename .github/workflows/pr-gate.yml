@@ -46,6 +46,13 @@ name: PR Gate
 # checks/playwright/vitest also `needs: gitflow`, so a PR from the wrong
 # source/target branch never burns CI time on them — see the gitflow job
 # below.
+#
+# Every job here and in the workflows this file calls pins `runs-on:
+# ubuntu-26.04` rather than `ubuntu-latest` (MB.37). GitHub moves the
+# floating label to 26.04 from 2026-10-19 and annotated every job with a
+# notice until then; a pinned label means the move happened on a PR that was
+# watched. Bumping it is one sed across .github/workflows/ — and .actrc's
+# `-P` platform mapping goes with it.
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
@@ -77,7 +84,7 @@ jobs:
   # typecheck and build together, which is what collapsing them onto one
   # workflow costs.
   changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       lint: ${{ steps.filter.outputs.lint }}
       typecheck: ${{ steps.filter.outputs.typecheck }}
