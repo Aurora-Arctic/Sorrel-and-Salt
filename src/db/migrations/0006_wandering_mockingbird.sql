@@ -1,0 +1,3 @@
+CREATE UNIQUE INDEX "ingredients_compendium_identity_unique" ON "ingredients" USING btree ("canonical_key") WHERE "ingredients"."workspace_id" is null and "ingredients"."deleted_at" is null;--> statement-breakpoint
+CREATE UNIQUE INDEX "ingredients_workspace_identity_unique" ON "ingredients" USING btree ("workspace_id","canonical_key") WHERE "ingredients"."workspace_id" is not null and "ingredients"."deleted_at" is null;--> statement-breakpoint
+CREATE UNIQUE INDEX "ingredients_workspace_label_unique" ON "ingredients" USING btree ("workspace_id",lower("name")) WHERE "ingredients"."workspace_id" is not null and "ingredients"."deleted_at" is null;

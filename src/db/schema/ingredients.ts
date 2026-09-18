@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { check, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../audit';
 import { workspaces } from './workspaces';
 
@@ -68,8 +68,8 @@ const CANONICAL_KEY = sql`
 // uniqueness on `lower(name)` was what stopped the compendium holding that
 // ambiguity at all. `name` is only what the ingredient is called *here*, and
 // is freely relabellable because identity moved off it. The three partial
-// unique indexes over `canonical_key` and the label are M4.1a; folk names
-// are their own table (M4.4a), not the `folkNames text[]` they replace.
+// unique indexes below are what hold that ambiguity (M4.1a); folk names are
+// their own table (M4.4a), not the `folkNames text[]` they replace.
 export const ingredients = pgTable(
   'ingredients',
   {
@@ -103,7 +103,7 @@ export const ingredients = pgTable(
     substitutes: text('substitutes').array(),
     ...auditColumns,
   },
-  () => [
+  (table) => [
     // A biconditional, asserted in both directions: `none`/`unknown`
     // carrying a formal name is rejected, and any other kind carrying none
     // is rejected too. Enforced in Zod as well, so the CHECK is never what a
@@ -119,5 +119,31 @@ export const ingredients = pgTable(
       sql`canonical_name is null or btrim(canonical_name) <> ''`,
     ),
     check('ingredients_form_not_blank', sql`form is null or btrim(form) <> ''`),
+
+    // DESIGN.md §5's three partial unique indexes, partial per CLAUDE.md rule
+    // 4: without `deleted_at is null` a soft-deleted entry would reserve its
+    // identity forever. They stay indexes rather than unique constraints out
+    // of necessity — a constraint carries no WHERE predicate, and
+    // `nullsNotDistinct()` exists only on constraints — which is also why the
+    // two tiers are two indexes rather than one over (workspace_id,
+    // canonical_key): under a single index every compendium row's null
+    // workspace_id would be distinct from every other's, reserving nothing.
+    //
+    // Uniqueness is on `canonicalKey` — the formal name plus the normalised
+    // form — never on the display label, which is what lets four compendium
+    // entries all display "Cat's Claw", told apart by their formal names.
+    uniqueIndex('ingredients_compendium_identity_unique')
+      .on(table.canonicalKey)
+      .where(sql`${table.workspaceId} is null and ${table.deletedAt} is null`),
+    uniqueIndex('ingredients_workspace_identity_unique')
+      .on(table.workspaceId, table.canonicalKey)
+      .where(sql`${table.workspaceId} is not null and ${table.deletedAt} is null`),
+    // Label uniqueness survives in the workspace tier only: inside one drawer
+    // an ambiguous label is a mistake, not a distinction. `lower(name)` folds
+    // Mugwort onto mugwort; the compendium carries no counterpart, which is
+    // the ambiguity it exists to hold.
+    uniqueIndex('ingredients_workspace_label_unique')
+      .on(table.workspaceId, sql`lower(${table.name})`)
+      .where(sql`${table.workspaceId} is not null and ${table.deletedAt} is null`),
   ],
 );
