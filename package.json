@@ -24,7 +24,7 @@
     "e2e:trace": "playwright show-trace --host 0.0.0.0 --port 9323",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/db-seed.ts",
+    "db:seed": "tsx scripts/db-seed.ts",
     "db:reset": "npm run db:migrate && npm run db:seed",
     "db:studio": "drizzle-kit studio --host 0.0.0.0 --port 4983",
     "codegen": "echo 'codegen is not wired up yet — see M3.x' && exit 1",
@@ -63,6 +63,7 @@
     "pre-commit": "^2.0.0",
     "prettier": "^3.9.6",
     "sass": "^1.104.1",
+    "tsx": "^4.23.13",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.0"

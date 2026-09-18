@@ -1,9 +1,12 @@
 #!/usr/bin/env node
-// M1.3 — wires `npm run db:seed` to the seed module's entrypoint.
+// M1.3 wired `npm run db:seed` to the seed module's entrypoint; M1.21 gave it
+// something to do. This always seeds `minimal` — scenario selection by
+// environment variable is M1.24's job, alongside the Docker init hook and
+// `make db-reset`.
 //
-// No scenario is implemented yet (see src/db/seed/index.ts), and scenario
-// selection by environment variable is M1.24's job — this always seeds
-// `minimal`, and always fails, until M1.21 gives it something to do.
+// Runs through `tsx`, not bare Node like the other scripts: Node's own type
+// stripping resolves no extensionless relative import, and the seed is the
+// first thing under src/ a script executes that has one (M1.21).
 //
 // Usage: npm run db:seed
 
@@ -14,4 +17,12 @@
 import { db } from '../src/db/connection.ts';
 import { seed } from '../src/db/seed/index.ts';
 
-await seed(db, { scenario: 'minimal' });
+try {
+  await seed(db, { scenario: 'minimal' });
+} finally {
+  // connection.ts opens a pool and never closes it — the app has no reason
+  // to — so without this the process finishes its work and then never
+  // exits. A thrown seed still ends the pool, and the throw still propagates
+  // to a non-zero exit.
+  await db.$client.end();
+}
