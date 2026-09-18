@@ -1449,9 +1449,11 @@ _Acceptance criteria:_
 
 - Carries the audit spread
 - Unique per `(ingredient_id, lower(name))` on a partial index excluding soft-deleted rows
-- Two different ingredients may both claim the same common name
+- Two different ingredients may both claim the same common name — asserted, not merely allowed
 - Foreign key to `ingredients`
 - Re-adding a folk name after soft delete succeeds
+- `gin_trgm_ops` index on `name`, so §9's common-name matching has an index to use
+- Catalogue introspection asserts the unique index's predicate, not merely that some predicate exists
 - Lands before M1.18 so the trigger sweep covers it in one pass
 
 **M4.5 — Zod schemas for ingredient and category** · 2h
