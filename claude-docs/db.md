@@ -99,6 +99,15 @@ output or CI behaviour changes when it's unset. Full setup:
   independently of it. Hand-editing the SQL is safe here because `db:generate`
   diffs the `meta/` snapshots rather than the statements, so the keyword
   changes nothing a later generate sees.
+- **`0016_updated-at-trigger.sql`** (M1.18) is the third hand-written one,
+  again via `generate --custom`: it adds the `set_updated_at()` trigger
+  function and attaches it to every audited table, neither of which schema
+  diffing can express. `CREATE OR REPLACE TRIGGER` (Postgres 14+) is the
+  idempotent form — there is no `CREATE TRIGGER IF NOT EXISTS` — so
+  re-applying the file is a no-op independently of the journal, for the same
+  reason 0000 and 0011 carry an `IF NOT EXISTS`, and it needs no
+  destructive-DDL acknowledgement because it drops nothing. See
+  "`updated_at` is the database's" below.
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
@@ -975,13 +984,80 @@ audit fields the caller supplied stripped out and replaced with the correct
 ones for that operation:
 
 - `insert` sets `createdAt`/`createdBy`/`updatedAt`/`updatedBy` from `session`
-- `update` sets only `updatedAt`/`updatedBy`, leaving `createdAt`/`createdBy` absent from the returned payload so the `UPDATE` never touches them
+- `update` sets only `updatedAt`/`updatedBy`, leaving `createdAt`/`createdBy` absent from the returned payload so the `UPDATE` never touches them — and the `updatedAt` it sets is then overwritten by the database (see "`updated_at` is the database's" below), so the column carries one clock rather than two
 - `delete` (soft delete) sets only `deletedAt`/`deletedBy`
 
 Audit ids never come from the caller: `applyAudit` deletes any of the six
 audit keys off the incoming payload before setting the ones the operation
 calls for, so a payload smuggling `createdBy` from a request body is ignored
 in favour of `session.userId`, per CLAUDE.md rule 3.
+
+## `updated_at` is the database's (M1.18)
+
+DESIGN.md §5's second enforcement rule: `updated_at` is stamped by a trigger,
+not by application code, so a fix made by hand in `psql` still stamps it and
+the audit trail cannot be quietly bypassed.
+`0016_updated-at-trigger.sql` adds one PL/pgSQL function —
+
+```sql
+CREATE OR REPLACE FUNCTION set_updated_at() RETURNS trigger
+LANGUAGE plpgsql AS $
+BEGIN
+	NEW.updated_at := now();
+	RETURN NEW;
+END;
+$;
+```
+
+— and attaches it `BEFORE UPDATE ... FOR EACH ROW` to each of the fifteen
+tables carrying the four audit stamps. The trigger takes the same name,
+`set_updated_at`, on every one: a trigger name is scoped to its table rather
+than shared with indexes, so there is nothing for a table prefix to
+disambiguate.
+
+- **The assignment is unconditional, and that is the point.** A value the
+  statement supplied loses — a hand-written `UPDATE ... SET updated_at = …` is
+  precisely what the trigger exists to override — and so does an `UPDATE` that
+  changes nothing else, because a statement that touched the row is a touch.
+- **`now()`, not `clock_timestamp()`.** It is the transaction timestamp, so
+  every row one transaction touches carries the same `updated_at`, and it
+  matches the `DEFAULT now()` the column already carries.
+- **`BEFORE UPDATE` only.** An insert keeps its own stamps, which is what makes
+  `created_at` and `updated_at` equal on a row nobody has edited.
+- **Only `updated_at` moves.** The database owns _when_; `updated_by` still
+  comes from the session, per CLAUDE.md rule 3. `RETURNING` reads the row the
+  trigger already rewrote, so what a caller is handed and what is stored cannot
+  disagree.
+- **`applyAudit` still puts an `updatedAt` in the `SET` list, and it is
+  always overwritten.** Both paths stamp, but only one value is ever stored —
+  the database's — so an application whose clock has drifted cannot write a
+  timestamp that disagrees with its neighbours.
+  `src/db/updated-at-trigger.test.ts` proves it by faking `Date` alone
+  (`toFake: ['Date']`, leaving the driver's timers real), running a
+  `withAudit` update whose payload says the year 2000, and reading back this
+  year.
+
+**Better Auth's three adapter tables are deliberately excluded.** `accounts`,
+`sessions` and `verifications` carry an `updated_at` and no `*_by` columns at
+all: nothing writes them through `withAudit`, they are not part of the audit
+trail, and Better Auth's own `$onUpdate` stamps them (`src/db/schema/auth.ts`).
+
+### A table added later does not get the trigger for free
+
+An event trigger would attach one automatically on `CREATE TABLE`, but
+`CREATE EVENT TRIGGER` requires superuser and `sorrel` deliberately is not one
+("Migrations and scripts" above). So **a new audited table adds its own
+`CREATE OR REPLACE TRIGGER` line in its own migration** — one line, copied.
+
+What makes forgetting that a failing test rather than a review note is
+`src/db/updated-at-trigger.test.ts`, the catalogue-introspection guard the
+sweep-task rule requires. It applies the whole migration set into the worker's
+clone — which tables the sweep reached is the thing under test, so unlike the
+per-table schema tests it stubs nothing — and then compares two catalogue
+queries: the tables carrying all four audit stamps, and the tables carrying a
+`set_updated_at` trigger. A sixteenth audited table reddens it without that
+file being edited. The list of fifteen is transcribed there as well, because
+two empty sets are equal and something has to say they aren't.
 
 ## The write path — `repository.ts` and `withAudit` (M1.16)
 
