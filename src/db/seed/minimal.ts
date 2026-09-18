@@ -7,8 +7,9 @@ import type { SeedDatabase } from './index';
 // and the spread contributes nothing — an insert then carries no created_by
 // and fails NOT NULL. Every db test in src/db/ orders these the same way.
 import { users } from '../schema/users';
-import { applyAudit, type AuditSession } from '../audit';
+import { applyAudit } from '../audit';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
+import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
 
 // M1.21 — the `minimal` scenario (DESIGN.md §"Seed data"): one admin, one
 // user, empty compendium. The bare install every other scenario builds on.
@@ -32,22 +33,15 @@ import { BOOTSTRAP_USER_ID } from '../bootstrap';
  */
 export const MINIMAL_USER_ID = '00000000-0000-0000-0000-000000000002';
 
-// The bootstrap user acts for the whole seed, including its own insert —
-// `applyAudit` stamps `createdBy`/`updatedBy` from this, and with `id` set to
-// the same value the row is one self-satisfying statement (src/db/bootstrap.ts).
-const bootstrap: AuditSession = { userId: BOOTSTRAP_USER_ID };
+// The admin this scenario opens with moved to bootstrap-admin.ts in M4.3: it
+// is the precondition of every seed rather than a detail of this one, and the
+// category seed runs without `minimal` having gone first. `BOOTSTRAP_SESSION`
+// is the session both stamp under.
 
 // The columns a seeded user names — typed against the table's own insert
 // model so `role` is the enum, not `string`, and so a column renamed in
 // users.ts fails here at compile time rather than at the first `db:seed`.
 type SeedUser = Pick<typeof users.$inferInsert, 'id' | 'name' | 'email' | 'role'>;
-
-const ADMIN: SeedUser = {
-  id: BOOTSTRAP_USER_ID,
-  name: 'Bootstrap Admin',
-  email: 'admin@seed.sorrelandsalt.com',
-  role: 'admin',
-};
 
 const USER: SeedUser = {
   id: MINIMAL_USER_ID,
@@ -67,14 +61,11 @@ export async function seedMinimal(db: SeedDatabase): Promise<void> {
     // an id that never changes, so a re-run is a no-op on conflict and a seed
     // pointed at a database that already holds them adds nothing. Nothing is
     // dropped — the Docker-level reset that does drop is M1.24's.
-    await tx
-      .insert(users)
-      .values(applyAudit('insert', ADMIN, bootstrap))
-      .onConflictDoNothing({ target: users.id });
+    await insertBootstrapAdmin(tx);
 
     await tx
       .insert(users)
-      .values(applyAudit('insert', USER, bootstrap))
+      .values(applyAudit('insert', USER, BOOTSTRAP_SESSION))
       .onConflictDoNothing({ target: users.id });
   });
 }

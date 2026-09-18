@@ -58,8 +58,8 @@ export const categoryGroups = pgTable(
 //
 // No colour of its own. MB.35 moved the chip colour onto the group, as a pair
 // of hexes one per theme, and a category wears its group's — a single `color`
-// column here could hold neither half of that pair, and §6's 52 categories
-// are grouped precisely so they read as eight families rather than 52
+// column here could hold neither half of that pair, and §6's 63 categories
+// are grouped precisely so they read as eight families rather than 63
 // individually-tinted chips. §5, §6 and db.md listed `color` on this table
 // until this task; the decision is recorded in §14.
 //
