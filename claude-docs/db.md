@@ -189,10 +189,12 @@ cheapest to get right before anything depends on it. What follows describes
 - **`ingredient_folk_names`** — `id`, `ingredientId` (FK to `ingredients`),
   `name`, + audit. Common names, one row each, scoped to the ingredient that
   claims them.
-- **`ingredient_forms`** — `id`, `name`, `slug`, `group`, `description`, +
+- **`ingredient_forms`** — `id`, `name`, `slug`, `groupId`, `description`, +
   audit. Shaped like `categories`: global, admin-curated, no workspace
   scoping. This is the third resource admins curate globally, alongside the
-  compendium and categories (CLAUDE.md).
+  compendium and categories (CLAUDE.md). Its `groupId` points at
+  `ingredient_form_groups`, admin-curated in turn — see the categories
+  section below, which settles both (MB.35).
 
 **`nomenclature`** is a seven-value `pgEnum`, `NOT NULL` with no default:
 `botanical`, `fungal`, `zoological`, `mineral`, `chemical`, `unknown`, `none`.
@@ -325,6 +327,79 @@ limit, not a gap left for later.
 Full column list, the CHECK constraints' exact text, and the
 local-beats-compendium resolution query that reads these indexes: DESIGN.md
 §5.
+
+## Categories, and the two group vocabularies (MB.35; tables M4.2, M4.2a)
+
+DESIGN.md §5 specifies four tables here, none yet written: M4.2 creates
+`category_groups` and `categories`, M4.2a creates `ingredient_form_groups`
+and `ingredient_forms`. MB.35 recorded the model first, as MB.28 did for
+ingredients — and for a sharper reason: M4.2 had already been built and
+verified as a `category_group` pgEnum before the question "can an admin add
+a ninth group?" was asked. The enum was a faithful transcription of §6's
+closed eight and had to be thrown away. What follows describes the model as
+specified.
+
+- **`categories`** — `id`, `name`, `slug`, `color`, `description`, `groupId`
+  (FK to `category_groups`), + audit. Global, admin-curated, no workspace
+  scoping. §6 seeds 52.
+- **`category_groups`** — `id`, `name`, `slug`, `colorDark`, `colorLight`,
+  `description`, + audit. Global, admin-curated. §6 seeds eight; an admin
+  may add more. Listed alphabetically by `name`.
+- **`ingredient_forms`** — as in the identity section above, with `groupId`
+  (FK to `ingredient_form_groups`) in place of the earlier `group` text.
+- **`ingredient_form_groups`** — `id`, `name`, `slug`, `description`, +
+  audit. Seeds _organism part_, _preparation_ and _matter_. No colour: form
+  groups section an autofill dropdown, not chips. Also alphabetical.
+
+**Groups are rows, not enums, because an admin mutation cannot run DDL.**
+`ALTER TYPE … ADD VALUE` is a migration, migrations here are forward-only and
+CI-gated, and the whole point of the change is that adding a group needs no
+deploy. As a table the group also gets what an open set needs and a closed
+one could imply: a colour per row, below. It does _not_ get an order column
+— groups list alphabetically by `name`, which needs nothing stored and puts
+an admin-added group where a reader would look for it.
+
+**Two group tables, not one with a `kind` column.** A shared table with a
+discriminator would let `categories.groupId` point at a form group, and the
+mistake would surface only when a chip section rendered empty. Two tables
+make it a foreign-key violation — impossible rather than merely absent, for
+the price of one more `CREATE TABLE`.
+
+**Both `groupId`s are foreign keys, and `ingredients.form` is not — that is
+a rule, not an inconsistency.** `ingredients.form` is written by a _member_,
+who must be able to write `rhizome` before an admin has curated it, so it is
+text over a vocabulary. A category, a form, and the groups they point at are
+written only by admins, on both sides, so an FK blocks nobody — and a
+typo'd group would otherwise silently empty a section. Generalised: a
+vocabulary a member writes is text; a vocabulary only an admin writes is a
+foreign key.
+
+**A group's colour is two hexes on the row, one per theme, each validated on
+write — not a build-time token.** M0.7 emits one `--group-<slug>` custom
+property per key of `$category-groups` at Sass compile time, which is
+exactly what a group created at runtime cannot have. So the map becomes the
+**seed source**: it already carries a `dark` and a `light` value per group,
+and M4.3 resolves each to a hex once and writes both onto the row, carrying
+M0.7's hue rotation and per-theme contrast tuning across into data. From
+then on the chip reads the row (MB.36 changes the mixin to take the pair).
+Two columns rather than one because the grounds differ — M0.7 lifts a
+dark-theme colour and darkens a light-theme one, and no single hex clears
+4.5:1 on both soot and parchment without being mud on at least one. The
+validation is M5.6b's, in the service and not a CHECK constraint, because
+the failure needs a readable message and the ground to compare against:
+`colorDark` is checked against the dark ground only, `colorLight` against
+the light, so each floor is exact. What an admin adds is legible in both
+themes but does not join the rotation — the accepted cost of an open set,
+stated in §6 rather than glossed.
+
+**Uniqueness is on `slug`, partial on `deleted_at IS NULL`, on all four
+tables** — the partial-index convention below. Display names carry no
+constraint on `categories`: two groups may each want a "Protection", and the
+slug is what tells them apart.
+
+**NOT NULL on every §6 field.** Constraining now is the reversible direction:
+dropping a `NOT NULL` later is a widening, where adding one is destructive
+DDL needing a PR acknowledgement (rule 10, and the section below).
 
 ## Expand/contract and the destructive-DDL check (M1.5)
 
