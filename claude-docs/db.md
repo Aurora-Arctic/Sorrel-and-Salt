@@ -330,18 +330,18 @@ local-beats-compendium resolution query that reads these indexes: DESIGN.md
 
 ## Categories, and the two group vocabularies (MB.35; tables M4.2, M4.2a)
 
-DESIGN.md §5 specifies four tables here, none yet written: M4.2 creates
-`category_groups` and `categories`, M4.2a creates `ingredient_form_groups`
-and `ingredient_forms`. MB.35 recorded the model first, as MB.28 did for
-ingredients — and for a sharper reason: M4.2 had already been built and
-verified as a `category_group` pgEnum before the question "can an admin add
-a ninth group?" was asked. The enum was a faithful transcription of §6's
-closed eight and had to be thrown away. What follows describes the model as
-specified.
+DESIGN.md §5 specifies four tables here. M4.2 has written two of them —
+`category_groups` and `categories`, in migration `0007_even_wild_pack.sql`;
+M4.2a still owes `ingredient_form_groups` and `ingredient_forms`. MB.35
+recorded the model first, as MB.28 did for ingredients — and for a sharper
+reason: M4.2 had already been built and verified as a `category_group`
+pgEnum before the question "can an admin add a ninth group?" was asked. The
+enum was a faithful transcription of §6's closed eight and had to be thrown
+away.
 
-- **`categories`** — `id`, `name`, `slug`, `color`, `description`, `groupId`
-  (FK to `category_groups`), + audit. Global, admin-curated, no workspace
-  scoping. §6 seeds 52.
+- **`categories`** — `id`, `name`, `slug`, `description`, `groupId` (FK to
+  `category_groups`), + audit. Global, admin-curated, no workspace scoping.
+  §6 seeds 52. **No colour of its own** — see below.
 - **`category_groups`** — `id`, `name`, `slug`, `colorDark`, `colorLight`,
   `description`, + audit. Global, admin-curated. §6 seeds eight; an admin
   may add more. Listed alphabetically by `name`.
@@ -392,14 +392,30 @@ the light, so each floor is exact. What an admin adds is legible in both
 themes but does not join the rotation — the accepted cost of an open set,
 stated in §6 rather than glossed.
 
-**Uniqueness is on `slug`, partial on `deleted_at IS NULL`, on all four
-tables** — the partial-index convention below. Display names carry no
-constraint on `categories`: two groups may each want a "Protection", and the
-slug is what tells them apart.
+**The colour lives on the group only, and a category has none (M4.2).** §5,
+§6 and this file all listed a `color` on `categories` until the table was
+written, carried over from before MB.35 made a group's colour a _pair_ of
+hexes — which a single category column cannot hold either half of, and which
+M4.3 has nothing to seed a per-category counterpart from, since the
+resolution it describes writes onto the group row. One source for a chip's
+colour, rather than a per-category override shadowing a per-group value; §6's
+grouping exists so 52 chips read as eight families in the first place. If a
+per-category override is ever wanted it is addable as a widening.
 
-**NOT NULL on every §6 field.** Constraining now is the reversible direction:
-dropping a `NOT NULL` later is a widening, where adding one is destructive
-DDL needing a PR acknowledgement (rule 10, and the section below).
+**Uniqueness is on `slug`, partial on `deleted_at IS NULL`, on all four
+tables** — `category_groups_slug_unique` and `categories_slug_unique` for the
+two that exist, the partial-index convention below. Slug uniqueness on
+`categories` is global rather than per group: the slug is what a chip filter
+and M4.3's idempotency key both read, and neither carries a group alongside
+it. Display names carry no constraint: two groups may each want a
+"Protection", and the slug is what tells them apart.
+
+**NOT NULL on every remaining §6 field** — `name`, `slug` and `description`
+on both tables, both hexes on the group, and `groupId` on a category (FK
+`categories_group_id_category_groups_id_fk`). Constraining now is the
+reversible direction: dropping a `NOT NULL` later is a widening, where adding
+one is destructive DDL needing a PR acknowledgement (rule 10, and the section
+below).
 
 ## Expand/contract and the destructive-DDL check (M1.5)
 
