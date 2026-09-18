@@ -99,6 +99,13 @@
       "when": 1789707704447,
       "tag": "0013_illegal_red_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1789708781610,
+      "tag": "0014_cooing_bug",
+      "breakpoints": true
     }
   ]
 }
