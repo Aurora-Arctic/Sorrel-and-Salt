@@ -307,7 +307,7 @@ Uniqueness is per ingredient, **deliberately not global** — several unrelated 
 
 **`ingredient_categories`** — `ingredientId`, `categoryId`, + audit stamps. Composite primary key on the pair, no `deleted_at`, hard-deleted. A second, non-unique index leads on `categoryId` so the pair is readable in both directions: the key answers "what is this ingredient tagged with", and the index answers "what is in this category" without scanning every assignment.
 
-**`spell_categories`** — `spellId`, `categoryId`, + audit stamps. Composite primary key on the pair, no `deleted_at`, hard-deleted.
+**`spell_categories`** — `spellId`, `categoryId`, + audit stamps. Composite primary key on the pair, no `deleted_at`, hard-deleted. A second, non-unique index leads on `categoryId`, exactly as on `ingredient_categories`: the key answers "what is this spell tagged for", and the index answers "which spells are tagged for prosperity" — §9's grimoire list is filterable by category (M10.11), so that direction has a reader. `spell_ingredients` gets no such index because no v1 feature lists spells by ingredient; the asymmetry between the three join tables is which directions are actually queried, not an oversight in any of them.
 
 **`inventory_items`** — `id`, `workspaceId`, `ingredientId`, `quantityOnHand`, `unit`, `unitDimension`, `lowStockThreshold`, `source`, `acquiredDate`, + audit.
 
