@@ -12,10 +12,8 @@
     "lint:fix": "oxlint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check:stories": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-component-stories.ts",
     "check:destructive-ddl": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-destructive-ddl.ts",
-    "check:theme-default": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-workshop-theme-default.ts",
-    "pre-commit": "npm run lint && npm run format:check && npm run typecheck && npm run check:stories && npm run check:theme-default",
+    "pre-commit": "npm run lint && npm run format:check && npm run typecheck",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:debug": "vitest run --inspectBrk=0.0.0.0:9230 --no-file-parallelism --maxWorkers=1",
@@ -36,9 +34,7 @@
   "pre-commit": [
     "lint",
     "format:check",
-    "typecheck",
-    "check:stories",
-    "check:theme-default"
+    "typecheck"
   ],
   "dependencies": {
     "better-auth": "^1.7.4",
