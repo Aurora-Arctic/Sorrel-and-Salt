@@ -46,13 +46,14 @@ edit at any call site; nothing passes it today.
     cancelled check, which required-status-check protection treats as
     unsatisfied — so one failing leg would otherwise block the PR on four
     checks that never got to run.
-  - **`run-lint` / `run-typecheck` / `run-build` are the path-filter inputs**,
-    one per filtered leg, in place of the single `should-run` each workflow
-    used to take. `format` has none and always runs, since Prettier covers
-    non-code files; `audit` has none because it is non-blocking and PR-only.
-    The first step resolves the three down to one flag for the leg it is
-    running, and treats an empty flag as true — so `act`, which applies no
-    `workflow_call` input defaults, cannot report a check it never ran.
+  - **`run-lint` / `run-typecheck` / `run-build` / `run-destructive-ddl` are
+    the path-filter inputs**, one per filtered leg, in place of the single
+    `should-run` each workflow used to take. `format` has none and always runs,
+    since Prettier covers non-code files; `audit` has none because it is
+    non-blocking and PR-only. The first step resolves the four down to one flag
+    for the leg it is running, and treats an empty flag as true — so `act`,
+    which applies no `workflow_call` input defaults, cannot report a check it
+    never ran.
   - **`build`'s extras all survive the collapse**: the `/app/.next/cache`
     restore through `actions/cache`, `DATABASE_URL`/`BETTER_AUTH_SECRET`, and
     `npm run check:stories` / `npm run workshop:build` chained onto
@@ -61,6 +62,12 @@ edit at any call site; nothing passes it today.
     - **The cache `path` is the absolute `/app/.next/cache`**, not a
       workspace-relative path: `hashFiles()` reads `$GITHUB_WORKSPACE`, but
       the job's working directory is `/app`.
+    - **The cache never hit before MB.37.** `actions/cache` runs inside the
+      `testing` container, and the Alpine image's busybox `tar` rejects
+      `--posix`, so every save failed with a warning and every restore missed
+      — from the step's first commit (`57d81bd`) until MB.37 added GNU `tar`
+      and `zstd` to the image's `testing` stage. The `testing` image hash
+      moved with that Dockerfile change, as it does for any.
     - **`package.json`'s `build` script forces `NODE_ENV=production`.** The
       `testing` image bakes in `NODE_ENV=test`, and Turbopack crashes
       prerendering `/_global-error` under anything but `production`/unset —
@@ -77,30 +84,50 @@ edit at any call site; nothing passes it today.
     `.github/scripts/audit-comment.cjs` under `actions/github-script` rather
     than `pr-comment`: a severity table and a package breakdown reported as a
     `[!WARNING]` on a step that passed, which `pr-comment`'s pass/fail
-    vocabulary has no way to say. It writes no job summary, for the same
-    reason — "Dependency Audit passed" directly above a warning about three
-    vulnerabilities is worse than nothing.
+    vocabulary has no way to say. The same script writes the same callout to
+    the job summary (MB.37). Until then the leg wrote no summary at all,
+    because the pass/fail `job-summary` action would have put "Dependency
+    Audit passed" directly above the table — and the audit was invisible on
+    the run's summary page as a result. The summary is written whether or not
+    a `pr-number` was passed; the PR comment only when one was, so
+    `make act-check CHECK=audit` shows the table and skips the comment.
   - **`vitest` and `playwright` are deliberately not legs.** Each brings a
     `services: postgres:` block, a `db-image` input and its own artifact
     uploads — a different job shape, not a different npm script.
 
-- **`destructive-ddl.yml`** (M1.5) — flags destructive DDL (`DROP COLUMN`,
-  `DROP TABLE`, `RENAME`, `ALTER COLUMN ... TYPE`, `SET NOT NULL`/
-  `ADD COLUMN ... NOT NULL` without a default) in migration files new or
-  changed in the PR, via `scripts/check-destructive-ddl.ts`, and fails unless
-  the PR body carries a `Destructive DDL acknowledged: <reason>` line — see
-  `claude-docs/db.md`'s Migrations section for the policy. Blocking, like
-  `lint`/`typecheck`. Unlike them it needs two things `workflow_call` can't
-  read off its own trigger — the changed-migration-file list and the PR body
-  — so both are passed in as string inputs: the file list from `changes`'s
-  `dorny/paths-filter` step (`list-files: json`, reused rather than adding a
-  second changed-files action), the body straight from
-  `github.event.pull_request.body` at the `pr-gate.yml` call site.
-  Its `should-run: false` path exists for a merge-queue caller (same reason
-  as `gitflow`'s — `merge_group` has no real PR body or diffable source ref,
-  so it can only trust that `pr-gate.yml` already gated the PR before it
-  reached the queue) purely so the check name reports success there instead of
-  never posting. `merge-queue.yml` was that caller until MB.32 deleted it.
+- **`checks / destructive-ddl`** (M1.5, a `checks.yml` leg since MB.37) —
+  flags destructive DDL in migration files new or changed in the PR, via
+  `scripts/check-destructive-ddl.ts`, and fails unless the PR body carries a
+  `Destructive DDL acknowledged: <reason>` line. The forms: any `DROP` except
+  `DROP NOT NULL` and `DROP DEFAULT` (which widen), `RENAME`,
+  `ALTER COLUMN ... TYPE`, `SET NOT NULL`, and `ADD COLUMN ... NOT NULL` with
+  no `DEFAULT` — see `claude-docs/db.md`'s Migrations section for the policy.
+  Blocking, like `lint`/`typecheck`.
+  - **It needs two things a `workflow_call` file cannot read off its own
+    trigger**, which is why it has inputs where the other legs have none: the
+    changed-migration-file list and the PR body. Only the caller sees
+    `github.event.pull_request`. The list comes from `changes`'s
+    `dorny/paths-filter` step (`list-files: json`, reused rather than adding a
+    second changed-files action) as `destructive-ddl-files`, the body straight
+    from `github.event.pull_request.body` as `pr-body`, and `checks.yml` puts
+    both into the job `env` as `DESTRUCTIVE_DDL_FILES` /
+    `DESTRUCTIVE_DDL_PR_BODY`, inert in the other five legs.
+  - **`DESTRUCTIVE_DDL_FILES` is always set, even to an empty string.** The
+    script reads set-but-empty as "no migrations changed, scan nothing" and
+    _unset_ as "work out what this branch changed from git" — the second is a
+    local convenience and must never be what CI does.
+  - ⚠️ **MB.32 deleted its calling job and did not replace it.** The check ran
+    on nothing from 2026-09-17 until MB.37 folded it in as a leg; PRs #104–#107
+    were never gated by it, and two migrations (`0005`, `0006`) landed
+    unscanned. The `changes` job kept computing its filters the whole time,
+    which is why nothing looked wrong. MB.37 also widened `DROP` past
+    `COLUMN`/`TABLE` — `0002`'s `DROP CONSTRAINT users_email_unique` had passed
+    — and stopped `migrations/meta/*.json` being handed to the script as SQL.
+  - Its `run-destructive-ddl: false` path exists for a merge-queue caller (same
+    reason as `gitflow`'s `should-run` — `merge_group` has no real PR body or
+    diffable source ref, so it can only trust that `pr-gate.yml` already gated
+    the PR before it reached the queue). `merge-queue.yml` was that caller
+    until MB.32 deleted it.
 
 - **`build-image.yml`** — builds the shared `testing` image once and exposes its
   ref as an `image` output. Tag is content-addressed:
@@ -177,13 +204,13 @@ edit at any call site; nothing passes it today.
 
 ## Aggregating workflows
 
-- **`pr-gate.yml`** — path-filters `lint`/`typecheck`/`build` (passed to
-  `checks.yml` as its three `run-*` inputs), `destructive-ddl`, `vitest` and
+- **`pr-gate.yml`** — path-filters `lint`/`typecheck`/`build`/`destructive-ddl`
+  (passed to `checks.yml` as its four `run-*` inputs), `vitest` and
   `playwright` via `dorny/paths-filter`; `format`, `audit` and `gitflow` always
   run. It calls `checks.yml` **once**, as the `checks` job, where lint, format,
   typecheck, build and audit used to be five jobs calling five workflows — so a
-  change to `checks.yml` now flips the lint, typecheck and build filters
-  together, which is what sharing one workflow costs. `vitest`/`playwright`
+  change to `checks.yml` now flips the lint, typecheck, build and
+  destructive-ddl filters together, which is what sharing one workflow costs. `vitest`/`playwright`
   (M1.14) are real `workflow_call` jobs now, same job names the M0-era stubs
   used so no required-status-check rename was ever needed. Its `build-image` job keeps a
   `pr-gate-build-image-<pr number>` / `cancel-in-progress: false` concurrency
@@ -192,15 +219,18 @@ edit at any call site; nothing passes it today.
 - **`merge-queue.yml` was deleted by MB.32, and is restored from git history
   when M7.A.1 fires.** It was the `merge_group` counterpart, re-expressing this
   entire job graph — the same checks with `merge-queue: true`, plus
-  `destructive-ddl` and `gitflow` with `should-run: false` so their check names
-  reported rather than hung — for a queue that has never run. **"Require merge
+  `destructive-ddl` (a workflow of its own then) and `gitflow` with
+  `should-run: false` so their check names reported rather than hung — for a
+  queue that has never run. **"Require merge
   queue" is deliberately OFF** on `main` and `staging`, so `merge_group` never
   fires until M7.A.1 flips that setting, once there is more than one
   contributor; M7.A.1 is trigger-based and a prerequisite for nothing. The
   `merge-queue` input it fed survives on `checks.yml`, `vitest.yml`,
-  `playwright.yml`, `destructive-ddl.yml` and `gitflow.yml`, and `pr-comment`'s
-  fail-only merge-queue thread with it, so bringing the file back is a revert
-  rather than a redesign. Nothing passes it today.
+  `playwright.yml` and `gitflow.yml`, and `pr-comment`'s fail-only merge-queue
+  thread with it, so bringing the file back is a revert rather than a redesign.
+  Nothing passes it today. Restoring it must re-express its `destructive-ddl`
+  job as `run-destructive-ddl: false` on its `checks` call, since MB.37 made
+  that a leg and deleted `destructive-ddl.yml`.
 - Every check job `needs: gitflow`, so a PR from the wrong source branch burns
   no CI time on the rest. `gitflow.yml`'s own `should-run: false` path is there
   for a merge-queue caller, which sees only a synthetic head ref rather than
@@ -215,11 +245,13 @@ edit at any call site; nothing passes it today.
   a PAT with `Administration` scope (the write returns `403` without it) or the
   GitHub UI, and until it is done the gitflow workflow reports but **blocks
   nothing**.
-- **MB.32 renamed five check contexts.** `lint / lint`, `format / format`,
-  `typecheck / typecheck`, `build / build` and `audit / audit` are now
-  `checks / lint`, `checks / format`, `checks / typecheck`, `checks / build`
-  and `checks / audit`; `vitest / vitest`, `playwright / playwright`,
-  `destructive-ddl / destructive-ddl` and `gitflow / gitflow` are unchanged.
+- **MB.32 renamed five check contexts, MB.37 a sixth.** `lint / lint`,
+  `format / format`, `typecheck / typecheck`, `build / build` and
+  `audit / audit` are now `checks / lint`, `checks / format`,
+  `checks / typecheck`, `checks / build` and `checks / audit`;
+  `destructive-ddl / destructive-ddl` is now `checks / destructive-ddl`;
+  `vitest / vitest`, `playwright / playwright` and `gitflow / gitflow` are
+  unchanged.
   Nothing had to be updated, because no ruleset required the old names and the
   old names will never report again — but whatever enables protection must use
   the new ones. A required check that no workflow publishes is permanently
@@ -233,6 +265,12 @@ edit at any call site; nothing passes it today.
   decides internally whether to do the work.
 - **Live GitHub settings are confirmed with the user before being changed**, and
   a permissions-blocked write is reported rather than routed around.
+- **Runners are pinned to `ubuntu-26.04`** (MB.37), not `ubuntu-latest`.
+  GitHub moves the floating label to 26.04 from 2026-10-19
+  (actions/runner-images#14748) and annotated every job with a notice until
+  then; pinning did the move on a PR that was watched and silenced the notice.
+  Bumping it is one `sed` across `.github/workflows/`, and `.actrc`'s `-P`
+  platform mapping must move with it.
 
 ## Smoke checks
 
@@ -366,7 +404,7 @@ nothing and this workflow is the only path.
 - `pull_request`, not `pull_request_target` — hotfix branches are never forks.
 - The per-hotfix domains need a wildcard `*.sorrelandsalt.com` (Vercel
   nameservers, Hobby-OK).
-- Bare `ubuntu-latest` runner (needs the Vercel CLI, writes `.vercel/output`),
+- Bare `ubuntu-26.04` runner (needs the Vercel CLI, writes `.vercel/output`),
   with `actions/setup-node@v4` **pinned to Node 26.6.0** to match
   `Docker/Dockerfile.node` — under Node 22, `npm ci` fails because npm 10 cannot
   read the npm-11 lockfile for `typescript@7`'s per-platform deps.
@@ -406,35 +444,38 @@ nothing and this workflow is the only path.
 **`.actrc` + `make act-*`** — run the reusable checks through
 [`act`](https://github.com/nektos/act) against a locally-built
 `Docker/Dockerfile.node` `testing` image (`act-image`). `.actrc` carries
-`-P ubuntu-latest=catthehacker/ubuntu:act-latest` and `--pull=false`.
+`-P ubuntu-26.04=catthehacker/ubuntu:act-latest` and `--pull=false`.
 
 - **One target covers every `checks.yml` leg** (MB.32), where there was one per
   check workflow before the collapse: `make act-check` runs lint,
   `make act-check CHECK=typecheck` runs typecheck, and so on through `format`,
-  `build` and `audit`. `--matrix name:<leg>` is what keeps `act` from running
-  all five. `make act-destructive-ddl` stays its own target — a different
-  workflow, with its own inputs — and `make act-test` chains lint, format,
+  `build`, `audit` and `destructive-ddl` (MB.37). `--matrix name:<leg>` is what
+  keeps `act` from running all six, and `make act-test` chains lint, format,
   typecheck and destructive-ddl.
 - `make act-cache-checkout` pre-clones this repo's `main` so the remote
   `checkout-to-app@main` ref resolves offline.
-- **act does not apply `workflow_call` input defaults**, which is why
-  `act-destructive-ddl` passes `--input should-run=true` — without it the job
-  "passes" having run nothing. `act-check` needs no such flag: `checks.yml`
-  resolves an empty flag to true precisely so a local run cannot quietly skip
-  the work it was asked to do.
+- **act does not apply `workflow_call` input defaults**, so a flag arrives
+  empty under `-W`. `act-check` needs none passed: `checks.yml` resolves an
+  empty flag to true precisely so a local run cannot quietly skip the work it
+  was asked to do.
 - **`CHECK=build` and `CHECK=audit` are expected to fail locally**, and neither
   is in `act-test`. The build leg wants `actions/cache@v6` pre-cached the way
   `act-cache-checkout` pre-caches `checkout-to-app`; the audit leg wants a real
   PR to comment on.
-- **`act-destructive-ddl` can't exercise the PR-body/changed-files inputs** —
-  those come from `pr-gate.yml`'s `changes` job and the real
+- **`CHECK=destructive-ddl` scans nothing locally, and that is the honest
+  outcome rather than a gap** — its `destructive-ddl-files`/`pr-body` inputs
+  come from `pr-gate.yml`'s `changes` job and the real
   `github.event.pull_request.body`, neither of which exists under a bare
-  `act -W ... -j destructive-ddl` invocation. It always falls back to the
-  script's no-args behavior (scan every committed migration, no ack line to
-  find) — good for catching a broken workflow/script wiring, not a
-  substitute for `npm run check:destructive-ddl -- --self-test`, which
-  exercises the ack-line gating logic directly against fixtures under
-  `scripts/__fixtures__/destructive-ddl/`.
+  `act -W ... --matrix name:destructive-ddl` invocation. Both arrive empty,
+  `checks.yml` sets `DESTRUCTIVE_DDL_FILES` from the input regardless, and the
+  script reads set-but-empty as "no migrations changed". So the leg proves the
+  wiring, not the scan. What proves the scan is
+  `src/test/destructive-ddl-check.test.ts` (the rules, the file-list
+  resolution and the branch diff, each asserted to fail with its guard
+  removed) and `npm run check:destructive-ddl -- --self-test` (the ack-line
+  gating, against the fixtures under `scripts/__fixtures__/destructive-ddl/`).
+  Before MB.37 this target claimed to fall back to scanning every committed
+  migration; it never did — the workflow always exported the variable.
 - **`act-vitest` / `act-playwright` still do not exist**, even though
   `vitest.yml`/`playwright.yml` landed in M1.14. Unlike the `checks.yml` legs
   (single job, every input passed directly), both take a `db-image` input that

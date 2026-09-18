@@ -75,7 +75,7 @@ permissions:
 
 jobs:
   gitflow:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       # Local action references (./.github/actions/...) below resolve against
       # $GITHUB_WORKSPACE, so a checkout is needed even though this job never
