@@ -1,0 +1,14 @@
+-- DESIGN.md §9's fuzzy duplicate warning. One multicolumn index over both
+-- names rather than two single-column ones: a multicolumn `gin_trgm_ops` index
+-- serves a predicate naming either column alone. `ingredient_folk_names_trgm`
+-- (0010) stays its own index over its own table.
+--
+-- pg_trgm is enabled by 0000, which owns that statement — this migration only
+-- consumes the `gin_trgm_ops` operator class it provides.
+--
+-- IF NOT EXISTS, hand-added to what drizzle-kit generated, for the same reason
+-- 0000 carries it: the journal's once-only bookkeeping already skips an applied
+-- migration, and the keyword makes re-applying this file a no-op rather than an
+-- error independently of that. It changes no snapshot, so `db:generate` keeps
+-- diffing against the schema unaffected.
+CREATE INDEX IF NOT EXISTS "ingredients_trgm" ON "ingredients" USING gin ("name" gin_trgm_ops,"canonical_name" gin_trgm_ops);
