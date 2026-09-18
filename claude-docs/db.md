@@ -50,10 +50,14 @@ point rather than an architectural commitment.
 **Revisit when any of these fires** — not before:
 
 - `drizzle-orm` / `drizzle-kit` `1.0` goes GA on the `latest` dist-tag.
-- `drizzle-kit generate` cannot express DDL a task needs. M4.1a settled the
-  first candidate: it emitted all three of `ingredients`' partial unique
-  indexes, predicates and the `lower(name)` expression included, with no
-  hand-editing. M4.6's `pg_trgm` gin index is the one still untested.
+- `drizzle-kit generate` cannot express DDL a task needs. Both candidates are
+  now settled, and neither fired. M4.1a: it emitted all three of `ingredients`'
+  partial unique indexes, predicates and the `lower(name)` expression included,
+  with no hand-editing. M4.6: it emitted the multicolumn trigram index from a
+  schema-level `index().using('gin', …)`, both `gin_trgm_ops` operator classes
+  included. The one hand-edit that migration carries is an `IF NOT EXISTS`
+  added for idempotency (see the migrations section) — a keyword, not DDL the
+  generator could not express.
 - The advisory gains a runtime path, or escalates past moderate.
 
 ## Debugging a query (MB.22)
@@ -87,6 +91,14 @@ output or CI behaviour changes when it's unset. Full setup:
   against `sorrel`/`sorrel_template`, which already have `pg_trgm` baked in
   at the Postgres image's build time (`Docker/postgres-init/`) — the
   migration is what makes a from-scratch database (e.g. Neon) match.
+- **`0011_breezy_bastion.sql`** (M4.6) creates `ingredients_trgm`, the
+  multicolumn `gin_trgm_ops` index DESIGN.md §9's fuzzy duplicate warning
+  reads. `drizzle-kit generate` wrote the statement; the `IF NOT EXISTS` was
+  added by hand, for the reason 0000 carries one — the journal already skips an
+  applied migration, and the keyword makes re-applying the file a no-op
+  independently of it. Hand-editing the SQL is safe here because `db:generate`
+  diffs the `meta/` snapshots rather than the statements, so the keyword
+  changes nothing a later generate sees.
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
@@ -190,7 +202,9 @@ What follows describes all three as built.
   the exact opposite of `form`, and the reason the two are easy to confuse
   but never interchangeable. `deities` and `substitutes` are native
   `text[]` columns, one of the things SQLite could not have run (DESIGN.md
-  §14).
+  §14). Four indexes: M4.1a's three partial unique ones (below) plus
+  `ingredients_trgm` (M4.6), one multicolumn `gin_trgm_ops` index over `name`
+  and `canonical_name` — see "Fuzzy matching" below.
 - **`ingredient_folk_names`** — `id`, `ingredientId` (FK to `ingredients`),
   `name`, + audit. Common names, one row each, scoped to the ingredient that
   claims them. Two indexes: `ingredient_folk_names_unique` over
@@ -331,6 +345,39 @@ uniqueness is per ingredient, deliberately not global, since several
 unrelated ingredients claiming the same common name is exactly what's being
 documented, not an error. `lower`, `btrim`, and `similarity`, by contrast,
 are all IMMUTABLE and used freely throughout this model.
+
+### Fuzzy matching: one index, and a rule every caller is bound by (M4.6)
+
+**`ingredients_trgm` is one multicolumn index, not two single-column ones.**
+`USING gin (name gin_trgm_ops, canonical_name gin_trgm_ops)` — a multicolumn
+GIN index is reachable from a predicate naming either column on its own, which
+is a property of the access method rather than a hope, and
+`ingredients-trigram.test.ts` asserts it by `EXPLAIN` for each column
+separately. Reduce it to `name` alone and the `canonical_name` assertion
+reddens. It is neither unique nor partial: the three unique indexes _reserve_
+an identity, so a tombstone must fall outside them, while this one only answers
+"what is this called" for a finder that filters `deleted_at` itself.
+`ingredient_folk_names_trgm` stays its own index over its own table (M4.4a),
+and is reached independently.
+
+**The index is only half of it. A match must be written `name % $1`, with
+`pg_trgm.similarity_threshold` set per transaction — never
+`similarity(name, $1) > 0.4`.** The two return the same rows, so nothing but
+the query plan tells them apart, and getting it wrong is silent in both
+directions:
+
+- `similarity(a, b) > 0.4` is a **function call**, and no trigram index can
+  answer one. Only the operators (`%`, `<->`) are indexable. A query written
+  that way sequentially scans `ingredients` no matter what indexes exist — and
+  it does so even with `enable_seqscan = off`, which is how the test asserts it
+  rather than merely observing a planner preference.
+- `%` alone means "similar by `pg_trgm.similarity_threshold`", which defaults
+  to **0.3**, not the 0.4 DESIGN.md §9 specifies. So the threshold is set with
+  `SET LOCAL` inside the matching transaction, and does not leak past it.
+
+One is a correctness bug in the results, the other a performance bug invisible
+until the table is big. M4.7's fuzzy duplicate service is the first caller
+bound by both.
 
 **Accent insensitivity is client-side only.** `unaccent` is not installed in
 this database (only `pg_trgm` is, per the migrations section above), so
