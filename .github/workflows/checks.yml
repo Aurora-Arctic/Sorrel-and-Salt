@@ -142,16 +142,18 @@ jobs:
             command: npm run typecheck
             summarize: .github/scripts/summarize-typecheck.sh
             comment: minimize
-          # M0.33's gate (missing index.stories.tsx) and M0.36's wrapper around
-          # `ladle build` (a story that fails to bundle) ride along on the build
-          # leg, chained with `&&` so the first failure still fails the check:
-          # both are plain npm scripts, per M0.33's decision record, and this
-          # leg already runs on every push that could touch a component.
+          # M0.36's wrapper around `ladle build` (a story that fails to bundle)
+          # rides along on the build leg, chained with `&&` so a failed app
+          # build still fails the check before the workshop is tried: a story
+          # that does not bundle is a build-time finding, and this leg already
+          # runs on every push that could touch a component. M0.33's gate
+          # (missing index.stories.tsx) rode here too until MB.38 made it a
+          # test — src/test/workshop-guards.test.ts, on the vitest job.
           # No PR comment, matching build.yml before the collapse — a failing
           # build's own check and job summary are the report.
           - name: build
             label: Build
-            command: npm run build && npm run check:stories && npm run workshop:build
+            command: npm run build && npm run workshop:build
             summarize: ''
             comment: ''
           # Blocking, unlike audit below — this gates a merge, since a
