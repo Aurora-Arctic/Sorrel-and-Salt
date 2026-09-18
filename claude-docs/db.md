@@ -50,10 +50,10 @@ point rather than an architectural commitment.
 **Revisit when any of these fires** — not before:
 
 - `drizzle-orm` / `drizzle-kit` `1.0` goes GA on the `latest` dist-tag.
-- `drizzle-kit generate` cannot express DDL a task needs (the candidates are
-  M4.1's two partial unique indexes and M4.6's `pg_trgm` gin index; note
-  `0002_solid_marauders.sql` shows it already emits a partial unique index
-  with its `WHERE` predicate correctly).
+- `drizzle-kit generate` cannot express DDL a task needs. M4.1a settled the
+  first candidate: it emitted all three of `ingredients`' partial unique
+  indexes, predicates and the `lower(name)` expression included, with no
+  hand-editing. M4.6's `pg_trgm` gin index is the one still untested.
 - The advisory gains a runtime path, or escalates past moderate.
 
 ## Debugging a query (MB.22)
@@ -165,12 +165,13 @@ order, which is the hierarchy M6.3's `assertMembership` implements).
 DESIGN.md §5 specifies three tables that land in Wave 3: M4.1 creates
 `ingredients` (the enums, columns, generated key, and CHECKs) — **merged**,
 `src/db/schema/ingredients.ts`, migration `0005_uneven_bloodstorm.sql`; M4.1a
-adds its three partial unique indexes, M4.2a creates `ingredient_forms`, and
+adds its three partial unique indexes — **merged**, same schema file, migration
+`0006_wandering_mockingbird.sql`; M4.2a creates `ingredient_forms`, and
 M4.4a creates `ingredient_folk_names`. MB.28 recorded the model here first,
 ahead of that DDL, so M4.1 was transcription rather than design — the same
 reasoning as CLAUDE.md's table-then-behaviour rule, one step earlier:
 cheapest to get right before anything depends on it. What follows describes
-`ingredients` as built and the three tables still to come.
+`ingredients` as built and the two tables still to come.
 
 - **`ingredients`** — `id`, `workspaceId` (nullable: `NULL` is the compendium
   tier, non-null is a workspace's own ingredient), `name`, `canonicalName`,
@@ -254,7 +255,7 @@ the file needs no database at all and reads `getTableConfig`, the same as
 `workspaces-schema.test.ts`.
 
 **Three partial unique indexes, not two, and indexes rather than
-constraints** — M4.1a, not yet built:
+constraints** — M4.1a, as built:
 
 ```sql
 CREATE UNIQUE INDEX ingredients_compendium_identity_unique
@@ -279,7 +280,22 @@ entries) as long as they're different identities. They're indexes rather
 than unique constraints because Drizzle's `nullsNotDistinct()` exists only
 on constraints, and a constraint can't carry a `WHERE` predicate at all —
 since every unique index in this schema must be partial, the constraint form
-was never on the table regardless.
+was never on the table regardless. Two indexes over the two tiers rather than
+one over `(workspace_id, canonical_key)` for the same reason: without
+`NULLS NOT DISTINCT`, every compendium row's null `workspace_id` would be
+distinct from every other's and the single index would reserve nothing there.
+
+**The predicates are asserted from the catalogue, not just the behaviour**
+(`src/db/ingredients-indexes.test.ts`, which applies `0005` and `0006` into
+the worker clone the same way described above). Each index's
+`pg_get_expr(indpred, indrelid)` is pinned to its rendered predicate and its
+`pg_get_indexdef` to its key columns, and one test asserts the table carries
+no fourth unique index. Behaviour alone could not catch a dropped
+`WHERE deleted_at IS NULL`: no collision test re-uses an identity without
+soft-deleting first, so every one of them would stay green while the
+reservation silently widened to forever. Verified by mutation — dropping the
+predicate reddens six tests, dropping the label index five, and keying the
+compendium on `lower(name)` instead of `canonical_key` four.
 
 **`ingredients.form` is `text`, and deliberately not a foreign key to
 `ingredient_forms`.** The curated table is an autofill vocabulary, not a
