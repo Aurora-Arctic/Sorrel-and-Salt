@@ -56,9 +56,11 @@ edit at any call site; nothing passes it today.
     never ran.
   - **`build`'s extras all survive the collapse**: the `/app/.next/cache`
     restore through `actions/cache`, `DATABASE_URL`/`BETTER_AUTH_SECRET`, and
-    `npm run check:stories` / `npm run workshop:build` chained onto
-    `npm run build` with `&&`, which short-circuits the same way three
-    separate steps did. It posts no PR comment, as `build.yml` didn't.
+    `npm run workshop:build` chained onto `npm run build` with `&&`, which
+    short-circuits the same way separate steps did. The story gate rode here
+    too until MB.38 moved it — and the theme-default guard, which had only
+    ever run in pre-commit — into `src/test/workshop-guards.test.ts` on the
+    `vitest` job. It posts no PR comment, as `build.yml` didn't.
     - **The cache `path` is the absolute `/app/.next/cache`**, not a
       workspace-relative path: `hashFiles()` reads `$GITHUB_WORKSPACE`, but
       the job's working directory is `/app`.
