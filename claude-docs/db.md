@@ -486,15 +486,34 @@ mid-rollout. Never do it in one step. Instead:
   has to say out loud "yes, this is the point where we give up the old
   column," not have it happen silently.
 
-**The CI check (`destructive-ddl.yml` / `scripts/check-destructive-ddl.ts`,
-M1.5)** scans migration files new or changed in a PR for `DROP COLUMN`,
-`DROP TABLE`, `RENAME` (column or table), `ALTER COLUMN ... TYPE` (flagged
-for review whenever present — telling narrowing apart from widening reliably
-needs a real SQL parser and the column's previous definition, not just
-regexes over the new migration's text), and a `NOT NULL` addition
-(`SET NOT NULL`, or `ADD COLUMN ... NOT NULL` with no `DEFAULT`). It passes
-automatically when none of those appear. When one does, the PR body must
-contain a line of the exact form:
+**The CI check (`checks / destructive-ddl` / `scripts/check-destructive-ddl.ts`,
+M1.5; a `checks.yml` leg since MB.37)** scans migration files new or changed in
+a PR for five forms:
+
+- **any `DROP`** — column, table, type, constraint, index, function, trigger,
+  view. Rule 10 says "DROP", and a dropped type or constraint breaks a
+  rolled-back release as readily as a dropped column. The two exceptions
+  **widen** rather than narrow and pass: `DROP NOT NULL` and `DROP DEFAULT`
+  only admit values the old code was already writing. `DROP INDEX` is
+  deliberately inside the rule, which means a changed index predicate — Drizzle
+  emits `DROP INDEX` + `CREATE INDEX` for one — costs an acknowledgement line
+  saying the rebuild is intentional.
+- **`RENAME`** (column or table). An index rename is caught too, though it
+  cannot break a rollback; Drizzle never emits one.
+- **`ALTER COLUMN ... TYPE`**, flagged whenever present — telling narrowing
+  apart from widening reliably needs a real SQL parser and the column's
+  previous definition, not just regexes over the new migration's text.
+- **a `NOT NULL` addition** — `SET NOT NULL`, or `ADD COLUMN ... NOT NULL` with
+  no `DEFAULT`.
+
+Comments and string literals are stripped before any rule runs, so a column
+comment reading `'never drop this'` is prose rather than DDL. Only `*.sql` is
+ever scanned: the `meta/*.json` files Drizzle writes beside each migration are
+excluded by the paths filter in `pr-gate.yml` **and** by the script, which
+ignores anything else it is handed.
+
+It passes automatically when none of those forms appear. When one does, the PR
+body must contain a line of the exact form:
 
 ```
 Destructive DDL acknowledged: <reason>
@@ -504,6 +523,16 @@ Destructive DDL acknowledged: <reason>
 comment for the regex and the reasoning. There's no such line format
 elsewhere in the repo to stay consistent with; this is the one place it's
 defined, so `claude-docs/ci.md` and the script both point back here.
+
+**Locally, `npm run check:destructive-ddl` scans what this branch adds** —
+every migration new or changed against its Gitflow base (`origin/staging`, or
+`origin/main` for a `hotfix/*` or `release/*` branch), including one
+`db:generate` has just written and not yet committed. `--base <ref>` picks
+another base. `--all` scans every committed migration instead, which is an
+audit rather than a gate: it stays red on `0002_solid_marauders.sql`, whose
+`DROP CONSTRAINT` and two `NOT NULL` columns were acknowledged when they
+landed. Before MB.37 the bare command _was_ that full scan, so it was
+permanently red and told you nothing about your own branch.
 
 ## Audit columns and `applyAudit` (M1.15, FKs restored MB.5)
 

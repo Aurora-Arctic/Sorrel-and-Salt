@@ -1,16 +1,18 @@
 name: PR Gate
 
 # Runs on every pull request targeting `main`, `staging`, or `release/*`. Fans
-# out to every check ported so far — `checks` (lint, format, typecheck, build
-# and a non-blocking npm audit, as one matrix), `vitest`, `playwright`,
-# `destructive-ddl` and `gitflow` — gating the PR before it can be merged.
+# out to every check ported so far — `checks` (lint, format, typecheck, build,
+# destructive-ddl and a non-blocking npm audit, as one matrix), `vitest`,
+# `playwright` and `gitflow` — gating the PR before it can be merged.
 # format, audit and gitflow always run; the rest are path-filtered by the
 # `changes` job below so a PR only pays for the checks its changed files could
 # actually affect.
 #
 # `checks` is one job calling checks.yml once (MB.32), where lint, format,
 # typecheck, build and audit used to be five jobs calling five near-identical
-# reusable workflows. Each leg reports as `checks / <name>`.
+# reusable workflows. Each leg reports as `checks / <name>`. `destructive-ddl`
+# joined them as a sixth leg in MB.37 — MB.32 had deleted its calling job here
+# without folding it in, so it ran on nothing between PR #104 and MB.37.
 #
 # `vitest` and `playwright` (M1.14) are real `workflow_call` checks now, not
 # the M0-era no-op stubs — job names are unchanged from the stubs, so no
@@ -41,9 +43,9 @@ name: PR Gate
 # from upstream so retargeting a PR's base branch re-triggers gitflow's
 # source->target validation even without a new push.
 #
-# checks/destructive-ddl/playwright/vitest also `needs: gitflow`, so a PR from
-# the wrong source/target branch never burns CI time on them — see the gitflow
-# job below.
+# checks/playwright/vitest also `needs: gitflow`, so a PR from the wrong
+# source/target branch never burns CI time on them — see the gitflow job
+# below.
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
@@ -145,20 +147,27 @@ jobs:
               - 'package-lock.json'
             destructive_ddl:
               - *shared
-              - '.github/workflows/destructive-ddl.yml'
+              - '.github/workflows/checks.yml'
+              - 'scripts/check-destructive-ddl.ts'
               - 'src/db/migrations/**'
             # Deliberately narrower than destructive_ddl above: this filter's
             # only job is to produce a `_files` list of the migration files to
-            # scan. destructive_ddl's `*shared` entries exist so the job
-            # reruns when its own workflow changes, but dorny/paths-filter's
-            # list-files output for a filter includes every changed file
-            # matching *any* of that filter's patterns — so destructive_ddl's
-            # own `_files` output would include a changed pr-gate.yml itself,
-            # and check-destructive-ddl.ts would then scan that YAML file as
-            # if it were a SQL migration (see MB.4). destructive_ddl still
-            # drives should-run; this one only feeds changed-files.
+            # scan. destructive_ddl's `*shared` entries exist so the leg
+            # reruns when the workflow running it changes, but
+            # dorny/paths-filter's list-files output for a filter includes
+            # every changed file matching *any* of that filter's patterns — so
+            # destructive_ddl's own `_files` output would include a changed
+            # pr-gate.yml itself, and check-destructive-ddl.ts would then be
+            # handed that YAML file as if it were a SQL migration (see MB.4).
+            # destructive_ddl still drives run-destructive-ddl; this one only
+            # feeds destructive-ddl-files.
+            #
+            # `*.sql` rather than `**`, so the meta/*.json Drizzle writes
+            # beside each migration never reaches the script. MB.37 also made
+            # the script itself ignore anything that is not `.sql` — this is
+            # the belt, that is the braces.
             destructive_ddl_migrations:
-              - 'src/db/migrations/**'
+              - 'src/db/migrations/*.sql'
             # vitest also matches build-db-image.yml/Dockerfile.postgres/
             # postgres-init — the build-db-image job below (its `db-image`
             # input) is what actually consumes that image, so a change there
@@ -238,6 +247,12 @@ jobs:
       run-lint: ${{ needs.changes.outputs.lint == 'true' }}
       run-typecheck: ${{ needs.changes.outputs.typecheck == 'true' }}
       run-build: ${{ needs.changes.outputs.build == 'true' }}
+      run-destructive-ddl: ${{ needs.changes.outputs.destructive_ddl == 'true' }}
+      # The destructive-ddl leg's two extra inputs — neither readable from
+      # inside a called workflow, which sees no `pull_request` event of its
+      # own. See checks.yml's header.
+      destructive-ddl-files: ${{ needs.changes.outputs.destructive_ddl_migrations_files }}
+      pr-body: ${{ github.event.pull_request.body }}
 
   # Publishes (or reuses, if content-addressed and unchanged) the preseeded
   # Postgres 18 image both vitest and playwright below need for their
