@@ -25,6 +25,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx scripts/db-seed.ts",
+    "db:seed:categories": "tsx scripts/db-seed.ts categories",
     "db:reset": "npm run db:migrate && npm run db:seed",
     "db:studio": "drizzle-kit studio --host 0.0.0.0 --port 4983",
     "codegen": "echo 'codegen is not wired up yet — see M3.x' && exit 1",
@@ -42,7 +43,8 @@
     "next": "^16.3.4",
     "postgres": "^3.4.9",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "slugify": "^1.6.9"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

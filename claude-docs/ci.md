@@ -457,16 +457,40 @@ nothing and this workflow is the only path.
   output), `migrate` (`needs: resolve-target`, calls this workflow with
   `secrets: inherit`, and carries its own `group: migrate` /
   `cancel-in-progress: false` concurrency lock so two merges never migrate at
-  once), and `deploy` (`needs: [resolve-target, migrate]`, `if: success()` —
-  required because a job-level `if:` overrides the implicit "needs succeeded"
-  check, so without it a failed migration would not actually block the
-  deploy). Same guard-skip stub as `deploy.yml` when the `VERCEL_*` secrets
+  once), and `deploy`. Same guard-skip stub as `deploy.yml` when the `VERCEL_*` secrets
   are absent. `vercel pull --environment=<preview|production>` resolves the
   right `DATABASE_URL` for each target the same way `deploy.yml`'s own pull
   does — the branch-scoped override for `staging`, the integration's
   per-deployment ephemeral Neon branch for a hotfix preview (see
   `claude-docs/design-decisions/m1.1-neon-branch-strategy.md`) — read from
   `.vercel/.env.<environment>.local` and masked before use.
+- **The category seed (M4.3) is a step inside `migrate.yml`, not a workflow of
+  its own.** After the migrations, `npm run db:seed:categories` writes
+  DESIGN.md §6's vocabulary into the schema they just created, when the
+  `seed-categories` input says so. It is how that vocabulary reaches staging
+  and production at all: deploys are CI-only and there is no shell on either
+  database, so reference data has to arrive with the deploy that needs it.
+  A separate reusable workflow was written first and then folded in — it
+  needed exactly what the migration needs and nothing else (a checkout,
+  `npm ci`, the Vercel CLI, the same pulled `DATABASE_URL`), so it paid for
+  all of that a second time to run one `npm run`, and needed its own
+  concurrency lock against `migrate` to avoid seeding a schema mid-migration.
+  Sharing the job makes that ordering structural. The two still report
+  separately — one `job-summary` call each — so a failed seed does not read as
+  a failed migration, and a failed seed blocks `deploy` for free, because it
+  fails the job `deploy` already depends on.
+- **`deploy.yml` gains one job, `seed-changed`**, which diffs
+  `github.event.before`..`github.sha` over the seed's own files
+  (`src/db/seed/categories.ts`, `src/db/seed/bootstrap-admin.ts`,
+  `src/lib/slugify.ts`, `scripts/db-seed.ts`) and hands `migrate` the answer.
+  Two things about it are load-bearing. It carries **no job-level `if:`**: a
+  skipped dependency skips its dependents, so gating the job on
+  `github.event_name == 'push'` would take every hotfix preview deploy down
+  with it — non-push events answer `changed=false` from inside the step
+  instead. And an unusable `before` (a new branch, or a force-push past what
+  the runner fetched) seeds rather than guesses: the seed is additive, so a
+  false positive costs one extra `npm run` where a false negative is an empty
+  vocabulary in production.
 
 ## Running CI locally
 
