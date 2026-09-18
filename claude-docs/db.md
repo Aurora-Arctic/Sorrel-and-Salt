@@ -108,6 +108,18 @@ output or CI behaviour changes when it's unset. Full setup:
   reason 0000 and 0011 carry an `IF NOT EXISTS`, and it needs no
   destructive-DDL acknowledgement because it drops nothing. See
   "`updated_at` is the database's" below.
+- **`0017_custom-spell-ingredients.sql`** (MB.40) reshapes `spell_ingredients`
+  so a layer may be a custom, one-off ingredient — see "Custom ingredients"
+  under the grimoire. `drizzle-kit generate` wrote the statements and the file
+  was reordered by hand, expand first (two columns, two partial unique indexes,
+  four checks) and contract last (the `(spell_id, ingredient_id)` primary key
+  replaced by `(spell_id, layer_order)`, `ingredient_id` made nullable, the old
+  layer index dropped as redundant), so every guarantee is held by its
+  replacement before the thing that used to hold it goes. It is the first
+  migration here to carry rule 10's destructive-DDL acknowledgement, for the
+  `DROP CONSTRAINT` and the `DROP INDEX`; `DROP NOT NULL` widens and is exempt.
+  A contract migration was affordable because the table was empty and
+  unqueried — the table-task-then-behaviour-task rule paying out.
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
@@ -719,9 +731,13 @@ holds (`inventory_items`).
 - **`spells`** — `id`, `workspaceId`, `title`, `intent`, `jarSize`,
   `sealWaxColor`, `moonPhase`, `dayOfWeek`, `instructions`, `status`, + the full
   six-column audit spread. Stories 47 and 50's table.
-- **`spell_ingredients`** — `spellId`, `ingredientId`, `quantity`, `unit`,
-  `layerOrder`, `note`, + the four audit stamps, keyed on
-  `(spell_id, ingredient_id)` and hard-deleted (MB.34).
+- **`spell_ingredients`** — `spellId`, `ingredientId` (nullable), `name`,
+  `form`, `quantity`, `unit`, `layerOrder`, `note`, + the four audit stamps,
+  keyed on `(spell_id, layer_order)` and hard-deleted (MB.34). Stories 50 and
+  57's table: a layer is an ingredient the workspace knows or a custom name
+  written for this one jar. M10.2 shipped it keyed on
+  `(spell_id, ingredient_id)`; MB.40 moved the key (`0017`) once a row could
+  exist without the pair.
 
 **`visibility` is not on `spells` yet, and its absence is scheduled rather than
 forgotten.** §5 lists the column and M10.3 adds it in Wave 5, after M1.23 has
@@ -743,28 +759,87 @@ target rather than asserting it twice: an id that exists only in
 against an ingredient the workspace holds no stock of is accepted. Repoint the
 key and the pair swaps which one reddens.
 
-### Layer order, and what it costs the reorder
+### Layer order is the identity, and what that costs the reorder
 
-`layerOrder` is `integer NOT NULL`, unique within a spell through
-`spell_ingredients_spell_id_layer_order_unique` on `(spell_id, layer_order)`.
-Both halves are load-bearing:
+`layerOrder` is `integer NOT NULL` and, since MB.40, half of the primary key:
+`spell_ingredients_spell_id_layer_order_pk` on `(spell_id, layer_order)`. M10.2
+had the same pair as a unique index beside a `(spell_id, ingredient_id)` key;
+once a row could exist without an ingredient id the pair could not be the key,
+and the layer was the only thing every row has. Each half is load-bearing:
 
 - **Stored, not inferred.** Story 51 makes layering part of the recipe, and no
   query may lean on insertion order.
-- **NOT NULL**, because a nullable column would satisfy neither half of "stored
-  and unique within a spell" — distinct NULLs collide with nothing, so an
-  unordered row would sit outside the index meant to constrain it.
-- **Leading on `spell_id`**, which both scopes the uniqueness to the one jar and
-  makes this the index that answers "read this spell's ingredients in order" —
+- **NOT NULL** — by construction now, as a key column — because a nullable
+  column would satisfy neither half of "stored and unique within a spell":
+  distinct NULLs collide with nothing, so an unordered row would sit outside the
+  key meant to constrain it.
+- **Leading on `spell_id`**, which both scopes the key to the one jar and makes
+  its index the one that answers "read this spell's ingredients in order" —
   every read of the table in M10.9 and MB.6.
-- **Not partial**: there is no `deleted_at` here to write a predicate against.
+- **No surrogate id.** An `id` column would say nothing about the jar, and the
+  schema test asserts its absence.
 
-A unique index is checked per row rather than at end of statement, so **M10.16's
-reorder cannot be a single `set layer_order = layer_order + 1` sweep** even
-though the final state is conflict-free. It rewrites the jar's rows instead,
-which a hard-deleted table makes an ordinary delete-and-insert. The schema test
-pins both directions — the sweep is refused, the rewrite succeeds — so the
-constraint the reorder has to work within is written down before the reorder is.
+A key is checked per row rather than at end of statement, so **M10.16's reorder
+cannot be a single `set layer_order = layer_order + 1` sweep** even though the
+final state is conflict-free. It rewrites the jar's rows instead, which a
+hard-deleted table makes an ordinary delete-and-insert — and under this key
+that rewrite replaces primary keys, which is fine for the same reason. The
+schema test pins both directions — the sweep is refused, the rewrite succeeds —
+so the constraint the reorder has to work within is written down before the
+reorder is.
+
+### Custom ingredients (MB.40)
+
+Story 57: a spell may call for something the workspace will never stock. A row
+in `spell_ingredients` is either an ingredient the workspace knows
+(`ingredient_id`) or a name written for this one jar (`name`, with an optional
+free-text `form`) — exactly one of the two. The design argument is in DESIGN.md
+§5 and [`mb.40-custom-spell-ingredients.md`](design-decisions/mb.40-custom-spell-ingredients.md);
+this is what holds it in the database.
+
+- **`ingredient_id` is nullable, and the foreign key stays.** Nullability costs
+  nothing in integrity because the first CHECK below forbids the row that would
+  exploit it — §14's "nullable FKs plus `num_nonnulls`" idiom.
+- **Four CHECKs**, each named so a refusal says which rule it broke:
+  `spell_ingredients_ingredient_or_name` is
+  `num_nonnulls(ingredient_id, name) = 1`;
+  `spell_ingredients_form_only_on_custom` is
+  `ingredient_id is null or form is null`, because `form` beside an ingredient
+  id would be a second copy of half that ingredient's identity;
+  `spell_ingredients_name_not_blank` and `spell_ingredients_form_not_blank` are
+  the `ingredients_form_not_blank` idiom, since a blank name would satisfy
+  `num_nonnulls` and name nothing.
+- **Two partial unique indexes, one per kind of row.**
+  `spell_ingredients_spell_id_ingredient_id_unique` on
+  `(spell_id, ingredient_id) WHERE ingredient_id IS NOT NULL` is one ingredient
+  per jar — what the M10.2 key used to give — and
+  `spell_ingredients_spell_id_custom_name_unique` on
+  `(spell_id, lower(name)) WHERE ingredient_id IS NULL` is one custom name per
+  jar, the shape of `ingredients_workspace_label_unique`. Both are partial and
+  neither predicate is rule 4's: there is still no `deleted_at` here. The
+  predicate is a discriminator, so each index covers exactly the rows that have
+  the column it is unique on.
+- **Name only, not name plus form, in the custom-name index.** A custom row is
+  never matched against anything, so there is no identity key for `form` to be
+  part of; a jar that wants valerian root and valerian leaf writes two names.
+  This is the one judgment call in the shape, and the decision record says so.
+- **Still hard-deleted, still the four stamps.** A custom row carries content,
+  but content addressable only through its spell — unlike a folk name, which
+  stands on its own — and MB.34's deciding argument was the
+  `deleted_at IS NULL` a service joining _through_ this table would have to
+  remember by hand, which is exactly how derived categories (M10.7) reach
+  `ingredient_categories`.
+- **`form` is text, not a foreign key**, for the reason `ingredients.form` is
+  not: a member must be able to write `rhizome` before anyone has curated it.
+
+`spell-ingredients-schema.test.ts` proves every refusal by its
+`constraint_name` and pairs each with the insert that shows why it could have
+succeeded: `form` on a linked row is refused where the same `form` on a custom
+row is accepted; `Threshold Salt` and `threshold salt` collide in one jar and
+not across two; the same ingredient twice is refused by the partial index, a
+layer collision by the key. What Wave 13 inherits — the Zod exclusive-or, the
+skip in derived categories, no suppression, no held/not-held, no safety source
+— is written into each task's criteria rather than left to be remembered.
 
 ### The rest of the calls, and the ones not made
 
@@ -801,9 +876,11 @@ constraint the reorder has to work within is written down before the reorder is.
   no v1 feature lists spells by ingredient, so the asymmetry is §5's rather than
   an oversight.
 
-Both tables are inert at Wave 3. Nothing queries them until M10.5's service and
-M10.10's mutations land in Wave 13 — the table-task-then-behaviour-task rule,
-and the reason the DDL can be constrained now, while the tables are empty.
+Both tables are inert until Wave 13. Nothing queries them until M10.5's service
+and M10.10's mutations land — the table-task-then-behaviour-task rule, the
+reason the DDL could be constrained at Wave 3 while the tables were empty, and
+the reason MB.40 could reshape `spell_ingredients` in Wave 4 as a contract
+migration against zero rows rather than as a retrofit across every consumer.
 
 Every guard above was verified load-bearing rather than assumed, by rebuilding
 the shipped migration with each stripped in turn: without the layer index two
@@ -1287,7 +1364,8 @@ to make it possible, and a delete rolls back with the rest of its transaction.
 the real table rather than the scratch pair: `write.delete` removes the row
 outright, the pair can be re-added afterwards — by a different member, whose
 stamps the new row carries — and an ingredient's other categories are untouched.
-`spell_ingredients` (M10.2, migration `0014_cooing_bug.sql`) is the second, and
+`spell_ingredients` (M10.2, migration `0014_cooing_bug.sql`; reshaped by MB.40's
+`0017`, and hard-deleted still) is the second, and
 `spell_categories` (M10.4, migration `0015_wooden_zaran.sql`) the third; each
 repeats those three assertions against its own table, so the shape is proved
 where it is used rather than once in the abstract.
