@@ -26,11 +26,11 @@ every change follows are in [`CLAUDE.md`](CLAUDE.md).
 6. Before every commit: `npm run pre-commit` (lint, `format:check`, typecheck).
 
 The Docker stack (`make docker-up`) and the component workshop
-(`npm run workshop`, on 61000) both work today. Still to come: the database and
-seed data (M1.3) and GraphQL codegen (M3.5) — `npm run db:*` and
-`npm run codegen` exit non-zero until then. Once Vitest is wired (M1.7), verify
-with the **`:coverage`** script variants — a plain `npm run test` pass can
-still fail CI's 80% threshold.
+(`npm run workshop`, on 61000) both work today, as do `npm run db:migrate` and
+`npm run db:seed` (the `minimal` scenario, M1.21; `standard` and `demo` land in
+M1.22–M1.23). Still to come: GraphQL codegen (M3.5) — `npm run codegen` exits
+non-zero until then. Verify with the **`:coverage`** script variants — a plain
+`npm run test` pass can still fail CI's 80% threshold.
 
 `make` and `docker` are host-level; the devcontainer has neither, so run the
 npm scripts directly inside it.
