@@ -170,12 +170,13 @@ DESIGN.md §5 specifies three tables that land in Wave 3: M4.1 creates
 adds its three partial unique indexes — **merged**, same schema file, migration
 `0006_wandering_mockingbird.sql`; M4.2a creates `ingredient_forms` —
 **merged**, `src/db/schema/ingredient-forms.ts`, migration
-`0008_unknown_lyja.sql`; and M4.4a creates `ingredient_folk_names`. MB.28
+`0008_unknown_lyja.sql`; and M4.4a creates `ingredient_folk_names` —
+**merged**, `src/db/schema/ingredient-folk-names.ts`, migration
+`0010_broken_shiver_man.sql`. MB.28
 recorded the model here first, ahead of that DDL, so M4.1 was transcription
 rather than design — the same reasoning as CLAUDE.md's table-then-behaviour
 rule, one step earlier: cheapest to get right before anything depends on it.
-What follows describes `ingredients` and `ingredient_forms` as built, and the
-one table still to come.
+What follows describes all three as built.
 
 - **`ingredients`** — `id`, `workspaceId` (nullable: `NULL` is the compendium
   tier, non-null is a workspace's own ingredient), `name`, `canonicalName`,
@@ -192,7 +193,15 @@ one table still to come.
   §14).
 - **`ingredient_folk_names`** — `id`, `ingredientId` (FK to `ingredients`),
   `name`, + audit. Common names, one row each, scoped to the ingredient that
-  claims them.
+  claims them. Two indexes: `ingredient_folk_names_unique` over
+  `(ingredient_id, lower(name))`, partial on `deleted_at IS NULL`, and
+  `ingredient_folk_names_trgm`, a plain `gin_trgm_ops` index on `name` — which
+  is what M4.7's common-name matching reads, and what the array column it
+  replaces could not have carried. The surrogate `id` is not redundant beside
+  that unique index: the index is unique among _live_ rows only and a primary
+  key carries no predicate, and M8.3a's promotion swaps one named row rather
+  than reconstructing a pair. No locale or region column — DESIGN.md §5 records
+  no regional requirement and nothing renders one.
 - **`ingredient_forms`** — `id`, `name`, `slug`, `groupId`, `description`, +
   audit. Shaped like `categories`: global, admin-curated, no workspace
   scoping. This is the third resource admins curate globally, alongside the
