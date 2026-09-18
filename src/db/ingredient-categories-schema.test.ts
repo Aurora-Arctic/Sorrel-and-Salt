@@ -1,0 +1,390 @@
+import { readFileSync, readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import postgres from 'postgres';
+import { and, eq } from 'drizzle-orm';
+import { getTableConfig } from 'drizzle-orm/pg-core';
+import { categories } from './schema/categories';
+import { ingredientCategories } from './schema/ingredient-categories';
+import { ingredients } from './schema/ingredients';
+import { users } from './schema/users';
+import { findMany, withAudit } from './repository';
+
+const STAMP_COLUMNS = ['created_at', 'created_by', 'updated_at', 'updated_by'];
+const DELETE_COLUMNS = ['deleted_at', 'deleted_by'];
+
+const PRIMARY_KEY = 'ingredient_categories_ingredient_id_category_id_pk';
+const REVERSE_INDEX = 'ingredient_categories_category_id_idx';
+const INGREDIENT_FK = 'ingredient_categories_ingredient_id_ingredients_id_fk';
+const CATEGORY_FK = 'ingredient_categories_category_id_categories_id_fk';
+
+describe('ingredient_categories schema', () => {
+  const { columns, indexes, primaryKeys, foreignKeys } = getTableConfig(ingredientCategories);
+  const byName = Object.fromEntries(columns.map((c) => [c.name, c]));
+  const foreignKeyByColumn = Object.fromEntries(
+    foreignKeys.map((fk) => {
+      const { columns: local, foreignColumns, foreignTable } = fk.reference();
+      return [local[0].name, { foreignColumnName: foreignColumns[0].name, foreignTable }];
+    }),
+  );
+
+  it('has DESIGN.md §5 columns and nothing else', () => {
+    expect(Object.keys(byName).sort()).toEqual(
+      ['ingredient_id', 'category_id', ...STAMP_COLUMNS].sort(),
+    );
+  });
+
+  // MB.34, and the whole reason this table is shaped unlike every other one:
+  // the four stamps, not the six. `created_by` still answers who added this
+  // category to this ingredient; there is simply no tombstone per chip toggle.
+  it('spreads the four audit stamps, each required', () => {
+    for (const column of STAMP_COLUMNS) {
+      expect(byName[column]).toBeDefined();
+      expect(byName[column].notNull).toBe(true);
+    }
+  });
+
+  it('carries no delete columns: a removed pair leaves no row', () => {
+    for (const column of DELETE_COLUMNS) {
+      expect(byName[column]).toBeUndefined();
+    }
+  });
+
+  // A surrogate id would let the same pair be assigned twice, which is exactly
+  // what the composite key exists to refuse — as on `workspace_members`.
+  it('has no surrogate id, keying on the pair instead', () => {
+    expect(byName.id).toBeUndefined();
+
+    const [key, ...rest] = primaryKeys;
+    expect(rest).toEqual([]);
+    expect(key.columns.map((column) => column.name)).toEqual(['ingredient_id', 'category_id']);
+    expect(key.getName()).toBe(PRIMARY_KEY);
+  });
+
+  it('requires both sides of the pair', () => {
+    expect(byName.ingredient_id.notNull).toBe(true);
+    expect(byName.category_id.notNull).toBe(true);
+  });
+
+  it('points each side at its own table by foreign key', () => {
+    expect(foreignKeyByColumn.ingredient_id.foreignTable).toBe(ingredients);
+    expect(foreignKeyByColumn.ingredient_id.foreignColumnName).toBe('id');
+    expect(foreignKeyByColumn.category_id.foreignTable).toBe(categories);
+    expect(foreignKeyByColumn.category_id.foreignColumnName).toBe('id');
+  });
+
+  it('references users.id from every audit id (MB.5)', () => {
+    for (const column of ['created_by', 'updated_by']) {
+      expect(foreignKeyByColumn[column]).toBeDefined();
+      expect(foreignKeyByColumn[column].foreignColumnName).toBe('id');
+      expect(foreignKeyByColumn[column].foreignTable).toBe(users);
+    }
+    // The delete stamp every other table carries has no counterpart here.
+    expect(foreignKeyByColumn.deleted_by).toBeUndefined();
+  });
+
+  // The primary key indexes (ingredient_id, category_id), which answers "what
+  // is this ingredient tagged with"; the reverse question — "what is in this
+  // category" — needs its own index, `category_id` leading.
+  it('indexes the reverse direction, category to ingredient', () => {
+    const reverse = indexes.find((index) => index.config.name === REVERSE_INDEX);
+
+    expect(reverse).toBeDefined();
+    expect(reverse?.config.unique).toBe(false);
+    expect(reverse?.config.columns.map((column) => (column as { name: string }).name)).toEqual([
+      'category_id',
+      'ingredient_id',
+    ]);
+  });
+
+  // Rule 4's partial-index convention exists to stop a tombstone reserving a
+  // name, and this table has no tombstone to dodge: the pair is either there or
+  // it is not. A `WHERE deleted_at IS NULL` here would not even compile.
+  it('carries no partial index: there is no soft-delete predicate to write', () => {
+    for (const index of indexes) {
+      expect(index.config.where).toBeUndefined();
+    }
+  });
+});
+
+const MIGRATIONS_DIR = fileURLToPath(new URL('./migrations', import.meta.url));
+
+function migrationFiles(): string[] {
+  return readdirSync(MIGRATIONS_DIR)
+    .filter((name) => name.endsWith('.sql'))
+    .sort()
+    .map((name) =>
+      readFileSync(fileURLToPath(new URL(`./migrations/${name}`, import.meta.url)), 'utf8'),
+    );
+}
+
+function migrationStatementsContaining(marker: string): string[] {
+  const file = migrationFiles().find((contents) => contents.includes(marker));
+
+  if (!file) throw new Error(`No migration in src/db/migrations contains ${marker}`);
+
+  return file
+    .split('--> statement-breakpoint')
+    .map((statement) => statement.trim())
+    .filter(Boolean);
+}
+
+// The behaviour half, applying the shipped migration into this worker's
+// disposable clone rather than hand-copying its DDL — what is asserted below is
+// then the SQL production runs. `users`, `ingredients` and `categories` are
+// stubbed to the one column this table's foreign keys point at, exactly as the
+// categories and ingredient-forms tests stub `users`.
+const AUTHOR = '11111111-1111-1111-1111-111111111111';
+const SECOND_AUTHOR = '22222222-2222-2222-2222-222222222222';
+const MUGWORT = '33333333-3333-3333-3333-333333333333';
+const ROSEMARY = '44444444-4444-4444-4444-444444444444';
+const PROTECTION = '55555555-5555-5555-5555-555555555555';
+const CLEANSING = '66666666-6666-6666-6666-666666666666';
+const ABSENT = '99999999-9999-9999-9999-999999999999';
+
+let sql: ReturnType<typeof postgres>;
+
+async function assign(ingredientId: string, categoryId: string, author = AUTHOR): Promise<void> {
+  await sql`
+    insert into ingredient_categories (ingredient_id, category_id, created_by, updated_by)
+    values (${ingredientId}, ${categoryId}, ${author}, ${author})
+  `;
+}
+
+async function failureOf(work: Promise<unknown>) {
+  return await work.then(
+    () => {
+      throw new Error('expected the statement to be rejected, but it succeeded');
+    },
+    (error: postgres.PostgresError) => error,
+  );
+}
+
+async function columnNames(table: string): Promise<string[]> {
+  const rows = await sql`
+    select column_name from information_schema.columns
+    where table_name = ${table} order by column_name
+  `;
+  return rows.map((r) => r.column_name as string);
+}
+
+async function pairs(): Promise<{ ingredientId: string; categoryId: string }[]> {
+  const rows = await sql`
+    select ingredient_id, category_id from ingredient_categories
+    order by ingredient_id, category_id
+  `;
+  return rows.map((row) => ({
+    ingredientId: row.ingredient_id as string,
+    categoryId: row.category_id as string,
+  }));
+}
+
+async function indexDefinition(name: string): Promise<{ unique: boolean; definition: string }> {
+  const [found] = await sql`
+    select i.indisunique as unique, pg_get_indexdef(i.indexrelid) as definition
+    from pg_index i
+    join pg_class c on c.oid = i.indexrelid
+    where i.indrelid = 'ingredient_categories'::regclass and c.relname = ${name}
+  `;
+  return found as unknown as { unique: boolean; definition: string };
+}
+
+beforeAll(async () => {
+  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
+
+  await sql`drop table if exists ingredient_categories`;
+  await sql`create table if not exists users (id uuid primary key)`;
+  await sql`create table if not exists ingredients (id uuid primary key)`;
+  await sql`create table if not exists categories (id uuid primary key)`;
+  await sql`
+    insert into users (id) values (${AUTHOR}), (${SECOND_AUTHOR}) on conflict do nothing
+  `;
+  await sql`
+    insert into ingredients (id) values (${MUGWORT}), (${ROSEMARY}) on conflict do nothing
+  `;
+  await sql`
+    insert into categories (id) values (${PROTECTION}), (${CLEANSING}) on conflict do nothing
+  `;
+
+  for (const statement of migrationStatementsContaining('CREATE TABLE "ingredient_categories"')) {
+    await sql.unsafe(statement);
+  }
+});
+
+beforeEach(async () => {
+  await sql`delete from ingredient_categories`;
+});
+
+afterAll(async () => {
+  await sql`drop table if exists ingredient_categories`;
+  await sql`drop table if exists categories`;
+  await sql`drop table if exists ingredients`;
+  await sql`drop table if exists users`;
+  await sql.end();
+});
+
+describe('ingredient_categories table', () => {
+  it('carries the four stamp columns and neither delete column', async () => {
+    expect(await columnNames('ingredient_categories')).toEqual(
+      ['ingredient_id', 'category_id', ...STAMP_COLUMNS].sort(),
+    );
+  });
+
+  describe('the composite primary key', () => {
+    // Story 22, and the precondition for the refusal below: several categories
+    // per ingredient insert fine, so what stops the duplicate is the key on the
+    // pair rather than the insert never working at all.
+    it('lets an ingredient carry several categories, and a category several ingredients', async () => {
+      await assign(MUGWORT, PROTECTION);
+      await assign(MUGWORT, CLEANSING);
+      await assign(ROSEMARY, PROTECTION);
+
+      expect(await pairs()).toEqual([
+        { ingredientId: MUGWORT, categoryId: PROTECTION },
+        { ingredientId: MUGWORT, categoryId: CLEANSING },
+        { ingredientId: ROSEMARY, categoryId: PROTECTION },
+      ]);
+    });
+
+    it('refuses to assign the same category to the same ingredient twice', async () => {
+      await assign(MUGWORT, PROTECTION);
+
+      const error = await failureOf(assign(MUGWORT, PROTECTION));
+
+      // 23505 is unique_violation, named: proof the insert reached the primary
+      // key rather than failing some other constraint first.
+      expect(error.code).toBe('23505');
+      expect(error.constraint_name).toBe(PRIMARY_KEY);
+    });
+
+    // The pair is the identity; the stamps are only who touched it. A second
+    // member toggling the same chip on is the same row, not a second one.
+    it('refuses the duplicate whoever is adding it', async () => {
+      await assign(MUGWORT, PROTECTION);
+
+      const error = await failureOf(assign(MUGWORT, PROTECTION, SECOND_AUTHOR));
+
+      expect(error.code).toBe('23505');
+      expect(error.constraint_name).toBe(PRIMARY_KEY);
+    });
+  });
+
+  describe('both sides are real rows', () => {
+    it('refuses an ingredient id no ingredient holds', async () => {
+      const error = await failureOf(assign(ABSENT, PROTECTION));
+
+      // 23503 is foreign_key_violation.
+      expect(error.code).toBe('23503');
+      expect(error.constraint_name).toBe(INGREDIENT_FK);
+    });
+
+    it('refuses a category id no category holds', async () => {
+      const error = await failureOf(assign(MUGWORT, ABSENT));
+
+      expect(error.code).toBe('23503');
+      expect(error.constraint_name).toBe(CATEGORY_FK);
+    });
+
+    it('refuses an insert omitting the ingredient', async () => {
+      const error = await failureOf(sql`
+        insert into ingredient_categories (category_id, created_by, updated_by)
+        values (${PROTECTION}, ${AUTHOR}, ${AUTHOR})
+      `);
+
+      // 23502 is not_null_violation on that exact column.
+      expect(error.code).toBe('23502');
+      expect(error.column_name).toBe('ingredient_id');
+    });
+
+    it('refuses an insert omitting the category', async () => {
+      const error = await failureOf(sql`
+        insert into ingredient_categories (ingredient_id, created_by, updated_by)
+        values (${MUGWORT}, ${AUTHOR}, ${AUTHOR})
+      `);
+
+      expect(error.code).toBe('23502');
+      expect(error.column_name).toBe('category_id');
+    });
+  });
+
+  // Both directions, asserted from the catalogue: a chip section on an
+  // ingredient page reads the pair one way, and a category filter reads it the
+  // other. The primary key covers the first; without the second index the
+  // category filter is a sequential scan over every assignment in the database.
+  describe('lookup in both directions', () => {
+    it('indexes the pair from the ingredient side, as the primary key', async () => {
+      const index = await indexDefinition(PRIMARY_KEY);
+
+      expect(index).toBeDefined();
+      expect(index.unique).toBe(true);
+      expect(index.definition).toContain('(ingredient_id, category_id)');
+    });
+
+    it('indexes the pair from the category side too', async () => {
+      const index = await indexDefinition(REVERSE_INDEX);
+
+      expect(index).toBeDefined();
+      // Not unique: the pair's uniqueness is the primary key's job, and a
+      // unique index here would refuse a category its second ingredient.
+      expect(index.unique).toBe(false);
+      expect(index.definition).toContain('(category_id, ingredient_id)');
+    });
+  });
+});
+
+// MB.34's type constraints exercised against the real table rather than
+// `repository.test.ts`'s scratch pair: `write.delete` compiles against this one
+// because it carries no `deletedAt`, and what it leaves behind is nothing.
+describe('a pair removed through write.delete', () => {
+  const session = { userId: AUTHOR };
+
+  const isPair = (ingredientId: string, categoryId: string) =>
+    and(
+      eq(ingredientCategories.ingredientId, ingredientId),
+      eq(ingredientCategories.categoryId, categoryId),
+    ) as ReturnType<typeof eq>;
+
+  const add = (ingredientId: string, categoryId: string, author = AUTHOR) =>
+    withAudit({ userId: author }, (write) =>
+      write.insert(ingredientCategories, { ingredientId, categoryId }),
+    );
+
+  const remove = (ingredientId: string, categoryId: string) =>
+    withAudit(session, (write) =>
+      write.delete(ingredientCategories, isPair(ingredientId, categoryId)),
+    );
+
+  it('is deleted outright, leaving no row to filter out', async () => {
+    await add(MUGWORT, PROTECTION);
+
+    const removed = await remove(MUGWORT, PROTECTION);
+
+    expect(removed).toHaveLength(1);
+    expect(await pairs()).toEqual([]);
+    // Not merely filtered out of the finder: `findMany` writes no
+    // `deleted_at IS NULL` for a table that has no such column, so an empty
+    // read here is an empty table.
+    expect(await findMany(ingredientCategories)).toEqual([]);
+  });
+
+  it('can be re-added afterwards, with no partial index to make it possible', async () => {
+    await add(MUGWORT, PROTECTION);
+    await remove(MUGWORT, PROTECTION);
+
+    const [readded] = await add(MUGWORT, PROTECTION, SECOND_AUTHOR);
+
+    expect(await pairs()).toEqual([{ ingredientId: MUGWORT, categoryId: PROTECTION }]);
+    // Re-adding is an ordinary insert, so the row's stamps are the second
+    // member's — not the first author's, resurrected.
+    expect(readded.createdBy).toBe(SECOND_AUTHOR);
+  });
+
+  it('leaves the ingredient other categories alone', async () => {
+    await add(MUGWORT, PROTECTION);
+    await add(MUGWORT, CLEANSING);
+
+    await remove(MUGWORT, PROTECTION);
+
+    expect(await pairs()).toEqual([{ ingredientId: MUGWORT, categoryId: CLEANSING }]);
+  });
+});
