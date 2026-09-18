@@ -1692,7 +1692,8 @@ transcribed copy is exactly what rots.
 `src/db/seed/standard.ts` implements DESIGN.md §"Seed data"'s second scenario:
 five fixture users, workspaces W and X, and a populated compendium. It is the
 fixture every authorization test reads against, which is why the cast is fixed
-rather than generated — `asUser(A)` (M1.26) has to mean the same person in
+rather than generated — `asUser(A)` (M1.26, `src/test/as-user.ts`, which
+re-exports this module's own `FIXTURE_USERS`) has to mean the same person in
 every suite, and an id a test can name beats one this run happened to produce.
 
 | User | Id      | Role    | Where                 |
