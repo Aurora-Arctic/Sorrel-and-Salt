@@ -111,16 +111,17 @@ output or CI behaviour changes when it's unset. Full setup:
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
-  `seed(db, { scenario: 'minimal' })` from `src/db/seed/index.ts`. That
-  function exists only as an interface for now — it throws for every
-  scenario. The tables it will populate mostly don't exist yet either: Wave 1
-  created `users` and Better Auth's three adapter tables, and everything else
-  §5 specifies lands in Wave 3. Scenario content arrives scenario-by-scenario
-  in M1.21 (`minimal`), M1.22 (`standard`), and M1.23 (`demo`); scenario
-  selection by environment variable is M1.24.
-- **`npm run db:reset`** is `db:migrate` then `db:seed` — real plumbing, but
-  it fails until `db:seed` has something to do. The Docker-level reset (init
-  hook, `make db-reset`, drop-and-recreate from a broken state) is M1.24.
+  `seed(db, { scenario: 'minimal' })` from `src/db/seed/index.ts` and then
+  closes the pool `connection.ts` opened, or the process never exits.
+  `minimal` is implemented (M1.21, "The seed module" below); `standard`
+  (M1.22) and `demo` (M1.23) throw before touching the database, and
+  scenario selection by environment variable is M1.24. The script runs
+  through **`tsx`**, alone among the scripts: bare Node's type stripping
+  resolves no extensionless relative import, and the seed is the first thing
+  under `src/` a script executes that has one.
+- **`npm run db:reset`** is `db:migrate` then `db:seed`, and works against
+  the local `sorrel` database. The Docker-level reset (init hook, `make
+db-reset`, drop-and-recreate from a broken state) is M1.24.
 - **`Docker/postgres-init/enable-extensions.sql`** also creates the `sorrel`
   role and database now, not just `pg_trgm`. Without it, a container built
   from `Dockerfile.postgres` would never get a `sorrel` role/database at
@@ -1402,6 +1403,55 @@ The table is inert at Wave 3 — nothing queries it until Wave 13, where M10.5's
 service and M10.9's queries are its first readers, which is the
 table-task-then-behaviour-task rule and the reason the DDL can be constrained
 now, while the table is empty.
+
+## The seed module (M1.21)
+
+`src/db/seed/index.ts` exports `seed(db, { scenario })` — DESIGN.md's one
+module for Docker, Vitest and Playwright, so a bug reproduces identically in
+all three. Each consumer hands over its own handle; `SeedDatabase`
+(`PostgresJsDatabase<Record<string, unknown>>`) is what `drizzle(client)`
+actually returns, and is the parameter type because the bare
+`PostgresJsDatabase` the stub declared defaults its schema to
+`Record<string, never>` and rejects a real handle — unnoticed until this
+task because `scripts/` is outside `tsconfig.json`'s `include`, so
+`db-seed.ts`'s call was never typechecked.
+
+**The seed writes through the handle it is given, not through `withAudit`**
+— the one write path beside `src/lib/auth.ts`'s sign-up hook that does not,
+and for the same reason: it is an identity bootstrap with no session to hand
+over. What `withAudit` guarantees is kept rather than re-argued: one
+transaction, `app.current_user_id` published first in the same
+parameterised `set_config` form (M1.19), every stamp produced by the shared
+`applyAudit`. The seed cannot hold any other handle — `src/db/seed/` is not
+among the four files allowed to import `connection.ts` — which is what makes
+the handle honest. The reasoning, and the alternatives it rules out, are in
+[`design-decisions/m1.21-seed-writes-through-its-handle.md`](design-decisions/m1.21-seed-writes-through-its-handle.md).
+
+**`minimal`** (`src/db/seed/minimal.ts`): one admin, one user, empty
+compendium. The admin is the bootstrap user under the fixed
+`BOOTSTRAP_USER_ID` (`…0001`, MB.5), inserted as its own
+`created_by`/`updated_by` in a single self-satisfying statement; the plain
+user is `MINIMAL_USER_ID` (`…0002`), created by the bootstrap user. Both
+keep `canCreateWorkspace` false — a bare install has granted nothing. It is
+**idempotent by fixed id** (`ON CONFLICT (id) DO NOTHING`), not by
+truncating: a re-run adds nothing, and nothing is dropped — the reset that
+drops is M1.24's. `standard` and `demo` throw until M1.22 and M1.23.
+
+Two rules a later scenario inherits. Import a schema module **before**
+`audit` in a seed file: `audit.ts` and `schema/users.ts` import each other,
+and entered via `audit.ts` the `users` table is built while `auditColumns` is
+still undefined, so the insert carries no `created_by` (every db test under
+`src/db/` already orders them this way). And write through the handle,
+stamping via `applyAudit`, in `minimal.ts`'s shape.
+
+`src/db/seed/index.test.ts` is the `db`-project test: it applies the full
+migration set into the worker's clone (the M1.18 pattern — the seed writes
+into the real `users` table with its real self-referencing FKs, and "the
+compendium is empty" needs tables to count), hands `seed()` a handle of its
+own, and asserts the two rows, the fixed ids, the creator chain, idempotency,
+and — through an `AFTER INSERT` trigger recording `current_setting('app.
+current_user_id', true)` — that the GUC was published, the same
+observation trick `repository.test.ts` uses.
 
 ## Who may import the client (M1.17)
 
