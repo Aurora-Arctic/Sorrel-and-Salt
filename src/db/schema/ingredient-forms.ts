@@ -6,15 +6,15 @@ import { auditColumns } from '../audit';
 // admin-curated, the same shape `category_groups` has minus its colour pair.
 //
 // A table rather than an enum for the same reason MB.35 gave for category
-// groups: organism part / preparation / matter is a set that has already grown
-// twice, `ALTER TYPE … ADD VALUE` is DDL, and an admin mutation cannot run DDL
-// at all. The three §5 names are a starting set, seeded by M4.3a.
+// groups: the set has already grown twice, `ALTER TYPE … ADD VALUE` is DDL, and
+// an admin mutation cannot run DDL at all. §5's six names — Botanical, Animal,
+// Mineral, Substance, Fluid, Curio — are a starting set, seeded by M4.3a.
 //
 // No colour, unlike `category_groups` — a form group sections an autofill
 // dropdown, it is not a chip, so there is no ground to contrast against and
 // nothing for M5.6b to validate. And no order column: groups render
-// alphabetically by `name`, so an admin-added fourth lands where a reader would
-// look for it rather than at the end.
+// alphabetically by `name`, so an admin-added seventh lands where a reader
+// would look for it rather than at the end.
 export const ingredientFormGroups = pgTable(
   'ingredient_form_groups',
   {
@@ -78,12 +78,12 @@ export const ingredientForms = pgTable(
     // it.
     //
     // The display name carries no index, which leaves one gap deliberately
-    // open: two live forms may both be called "Root", one an organism part and
-    // one a preparation. `ingredients.form` stores the string rather than an
+    // open: two live forms may both be called "Wax", one an animal part and
+    // one a substance. `ingredients.form` stores the string rather than an
     // id, so nothing downstream can tell the two rows apart — the autofill is
     // where that ambiguity is resolved instead, M4.7a returning each
-    // suggestion's group and M5.10a rendering it, so the dropdown offers "Root
-    // (organism part)" beside "Root (preparation)". Recorded in db.md with the
+    // suggestion's group and M5.10a rendering it, so the dropdown offers "Wax
+    // (animal)" beside "Wax (substance)". Recorded in db.md with the
     // reasoning, and asserted by test so it stays a decision rather than an
     // oversight.
     uniqueIndex('ingredient_forms_slug_unique')

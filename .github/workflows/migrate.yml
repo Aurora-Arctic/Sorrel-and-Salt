@@ -1,9 +1,10 @@
 name: Migrate
 
 # Reusable workflow that prepares a target database ahead of a Vercel deploy:
-# it applies pending Drizzle migrations, and then — when `seed-categories`
-# says so — seeds DESIGN.md §6's category vocabulary into the schema those
-# migrations just created. Called via workflow_call from deploy.yml with a
+# it applies pending Drizzle migrations, and then — when `seed-reference`
+# says so — seeds DESIGN.md §6's category vocabulary and §5's ingredient form
+# vocabulary into the schema those migrations just created. Called via
+# workflow_call from deploy.yml with a
 # `needs:` dependency so `deploy` never promotes a build against a schema its
 # own migrations haven't reached yet — DESIGN.md §12, "New migrate.yml" row.
 #
@@ -39,13 +40,13 @@ on:
         description: Vercel environment to pull DATABASE_URL for (preview or production)
         required: true
         type: string
-      seed-categories:
+      seed-reference:
         description: >-
-          Seed DESIGN.md §6's category vocabulary after migrating. deploy.yml
-          passes true only when the push changed the seed's own files — the
-          seed is additive and idempotent, so running it again would be
-          harmless, but "harmless" is not a reason to write to production on
-          every merge.
+          Seed the two reference vocabularies after migrating — DESIGN.md §6's
+          categories and §5's ingredient forms. deploy.yml passes true only
+          when the push changed a seed's own files — both seeds are additive
+          and idempotent, so running them again would be harmless, but
+          "harmless" is not a reason to write to production on every merge.
         required: false
         default: false
         type: boolean
@@ -188,23 +189,27 @@ jobs:
           log-file: migrate.log
           summary: ${{ steps.migrate.outcome == 'success' && 'Migrations applied' || 'Migration failed' }}
 
-      # M4.3 — after the migrations, because the tables it writes into are the
-      # ones they create. It is how §6's vocabulary reaches staging and
-      # production at all: deploys are CI-only (CLAUDE.md) and there is no
-      # shell on either database, so reference data has to arrive with the
-      # deploy that needs it.
-      - name: Seed the category vocabulary
+      # M4.3, extended by M4.3a — after the migrations, because the tables they
+      # write into are the ones those create. It is how §6's category
+      # vocabulary and §5's form vocabulary reach staging and production at
+      # all: deploys are CI-only (CLAUDE.md) and there is no shell on either
+      # database, so reference data has to arrive with the deploy that needs
+      # it. One step rather than two: they share a gate, a log and a summary,
+      # and a form vocabulary seeded while the categories failed is not a state
+      # worth reporting separately.
+      - name: Seed the reference vocabularies
         id: seed
-        if: steps.guard.outputs.enabled == 'true' && inputs.seed-categories
+        if: steps.guard.outputs.enabled == 'true' && inputs.seed-reference
         run: |
           set -o pipefail
           npm run db:seed:categories 2>&1 | tee seed.log
+          npm run db:seed:forms 2>&1 | tee -a seed.log
 
       - name: Write seed job summary
-        if: always() && steps.guard.outputs.enabled == 'true' && inputs.seed-categories
+        if: always() && steps.guard.outputs.enabled == 'true' && inputs.seed-reference
         uses: ./.github/actions/job-summary
         with:
-          check-name: Seed categories (${{ inputs.environment }})
+          check-name: Seed reference data (${{ inputs.environment }})
           outcome: ${{ steps.seed.outcome }}
           log-file: seed.log
-          summary: ${{ steps.seed.outcome == 'success' && 'Category vocabulary seeded' || 'Seed failed' }}
+          summary: ${{ steps.seed.outcome == 'success' && 'Category and form vocabularies seeded' || 'Seed failed' }}

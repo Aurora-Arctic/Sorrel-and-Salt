@@ -237,9 +237,9 @@ type Row = Record<string, string | null>;
 
 function groupRow(overrides: Row = {}): Row {
   return {
-    name: 'Organism part',
-    slug: 'organism-part',
-    description: 'A part of the plant, fungus, animal or mineral itself.',
+    name: 'Botanical',
+    slug: 'botanical',
+    description: 'Parts of a plant or fungus.',
     created_by: AUTHOR,
     updated_by: AUTHOR,
     ...overrides,
@@ -477,10 +477,10 @@ describe('ingredient_forms table', () => {
     // alongside it.
     it('rejects a shared slug across two different groups', async () => {
       const organismPart = await insertGroup();
-      const preparation = await insertGroup({ name: 'Preparation', slug: 'preparation' });
+      const substance = await insertGroup({ name: 'Substance', slug: 'substance' });
       await insertForm(organismPart);
 
-      const error = await failureOf(insertForm(preparation, { slug: 'root' }));
+      const error = await failureOf(insertForm(substance, { slug: 'root' }));
 
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(FORMS_SLUG_UNIQUE);
@@ -489,19 +489,19 @@ describe('ingredient_forms table', () => {
 
   // The deliberate gap, asserted so it stays deliberate. Uniqueness is on the
   // slug alone on all four vocabulary tables (MB.35), so two live forms may
-  // both be called "Root" — one an organism part, one a preparation. Nothing in
+  // both be called "Wax" — one an animal part, one a substance. Nothing in
   // the database distinguishes them, and `ingredients.form` stores the string
   // rather than an id, so the autofill is where the ambiguity has to be
   // resolved: M4.7a returns each suggestion's group and M5.10a renders it, so a
-  // reader picking from the dropdown sees "Root (organism part)" beside "Root
-  // (preparation)". If a `name` index is ever added here, that pair of
+  // reader picking from the dropdown sees "Wax (animal)" beside "Wax
+  // (substance)". If a `name` index is ever added here, that pair of
   // requirements is what it supersedes — say so rather than deleting this test.
   it('permits two live forms to share a display name, told apart by their group', async () => {
     const organismPart = await insertGroup();
-    const preparation = await insertGroup({ name: 'Preparation', slug: 'preparation' });
+    const substance = await insertGroup({ name: 'Substance', slug: 'substance' });
 
     await insertForm(organismPart);
-    await insertForm(preparation, { slug: 'root-preparation' });
+    await insertForm(substance, { slug: 'root-preparation' });
 
     const rows = await sql`
       select f.name, g.name as group_name
@@ -509,7 +509,7 @@ describe('ingredient_forms table', () => {
       order by g.name
     `;
     expect(rows.map((r) => r.name)).toEqual(['Root', 'Root']);
-    expect(rows.map((r) => r.group_name)).toEqual(['Organism part', 'Preparation']);
+    expect(rows.map((r) => r.group_name)).toEqual(['Botanical', 'Substance']);
   });
 
   it('requires the name, slug and description', async () => {

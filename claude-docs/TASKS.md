@@ -1387,7 +1387,7 @@ _Story:_ As an admin, I want a curated vocabulary of ingredient forms shaped lik
 
 Add `ingredient_form_groups` (id, name, slug, description, audit) and `ingredient_forms` — global, admin-curated, shaped like `categories` — with `name`, `slug`, `groupId` and a required `description`, so a curated value like `rootBark` can explain itself. Same shape as M4.2, adjacent task. Deliberately **not** a foreign key target for `ingredients.form`, which stays free text — the curated table is a vocabulary, not a constraint.
 
-**Re-scoped by MB.35**, alongside M4.2 and for the same reason: the three form groups (organism part / preparation / matter) are a set that has already grown twice, so they are rows rather than an enum. No colour and no order column — form groups section an autofill dropdown alphabetically, they are not chips. Note the two directions of the same table sitting side by side here: `ingredient_forms.groupId` is a foreign key because only an admin writes it, while `ingredients.form` stays text because a member writes it. That asymmetry is the rule stated in DESIGN.md §5, not an inconsistency to tidy up.
+**Re-scoped by MB.35**, alongside M4.2 and for the same reason: the form groups are a set that has already grown twice — and again in M4.3a, which replaced the original three with §5's six — so they are rows rather than an enum. No colour and no order column — form groups section an autofill dropdown alphabetically, they are not chips. Note the two directions of the same table sitting side by side here: `ingredient_forms.groupId` is a foreign key because only an admin writes it, while `ingredients.form` stays text because a member writes it. That asymmetry is the rule stated in DESIGN.md §5, not an inconsistency to tidy up.
 
 _Acceptance criteria:_
 
@@ -1416,15 +1416,21 @@ _Acceptance criteria:_
 
 _Story:_ As an admin, I want a starter set of ingredient forms already curated, so that the form autofill has real options before anyone types the first uncurated value.
 
-Seed `ingredient_forms` with §5's original twelve values plus the additions the identity model surfaces — leaf, seed, fruit, peel, stem, wood, sap, pollen, bone, claw, feather, shell, tooth, fur, shed, wax, whole — each grouped as organism part, preparation or matter. Pulled ahead of M1.22 for the same reason M4.3 already is: M1.22 consumes this vocabulary.
+Seed `ingredient_forms` with §5's table: six groups and the 78 forms filed under them, including the original twelve and the additions the identity model surfaced (leaf, seed, fruit, peel, stem, wood, sap, pollen, bone, claw, feather, shell, tooth, fur, shed, wax, whole). Pulled ahead of M1.22 for the same reason M4.3 already is: M1.22 consumes this vocabulary.
+
+**It ships the way M4.3's categories do**, and that is part of the task rather than a later one: reference data reaches staging and production only through `migrate.yml`, since deploys are CI-only and neither database has a shell. So `scripts/db-seed.ts` gains a second target (`npm run db:seed:forms`) and the existing seed step runs both vocabularies — one gate, one log, one summary. Its input is renamed `seed-categories` → `seed-reference` in the same pass, since it no longer seeds only categories.
+
+**The groups were resettled while building the task, and §5 amended in the same PR.** The original three — organism part, preparation, matter — named a group after a process where `form` asks what you are holding, and put 21 of 29 rows under one header. §5 now files every form under one of Botanical, Animal, Mineral, Substance, Fluid or Curio: three by source, three by state. A powdered mineral is a `powder`, and the ingredient's name carries what it was made from. **There is no `Other`** — a value fitting no form is free text, which is what feeds M4.7a's second bucket and M5.6a's to-do list, and a catch-all row would swallow exactly those.
 
 _Acceptance criteria:_
 
-- §5's twelve original values are present
-- The animal-derived and whole-organism additions are present
-- Every row is grouped as organism part, preparation or matter
-- Every row carries a non-empty description
-- Reseeding does not duplicate rows
+- Every form §5's table lists is present, in §5's order, filed under the group §5 files it under — and nothing §5 does not list
+- The twelve MB.28 originals and the seventeen animal-derived and whole-organism additions are all still present
+- §5's six groups are seeded, and no group holds more than half the vocabulary — the failure the regrouping exists to prevent
+- Every row carries a non-empty description, and no two rows share one — "non-empty" alone would pass a description copied from the row above. A description defines its own form and stops there: an earlier draft ended several with a redirect ("Set firm, it is a balm") and tested that 30 such pairs named each other, which read as instructions rather than descriptions and pushed toward padding a line to keep a test green
+- The vocabulary is asserted against §5's own sentence, parsed at test time rather than transcribed, and the parse itself is checked so an empty match cannot make the comparison vacuous
+- Reseeding does not duplicate rows, does not resurrect a form an admin has deleted, and does not overwrite a description an admin has rewritten
+- `npm run db:seed:forms` runs it, and `migrate.yml` runs it on staging and production alongside the categories
 
 **M4.4 — ingredient_categories join table** · 1h
 
@@ -1514,11 +1520,12 @@ Service plus GraphQL field suggesting values as someone types a folk name or a f
 _Acceptance criteria:_
 
 - The curated vocabulary is returned first and in-use values outside it second, distinguishable by the caller
+- **A curated form matches on its description as well as its name**, so typing `salve` or `balm` offers _Ointment_ — §5's rule, added by M4.3a when those two rows merged into one. The vocabulary is short by design and each description carries the words its row stands in for, so name-only matching would offer nothing and the value would be typed uncurated. A name match outranks a description match in the returned order (typing `wax` puts _Wax_ above _Ointment_), asserted by test. Only curated rows are searched this way — an in-use uncurated value has no description. `ingredient_forms.description` needs its own trigram index, or the match degenerates to a sequential scan the same way M4.6's rule warns about
 - Suggestions of in-use values span the compendium and the current workspace only
 - A folk name or in-use form present only in unrelated workspace X never appears, asserted by direct query and not merely by absence from a list
 - Filtering happens in SQL, not after fetching
 - Each suggestion carries the formal names of the in-scope ingredients already claiming it
-- **Each curated form suggestion carries its group's name**, so the caller can render "Root (organism part)". Not cosmetic: M4.2a constrains `ingredient_forms` on `slug` alone, so two live forms may share a display name, and since `ingredients.form` stores the string rather than an id the group is the only thing that tells them apart. A test asserts that two same-named forms in different groups both come back, each with its own group — returning the name alone would collapse them into an unresolvable pair
+- **Each curated form suggestion carries its group's name**, so the caller can render "Wax (substance)". Not cosmetic: M4.2a constrains `ingredient_forms` on `slug` alone, so two live forms may share a display name, and since `ingredients.form` stores the string rather than an id the group is the only thing that tells them apart. A test asserts that two same-named forms in different groups both come back, each with its own group — returning the name alone would collapse them into an unresolvable pair
 - Soft-deleted rows are excluded
 - Bounded by the M3.6 pagination helper
 - The similarity threshold is set explicitly per transaction and the match is written with the `%` operator, same as M4.7, so the trigram index is actually used
@@ -1740,10 +1747,11 @@ _Acceptance criteria:_
 
 - Both fields debounce and suggest
 - Curated values are visibly distinguished from in-use uncurated ones
-- **A curated form suggestion renders its group beside the name** — "Root (organism part)" beside "Root (preparation)" — using the group M4.7a returns. Two live forms may legitimately share a display name (M4.2a constrains the slug alone), and the group is the only thing distinguishing them; without it the dropdown offers the same word twice with no way to choose. The group is part of the option's accessible name, not a visual-only adornment, so the distinction survives for a screen-reader user, and it is asserted by a test that renders a same-named pair
+- **A curated form suggestion renders its group beside the name** — "Wax (animal)" beside "Wax (substance)" — using the group M4.7a returns. Two live forms may legitimately share a display name (M4.2a constrains the slug alone), and the group is the only thing distinguishing them; without it the dropdown offers the same word twice with no way to choose. The group is part of the option's accessible name, not a visual-only adornment, so the distinction survives for a screen-reader user, and it is asserted by a test that renders a same-named pair
 - A suggestion shows which ingredients already claim it, with their formal names
 - Picking a suggestion fills the text field and links nothing
 - Free text outside the vocabulary is accepted without a warning
+- **The suggestion list ends in an explicit "use what you typed" row**, so typing past the vocabulary is a visible choice rather than a discovered behaviour. Added by M4.3a: the seeded vocabulary carries no `Other`, deliberately — a catch-all would swallow the uncurated values M4.7a's second bucket and M5.6a's to-do list exist to surface — so the affordance belongs in the UI instead. Asserted by a test that types a value in no vocabulary and picks that row
 - Keyboard operable end to end and announced to assistive technology
 - axe clean, usable at 375px
 
