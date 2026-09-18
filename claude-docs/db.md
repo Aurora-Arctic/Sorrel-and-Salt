@@ -166,12 +166,14 @@ DESIGN.md §5 specifies three tables that land in Wave 3: M4.1 creates
 `ingredients` (the enums, columns, generated key, and CHECKs) — **merged**,
 `src/db/schema/ingredients.ts`, migration `0005_uneven_bloodstorm.sql`; M4.1a
 adds its three partial unique indexes — **merged**, same schema file, migration
-`0006_wandering_mockingbird.sql`; M4.2a creates `ingredient_forms`, and
-M4.4a creates `ingredient_folk_names`. MB.28 recorded the model here first,
-ahead of that DDL, so M4.1 was transcription rather than design — the same
-reasoning as CLAUDE.md's table-then-behaviour rule, one step earlier:
-cheapest to get right before anything depends on it. What follows describes
-`ingredients` as built and the two tables still to come.
+`0006_wandering_mockingbird.sql`; M4.2a creates `ingredient_forms` —
+**merged**, `src/db/schema/ingredient-forms.ts`, migration
+`0008_unknown_lyja.sql`; and M4.4a creates `ingredient_folk_names`. MB.28
+recorded the model here first, ahead of that DDL, so M4.1 was transcription
+rather than design — the same reasoning as CLAUDE.md's table-then-behaviour
+rule, one step earlier: cheapest to get right before anything depends on it.
+What follows describes `ingredients` and `ingredient_forms` as built, and the
+one table still to come.
 
 - **`ingredients`** — `id`, `workspaceId` (nullable: `NULL` is the compendium
   tier, non-null is a workspace's own ingredient), `name`, `canonicalName`,
@@ -330,9 +332,10 @@ local-beats-compendium resolution query that reads these indexes: DESIGN.md
 
 ## Categories, and the two group vocabularies (MB.35; tables M4.2, M4.2a)
 
-DESIGN.md §5 specifies four tables here. M4.2 has written two of them —
-`category_groups` and `categories`, in migration `0007_even_wild_pack.sql`;
-M4.2a still owes `ingredient_form_groups` and `ingredient_forms`. MB.35
+DESIGN.md §5 specifies four tables here, and all four are now written: M4.2
+added `category_groups` and `categories` in migration
+`0007_even_wild_pack.sql`, and M4.2a added `ingredient_form_groups` and
+`ingredient_forms` in `0008_unknown_lyja.sql`. MB.35
 recorded the model first, as MB.28 did for ingredients — and for a sharper
 reason: M4.2 had already been built and verified as a `category_group`
 pgEnum before the question "can an admin add a ninth group?" was asked. The
@@ -403,19 +406,56 @@ grouping exists so 52 chips read as eight families in the first place. If a
 per-category override is ever wanted it is addable as a widening.
 
 **Uniqueness is on `slug`, partial on `deleted_at IS NULL`, on all four
-tables** — `category_groups_slug_unique` and `categories_slug_unique` for the
-two that exist, the partial-index convention below. Slug uniqueness on
-`categories` is global rather than per group: the slug is what a chip filter
-and M4.3's idempotency key both read, and neither carries a group alongside
-it. Display names carry no constraint: two groups may each want a
-"Protection", and the slug is what tells them apart.
+tables** — `category_groups_slug_unique`, `categories_slug_unique`,
+`ingredient_form_groups_slug_unique` and `ingredient_forms_slug_unique`, the
+partial-index convention below. Slug uniqueness is global rather than per
+group on both child tables: the slug is what a chip filter and M4.3/M4.3a's
+idempotency keys read, and none of them carries a group alongside it. Display
+names carry no constraint: two groups may each want a "Protection", and the
+slug is what tells them apart.
 
-**NOT NULL on every remaining §6 field** — `name`, `slug` and `description`
-on both tables, both hexes on the group, and `groupId` on a category (FK
-`categories_group_id_category_groups_id_fk`). Constraining now is the
-reversible direction: dropping a `NOT NULL` later is a widening, where adding
-one is destructive DDL needing a PR acknowledgement (rule 10, and the section
-below).
+**On `ingredient_forms` that last sentence has a consequence the other three
+do not have, and it is deliberate.** A category is referenced by **id**, so
+two categories sharing a display name are only two similar chips.
+`ingredients.form` stores the **string**, so two live forms both called "Root"
+— one an _organism part_, one a _preparation_ — are indistinguishable to
+everything downstream: whichever the member picks, the same `Root` lands on
+the row, and the second curated entry can never be attributed to anything.
+M4.2a's acceptance criteria originally asked for a partial unique index on
+`name` here, which would have refused the second row outright. It was dropped
+in favour of MB.35's slug-only rule for two reasons: a unique index on `name`
+is case-sensitive, so it would still admit "Root" beside "root" — two
+identical strings once `canonicalKey` lowercases `form` — and _wax_ is
+legitimately both a part of the bee and a preparation of it, which the index
+would force an admin to rename their way out of. **The disambiguation moved to
+the autofill instead**: M4.7a returns each curated suggestion's group and
+M5.10a renders it, so the dropdown offers "Root (organism part)" beside "Root
+(preparation)". The schema test asserts the same-named pair is _accepted_, so
+the gap stays a recorded decision. Adding the index later is the reversible
+direction — `CREATE UNIQUE INDEX` is expand-direction DDL that only fails if
+duplicates already exist, where dropping one is a `DROP` needing a PR
+acknowledgement (rule 10).
+
+**NOT NULL on every remaining §5 and §6 field** — `name`, `slug` and
+`description` on all four tables, both hexes on a category group, and
+`groupId` on a category and on a form (FKs
+`categories_group_id_category_groups_id_fk` and
+`ingredient_forms_group_id_ingredient_form_groups_id_fk`). Constraining now is
+the reversible direction: dropping a `NOT NULL` later is a widening, where
+adding one is destructive DDL needing a PR acknowledgement (rule 10, and the
+section below).
+
+**The two form tables go one step further than NOT NULL on `description`**, in
+`ingredient_form_groups_description_not_blank` and
+`ingredient_forms_description_not_blank`: §5 asks for a description that is
+required _and non-empty_, and `NOT NULL` alone accepts `''` and `'   '` — a
+curated value that curates nothing, when the whole point of the column is that
+`rootBark` can say "the bark of the root, not the stem". It is a CHECK rather
+than service-side validation, unlike M5.6b's contrast floor, because "say
+something" needs no ratio in its error message. The two category tables carry
+no counterpart: §5 asks for non-empty only on the form vocabulary, so M4.2
+shipped NOT NULL alone and this is a difference in the specification, not a
+gap in M4.2.
 
 ## Expand/contract and the destructive-DDL check (M1.5)
 
