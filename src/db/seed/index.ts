@@ -1,5 +1,6 @@
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { seedMinimal } from './minimal';
+import { seedStandard } from './standard';
 
 export type SeedScenario = 'minimal' | 'standard' | 'demo';
 
@@ -39,6 +40,7 @@ export async function seed(
     case 'minimal':
       return seedMinimal(db);
     case 'standard':
+      return seedStandard(db);
     case 'demo':
       throw new Error(`Seed scenario "${scenario}" is not implemented yet.`);
   }
