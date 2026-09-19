@@ -50,33 +50,7 @@ export default defineConfig({
       // src/db/seed is fixture code that runs test infrastructure rather
       // than product logic — a bug there fails the tests that consume it, so
       // it doesn't need its own coverage.
-      //
-      // The first two look dead since MB.41: no test and no harness file
-      // lives under src/ any more, so nothing should match them. They stayed
-      // because `include` enumerates the *disk*, not the repo, and in CI
-      // those were different. The container's image bakes the repo at
-      // Docker/Dockerfile.node's `COPY . .` and checkout-to-app laid the
-      // checkout over it with `cp -a`, which never deletes — so every file
-      // the repo had deleted was still there, uncovered, dragging the
-      // denominator down. Removing these two entries dropped CI from 92% to
-      // 78.54% and failed the 80% gate while every test passed.
-      //
-      // MB.42 closed that: the action now runs `git clean -fd` after the copy,
-      // so /app holds the checkout and nothing else. These two are therefore
-      // on their way out rather than load-bearing — but not yet, and not in
-      // MB.42's own PR. Every caller reaches the action at
-      // `checkout-to-app@main`, so the fix is live only once it is on `main`,
-      // which a merge to `staging` does not do; until then CI still sees the
-      // leftovers and still needs these. MB.44 is the follow-up: it cuts that
-      // release, then deletes these two and this paragraph with them. If the
-      // number moves when they go, they were not dead — see that task.
-      exclude: [
-        'src/**/*.test.{ts,tsx}',
-        'src/test/**',
-        'src/**/*.stories.tsx',
-        'src/db/migrations/**',
-        'src/db/seed/**',
-      ],
+      exclude: ['src/**/*.stories.tsx', 'src/db/migrations/**', 'src/db/seed/**'],
       thresholds: {
         lines: 80,
         branches: 80,
