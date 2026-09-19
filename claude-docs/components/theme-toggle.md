@@ -50,6 +50,20 @@ the outgoing facet back to `theme-toggle__facet--pre-enter` once its `transform`
 transition completes. The fast-double-click guard clears both classes explicitly
 rather than assuming either facet is at rest before toggling.
 
+**The resting facets are settled in CSS, before first paint** (MB.2). The light
+facet's `--pre-enter` class is baked into the server-rendered markup, so it is
+what paints first whatever theme the visitor actually has — including light,
+where the sun should already be at rest. The mount effect used to be the only
+thing that corrected it, which ran _after_ that paint and let the facet visibly
+swing from parked to resting. `index.scss`'s `theme-toggle-light-facets` mixin
+settles the _visible_ state instead, keyed off the same `data-theme` the
+pre-paint init script stamps; the mount effect still runs, but only to keep the
+real class list correct for the next click. MB.23 is why the mixin is included
+under both light tiers rather than the attribute alone: a light _system_
+preference with nothing stored paints the page light while leaving the attribute
+absent, and the crescent sat on a light page until the effect swapped it — the
+exact swing MB.2 removed, still happening for anyone who had never clicked.
+
 **Under `prefers-reduced-motion: reduce` the click handler parks the outgoing
 facet itself** rather than waiting for a `transitionend` that never comes — the
 `reduced-motion` block in `index.scss` sets `transition: none`, so no transition
@@ -76,6 +90,14 @@ palette, not the runtime tokens**, because they must stay the same colour in
 both themes. Only the rotate swaps which one is showing; nothing about the icons
 transitions on a theme change.
 
+**The two facets are sized apart by 5%.** The crescent's knotwork carries less
+visual weight than the sun's at the same box size, so the moon gets a 102% box
+nudged up and right off the pivot corner (riding slightly higher and further
+into the corner) and the sun a 95% box that grows and shrinks along its left and
+bottom edges so its top-right pivot stays put. Sized via the box rather than
+`transform: scale()`, because the `--out` / `--pre-enter` classes overwrite
+`transform` wholesale for the rotate choreography.
+
 ## Styling
 
 Only the shared tokens and mixins: `$text-primary`, `$accent`,
@@ -86,7 +108,7 @@ of the app shares, so it is not a token.
 
 - `fill` is deliberately **not** in the facet's `theme-transition()` — only
   `transform` is, so the swap is purely the rotate.
-- Hover is `background-color: $accent-hover` **plus** `transform: scale(1.12)`
+- Hover is `background-color: $accent-hover` **plus** `transform: scale(1.07)`
   from the pinned corner. On the dark theme `$accent` and `$accent-hover` are
   only a shade apart, so the colour step alone reads as almost nothing; the
   scale carries the hover and lands the same in both themes without forking a

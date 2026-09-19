@@ -2,23 +2,14 @@
 @use './variables' as *;
 @use './mixins' as *;
 
-// Structural UI primitives promoted from the .ladle/ design-language reference
-// page: a raised panel, badges, chips, a raised modal + its action row, a
-// button, and the ingredient-card "specimen" layout. Colour/edge/geometry for
-// the badge and chip shapes still come from M0.8's badge()/chip() mixins in
-// _mixins.scss — this partial is the class layer a component applies directly
-// instead of re-deriving them, plus the shapes M0.8 didn't cover (panel,
-// button, modal actions, specimen layout).
-//
-// Emitted once via this mixin, the same way typography-base/layout-base are:
-// `body { @include primitives-base; }` in the app's globals.scss, and
-// `.ladle-story-frame { @include primitives-base; }` in the workshop
-// (.ladle/primitives.scss), so a story gets identical classes to a page.
+// The class layer over _mixins.scss: a component applies `.chip--mind` rather
+// than re-deriving chip(), plus the shapes the mixins do not cover (panel,
+// button, modal actions, specimen layout). Emitted once via this mixin, the
+// same way typography-base and layout-base are — `body` in the app,
+// `.ladle-story-frame` in the workshop.
 @mixin primitives-base {
-  // A plain framed box on the raised surface — the neutral ground a specimen
-  // or a set of swatches sits on. Not modal-surface(): that carries a shadow
-  // and a bigger radius meant for a floating panel, which would read as "this
-  // is a dialog".
+  // Not modal-surface(): that carries a shadow and a bigger radius meant for a
+  // floating panel, which would read as "this is a dialog".
   .panel {
     background-color: $surface-card;
     border-radius: 0.25rem;
@@ -52,10 +43,9 @@
     }
   }
 
-  // The raised surface behind a modal or an "everything at once" card.
-  // modal-surface() deliberately excludes width/padding/position — the
-  // component that owns a real modal (M3.x) decides those; this class adds
-  // only the padding and heading trim every instance of the shape wants.
+  // modal-surface() excludes width/padding/position — the component owning a
+  // real modal decides those. This adds only the padding and heading trim
+  // every instance of the shape wants.
   .modal {
     @include modal-surface;
     padding: 1.5rem;
@@ -106,9 +96,8 @@
     }
   }
 
-  // An "everything at once" card — chips and badges laid out the way an
-  // IngredientCard (M8.x) will need. `.specimen` composes with `.modal` for
-  // the raised surface; it adds only the internal layout.
+  // Chips and badges laid out the way an IngredientCard will need. Composes
+  // with `.modal` for the raised surface; adds only the internal layout.
   .specimen {
     display: flex;
     flex-direction: column;
@@ -118,8 +107,8 @@
   .specimen__top {
     display: flex;
     justify-content: space-between;
-    // Top-align, so the badge cluster hugs its own content instead of
-    // stretching to the height of the name + binomial beside it.
+    // So the badge cluster hugs its own content instead of stretching to the
+    // height of the name + binomial beside it.
     align-items: flex-start;
     gap: 1rem;
 
