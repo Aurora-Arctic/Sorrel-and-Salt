@@ -170,6 +170,20 @@ devcontainer carries isn't scoped to manage Actions secrets/variables
    `preview` one.
 2. **Neon connection strings**: Neon console → the project → each branch
    (`main`, `staging`) → Connection Details.
+
+   **Delete `channel_binding=require` from whatever the console hands you**
+   (MB.49). It puts that parameter in by default and it does not work with
+   this stack: `channel_binding` is a libpq _client-side_ option, and
+   postgres.js consumes `sslmode` and its own known keys and then forwards
+   every remaining query parameter to the server as a **startup parameter**.
+   Postgres has never heard of it and answers `42704 unrecognized
+configuration parameter "channel_binding"`, which `drizzle-kit migrate`
+   swallows — so the migration exits 1 in total silence. Keep
+   `sslmode=require`: that one postgres.js does consume, and it is what
+   actually requests TLS. `scripts/assert-pulled-env.ts` now rejects the
+   parameter by name before CI tries to connect, so this is a rule the
+   pipeline enforces rather than one to remember.
+
 3. **Google OAuth client**: Google Cloud Console → APIs & Services →
    Credentials → Create OAuth client ID (Web application). Authorized
    redirect URIs — one client, two real rows (see above for why hotfix

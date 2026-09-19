@@ -3317,6 +3317,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.46 | CI cannot see what `vercel pull` actually returned                                             | Wave 5  | MB.45        |
 | MB.47 | CI cannot read the Sensitive Vercel variables it needs                                         | Wave 5  | MB.46        |
 | MB.48 | A destructive-DDL acknowledgement does not survive the release PR                              | Wave 5  | MB.37        |
+| MB.49 | `drizzle-kit` fails silently, so a bad `DATABASE_URL` has no cause                             | Wave 5  | MB.47        |
 
 **MB.5 — Restore `users` foreign keys on `auditColumns`** · 2h
 
@@ -4343,6 +4344,36 @@ _Acceptance criteria:_
 - `npm run check:destructive-ddl -- --all` green with both, red again when one is deleted — the proof the sidecar is load-bearing rather than decorative
 - CLAUDE.md rule 10 and `ci.md` updated; `db.md`'s claim that `0002` "was acknowledged when [it] landed" corrected — #73 carries no acknowledgement and never did, so the **doc** is what is wrong
 - Sized at 3h rather than split for the sake of the number, per CLAUDE.md
+
+**MB.49 — `drizzle-kit` fails silently, so a bad `DATABASE_URL` has no cause** · 1h
+
+_Story:_ As whoever is on the end of a failed deploy, I want a failed migration to name what went wrong so that I can fix it instead of guessing at it.
+
+Staging's migration failed after MB.45–47 and the log said this, in full:
+
+```
+Using 'postgres' driver for database querying
+[⣟] applying migrations...
+##[error]Process completed with exit code 1.
+```
+
+No error, no code, no message — `drizzle-kit migrate` catches whatever postgres.js threw and exits 1. Reproduced locally, **an unreachable host, a wrong password, `sslmode=require` against a server with no TLS, and `channel_binding=require` all produce byte-identical output.** Four different fixes, one indistinguishable failure. That is why MB.45, MB.46 and MB.47 each ended on a hypothesis rather than a diagnosis, and it is the actual defect: not any one bad URL, but that a bad URL cannot be told from a bad network.
+
+**A connectivity probe, before the consumer.** `scripts/probe-database.ts` opens the connection itself and runs `select 1`, printing the driver's own error code and message on failure and the role, database and server version on success. `ECONNREFUSED`, `ENOTFOUND`, `28P01`, `3D000` and `42704` are five different problems with five different fixes, and naming which one happened is the whole task. Fatal in `migrate.yml`, where a migration cannot proceed without a connection; advisory in `deploy.yml`, where a build issues no query and failing on a transient blip would trade one outage for another.
+
+**It validates the _resolved_ URL, which is the gap MB.47 reopened.** MB.46's validator only ever saw the file `vercel pull` wrote; MB.47 then took `DATABASE_URL` from a GitHub secret and handed it straight to drizzle-kit, so a malformed secret failed exactly as silently as a malformed pull used to — one task after the gap was closed, by its own successor. `Resolve DATABASE_URL` now writes whichever value won to `$RUNNER_TEMP/resolved.env` under `umask 077`, and the probe reads that. A file path rather than argv or a step `env:`, for MB.46's reasons: argv is `ps`-visible and echoed by `set -x`.
+
+**`channel_binding` gets a named rule rather than a note.** It is a libpq _client-side_ option; postgres.js consumes `sslmode` and its own known keys, then forwards every remaining query parameter to the server as a startup parameter, so Postgres answers `42704 unrecognized configuration parameter "channel_binding"`. Neon's console adds it by default, so it will recur — and it is cheaper to reject in the validator, before a connection is attempted, than to diagnose from a 42704 afterwards.
+
+_Acceptance criteria:_
+
+- Tests written first and watched fail — the `channel_binding` rule against `validateDatabaseUrl`, the probe's error-description and scrubbing helpers, and the workflow sweep
+- The probe runs in `migrate.yml` before `Apply pending migrations` and in `deploy.yml` before `Build`, fatal in the first and advisory in the second, asserted apart
+- Its output names the driver's error code and message and **never** the URL — asserted against a realistic connection string rather than intended, including errors that quote the URL, the password and the userinfo back at it. The hostname is deliberately kept: `ENOTFOUND` without the name it failed to resolve is the same silence this task exists to end
+- `validateDatabaseUrl` gains the client-only-parameter rule, with a green case for a Neon pooled URL carrying `sslmode=require` alone — postgres.js consumes that one, and rejecting it would break every working string in the project
+- The resolved `DATABASE_URL` is validated whatever its source, secret or pulled `POSTGRES_URL`, pinned by a guard — the point is that the gap cannot reopen a second time
+- Docs corrected: `ci.md` and `db.md` on what a failed migration now tells you, `secrets.md` on deleting `channel_binding` from what the Neon console hands you
+- **Not done when CI is green** — done when a live staging push either migrates, or fails with a named cause somebody can act on
 
 ## MW — Wave close-out
 
