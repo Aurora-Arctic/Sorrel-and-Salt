@@ -2,9 +2,8 @@
 
 # Sorrel & Salt — preseeded Postgres 18 image, published to GHCR (M0.18).
 #
-# Every environment — CI, docker-compose, and eventually the seeded
-# `standard`/`demo` scenarios (M1.27) — starts from this one image so a
-# data-layer bug reproduces identically everywhere. Two things are baked in
+# Every environment — CI and docker-compose — starts from this one image so
+# a data-layer bug reproduces identically everywhere. Two things are baked in
 # at image *build* time, not left to a container's first boot:
 #
 #   - the extensions the design actually names (today just pg_trgm, for the
@@ -17,11 +16,18 @@
 #   - the `sorrel` role/database that `app`/`devcontainer` connect to
 #     (Docker/docker-compose.yaml's DATABASE_URL), also with pg_trgm applied.
 #
-# No schema and no seed data are baked in here — src/db/schema is still empty
-# (M1.x), so `sorrel` is an empty database with only extensions applied, just
-# like `sorrel_template`. M1.27 extends this same image once there is a real
-# schema and seed data to bake in; doing that now would mean guessing at a
-# schema that doesn't exist yet.
+# No schema and no seed data are baked in here, and none will be. `sorrel` is
+# an empty database with only extensions applied, just like `sorrel_template`;
+# docker-compose's `db-init` one-shot (M1.24) migrates and seeds `sorrel` at
+# container start, and the test harness clones `sorrel_template` and runs the
+# same two npm scripts against the clone at test-run setup (M1.27,
+# tests/support/seeded-database.ts). That was M1.27's decision — TASKS.md
+# first had it baking the migrated, seeded template into this image, and
+# claude-docs/design-decisions/m1.27-template-at-setup-not-in-image.md says
+# why not: migrate + seed is about a second, once per run, and a template
+# built from the checkout can never disagree with it the way a baked one
+# would after a `git pull` without `make docker-rebuild`. So this image's
+# contents depend on nothing under src/, and a migration never rebuilds it.
 #
 # The extensions/database are created by running the official image's own
 # first-boot initialization (docker-entrypoint.sh, which starts a temporary

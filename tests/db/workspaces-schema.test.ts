@@ -13,10 +13,10 @@ const AUDIT_COLUMNS = [
 ];
 
 // Pure schema-shape assertions via Drizzle's own introspection, the same
-// shape as users-schema.test.ts — sorrel_template carries no tables until
-// M1.27 (claude-docs/db.md), so a test that inserted a row here would only
-// pass by accident locally. "Migration applies cleanly" is verified by
-// running db:migrate against the local database, not from here.
+// shape as users-schema.test.ts. "Migration applies cleanly" is verified by
+// the harness itself since M1.27 — tests/support/seeded-database.ts runs
+// db:migrate into the template every clone is made from, so a migration that
+// fails to apply fails the whole db project before this file runs.
 describe('workspaces schema', () => {
   const { columns, indexes } = getTableConfig(workspaces);
   const byName = Object.fromEntries(columns.map((c) => [c.name, c]));

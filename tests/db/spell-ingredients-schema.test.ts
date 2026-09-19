@@ -1,15 +1,13 @@
-import { join } from 'node:path';
-import { readFileSync, readdirSync } from 'node:fs';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { getTableConfig } from 'drizzle-orm/pg-core';
-import { MIGRATIONS_DIR } from '../support/paths';
 import { UNITS, dimensionOf } from '@/lib/units';
 import { ingredients } from '@/db/schema/ingredients';
 import { inventoryUnit } from '@/db/schema/inventory-items';
 import { spellIngredients } from '@/db/schema/spell-ingredients';
 import { spells } from '@/db/schema/spells';
 import { users } from '@/db/schema/users';
+import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 
 const STAMP_COLUMNS = ['created_at', 'created_by', 'updated_at', 'updated_by'];
 const DELETE_COLUMNS = ['deleted_at', 'deleted_by'];
@@ -181,40 +179,32 @@ describe('spell_ingredients schema', () => {
   });
 });
 
-// The behaviour half, applying the shipped migrations into this worker's
-// disposable clone rather than hand-copying their DDL: 0014 creates the table,
-// 0017 reshapes it. `users` and `ingredients` are stubbed to the one column
-// the foreign keys point at; `spells` is the real table, created by the same
-// migration. `inventory_items` is stubbed too, and only so that "references
-// ingredients, not inventory_items" has something to fail against.
-
-function migrationStatementsContaining(marker: string): string[] {
-  const file = readdirSync(MIGRATIONS_DIR)
-    .filter((name) => name.endsWith('.sql'))
-    .sort()
-    .map((name) => join(MIGRATIONS_DIR, name))
-    .find((path) => readFileSync(path, 'utf8').includes(marker));
-
-  if (!file) throw new Error(`No migration in src/db/migrations contains ${marker}`);
-
-  return readFileSync(file, 'utf8')
-    .split('--> statement-breakpoint')
-    .map((statement) => statement.trim())
-    .filter(Boolean);
-}
-
-const AUTHOR = '11111111-1111-1111-1111-111111111111';
-const COVEN = '22222222-2222-2222-2222-222222222222';
-const MUGWORT = '44444444-4444-4444-4444-444444444444';
-const ROSEMARY = '55555555-5555-5555-5555-555555555555';
-// Stock for an ingredient this workspace does not have an entry for — the id
-// exists in `inventory_items` and nowhere else, which is what makes it a probe
-// for which table the foreign key points at.
-const STOCK_ONLY = '66666666-6666-6666-6666-666666666666';
+// The behaviour half, against the real table. This worker's sorrel_test_<n>
+// clone arrives with every migration applied — 0014 creates the table, 0017
+// reshapes it — and the `standard` scenario seeded (M1.27,
+// tests/support/db-setup.ts), re-cloned that way before this file runs. So
+// what is asserted below is the SQL production runs, with no schema built here
+// and nothing to put back afterwards. Until M1.27 the template was empty: this
+// file applied the two migrations itself and stubbed `users`, `ingredients`
+// and `inventory_items` to a bare `id` column.
+//
+// The author and the workspace are the seed's, not invented ids: the real
+// `users` and `workspaces` have NOT NULL names, slugs and audit stamps, and a
+// row that exists is cheaper to point at than one to construct. Bound to the
+// old names so the tests read as they did.
+const AUTHOR = FIXTURE_USERS.A.id;
+const COVEN = WORKSPACE_W_ID;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
-let createdUnitEnum = false;
+// Two of the seeded compendium's entries, read back by identity in
+// `beforeAll` because the seed generates their ids.
+let MUGWORT: string;
+let ROSEMARY: string;
+// A stock row's own id. The row is this file's, written against a third
+// compendium entry, and its id exists in `inventory_items` and nowhere else —
+// which is what makes it a probe for which table the foreign key points at.
+let STOCK_ONLY: string;
 let hearthGuard: string;
 let otherSpell: string;
 
@@ -276,50 +266,36 @@ async function layerOrders(spellId: string): Promise<number[]> {
   return rows.map((row) => row.layer_order as number);
 }
 
+async function compendiumIdOf(canonicalName: string): Promise<string> {
+  const [found] = await sql`
+    select id from ingredients where workspace_id is null and canonical_name = ${canonicalName}
+  `;
+  if (!found) throw new Error(`The standard seed carries no compendium entry ${canonicalName}`);
+  return found.id as string;
+}
+
 beforeAll(async () => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
 
-  await sql`drop table if exists spell_ingredients`;
-  await sql`drop table if exists spells`;
-  await sql`drop type if exists spell_status`;
-  await sql`create table if not exists users (id uuid primary key)`;
-  await sql`create table if not exists workspaces (id uuid primary key)`;
-  await sql`create table if not exists ingredients (id uuid primary key)`;
-  await sql`create table if not exists inventory_items (id uuid primary key)`;
-  await sql`insert into users (id) values (${AUTHOR}) on conflict do nothing`;
-  await sql`insert into workspaces (id) values (${COVEN}) on conflict do nothing`;
-  await sql`insert into ingredients (id) values (${MUGWORT}), (${ROSEMARY}) on conflict do nothing`;
-  await sql`insert into inventory_items (id) values (${STOCK_ONLY}) on conflict do nothing`;
+  MUGWORT = await compendiumIdOf('Artemisia vulgaris');
+  ROSEMARY = await compendiumIdOf('Salvia rosmarinus');
 
-  // `unit` reuses M9.2's `inventory_unit`, so this migration does not create
-  // the type and the clone may or may not already carry it, depending on what
-  // else has run in this worker.
-  const [{ present }] = await sql`
-    select exists (select 1 from pg_type where typname = 'inventory_unit') as present
+  // `standard` seeds no stock, so the probe row is written here: the real
+  // table wants a workspace and an ingredient, and neither may be one the
+  // tests below lay in a jar, or "holds no stock of" would stop being true.
+  const [stock] = await sql`
+    insert into inventory_items (workspace_id, ingredient_id, created_by, updated_by)
+    values (${COVEN}, ${await compendiumIdOf('Laurus nobilis')}, ${AUTHOR}, ${AUTHOR})
+    returning id
   `;
-  if (!present) {
-    createdUnitEnum = true;
-    for (const statement of migrationStatementsContaining(
-      'CREATE TYPE "public"."inventory_unit"',
-    ).filter((statement) => statement.includes('CREATE TYPE "public"."inventory_unit"'))) {
-      await sql.unsafe(statement);
-    }
-  }
-
-  for (const statement of migrationStatementsContaining('CREATE TABLE "spell_ingredients"')) {
-    await sql.unsafe(statement);
-  }
-  // MB.40's reshaping, found by the one constraint name only it carries — 0014
-  // already contains `ALTER TABLE "spell_ingredients"`, so that marker would
-  // find the wrong file.
-  for (const statement of migrationStatementsContaining(`"${CHECK_INGREDIENT_OR_NAME}"`)) {
-    await sql.unsafe(statement);
-  }
+  STOCK_ONLY = stock.id as string;
 });
 
+// `truncate … cascade` rather than two deletes: `spells` is the parent of this
+// table and of `spell_categories`, and the cascade empties all three at once
+// before the two jars are written fresh for each test.
 beforeEach(async () => {
-  await sql`delete from spell_ingredients`;
-  await sql`delete from spells`;
+  await sql`truncate spells cascade`;
 
   const [first] = await sql`
     insert into spells (workspace_id, title, created_by, updated_by)
@@ -334,14 +310,6 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await sql`drop table if exists spell_ingredients`;
-  await sql`drop table if exists spells`;
-  await sql`drop type if exists spell_status`;
-  if (createdUnitEnum) await sql`drop type if exists inventory_unit`;
-  await sql`drop table if exists inventory_items`;
-  await sql`drop table if exists ingredients`;
-  await sql`drop table if exists workspaces`;
-  await sql`drop table if exists users`;
   await sql.end();
 });
 

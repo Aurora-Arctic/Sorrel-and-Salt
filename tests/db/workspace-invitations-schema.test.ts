@@ -1,10 +1,8 @@
-import { join } from 'node:path';
-import { readFileSync, readdirSync } from 'node:fs';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { getTableConfig } from 'drizzle-orm/pg-core';
-import { MIGRATIONS_DIR } from '../support/paths';
 import { users } from '@/db/schema/users';
+import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import { workspaceInvitations } from '@/db/schema/workspace-invitations';
 import { workspaces } from '@/db/schema/workspaces';
 
@@ -124,33 +122,23 @@ describe('workspace_invitations schema', () => {
   });
 });
 
-// The behaviour half, following M4.1/M4.4/M4.4a's idiom: apply the shipped
-// migration into this worker's disposable clone rather than hand-copying its
-// DDL, so what is asserted below is the SQL production runs. `users` and
-// `workspaces` are stubbed to the one column this table's foreign keys point
-// at — applying their own migrations here would leave a __drizzle_migrations
-// table behind for the next test file in this worker to trip over. The
-// `workspace_role` enum is created the same way and for the same reason: 0004
-// owns the real statement, and this file needs only the type to exist.
-
-function migrationStatementsContaining(marker: string): string[] {
-  const file = readdirSync(MIGRATIONS_DIR)
-    .filter((name) => name.endsWith('.sql'))
-    .sort()
-    .map((name) => join(MIGRATIONS_DIR, name))
-    .find((path) => readFileSync(path, 'utf8').includes(marker));
-
-  if (!file) throw new Error(`No migration in src/db/migrations contains ${marker}`);
-
-  return readFileSync(file, 'utf8')
-    .split('--> statement-breakpoint')
-    .map((statement) => statement.trim())
-    .filter(Boolean);
-}
-
-const OWNER = '11111111-1111-1111-1111-111111111111';
-const INVITEE = '22222222-2222-2222-2222-222222222222';
-const COVEN = '33333333-3333-3333-3333-333333333333';
+// The behaviour half, against the real table. This worker's sorrel_test_<n>
+// clone arrives with every migration applied and the `standard` scenario
+// seeded (M1.27, tests/support/db-setup.ts), re-cloned that way before this
+// file runs — so what is asserted below is the SQL production runs, with no
+// schema built here and nothing to put back afterwards. Until M1.27 the
+// template was empty: this file applied the one migration that ships the
+// table, stubbed `users`/`workspaces` to a bare `id` column and created the
+// `workspace_role` enum by hand; 0004's real one is now already there.
+//
+// The owner, the invitee and the coven are the seed's, not invented ids: the
+// real `users` and `workspaces` have NOT NULL names, slugs and audit stamps,
+// and a row that exists is cheaper to point at than one to construct. Bound
+// to the old names so the tests read as they did — A owns W, and B is the
+// one who accepts.
+const OWNER = FIXTURE_USERS.A.id;
+const INVITEE = FIXTURE_USERS.B.id;
+const COVEN = WORKSPACE_W_ID;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
@@ -190,35 +178,18 @@ async function columnNames(table: string): Promise<string[]> {
   return rows.map((row) => row.column_name as string);
 }
 
-beforeAll(async () => {
+beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-
-  await sql`drop table if exists workspace_invitations`;
-  await sql.unsafe(`
-    do $$ begin
-      create type workspace_role as enum ('viewer', 'member', 'owner');
-    exception when duplicate_object then null;
-    end $$
-  `);
-  await sql`create table if not exists users (id uuid primary key)`;
-  await sql`create table if not exists workspaces (id uuid primary key)`;
-  await sql`insert into users (id) values (${OWNER}), (${INVITEE}) on conflict do nothing`;
-  await sql`insert into workspaces (id) values (${COVEN}) on conflict do nothing`;
-
-  for (const statement of migrationStatementsContaining('CREATE TABLE "workspace_invitations"')) {
-    await sql.unsafe(statement);
-  }
 });
 
+// Nothing seeds an invitation, so the table is already empty; truncating
+// anyway is what keeps each test starting from nothing rather than from the
+// last one.
 beforeEach(async () => {
-  await sql`delete from workspace_invitations`;
+  await sql`truncate workspace_invitations`;
 });
 
 afterAll(async () => {
-  await sql`drop table if exists workspace_invitations`;
-  await sql`drop type if exists workspace_role`;
-  await sql`drop table if exists workspaces`;
-  await sql`drop table if exists users`;
   await sql.end();
 });
 

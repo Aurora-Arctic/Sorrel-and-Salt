@@ -1,12 +1,10 @@
-import { join } from 'node:path';
-import { readFileSync, readdirSync } from 'node:fs';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { getTableConfig } from 'drizzle-orm/pg-core';
-import { MIGRATIONS_DIR } from '../support/paths';
 import { ingredientFolkNames } from '@/db/schema/ingredient-folk-names';
 import { ingredients } from '@/db/schema/ingredients';
 import { users } from '@/db/schema/users';
+import { FIXTURE_USERS } from '@/db/seed/standard';
 
 // The full six, not `ingredient_categories`' four: MB.34 hard-deletes the three
 // join tables and this is not one of them. A folk name is content — "Devil's
@@ -104,37 +102,37 @@ describe('ingredient_folk_names schema', () => {
   });
 });
 
-// The behaviour half, following M4.1/M4.4's idiom: apply the shipped migration
-// into this worker's disposable clone rather than hand-copying its DDL, so what
-// is asserted below is the SQL production runs. `users` and `ingredients` are
-// stubbed to the one column this table's foreign keys point at — applying their
-// own migrations here would leave a __drizzle_migrations table behind for the
-// next test file in this worker to trip over.
-
-function migrationStatementsContaining(marker: string): string[] {
-  const file = readdirSync(MIGRATIONS_DIR)
-    .filter((name) => name.endsWith('.sql'))
-    .sort()
-    .map((name) => join(MIGRATIONS_DIR, name))
-    .find((path) => readFileSync(path, 'utf8').includes(marker));
-
-  if (!file) throw new Error(`No migration in src/db/migrations contains ${marker}`);
-
-  return readFileSync(file, 'utf8')
-    .split('--> statement-breakpoint')
-    .map((statement) => statement.trim())
-    .filter(Boolean);
-}
-
-const AUTHOR = '11111111-1111-1111-1111-111111111111';
+// The behaviour half, against the real table. This worker's sorrel_test_<n>
+// clone arrives with every migration applied and the `standard` scenario
+// seeded (M1.27, tests/support/db-setup.ts), and re-cloned that way before
+// this file runs — so what is asserted below is the SQL production runs, with
+// no schema built here and nothing to put back afterwards. Until M1.27 the
+// template was empty: this file applied the one migration that ships the
+// table and stubbed `users`/`ingredients` to a bare `id` column.
+//
+// The author and both ingredients are the seed's, not invented ids: the real
+// `users` and `ingredients` have NOT NULL names and audit stamps, and a row
+// that exists is cheaper to point at than one to construct. Bound to the old
+// names so the tests read as they did.
+const AUTHOR = FIXTURE_USERS.A.id;
 // Uncaria tomentosa, the vine. Displays "Cat's Claw".
-const UNCARIA = '22222222-2222-2222-2222-222222222222';
-// Acacia greggii, an unrelated shrub. Also displays "Cat's Claw" — §5's own
+let UNCARIA: string;
+// Senegalia greggii — the shrub that was Acacia greggii until it was renamed
+// out of Acacia — and an unrelated plant. Also displays "Cat's Claw": §5's own
 // example, and the reason uniqueness here is per ingredient rather than global.
-const ACACIA = '33333333-3333-3333-3333-333333333333';
+let ACACIA: string;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
+
+async function compendiumIdOf(canonicalName: string): Promise<string> {
+  const [found] = await sql`
+    select id from ingredients
+    where workspace_id is null and canonical_name = ${canonicalName} and deleted_at is null
+  `;
+  if (!found) throw new Error(`The standard seed carries no compendium row for ${canonicalName}`);
+  return found.id as string;
+}
 
 async function addFolkName(ingredientId: string, name: string): Promise<string> {
   const [inserted] = await sql`
@@ -194,27 +192,19 @@ async function indexRow(name: string): Promise<IndexRow | undefined> {
 beforeAll(async () => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
 
-  await sql`drop table if exists ingredient_folk_names`;
-  await sql`create table if not exists users (id uuid primary key)`;
-  await sql`create table if not exists ingredients (id uuid primary key)`;
-  await sql`insert into users (id) values (${AUTHOR}) on conflict do nothing`;
-  await sql`
-    insert into ingredients (id) values (${UNCARIA}), (${ACACIA}) on conflict do nothing
-  `;
-
-  for (const statement of migrationStatementsContaining('CREATE TABLE "ingredient_folk_names"')) {
-    await sql.unsafe(statement);
-  }
+  UNCARIA = await compendiumIdOf('Uncaria tomentosa');
+  ACACIA = await compendiumIdOf('Senegalia greggii');
 });
 
+// The seed gives both ingredients folk names of their own, and every test
+// below assumes an empty table: this table is a leaf, so a truncate reaches
+// nothing else — the same starting state the old empty template gave,
+// reached the other way round.
 beforeEach(async () => {
-  await sql`delete from ingredient_folk_names`;
+  await sql`truncate ingredient_folk_names`;
 });
 
 afterAll(async () => {
-  await sql`drop table if exists ingredient_folk_names`;
-  await sql`drop table if exists ingredients`;
-  await sql`drop table if exists users`;
   await sql.end();
 });
 

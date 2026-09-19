@@ -9,6 +9,29 @@ runs:
     - name: Checkout
       uses: actions/checkout@v7
 
+    # `cp -a` overlays; it never deletes. Docker/Dockerfile.node and
+    # Docker/Dockerfile.e2e both bake the whole repo into /app with `COPY . .`
+    # at image build time, so a file the checkout no longer contains is still
+    # sitting there afterwards — untracked, not gitignored, and indistinguishable
+    # to oxlint/tsc/vitest from a file the branch actually has. The clean step
+    # below is what removes it; the two steps are one operation (MB.42).
     - name: Copy checkout into /app
       shell: bash
       run: cp -a "$GITHUB_WORKSPACE"/. /app/
+
+    # Deletes what the copy above could not: every path in /app that the
+    # checkout does not contain. `-x` is deliberately absent, so .gitignore
+    # still applies and the image's own build artifacts — node_modules above
+    # all, plus .next — survive untouched; no job reinstalls dependencies.
+    # `-d` is what reaches a whole stale directory rather than only loose files.
+    #
+    # Removals are printed rather than quieted: on a PR that deletes files,
+    # this step's log is the only place the overlay's leftovers are ever named.
+    #
+    # `.git` comes from the checkout (`.dockerignore` keeps it out of the
+    # image), and so does `.gitignore` — both are in place by the time this
+    # runs, which is why the clean cannot precede the copy.
+    - name: Remove files the checkout no longer contains
+      shell: bash
+      working-directory: /app
+      run: git clean -fd

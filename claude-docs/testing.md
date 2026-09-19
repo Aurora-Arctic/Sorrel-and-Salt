@@ -14,7 +14,7 @@ Every Vitest file is under `tests/`, mirroring `src/` (MB.41). Nothing under
 tests/
   app/ components/ lib/ db/   # mirror the src/ path of the code under test
   guards/                     # the mechanical guards
-  support/                    # the harness: as-user, db-setup, msw, paths
+  support/                    # the harness: as-user, db-setup, seeded-database, msw, paths
   support/fixtures/           # makeIngredient / makeSpell / makeWorkspace
 ```
 
@@ -57,7 +57,7 @@ test, it is a file nothing runs.
     not a clone.** The per-worker `sorrel_test_<n>` rewrite is `db`-only — it
     lives in that project's `setupFiles` (below) and nothing rewrites
     `DATABASE_URL` for `unit`. So a `unit` test that reaches Postgres needs
-    schema that is actually in `sorrel`, and M1.27's template bake will not
+    schema that is actually in `sorrel`, and M1.27's seeded template will not
     help it: the template is never in its path. This is a real trap — it is
     what made a `POST /api/auth/sign-in/social` test pass locally (a
     hand-run `drizzle-kit migrate` had left `sorrel` migrated) and fail in
@@ -114,35 +114,64 @@ test, it is a file nothing runs.
     Covered by `tests/support/msw/graphql.test.ts`.
 - **`db`** — `environment: 'node'`. `include`s `tests/db/**/*.test.ts` and
   `tests/services/**/*.test.ts`. The `tests/db/**` half is real as of Wave 1
-  (`audit`, `bootstrap`, `users-schema`, `test-database-isolation`), though
-  the schema tests are Drizzle `getTableConfig()` introspection rather than
-  queries — `sorrel_template` carries no tables until M1.27. `src/services/`
-  doesn't exist yet, so `passWithNoTests: true` stays. Nothing in this
+  (`audit`, `bootstrap`, `users-schema`, `test-database-isolation`); since
+  M1.27 every file in it runs against a clone that already carries the full
+  migrated schema and the `standard` scenario, so a schema test asserts
+  against the real table (`tests/db/seeded-template.test.ts` states that
+  baseline) and no file builds tables of its own. `src/services/` doesn't
+  exist yet, so `passWithNoTests: true` stays. Nothing in this
   project's config ever points at
   Neon (`Docker/docker-compose.yaml`'s `postgres` service publishes **5432**
   for exactly this — "the host-side Vitest `db` project").
-  - **`globalSetup: ['./tests/support/db-global-setup.ts']`** (M1.9) runs once,
-    before any worker starts, and clones `sorrel_test_1` through
-    `sorrel_test_<maxWorkers>` from `sorrel_template` with
-    `CREATE DATABASE ... TEMPLATE`, dropping each one first (`DROP DATABASE
-IF EXISTS`) so a crashed previous run self-heals instead of erroring on a
-    stale database. `maxWorkers` comes off the `TestProject` Vitest hands the
-    setup function — no per-worker variable is set inside the single setup
-    process, so it pre-clones one database per possible worker instead. It
-    `provide`s that list as `workerDatabases`, which
-    `test-database-isolation.test.ts` asserts its own database is a member of
-    (MB.14) — the point being that a worker's name is checked against what was
-    actually created, not against a bound the test recomputed. The
-    returned teardown drops all of them. Requires `sorrel` to own
-    `sorrel_template` and hold `CREATEDB` — both granted in
+  - **`globalSetup: ['./tests/support/db-global-setup.ts']`** (M1.9, M1.27)
+    runs once, before any worker starts. It first builds the run's template,
+    `sorrel_test_template`, through `tests/support/seeded-database.ts`:
+    M0.18's extensions-only `sorrel_template` cloned, then `npm run
+db:migrate` and `SEED_SCENARIO=standard npm run db:seed` spawned against the
+    clone — the same two scripts `Docker/docker-compose.yaml`'s `db-init`
+    runs, which is what makes "local and CI run the same migrations and the
+    same seed" literally true. About a second. It then clones
+    `sorrel_test_1` through `sorrel_test_<maxWorkers>` from that template
+    with `CREATE DATABASE ... TEMPLATE`, dropping each one first (`DROP
+DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
+    instead of erroring on a stale database. `maxWorkers` comes off the
+    `TestProject` Vitest hands the setup function — no per-worker variable is
+    set inside the single setup process, so it pre-clones one database per
+    possible worker instead. It `provide`s that list as `workerDatabases`,
+    which `test-database-isolation.test.ts` asserts its own database is a
+    member of (MB.14) — the point being that a worker's name is checked
+    against what was actually created, not against a bound the test
+    recomputed — and the template's name as `templateDatabase`, which
+    `seeded-template.test.ts` asserts exists. The returned teardown drops all
+    of them, template included. Requires `sorrel` to own `sorrel_template`
+    and hold `CREATEDB` — both granted in
     `Docker/postgres-init/enable-extensions.sql` (M1.9) — since `postgres`'s
     own password is generated and discarded at image build time (M0.18) and
     so can never authenticate a real connection.
-  - **`setupFiles: ['./tests/support/db-setup.ts']`** points each worker's
-    `DATABASE_URL` at its own `sorrel_test_${VITEST_POOL_ID}` clone before
-    any test file imports `connection.ts` — it can read the variable at all
-    because `setupFiles` (unlike `globalSetup`) run inside the worker
-    process.
+    - **The template is built here, at setup, not baked into the Postgres
+      image.** TASKS.md first specified M1.27 as extending the image build;
+      [`design-decisions/m1.27-template-at-setup-not-in-image.md`](design-decisions/m1.27-template-at-setup-not-in-image.md)
+      records the measurement and the argument. The short form: migrate +
+      seed cost ~1 s once per run against a 30 ms clone, and a template built
+      from the checkout cannot disagree with it, whereas a baked one silently
+      would after a `git pull` without `make docker-rebuild`.
+  - **`setupFiles: ['./tests/support/db-setup.ts']`** runs once per **test
+    file** inside the worker process, and does two things in order. It
+    re-clones the worker's `sorrel_test_${VITEST_POOL_ID}` from
+    `sorrel_test_template` (M1.27) — `WITH (FORCE)`, so a previous file that
+    never ended its pool cannot block it — and then points `DATABASE_URL` at
+    that clone before any test file imports `connection.ts` (it can read the
+    slot variable at all because `setupFiles`, unlike `globalSetup`, run
+    inside the worker). Every file under `tests/db/` therefore starts from
+    the full schema and the `standard` scenario exactly as `globalSetup`
+    built them, whatever the previous file in that worker inserted, deleted,
+    truncated or dropped: a file owes the next one no restoring and no
+    discipline about what it deletes. A file that needs an empty table
+    truncates it, `cascade` — every child foreign key in the schema is
+    `NO ACTION`, so a `delete from` against seeded rows is refused. The
+    files that are _about_ seeding (`tests/db/seed/*`,
+    `updated-at-trigger.test.ts`) call `truncateAllTables(sql)` from
+    `seeded-database.ts` first.
     - **The slot is `VITEST_POOL_ID`, not `VITEST_WORKER_ID`** (MB.14).
       Vitest sets both, and only the first is bounded by `maxWorkers`
       ("Value is between 1-`maxWorkers`", per its own typedef);
@@ -162,10 +191,17 @@ IF EXISTS`) so a crashed previous run self-heals instead of erroring on a
 branches, functions, and statements, `include: ['src/**/*.{ts,tsx}']`,
 excluding `src/**/*.test.{ts,tsx}`, `src/test/**`, `*.stories.tsx`,
 `src/db/migrations/**`, and `src/db/seed/**`. The first two read as dead
-since MB.41 — no test or harness file lives under `src/` — and they are
-kept deliberately: `include` enumerates the disk rather than the repo, and
-CI's container still holds every file the repo has deleted (MB.42). Dropping
-them took CI from 92% to 78.54% with every test passing. Coverage has been above the threshold
+since MB.41 — no test or harness file lives under `src/` — and were kept
+deliberately: `include` enumerates the disk rather than the repo, and CI's
+container held every file the repo had deleted. Dropping them took CI from
+92% to 78.54% with every test passing. **MB.42 closed that condition** —
+`checkout-to-app` now runs `git clean -fd` after its copy — so the two are
+on their way out rather than load-bearing. They stay until the fixed action
+is live, which needs it on `main`, since every caller references it at
+`@main` and a merge to `staging` does not reach that; removing them before
+then fails the 80% gate on the PR that does it. **MB.44 is the follow-up** —
+it cuts that release and then removes both entries and this sentence.
+Coverage has been above the threshold
 since Wave 3's schema tests landed (~92% of lines at M1.21), so
 `npm run test:coverage` exits non-zero only on a test failure or on a change
 that pulls a metric back under 80% — which is the threshold doing its job,
@@ -264,8 +300,8 @@ fixture that names it. The schema import is `import type`: a runtime import of
 the schema is a runtime import of drizzle-orm, and `tests/support/` is not
 among the paths allowed to make one (CLAUDE.md rule 4 / MB.33).
 
-**Default names are invented, never real.** M1.27 bakes the `standard`
-scenario into `sorrel_template`, which every `db` worker clones, and the
+**Default names are invented, never real.** M1.27 seeds the `standard`
+scenario into the template every `db` worker clones, and the
 partial unique indexes reserve each seeded identity — so a default that
 matched one would be a fixture no test could insert. A real ingredient merely
 absent from the seed today is only safe until someone seeds it, so the
@@ -374,23 +410,27 @@ that file.
 worker — Playwright needs only one, `sorrel_e2e`, since `webServer` is a
 single shared server.
 
-- **`e2e/database.ts`** — `e2eDatabaseUrl()` swaps `DATABASE_URL`'s pathname
-  to `/sorrel_e2e` (handed to `webServer.env.DATABASE_URL` so the built app
-  reads from it instead of the dev database); `recreateE2eDatabase()`
-  connects as the `sorrel` admin role and does the same `DROP DATABASE IF
-EXISTS` / `CREATE DATABASE ... TEMPLATE sorrel_template` M1.9 already does
-  per Vitest worker.
-- **`globalSetup: './e2e/global-setup.ts'`** calls `recreateE2eDatabase()`
-  once, before `webServer` starts — `sorrel_e2e` has to exist before the
-  built app can connect to it.
+- **`e2e/database.ts`** — the same two-tier shape as the Vitest harness,
+  through the same `tests/support/seeded-database.ts` (M1.27).
+  `e2eDatabaseUrl()` swaps `DATABASE_URL`'s pathname to `/sorrel_e2e` (handed
+  to `webServer.env.DATABASE_URL` so the built app reads from it instead of
+  the dev database). `seedE2eTemplate()` builds `sorrel_e2e_template` —
+  `sorrel_template` cloned, migrated and `standard`-seeded, ~1 s;
+  `recreateE2eDatabase()` clones `sorrel_e2e` from it, tens of milliseconds;
+  `dropE2eTemplate()` removes the template again.
+- **`globalSetup: './e2e/global-setup.ts'`** calls `seedE2eTemplate()` and
+  then `recreateE2eDatabase()` once, before `webServer` starts — `sorrel_e2e`
+  has to exist before the built app can connect to it. `global-teardown.ts`
+  drops the template after the last spec; `sorrel_e2e` itself is left for
+  inspection.
 - **Reseeding between spec files** is each spec file's own `test.beforeAll`,
   not a Playwright hook that runs implicitly — see `e2e/smoke.spec.ts`. It
-  calls the same `recreateE2eDatabase()`, not `src/db/seed`: `sorrel_template`
-  itself carries no schema or seed data until M1.27 bakes them into the Postgres image
-  (`Docker/docker-compose.yaml`'s comment). Recreating from the template is
-  therefore what "reseed" resolves to today; once M1.27 lands, the same call
-  picks up real seeded content with no change needed here. Full reasoning in
-  [`design-decisions/m1.11-e2e-reseed-without-seed.md`](design-decisions/m1.11-e2e-reseed-without-seed.md).
+  calls `recreateE2eDatabase()`, never `src/db/seed` directly: a clone of the
+  seeded template _is_ the reseed, and it costs a clone rather than a seed.
+  Until M1.27 the template it cloned was the empty `sorrel_template`, so the
+  baseline every file started from was an empty database —
+  [`design-decisions/m1.11-e2e-reseed-without-seed.md`](design-decisions/m1.11-e2e-reseed-without-seed.md)
+  records why that was enough at the time.
   **Every db-touching spec file must open with
   `test.describe.configure({ mode: 'serial' })`** (M1.14) — `playwright.config.ts`
   sets `fullyParallel: true`, which lets Playwright split one file's tests
