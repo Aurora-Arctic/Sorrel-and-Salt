@@ -25,17 +25,22 @@ export interface WorkspaceFixture extends Required<
   members: WorkspaceMemberFixture[];
 }
 
-const DEFAULT_NAME = 'Whitethorn Coven';
+// Neither W nor X. M1.27 bakes the `standard` scenario into the template every
+// db worker clones, and `workspaces_slug_unique` reserves both their slugs — so
+// a default named after either would be a fixture no test could insert. A
+// fixture is what a test writes *beside* the seeded covens; workspace.test.ts
+// pins it against the seed's own list.
+const DEFAULT_NAME = 'Blackthorn Coven';
 
 const DEFAULTS: WorkspaceFixture = {
   name: DEFAULT_NAME,
   // Derived, never written down — see `makeWorkspace` below. Stated here as
   // the derivation of the default name for the same reason.
   slug: slugify(DEFAULT_NAME),
-  // A owns W in the fixture cast (CLAUDE.md's Testing section), and an
-  // ownerless coven is a shape the application never produces: story 2 makes
-  // the creator its owner, and the members page refuses the last owner's
-  // demotion.
+  // A owns this one too — A owns W in the fixture cast (CLAUDE.md's Testing
+  // section), and the membership is what the fixture is for: an ownerless
+  // coven is a shape the application never produces, since story 2 makes the
+  // creator its owner and the members page refuses the last owner's demotion.
   members: [{ userId: A.id, role: 'owner' }],
 };
 
@@ -43,8 +48,8 @@ const DEFAULTS: WorkspaceFixture = {
  * One workspace.
  *
  * ```ts
- * makeWorkspace()                            // Whitethorn Coven, A owning it
- * makeWorkspace({ name: 'Ninebark Coven' })  // slug follows the name
+ * makeWorkspace()                            // Blackthorn Coven, A owning it
+ * makeWorkspace({ name: 'Rowan Coven' })     // slug follows the name
  * ```
  *
  * **The slug follows the name.** CLAUDE.md's slug rule is that a slug is

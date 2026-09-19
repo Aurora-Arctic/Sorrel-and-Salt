@@ -114,7 +114,10 @@ type SeedWorkspace = Pick<typeof workspaces.$inferInsert, 'name'> & { id: string
 // No slug is written down, per CLAUDE.md's slug rule: it is `slugify(name)`,
 // through the one shared implementation, so a seeded workspace resolves at
 // /coven/<slug> under the same rule M3.3's mutation will slug a real one with.
-const WORKSPACES: SeedWorkspace[] = [
+//
+// Exported beside `FIXTURE_USERS` for the same reason: the M1.25 factories
+// have to know what W and X are called, so their own default can be neither.
+export const FIXTURE_WORKSPACES: SeedWorkspace[] = [
   { id: WORKSPACE_W_ID, name: 'Whitethorn Coven' },
   { id: WORKSPACE_X_ID, name: 'Ninebark Coven' },
 ];
@@ -527,12 +530,12 @@ async function insertMissingWorkspaces(tx: SeedTransaction): Promise<void> {
         .where(
           inArray(
             workspaces.id,
-            WORKSPACES.map((workspace) => workspace.id),
+            FIXTURE_WORKSPACES.map((workspace) => workspace.id),
           ),
         )
     ).map((row) => row.id),
   );
-  const missing = WORKSPACES.filter((workspace) => !present.has(workspace.id));
+  const missing = FIXTURE_WORKSPACES.filter((workspace) => !present.has(workspace.id));
 
   if (missing.length === 0) return;
 

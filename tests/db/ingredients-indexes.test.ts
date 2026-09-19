@@ -375,13 +375,18 @@ describe('ingredients unique indexes', () => {
   // an index that reserved nothing at all would fail the first half.
   describe('soft delete releases the reservation', () => {
     it('frees a compendium identity', async () => {
+      // The same identity under another label — stated on each row rather
+      // than left to the fixture's default, which is deliberately one the seed
+      // does not carry and so not the one this test names.
       const { id } = await insert({ canonicalName: 'Artemisia vulgaris', form: 'herb' });
 
-      const blocked = await failureOf(insert({ name: 'Cronewort' }));
+      const blocked = await failureOf(
+        insert({ name: 'Cronewort', canonicalName: 'Artemisia vulgaris' }),
+      );
       expect(blocked.constraint_name).toBe(COMPENDIUM_IDENTITY);
 
       await softDelete(id);
-      const reborn = await insert({ name: 'Cronewort' });
+      const reborn = await insert({ name: 'Cronewort', canonicalName: 'Artemisia vulgaris' });
 
       expect(reborn.canonicalKey).toBe('artemisia vulgaris :: herb');
       expect(await liveCount()).toBe(1);

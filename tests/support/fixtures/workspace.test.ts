@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { FIXTURE_WORKSPACES } from '@/db/seed/standard';
 import { slugify } from '@/lib/slugify';
 import { A, B, C } from '../as-user';
 import { makeWorkspace, workspaceColumns } from './workspace';
+
+// Derived here the way the seed derives them, rather than written down — a
+// workspace name copied into this file would be the second spelling the slug
+// rule forbids.
+const SEEDED_SLUGS = new Set(FIXTURE_WORKSPACES.map((workspace) => slugify(workspace.name)));
 
 // M1.25 — a coven, with the membership that makes it worth having one.
 //
@@ -15,8 +21,17 @@ describe('makeWorkspace', () => {
   it('builds a whole workspace with no arguments', () => {
     const workspace = makeWorkspace();
 
-    expect(workspace.name).toBe('Whitethorn Coven');
-    expect(workspace.slug).toBe('whitethorn-coven');
+    expect(workspace.name).toBe('Blackthorn Coven');
+    expect(workspace.slug).toBe('blackthorn-coven');
+  });
+
+  // M1.27 bakes the `standard` scenario — W and X — into the template every db
+  // worker clones, and `workspaces_slug_unique` reserves their slugs. A default
+  // that was one of them would be a fixture no test could insert; W is where a
+  // fixture *spell* lands, by reference, which is a different thing.
+  it('is not a workspace the standard seed already carries', () => {
+    expect(SEEDED_SLUGS.size).toBe(2);
+    expect(SEEDED_SLUGS.has(makeWorkspace().slug)).toBe(false);
   });
 
   it('opens with an owner, because a coven with no owner cannot be administered', () => {
@@ -24,10 +39,10 @@ describe('makeWorkspace', () => {
   });
 
   it('re-derives the slug from a name the override gives', () => {
-    const workspace = makeWorkspace({ name: 'Ninebark Coven' });
+    const workspace = makeWorkspace({ name: 'Rowan Coven' });
 
-    expect(workspace.slug).toBe('ninebark-coven');
-    expect(workspace.slug).toBe(slugify('Ninebark Coven'));
+    expect(workspace.slug).toBe('rowan-coven');
+    expect(workspace.slug).toBe(slugify('Rowan Coven'));
   });
 
   // Through the one shared implementation, so a fixture and M3.3's mutation
@@ -38,8 +53,10 @@ describe('makeWorkspace', () => {
     expect(makeWorkspace({ name: 'Sorrel & Salt' }).slug).toBe('sorrel-and-salt');
   });
 
+  // `whitethorn-coven` is W's slug: the collision a test would actually want
+  // to write, once M1.27 has W in every clone.
   it('leaves a slug the override names, so a test can write a colliding one', () => {
-    expect(makeWorkspace({ name: 'Ninebark Coven', slug: 'whitethorn-coven' }).slug).toBe(
+    expect(makeWorkspace({ name: 'Rowan Coven', slug: 'whitethorn-coven' }).slug).toBe(
       'whitethorn-coven',
     );
   });
@@ -68,6 +85,6 @@ describe('workspaceColumns', () => {
   it('names each field the way the database spells it, and leaves the members out', () => {
     const columns = workspaceColumns(makeWorkspace());
 
-    expect(columns).toEqual({ name: 'Whitethorn Coven', slug: 'whitethorn-coven' });
+    expect(columns).toEqual({ name: 'Blackthorn Coven', slug: 'blackthorn-coven' });
   });
 });

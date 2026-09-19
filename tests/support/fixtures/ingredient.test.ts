@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest';
+import { COMPENDIUM_INGREDIENTS } from '@/db/seed/standard';
 import { NOMENCLATURE_KINDS, ingredientColumns, makeIngredient } from './ingredient';
+
+/**
+ * The identity `canonical_key` is generated from (§5): the formal name where
+ * one is declared, the label where none is, plus the form — case and space
+ * folded, as the column folds them. Typed loosely enough to take a seed entry
+ * (which leaves the two optional) and a fixture (which does not).
+ */
+function identityOf(entry: {
+  name: string;
+  canonicalName?: string | null;
+  form?: string | null;
+}): string {
+  return `${(entry.canonicalName ?? entry.name).trim().toLowerCase()} :: ${(entry.form ?? '').trim().toLowerCase()}`;
+}
+
+const SEEDED_IDENTITIES = new Set(COMPENDIUM_INGREDIENTS.map(identityOf));
 
 // M1.25 — `makeIngredient()` is what a test writes when the ingredient is not
 // the point, and `makeIngredient({ … })` when one field of it is.
@@ -14,7 +31,7 @@ describe('makeIngredient', () => {
   it('builds a whole ingredient with no arguments', () => {
     const ingredient = makeIngredient();
 
-    expect(ingredient.name).toBe('Mugwort');
+    expect(ingredient.name).toBe('Yarrow');
     expect(ingredient.form).toBe('herb');
     // The compendium tier — what exists, rather than what one workspace has.
     expect(ingredient.workspaceId).toBeNull();
@@ -24,15 +41,15 @@ describe('makeIngredient', () => {
     const ingredient = makeIngredient();
 
     expect(ingredient.nomenclature).toBe('botanical');
-    expect(ingredient.canonicalName).toBe('Artemisia vulgaris');
+    expect(ingredient.canonicalName).toBe('Achillea millefolium');
   });
 
   it('keeps every field the override does not name', () => {
     const ingredient = makeIngredient({ form: 'root' });
 
     expect(ingredient.form).toBe('root');
-    expect(ingredient.name).toBe('Mugwort');
-    expect(ingredient.canonicalName).toBe('Artemisia vulgaris');
+    expect(ingredient.name).toBe('Yarrow');
+    expect(ingredient.canonicalName).toBe('Achillea millefolium');
   });
 
   it('files the ingredient under exactly the categories the override names', () => {
@@ -95,6 +112,25 @@ describe('makeIngredient', () => {
     expect(
       makeIngredient({ nomenclature: 'botanical', canonicalName: null }).canonicalName,
     ).toBeNull();
+  });
+
+  // M1.27 bakes the `standard` scenario into the template every db worker
+  // clones, and `ingredients_compendium_identity_unique` reserves each seeded
+  // identity — so a default that matched one would be a fixture no test could
+  // insert. Checked for every identity the factory can supply on its own, not
+  // just the zero-argument one: `{ nomenclature }` swaps in a formal name of
+  // the factory's choosing, and that name has to miss the seed too.
+  describe('an identity the standard seed does not carry', () => {
+    it('by default', () => {
+      expect(SEEDED_IDENTITIES.size).toBeGreaterThan(0);
+      expect(SEEDED_IDENTITIES.has(identityOf(makeIngredient()))).toBe(false);
+    });
+
+    it('for every nomenclature the factory names a formal name for', () => {
+      for (const nomenclature of NOMENCLATURE_KINDS) {
+        expect(SEEDED_IDENTITIES.has(identityOf(makeIngredient({ nomenclature })))).toBe(false);
+      }
+    });
   });
 
   it('gives each fixture its own folk names and categories', () => {

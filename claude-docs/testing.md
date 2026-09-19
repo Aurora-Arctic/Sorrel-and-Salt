@@ -252,7 +252,7 @@ one thing it is about and the factory answers the rest:
 ```ts
 makeIngredient({ categories: ['Protection'] });
 makeSpell({ layers: [{ ingredientId: mugwort }] });
-makeWorkspace({ name: 'Ninebark Coven' });
+makeWorkspace({ name: 'Rowan Coven' });
 ```
 
 **They are objects, not inserts.** Nothing here opens a connection, which is
@@ -263,6 +263,20 @@ use — so a column renamed in `src/db/schema/` is a compile error in every
 fixture that names it. The schema import is `import type`: a runtime import of
 the schema is a runtime import of drizzle-orm, and `tests/support/` is not
 among the paths allowed to make one (CLAUDE.md rule 4 / MB.33).
+
+**Defaults are distinct from the seed.** M1.27 bakes the `standard` scenario
+into `sorrel_template`, which every `db` worker clones, and the partial unique
+indexes reserve each seeded identity — so a default that matched one would be
+a fixture no test could insert. `makeIngredient()` is therefore Yarrow, not
+the seed's Mugwort, and every formal name the nomenclature table can supply
+misses the compendium; `makeWorkspace()` is neither W nor X. A fixture is what
+a test writes _beside_ the seeded world. `makeSpell()` still lands in W —
+`workspaceId` is a reference, not an insert, and a fixture spell and a seeded
+spell belong in the same coven. `ingredient.test.ts` and `workspace.test.ts`
+pin this against `COMPENDIUM_INGREDIENTS` and `FIXTURE_WORKSPACES`, read from
+`src/db/seed/standard` rather than copied, so a seed row added later that
+happens to collide fails there rather than in whichever db test first
+inserts the default.
 
 ### Overrides merge; arrays replace
 

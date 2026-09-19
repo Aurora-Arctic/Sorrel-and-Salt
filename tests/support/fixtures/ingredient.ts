@@ -70,18 +70,24 @@ export interface IngredientFixture extends Required<
  *
  * This table *is* the acceptance criterion: `ingredients_nomenclature_declares
  * _canonical_name` is a biconditional, so a fixture that let `{ nomenclature:
- * 'none' }` keep the default's `Artemisia vulgaris` would hand back a row
+ * 'none' }` keep the default's `Achillea millefolium` would hand back a row
  * Postgres refuses — and the test using it would fail for a reason having
- * nothing to do with what it was testing. Every entry is a name §5 or the
- * `standard` compendium already uses, so a fixture row and a seeded row are
- * recognisably the same kind of thing.
+ * nothing to do with what it was testing.
+ *
+ * Every entry is a real name the `standard` compendium does **not** carry, and
+ * that is deliberate: M1.27 bakes `standard` into the template every db worker
+ * clones, and `ingredients_compendium_identity_unique` reserves each seeded
+ * identity — so a default that matched one (Mugwort, *Artemisia vulgaris*, is
+ * the seed's first row) would be a fixture no test could insert. A fixture is
+ * what a test writes *beside* the seeded world. ingredient.test.ts pins this
+ * for every identity the factory can supply on its own.
  */
 const CANONICAL_NAME_BY_NOMENCLATURE: Record<Nomenclature, string | null> = {
-  botanical: 'Artemisia vulgaris',
-  fungal: 'Amanita muscaria',
-  zoological: 'Felis catus',
-  mineral: 'Quartz var. amethyst',
-  chemical: 'Sodium chloride',
+  botanical: 'Achillea millefolium',
+  fungal: 'Fomes fomentarius',
+  zoological: 'Corvus corax',
+  mineral: 'Quartz var. citrine',
+  chemical: 'Sodium bicarbonate',
   unknown: null,
   none: null,
 };
@@ -91,7 +97,7 @@ const DEFAULTS: IngredientFixture = {
   // one workspace has. A workspace-local fixture says so: `makeIngredient({
   // workspaceId: W })`.
   workspaceId: null,
-  name: 'Mugwort',
+  name: 'Yarrow',
   canonicalName: CANONICAL_NAME_BY_NOMENCLATURE.botanical,
   nomenclature: 'botanical',
   form: 'herb',
@@ -111,7 +117,7 @@ const DEFAULTS: IngredientFixture = {
  * One ingredient, with `nomenclature` and `canonicalName` guaranteed to agree.
  *
  * ```ts
- * makeIngredient()                              // Mugwort, botanical, Artemisia vulgaris
+ * makeIngredient()                              // Yarrow, botanical, Achillea millefolium
  * makeIngredient({ categories: ['Protection'] }) // filed under protection and nothing else
  * makeIngredient({ nomenclature: 'none' })      // graveyard-dirt shaped: no formal name
  * ```
