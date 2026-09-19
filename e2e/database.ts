@@ -1,38 +1,44 @@
-import postgres from 'postgres';
+import {
+  cloneDatabase,
+  databaseUrl,
+  dropDatabase,
+  seedTemplate,
+} from '../tests/support/seeded-database';
 
-// Mirrors tests/support/db-global-setup.ts's admin-connection pattern for
-// Vitest, adapted for Playwright's single `sorrel_e2e` database rather than
-// one clone per worker.
+// Playwright's single `sorrel_e2e` database, as against one clone per Vitest
+// worker — the same two-tier shape as tests/support/db-global-setup.ts and
+// db-setup.ts, through the same module (M1.27):
+//
+//   - global-setup.ts builds `sorrel_e2e_template` once per run: the
+//     extensions-only `sorrel_template` cloned, migrated, and seeded with the
+//     `standard` scenario. About a second.
+//   - every db-touching spec file recreates `sorrel_e2e` from it in its own
+//     `beforeAll` (see e2e/smoke.spec.ts) — a clone, tens of milliseconds —
+//     which is what DESIGN.md's "reseeded between spec files" resolves to.
+//   - global-teardown.ts drops the template again.
+//
+// Until M1.27 "reseeding" was a clone of `sorrel_template` itself, which
+// carried no schema and no rows: the known baseline every file started from
+// was an empty database. claude-docs/design-decisions/m1.11-e2e-reseed-
+// without-seed.md records that and why it was enough at the time.
 const E2E_DATABASE = 'sorrel_e2e';
-
-function baseUrl(): URL {
-  const value = process.env.DATABASE_URL;
-  if (!value) throw new Error('DATABASE_URL is not set');
-  return new URL(value);
-}
+const E2E_TEMPLATE = 'sorrel_e2e_template';
 
 export function e2eDatabaseUrl(): string {
-  const url = baseUrl();
-  url.pathname = `/${E2E_DATABASE}`;
-  return url.toString();
+  return databaseUrl(E2E_DATABASE);
 }
 
-function adminUrl(): string {
-  const url = baseUrl();
-  url.pathname = '/sorrel';
-  return url.toString();
+/** Once per run, before `webServer` starts. */
+export async function seedE2eTemplate(): Promise<void> {
+  await seedTemplate(E2E_TEMPLATE);
 }
 
-// "Reseeding" `sorrel_e2e` means recreating it from `sorrel_template`, the
-// same clone `db-global-setup.ts` does for each Vitest worker — not calling
-// `src/db/seed`, which still throws for every scenario until M1.21-23, and
-// `sorrel_template` itself carries no schema or seed data until M1.27 bakes
-// them into the image (see docker-compose.yaml). This keeps every spec file
-// starting from the same known baseline today, and needs no changes once
-// the template actually carries seeded content.
+/** Between spec files: `sorrel_e2e` back to the seeded baseline. */
 export async function recreateE2eDatabase(): Promise<void> {
-  const sql = postgres(adminUrl(), { onnotice: () => {} });
-  await sql.unsafe(`DROP DATABASE IF EXISTS ${E2E_DATABASE}`);
-  await sql.unsafe(`CREATE DATABASE ${E2E_DATABASE} TEMPLATE sorrel_template`);
-  await sql.end();
+  await cloneDatabase(E2E_DATABASE, E2E_TEMPLATE);
+}
+
+/** Once per run, after the last spec. `sorrel_e2e` itself is left for inspection. */
+export async function dropE2eTemplate(): Promise<void> {
+  await dropDatabase(E2E_TEMPLATE);
 }
