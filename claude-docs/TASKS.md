@@ -4208,6 +4208,7 @@ _Acceptance criteria:_
 - All three consuming workflows still pass
 - `ci.md` documents the overlay and why the clean step exists, so it is not later removed as redundant — including the correction to its own "every action is exercised by the checks that use it" claim, which is what let this go unguarded
 - `make act-overlay` runs the new job locally, per `ci.md`'s rule that a new check ships its `act-*` target in the same PR
+- The one workaround this does **not** retire is named rather than left: `vitest.config.mts`'s `src/**/*.test.{ts,tsx}` and `src/test/**` coverage excludes, which MB.41 emptied and the overlay kept alive. The clean step makes them dead, but only once it is live on `main` — every caller references the action at `@main`, and a merge to `staging` does not reach that — so removing them here would fail the 80% gate on this very PR. `vitest.config.mts` and `testing.md` both say so in place of the old "they are what makes the number describe the repo" rationale, which this task makes wrong
 
 **MB.43 — Map service errors to GraphQL errors with field-level detail** · 2h
 

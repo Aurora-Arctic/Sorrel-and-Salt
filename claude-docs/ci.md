@@ -39,6 +39,14 @@ edit at any call site; nothing passes it today.
     files added since. The guard was changed to scan the git index instead,
     which is right on its own merits and left the condition itself untouched
     until MB.42.
+  - **One workaround is left standing on purpose.** `vitest.config.mts`
+    excludes `src/**/*.test.{ts,tsx}` and `src/test/**` from coverage, paths
+    MB.41 emptied and the overlay kept alive — without them CI measured the
+    container rather than the repo and fell from 92% to 78.54%. The clean step
+    makes them dead, but only once it is live, and it is live only on `main`:
+    every caller references the action at `@main`, which a merge to `staging`
+    does not reach. Removing them before then fails the 80% gate on the PR that
+    does it. See `testing.md`'s Coverage paragraph.
   - Verified by `checks / overlay` — see below.
 - **`job-summary`** — a pass/fail `$GITHUB_STEP_SUMMARY` callout, with a tailed
   log excerpt on failure.
