@@ -4,6 +4,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { eq } from 'drizzle-orm';
+import { makeWorkspace, workspaceColumns } from '../support/fixtures';
 import { MIGRATIONS_DIR } from '../support/paths';
 import { users } from '@/db/schema/users';
 import { findOne, withAudit } from '@/db/repository';
@@ -123,9 +124,16 @@ beforeAll(async () => {
   }
 
   await insertUser(AUTHOR);
+  // M1.25 — the slug comes off the name through src/lib/slugify rather than
+  // being written down beside it (CLAUDE.md's slug rule), so this fixture
+  // cannot be the place the two spellings drift apart.
   await sql`
-    insert into workspaces (id, name, slug, created_by, updated_by)
-    values (${WORKSPACE}, 'Hearth', 'hearth', ${AUTHOR}, ${AUTHOR})
+    insert into workspaces ${sql({
+      id: WORKSPACE,
+      ...workspaceColumns(makeWorkspace({ name: 'Hearth' })),
+      created_by: AUTHOR,
+      updated_by: AUTHOR,
+    })}
   `;
   await sql`
     insert into spells (id, workspace_id, title, created_by, updated_by)

@@ -3,6 +3,12 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { getTableConfig } from 'drizzle-orm/pg-core';
+import {
+  type IngredientFixture,
+  type Overrides,
+  ingredientColumns,
+  makeIngredient,
+} from '../support/fixtures';
 import { MIGRATIONS_DIR } from '../support/paths';
 import { ingredients } from '@/db/schema/ingredients';
 
@@ -69,17 +75,19 @@ const AUTHOR = '11111111-1111-1111-1111-111111111111';
 const WORKSPACE_A = '22222222-2222-2222-2222-222222222222';
 const WORKSPACE_B = '33333333-3333-3333-3333-333333333333';
 
-type IngredientRow = Record<string, string | null>;
+// M1.25 — the shared factory, plus this file's own author; the audit stamps
+// are not the fixture's to give (CLAUDE.md rule 3). It is the same
+// `makeIngredient` ingredients-schema.test.ts writes its rows with, which is
+// the point: the two files were carrying byte-identical copies of this helper,
+// and a partial identity written into one of them would have gone on
+// disagreeing with the other silently.
+type IngredientOverrides = Overrides<IngredientFixture>;
 
-function row(overrides: IngredientRow = {}): IngredientRow {
+function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
   return {
-    name: 'Mugwort',
-    nomenclature: 'botanical',
-    canonical_name: 'Artemisia vulgaris',
-    form: 'herb',
+    ...ingredientColumns(makeIngredient(overrides)),
     created_by: AUTHOR,
     updated_by: AUTHOR,
-    ...overrides,
   };
 }
 
@@ -87,7 +95,7 @@ let sql: ReturnType<typeof postgres>;
 
 type Inserted = { id: string; canonicalKey: string };
 
-async function insert(overrides: IngredientRow = {}): Promise<Inserted> {
+async function insert(overrides: IngredientOverrides = {}): Promise<Inserted> {
   const [inserted] = await sql`
     insert into ingredients ${sql(row(overrides))} returning id, canonical_key
   `;
@@ -219,12 +227,12 @@ describe('ingredients unique indexes', () => {
     it('holds two entries that share a label but not a formal name', async () => {
       const vine = await insert({
         name: "Cat's Claw",
-        canonical_name: 'Uncaria tomentosa',
+        canonicalName: 'Uncaria tomentosa',
         form: 'bark',
       });
       const shrub = await insert({
         name: "Cat's Claw",
-        canonical_name: 'Senegalia greggii',
+        canonicalName: 'Senegalia greggii',
         form: 'bark',
       });
 
@@ -240,7 +248,7 @@ describe('ingredients unique indexes', () => {
     it('refuses a second entry that shares an identity', async () => {
       const first = await insert({
         name: "Cat's Claw",
-        canonical_name: 'Uncaria tomentosa',
+        canonicalName: 'Uncaria tomentosa',
         form: 'bark',
       });
 
@@ -248,15 +256,15 @@ describe('ingredients unique indexes', () => {
       // this index does not cover — and proof the two really do share an
       // identity rather than merely looking like they do.
       const elsewhere = await insert({
-        workspace_id: WORKSPACE_A,
+        workspaceId: WORKSPACE_A,
         name: 'Uña de gato',
-        canonical_name: 'Uncaria tomentosa',
+        canonicalName: 'Uncaria tomentosa',
         form: 'bark',
       });
       expect(elsewhere.canonicalKey).toBe(first.canonicalKey);
 
       const error = await failureOf(
-        insert({ name: 'Uña de gato', canonical_name: 'Uncaria tomentosa', form: 'bark' }),
+        insert({ name: 'Uña de gato', canonicalName: 'Uncaria tomentosa', form: 'bark' }),
       );
 
       // 23505 is unique_violation, and the constraint name pins *which* index
@@ -271,12 +279,12 @@ describe('ingredients unique indexes', () => {
     it('holds Valeriana officinalis root and leaf as two entries', async () => {
       const root = await insert({
         name: 'Valerian root',
-        canonical_name: 'Valeriana officinalis',
+        canonicalName: 'Valeriana officinalis',
         form: 'root',
       });
       const leaf = await insert({
         name: 'Valerian leaf',
-        canonical_name: 'Valeriana officinalis',
+        canonicalName: 'Valeriana officinalis',
         form: 'leaf',
       });
 
@@ -289,7 +297,7 @@ describe('ingredients unique indexes', () => {
     // keep the two identity indexes from seeing each other's rows.
     it('holds a compendium entry and a workspace local of the same identity', async () => {
       const global = await insert();
-      const local = await insert({ workspace_id: WORKSPACE_A });
+      const local = await insert({ workspaceId: WORKSPACE_A });
 
       expect(local.canonicalKey).toBe(global.canonicalKey);
       expect(await liveCount()).toBe(2);
@@ -298,20 +306,20 @@ describe('ingredients unique indexes', () => {
 
   describe('the workspace tier', () => {
     it('lets two workspaces each hold a local of the same formal name', async () => {
-      const mine = await insert({ workspace_id: WORKSPACE_A });
-      const yours = await insert({ workspace_id: WORKSPACE_B });
+      const mine = await insert({ workspaceId: WORKSPACE_A });
+      const yours = await insert({ workspaceId: WORKSPACE_B });
 
       expect(yours.canonicalKey).toBe(mine.canonicalKey);
       expect(await liveCount()).toBe(2);
     });
 
     it('refuses two locals of one workspace that share an identity', async () => {
-      const first = await insert({ workspace_id: WORKSPACE_A, name: 'Mugwort' });
+      const first = await insert({ workspaceId: WORKSPACE_A, name: 'Mugwort' });
 
-      const elsewhere = await insert({ workspace_id: WORKSPACE_B, name: 'Cronewort' });
+      const elsewhere = await insert({ workspaceId: WORKSPACE_B, name: 'Cronewort' });
       expect(elsewhere.canonicalKey).toBe(first.canonicalKey);
 
-      const error = await failureOf(insert({ workspace_id: WORKSPACE_A, name: 'Cronewort' }));
+      const error = await failureOf(insert({ workspaceId: WORKSPACE_A, name: 'Cronewort' }));
 
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(WORKSPACE_IDENTITY);
@@ -319,25 +327,25 @@ describe('ingredients unique indexes', () => {
 
     it('refuses two locals of one workspace that share a label', async () => {
       const first = await insert({
-        workspace_id: WORKSPACE_A,
+        workspaceId: WORKSPACE_A,
         name: 'Mugwort',
-        canonical_name: 'Artemisia vulgaris',
+        canonicalName: 'Artemisia vulgaris',
       });
 
       // Different identities, same label — so only the label index can be
       // what refuses the second row, and the assertion below says which.
       const elsewhere = await insert({
-        workspace_id: WORKSPACE_B,
+        workspaceId: WORKSPACE_B,
         name: 'Mugwort',
-        canonical_name: 'Artemisia absinthium',
+        canonicalName: 'Artemisia absinthium',
       });
       expect(elsewhere.canonicalKey).not.toBe(first.canonicalKey);
 
       const error = await failureOf(
         insert({
-          workspace_id: WORKSPACE_A,
+          workspaceId: WORKSPACE_A,
           name: 'Mugwort',
-          canonical_name: 'Artemisia absinthium',
+          canonicalName: 'Artemisia absinthium',
         }),
       );
 
@@ -346,13 +354,13 @@ describe('ingredients unique indexes', () => {
     });
 
     it('folds case when comparing labels inside a workspace', async () => {
-      await insert({ workspace_id: WORKSPACE_A, name: 'Mugwort' });
+      await insert({ workspaceId: WORKSPACE_A, name: 'Mugwort' });
 
       const error = await failureOf(
         insert({
-          workspace_id: WORKSPACE_A,
+          workspaceId: WORKSPACE_A,
           name: 'mugwort',
-          canonical_name: 'Artemisia absinthium',
+          canonicalName: 'Artemisia absinthium',
         }),
       );
 
@@ -367,7 +375,7 @@ describe('ingredients unique indexes', () => {
   // an index that reserved nothing at all would fail the first half.
   describe('soft delete releases the reservation', () => {
     it('frees a compendium identity', async () => {
-      const { id } = await insert({ canonical_name: 'Artemisia vulgaris', form: 'herb' });
+      const { id } = await insert({ canonicalName: 'Artemisia vulgaris', form: 'herb' });
 
       const blocked = await failureOf(insert({ name: 'Cronewort' }));
       expect(blocked.constraint_name).toBe(COMPENDIUM_IDENTITY);
@@ -380,34 +388,34 @@ describe('ingredients unique indexes', () => {
     });
 
     it('frees a workspace identity', async () => {
-      const { id } = await insert({ workspace_id: WORKSPACE_A });
+      const { id } = await insert({ workspaceId: WORKSPACE_A });
 
-      const blocked = await failureOf(insert({ workspace_id: WORKSPACE_A, name: 'Cronewort' }));
+      const blocked = await failureOf(insert({ workspaceId: WORKSPACE_A, name: 'Cronewort' }));
       expect(blocked.constraint_name).toBe(WORKSPACE_IDENTITY);
 
       await softDelete(id);
-      await insert({ workspace_id: WORKSPACE_A, name: 'Cronewort' });
+      await insert({ workspaceId: WORKSPACE_A, name: 'Cronewort' });
 
       expect(await liveCount()).toBe(1);
     });
 
     it('frees a workspace label', async () => {
-      const { id } = await insert({ workspace_id: WORKSPACE_A, name: 'Mugwort' });
+      const { id } = await insert({ workspaceId: WORKSPACE_A, name: 'Mugwort' });
 
       const blocked = await failureOf(
         insert({
-          workspace_id: WORKSPACE_A,
+          workspaceId: WORKSPACE_A,
           name: 'Mugwort',
-          canonical_name: 'Artemisia absinthium',
+          canonicalName: 'Artemisia absinthium',
         }),
       );
       expect(blocked.constraint_name).toBe(WORKSPACE_LABEL);
 
       await softDelete(id);
       await insert({
-        workspace_id: WORKSPACE_A,
+        workspaceId: WORKSPACE_A,
         name: 'Mugwort',
-        canonical_name: 'Artemisia absinthium',
+        canonicalName: 'Artemisia absinthium',
       });
 
       expect(await liveCount()).toBe(1);
