@@ -64,7 +64,12 @@ preview's own.
 
 `vercel pull` (`migrate.yml`) resolves `DATABASE_URL` per environment
 automatically once Preview/Production have it — no separate GitHub Actions
-copy of `DATABASE_URL` is needed, unlike everything below.
+copy of `DATABASE_URL` is needed, unlike everything below. The **branch-scoped**
+Preview row above is the exception to "automatically": Vercel resolves it only
+for a pull that names the branch, so `deploy.yml` and `migrate.yml` both pass
+`--git-branch` (MB.27). Setting that row in the branch-scoped form is necessary
+and not sufficient — dropping the flag puts staging back on the
+environment-wide value with nothing failing.
 
 ## GitHub Actions repository secrets
 
