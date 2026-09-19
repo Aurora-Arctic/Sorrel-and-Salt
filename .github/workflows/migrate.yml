@@ -17,12 +17,20 @@ name: Migrate
 # separately: one job summary each, so a failed seed is not read as a failed
 # migration.
 #
-# `environment` matches deploy.yml's own resolved target: `production` for
-# a push to main, `preview` for a push to staging and for a hotfix -> main
-# PR. `vercel pull` resolves the right DATABASE_URL for each — the
+# `environment` and `git-branch` both match deploy.yml's own resolved
+# target: `production`/`main` for a push to main, `preview`/`staging` for a
+# push to staging, `preview`/`hotfix/<slug>` for a hotfix -> main PR.
+# `vercel pull` resolves the right DATABASE_URL for each — the
 # branch-scoped override for staging, the integration's per-deployment
 # ephemeral Neon branch for a hotfix preview — see
-# claude-docs/design-decisions/m1.1-neon-branch-strategy.md. Never
+# claude-docs/design-decisions/m1.1-neon-branch-strategy.md.
+#
+# The branch is what makes that resolution happen at all (MB.27): a pull
+# without --git-branch gets the environment-wide value, so this workflow
+# would migrate whichever database the integration last injected while
+# deploy.yml served another. M1.1's "Cross-task impact" is the rule — the
+# two must resolve DATABASE_URL identically — and
+# tests/guards/vercel-pull-git-branch.test.ts holds them to it. Never
 # triggered directly, same as checks.yml.
 #
 # Production only (M1.6): before applying migrations, branch the `main`
@@ -38,6 +46,15 @@ on:
     inputs:
       environment:
         description: Vercel environment to pull DATABASE_URL for (preview or production)
+        required: true
+        type: string
+      git-branch:
+        description: >-
+          Git branch the deploy targets, so `vercel pull` resolves the
+          branch-scoped environment variables rather than the environment-wide
+          ones. Required: a caller that cannot say which branch it is
+          migrating cannot be given the right DATABASE_URL, and guessing is
+          what MB.27 fixed.
         required: true
         type: string
       seed-reference:
@@ -97,8 +114,12 @@ jobs:
 
       - name: Pull Vercel environment
         if: steps.guard.outputs.enabled == 'true'
-        run: vercel pull --yes --environment=${{ inputs.environment }} --token="$VERCEL_DEPLOY_TOKEN"
+        run: vercel pull --yes --environment=${{ inputs.environment }} --git-branch="$GIT_BRANCH" --token="$VERCEL_DEPLOY_TOKEN"
         env:
+          # Quoted and passed through env rather than interpolated: a branch
+          # name may legally contain shell metacharacters, and a hotfix
+          # branch's name arrives from a pull request.
+          GIT_BRANCH: ${{ inputs.git-branch }}
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
       - name: Load DATABASE_URL from pulled environment
