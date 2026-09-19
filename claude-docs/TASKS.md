@@ -976,6 +976,7 @@ _Acceptance criteria:_
 - Overrides merge rather than replace nested defaults
 - Factories are used by at least one existing test
 - `makeIngredient()` defaults to a valid `nomenclature`/`canonicalName` pair; overriding `nomenclature` still produces a valid row
+- Every ingredient or workspace name a factory supplies on its own is invented, never a real one — M1.27 bakes `standard` into every db worker's clone, and a real name is only safe until someone seeds it; a test that reads the seed's own lists backstops it
 
 **M1.26 — asUser helper and Forbidden error type** · 1h
 

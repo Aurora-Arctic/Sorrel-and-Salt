@@ -3,6 +3,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { getTableConfig } from 'drizzle-orm/pg-core';
+import { type SpellOverrides, makeSpell, spellColumns } from '../support/fixtures';
 import { MIGRATIONS_DIR } from '../support/paths';
 import { spellStatus, spells } from '@/db/schema/spells';
 import { users } from '@/db/schema/users';
@@ -166,36 +167,22 @@ const ABSENT = '99999999-9999-9999-9999-999999999999';
 let sql: ReturnType<typeof postgres>;
 let createdUnitEnum = false;
 
-interface SpellRow {
-  workspaceId?: string;
-  title?: string | null;
-  intent?: string | null;
-  jarSize?: string | null;
-  sealWaxColor?: string | null;
-  moonPhase?: string | null;
-  dayOfWeek?: string | null;
-  instructions?: string | null;
-}
+// M1.25 — the shared factory writes the row; this file supplies its own coven
+// and author, since the audit stamps are never the fixture's to give
+// (CLAUDE.md rule 3) and the workspaces here are stubs of this file's own.
+//
+// Every column §5 names except `status`, which is dropped so that the column's
+// own default is what the tests below observe — a status spelled out in the
+// insert would make "defaults a new spell to draft" assert the value it had
+// just written. `cast` takes the status path when a test is about the enum
+// itself.
+async function record(overrides: SpellOverrides = {}): Promise<string> {
+  const { status: _status, ...columns } = spellColumns(
+    makeSpell({ workspaceId: COVEN, ...overrides }),
+  );
 
-// Every column §5 names except `status`, which is left to its default here so
-// that the default is what the tests below observe; `cast` takes the status
-// path when a test is about the enum itself.
-async function record({
-  workspaceId = COVEN,
-  title = 'Hearth Guard',
-  intent = null,
-  jarSize = null,
-  sealWaxColor = null,
-  moonPhase = null,
-  dayOfWeek = null,
-  instructions = null,
-}: SpellRow = {}): Promise<string> {
   const [inserted] = await sql`
-    insert into spells
-      (workspace_id, title, intent, jar_size, seal_wax_color, moon_phase, day_of_week,
-       instructions, created_by, updated_by)
-    values (${workspaceId}, ${title}, ${intent}, ${jarSize}, ${sealWaxColor}, ${moonPhase},
-            ${dayOfWeek}, ${instructions}, ${AUTHOR}, ${AUTHOR})
+    insert into spells ${sql({ ...columns, created_by: AUTHOR, updated_by: AUTHOR })}
     returning id
   `;
   return inserted.id as string;
@@ -285,7 +272,7 @@ describe('spells table', () => {
   // be: a coven, a name, and the audit stamps. Everything else about the
   // working is still unanswered.
   it('accepts a spell that is only a title in a workspace', async () => {
-    const id = await record();
+    const id = await record({ title: 'Hearth Guard' });
 
     const [row] = await sql`select * from spells where id = ${id}`;
 
@@ -325,7 +312,10 @@ describe('spells table', () => {
   it('refuses a spell with no title', async () => {
     // 23502 is not_null_violation, named: the refusal is the column's and not
     // a foreign key's or a type cast's.
-    const error = await failureOf(record({ title: null }));
+    // Cast, because the fixture is typed against a NOT NULL column and the
+    // whole point of this row is the absence the column refuses — which has to
+    // be Postgres's refusal rather than TypeScript's.
+    const error = await failureOf(record({ title: null as unknown as string }));
 
     expect(error.code).toBe('23502');
     expect(error.column_name).toBe('title');
@@ -411,7 +401,7 @@ describe('spells table', () => {
   // 54's delete is recoverable. There is no unique index to dodge here, which
   // is why the tombstone costs nothing — the name was never reserved.
   it('soft-deletes, leaving the row and its title behind', async () => {
-    const id = await record();
+    const id = await record({ title: 'Hearth Guard' });
 
     await sql`update spells set deleted_at = now(), deleted_by = ${AUTHOR} where id = ${id}`;
 

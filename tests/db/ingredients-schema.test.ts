@@ -3,6 +3,12 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { getTableConfig } from 'drizzle-orm/pg-core';
+import {
+  type IngredientFixture,
+  type Overrides,
+  ingredientColumns,
+  makeIngredient,
+} from '../support/fixtures';
 import { MIGRATIONS_DIR } from '../support/paths';
 import { ingredientElement, ingredients, nomenclatureKind } from '@/db/schema/ingredients';
 import { workspaces } from '@/db/schema/workspaces';
@@ -28,7 +34,7 @@ const NOMENCLATURE_VALUES = [
   'none',
 ];
 
-const ELEMENT_VALUES = ['earth', 'air', 'fire', 'water', 'spirit'];
+const ELEMENT_VALUES = ['earth', 'air', 'fire', 'water', 'spirit'] as const;
 
 describe('ingredients schema', () => {
   const { columns, foreignKeys } = getTableConfig(ingredients);
@@ -177,23 +183,25 @@ function ingredientsMigrationStatements(): string[] {
 const AUTHOR = '11111111-1111-1111-1111-111111111111';
 const WORKSPACE = '22222222-2222-2222-2222-222222222222';
 
-type IngredientRow = Record<string, string | null>;
+// M1.25 — the shared factory, plus this file's own author. The audit stamps
+// are not the fixture's to give (CLAUDE.md rule 3), and `makeIngredient` is
+// what keeps a row stating one field from contradicting itself: overriding
+// `nomenclature` alone re-derives `canonicalName` to match, so only a test
+// that names *both* writes a row the biconditional CHECK rejects — which is
+// exactly what the tests below that expect a rejection do.
+type IngredientOverrides = Overrides<IngredientFixture>;
 
-function row(overrides: IngredientRow = {}): IngredientRow {
+function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
   return {
-    name: 'Mugwort',
-    nomenclature: 'botanical',
-    canonical_name: 'Artemisia vulgaris',
-    form: 'herb',
+    ...ingredientColumns(makeIngredient(overrides)),
     created_by: AUTHOR,
     updated_by: AUTHOR,
-    ...overrides,
   };
 }
 
 let sql: ReturnType<typeof postgres>;
 
-async function insert(overrides: IngredientRow = {}): Promise<string> {
+async function insert(overrides: IngredientOverrides = {}): Promise<string> {
   const [inserted] = await sql`
     insert into ingredients ${sql(row(overrides))} returning id, canonical_key
   `;
@@ -258,9 +266,9 @@ describe('ingredients table', () => {
   it('accepts a row in each tier: compendium (workspace_id null) and workspace-local', async () => {
     await insert();
     await insert({
-      workspace_id: WORKSPACE,
+      workspaceId: WORKSPACE,
       name: 'Mugwort',
-      canonical_name: null,
+      canonicalName: null,
       nomenclature: 'none',
     });
 
@@ -272,9 +280,9 @@ describe('ingredients table', () => {
     // Both directions, because a one-directional CHECK would let exactly one
     // of these two rows through and DESIGN.md §5 forbids both.
     it('rejects none or unknown carrying a formal name', async () => {
-      for (const nomenclature of ['none', 'unknown']) {
+      for (const nomenclature of ['none', 'unknown'] as const) {
         const error = await failureOf(
-          insert({ nomenclature, canonical_name: 'Artemisia vulgaris' }),
+          insert({ nomenclature, canonicalName: 'Artemisia vulgaris' }),
         );
         expect(error.code).toBe('23514');
         expect(error.constraint_name).toBe('ingredients_nomenclature_declares_canonical_name');
@@ -282,8 +290,14 @@ describe('ingredients table', () => {
     });
 
     it('rejects any other kind carrying no formal name', async () => {
-      for (const nomenclature of ['botanical', 'fungal', 'zoological', 'mineral', 'chemical']) {
-        const error = await failureOf(insert({ nomenclature, canonical_name: null }));
+      for (const nomenclature of [
+        'botanical',
+        'fungal',
+        'zoological',
+        'mineral',
+        'chemical',
+      ] as const) {
+        const error = await failureOf(insert({ nomenclature, canonicalName: null }));
         expect(error.code).toBe('23514');
         expect(error.constraint_name).toBe('ingredients_nomenclature_declares_canonical_name');
       }
@@ -293,10 +307,10 @@ describe('ingredients table', () => {
     // assertion above would also pass against a constraint that rejected
     // everything.
     it('accepts the two shapes it exists to allow', async () => {
-      await insert({ nomenclature: 'none', canonical_name: null, name: 'Graveyard dirt' });
+      await insert({ nomenclature: 'none', canonicalName: null, name: 'Graveyard dirt' });
       await insert({
         nomenclature: 'mineral',
-        canonical_name: 'Quartz var. amethyst',
+        canonicalName: 'Quartz var. amethyst',
         name: 'Amethyst',
       });
 
@@ -307,7 +321,7 @@ describe('ingredients table', () => {
 
   describe('the non-blank checks', () => {
     it('rejects a blank-but-present formal name', async () => {
-      const error = await failureOf(insert({ canonical_name: '   ' }));
+      const error = await failureOf(insert({ canonicalName: '   ' }));
       expect(error.code).toBe('23514');
       expect(error.constraint_name).toBe('ingredients_canonical_name_not_blank');
     });
@@ -320,14 +334,14 @@ describe('ingredients table', () => {
 
     // A blank form is rejected; an *absent* one is not — form is optional.
     it('accepts a null form', async () => {
-      const id = await insert({ form: null });
+      const id = await insert({ form: null, canonicalName: 'Artemisia vulgaris' });
       expect(await canonicalKeyOf(id)).toBe('artemisia vulgaris');
     });
 
     // The vocabulary is an autofill, not a constraint: `rhizome` is writable
     // before anyone has curated it (DESIGN.md §5).
     it('accepts a form absent from the curated vocabulary', async () => {
-      const id = await insert({ form: 'rhizome' });
+      const id = await insert({ form: 'rhizome', canonicalName: 'Artemisia vulgaris' });
       expect(await canonicalKeyOf(id)).toBe('artemisia vulgaris :: rhizome');
     });
   });
@@ -353,12 +367,12 @@ describe('ingredients table', () => {
     });
 
     it('folds case and surrounding space, so Root Bark and root bark are one key', async () => {
-      const shouted = await insert({ form: 'Root Bark' });
+      const shouted = await insert({ form: 'Root Bark', canonicalName: 'Artemisia vulgaris' });
       const muttered = await insert({
         form: '  root bark  ',
         name: 'Mugwort (second jar)',
-        canonical_name: 'Artemisia vulgaris',
-        workspace_id: WORKSPACE,
+        canonicalName: 'Artemisia vulgaris',
+        workspaceId: WORKSPACE,
       });
 
       expect(await canonicalKeyOf(shouted)).toBe('artemisia vulgaris :: root bark');
@@ -368,7 +382,7 @@ describe('ingredients table', () => {
     it('falls back to the display label when the row declares no formal name', async () => {
       const id = await insert({
         nomenclature: 'none',
-        canonical_name: null,
+        canonicalName: null,
         name: 'Graveyard Dirt',
         form: null,
       });
@@ -380,12 +394,12 @@ describe('ingredients table', () => {
     it('separates two rows sharing a formal name but not a form', async () => {
       const root = await insert({
         name: 'Valerian root',
-        canonical_name: 'Valeriana officinalis',
+        canonicalName: 'Valeriana officinalis',
         form: 'root',
       });
       const leaf = await insert({
         name: 'Valerian leaf',
-        canonical_name: 'Valeriana officinalis',
+        canonicalName: 'Valeriana officinalis',
         form: 'leaf',
       });
 
@@ -397,7 +411,7 @@ describe('ingredients table', () => {
       it('leaves the key unchanged when a row carrying a formal name is relabelled', async () => {
         const id = await insert({
           name: 'Mugwort',
-          canonical_name: 'Artemisia vulgaris',
+          canonicalName: 'Artemisia vulgaris',
           form: 'herb',
         });
         expect(await canonicalKeyOf(id)).toBe('artemisia vulgaris :: herb');
@@ -416,7 +430,7 @@ describe('ingredients table', () => {
       it('recomputes the key when a row carrying no formal name is relabelled', async () => {
         const id = await insert({
           nomenclature: 'none',
-          canonical_name: null,
+          canonicalName: null,
           name: 'Moon water',
           form: null,
         });
@@ -428,13 +442,13 @@ describe('ingredients table', () => {
       });
 
       it('recomputes the key whenever the form changes, formal name or not', async () => {
-        const named = await insert({ form: 'herb' });
+        const named = await insert({ form: 'herb', canonicalName: 'Artemisia vulgaris' });
         await sql`update ingredients set form = 'leaf' where id = ${named}`;
         expect(await canonicalKeyOf(named)).toBe('artemisia vulgaris :: leaf');
 
         const unnamed = await insert({
           nomenclature: 'none',
-          canonical_name: null,
+          canonicalName: null,
           name: 'Coffin nail',
           form: 'curio',
         });
@@ -447,7 +461,7 @@ describe('ingredients table', () => {
   describe('element', () => {
     it('accepts each of its five documented values', async () => {
       for (const element of ELEMENT_VALUES) {
-        await insert({ element, name: `Mugwort (${element})`, workspace_id: WORKSPACE });
+        await insert({ element, name: `Mugwort (${element})`, workspaceId: WORKSPACE });
       }
 
       const [{ count }] =
@@ -456,7 +470,10 @@ describe('ingredients table', () => {
     });
 
     it('rejects a value outside that set', async () => {
-      const error = await failureOf(insert({ element: 'aether' }));
+      // Cast, because the fixture is typed against the column and the whole
+      // point of this row is a value the column has never heard of — the
+      // database has to be the one to refuse it.
+      const error = await failureOf(insert({ element: 'aether' as IngredientFixture['element'] }));
       // 22P02 is invalid_text_representation: the enum cast refusing the
       // value, rather than the row failing some other constraint first.
       expect(error.code).toBe('22P02');
