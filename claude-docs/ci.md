@@ -15,10 +15,42 @@ print an elapsed time into a job summary. `duration` stays an **optional**
 input on `job-summary` and `pr-comment`, so restoring a timer would need no
 edit at any call site; nothing passes it today.
 
-- **`checkout-to-app`** — `actions/checkout` + `cp -a "$GITHUB_WORKSPACE"/. /app/`.
-  Every other local action resolves as `./.github/actions/<name>` once checked
-  out; this one runs _before_ that checkout exists, so **callers must reference
-  it by full `Aurora-Arctic/Sorrel-and-Salt/...@main` path**.
+- **`checkout-to-app`** — `actions/checkout`, then
+  `cp -a "$GITHUB_WORKSPACE"/. /app/`. Every other local action resolves as
+  `./.github/actions/<name>` once checked out; this one runs _before_ that
+  checkout exists, so **callers must reference it by full
+  `Aurora-Arctic/Sorrel-and-Salt/...@main` path**.
+  - **Copy-only is sufficient because the image carries no source** (MB.42).
+    `cp -a` overlays and never deletes, which is safe only when there is
+    nothing underneath for a stale file to survive _as_: `Dockerfile.node`
+    copies in the two manifests, runs `npm ci`, and stops, so `node_modules` is
+    all the image contributes to `/app` and the checkout is the only source a
+    job ever sees. Until MB.42 both `Dockerfile.node` and `Dockerfile.e2e`
+    baked the whole repo in with `COPY . .`, and every file dropped from the
+    repo since the image was last built stayed on disk after the overlay —
+    untracked, not gitignored, and indistinguishable to `oxlint`, `tsc` or a
+    `tests/**` glob from a file the branch actually had. That layer was
+    shadowed by the `..:/app` bind mount in every compose service and in the
+    devcontainer; CI was its only reader, and there it was the bug.
+  - **`tests/guards/image-source-layer.test.ts` is what keeps it that way.**
+    It parses every `COPY`/`ADD` in both Dockerfiles and checks each source
+    against a per-file allowlist — the two manifests, plus
+    `Docker/playwright-entrypoint.sh` for `Dockerfile.e2e`'s `headed` stage. An
+    allowlist rather than a `.` denylist: `COPY src src` is as much a source
+    layer as `COPY . .`, and a new COPY is a decision, not a convenience. The
+    guard runs in CI's `vitest` job, so a source layer re-added tomorrow fails
+    in the diff that adds it rather than on the next PR that deletes a file.
+    And the fix is live on the PR that makes it: `pr-gate.yml` builds the
+    image under a tag hashed from `Dockerfile.node` and `package-lock.json`,
+    so a Dockerfile change runs on its own image — unlike an edit to this
+    action, which every caller resolves at `@main`.
+  - Found by MB.41, whose new test-location guard failed on its first CI run
+    reporting 34 test files outside `tests/` — every one of them that move's own
+    predecessor, still sitting where the image had baked it. The count is the
+    tell: 34, not that branch's 39, because the image predated the five test
+    files added since. The guard was changed to scan the git index instead,
+    which is right on its own merits and left the condition itself untouched
+    until MB.42.
 - **`job-summary`** — a pass/fail `$GITHUB_STEP_SUMMARY` callout, with a tailed
   log excerpt on failure.
 - **`pr-comment`** — upserts one marked comment per check (`<!-- ci-<slug> -->`),
@@ -315,6 +347,21 @@ use it on the same push — a broken `job-summary` or `pr-comment` fails
 `checks`, `vitest` and `playwright` at once — and `checkout-to-app` is the
 first step of nearly every job in the repo.
 
+**That argument has one hole, and MB.42 fell into it.** "Exercised by the
+checks that use it" only covers the behaviour those checks would notice. Every
+job in the repo ran `checkout-to-app` on every push for months while it was
+leaving deleted files on disk, and not one of them failed, because a check that
+reads a file's _contents_ cannot tell a stale copy from a live one. The answer
+is not a job. MB.42 built one first — a `checks / overlay` that planted stale
+files in `/app` and asserted a `git clean` step removed them — and replaced it
+on the same PR with an image that carries no source layer, so the overlay has
+nothing to delete and a stale file has nothing to survive as, plus
+`tests/guards/image-source-layer.test.ts`, which fails the diff that re-adds
+one. The general lesson is the sweep-task rule's — a mechanism that can be
+made _impossible_ to get wrong needs a guard, and "something else would have
+noticed" is not one — and so is the tell: the job made stale files _absent_,
+the image makes them _impossible_.
+
 **A workflow must never publish a status-check context `pr-gate.yml` also
 publishes.** `lint-format-typecheck-check.yml` (M0.16) and
 `build-audit-check.yml` (M0.17) did, and MB.15 deleted them. They were written
@@ -551,4 +598,6 @@ vitest` would have to either execute `build-db-image.yml` for real (a
 - **Every new reusable check workflow ships its `act-<name>` target in the same
   PR**, plus an `act-cache-*` pre-clone for any action that isn't cached yet
   — except where that isn't possible yet, as above. A new `checks.yml` leg
-  needs no new target: it is `make act-check CHECK=<leg>` the day it lands.
+  needs no new target: it is `make act-check CHECK=<leg>` the day it lands. A
+  new `checks.yml` **job** would need one — `act-check` is
+  `-j check --matrix name:<leg>` and reaches only the matrix job.
