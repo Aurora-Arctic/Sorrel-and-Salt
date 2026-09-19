@@ -16,31 +16,34 @@ input on `job-summary` and `pr-comment`, so restoring a timer would need no
 edit at any call site; nothing passes it today.
 
 - **`checkout-to-app`** — `actions/checkout`, then
-  `cp -a "$GITHUB_WORKSPACE"/. /app/`, then `git clean -fd` in `/app`.
-  Every other local action resolves as `./.github/actions/<name>` once checked
-  out; this one runs _before_ that checkout exists, so **callers must reference
-  it by full `Aurora-Arctic/Sorrel-and-Salt/...@main` path**.
-  - **The clean step is not redundant, and removing it reopens MB.42.** Both
-    `Dockerfile.node` and `Dockerfile.e2e` bake the whole repo into `/app` with
-    `COPY . .` at image build time; the `cp -a` then _overlays_ that, and an
-    overlay never deletes. Every file dropped from the repo since the image was
-    last built therefore stays on disk — untracked, not gitignored, and
-    indistinguishable to `oxlint`, `tsc` or a `tests/**` glob from a file the
-    branch actually has. `git clean -fd` is what deletes it. **No `-x`**: the
-    image's own `node_modules` and `.next` are gitignored and must survive, or
-    every job reinstalls its dependencies.
-  - It must run _after_ the copy, not before: `.dockerignore` keeps both `.git`
-    and `.gitignore` out of the image, so the clean has neither an index to
-    compare against nor an ignore list until the checkout has landed.
-  - **The `git config --global --add safe.directory /app` beside it is not
-    boilerplate.** `Dockerfile.node` chowns `/app` to `node` and every consuming
-    job runs its container `--user root`; git as root requires a root-owned
-    repository, and refuses any other with `fatal: detected dubious ownership`.
-    `actions/checkout` makes the same call for `$GITHUB_WORKSPACE`, which is
-    exactly why the checkout works there and a copy of it at `/app` does not.
-    `--add` rather than `--replace-all`, so the workspace's own entry survives.
-    It is also what lets `checks / overlay`'s assertion step run `git status` in
-    `/app` without repeating the call.
+  `cp -a "$GITHUB_WORKSPACE"/. /app/`. Every other local action resolves as
+  `./.github/actions/<name>` once checked out; this one runs _before_ that
+  checkout exists, so **callers must reference it by full
+  `Aurora-Arctic/Sorrel-and-Salt/...@main` path**.
+  - **Copy-only is sufficient because the image carries no source** (MB.42).
+    `cp -a` overlays and never deletes, which is safe only when there is
+    nothing underneath for a stale file to survive _as_: `Dockerfile.node`
+    copies in the two manifests, runs `npm ci`, and stops, so `node_modules` is
+    all the image contributes to `/app` and the checkout is the only source a
+    job ever sees. Until MB.42 both `Dockerfile.node` and `Dockerfile.e2e`
+    baked the whole repo in with `COPY . .`, and every file dropped from the
+    repo since the image was last built stayed on disk after the overlay —
+    untracked, not gitignored, and indistinguishable to `oxlint`, `tsc` or a
+    `tests/**` glob from a file the branch actually had. That layer was
+    shadowed by the `..:/app` bind mount in every compose service and in the
+    devcontainer; CI was its only reader, and there it was the bug.
+  - **`tests/guards/image-source-layer.test.ts` is what keeps it that way.**
+    It parses every `COPY`/`ADD` in both Dockerfiles and checks each source
+    against a per-file allowlist — the two manifests, plus
+    `Docker/playwright-entrypoint.sh` for `Dockerfile.e2e`'s `headed` stage. An
+    allowlist rather than a `.` denylist: `COPY src src` is as much a source
+    layer as `COPY . .`, and a new COPY is a decision, not a convenience. The
+    guard runs in CI's `vitest` job, so a source layer re-added tomorrow fails
+    in the diff that adds it rather than on the next PR that deletes a file.
+    And the fix is live on the PR that makes it: `pr-gate.yml` builds the
+    image under a tag hashed from `Dockerfile.node` and `package-lock.json`,
+    so a Dockerfile change runs on its own image — unlike an edit to this
+    action, which every caller resolves at `@main`.
   - Found by MB.41, whose new test-location guard failed on its first CI run
     reporting 34 test files outside `tests/` — every one of them that move's own
     predecessor, still sitting where the image had baked it. The count is the
@@ -48,16 +51,6 @@ edit at any call site; nothing passes it today.
     files added since. The guard was changed to scan the git index instead,
     which is right on its own merits and left the condition itself untouched
     until MB.42.
-  - **One workaround is left standing on purpose.** `vitest.config.mts`
-    excludes `src/**/*.test.{ts,tsx}` and `src/test/**` from coverage, paths
-    MB.41 emptied and the overlay kept alive — without them CI measured the
-    container rather than the repo and fell from 92% to 78.54%. The clean step
-    makes them dead, but only once it is live, and it is live only on `main`:
-    every caller references the action at `@main`, which a merge to `staging`
-    does not reach. Removing them before then fails the 80% gate on the PR that
-    does it. **MB.44** is the follow-up that cuts the release and then removes
-    them, this note included. See `testing.md`'s Coverage paragraph.
-  - Verified by `checks / overlay` — see below.
 - **`job-summary`** — a pass/fail `$GITHUB_STEP_SUMMARY` callout, with a tailed
   log excerpt on failure.
 - **`pr-comment`** — upserts one marked comment per check (`<!-- ci-<slug> -->`),
@@ -67,8 +60,7 @@ edit at any call site; nothing passes it today.
 ## Reusable checks (`workflow_call`, never triggered directly)
 
 - **`checks.yml`** (MB.32) — one matrix job running `lint`, `format`,
-  `typecheck`, `build` and `audit`, each reporting as `checks / <name>`, plus a
-  second job, `overlay` (MB.42). These
+  `typecheck`, `build` and `audit`, each reporting as `checks / <name>`. These
   were five near-identical workflows until MB.32: the same
   `image`/`pr-number`/`merge-queue`/`should-run` inputs, the same
   `container: image: ${{ inputs.image }}` job (`options: --user root`), the
@@ -137,29 +129,6 @@ edit at any call site; nothing passes it today.
   - **`vitest` and `playwright` are deliberately not legs.** Each brings a
     `services: postgres:` block, a `db-image` input and its own artifact
     uploads — a different job shape, not a different npm script.
-
-- **`checks / overlay`** (MB.42, a second job in `checks.yml` rather than a
-  seventh leg) — the one check in the repo that tests `checkout-to-app` instead
-  of merely starting with it. It plants an untracked file, an untracked
-  directory and an ignored file in the image's `/app`, runs the action, and
-  asserts the first two are gone, the third survived, `node_modules` survived,
-  the checkout landed, and `git status --porcelain --untracked-files=all` in
-  `/app` is empty. Against the pre-MB.42 action — copy, no clean — every one of
-  the untracked assertions fails.
-  - **Why it has to manufacture the condition.** The `testing` image is rebuilt
-    whenever `Dockerfile.node` or `package-lock.json` changes, so on most PRs
-    there are few leftovers or none and every leg passes with the bug fully
-    present. It bites only on the PRs that delete files — rarely, and never on
-    the PR that would explain it.
-  - **It references the action as `./.github/actions/checkout-to-app`**, not by
-    the `@main` path its real callers use, so an edit to the action is verified
-    on the PR that makes it rather than after merge. That is why the job checks
-    out first: a local `./` reference is read from `$GITHUB_WORKSPACE`, so it
-    needs a checkout the real callers are calling the action to _get_. They pay
-    one checkout; this job pays two.
-  - **The `@main` reference is still how every other caller reaches it**, which
-    means a fix to the action has no effect on its own PR's other jobs and
-    takes hold on the first run after it reaches `main`.
 
 - **`checks / destructive-ddl`** (M1.5, a `checks.yml` leg since MB.37) —
   flags destructive DDL in migration files new or changed in the PR, via
@@ -393,12 +362,16 @@ first step of nearly every job in the repo.
 checks that use it" only covers the behaviour those checks would notice. Every
 job in the repo ran `checkout-to-app` on every push for months while it was
 leaving deleted files on disk, and not one of them failed, because a check that
-reads a file's _contents_ cannot tell a stale copy from a live one. `checks /
-overlay` is the narrow answer: not a smoke check restored, but one job inside
-the gate that manufactures the condition its callers cannot produce on demand.
-The general lesson is the sweep-task rule's — a mechanism that can be made
-_impossible_ to get wrong needs a guard, and "something else would have
-noticed" is not one.
+reads a file's _contents_ cannot tell a stale copy from a live one. The answer
+is not a job. MB.42 built one first — a `checks / overlay` that planted stale
+files in `/app` and asserted a `git clean` step removed them — and replaced it
+on the same PR with an image that carries no source layer, so the overlay has
+nothing to delete and a stale file has nothing to survive as, plus
+`tests/guards/image-source-layer.test.ts`, which fails the diff that re-adds
+one. The general lesson is the sweep-task rule's — a mechanism that can be
+made _impossible_ to get wrong needs a guard, and "something else would have
+noticed" is not one — and so is the tell: the job made stale files _absent_,
+the image makes them _impossible_.
 
 **A workflow must never publish a status-check context `pr-gate.yml` also
 publishes.** `lint-format-typecheck-check.yml` (M0.16) and
@@ -601,14 +574,6 @@ nothing and this workflow is the only path.
   typecheck and destructive-ddl.
 - `make act-cache-checkout` pre-clones this repo's `main` so the remote
   `checkout-to-app@main` ref resolves offline.
-- **`make act-overlay` is its own target** (MB.42), because `act-check` is
-  `-j check --matrix name:<leg>` and `overlay` is a second job rather than a
-  seventh leg. It needs no `act-cache-checkout` — it reaches the action as
-  `./.github/actions/checkout-to-app`, which is the point of it. It is
-  deliberately **not** in `act-test`: its closing assertion is that `/app`
-  matches the checkout exactly, and `act` runs against the working tree rather
-  than a commit, so a dirty tree fails it for a reason that has nothing to do
-  with the action.
 - **act does not apply `workflow_call` input defaults**, so a flag arrives
   empty under `-W`. `act-check` needs none passed: `checks.yml` resolves an
   empty flag to true precisely so a local run cannot quietly skip the work it
@@ -645,4 +610,5 @@ vitest` would have to either execute `build-db-image.yml` for real (a
   PR**, plus an `act-cache-*` pre-clone for any action that isn't cached yet
   — except where that isn't possible yet, as above. A new `checks.yml` leg
   needs no new target: it is `make act-check CHECK=<leg>` the day it lands. A
-  new `checks.yml` **job** does need one, as `overlay` did.
+  new `checks.yml` **job** would need one — `act-check` is
+  `-j check --matrix name:<leg>` and reaches only the matrix job.
