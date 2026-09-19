@@ -8,22 +8,34 @@ import { REPO_ROOT } from '../support/paths';
 // citation that does not resolve costs the reader the argument entirely — and
 // it fails silently, because nothing reads a comment.
 //
-// Four existed when the convention landed: src/scss/_variables.scss cited m0.6
-// and m0.7, scripts/build-workshop.ts cited m0.36, playwright.config.ts cited
-// mb.22. All four live under claude-docs/archive/, which README.md declares
-// write-once and never-read, and all four were cited without the archive/
-// prefix — so the paths were wrong *and* the destination was out of bounds.
+// Fourteen existed when the convention landed. Thirteen resolved only under
+// claude-docs/archive/, which README.md declares write-once and never-read, and
+// every one was cited without the archive/ prefix — so the path was wrong and
+// the destination was out of bounds. The fourteenth named a transcript that has
+// never existed at all.
 
 // Assembled so this file does not match its own assertions and report itself.
 const DOCS = 'claude-docs';
 const CITATION = new RegExp(`${DOCS}/[\\w./-]*\\.md`, 'g');
-// A citation left hanging on a line break: `claude-docs/design-decisions/`
-// with the filename on the next comment line. Six read that way before MB.50.
-const WRAPPED = new RegExp(`${DOCS}/[\\w./-]*/\\s*$`, 'm');
-// `db.md, "Who may import the client"` — the section names its own heading. A
-// quoted name may itself wrap mid-comment, so the capture is unwrapped before
-// it is compared: the line break and the leader that follows it are formatting,
-// not part of the heading.
+// A citation left hanging on a line break, with the rest on the next comment
+// line. A filename splits as readily as a directory does
+// (`m1.21-seed-writes-through-` / `its-handle.md`), and either form is
+// invisible to the resolve check above, which reads one line at a time.
+//
+// Only a fragment running to end-of-line counts. Naming the directory
+// mid-sentence is ordinary prose, and trailing sentence punctuation is not part
+// of the path.
+const PATH_CHARS = new RegExp(`${DOCS}/[\\w./-]*`, 'g');
+
+function wrappedCitation(text: string): boolean {
+  return text.split('\n').some((line) =>
+    [...line.matchAll(PATH_CHARS)].some((match) => {
+      const rest = line.slice(match.index + match[0].length);
+      if (!/^[.,;:)\]\s]*$/.test(rest)) return false;
+      return !match[0].replace(/[./-]+$/, '').endsWith('.md');
+    }),
+  );
+}
 const SECTION = new RegExp(`([\\w.-]+\\.md)['"]?,?s? "([^"]+)"`, 'g');
 
 function unwrap(section: string): string {
@@ -37,8 +49,7 @@ function unwrap(section: string): string {
  *
  * `src/db/migrations/` is excluded deliberately: drizzle hashes each migration's
  * file content, so editing one to fix a comment is not the harmless change it
- * looks like. Their citations are checked by nobody, which is the price of the
- * files being immutable.
+ * looks like. Their citations go unchecked, which is the price of immutability.
  */
 function citingFiles(): string[] {
   const args = ['-c', 'safe.directory=*', 'ls-files', '--cached', '--others', '--exclude-standard'];
@@ -62,9 +73,9 @@ const FILES = citingFiles();
 const CITED = FILES.flatMap((file) => citationsIn(file).map((path) => ({ file, path })));
 
 describe('every claude-docs citation resolves', () => {
-  // The precondition behind all three assertions: an empty listing, or one that
-  // missed the files carrying citations, would satisfy every `toEqual([])`
-  // below without a single path having been checked.
+  // The precondition behind every assertion below: an empty listing, or one
+  // that missed the files carrying citations, would satisfy each `toEqual([])`
+  // without a single path having been checked.
   it('is scanning files that actually cite the docs', () => {
     expect(FILES.length).toBeGreaterThan(50);
     expect(CITED.length).toBeGreaterThan(10);
@@ -78,25 +89,23 @@ describe('every claude-docs citation resolves', () => {
   });
 
   // archive/ is write-once and never-read (claude-docs/README.md). A comment
-  // sending its reader there is the live-doc bug that rule describes, one level
-  // down: the reasoning exists, and it is somewhere the reader is told to treat
-  // as out of context.
+  // sending its reader there is that rule's own failure one level down: the
+  // reasoning exists, somewhere the reader is told to treat as out of context.
   it('never sends the reader into the archive', () => {
     const archived = CITED.filter(({ path }) => path.startsWith(`${DOCS}/archive/`));
 
     expect(archived).toEqual([]);
   });
 
-  // A path broken over two comment lines is not merely untidy: it is invisible
-  // to the check above, which reads one line at a time, and to anyone grepping
-  // for the filename. Keeping it whole is what makes the resolve check sound.
+  // Keeping a path whole is what makes the resolve check sound — it reads one
+  // line at a time, so a split path is checked by nothing.
   it('keeps each citation on one line', () => {
-    const wrapped = FILES.filter((file) => WRAPPED.test(read(file)));
+    const wrapped = FILES.filter((file) => wrappedCitation(read(file)));
 
     expect(wrapped).toEqual([]);
   });
 
-  // The `"Slugs"` class of error: a real file, a section that was never written.
+  // The `"Slugs"` class of error: a real file, a section never written.
   // Headings carry a trailing task-ID parenthetical, so the quoted name is
   // matched as a prefix rather than for equality.
   it('names a section that exists, where it names one', () => {
