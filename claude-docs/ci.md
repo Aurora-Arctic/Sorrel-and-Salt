@@ -502,20 +502,38 @@ nothing and this workflow is the only path.
 - **`VERCEL_DEPLOY_TOKEN` must be minted against the `aurora-arctic` team
   scope**, not a personal scope. A personal-scope token is accepted as valid and
   then fails at `vercel pull` with `Could not retrieve Project Settings…`.
-- **Every `vercel pull` passes `--git-branch`** (MB.27). Vercel resolves a
-  branch-scoped environment variable only when the pull names the branch, and
-  `staging`'s `DATABASE_URL` is precisely such a variable — the override that
-  keeps staging off the Neon integration's per-preview ephemeral branches
+- **Every _preview_ `vercel pull` passes `--git-branch`, and no production one
+  does** (MB.27, narrowed by MB.45). Vercel resolves a branch-scoped
+  environment variable only when the pull names the branch, and `staging`'s
+  `DATABASE_URL` is precisely such a variable — the override that keeps staging
+  off the Neon integration's per-preview ephemeral branches
   (`claude-docs/design-decisions/m1.1-neon-branch-strategy.md`). Drop the flag
   and nothing fails: the pull succeeds, the deploy succeeds, and both the build
   and the migration quietly address whichever database the integration last
-  injected Preview-wide. `resolve-target` therefore emits a `git_branch`
-  output alongside `environment` — `github.head_ref` for a hotfix PR (`ref_name`
-  there is the `refs/pull/N/merge` ref, which nothing is scoped to),
-  `github.ref_name` for a push — and hands it to both the deploy job's pull and
-  `migrate.yml`'s `git-branch` input. `tests/guards/vercel-pull-git-branch.test.ts`
-  is the guard: it sweeps every workflow, so the next `vercel pull` added
-  without the flag fails in the diff that adds it.
+  injected Preview-wide. **Pass it on production and everything fails** —
+  branch-scoped overrides are a Preview-only feature, and the API rejects the
+  pair outright with `Invalid request: `target`must be "preview" when specifying
+a`gitBranch``. MB.27 passed it unconditionally and broke every production
+  deploy until MB.45; production has no branch-resolved value to miss, so it
+  loses nothing by omitting it.
+
+  Each workflow therefore pulls through **two steps, one per target**, selected
+  by a YAML `if:` on the resolved environment — not one command with an
+  optional flag. A command that merely _might_ carry `--git-branch` cannot
+  satisfy the preview half, and a `if:` is data the guard can read where a
+  shell `if` would be a string it had to parse. `resolve-target` emits a
+  `git_branch` output alongside `environment` — `github.head_ref` for a hotfix
+  PR (`ref_name` there is the `refs/pull/N/merge` ref, which nothing is scoped
+  to), `github.ref_name` for a push — and hands it to both the deploy job's
+  preview pull and `migrate.yml`'s `git-branch` input, which stays **required**
+  of every caller even though production ignores it: a caller that cannot name
+  its branch cannot be trusted with preview either.
+  `tests/guards/vercel-pull-git-branch.test.ts` is the guard. It sweeps every
+  workflow and checks both halves — the flag present on preview, absent on
+  production, and each arm's `if:` naming the same target its command does —
+  so the next `vercel pull` added on either side fails in the diff that adds
+  it.
+
 - **The `deploy` step passes `--meta githubDeployment=1 --meta
 githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   equally load-bearing. `--git-branch` fixes what the **build** pulls; the
@@ -533,11 +551,13 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   the tiebreak. Re-enabling a branch means adding a key, never loosening the
   catch-all.
 - A guard step skips every real step unless `VERCEL_DEPLOY_TOKEN` /
-  `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` / `VERCEL_SCOPE` are set. The first
-  three are set as repo secrets; **`VERCEL_SCOPE` is not**, so the guard still
-  skips and no deploy has run for real yet. MB.12 owns setting it, alongside
-  `NEON_API_KEY`/`NEON_PROJECT_ID` for `migrate.yml` — `claude-docs/secrets.md`
-  is the matrix and the source of truth for which rows are set.
+  `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` are set. All three are set as repo
+  secrets, so **the guard passes and deploys run for real** — as of v0.2.0 both
+  `staging` and `main` reach `vercel pull`. `VERCEL_SCOPE` is **not** part of
+  the guard and never was; it is still unset, and MB.12 owns it alongside
+  `NEON_API_KEY`/`NEON_PROJECT_ID` for `migrate.yml`'s production snapshot.
+  `claude-docs/secrets.md` is the matrix and the source of truth for which rows
+  are set.
 - **`migrate.yml` (M1.4)** — reusable (`workflow_call`-only) workflow, applying
   `npm run db:migrate` against the environment's `DATABASE_URL`. `deploy.yml`
   splits its old single `deploy` job into three: `resolve-target` (the old
@@ -546,9 +566,10 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   `secrets: inherit`, and carries its own `group: migrate` /
   `cancel-in-progress: false` concurrency lock so two merges never migrate at
   once), and `deploy`. Same guard-skip stub as `deploy.yml` when the `VERCEL_*` secrets
-  are absent. `vercel pull --environment=<preview|production>
---git-branch=<branch>` resolves the right `DATABASE_URL` for each target the
-  same way `deploy.yml`'s own pull does — the branch-scoped override for
+  are absent. `vercel pull --environment=preview --git-branch=<branch>`, or
+  `vercel pull --environment=production` with no branch (MB.45), resolves the
+  right `DATABASE_URL` for each target the same way `deploy.yml`'s own two
+  pulls do — the branch-scoped override for
   `staging`, the integration's per-deployment ephemeral Neon branch for a
   hotfix preview (see
   `claude-docs/design-decisions/m1.1-neon-branch-strategy.md`) — read from
