@@ -4,24 +4,13 @@ import { parse } from 'yaml';
 
 import { fromRoot } from '../support/paths';
 
-// M1.24 — the two pieces of wiring that make "a corrupted local database is
-// never a blocker" true, neither of which any other test can reach.
-//
-//   1. `npm run db:reset` drops before it migrates and seeds. Drop the drop
-//      and the script still passes its own smoke test on a healthy database —
-//      it only fails in the state it exists for, on someone else's machine.
-//   2. `make docker-up` seeds a clean volume on its own, because `app` waits
-//      on a one-shot `db-init` service. Delete the `depends_on` and compose
-//      still starts everything; the app just races an unmigrated database.
-//
-// Both are configuration, so both are unreachable from a runtime test and
-// neither shows up as a failure until a developer hits it by hand. That is the
-// sweep-task rule's "can it be made impossible, or only absent?" — this one
-// can only be made absent, so it gets a mechanical guard (CLAUDE.md).
-//
-// The compose file is parsed rather than grepped: `condition:
-// service_completed_successfully` appearing *somewhere* in the file is not the
-// claim. The claim is that it is `app`'s condition on `db-init`.
+// Two pieces of wiring no runtime test reaches: `npm run db:reset` drops
+// before it migrates and seeds (claude-docs/db.md, "Migrations and scripts"),
+// and `app` in compose waits on the one-shot `db-init` service
+// (claude-docs/docker.md). Either can go missing with nothing failing until a
+// developer hits it by hand. The compose file is parsed rather than grepped:
+// the claim is that `service_completed_successfully` is `app`'s condition on
+// `db-init`, not that the phrase appears somewhere.
 
 interface ComposeService {
   profiles?: string[];
@@ -78,8 +67,7 @@ describe(`the ${INIT_SERVICE} compose service`, () => {
     expect(service).toBeDefined();
   });
 
-  // A profile is what keeps `workshop` and `studio` out of a bare
-  // `make docker-up`. This service is the one that must not be kept out.
+  // A profile is what keeps `workshop` and `studio` out of a bare `make docker-up`.
   it('sits in no compose profile, so a bare docker-up runs it', () => {
     expect(service.profiles).toBeUndefined();
   });
@@ -99,8 +87,7 @@ describe(`the ${INIT_SERVICE} compose service`, () => {
     expect(service.environment?.SEED_SCENARIO).toBe('${SEED_SCENARIO:-minimal}');
   });
 
-  // docker.md's rule: one node_modules volume per service, because a shared
-  // one makes services race to populate it from their images on first mount.
+  // One node_modules volume per service (docker.md, see above).
   it('has a node_modules volume of its own', () => {
     expect(compose.volumes).toHaveProperty('node_modules_db_init');
   });
@@ -113,10 +100,9 @@ describe('the app compose service', () => {
     );
   });
 
-  // The precondition for the assertion above: `app` really does declare
-  // conditional dependencies, so a green result is the condition being right
-  // rather than depends_on having been rewritten to the short list form (where
-  // every lookup would read `undefined` and this suite would go quiet).
+  // Precondition: `app` really does declare conditional dependencies, so a
+  // green result is the condition being right rather than `depends_on` rewritten
+  // to the short list form, where every lookup reads `undefined`.
   it('still health-gates on Postgres as well', () => {
     expect(compose.services.app.depends_on?.postgres?.condition).toBe('service_healthy');
   });

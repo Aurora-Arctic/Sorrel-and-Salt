@@ -22,11 +22,7 @@ const GROUPS_SLUG_UNIQUE = 'ingredient_form_groups_slug_unique';
 const FORMS_SLUG_UNIQUE = 'ingredient_forms_slug_unique';
 const FORMS_GROUP_FK = 'ingredient_forms_group_id_ingredient_form_groups_id_fk';
 
-// As in categories-schema.test.ts: a column that would order the vocabulary by
-// hand, in any of the names such a column is usually given. DESIGN.md §5 lists
-// none for either table — a form group sections an autofill dropdown
-// alphabetically, and an admin-added group lands where a reader would look for
-// it rather than at the end.
+// As in categories-schema.test.ts: a hand-ordering column under any usual name; §5 lists none.
 const ORDERING_COLUMNS = ['order', 'position', 'sort', 'sort_order', 'rank', 'display_order'];
 
 type VocabularyTable = typeof ingredientForms | typeof ingredientFormGroups;
@@ -63,9 +59,7 @@ describe('ingredient_form_groups schema', () => {
     );
   });
 
-  // The one column this table has that `category_groups` does not have to
-  // justify — and the reason it is absent: a form group sections an autofill
-  // dropdown, where a category group tints a chip (§5, MB.35).
+  // No colour: a form group sections a dropdown, where a category group tints a chip (MB.35).
   it('carries no colour: form groups section a dropdown, they are not chips', () => {
     expect(Object.keys(byName).filter((column) => column.includes('color'))).toEqual([]);
   });
@@ -130,10 +124,8 @@ describe('ingredient_forms schema', () => {
     }
   });
 
-  // §5: a vocabulary only an admin writes is a foreign key, where one a member
-  // writes is text. Both directions of that rule sit in this one file —
-  // `ingredient_forms.groupId` below is the foreign key, `ingredients.form`
-  // further down is the text.
+  // A vocabulary only an admin writes is a foreign key; `ingredients.form`,
+  // which a member writes, is text (asserted further down).
   it('points groupId at ingredient_form_groups by foreign key, and requires it', () => {
     expect(byName.group_id.notNull).toBe(true);
 
@@ -172,9 +164,7 @@ describe('ingredient_forms schema', () => {
   });
 });
 
-// Still read from disk, for the one assertion below that a hand-edited
-// migration would hide from the Drizzle schema: no shipped SQL points
-// `ingredients.form` at this vocabulary.
+// Read from disk for the one assertion a hand-edited migration would hide from the schema.
 function migrationFiles(): string[] {
   return readdirSync(MIGRATIONS_DIR)
     .filter((name) => name.endsWith('.sql'))
@@ -182,13 +172,10 @@ function migrationFiles(): string[] {
     .map((name) => readFileSync(join(MIGRATIONS_DIR, name), 'utf8'));
 }
 
-// DESIGN.md §5: "`ingredients.form` is `text`, not a foreign key to this
-// table`, and that is the property the whole design rests on." An FK would key
-// identity on a surrogate id and make `rhizome` unwritable until an admin
-// curated it, where text lets `canonicalKey` normalise the string. Asserted
-// from both ends — the schema Drizzle generates migrations from, and the SQL
-// actually shipped, since a hand-edited migration would not show up in the
-// first.
+// §5: `ingredients.form` is text, not a foreign key to this table — an FK would
+// key identity on a surrogate id and make an uncurated value unwritable.
+// Asserted from both the Drizzle schema and the shipped SQL —
+// claude-docs/db.md, "The ingredient identity model".
 describe('ingredients.form is text over this vocabulary, not a foreign key to it', () => {
   it('declares form as a nullable text column', () => {
     const form = getTableConfig(ingredients).columns.find((column) => column.name === 'form');
@@ -216,17 +203,6 @@ describe('ingredients.form is text over this vocabulary, not a foreign key to it
   });
 });
 
-// The behaviour half, against the real tables. This worker's sorrel_test_<n>
-// clone arrives with every migration applied and the `standard` scenario
-// seeded (M1.27, tests/support/db-setup.ts), and re-cloned that way before
-// this file runs — so what is asserted below is the SQL production runs, with
-// no schema built here and nothing to put back afterwards. Until M1.27 the
-// template was empty: this file applied the one migration that ships these
-// two tables and stubbed `users` to a bare `id` column.
-//
-// The author is the seed's, not an invented id: the real `users` has NOT NULL
-// name, email and audit stamps, and a row that exists is cheaper to point at
-// than one to construct. Bound to the old name so the tests read as they did.
 const AUTHOR = FIXTURE_USERS.A.id;
 const ABSENT_GROUP = '99999999-9999-9999-9999-999999999999';
 
@@ -301,13 +277,6 @@ beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
 });
 
-// `truncate … cascade`, not `delete from`: the seed fills both tables and
-// every child foreign key in the schema is NO ACTION, so a delete from the
-// groups would be refused while the forms still point at them. Nothing points
-// at either from outside this pair — `ingredients.form` is text, which is the
-// point of the file — so the cascade reaches no further. The empty tables are
-// what every test below assumes: the same starting state the old empty
-// template gave, reached the other way round.
 beforeEach(async () => {
   await sql`truncate ingredient_forms, ingredient_form_groups cascade`;
 });
@@ -343,16 +312,13 @@ describe('ingredient_form_groups table', () => {
       await insertGroup();
       const error = await failureOf(insertGroup({ name: 'Part of the organism' }));
 
-      // 23505 is unique_violation, named: proof the insert reached the index
-      // rather than failing some other constraint first.
+      // 23505 is unique_violation, named: the index refused, not something earlier.
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(GROUPS_SLUG_UNIQUE);
     });
 
-    // Rule 4: the index is partial, so soft-deleting a group releases its slug
-    // rather than reserving it forever. The test above is this one's
-    // precondition — without the soft delete the second insert is refused, so
-    // the pass here is the predicate working and not an empty table.
+    // The test above is the precondition: without the soft delete the second
+    // insert is refused, so this pass is the predicate and not an empty table.
     it('frees the slug once the holder is soft-deleted', async () => {
       const first = await insertGroup();
       await softDelete('ingredient_form_groups', first);
@@ -370,16 +336,13 @@ describe('ingredient_form_groups table', () => {
     for (const column of ['name', 'slug', 'description']) {
       const error = await failureOf(insertGroup({ [column]: null }));
 
-      // 23502 is not_null_violation on that exact column: proof the insert
-      // reached it and found neither a value nor a default.
+      // 23502 is not_null_violation on that exact column.
       expect(error.code).toBe('23502');
       expect(error.column_name).toBe(column);
     }
   });
 
-  // §5 asks for a description that is required *and non-empty*: NOT NULL alone
-  // accepts '' and '   ', which is a group that explains nothing while
-  // satisfying the column.
+  // NOT NULL alone accepts '' and '   ' — a group that explains nothing.
   it('rejects a blank description', async () => {
     for (const blank of ['', '   ']) {
       const error = await failureOf(insertGroup({ description: blank }));
@@ -418,10 +381,7 @@ describe('ingredient_forms table', () => {
       expect(error.column_name).toBe('group_id');
     });
 
-    // The half a NOT NULL alone would miss: a required column still accepts any
-    // uuid, and a typo'd group silently empties a section of the autofill. The
-    // accepting case below is what proves the refusal is the foreign key rather
-    // than the insert never working at all.
+    // The accepting case below is what proves the refusal is the foreign key's.
     it('rejects a group id no group holds', async () => {
       const error = await failureOf(insertForm(ABSENT_GROUP));
 
@@ -463,9 +423,8 @@ describe('ingredient_forms table', () => {
       expect(rows[1].deleted_at).toBeNull();
     });
 
-    // Slug uniqueness is global rather than per group, as on `categories`: the
-    // slug is what M4.3a's idempotency key reads, and it carries no group
-    // alongside it.
+    // Global rather than per group, as on `categories`: the seed's idempotency
+    // key reads the slug alone.
     it('rejects a shared slug across two different groups', async () => {
       const organismPart = await insertGroup();
       const substance = await insertGroup({ name: 'Substance', slug: 'substance' });
@@ -478,15 +437,10 @@ describe('ingredient_forms table', () => {
     });
   });
 
-  // The deliberate gap, asserted so it stays deliberate. Uniqueness is on the
-  // slug alone on all four vocabulary tables (MB.35), so two live forms may
-  // both be called "Wax" — one an animal part, one a substance. Nothing in
-  // the database distinguishes them, and `ingredients.form` stores the string
-  // rather than an id, so the autofill is where the ambiguity has to be
-  // resolved: M4.7a returns each suggestion's group and M5.10a renders it, so a
-  // reader picking from the dropdown sees "Wax (animal)" beside "Wax
-  // (substance)". If a `name` index is ever added here, that pair of
-  // requirements is what it supersedes — say so rather than deleting this test.
+  // The deliberate gap: uniqueness is on the slug alone, so two live forms may
+  // share a display name ("Wax", animal and substance) and the autofill shows
+  // the group beside each. A `name` index would supersede that — say so rather
+  // than deleting this test.
   it('permits two live forms to share a display name, told apart by their group', async () => {
     const organismPart = await insertGroup();
     const substance = await insertGroup({ name: 'Substance', slug: 'substance' });
@@ -514,9 +468,7 @@ describe('ingredient_forms table', () => {
     }
   });
 
-  // §5 again, and the sharper case of the two: a curated value exists to
-  // explain itself — `rootBark` says "the bark of the root, not the stem" — so
-  // a blank description is a curated row that curates nothing.
+  // A curated value exists to explain itself; a blank description curates nothing.
   it('rejects a blank description', async () => {
     const group = await insertGroup();
 

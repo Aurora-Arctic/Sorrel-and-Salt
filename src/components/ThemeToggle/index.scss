@@ -1,22 +1,14 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// Ported from resume-2026's ThemeToggle, minus its folded-corner button
-// chrome (the ::before border, the $silver-oxide/$lavender-oxide swap and
-// the clip-path triangle), its _buttons.scss base and its print-hidden rule
-// — this repo has none of those and M0.29 does not add them back. What
-// carries over is the choreography: two absolutely-stacked facets that
-// rotate out through the top and park off to the side, keyed by the same
-// --out / --pre-enter classes index.tsx toggles.
+// Two stacked facets that rotate out through the top and park off to the side,
+// keyed by the --out / --pre-enter classes index.tsx toggles.
+// claude-docs/components/theme-toggle.md, "Styling".
 
-// Rotation swept by an exiting/entering facet. A component-local constant
-// rather than a token — it describes this animation's geometry, not a colour
-// or duration the rest of the app shares.
+// The arc a facet sweeps; component geometry, not a shared token.
 $theme-toggle-icon-arc: 130deg;
 
-// Radius of the quarter-circle backdrop, measured from the corner it's
-// centered on — also doubles as the button's own width/height, since a
-// square exactly that size is the smallest box the circle needs.
+// Backdrop radius, and the button's own width/height.
 $theme-toggle-corner-radius: 3.9rem;
 
 .theme-toggle {
@@ -28,25 +20,17 @@ $theme-toggle-corner-radius: 3.9rem;
   justify-content: center;
   width: $theme-toggle-corner-radius;
   height: $theme-toggle-corner-radius;
-  // Pulls the icon down and left off the pivot corner, so it doesn't sit
-  // flush against the two edges it rotates around.
+  // Pulls the icon off the pivot corner.
   padding: 0 0 0.75rem 1rem;
   border: none;
-  // Circle centered on the box's own top-right corner — with the box pinned
-  // to the page's top-right corner too, only the quarter of the circle that
-  // falls inside the viewport ever paints.
+  // Centred on the pinned top-right corner, so only the quarter in the viewport paints.
   clip-path: circle($theme-toggle-corner-radius at 100% 0%);
-  // Sorrel, the accent — M0.7's $text-on-color is the token for a label
-  // sitting on a solid fill of a colour like this one, already worked out to
-  // clear contrast on both themes rather than re-deriving it here.
+  // $text-on-color: the contrast-checked label for a solid fill.
   background-color: $accent;
   color: $text-on-color;
   cursor: pointer;
-  // Grow on hover from the pinned corner, the same pivot everything else in
-  // this file turns on. The $accent -> $accent-hover step is barely a shade
-  // apart on the dark theme, so colour alone can't carry the hover; the
-  // scale gives it a reading that lands the same in both themes without a
-  // second, theme-forked hover colour.
+  // Hover grows from the pinned corner: on dark $accent and $accent-hover are a
+  // shade apart, so colour alone cannot carry it.
   transform-origin: 100% 0;
   @include theme-transition(background-color, color, transform);
 
@@ -74,26 +58,15 @@ $theme-toggle-corner-radius: 3.9rem;
   inset: 0;
   width: 100%;
   height: 100%;
-  // Pivot at the icon's own top-right corner — the same corner the button
-  // itself is pinned to and rotates its quarter-circle backdrop around — so
-  // rotate() swings each facet through an arc centered there, matching the
-  // "rotate through the top" choreography the acceptance criteria name.
+  // Pivot at the icon's top-right corner, the one the button is pinned to.
   transform-origin: 100% 0;
   @include theme-transition(transform);
   transform: rotate(0deg);
 
-  // The knotwork is not themed: the crescent is always the near-black ground
-  // ink and the sun always parchment, whichever theme is active. Only the
-  // rotate swaps them, so there is no `fill` transition to fall out of step
-  // with the button's — raw palette values, not the runtime tokens.
-  // The crescent's knotwork carries less visual weight than the sun's at the
-  // same box size, so nudge the two apart: the moon gets a 5% larger box, the
-  // sun a 5% smaller one. The sun grows/shrinks along its left and bottom
-  // edges so its top-right pivot corner stays put; the moon is deliberately
-  // let off that corner a touch, its box pushed up and right so the crescent
-  // rides slightly higher and further into the corner. Sized via the box
-  // rather than `transform: scale()` because --out / --pre-enter overwrite
-  // `transform` wholesale for the rotate choreography.
+  // Raw palette, not the runtime tokens: the knotwork is not themed, so only the
+  // rotate swaps the facets. The 5% box difference balances their visual weight;
+  // a box rather than `scale()` because --out / --pre-enter overwrite `transform`.
+  // claude-docs/components/theme-toggle.md, "Icons".
   &--dark {
     fill: $soot;
     inset: -6% auto auto 6%;
@@ -119,37 +92,17 @@ $theme-toggle-corner-radius: 3.9rem;
   }
 }
 
-// MB.2: the light facet's --pre-enter class above is baked into the
-// server-rendered markup (index.tsx's JSX), so it's what paints first no
-// matter which theme the visitor actually has — including light, where the
-// sun should already be resting instead of parked. index.tsx's mount effect
-// used to be the only place that corrected this, which ran after that first
-// paint and let the facet visibly swing from parked to resting.
-//
-// The pre-paint init script (src/app/layout.tsx) stamps `data-theme` on
-// `<html>` before the browser paints anything, so keying off it here settles
-// both facets' *visible* resting state at that same first paint — the mount
-// effect still flips the real --pre-enter class between facets afterward
-// (index.tsx), but only to keep the class list correct for the next click;
-// by then these rules already show the settled values, so nothing animates.
-// MB.23: keyed off the attribute alone, this only covered a *stored* light
-// choice — the one case the init script stamps. A light system preference
-// with nothing stored paints the page light (globals.scss) while leaving the
-// attribute absent, so the crescent sat on a light page until the mount
-// effect swapped it after first paint: the exact swing MB.2 removed, still
-// happening for anyone who had never clicked the toggle. Both tiers include
-// this mixin, and they mirror globals.scss's own light tiers selector for
-// selector — including the `:not([data-theme='dark'])` guard that lets an
-// explicit dark choice beat a light system.
+// Settles the visible resting state at first paint, so a light visitor never
+// sees the sun swing in. Included under both light tiers, mirroring globals.scss
+// selector for selector, because the attribute alone covers only a stored
+// choice, not a light system preference.
 @mixin theme-toggle-light-facets {
   .theme-toggle__facet--light.theme-toggle__facet--pre-enter {
     transform: rotate(0deg);
     opacity: 1;
   }
 
-  // The dark facet carries no --pre-enter class in the markup — it's the
-  // default-visible one — so it needs the equivalent parked look applied
-  // directly rather than via that class.
+  // The dark facet carries no --pre-enter class in the markup, so park it directly.
   .theme-toggle__facet--dark {
     transform: rotate(-$theme-toggle-icon-arc);
     opacity: 0;

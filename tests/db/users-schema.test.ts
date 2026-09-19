@@ -2,13 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import { users } from '@/db/schema/users';
 
-// Pure schema-shape assertions via Drizzle's own introspection — no real
-// Postgres needed. Written when the template carried no tables (before
-// M1.27), so a test that inserted a row here would only have passed by
-// accident locally, per the M2.4 lesson recorded in
-// tests/app/api/auth/[...all]/route.test.ts; the clone now carries the real
-// table, and tests/db/seeded-template.test.ts is where its seeded rows are
-// asserted.
+// Schema shape via Drizzle's introspection; the seeded rows are asserted in
+// seeded-template.test.ts.
 describe('users schema', () => {
   const { columns, indexes } = getTableConfig(users);
   const byName = Object.fromEntries(columns.map((c) => [c.name, c]));
@@ -55,8 +50,7 @@ describe('users schema', () => {
     expect(emailIndex?.config.where).toBeDefined();
   });
 
-  // MB.5: auditColumns' *_by columns reference users.id, including here,
-  // where that's a self-reference (users.created_by -> users.id).
+  // MB.5: a self-reference here (users.created_by -> users.id).
   it('references users.id from created_by, updated_by and deleted_by (MB.5)', () => {
     const { foreignKeys } = getTableConfig(users);
     const byColumn = Object.fromEntries(

@@ -61,9 +61,8 @@ describe('ingredients schema', () => {
     );
   });
 
-  // The two tiers of DESIGN.md §5: `workspace_id IS NULL` is the global
-  // compendium, `workspace_id` set is one workspace's own drawer. One table,
-  // so spell_ingredients points at a single kind of thing.
+  // `workspace_id IS NULL` is the compendium, set is a workspace's own drawer:
+  // one table, so spell_ingredients points at a single kind of thing.
   it('makes workspace_id nullable, and points it at workspaces', () => {
     expect(byName.workspace_id.notNull).toBe(false);
 
@@ -78,8 +77,7 @@ describe('ingredients schema', () => {
     expect(byName.canonical_name.notNull).toBe(false);
   });
 
-  // DESIGN.md §5: "no DEFAULT, deliberately" — the missing default is what
-  // makes the compendium's Zod variant ask the admin rather than guess.
+  // "No DEFAULT, deliberately": the compendium's Zod variant asks rather than guesses.
   it('gives nomenclature no database default', () => {
     expect(byName.nomenclature.hasDefault).toBe(false);
     expect(byName.nomenclature.default).toBeUndefined();
@@ -89,15 +87,13 @@ describe('ingredients schema', () => {
     expect(nomenclatureKind.enumValues).toEqual(NOMENCLATURE_VALUES);
   });
 
-  // `element` is a correspondence, not identity: a closed five-value enum,
-  // the exact opposite of `form`.
+  // A correspondence, not identity: a closed enum, the opposite of `form`.
   it('declares element as a closed five-value enum', () => {
     expect(ingredientElement.enumValues).toEqual(ELEMENT_VALUES);
   });
 
-  // `form` is text over an admin-curated vocabulary, *not* a foreign key to
-  // ingredient_forms — an FK would make an uncurated value unwritable, and
-  // would put an enum cast (not IMMUTABLE) inside the generated expression.
+  // Text, not an FK: an FK makes an uncurated value unwritable and would put a
+  // non-IMMUTABLE enum cast inside the generated expression.
   it('keeps form as free text rather than an enum or a foreign key', () => {
     expect(byName.form.getSQLType()).toBe('text');
     expect(foreignKeys.some((fk) => fk.reference().columns[0].name === 'form')).toBe(false);
@@ -131,12 +127,9 @@ describe('ingredients schema', () => {
     }
   });
 
-  // Half of the acceptance criterion "canonical_key cannot be inserted or
-  // updated directly": Drizzle omits a generated column from $inferInsert, so
-  // TypeScript refuses before Postgres is reached. `npm run typecheck` covers
-  // src/**/*, this file included, so the @ts-expect-error below fails the
-  // typecheck gate if the column ever becomes writable. The other half — that
-  // Postgres refuses too — is asserted against the real table further down.
+  // Drizzle omits a generated column from $inferInsert, so TypeScript refuses
+  // first; `npm run typecheck` covers this file, so the @ts-expect-error
+  // reddens if the column ever becomes writable. Postgres's refusal is below.
   it('omits canonical_key from $inferInsert, so TypeScript refuses a direct write', () => {
     const insert: typeof ingredients.$inferInsert = {
       name: 'Mugwort',
@@ -155,27 +148,12 @@ describe('ingredients schema', () => {
   });
 });
 
-// The behaviour half, against the real table. This worker's sorrel_test_<n>
-// clone arrives with every migration applied and the `standard` scenario
-// seeded (M1.27, tests/support/db-setup.ts), and re-cloned that way before
-// this file runs — so what is asserted below is the SQL production runs, with
-// no schema built here and nothing to put back afterwards. Until M1.27 the
-// template was empty: this file applied the one migration that ships the
-// table and stubbed `users`/`workspaces` to a bare `id` column.
-//
-// The author and the workspace are the seed's, not invented ids: the real
-// `users` and `workspaces` have NOT NULL names, slugs and audit stamps, and a
-// row that exists is cheaper to point at than one to construct. Bound to the
-// old names so the tests read as they did.
 const AUTHOR = FIXTURE_USERS.A.id;
 const WORKSPACE = WORKSPACE_W_ID;
 
-// M1.25 — the shared factory, plus this file's own author. The audit stamps
-// are not the fixture's to give (CLAUDE.md rule 3), and `makeIngredient` is
-// what keeps a row stating one field from contradicting itself: overriding
-// `nomenclature` alone re-derives `canonicalName` to match, so only a test
-// that names *both* writes a row the biconditional CHECK rejects — which is
-// exactly what the tests below that expect a rejection do.
+// The shared factory plus this file's author. `makeIngredient` re-derives
+// `canonicalName` when `nomenclature` alone is overridden, so only a test
+// naming both writes a row the biconditional CHECK rejects.
 type IngredientOverrides = Overrides<IngredientFixture>;
 
 function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
@@ -213,11 +191,6 @@ beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
 });
 
-// `truncate … cascade`, not `delete from`: the seeded compendium's rows have
-// category and folk-name links, and every child foreign key in the schema is
-// NO ACTION, so a delete would be refused. Truncating takes the links with
-// it, and the empty table is what every test below assumes — the same
-// starting state the old empty template gave, reached the other way round.
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
 });
@@ -233,8 +206,7 @@ describe('ingredients table', () => {
       values ('Mugwort', 'Artemisia vulgaris', ${AUTHOR}, ${AUTHOR})
     `);
 
-    // 23502 is not_null_violation: proof the insert reached the column and
-    // found no default waiting, rather than failing somewhere earlier.
+    // 23502 is not_null_violation: the column was reached and found no default.
     expect(error.code).toBe('23502');
     expect(error.column_name).toBe('nomenclature');
   });
@@ -253,8 +225,7 @@ describe('ingredients table', () => {
   });
 
   describe('the nomenclature/canonicalName biconditional', () => {
-    // Both directions, because a one-directional CHECK would let exactly one
-    // of these two rows through and DESIGN.md §5 forbids both.
+    // Both directions: a one-directional CHECK would let exactly one of these through.
     it('rejects none or unknown carrying a formal name', async () => {
       for (const nomenclature of ['none', 'unknown'] as const) {
         const error = await failureOf(
@@ -279,9 +250,7 @@ describe('ingredients table', () => {
       }
     });
 
-    // The rows the CHECK must let through — without these two, every
-    // assertion above would also pass against a constraint that rejected
-    // everything.
+    // Without these, a CHECK that rejected everything would pass the tests above.
     it('accepts the two shapes it exists to allow', async () => {
       await insert({ nomenclature: 'none', canonicalName: null, name: 'Graveyard dirt' });
       await insert({
@@ -314,8 +283,7 @@ describe('ingredients table', () => {
       expect(await canonicalKeyOf(id)).toBe('artemisia vulgaris');
     });
 
-    // The vocabulary is an autofill, not a constraint: `rhizome` is writable
-    // before anyone has curated it (DESIGN.md §5).
+    // The vocabulary is an autofill, not a constraint: `rhizome` is writable uncurated.
     it('accepts a form absent from the curated vocabulary', async () => {
       const id = await insert({ form: 'rhizome', canonicalName: 'Artemisia vulgaris' });
       expect(await canonicalKeyOf(id)).toBe('artemisia vulgaris :: rhizome');
@@ -329,8 +297,7 @@ describe('ingredients table', () => {
         values ('Mugwort', 'botanical', 'Artemisia vulgaris', 'forged', ${AUTHOR}, ${AUTHOR})
       `);
 
-      // 428C9 is ERRCODE_GENERATED_ALWAYS — the column refusing the write
-      // itself, rather than an unknown-column or type error.
+      // 428C9 is ERRCODE_GENERATED_ALWAYS — the column refusing the write itself.
       expect(error.code).toBe('428C9');
     });
 
@@ -365,8 +332,7 @@ describe('ingredients table', () => {
       expect(await canonicalKeyOf(id)).toBe('graveyard dirt');
     });
 
-    // Identity is the formal name plus the form: valerian root and valerian
-    // leaf are two identities, which is what folding form into the key buys.
+    // Identity is the formal name plus the form: valerian root and leaf are two.
     it('separates two rows sharing a formal name but not a form', async () => {
       const root = await insert({
         name: 'Valerian root',
@@ -394,11 +360,9 @@ describe('ingredients table', () => {
 
         await sql`update ingredients set name = 'Cronewort' where id = ${id}`;
 
-        // Pinned to the value rather than to "whatever it was before": a
-        // plain, ungenerated column would also be unchanged by a relabel.
+        // Pinned to the value: an ungenerated column would also survive a relabel.
         expect(await canonicalKeyOf(id)).toBe('artemisia vulgaris :: herb');
-        // And the relabelling did happen — otherwise an update that silently
-        // did nothing would pass this test too.
+        // And the relabel happened, so a silent no-op update cannot pass either.
         const [{ name }] = await sql`select name from ingredients where id = ${id}`;
         expect(name).toBe('Cronewort');
       });
@@ -437,11 +401,8 @@ describe('ingredients table', () => {
   describe('element', () => {
     it('accepts each of its five documented values', async () => {
       for (const element of ELEMENT_VALUES) {
-        // Five rows in one workspace, so five identities: the factory's default
-        // canonical name would make them one identity five times over, which
-        // `ingredients_workspace_identity_unique` (M4.7) refuses. Unseen before
-        // M1.27, when this file applied only the migration that created the
-        // table and never met the index a later one added.
+        // Five identities: the factory's one canonical name five times over
+        // would trip `ingredients_workspace_identity_unique`.
         await insert({
           element,
           name: `Mugwort (${element})`,
@@ -456,12 +417,9 @@ describe('ingredients table', () => {
     });
 
     it('rejects a value outside that set', async () => {
-      // Cast, because the fixture is typed against the column and the whole
-      // point of this row is a value the column has never heard of — the
-      // database has to be the one to refuse it.
+      // Cast: the fixture is typed against the column; the database must refuse it.
       const error = await failureOf(insert({ element: 'aether' as IngredientFixture['element'] }));
-      // 22P02 is invalid_text_representation: the enum cast refusing the
-      // value, rather than the row failing some other constraint first.
+      // 22P02 is invalid_text_representation: the enum cast refusing the value.
       expect(error.code).toBe('22P02');
     });
   });

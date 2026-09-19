@@ -1,35 +1,16 @@
 /**
- * MB.49 — open the connection ourselves, so a failure has a cause.
+ * Open the connection ourselves, so a failure has a cause. `drizzle-kit
+ * migrate` catches whatever postgres.js throws and exits 1 without printing
+ * it, so an unreachable host, a wrong password, an `sslmode` mismatch and a
+ * `channel_binding` parameter are byte-identical in its output. This runs
+ * first, connects, runs `select 1`, and on failure prints the driver's own
+ * error code and message (claude-docs/ci.md, "Deploy").
  *
- * `drizzle-kit migrate` catches whatever postgres.js throws and exits 1 without
- * printing it. Staging's migration produced this, and nothing else:
- *
- *   Using 'postgres' driver for database querying
- *   [⣟] applying migrations...
- *   ##[error]Process completed with exit code 1.
- *
- * Reproduced locally, an unreachable host, a wrong password, `sslmode=require`
- * against a server with no TLS, and `channel_binding=require` ALL produce that
- * byte-identical output. Four different fixes, one indistinguishable failure —
- * which is why MB.45, MB.46 and MB.47 each ended on a hypothesis rather than a
- * diagnosis.
- *
- * So this runs first and does the one thing drizzle-kit will not: it connects,
- * runs `select 1`, and on failure prints the driver's own error code and
- * message. `ECONNREFUSED`, `ENOTFOUND`, `28P01`, `3D000`, `42704` are five
- * different problems with five different fixes, and naming which one happened
- * is the entire point of the step.
- *
- * Two disciplines carried over from scripts/assert-pulled-env.ts, for the same
- * reasons:
- *
- *   The URL arrives as a FILE PATH, never on argv — argv is visible to `ps` and
- *   is echoed by `set -x`.
- *
- *   Nothing printed carries the credentials. The driver's message is its own
- *   and may quote the connection string it was handed, so it is scrubbed rather
- *   than trusted. The hostname is deliberately kept: `ENOTFOUND` without the
- *   name it failed to resolve is the same silence this script exists to end.
+ * Two disciplines shared with scripts/assert-pulled-env.ts: the URL arrives
+ * as a FILE PATH, never on argv (visible to `ps`, echoed by `set -x`); and
+ * nothing printed carries the credentials — the driver's message may quote
+ * the connection string, so it is scrubbed rather than trusted. The hostname
+ * is kept: `ENOTFOUND` without the name it failed to resolve says nothing.
  */
 
 import { readFileSync } from 'node:fs';
@@ -39,9 +20,9 @@ import postgres from 'postgres';
 import { parseEnvFile, validateDatabaseUrl } from './assert-pulled-env.ts';
 
 /**
- * What to do about each failure, for the failures where the code alone still
- * means reading a Postgres error table mid-incident. Keyed by the driver's own
- * code so the log is searchable by the string it prints.
+ * What to do about each failure whose code alone would still mean reading a
+ * Postgres error table mid-incident. Keyed by the driver's own code so the log
+ * is searchable by the string it prints.
  */
 export const probeHints: Record<string, string> = {
   '42704':
@@ -76,11 +57,9 @@ export const probeHints: Record<string, string> = {
 
 /**
  * Every spelling of the credentials that could appear in a driver's message,
- * longest first so the full URL is removed before its own substrings are.
- *
- * `split`/`join` rather than a regular expression: a password may legally
- * contain regex metacharacters, and escaping them correctly is a second bug
- * waiting to happen in the one function whose failure mode is a leaked secret.
+ * longest first so the full URL goes before its own substrings. `split`/`join`
+ * rather than a regex: a password may contain metacharacters, and escaping
+ * them is a second bug in the one function whose failure is a leaked secret.
  */
 export function scrub(text: string, url: string | undefined): string {
   if (!url) return text;
@@ -97,9 +76,7 @@ export function scrub(text: string, url: string | undefined): string {
       secrets.add(`${parsed.username}:${decodeURIComponent(parsed.password)}`);
     }
   } catch {
-    // Not a parseable URL. The whole string is still scrubbed, which is the
-    // case that matters — an unparseable value is one validateDatabaseUrl has
-    // already rejected by name.
+    // Not a parseable URL; the whole string is still scrubbed.
   }
 
   let scrubbed = text;
@@ -117,18 +94,16 @@ export function describeConnectionError(error: unknown, url: string | undefined)
     return scrub(String(error), url);
   }
   // `code` is not a property of `Error`, and every layer puts something
-  // different there: Node's own socket errors use `ECONNREFUSED`/`ENOTFOUND`,
-  // postgres.js copies the server's five-character SQLSTATE. Read defensively
-  // rather than asserted — an error carrying no code at all still has to be
-  // reported, because reporting nothing is the bug this file exists to end.
+  // different there — Node's socket errors `ECONNREFUSED`/`ENOTFOUND`,
+  // postgres.js the server's five-character SQLSTATE. Read defensively: an
+  // error carrying no code at all still has to be reported.
   const raw: unknown = (error as unknown as Record<string, unknown>).code;
   const code = typeof raw === 'string' ? raw : undefined;
 
   const parts = [code ? `${code}: ${scrub(error.message, url)}` : scrub(error.message, url)];
 
-  // postgres.js puts the server's own detail and hint on the error. They are
-  // written by Postgres about the query, not about the connection string, but
-  // they go through the same scrub as everything else rather than being trusted.
+  // postgres.js puts the server's own detail and hint on the error; they go
+  // through the same scrub rather than being trusted.
   for (const field of ['detail', 'hint', 'routine'] as const) {
     const value = (error as unknown as Record<string, unknown>)[field];
     if (typeof value === 'string' && value) parts.push(`${field}: ${scrub(value, url)}`);
@@ -148,20 +123,18 @@ export interface ProbeResult {
 }
 
 /**
- * `select 1`, then who answered it. The identity is not decoration: the two
- * long-lived databases are chosen by a `$ENVIRONMENT` / `$GIT_BRANCH` branch in
- * two different workflows, and a mis-picked secret migrates the wrong one
- * silently. Printing the role and server the connection actually reached is the
- * cheapest check that the branch chose what it meant to.
+ * `select 1`, then who answered it. Two workflows each choose the long-lived
+ * database by a `$ENVIRONMENT` / `$GIT_BRANCH` branch, and a mis-picked secret
+ * migrates the wrong one silently; printing the role and server reached is
+ * the cheapest check that the branch chose what it meant to.
  */
 export async function probe(url: string): Promise<ProbeResult> {
   let sql: ReturnType<typeof postgres> | undefined;
 
   try {
     // `postgres()` parses the URL eagerly, so a malformed value throws here
-    // rather than on the query — which is the ERR_INVALID_URL that started all
-    // of this. connect_timeout is short on purpose: a probe that hangs for the
-    // driver's 30s default has replaced a silent failure with a slow one.
+    // rather than on the query. connect_timeout is short on purpose: a probe
+    // hanging for the driver's 30s default replaces a silent failure with a slow one.
     sql = postgres(url, {
       max: 1,
       connect_timeout: 10,
@@ -178,8 +151,8 @@ export async function probe(url: string): Promise<ProbeResult> {
   } catch (error) {
     return { ok: false, description: describeConnectionError(error, url) };
   } finally {
-    // `await`ed so the process can exit on its own rather than being killed
-    // with an open socket, but never allowed to mask the real failure.
+    // `await`ed so the process exits on its own rather than with an open
+    // socket, but never allowed to mask the real failure.
     try {
       await sql?.end({ timeout: 5 });
     } catch {
@@ -223,11 +196,8 @@ async function main(): Promise<void> {
 
   const url = parseEnvFile(text).get(key);
 
-  // MB.49 acceptance criterion 2. MB.46's validator only ever saw the file
-  // `vercel pull` wrote; MB.47 then took the value from a GitHub secret and
-  // handed it straight to drizzle-kit, so a malformed secret failed exactly as
-  // silently as a malformed pull used to. Whatever source won, the value is
-  // validated here before anything tries to open it.
+  // Whatever source won — a GitHub secret or the pulled file — the value is
+  // validated before anything tries to open it.
   const verdict = validateDatabaseUrl(url);
   if (!verdict.ok) {
     console.error(`::error::${key} (${verdict.code}) — ${verdict.message}`);

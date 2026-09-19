@@ -1,9 +1,7 @@
 import ThemeToggle from '../components/ThemeToggle';
 
 export default function HomePage() {
-  // Temporary: rendered here for visual review while M0.29 is in progress.
-  // There's no header/nav to host it in yet — a real placement lands with
-  // whichever task adds one.
+  // Temporary placement: there is no header or nav to host the toggle in yet.
   return (
     <main>
       <ThemeToggle />

@@ -1,35 +1,13 @@
 @use '../src/scss/variables' as *;
 
-// Styles for the design-language reference page (.ladle/design-language.tsx).
+// Reference-page chrome for ./design-language.tsx, and only that: prose,
+// primitives and every colour come from the app's partials. Local is what the
+// app has no token for yet — layout lengths, the demo backdrop, `.modal` width,
+// and `.dl-binomial`.
 //
-// What comes from the app, not from here:
-//   - all prose — h1–h4, p, a, ul, and now `code` — from _typography.scss, via
-//     .ladle/typography.scss (which @includes the same `typography-base` mixin
-//     the app's globals.scss does); this now includes the `.eyebrow` overline
-//     and `.tight-headings` (the stacked-heading margin trim)
-//   - section/header/footer structure — from _layout.scss, via .ladle/layout.scss
-//     (which @includes the same `layout-base` mixin the app's globals.scss does)
-//   - the panel, badge, chip, modal, button and specimen-card primitives —
-//     from _primitives.scss, via .ladle/primitives.scss (which @includes the
-//     same `primitives-base` mixin the app's globals.scss does)
-//   - every colour: `$surface-card` / `$text-muted` / `$accent` / … from
-//     _variables.scss
-//
-// What's local, and why:
-//   - layout lengths (max-width, gaps, grid tracks, padding, radii) — there is
-//     no spacing or radius token; M0.6–M0.8 are colour + type only, and
-//     CLAUDE.md says not to build styling past the tokens and mixins
-//   - `.dl-modal-demo`'s ground and `.modal`'s 24rem width here — the demo
-//     backdrop and the width `primitives-base`'s `.modal` deliberately leaves
-//     to its caller
-//   - `.dl-binomial` — the italic-metadata look an IngredientCard will define
-//     later (M8.x); it borrows the M0.7 artifact's values until then
-//
-// The whole file nests under `.dl`. .ladle/typography.scss scopes
-// _typography.scss's rules to `.ladle-story-frame`, so a bare `p` on this page
-// is `.ladle-story-frame p` at (0,1,1) — which beats a plain `.dl-binomial`
-// (0,1,0) sitting on the same `<p>`. Nesting under `.dl` lifts every rule here
-// to (0,2,x) so the page's own captions win.
+// Everything must stay nested under `.dl`: .ladle/typography.scss scopes prose
+// to `.ladle-story-frame`, so a bare `p` there is (0,1,1) and outranks a plain
+// `.dl-binomial` (0,1,0); nesting lifts every rule here to (0,2,x).
 
 .dl {
   max-width: 60rem;
@@ -62,7 +40,7 @@
     border: 1px solid $text-muted;
   }
 
-  // `<code>` elements — the monospace family and size come from _typography.scss.
+  // Mono family and size come from _typography.scss.
   .dl-swatch__name {
     font-size: 0.85rem;
     font-weight: 500;
@@ -119,7 +97,6 @@
     flex-wrap: wrap;
   }
 
-  // `<code>` — mono family/size from _typography.scss.
   .dl-group-slug {
     font-size: 0.8rem;
     font-weight: 500;
@@ -135,9 +112,7 @@
     background-color: $surface-page;
   }
 
-  // primitives-base's .modal deliberately excludes width, the same way
-  // modal-surface() does — this page's two demos (the confirm dialog and the
-  // specimen card) share one so both read at the same scale.
+  // primitives-base's .modal sets no width; both demos share one.
   .modal {
     max-width: 24rem;
   }
@@ -146,9 +121,7 @@
     display: flex;
   }
 
-  // Scientific name. Matches the M0.7 artifact: the body ink at 70% rather than
-  // the --text-muted token, kept italic (a binomial is always italicised), one
-  // step down in size.
+  // Italic body ink at 70%, a step down — a binomial's look, ahead of IngredientCard.
   .dl-binomial {
     margin: 0;
     font-style: italic;

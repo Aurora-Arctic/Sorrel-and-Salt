@@ -3,25 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { fromRoot } from './paths';
 import { V1_STORIES, V1_STORY_IDS, parseStories, parseStoryHeading } from './stories';
 
-// M1.28 — the story list is read out of DESIGN.md §10, not copied here.
-//
-// A second list of 45 titles in the harness would drift from the design doc
-// without a single test failing, the way a second copy of the fixture ids
-// would (as-user.test.ts). Reading the spec makes DESIGN.md the one place a
-// story is written down; these tests pin what the parse must find so that a
-// rewording of §10 that breaks it fails here rather than silently emptying
-// the checklist.
+// The list is read out of DESIGN.md §10; these pin what the parse must find,
+// so a §10 rewording that empties it fails here.
 
 const range = (from: number, to: number) =>
   Array.from({ length: to - from + 1 }, (_, i) => from + i);
 
 describe('V1_STORIES', () => {
   it('reads the v1 stories out of DESIGN.md §10 — 1–34 and 47–57 today, never 35–46', () => {
-    // The list is pinned by its rules rather than frozen: a story added to
-    // §10 later (57 arrived with MB.40) joins the checklist without a
-    // harness edit, while a reworded §10 that the parse no longer reads
-    // still fails here. CLAUDE.md: the notes numbers moved to v2 and are
-    // not reused.
+    // Pinned by rule rather than frozen: a story added to §10 joins without a
+    // harness edit, and 35–46 are not reused.
     expect(V1_STORY_IDS).toEqual([...V1_STORY_IDS].sort((a, b) => a - b));
     expect(new Set(V1_STORY_IDS).size).toBe(V1_STORY_IDS.length);
     expect(V1_STORY_IDS.filter((id) => id >= 35 && id <= 46)).toEqual([]);

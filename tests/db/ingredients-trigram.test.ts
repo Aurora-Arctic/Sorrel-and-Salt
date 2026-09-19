@@ -8,15 +8,13 @@ import { ingredientFolkNames } from '@/db/schema/ingredient-folk-names';
 import { ingredients } from '@/db/schema/ingredients';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
-// DESIGN.md §9's one multicolumn index, beside `ingredient_folk_names`' own
-// (M4.4a). A multicolumn `gin_trgm_ops` index serves a query on either column
-// alone, which is why the two names need one index rather than two — the
-// planner assertions below are what turn that claim into a fact.
+// §9's one multicolumn gin index serves a predicate on either column alone,
+// which the planner assertions below prove —
+// claude-docs/db.md, "Fuzzy matching: one index, and a rule every caller is bound by".
 const TRIGRAM_INDEX = 'ingredients_trgm';
 const FOLK_NAMES_TRIGRAM_INDEX = 'ingredient_folk_names_trgm';
 
-// M4.1a's three, named only so the declaration test can say the trigram index
-// joined them rather than replaced one.
+// Named so the declaration test says the trigram index joined them, not replaced one.
 const UNIQUE_INDEXES = [
   'ingredients_compendium_identity_unique',
   'ingredients_workspace_identity_unique',
@@ -36,24 +34,15 @@ describe('ingredients trigram index declaration', () => {
     expect(byName[TRIGRAM_INDEX].config.columns).toHaveLength(2);
   });
 
-  // Uniqueness is the other three indexes' job, and a partial predicate would
-  // be actively wrong here: `%` answers "what is this called", and a soft-
-  // deleted row a finder already filters out is not worth narrowing the
-  // planner's choice over. Same reasoning as the folk-names index (M4.4a).
+  // Uniqueness is the other three's job, and a partial predicate would narrow
+  // the planner's choice over rows a finder already filters out.
   it('makes it neither unique nor partial', () => {
     expect(byName[TRIGRAM_INDEX].config.unique).toBe(false);
     expect(byName[TRIGRAM_INDEX].config.where).toBeUndefined();
   });
 });
 
-// The behaviour half, against the real tables and indexes. This worker's
-// sorrel_test_<n> clone arrives with every migration applied and the
-// `standard` scenario seeded (M1.27, tests/support/db-setup.ts), re-cloned
-// that way before this file runs — so what is asserted below is the SQL
-// production runs, with no schema built here and nothing to put back
-// afterwards. Until M1.27 the template was empty and this file applied the
-// three migrations itself; the reader survives for the one test that still
-// needs the shipped statement, the idempotency check at the bottom.
+// The migration reader survives for the idempotency test at the bottom.
 
 function migrationStatementsContaining(marker: string): string[] {
   const file = readdirSync(MIGRATIONS_DIR)
@@ -72,9 +61,6 @@ function migrationStatementsContaining(marker: string): string[] {
 
 const TRIGRAM_MIGRATION = `CREATE INDEX IF NOT EXISTS "${TRIGRAM_INDEX}"`;
 
-// The seed's user rather than an invented id: the real `users` table has NOT
-// NULL names, emails and audit stamps, and a row that exists is cheaper to
-// point at than one to construct.
 const AUTHOR = FIXTURE_USERS.A.id;
 
 let sql: ReturnType<typeof postgres>;
@@ -94,11 +80,8 @@ async function addIngredient(name: string, canonicalName: string | null): Promis
   return inserted.id as string;
 }
 
-// Enough rows that the table is not trivially scannable, and varied enough that
-// the trigram index has something to discriminate on. The planner assertions
-// below disable sequential scans rather than relying on this volume — see the
-// comment there — but a one-row table would make "the index was chosen" a much
-// weaker statement than it reads as.
+// Enough varied rows that "the index was chosen" means something; the planner
+// assertions disable sequential scans regardless.
 async function fillWithDecoys(): Promise<void> {
   await sql`
     insert into ingredients (name, canonical_name, nomenclature, created_by, updated_by)
@@ -108,14 +91,10 @@ async function fillWithDecoys(): Promise<void> {
   await sql`analyze ingredients`;
 }
 
-// `explain` as one string, which is what the plan assertions match against.
-// Sequential scans are disabled for the duration: on a table this size the
-// planner would seq-scan even a perfectly usable index because the whole heap
-// costs less than the bitmap, and the question being asked is "can this
-// predicate reach the index at all", not "is it cheap today". It is also the
-// stronger form of the `similarity()` assertion — DESIGN.md §9's claim is that
-// a function call cannot use a trigram index *even with sequential scans
-// disabled*, and with them enabled a seq scan proves nothing.
+// `explain` as one string, with sequential scans disabled: on a table this
+// size the planner would seq-scan past a usable index because the heap costs
+// less, and the question is "can this predicate reach the index at all". With
+// seq scans on, the `similarity()` assertion below would prove nothing.
 async function planFor(query: string, threshold = 0.4): Promise<string> {
   return await sql.begin(async (tx) => {
     await tx.unsafe(`set local pg_trgm.similarity_threshold = ${threshold}`);
@@ -151,11 +130,6 @@ beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
 });
 
-// `truncate … cascade`, not `delete from`: the seeded compendium's rows have
-// category and folk-name links, and every child foreign key in the schema is
-// NO ACTION, so a delete would be refused. Truncating ingredients takes its
-// folk names with it, and the empty tables are what the planner assertions
-// below build their own rows on.
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
 });
@@ -165,10 +139,7 @@ afterAll(async () => {
 });
 
 describe('pg_trgm', () => {
-  // Enabled by migration 0000, and baked into the Postgres image on top of that
-  // (Docker/postgres-init/). Asserted here rather than assumed because every
-  // other test in this file is meaningless without it — `gin_trgm_ops` would
-  // not even be a resolvable operator class.
+  // Enabled by migration 0000; asserted because `gin_trgm_ops` is not resolvable without it.
   it('is installed in this database', async () => {
     const rows = await sql`select extname from pg_extension where extname = 'pg_trgm'`;
 
@@ -197,8 +168,7 @@ describe('ingredients trigram index', () => {
     });
   });
 
-  // The acceptance criterion that a multicolumn index is enough: one index, and
-  // a predicate naming either column on its own reaches it.
+  // One index, reached from either column alone.
   describe('the planner reaches it from either column alone', () => {
     beforeEach(async () => {
       await addIngredient('Mugwort', 'Artemisia vulgaris');
@@ -219,12 +189,9 @@ describe('ingredients trigram index', () => {
       expect(plan).toContain(`Bitmap Index Scan on ${TRIGRAM_INDEX}`);
     });
 
-    // DESIGN.md §9's trap, asserted rather than described: `similarity(a, b) >
-    // 0.4` is a function call, and no trigram index can answer one. The two
-    // forms return identical rows, so the plan is the only thing that tells
-    // them apart — and this runs with sequential scans already disabled, so a
-    // seq scan here is the planner having no alternative rather than
-    // preferring one.
+    // §9's trap: `similarity(a, b) > 0.4` is a function call no trigram index
+    // can answer. Seq scans are already off, so a seq scan here is the planner
+    // having no alternative rather than preferring one.
     it('cannot be reached by a similarity() comparison, even with seq scans off', async () => {
       const plan = await planFor(
         `select id from ingredients where similarity(name, 'Mugwart') > 0.4`,
@@ -234,9 +201,8 @@ describe('ingredients trigram index', () => {
       expect(plan).not.toContain(TRIGRAM_INDEX);
     });
 
-    // Why the two assertions above could have passed for the wrong reason: if
-    // `%` could not reach the index either, the first two would have read the
-    // same as this one. They don't, and that difference is the whole rule.
+    // Why the two above could have passed wrongly: if `%` could not reach the
+    // index either, their plans would read like this one.
     it('is what separates the two forms — same rows, different plans', async () => {
       const operatorPlan = await planFor(`select id from ingredients where name % 'Mugwart'`);
       const functionPlan = await planFor(
@@ -248,9 +214,7 @@ describe('ingredients trigram index', () => {
     });
   });
 
-  // M4.4a's index, asserted here to be independently reachable: the acceptance
-  // criterion is that folk names match through their own index rather than
-  // through this table's.
+  // Folk names match through their own index, never this table's.
   describe('the folk-names index stays independent (M4.4a)', () => {
     it('is reached for a predicate on ingredient_folk_names.name', async () => {
       const mugwort = await addIngredient('Mugwort', 'Artemisia vulgaris');
@@ -271,26 +235,22 @@ describe('ingredients trigram index', () => {
     });
   });
 
-  // `%` alone means "similar by pg_trgm.similarity_threshold", which defaults
-  // to 0.3 — not the 0.4 DESIGN.md §9 wants. Setting it per transaction is
-  // what makes the operator mean what the design says, and these assert both
-  // halves: that it changes the answer, and that it does not leak past the
-  // transaction that set it.
+  // `%` means "similar by pg_trgm.similarity_threshold", default 0.3 rather
+  // than §9's 0.4. Set per transaction; asserted both to change the answer and
+  // not to leak past the transaction.
   describe('the similarity threshold is set per transaction', () => {
     beforeEach(async () => {
       // 0.4545 against 'Mugwart' — above 0.4, so it survives either threshold.
       await addIngredient('Mugwort', 'Artemisia vulgaris');
-      // 0.3125 against 'Mugwart' — above the 0.3 default, below 0.4. The one
-      // row whose fate the threshold decides, and a realistic one: a member
-      // typing a second label for a thing already in the drawer is story 16.
+      // 0.3125 against 'Mugwart' — above the 0.3 default, below 0.4: the one
+      // row the threshold decides.
       await addIngredient('Mugwort Leaf', null);
     });
 
     it('excludes a 0.31 near-miss at 0.4 that the default would have returned', async () => {
       expect(await matchingNames('Mugwart', 0.4)).toEqual(['Mugwort']);
-      // Why that could have been an empty fixture or a broken query: at the
-      // database's own default the same term over the same two rows returns
-      // both. The threshold is what dropped the second row, not the data.
+      // At the database default the same rows return both, so the threshold
+      // dropped the second row, not the data.
       expect(await matchingNames('Mugwart')).toEqual(['Mugwort', 'Mugwort Leaf']);
     });
 
@@ -303,11 +263,7 @@ describe('ingredients trigram index', () => {
     });
   });
 
-  // 0000 enables the extension with `IF NOT EXISTS` because the Postgres image
-  // bakes it in outside the journal; this migration is written the same way for
-  // the same class of reason. `__drizzle_migrations` already makes `db:migrate`
-  // skip an applied migration, so this is the belt to that braces — and cheap
-  // enough that the criterion asking for it costs one keyword.
+  // `IF NOT EXISTS`, like 0000's extension: belt to `__drizzle_migrations`' braces.
   describe('the migration is idempotent', () => {
     it('applies a second time without error', async () => {
       for (const statement of migrationStatementsContaining(TRIGRAM_MIGRATION)) {
@@ -329,12 +285,8 @@ describe('ingredients trigram index', () => {
   });
 });
 
-// The folk-names table's own declarations are asserted in
-// ingredient-folk-names-schema.test.ts (M4.4a) and are not re-litigated here.
-// This one line exists because the plan assertion above matches on that index's
-// name as a string: rename it in the schema and the EXPLAIN test would go red
-// with "the planner chose the wrong index", which is the wrong diagnosis. This
-// reddens beside it with the right one.
+// The plan assertion above matches this index's name as a string; a rename
+// would redden it as "wrong index chosen". This reddens beside it, correctly.
 describe('folk-names index name is the one M4.4a declared', () => {
   it('matches the constant this file plans against', () => {
     const { indexes } = getTableConfig(ingredientFolkNames);

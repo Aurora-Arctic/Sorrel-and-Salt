@@ -25,6 +25,14 @@ how the system works today, that is a defect in the summary, not a research step
   carries the decision and the constraint, not the story of how they were
   reached. Where a constraint would look arbitrary without a reason, give the
   reason in a clause — not a link out.
+- A **code comment** is the other half of that rule, pointing the other way. The
+  comment says what the code is and why it is not the obvious alternative; the
+  argument for the choice lives here, in the summary. So a doc that defers
+  outward is a defect, and a comment that re-argues a decision at length is
+  duplication — the doc is the copy that can be corrected in one place, where the
+  comment is the copy that gets pasted into sixteen files and drifts. See
+  [`CLAUDE.md`](../CLAUDE.md), Conventions. Prose that leaves a comment lands in
+  the summary for its subsystem, never in `archive/`.
 - A **transcript** was written as work landed, one entry per task or session.
   MB.31 stopped that: the five that exist are frozen, and a PR body now carries
   what one would have said.

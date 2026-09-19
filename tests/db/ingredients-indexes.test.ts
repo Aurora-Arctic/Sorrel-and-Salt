@@ -10,28 +10,20 @@ import {
 import { ingredients } from '@/db/schema/ingredients';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 
-// DESIGN.md §5's three partial unique indexes, transcribed by name. Identity
-// is `canonical_key` — the formal name plus the normalised form — so the
-// compendium is unique on identity rather than on the display label, which is
-// what lets four entries all display "Cat's Claw". Label uniqueness survives
-// in the workspace tier only: inside one drawer an ambiguous label is a
-// mistake, not a distinction.
+// §5's three partial unique indexes. Identity is `canonical_key`, so the
+// compendium is unique on identity and label uniqueness survives only inside
+// a workspace — claude-docs/db.md, "The ingredient identity model".
 const COMPENDIUM_IDENTITY = 'ingredients_compendium_identity_unique';
 const WORKSPACE_IDENTITY = 'ingredients_workspace_identity_unique';
 const WORKSPACE_LABEL = 'ingredients_workspace_label_unique';
-// DESIGN.md §9's, not §5's, and neither unique nor partial — this file asserts
-// only that it is declared and is not one of the three above.
-// ingredients-trigram.test.ts (M4.6) owns everything else about it.
+// §9's, neither unique nor partial; ingredients-trigram.test.ts owns it.
 const TRIGRAM = 'ingredients_trgm';
 
 describe('ingredients index declarations', () => {
   const { indexes } = getTableConfig(ingredients);
   const byName = Object.fromEntries(indexes.map((index) => [index.config.name, index]));
 
-  // §5's three, plus §9's trigram index (M4.6) — which is asserted in
-  // ingredients-trigram.test.ts and named here only so this stays an "exactly"
-  // rather than an "at least". A fourth *unique* index is the thing this list
-  // exists to catch, and the assertion below is what makes it one.
+  // "Exactly", not "at least": a fourth unique index is what this list exists to catch.
   it('declares exactly §5’s three unique indexes and §9’s trigram one', () => {
     expect(Object.keys(byName).sort()).toEqual(
       [COMPENDIUM_IDENTITY, WORKSPACE_IDENTITY, WORKSPACE_LABEL, TRIGRAM].sort(),
@@ -46,29 +38,11 @@ describe('ingredients index declarations', () => {
   });
 });
 
-// The behaviour half, against the real table and indexes. This worker's
-// sorrel_test_<n> clone arrives with every migration applied and the
-// `standard` scenario seeded (M1.27, tests/support/db-setup.ts), re-cloned
-// that way before this file runs — so what is asserted below is the SQL
-// production runs, with no schema built here and nothing to put back
-// afterwards. Until M1.27 the template was empty: this file applied the two
-// migrations that ship the table and its indexes, and stubbed
-// `users`/`workspaces` to a bare `id` column.
-//
-// The author and the two workspaces are the seed's, not invented ids: the
-// real `users` and `workspaces` have NOT NULL names, slugs and audit stamps,
-// and a row that exists is cheaper to point at than one to construct. Bound
-// to the old names so the tests read as they did.
 const AUTHOR = FIXTURE_USERS.A.id;
 const WORKSPACE_A = WORKSPACE_W_ID;
 const WORKSPACE_B = WORKSPACE_X_ID;
 
-// M1.25 — the shared factory, plus this file's own author; the audit stamps
-// are not the fixture's to give (CLAUDE.md rule 3). It is the same
-// `makeIngredient` ingredients-schema.test.ts writes its rows with, which is
-// the point: the two files were carrying byte-identical copies of this helper,
-// and a partial identity written into one of them would have gone on
-// disagreeing with the other silently.
+// The shared factory plus this file's author; the audit stamps are never the fixture's.
 type IngredientOverrides = Overrides<IngredientFixture>;
 
 function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
@@ -129,10 +103,6 @@ beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
 });
 
-// `truncate … cascade`, not `delete from`: the seeded compendium's rows have
-// category and folk-name links, and every child foreign key in the schema is
-// NO ACTION, so a delete would be refused. Truncating takes the links with
-// it, and the empty table is what every test below assumes.
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
 });
@@ -142,11 +112,8 @@ afterAll(async () => {
 });
 
 describe('ingredients unique indexes', () => {
-  // The catalogue-introspection half. Asserting the rendered predicate rather
-  // than merely "some predicate exists" is the point: a dropped WHERE clause
-  // silently widens the reservation — a soft-deleted entry would keep its
-  // identity forever — and every behaviour test below would still pass,
-  // because none of them re-uses an identity without deleting it first.
+  // The rendered predicate, not "some predicate": a dropped WHERE reserves a
+  // deleted identity forever, and no test below re-uses one without deleting first.
   describe('catalogue introspection', () => {
     it('makes the compendium unique on identity, among live compendium rows only', async () => {
       const index = await indexRow(COMPENDIUM_IDENTITY);
@@ -169,14 +136,12 @@ describe('ingredients unique indexes', () => {
 
       expect(index?.unique).toBe(true);
       expect(index?.predicate).toBe('((workspace_id IS NOT NULL) AND (deleted_at IS NULL))');
-      // `lower(name)`, not `name`: the index is what makes Mugwort and
-      // mugwort one label inside a workspace.
+      // `lower(name)`: Mugwort and mugwort are one label inside a workspace.
       expect(index?.definition).toContain('USING btree (workspace_id, lower(name))');
     });
 
-    // A fourth unique index would be a reservation nobody argued for — most
-    // likely a label index over the compendium tier, which is exactly the
-    // constraint DESIGN.md §5 dropped so four rows may display "Cat's Claw".
+    // A fourth unique index — most likely a label index over the compendium —
+    // is exactly the constraint §5 dropped.
     it('carries no unique index beyond those three and the primary key', async () => {
       const rows = await sql`
         select c.relname as name
@@ -193,9 +158,7 @@ describe('ingredients unique indexes', () => {
   });
 
   describe('the compendium tier', () => {
-    // Story: "Cat's Claw" names an Amazonian vine, a desert shrub, and a
-    // literal claw. Under the old uniqueness on lower(name) the compendium
-    // could hold exactly one of them.
+    // "Cat's Claw" is a vine, a shrub and a claw; uniqueness on lower(name) held one.
     it('holds two entries that share a label but not a formal name', async () => {
       const vine = await insert({
         name: "Cat's Claw",
@@ -208,9 +171,7 @@ describe('ingredients unique indexes', () => {
         form: 'bark',
       });
 
-      // The precondition the test exists to exercise: the labels really are
-      // identical and the identities really are not. Without this, a schema
-      // that rejected nothing at all would pass just as well.
+      // Precondition: the labels are identical and the identities are not.
       expect(vine.canonicalKey).not.toBe(shrub.canonicalKey);
       const labels = await sql`select name from ingredients order by canonical_key`;
       expect(labels.map((r) => r.name)).toEqual(["Cat's Claw", "Cat's Claw"]);
@@ -224,9 +185,7 @@ describe('ingredients unique indexes', () => {
         form: 'bark',
       });
 
-      // Proof the colliding row is otherwise insertable — same values, a tier
-      // this index does not cover — and proof the two really do share an
-      // identity rather than merely looking like they do.
+      // Proof the colliding row is otherwise insertable and really shares the identity.
       const elsewhere = await insert({
         workspaceId: WORKSPACE_A,
         name: 'Uña de gato',
@@ -239,15 +198,12 @@ describe('ingredients unique indexes', () => {
         insert({ name: 'Uña de gato', canonicalName: 'Uncaria tomentosa', form: 'bark' }),
       );
 
-      // 23505 is unique_violation, and the constraint name pins *which* index
-      // refused: the label index would have let this row through, since the
-      // labels differ.
+      // The constraint name pins which index refused; the labels differ.
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(COMPENDIUM_IDENTITY);
     });
 
-    // Folding the form into the key is what makes valerian root and valerian
-    // leaf two identities — two sets of correspondences, two safety notes.
+    // Folding the form into the key makes valerian root and leaf two identities.
     it('holds Valeriana officinalis root and leaf as two entries', async () => {
       const root = await insert({
         name: 'Valerian root',
@@ -304,8 +260,7 @@ describe('ingredients unique indexes', () => {
         canonicalName: 'Artemisia vulgaris',
       });
 
-      // Different identities, same label — so only the label index can be
-      // what refuses the second row, and the assertion below says which.
+      // Different identities, same label: only the label index can refuse.
       const elsewhere = await insert({
         workspaceId: WORKSPACE_B,
         name: 'Mugwort',
@@ -341,15 +296,11 @@ describe('ingredients unique indexes', () => {
     });
   });
 
-  // CLAUDE.md rule 4: without WHERE deleted_at IS NULL, deleting a record
-  // permanently reserves its name. Each of these three asserts the collision
-  // first, so what the soft delete changes is visible rather than assumed —
-  // an index that reserved nothing at all would fail the first half.
+  // Each asserts the collision first, so an index that reserved nothing at all
+  // fails the first half.
   describe('soft delete releases the reservation', () => {
     it('frees a compendium identity', async () => {
-      // The same identity under another label — stated on each row rather
-      // than left to the fixture's default, which is deliberately one the seed
-      // does not carry and so not the one this test names.
+      // The identity stated on both rows rather than left to the factory's default.
       const { id } = await insert({ canonicalName: 'Artemisia vulgaris', form: 'herb' });
 
       const blocked = await failureOf(

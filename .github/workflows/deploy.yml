@@ -1,38 +1,17 @@
 name: Deploy
 
-# CLI-driven Vercel deploys. Replaces Vercel's Git integration (which
-# vercel.json now disables for every branch) as the thing that ships code —
-# see claude-docs/design-decisions/m0.26-*.md.
+# The only path that ships code: vercel.json disables Vercel's Git
+# integration. claude-docs/ci.md, "Deploy" is the walkthrough.
 #
-#   push to main            -> vercel deploy --prebuilt --prod (assigns sorrelandsalt.com)
-#   push to staging         -> preview deploy, aliased to staging.sorrelandsalt.com
-#   PR from hotfix/** -> main -> preview deploy, aliased to a per-hotfix domain
-#                          hotfix-<slug>.sorrelandsalt.com, URL posted as a PR
-#                          comment; the alias is removed when the PR closes.
+#   push to main               -> production (sorrelandsalt.com)
+#   push to staging            -> preview, aliased staging.sorrelandsalt.com
+#   PR from hotfix/** -> main  -> preview, aliased hotfix-<slug>.sorrelandsalt.com
+#                                 and commented on the PR; removed on close
 #
-# Hotfixes deploy on the PR, not on push: an urgent fix wants a review-time
-# preview URL its reviewers can click, and it reaches production through its
-# own main PR anyway. The hotfix->staging PR the create-pr skill also opens
-# is ignored here (trigger is `branches: [main]`) so a hotfix deploys once.
-#
-# Nothing else deploys: no other branch/PR is in the trigger and the Git
-# integration is off. Feature branches are covered by local dev + pr-gate.
-#
-# pull_request (not pull_request_target) is safe here: hotfix branches live in
-# this repo, never a fork, so the secrets below are available and no
-# untrusted checkout runs with them.
-#
-# The VERCEL_* secrets are defined in M0.27's env/secrets matrix and do not
-# exist yet. Until they do, the "Check secrets" gate skips every real step and
-# the workflow still completes green — the same stub-now/wire-later shape
-# pr-gate.yml uses for its vitest/playwright jobs.
-#
-# `deploy` needs: [resolve-target, migrate] — migrate.yml (M1.4) applies
-# pending migrations to the same environment before `deploy` is allowed to
-# run, so a failed migration blocks the promotion instead of racing it. It
-# also seeds the two reference vocabularies — DESIGN.md §6's categories (M4.3)
-# and §5's ingredient forms (M4.3a) — in that same job and only when the push
-# actually changed one of them; see the `seed-changed` job.
+# A hotfix deploys on its PR rather than on push so it has a review-time
+# preview URL. `pull_request` rather than `pull_request_target`: hotfix
+# branches are never forks. `deploy` needs `migrate`, so a failed migration or
+# reference seed blocks the promotion rather than racing it.
 
 on:
   push:
@@ -45,9 +24,7 @@ on:
       - main
 
 concurrency:
-  # One run per branch (push) or per PR (hotfix); never cancel one mid-flight
-  # — a half-run `vercel deploy`/`alias` can leave an alias pointing at a dead
-  # deployment.
+  # Never cancelled mid-flight: a half-run alias can point at a dead deployment.
   group: deploy-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false
 
@@ -56,11 +33,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  # Pure string computation shared by `migrate` (needs the target
-  # environment) and `deploy` (needs environment, prod_flag, and alias) —
-  # split out so migrate.yml can run, and complete, before the deploy job
-  # below. No secrets needed here, so it always runs even when the VERCEL_*
-  # guard downstream would skip the real work.
+  # Shared by `migrate` and `deploy`; needs no secrets.
   resolve-target:
     # push to main/staging, or an open hotfix -> main PR (not its close event).
     if: >-
@@ -83,8 +56,7 @@ jobs:
           HEAD_REF: ${{ github.head_ref }}
         run: |
           if [ "$EVENT_NAME" = "pull_request" ]; then
-            # hotfix/<slug> -> hotfix-<sanitised slug>.sorrelandsalt.com, kept
-            # inside the 63-char DNS label limit (7 for the "hotfix-" prefix).
+            # 56 chars: the 63-char DNS label minus the `hotfix-` prefix.
             raw="${HEAD_REF#hotfix/}"
             slug="$(printf '%s' "$raw" \
               | tr '[:upper:]' '[:lower:]' \
@@ -107,15 +79,9 @@ jobs:
             echo "alias=staging.sorrelandsalt.com" >> "$GITHUB_OUTPUT"
           fi
 
-  # Did this push touch the category seed? The seed is reference data rather
-  # than schema, so it has no journal of its own to tell CI what is pending —
-  # this diff is that journal, and the answer is an input to `migrate`, which
-  # seeds in the same job it migrates in.
-  #
-  # No `if:` on the job, deliberately. `migrate` needs this output, and a
-  # dependency that skips skips its dependents — gating this on
-  # `github.event_name == 'push'` would take every hotfix preview deploy down
-  # with it. Non-push events answer "no" from inside the step instead.
+  # Whether this push touched a reference seed, for `migrate`. No job-level
+  # `if:`: a skipped dependency skips its dependents, which would take every
+  # hotfix preview down with it — non-push events answer "no" from the step.
   seed-changed:
     needs: resolve-target
     runs-on: ubuntu-26.04
@@ -125,8 +91,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          # Both ends of the comparison below have to be in the clone, and a
-          # push can carry more than one commit.
+          # Both ends of the diff have to be in the clone.
           fetch-depth: 0
 
       - name: Look for changes to the seed
@@ -134,19 +99,14 @@ jobs:
         env:
           BEFORE: ${{ github.event.before }}
         run: |
-          # Only a push has a `before` to diff against, and staging and
-          # production are the two databases the seed is meant to reach anyway
-          # — a hotfix preview runs on a disposable Neon branch.
+          # Only a push has a `before`; a hotfix preview's database is disposable.
           if [ "$GITHUB_EVENT_NAME" != "push" ]; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          # A new branch, or a force-push past what the runner fetched, reports
-          # an all-zero `before`. Seed in that case rather than guess: the seed
-          # adds only what is missing, so the cost of a false positive is one
-          # extra `npm run` and the cost of a false negative is an empty
-          # vocabulary in production.
+          # An all-zero or unfetched `before` seeds rather than guesses: the
+          # seed is additive, so a false positive costs one extra `npm run`.
           if [ -z "${BEFORE//0/}" ] || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
             echo "::notice::No usable 'before' commit — seeding anyway."
             echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -168,10 +128,7 @@ jobs:
   migrate:
     needs: [resolve-target, seed-changed]
     concurrency:
-      # One migration at a time, full stop — never let two merges (staging
-      # and main, or two rapid staging pushes) apply migrations concurrently.
-      # The seed rides inside this job, so it inherits the same lock rather
-      # than needing one of its own against it.
+      # One migration at a time; the seed inside inherits the lock.
       group: migrate
       cancel-in-progress: false
     uses: ./.github/workflows/migrate.yml
@@ -183,15 +140,11 @@ jobs:
 
   deploy:
     needs: [resolve-target, migrate]
-    # `success()` here because a custom `if:` on a job with `needs:`
-    # overrides the implicit "needs all succeeded" check — without it, a
-    # failed migrate wouldn't actually block deploy. A failed *seed* blocks it
-    # too, since the seed is a step inside that same job.
+    # `success()`: a custom `if:` on a job with `needs:` replaces the implicit
+    # needs-all-succeeded check, so a bare condition would not block on migrate.
     if: success()
     runs-on: ubuntu-26.04
-    # Bare runner, not the `testing` GHCR image the check workflows use: this
-    # job needs the Vercel CLI and writes .vercel/output, neither of which the
-    # test image is built for. Same call composite-actions-check.yml made.
+    # Bare runner: this needs the Vercel CLI.
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -216,9 +169,8 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         uses: actions/setup-node@v7
         with:
-          # Match Docker/Dockerfile.node and local dev. Node 22 ships npm 10,
-          # which can't reconcile the npm-11-generated package-lock.json for
-          # typescript@7's per-platform optional deps and fails `npm ci`.
+          # Must match Docker/Dockerfile.node: Node 22's npm 10 cannot read
+          # this npm-11 lockfile.
           node-version: 26.6.0
           cache: npm
 
@@ -230,41 +182,17 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         run: npm install --global vercel@59
 
-      # Two pulls, one per target, because --git-branch is legal on exactly
-      # one of them.
-      #
-      # On preview it is load-bearing, not decoration: Vercel resolves a
-      # branch-scoped environment variable only when the pull names a branch,
-      # and the staging DATABASE_URL is exactly such a variable — the one
-      # thing keeping staging off the Neon integration's per-preview
-      # ephemeral branches (MB.27, and
-      # claude-docs/design-decisions/m1.1-neon-branch-strategy.md). Without it
-      # the pull still succeeds and the build simply talks to another
-      # database, so tests/guards/vercel-pull-git-branch.test.ts is what
-      # notices.
-      #
-      # On production it is rejected outright (MB.45):
-      #
-      #   Invalid request: `target` must be "preview" when specifying a `gitBranch`
-      #
-      # Branch-scoped overrides are a Preview-only feature, so production has
-      # no branch-resolved value to miss — omitting the flag there costs
-      # nothing, and MB.27 passing it unconditionally broke every production
-      # deploy. Two steps rather than one command with an optional flag: a
-      # command that merely *might* carry the flag cannot satisfy the preview
-      # half, and a YAML `if:` is data the guard can read where a shell `if`
-      # would be a string it had to parse.
-      #
-      # `== 'preview'` rather than `!= 'production'`: a third environment then
-      # skips both arms and fails at migrate.yml's named "$env_file not found
-      # after vercel pull", rather than silently pulling the wrong one.
+      # Two pulls, one per target: `--git-branch` is what makes Vercel resolve
+      # staging's branch-scoped DATABASE_URL on preview, and production
+      # rejects the flag outright. Two steps rather than one optional flag so
+      # tests/guards/vercel-pull-git-branch.test.ts reads the condition as
+      # data; `== 'preview'` so an unknown environment fails by name.
       - name: Pull Vercel environment (preview)
         if: steps.guard.outputs.enabled == 'true' && needs.resolve-target.outputs.environment == 'preview'
         run: vercel pull --yes --environment=preview --git-branch="$GIT_BRANCH" --token="$VERCEL_DEPLOY_TOKEN"
         env:
-          # Quoted and passed through env rather than interpolated: a branch
-          # name may legally contain shell metacharacters, and a hotfix
-          # branch's name arrives from a pull request.
+          # Through env: a hotfix branch name comes from a PR and may carry
+          # shell metacharacters.
           GIT_BRANCH: ${{ needs.resolve-target.outputs.git_branch }}
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
@@ -274,25 +202,11 @@ jobs:
         env:
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
-      # MB.47 — put back what the pull could not read.
-      #
-      # `DATABASE_URL` and `BETTER_AUTH_SECRET` are marked Sensitive in Vercel,
-      # and a Sensitive variable cannot be read back by `vercel pull` — that is
-      # what the setting means. A diagnostic run pulled staging both with and
-      # without `--git-branch` and got the literal string `[SENSITIVE]` for
-      # both, either way. No arrangement of flags fixes it, so CI keeps its own
-      # copy of exactly those two.
-      #
-      # The runtime is untouched: a deployed function reads its environment
-      # from the platform, not from this file. Only `vercel build` reads it,
-      # and it reads the FILE — a step-level `env:` would not reach the Next
-      # build — so the values are written in rather than exported.
-      #
-      # DATABASE_URL differs per target and so has a secret per target;
-      # BETTER_AUTH_SECRET is one value for both and so has one. The selection
-      # mirrors migrate.yml's, and tests/guards/ci-secret-environments.test.ts
-      # is what holds the two together: choosing differently would migrate one
-      # database and serve another.
+      # DATABASE_URL and BETTER_AUTH_SECRET are Sensitive in Vercel, and
+      # `vercel pull` writes the literal `[SENSITIVE]` for those. Written into
+      # the file because `vercel build` reads the file, not step `env:`. The
+      # selection mirrors migrate.yml's; tests/guards/ci-secret-environments.test.ts
+      # holds the two together.
       - name: Override what the pull could not read
         if: steps.guard.outputs.enabled == 'true'
         env:
@@ -313,14 +227,11 @@ jobs:
           elif [ "$GIT_BRANCH" = "staging" ]; then
             db_url="$DATABASE_URL_STAGING"
           else
-            # A hotfix preview has no named secret — its Neon branch is created
-            # per deployment. Leave whatever the pull carried; the build issues
-            # no query, and the assertion below reports what it got.
+            # A hotfix preview has no named secret; leave what the pull carried.
             db_url=""
           fi
 
-          # Drop the pulled line, append ours. Never echoes a value. An empty
-          # secret leaves the pulled value alone rather than blanking it.
+          # An empty secret leaves the pulled value alone. Never echoes a value.
           override() {
             key="$1"
             value="$2"
@@ -337,19 +248,9 @@ jobs:
           override DATABASE_URL "$db_url"
           override BETTER_AUTH_SECRET "$BETTER_AUTH_SECRET"
 
-      # MB.46 — read what the pull actually returned, before handing it to a
-      # build that cannot say. `vercel build` runs `next build` with
-      # NODE_ENV=production, which traces /api/auth/[...all] -> src/lib/auth.ts
-      # -> src/db/connection.ts: `auth.ts` throws on an unset
-      # BETTER_AUTH_SECRET, and `connection.ts` calls `postgres()` at module
-      # scope, which parses its URL eagerly. So a missing secret or a
-      # placeholder URL fails the build either way — the difference is whether
-      # the log names the cause or prints a stack trace with the value masked
-      # out of it. That is how MB.27 silently dropping variables survived until
-      # a production outage.
-      #
-      # The script reports every key it found, with a classification and never
-      # a value, and prints that report even when it is about to fail.
+      # `vercel build` fails on a missing secret or placeholder URL with the
+      # value masked out of the trace; this names the cause first, and prints
+      # a report of every key, never a value.
       - name: Assert the pulled environment
         if: steps.guard.outputs.enabled == 'true'
         run: |
@@ -357,23 +258,10 @@ jobs:
             --file ".vercel/.env.${{ needs.resolve-target.outputs.environment }}.local" \
             --require DATABASE_URL,BETTER_AUTH_SECRET
 
-      # MB.49 — open the connection before building against it.
-      #
-      # The assertion above reads the file's SHAPE; this opens what is in it. A
-      # URL can be perfectly well-formed and still name a deleted Neon branch, a
-      # rotated password, or a host that no longer resolves — and `vercel build`
-      # would not notice, because a build parses the URL without ever issuing a
-      # query. The failure surfaces later, in a deployed function, as a 500.
-      #
-      # Advisory here, and only here. A build genuinely does not need the
-      # database, so failing the deploy on a transient network blip would trade
-      # one outage for another. What the warning buys is that a deploy which is
-      # about to serve errors says so at build time, in the log, with the
-      # driver's own error code. migrate.yml's probe is fatal for the opposite
-      # reason, and tests/guards/database-probe.test.ts asserts the two apart.
-      #
-      # It reads the env file because that is where the override step wrote the
-      # resolved value — the same value `vercel build` will read.
+      # The assertion reads the file's shape; this opens the connection, which
+      # a build never does. Advisory here and fatal in migrate.yml — a build
+      # does not need the database, but a deploy about to serve 500s should say
+      # so. tests/guards/database-probe.test.ts asserts the two apart.
       - name: Probe the database
         if: steps.guard.outputs.enabled == 'true'
         run: |
@@ -395,21 +283,10 @@ jobs:
           PROD_FLAG: ${{ needs.resolve-target.outputs.prod_flag }}
           GIT_BRANCH: ${{ needs.resolve-target.outputs.git_branch }}
         run: |
-          # The --meta pair is the deploy-side half of MB.27's fix, and it is
-          # not optional here: the CLI infers a deployment's branch from the
-          # local checkout, and actions/checkout leaves a detached HEAD, so
-          # without it the deployment has no branch association at all. Branch
-          # association is what makes Vercel resolve branch-scoped Preview
-          # variables — so the pull's --git-branch fixes the *build's*
-          # DATABASE_URL and this fixes the *runtime's*, which is the one
-          # src/db/connection.ts actually reads. Both halves are required;
-          # either alone leaves staging on the integration's Preview-wide
-          # value. A production deploy uses Production settings regardless of
-          # this metadata, so main carries it harmlessly rather than needing a
-          # branch of its own here.
-          #
-          # stdout is always the deployment URL; stderr carries build/progress
-          # logs — keep them apart (Vercel's own CI example does this).
+          # --meta is the runtime half of --git-branch: actions/checkout leaves
+          # a detached HEAD, so without it the deployment has no branch
+          # association and resolves the Preview-wide DATABASE_URL. Production
+          # ignores it. stdout is the URL and stderr the build log; keep them apart.
           if vercel deploy --prebuilt $PROD_FLAG \
               --meta githubDeployment=1 --meta githubCommitRef="$GIT_BRANCH" \
               --token="$VERCEL_DEPLOY_TOKEN" \
@@ -469,8 +346,9 @@ jobs:
           summary: ${{ steps.alias.outputs.url || steps.deploy.outputs.url || 'deploy failed' }}
 
   teardown:
-    # A closed hotfix -> main PR (merged or abandoned): drop its preview alias
-    # so stale per-hotfix domains don't pile up against the Hobby 50-domain cap.
+    # A closed hotfix PR, merged or not: drop its alias so per-hotfix domains
+    # do not pile up against the Hobby 50-domain cap. Recomputes the slug
+    # because a closed PR runs no `resolve-target`.
     if: >-
       github.event_name == 'pull_request' &&
       github.event.action == 'closed' &&

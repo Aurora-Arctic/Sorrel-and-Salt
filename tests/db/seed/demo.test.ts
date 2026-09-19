@@ -12,19 +12,10 @@ import {
 import { DEMO_SPELLS, WORKSPACE_W_INGREDIENTS, seedDemo } from '@/db/seed/demo';
 import { seed } from '@/db/seed/index';
 
-// M1.23 — the `demo` scenario: DESIGN.md §"Seed data"'s third, "standard plus
-// spells with ingredients and layer order". Like standard.test.ts it runs
-// against the real schema rather than a stubbed table or two, and for a
-// sharper version of the same reason: a layer's integrity is three CHECK
-// constraints, two partial unique indexes and a composite primary key
-// (MB.40), none of which an object this module returns can demonstrate. The
-// worker's sorrel_test_<n> clone arrives with every migration applied and the
-// `standard` scenario seeded (M1.27, tests/support/db-setup.ts), re-cloned
-// that way before this file runs — so nothing is built here and nothing put
-// back afterwards. A test *about* the seed needs the tables empty, so
-// `beforeEach` truncates every one of them, and `seedDemo` then lays
-// `standard` down itself, inside its one transaction, exactly as it did
-// against the empty template this file used to migrate by hand.
+// The `demo` scenario against the real schema: a layer's integrity is three
+// CHECKs, two partial indexes and a composite key no returned object can
+// demonstrate. Every table is emptied first, and `seedDemo` lays `standard`
+// down itself — claude-docs/db.md, "The demo scenario".
 
 const PROBE = 'demo_probe_acting_user';
 
@@ -105,10 +96,8 @@ beforeAll(async () => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
 
-  // standard.test.ts's observation trick, pointed at `spells`:
-  // `app.current_user_id` is transaction-local and so gone by the time a test
-  // could read it, and this records what it held *inside* the transaction that
-  // inserted each spell.
+  // Records what `app.current_user_id` held inside the inserting transaction;
+  // it is transaction-local and gone by the time a test could read it.
   await sql`create table ${sql(PROBE)} (spell_id uuid not null, acting_user text)`;
   await sql.unsafe(`
     create function ${PROBE}() returns trigger language plpgsql as $$
@@ -124,18 +113,11 @@ beforeAll(async () => {
   );
 });
 
-// Every table in `public` emptied, the probe included — one `truncate …
-// cascade` rather than the ordered `delete from` list this used to be: the
-// clone arrives already holding `standard`, every child foreign key is
-// NO ACTION, and a table-by-table delete would be refused. The empty tables
-// are the starting state every test below assumes: the one the old empty
-// template gave, reached the other way round.
 beforeEach(async () => {
   await truncateAllTables(sql);
 });
 
-// Only this file's own objects come down; the schema is the clone's and the
-// next file gets a fresh one.
+// Only this file's own objects come down.
 afterAll(async () => {
   await sql.unsafe(`drop function if exists ${PROBE}() cascade`);
   await sql`drop table if exists ${sql(PROBE)}`;
@@ -151,7 +133,6 @@ describe('demo is standard plus spells', () => {
 
     await seedDemo(db);
 
-    // The cast, the two workspaces and the populated compendium — `demo` is
     // "standard plus", not a second scenario that happens to look similar.
     const users = await sql<{ id: string }[]>`select id from users`;
     expect(new Set(users.map((u) => u.id))).toEqual(
@@ -170,8 +151,6 @@ describe('demo is standard plus spells', () => {
     expect(local.map((i) => i.name).sort()).toEqual(
       WORKSPACE_W_INGREDIENTS.map((i) => i.name).sort(),
     );
-    // Local means local: X sees none of them, which is the isolation the two
-    // workspaces exist to make assertable.
     expect(await ingredientsIn(WORKSPACE_X_ID)).toEqual([]);
   });
 });
@@ -249,9 +228,7 @@ describe('layers: ingredients, and the order they go into the jar', () => {
     expect(layers.filter((l) => (l.note ?? '').length > 0).length).toBeGreaterThanOrEqual(1);
   });
 
-  // The acceptance criterion, and the reason the demo seeds local ingredients
-  // at all: a jar in a real grimoire mixes what the compendium knows with what
-  // this coven wrote down for itself.
+  // A real jar mixes what the compendium knows with what the coven wrote down itself.
   it('mixes compendium entries with W’s own ingredients', async () => {
     await seedDemo(db);
 
@@ -267,18 +244,15 @@ describe('layers: ingredients, and the order they go into the jar', () => {
     );
     const tiers = linked.map((l) => tierById.get(l.ingredient_id as string));
 
-    // The precondition: both tiers are populated, so "both appear" is the
-    // seed's doing rather than one tier being all there is.
+    // Precondition: both tiers are populated.
     expect(new Set(tierById.values())).toEqual(new Set(['compendium', 'workspace']));
     expect(tiers.filter((tier) => tier === 'compendium').length).toBeGreaterThanOrEqual(1);
     expect(tiers.filter((tier) => tier === 'workspace').length).toBeGreaterThanOrEqual(1);
-    // Every linked layer points at something that really exists — and at an
-    // ingredient, never at a stock row (§5, M10.21).
+    // Every linked layer points at an ingredient, never at a stock row.
     expect(tiers.filter((tier) => tier === undefined)).toEqual([]);
   });
 
-  // MB.40, story 57: a pinch of dust from the garden path, named for this jar
-  // only and never added to the workspace's ingredients.
+  // Story 57: a one-off layer named for this jar only, never added to the ingredients.
   it('carries one custom, one-off layer beside the linked ones', async () => {
     await seedDemo(db);
 
@@ -290,13 +264,10 @@ describe('layers: ingredients, and the order they go into the jar', () => {
     expect(custom[0].name).toBeTruthy();
     expect(custom[0].form).toBeTruthy();
 
-    // It sits beside linked layers in the same jar, which is the arrangement
-    // Wave 13 has to render and reorder.
     const siblings = await layersOf(custom[0].spell_id);
     expect(siblings.filter((l) => l.ingredient_id !== null).length).toBeGreaterThanOrEqual(1);
 
-    // And it is one-off: the name it carries is not an ingredient anywhere,
-    // in either tier.
+    // One-off: the name is not an ingredient in either tier.
     const named = await sql<{ id: string }[]>`
       select id from ingredients where lower(name) = lower(${custom[0].name as string})
     `;
@@ -327,13 +298,9 @@ describe('re-running the scenario', () => {
     expect(await counts()).toEqual(before);
   });
 
-  // The reason a jar's stack is keyed as a whole rather than layer by layer: a
-  // layer pulled out of the middle renumbers everything below it, so the depth
-  // the seed wants back is occupied by a different ingredient and the
-  // ingredient it wants is already at another depth. A per-layer "insert what
-  // is missing" hits the primary key or MB.40's partial unique index and fails
-  // the entire scenario, not the row — which is what this asserts does not
-  // happen.
+  // The stack is keyed as a whole: patching one layer back into an edited jar
+  // collides with the key or the partial index and fails the whole scenario
+  // (see the citation above).
   it('leaves a jar someone has edited alone, rather than patching rows back into it', async () => {
     await seedDemo(db);
 
@@ -341,8 +308,7 @@ describe('re-running the scenario', () => {
     const before = await layersOf(spell.id);
     const pulled = before[2];
 
-    // A member takes the third layer out of the jar — a hard delete (MB.34) —
-    // and the ones below it close the gap, the way M10.16's reorder will.
+    // A member pulls the third layer out (a hard delete) and the ones below close the gap.
     await sql`
       delete from spell_ingredients
       where spell_id = ${spell.id} and layer_order = ${pulled.layer_order}
@@ -359,8 +325,7 @@ describe('re-running the scenario', () => {
     const after = await layersOf(spell.id);
     expect(after).toHaveLength(before.length - 1);
     expect(after.map((l) => l.layer_order)).toEqual(after.map((_layer, index) => index + 1));
-    // The layer that was pulled out stayed out — nothing was re-added under a
-    // depth that had moved on.
+    // The pulled layer stayed out.
     expect(
       after.filter((l) => l.ingredient_id === pulled.ingredient_id && l.name === pulled.name),
     ).toEqual([]);
@@ -371,8 +336,7 @@ describe('re-running the scenario', () => {
 
     const spell = DEMO_SPELLS[0];
     const layers = await layersOf(spell.id);
-    // Reverse the stack: n, n-1, … 1, through a scratch offset so the
-    // rewrite never collides with the key it is rewriting.
+    // Reverse the stack through a scratch offset, so the rewrite never collides with the key.
     for (const layer of layers) {
       await sql`
         update spell_ingredients set layer_order = ${layer.layer_order + 1000}
