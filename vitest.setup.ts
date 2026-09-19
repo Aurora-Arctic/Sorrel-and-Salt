@@ -1,6 +1,6 @@
 import { afterEach, afterAll, beforeAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
-import { server } from './src/test/msw/server';
+import { server } from './tests/support/msw/server';
 
 // Ported from resume-2026's vitest.setup.ts. `test.globals: true` doesn't
 // register RTL's automatic afterEach(cleanup) on its own, so without this a

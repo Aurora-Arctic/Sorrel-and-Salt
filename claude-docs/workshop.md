@@ -9,13 +9,17 @@ without a page routed to it.
 - **Ladle**, not Storybook or Histoire — Vite + React only, so it never couples
   the workshop to a Next.js major; one dependency, one config file.
 - **Component stories live at exactly `src/components/<Name>/index.stories.tsx`**,
-  beside `index.tsx` and `index.test.tsx`. The `stories` glob also picks up
+  beside `index.tsx`. The `stories` glob also picks up
   `.ladle/*.stories.tsx`, for workshop-only pages the app never imports.
-- Stories carry no test ids, no snapshots and no assertions — behaviour is
-  `index.test.tsx`'s job.
-- `*.stories.tsx` is excluded from `tsc` (mirroring `*.test.tsx`) while
-  `@ladle/react`'s bundled types don't pass `strict`; `ladle build` still
-  compiles stories through esbuild.
+- Stories carry no test ids, no snapshots and no assertions — behaviour is the
+  test's job, and since MB.41 the test is not beside the story: it lives at
+  `tests/components/<Name>/index.test.tsx`. The story stays in the component
+  directory because Ladle discovers components by that file, which is the one
+  thing the move could not relocate.
+- `*.stories.tsx` is excluded from `tsc` while `@ladle/react`'s bundled types
+  don't pass `strict`; `ladle build` still compiles stories through esbuild.
+  Test files are not excluded — `tests/` is in tsconfig's `include` and `tsc`
+  is the only thing that typechecks it.
 
 ## `.ladle/`
 
@@ -25,7 +29,7 @@ without a page routed to it.
   own order; it is a global-config hook only (no per-story-file equivalent) and
   must stay a self-contained function, since Ladle serializes it with
   `.toString()`. `addons.theme.defaultState: 'dark'` matches the app's
-  dark-first default in `globals.scss`; `src/test/workshop-guards.test.ts`
+  dark-first default in `globals.scss`; `tests/guards/workshop-guards.test.ts`
   asserts it stays that way.
 - **`config.d.mts`** — a hand-written declaration of the slice of `config.mjs`
   that guard reads, for `tsc` alone: `allowJs` is off, so the
@@ -103,7 +107,7 @@ without a page routed to it.
   because `@ladle/react` 5.1.1's own CLI always exits 0 even when the underlying
   Vite build fails; it turns Vite's `✗ Build failed` marker into a real
   non-zero exit.
-- `src/test/workshop-guards.test.ts` (MB.38) — the two mechanical guards, as
+- `tests/guards/workshop-guards.test.ts` (MB.38) — the two mechanical guards, as
   ordinary Vitest tests in the `unit` project. One fails if a directory under
   `src/components/` has an `index.tsx` but no sibling `index.stories.tsx` —
   not an Oxlint rule, because Oxlint has no custom-rule API and this is a

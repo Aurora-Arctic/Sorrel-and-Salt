@@ -23,9 +23,16 @@
       "@/*": ["./src/*"]
     }
   },
+  // tests/ is listed because `tsc` is the only thing that typechecks it:
+  // Vitest strips types rather than checking them, so an omission here would
+  // not fail anything — it would silently stop checking the suite, which is
+  // the state e2e/ is already in. The `@ts-expect-error` assertions in
+  // tests/db/repository.test.ts and tests/support/as-user.test.ts are only
+  // assertions while this line stands (MB.41).
   "include": [
     "next-env.d.ts",
     "./src/**/*",
+    "./tests/**/*",
     "./.next/types/**/*.ts",
     "./next.config.ts",
     ".next/types/**/*.ts",
