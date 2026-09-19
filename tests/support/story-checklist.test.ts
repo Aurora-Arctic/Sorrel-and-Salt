@@ -2,11 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { buildChecklist, formatChecklist } from './story-checklist';
 import type { ReportedModule, SuiteState } from './story-checklist';
 
-// M1.28 — a checklist is built from what the run reported, one line per v1
-// story, and a story nobody has written a test for is still on it. The
-// inputs here are the narrow structural shape the builder reads off
-// Vitest's TestModule (name, state, module id), so the cases can be plain
-// objects rather than a real run.
+// The inputs are the narrow shape the builder reads off Vitest's TestModule,
+// so the cases are plain objects rather than a run.
 
 function module(relativeModuleId: string, suites: Array<[string, SuiteState]>): ReportedModule {
   return {
@@ -70,9 +67,7 @@ describe('buildChecklist', () => {
   });
 
   it('passes a story only when every suite naming it passed', () => {
-    // A failure anywhere is a failure; a skip anywhere means the story is not
-    // fully verified; 'pending' is what an interrupted run leaves behind and
-    // must never read as green.
+    // 'pending' is what an interrupted run leaves behind and must never read as green.
     const status = (states: SuiteState[]) =>
       buildChecklist([
         module(

@@ -13,16 +13,8 @@ import {
   WORKSPACE_X_ID,
 } from '@/db/seed/standard';
 
-// M1.27 — every `db` worker's clone starts as the migrated schema plus the
-// `standard` scenario, and it starts that way for *every test file*, not once
-// per run: tests/support/db-setup.ts re-clones the worker's database from
-// the seeded template before each file. So this file makes no schema and
-// seeds nothing — what it asserts is the baseline every other file under
-// tests/db/ may assume.
-//
-// Why the template is populated at test-run setup rather than baked into the
-// Postgres image:
-// claude-docs/design-decisions/m1.27-template-at-setup-not-in-image.md.
+// The baseline every other file under tests/db/ may assume; this one builds no
+// schema and seeds nothing — claude-docs/testing.md, "Where tests live".
 
 let sql: ReturnType<typeof postgres>;
 
@@ -53,8 +45,7 @@ describe('the seeded template every db worker clones', () => {
     const [{ count }] = await sql<{ count: string }[]>`
       select count(*) from drizzle.__drizzle_migrations
     `;
-    // Both the journal and its table, so a migration generated but not applied
-    // — a stale template — is a failing test rather than a confusing one.
+    // Journal and table both, so a stale template is a failing test rather than a confusing one.
     expect(Number(count)).toBe(journal.entries.length);
     expect(Number(count)).toBeGreaterThan(0);
   });

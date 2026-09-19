@@ -3,19 +3,10 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { dropSchema } from '@/db/seed/reset';
 
-// M1.24 — the drop half of `npm run db:reset`.
-//
-// `db:reset` is the answer to "my local database is wedged": drop, migrate,
-// reseed. The migrate and reseed halves already existed; nothing dropped, so a
-// half-applied migration or a table drizzle-kit's journal disagrees about left
-// `db:migrate` failing in exactly the state the reset exists to escape.
-//
-// This test runs against a **database of its own**, not the worker's clone.
-// `dropSchema` removes the `public` schema outright, pg_trgm and all, and the
-// worker clone is shared with every other file that lands in the same pool
-// slot — a test that wrecked it would fail some unrelated file downstream
-// instead of here. The same `CREATE DATABASE` the harness itself uses
-// (tests/support/db-global-setup.ts) keeps the blast radius inside this file.
+// The drop half of `db:reset`, run against a database of its own: `dropSchema`
+// removes `public` outright, and the worker clone is shared with every file in
+// the same pool slot. The same `CREATE DATABASE` the harness uses keeps the
+// blast radius inside this file — claude-docs/db.md, "Migrations and scripts".
 
 /** Reachable as the `sorrel` role, which owns the database it is about to gut. */
 function adminUrl(): string {
@@ -32,8 +23,7 @@ function databaseUrl(name: string): string {
   return url.toString();
 }
 
-// One per pool slot, for the reason worker-database.ts gives: `VITEST_POOL_ID`
-// is bounded by the worker count, `VITEST_WORKER_ID` is not (MB.14).
+// One per pool slot: `VITEST_POOL_ID` is bounded by the worker count, `VITEST_WORKER_ID` is not.
 const DATABASE = `sorrel_reset_${process.env.VITEST_POOL_ID ?? '1'}`;
 
 let admin: ReturnType<typeof postgres>;
@@ -62,10 +52,9 @@ async function extensionNames(): Promise<string[]> {
 }
 
 /**
- * The state `db:reset` is called in: application tables in `public`, plus the
- * `drizzle` schema holding drizzle-kit's `__drizzle_migrations` journal. The
- * journal is the reason a reset has to drop rather than re-run — a migration
- * it records as applied is never applied again, however wrecked the table is.
+ * The state `db:reset` is called in: tables in `public` plus drizzle-kit's
+ * journal, which is why a reset drops rather than re-runs — a migration
+ * recorded as applied is never applied again, however wrecked the table.
  */
 async function buildWreckedDatabase(): Promise<void> {
   await sql.unsafe('create extension if not exists pg_trgm');
@@ -98,8 +87,7 @@ afterAll(async () => {
 });
 
 describe('dropSchema', () => {
-  // The precondition, so nothing below can pass because the setup silently did
-  // nothing: a database with no tables would also report no tables afterwards.
+  // Precondition: a database with no tables would also report none afterwards.
   it('starts from a database that really holds the objects it is asked to drop', async () => {
     await buildWreckedDatabase();
 
@@ -123,9 +111,7 @@ describe('dropSchema', () => {
 
     expect(await schemaNames()).not.toContain('drizzle');
   });
-
-  // Dropping `public` takes pg_trgm with it — the extension is installed
-  // there. Migration 0000 puts it back, which is why the reset is drop *then*
+  // Dropping `public` takes pg_trgm with it; migration 0000 puts it back — drop then migrate.
   // migrate and never drop alone.
   it('leaves an empty public schema behind for the migrations to land in', async () => {
     await buildWreckedDatabase();
@@ -149,9 +135,7 @@ describe('dropSchema', () => {
     expect(rows).toEqual([]);
   });
 
-  // "Completes from a broken state" is the acceptance criterion, and the
-  // broken state that matters most is the one a failed reset leaves: no
-  // `public` schema at all.
+  // The broken state that matters most: a failed reset leaves no `public` schema at all.
   it('succeeds against a database whose public schema is already gone', async () => {
     await sql.unsafe('drop schema public cascade');
 

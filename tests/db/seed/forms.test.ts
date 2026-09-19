@@ -8,32 +8,17 @@ import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { FORM_GROUPS, FORMS, seedForms } from '@/db/seed/forms';
 import { slugify } from '@/lib/slugify';
 
-// M4.3a — the six form groups and every form DESIGN.md §5 lists under them,
-// seeded as a starting set an admin may edit afterwards.
-//
-// Shaped like categories.test.ts (M4.3), and for the same reason: the
-// vocabulary is asserted against its *source* — §5's own table, parsed below —
-// rather than against a copy of it, because a copy is exactly what rots. §5
-// now files each form under a group, so the grouping is asserted too, and with
-// it the property the regrouping was for: no section holds more than half the
-// list.
-//
-// Against the real tables, not stubs: `ingredient_forms.group_id` is a real
-// foreign key and every row carries audit ids pointing at `users`, so "the
-// groups land before the forms" is only a claim if both tables are the real
-// ones. The clone carries every migration and the `standard` seed
-// (tests/support/db-setup.ts); what the file *is* about is seeding, so
-// beforeEach empties every table first.
+// §5's six form groups and every form under them, asserted against §5's own
+// table rather than a copy, against the real tables emptied first —
+// claude-docs/db.md, "The form vocabulary seed". The regrouping's own property
+// is asserted too: no section holds more than half the list.
 
 const DESIGN_DOC = fromRoot('claude-docs/DESIGN.md');
 
 // --- DESIGN.md §5, parsed ---------------------------------------------------
 
-// §5 carries the vocabulary as a table — one row per group, its forms in a
-// comma-separated cell — and the two historical lists as a sentence beneath
-// it. Parsing both rather than transcribing them means a form added to §5 and
-// not to the seed fails here instead of passing quietly, exactly as
-// categories.test.ts parses §6's table.
+// §5 carries the vocabulary as a table and the two historical lists as a
+// sentence beneath it; both are parsed rather than transcribed.
 function designSection5(): string {
   const doc = readFileSync(DESIGN_DOC, 'utf8');
   const start = doc.indexOf('**`ingredient_forms`**');
@@ -127,10 +112,6 @@ beforeAll(() => {
   db = drizzle(sql);
 });
 
-// One `truncate … cascade` over every table, not a `delete from` list: the
-// seeded scenario's rows point at each other and every child foreign key is
-// NO ACTION, so a delete would be refused. Truncating takes the links with it
-// and leaves the empty tables every count below assumes.
 beforeEach(async () => {
   await truncateAllTables(sql);
 });
@@ -140,9 +121,8 @@ afterAll(async () => {
 });
 
 describe('the seed data matches DESIGN.md §5', () => {
-  // The precondition behind every comparison below: §5 really was parsed, and
-  // into the counts §5 states in words. Without this a parse that matched
-  // nothing would make every "covers §5's values" test vacuously true.
+  // Precondition: §5 really was parsed, into the counts it states — otherwise
+  // every "covers §5" test below is vacuously true.
   it('parses §5’s own table and sentence, not an empty match', () => {
     expect(DESIGN_GROUPS.map((group) => group.name)).toEqual([
       'Botanical',
@@ -165,10 +145,8 @@ describe('the seed data matches DESIGN.md §5', () => {
     expect(FORMS.map((form) => form.name.toLowerCase())).toEqual(DESIGN_VALUES);
   });
 
-  // The two historical lists, still required by this task's acceptance
-  // criteria. They are a subset of the table above rather than a prefix of it —
-  // §5 groups the vocabulary now, so `ash` and `curio` sit far apart — which is
-  // why this asks for membership where the test above asks for order.
+  // Membership rather than order: §5 groups the vocabulary now, so `ash` and
+  // `curio` sit far apart.
   it('keeps the vocabulary MB.28 first wrote, and the additions after it', () => {
     const seeded = new Set(FORMS.map((form) => slugify(form.name)));
 
@@ -183,9 +161,8 @@ describe('the seed data matches DESIGN.md §5', () => {
     expect(FORM_GROUPS.map((group) => slugify(group.name))).toEqual(designNames.map(slugify));
   });
 
-  // Not just "in some group §5 names" — in the group §5 files it under. The
-  // grouping is what this revision of the vocabulary is for, so putting `wax`
-  // under Fluid would be a silent regression the count tests below would miss.
+  // In the group §5 files it under, not merely some group: `wax` under Fluid
+  // would pass the count tests below.
   it('files every form under the group §5 puts it in', () => {
     const designGroupOf = new Map(
       DESIGN_GROUPS.flatMap((group) => group.forms.map((form) => [form, group.name] as const)),
@@ -196,9 +173,7 @@ describe('the seed data matches DESIGN.md §5', () => {
     }
   });
 
-  // Each of the six is a section header a reader would notice standing empty,
-  // and a vocabulary that filed everything under one would still satisfy the
-  // test above.
+  // A vocabulary filed entirely under one group would still pass the test above.
   it('puts something in each of the six groups', () => {
     for (const group of FORM_GROUPS) {
       expect(FORMS.filter((form) => form.group === group.name).length, group.name).toBeGreaterThan(
@@ -207,9 +182,7 @@ describe('the seed data matches DESIGN.md §5', () => {
     }
   });
 
-  // The failure the regrouping exists to prevent: the old vocabulary put 21 of
-  // its 29 rows under one header, which is a dropdown section as long as the
-  // dropdown. No group may hold more than half.
+  // The old vocabulary put 21 of 29 rows under one header; no group may hold more than half.
   it('spreads the vocabulary rather than piling it into one section', () => {
     for (const group of FORM_GROUPS) {
       const held = FORMS.filter((form) => form.group === group.name).length;
@@ -218,13 +191,9 @@ describe('the seed data matches DESIGN.md §5', () => {
     }
   });
 
-  // §5 writes its vocabulary in prose and so writes it lower case; a seeded
-  // name is a rendered label — a dropdown option and the section header above
-  // it — and those are Title Case, as §6's categories already are. Every test
-  // above compares case-insensitively, since §5 is the lower-case source, and
-  // that is exactly what leaves room for a seeded "herb" to pass all of them.
-  // Each word is checked rather than the first, so a two-word name an admin
-  // adds later cannot land half-cased.
+  // §5 writes lower case and a seeded name is a rendered label. Every test
+  // above compares case-insensitively, which is what would let a seeded "herb"
+  // through — so every word is checked, not only the first.
   it('writes every name in Title Case, as a rendered label', () => {
     const sentenceCased = (name: string) => name.split(' ').filter((word) => !/^[A-Z]/.test(word));
 
@@ -243,8 +212,7 @@ describe('every row explains itself', () => {
     expect(FORMS.filter((form) => form.description.trim() === '')).toEqual([]);
   });
 
-  // A description copied from the row above satisfies "non-empty" and explains
-  // nothing, which is the failure §5's requirement is actually about.
+  // A description copied from the row above is non-empty and explains nothing.
   it('gives no two forms the same description', () => {
     const descriptions = FORMS.map((form) => form.description);
 
@@ -260,8 +228,7 @@ describe('every row explains itself', () => {
 });
 
 describe('seedForms(db)', () => {
-  // The precondition behind every count below: a fresh clone really starts at
-  // zero, so the rows that follow are this seed's and not a leftover.
+  // Precondition: the truncated clone really starts at zero.
   it('starts from two empty tables', async () => {
     expect(await countOf('ingredient_form_groups')).toBe(0);
     expect(await countOf('ingredient_forms')).toBe(0);
@@ -309,9 +276,8 @@ describe('seedForms(db)', () => {
     expect(await allForms()).toEqual(forms);
   });
 
-  // The vocabulary is the admin's from here on (MB.35), and a description is
-  // the part of a curated row most likely to be rewritten — a seed that
-  // re-asserted its own wording would undo that on the next deploy.
+  // The vocabulary is the admin's (MB.35), and a description is the part of a
+  // curated row most likely to be rewritten.
   it('does not overwrite a description an admin has since rewritten', async () => {
     await seedForms(db);
     await sql`
@@ -325,10 +291,7 @@ describe('seedForms(db)', () => {
     expect(bark.description).toBe('The bark of the root, not the stem.');
   });
 
-  // Idempotency keys on the slug and ignores `deleted_at`, which is stronger
-  // than the partial unique index gives on its own: the index stops only a
-  // second *live* row, so a slug an admin had soft-deleted would be
-  // re-inserted on the next deploy. Removing a form is a decision.
+  // Keyed on the slug, ignoring `deleted_at`: the partial index stops only a second live row.
   it('does not resurrect a form an admin has since deleted', async () => {
     await seedForms(db);
     await sql`

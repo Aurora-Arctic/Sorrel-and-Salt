@@ -38,9 +38,8 @@ describe('spell_categories schema', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...STAMP_COLUMNS].sort());
   });
 
-  // MB.34: the four stamps, not the six. `created_by` still answers who tagged
-  // this spell with this intent; what goes is the tombstone, because a chip
-  // toggled off leaves no row.
+  // Four stamps and no tombstone (MB.34) —
+  // claude-docs/db.md, "Hard delete on the three join tables".
   it('spreads the four audit stamps, each required', () => {
     for (const column of STAMP_COLUMNS) {
       expect(byName[column]).toBeDefined();
@@ -54,9 +53,7 @@ describe('spell_categories schema', () => {
     }
   });
 
-  // A surrogate id would let the same pair be assigned twice, which is exactly
-  // what the composite key exists to refuse — as on `ingredient_categories`,
-  // `spell_ingredients` and `workspace_members`.
+  // A surrogate id would let the same pair be assigned twice.
   it('has no surrogate id, keying on the pair instead', () => {
     expect(byName.id).toBeUndefined();
 
@@ -86,14 +83,11 @@ describe('spell_categories schema', () => {
       expect(foreignKeyByColumn[column].foreignColumnName).toBe('id');
       expect(foreignKeyByColumn[column].foreignTable).toBe(users);
     }
-    // The delete stamp every audited table carries has no counterpart here.
     expect(foreignKeyByColumn.deleted_by).toBeUndefined();
   });
 
-  // The primary key indexes (spell_id, category_id), which answers "what is
-  // this spell tagged with"; the reverse question — "which spells are tagged
-  // for prosperity", M10.11's category filter — needs its own index,
-  // `category_id` leading.
+  // The key answers "what is this spell tagged with"; the category filter needs
+  // its own index, `category_id` leading.
   it('indexes the reverse direction, category to spell', () => {
     const reverse = indexes.find((index) => index.config.name === REVERSE_INDEX);
 
@@ -105,34 +99,26 @@ describe('spell_categories schema', () => {
     ]);
   });
 
-  // Rule 4's partial-index convention exists to stop a tombstone reserving a
-  // name, and this table has no tombstone to dodge: the pair is either there or
-  // it is not. A `WHERE deleted_at IS NULL` here would not even compile.
+  // No tombstone, so there is no soft-delete predicate to write.
   it('carries no partial index: there is no soft-delete predicate to write', () => {
     for (const index of indexes) {
       expect(index.config.where).toBeUndefined();
     }
   });
 
-  // §5 names none, and the pair is fully constrained by the key and the two
-  // foreign keys — there is nothing about an assignment left to check.
+  // §5 names none: the key and the two foreign keys leave nothing about a pair to check.
   it('carries no CHECK constraints', () => {
     expect(checks).toEqual([]);
   });
 });
 
-// The behaviour half, against the real table: a clone carrying every migration
-// and the `standard` seed, re-cloned before this file runs
-// (tests/support/db-setup.ts). The authors and the categories are the seed's —
-// the real `users` and `categories` demand NOT NULL names, slugs and audit
-// stamps. The two spells are this file's own, because `standard` seeds none.
+// The two spells are this file's own, because `standard` seeds none.
 const AUTHOR = FIXTURE_USERS.A.id;
 const SECOND_AUTHOR = FIXTURE_USERS.B.id;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
-// Read back in `beforeAll`: §6's category ids are generated at seed time, and a
-// spell's id is the column default's.
+// Read back in `beforeAll`: the seed generates the category ids.
 let HEARTH_GUARD: string;
 let SWEET_JAR: string;
 let PROTECTION: string;
@@ -191,9 +177,7 @@ async function pairs(): Promise<Pair[]> {
   }));
 }
 
-// The order `pairs()` reads them back in. Since M1.27 the ids are generated
-// rather than fixed, so a list of expected pairs is sorted the same way
-// instead of relying on the ids sorting in the order they were written.
+// Sorted as `pairs()` reads: the ids are generated, so their order is unknown when written.
 function inReadOrder(expected: Pair[]): Pair[] {
   return [...expected].sort(
     (a, b) => a.spellId.localeCompare(b.spellId) || a.categoryId.localeCompare(b.categoryId),
@@ -219,8 +203,6 @@ beforeAll(async () => {
   PROSPERITY = await categoryIdNamed('Prosperity');
 });
 
-// Nothing references an assignment, so a plain truncate is enough; the empty
-// table is what every test below assumes.
 beforeEach(async () => {
   await sql`truncate spell_categories`;
 });
@@ -237,9 +219,8 @@ describe('spell_categories table', () => {
   });
 
   describe('the composite primary key', () => {
-    // Story 48, and the precondition for the refusal below: several intents per
-    // spell insert fine, so what stops the duplicate is the key on the pair
-    // rather than the insert never working at all.
+    // Story 48, and the precondition for the refusal below: several intents
+    // insert fine, so the key on the pair is what stops the duplicate.
     it('lets a spell carry several categories, and a category several spells', async () => {
       await assign(HEARTH_GUARD, PROTECTION);
       await assign(HEARTH_GUARD, PROSPERITY);
@@ -259,14 +240,12 @@ describe('spell_categories table', () => {
 
       const error = await failureOf(assign(HEARTH_GUARD, PROTECTION));
 
-      // 23505 is unique_violation, named: proof the insert reached the primary
-      // key rather than failing some other constraint first.
+      // 23505 is unique_violation, named: the primary key refused, not something earlier.
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(PRIMARY_KEY);
     });
 
-    // The pair is the identity; the stamps are only who touched it. A second
-    // member toggling the same chip on is the same row, not a second one.
+    // The pair is the identity: a second member toggling the same chip is the same row.
     it('refuses the duplicate whoever is adding it', async () => {
       await assign(HEARTH_GUARD, PROTECTION);
 
@@ -293,17 +272,14 @@ describe('spell_categories table', () => {
       expect(error.constraint_name).toBe(CATEGORY_FK);
     });
 
-    // Which table each key names, proved rather than asserted twice: the same
-    // id is a real row on one side and refused on the other. Repoint either key
-    // and this is the test that reddens — an id that exists *somewhere* is the
-    // failure a foreign key to the wrong table lets through.
+    // Which table each key names, proved: the same id is a real row on one
+    // side and refused on the other.
     it('refuses a real category id in the spell column', async () => {
       const error = await failureOf(assign(PROTECTION, PROTECTION));
 
       expect(error.code).toBe('23503');
       expect(error.constraint_name).toBe(SPELL_FK);
-      // Why it could have succeeded: that id is a live category, and the same
-      // insert with it on the category side alone is accepted.
+      // Why it could have succeeded: the id is a live category, accepted on that side.
       await assign(HEARTH_GUARD, PROTECTION);
       expect(await pairs()).toEqual([{ spellId: HEARTH_GUARD, categoryId: PROTECTION }]);
     });
@@ -317,12 +293,9 @@ describe('spell_categories table', () => {
       expect(await pairs()).toEqual([{ spellId: HEARTH_GUARD, categoryId: PROTECTION }]);
     });
 
-    // 23502 is not_null_violation on that exact column. The refusal is the
-    // composite key's rather than the column's own `NOT NULL`: a primary key
-    // column is implicitly non-null, so stripping the explicit declaration
-    // changes nothing here. The declaration stays because it matches the other
-    // two join tables and says what the column means, and these two tests
-    // assert the shipped behaviour rather than which constraint produced it.
+    // 23502 is not_null_violation. The refusal is the composite key's implicit
+    // NOT NULL; the explicit declaration stays to match the other join tables,
+    // and these assert the shipped behaviour rather than which constraint.
     it('refuses an insert omitting the spell', async () => {
       const error = await failureOf(sql`
         insert into spell_categories (category_id, created_by, updated_by)
@@ -339,16 +312,13 @@ describe('spell_categories table', () => {
         values (${HEARTH_GUARD}, ${AUTHOR}, ${AUTHOR})
       `);
 
-      // Same as above: the key's implicit non-nullability, named.
       expect(error.code).toBe('23502');
       expect(error.column_name).toBe('category_id');
     });
   });
 
-  // Both directions, asserted from the catalogue: a chip section on a spell
-  // page reads the pair one way, and M10.11's category filter reads it the
-  // other. The primary key covers the first; without the second index the
-  // grimoire filter is a sequential scan over every assignment in the database.
+  // Without the reverse index the grimoire's category filter is a sequential
+  // scan over every assignment in the database.
   describe('lookup in both directions', () => {
     it('indexes the pair from the spell side, as the primary key', async () => {
       const index = await indexDefinition(PRIMARY_KEY);
@@ -362,17 +332,14 @@ describe('spell_categories table', () => {
       const index = await indexDefinition(REVERSE_INDEX);
 
       expect(index).toBeDefined();
-      // Not unique: the pair's uniqueness is the primary key's job, and a
-      // unique index here would refuse a category its second spell.
+      // Not unique: a unique index here would refuse a category its second spell.
       expect(index.unique).toBe(false);
       expect(index.definition).toContain('(category_id, spell_id)');
     });
   });
 });
 
-// MB.34's type constraints exercised against the real table rather than
-// `repository.test.ts`'s scratch pair: `write.delete` compiles against this one
-// because it carries no `deletedAt`, and what it leaves behind is nothing.
+// `write.delete` against the real table rather than repository.test.ts's scratch pair.
 describe('an assignment removed through write.delete', () => {
   const session = { userId: AUTHOR };
 
@@ -397,9 +364,8 @@ describe('an assignment removed through write.delete', () => {
 
     expect(removed).toHaveLength(1);
     expect(await pairs()).toEqual([]);
-    // Not merely filtered out of the finder: `findMany` writes no
-    // `deleted_at IS NULL` for a table that has no such column, so an empty
-    // read here is an empty table.
+    // `findMany` writes no `deleted_at IS NULL` for this table, so an empty
+    // read is an empty table.
     expect(await findMany(spellCategories)).toEqual([]);
   });
 
@@ -410,8 +376,8 @@ describe('an assignment removed through write.delete', () => {
     const [readded] = await add(HEARTH_GUARD, PROTECTION, SECOND_AUTHOR);
 
     expect(await pairs()).toEqual([{ spellId: HEARTH_GUARD, categoryId: PROTECTION }]);
-    // Re-adding is an ordinary insert, so the row's stamps are the second
-    // member's — not the first author's, resurrected.
+    // An ordinary insert: the stamps are the second member's, not the first
+    // author's resurrected.
     expect(readded.createdBy).toBe(SECOND_AUTHOR);
   });
 

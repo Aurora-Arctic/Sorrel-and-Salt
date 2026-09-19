@@ -1,6 +1,4 @@
 import { setupServer } from 'msw/node';
 
-// No handlers yet — the `/api/graphql` stub and its per-test override helper
-// land in M1.10. This just gives vitest.setup.ts's lifecycle hooks a server
-// to start, reset, and close.
+// No base handlers — every operation is registered per test (graphql.ts).
 export const server = setupServer();

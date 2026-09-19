@@ -142,7 +142,13 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
     instead of erroring on a stale database. `maxWorkers` comes off the
     `TestProject` Vitest hands the setup function — no per-worker variable is
     set inside the single setup process, so it pre-clones one database per
-    possible worker instead. It `provide`s that list as `workerDatabases`,
+    possible worker instead. That number is `undefined` there unless the
+    config pins it, so `tests/support/db-project.mts` pins `maxWorkers` to
+    Vitest's own default (`os.availableParallelism() - 1`, floored at 1) —
+    and it must keep mirroring that default: both projects share one pool
+    group, and Vitest throws when two projects in a group disagree on
+    `maxWorkers`, which is what makes "every slot has a clone" a guarantee
+    rather than a hope. It `provide`s that list as `workerDatabases`,
     which `test-database-isolation.test.ts` asserts its own database is a
     member of (MB.14) — the point being that a worker's name is checked
     against what was actually created, not against a bound the test
@@ -498,7 +504,9 @@ that file.
 && npm run start`, on **8001** (`PORT` env override; `start` defaults to
 8000). Distinct from Vitest's `db` project, which clones one database per
 worker — Playwright needs only one, `sorrel_e2e`, since `webServer` is a
-single shared server.
+single shared server. `reuseExistingServer` is off whenever `CI` is set, so a
+CI run always builds and starts its own server rather than attaching to one
+left over on the port.
 
 - **`e2e/database.ts`** — the same two-tier shape as the Vitest harness,
   through the same `tests/support/seeded-database.ts` (M1.27).

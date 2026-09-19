@@ -10,10 +10,7 @@ import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standar
 import { users } from '@/db/schema/users';
 import { workspaces } from '@/db/schema/workspaces';
 
-// The full six. An inventory item is a workspace's record of what it holds,
-// and story 25 deletes one with a confirmation and calls it recoverable — so
-// it leaves a tombstone, and the unique index below is partial to let the
-// same ingredient be re-added afterwards.
+// The full six: story 25's delete is recoverable, so the unique index below is partial.
 const AUDIT_COLUMNS = [
   'created_at',
   'created_by',
@@ -43,8 +40,7 @@ const INGREDIENT_FK = 'inventory_items_ingredient_id_ingredients_id_fk';
 
 const SCHEMA_SOURCE = fromRoot('src/db/schema/inventory-items.ts');
 
-// Every single-quoted literal in a source file, with comments removed first so
-// that the guard below reads the code rather than the prose about it.
+// Every single-quoted literal, comments stripped first so the guard reads code, not prose.
 function quotedLiteralsIn(path: string): string[] {
   const code = readFileSync(path, 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '')
@@ -74,10 +70,8 @@ describe('inventory_items schema', () => {
     }
   });
 
-  // Quantity is nullable because zero already means something else: M9.8
-  // renders `0` as out of stock, and a NOT NULL column with no default would
-  // force every add to claim a number it may not have. "Held, not yet
-  // measured" and "held, none left" are different facts about a jar.
+  // "Held, not yet measured" and "held, none left" are different facts —
+  // claude-docs/db.md, "Nullability, and why zero is not the same as nothing".
   it('leaves the measurements nullable, so an unmeasured jar is not an empty one', () => {
     for (const column of [
       'quantity_on_hand',
@@ -141,11 +135,9 @@ describe('inventory_items schema', () => {
       expect(unitDimension.enumValues).toEqual([...UNIT_DIMENSIONS]);
     });
 
-    // The acceptance criterion — "adding a unit means editing one module, not
-    // three" — as a property of the file rather than of the values, which is the
-    // only form of it a later edit can fail. Equal lists stay equal when someone
-    // pastes the vocabulary in beside the import; a literal `'tsp'` in this
-    // file's code does not survive it.
+    // "Adding a unit means editing one module" as a property of the file:
+    // equal lists stay equal when the vocabulary is pasted in beside the
+    // import; a literal `'tsp'` in this file's code does not.
     it('names no unit of its own in the schema file’s code', () => {
       const named: readonly string[] = UNITS;
 
@@ -160,12 +152,6 @@ describe('inventory_items schema', () => {
   });
 });
 
-// The behaviour half, against the real table: a clone carrying every migration
-// and the `standard` seed, re-cloned before this file runs
-// (tests/support/db-setup.ts). The member, the two covens and the two
-// ingredients are the seed's — the real parent tables demand NOT NULL names,
-// slugs and audit stamps. The compendium's ids are generated rather than
-// fixed, so the two ingredients are looked up by name in `beforeAll`.
 const MEMBER = FIXTURE_USERS.A.id;
 const COVEN = WORKSPACE_W_ID;
 const OTHER_COVEN = WORKSPACE_X_ID;
@@ -240,8 +226,6 @@ beforeAll(async () => {
   ROSEMARY = await compendiumIdOf('Rosemary');
 });
 
-// Nothing seeds stock, so the table is already empty; truncating anyway is
-// what keeps each test starting from nothing rather than from the last one.
 beforeEach(async () => {
   await sql`truncate inventory_items`;
 });
@@ -261,15 +245,13 @@ describe('inventory_items table', () => {
 
       const error = await failureOf(hold({ quantity: '3', unit: 'kg', dimension: 'weight' }));
 
-      // 23505 is unique_violation, named: proof the insert reached this index
-      // rather than tripping something else on the way.
+      // 23505 is unique_violation, named: this index refused, not something earlier.
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(HELD_ONCE_INDEX);
     });
 
-    // Why the refusal above could have succeeded: the pair is what is unique,
-    // not either half of it. Drop a column from the index and one of these two
-    // reddens while the refusal above stays green.
+    // Why the refusal above could have succeeded: the pair is unique, not
+    // either half; drop a column from the index and one of these reddens.
     it('lets one workspace hold two different ingredients', async () => {
       await hold();
 
@@ -297,9 +279,8 @@ describe('inventory_items table', () => {
       expect(index?.definition).toContain('USING btree (workspace_id, ingredient_id)');
     });
 
-    // Story 25 calls the delete recoverable, and CLAUDE.md rule 4's argument
-    // is exactly this: without the partial predicate, throwing a jar out
-    // permanently reserves that ingredient against ever being stocked again.
+    // Story 25's recoverable delete: without the predicate a thrown-out jar
+    // reserves its ingredient forever.
     it('lets a workspace re-add an ingredient it soft-deleted', async () => {
       const id = await hold();
       await sql`
@@ -313,11 +294,8 @@ describe('inventory_items table', () => {
   });
 
   describe('the unit vocabulary', () => {
-    // Every unit in the shared module, inserted against the dimension the
-    // module assigns it. This is the criterion "unit enum covers weight,
-    // volume and count, metric and imperial" asserted against the shipped
-    // enum rather than against the TypeScript list — a unit added to the
-    // module and left out of a regenerated migration reddens here.
+    // Every unit against the shipped enum rather than the TypeScript list: a
+    // unit added to the module and left out of a regenerated migration reddens.
     for (const unit of UNITS) {
       it(`stores ${unit} as ${dimensionOf(unit)}`, async () => {
         const id = await hold({ unit, dimension: dimensionOf(unit) });
@@ -346,24 +324,20 @@ describe('inventory_items table', () => {
     it('refuses a unit the vocabulary does not name', async () => {
       const error = await failureOf(hold({ unit: 'dram', dimension: 'weight' }));
 
-      // 22P02 is invalid_text_representation — the enum refusing the cast,
-      // before the CHECK is ever consulted.
+      // 22P02 is invalid_text_representation: the enum refusing the cast before the CHECK.
       expect(error.code).toBe('22P02');
     });
   });
 
   describe('a dimension that contradicts its unit cannot be written', () => {
-    // One mismatch per unit: each unit paired with a dimension that is not
-    // its own. Sampling one pair would leave the constraint free to name only
-    // the units someone thought of.
+    // One mismatch per unit; sampling one pair would leave the constraint free to forget units.
     for (const unit of UNITS) {
       const wrong = UNIT_DIMENSIONS.find((dimension) => dimension !== dimensionOf(unit));
 
       it(`refuses ${unit} declared as ${wrong}`, async () => {
         const error = await failureOf(hold({ unit, dimension: wrong }));
 
-        // 23514 is check_violation, named: the refusal is this constraint's
-        // and not the enum's or the index's.
+        // 23514 is check_violation, named: this constraint's, not the enum's or the index's.
         expect(error.code).toBe('23514');
         expect(error.constraint_name).toBe(DIMENSION_CHECK);
       });
@@ -394,9 +368,8 @@ describe('inventory_items table', () => {
       expect(error.constraint_name).toBe(DIMENSION_CHECK);
     });
 
-    // The other half of the check, and the reason it is not simply
-    // `unit_dimension = dimension_of(unit)`: a row that records nothing about
-    // measurement records no contradiction either.
+    // A row that measures nothing records no contradiction — why the check is
+    // not simply `unit_dimension = dimension_of(unit)`.
     it('accepts a row that measures nothing at all', async () => {
       await expect(
         hold({ quantity: null, unit: null, dimension: null, threshold: null }),
@@ -410,8 +383,7 @@ describe('inventory_items table', () => {
 
       const [row] = await sql`select quantity_on_hand from inventory_items where id = ${id}`;
 
-      // The driver hands back `numeric` as a string, which is the point:
-      // 0.1 kg survives as 0.1 rather than as a float's nearest neighbour.
+      // The driver returns `numeric` as a string: 0.1 survives as 0.1.
       expect(row.quantity_on_hand).toBe('0.100');
     });
 
@@ -428,10 +400,7 @@ describe('inventory_items table', () => {
       expect(quantityById[unmeasured]).toBeNull();
     });
 
-    // M9.8 writes the dimension-appropriate default onto the row at creation
-    // rather than applying a constant at read time. The column takes what it
-    // is given, including zero, which M9.8 reads as "no warning wanted"
-    // rather than "always low".
+    // Zero is stored as zero ("no warning wanted"), not as absent.
     it('stores a low-stock threshold of zero as zero, not as absent', async () => {
       const id = await hold({ threshold: '0' });
 
@@ -470,10 +439,9 @@ describe('inventory_items table', () => {
   });
 
   describe('the constraint covers the vocabulary rather than a list of its own', () => {
-    // Read the shipped CHECK back out of the catalogue and compare it against
-    // the module: every unit named, grouped under the dimension the module
-    // assigns it. A hand-written constraint that forgets `pinch` passes every
-    // rejection test above — nothing there asserts what the check *admits*.
+    // The shipped CHECK read back and compared to the module: a hand-written
+    // constraint that forgets `pinch` passes every rejection test above, since
+    // none asserts what the check admits.
     it('names every unit, under the dimension the module gives it', async () => {
       const [row] = await sql`
         select pg_get_constraintdef(oid) as definition

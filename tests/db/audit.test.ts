@@ -62,9 +62,7 @@ describe('applyAudit', () => {
   });
 });
 
-// MB.34: the three join tables carry the four stamps and no delete columns, so
-// the six-column set is defined as the four-column one plus the two rather than
-// listed twice — a second listing is a second thing to forget.
+// The six-column set is the four-column one plus two, so the two cannot drift (MB.34).
 describe('the two audit column sets', () => {
   it('defines auditColumns as the stamp columns plus the two delete columns', () => {
     expect(Object.keys(auditStampColumns)).toEqual([

@@ -8,11 +8,8 @@ import {
   type Unit,
 } from '@/lib/units';
 
-// DESIGN.md §5, transcribed here rather than imported, so that the assertions
-// below compare the module against the specification instead of against
-// itself. `fl oz` is spelled `fl_oz` — see the module's own comment for why
-// the label carries an underscore where the design doc's prose carries a
-// space.
+// DESIGN.md §5 transcribed rather than imported, so the module is compared
+// against the spec, not itself. `fl oz` is spelled `fl_oz` — see the module.
 const SPECIFIED = {
   weight: ['mg', 'g', 'kg', 'oz', 'lb'],
   volume: ['ml', 'l', 'tsp', 'tbsp', 'fl_oz', 'cup'],
@@ -30,10 +27,7 @@ describe('unit vocabulary', () => {
     }
   });
 
-  // The flat list is what the pgEnum and every future Zod enum are built
-  // from, so it has to be the map flattened rather than a second list that
-  // happens to agree today. Adding a dimension without spreading it into
-  // UNITS reddens this and nothing else would.
+  // The flat list must be the map flattened, not a second list that agrees today.
   it('flattens to every unit the map holds, and nothing more', () => {
     const fromMap = UNIT_DIMENSIONS.flatMap((dimension) => [...UNITS_BY_DIMENSION[dimension]]);
 
@@ -54,10 +48,8 @@ describe('dimensionOf', () => {
     }
   });
 
-  // Why the answers above are unambiguous rather than merely first-wins: no
-  // unit belongs to two dimensions, so there is exactly one right answer to
-  // give. M9.5's conversion refuses across dimensions, and a unit sitting in
-  // two of them would make that refusal meaningless.
+  // No unit belongs to two dimensions, so there is exactly one answer — what
+  // makes a cross-dimension refusal meaningful.
   it('has one dimension to answer with, never two', () => {
     const seen = new Map<string, string>();
 
@@ -83,9 +75,8 @@ describe('isUnit', () => {
     }
   });
 
-  // The guard is a type predicate as well as a runtime check — this is the
-  // call shape every parser reaching the database will use, and it has to
-  // narrow `string` to `Unit` for the row it builds to typecheck.
+  // A type predicate as well as a runtime check: parsers need `string`
+  // narrowed to `Unit`.
   it('narrows a string to a Unit', () => {
     const value: string = 'tsp';
 

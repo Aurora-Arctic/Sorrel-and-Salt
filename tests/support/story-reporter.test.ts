@@ -6,11 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import StoryReporter from './story-reporter';
 import type { ReportedModule } from './story-checklist';
 
-// M1.28 — the reporter is a thin adapter: it hands the run's modules to
-// buildChecklist, prints the result through Vitest's logger, and writes the
-// same checklist as JSON when an output file is configured, which is how
-// CI's summarize-stories.mjs gets it. Everything about *what* the checklist
-// says is story-checklist.test.ts's; this covers only the plumbing.
+// Only the plumbing; what the checklist says is story-checklist.test.ts's.
 
 const modules: ReportedModule[] = [
   {

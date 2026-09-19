@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { storyNamingViolations } from './story-naming';
 
-// M1.28 — the static half of story traceability. A test under
-// tests/acceptance/ that names no story is a test the checklist cannot
-// place, so the guard (tests/guards/story-naming.test.ts) reads each file's
-// top-level blocks and this is what it asks of them.
+// The static half of story traceability: what the guard asks of each top-level block.
 
 describe('storyNamingViolations', () => {
   it('accepts a file whose top-level describes each name a v1 story', () => {

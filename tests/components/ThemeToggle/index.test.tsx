@@ -4,14 +4,9 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import ThemeToggle from '@/components/ThemeToggle';
 
-// Ported from resume-2026's ThemeToggle test suite. The aria-label changed
-// ("...for the paper" was specific to that resume site) and the Tooltip
-// wrapper is gone, so queries target the new label and there's no tooltip
-// assertion to port — everything else (toggle behaviour, facet class
-// choreography, listener cleanup) carries over unchanged.
-// Stubs `matchMedia` so `(prefers-reduced-motion: reduce)` reports `matches`.
-// jsdom's own `matchMedia` always answers `false`, so reduced motion can only
-// be exercised by replacing it.
+// Ported from resume-2026; the aria-label and the Tooltip wrapper changed, the
+// rest carries over.
+// jsdom's `matchMedia` always answers `false`, so reduced motion needs a stub.
 const stubReducedMotion = (matches: boolean): void => {
   vi.stubGlobal('matchMedia', (query: string) => ({
     matches: matches && query === '(prefers-reduced-motion: reduce)',
@@ -21,10 +16,8 @@ const stubReducedMotion = (matches: boolean): void => {
   }));
 };
 
-// Stubs `matchMedia` so `(prefers-color-scheme: light)` reports `matches` —
-// the exact query globals.scss keys its light tier off. jsdom's own
-// `matchMedia` always answers `false`, which *is* the "system asks for
-// neither" case, so a light system can only be exercised by replacing it.
+// jsdom's `matchMedia` always answers `false` — the "system asks for neither"
+// case — so a light system needs a stub.
 const stubLightSystemPreference = (): void => {
   vi.stubGlobal('matchMedia', (query: string) => ({
     matches: query === '(prefers-color-scheme: light)',
@@ -120,9 +113,8 @@ describe('ThemeToggle', () => {
     expect(darkFacet).not.toHaveClass('theme-toggle__facet--pre-enter');
   });
 
-  // Regression: index.scss zeroes the facet transition under reduced motion,
-  // so no transitionend arrives and the outgoing facet used to stay stuck
-  // holding --out — rotated askew and still opaque over the entering facet.
+  // Regression: under reduced motion no transitionend arrives, and the
+  // outgoing facet stayed stuck holding --out.
   it('parks an outgoing facet immediately under prefers-reduced-motion, with no transitionend', () => {
     stubReducedMotion(true);
     render(<ThemeToggle />);
@@ -145,8 +137,7 @@ describe('ThemeToggle', () => {
     fireEvent.click(button);
     fireEvent.click(button);
 
-    // Back in dark mode: the crescent rests and the sun is parked, exactly as
-    // on first render. Neither facet is left holding --out.
+    // As on first render; neither facet holds --out.
     expect(darkFacet).not.toHaveClass('theme-toggle__facet--out');
     expect(darkFacet).not.toHaveClass('theme-toggle__facet--pre-enter');
     expect(lightFacet).not.toHaveClass('theme-toggle__facet--out');
@@ -165,19 +156,13 @@ describe('ThemeToggle', () => {
     expect(darkFacet).not.toHaveClass('theme-toggle__facet--pre-enter');
   });
 
-  // Regression (MB.2): the light facet's --pre-enter class is baked into the
-  // server-rendered markup, so it paints first regardless of theme, and a mount
-  // effect corrects it only after that paint. jsdom applies no real stylesheets,
-  // so the paint-timing fix itself isn't observable here (see the `Light` story
-  // for the manual check); this instead guards the index.scss rule that settles
-  // both facets' visible state pre-paint, off the same `data-theme` attribute
-  // the layout.tsx init script stamps before the browser paints anything — so a
-  // future edit can't quietly drop it back to effect-only.
+  // jsdom applies no stylesheets, so the paint-timing fix itself is not
+  // observable here; this guards the index.scss rule that settles both facets
+  // pre-paint off `data-theme`. claude-docs/components/theme-toggle.md,
+  // "Behaviour".
   it('settles both facets pre-paint via CSS keyed off data-theme, not just the mount effect', () => {
-    // Not `fileURLToPath(new URL('./index.scss', import.meta.url))`: Vitest's
-    // jsdom environment resolves `import.meta.url` against the mocked
-    // browser `location` (matching real-browser semantics), not a `file:`
-    // URL, so that pattern resolves to the wrong path here.
+    // Not `new URL('./index.scss', import.meta.url)`: jsdom resolves
+    // `import.meta.url` against the mocked `location`, not a `file:` URL.
     const scssPath = join(process.cwd(), 'src/components/ThemeToggle/index.scss');
     const scss = readFileSync(scssPath, 'utf-8');
     const settledFacets = scss.slice(scss.indexOf('@mixin theme-toggle-light-facets'));
@@ -188,11 +173,9 @@ describe('ThemeToggle', () => {
     expect(settledFacets).toMatch(/\.theme-toggle__facet--dark\s*\{[^}]*opacity:\s*0/);
   });
 
-  // MB.23: and applied to *both* light tiers, not just the stored-choice one.
-  // A light system preference never stamps `data-theme`, so an attribute-only
-  // rule left the crescent showing on a light page until the mount effect
-  // swapped it a paint later. These selectors mirror globals.scss's own light
-  // tiers; if that cascade is ever restructured, both have to move together.
+  // Both light tiers, not just the stored-choice one: a light system
+  // preference never stamps `data-theme`. These mirror globals.scss's own
+  // tiers and move together.
   it('settles the facets for a light system preference as well as a stored light choice', () => {
     const scssPath = join(process.cwd(), 'src/components/ThemeToggle/index.scss');
     const scss = readFileSync(scssPath, 'utf-8');
@@ -203,15 +186,10 @@ describe('ThemeToggle', () => {
     expect(scss).toMatch(/html\[data-theme='light'\]\s*\{\s*@include theme-toggle-light-facets/);
   });
 
-  // Regression (MB.23): there are three theme states, not two (globals.scss).
-  // Dark is the `:root` default; a light *system* preference resolves through
-  // `prefers-color-scheme` without ever stamping `data-theme`, because
-  // layout.tsx's init script only stamps a *stored* choice. Reading the
-  // attribute alone therefore reported "not light" on a light system with
-  // nothing stored, so the first click applied `light` — the theme already
-  // showing — and visibly did nothing. The current theme has to be resolved
-  // the same way the stylesheet resolves it: attribute first, then the media
-  // query, then dark.
+  // Three theme states, not two: dark by default, a light *system* preference
+  // that never stamps `data-theme`, and a stored choice. The current theme is
+  // resolved as the stylesheet resolves it: attribute, then media query, then
+  // dark.
   describe('on a light system with no stored choice', () => {
     beforeEach(() => {
       document.documentElement.removeAttribute('data-theme');
@@ -245,8 +223,7 @@ describe('ThemeToggle', () => {
     });
   });
 
-  // The other half of that rule: nothing stored and no light preference is
-  // dark, per globals.scss's `:root` default — so the first click goes light.
+  // Nothing stored and no light preference is dark, so the first click goes light.
   it('switches to light on the first click when nothing is stored and the system asks for neither', () => {
     document.documentElement.removeAttribute('data-theme');
     render(<ThemeToggle />);
