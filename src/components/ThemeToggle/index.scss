@@ -1,17 +1,14 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// Two absolutely-stacked facets that rotate out through the top and park off
-// to the side, keyed by the --out / --pre-enter classes index.tsx toggles.
+// Two stacked facets that rotate out through the top and park off to the side,
+// keyed by the --out / --pre-enter classes index.tsx toggles.
 // claude-docs/components/theme-toggle.md, "Styling".
 
-// Rotation swept by an exiting or entering facet. A component-local constant
-// rather than a token: it describes this animation's geometry, not a colour or
-// duration the rest of the app shares.
+// The arc a facet sweeps; component geometry, not a shared token.
 $theme-toggle-icon-arc: 130deg;
 
-// Radius of the quarter-circle backdrop, and the button's own width/height —
-// a square that size is the smallest box the circle needs.
+// Backdrop radius, and the button's own width/height.
 $theme-toggle-corner-radius: 3.9rem;
 
 .theme-toggle {
@@ -23,21 +20,17 @@ $theme-toggle-corner-radius: 3.9rem;
   justify-content: center;
   width: $theme-toggle-corner-radius;
   height: $theme-toggle-corner-radius;
-  // Pulls the icon off the pivot corner, so it does not sit flush against the
-  // two edges it rotates around.
+  // Pulls the icon off the pivot corner.
   padding: 0 0 0.75rem 1rem;
   border: none;
-  // Centred on the box's own top-right corner, which is pinned to the page's —
-  // so only the quarter inside the viewport ever paints.
+  // Centred on the pinned top-right corner, so only the quarter in the viewport paints.
   clip-path: circle($theme-toggle-corner-radius at 100% 0%);
-  // $text-on-color is the token for a label on a solid fill, already contrast-
-  // checked in both themes rather than re-derived here.
+  // $text-on-color: the contrast-checked label for a solid fill.
   background-color: $accent;
   color: $text-on-color;
   cursor: pointer;
-  // Hover grows from the pinned corner, the same pivot everything here turns
-  // on: $accent -> $accent-hover is barely a shade apart on dark, so colour
-  // alone cannot carry the hover.
+  // Hover grows from the pinned corner: on dark $accent and $accent-hover are a
+  // shade apart, so colour alone cannot carry it.
   transform-origin: 100% 0;
   @include theme-transition(background-color, color, transform);
 
@@ -65,17 +58,14 @@ $theme-toggle-corner-radius: 3.9rem;
   inset: 0;
   width: 100%;
   height: 100%;
-  // Pivot at the icon's own top-right corner, the same one the button is
-  // pinned to, so rotate() swings each facet through an arc centred there.
+  // Pivot at the icon's top-right corner, the one the button is pinned to.
   transform-origin: 100% 0;
   @include theme-transition(transform);
   transform: rotate(0deg);
 
-  // Raw palette values, not the runtime tokens: the knotwork is not themed, so
-  // only the rotate swaps the facets and no `fill` transition can fall out of
-  // step with the button's. The 5% box difference balances their visual weight,
-  // and is a box rather than a `transform: scale()` because --out /
-  // --pre-enter overwrite `transform` wholesale.
+  // Raw palette, not the runtime tokens: the knotwork is not themed, so only the
+  // rotate swaps the facets. The 5% box difference balances their visual weight;
+  // a box rather than `scale()` because --out / --pre-enter overwrite `transform`.
   // claude-docs/components/theme-toggle.md, "Icons".
   &--dark {
     fill: $soot;
@@ -102,20 +92,17 @@ $theme-toggle-corner-radius: 3.9rem;
   }
 }
 
-// Settles both facets' *visible* resting state at first paint, so a light
-// visitor never sees the sun swing in from its parked position. Included under
-// both light tiers below, which mirror globals.scss's own selector for selector
-// — including the `:not([data-theme='dark'])` guard — because the attribute
-// alone covers only a stored choice, not a light system preference.
-// claude-docs/components/theme-toggle.md, "Behaviour".
+// Settles the visible resting state at first paint, so a light visitor never
+// sees the sun swing in. Included under both light tiers, mirroring globals.scss
+// selector for selector, because the attribute alone covers only a stored
+// choice, not a light system preference.
 @mixin theme-toggle-light-facets {
   .theme-toggle__facet--light.theme-toggle__facet--pre-enter {
     transform: rotate(0deg);
     opacity: 1;
   }
 
-  // The dark facet carries no --pre-enter class in the markup (it is the
-  // default-visible one), so it needs the parked look applied directly.
+  // The dark facet carries no --pre-enter class in the markup, so park it directly.
   .theme-toggle__facet--dark {
     transform: rotate(-$theme-toggle-icon-arc);
     opacity: 0;

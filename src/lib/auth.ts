@@ -7,11 +7,9 @@ import { db } from '../db/connection';
 import { users } from '../db/schema/users';
 import { sessions, accounts, verifications } from '../db/schema/auth';
 
-// Enforced here rather than left to Better Auth's own `validateSecret`, whose
-// rejection is swallowed: with the secret unset it logs a BetterAuthError and
-// still answers 200 using the well-known default. Production-only, since
-// `next dev` and Vitest have no use for it.
-// See claude-docs/auth.md, "Config".
+// Better Auth's own `validateSecret` is swallowed — with the secret unset it
+// logs and still answers 200 on the well-known default. Production-only:
+// `next dev` and Vitest have no use for it. See claude-docs/auth.md, "Config".
 function authSecret(): string | undefined {
   const secret = process.env.BETTER_AUTH_SECRET;
   if (!secret && process.env.NODE_ENV === 'production') {
@@ -20,10 +18,8 @@ function authSecret(): string | undefined {
   return secret;
 }
 
-// Registered only when id and secret are both present, never with an empty
-// string, so `next dev` runs with neither provider configured. The site is
-// invite-gated regardless: a successful sign-in earns an account and nothing
-// else (CLAUDE.md's domain invariants).
+// Registered only when id and secret are both present, so `next dev` runs with
+// neither. A sign-in earns an account and nothing else (CLAUDE.md invariants).
 function socialProviders(): BetterAuthOptions['socialProviders'] {
   const providers: NonNullable<BetterAuthOptions['socialProviders']> = {};
 
@@ -44,15 +40,10 @@ function socialProviders(): BetterAuthOptions['socialProviders'] {
   return providers;
 }
 
-// Resolved per request rather than from a `BETTER_AUTH_URL` env var: production
-// spans three origins, and a single Preview-scoped variable would leak
-// staging's URL into every hotfix preview's OAuth callbacks.
-//
-// Outside production the origin is fixed rather than derived, because
-// `next dev --hostname 0.0.0.0` computes it from its own bind address and every
-// local `redirect_uri` would come out as `0.0.0.0:8000` — not what is
-// registered with Google/GitHub, so sign-in fails with `redirect_uri_mismatch`.
-// See claude-docs/auth.md, "Config".
+// Per request rather than a `BETTER_AUTH_URL` env var: production spans three
+// origins, and one Preview-scoped variable cannot tell staging from a hotfix.
+// Outside production the origin is fixed: `next dev --hostname 0.0.0.0` derives
+// it from its bind address, so every `redirect_uri` would be `0.0.0.0:8000`.
 function baseURL(): BetterAuthOptions['baseURL'] {
   if (process.env.NODE_ENV === 'production') {
     return {
@@ -62,24 +53,20 @@ function baseURL(): BetterAuthOptions['baseURL'] {
         'hotfix-*.sorrelandsalt.com',
       ],
       fallback: 'https://sorrelandsalt.com',
-      // Forced rather than trusting x-forwarded-proto: every real deployment is
-      // Vercel-fronted HTTPS and `advanced.trustedProxyHeaders` is unset.
+      // Forced: `advanced.trustedProxyHeaders` is unset, so x-forwarded-proto is not read.
       protocol: 'https',
     };
   }
   return 'http://localhost:8000';
 }
 
-// DESIGN.md §5's admin bootstrap. Case-insensitive, since email providers do
-// not treat casing as significant; unset means no sign-in is ever promoted.
+// DESIGN.md §5's admin bootstrap; case-insensitive, and unset promotes nobody.
 function isAdminBootstrapEmail(email: string): boolean {
   const bootstrapEmail = process.env.ADMIN_BOOTSTRAP_EMAIL;
   return !!bootstrapEmail && email.toLowerCase() === bootstrapEmail.toLowerCase();
 }
 
-// The OAuth handshake mounted at /api/auth/* is the one exception to the
-// GraphQL-only access rule (CLAUDE.md rule 1) — claude-docs/auth.md states the
-// boundary.
+// /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
 export const auth = betterAuth({
   secret: authSecret(),
   baseURL: baseURL(),
@@ -97,11 +84,8 @@ export const auth = betterAuth({
   },
   user: {
     additionalFields: {
-      // `input: false` on all four: Better Auth drops any client-supplied value
-      // for such a field, so only the hook below can set them — CLAUDE.md's
-      // "nothing in the OAuth flow sets the flag". No `defaultValue`, so an
-      // unset value is omitted from the INSERT and Postgres's own column
-      // default applies rather than being duplicated here.
+      // `input: false`: Better Auth drops any client-supplied value, so only the
+      // hook below can set these. No `defaultValue`, so Postgres's own applies.
       role: { type: 'string', input: false },
       canCreateWorkspace: { type: 'boolean', input: false },
       // NOT NULL with no database default, so every insert must supply these.
@@ -112,11 +96,9 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        // One of the two identity bootstraps that write outside `withAudit`:
-        // there is no session yet because this is how one comes to exist, so
-        // the row stamps itself as its own creator (CLAUDE.md rule 3).
-        // `forceAllowId` lets the uuid generated here become the row's real id,
-        // so createdBy/updatedBy can reference it before the row exists.
+        // Writes outside `withAudit` (CLAUDE.md rule 3): there is no session yet,
+        // so the row stamps itself as its creator. `forceAllowId` makes the uuid
+        // generated here the row's real id, so createdBy/updatedBy can name it.
         before: async (user) => {
           const id = crypto.randomUUID();
           return {

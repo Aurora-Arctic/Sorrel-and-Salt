@@ -2,9 +2,8 @@
 @use 'sass:map';
 @use './variables' as *;
 
-// Every colour fade in the app rides one duration/easing pair, so the theme
-// toggle and everything reacting to it stay in visual lockstep. This saves
-// re-spelling that pair per property.
+// One duration/easing pair for every colour fade, so everything reacting to
+// the toggle stays in lockstep.
 @mixin theme-transition($props...) {
   $transitions: ();
 
@@ -25,15 +24,13 @@
   }
 }
 
-// Defaults to the body ink token, so the ring re-colours with the theme
-// without the call site naming one.
+// Defaults to the body ink, so the ring re-colours with the theme.
 @mixin focus-ring($color: $text-primary) {
   outline: 2px solid $color;
   outline-offset: 2px;
 }
 
-// Light text on a dark ground renders heavier than the reverse. theme-dark and
-// theme-light are the only callers; light reverts to the browser default.
+// Light text on a dark ground renders heavier; only theme-dark uses this.
 @mixin font-smoothing-antialiased {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -42,17 +39,12 @@
 // ---------------------------------------------------------------------------
 // UI primitives
 // ---------------------------------------------------------------------------
-//
-// A raised panel, a pill, a square-cornered badge. Each sets colour, edge and
-// geometry and nothing else — no width, no margin, no cursor, no layout. The
-// design will change (CLAUDE.md); what these hold is the contrast-checked part
-// that must not be re-picked per component. All three name tokens through the
-// accessors, so a typo is a compile error.
+// A raised panel, a pill, a square badge. Each sets colour, edge and geometry
+// only — the contrast-checked part that must not be re-picked per component.
+// All name tokens through the accessors, so a typo fails to compile.
 
-// Elevation is an argument because a nested surface — a confirm over an
-// already-open modal — wants the floating shadow rather than a second
-// full-strength one. Deliberately not here: padding, width, position and the
-// backdrop; a mixin that positioned its caller could only ever fit one modal.
+// Elevation is an argument so a nested surface can take the floating shadow.
+// No padding, width, position or backdrop: those would fit only one modal.
 @mixin modal-surface($shadow: $shadow-elevated) {
   background-color: $surface-card;
   color: $text-primary;
@@ -66,10 +58,8 @@
   }
 }
 
-// A pill, always edged in its group's colour. `selected` fills solid and
-// inverts the label onto $text-on-color; a low-opacity wash instead of the
-// solid fill cannot hold 4.5:1. Both states carry the same edge and padding, so
-// a row can mix them without the selected ones jumping out of rhythm.
+// A pill edged in its group's colour; `selected` fills solid and inverts the
+// label, since a wash cannot hold 4.5:1. Both states share edge and padding.
 // claude-docs/styling.md, "Chips, badges and the solid-fill rule".
 @mixin chip($group, $state: unselected) {
   $color: category-group($group);
@@ -81,8 +71,7 @@
   border-radius: 999px;
   font-family: $font-body;
   font-size: 0.8125rem;
-  // A step over Lexend's 300 body weight so the label holds its colour at chip
-  // size — the unselected state especially, where the label *is* the group hue.
+  // A step over Lexend's 300, so the label holds its colour at chip size.
   font-weight: 500;
   line-height: 1.4;
   white-space: nowrap;
@@ -104,11 +93,8 @@
   }
 }
 
-// Takes a $badge-palettes key rather than a colour, so the two badges cannot be
-// drawn in each other's ink. No variant argument: the palette's own declared
-// treatment decides the drawing, and asking for the wrong one is already a
-// compile error from badge-token(). Square-cornered, which is what keeps a
-// badge from reading as a chip now that chips are pills.
+// Takes a palette key, not a colour, so the two badges cannot swap inks; the
+// palette's own treatment decides the drawing. Square-cornered, unlike a chip.
 @mixin badge($palette) {
   $parts: badge-parts($palette);
 
@@ -118,7 +104,7 @@
   border-radius: 2px;
   font-family: $font-body;
   font-size: 0.8125rem;
-  // A step over Lexend's 300 body weight: 300 goes thin at this size.
+  // 300 goes thin at this size.
   font-weight: 500;
   line-height: 1.4;
   white-space: nowrap;
@@ -126,8 +112,7 @@
   @if list.index($parts, 'fill') {
     background-color: badge-token($palette, 'fill');
     color: $text-on-color;
-    // Geometry, not an edge: keeps a solid badge the same height as a tinted
-    // one beside it. A solid fill is its own boundary.
+    // Transparent border keeps a solid badge the height of a tinted one.
     border: 1px solid transparent;
   } @else {
     background-color: badge-token($palette, 'bg');
@@ -142,9 +127,7 @@
   }
 }
 
-// The category-group and badge custom properties, generated from the maps in
-// _variables.scss rather than spelled out per theme. Both theme mixins call
-// this with their own name, so the two halves cannot drift.
+// Generated from the _variables.scss maps; both theme mixins call this.
 @mixin semantic-tokens($theme) {
   @each $slug in map.keys($category-groups) {
     --group-#{$slug}: #{category-group-color($slug, $theme)};
@@ -157,13 +140,10 @@
   }
 }
 
-// The two halves of the palette, as the custom properties the token aliases in
-// _variables.scss name. Mixins rather than plain rules because globals.scss has
-// to emit the light half twice and the two spellings must not drift — see
-// claude-docs/styling.md, "Theme resolution".
+// Mixins rather than plain rules because globals.scss emits the light half
+// twice and the spellings must not drift. claude-docs/styling.md, "Theme resolution".
 @mixin theme-dark {
-  // Form controls, scrollbars and the canvas behind the page then match the
-  // theme without being styled.
+  // Form controls, scrollbars and the canvas then match without styling.
   color-scheme: dark;
 
   --surface-page: #{$soot};

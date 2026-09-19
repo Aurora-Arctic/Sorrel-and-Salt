@@ -1,15 +1,8 @@
 <!--
-  Ladle injects this file's contents just before </head> (see
-  node_modules/@ladle/react/lib/cli/vite-plugin/vite-plugin.js).
-
-  The workshop has no next/font, so it loads the two families by name instead;
-  .ladle/typography.scss points `--font-body` / `--font-display` at them.
-  Weights match src/app/fonts.ts: Cormorant Unicase 500/600/700, Lexend
-  variable.
-
-  The one place in the project that talks to fonts.googleapis.com, and
-  dev-workshop only — `workshop:build` output is gitignored and never shipped.
-  claude-docs/workshop.md, "Stopgaps to unwind".
+  Injected before </head>. The workshop has no next/font, so it loads the two
+  families by name — weights match src/app/fonts.ts — and .ladle/typography.scss
+  points --font-body / --font-display at them. The one place that talks to
+  fonts.googleapis.com; claude-docs/workshop.md, "Stopgaps to unwind".
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

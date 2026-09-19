@@ -1,16 +1,10 @@
 @use './variables' as *;
 @use './mixins' as *;
 
-// Document prose. A mixin rather than bare top-level rules so it can be scoped:
-// `@include` it on the element standing in for the page body — `body` in the
-// app, `.ladle-story-frame` in the workshop, where unscoped element selectors
-// would land on Ladle's own `<ul>`/`<li>`/`<a>` chrome too. The bare
-// declarations below land on that element; the rest are descendant rules.
-//
-// Nothing here names a palette colour directly — the tokens resolve per theme
-// at runtime, so one rule covers dark, light and system-preference. A rule
-// needing a hue that is not a token yet adds the token. No print tier: print
-// styling is scoped to the spell recipe view (M10.22).
+// Document prose, as a mixin so it can be scoped: `body` in the app,
+// `.ladle-story-frame` in the workshop, where bare element selectors would
+// otherwise land on Ladle's own chrome. Nothing here names a raw hue; a rule
+// needing one adds a token. No print tier outside the spell recipe view.
 @mixin typography-base {
   font-family: $font-body;
   font-weight: 300;
@@ -20,10 +14,8 @@
   h3,
   h4 {
     font-family: $font-heading;
-    // All four levels run at 700, Cormorant Unicase's heaviest: its hairlines
-    // thin out the smaller it is set and the darker the ground. Nothing above
-    // 700 exists for this face, so if it still reads light the display face
-    // itself is the lever, not the weight. claude-docs/styling.md, "Type".
+    // 700, Cormorant Unicase's heaviest: its hairlines thin out at small sizes
+    // on a dark ground. claude-docs/styling.md, "Type".
     font-weight: 700;
     letter-spacing: 0.01em;
     margin: 0 0 1rem;
@@ -90,9 +82,7 @@
     }
   }
 
-  // The body ink (already ≥13:1 in both themes) rather than pushing the sorrel
-  // hue further, plus an underline so the link does not depend on colour at
-  // all — WCAG's "don't rely on colour alone".
+  // The body ink plus an underline, so the link does not rely on colour alone.
   @media (prefers-contrast: more) {
     a {
       color: $text-primary;
@@ -139,8 +129,7 @@
     color: $text-muted;
   }
 
-  // For headings that stack directly — a type sample, a compact heading group
-  // — rather than each leading its own block of prose.
+  // For headings that stack directly, as in a type sample.
   .tight-headings {
     h1,
     h2,

@@ -3,17 +3,13 @@
 @use 'sass:map';
 
 // The raw palette and the `var(--token)` aliases over it. Emits no CSS: every
-// component `@use`s this file, so output here would land in every compiled
-// stylesheet — the custom properties are assigned in src/app/globals.scss,
-// which is imported once. See claude-docs/styling.md, "The palette".
+// component `@use`s this file. See claude-docs/styling.md, "The palette".
 
 // ---------------------------------------------------------------------------
 // Raw palette — "parchment and iron-gall ink"
 // ---------------------------------------------------------------------------
-//
-// Named for the material rather than the role, since a role can change and
-// #14120e cannot. Warm near-blacks rather than neutral ones: a green accent
-// over a blue-grey ground reads cold.
+// Named for the material, not the role. Warm near-blacks: a green accent over
+// a blue-grey ground reads cold.
 $soot: #14120e; // dark page background
 $soot-raised: #1f1c16; // dark card background
 $parchment: #efe9da; // light page background
@@ -22,18 +18,15 @@ $parchment-raised: #f9f5ea; // light card background
 $chalk: #ebe4d4; // dark-theme body text — 13.42:1 on $soot-raised
 $iron-gall: #23201a; // light-theme body text — 14.91:1 on $parchment-raised
 
-// $sorrel is the plant the app is half-named after; $wax is the sealing wax on
-// a jar, and the hue the safety badge derives from.
+// $sorrel is the plant in the name; $wax the sealing wax the safety badge derives from.
 $sorrel: #4a6b34;
 $wax: #8c3b2e;
 
 // ---------------------------------------------------------------------------
 // Derived — color.adjust() from the four above, never re-picked by eye
 // ---------------------------------------------------------------------------
-//
-// Every value below clears 4.5:1 against both surfaces of its theme. Dark-theme
-// variants move away from the ground by lightening, so "hover is punchier" is
-// lighter-and-more-saturated on dark and darker on light.
+// Each clears 4.5:1 on both surfaces of its theme. Dark variants move away from
+// the ground by lightening, so "punchier" is lighter on dark, darker on light.
 $sorrel-bright: color.adjust($sorrel, $lightness: 25%); // dark accent
 $sorrel-glow: color.adjust(
   color.adjust($sorrel, $lightness: 32%),
@@ -47,25 +40,20 @@ $wax-glow: color.adjust(
 ); // dark secondary, hover
 $wax-deep: color.adjust($wax, $lightness: -6%); // light secondary, hover
 
-// Secondary text. The body ink at lower strength rather than a separate grey,
-// so it still clears 4.5:1 instead of the decorative-grey level that fails it.
+// Body ink at lower strength rather than a separate grey, so it still clears 4.5:1.
 $chalk-muted: color.adjust($chalk, $lightness: -22%);
 $ink-muted: color.adjust($iron-gall, $lightness: 20%);
 
-// Per-theme: a 0.8-alpha near-black under a card reads as a hole punched in
-// parchment, so light gets a much softer one.
+// A 0.8-alpha shadow reads as a hole punched in parchment; light gets a softer one.
 $shadow-dark: rgba(6, 5, 3, 0.8);
 $shadow-light: rgba(35, 32, 26, 0.18);
 
 // ---------------------------------------------------------------------------
 // Category groups
 // ---------------------------------------------------------------------------
-//
-// §6's eight groups, as one rotation of $sorrel in 22.5deg steps taking only
-// the odd multiples — the half-step offset is what keeps every group clear of
-// the accent hue (96deg) and the secondary (8deg). Saturation is lifted once
-// per theme, lightness trimmed per group only as far as the 4.5:1 floor
-// demands. Hue table and arithmetic:
+// One rotation of $sorrel in 22.5deg steps, odd multiples only, so no group
+// lands on the accent (96deg) or secondary (8deg) hue. Saturation lifted once
+// per theme, lightness trimmed per group to the 4.5:1 floor.
 // claude-docs/styling.md, "Category-group colours".
 $category-group-step: 22.5deg;
 $category-group-saturation: (
@@ -73,8 +61,8 @@ $category-group-saturation: (
   light: 50%,
 );
 
-// `step` is an odd multiple of $category-group-step. Slugs are the §6 group
-// names shortened, and the category seed's `group` field must match them.
+// `step` is an odd multiple of $category-group-step. The category seed's
+// `group` field must match these slugs.
 $category-groups: (
   // 208.5deg — steel blue
   'protection': (
@@ -126,8 +114,7 @@ $category-groups: (
     )
 );
 
-// Without this, a mistyped theme surfaces as `null is not a number` from
-// somewhere deep inside color.adjust().
+// Otherwise a mistyped theme surfaces as `null is not a number` inside color.adjust().
 @function _assert-theme($theme) {
   @if not list.index((dark, light), $theme) {
     @error 'Unknown theme "#{$theme}". Expected dark or light.';
@@ -136,8 +123,7 @@ $category-groups: (
   @return $theme;
 }
 
-// Only the theme mixins call this; components use category-group() below,
-// which hands back the token instead.
+// Theme mixins only; components use category-group() below.
 @function category-group-color($slug, $theme) {
   $theme: _assert-theme($theme);
   $spec: map.get($category-groups, $slug);
@@ -157,15 +143,10 @@ $category-groups: (
 // ---------------------------------------------------------------------------
 // Badge palettes
 // ---------------------------------------------------------------------------
-//
-// Safety is a warning (story 53) and low stock an inventory state (story 54),
-// so the two are deliberately not equals: one loud sealing-wax fill, one muted
-// tint that spends no hue. Each palette is an ink per theme plus a treatment,
-// and emits *only* that treatment's parts — solid has `fill`, tinted has
-// `fg`/`bg`/`border`. Safety's ink fails AA as a tint (3.85 on its own bg,
-// 2.78 on its edge), so those parts do not exist for it and asking for one is a
-// compile error rather than a token that quietly fails WCAG.
-// claude-docs/styling.md, "Badge palettes".
+// Safety is a warning and low stock an inventory state, so one is a solid
+// sealing-wax fill and the other a muted tint. A palette emits only its own
+// treatment's parts: safety's ink fails AA as a tint, so asking for its `bg`
+// is a compile error. claude-docs/styling.md, "Badge palettes".
 $badge-treatments: (
   solid: ('fill'),
   tinted: (
@@ -176,11 +157,8 @@ $badge-treatments: (
 );
 
 $badge-palettes: (
-  // Both inks carry the same +22% saturation, which is what holds the two
-  // halves of the palette recognisably the same red. The dark lift is +18%
-  // rather than what a *text* colour on soot would need: the badge is a solid
-  // fill, so the contrast that matters is its label's, and the label ($soot)
-  // has little headroom on the fill.
+  // Both inks carry +22% saturation, holding the two halves the same red. The
+  // dark lift is +18%, sized for the label ($soot) on the fill, not for text on soot.
   'safety': (
       treatment: solid,
       dark: color.adjust($wax, $saturation: 22%, $lightness: 18%),
@@ -193,8 +171,7 @@ $badge-palettes: (
   )
 );
 
-// Named once so the mixin's loop and the accessor's validation cannot fall
-// out of step.
+// Named once, so the mixin's loop and the accessor's validation agree.
 @function badge-parts($palette) {
   $spec: map.get($badge-palettes, $palette);
 
@@ -206,8 +183,7 @@ $badge-palettes: (
 }
 
 // Per theme rather than per palette: a tint over near-black needs more ink to
-// register than the same tint over parchment. The edge weights are the smallest
-// clearing 3:1 against both surfaces (WCAG 1.4.11).
+// register. The edge weights are the smallest clearing 3:1 (WCAG 1.4.11).
 $badge-fill-weight: (
   dark: 14%,
   light: 12%,
@@ -217,9 +193,7 @@ $badge-edge-weight: (
   light: 75%,
 );
 
-// No part for the inverted label a solid badge or chip needs: that is
-// $text-on-color below, one alias rather than a property per palette and per
-// group. As with category-group-color(), only the theme mixins call this.
+// The inverted label a solid needs is $text-on-color below. Theme mixins only.
 @function badge-palette-color($palette, $theme, $part) {
   $theme: _assert-theme($theme);
   $parts: badge-parts($palette);
@@ -248,10 +222,8 @@ $badge-edge-weight: (
 // ---------------------------------------------------------------------------
 // Token aliases — what components consume
 // ---------------------------------------------------------------------------
-//
-// Sass variables rather than raw var() calls at the call site, so a component
-// keeps the familiar `color: $text-primary;` shape and never has to know a
-// token's spelling. Assigned in globals.scss.
+// Sass variables over var() calls, so a component keeps `color: $text-primary;`
+// and never spells a token. Assigned in globals.scss.
 $surface-page: var(--surface-page);
 $surface-card: var(--surface-card);
 $text-primary: var(--text-primary);
@@ -263,18 +235,14 @@ $secondary-hover: var(--secondary-hover);
 $shadow-elevated: var(--shadow-elevated);
 $shadow-floating: var(--shadow-floating);
 
-// The label on anything drawn as a *solid* fill — the selected chip, the safety
-// badge. An alias for the page surface rather than a token of its own, because
-// the answer is the same whatever the fill: on dark the fill is the light thing
-// and the label goes dark, on light the reverse. Needs no contrast table of its
-// own; worst pairing in the set is 4.74:1. See
+// The label on a solid fill — the selected chip, the safety badge. An alias for
+// the page surface: on dark the fill is the light thing and the label goes
+// dark, on light the reverse. Worst pairing 4.74:1. See
 // claude-docs/styling.md, "$text-on-color".
 $text-on-color: var(--surface-page);
 
-// Functions rather than one variable each: a function rejects a typo at compile
-// time where `var(--group-protectoin)` fails silently in the browser. Same
-// contract as the aliases above — a component names a group or a badge part,
-// never a theme and never a raw hue.
+// Functions rather than variables: a typo fails at compile time where
+// `var(--group-protectoin)` fails silently in the browser.
 @function category-group($slug) {
   @if not map.has-key($category-groups, $slug) {
     @error 'Unknown category group "#{$slug}". The eight groups are: #{map.keys($category-groups)}.';
@@ -297,20 +265,14 @@ $text-on-color: var(--surface-page);
 // ---------------------------------------------------------------------------
 // Type
 // ---------------------------------------------------------------------------
-//
-// The var(--font-*) entries are the hashed families next/font generates
-// (src/app/fonts.ts); the named families behind them are the escape hatch for a
-// render outside the root layout, and the generic stacks are the real fallback
-// — but see claude-docs/styling.md, "Known issue", for why that escape hatch
-// does not actually work.
-//
-// Plain variables, so a component needing only a font-family can `@use` this
-// file without pulling in _typography.scss's global rules.
+// The var(--font-*) entries are next/font's hashed families (src/app/fonts.ts);
+// the named families behind them do not actually rescue a render outside the
+// root layout — claude-docs/styling.md, "Known issue". Plain variables, so a
+// component can `@use` this file without _typography.scss's global rules.
 $font-body: var(--font-body), 'Lexend', Arial, Helvetica, sans-serif;
 $font-heading: var(--font-display), 'Cormorant Unicase', Georgia, 'Times New Roman', serif;
 
-// No webfont on purpose — this is incidental inline code, not typeset code
-// blocks, and every platform ships a good UI monospace.
+// No webfont: incidental inline code, and every platform ships a good monospace.
 $font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
 
 // ---------------------------------------------------------------------------
@@ -319,6 +281,5 @@ $font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', 'Menlo', 'Consolas', mono
 $theme-transition-duration: 400ms;
 $theme-transition-easing: ease-in-out;
 
-// The only width-based breakpoint in the project; everything else keys off
-// `prefers-reduced-motion` / `prefers-contrast`.
+// The only width-based breakpoint; everything else keys off media preferences.
 $breakpoint-desktop: 1024px;
