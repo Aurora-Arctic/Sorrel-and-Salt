@@ -2,20 +2,12 @@ import { sql } from 'drizzle-orm';
 import { pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../audit';
 
-// DESIGN.md §5's category groups: global, admin-curated at
-// `/admin/category-groups`. A table rather than the `category_group` pgEnum
-// M4.2 first shipped — right for a closed set of eight, wrong the moment an
-// admin may add a ninth, since `ALTER TYPE … ADD VALUE` is DDL and an admin
-// mutation cannot run DDL at all (MB.35). §6's eight are a starting set.
-//
-// Two colours rather than one because the grounds differ: one hex cannot clear
-// 4.5:1 on both soot and parchment without being mud on at least one. Stored as
-// hexes on the row rather than looked up from a Sass token because a group
-// created at runtime cannot have a build-time one. Neither carries a CHECK —
-// M5.6b validates each in the service, where the failure can name the column
-// and the ratio it missed.
-//
-// No order column: groups render alphabetically by `name`.
+// Category groups: global, admin-curated. A table rather than an enum so an
+// admin can add a ninth without DDL (MB.35). Two colours because one hex cannot
+// clear 4.5:1 on both grounds; stored as hexes because a runtime group has no
+// build-time Sass token; no CHECK — the service validates, where it can name
+// the ratio missed. No order column: groups list alphabetically
+// (claude-docs/db.md, "Categories, and the two group vocabularies").
 export const categoryGroups = pgTable(
   'category_groups',
   {
@@ -30,28 +22,18 @@ export const categoryGroups = pgTable(
     ...auditColumns,
   },
   (table) => [
-    // Partial per CLAUDE.md rule 4: a plain unique constraint would let a
-    // soft-deleted group reserve its slug forever. Uniqueness is on the slug
-    // alone, never on the display name — two groups may both want to be
-    // called "Protection", and the slug is what tells them apart.
+    // Partial per CLAUDE.md rule 4, and on the slug alone: two groups may both
+    // display "Protection".
     uniqueIndex('category_groups_slug_unique')
       .on(table.slug)
       .where(sql`${table.deletedAt} is null`),
   ],
 );
 
-// DESIGN.md §5's categories: global, admin-curated, and deliberately carrying
-// no `workspaceId`. That absence is the table's whole scoping story —
-// categories are one shared vocabulary, and §12's assigned-versus-derived
-// comparison is only meaningful because both sides draw from the same set.
-// User suggestions are v2.
-//
-// No colour of its own: MB.35 moved the chip colour onto the group as a pair
-// of hexes, and a single `color` column here could hold neither half.
-//
-// `groupId` is a real foreign key, unlike `ingredients.form`, and the
-// asymmetry is §5's: a vocabulary a *member* writes is text, one only an
-// *admin* writes can be a foreign key because the same admin writes both sides.
+// Categories: global, admin-curated, and carrying no `workspaceId` — one
+// shared vocabulary, which is what makes assigned-versus-derived comparable.
+// No colour of its own; the group carries the pair. `groupId` is a real
+// foreign key where `ingredients.form` is text: only an admin writes both sides.
 export const categories = pgTable(
   'categories',
   {
@@ -67,9 +49,8 @@ export const categories = pgTable(
     ...auditColumns,
   },
   (table) => [
-    // Partial per rule 4, as above — and global rather than per group: the
-    // slug is what a chip filter and M4.3's idempotency key both read, and
-    // neither carries a group alongside it.
+    // Partial per rule 4, and global rather than per group: a chip filter and
+    // the seed's idempotency key both read the slug alone.
     uniqueIndex('categories_slug_unique')
       .on(table.slug)
       .where(sql`${table.deletedAt} is null`),

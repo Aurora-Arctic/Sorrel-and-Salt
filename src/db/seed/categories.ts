@@ -7,24 +7,16 @@ import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import { slugify } from '../../lib/slugify';
 import type { SeedDatabase, SeedTransaction } from './index';
 
-// DESIGN.md §6's category vocabulary: eight groups and every category the
-// section's table lists, seeded as a *starting* set an admin may edit.
-//
-// **Not one of the three scenarios.** It ships to staging and production on its
-// own — migrate.yml seeds after migrating — so it assumes nothing about what
-// else has run and inserts the bootstrap admin itself.
-//
-// **No slug is written down here.** Every one is `slugify(name)` per CLAUDE.md's
-// slug rule, so there is no second list to keep in step. The visible
-// consequence is that the rule expands `&`, making "Protection & Defense"
-// `protection-and-defense` (claude-docs/db.md, "The category seed").
+// DESIGN.md §6's vocabulary: eight groups and every category, a starting set
+// an admin may edit. Not a scenario — migrate.yml seeds it on its own after
+// migrating, so it inserts the bootstrap admin itself. No slug is written down:
+// every one is `slugify(name)`, which expands `&` to `and`
+// (claude-docs/db.md, "The category seed").
 
 /**
- * Each group's display name, mapped to the key it wears in M0.7's
- * `$category-groups` Sass map. Keyed by name rather than slug because the slug
- * is derived, and a map keyed on a derived value would have to be rewritten
- * whenever the rule that derives it changed. The two vocabularies meet here,
- * once, and nowhere else.
+ * Each group's name mapped to its key in M0.7's `$category-groups` Sass map —
+ * keyed by name because the slug is derived. The two vocabularies meet here
+ * and nowhere else.
  */
 export const SASS_TOKEN_BY_GROUP_NAME: Record<string, string> = {
   'Protection & Defense': 'protection',
@@ -52,13 +44,10 @@ export interface SeedCategory {
 }
 
 /**
- * The eight groups, in §6's order, each carrying the pair of hexes M0.7's
+ * The eight groups in §6's order, each carrying the hex pair M0.7's
  * `category-group-color($slug, $theme)` resolves to. Written out rather than
- * computed, because MB.35 makes the colour data an admin owns: a value
- * recomputed on every seed could not be left alone once changed.
- * categories.test.ts compiles M0.7's own function and compares all sixteen, so
- * retuning the map without reseeding reddens there. Each clears 4.5:1 against
- * its own theme's ground; the worst is wellbeing's light hex at 4.74:1.
+ * computed because an admin owns the colour once seeded; categories.test.ts
+ * compares all sixteen against the Sass function.
  */
 export const CATEGORY_GROUPS: SeedCategoryGroup[] = [
   {
@@ -453,17 +442,10 @@ export const CATEGORIES: SeedCategory[] = [
 ];
 
 /**
- * Seeds §6's groups and then its categories. Safe to run repeatedly, against a
- * fresh database or a populated one.
- *
- * Idempotency keys on the slug and **ignores `deleted_at`**, which is stronger
- * than the partial unique index gives on its own: that index stops only a
- * second *live* row, so a slug an admin soft-deleted would be re-inserted on
- * the next deploy and the deletion quietly undone. Nothing already present is
- * updated either, so a retitled category and a retuned colour pair survive.
- *
- * The writes go through the handle the caller gives, not through `withAudit`
- * (claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md).
+ * Seeds §6's groups, then its categories. Idempotent on the slug and ignoring
+ * `deleted_at`, so a slug an admin soft-deleted is not re-inserted on the next
+ * deploy; nothing present is updated, so a retitle or retuned colour survives.
+ * Writes go through the handle the caller gives, not `withAudit` — see minimal.ts.
  */
 export async function seedCategories(db: SeedDatabase): Promise<void> {
   await db.transaction(async (tx) => {
@@ -474,16 +456,11 @@ export async function seedCategories(db: SeedDatabase): Promise<void> {
 }
 
 /**
- * The same seed, inside a transaction the caller already opened — the only
- * reason it is separate, since `standard` writes these alongside its own rows
- * and a half-applied scenario is worse than one that never ran.
- *
- * It assumes what `seedCategories` does for itself: the GUC is published and
- * the bootstrap admin exists, since every row here is stamped as that user's.
+ * The same seed inside a transaction the caller opened, so `standard` is never
+ * half-applied. Assumes the GUC is published and the bootstrap admin exists.
  */
 export async function seedCategoryVocabulary(tx: SeedTransaction): Promise<void> {
-  // Groups first: `categories.group_id` is a NOT NULL foreign key, so there
-  // is nothing for a category to point at until they exist.
+  // Groups first: `group_id` is a NOT NULL foreign key.
   await insertMissingGroups(tx);
   await insertMissingCategories(tx, await groupIdByName(tx));
 }
@@ -506,10 +483,8 @@ async function insertMissingGroups(tx: SeedTransaction): Promise<void> {
 }
 
 /**
- * Live category ids keyed by *name*, which is what a scenario names — both
- * `standard` and `demo` do, so it lives here rather than in either.
- * `deleted_at IS NULL` because a category an admin has retired is not one a
- * seed may point at.
+ * Live category ids by *name*, which is what both scenarios name.
+ * `deleted_at IS NULL`: a retired category is not one a seed may point at.
  */
 export async function categoryIdByName(tx: SeedTransaction): Promise<Map<string, string>> {
   const rows = await tx
@@ -544,10 +519,8 @@ async function insertMissingCategories(
     missing.map(({ name, description, group }) => {
       const groupId = groupIds.get(group);
 
-      // Unreachable while CATEGORIES and CATEGORY_GROUPS agree, which the
-      // tests pin — but a category whose group an admin has since renamed or
-      // deleted would otherwise be inserted with `undefined` and fail on NOT
-      // NULL several rows later, naming the wrong row.
+      // Unreachable while CATEGORIES and CATEGORY_GROUPS agree; a silent
+      // `undefined` would fail NOT NULL later, naming the wrong row.
       if (groupId === undefined) {
         throw new Error(`Category "${name}" names group "${group}", which is not in the database.`);
       }

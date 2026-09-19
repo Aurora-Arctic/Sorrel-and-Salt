@@ -1043,7 +1043,10 @@ a PR for five forms:
   no `DEFAULT`.
 
 Comments and string literals are stripped before any rule runs, so a column
-comment reading `'never drop this'` is prose rather than DDL. Only `*.sql` is
+comment reading `'never drop this'` is prose rather than DDL. Statements are
+split on `;` with no awareness of dollar-quoted bodies, so a PL/pgSQL function
+is judged as several fragments rather than one statement — harmless while no
+rule spans a `BEGIN … END`, and the first thing to fix if one ever must. Only `*.sql` is
 ever scanned: the `meta/*.json` files Drizzle writes beside each migration are
 excluded by the paths filter in `pr-gate.yml` **and** by the script, which
 ignores anything else it is handed.

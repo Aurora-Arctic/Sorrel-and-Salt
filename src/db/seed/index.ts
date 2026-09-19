@@ -3,24 +3,12 @@ import { seedDemo } from './demo';
 import { seedMinimal } from './minimal';
 import { seedStandard } from './standard';
 
-/**
- * The three scenarios, in the order they build on each other: `standard` is
- * `minimal` plus a cast and a compendium, `demo` is `standard` plus a grimoire.
- * Exported as a list so `resolveScenario`'s error can name the valid values
- * rather than restate them.
- */
+/** The three scenarios, each building on the last. A list so `resolveScenario`'s error can name them. */
 export const SEED_SCENARIOS = ['minimal', 'standard', 'demo'] as const;
 
 export type SeedScenario = (typeof SEED_SCENARIOS)[number];
 
-/**
- * A `SEED_SCENARIO` environment value turned into a scenario.
- *
- * Unset or blank means `minimal`. Anything else that is not a scenario
- * **throws** rather than falling back: someone who mistypes `demo` would
- * otherwise get one admin and one user, and debug the app rather than the
- * variable.
- */
+/** `SEED_SCENARIO` resolved: unset or blank means `minimal`; an unrecognised name throws rather than falling back. */
 export function resolveScenario(value: string | undefined): SeedScenario {
   const name = value?.trim();
   if (!name) return 'minimal';
@@ -35,25 +23,15 @@ export function resolveScenario(value: string | undefined): SeedScenario {
 }
 
 /**
- * What `drizzle(client)` actually returns. Bare `PostgresJsDatabase` defaults
- * its schema parameter to `Record<string, never>`, which a real handle is not
- * assignable to — and `scripts/` is outside tsconfig's `include`, so nothing
- * there would catch the bare form.
+ * What `drizzle(client)` returns: bare `PostgresJsDatabase` defaults its schema
+ * to `Record<string, never>`, which a real handle is not assignable to.
  */
 export type SeedDatabase = PostgresJsDatabase<Record<string, unknown>>;
 
-/**
- * The handle inside `db.transaction()`, named so a seed module can take one as
- * a parameter and run inside the caller's transaction rather than a second one.
- */
+/** The handle inside `db.transaction()`, so a seed module can run inside the caller's transaction. */
 export type SeedTransaction = Parameters<Parameters<SeedDatabase['transaction']>[0]>[0];
 
-/**
- * One seed module, used by Docker, Vitest and Playwright alike so a bug
- * reproduces identically in all three. Each consumer hands over its own
- * database handle and the seed writes through it — see minimal.ts for why that
- * is a handle and not `withAudit`.
- */
+/** One seed module for Docker, Vitest and Playwright; each hands over its own handle (claude-docs/db.md, "The seed module"). */
 export async function seed(
   db: SeedDatabase,
   { scenario }: { scenario: SeedScenario },

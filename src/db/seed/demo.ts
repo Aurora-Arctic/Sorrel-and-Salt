@@ -16,18 +16,11 @@ import {
 } from './standard';
 import type { SeedDatabase, SeedTransaction } from './index';
 
-// The `demo` scenario (DESIGN.md §"Seed data"): "standard plus spells with
-// ingredients and layer order". The scenario a screenshot is taken against,
-// which is why the jars below are written as a member would write them rather
-// than generated as "Spell 1" through "Spell 3".
-//
-// It adds two things `standard` does not have: **W's own ingredients**, so the
-// jars mix §5's two tiers the way a real one does; and **a custom, one-off
-// layer** (MB.40, story 57) — a name written for one jar, with no
-// `ingredient_id`, which never becomes an ingredient anywhere.
-//
-// The writes go through the handle `seed()` was given rather than through
-// `withAudit` (claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md).
+// The `demo` scenario: `standard` plus spells with ingredients and layer order,
+// written as a member would write them since screenshots are taken against it.
+// It adds W's own ingredients, so the jars mix both tiers, and one custom
+// one-off layer with no `ingredient_id` (claude-docs/db.md, "The demo
+// scenario"). Writes go through the handle `seed()` was given — see minimal.ts.
 
 /** W's own ingredients — the workspace tier, `workspace_id` set rather than null. */
 type SeedWorkspaceIngredient = Pick<
@@ -36,11 +29,9 @@ type SeedWorkspaceIngredient = Pick<
 >;
 
 /**
- * Rosemary the coven grows, beside the compendium's own entry for the same
- * species. **The duplication is the fixture** — the pair M8.3's
- * local-beats-compendium resolution has to collapse. The two share an identity,
- * which the two partial unique indexes permit because they are in different
- * tiers.
+ * Rosemary the coven grows, beside the compendium's entry for the same species
+ * — the pair local-beats-compendium has to collapse. Two tiers, so both partial
+ * indexes permit it.
  */
 const GARDEN_ROSEMARY: SeedWorkspaceIngredient = {
   name: 'Garden Rosemary',
@@ -51,11 +42,7 @@ const GARDEN_ROSEMARY: SeedWorkspaceIngredient = {
   element: 'fire',
 };
 
-/**
- * Story 29's one-field stub, near enough: a thing this household keeps that no
- * naming system names, so `nomenclature` is `none`. The local tier is where a
- * row like this is allowed to live.
- */
+/** Story 29's one-field stub: a thing no naming system names, so `none`. */
 const HEARTH_ASH: SeedWorkspaceIngredient = {
   name: 'Hearth Ash',
   nomenclature: 'none',
@@ -80,10 +67,7 @@ export const WORKSPACE_W_INGREDIENTS: SeedWorkspaceIngredient[] = [
   HOUSE_CHAMOMILE,
 ];
 
-/**
- * What a layer points at: an ingredient in one of the two tiers, or nothing at
- * all — the custom row, which carries its own name and form instead.
- */
+/** What a layer points at: an ingredient in either tier, or a custom row carrying its own name and form. */
 type SeedLayerIngredient =
   | {
       tier: 'compendium' | 'workspace';
@@ -91,11 +75,7 @@ type SeedLayerIngredient =
     }
   | { tier: 'custom'; name: string; form: string };
 
-/**
- * One layer of a jar. `layerOrder` is deliberately not a picked column: it is
- * the position in the array below, so the two cannot disagree and a layer
- * cannot be given the same depth as its neighbour.
- */
+/** One layer. `layerOrder` is the position in the array below, so two layers cannot share a depth. */
 type SeedLayer = Pick<typeof spellIngredients.$inferInsert, 'quantity' | 'unit' | 'note'> & {
   ingredient: SeedLayerIngredient;
 };
@@ -118,10 +98,8 @@ type SeedSpell = Pick<
 };
 
 /**
- * A compendium entry, named by what `standard` seeds rather than by a second
- * copy of its columns. The lookup runs at module load, so a layer naming an
- * entry the compendium does not carry fails on import — before a seed has
- * written anything — rather than at a foreign key several inserts later.
+ * A compendium entry `standard` seeds, looked up at module load so a layer
+ * naming a missing entry fails on import rather than at a foreign key later.
  */
 function fromCompendium(name: string, canonicalName?: string): SeedLayerIngredient {
   const entry = COMPENDIUM_INGREDIENTS.find(
@@ -142,7 +120,7 @@ function fromWorkspace(entry: SeedWorkspaceIngredient): SeedLayerIngredient {
   return { tier: 'workspace', entry };
 }
 
-/** The jars. Fixed ids in a block of their own, `…0002-…`, after the users (`…0000-…`) and the workspaces (`…0001-…`). */
+/** The jars, fixed ids in a block of their own (`…0002-…`). */
 export const DEMO_SPELLS: SeedSpell[] = [
   {
     id: '00000000-0000-0000-0002-000000000001',
@@ -176,9 +154,8 @@ export const DEMO_SPELLS: SeedSpell[] = [
         note: 'From our own grate, which is the whole point of the jar.',
       },
       {
-        // The custom, one-off layer (MB.40). Never an `ingredients` row, and
-        // `dust` is nowhere in the curated forms — exactly as a member would
-        // write it.
+        // The custom, one-off layer: never an `ingredients` row, and `dust` is
+        // uncurated — as a member would write it.
         ingredient: { tier: 'custom', name: 'Dust from the front step', form: 'dust' },
         quantity: '1.000',
         unit: 'pinch',
@@ -235,15 +212,11 @@ export const DEMO_SPELLS: SeedSpell[] = [
 
 export async function seedDemo(db: SeedDatabase): Promise<void> {
   await db.transaction(async (tx) => {
-    // Published exactly as withAudit publishes it: `set_config` with a bind
-    // parameter, transaction-local.
+    // Published exactly as withAudit publishes it.
     await tx.execute(sql`select set_config('app.current_user_id', ${BOOTSTRAP_USER_ID}, true)`);
     await insertBootstrapAdmin(tx);
 
-    // The plus is inside the same transaction: every spell below points at a
-    // workspace, a category and — mostly — a compendium entry `standard`
-    // writes, so a half-applied scenario is a grimoire referencing rows that
-    // are not there.
+    // Inside the same transaction: every spell points at rows `standard` writes.
     await seedStandardContent(tx);
 
     await insertMissingWorkspaceIngredients(tx);
@@ -255,10 +228,9 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
   });
 }
 
-// Idempotent the way `standard` is: it inserts what is missing, keyed on
-// identity, and **ignores `deleted_at`** — the partial unique indexes stop only
-// a second *live* row, so a soft-deleted spell would otherwise be re-inserted
-// and the deletion quietly undone. Nothing already present is updated either.
+// Idempotent the way `standard` is: inserts what is missing by identity,
+// ignoring `deleted_at` so a soft-deleted spell is not restored, updating
+// nothing already present.
 
 async function insertMissingWorkspaceIngredients(tx: SeedTransaction): Promise<void> {
   const present = new Set(
@@ -314,10 +286,9 @@ async function insertMissingSpells(tx: SeedTransaction): Promise<void> {
 }
 
 /**
- * Every id a layer below could name, keyed by `identityOf`. Both tiers in one
- * map, which is safe here and only here: the two share no identity except
- * Garden Rosemary's, whose local row wins — and a layer of W's jar naming
- * rosemary means W's rosemary, which is M8.3's rule from the other end.
+ * Every id a layer could name, keyed by `identityOf`. Both tiers in one map is
+ * safe only here: the tiers share no identity but Garden Rosemary's, whose
+ * local row wins.
  */
 async function ingredientIdByIdentity(tx: SeedTransaction): Promise<Map<string, string>> {
   const rows = await tx
@@ -332,8 +303,7 @@ async function ingredientIdByIdentity(tx: SeedTransaction): Promise<Map<string, 
     .where(isNull(ingredients.deletedAt));
 
   const ids = new Map<string, string>();
-  // Compendium first, workspace second, so a local entry overwrites rather
-  // than loses to the global one it shadows.
+  // Compendium first, so a local entry overwrites the global one it shadows.
   for (const row of rows.filter((row) => row.workspaceId === null))
     ids.set(identityOf(row), row.id);
   for (const row of rows.filter((row) => row.workspaceId === WORKSPACE_W_ID))
@@ -343,10 +313,9 @@ async function ingredientIdByIdentity(tx: SeedTransaction): Promise<Map<string, 
 }
 
 /**
- * The id a layer's ingredient landed under. Unreachable today — but a lookup
- * that silently returned `undefined` would write a null `ingredient_id`, which
- * is a *custom* row under MB.40's CHECK, so the failure would be a blank-named
- * layer rather than an error.
+ * Unreachable today, but a silent `undefined` would make a null
+ * `ingredient_id` — a *custom* row under the CHECK — so the failure would be a
+ * blank-named layer rather than an error.
  */
 function ingredientIdFor(
   ingredient: SeedLayerIngredient & { tier: 'compendium' | 'workspace' },
@@ -361,11 +330,7 @@ function ingredientIdFor(
   return id;
 }
 
-/**
- * The columns that say *which* ingredient a layer is. Exactly one of
- * `ingredientId` and `name` is set — MB.40's `num_nonnulls(ingredient_id,
- * name) = 1` — and `form` rides with `name`.
- */
+/** Exactly one of `ingredientId` and `name` is set, and `form` rides with `name`. */
 function layerIdentity(
   ingredient: SeedLayerIngredient,
   ingredientIds: Map<string, string>,
@@ -378,16 +343,9 @@ function layerIdentity(
 }
 
 /**
- * **A jar's stack is seeded whole or not at all** — the unit keyed on is the
- * spell, not the layer, unlike every other seed here.
- *
- * A layer's identity is a depth in a shared sequence, so "insert what is
- * missing" is not well defined per row: patch one back into a stack a member
- * has edited and both indexes collide — the depth the seed wants is occupied by
- * a different ingredient, and the ingredient it wants is already at another
- * depth. Either collision fails the whole seed. So a jar that already has
- * layers is left as it is, which trades a demo jar that heals itself for a
- * reseed over an edited grimoire being a no-op rather than an error
+ * A jar's stack is seeded whole or not at all: a layer's identity is a depth in
+ * a shared sequence, so patching one into an edited stack collides on either
+ * index. A jar that already has layers is left as it is
  * (claude-docs/db.md, "A jar's stack is seeded whole or not at all").
  */
 async function insertMissingLayers(
@@ -403,8 +361,7 @@ async function insertMissingLayers(
 
   if (missing.length === 0) return;
 
-  // `spell_ingredients` is hard-deleted (MB.34), so these carry the four-column
-  // stamp set and `applyAudit` simply stamps fewer columns.
+  // Hard-deleted (MB.34): the four-column stamp set.
   await tx.insert(spellIngredients).values(
     missing.flatMap((spell) =>
       spell.layers.map((layer, index) =>
@@ -415,9 +372,7 @@ async function insertMissingLayers(
             ...layerIdentity(layer.ingredient, ingredientIds),
             quantity: layer.quantity,
             unit: layer.unit,
-            // The position in the array, so the stack is written down once —
-            // one per jar from 1, which M10.16's reorder rewrites and M10.9's
-            // read orders by.
+            // The position in the array, one per jar from 1.
             layerOrder: index + 1,
             note: layer.note,
           },
@@ -436,10 +391,8 @@ async function insertMissingSpellCategories(
     spell.categories.map((name) => {
       const categoryId = categoryIds.get(name);
 
-      // Unreachable while these spells and §6's vocabulary agree, which the
-      // tests pin — but a spell naming a category an admin has since renamed
-      // or deleted would otherwise be inserted with `undefined` and fail on
-      // NOT NULL several rows later, naming the wrong row.
+      // Unreachable while these spells and §6's vocabulary agree; a silent
+      // `undefined` would fail NOT NULL later, naming the wrong row.
       if (categoryId === undefined) {
         throw new Error(`"${spell.title}" names category "${name}", which is not in the database.`);
       }

@@ -11,7 +11,6 @@ function databaseUrl(): string {
 
 const client = postgres(databaseUrl());
 
-// Off by default, so test output and CI are unaffected. `DEBUG_SQL=1` prints
-// every statement the repository emits, including `withAudit`'s `set_config`
+// `DEBUG_SQL=1` prints every statement, `withAudit`'s `set_config` included
 // (claude-docs/db.md, "Debugging a query").
 export const db = drizzle(client, { logger: process.env.DEBUG_SQL === '1' });
