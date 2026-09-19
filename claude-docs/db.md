@@ -123,19 +123,39 @@ output or CI behaviour changes when it's unset. Full setup:
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
-  `seed(db, { scenario: 'minimal' })` from `src/db/seed/index.ts` and then
+  `seed(db, { scenario })` from `src/db/seed/index.ts` and then
   closes the pool `connection.ts` opened, or the process never exits.
   All three scenarios are implemented (M1.21, M1.22, M1.23 — "The seed
-  module", "The standard scenario" and "The demo scenario" below). The script
-  always seeds `minimal`: scenario
-  selection by environment variable is M1.24, so `standard` and `demo` are
-  reached from a test or from `seed(db, { scenario })` rather than from the CLI. The script runs
+  module", "The standard scenario" and "The demo scenario" below) and all
+  three are reachable from the CLI as of M1.24: **`SEED_SCENARIO`** picks one,
+  defaulting to `minimal`. The script runs
   through **`tsx`**, alone among the scripts: bare Node's type stripping
   resolves no extensionless relative import, and the seed is the first thing
   under `src/` a script executes that has one.
-- **`npm run db:reset`** is `db:migrate` then `db:seed`, and works against
-  the local `sorrel` database. The Docker-level reset (init hook, `make
-db-reset`, drop-and-recreate from a broken state) is M1.24.
+- **`resolveScenario` (M1.24) refuses an unrecognised name rather than falling
+  back to `minimal`.** Both readers of `SEED_SCENARIO` — the CLI and the
+  `db-init` compose service through it — go through that one parse, so they
+  cannot disagree about what `demo` means. A silent fallback would hand
+  someone who mistyped `demo` one admin and one user, and they would then
+  debug the app rather than the variable. Unset or blank is still `minimal`.
+- **`npm run db:drop` and `npm run db:reset`** (M1.24). `db:drop` calls
+  `dropSchema` from `src/db/seed/reset.ts`; `db:reset` is `db:drop &&
+db:migrate && db:seed`, and that first step is what makes it a reset rather
+  than a re-run. `dropSchema` drops **two** schemas inside one transaction:
+  `public` (the tables, the enums, `set_updated_at()`, `pg_trgm`) and
+  `drizzle` (drizzle-kit's `__drizzle_migrations` journal). Leaving the
+  journal is the trap — `db:migrate` reads every migration as already applied,
+  does nothing, and the seed then fails on tables that are gone. It recreates
+  an empty `public` for migration `0000_enable-extensions` to put `pg_trgm`
+  back into, which is why the reset is drop _then_ migrate and never a drop
+  alone. A `SET LOCAL client_min_messages = warning` rides at the head of the
+  transaction: `DROP ... CASCADE` emits a NOTICE per dependent object, around
+  thirty of them by Wave 4, each rendered by postgres-js as a multi-line
+  object that reads like a stack trace. Schemas the app does not own are left
+  alone. `drop` is the one destructive verb in the CLI and refuses to run
+  under `NODE_ENV=production`; nothing in `deploy.yml` or `migrate.yml` calls
+  it, so the accident worth refusing is a production `DATABASE_URL` in a shell
+  that also has this script.
 - **`Docker/postgres-init/enable-extensions.sql`** also creates the `sorrel`
   role and database now, not just `pg_trgm`. Without it, a container built
   from `Dockerfile.postgres` would never get a `sorrel` role/database at

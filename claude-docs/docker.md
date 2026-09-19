@@ -23,10 +23,37 @@ no Neon connection and no host Node-version juggling.
 - **`Docker/docker-compose.yaml`** — `name: sorrel-and-salt`, pinned so it does
   not collide with another project's compose stack on the same machine.
 
+  - **`db-init`** (M1.24) — the Docker seed hook: a **one-shot** container on
+    the same `development` stage, running
+    `sh -c 'npm run db:migrate && npm run db:seed'` and exiting. `app` waits on
+    `condition: service_completed_successfully`, so the first
+    `make docker-up` on a clean `postgres_data` volume comes up migrated and
+    seeded rather than pointed at an empty database, and a failed migration
+    stops `app` instead of producing a running app that 500s on first request.
+    - **It is not in `Docker/postgres-init/`, and could not be.** The seed is
+      TypeScript and the Postgres image has no Node — and that directory does
+      not run at container start anyway: `Dockerfile.postgres` populates
+      PGDATA during the image _build_, so `docker-entrypoint.sh` finds an
+      initialised data directory and skips `/docker-entrypoint-initdb.d/`
+      entirely. A Node-side one-shot is what the outcome actually costs.
+      Distinct from M1.27, which bakes migrations and the `standard` seed into
+      `sorrel_template` at image build time — that template is what the Vitest
+      workers clone, not what `app` connects to.
+    - **No compose profile**, unlike `workshop`/`studio`/`e2e`: a bare
+      `make docker-up` has to reach it.
+    - **`SEED_SCENARIO: ${SEED_SCENARIO:-minimal}`** — host environment or
+      `Docker/.env`, defaulting to the bare install. An unrecognised name fails
+      this container (and so `app`) rather than quietly seeding `minimal`; see
+      `resolveScenario` in `claude-docs/db.md`.
+    - **It re-runs on every `docker compose up`, deliberately.** Migrations are
+      journal-guarded and every scenario is idempotent by fixed id, so the cost
+      is a few seconds and the payoff is that a developer who just pulled new
+      migrations gets them applied by the command they were going to run anyway.
   - **`app`** — builds `target: development`, serves `next dev` on **8000**. No
     `command:`; `package.json`'s `dev` script already binds `0.0.0.0:8000` and
     is the Dockerfile `CMD`. `.next/` is written into the bind mount (git- and
-    docker-ignored); there is no `.next` volume.
+    docker-ignored); there is no `.next` volume. Gated on `postgres` being
+    healthy **and** on `db-init` having exited zero (M1.24).
     - **Second DNS alias `sorrel-app` (MB.23), for browser-facing URLs only.**
       `.app` is a Google-registered gTLD, and every major browser ships a
       hard-coded HSTS-preload entry for the bare domain `app` — a real
@@ -60,9 +87,9 @@ no Neon connection and no host Node-version juggling.
     `pg_isready -U postgres -d sorrel_template` — it probes `postgres`/
     `sorrel_template` because that pair proves the server is up, not because
     `sorrel` is missing (`Docker/postgres-init/enable-extensions.sql` creates
-    the `sorrel` role and database at image build time). `app` has
-    `depends_on: { postgres: { condition: service_healthy } }`, so
-    `make docker-up` blocks on `postgres Healthy` before `app Starting`. Port
+    the `sorrel` role and database at image build time). Both `app` and
+    `db-init` have `depends_on: { postgres: { condition: service_healthy } }`,
+    so `make docker-up` blocks on `postgres Healthy` before either starts. Port
     **5432** is published for the host-side Vitest `db` project.
     - **Every `POSTGRES_*` env var is ignored**: PGDATA is populated at image
       _build_ time, and `docker-entrypoint.sh` only reads those vars on first
@@ -76,9 +103,12 @@ no Neon connection and no host Node-version juggling.
       created. `make docker-rebuild` (`down -v`) is what gets a fresh one.
   - **Volumes** — one `node_modules` volume per service
     (`node_modules_app`, `node_modules_workshop`, `node_modules_studio`,
-    `node_modules_devcontainer`);
+    `node_modules_e2e`, `node_modules_playwright_server`,
+    `node_modules_db_init`, `node_modules_devcontainer`);
     a single shared volume makes the services race to populate it from their
-    images on first mount. All persist across `docker compose restart` and
+    images on first mount. `db-init` runs to completion before `app` starts and
+    so could not actually race it — it gets its own anyway, because "one per
+    service" is the rule that makes that reasoning unnecessary. All persist across `docker compose restart` and
     `make docker-down`; only `make docker-rebuild` clears them.
     - **A new named volume over a path the app writes needs a matching
       `mkdir` + `chown node:node` in `Docker/Dockerfile.node`.** A fresh named
@@ -101,7 +131,9 @@ no Neon connection and no host Node-version juggling.
 
 - **`makefile`** — each target wraps
   `docker compose -f Docker/docker-compose.yaml` (via the `COMPOSE` variable):
-  `docker-up` (app + Postgres, detached), `docker-workshop` (adds the workshop
+  `docker-up` (app + Postgres, detached, migrated and seeded by `db-init`
+  first — `SEED_SCENARIO=demo make docker-up` picks a scenario),
+  `docker-workshop` (adds the workshop
   on 61000), `docker-studio` (adds Drizzle Studio on 4983, MB.21), `docker-all`
   (app + Postgres + workshop + studio + the Playwright browser server
   together — `--profile e2e up -d` is scoped to name `playwright-server`
@@ -124,7 +156,11 @@ NAME=<spec>` (MB.23) — starts `playwright-server` if needed, then `exec`s
 - **`.devcontainer/`** — `devcontainer.json` plus a `docker-compose.yml` overlay
   merged on top of `Docker/docker-compose.yaml`. The overlay adds one service,
   `devcontainer`, mirroring `app` (same `development` stage, `..:/app` bind
-  mount, `DATABASE_URL`, `depends_on: postgres` health gate) but with its own
+  mount, `DATABASE_URL`, `depends_on: postgres` health gate) — but **not**
+  `app`'s `db-init` gate (M1.24), on purpose: attaching an editor should not
+  block on a migration run, and the devcontainer is where
+  `npm run db:reset` is run from when the database does need rebuilding. It
+  has its own
   `node_modules` volume, no published ports, and `command: sleep infinity` —
   which only sticks because `devcontainer.json` sets **`overrideCommand: false`**;
   without that the lifecycle re-pins the container to `npm run dev`.

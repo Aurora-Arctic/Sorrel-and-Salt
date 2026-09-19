@@ -864,7 +864,9 @@ Every story becomes a failing test first: **write test → watch it fail → min
 
 ### Seed data — one module, three consumers
 
-`src/db/seed/index.ts` exports `seed(db, { scenario })`. Docker Postgres runs it on first boot; the Vitest `db` project and Playwright's `globalSetup` call it directly. Identical data everywhere, so a bug reproduces in all three.
+`src/db/seed/index.ts` exports `seed(db, { scenario })`. A one-shot `db-init` compose container runs it before the app starts; the Vitest `db` project and Playwright's `globalSetup` call it directly. Identical data everywhere, so a bug reproduces in all three.
+
+The Docker side is a Node container rather than a Postgres init script, corrected at M1.24 from "Docker Postgres runs it on first boot": the seed is TypeScript and the Postgres image has no Node, and `Docker/postgres-init/` does not run at container start in any case, since `Dockerfile.postgres` populates PGDATA at image build time and the entrypoint then skips `/docker-entrypoint-initdb.d/`. The outcome the line described — a clean volume comes up seeded — is unchanged.
 
 Scenarios: `minimal` (one admin, one user, empty compendium), `standard` (five users, workspaces W and X, populated compendium), `demo` (standard plus spells with ingredients and layer order).
 
@@ -878,7 +880,7 @@ Scenarios: `minimal` (one admin, one user, empty compendium), `standard` (five u
 | D    | Member of unrelated workspace X    |
 | E    | Site admin, member of no workspace |
 
-`make db-reset` reseeds local.
+`make db-reset` drops, migrates and reseeds local; `SEED_SCENARIO` picks the scenario for it and for `make docker-up`, defaulting to `minimal`.
 
 ### Acceptance tests — story traceability
 
@@ -1057,7 +1059,7 @@ Specs: admin adds a compendium entry; A adds it to W's ingredients with a quanti
 | `playwright.config.ts`      | `webServer` → `npm run build && npm run start`, port 8001; local Postgres setup in `globalSetup`                                                                                                                                                                                                                                                                                 |
 | `vitest.config.ts`          | Two projects — `unit` (jsdom) and `db` (node, local Postgres); keep 80% thresholds                                                                                                                                                                                                                                                                                               |
 | `.oxlintrc.json`            | Node-globals override swaps `gatsby-*.ts` for `next.config.ts`, `drizzle.config.ts`, `src/db/**`, `src/app/**/route.ts`                                                                                                                                                                                                                                                          |
-| `docker-compose.yaml`       | Drop the Gatsby LMDB volume; keep `node_modules`; **add `postgres` service** with seed init script; `devcontainer` depends on it                                                                                                                                                                                                                                                 |
+| `docker-compose.yaml`       | Drop the Gatsby LMDB volume; keep `node_modules`; **add `postgres` service**, plus the one-shot `db-init` container that migrates and seeds before `app` starts (M1.24); `devcontainer` depends on it                                                                                                                                                                            |
 | `netlify.toml`              | Replaced by `vercel.json` — config only; `vercel.json` disables the Git integration and does not drive deploys (see below)                                                                                                                                                                                                                                                       |
 | **New** `codegen.yml` check | Fails if generated GraphQL types are stale relative to the schema                                                                                                                                                                                                                                                                                                                |
 | **New** `deploy.yml`        | CLI-driven Vercel deploy on push to `main`/`staging`/`hotfix/**` (§4). Not ported — `resume-2026` deployed via Netlify's own Git integration with no workflow file                                                                                                                                                                                                               |
