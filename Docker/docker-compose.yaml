@@ -28,15 +28,15 @@
 # and deployment; that would mean network + registry auth for something a
 # local build handles directly.
 #
-# The `sorrel` role/database (M1.3) and the empty `sorrel_template` used to
-# clone each Vitest worker's database (CLAUDE.md's Testing section) are both
-# baked into the image at build time — see Docker/postgres-init's comment for
-# why it has to happen there rather than at a container's first boot. The
-# `POSTGRES_*` env vars below are inert either way (PGDATA is already
-# populated by build time, so the entrypoint's own first-boot init never
-# runs); they're kept here only as documentation that matches the baked-in
-# credentials. `sorrel` has no schema and no seed data until M1.27 bakes
-# those into this same image.
+# The `sorrel` role/database (M1.3) and the empty `sorrel_template` the test
+# harness clones its own seeded templates from (CLAUDE.md's Testing section,
+# M1.27) are both baked into the image at build time — see
+# Docker/postgres-init's comment for why it has to happen there rather than
+# at a container's first boot. The `POSTGRES_*` env vars below are inert
+# either way (PGDATA is already populated by build time, so the entrypoint's
+# own first-boot init never runs); they're kept here only as documentation
+# that matches the baked-in credentials. `sorrel` has no schema and no seed
+# data baked in — `db-init` below applies both at start (M1.24).
 #
 # A `postgres_data` volume populated by the *old* stock `postgres:17` image
 # (i.e. from before M0.19 switched this file from `image:` to `build:`; that
@@ -155,10 +155,11 @@ services:
   # during the image *build*, so `docker-entrypoint.sh` finds an initialised
   # data directory and skips `/docker-entrypoint-initdb.d/` entirely. The
   # "Postgres init script" this task was written against cannot exist; a
-  # Node-side one-shot is what the same outcome actually costs. (M1.27 bakes
-  # migrations and the `standard` seed into `sorrel_template` at image build
-  # time, which is a different job: that template is what the Vitest workers
-  # clone, not what `app` connects to.)
+  # Node-side one-shot is what the same outcome actually costs. (The test
+  # harness's templates are a different job: M1.27 clones `sorrel_template`
+  # and runs these same two commands against the clone at test-run setup —
+  # tests/support/seeded-database.ts — and that is what the Vitest workers
+  # and Playwright clone, not what `app` connects to.)
   #
   # Re-running on every `docker compose up` is deliberate and cheap: migrations
   # are journal-guarded and every scenario is idempotent by fixed id, so this

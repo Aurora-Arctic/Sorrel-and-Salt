@@ -1,13 +1,11 @@
-import { join } from 'node:path';
-import { readFileSync, readdirSync } from 'node:fs';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import { type SpellOverrides, makeSpell, spellColumns } from '../support/fixtures';
-import { MIGRATIONS_DIR } from '../support/paths';
 import { spellStatus, spells } from '@/db/schema/spells';
 import { users } from '@/db/schema/users';
 import { workspaces } from '@/db/schema/workspaces';
+import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 
 // The full six. A spell is a workspace's record of a working, and story 54
 // deletes one — recoverably, like every other content table. Only the three
@@ -135,41 +133,30 @@ describe('spells schema', () => {
   });
 });
 
-// The behaviour half, following M4.1/M4.4/M4.4a/M7.1/M9.2's idiom: apply the
-// shipped migration into this worker's disposable clone rather than
-// hand-copying its DDL, so what is asserted below is the SQL production runs.
-// `users`, `workspaces` and `ingredients` are stubbed to the one column the
-// two new tables' foreign keys point at — applying their own migrations here
-// would leave a __drizzle_migrations table behind for the next test file in
-// this worker to trip over.
-
-function migrationStatementsContaining(marker: string): string[] {
-  const file = readdirSync(MIGRATIONS_DIR)
-    .filter((name) => name.endsWith('.sql'))
-    .sort()
-    .map((name) => join(MIGRATIONS_DIR, name))
-    .find((path) => readFileSync(path, 'utf8').includes(marker));
-
-  if (!file) throw new Error(`No migration in src/db/migrations contains ${marker}`);
-
-  return readFileSync(file, 'utf8')
-    .split('--> statement-breakpoint')
-    .map((statement) => statement.trim())
-    .filter(Boolean);
-}
-
-const AUTHOR = '11111111-1111-1111-1111-111111111111';
-const COVEN = '22222222-2222-2222-2222-222222222222';
-const OTHER_COVEN = '33333333-3333-3333-3333-333333333333';
-const MUGWORT = '44444444-4444-4444-4444-444444444444';
+// The behaviour half, against the real table. This worker's sorrel_test_<n>
+// clone arrives with every migration applied and the `standard` scenario
+// seeded (M1.27, tests/support/db-setup.ts), and re-cloned that way before
+// this file runs — so what is asserted below is the SQL production runs, with
+// no schema built here and nothing to put back afterwards. Until M1.27 the
+// template was empty: this file applied the one migration that ships the
+// table and stubbed `users`, `workspaces` and `ingredients` to a bare `id`
+// column.
+//
+// The author and the two covens are the seed's, not invented ids: the real
+// `users` and `workspaces` have NOT NULL names, slugs and audit stamps, and a
+// row that exists is cheaper to point at than one to construct. Bound to the
+// old names so the tests read as they did.
+const AUTHOR = FIXTURE_USERS.A.id;
+const COVEN = WORKSPACE_W_ID;
+const OTHER_COVEN = WORKSPACE_X_ID;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
-let createdUnitEnum = false;
 
-// M1.25 — the shared factory writes the row; this file supplies its own coven
-// and author, since the audit stamps are never the fixture's to give
-// (CLAUDE.md rule 3) and the workspaces here are stubs of this file's own.
+// M1.25 — the shared factory writes the row; this file supplies the coven and
+// the author, since the audit stamps are never the fixture's to give
+// (CLAUDE.md rule 3) and which of the seed's two covens holds the spell is
+// what several tests below are about.
 //
 // Every column §5 names except `status`, which is dropped so that the column's
 // own default is what the tests below observe — a status spelled out in the
@@ -214,52 +201,19 @@ async function columnNames(table: string): Promise<string[]> {
   return rows.map((row) => row.column_name as string);
 }
 
-beforeAll(async () => {
+beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-
-  await sql`drop table if exists spell_ingredients`;
-  await sql`drop table if exists spells`;
-  await sql`drop type if exists spell_status`;
-  await sql`create table if not exists users (id uuid primary key)`;
-  await sql`create table if not exists workspaces (id uuid primary key)`;
-  await sql`create table if not exists ingredients (id uuid primary key)`;
-  await sql`insert into users (id) values (${AUTHOR}) on conflict do nothing`;
-  await sql`insert into workspaces (id) values (${COVEN}), (${OTHER_COVEN}) on conflict do nothing`;
-  await sql`insert into ingredients (id) values (${MUGWORT}) on conflict do nothing`;
-
-  // `spell_ingredients.unit` reuses M9.2's `inventory_unit` — one vocabulary,
-  // one Postgres type — so this migration does not create it and the clone may
-  // or may not already carry it, depending on what else ran in this worker.
-  const [{ present }] = await sql`
-    select exists (select 1 from pg_type where typname = 'inventory_unit') as present
-  `;
-  if (!present) {
-    createdUnitEnum = true;
-    for (const statement of migrationStatementsContaining(
-      'CREATE TYPE "public"."inventory_unit"',
-    ).filter((statement) => statement.includes('CREATE TYPE "public"."inventory_unit"'))) {
-      await sql.unsafe(statement);
-    }
-  }
-
-  for (const statement of migrationStatementsContaining('CREATE TABLE "spells"')) {
-    await sql.unsafe(statement);
-  }
 });
 
+// `truncate … cascade` rather than `delete from`: `spell_ingredients` and
+// `spell_categories` both hang off this table under NO ACTION keys, and the
+// cascade takes any of their rows with it. The empty table is what every test
+// below assumes.
 beforeEach(async () => {
-  await sql`delete from spell_ingredients`;
-  await sql`delete from spells`;
+  await sql`truncate spells cascade`;
 });
 
 afterAll(async () => {
-  await sql`drop table if exists spell_ingredients`;
-  await sql`drop table if exists spells`;
-  await sql`drop type if exists spell_status`;
-  if (createdUnitEnum) await sql`drop type if exists inventory_unit`;
-  await sql`drop table if exists ingredients`;
-  await sql`drop table if exists workspaces`;
-  await sql`drop table if exists users`;
   await sql.end();
 });
 

@@ -3,10 +3,12 @@ import { getTableConfig } from 'drizzle-orm/pg-core';
 import { users } from '@/db/schema/users';
 
 // Pure schema-shape assertions via Drizzle's own introspection — no real
-// Postgres needed. sorrel_template carries no tables until M1.27
-// (claude-docs/db.md), so a test that actually inserted a row here would
-// only pass by accident locally, per the M2.4 lesson recorded in
-// src/app/api/auth/[...all]/route.test.ts.
+// Postgres needed. Written when the template carried no tables (before
+// M1.27), so a test that inserted a row here would only have passed by
+// accident locally, per the M2.4 lesson recorded in
+// tests/app/api/auth/[...all]/route.test.ts; the clone now carries the real
+// table, and tests/db/seeded-template.test.ts is where its seeded rows are
+// asserted.
 describe('users schema', () => {
   const { columns, indexes } = getTableConfig(users);
   const byName = Object.fromEntries(columns.map((c) => [c.name, c]));

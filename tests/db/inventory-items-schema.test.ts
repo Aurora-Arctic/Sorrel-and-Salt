@@ -1,12 +1,12 @@
-import { join } from 'node:path';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { getTableConfig } from 'drizzle-orm/pg-core';
-import { MIGRATIONS_DIR, fromRoot } from '../support/paths';
+import { fromRoot } from '../support/paths';
 import { UNITS, UNITS_BY_DIMENSION, UNIT_DIMENSIONS, dimensionOf } from '@/lib/units';
 import { ingredients } from '@/db/schema/ingredients';
 import { inventoryItems, inventoryUnit, unitDimension } from '@/db/schema/inventory-items';
+import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { users } from '@/db/schema/users';
 import { workspaces } from '@/db/schema/workspaces';
 
@@ -165,34 +165,26 @@ describe('inventory_items schema', () => {
   });
 });
 
-// The behaviour half, following M4.1/M4.4/M4.4a/M7.1's idiom: apply the
-// shipped migration into this worker's disposable clone rather than
-// hand-copying its DDL, so what is asserted below is the SQL production runs.
-// `users`, `workspaces` and `ingredients` are stubbed to the one column this
-// table's foreign keys point at — applying their own migrations here would
-// leave a __drizzle_migrations table behind for the next test file in this
-// worker to trip over.
-
-function migrationStatementsContaining(marker: string): string[] {
-  const file = readdirSync(MIGRATIONS_DIR)
-    .filter((name) => name.endsWith('.sql'))
-    .sort()
-    .map((name) => join(MIGRATIONS_DIR, name))
-    .find((path) => readFileSync(path, 'utf8').includes(marker));
-
-  if (!file) throw new Error(`No migration in src/db/migrations contains ${marker}`);
-
-  return readFileSync(file, 'utf8')
-    .split('--> statement-breakpoint')
-    .map((statement) => statement.trim())
-    .filter(Boolean);
-}
-
-const MEMBER = '11111111-1111-1111-1111-111111111111';
-const COVEN = '22222222-2222-2222-2222-222222222222';
-const OTHER_COVEN = '33333333-3333-3333-3333-333333333333';
-const MUGWORT = '44444444-4444-4444-4444-444444444444';
-const ROSEMARY = '55555555-5555-5555-5555-555555555555';
+// The behaviour half, against the real table. This worker's sorrel_test_<n>
+// clone arrives with every migration applied and the `standard` scenario
+// seeded (M1.27, tests/support/db-setup.ts), re-cloned that way before this
+// file runs — so what is asserted below is the SQL production runs, with no
+// schema built here and nothing to put back afterwards. Until M1.27 the
+// template was empty: this file applied the one migration that ships the
+// table and stubbed `users`, `workspaces` and `ingredients` to a bare `id`
+// column.
+//
+// The member, the two covens and the two ingredients are the seed's, not
+// invented ids: the real parent tables have NOT NULL names, slugs and audit
+// stamps, and a row that exists is cheaper to point at than one to construct.
+// Bound to the old names so the tests read as they did. The compendium's ids
+// are generated rather than fixed, so the two ingredients are looked up by
+// name in `beforeAll` — Mugwort and Rosemary really are what they were.
+const MEMBER = FIXTURE_USERS.A.id;
+const COVEN = WORKSPACE_W_ID;
+const OTHER_COVEN = WORKSPACE_X_ID;
+let MUGWORT: string;
+let ROSEMARY: string;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
@@ -247,35 +239,28 @@ async function columnNames(table: string): Promise<string[]> {
   return rows.map((row) => row.column_name as string);
 }
 
+async function compendiumIdOf(name: string): Promise<string> {
+  const [found] = await sql`
+    select id from ingredients where workspace_id is null and name = ${name}
+  `;
+  if (!found) throw new Error(`The standard seed carries no compendium entry named ${name}`);
+  return found.id as string;
+}
+
 beforeAll(async () => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
 
-  await sql`drop table if exists inventory_items`;
-  await sql`drop type if exists inventory_unit`;
-  await sql`drop type if exists unit_dimension`;
-  await sql`create table if not exists users (id uuid primary key)`;
-  await sql`create table if not exists workspaces (id uuid primary key)`;
-  await sql`create table if not exists ingredients (id uuid primary key)`;
-  await sql`insert into users (id) values (${MEMBER}) on conflict do nothing`;
-  await sql`insert into workspaces (id) values (${COVEN}), (${OTHER_COVEN}) on conflict do nothing`;
-  await sql`insert into ingredients (id) values (${MUGWORT}), (${ROSEMARY}) on conflict do nothing`;
-
-  for (const statement of migrationStatementsContaining('CREATE TABLE "inventory_items"')) {
-    await sql.unsafe(statement);
-  }
+  MUGWORT = await compendiumIdOf('Mugwort');
+  ROSEMARY = await compendiumIdOf('Rosemary');
 });
 
+// Nothing seeds stock, so the table is already empty; truncating anyway is
+// what keeps each test starting from nothing rather than from the last one.
 beforeEach(async () => {
-  await sql`delete from inventory_items`;
+  await sql`truncate inventory_items`;
 });
 
 afterAll(async () => {
-  await sql`drop table if exists inventory_items`;
-  await sql`drop type if exists inventory_unit`;
-  await sql`drop type if exists unit_dimension`;
-  await sql`drop table if exists ingredients`;
-  await sql`drop table if exists workspaces`;
-  await sql`drop table if exists users`;
   await sql.end();
 });
 

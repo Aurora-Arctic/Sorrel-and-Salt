@@ -36,9 +36,10 @@ no Neon connection and no host Node-version juggling.
       PGDATA during the image _build_, so `docker-entrypoint.sh` finds an
       initialised data directory and skips `/docker-entrypoint-initdb.d/`
       entirely. A Node-side one-shot is what the outcome actually costs.
-      Distinct from M1.27, which bakes migrations and the `standard` seed into
-      `sorrel_template` at image build time — that template is what the Vitest
-      workers clone, not what `app` connects to.
+      Distinct from the test harness's templates (M1.27): those clone
+      `sorrel_template` and run these same two npm scripts against the clone
+      at test-run setup (`tests/support/seeded-database.ts`), and are what
+      the Vitest workers and Playwright clone, not what `app` connects to.
     - **No compose profile**, unlike `workshop`/`studio`/`e2e`: a bare
       `make docker-up` has to reach it.
     - **`SEED_SCENARIO: ${SEED_SCENARIO:-minimal}`** — host environment or
@@ -96,8 +97,9 @@ no Neon connection and no host Node-version juggling.
       boot. The credentials the image really has (`sorrel`/`sorrel`) come from
       its own init script instead. `DATABASE_URL` on `app` is **not** inert as
       of Wave 1 — `src/db/connection.ts` throws when it is unset, and the
-      Better Auth route handlers query through that client. M1.27 adds schema
-      and seed data to the image; the credentials are already real.
+      Better Auth route handlers query through that client. The schema and
+      seed data come from `db-init` at container start, never from the image
+      (M1.27 decided against baking them in); the credentials are already real.
     - **Switching `image:`/`build:` never resets an existing named volume** — a
       stale `postgres_data` keeps serving whatever the previous image's init
       created. `make docker-rebuild` (`down -v`) is what gets a fresh one.

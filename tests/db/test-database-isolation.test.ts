@@ -29,11 +29,16 @@ describe('per-worker test database', () => {
     expect(inject('workerDatabases')).toContain(name);
   });
 
-  it('has no migrations table, since setup clones rather than migrates', async () => {
+  // M1.27: the clone is made from a template globalSetup migrated and seeded,
+  // so drizzle-kit's journal is in it. Until then this asserted the opposite —
+  // "no migrations table, since setup clones rather than migrates" — because
+  // sorrel_template was empty and every file built its own tables. Setup still
+  // clones; it is the template that is no longer empty.
+  it('has the migrations journal, since the template it was cloned from was migrated', async () => {
     const [{ exists }] = await db.execute<{ exists: boolean }>(
-      "select exists (select 1 from information_schema.tables where table_name = '__drizzle_migrations') as exists",
+      "select exists (select 1 from information_schema.tables where table_schema = 'drizzle' and table_name = '__drizzle_migrations') as exists",
     );
-    expect(exists).toBe(false);
+    expect(exists).toBe(true);
   });
 
   it('is a real, writable database distinct from a crashed run leftover', async () => {
