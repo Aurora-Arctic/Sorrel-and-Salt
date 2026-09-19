@@ -9,9 +9,10 @@
 
 /** @type {import('@ladle/react').UserConfig} */
 export default {
-  // One story file per component directory, beside index.tsx and
-  // index.test.tsx, imported the same way — that's where every component's
-  // stories live, and the M0.33 gate is written against that shape.
+  // One story file per component directory, beside index.tsx and imported
+  // the same way — that's where every component's stories live, and the M0.33
+  // gate is written against that shape. The component's test is not beside
+  // it: since MB.41 that lives at tests/components/<Name>/index.test.tsx.
   //
   // The second glob is for workshop-only pages that aren't components and the
   // app never imports — currently just the design-language reference

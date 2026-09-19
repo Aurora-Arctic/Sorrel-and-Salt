@@ -27,7 +27,7 @@ Start a new Gitflow hotfix branch off the latest `main`, asking what to call it 
    - `git fetch origin main`.
 
 6. **Create and switch to the new branch.**
-   - `git checkout -b hotfix/<slug> origin/main` — branches off the fetched remote ref directly, not a possibly-stale local `main`.
+   - `git checkout --no-track -b hotfix/<slug> origin/main` — branches off the fetched remote ref directly, not a possibly-stale local `main`. `--no-track` matters: without it the new branch’s upstream becomes `origin/main`, and a later bare `git push` then targets production instead of this branch (MB.13).
 
 7. **Mark the Asana task `In Progress`.**
    - Skip this step entirely if step 2 produced no task ID.

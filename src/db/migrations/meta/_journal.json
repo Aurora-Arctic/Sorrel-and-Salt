@@ -8,6 +8,125 @@
       "when": 1789006845902,
       "tag": "0000_enable-extensions",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789135993572,
+      "tag": "0001_lucky_centennial",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789150208931,
+      "tag": "0002_solid_marauders",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789150852144,
+      "tag": "0003_sweet_madame_masque",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789672562855,
+      "tag": "0004_black_slyde",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789689798865,
+      "tag": "0005_uneven_bloodstorm",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789691189815,
+      "tag": "0006_wandering_mockingbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789700950994,
+      "tag": "0007_even_wild_pack",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789702694621,
+      "tag": "0008_unknown_lyja",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789704593691,
+      "tag": "0009_amusing_ken_ellis",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789705163708,
+      "tag": "0010_broken_shiver_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1789705837554,
+      "tag": "0011_breezy_bastion",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789706628859,
+      "tag": "0012_cultured_ben_grimm",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1789707704447,
+      "tag": "0013_illegal_red_hulk",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1789708781610,
+      "tag": "0014_cooing_bug",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1789709459851,
+      "tag": "0015_wooden_zaran",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1789710931607,
+      "tag": "0016_updated-at-trigger",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1789772030503,
+      "tag": "0017_custom-spell-ingredients",
+      "breakpoints": true
     }
   ]
 }

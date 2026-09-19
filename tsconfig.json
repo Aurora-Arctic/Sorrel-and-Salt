@@ -23,22 +23,25 @@
       "@/*": ["./src/*"]
     }
   },
+  // tests/ is listed because `tsc` is the only thing that typechecks it:
+  // Vitest strips types rather than checking them, so an omission here would
+  // not fail anything — it would silently stop checking the suite, which is
+  // the state e2e/ is already in. The `@ts-expect-error` assertions in
+  // tests/db/repository.test.ts and tests/support/as-user.test.ts are only
+  // assertions while this line stands (MB.41).
   "include": [
     "next-env.d.ts",
     "./src/**/*",
+    "./tests/**/*",
     "./.next/types/**/*.ts",
     "./next.config.ts",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    ".next-e2e/types/**/*.ts",
+    ".next-e2e/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    // *.test.tsx imports `vitest` and `@testing-library/react`, neither
-    // installed until M1.7. ThemeToggle (M0.29) is the only component before
-    // then that ships a test file per the TDD convention — narrow and
-    // temporary; M1.7 removes this exclusion when it adds the real
-    // dependencies and wires up the runner.
-    "src/**/*.test.tsx",
     // *.stories.tsx pull @ladle/react's types, whose bundled app sources
     // (typings-for-build/**/*.tsx) don't survive this repo's `strict` on their
     // own and aren't reached by `skipLibCheck` because they ship as .tsx, not

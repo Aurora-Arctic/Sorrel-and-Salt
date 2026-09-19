@@ -29,7 +29,10 @@ name: Deploy
 #
 # `deploy` needs: [resolve-target, migrate] — migrate.yml (M1.4) applies
 # pending migrations to the same environment before `deploy` is allowed to
-# run, so a failed migration blocks the promotion instead of racing it.
+# run, so a failed migration blocks the promotion instead of racing it. It
+# also seeds the two reference vocabularies — DESIGN.md §6's categories (M4.3)
+# and §5's ingredient forms (M4.3a) — in that same job and only when the push
+# actually changed one of them; see the `seed-changed` job.
 
 on:
   push:
@@ -65,9 +68,10 @@ jobs:
       (github.event_name == 'pull_request' &&
         github.event.action != 'closed' &&
         startsWith(github.head_ref, 'hotfix/'))
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       environment: ${{ steps.target.outputs.environment }}
+      git_branch: ${{ steps.target.outputs.git_branch }}
       prod_flag: ${{ steps.target.outputs.prod_flag }}
       alias: ${{ steps.target.outputs.alias }}
     steps:
@@ -88,37 +92,103 @@ jobs:
             slug="${slug:0:56}"
             slug="${slug%-}"
             echo "environment=preview" >> "$GITHUB_OUTPUT"
+            echo "git_branch=$HEAD_REF" >> "$GITHUB_OUTPUT"
             echo "prod_flag=" >> "$GITHUB_OUTPUT"
             echo "alias=hotfix-${slug}.sorrelandsalt.com" >> "$GITHUB_OUTPUT"
           elif [ "$REF_NAME" = "main" ]; then
             echo "environment=production" >> "$GITHUB_OUTPUT"
+            echo "git_branch=$REF_NAME" >> "$GITHUB_OUTPUT"
             echo "prod_flag=--prod" >> "$GITHUB_OUTPUT"
             echo "alias=" >> "$GITHUB_OUTPUT"
           else
             echo "environment=preview" >> "$GITHUB_OUTPUT"
+            echo "git_branch=$REF_NAME" >> "$GITHUB_OUTPUT"
             echo "prod_flag=" >> "$GITHUB_OUTPUT"
             echo "alias=staging.sorrelandsalt.com" >> "$GITHUB_OUTPUT"
           fi
 
-  migrate:
+  # Did this push touch the category seed? The seed is reference data rather
+  # than schema, so it has no journal of its own to tell CI what is pending —
+  # this diff is that journal, and the answer is an input to `migrate`, which
+  # seeds in the same job it migrates in.
+  #
+  # No `if:` on the job, deliberately. `migrate` needs this output, and a
+  # dependency that skips skips its dependents — gating this on
+  # `github.event_name == 'push'` would take every hotfix preview deploy down
+  # with it. Non-push events answer "no" from inside the step instead.
+  seed-changed:
     needs: resolve-target
+    runs-on: ubuntu-26.04
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # Both ends of the comparison below have to be in the clone, and a
+          # push can carry more than one commit.
+          fetch-depth: 0
+
+      - name: Look for changes to the seed
+        id: diff
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          # Only a push has a `before` to diff against, and staging and
+          # production are the two databases the seed is meant to reach anyway
+          # — a hotfix preview runs on a disposable Neon branch.
+          if [ "$GITHUB_EVENT_NAME" != "push" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # A new branch, or a force-push past what the runner fetched, reports
+          # an all-zero `before`. Seed in that case rather than guess: the seed
+          # adds only what is missing, so the cost of a false positive is one
+          # extra `npm run` and the cost of a false negative is an empty
+          # vocabulary in production.
+          if [ -z "${BEFORE//0/}" ] || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            echo "::notice::No usable 'before' commit — seeding anyway."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git diff --name-only "$BEFORE" "$GITHUB_SHA" -- \
+            src/db/seed/categories.ts \
+            src/db/seed/forms.ts \
+            src/db/seed/bootstrap-admin.ts \
+            src/lib/slugify.ts \
+            scripts/db-seed.ts \
+            | grep -q .; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  migrate:
+    needs: [resolve-target, seed-changed]
     concurrency:
       # One migration at a time, full stop — never let two merges (staging
       # and main, or two rapid staging pushes) apply migrations concurrently.
+      # The seed rides inside this job, so it inherits the same lock rather
+      # than needing one of its own against it.
       group: migrate
       cancel-in-progress: false
     uses: ./.github/workflows/migrate.yml
     with:
       environment: ${{ needs.resolve-target.outputs.environment }}
+      git-branch: ${{ needs.resolve-target.outputs.git_branch }}
+      seed-reference: ${{ needs.seed-changed.outputs.changed == 'true' }}
     secrets: inherit
 
   deploy:
     needs: [resolve-target, migrate]
     # `success()` here because a custom `if:` on a job with `needs:`
     # overrides the implicit "needs all succeeded" check — without it, a
-    # failed migrate wouldn't actually block deploy.
+    # failed migrate wouldn't actually block deploy. A failed *seed* blocks it
+    # too, since the seed is a step inside that same job.
     if: success()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Bare runner, not the `testing` GHCR image the check workflows use: this
     # job needs the Vercel CLI and writes .vercel/output, neither of which the
     # test image is built for. Same call composite-actions-check.yml made.
@@ -144,7 +214,7 @@ jobs:
 
       - name: Set up Node
         if: steps.guard.outputs.enabled == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           # Match Docker/Dockerfile.node and local dev. Node 22 ships npm 10,
           # which can't reconcile the npm-11-generated package-lock.json for
@@ -160,15 +230,20 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         run: npm install --global vercel@59
 
-      - name: Start timer
-        id: start
-        if: steps.guard.outputs.enabled == 'true'
-        uses: ./.github/actions/timer-start
-
+      # --git-branch is load-bearing, not decoration: Vercel resolves a
+      # branch-scoped environment variable only when the pull names a branch,
+      # and the staging DATABASE_URL is exactly such a variable — the one
+      # thing keeping staging off the Neon integration's per-preview
+      # ephemeral branches (MB.27, and
+      # claude-docs/design-decisions/m1.1-neon-branch-strategy.md). Without it
+      # the pull still succeeds and the build simply talks to another
+      # database, so tests/guards/vercel-pull-git-branch.test.ts is what
+      # notices.
       - name: Pull Vercel environment
         if: steps.guard.outputs.enabled == 'true'
-        run: vercel pull --yes --environment=${{ needs.resolve-target.outputs.environment }} --token="$VERCEL_DEPLOY_TOKEN"
+        run: vercel pull --yes --environment=${{ needs.resolve-target.outputs.environment }} --git-branch="$GIT_BRANCH" --token="$VERCEL_DEPLOY_TOKEN"
         env:
+          GIT_BRANCH: ${{ needs.resolve-target.outputs.git_branch }}
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
       - name: Build
@@ -183,10 +258,26 @@ jobs:
         env:
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
           PROD_FLAG: ${{ needs.resolve-target.outputs.prod_flag }}
+          GIT_BRANCH: ${{ needs.resolve-target.outputs.git_branch }}
         run: |
+          # The --meta pair is the deploy-side half of MB.27's fix, and it is
+          # not optional here: the CLI infers a deployment's branch from the
+          # local checkout, and actions/checkout leaves a detached HEAD, so
+          # without it the deployment has no branch association at all. Branch
+          # association is what makes Vercel resolve branch-scoped Preview
+          # variables — so the pull's --git-branch fixes the *build's*
+          # DATABASE_URL and this fixes the *runtime's*, which is the one
+          # src/db/connection.ts actually reads. Both halves are required;
+          # either alone leaves staging on the integration's Preview-wide
+          # value. A production deploy uses Production settings regardless of
+          # this metadata, so main carries it harmlessly rather than needing a
+          # branch of its own here.
+          #
           # stdout is always the deployment URL; stderr carries build/progress
           # logs — keep them apart (Vercel's own CI example does this).
-          if vercel deploy --prebuilt $PROD_FLAG --token="$VERCEL_DEPLOY_TOKEN" \
+          if vercel deploy --prebuilt $PROD_FLAG \
+              --meta githubDeployment=1 --meta githubCommitRef="$GIT_BRANCH" \
+              --token="$VERCEL_DEPLOY_TOKEN" \
               > deploy-url.txt 2> deploy.log; then
             url="$(cat deploy-url.txt)"
             echo "url=$url" >> "$GITHUB_OUTPUT"
@@ -218,13 +309,6 @@ jobs:
             exit 1
           fi
 
-      - name: Compute duration
-        id: timer
-        if: always() && steps.guard.outputs.enabled == 'true'
-        uses: ./.github/actions/timer-elapsed
-        with:
-          start: ${{ steps.start.outputs.start }}
-
       - name: Write job summary
         if: always() && steps.guard.outputs.enabled == 'true'
         uses: ./.github/actions/job-summary
@@ -232,7 +316,6 @@ jobs:
           check-name: Deploy (${{ needs.resolve-target.outputs.environment }})
           outcome: ${{ steps.deploy.outcome }}
           log-file: deploy.log
-          duration: ${{ steps.timer.outputs.duration }}
           summary: ${{ steps.deploy.outputs.url && format('Deployed {0}', steps.deploy.outputs.url) || 'Deploy did not complete' }}
           details: "${{ steps.alias.outputs.url && format('Preview: {0}', steps.alias.outputs.url) || '' }}"
 
@@ -248,7 +331,6 @@ jobs:
           outcome: ${{ steps.deploy.outcome }}
           log-file: deploy.log
           success-mode: comment
-          duration: ${{ steps.timer.outputs.duration }}
           summary: ${{ steps.alias.outputs.url || steps.deploy.outputs.url || 'deploy failed' }}
 
   teardown:
@@ -258,7 +340,7 @@ jobs:
       github.event_name == 'pull_request' &&
       github.event.action == 'closed' &&
       startsWith(github.head_ref, 'hotfix/')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -277,7 +359,7 @@ jobs:
 
       - name: Set up Node
         if: steps.guard.outputs.enabled == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 26.6.0
 

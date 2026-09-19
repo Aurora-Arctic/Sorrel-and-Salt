@@ -1,7 +1,9 @@
-# Build context excludes for Docker/Dockerfile.node (context is the repo root —
-# see docker-compose.yaml, M0.12). Keeps the image slim and, by leaving the
-# host's platform-specific node_modules out, keeps the container's `npm ci`
-# result from being overwritten by `COPY . .`.
+# Build context excludes for Docker/Dockerfile.node and Docker/Dockerfile.e2e
+# (context is the repo root — see docker-compose.yaml, M0.12). Neither image
+# carries a source layer (MB.42) — only the manifests and, for `headed`, the
+# entrypoint script are ever COPY'd — so this file's job is keeping the
+# build context small: everything listed here is what `docker build` would
+# otherwise send to the daemon before finding out it copies none of it.
 
 # Dependencies — reinstalled inside the image
 node_modules

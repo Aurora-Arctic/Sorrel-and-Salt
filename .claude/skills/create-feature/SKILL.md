@@ -27,7 +27,7 @@ Start a new Gitflow feature branch off the latest `staging`, asking what to call
    - `git fetch origin staging`.
 
 6. **Create and switch to the new branch.**
-   - `git checkout -b feature/<slug> origin/staging` — branches off the fetched remote ref directly, not a possibly-stale local `staging`.
+   - `git checkout --no-track -b feature/<slug> origin/staging` — branches off the fetched remote ref directly, not a possibly-stale local `staging`. `--no-track` matters: without it the new branch’s upstream becomes `origin/staging`, and a later bare `git push` then targets the protected base branch instead of this one (MB.13).
 
 7. **Mark the Asana task `In Progress`.**
    - Skip this step entirely if step 2 produced no task ID.

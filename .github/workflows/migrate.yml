@@ -1,18 +1,37 @@
 name: Migrate
 
-# Reusable workflow that applies pending Drizzle migrations to a target
-# database ahead of a Vercel deploy. Called via workflow_call from
-# deploy.yml with a `needs:` dependency so `deploy` never promotes a build
-# against a schema its own migrations haven't reached yet — DESIGN.md §12,
-# "New migrate.yml" row.
+# Reusable workflow that prepares a target database ahead of a Vercel deploy:
+# it applies pending Drizzle migrations, and then — when `seed-reference`
+# says so — seeds DESIGN.md §6's category vocabulary and §5's ingredient form
+# vocabulary into the schema those migrations just created. Called via
+# workflow_call from deploy.yml with a
+# `needs:` dependency so `deploy` never promotes a build against a schema its
+# own migrations haven't reached yet — DESIGN.md §12, "New migrate.yml" row.
 #
-# `environment` matches deploy.yml's own resolved target: `production` for
-# a push to main, `preview` for a push to staging and for a hotfix -> main
-# PR. `vercel pull` resolves the right DATABASE_URL for each — the
+# The seed is a step here rather than a workflow of its own (M4.3). It needs
+# exactly what the migration needs and nothing else — a checkout, `npm ci`,
+# the Vercel CLI, and the same pulled `DATABASE_URL` — so a second job would
+# pay for all of that twice to run one `npm run`, and would need its own
+# concurrency lock against this one to avoid seeding a schema mid-migration.
+# Sharing the job makes the ordering structural instead. The two still report
+# separately: one job summary each, so a failed seed is not read as a failed
+# migration.
+#
+# `environment` and `git-branch` both match deploy.yml's own resolved
+# target: `production`/`main` for a push to main, `preview`/`staging` for a
+# push to staging, `preview`/`hotfix/<slug>` for a hotfix -> main PR.
+# `vercel pull` resolves the right DATABASE_URL for each — the
 # branch-scoped override for staging, the integration's per-deployment
 # ephemeral Neon branch for a hotfix preview — see
-# claude-docs/design-decisions/m1.1-neon-branch-strategy.md. Never
-# triggered directly, same as lint.yml/format.yml/etc.
+# claude-docs/design-decisions/m1.1-neon-branch-strategy.md.
+#
+# The branch is what makes that resolution happen at all (MB.27): a pull
+# without --git-branch gets the environment-wide value, so this workflow
+# would migrate whichever database the integration last injected while
+# deploy.yml served another. M1.1's "Cross-task impact" is the rule — the
+# two must resolve DATABASE_URL identically — and
+# tests/guards/vercel-pull-git-branch.test.ts holds them to it. Never
+# triggered directly, same as checks.yml.
 #
 # Production only (M1.6): before applying migrations, branch the `main`
 # Neon branch as `snapshot-<short sha>` — a known-good point the restore
@@ -29,13 +48,32 @@ on:
         description: Vercel environment to pull DATABASE_URL for (preview or production)
         required: true
         type: string
+      git-branch:
+        description: >-
+          Git branch the deploy targets, so `vercel pull` resolves the
+          branch-scoped environment variables rather than the environment-wide
+          ones. Required: a caller that cannot say which branch it is
+          migrating cannot be given the right DATABASE_URL, and guessing is
+          what MB.27 fixed.
+        required: true
+        type: string
+      seed-reference:
+        description: >-
+          Seed the two reference vocabularies after migrating — DESIGN.md §6's
+          categories and §5's ingredient forms. deploy.yml passes true only
+          when the push changed a seed's own files — both seeds are additive
+          and idempotent, so running them again would be harmless, but
+          "harmless" is not a reason to write to production on every merge.
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
 
 jobs:
   migrate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Bare runner, not the `testing` GHCR image the check workflows use:
     # this job needs the Vercel CLI, same call deploy.yml makes.
     env:
@@ -60,7 +98,7 @@ jobs:
 
       - name: Set up Node
         if: steps.guard.outputs.enabled == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           # Match Docker/Dockerfile.node, local dev, and deploy.yml.
           node-version: 26.6.0
@@ -74,15 +112,14 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         run: npm install --global vercel@59
 
-      - name: Start timer
-        id: start
-        if: steps.guard.outputs.enabled == 'true'
-        uses: ./.github/actions/timer-start
-
       - name: Pull Vercel environment
         if: steps.guard.outputs.enabled == 'true'
-        run: vercel pull --yes --environment=${{ inputs.environment }} --token="$VERCEL_DEPLOY_TOKEN"
+        run: vercel pull --yes --environment=${{ inputs.environment }} --git-branch="$GIT_BRANCH" --token="$VERCEL_DEPLOY_TOKEN"
         env:
+          # Quoted and passed through env rather than interpolated: a branch
+          # name may legally contain shell metacharacters, and a hotfix
+          # branch's name arrives from a pull request.
+          GIT_BRANCH: ${{ inputs.git-branch }}
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
       - name: Load DATABASE_URL from pulled environment
@@ -164,13 +201,6 @@ jobs:
           set -o pipefail
           npm run db:migrate 2>&1 | tee migrate.log
 
-      - name: Compute duration
-        id: timer
-        if: always() && steps.guard.outputs.enabled == 'true'
-        uses: ./.github/actions/timer-elapsed
-        with:
-          start: ${{ steps.start.outputs.start }}
-
       - name: Write job summary
         if: always() && steps.guard.outputs.enabled == 'true'
         uses: ./.github/actions/job-summary
@@ -178,5 +208,29 @@ jobs:
           check-name: Migrate (${{ inputs.environment }})
           outcome: ${{ steps.migrate.outcome }}
           log-file: migrate.log
-          duration: ${{ steps.timer.outputs.duration }}
           summary: ${{ steps.migrate.outcome == 'success' && 'Migrations applied' || 'Migration failed' }}
+
+      # M4.3, extended by M4.3a — after the migrations, because the tables they
+      # write into are the ones those create. It is how §6's category
+      # vocabulary and §5's form vocabulary reach staging and production at
+      # all: deploys are CI-only (CLAUDE.md) and there is no shell on either
+      # database, so reference data has to arrive with the deploy that needs
+      # it. One step rather than two: they share a gate, a log and a summary,
+      # and a form vocabulary seeded while the categories failed is not a state
+      # worth reporting separately.
+      - name: Seed the reference vocabularies
+        id: seed
+        if: steps.guard.outputs.enabled == 'true' && inputs.seed-reference
+        run: |
+          set -o pipefail
+          npm run db:seed:categories 2>&1 | tee seed.log
+          npm run db:seed:forms 2>&1 | tee -a seed.log
+
+      - name: Write seed job summary
+        if: always() && steps.guard.outputs.enabled == 'true' && inputs.seed-reference
+        uses: ./.github/actions/job-summary
+        with:
+          check-name: Seed reference data (${{ inputs.environment }})
+          outcome: ${{ steps.seed.outcome }}
+          log-file: seed.log
+          summary: ${{ steps.seed.outcome == 'success' && 'Category and form vocabularies seeded' || 'Seed failed' }}

@@ -9,15 +9,15 @@ enough to start a task without opening anything else. They are meant to be
 self-sufficient: if you need a transcript or an archived record to understand
 how the system works today, that is a defect in the summary, not a research step.
 
-| Path                                | What it holds                                                                                                                            |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `DESIGN.md`                         | The specification. The source of truth for behaviour.                                                                                    |
-| `TASKS.md`, `TASKS.csv`             | The frozen original work breakdown. The live list of what to do is the Asana board (see [`CLAUDE.md`](../CLAUDE.md)).                    |
-| `<subsystem>.md`                    | **A summary per subsystem** — the current shape of one area, kept short. States decisions, not how they were reached.                    |
-| `components/<name>.md`              | **One doc per standalone component.** Required by several tasks; a component that ships without its doc is an incomplete task.           |
-| `transcripts/<subsystem>.md`        | **An append-only transcript** — how a subsystem reached its shape. Newest entry last, never rewritten. Current milestone only.           |
-| `design-decisions/<mN.n>-<slug>.md` | A decision record — what was decided, why, and what it rules out. Current milestone only.                                                |
-| `archive/<mN>/`                     | **Write-once.** Closed milestones' transcripts and decision records, plus text cut from a live doc. See [`archive/`](archive/README.md). |
+| Path                                | What it holds                                                                                                                                               |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DESIGN.md`                         | The specification. The source of truth for behaviour.                                                                                                       |
+| `TASKS.md`                          | The work breakdown and the reasoning behind it, corrected in place. The live list of what to do is the Asana board (see [`CLAUDE.md`](../CLAUDE.md)).       |
+| `<subsystem>.md`                    | **A summary per subsystem** — the current shape of one area, kept short. States decisions, not how they were reached.                                       |
+| `components/<name>.md`              | **One doc per standalone component.** Required by several tasks; a component that ships without its doc is an incomplete task.                              |
+| `transcripts/<subsystem>.md`        | **Frozen as of MB.31** — how a subsystem reached its shape. No longer appended to; a PR body is the record now.                                             |
+| `design-decisions/<mN.n>-<slug>.md` | A decision record — what was decided, why, and what it rules out. Live; superseded in place, never archived mid-project.                                    |
+| `archive/m0/`, `archive/wave-<n>/`  | **Frozen.** M0's and waves 1–2's transcripts and decision records, plus text cut from a live doc. Nothing new goes in. See [`archive/`](archive/README.md). |
 
 ## What lives where, and what to read
 
@@ -25,13 +25,14 @@ how the system works today, that is a defect in the summary, not a research step
   carries the decision and the constraint, not the story of how they were
   reached. Where a constraint would look arbitrary without a reason, give the
   reason in a clause — not a link out.
-- A **transcript** is written as work lands: one entry per milestone or session,
-  appended, never edited after the fact.
+- A **transcript** was written as work landed, one entry per task or session.
+  MB.31 stopped that: the five that exist are frozen, and a PR body now carries
+  what one would have said.
 - A **decision record** captures the reasoning behind one contested choice so it
   does not get re-argued.
-- At the end of a milestone, its transcripts and decision records **move** into
-  `archive/<mN>/`, and the compression pass trims the summaries down to what is
-  still true. The live directories then start empty for the next milestone.
+- A summary is corrected in the PR that makes it wrong (MB.31) — there is no
+  scheduled compression pass. `MW.15`, the v1 close-out, is the one remaining
+  pass over the whole set.
 
 ## `archive/` is written, not read
 
@@ -43,17 +44,10 @@ in the way of the docs every session opens first. Treat it as out of context:
   they were written and are allowed to be wrong. A live doc that sends you into
   `archive/` to understand the system is a bug in the live doc.
 - **Do not edit it to correct something.** Fix the live doc instead.
-- **Empty it of anything still true before you fill it.** Moving a transcript or
-  decision record in is the last step of a compression pass, not the first: every
-  settled decision and binding constraint it holds must already be written into a
-  live summary, `CLAUDE.md`, or a component doc. Verify that a line at a time —
-  the ones that get lost are the constraints stated once, in passing, years of
-  context ago.
-- **Check the move mechanically**, by diffing the live doc against `HEAD`.
-  Normalise whitespace first: Prettier re-pads a whole Markdown table column when
-  one cell changes, and a naive diff reports every row of it as a removal.
-- A second pass over a milestone whose filenames are already taken writes a
-  dated subdirectory rather than editing what is already there.
+- **Nothing new goes in.** MB.31 retired the compression pass that filled it, so
+  the archive is closed at what waves 1–2 put there. Text that leaves a live doc
+  now either moves to another live doc because it still binds, or goes, and git
+  history is the record.
 
 ## Naming
 
