@@ -4,15 +4,9 @@ import { makeSpell, spellColumns } from './spell';
 
 const MUGWORT = '44444444-4444-4444-4444-444444444444';
 
-// M1.25 — a jar, its assigned categories, and the stack inside it.
-//
-// The layers carry this factory's real work, for the same reason the
-// nomenclature pair carries the ingredient's: `spell_ingredients` is governed
-// by `num_nonnulls(ingredient_id, name) = 1` and by
-// `spell_ingredients_form_only_on_custom`, so a layer that merged an
-// `ingredientId` into a default naming a custom ingredient would break both at
-// once — and the test that used it would fail for a reason having nothing to
-// do with what it was testing.
+// The layers carry this factory's real work: `num_nonnulls(ingredient_id,
+// name) = 1` and `spell_ingredients_form_only_on_custom` would both reject a
+// merged `ingredientId` beside the default's custom name and form.
 
 describe('makeSpell', () => {
   it('builds a whole spell with no arguments', () => {
@@ -22,8 +16,7 @@ describe('makeSpell', () => {
     expect(spell.workspaceId).toBe(WORKSPACE_W_ID);
   });
 
-  // M10.20: a spell is a draft until something says otherwise, and the fixture
-  // is not something saying otherwise.
+  // A draft until something says otherwise, and the fixture is not that.
   it('opens as a draft', () => {
     expect(makeSpell().status).toBe('draft');
   });
@@ -40,9 +33,7 @@ describe('makeSpell', () => {
   });
 
   describe('its layers', () => {
-    // A layer that pointed at an ingredient would need that ingredient to
-    // exist first; one that names itself needs nothing, so `makeSpell()` is
-    // insertable on its own.
+    // A custom layer needs no ingredient inserted first.
     it('stacks one custom layer by default', () => {
       const [layer, ...rest] = makeSpell().layers;
 
@@ -52,9 +43,7 @@ describe('makeSpell', () => {
       expect(layer.form).toBe('ash');
     });
 
-    // Story 51: the sequence is stored rather than inferred, and it is the
-    // position in the array so the two cannot disagree — the seed's own rule
-    // (src/db/seed/demo.ts), and 1-based as the seed writes it.
+    // The position in the array, 1-based as the seed writes it.
     it('numbers each layer by its position in the stack', () => {
       const spell = makeSpell({ layers: [{}, {}, {}] });
 
@@ -62,8 +51,7 @@ describe('makeSpell', () => {
     });
 
     // `spell_ingredients_spell_id_custom_name_unique` folds Salt onto salt
-    // within one jar, so repeating the default name would make a three-layer
-    // fixture uninsertable.
+    // within one jar.
     it('gives each defaulted layer a name of its own', () => {
       const names = makeSpell({ layers: [{}, {}, {}] }).layers.map((layer) => layer.name);
 
@@ -78,10 +66,7 @@ describe('makeSpell', () => {
       expect(layer.unit).toBe('pinch');
     });
 
-    // The acceptance criterion's counterpart on this table: naming an
-    // ingredient makes the layer a linked one, and a linked layer carries
-    // neither a name of its own nor a form — `num_nonnulls(ingredient_id,
-    // name) = 1` and `spell_ingredients_form_only_on_custom`.
+    // A linked layer carries neither a name nor a form of its own.
     it('turns a layer that names an ingredient into a linked one', () => {
       const [layer] = makeSpell({ layers: [{ ingredientId: MUGWORT }] }).layers;
 
@@ -119,8 +104,7 @@ describe('spellColumns', () => {
     expect(columns.seal_wax_color).toBeNull();
   });
 
-  // Both live in other tables: the assigned categories in `spell_categories`,
-  // the stack in `spell_ingredients`.
+  // Both are other tables' rows.
   it('leaves out the categories and the layers', () => {
     const columns = spellColumns(makeSpell());
 

@@ -12,8 +12,8 @@ import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 const STAMP_COLUMNS = ['created_at', 'created_by', 'updated_at', 'updated_by'];
 const DELETE_COLUMNS = ['deleted_at', 'deleted_by'];
 
-// DESIGN.md §5's column list, transcribed. `name` and `form` are MB.40's: a
-// custom, one-off ingredient carries them instead of an `ingredient_id`.
+// §5's columns; `name` and `form` are a custom one-off layer's, in place of an
+// `ingredient_id` (MB.40).
 const OWN_COLUMNS = [
   'spell_id',
   'ingredient_id',
@@ -25,9 +25,9 @@ const OWN_COLUMNS = [
   'note',
 ];
 
-// MB.40 moved the primary key onto the layer. The pair `(spell_id,
-// ingredient_id)` no longer exists on every row, so it cannot be the key; the
-// guarantee it gave — one ingredient per jar — is the partial index's now.
+// The key is the layer: the `(spell_id, ingredient_id)` pair is absent on a
+// custom row, so one-ingredient-per-jar is the partial index's now —
+// claude-docs/db.md, "Layer order is the identity, and what that costs the reorder".
 const PRIMARY_KEY = 'spell_ingredients_spell_id_layer_order_pk';
 const INGREDIENT_INDEX = 'spell_ingredients_spell_id_ingredient_id_unique';
 const CUSTOM_NAME_INDEX = 'spell_ingredients_spell_id_custom_name_unique';
@@ -63,10 +63,7 @@ describe('spell_ingredients schema', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...STAMP_COLUMNS].sort());
   });
 
-  // MB.34: the four stamps, not the six. `created_by` still answers who put
-  // this ingredient in this jar, which is story 13's question; what goes is the
-  // tombstone, because pulling an ingredient back out of a spell leaves no row.
-  // MB.40 does not change that: a custom row carries content, but content
+  // Four stamps and no tombstone (MB.34). A custom row's content is
   // addressable only through its spell, and nothing in v1 reads a removed one.
   it('spreads the four audit stamps, each required', () => {
     for (const column of STAMP_COLUMNS) {
@@ -81,9 +78,7 @@ describe('spell_ingredients schema', () => {
     }
   });
 
-  // The identity of a row is the layer it sits at. Not a surrogate id, which
-  // would say nothing about the jar; not the `(spell_id, ingredient_id)` pair,
-  // which a custom row does not have.
+  // Not a surrogate id, which says nothing about the jar; not the pair, absent on a custom row.
   it('has no surrogate id, keying on the layer instead', () => {
     expect(byName.id).toBeUndefined();
 
@@ -96,26 +91,21 @@ describe('spell_ingredients schema', () => {
   it('requires the spell and the layer, and makes the ingredient optional', () => {
     expect(byName.spell_id.notNull).toBe(true);
     expect(byName.layer_order.notNull).toBe(true);
-    // Nullable, because a custom row has no ingredient to point at. The CHECK
-    // below is what stops a row leaving both halves empty.
+    // Nullable because a custom row has no ingredient; the CHECK stops both halves being empty.
     expect(byName.ingredient_id.notNull).toBe(false);
     expect(byName.name.notNull).toBe(false);
     expect(byName.form.notNull).toBe(false);
   });
 
-  // A measurement may be missing without the row being meaningless — "a pinch
-  // of salt" names no number, and a draft is saved before it is finished. The
-  // same call §5 makes on `inventory_items.quantityOnHand`, for the same
-  // reason: zero is a quantity, and absence is not.
+  // "A pinch of salt" names no number, and a draft is saved unfinished; zero
+  // is a quantity and absence is not.
   it('leaves the measurement and the note nullable', () => {
     for (const column of ['quantity', 'unit', 'note']) {
       expect(byName[column].notNull).toBe(false);
     }
   });
 
-  // The acceptance criterion, as a property of the schema rather than of a
-  // comment: the join points at the ingredient, so a spell is a record of what
-  // was used and survives the stock row for it being thrown out (M10.21).
+  // The join points at the ingredient, so a spell survives its stock row being thrown out.
   it('points at the ingredient, never at the inventory item', () => {
     expect(foreignKeyByColumn.ingredient_id.foreignTable).toBe(ingredients);
     expect(foreignKeyByColumn.ingredient_id.foreignColumnName).toBe('id');
@@ -137,12 +127,9 @@ describe('spell_ingredients schema', () => {
     expect(foreignKeyByColumn.deleted_by).toBeUndefined();
   });
 
-  // Two partial unique indexes, one per kind of row. Both are partial, and
-  // neither predicate is rule 4's `deleted_at is null` — there is still no
-  // tombstone on this table to dodge. The predicate is the discriminator: an
-  // index over linked rows and an index over custom rows, each unique within
-  // its own kind, because a linked row has no name to collide on and a custom
-  // row has no ingredient id to.
+  // Two partial unique indexes whose predicate is the discriminator, not rule
+  // 4's `deleted_at`: one over linked rows, one over custom rows, each unique
+  // within its own kind.
   it('declares two partial unique indexes: one ingredient per jar, one custom name per jar', () => {
     expect(Object.keys(indexByName).sort()).toEqual([INGREDIENT_INDEX, CUSTOM_NAME_INDEX].sort());
 
@@ -157,9 +144,8 @@ describe('spell_ingredients schema', () => {
       ),
     ).toEqual(['spell_id', 'ingredient_id']);
 
-    // `(spell_id, lower(name))` — the second column is an expression, so only
-    // the leading column has a name to read here; the Postgres half checks
-    // the expression itself.
+    // The second column is an expression, so only the leading one has a name
+    // here; the Postgres half checks the expression itself.
     const customColumns = indexByName[CUSTOM_NAME_INDEX].config.columns;
     expect(customColumns).toHaveLength(2);
     expect((customColumns[0] as { name: string }).name).toBe('spell_id');
@@ -169,33 +155,23 @@ describe('spell_ingredients schema', () => {
     expect(checks.map((check) => check.name).sort()).toEqual(CHECKS);
   });
 
-  // One vocabulary, one Postgres type. M9.2 declared `inventory_unit` from
-  // `src/lib/units.ts`, and a spell measuring in tablespoons means the same
-  // tablespoon a jar is measured in — a second enum would be the drift that
-  // module exists to prevent.
+  // One vocabulary, one Postgres type: a second enum is the drift
+  // `src/lib/units.ts` exists to prevent.
   it('measures in M9.2’s unit enum rather than a second copy of it', () => {
     expect(byName.unit.enumValues).toEqual([...UNITS]);
     expect(byName.unit.getSQLType()).toBe(inventoryUnit.enumName);
   });
 });
 
-// The behaviour half, against the real table: a clone carrying every migration
-// — 0014 creates the table, 0017 reshapes it — and the `standard` seed,
-// re-cloned before this file runs (tests/support/db-setup.ts). The author and
-// the workspace are the seed's — the real `users` and `workspaces` demand NOT
-// NULL names, slugs and audit stamps.
 const AUTHOR = FIXTURE_USERS.A.id;
 const COVEN = WORKSPACE_W_ID;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
-// Two of the seeded compendium's entries, read back by identity in
-// `beforeAll` because the seed generates their ids.
 let MUGWORT: string;
 let ROSEMARY: string;
-// A stock row's own id. The row is this file's, written against a third
-// compendium entry, and its id exists in `inventory_items` and nowhere else —
-// which is what makes it a probe for which table the foreign key points at.
+// A stock row's own id, in `inventory_items` and nowhere else: a probe for
+// which table the foreign key points at.
 let STOCK_ONLY: string;
 let hearthGuard: string;
 let otherSpell: string;
@@ -272,9 +248,7 @@ beforeAll(async () => {
   MUGWORT = await compendiumIdOf('Artemisia vulgaris');
   ROSEMARY = await compendiumIdOf('Salvia rosmarinus');
 
-  // `standard` seeds no stock, so the probe row is written here: the real
-  // table wants a workspace and an ingredient, and neither may be one the
-  // tests below lay in a jar, or "holds no stock of" would stop being true.
+  // `standard` seeds no stock; the probe's ingredient must be one no test below lays in a jar.
   const [stock] = await sql`
     insert into inventory_items (workspace_id, ingredient_id, created_by, updated_by)
     values (${COVEN}, ${await compendiumIdOf('Laurus nobilis')}, ${AUTHOR}, ${AUTHOR})
@@ -283,9 +257,7 @@ beforeAll(async () => {
   STOCK_ONLY = stock.id as string;
 });
 
-// `truncate … cascade` rather than two deletes: `spells` is the parent of this
-// table and of `spell_categories`, and the cascade empties all three at once
-// before the two jars are written fresh for each test.
+// `spells` parents this table and `spell_categories`; the cascade empties all three.
 beforeEach(async () => {
   await sql`truncate spells cascade`;
 
@@ -320,8 +292,7 @@ describe('spell_ingredients table', () => {
       where spell_id = ${hearthGuard}
     `;
 
-    // `numeric`, not a float — M9.5 converts against these, and 0.125 has to
-    // come back as 0.125 rather than as something near it.
+    // `numeric`, not a float: 0.125 comes back as 0.125.
     expect(row.quantity).toBe('0.125');
     expect(row.unit).toBe('tsp');
     expect(row.layer_order).toBe(3);
@@ -339,10 +310,8 @@ describe('spell_ingredients table', () => {
     expect(row.unit).toBeNull();
   });
 
-  // MB.40, story 57: a layer is either an ingredient the workspace knows or a
-  // name written for this one jar — never both, never neither. The CHECK is
-  // DESIGN.md §14's "nullable FKs plus num_nonnulls" idiom, and it is what
-  // makes `ingredient_id` safe to leave nullable.
+  // Story 57: a layer is an ingredient or a custom name, never both or neither
+  // — §14's "nullable FKs plus num_nonnulls" idiom.
   describe('a layer names an ingredient or a custom name, never both or neither', () => {
     it('stores a custom ingredient by name and form, with no ingredient row', async () => {
       await custom('Garden dust', { form: 'powder' });
@@ -375,11 +344,9 @@ describe('spell_ingredients table', () => {
       expect(error.constraint_name).toBe(CHECK_INGREDIENT_OR_NAME);
     });
 
-    // `form` beside an ingredient id would be a second copy of
-    // `ingredients.form`, which is half of that ingredient's identity — the
-    // drift `canonical_key` exists to prevent. The positive case above ("with
-    // no ingredient row") is why this refusal could have succeeded: the same
-    // `form` is accepted the moment `ingredient_id` is null.
+    // `form` beside an ingredient id would duplicate half that ingredient's
+    // identity. The positive case above is why this refusal could have
+    // succeeded: the same `form` is accepted once `ingredient_id` is null.
     it('refuses a form beside an ingredient id', async () => {
       const error = await failureOf(layer({ form: 'powder' }));
 
@@ -387,8 +354,7 @@ describe('spell_ingredients table', () => {
       expect(error.constraint_name).toBe(CHECK_FORM_ONLY_ON_CUSTOM);
     });
 
-    // A blank name would satisfy `num_nonnulls` and name nothing — the
-    // `ingredients_form_not_blank` idiom, applied to both text columns.
+    // A blank name satisfies `num_nonnulls` and names nothing.
     it('refuses a blank custom name', async () => {
       const error = await failureOf(custom('   '));
 
@@ -434,8 +400,7 @@ describe('spell_ingredients table', () => {
       expect(error.constraint_name).toBe(PRIMARY_KEY);
     });
 
-    // Why those refusals could have succeeded: the key leads on `spell_id`, so
-    // the layering of one jar says nothing about the layering of another.
+    // Why those refusals could have succeeded: the key leads on `spell_id`.
     it('lets two spells each have a first layer', async () => {
       await layer();
 
@@ -471,17 +436,14 @@ describe('spell_ingredients table', () => {
         `,
       );
 
-      // 23502 is not_null_violation. A primary key column is NOT NULL by
-      // construction, so an unordered row has nowhere to sit.
+      // 23502: a primary key column is NOT NULL by construction.
       expect(error.code).toBe('23502');
       expect(error.column_name).toBe('layer_order');
     });
 
-    // The key is checked per row, not at end of statement, so M10.16's
-    // reorder cannot be a single `set layer_order = layer_order + 1` sweep even
-    // though the final state is conflict-free. Recorded here as the shape the
-    // reorder has to take — rewrite the jar's rows, which a hard-deleted table
-    // makes an ordinary delete-and-insert.
+    // The key is checked per row, not at end of statement, so a reorder cannot
+    // be one `layer_order + 1` sweep even though the final state is
+    // conflict-free; it rewrites the jar's rows.
     it('refuses a shift that collides mid-statement, so a reorder rewrites', async () => {
       await layer({ layerOrder: 1 });
       await layer({ ingredientId: ROSEMARY, layerOrder: 2 });
@@ -503,11 +465,9 @@ describe('spell_ingredients table', () => {
     });
   });
 
-  // What the old primary key used to guarantee, now held by a partial index
-  // over the linked rows — and its mirror over the custom rows, in the shape of
-  // `ingredients_workspace_label_unique`: inside one jar an ambiguous label is
-  // a mistake, not a distinction. An ingredient wanted at two depths is one
-  // row with a note, not two rows competing to describe the same thing.
+  // The old primary key's guarantee, now a partial index over linked rows and
+  // its mirror over custom rows: inside one jar an ambiguous label is a
+  // mistake, not a distinction.
   describe('one ingredient per jar, one custom name per jar', () => {
     it('refuses the same ingredient twice in one spell', async () => {
       await layer();
@@ -518,8 +478,7 @@ describe('spell_ingredients table', () => {
       expect(error.constraint_name).toBe(INGREDIENT_INDEX);
     });
 
-    // Why the refusal above could have succeeded: the pair is what is unique,
-    // not either half of it.
+    // Why the refusal above could have succeeded: the pair is unique, not either half.
     it('lets one spell hold two different ingredients', async () => {
       await layer();
 
@@ -562,9 +521,9 @@ describe('spell_ingredients table', () => {
       expect(error.constraint_name).toBe(INGREDIENT_FK);
     });
 
-    // Why that refusal could have succeeded: the very same insert against an
-    // id that *is* an ingredient is accepted. Point the key at
-    // `inventory_items` instead and this pair swaps which one reddens.
+    // Why that refusal could have succeeded: the same insert against a real
+    // ingredient is accepted. Point the key at `inventory_items` and this pair
+    // swaps which one reddens.
     it('accepts an ingredient the workspace holds no stock of', async () => {
       const held = await sql`select id from inventory_items where id = ${MUGWORT}`;
       expect(held).toEqual([]);
@@ -616,9 +575,7 @@ describe('spell_ingredients table', () => {
     });
   });
 
-  // MB.34: an ingredient pulled out of a jar leaves no row, and re-adding it is
-  // an ordinary insert rather than a resurrection. Nothing in v1 reads a
-  // removed layer — there is no restore UI and the trash view is v2.
+  // MB.34: pulled out leaves no row, and re-adding is an ordinary insert.
   describe('removal is a hard delete', () => {
     it('leaves no row behind', async () => {
       await layer();
@@ -642,8 +599,7 @@ describe('spell_ingredients table', () => {
       await expect(layer()).resolves.toBeUndefined();
     });
 
-    // A custom row has no ingredient id to be addressed by; the layer is its
-    // address, which is the primary key doing its job.
+    // A custom row's address is its layer.
     it('removes a custom row by its layer, and lets the name be written again', async () => {
       await custom('Garden dust');
 
@@ -671,8 +627,7 @@ describe('spell_ingredients table', () => {
     );
   });
 
-  // The predicates, read back from the catalogue: each index covers exactly
-  // one kind of row, and the custom-name one folds case.
+  // Read back from the catalogue: each index covers one kind of row, and the custom one folds case.
   it('partitions the indexes by kind of row', async () => {
     const rows = await sql`
       select indexname, indexdef from pg_indexes

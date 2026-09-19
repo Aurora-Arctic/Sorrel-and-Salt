@@ -6,10 +6,8 @@ import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import { workspaceInvitations } from '@/db/schema/workspace-invitations';
 import { workspaces } from '@/db/schema/workspaces';
 
-// The full six, not MB.34's four: an invitation is a record of something an
-// owner did, not a link between two rows, so withdrawing one leaves a
-// tombstone. The tombstone is also what makes the token-hash index below
-// partial rather than plain.
+// The full six: an invitation is a record of an owner's act, not a link, so
+// withdrawing one leaves a tombstone and the hash index below is partial.
 const AUDIT_COLUMNS = [
   'created_at',
   'created_by',
@@ -52,10 +50,8 @@ describe('workspace_invitations schema', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
 
-  // The acceptance criterion stated as a property of the table rather than of
-  // one column: pinning "the only column whose name mentions a token is the
-  // hash" is what a later `token`/`plaintext_token`/`invite_token` column
-  // reddens. Story 4's whole point is that a leaked row cannot be redeemed.
+  // As a property of the table: a later `token`/`plaintext_token` column
+  // reddens this. A leaked row cannot be redeemed (story 4).
   it('holds the token only as a hash', () => {
     const tokenish = Object.keys(byName).filter((name) => name.includes('token'));
 
@@ -68,8 +64,7 @@ describe('workspace_invitations schema', () => {
     }
   });
 
-  // The three lifecycle columns are null on a pending invitation — that is the
-  // state M7.7 reads to tell "expired" from "revoked" from "already used".
+  // Null on a pending invitation: the state that tells expired from revoked from used.
   it('leaves acceptance and revocation nullable', () => {
     for (const column of ['accepted_at', 'accepted_by', 'revoked_at']) {
       expect(byName[column].notNull).toBe(false);
@@ -122,11 +117,7 @@ describe('workspace_invitations schema', () => {
   });
 });
 
-// The behaviour half, against the real table: a clone carrying every migration
-// and the `standard` seed, re-cloned before this file runs
-// (tests/support/db-setup.ts). The owner, the invitee and the coven are the
-// seed's — the real `users` and `workspaces` demand NOT NULL names, slugs and
-// audit stamps. A owns W, and B is the one who accepts.
+// A owns W; B is the one who accepts.
 const OWNER = FIXTURE_USERS.A.id;
 const INVITEE = FIXTURE_USERS.B.id;
 const COVEN = WORKSPACE_W_ID;
@@ -134,9 +125,8 @@ const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
 
-// A hash is what the column holds, so the fixtures are hashes — 64 hex
-// characters, the shape M7.2's sha-256 of a `crypto.randomBytes` token will
-// have. Nothing here generates a token: that service is M7.2's task.
+// 64 hex characters, the shape of a sha-256 of a `crypto.randomBytes` token;
+// nothing here generates one.
 const HASH_A = 'a'.repeat(64);
 const HASH_B = 'b'.repeat(64);
 
@@ -173,9 +163,6 @@ beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
 });
 
-// Nothing seeds an invitation, so the table is already empty; truncating
-// anyway is what keeps each test starting from nothing rather than from the
-// last one.
 beforeEach(async () => {
   await sql`truncate workspace_invitations`;
 });
@@ -191,9 +178,7 @@ describe('workspace_invitations table', () => {
     );
   });
 
-  // CLAUDE.md's invitation invariant, asserted against the shipped DDL rather
-  // than the Drizzle table object: only the hash is stored, so a dumped row is
-  // not a credential.
+  // Against the shipped DDL rather than the Drizzle object: a dumped row is not a credential.
   it('has no column that could hold a plaintext token', async () => {
     const stored = await columnNames('workspace_invitations');
 
@@ -204,17 +189,14 @@ describe('workspace_invitations table', () => {
     it('rejects an invitation with role owner', async () => {
       const error = await failureOf(invite('owner'));
 
-      // 23514 is check_violation, named: proof the insert reached this
-      // constraint rather than tripping some other one first.
+      // 23514 is check_violation, named: this constraint refused, not something earlier.
       expect(error.code).toBe('23514');
       expect(error.constraint_name).toBe(ROLE_CHECK);
     });
 
-    // Why the rejection above could have succeeded: the row is otherwise
-    // well-formed and the enum itself admits `owner` (workspace_members
-    // stores it). Drop the CHECK and these two stay green while the one above
-    // reddens — which is what makes it a test of the constraint rather than of
-    // the enum, the FKs, or a typo in the fixture.
+    // Why the rejection above could have succeeded: the row is well-formed and
+    // the enum admits `owner`. Drop the CHECK and these stay green while the
+    // one above reddens.
     it('accepts viewer', async () => {
       await expect(invite('viewer')).resolves.toBeDefined();
     });
@@ -226,8 +208,7 @@ describe('workspace_invitations table', () => {
     it('rejects a role no workspace role names at all', async () => {
       const error = await failureOf(invite('admin'));
 
-      // 22P02 is invalid_text_representation — the enum refusing the cast,
-      // before the CHECK is ever consulted.
+      // 22P02 is invalid_text_representation: the enum refusing the cast before the CHECK.
       expect(error.code).toBe('22P02');
     });
   });
@@ -242,10 +223,8 @@ describe('workspace_invitations table', () => {
       `;
 
       expect(row.expires_at).toBeInstanceOf(Date);
-      // Seconds rather than a parsed interval: the driver renders an interval
-      // as its own shape, and the assertion worth making is "seven days from
-      // the insert", not "the string 7 days". A second of slack covers the gap
-      // between the insert's `now()` and this statement's.
+      // Seconds rather than a parsed interval, which the driver renders as its
+      // own shape; a second of slack covers the gap between the two `now()`s.
       expect(Number(row.remaining)).toBeCloseTo(7 * 24 * 60 * 60, -1);
     });
 
@@ -295,8 +274,7 @@ describe('workspace_invitations table', () => {
 
       const error = await failureOf(invite('viewer', { email: 'ash@example.com' }));
 
-      // 23505 is unique_violation. One hash must resolve to one invitation:
-      // M7.5 redeems what it finds, and two rows would make that a coin toss.
+      // 23505: one hash must resolve to one invitation, or redeeming is a coin toss.
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(TOKEN_HASH_INDEX);
     });
@@ -307,9 +285,8 @@ describe('workspace_invitations table', () => {
       await expect(invite('member', { tokenHash: HASH_B })).resolves.toBeDefined();
     });
 
-    // Rule 4's partial predicate, exercised end to end. The reservation
-    // argument is weaker here than on a slug — nothing re-proposes a random
-    // hash — but the rule is absolute and the predicate costs nothing.
+    // Rule 4 end to end; weaker here than on a slug, but the rule is absolute
+    // and the predicate costs nothing.
     it('stops a soft-deleted row from reserving its hash', async () => {
       const id = await invite('member');
       await sql`
@@ -362,8 +339,7 @@ describe('workspace_invitations table', () => {
       `;
       expect(row.accepted_by).toBe(INVITEE);
       expect(row.accepted_at).toBeInstanceOf(Date);
-      // Revocation and acceptance are separate states, which is what lets M7.7
-      // report one reason rather than a single 'invalid link'.
+      // Revocation and acceptance are separate states, so one reason can be reported.
       expect(row.revoked_at).toBeNull();
     });
   });

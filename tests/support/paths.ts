@@ -1,13 +1,8 @@
 import { join, resolve } from 'node:path';
 
-// MB.41 — every path a test reads from disk, anchored once. The `../` chain is
-// counted here and nowhere else: a test names what it wants (`MIGRATIONS_DIR`,
-// `fromRoot('…')`) rather than how far away it is.
-//
-// `import.meta.dirname` rather than `new URL(…, import.meta.url)` because the
-// `unit` project runs under jsdom, where `import.meta.url` resolves against the
-// mocked browser `location` instead of a `file://` URL (claude-docs/testing.md).
-// `dirname` is a real path in both projects, so one helper serves both.
+// Every path a test reads from disk, anchored once. `import.meta.dirname`
+// rather than `import.meta.url`: under jsdom the URL resolves against the
+// mocked browser `location`, not `file://`; `dirname` is real in both projects.
 export const REPO_ROOT = resolve(import.meta.dirname, '../..');
 
 /** A path inside the repo, named from the root rather than from the caller. */
@@ -15,8 +10,5 @@ export function fromRoot(...segments: string[]): string {
   return join(REPO_ROOT, ...segments);
 }
 
-/**
- * Drizzle's generated SQL. Read by every schema test, which applies the whole
- * directory in filename order to build the shape it then asserts against.
- */
+/** Drizzle's generated SQL, for the tests that read a migration's text. */
 export const MIGRATIONS_DIR = fromRoot('src/db/migrations');

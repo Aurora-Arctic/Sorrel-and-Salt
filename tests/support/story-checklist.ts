@@ -1,14 +1,9 @@
 import { V1_STORIES, parseStoryHeading } from './stories';
 import type { Story } from './stories';
 
-// M1.28 — the per-story checklist, built from what a run reported.
-//
-// One entry per v1 story, in §10 order, whether or not anything tested it:
-// the point is a live progress report against the specification, and a
-// story with no test yet is a line on that report, not an omission from it.
-// A suite names its story in its describe (`Story 12: …`, DESIGN.md §11);
-// every suite at any depth that does so counts, so a scaffold may group
-// stories under an outer describe and a story may be tested from two files.
+// One entry per v1 story in §10 order, whether or not anything tested it — a
+// story with no test yet is a line on the report, not an omission. Every suite
+// at any depth naming a story counts, so a story may be tested from two files.
 
 export type SuiteState = 'passed' | 'failed' | 'skipped' | 'pending';
 
@@ -47,10 +42,8 @@ export interface Checklist {
 }
 
 /**
- * A story passes only when every suite naming it passed. A failure anywhere
- * is a failure; a skip anywhere leaves the story not fully verified; and
- * `pending` is what an interrupted run leaves behind, which must never read
- * as green.
+ * A failure anywhere fails the story; a skip anywhere leaves it not fully
+ * verified; `pending`, what an interrupted run leaves, must never read as green.
  */
 function statusOf(states: SuiteState[]): StoryStatus {
   if (states.length === 0) return 'untested';

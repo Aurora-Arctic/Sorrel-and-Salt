@@ -7,19 +7,13 @@ import { truncateAllTables } from '../support/seeded-database';
 import { users } from '@/db/schema/users';
 import { findOne, withAudit } from '@/db/repository';
 
-// M1.18, DESIGN.md §5's second enforcement rule: `updated_at` is stamped by a
-// database trigger, so a manual `psql` fix still stamps it and the audit trail
-// cannot be quietly bypassed. One PL/pgSQL function, attached to every audited
-// table — the sweep-task rule's database half, which is why it lands after the
-// last table it covers rather than being re-asserted later.
+// One function attached to every audited table —
+// claude-docs/db.md, "updated_at is the database's".
 const FUNCTION = 'set_updated_at';
-// Same name on every table: a trigger name is scoped to its table rather than
-// shared with indexes, so there is nothing for a table prefix to disambiguate.
+// Same name on every table: a trigger name is scoped to its table.
 const TRIGGER = 'set_updated_at';
 
-// The tables carrying the audit stamps, transcribed. The coverage assertion
-// below compares two catalogue queries, and two empty sets are equal — this
-// list is what stops that passing vacuously.
+// Transcribed so the two-query comparison below cannot pass on two empty sets.
 const AUDITED_TABLES = [
   'categories',
   'category_groups',
@@ -38,17 +32,11 @@ const AUDITED_TABLES = [
   'workspaces',
 ].sort();
 
-// Better Auth's three adapter tables (schema/auth.ts) carry an `updated_at` and
-// no `*_by` columns at all: they are not part of the audit trail, nothing
-// writes them through `withAudit`, and Better Auth's own `$onUpdate` stamps
-// them. Named so "only the audited tables" is asserted against a real
-// counter-example rather than against nothing.
+// Better Auth's adapter tables carry an `updated_at` and no `*_by` columns;
+// Better Auth's own `$onUpdate` stamps them. A real counter-example for "only
+// the audited tables".
 const UNAUDITED_TABLES = ['accounts', 'sessions', 'verifications'].sort();
 
-// *Which* tables the sweep reached is the thing under test, so every table has
-// to be the real one — and it is: a clone carrying every migration and the
-// `standard` seed, re-cloned before this file runs (tests/support/db-setup.ts).
-// The function and its triggers are the schema's own.
 let sql: ReturnType<typeof postgres>;
 
 const AUTHOR = '11111111-1111-1111-1111-111111111111';
@@ -84,18 +72,11 @@ async function insertUser(id = randomUUID(), overrides = ''): Promise<string> {
 beforeAll(async () => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
 
-  // The rows below are this file's own, written against the empty schema the
-  // file was written for. Emptied with one `truncate … cascade` rather than a
-  // `delete from` list: the seeded scenario's rows point at each other and
-  // every child foreign key is NO ACTION, so a delete would be refused — and
-  // beforeEach's `delete from users where id <> AUTHOR` only works because
-  // nothing seeded is left pointing at a user.
+  // Emptied first so beforeEach's `delete from users where id <> AUTHOR` finds
+  // nothing seeded still pointing at a user.
   await truncateAllTables(sql);
 
   await insertUser(AUTHOR);
-  // M1.25 — the slug comes off the name through src/lib/slugify rather than
-  // being written down beside it (CLAUDE.md's slug rule), so this fixture
-  // cannot be the place the two spellings drift apart.
   await sql`
     insert into workspaces ${sql({
       id: WORKSPACE,
@@ -132,9 +113,8 @@ afterAll(async () => {
 });
 
 describe('the updated_at trigger', () => {
-  // The catalogue-introspection half the sweep-task rule requires: a table
-  // added later that forgets its trigger line reddens here, without this file
-  // being edited, because both sides of the comparison are queries.
+  // Both sides are catalogue queries, so a later table that forgets its
+  // trigger line reddens without this file being edited.
   describe('coverage', () => {
     async function auditedTables(): Promise<string[]> {
       const rows = await sql<{ table_name: string }[]>`
@@ -158,9 +138,7 @@ describe('the updated_at trigger', () => {
       return rows.map((row) => row.relname);
     }
 
-    // Why the equality below could hold without the trigger existing: if no
-    // table carried the audit stamps, both queries would come back empty. This
-    // is the precondition that says they don't.
+    // Precondition: with no audited tables both queries are empty, and equal.
     it('finds the audited tables DESIGN.md §5 specifies', async () => {
       expect(await auditedTables()).toEqual(AUDITED_TABLES);
     });
@@ -175,8 +153,8 @@ describe('the updated_at trigger', () => {
       for (const table of UNAUDITED_TABLES) {
         expect(triggered).not.toContain(table);
       }
-      // Why they could have been skipped for the wrong reason: they exist, and
-      // they carry the `updated_at` a careless sweep would have matched on.
+      // Why they could have been skipped wrongly: they exist, and carry the
+      // `updated_at` a careless sweep would have matched on.
       const withUpdatedAt = await sql<{ table_name: string }[]>`
         select table_name from information_schema.columns
         where table_schema = 'public' and column_name = 'updated_at'
@@ -223,7 +201,6 @@ describe('the updated_at trigger', () => {
     });
   });
 
-  // The user story: a manual database fix cannot leave `updated_at` stale.
   describe('a raw SQL update', () => {
     it('stamps updated_at although the statement never mentions it', async () => {
       const id = await insertUser(randomUUID(), THE_MILLENNIUM);
@@ -258,10 +235,8 @@ describe('the updated_at trigger', () => {
       expect(row.created_at.getFullYear()).toBe(2000);
     });
 
-    // The trigger is BEFORE UPDATE only, which is what makes the test above
-    // meaningful: an insert's own stamps survive, so a 2000 timestamp in the
-    // column is a value the trigger declined to touch rather than one it never
-    // had the chance to.
+    // BEFORE UPDATE only: an insert's stamps survive, so a 2000 timestamp
+    // above is a value the trigger declined to touch.
     it('does not fire on insert', async () => {
       const id = await insertUser(randomUUID(), THE_MILLENNIUM);
 
@@ -271,18 +246,15 @@ describe('the updated_at trigger', () => {
     });
   });
 
-  // The other half of "not double-stamped inconsistently": `applyAudit` still
-  // puts an `updated_at` in the SET list, and the database overwrites it every
-  // time, so there is exactly one clock in the column no matter which path
-  // wrote the row.
+  // `applyAudit` still sends an `updated_at` and the database overwrites it:
+  // one clock in the column whichever path wrote the row.
   describe('an application update through withAudit', () => {
     const session = { userId: AUTHOR };
 
     it('stores the database clock, not the application’s', async () => {
       const id = await insertUser();
-      // Only `Date` is faked — the driver's own timers stay real. This is what
-      // makes the two clocks distinguishable at all: `applyAudit` sends the
-      // year 2000, and what lands in the column is this year.
+      // Only `Date` is faked, so the driver's timers stay real: `applyAudit`
+      // sends the year 2000 and the column gets this year.
       vi.useFakeTimers({ toFake: ['Date'], now: new Date(`${THE_MILLENNIUM}Z`) });
 
       const [returned] = await withAudit(session, (write) =>
@@ -291,8 +263,7 @@ describe('the updated_at trigger', () => {
 
       vi.useRealTimers();
       expect(returned.updatedAt.getFullYear()).toBe((await databaseNow()).getFullYear());
-      // RETURNING reads the row the trigger already rewrote, so what the caller
-      // is handed and what is stored cannot disagree.
+      // RETURNING reads the row the trigger already rewrote.
       const stored = await findOne(users, eq(users.id, id));
       expect(stored?.updatedAt).toEqual(returned.updatedAt);
     });
@@ -304,8 +275,7 @@ describe('the updated_at trigger', () => {
         write.update(users, { name: 'Renamed' }, eq(users.id, id)),
       );
 
-      // The database owns *when*; the session still owns *who* (CLAUDE.md
-      // rule 3) — the trigger touches one column and not the other.
+      // The database owns when; the session owns who (rule 3).
       expect(returned.updatedBy).toBe(AUTHOR);
     });
 
@@ -316,16 +286,15 @@ describe('the updated_at trigger', () => {
         write.softDelete(users, eq(users.id, id)),
       );
 
-      // `applyAudit('delete')` sets `deleted_at`/`deleted_by` and nothing else,
-      // so this column moved because the row was touched, not because the
-      // payload carried it.
+      // `applyAudit('delete')` sets only `deleted_*`, so this column moved
+      // because the row was touched, not because the payload carried it.
       expect(returned.updatedAt.getFullYear()).not.toBe(2000);
       expect(returned.deletedBy).toBe(AUTHOR);
     });
   });
 
-  // MB.34's three join tables carry the four stamps and no `deleted_at`, so the
-  // function has to reach a row it can never soft-delete.
+  // The join tables carry no `deleted_at`, so the function has to reach a row
+  // it can never soft-delete.
   describe('a join table carrying only the four stamps', () => {
     it('stamps a spell_categories row the same way', async () => {
       await sql`

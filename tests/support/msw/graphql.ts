@@ -1,11 +1,8 @@
 import { graphql, HttpResponse, type GraphQLQuery, type GraphQLVariables } from 'msw';
 import { server } from './server';
 
-// Scoped to /api/graphql so a handler here never accidentally intercepts an
-// unrelated request. No handlers are registered until a test calls one of
-// the helpers below — an operation nothing has overridden falls through to
-// vitest.setup.ts's `onUnhandledRequest: 'error'`, which is what makes an
-// unmocked operation fail loudly instead of silently hitting the network.
+// Scoped to /api/graphql. No base handlers: an operation nothing has mocked
+// falls through to vitest.setup.ts's `onUnhandledRequest: 'error'`.
 export const graphqlLink = graphql.link('/api/graphql');
 
 export function mockGraphQLQuery<

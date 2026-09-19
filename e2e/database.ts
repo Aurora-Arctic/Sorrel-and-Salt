@@ -5,17 +5,10 @@ import {
   seedTemplate,
 } from '../tests/support/seeded-database';
 
-// Playwright's single `sorrel_e2e` database, as against one clone per Vitest
-// worker — the same two-tier shape as tests/support/db-global-setup.ts and
-// db-setup.ts, through the same module (M1.27):
-//
-//   - global-setup.ts builds `sorrel_e2e_template` once per run: the
-//     extensions-only `sorrel_template` cloned, migrated, and seeded with the
-//     `standard` scenario. About a second.
-//   - every db-touching spec file recreates `sorrel_e2e` from it in its own
-//     `beforeAll` (see e2e/smoke.spec.ts) — a clone, tens of milliseconds —
-//     which is what DESIGN.md's "reseeded between spec files" resolves to.
-//   - global-teardown.ts drops the template again.
+// Playwright's single `sorrel_e2e`, as against one clone per Vitest worker:
+// global-setup.ts builds the seeded template once per run, each db-touching
+// spec file recreates `sorrel_e2e` from it in its own `beforeAll`, and
+// global-teardown.ts drops the template.
 const E2E_DATABASE = 'sorrel_e2e';
 const E2E_TEMPLATE = 'sorrel_e2e_template';
 

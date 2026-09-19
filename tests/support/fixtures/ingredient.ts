@@ -2,20 +2,15 @@ import type { ingredients } from '@/db/schema/ingredients';
 import { toColumns } from './columns';
 import { type Overrides, mergeFixture, stated } from './merge';
 
-// M1.25 — the compendium entry a test writes when the ingredient itself is not
-// what is under test. Typed against the table's own insert model, so a column
-// renamed in schema/ingredients.ts fails at compile time rather than at the
-// first insert. The import is `import type` deliberately: the fixtures carry no
-// runtime dependency on the database layer, which is what lets the `unit`
-// project run their tests with no Postgres anywhere near them.
+// The compendium entry a test writes when the ingredient is not what is under
+// test. `import type` only: the fixtures carry no runtime dependency on the
+// database layer, which is what lets the `unit` project test them.
 
 /**
- * §5's seven values, in the design doc's own order. Written out rather than
- * read off `nomenclatureKind.enumValues` because that would be a runtime
- * import of the schema — and, with it, of drizzle-orm, which nothing outside
- * the database layer may import at runtime (CLAUDE.md rule 4 / MB.33). The
- * list is pinned against §5 by ingredient.test.ts, and the type below is the
- * table's, so a value added to the enum and forgotten here is a type error.
+ * §5's seven values, in its order. Written out rather than read off
+ * `nomenclatureKind.enumValues`, a runtime import of drizzle-orm; the type
+ * below is the table's, so a value added to the enum and forgotten here is a
+ * type error.
  */
 export const NOMENCLATURE_KINDS = [
   'botanical',
@@ -30,13 +25,9 @@ export const NOMENCLATURE_KINDS = [
 type Nomenclature = typeof ingredients.$inferInsert.nomenclature;
 
 /**
- * An ingredient, plus its folk names and the categories it is filed under — by
- * §6 name rather than by id, so a test names `'Protection'` and not a UUID it
- * would have to look up first.
- *
- * `canonicalKey` is absent because it is GENERATED ALWAYS: Postgres refuses a
- * direct write and Drizzle omits it from the insert model, so there is nothing
- * for a fixture to state.
+ * An ingredient plus its folk names and categories, the latter by §6 name
+ * rather than id. `canonicalKey` is absent: GENERATED ALWAYS, so Drizzle omits
+ * it from the insert model.
  */
 export interface IngredientFixture extends Required<
   Pick<
@@ -61,21 +52,10 @@ export interface IngredientFixture extends Required<
 }
 
 /**
- * The formal name each kind of nomenclature comes with, and `null` for the two
- * that must not have one.
- *
- * This table *is* the acceptance criterion: `ingredients_nomenclature_declares
- * _canonical_name` is a biconditional, so a fixture that let `{ nomenclature:
- * 'none' }` keep the default's `Fixtura testalis` would hand back a row
- * Postgres refuses — and the test using it would fail for a reason having
- * nothing to do with what it was testing.
- *
- * **Every name here is invented.** `standard` is baked into the template every
- * db worker clones and `ingredients_compendium_identity_unique` reserves each
- * seeded identity, so a default matching one would be a fixture no test could
- * insert — and a real name merely absent from the seed today is only safe until
- * someone seeds it. ingredient.test.ts checks the factory's own identities
- * against the seed as a backstop rather than as the mechanism.
+ * The formal name each nomenclature comes with, `null` for the two that must
+ * not have one — `ingredients_nomenclature_declares_canonical_name` is a
+ * biconditional. Every name is invented (CLAUDE.md, Testing); ingredient.test.ts
+ * checks them against the seed as a backstop.
  */
 const CANONICAL_NAME_BY_NOMENCLATURE: Record<Nomenclature, string | null> = {
   botanical: 'Fixtura testalis',
@@ -88,9 +68,7 @@ const CANONICAL_NAME_BY_NOMENCLATURE: Record<Nomenclature, string | null> = {
 };
 
 const DEFAULTS: IngredientFixture = {
-  // The compendium tier — `workspace_id` null, what exists rather than what
-  // one workspace has. A workspace-local fixture says so: `makeIngredient({
-  // workspaceId: W })`.
+  // The compendium tier; a workspace-local fixture says so with `workspaceId`.
   workspaceId: null,
   name: 'Testwort',
   canonicalName: CANONICAL_NAME_BY_NOMENCLATURE.botanical,
@@ -117,9 +95,8 @@ const DEFAULTS: IngredientFixture = {
  * makeIngredient({ nomenclature: 'none' })      // graveyard-dirt shaped: no formal name
  * ```
  *
- * A formal name the caller names is left exactly as given, including one that
- * contradicts the nomenclature beside it — that is how ingredients-schema.test
- * .ts writes the rows the CHECK exists to reject.
+ * A stated `canonicalName` is left as given, even beside a contradicting
+ * nomenclature — that is how a test writes the row the CHECK rejects.
  */
 export function makeIngredient(overrides: Overrides<IngredientFixture> = {}): IngredientFixture {
   const ingredient = mergeFixture(DEFAULTS, overrides);
@@ -132,15 +109,10 @@ export function makeIngredient(overrides: Overrides<IngredientFixture> = {}): In
 }
 
 /**
- * The fixture as an insert into `ingredients`, keyed by column name — for the
- * schema tests, which talk to Postgres directly and so name columns rather
- * than fields.
- *
- * The two child collections are destructured off by name rather than filtered
- * out by shape: `deities` and `substitutes` are `text[]` columns, so "drop the
- * arrays" would drop two real columns with them. Audit stamps are not here at
- * all — they come from the session (CLAUDE.md rule 3), and a raw-SQL test
- * spreads its own author beside this.
+ * The fixture as an insert into `ingredients`, by column name. The child
+ * collections are destructured off by name rather than filtered by shape:
+ * `deities` and `substitutes` are `text[]` columns too. No audit stamps
+ * (rule 3).
  */
 export function ingredientColumns(fixture: IngredientFixture): Record<string, unknown> {
   const { folkNames: _folkNames, categories: _categories, ...row } = fixture;

@@ -1,14 +1,9 @@
 import { V1_STORY_IDS, describeRanges, parseStoryHeading } from './stories';
 
-// M1.28 — what tests/guards/story-naming.test.ts asks of an acceptance file.
-//
-// A static read of the source, not a run: a block at column 0 is top-level,
-// and a top-level block is either a describe citing a v1 story or a
-// violation. Nested describes are free to be named anything — grouping
-// inside a story is the author's business — and a test inside a story
-// describe carries the story by position. What this cannot see is a
-// describe whose name is built at runtime; that is not how §11's example
-// writes them, and the checklist would show such a story as untested.
+// What tests/guards/story-naming.test.ts asks of an acceptance file, as a
+// static read: a block at column 0 is top-level and must be a describe citing
+// a v1 story. Nested describes may be named anything. A describe name built at
+// runtime is invisible here and shows in the checklist as untested.
 
 const TOP_LEVEL_DESCRIBE = /^describe(?:\.\w+)*\(\s*(['"`])(.*?)\1/;
 const TOP_LEVEL_TEST = /^(?:it|test)(?:\.\w+)*\(\s*(['"`])(.*?)\1/;

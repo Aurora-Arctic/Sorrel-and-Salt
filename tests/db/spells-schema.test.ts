@@ -7,9 +7,7 @@ import { users } from '@/db/schema/users';
 import { workspaces } from '@/db/schema/workspaces';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 
-// The full six. A spell is a workspace's record of a working, and story 54
-// deletes one — recoverably, like every other content table. Only the three
-// join tables take the four-column spread (MB.34).
+// The full six: story 54's delete is recoverable. Only the three join tables take four (MB.34).
 const AUDIT_COLUMNS = [
   'created_at',
   'created_by',
@@ -19,12 +17,9 @@ const AUDIT_COLUMNS = [
   'deleted_by',
 ];
 
-// DESIGN.md §5's column list, transcribed — minus `visibility`, which lands
-// with the service rule that reads it (M10.3). The split is deliberate
-// (TASKS.md, "Breaking the M1.23 ↔ M10.3 cycle"): M10.3's "existing seeded
-// spells migrate to workspace visibility" is only testable if there are seeded
-// rows first, so this list failing is the reminder that adding the column early
-// would quietly take that criterion away.
+// §5's columns minus `visibility`, which lands with the service rule that
+// reads it so seeded spells exist to migrate; this list failing is the
+// reminder — claude-docs/db.md, "The grimoire".
 const OWN_COLUMNS = [
   'id',
   'workspace_id',
@@ -71,10 +66,7 @@ describe('spells schema', () => {
     expect(byName.title.notNull).toBe(true);
   });
 
-  // §8's own example creates a spell with a workspace and a title and nothing
-  // else: `spells.create(asUser(A), { workspaceId: W.id, title: 'x' })`. A
-  // draft is the state a spell is saved in *before* it is finished (M10.20),
-  // so every field describing the working has to be omittable.
+  // §8's example creates a spell with a workspace and a title only; a draft is saved unfinished.
   it('leaves every field a draft has not filled in yet nullable', () => {
     for (const column of [
       'intent',
@@ -118,10 +110,7 @@ describe('spells schema', () => {
     }
   });
 
-  // §5 names no index and no CHECK on this table, and the rule against hooks
-  // the design doc does not name applies to both. The grimoire's own lookups
-  // are M10.9's, and a spell title is not unique — two workings may share a
-  // name in the same coven.
+  // §5 names no index and no CHECK; a title is not unique, so two workings may share a name.
   it('declares no index and no check of its own', () => {
     expect(indexes).toEqual([]);
     expect(checks).toEqual([]);
@@ -132,11 +121,6 @@ describe('spells schema', () => {
   });
 });
 
-// The behaviour half, against the real table: a clone carrying every migration
-// and the `standard` seed, re-cloned before this file runs
-// (tests/support/db-setup.ts). The author and the two covens are the seed's —
-// the real `users` and `workspaces` demand NOT NULL names, slugs and audit
-// stamps.
 const AUTHOR = FIXTURE_USERS.A.id;
 const COVEN = WORKSPACE_W_ID;
 const OTHER_COVEN = WORKSPACE_X_ID;
@@ -144,16 +128,10 @@ const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
 
-// M1.25 — the shared factory writes the row; this file supplies the coven and
-// the author, since the audit stamps are never the fixture's to give
-// (CLAUDE.md rule 3) and which of the seed's two covens holds the spell is
-// what several tests below are about.
-//
-// Every column §5 names except `status`, which is dropped so that the column's
-// own default is what the tests below observe — a status spelled out in the
-// insert would make "defaults a new spell to draft" assert the value it had
-// just written. `cast` takes the status path when a test is about the enum
-// itself.
+// The factory writes the row; this file supplies the coven and the author.
+// `status` is dropped so the column's own default is what the tests observe —
+// a status spelled out in the insert would make "defaults to draft" assert
+// what it just wrote. `cast` takes the status path.
 async function record(overrides: SpellOverrides = {}): Promise<string> {
   const { status: _status, ...columns } = spellColumns(
     makeSpell({ workspaceId: COVEN, ...overrides }),
@@ -196,10 +174,6 @@ beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
 });
 
-// `truncate … cascade` rather than `delete from`: `spell_ingredients` and
-// `spell_categories` both hang off this table under NO ACTION keys, and the
-// cascade takes any of their rows with it. The empty table is what every test
-// below assumes.
 beforeEach(async () => {
   await sql`truncate spells cascade`;
 });
@@ -213,9 +187,7 @@ describe('spells table', () => {
     expect(await columnNames('spells')).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
 
-  // What §8's acceptance example writes, and therefore the least a spell can
-  // be: a coven, a name, and the audit stamps. Everything else about the
-  // working is still unanswered.
+  // What §8's example writes, and so the least a spell can be.
   it('accepts a spell that is only a title in a workspace', async () => {
     const id = await record({ title: 'Hearth Guard' });
 
@@ -255,11 +227,8 @@ describe('spells table', () => {
   });
 
   it('refuses a spell with no title', async () => {
-    // 23502 is not_null_violation, named: the refusal is the column's and not
-    // a foreign key's or a type cast's.
-    // Cast, because the fixture is typed against a NOT NULL column and the
-    // whole point of this row is the absence the column refuses — which has to
-    // be Postgres's refusal rather than TypeScript's.
+    // 23502 is not_null_violation, named. Cast, because the fixture is typed
+    // against a NOT NULL column and the refusal must be Postgres's, not TypeScript's.
     const error = await failureOf(record({ title: null as unknown as string }));
 
     expect(error.code).toBe('23502');
@@ -275,8 +244,7 @@ describe('spells table', () => {
   });
 
   // Why the two refusals above could have succeeded: neither the title nor the
-  // workspace is unique or otherwise constrained, so a coven may record two
-  // workings under one name and two covens may each record their own.
+  // workspace is otherwise constrained.
   it('lets one workspace hold two spells with the same title', async () => {
     await record();
 
@@ -290,10 +258,8 @@ describe('spells table', () => {
   });
 
   describe('status', () => {
-    // M10.20: "New spells default to draft". In the column rather than in the
-    // service, so a spell written by any path is a draft until something says
-    // otherwise — an unfinished spell mistaken for a finished one is the
-    // failure the story names.
+    // In the column rather than the service, so a spell written by any path is
+    // a draft until something says otherwise.
     it('defaults a new spell to draft', async () => {
       const id = await record();
 
@@ -312,10 +278,8 @@ describe('spells table', () => {
       });
     }
 
-    // The acceptance criterion — "status accepts only draft and complete in
-    // v1" — against the shipped type. §13's viewer-approval workflow adds
-    // `proposed` and `approved` in v2, which is an `ALTER TYPE ... ADD VALUE`
-    // rather than a rewrite, and is exactly why this is an enum.
+    // Exactly two in v1; v2's `proposed`/`approved` are an `ALTER TYPE ... ADD
+    // VALUE`, which is why this is an enum.
     it('holds exactly the two labels and no more', async () => {
       const [row] = await sql`select enum_range(null::spell_status)::text[] as labels`;
 
@@ -342,9 +306,8 @@ describe('spells table', () => {
     });
   });
 
-  // Rule 4: a spell is soft-deleted like every other content table, and story
-  // 54's delete is recoverable. There is no unique index to dodge here, which
-  // is why the tombstone costs nothing — the name was never reserved.
+  // Soft-deleted like every content table; there is no unique index to dodge,
+  // so the tombstone costs nothing.
   it('soft-deletes, leaving the row and its title behind', async () => {
     const id = await record({ title: 'Hearth Guard' });
 

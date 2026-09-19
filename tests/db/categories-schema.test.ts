@@ -17,10 +17,8 @@ const AUDIT_COLUMNS = [
 const GROUPS_SLUG_UNIQUE = 'category_groups_slug_unique';
 const CATEGORIES_SLUG_UNIQUE = 'categories_slug_unique';
 
-// A column that would order groups or categories by hand, in any of the names
-// such a column is usually given. DESIGN.md §5 lists none for either table:
-// both render alphabetically by `name`, so an admin-added group lands where a
-// reader would look for it rather than at the end of a list.
+// Names a hand-ordering column usually takes; §5 lists none, since groups and
+// categories sort by name — claude-docs/db.md, "Categories, and the two group vocabularies".
 const ORDERING_COLUMNS = ['order', 'position', 'sort', 'sort_order', 'rank', 'display_order'];
 
 function nonAuditForeignKeys(table: typeof categories | typeof categoryGroups) {
@@ -55,21 +53,14 @@ describe('category_groups schema', () => {
     );
   });
 
-  // §5: "groups render alphabetically by `name`, so there is no order column
-  // to maintain". Pinning the column set above already says it, but naming the
-  // absence is what makes it survive a later "just add a sort field" —
-  // ordering data by hand is the thing being refused, not one column spelling.
   it('carries no column for ordering groups by hand', () => {
     for (const column of ORDERING_COLUMNS) {
       expect(byName[column]).toBeUndefined();
     }
   });
 
-  // §5: the two colours are the chip colour every category in the group
-  // wears, one per theme — a group with only one of them is a group whose
-  // chips are illegible on the other ground. Validating each against its own
-  // theme's 4.5:1 floor is M5.6b's job, not a CHECK: the failure needs a
-  // readable message naming the column and the ratio.
+  // One hex per theme. The 4.5:1 floor is checked in the service rather than
+  // a CHECK, so the failure can name the column and the ratio.
   it('requires both hexes, one per theme', () => {
     expect(byName.color_dark.notNull).toBe(true);
     expect(byName.color_light.notNull).toBe(true);
@@ -111,9 +102,7 @@ describe('categories schema', () => {
   const { columns, indexes } = getTableConfig(categories);
   const byName = Object.fromEntries(columns.map((c) => [c.name, c]));
 
-  // No `color`: MB.35 moved the chip colour onto the group, as the pair of
-  // hexes one per theme that a single category column could not hold, and a
-  // category wears its group's rather than one of its own.
+  // No `color`: the chip colour is the group's pair, one hex per theme (MB.35).
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
       ['id', 'name', 'slug', 'description', 'group_id', ...AUDIT_COLUMNS].sort(),
@@ -132,10 +121,8 @@ describe('categories schema', () => {
     }
   });
 
-  // §5: a vocabulary only an admin writes is a foreign key, where one a member
-  // writes is text — the asymmetry with `ingredients.form`, which stays text
-  // so a member can write `rhizome` uncurated. Nobody is blocked by a group
-  // that does not exist yet, because the same admin writes both.
+  // A vocabulary only an admin writes is a foreign key, where one a member
+  // writes (`ingredients.form`) is text.
   it('points groupId at category_groups by foreign key, and requires it', () => {
     expect(byName.group_id.notNull).toBe(true);
 
@@ -154,12 +141,9 @@ describe('categories schema', () => {
     expect(slugIndex?.config.where).toBeDefined();
   });
 
-  // The categories are one shared vocabulary, which is what makes §12's
-  // assigned-versus-derived comparison meaningful: both sides draw from the
-  // same set. A workspace-scoped category would be a second, private
-  // vocabulary nobody else could read. Asserted as the absence of both halves
-  // — the column the scoping would live in, and any foreign key that could
-  // reach a workspace under another name.
+  // One shared vocabulary, or §12's assigned-versus-derived comparison is
+  // meaningless. Asserted as both halves: the column, and any foreign key
+  // that could reach a workspace under another name.
   it('carries no workspace scoping', () => {
     expect(byName.workspace_id).toBeUndefined();
     expect(nonAuditForeignKeys(categories).map((fk) => fk.reference().foreignTable)).toEqual([
@@ -180,10 +164,6 @@ describe('categories schema', () => {
   });
 });
 
-// The behaviour half, against the real tables: a clone carrying every
-// migration and the `standard` seed, re-cloned before this file runs
-// (tests/support/db-setup.ts). The author is the seed's — the real `users` has
-// a NOT NULL name, email and audit stamps.
 const AUTHOR = FIXTURE_USERS.A.id;
 const ABSENT_GROUP = '99999999-9999-9999-9999-999999999999';
 
@@ -257,10 +237,6 @@ beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
 });
 
-// `truncate … cascade`, not `delete from`: the seeded vocabulary is filed
-// against the compendium through ingredient_categories, and every child foreign
-// key in the schema is NO ACTION, so a delete would be refused. Truncating takes
-// the links with it, and the empty tables are what every test below assumes.
 beforeEach(async () => {
   await sql`truncate categories, category_groups cascade`;
 });
@@ -290,17 +266,13 @@ describe('category_groups table', () => {
       await insertGroup();
       const error = await failureOf(insertGroup({ name: 'Protective work' }));
 
-      // 23505 is unique_violation, named: proof the insert reached the index
-      // rather than failing some other constraint first.
+      // 23505 is unique_violation, named: the index refused, not something earlier.
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(GROUPS_SLUG_UNIQUE);
     });
 
-    // CLAUDE.md rule 4: the index is partial, so soft-deleting a group
-    // releases its slug rather than reserving it forever. The test above is
-    // this one's precondition — without the soft delete the second insert is
-    // refused, so the pass here is the predicate working and not an empty
-    // table.
+    // The test above is the precondition: without the soft delete the second
+    // insert is refused, so this pass is the predicate and not an empty table.
     it('frees the slug once the holder is soft-deleted', async () => {
       const first = await insertGroup();
       await softDelete('category_groups', first);
@@ -313,8 +285,6 @@ describe('category_groups table', () => {
       expect(rows[1].deleted_at).toBeNull();
     });
 
-    // The display name is free — two groups may both want to be called
-    // "Protection", and the slug is what tells them apart.
     it('does not constrain the display name', async () => {
       await insertGroup();
       await insertGroup({ slug: 'protective-work' });
@@ -328,8 +298,7 @@ describe('category_groups table', () => {
     for (const column of ['color_dark', 'color_light']) {
       const error = await failureOf(insertGroup({ [column]: null }));
 
-      // 23502 is not_null_violation on that exact column: proof the insert
-      // reached it and found neither a value nor a default.
+      // 23502 is not_null_violation on that exact column.
       expect(error.code).toBe('23502');
       expect(error.column_name).toBe(column);
     }
@@ -378,10 +347,7 @@ describe('categories table', () => {
       expect(error.column_name).toBe('group_id');
     });
 
-    // The half a NOT NULL alone would miss: a required column still accepts
-    // any uuid, and a typo'd group silently empties a chip section. The
-    // accepting case below is what proves the refusal is the foreign key
-    // rather than the insert never working at all.
+    // The accepting case below is what proves the refusal is the foreign key's.
     it('rejects a group id no group holds', async () => {
       const error = await failureOf(insertCategory(ABSENT_GROUP));
 
@@ -423,9 +389,8 @@ describe('categories table', () => {
       expect(rows[1].deleted_at).toBeNull();
     });
 
-    // Slug uniqueness is global rather than per group: the slug is what a
-    // chip filter and the seed's idempotency key both read, and neither
-    // carries a group alongside it.
+    // Global rather than per group: a chip filter and the seed's idempotency
+    // key both read the slug alone.
     it('rejects a shared slug across two different groups', async () => {
       const protection = await insertGroup();
       const cleansing = await insertGroup({ name: 'Cleansing & release', slug: 'cleansing' });
