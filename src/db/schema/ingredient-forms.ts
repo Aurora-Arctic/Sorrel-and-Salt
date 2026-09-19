@@ -2,19 +2,15 @@ import { sql } from 'drizzle-orm';
 import { check, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../audit';
 
-// DESIGN.md §5: `id`, `name`, `slug`, `description`, + audit. Global only and
-// admin-curated, the same shape `category_groups` has minus its colour pair.
+// DESIGN.md §5's form groups: global, admin-curated, the shape
+// `category_groups` has minus its colour pair. A table rather than an enum for
+// MB.35's reason — `ALTER TYPE … ADD VALUE` is DDL and an admin mutation
+// cannot run DDL at all. §5's six names are a starting set, seeded by M4.3a.
 //
-// A table rather than an enum for the same reason MB.35 gave for category
-// groups: the set has already grown twice, `ALTER TYPE … ADD VALUE` is DDL, and
-// an admin mutation cannot run DDL at all. §5's six names — Botanical, Animal,
-// Mineral, Substance, Fluid, Curio — are a starting set, seeded by M4.3a.
-//
-// No colour, unlike `category_groups` — a form group sections an autofill
-// dropdown, it is not a chip, so there is no ground to contrast against and
-// nothing for M5.6b to validate. And no order column: groups render
-// alphabetically by `name`, so an admin-added seventh lands where a reader
-// would look for it rather than at the end.
+// No colour, unlike `category_groups`: a form group sections an autofill
+// dropdown rather than being a chip, so there is no ground to contrast against.
+// And no order column — groups render alphabetically by `name`, so an
+// admin-added seventh lands where a reader would look for it.
 export const ingredientFormGroups = pgTable(
   'ingredient_form_groups',
   {
@@ -34,27 +30,24 @@ export const ingredientFormGroups = pgTable(
     uniqueIndex('ingredient_form_groups_slug_unique')
       .on(table.slug)
       .where(sql`${table.deletedAt} is null`),
-    // §5 asks for a description that is required *and non-empty*: NOT NULL
-    // alone accepts '' and '   ', which satisfies the column while explaining
-    // nothing. A CHECK rather than service-only validation because there is
-    // nothing to phrase carefully here — unlike M5.6b's contrast floor, "say
-    // something" needs no ratio in its message.
+    // §5 asks for a description required *and non-empty*: NOT NULL alone
+    // accepts '' and '   '. A CHECK rather than service-only validation
+    // because "say something" needs no carefully phrased message, unlike
+    // M5.6b's contrast floor.
     check('ingredient_form_groups_description_not_blank', sql`btrim(description) <> ''`),
   ],
 );
 
-// DESIGN.md §5: `id`, `name`, `slug`, `groupId`, `description`, + audit. Global
-// only and admin-curated, managed at `/admin/forms` under the same gate as
-// `/admin/categories`. This is the third resource admins curate globally,
-// alongside the compendium and categories (CLAUDE.md).
+// DESIGN.md §5's form vocabulary, global and admin-curated at `/admin/forms` —
+// the third resource admins curate globally, alongside the compendium and
+// categories.
 //
 // It is the vocabulary behind `ingredients.form` and deliberately **not** a
-// foreign key target for it — the property the whole identity design rests on,
-// asserted by test in ingredient-forms-schema.test.ts. Both directions of §5's
-// rule sit in this one file: `groupId` below is a foreign key because only an
-// admin writes it, while `ingredients.form` stays text because a member writes
-// it and must be able to write `rhizome` before anyone has curated it. The
-// curated set is a vocabulary, not a constraint.
+// foreign key target for it, which the whole identity design rests on and
+// ingredient-forms-schema.test.ts asserts. Both directions of §5's rule sit in
+// this file: `groupId` below is a foreign key because only an admin writes it,
+// while `ingredients.form` stays text because a member must be able to write
+// `rhizome` before anyone has curated it.
 //
 // `description` is required and non-empty so a curated value explains itself:
 // `rootBark` can say "the bark of the root, not the stem".
@@ -78,14 +71,9 @@ export const ingredientForms = pgTable(
     // it.
     //
     // The display name carries no index, which leaves one gap deliberately
-    // open: two live forms may both be called "Wax", one an animal part and
-    // one a substance. `ingredients.form` stores the string rather than an
-    // id, so nothing downstream can tell the two rows apart — the autofill is
-    // where that ambiguity is resolved instead, M4.7a returning each
-    // suggestion's group and M5.10a rendering it, so the dropdown offers "Wax
-    // (animal)" beside "Wax (substance)". Recorded in db.md with the
-    // reasoning, and asserted by test so it stays a decision rather than an
-    // oversight.
+    // open: two live forms may both be called "Wax", one an animal part and one
+    // a substance. The autofill resolves that instead, M4.7a returning each
+    // suggestion's group (claude-docs/db.md, "The form vocabulary seed").
     uniqueIndex('ingredient_forms_slug_unique')
       .on(table.slug)
       .where(sql`${table.deletedAt} is null`),

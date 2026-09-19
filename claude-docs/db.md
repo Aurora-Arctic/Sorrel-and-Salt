@@ -1435,6 +1435,15 @@ added this ingredient to this spell" (story 13). `workspace_members` keeps the
 full six — who removed whom, and when, is worth keeping — and so does
 `ingredient_folk_names`, which holds content rather than a link.
 
+**No `deleted_at` also means no partial unique index**, on any of the three.
+Rule 4's convention exists so a tombstone cannot reserve a name forever, and a
+composite primary key has no tombstone to dodge: the pair is either there or it
+is not, re-adding one that was removed is an ordinary insert, and
+`WHERE deleted_at IS NULL` would not compile against these columns. The
+exception is a predicate that is about something else — `spell_ingredients`
+carries two partial unique indexes keyed on whether `ingredient_id` is null,
+which is MB.40's custom-row split rather than soft-delete filtering.
+
 **What makes it impossible to get wrong.** Two type constraints, both proved by
 `@ts-expect-error` lines in `repository.test.ts` (which fail `npm run typecheck`,
 not `vitest`, if either constraint is ever loosened):
@@ -1602,6 +1611,18 @@ parameterised `set_config` form (M1.19), every stamp produced by the shared
 among the four files allowed to import `connection.ts` — which is what makes
 the handle honest. The reasoning, and the alternatives it rules out, are in
 [`design-decisions/m1.21-seed-writes-through-its-handle.md`](design-decisions/m1.21-seed-writes-through-its-handle.md).
+
+**Import order inside a seed module is load-bearing, and silently so.**
+`audit.ts` and `schema/users.ts` import each other (above), so whichever is
+entered first sees the other half-initialised. A seed module that reaches
+`audit.ts` first — by importing a schema module that spreads `auditColumns`
+before importing anything that pulls in `users` — makes `users.ts` build its
+table while `auditColumns` is still `undefined`, so the spread contributes
+nothing and every insert goes out without a `created_by`, failing `NOT NULL`.
+Every module under `src/db/seed/` therefore imports `users` (directly, or via
+`./bootstrap-admin`, which imports it) **above** the schema modules that reach
+`audit.ts`, and `src/db/seed/minimal.ts` carries the note. Nothing enforces it:
+reordering the imports is a clean-looking edit that reddens the seed tests.
 
 **`minimal`** (`src/db/seed/minimal.ts`): one admin, one user, empty
 compendium. The admin is the bootstrap user under the fixed

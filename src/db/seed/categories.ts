@@ -1,11 +1,5 @@
 import { isNull, sql } from 'drizzle-orm';
-// `./bootstrap-admin` first, and load-bearing for the reason minimal.ts
-// records at length: audit.ts and schema/users.ts import each other, and
-// whichever is entered first sees the other half-initialised. bootstrap-admin
-// imports schema/users, so putting it above schema/categories — which reaches
-// audit.ts directly — is what makes `users` build its table with
-// `auditColumns` already defined. Reverse these two and every insert below
-// silently drops its created_by and fails NOT NULL.
+// `./bootstrap-admin` first, and load-bearing — see minimal.ts.
 import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
 import { categories, categoryGroups } from '../schema/categories';
 import { applyAudit } from '../audit';
@@ -13,42 +7,24 @@ import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import { slugify } from '../../lib/slugify';
 import type { SeedDatabase, SeedTransaction } from './index';
 
-// M4.3 — DESIGN.md §6's category vocabulary: eight groups, and every category
-// the section's table lists, seeded as a *starting* set an admin may edit
-// afterwards.
+// DESIGN.md §6's category vocabulary: eight groups and every category the
+// section's table lists, seeded as a *starting* set an admin may edit.
 //
-// This is not one of the three scenarios. `minimal` leaves the compendium
-// empty by definition and M1.22's `standard` consumes what is written here,
-// which is why §6's seed lands a task ahead of it. It also ships to staging
-// and production on its own — migrate.yml seeds after migrating — so it
-// assumes nothing about what else has run, and inserts the bootstrap admin
-// itself.
+// **Not one of the three scenarios.** It ships to staging and production on its
+// own — migrate.yml seeds after migrating — so it assumes nothing about what
+// else has run and inserts the bootstrap admin itself.
 //
-// **No slug is written down here.** Every one is `slugify(name)` — CLAUDE.md's
-// slug rule, the shared `src/lib/slugify.ts` — applied to the name beside it,
-// so there is no second list to keep in step and no way to seed a row whose
-// slug and name disagree. Calling the shared rule rather than wrapping it is
-// the point: an admin's category, slugged by the same function in M5.6's
-// mutation, lands in the same shape as a seeded one.
-//
-// The visible consequence is in the group names: seven of the eight carry an
-// ampersand, which the rule expands, so "Protection & Defense" is
-// `protection-and-defense`. §6's Slug column is corrected to match in this
-// task's PR — it previously named eight hand-picked short slugs, one of which
-// (`grounding`, for "Craft & Change") collided with a category slug inside its
-// own group.
+// **No slug is written down here.** Every one is `slugify(name)` per CLAUDE.md's
+// slug rule, so there is no second list to keep in step. The visible
+// consequence is that the rule expands `&`, making "Protection & Defense"
+// `protection-and-defense` (claude-docs/db.md, "The category seed").
 
 /**
  * Each group's display name, mapped to the key it wears in M0.7's
- * `$category-groups` Sass map — the entry whose two hexes the row below
- * carries. It is keyed by name rather than by slug because the slug is derived
- * (see `slugFor`), and a map keyed on a derived value would have to be
- * rewritten every time the rule that derives it changed.
- *
- * The Sass keys are M0.7's own words and stay as they are: renaming one moves a
- * token and the `--group-*` custom property generated from it, for no gain now
- * that nothing looks a colour up by slug (MB.35). The two vocabularies meet
- * here, once, and nowhere else.
+ * `$category-groups` Sass map. Keyed by name rather than slug because the slug
+ * is derived, and a map keyed on a derived value would have to be rewritten
+ * whenever the rule that derives it changed. The two vocabularies meet here,
+ * once, and nowhere else.
  */
 export const SASS_TOKEN_BY_GROUP_NAME: Record<string, string> = {
   'Protection & Defense': 'protection',
@@ -77,16 +53,12 @@ export interface SeedCategory {
 
 /**
  * The eight groups, in §6's order, each carrying the pair of hexes M0.7's
- * `category-group-color($slug, $theme)` resolves to.
- *
- * The hexes are written out rather than computed, because MB.35's whole point
- * is that the colour is data an admin owns from here on: a value recomputed on
- * every seed could not be left alone once changed. The resolution is still
- * checked rather than trusted — categories.test.ts compiles M0.7's own
- * function and compares all sixteen, so retuning the map without reseeding
- * fails there instead of drifting quietly. Each also clears 4.5:1 against its
- * own theme's ground ($soot dark, $parchment light); the worst pairing in the
- * set is wellbeing's light hex at 4.74:1.
+ * `category-group-color($slug, $theme)` resolves to. Written out rather than
+ * computed, because MB.35 makes the colour data an admin owns: a value
+ * recomputed on every seed could not be left alone once changed.
+ * categories.test.ts compiles M0.7's own function and compares all sixteen, so
+ * retuning the map without reseeding reddens there. Each clears 4.5:1 against
+ * its own theme's ground; the worst is wellbeing's light hex at 4.74:1.
  */
 export const CATEGORY_GROUPS: SeedCategoryGroup[] = [
   {
@@ -146,11 +118,7 @@ export const CATEGORY_GROUPS: SeedCategoryGroup[] = [
   },
 ];
 
-/**
- * Every category §6 lists, in §6's order, grouped as §6 groups them. The
- * display name is §6's own wording in sentence case; the slug is that wording
- * with its spaces hyphenated, which is the only transformation between the two.
- */
+/** Every category §6 lists, in §6's order, grouped as §6 groups them. */
 export const CATEGORIES: SeedCategory[] = [
   // Protection & defense
   {
@@ -489,19 +457,13 @@ export const CATEGORIES: SeedCategory[] = [
  * fresh database or a populated one.
  *
  * Idempotency keys on the slug and **ignores `deleted_at`**, which is stronger
- * than the partial unique index would give on its own: the index only stops a
- * second *live* row, so a slug an admin has soft-deleted would otherwise be
- * re-inserted on the next run. Removing a category is a decision, and a seed
- * that ran again on every deploy would keep undoing it. Nothing already present
- * is updated either — an admin's retitled category and retuned colour pair both
- * survive (MB.35).
+ * than the partial unique index gives on its own: that index stops only a
+ * second *live* row, so a slug an admin soft-deleted would be re-inserted on
+ * the next deploy and the deletion quietly undone. Nothing already present is
+ * updated either, so a retitled category and a retuned colour pair survive.
  *
- * The writes go through the handle the caller gives, not through `withAudit`,
- * for the reason recorded in
- * claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md — and
- * what `withAudit` guarantees is kept rather than re-argued: one transaction,
- * the acting user published as `app.current_user_id` in the same parameterised
- * form, and every stamp produced by the shared `applyAudit`.
+ * The writes go through the handle the caller gives, not through `withAudit`
+ * (claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md).
  */
 export async function seedCategories(db: SeedDatabase): Promise<void> {
   await db.transaction(async (tx) => {
@@ -512,11 +474,9 @@ export async function seedCategories(db: SeedDatabase): Promise<void> {
 }
 
 /**
- * The same seed, inside a transaction the caller already opened — which is the
- * only reason it is separate. M1.22's `standard` scenario writes the categories
- * alongside its own users, workspaces and compendium, and a scenario that is
- * half-applied is worse than one that is not applied at all, so the whole thing
- * is one transaction rather than three.
+ * The same seed, inside a transaction the caller already opened — the only
+ * reason it is separate, since `standard` writes these alongside its own rows
+ * and a half-applied scenario is worse than one that never ran.
  *
  * It assumes what `seedCategories` does for itself: the GUC is published and
  * the bootstrap admin exists, since every row here is stamped as that user's.
@@ -545,12 +505,9 @@ async function insertMissingGroups(tx: SeedTransaction): Promise<void> {
     );
 }
 
-/** Group ids keyed by *name*, which is what a category in CATEGORIES names. */
 /**
- * Live category ids keyed by *name*, which is what a scenario names: M1.22's
- * compendium entries file themselves under "Protection", M1.23's spells are
- * assigned "Dream Work". It lives here rather than in either scenario because
- * both need it and a second copy is a second thing to keep in step — and
+ * Live category ids keyed by *name*, which is what a scenario names — both
+ * `standard` and `demo` do, so it lives here rather than in either.
  * `deleted_at IS NULL` because a category an admin has retired is not one a
  * seed may point at.
  */
@@ -563,6 +520,7 @@ export async function categoryIdByName(tx: SeedTransaction): Promise<Map<string,
   return new Map(rows.map((row) => [row.name, row.id]));
 }
 
+/** Group ids keyed by *name*, which is what a category in CATEGORIES names. */
 async function groupIdByName(tx: SeedTransaction): Promise<Map<string, string>> {
   const rows = await tx
     .select({ id: categoryGroups.id, name: categoryGroups.name })
