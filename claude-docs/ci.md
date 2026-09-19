@@ -132,21 +132,35 @@ edit at any call site; nothing passes it today.
 
 - **`checks / destructive-ddl`** (M1.5, a `checks.yml` leg since MB.37) —
   flags destructive DDL in migration files new or changed in the PR, via
-  `scripts/check-destructive-ddl.ts`, and fails unless the PR body carries a
-  `Destructive DDL acknowledged: <reason>` line. The forms: any `DROP` except
+  `scripts/check-destructive-ddl.ts`, and fails unless each flagged migration
+  carries an acknowledgement sidecar beside it — `src/db/migrations/<tag>.ack.md`
+  holding a `Destructive DDL acknowledged: <reason>` line (MB.48). The forms:
+  any `DROP` except
   `DROP NOT NULL` and `DROP DEFAULT` (which widen), `RENAME`,
   `ALTER COLUMN ... TYPE`, `SET NOT NULL`, and `ADD COLUMN ... NOT NULL` with
   no `DEFAULT` — see `claude-docs/db.md`'s Migrations section for the policy.
   Blocking, like `lint`/`typecheck`.
-  - **It needs two things a `workflow_call` file cannot read off its own
-    trigger**, which is why it has inputs where the other legs have none: the
-    changed-migration-file list and the PR body. Only the caller sees
-    `github.event.pull_request`. The list comes from `changes`'s
+  - **It needs one thing a `workflow_call` file cannot read off its own
+    trigger**, which is why it has an input where the other legs have none: the
+    changed-migration-file list, since only the caller sees
+    `github.event.pull_request`. It comes from `changes`'s
     `dorny/paths-filter` step (`list-files: json`, reused rather than adding a
-    second changed-files action) as `destructive-ddl-files`, the body straight
-    from `github.event.pull_request.body` as `pr-body`, and `checks.yml` puts
-    both into the job `env` as `DESTRUCTIVE_DDL_FILES` /
-    `DESTRUCTIVE_DDL_PR_BODY`, inert in the other five legs.
+    second changed-files action) as `destructive-ddl-files`, and `checks.yml`
+    puts it into the job `env` as `DESTRUCTIVE_DDL_FILES`, inert in the other
+    five legs.
+  - **It took the PR body as a second input until MB.48**, as `pr-body` →
+    `DESTRUCTIVE_DDL_PR_BODY`. Both are gone. A PR body is visible from one
+    branch base and gone on merge, so a release PR — which the script sends at
+    `origin/main`, rescanning every migration since the last release — saw none
+    of the acknowledgements that let those migrations land; release 0.2.0's PR
+    failed this leg for exactly that reason and was merged past it. And one
+    line in a body blessed every finding in the diff whatever file it was in.
+    The PR-body path is retired rather than OR-ed with the sidecar, since an
+    `OR` would keep the uncorrelated hole open. **The leg now reads nothing
+    from GitHub but the file list**, so `make act-check CHECK=destructive-ddl`
+    proves the scan rather than the wiring, and
+    `npm run check:destructive-ddl -- --all` is a usable audit instead of
+    permanently red.
   - **`DESTRUCTIVE_DDL_FILES` is always set, even to an empty string.** The
     script reads set-but-empty as "no migrations changed, scan nothing" and
     _unset_ as "work out what this branch changed from git" — the second is a
@@ -158,11 +172,13 @@ edit at any call site; nothing passes it today.
     which is why nothing looked wrong. MB.37 also widened `DROP` past
     `COLUMN`/`TABLE` — `0002`'s `DROP CONSTRAINT users_email_unique` had passed
     — and stopped `migrations/meta/*.json` being handed to the script as SQL.
+    That same window is why `0002` has no acknowledgement in its own PR (#73)
+    and its sidecar had to be written retroactively.
   - Its `run-destructive-ddl: false` path exists for a merge-queue caller (same
-    reason as `gitflow`'s `should-run` — `merge_group` has no real PR body or
-    diffable source ref, so it can only trust that `pr-gate.yml` already gated
-    the PR before it reached the queue). `merge-queue.yml` was that caller
-    until MB.32 deleted it.
+    reason as `gitflow`'s `should-run` — `merge_group` has no diffable source
+    ref, so it can only trust that `pr-gate.yml` already gated the PR before it
+    reached the queue). `merge-queue.yml` was that caller until MB.32 deleted
+    it.
 
 - **`build-image.yml`** — builds the shared `testing` image once and exposes its
   ref as an `image` output. Tag is content-addressed:
@@ -749,18 +765,22 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   is in `act-test`. The build leg wants `actions/cache@v6` pre-cached the way
   `act-cache-checkout` pre-caches `checkout-to-app`; the audit leg wants a real
   PR to comment on.
-- **`CHECK=destructive-ddl` scans nothing locally, and that is the honest
-  outcome rather than a gap** — its `destructive-ddl-files`/`pr-body` inputs
-  come from `pr-gate.yml`'s `changes` job and the real
-  `github.event.pull_request.body`, neither of which exists under a bare
-  `act -W ... --matrix name:destructive-ddl` invocation. Both arrive empty,
-  `checks.yml` sets `DESTRUCTIVE_DDL_FILES` from the input regardless, and the
-  script reads set-but-empty as "no migrations changed". So the leg proves the
-  wiring, not the scan. What proves the scan is
-  `tests/guards/destructive-ddl-check.test.ts` (the rules, the file-list
-  resolution and the branch diff, each asserted to fail with its guard
-  removed) and `npm run check:destructive-ddl -- --self-test` (the ack-line
-  gating, against the fixtures under `scripts/__fixtures__/destructive-ddl/`).
+- **`CHECK=destructive-ddl` still scans nothing locally, and that is the honest
+  outcome rather than a gap** — but for one reason now rather than two. Its
+  `destructive-ddl-files` input comes from `pr-gate.yml`'s `changes` job, which
+  does not exist under a bare `act -W ... --matrix name:destructive-ddl`, so it
+  arrives empty; `checks.yml` sets `DESTRUCTIVE_DDL_FILES` from the input
+  regardless, and the script reads set-but-empty as "no migrations changed".
+  The `pr-body` input is gone entirely (MB.48), so the leg no longer depends on
+  a real `github.event.pull_request.body` — which is what makes the scan
+  provable locally at all: `npm run check:destructive-ddl -- --all` now reads
+  every acknowledgement from the repository itself and is green, where it was
+  permanently red while they lived in PR bodies. What proves the leg's own
+  gating is `tests/guards/destructive-ddl-check.test.ts` (the rules, the
+  file-list resolution, the branch diff and the per-file sidecar correlation,
+  each asserted to fail with its guard removed) and
+  `npm run check:destructive-ddl -- --self-test` (the sidecar gating, against
+  the fixtures under `scripts/__fixtures__/destructive-ddl/`).
   Before MB.37 this target claimed to fall back to scanning every committed
   migration; it never did — the workflow always exported the variable.
 - **`act-vitest` / `act-playwright` still do not exist**, even though
