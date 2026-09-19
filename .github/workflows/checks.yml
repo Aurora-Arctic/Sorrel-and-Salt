@@ -454,7 +454,11 @@ jobs:
 
           # The general statement the three probes are instances of. Untracked
           # paths are the bug; modified tracked paths would mean the overlay
-          # left a stale *version* of a file rather than a stale file.
+          # left a stale *version* of a file rather than a stale file. This
+          # runs git in /app as the action's clean step does, and relies on the
+          # `safe.directory` entry that step added — same container, same user,
+          # same global config. A step that runs git in /app *before* the
+          # action would have to add it itself.
           leftovers="$(git status --porcelain --untracked-files=all)"
           if [ -n "$leftovers" ]; then
             echo "FAIL: /app differs from the checkout:"
