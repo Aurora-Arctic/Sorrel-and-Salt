@@ -357,6 +357,30 @@ jobs:
             --file ".vercel/.env.${{ needs.resolve-target.outputs.environment }}.local" \
             --require DATABASE_URL,BETTER_AUTH_SECRET
 
+      # MB.49 — open the connection before building against it.
+      #
+      # The assertion above reads the file's SHAPE; this opens what is in it. A
+      # URL can be perfectly well-formed and still name a deleted Neon branch, a
+      # rotated password, or a host that no longer resolves — and `vercel build`
+      # would not notice, because a build parses the URL without ever issuing a
+      # query. The failure surfaces later, in a deployed function, as a 500.
+      #
+      # Advisory here, and only here. A build genuinely does not need the
+      # database, so failing the deploy on a transient network blip would trade
+      # one outage for another. What the warning buys is that a deploy which is
+      # about to serve errors says so at build time, in the log, with the
+      # driver's own error code. migrate.yml's probe is fatal for the opposite
+      # reason, and tests/guards/database-probe.test.ts asserts the two apart.
+      #
+      # It reads the env file because that is where the override step wrote the
+      # resolved value — the same value `vercel build` will read.
+      - name: Probe the database
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probe-database.ts \
+            --file ".vercel/.env.${{ needs.resolve-target.outputs.environment }}.local" \
+            --on-failure warn
+
       - name: Build
         if: steps.guard.outputs.enabled == 'true'
         run: vercel build ${{ needs.resolve-target.outputs.prod_flag }} --token="$VERCEL_DEPLOY_TOKEN"
