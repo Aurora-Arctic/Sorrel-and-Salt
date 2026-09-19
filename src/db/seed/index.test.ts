@@ -224,11 +224,10 @@ describe('seed(db, { scenario: "minimal" })', () => {
   });
 });
 
-describe('the scenarios still to land', () => {
-  // `standard` landed in M1.22 and is asserted in standard.test.ts; `demo` is
-  // M1.23's and still throws before touching the database.
-  it('demo throws until its task lands', async () => {
-    await expect(seed(db, { scenario: 'demo' })).rejects.toThrow(/not implemented/);
-    expect(await countOf('users'), 'a scenario that throws has written nothing').toBe(0);
-  });
-});
+// The other two scenarios are asserted where they live — standard.test.ts
+// (M1.22) and demo.test.ts (M1.23), each of which ends by routing its own name
+// through `seed(db, { scenario })`. There is no longer a scenario that throws:
+// M1.23 was the last to land, and the block that asserted `demo` did went with
+// it. This file's `beforeEach` is `delete from users` alone, which is only
+// enough for a scenario that writes users and nothing else — another reason
+// the other two are exercised against their own fixtures rather than here.

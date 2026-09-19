@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { isNull, sql } from 'drizzle-orm';
 // `./bootstrap-admin` first, and load-bearing for the reason minimal.ts
 // records at length: audit.ts and schema/users.ts import each other, and
 // whichever is entered first sees the other half-initialised. bootstrap-admin
@@ -546,6 +546,23 @@ async function insertMissingGroups(tx: SeedTransaction): Promise<void> {
 }
 
 /** Group ids keyed by *name*, which is what a category in CATEGORIES names. */
+/**
+ * Live category ids keyed by *name*, which is what a scenario names: M1.22's
+ * compendium entries file themselves under "Protection", M1.23's spells are
+ * assigned "Dream Work". It lives here rather than in either scenario because
+ * both need it and a second copy is a second thing to keep in step — and
+ * `deleted_at IS NULL` because a category an admin has retired is not one a
+ * seed may point at.
+ */
+export async function categoryIdByName(tx: SeedTransaction): Promise<Map<string, string>> {
+  const rows = await tx
+    .select({ id: categories.id, name: categories.name })
+    .from(categories)
+    .where(isNull(categories.deletedAt));
+
+  return new Map(rows.map((row) => [row.name, row.id]));
+}
+
 async function groupIdByName(tx: SeedTransaction): Promise<Map<string, string>> {
   const rows = await tx
     .select({ id: categoryGroups.id, name: categoryGroups.name })
