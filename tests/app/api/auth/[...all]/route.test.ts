@@ -25,8 +25,9 @@ describe('GET /api/auth/*', () => {
 // state) before redirecting, so it needs real schema. This `unit`-project
 // test runs against the plain `sorrel` database (not a per-worker
 // `sorrel_test_<n>` clone — only the `db` project's setupFiles rewrite
-// DATABASE_URL for that), which has no schema applied in CI any more than
-// `sorrel_template` does (`claude-docs/db.md` — not baked in until M1.27).
+// DATABASE_URL for that), which has no schema applied in CI — nothing
+// migrates `sorrel` there; M1.27's seeded template is the `db` project's,
+// and this test never sees it (`claude-docs/db.md`).
 // It passed locally only because this session had already run
 // `drizzle-kit migrate` against its own local `sorrel` by hand; CI's never
 // has. `socialProviders()`'s tests (`src/lib/auth.test.ts`) already cover

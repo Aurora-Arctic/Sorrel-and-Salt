@@ -1,5 +1,3 @@
-import { join } from 'node:path';
-import { readFileSync, readdirSync } from 'node:fs';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { getTableConfig } from 'drizzle-orm/pg-core';
@@ -9,8 +7,8 @@ import {
   ingredientColumns,
   makeIngredient,
 } from '../support/fixtures';
-import { MIGRATIONS_DIR } from '../support/paths';
 import { ingredientElement, ingredients, nomenclatureKind } from '@/db/schema/ingredients';
+import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import { workspaces } from '@/db/schema/workspaces';
 import { users } from '@/db/schema/users';
 
@@ -157,31 +155,20 @@ describe('ingredients schema', () => {
   });
 });
 
-// The behaviour half. sorrel_template carries no application tables until
-// M1.27, so this applies the migration that ships this table into this
-// worker's disposable sorrel_test_<n> clone rather than hand-copying its DDL
-// — what is asserted below is then the SQL production runs, not a
-// paraphrase of it. `users` and `workspaces` are stubbed to the one column
-// the ingredients foreign keys point at: they are M2.2/M6.2's tables, and
-// applying their migrations here would leave a __drizzle_migrations table
-// behind for the next test file in this worker to trip over.
-
-function ingredientsMigrationStatements(): string[] {
-  const file = readdirSync(MIGRATIONS_DIR)
-    .filter((name) => name.endsWith('.sql'))
-    .map((name) => join(MIGRATIONS_DIR, name))
-    .find((path) => readFileSync(path, 'utf8').includes('CREATE TABLE "ingredients"'));
-
-  if (!file) throw new Error('No migration in src/db/migrations creates the ingredients table');
-
-  return readFileSync(file, 'utf8')
-    .split('--> statement-breakpoint')
-    .map((statement) => statement.trim())
-    .filter(Boolean);
-}
-
-const AUTHOR = '11111111-1111-1111-1111-111111111111';
-const WORKSPACE = '22222222-2222-2222-2222-222222222222';
+// The behaviour half, against the real table. This worker's sorrel_test_<n>
+// clone arrives with every migration applied and the `standard` scenario
+// seeded (M1.27, tests/support/db-setup.ts), and re-cloned that way before
+// this file runs — so what is asserted below is the SQL production runs, with
+// no schema built here and nothing to put back afterwards. Until M1.27 the
+// template was empty: this file applied the one migration that ships the
+// table and stubbed `users`/`workspaces` to a bare `id` column.
+//
+// The author and the workspace are the seed's, not invented ids: the real
+// `users` and `workspaces` have NOT NULL names, slugs and audit stamps, and a
+// row that exists is cheaper to point at than one to construct. Bound to the
+// old names so the tests read as they did.
+const AUTHOR = FIXTURE_USERS.A.id;
+const WORKSPACE = WORKSPACE_W_ID;
 
 // M1.25 — the shared factory, plus this file's own author. The audit stamps
 // are not the fixture's to give (CLAUDE.md rule 3), and `makeIngredient` is
@@ -222,31 +209,20 @@ async function failureOf(work: Promise<unknown>) {
   );
 }
 
-beforeAll(async () => {
+beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-
-  await sql`drop table if exists ingredients`;
-  await sql`drop table if exists ingredients_probe_workspaces`;
-  await sql`create table if not exists users (id uuid primary key)`;
-  await sql`create table if not exists workspaces (id uuid primary key)`;
-  await sql`insert into users (id) values (${AUTHOR}) on conflict do nothing`;
-  await sql`insert into workspaces (id) values (${WORKSPACE}) on conflict do nothing`;
-
-  for (const statement of ingredientsMigrationStatements()) {
-    await sql.unsafe(statement);
-  }
 });
 
+// `truncate … cascade`, not `delete from`: the seeded compendium's rows have
+// category and folk-name links, and every child foreign key in the schema is
+// NO ACTION, so a delete would be refused. Truncating takes the links with
+// it, and the empty table is what every test below assumes — the same
+// starting state the old empty template gave, reached the other way round.
 beforeEach(async () => {
-  await sql`delete from ingredients`;
+  await sql`truncate ingredients cascade`;
 });
 
 afterAll(async () => {
-  await sql`drop table if exists ingredients`;
-  await sql`drop type if exists nomenclature_kind`;
-  await sql`drop type if exists ingredient_element`;
-  await sql`drop table if exists workspaces`;
-  await sql`drop table if exists users`;
   await sql.end();
 });
 
@@ -461,7 +437,17 @@ describe('ingredients table', () => {
   describe('element', () => {
     it('accepts each of its five documented values', async () => {
       for (const element of ELEMENT_VALUES) {
-        await insert({ element, name: `Mugwort (${element})`, workspaceId: WORKSPACE });
+        // Five rows in one workspace, so five identities: the factory's default
+        // canonical name would make them one identity five times over, which
+        // `ingredients_workspace_identity_unique` (M4.7) refuses. Unseen before
+        // M1.27, when this file applied only the migration that created the
+        // table and never met the index a later one added.
+        await insert({
+          element,
+          name: `Mugwort (${element})`,
+          canonicalName: `Fixtura ${element}`,
+          workspaceId: WORKSPACE,
+        });
       }
 
       const [{ count }] =

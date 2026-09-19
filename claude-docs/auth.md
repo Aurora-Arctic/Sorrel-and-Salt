@@ -398,15 +398,17 @@ migrations.
   so it needs schema that is really there. `route.test.ts` is a **`unit`**
   test, so it reads the plain `sorrel` database — the per-worker
   `sorrel_test_<n>` clone is `db`-project-only and was never in this test's
-  path, which also means M1.27's template bake would not have fixed it. It
+  path, which also means M1.27's seeded template does not reach it. It
   passed locally only because this session had separately run
   `drizzle-kit migrate` by hand against its own `sorrel`; CI's was empty.
   See `claude-docs/testing.md`. The Google/GitHub redirect shape (real
   authorization URL, PKCE params, correct callback path per environment)
   was verified by hand against a running server instead, and the
   "Config" section above records what that verification established.
-- **No db-project introspection test for these tables yet.** `sorrel_template`
-  has no schema baked in until M1.27 (`claude-docs/db.md`), so a test
-  asserting these tables exist in a cloned `sorrel_test_<n>` database would
-  fail today regardless of whether the migration is correct — that gap
-  closes with M1.27, not before.
+- **The db-project introspection gap closed with M1.27.** Until then the
+  template carried no schema, so a test asserting these tables exist in a
+  cloned `sorrel_test_<n>` database would have failed regardless of whether
+  the migration was correct. Every clone now carries the full schema, and
+  `tests/db/updated-at-trigger.test.ts` reads `accounts`, `sessions` and
+  `verifications` from the catalogue as its named counter-example — the
+  three tables that carry `updated_at` and no trigger.

@@ -1,9 +1,9 @@
-import { join } from 'node:path';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import { MIGRATIONS_DIR, fromRoot } from '../../support/paths';
+import { fromRoot } from '../../support/paths';
+import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { FORM_GROUPS, FORMS, seedForms } from '@/db/seed/forms';
 import { slugify } from '@/lib/slugify';
@@ -18,24 +18,17 @@ import { slugify } from '@/lib/slugify';
 // it the property the regrouping was for: no section holds more than half the
 // list.
 //
-// The whole migration set is applied into the worker's clone rather than the
-// two tables being stubbed: `ingredient_forms.group_id` is a real foreign key
-// and every row carries audit ids pointing at `users`, so "the groups land
-// before the forms" is only a claim if both tables are the real ones.
+// Against the real tables, not stubs: `ingredient_forms.group_id` is a real
+// foreign key and every row carries audit ids pointing at `users`, so "the
+// groups land before the forms" is only a claim if both tables are the real
+// ones. This worker's clone arrives with every migration applied and the
+// `standard` scenario seeded (M1.27, tests/support/db-setup.ts), re-cloned
+// that way before this file runs — nothing is built here and nothing put back
+// afterwards. What the file *is* about is seeding, so beforeEach empties every
+// table first. Until M1.27 the template was empty and this file applied the
+// migration set itself.
 
 const DESIGN_DOC = fromRoot('claude-docs/DESIGN.md');
-
-function migrationStatements(): string[] {
-  return readdirSync(MIGRATIONS_DIR)
-    .filter((name) => name.endsWith('.sql'))
-    .sort()
-    .flatMap((name) =>
-      readFileSync(join(MIGRATIONS_DIR, name), 'utf8')
-        .split('--> statement-breakpoint')
-        .map((statement) => statement.trim())
-        .filter(Boolean),
-    );
-}
 
 // --- DESIGN.md §5, parsed ---------------------------------------------------
 
@@ -118,22 +111,6 @@ interface FormRow {
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
-let preexistingTables: string[] = [];
-let preexistingTypes: string[] = [];
-
-async function tableNames(): Promise<string[]> {
-  const rows = await sql`select tablename from pg_tables where schemaname = 'public'`;
-  return rows.map((row) => row.tablename as string);
-}
-
-async function enumTypeNames(): Promise<string[]> {
-  const rows = await sql`
-    select t.typname from pg_type t
-    join pg_namespace n on n.oid = t.typnamespace
-    where n.nspname = 'public' and t.typtype = 'e'
-  `;
-  return rows.map((row) => row.typname as string);
-}
 
 async function allGroups(): Promise<GroupRow[]> {
   return sql<GroupRow[]>`select * from ingredient_form_groups order by slug`;
@@ -148,32 +125,20 @@ async function countOf(table: string): Promise<number> {
   return Number(count);
 }
 
-beforeAll(async () => {
+beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-
-  preexistingTables = await tableNames();
-  preexistingTypes = await enumTypeNames();
-
-  for (const statement of migrationStatements()) {
-    await sql.unsafe(statement);
-  }
 });
 
+// One `truncate … cascade` over every table, not a `delete from` list: the
+// seeded scenario's rows point at each other and every child foreign key is
+// NO ACTION, so a delete would be refused. Truncating takes the links with it
+// and leaves the empty tables every count below assumes.
 beforeEach(async () => {
-  await sql`delete from ingredient_forms`;
-  await sql`delete from ingredient_form_groups`;
-  await sql`delete from users`;
+  await truncateAllTables(sql);
 });
 
 afterAll(async () => {
-  for (const table of (await tableNames()).filter((name) => !preexistingTables.includes(name))) {
-    await sql.unsafe(`drop table if exists "${table}" cascade`);
-  }
-  for (const type of (await enumTypeNames()).filter((name) => !preexistingTypes.includes(name))) {
-    await sql.unsafe(`drop type if exists "${type}" cascade`);
-  }
-  await sql.unsafe('drop function if exists set_updated_at() cascade');
   await sql.end();
 });
 

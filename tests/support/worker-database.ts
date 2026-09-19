@@ -3,6 +3,15 @@
 // clone, db-setup.ts to know what to connect to. They computed it separately
 // before, and drifted — see MB.14.
 
+/**
+ * `sorrel_test_template` — the migrated, `standard`-seeded template
+ * db-global-setup.ts builds once per run (M1.27) and every worker clone is
+ * made from: by db-global-setup.ts once per slot, and by db-setup.ts again
+ * before every test file. Never `sorrel_template` itself, which is M0.18's
+ * extensions-only base and stays pristine.
+ */
+export const TEST_TEMPLATE = 'sorrel_test_template';
+
 /** `sorrel_test_<slot>` — the clone db-global-setup.ts makes for one pool slot. */
 export function workerDatabaseName(slot: number | string): string {
   return `sorrel_test_${slot}`;
