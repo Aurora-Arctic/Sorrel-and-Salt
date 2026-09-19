@@ -178,7 +178,7 @@ and the same for GitHub, whose default scope already includes
 `user:email` — satisfying M2.5's "matched by email, not duplicated"
 criterion via Better Auth's own `accountLinking` default (implicit linking
 on a verified email, enabled out of the box) rather than anything this
-repo added. `src/app/api/auth/[...all]/route.test.ts` automates the Google
+repo added. `tests/app/api/auth/[...all]/route.test.ts` automates the Google
 half of that same check.
 
 **Not yet demonstrated, and not claimed as done:** M2.4/M2.5's actual
@@ -257,7 +257,7 @@ the organization plugin down — calling its server API from a service would hav
 made every fixture user a `sessions` row and a signed cookie, and `asUser(A)`
 would have stopped being a service-level value at all. M2.7 adds the helper
 that produces one from a request; M1.26 defined the shape ahead of it so
-authorization tests could be written first, and `src/test/as-user.ts` produces
+authorization tests could be written first, and `tests/support/as-user.ts` produces
 one from a fixture user (`claude-docs/testing.md`).
 
 - **It extends `AuditSession` rather than restating `userId`.** The identity a
@@ -349,12 +349,12 @@ migrations.
 
 ## Tests
 
-- `src/app/api/auth/[...all]/route.test.ts` — calls the exported `GET`
+- `tests/app/api/auth/[...all]/route.test.ts` — calls the exported `GET`
   against `/api/auth/ok` and asserts a real `200`/`{ ok: true }`, not a 404.
   Chosen specifically because it's the one built-in endpoint that never
   touches the database, so it exercises real route mounting without needing
   Postgres.
-- `src/lib/auth.test.ts` — asserts importing `./auth` throws when
+- `tests/lib/auth.test.ts` — asserts importing `@/lib/auth` throws when
   `BETTER_AUTH_SECRET` is unset at `NODE_ENV=production`, and doesn't
   throw when unset outside it; asserts `socialProviders()` registers a
   provider only once both its client id and secret are set; asserts
@@ -363,10 +363,10 @@ migrations.
   `NODE_ENV=production`.
   Uses `vi.resetModules()`/`vi.stubEnv()` throughout: ESM caches a module
   (including one that threw during evaluation) after its first import, so
-  reusing one `import('./auth')` across cases in the same test file would
+  reusing one `import('@/lib/auth')` across cases in the same test file would
   otherwise replay the first result instead of re-evaluating against new
   env vars.
-- **`src/lib/auth.test.ts` (M2.3 additions)** — asserts `role` and
+- **`tests/lib/auth.test.ts` (M2.3 additions)** — asserts `role` and
   `canCreateWorkspace` are registered with `input: false`; and calls
   `databaseHooks.user.create.before` directly (no real Better Auth request,
   no database) to assert a new user is stamped as its own `createdBy`/
@@ -374,21 +374,22 @@ migrations.
   matching `ADMIN_BOOTSTRAP_EMAIL` (case-insensitively), and left
   `undefined` — not `'user'` — for everyone else, so the column default is
   what actually applies rather than a second copy of it in this code.
-- **`src/lib/errors.test.ts` (M1.26)** — asserts `Forbidden` and
+- **`tests/lib/errors.test.ts` (M1.26)** — asserts `Forbidden` and
   `NotFound` are distinguishable by type in a `catch` and in an
   `expect().rejects.toThrow(Class)`, and that neither an empty list nor a
   success value satisfies an assertion written for a refusal. The last three
   cases assert that an _inner_ expectation rejects, which is what proves the
   assertion style can fail at all — see `claude-docs/testing.md`.
-- **`src/db/users-schema.test.ts`** — asserts `users`' shape via Drizzle's
+- **`tests/db/users-schema.test.ts`** — asserts `users`' shape via Drizzle's
   own `getTableConfig()` introspection: `name`/`image` columns,
   `role`'s `user`/`admin` enum and `'user'` default, `canCreateWorkspace`'s
   `false` default, every `...auditColumns` field present, and the email
   index being a partial unique index (`WHERE deleted_at IS NULL`) rather
-  than a plain unique constraint. Lives in `src/db/` rather than beside
-  `src/db/schema/users.ts` — a `*.test.ts` file inside `src/db/schema/`
-  gets swept into `drizzle.config.ts`'s `schema` glob, and `drizzle-kit
-generate` fails trying to `require()` a file that imports Vitest.
+  than a plain unique constraint. It was kept out of `src/db/schema/` from
+  the start — a `*.test.ts` file there gets swept into `drizzle.config.ts`'s
+  `schema` glob, and `drizzle-kit generate` fails trying to `require()` a
+  file that imports Vitest; MB.41 moved the whole suite to `tests/`, which
+  settles that by construction rather than by convention.
   Pure introspection, no real Postgres — see the next bullet for why.
 - **No automated test for the sign-in redirect, and not for the same
   reason as the introspection gap below.** A `POST /api/auth/sign-in/social`

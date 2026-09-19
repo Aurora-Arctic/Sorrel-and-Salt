@@ -1,6 +1,6 @@
 import postgres from 'postgres';
 
-// Mirrors src/test/db-global-setup.ts's admin-connection pattern for
+// Mirrors tests/support/db-global-setup.ts's admin-connection pattern for
 // Vitest, adapted for Playwright's single `sorrel_e2e` database rather than
 // one clone per worker.
 const E2E_DATABASE = 'sorrel_e2e';

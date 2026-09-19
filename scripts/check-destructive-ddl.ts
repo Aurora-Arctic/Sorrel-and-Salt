@@ -296,7 +296,7 @@ export function currentBranch(cwd: string = REPO_ROOT): string {
 
 // Every *.sql directly under src/db/migrations — drizzle-kit doesn't nest
 // migrations, so this doesn't need to recurse the way the story guard in
-// src/test/workshop-guards.test.ts does for src/components.
+// tests/guards/workshop-guards.test.ts does for src/components.
 function allCommittedMigrations(): string[] {
   if (!existsSync(MIGRATIONS_DIR)) return [];
   return readdirSync(MIGRATIONS_DIR)
@@ -378,7 +378,7 @@ export function report(findings: Finding[], prBody: string | undefined): number 
   return 1;
 }
 
-// Exercises the checked-in fixtures end to end. src/test/destructive-ddl-check.test.ts
+// Exercises the checked-in fixtures end to end. tests/guards/destructive-ddl-check.test.ts
 // is where the rules and the file-list resolution are actually pinned; this
 // stays because it needs no test runner, which is what `make act-*` and a bare
 // clone have.

@@ -103,7 +103,7 @@ jobs:
       # Same host/credentials shape Docker/docker-compose.yaml's `app` service
       # uses locally — `postgres` is this job's service container, reachable
       # by name since `vitest` itself runs inside a `container:`.
-      # src/test/db-global-setup.ts / db-setup.ts rewrite the database name
+      # tests/support/db-global-setup.ts / db-setup.ts rewrite the database name
       # per worker off this same base URL.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
     steps:

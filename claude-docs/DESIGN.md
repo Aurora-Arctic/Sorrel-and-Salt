@@ -94,7 +94,7 @@ This answers the risk GraphQL usually introduces. Field-level authorization scat
 src/
   app/                      # routes, layouts, server components
     api/graphql/route.ts    # Yoga handler
-  components/<Name>/        # index.tsx + index.scss + index.test.tsx
+  components/<Name>/        # index.tsx + index.scss
   services/                 # authz + business logic — THE choke point
   db/
     schema/                 # Drizzle tables
@@ -740,7 +740,7 @@ Workspace ingredients and stock are **one page**, not two. A filter chip disting
 
 ### Components
 
-Component folders follow the `resume-2026` convention exactly — `src/components/IngredientCard/` with `index.tsx`, `index.scss`, `index.test.tsx`, imported `from '../components/IngredientCard'`.
+Component folders follow the `resume-2026` convention — `src/components/IngredientCard/` with `index.tsx` and `index.scss`, imported `from '../components/IngredientCard'`. The test is the one departure from that convention: it lives at `tests/components/IngredientCard/index.test.tsx` rather than beside the component, because MB.41 moved every Vitest file under `tests/`.
 
 **`AppShell`** is the application-wide navigation frame, not a route. It wraps every signed-in page — compendium and ingredient detail included, which sit outside `/coven/` — and carries the primary nav, the `WorkspaceSwitcher`, and the global affordances for adding and editing an ingredient from any page. It is a layout component rather than a route because the nav must persist across navigation between workspace-scoped and global pages; the coven layout nests inside it and adds only workspace-scoped chrome.
 
@@ -754,7 +754,6 @@ Every component folder carries its own `index.scss`, imported by its `index.tsx`
 src/components/IngredientCard/
   index.tsx      → imports './index.scss'
   index.scss     → @use '../../scss/variables' as *;
-  index.test.tsx
 ```
 
 Shared partials in `src/scss/`, `@use`'d directly by whichever component needs them — never routed through a parent:
@@ -1009,9 +1008,9 @@ The highest-risk tests in the project.
 - DataLoader batches — assert query count, not just correctness, on a 50-ingredient fetch
 - Every mutation delegates to a service; no resolver touches `db`
 
-### Component — Vitest + RTL, colocated
+### Component — Vitest + RTL
 
-`src/components/<Name>/index.test.tsx`, importing the sibling `from '.'`. Role and label queries only; no test ids for anything a user can see.
+`tests/components/<Name>/index.test.tsx`, importing the component as `@/components/<Name>`. Mirrored under `tests/` rather than colocated: MB.41 moved the whole suite out of `src/`, so the directory a component test sits in is the component's own path with the tree swapped, and nothing under `src/` is a test. Role and label queries only; no test ids for anything a user can see.
 
 - `IngredientSearch` — filtering, chip toggle, grouped chips collapse, clear, debounce via fake timers
 - `IngredientForm` — fuzzy warning renders and names each match's formal name, Create Anyway proceeds, compendium entries read-only for non-admins, the formal-name and form fields suggest in scope and accept free text outside the vocabulary

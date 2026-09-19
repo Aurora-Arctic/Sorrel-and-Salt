@@ -5,13 +5,47 @@ Vitest 5, configured as two projects in `vitest.config.mts` (`.mts`, not
 `MODULE_TYPELESS_PACKAGE_JSON`, so an explicit `.mts` extension is what tells
 Vite's native config loader this file is ESM instead of warning about it).
 
+## Where tests live
+
+Every Vitest file is under `tests/`, mirroring `src/` (MB.41). Nothing under
+`src/` is a test.
+
+```
+tests/
+  app/ components/ lib/ db/   # mirror the src/ path of the code under test
+  guards/                     # the mechanical guards
+  support/                    # the harness: as-user, db-setup, msw, paths
+```
+
+Three consequences worth knowing before writing a test:
+
+- **A test imports the code under test by the `@/` alias**, not by a relative
+  path — `import { users } from '@/db/schema/users'`. `vitest.config.mts` sets
+  `resolve: { tsconfigPaths: true }` so Vite reads the `@/*` → `./src/*`
+  mapping tsconfig already declared; each project spells out `extends: true`
+  to inherit it. Imports _within_ `tests/` stay relative.
+- **A test that reads a file from disk goes through `tests/support/paths.ts`**
+  — `REPO_ROOT`, `fromRoot('…')`, `MIGRATIONS_DIR` — rather than counting
+  `../` from its own location. The chain is counted once, there.
+- **The project split is a path glob**, so where a file sits decides how it
+  runs. A test that touches Postgres and is not under `tests/db/` lands in
+  `unit`, under jsdom, against the plain `sorrel` database.
+
+`tests/guards/test-location.test.ts` holds the rule. It is a test rather than
+a lint rule because Oxlint has no custom-rule API and cannot express a
+statement about the tree; it scans tracked _and_ untracked files, so a test
+written in `src/` fails in the diff that adds it. The failure it prevents is
+silent: `include` is scoped to `tests/`, so a misplaced test is not a red
+test, it is a file nothing runs.
+
 - **`unit`** — `environment: 'jsdom'`, `globals: true` (enables
   `@testing-library/react`'s automatic post-test `cleanup()`, which hooks
   itself onto the global `afterEach` at import time). `include`s
-  `src/**/*.test.{ts,tsx}`, excluding `src/db/**` and `src/services/**`. That
-  glob does reach a test inside a directory literally named `[...all]`
-  (`src/app/api/auth/[...all]/route.test.ts`) — `[...]` is glob metacharacter
-  syntax, so it was worth confirming rather than assuming.
+  `tests/**/*.test.{ts,tsx}`, excluding `tests/db/**` and
+  `tests/services/**`. That glob does reach a test inside a directory
+  literally named `[...all]` (`tests/app/api/auth/[...all]/route.test.ts`) —
+  `[...]` is glob metacharacter syntax, so it was worth confirming rather
+  than assuming.
   - **A `unit` test that opens a connection gets the plain `sorrel` database,
     not a clone.** The per-worker `sorrel_test_<n>` rewrite is `db`-only — it
     lives in that project's `setupFiles` (below) and nothing rewrites
@@ -30,10 +64,12 @@ Vite's native config loader this file is ESM instead of warning about it).
   - **Vitest's jsdom environment resolves `import.meta.url` against the
     mocked browser `location`, not a real `file://` URL** — matching real
     browser semantics (a bundled ES module's `import.meta.url` is an `http(s)`
-    URL there too), not a bug. A test that needs its own file's path (e.g. to
-    read a sibling `.scss` file, as `ThemeToggle`'s does) needs
-    `path.join(process.cwd(), …)` instead of
-    `fileURLToPath(new URL('./x', import.meta.url))`.
+    URL there too), not a bug. So a `unit` test cannot reach its own path that
+    way. `tests/support/paths.ts` is built on `import.meta.dirname`, which is
+    a real path in both projects, which is why one helper serves both; the
+    one place still reading a file by convention is `ThemeToggle`'s test,
+    which uses `path.join(process.cwd(), …)` to reach the component's
+    `index.scss` now that the two no longer sit in the same directory.
   - **`setupFiles` also runs `./vitest.setup.ts`** (M1.8, ported from
     `resume-2026`), which adds three global hooks on top of the RTL
     `cleanup()` that `globals: true` already registers on its own:
@@ -47,11 +83,11 @@ Vite's native config loader this file is ESM instead of warning about it).
     - MSW lifecycle — `beforeAll(() => server.listen({ onUnhandledRequest:
 'error' }))`, `afterEach(() => server.resetHandlers())`,
       `afterAll(() => server.close())` — against the `server` exported from
-      `src/test/msw/server.ts` (`setupServer()`, no base handlers — every
+      `tests/support/msw/server.ts` (`setupServer()`, no base handlers — every
       operation is registered per test, see below).
-    - Covered by `src/test/vitest-setup.test.tsx`, which asserts each hook's
+    - Covered by `tests/support/vitest-setup.test.tsx`, which asserts each hook's
       effect directly rather than testing `vitest.setup.ts` itself.
-  - **`src/test/msw/graphql.ts`** (M1.10) scopes MSW's `graphql` helper to
+  - **`tests/support/msw/graphql.ts`** (M1.10) scopes MSW's `graphql` helper to
     `/api/graphql` with `graphql.link('/api/graphql')`, and exports
     `mockGraphQLQuery(operationName, resolveData)` /
     `mockGraphQLMutation(operationName, resolveData)` for a component test to
@@ -68,9 +104,9 @@ Vite's native config loader this file is ESM instead of warning about it).
     through to `onUnhandledRequest: 'error'` and fails loudly instead of
     hitting the network; `afterEach(() => server.resetHandlers())` means an
     override from one test never leaks into the next.
-    Covered by `src/test/msw/graphql.test.ts`.
-- **`db`** — `environment: 'node'`. `include`s `src/db/**/*.test.ts` and
-  `src/services/**/*.test.ts`. The `src/db/**` half is real as of Wave 1
+    Covered by `tests/support/msw/graphql.test.ts`.
+- **`db`** — `environment: 'node'`. `include`s `tests/db/**/*.test.ts` and
+  `tests/services/**/*.test.ts`. The `tests/db/**` half is real as of Wave 1
   (`audit`, `bootstrap`, `users-schema`, `test-database-isolation`), though
   the schema tests are Drizzle `getTableConfig()` introspection rather than
   queries — `sorrel_template` carries no tables until M1.27. `src/services/`
@@ -78,7 +114,7 @@ Vite's native config loader this file is ESM instead of warning about it).
   project's config ever points at
   Neon (`Docker/docker-compose.yaml`'s `postgres` service publishes **5432**
   for exactly this — "the host-side Vitest `db` project").
-  - **`globalSetup: ['./src/test/db-global-setup.ts']`** (M1.9) runs once,
+  - **`globalSetup: ['./tests/support/db-global-setup.ts']`** (M1.9) runs once,
     before any worker starts, and clones `sorrel_test_1` through
     `sorrel_test_<maxWorkers>` from `sorrel_template` with
     `CREATE DATABASE ... TEMPLATE`, dropping each one first (`DROP DATABASE
@@ -95,7 +131,7 @@ IF EXISTS`) so a crashed previous run self-heals instead of erroring on a
     `Docker/postgres-init/enable-extensions.sql` (M1.9) — since `postgres`'s
     own password is generated and discarded at image build time (M0.18) and
     so can never authenticate a real connection.
-  - **`setupFiles: ['./src/test/db-setup.ts']`** points each worker's
+  - **`setupFiles: ['./tests/support/db-setup.ts']`** points each worker's
     `DATABASE_URL` at its own `sorrel_test_${VITEST_POOL_ID}` clone before
     any test file imports `connection.ts` — it can read the variable at all
     because `setupFiles` (unlike `globalSetup`) run inside the worker
@@ -108,7 +144,7 @@ IF EXISTS`) so a crashed previous run self-heals instead of erroring on a
       there are more test files than workers. Keying the name off it worked
       until the repo had eleven test files and CI had three workers, at which
       point the isolation spec asked for a `sorrel_test_4` nobody had cloned.
-      Both halves now share `src/test/worker-database.ts`, which is also
+      Both halves now share `tests/support/worker-database.ts`, which is also
       where a missing `DATABASE_URL`/`VITEST_POOL_ID` is turned into a named
       harness error rather than a `sorrel_test_undefined` connection failure.
   - Rejected alternative — wrapping each test in a rolled-back transaction —
@@ -117,8 +153,9 @@ IF EXISTS`) so a crashed previous run self-heals instead of erroring on a
 
 **Coverage** (`test.coverage`, provider `v8`): thresholds are 80% on lines,
 branches, functions, and statements, `include: ['src/**/*.{ts,tsx}']`,
-excluding test files, `*.stories.tsx`, `src/db/migrations/**`,
-`src/db/seed/**`, and `src/test/**`. Coverage has been above the threshold
+excluding `*.stories.tsx`, `src/db/migrations/**`, and `src/db/seed/**`.
+The test files and the harness used to need excluding too; since MB.41 they
+live in `tests/`, which `include` never reaches. Coverage has been above the threshold
 since Wave 3's schema tests landed (~92% of lines at M1.21), so
 `npm run test:coverage` exits non-zero only on a test failure or on a change
 that pulls a metric back under 80% — which is the threshold doing its job,
@@ -130,7 +167,10 @@ not a defect.
 
 **Wired into CI (M1.14).** `pr-gate.yml`'s `vitest` job
 calls the real `.github/workflows/vitest.yml`, path-filtered off `src/**`,
-`vitest.config.mts`, `vitest.setup.ts`, and `package{,-lock}.json`. It runs
+`tests/**`, `vitest.config.mts`, `vitest.setup.ts`, and
+`package{,-lock}.json`. `tests/**` is load-bearing: without it a test-only
+PR — the one kind whose whole content is what this job runs — would skip the
+job and report green. It runs
 in `build-image.yml`'s shared `testing` container plus its own `services:
 postgres:` (a `build-db-image` job feeding
 `postgres://sorrel:sorrel@postgres:5432/sorrel`, reachable by service name —
@@ -141,7 +181,7 @@ coverage table (`.github/scripts/summarize-vitest.mjs`).
 
 ## Acting as a fixture user, and asserting a refusal (M1.26)
 
-**`src/test/as-user.ts`** is the one line an authorization test opens with:
+**`tests/support/as-user.ts`** is the one line an authorization test opens with:
 
 ```ts
 await expect(spells.create(asUser(C), { workspaceId: W.id, title: 'x' })).rejects.toThrow(
@@ -164,10 +204,10 @@ await expect(spells.create(asUser(C), { workspaceId: W.id, title: 'x' })).reject
   the middle to fall out of step, and a user a test creates mid-run acts
   through the same helper.
 - **It never touches the database.** Whether A exists is
-  `src/db/seed/standard.test.ts`'s claim, made against real rows; re-proving
+  `tests/db/seed/standard.test.ts`'s claim, made against real rows; re-proving
   it here would cost a second migrate-and-seed harness to assert something
   already asserted.
-- **`src/test/as-user.test.ts` loops over `FIXTURE_USERS` rather than naming
+- **`tests/support/as-user.test.ts` loops over `FIXTURE_USERS` rather than naming
   five cases**, so a sixth fixture user is covered the day it is added. It
   also carries a `@ts-expect-error` compile assertion that an id alone cannot
   make a session — the role has to come off the row.
@@ -177,7 +217,7 @@ await expect(spells.create(asUser(C), { workspaceId: W.id, title: 'x' })).reject
 so the two refusals stay distinguishable — see `claude-docs/auth.md` for why a
 route needs to know which one happened.
 
-`src/lib/errors.test.ts` proves the assertion style can actually fail, which is
+`tests/lib/errors.test.ts` proves the assertion style can actually fail, which is
 the only thing that makes it worth writing. Three of its cases assert that an
 _inner_ expectation rejects:
 
