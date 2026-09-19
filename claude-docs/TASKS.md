@@ -4257,7 +4257,7 @@ _Acceptance criteria:_
 
 _Story:_ As a maintainer, I want a push to `main` to reach production so that a merged release actually ships.
 
-Every push to `main` fails at `vercel pull` with `Invalid request: \`target\` must be "preview" when specifying a \`gitBranch\``. Branch-scoped environment variables are a Preview-only Vercel feature, and MB.27 added `--git-branch="$GIT_BRANCH"`to both workflows unconditionally while`resolve-target`emits`git_branch=main`for the production arm. v0.2.0 merged and was tagged but never deployed:`migrate`dies at the pull, and`deploy` is gated behind it, so production still serves v0.1.1 — stale rather than broken, since code and schema still agree.
+Every push to `main` fails at `vercel pull` with ``Invalid request: `target` must be "preview" when specifying a `gitBranch` ``. Branch-scoped environment variables are a Preview-only Vercel feature, and MB.27 added `--git-branch="$GIT_BRANCH"` to both workflows unconditionally while `resolve-target` emits `git_branch=main` for the production arm. v0.2.0 merged and was tagged but never deployed: `migrate` dies at the pull, and `deploy` is gated behind it, so production still serves v0.1.1 — stale rather than broken, since code and schema still agree.
 
 MB.27's own commit recorded two acceptance criteria as open, both needing live Vercel access. This is one of them, found the only way it could be.
 
