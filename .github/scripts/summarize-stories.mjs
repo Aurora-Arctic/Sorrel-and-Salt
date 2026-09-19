@@ -1,11 +1,9 @@
-// M1.28 — turns the checklist tests/support/story-reporter.ts wrote as JSON
-// (vitest.yml's "Run acceptance stories" step, `--outputFile=/app/stories.json`)
-// into the short `summary` stat line and the collapsible `details` checklist
-// consumed by the job-summary and pr-comment composite actions — the same
-// two outputs summarize-vitest.mjs produces for the unit run. The JSON's
-// shape is story-checklist.ts's `Checklist`: `stories` in §10 order, each
-// with `status` (passed / failed / skipped / untested), `unknown` for a
-// suite naming a number §10 does not list, `counts` and `total`.
+// Turns the checklist tests/support/story-reporter.ts writes as JSON (from
+// vitest.yml's "Run acceptance stories" step) into the same two outputs
+// summarize-vitest.mjs produces for the unit run. The shape is
+// story-checklist.ts's `Checklist`: `stories` in DESIGN.md §10 order, each
+// with a `status`; `unknown` for a suite naming a number §10 does not list;
+// `counts` and `total`.
 import fs from 'node:fs';
 
 const RESULTS_PATH = '/app/stories.json';

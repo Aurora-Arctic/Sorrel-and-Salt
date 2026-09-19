@@ -1,8 +1,7 @@
-// Ported from resume-2026/.github/scripts/summarize-playwright.mjs (M1.14).
 // Parses Playwright's JSON reporter output (written alongside the list
 // reporter by playwright.yml's "Run Playwright e2e tests" step) into the
-// short `summary` stat line and collapsible `details` block consumed by
-// the job-summary and pr-comment composite actions.
+// short `summary` stat line and collapsible `details` block the job-summary
+// and pr-comment composite actions consume.
 import fs from 'node:fs';
 import { buildCoverageSection } from './lib/coverage-table.mjs';
 
@@ -32,11 +31,9 @@ const testSummary = summaryParts.join(', ');
 const coverage = buildCoverageSection(COVERAGE_SUMMARY_PATH, REPO_ROOT);
 const summary = coverage ? `${testSummary} — ${coverage.stat}` : testSummary;
 
-// Suites nest recursively (suite.suites[] inside suite.suites[]). The
-// outermost suite per spec file has title/file equal to the spec file name
-// itself — skip that title when building the ancestor breadcrumb (the file
-// is already shown separately), only accumulate titles from suites nested
-// below that top level (i.e. describe() blocks).
+// Suites nest recursively. The outermost suite per spec file has a title
+// equal to the file name, which is already shown separately — so that one
+// title is skipped and only describe() blocks below it join the breadcrumb.
 const failures = [];
 function walk(suite, ancestors, skipOwnTitle) {
   const nextAncestors = skipOwnTitle ? ancestors : [...ancestors, suite.title];

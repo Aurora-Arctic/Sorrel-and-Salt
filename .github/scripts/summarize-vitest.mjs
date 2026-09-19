@@ -1,8 +1,7 @@
-// Ported from resume-2026/.github/scripts/summarize-vitest.mjs (M1.14).
 // Parses Vitest's JSON reporter output (written alongside the default
 // console reporter by vitest.yml's "Run vitest" step) into the short
-// `summary` stat line and collapsible `details` block consumed by the
-// job-summary and pr-comment composite actions.
+// `summary` stat line and collapsible `details` block the job-summary and
+// pr-comment composite actions consume.
 import fs from 'node:fs';
 import path from 'node:path';
 import { buildCoverageSection } from './lib/coverage-table.mjs';

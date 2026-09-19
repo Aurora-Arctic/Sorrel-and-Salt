@@ -1,23 +1,19 @@
 name: Neon Snapshot Prune
 
 # Scheduled cleanup for the pre-migration snapshot branches migrate.yml
-# creates (M1.6). Neon's free tier caps a project at 10 branches total —
-# `production`, `staging`, one snapshot per production migration, and one
-# ephemeral branch per open hotfix preview all draw from the same quota — so
-# `snapshot-*` branches can't just accumulate. Keeps the newest
-# KEEP_SNAPSHOTS (below) and deletes the rest; runs weekly and can also be
-# triggered by hand. Never triggered from another workflow — this is the one
-# workflow in the repo that runs on a schedule rather than push/PR/call.
+# creates. **Neon's free tier caps a project at 10 branches in total**, and
+# `production`, `staging`, every retained snapshot and every open hotfix
+# preview's ephemeral branch draw on that one quota — so `snapshot-*` cannot
+# be left to accumulate. See claude-docs/ci.md's "Neon snapshots" section.
 #
-# Guarded the same stub-now/wire-later way as migrate.yml's own Neon step:
-# NEON_API_KEY/NEON_PROJECT_ID don't exist until M0.27 wires up the secrets
-# matrix, so a run before then warns and exits green instead of failing.
+# The only scheduled workflow in the repo; nothing calls it. Guarded the same
+# warn-and-skip way as migrate.yml's Neon step, since NEON_API_KEY and
+# NEON_PROJECT_ID are not set yet (claude-docs/secrets.md).
 
 on:
   schedule:
-    # Sundays at 06:00 UTC — outside any deploy window, and infrequent
-    # enough that a week of production migrations (rare, per CLAUDE.md's
-    # one-task-per-PR cadence) won't outrun it.
+    # Sundays at 06:00 UTC — outside any deploy window, and a week of
+    # production migrations cannot outrun it at this repo's cadence.
     - cron: '0 6 * * 0'
   workflow_dispatch: {}
 
@@ -25,9 +21,8 @@ permissions:
   contents: read
 
 env:
-  # How many of the most recent snapshot-* branches to keep. Comfortably
-  # under the 10-branch quota once production, staging, and any in-flight
-  # hotfix previews are accounted for.
+  # How many of the newest snapshot-* branches to keep — comfortably under
+  # the 10-branch quota with production, staging and in-flight previews.
   KEEP_SNAPSHOTS: 3
 
 jobs:

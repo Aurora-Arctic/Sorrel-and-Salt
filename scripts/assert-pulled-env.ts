@@ -1,31 +1,20 @@
 /**
- * MB.46 — assert (and report on) the environment `vercel pull` wrote.
+ * Assert, and report on, the environment `vercel pull` wrote. Run by
+ * deploy.yml and migrate.yml before anything consumes that file;
+ * claude-docs/ci.md's "Deploy" section is the walkthrough.
  *
- * `vercel pull` writes `.vercel/.env.<environment>.local` and CI has been
- * trusting it. Two failures came out of that trust:
- *
- *   - `migrate.yml` extracted `DATABASE_URL` and guarded it with `[ -z ]`
- *     alone, so Vercel's `[SENSITIVE]` placeholder — or a quote the extraction
- *     failed to strip, or a `psql '…'` wrapper — reached drizzle-kit, which
- *     died on `new URL()` with the value masked out of its own stack trace.
- *   - `deploy.yml` never read the file at all. It handed it to `vercel build`,
- *     which died on `BETTER_AUTH_SECRET is not set`.
- *
- * Both are the same defect: nothing between the pull and its consumer could
- * say what the pull returned. That is why `--git-branch` dropping variables
- * (MB.27, found by MB.45) took a production outage to notice.
- *
- * So this script does two things, and the second is the one worth having:
- *
- *   ASSERT — a required key that is missing, empty, a placeholder, or not a
- *   connection string fails the job with its own named cause.
+ *   ASSERT — a required key that is missing, empty, a placeholder or not a
+ *   connection string fails the job with its own named cause, rather than
+ *   reaching a consumer that cannot describe it.
  *
  *   REPORT — every key the pull returned, with a classification and never a
- *   value. Key names are not secret; claude-docs/secrets.md already enumerates
- *   them. Values never appear in output, which
- *   tests/guards/pulled-env-assertion.test.ts asserts rather than assumes.
+ *   value, printed even when the run is about to fail. This is the half worth
+ *   having: before it, CI could not answer "what did the pull return?" at all.
+ *   Key names are not secret (claude-docs/secrets.md enumerates them); that no
+ *   value is ever printed is asserted in
+ *   tests/guards/pulled-env-assertion.test.ts rather than intended.
  *
- * The input is read from a FILE PATH, never from argv and never from an
+ * **The input is read from a FILE PATH**, never from argv and never from an
  * environment variable carrying the value: argv is visible to `ps` and is
  * echoed by `set -x`.
  */
@@ -116,22 +105,19 @@ const SCHEME = /^postgres(?:ql)?:\/\//;
 const CONNECTION = /^postgres(?:ql)?:\/\/[^\s/@]+(?::[^\s/@]*)?@[^\s/:]+(?::\d+)?\/[^\s?]+/;
 
 /**
- * MB.49 — libpq parameters postgres.js does not consume, and so forwards.
+ * libpq parameters postgres.js does not consume, and so forwards.
  *
- * `parseOptions` deletes `sslmode`, reads the keys named in its own `defaults`
- * object, and spreads EVERY REMAINING query parameter into `connection` — which
- * the driver sends verbatim as a Postgres startup parameter. A libpq parameter
- * that the *client* is supposed to act on therefore reaches the *server*, which
- * has never heard of it and answers 42704.
+ * `parseOptions` deletes `sslmode`, reads the keys in its own `defaults`, and
+ * spreads EVERY REMAINING query parameter into `connection` — which the driver
+ * sends verbatim as a Postgres *startup parameter*. So a libpq CLIENT-side
+ * option reaches the server, which has never heard of it and answers 42704.
  *
- * `channel_binding` is the confirmed one: Neon's console puts it in the
- * connection strings it hands you, and it is what made staging's migration exit
- * 1 without a word. The rest are the same defect — libpq client-side options,
- * absent from postgres.js's `defaults`, so forwarded identically. They are
- * listed rather than derived because deriving them would mean reading
- * node_modules at runtime, and a list is reviewable.
+ * `channel_binding` is the confirmed one, and Neon's console adds it to the
+ * connection strings it hands you by default. The rest are the same defect.
+ * Listed rather than derived, because deriving would mean reading node_modules
+ * at runtime and a list is reviewable.
  *
- * Deliberately NOT here: `sslmode` (consumed and mapped to `ssl`),
+ * Deliberately NOT here: `sslmode` (consumed, mapped to `ssl`),
  * `application_name` and `options` (real server parameters), and the keys
  * postgres.js already names — `connect_timeout`, `target_session_attrs`,
  * `sslnegotiation`, `prepare`, `max`, `fetch_types`.
@@ -166,13 +152,12 @@ function clientOnlyParams(value: string): string[] {
 }
 
 /**
- * Ordered, and the order is load-bearing. `"postgres://…"` is a quoted URL
+ * **Ordered, and the order is load-bearing.** `"postgres://…"` is a quoted URL
  * rather than a non-URL, and saying so is the difference between "fix the
  * extraction" and "fix the value" — so UNTRIMMED is judged before the scheme.
  *
- * No message interpolates the value. The value is masked in CI, so a message
- * that quoted it would print `***` and say nothing — which is how the original
- * failure managed to be both loud and uninformative.
+ * No message interpolates the value. It is masked in CI, so a message quoting
+ * it would print `***` and say nothing.
  */
 export function validateDatabaseUrl(raw: string | undefined): Verdict {
   const kind = classify(raw);
@@ -327,8 +312,8 @@ function main(): void {
 
   const result = assertPulledEnv(text, required);
 
-  // The report prints first and prints always. A failure that does not say
-  // what the pull returned leaves you exactly where MB.45 started.
+  // The report prints first and prints always: a failure that does not say
+  // what the pull returned is the defect this script exists to end.
   console.log(`Pulled environment (${file}) — ${result.report.length} variable(s):\n`);
   for (const line of result.report) console.log(line);
   console.log('');

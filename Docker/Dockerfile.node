@@ -1,34 +1,29 @@
 # syntax=docker/dockerfile:1
 
 # Sorrel & Salt — Node image for local development and CI test runs.
+# claude-docs/docker.md is the walkthrough.
 #
-# Two stages, both on the musl/alpine Node base. This is a deliberate slimming
-# of the three-stage resume-2026 file (`builder` -> `testing` -> `devcontainer`,
-# on the full Debian `node` image): there is no separate `devcontainer` stage,
-# the devcontainer (M0.14) builds `development` directly, and Playwright's
-# system libraries and browser download are left out entirely — e2e is not run
-# from this image.
+#   development  Dependencies only. What the compose `app` service and the
+#                devcontainer build.
+#   testing      `development` plus a test-only default command. What CI
+#                builds to run vitest against a Postgres service.
 #
-#   development  Dependencies only. The interactive image the compose `app`
-#                service and the devcontainer both build (M0.12-M0.14).
-#   testing      `development` plus a test-only default command. What CI builds
-#                to run vitest against a Postgres service.
+# Both stages are Alpine/musl, and **Playwright is deliberately absent** —
+# its Chromium has no official musl support, so e2e runs from
+# Docker/Dockerfile.e2e instead. Adding browser tooling here would put half a
+# gigabyte into the image CI and the app share.
 #
-# Neither stage carries the source (MB.42). It arrives from outside the image:
-# the compose services and the devcontainer bind-mount `..:/app` over
-# `/app`, and CI's `.github/actions/checkout-to-app` copies the PR checkout
-# into it. A baked-in tree was read by nobody but CI, and there it was a bug —
-# the copy overlays without deleting, so a file the repo had removed stayed on
-# disk in every container job. `tests/guards/image-source-layer.test.ts`
-# pins the allowlist of what each Dockerfile may COPY; adding to it is a
-# decision made in that test, not here.
-#
-# Dependencies are installed in their own layer from the manifests alone, so
-# they stay cached until a manifest changes. Requires BuildKit (default in
-# modern Docker) for the `# syntax` directive above.
+# **Neither stage carries the source**, and neither may. It arrives from
+# outside: the `..:/app` bind mount in every compose service and the
+# devcontainer, or .github/actions/checkout-to-app's `cp -a` in CI. That copy
+# overlays without deleting, so a baked-in tree means a file the branch has
+# deleted survives it and gets linted, typechecked and globbed as if it were
+# still there — which is exactly what happened.
+# tests/guards/image-source-layer.test.ts allowlists what each Dockerfile may
+# COPY; adding to it is a decision made in that test, not here.
 
-# Pinned to the same tag resume-2026 uses, so the image-size comparison in
-# claude-docs/design-decisions/m0.11-slim-dockerfile-node.md is like-for-like.
+# Pinned. deploy.yml and migrate.yml's actions/setup-node must match it —
+# under Node 22, npm 10 cannot read this repo's npm-11 lockfile.
 ARG NODE_VERSION=26.6.0
 
 # ---------------------------------------------------------------------------
@@ -36,8 +31,8 @@ ARG NODE_VERSION=26.6.0
 # ---------------------------------------------------------------------------
 FROM node:${NODE_VERSION}-alpine AS development
 
-# glibc shim for the occasional prebuilt native addon that assumes it (Next's
-# SWC binary ships a musl build, but this keeps `npm ci` robust). ~1 MB.
+# glibc shim for prebuilt native addons that assume it (~1 MB). The only
+# `apk` package in this stage; keep it that way.
 RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
@@ -45,9 +40,8 @@ RUN chown node:node /app
 USER node
 
 # Dependency layer: only the manifests, so `npm ci` stays cached until they
-# change. `--include=dev` is the default; vitest and the rest of the toolchain
-# land here once they are added to package.json. This is the last COPY — see
-# the header for why there is no source layer beneath it.
+# change. Always `npm ci`, never `npm i`. This is the last COPY — see the
+# header for why nothing follows it.
 COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci
 
@@ -60,27 +54,21 @@ CMD ["npm", "run", "dev"]
 # ---------------------------------------------------------------------------
 FROM development AS testing
 
-# The reusable check workflows (lint/format/typecheck/build, M0.16) force
-# `shell: bash` and `set -o pipefail`, and their `checkout-to-app` composite
-# step runs `bash` too — none of which the Node alpine base ships. `git` is
-# what actions/checkout uses to fetch the tree (it falls back to a slow, and
-# offline-unusable, tarball download otherwise). Both are test/CI-only, so
-# they land in this stage rather than `development`. Surfaced by `make act-*`
-# (M0.23) — see claude-docs/design-decisions/m0.23-act-local-ci.md.
+# Four packages the Alpine base lacks and CI needs, all test/CI-only and so
+# absent from `development`:
 #
-# `tar` and `zstd` (MB.37) are for actions/cache, which runs *inside* this
-# container on checks.yml's build leg and needs GNU tar (`--posix`, among
-# other flags). busybox's, all the Alpine base ships, exited 1 on every save,
-# so the Next.js build cache never hit once between landing and MB.37 — a
-# warning on every run that read as noise. Alpine's `tar` package installs
-# /usr/bin/tar, ahead of busybox's /bin/tar on PATH. zstd is what the action
-# compresses with when it finds it, gzip otherwise.
+#   bash   every check workflow forces `shell: bash` and `set -o pipefail`
+#   git    what actions/checkout fetches with; otherwise a slow tarball
+#   tar    actions/cache runs INSIDE this container and needs GNU tar —
+#          busybox's rejects `--posix` and exited 1 on every save, so the
+#          Next.js build cache never hit once until this line landed. The
+#          `tar` package installs /usr/bin/tar, ahead of busybox's /bin/tar.
+#   zstd   what actions/cache compresses with when it finds it, gzip otherwise
 USER root
 RUN apk add --no-cache bash git tar zstd
 USER node
 
 ENV NODE_ENV=test
-# The `db` vitest project needs a reachable Postgres; compose/CI provide it.
-# The source, too: this assumes a bind mount or `checkout-to-app` has filled
-# `/app` — the image alone holds nothing for vitest to run.
+# The `db` project needs a reachable Postgres, and vitest needs the source:
+# both come from outside, via compose or checkout-to-app.
 CMD ["npx", "vitest", "run"]
