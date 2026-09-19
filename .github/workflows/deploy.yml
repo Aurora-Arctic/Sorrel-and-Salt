@@ -274,6 +274,26 @@ jobs:
         env:
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
+      # MB.46 — read what the pull actually returned, before handing it to a
+      # build that cannot say. `vercel build` runs `next build` with
+      # NODE_ENV=production, which traces /api/auth/[...all] -> src/lib/auth.ts
+      # -> src/db/connection.ts: `auth.ts` throws on an unset
+      # BETTER_AUTH_SECRET, and `connection.ts` calls `postgres()` at module
+      # scope, which parses its URL eagerly. So a missing secret or a
+      # placeholder URL fails the build either way — the difference is whether
+      # the log names the cause or prints a stack trace with the value masked
+      # out of it. That is how MB.27 silently dropping variables survived until
+      # a production outage.
+      #
+      # The script reports every key it found, with a classification and never
+      # a value, and prints that report even when it is about to fail.
+      - name: Assert the pulled environment
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/assert-pulled-env.ts \
+            --file ".vercel/.env.${{ needs.resolve-target.outputs.environment }}.local" \
+            --require DATABASE_URL,BETTER_AUTH_SECRET
+
       - name: Build
         if: steps.guard.outputs.enabled == 'true'
         run: vercel build ${{ needs.resolve-target.outputs.prod_flag }} --token="$VERCEL_DEPLOY_TOKEN"

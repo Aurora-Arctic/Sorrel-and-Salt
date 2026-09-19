@@ -142,19 +142,30 @@ jobs:
         env:
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
+      # MB.46 — the guard below used to be `[ -z "$db_url" ]` and nothing else,
+      # so anything non-empty reached drizzle-kit: Vercel's `[SENSITIVE]`
+      # placeholder, a quote the `sed` failed to strip, a `psql '…'` wrapper
+      # pasted from the Neon console. drizzle-kit then died on `new URL()` with
+      # the value masked out of its own stack trace, which is a failure that
+      # tells you nothing.
+      #
+      # The script reads the file itself rather than being handed the value:
+      # it never prints a value (asserted, not assumed, in
+      # tests/guards/pulled-env-assertion.test.ts), so it is safe to run before
+      # the mask exists — and it reports every key it found, which is the half
+      # that would have made MB.27's dropped variables visible.
+      - name: Assert the pulled environment
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/assert-pulled-env.ts \
+            --file ".vercel/.env.${{ inputs.environment }}.local" \
+            --require DATABASE_URL
+
       - name: Load DATABASE_URL from pulled environment
         if: steps.guard.outputs.enabled == 'true'
         run: |
           env_file=".vercel/.env.${{ inputs.environment }}.local"
-          if [ ! -f "$env_file" ]; then
-            echo "::error::$env_file not found after vercel pull"
-            exit 1
-          fi
           db_url=$(grep -m1 '^DATABASE_URL=' "$env_file" | cut -d '=' -f2- | sed -e 's/^"//' -e 's/"$//')
-          if [ -z "$db_url" ]; then
-            echo "::error::DATABASE_URL not present in $env_file"
-            exit 1
-          fi
           echo "::add-mask::$db_url"
           echo "DATABASE_URL=$db_url" >> "$GITHUB_ENV"
 
