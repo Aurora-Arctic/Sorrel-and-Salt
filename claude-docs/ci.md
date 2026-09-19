@@ -512,8 +512,9 @@ nothing and this workflow is the only path.
   and the migration quietly address whichever database the integration last
   injected Preview-wide. **Pass it on production and everything fails** —
   branch-scoped overrides are a Preview-only feature, and the API rejects the
-  pair outright with `Invalid request: `target`must be "preview" when specifying
-a`gitBranch``. MB.27 passed it unconditionally and broke every production
+  pair outright with
+  ``Invalid request: `target` must be "preview" when specifying a `gitBranch` ``.
+  MB.27 passed it unconditionally and broke every production
   deploy until MB.45; production has no branch-resolved value to miss, so it
   loses nothing by omitting it.
 
