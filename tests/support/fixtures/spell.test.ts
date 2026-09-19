@@ -48,7 +48,7 @@ describe('makeSpell', () => {
 
       expect(rest).toEqual([]);
       expect(layer.ingredientId).toBeNull();
-      expect(layer.name).toBe('Hearth Ash');
+      expect(layer.name).toBe('Fixture Ash');
       expect(layer.form).toBe('ash');
     });
 
@@ -92,11 +92,11 @@ describe('makeSpell', () => {
 
     it('leaves a name the layer override states, so a test can write a row the check rejects', () => {
       const [layer] = makeSpell({
-        layers: [{ ingredientId: MUGWORT, name: 'Hearth Ash' }],
+        layers: [{ ingredientId: MUGWORT, name: 'Fixture Ash' }],
       }).layers;
 
       expect(layer.ingredientId).toBe(MUGWORT);
-      expect(layer.name).toBe('Hearth Ash');
+      expect(layer.name).toBe('Fixture Ash');
     });
 
     it('gives each fixture its own stack', () => {

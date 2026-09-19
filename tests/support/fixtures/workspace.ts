@@ -25,12 +25,14 @@ export interface WorkspaceFixture extends Required<
   members: WorkspaceMemberFixture[];
 }
 
-// Neither W nor X. M1.27 bakes the `standard` scenario into the template every
-// db worker clones, and `workspaces_slug_unique` reserves both their slugs — so
-// a default named after either would be a fixture no test could insert. A
-// fixture is what a test writes *beside* the seeded covens; workspace.test.ts
-// pins it against the seed's own list.
-const DEFAULT_NAME = 'Blackthorn Coven';
+// Neither W nor X, and not a name anyone would seed. M1.27 bakes the
+// `standard` scenario into the template every db worker clones, and
+// `workspaces_slug_unique` reserves both their slugs — so a default named
+// after either would be a fixture no test could insert, and a plausible coven
+// name is only safe until someone seeds it. A fixture is what a test writes
+// *beside* the seeded covens; workspace.test.ts checks it against the seed's
+// own list as a backstop.
+const DEFAULT_NAME = 'Fixture Coven';
 
 const DEFAULTS: WorkspaceFixture = {
   name: DEFAULT_NAME,
@@ -48,8 +50,8 @@ const DEFAULTS: WorkspaceFixture = {
  * One workspace.
  *
  * ```ts
- * makeWorkspace()                            // Blackthorn Coven, A owning it
- * makeWorkspace({ name: 'Rowan Coven' })     // slug follows the name
+ * makeWorkspace()                                // Fixture Coven, A owning it
+ * makeWorkspace({ name: 'Fixture Coven Two' })   // slug follows the name
  * ```
  *
  * **The slug follows the name.** CLAUDE.md's slug rule is that a slug is
