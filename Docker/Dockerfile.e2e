@@ -46,12 +46,13 @@ FROM mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble AS e2e
 
 WORKDIR /app
 
-# Dependency layer first, same as Dockerfile.node, so an unrelated source
-# change never invalidates `npm ci`.
+# Dependency layer, same as Dockerfile.node — and, as there, no source layer
+# beneath it (MB.42): the `e2e` compose service bind-mounts `..:/app` and
+# CI's `checkout-to-app` copies the PR checkout in, so a baked-in tree would
+# only ever be read by CI, where a file the repo had deleted survived the
+# overlay. `tests/guards/image-source-layer.test.ts` pins what may be COPY'd.
 COPY package.json package-lock.json ./
 RUN npm ci
-
-COPY . .
 
 # Fast no-op in the normal case — the base image already ships this exact
 # version's Chromium build. Real insurance against the version-drift failure
@@ -108,12 +109,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # already is, not a second copy to keep in sync.
 RUN ln -s vnc.html /usr/share/novnc/index.html
 
-# The script itself already landed at Docker/playwright-entrypoint.sh via
-# the `e2e` stage's `COPY . .` above; just make it executable. At runtime
-# `playwright-server`'s bind mount (Docker/docker-compose.yaml, `..:/app`)
-# shadows this baked-in copy with the host's own working tree, same as every
-# other file here — this chmod is what makes a bare `docker run` of this
-# stage (no bind mount) work too.
+# The one file this image bakes beyond the manifests: the entrypoint, copied
+# on its own so a bare `docker run` of this stage (no bind mount) still has
+# something to exec. At runtime `playwright-server`'s bind mount
+# (Docker/docker-compose.yaml, `..:/app`) shadows it with the host's own
+# working tree, so the chmod matters only to that bare case. It is a single
+# file rather than `COPY . .` because the `e2e` stage carries no source
+# (see above); `tests/guards/image-source-layer.test.ts` allows exactly this
+# path for this file.
+COPY Docker/playwright-entrypoint.sh Docker/playwright-entrypoint.sh
 RUN chmod +x Docker/playwright-entrypoint.sh
 
 ENTRYPOINT ["/app/Docker/playwright-entrypoint.sh"]

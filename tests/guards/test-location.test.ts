@@ -24,16 +24,19 @@ import { REPO_ROOT } from '../support/paths';
 // duplicate copy of a file is harmless, while this one enumerates *locations*,
 // where a stray copy is the whole finding.
 //
-// The difference is not hypothetical. CI runs this suite inside a container
-// whose image bakes the repo at `Docker/Dockerfile.node`'s `COPY . .`, and
-// `.github/actions/checkout-to-app` lays the checkout over it with `cp -a`,
-// which overlays without deleting. So every file deleted since that image was
-// built is still on disk in CI, untracked and not ignored — and `--others`
-// reported all 34 of this move's own predecessors as violations. A file that
-// is untracked because it was just written and one that is untracked because
-// it was deleted from the repo are indistinguishable to `git ls-files`; the
-// index is the question that actually separates them, because it describes
-// the repo rather than the disk.
+// The difference was not hypothetical. Until MB.42, CI ran this suite inside a
+// container whose image baked the repo at `Docker/Dockerfile.node`'s
+// `COPY . .`, and `.github/actions/checkout-to-app` laid the checkout over it
+// with `cp -a`, which overlays without deleting. So every file deleted since
+// that image was built was still on disk in CI, untracked and not ignored —
+// and `--others` reported all 34 of this move's own predecessors as
+// violations. The image no longer carries source (MB.42;
+// tests/guards/image-source-layer.test.ts pins it), but the argument stands
+// on its own: a file that is untracked because it was just written and one
+// that is untracked because it was deleted from the repo are indistinguishable
+// to `git ls-files`, and the index is the question that actually separates
+// them, because it describes the repo rather than the disk. The scan stays
+// `--cached`.
 //
 // Playwright's specs are outside this by construction — they end `.spec.ts`,
 // which is what keeps `e2e/` from having to be named as an exception here.
