@@ -182,9 +182,15 @@ jobs:
             # checks.yml's own narrower conventions. vitest.config.mts
             # and vitest.setup.ts aren't under src/**, so they're listed
             # explicitly. So is .ladle/config.mjs: the workshop guard in
-            # src/test/ (MB.38) pins its theme default, and without the entry
-            # the one edit that guard exists to catch is the one edit that
-            # would not run it.
+            # tests/guards/ (MB.38) pins its theme default, and without the
+            # entry the one edit that guard exists to catch is the one edit
+            # that would not run it.
+            #
+            # tests/** is listed for the same reason and is the sharpest case
+            # of it: since MB.41 the suite lives there rather than under
+            # src/**, so without this entry a test-only PR — the one kind of
+            # PR whose entire content is the thing this job runs — would skip
+            # the job altogether and report green.
             vitest:
               - *shared
               - '.github/workflows/vitest.yml'
@@ -192,6 +198,7 @@ jobs:
               - '.github/scripts/summarize-vitest.mjs'
               - '.github/scripts/lib/**'
               - 'src/**'
+              - 'tests/**'
               - '.ladle/config.mjs'
               - 'vitest.config.mts'
               - 'vitest.setup.ts'

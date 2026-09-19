@@ -24,7 +24,7 @@ import { db } from './connection';
 // is built; it is not exported, so a caller can only reach a row through
 // `findMany`/`findOne` (filtered) or the explicitly named
 // `findManyIncludingSoftDeleted` escape hatch below. A finder written
-// without the filter fails `src/test/soft-delete-finder-guard.test.ts`
+// without the filter fails `tests/guards/soft-delete-finder-guard.test.ts`
 // (M1.20), not review.
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];

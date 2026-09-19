@@ -59,8 +59,9 @@ edit at any call site; nothing passes it today.
     `npm run workshop:build` chained onto `npm run build` with `&&`, which
     short-circuits the same way separate steps did. The story gate rode here
     too until MB.38 moved it — and the theme-default guard, which had only
-    ever run in pre-commit — into `src/test/workshop-guards.test.ts` on the
-    `vitest` job. It posts no PR comment, as `build.yml` didn't.
+    ever run in pre-commit — into `workshop-guards.test.ts` on the `vitest`
+    job (`src/test/` then; `tests/guards/` since MB.41). It posts no PR
+    comment, as `build.yml` didn't.
     - **The cache `path` is the absolute `/app/.next/cache`**, not a
       workspace-relative path: `hashFiles()` reads `$GITHUB_WORKSPACE`, but
       the job's working directory is `/app`.
@@ -151,7 +152,7 @@ edit at any call site; nothing passes it today.
   building the same content-addressed image twice per run for no reason.
   `DATABASE_URL` is `postgres://sorrel:sorrel@postgres:5432/sorrel`, the same
   credentials `Docker/docker-compose.yaml`'s `app` service uses locally;
-  `src/test/db-global-setup.ts`/`db-setup.ts` rewrite the database name per
+  `tests/support/db-global-setup.ts`/`db-setup.ts` rewrite the database name per
   worker from there. Coverage JSON (`--reporter=json`) and the `vitest`
   project's `json-summary` coverage reporter feed
   `.github/scripts/summarize-vitest.mjs` (ported from resume-2026, alongside
@@ -528,7 +529,7 @@ nothing and this workflow is the only path.
   `checks.yml` sets `DESTRUCTIVE_DDL_FILES` from the input regardless, and the
   script reads set-but-empty as "no migrations changed". So the leg proves the
   wiring, not the scan. What proves the scan is
-  `src/test/destructive-ddl-check.test.ts` (the rules, the file-list
+  `tests/guards/destructive-ddl-check.test.ts` (the rules, the file-list
   resolution and the branch diff, each asserted to fail with its guard
   removed) and `npm run check:destructive-ddl -- --self-test` (the ack-line
   gating, against the fixtures under `scripts/__fixtures__/destructive-ddl/`).

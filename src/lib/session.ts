@@ -12,7 +12,7 @@ import type { users } from '../db/schema/users';
 // a service-level value at all
 // (claude-docs/design-decisions/mb.30-organization-plugin.md). M2.7 adds the
 // helper that produces one from a request; M1.26 defines the shape and
-// `src/test/as-user.ts` produces one from a fixture user, so authorization
+// `tests/support/as-user.ts` produces one from a fixture user, so authorization
 // tests can be written before the reader exists.
 //
 // It extends `AuditSession` rather than restating `userId`, which is what
