@@ -1,14 +1,9 @@
 name: Vitest
 
-# Reusable check running the Vitest suite with coverage, plus the acceptance
-# story checklist as a second step. Called via workflow_call from pr-gate,
-# never triggered directly. claude-docs/ci.md is the walkthrough.
-#
-# The `services: postgres:` block is why the `db` project can run at all —
-# SQLite cannot execute what this schema needs
-# (claude-docs/design-decisions/m1.9-test-db-isolation.md). The image arrives
-# as `inputs.db-image`, built once by the caller and shared with
-# playwright.yml rather than each calling build-db-image.yml itself.
+# The Vitest suite with coverage, then the acceptance story checklist.
+# workflow_call only, from pr-gate. claude-docs/ci.md, "Reusable checks" is
+# the walkthrough. `services: postgres:` is why the `db` project can run; the
+# image is built once by the caller and shared with playwright.yml.
 on:
   workflow_call:
     inputs:
@@ -44,8 +39,7 @@ on:
 
 permissions:
   contents: read
-  # read, not write: this job only pulls already-published images. It pushes
-  # nothing.
+  # read: this job pulls images and pushes none.
   packages: read
   pull-requests: write
 
@@ -57,17 +51,12 @@ jobs:
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-      # The image's default user (node) cannot write the runner's
-      # bind-mounted _temp/_runner_file_commands directory — EACCES without
-      # this. Same reasoning as checks.yml.
+      # The image's default user cannot write the runner's file-commands
+      # directory; actions/checkout fails EACCES without it.
       options: --user root
     services:
-      # Reachable by service name from this job's own `container:`.
-      # `inputs.db-image` is the caller's computed hash tag, never
-      # reconstructed here. The `POSTGRES_*` vars are inert — PGDATA is
-      # populated at image build time, so the entrypoint's first-boot init
-      # never runs — and are kept as documentation of the credentials
-      # Docker/postgres-init/enable-extensions.sql actually bakes in.
+      # `POSTGRES_*` are inert — PGDATA is populated at image build — and
+      # document the credentials enable-extensions.sql bakes in.
       postgres:
         image: ${{ inputs.db-image }}
         env:
@@ -85,18 +74,14 @@ jobs:
         # A `container:` job defaults to sh, which has no `set -o pipefail`.
         shell: bash
     env:
-      # The same shape Docker/docker-compose.yaml's `app` service uses locally.
-      # tests/support/db-global-setup.ts and db-setup.ts rewrite the database
-      # name per worker off this base URL.
+      # tests/support/db-global-setup.ts rewrites the database name per worker.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
     steps:
       - name: Checkout into /app
         if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
-      # vitest.config.mts's coverage thresholds fail this command itself when
-      # coverage drops below 80%, on the same exit-code path as a failing
-      # test — so steps.run.outcome already covers both.
+      # Coverage thresholds fail this command on the same exit path as a test.
       - name: Run vitest
         id: run
         if: inputs.should-run
@@ -109,11 +94,9 @@ jobs:
         if: always() && inputs.should-run
         run: node .github/scripts/summarize-vitest.mjs
 
-      # The acceptance suite, printed as the per-story checklist. A second run
-      # on its own config rather than a third project above, and without
-      # `--coverage`: a story never moves the 80% threshold either way.
-      # `always()` because the checklist is a progress report, wanted even
-      # when the unit run is red. A failing story fails the job.
+      # Its own config and no `--coverage`: a story never moves the 80%
+      # threshold. `always()` because the checklist is a progress report; a
+      # failing story still fails the job.
       - name: Run acceptance stories
         id: stories
         if: always() && inputs.should-run
@@ -126,8 +109,7 @@ jobs:
         if: always() && inputs.should-run
         run: node .github/scripts/summarize-stories.mjs
 
-      # Deliberately not failure-only: the point is a downloadable coverage
-      # report to track on every run, pass or fail.
+      # Not failure-only: a coverage report on every run.
       - name: Upload coverage artifact
         if: always() && inputs.should-run
         uses: actions/upload-artifact@v7
@@ -146,8 +128,7 @@ jobs:
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
 
-      # Its own section and comment thread, so the checklist reads on its own
-      # rather than under the coverage table.
+      # Its own section and thread, so the checklist reads on its own.
       - name: Write stories job summary
         if: always() && inputs.should-run
         uses: ./.github/actions/job-summary
@@ -158,8 +139,7 @@ jobs:
           summary: ${{ steps.summarize-stories.outputs.summary }}
           details: ${{ steps.summarize-stories.outputs.details }}
 
-      # Always comments pass/fail from pr-gate; fail-only on a separate thread
-      # for a merge-queue caller. See .github/actions/pr-comment.
+      # .github/actions/pr-comment has the modes.
       - name: Comment on PR
         if: always() && inputs.pr-number && inputs.should-run
         uses: ./.github/actions/pr-comment

@@ -1,13 +1,8 @@
 name: Build Testing Image
 
-# Builds (or reuses, if unchanged) the shared `testing` image every
-# checks.yml leg and vitest.yml runs inside, and publishes its ref as an
-# output. Called via workflow_call from pr-gate. claude-docs/ci.md is the
-# walkthrough.
-#
-# The tag is content-addressed off `github.repository` lowercased plus a hash
-# of the only two files that determine the image's contents, so it lands
-# under this repo's own GHCR namespace with nothing to change when ported.
+# Builds or reuses the shared `testing` image every checks.yml leg and
+# vitest.yml runs inside. workflow_call only, from pr-gate. The tag is
+# content-addressed off the two files that determine the image's contents;
 # build-db-image.yml and build-e2e-image.yml tag the same way.
 on:
   workflow_call:
@@ -46,11 +41,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # Most pushes touch neither file, so the tag from a prior run usually
-      # already exists — skip rather than re-push the same content. It keeps
-      # this job to a few-second read with nothing mutable in flight; it is
-      # the real-build path below that pr-gate.yml's concurrency group
-      # protects from cancellation.
+      # Skip rather than re-push identical content. The real build below is
+      # what pr-gate.yml's concurrency group protects from cancellation.
       - name: Check if image already exists
         id: check
         run: |
@@ -60,9 +52,7 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # Layers are GHA-cached, so even a rebuild is fast. No `playwright
-      # install` here: this image is Alpine and deliberately carries no
-      # browser — Docker/Dockerfile.e2e is where e2e runs.
+      # No `playwright install`: this image is Alpine and carries no browser.
       - name: Build and push testing image
         if: steps.check.outputs.exists != 'true'
         uses: docker/build-push-action@v7

@@ -1,64 +1,42 @@
 # syntax=docker/dockerfile:1
 
-# Sorrel & Salt — dedicated Playwright e2e image. Built and published by
-# build-e2e-image.yml under a content-addressed GHCR tag, and built locally by
-# docker-compose.yaml's opt-in `e2e` service. claude-docs/ci.md is the
-# walkthrough.
+# Playwright e2e image, built by build-e2e-image.yml for CI and by the `e2e`
+# compose service locally. Playwright's Chromium has no musl support, so it
+# cannot ride in the Alpine Dockerfile.node. The workflow is in
+# claude-docs/ci.md, "Reusable checks"; the compose side in claude-docs/docker.md.
 #
-# It exists because **Playwright's Chromium has no official Alpine/musl
-# support at all**, and Docker/Dockerfile.node is Alpine — bolting the browser
-# on there is not an option, so e2e gets its own Debian-based image.
+# PLAYWRIGHT_VERSION must move in lockstep with `@playwright/test` in
+# package-lock.json; a mismatch is Playwright's usual "browser not found".
 #
-# Based on Microsoft's own Playwright image, which bundles a matching Node
-# runtime, every OS library Chromium needs, and the browser itself, all pinned
-# together for one exact release. **PLAYWRIGHT_VERSION below must move in
-# lockstep with `@playwright/test` in package.json/package-lock.json, and this
-# Dockerfile is the one place that version is duplicated outside
-# package-lock.json.** A mismatch is Playwright's single most common "browser
-# not found" / "host system is missing dependencies" failure.
-#
-# Two stages. `e2e` is what CI and `make docker-e2e` build: headless, nothing
-# extra. `headed` adds a display for `playwright-server` to run `codegen` and
-# `page.pause()` on — kept separate because CI pulls this image on every
-# `playwright` job and has no use for a display it never opens.
-# **`docker build` with no `--target` picks whichever stage is LAST**, so
-# `e2e` must stay named and build-e2e-image.yml and the `e2e` compose service
-# must both pin `target: e2e`.
+# Two stages: `e2e` (headless; CI and `make docker-e2e`) and `headed` (a
+# display for `playwright-server`). `docker build` with no `--target` picks
+# the LAST stage, so every `e2e` consumer pins `target: e2e`.
 ARG PLAYWRIGHT_VERSION=1.63.0
 FROM mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble AS e2e
 
 WORKDIR /app
 
-# Dependency layer, same as Dockerfile.node — and, as there, no source layer
-# beneath it: the source arrives from the bind mount or checkout-to-app, whose
-# `cp -a` overlays without deleting. tests/guards/image-source-layer.test.ts
-# pins what may be COPY'd.
+# No source layer, as in Dockerfile.node: checkout-to-app's `cp -a` overlays
+# without deleting. tests/guards/image-source-layer.test.ts pins what may be
+# COPY'd.
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# A no-op in the normal case — the base image already ships this version's
-# Chromium. It is here so that a PLAYWRIGHT_VERSION / package-lock.json
-# disagreement fails the BUILD rather than a confusing test run later.
+# A no-op when the versions agree; a disagreement fails the build here rather
+# than the test run.
 RUN npx playwright install --with-deps chromium
 
 ENV NODE_ENV=test
 
-# `headed` — same image plus a virtual display, so codegen, page.pause()'s
-# Inspector and UI mode's locator picker have somewhere to draw. Only the
-# `playwright-server` compose service builds it.
+# A virtual display for codegen, page.pause() and UI mode's locator picker;
+# only `playwright-server` builds it.
 FROM e2e AS headed
 
 USER root
 
-# Two of these five are redundant and both stay: `xvfb` already ships in the
-# base image (via `playwright-core install-deps`) and `novnc` Depends on
-# `websockify`. Naming them costs nothing and says out loud what the
-# entrypoint invokes.
-#
-# The three that carry weight: `x11vnc` + `novnc` make the display reachable
-# from an ordinary browser tab at :7900, and `openbox` is not optional —
-# without a window manager the Chromium and Inspector windows are unmovable
-# and overlap, which is the likeliest thing to go wrong here.
+# `xvfb` and `websockify` already arrive with the base image and `novnc`;
+# named anyway. `openbox` is not optional: without a window manager the
+# Chromium and Inspector windows overlap unmovably.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     xvfb \
     x11vnc \
@@ -67,16 +45,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     openbox \
     && rm -rf /var/lib/apt/lists/*
 
-# The `novnc` package's landing page is `vnc.html`, not `index.html`, and
-# `websockify --web=` is a plain static file server — so without this symlink
-# the bare :7900 root serves a directory listing instead of the client.
+# novnc's landing page is `vnc.html`; without the symlink :7900's root is a
+# directory listing.
 RUN ln -s vnc.html /usr/share/novnc/index.html
 
-# The one file this image bakes beyond the manifests, so a bare `docker run`
-# of this stage still has something to exec. `playwright-server`'s bind mount
-# shadows it at runtime, so the chmod matters only to that bare case. A single
-# named file rather than `COPY . .` — see the header, and
-# tests/guards/image-source-layer.test.ts, which allows exactly this path.
+# The one file baked beyond the manifests, so a bare `docker run` has
+# something to exec; the compose bind mount shadows it.
+# image-source-layer.test.ts allows exactly this path.
 COPY Docker/playwright-entrypoint.sh Docker/playwright-entrypoint.sh
 RUN chmod +x Docker/playwright-entrypoint.sh
 

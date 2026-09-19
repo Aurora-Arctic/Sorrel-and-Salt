@@ -1,47 +1,35 @@
 # syntax=docker/dockerfile:1
 
-# Sorrel & Salt — Node image for local development and CI test runs.
-# claude-docs/docker.md is the walkthrough.
+# Node image for local development and CI. claude-docs/docker.md is the
+# walkthrough.
 #
-#   development  Dependencies only. What the compose `app` service and the
-#                devcontainer build.
-#   testing      `development` plus a test-only default command. What CI
-#                builds to run vitest against a Postgres service.
+#   development  dependencies only; the compose `app` service and devcontainer
+#   testing      `development` plus what CI needs and a vitest default command
 #
-# Both stages are Alpine/musl, and **Playwright is deliberately absent** —
-# its Chromium has no official musl support, so e2e runs from
-# Docker/Dockerfile.e2e instead. Adding browser tooling here would put half a
-# gigabyte into the image CI and the app share.
-#
-# **Neither stage carries the source**, and neither may. It arrives from
-# outside: the `..:/app` bind mount in every compose service and the
-# devcontainer, or .github/actions/checkout-to-app's `cp -a` in CI. That copy
-# overlays without deleting, so a baked-in tree means a file the branch has
-# deleted survives it and gets linted, typechecked and globbed as if it were
-# still there — which is exactly what happened.
+# Both stages are Alpine, and Playwright is deliberately absent: its Chromium
+# has no musl support, and a browser would add half a gigabyte to the image CI
+# and the app share. Neither stage carries source — it arrives from the bind
+# mount or checkout-to-app's `cp -a`, which overlays without deleting, so a
+# baked-in tree would let a deleted file survive.
 # tests/guards/image-source-layer.test.ts allowlists what each Dockerfile may
-# COPY; adding to it is a decision made in that test, not here.
+# COPY.
 
-# Pinned. deploy.yml and migrate.yml's actions/setup-node must match it —
-# under Node 22, npm 10 cannot read this repo's npm-11 lockfile.
+# deploy.yml and migrate.yml's setup-node must match: Node 22's npm 10 cannot
+# read this npm-11 lockfile.
 ARG NODE_VERSION=26.6.0
 
-# ---------------------------------------------------------------------------
-# development — deps only, runs `npm run dev` on 8000 against the mount
-# ---------------------------------------------------------------------------
+# development — deps only, `npm run dev` on 8000 against the mount
 FROM node:${NODE_VERSION}-alpine AS development
 
-# glibc shim for prebuilt native addons that assume it (~1 MB). The only
-# `apk` package in this stage; keep it that way.
+# glibc shim for prebuilt native addons; the only `apk` package in this stage.
 RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 RUN chown node:node /app
 USER node
 
-# Dependency layer: only the manifests, so `npm ci` stays cached until they
-# change. Always `npm ci`, never `npm i`. This is the last COPY — see the
-# header for why nothing follows it.
+# Manifests only, so `npm ci` stays cached. Always `npm ci`, never `npm i`.
+# The last COPY — see the header.
 COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci
 
@@ -49,26 +37,15 @@ ENV NODE_ENV=development
 EXPOSE 8000
 CMD ["npm", "run", "dev"]
 
-# ---------------------------------------------------------------------------
 # testing — development + a vitest default command
-# ---------------------------------------------------------------------------
 FROM development AS testing
 
-# Four packages the Alpine base lacks and CI needs, all test/CI-only and so
-# absent from `development`:
-#
-#   bash   every check workflow forces `shell: bash` and `set -o pipefail`
-#   git    what actions/checkout fetches with; otherwise a slow tarball
-#   tar    actions/cache runs INSIDE this container and needs GNU tar —
-#          busybox's rejects `--posix` and exited 1 on every save, so the
-#          Next.js build cache never hit once until this line landed. The
-#          `tar` package installs /usr/bin/tar, ahead of busybox's /bin/tar.
-#   zstd   what actions/cache compresses with when it finds it, gzip otherwise
+# What the Alpine base lacks and CI needs: bash (`shell: bash`, pipefail),
+# git (actions/checkout), GNU tar and zstd (actions/cache runs inside this
+# container, and busybox tar rejects `--posix`).
 USER root
 RUN apk add --no-cache bash git tar zstd
 USER node
 
 ENV NODE_ENV=test
-# The `db` project needs a reachable Postgres, and vitest needs the source:
-# both come from outside, via compose or checkout-to-app.
 CMD ["npx", "vitest", "run"]

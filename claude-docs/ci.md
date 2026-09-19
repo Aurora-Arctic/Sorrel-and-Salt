@@ -73,6 +73,9 @@ visible from the step that depends on them.
   user is `node`, which cannot write the runner's bind-mounted
   `_temp/_runner_file_commands` directory — `actions/checkout`, and any JS
   action using `core.saveState`/`setOutput`, fails `EACCES` without it.
+- **Guards that shell out to git pass `-c safe.directory=*`.** Those root jobs
+  run over a checkout owned by uid 1000, and git refuses a repository owned by
+  another user ("dubious ownership") unless told the directory is safe.
 - **`playwright.yml` passes `options: --ipc=host` instead.** Chromium crashes
   on the container default 64 MB `/dev/shm`. Microsoft's Playwright base image
   already runs as root, so `--user root` would add nothing there; Chromium
@@ -178,7 +181,13 @@ matrix's generated job name, not the leg's.
     `dorny/paths-filter` step (`list-files: json`, reused rather than adding a
     second changed-files action) as `destructive-ddl-files`, and `checks.yml`
     puts it into the job `env` as `DESTRUCTIVE_DDL_FILES`, inert in the other
-    five legs.
+    five legs. The list comes from a separate, narrower
+    `destructive_ddl_migrations` filter (`src/db/migrations/*.sql` only)
+    rather than from `destructive_ddl`'s own `_files` output: paths-filter
+    lists every changed file matching _any_ of a filter's patterns, so the
+    wider filter's list would hand a changed `pr-gate.yml` or `checks.yml` to
+    the script as if it were SQL, and `*.sql` keeps Drizzle's `meta/*.json`
+    out as well.
   - **It took the PR body as a second input until MB.48**, as `pr-body` →
     `DESTRUCTIVE_DDL_PR_BODY`. Both are gone. A PR body is visible from one
     branch base and gone on merge, so a release PR — which the script sends at
@@ -308,7 +317,12 @@ matrix's generated job name, not the leg's.
   used so no required-status-check rename was ever needed. Its `build-image` job keeps a
   `pr-gate-build-image-<pr number>` / `cancel-in-progress: false` concurrency
   group on the caller; `build-e2e-image` (feeding `playwright`, not
-  `build-image`) does the same under its own group.
+  `build-image`) and `build-db-image` do the same under their own groups.
+  The three image jobs are the only uncancellable ones because cancelling a
+  push mid-build can freeze a half-written layer into the shared GHA layer
+  cache under its content-addressed tag, which every later run with the same
+  hash then reuses — a corruption that does not self-heal on retry. The check
+  jobs share no mutable state and are cheap to rerun, so they stay cancellable.
 - **`merge-queue.yml` was deleted by MB.32, and is restored from git history
   when M7.A.1 fires.** It was the `merge_group` counterpart, re-expressing this
   entire job graph — the same checks with `merge-queue: true`, plus
@@ -577,7 +591,10 @@ nothing and this workflow is the only path.
   by a YAML `if:` on the resolved environment — not one command with an
   optional flag. A command that merely _might_ carry `--git-branch` cannot
   satisfy the preview half, and a `if:` is data the guard can read where a
-  shell `if` would be a string it had to parse. `resolve-target` emits a
+  shell `if` would be a string it had to parse. Each arm tests `== 'preview'`
+  or `== 'production'` rather than `!= 'production'`, so a third environment
+  name skips both arms and fails by name at the assertion step rather than
+  pulling the wrong one. `resolve-target` emits a
   `git_branch` output alongside `environment` — `github.head_ref` for a hotfix
   PR (`ref_name` there is the `refs/pull/N/merge` ref, which nothing is scoped
   to), `github.ref_name` for a push — and hands it to both the deploy job's
@@ -621,7 +638,10 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   output), `migrate` (`needs: resolve-target`, calls this workflow with
   `secrets: inherit`, and carries its own `group: migrate` /
   `cancel-in-progress: false` concurrency lock so two merges never migrate at
-  once), and `deploy`. Same guard-skip stub as `deploy.yml` when the `VERCEL_*` secrets
+  once), and `deploy`, whose `if: success()` is load-bearing: a custom `if:`
+  on a job with `needs:` replaces the implicit needs-all-succeeded check, so
+  any other condition there would let a failed `migrate` through to the
+  deploy. Same guard-skip stub as `deploy.yml` when the `VERCEL_*` secrets
   are absent. `vercel pull --environment=preview --git-branch=<branch>`, or
   `vercel pull --environment=production` with no branch (MB.45), resolves the
   right `DATABASE_URL` for each target the same way `deploy.yml`'s own two
@@ -641,7 +661,9 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   string `[SENSITIVE]` instead, which is non-empty and so passes any check that
   only asks whether something is set. A diagnostic run pulled staging both with
   and without `--git-branch` and got the placeholder either way, so no
-  arrangement of flags fixes it.
+  arrangement of flags fixes it. A `${{ secrets.X }}` reference to a secret
+  that does not exist resolves to the empty string rather than failing, so a
+  misspelt name reads as an unset value; the guard pins the names in use.
 
   `migrate.yml` picks `DATABASE_URL_PRODUCTION` or `DATABASE_URL_STAGING` — the
   first by the Vercel environment, the second by the branch — and falls back to
@@ -811,7 +833,11 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   `make act-check CHECK=typecheck` runs typecheck, and so on through `format`,
   `build`, `audit` and `destructive-ddl` (MB.37). `--matrix name:<leg>` is what
   keeps `act` from running all six, and `make act-test` chains lint, format,
-  typecheck and destructive-ddl.
+  typecheck and destructive-ddl. `act-image` builds the `testing` target
+  locally under the exact tag the job's required `image` input names, so
+  `docker run` never reaches GHCR and the container `credentials:` block is a
+  no-op — which is why `act-check` passes a dummy `GITHUB_TOKEN` rather than
+  a real one.
 - `make act-cache-checkout` pre-clones this repo's `main` so the remote
   `checkout-to-app@main` ref resolves offline.
 - **act does not apply `workflow_call` input defaults**, so a flag arrives
