@@ -159,9 +159,12 @@ IF EXISTS`) so a crashed previous run self-heals instead of erroring on a
 
 **Coverage** (`test.coverage`, provider `v8`): thresholds are 80% on lines,
 branches, functions, and statements, `include: ['src/**/*.{ts,tsx}']`,
-excluding `*.stories.tsx`, `src/db/migrations/**`, and `src/db/seed/**`.
-The test files and the harness used to need excluding too; since MB.41 they
-live in `tests/`, which `include` never reaches. Coverage has been above the threshold
+excluding `src/**/*.test.{ts,tsx}`, `src/test/**`, `*.stories.tsx`,
+`src/db/migrations/**`, and `src/db/seed/**`. The first two read as dead
+since MB.41 — no test or harness file lives under `src/` — and they are
+kept deliberately: `include` enumerates the disk rather than the repo, and
+CI's container still holds every file the repo has deleted (MB.42). Dropping
+them took CI from 92% to 78.54% with every test passing. Coverage has been above the threshold
 since Wave 3's schema tests landed (~92% of lines at M1.21), so
 `npm run test:coverage` exits non-zero only on a test failure or on a change
 that pulls a metric back under 80% — which is the threshold doing its job,
