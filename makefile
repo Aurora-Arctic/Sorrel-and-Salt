@@ -19,18 +19,19 @@
 #     playwright-server-up/-down      MB.22
 #   docker-codegen                    MB.23
 #
-# The db-seed/db-reset and codegen targets below are placeholders: the script
-# names exist so nothing has to be renamed later, but they exit non-zero until
-# M1.21–M1.23 fill in the seed scenarios and M3.x wires graphql-codegen. The
-# workshop targets are live as of M0.30 — they run Ladle — db-generate and
-# db-migrate as of M1.3, and db-studio as of MB.21.
+# The codegen target below is a placeholder: the script name exists so nothing
+# has to be renamed later, but it exits non-zero until M3.x wires
+# graphql-codegen. Everything else is live — the workshop targets as of M0.30,
+# db-generate and db-migrate as of M1.3, db-studio as of MB.21, and
+# db-seed/db-drop/db-reset as of M1.24, once M1.21–M1.23 had scenarios for them
+# to run.
 
 .DEFAULT_GOAL := help
 
 .PHONY: help install dev dev-debug build start \
 	lint lint-fix format format-check typecheck check-destructive-ddl pre-commit \
 	test-debug test-ui e2e-ui e2e-trace \
-	db-generate db-migrate db-seed db-reset db-studio db-psql codegen \
+	db-generate db-migrate db-seed db-drop db-reset db-studio db-psql codegen \
 	workshop workshop-build \
 	docker-build docker-up docker-workshop docker-studio docker-all docker-e2e docker-down docker-rebuild docker-logs \
 	docker-update-token playwright-server-up playwright-server-down docker-codegen \
@@ -109,19 +110,23 @@ e2e-ui:
 e2e-trace:
 	npm run e2e:trace -- $(TRACE)
 
-## Generate a Drizzle migration from the schema (placeholder until M1.x)
+## Generate a Drizzle migration from the schema
 db-generate:
 	npm run db:generate
 
-## Apply pending Drizzle migrations (placeholder until M1.x)
+## Apply pending Drizzle migrations
 db-migrate:
 	npm run db:migrate
 
-## Seed the database (placeholder until M1.x)
+## Seed a scenario — SEED_SCENARIO=minimal|standard|demo, default minimal (M1.24)
 db-seed:
 	npm run db:seed
 
-## Drop, migrate and reseed the database (placeholder until M1.x)
+## Drop the public and drizzle schemas, leaving an empty database (M1.24)
+db-drop:
+	npm run db:drop
+
+## Drop, migrate and reseed — the one command for a wedged local database (M1.24)
 db-reset:
 	npm run db:reset
 
@@ -146,8 +151,10 @@ workshop-build:
 	npm run workshop:build
 
 # Host-level docker compose wrappers. `docker-up` starts the app on 8000 and
-# Postgres 17 (M0.13), waiting for the database health check before the app
-# starts; the Ladle workshop (61000), Drizzle Studio (4983, MB.21) and the
+# Postgres 18 (M0.13), waiting for the database health check and then for the
+# one-shot `db-init` container to migrate and seed before the app starts
+# (M1.24; `SEED_SCENARIO` picks the scenario, default `minimal`);
+# the Ladle workshop (61000), Drizzle Studio (4983, MB.21) and the
 # Playwright browser server (4444/7900, MB.22/MB.23) are behind the
 # `workshop`/`studio`/`e2e` compose profiles, so they only come up with
 # `docker-workshop`/`docker-studio`/`docker-all` (`playwright-server`) or
@@ -163,7 +170,7 @@ workshop-build:
 docker-build:
 	$(COMPOSE) --profile workshop --profile studio --profile e2e build
 
-## Start the app (8000) and Postgres detached
+## Start the app (8000) and Postgres detached, migrating and seeding first (M1.24)
 docker-up:
 	$(COMPOSE) up -d
 

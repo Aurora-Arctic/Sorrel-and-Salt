@@ -101,6 +101,10 @@ volumes:
   node_modules_e2e:
   node_modules_studio:
   node_modules_playwright_server:
+  # `db-init` runs to completion before `app` starts, so the two never race for
+  # a shared volume in practice — it gets its own anyway, because "one per
+  # service" is the rule that makes that reasoning unnecessary (M1.24).
+  node_modules_db_init:
 
   # Postgres data directory. Persists across `docker compose restart` and
   # `make docker-down`; only `make docker-rebuild` (`down -v`) clears it.
@@ -138,6 +142,53 @@ services:
       retries: 10
       start_period: 10s
 
+  # M1.24 — the Docker seed hook. A one-shot container, not a long-running
+  # service: it applies the migrations, seeds a scenario, and exits, and `app`
+  # waits for that exit to succeed. What that buys is the acceptance criterion
+  # "first `make docker-up` on a clean volume seeds automatically" — a fresh
+  # `postgres_data` carries only the `sorrel` role/database and pg_trgm that
+  # Dockerfile.postgres bakes in, with no schema and no rows.
+  #
+  # It lives here rather than in `Docker/postgres-init/` because the seed is
+  # TypeScript and the Postgres image has no Node — and because that directory
+  # never runs at container start anyway: Dockerfile.postgres populates PGDATA
+  # during the image *build*, so `docker-entrypoint.sh` finds an initialised
+  # data directory and skips `/docker-entrypoint-initdb.d/` entirely. The
+  # "Postgres init script" this task was written against cannot exist; a
+  # Node-side one-shot is what the same outcome actually costs. (M1.27 bakes
+  # migrations and the `standard` seed into `sorrel_template` at image build
+  # time, which is a different job: that template is what the Vitest workers
+  # clone, not what `app` connects to.)
+  #
+  # Re-running on every `docker compose up` is deliberate and cheap: migrations
+  # are journal-guarded and every scenario is idempotent by fixed id, so this
+  # is also how a developer who just pulled new migrations gets them applied.
+  # No profile — `docker-up` must reach it.
+  db-init:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.node
+      target: development
+    image: sorrel-node:development
+    working_dir: /app
+    volumes:
+      - ..:/app:cached
+      - node_modules_db_init:/app/node_modules
+    init: true
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
+      # "Scenario is selectable by environment variable". Compose reads it from
+      # the host environment or Docker/.env; `minimal` is the bare install a
+      # developer gets without thinking about it. A name that is not a scenario
+      # fails this container rather than quietly seeding `minimal`, which is
+      # what stops `app` — see src/db/seed/index.ts's resolveScenario.
+      SEED_SCENARIO: ${SEED_SCENARIO:-minimal}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ['sh', '-c', 'npm run db:migrate && npm run db:seed']
+
   app:
     build:
       context: ..
@@ -166,6 +217,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      # Health alone is not enough as of M1.24: a healthy Postgres with no
+      # schema is exactly what a clean volume gives, and `next dev` would serve
+      # a database the Better Auth route handlers cannot query. Waiting on the
+      # one-shot's *exit status* also means a failed migration stops the app
+      # rather than producing a running app that 500s on first request.
+      db-init:
+        condition: service_completed_successfully
     # Command comes from the Dockerfile `CMD` (`npm run dev`), which already
     # binds 0.0.0.0:8000 — see the `dev` script in package.json. `next dev`
     # runs at NODE_ENV=development, so Better Auth's own BETTER_AUTH_SECRET

@@ -27,7 +27,8 @@
     "db:seed": "tsx scripts/db-seed.ts",
     "db:seed:categories": "tsx scripts/db-seed.ts categories",
     "db:seed:forms": "tsx scripts/db-seed.ts forms",
-    "db:reset": "npm run db:migrate && npm run db:seed",
+    "db:drop": "tsx scripts/db-seed.ts drop",
+    "db:reset": "npm run db:drop && npm run db:migrate && npm run db:seed",
     "db:studio": "drizzle-kit studio --host 0.0.0.0 --port 4983",
     "codegen": "echo 'codegen is not wired up yet — see M3.x' && exit 1",
     "workshop": "ladle serve",
@@ -69,7 +70,8 @@
     "tsx": "^4.23.13",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.0",
+    "yaml": "^2.9.1"
   },
   "allowScripts": {
     "pre-commit@2.0.0": true

@@ -520,7 +520,7 @@ Single route handler at `/api/graphql`. No separate service, no additional hosti
 
 **Stack:** GraphQL Yoga (server), Pothos (code-first schema, no ORM plugin — §2), DataLoader, graphql-codegen for client types.
 
-**Client:** `graphql-request` plus TanStack Query, not Apollo. Apollo's normalized cache duplicates what TanStack Query already does here and adds ~40 kB. Codegen generates typed document nodes and hooks.
+**Client:** `graphql-request` plus TanStack Query, not Apollo. Apollo's normalized cache duplicates what TanStack Query already does here and adds ~40 kB. Codegen generates typed document nodes and hooks. Forms are react-hook-form with the Zod resolver; the suggesting fields of M5.10a are a headless combobox on Downshift, not react-select — §14 carries both arguments.
 
 **Four rules follow from dropping the Drizzle plugin (MB.20), and bind every M3 task:**
 
@@ -553,6 +553,41 @@ No database access in a resolver, ever. Same lint rule as `db`.
 **Authorization surface.** Handled by the service-layer choke point in §3. Pothos auth scopes provide a second check on sensitive fields (`User.email`) and on admin mutation fields, but the service layer is the real gate.
 
 **Client-composable expense.** `graphql-armor` applies a depth limit of 7, a cost limit, and disables introspection and field suggestions in production. Aliasing and directive-overload protections come with it.
+
+### Errors — one shape, so a message can land beside its field
+
+Services throw rather than answering with an empty list or a success that did nothing — §11 asserts it as "not a silent no-op", and `auth.md` carries the full argument. Three types live in `src/lib/errors.ts`: `Forbidden`, `NotFound`, and `ValidationError`, which carries `issues: { path: (string | number)[]; message: string }[]`. None of the three carries a status code or a GraphQL error code — a service called from a seed or a script has no use for one — so the mapping below belongs to the transport, and MB.43 is where it lives.
+
+Yoga maps them on the way out through `maskedErrors.maskError`, which keeps masking on: anything that is _not_ one of the three leaves as "Unexpected error", so no stack trace and no constraint name reaches a client. M11.10 makes the same promise for pages.
+
+| Thrown            | `extensions.code` | Also carries                              |
+| ----------------- | ----------------- | ----------------------------------------- |
+| `ValidationError` | `VALIDATION`      | `extensions.fieldErrors`, from its issues |
+| `Forbidden`       | `FORBIDDEN`       | —                                         |
+| `NotFound`        | `NOT_FOUND`       | —                                         |
+| anything else     | masked            | —                                         |
+
+The message is the service's, verbatim. That is what carries M5.6b's "which column failed and what the ratio was", M5.2's duplicate naming the colliding entry, and M10.3's explaining refusal all the way to the person reading the form — a rewrite at the transport is how those become "Invalid input" again.
+
+```json
+{
+  "errors": [
+    {
+      "message": "Invalid input",
+      "path": ["createWorkspaceIngredient"],
+      "extensions": {
+        "code": "VALIDATION",
+        "fieldErrors": [{ "path": ["canonicalName"], "message": "A botanical name is required" }]
+      }
+    }
+  ],
+  "data": null
+}
+```
+
+**An issue's `path` names the input field**, in the shape of the mutation's own `input` — `['canonicalName']`, `['folkNames', 2]`. A rule belonging to no single field uses the empty path and the form renders it above the fields. Most refusals do have a field: the duplicate-identity collision of §5 names `canonicalName`, a slug collision names `slug`, the contrast floor names `colorDark` or `colorLight`. What is genuinely not a field stays a `Forbidden` with a message — the last-owner guard refuses an action and offers a remedy, which is not a bad value in a box. Either way: **never a bare constraint name.**
+
+**The client validates first and renders both sources the same way.** The Zod resolver runs the shared schema before the mutation is sent, so a well-behaved form never asks the server to reject what it could have caught; the service runs that same schema again, because the browser is not the only caller. Returned `fieldErrors` go into react-hook-form through `setError(path, { message })`, an empty path through `setError('root', …)`, and both render through the same inline error element the resolver's own errors use — one component, two sources, so a server-only rule is not a second visual language. `FORBIDDEN` and `NOT_FOUND` are not form errors; the page decides what to do with them (§9).
 
 ### Caching — three layers in v1
 
@@ -599,6 +634,9 @@ type Query {
   spell(id: ID!): Spell
 }
 
+# Mutations return the entity. A refusal travels in `errors[].extensions` —
+# a code, and `fieldErrors` for a validation failure — rather than in a payload
+# type pairing an entity with a userErrors list. See Errors above.
 type Mutation {
   createWorkspace(input: WorkspaceInput!): Workspace! # gated on canCreateWorkspace or admin
   createWorkspaceIngredient(input: IngredientInput!): Ingredient!
@@ -864,7 +902,9 @@ Every story becomes a failing test first: **write test → watch it fail → min
 
 ### Seed data — one module, three consumers
 
-`src/db/seed/index.ts` exports `seed(db, { scenario })`. Docker Postgres runs it on first boot; the Vitest `db` project and Playwright's `globalSetup` call it directly. Identical data everywhere, so a bug reproduces in all three.
+`src/db/seed/index.ts` exports `seed(db, { scenario })`. A one-shot `db-init` compose container runs it before the app starts; the Vitest `db` project and Playwright's `globalSetup` call it directly. Identical data everywhere, so a bug reproduces in all three.
+
+The Docker side is a Node container rather than a Postgres init script, corrected at M1.24 from "Docker Postgres runs it on first boot": the seed is TypeScript and the Postgres image has no Node, and `Docker/postgres-init/` does not run at container start in any case, since `Dockerfile.postgres` populates PGDATA at image build time and the entrypoint then skips `/docker-entrypoint-initdb.d/`. The outcome the line described — a clean volume comes up seeded — is unchanged.
 
 Scenarios: `minimal` (one admin, one user, empty compendium), `standard` (five users, workspaces W and X, populated compendium), `demo` (standard plus spells with ingredients and layer order).
 
@@ -878,7 +918,7 @@ Scenarios: `minimal` (one admin, one user, empty compendium), `standard` (five u
 | D    | Member of unrelated workspace X    |
 | E    | Site admin, member of no workspace |
 
-`make db-reset` reseeds local.
+`make db-reset` drops, migrates and reseeds local; `SEED_SCENARIO` picks the scenario for it and for `make docker-up`, defaulting to `minimal`.
 
 ### Acceptance tests — story traceability
 
@@ -1007,6 +1047,7 @@ The highest-risk tests in the project.
 - Introspection disabled in production config
 - DataLoader batches — assert query count, not just correctness, on a 50-ingredient fetch
 - Every mutation delegates to a service; no resolver touches `db`
+- Error mapping — each of the three service error types leaves carrying its own `extensions.code`, a `ValidationError` leaves carrying `fieldErrors` matching its issues and its message verbatim, and a plain `Error` leaves masked with no message and no stack
 
 ### Component — Vitest + RTL
 
@@ -1057,7 +1098,7 @@ Specs: admin adds a compendium entry; A adds it to W's ingredients with a quanti
 | `playwright.config.ts`      | `webServer` → `npm run build && npm run start`, port 8001; local Postgres setup in `globalSetup`                                                                                                                                                                                                                                                                                 |
 | `vitest.config.ts`          | Two projects — `unit` (jsdom) and `db` (node, local Postgres); keep 80% thresholds                                                                                                                                                                                                                                                                                               |
 | `.oxlintrc.json`            | Node-globals override swaps `gatsby-*.ts` for `next.config.ts`, `drizzle.config.ts`, `src/db/**`, `src/app/**/route.ts`                                                                                                                                                                                                                                                          |
-| `docker-compose.yaml`       | Drop the Gatsby LMDB volume; keep `node_modules`; **add `postgres` service** with seed init script; `devcontainer` depends on it                                                                                                                                                                                                                                                 |
+| `docker-compose.yaml`       | Drop the Gatsby LMDB volume; keep `node_modules`; **add `postgres` service**, plus the one-shot `db-init` container that migrates and seeds before `app` starts (M1.24); `devcontainer` depends on it                                                                                                                                                                            |
 | `netlify.toml`              | Replaced by `vercel.json` — config only; `vercel.json` disables the Git integration and does not drive deploys (see below)                                                                                                                                                                                                                                                       |
 | **New** `codegen.yml` check | Fails if generated GraphQL types are stale relative to the schema                                                                                                                                                                                                                                                                                                                |
 | **New** `deploy.yml`        | CLI-driven Vercel deploy on push to `main`/`staging`/`hotfix/**` (§4). Not ported — `resume-2026` deployed via Netlify's own Git integration with no workflow file                                                                                                                                                                                                               |
@@ -1295,6 +1336,9 @@ Choices made during design that a future reader might otherwise revisit.
 | Custom spell ingredients in their own table?                      | No — columns on `spell_ingredients`, nullable FK + `num_nonnulls` (MB.40)   | A layer is a layer: quantity, unit, layer order and note are the same whichever kind of row it is, and a second table would split layer ordering across two tables, where no constraint can hold it — every jar read a `UNION`, every reorder a two-table rewrite, every client a union type. Same table, on the idiom the "Polymorphic note subject?" row already blesses. One-off rather than reusable, because reusable is a workspace-local `ingredients` row and already exists (story 29); `form` is text by the "`form` as a pgEnum?" row. The key moves onto `(spell_id, layer_order)` because the old pair no longer exists on every row, and one-ingredient-per-jar survives as a partial index. Done in Wave 4 against an empty table rather than as a fast-follow, which would have cost a retrofit across every Wave 13 consumer and a breaking nullability change in the SDL. [`mb.40-custom-spell-ingredients.md`](design-decisions/mb.40-custom-spell-ingredients.md) |
 | Per-task transcripts and scheduled compression passes?            | No — retired (MB.31)                                                        | A PR body already carries what a transcript said, and a statement is cheapest to fix in the diff that stales it rather than in a sweep weeks later. The rule survives in CLAUDE.md; only the schedule and the append-only file are gone. `MW.15` still closes v1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Better Auth's organization plugin for workspaces and invitations? | No — spiked and not adopted (MB.30)                                         | Run against a real database, not read from its docs: every write is unaudited and every delete is hard; the invitation id is the token, stored in plaintext and returned to every member; acceptance is bound to the invited email with no option; an omitted `organizationId` falls back to a session-held active workspace (§9's two-tabs bug); and ~20 `/api/auth/organization/*` routes carry workspace data outside GraphQL. What it gets right — the last-owner guard, the creation gate — the service wraps anyway. [`mb.30-organization-plugin.md`](design-decisions/mb.30-organization-plugin.md)                                                                                                                                                                                                                                                                                                                                                                            |
+| A form library?                                                   | Yes — react-hook-form, with `@hookform/resolvers/zod`                       | Form state is the one client concern the stack left unnamed, and every form task (M5.9, M5.6a, M10.12) validates with the shared Zod schema of M4.5/MB.8, so the resolver runs the schema the service will run again — one set of rules in two places, the same shape as the two transports. `useFieldArray` covers the three array fields (folkNames, deities, substitutes). Closed enums — nomenclature, element, planet, zodiac, unit, visibility, status — are native `<select>`s; category chips are the custom component M8.11 and M0.8's `chip()` mixin already describe. No server actions, per §2: the form submits a GraphQL mutation                                                                                                                                                                                                                                                                                                                                       |
+| react-select for the suggesting fields?                           | No — one `Combobox` component on Downshift's `useCombobox`                  | Only M5.10a's two lookup fields need a combobox, and its criteria decide the library: the group is part of the option's _accessible name_, curated and in-use values are visibly distinguished, and the list ends in an explicit "use what you typed" row. react-select renders its own DOM through Emotion, so each of those is a fight with `formatOptionLabel` and a second theming system beside the Sass tokens the design says not to build past — and it is ~30 kB for one field pair, the same argument that rejected Apollo. A hand-rolled combobox is the wrong fix in the other direction: keyboard and `aria-activedescendant` handling is a known trap. The headless hook owns the ARIA and keyboard state and nothing else; the markup, the option content and the Sass are ours. Free text is its default behaviour — selecting an item fills `inputValue` and links nothing, which is what M5.10a asks. Installed by M5.9/M5.10a, not before                          |
+| A `userErrors` payload type on mutations?                         | No — a code and `fieldErrors` in `errors[].extensions` (MB.43)              | The Shopify shape makes a rejected write a successful response carrying a list, which is the opposite of what it is: every mutation here either wrote or refused. Taking it would also rewrite every mutation signature in §7's sketch into a payload type, and every resolver and test that reads one, to gain nothing the extensions do not already carry — a path per issue is a path per issue either way. `graphql-request` throws on `errors`, so TanStack Query's existing error path is the one the form already handles, where a payload type would need each mutation's own success branch to remember to look. The argument that would move this is a client that must render a partial success; v1 has none, and the three refusal types are a closed set                                                                                                                                                                                                                 |
 
 ---
 
