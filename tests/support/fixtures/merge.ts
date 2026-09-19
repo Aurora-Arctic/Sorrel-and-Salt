@@ -1,25 +1,13 @@
-// M1.25 — how every factory applies its overrides.
+// M1.25 — how every factory applies its overrides: an override is read as a
+// *sentence about the default* rather than as a replacement for it. A nested
+// object merges key by key, an array replaces wholesale, `undefined` says
+// nothing (it is what an absent optional property reads as) and `null` replaces
+// — which is how a test writes the row it expects the database to reject.
 //
-// A fixture exists so a test can state only what it is actually testing, which
-// means the override has to be read as a *sentence about the default* rather
-// than as a replacement for it. Three decisions make that true, and each one
-// is a case the factories depend on:
-//
-//   - **A nested object merges, key by key.** `{ seal: { color: 'oxblood' } }`
-//     says the wax is still beeswax.
-//   - **An array replaces.** `makeIngredient({ categories: ['Protection'] })`
-//     is filed under protection and nothing else (DESIGN.md §11's own
-//     example); merging element by element would leave the default's other
-//     entries behind and the test would be about categories it never named.
-//   - **`undefined` says nothing.** It is what an absent optional property
-//     reads as, so treating it as a value would let `{ form: maybeForm }`
-//     erase a default whenever the caller's own variable happened to be unset.
-//     `null` is a value and does replace — that is how a test writes the row
-//     it expects the database to reject.
-//
-// There is no `deepmerge` dependency here on purpose: the three rules above
-// are the whole library, and the one that matters most (arrays replace) is the
-// one a general-purpose merge is least likely to agree with us about.
+// No `deepmerge` dependency: those three rules are the whole library, and the
+// one that matters most (arrays replace) is the one a general-purpose merge is
+// least likely to agree with us about. The argument at length:
+// claude-docs/testing.md, "Overrides merge; arrays replace".
 
 type Plain = Record<string, unknown>;
 

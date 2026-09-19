@@ -6,12 +6,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 import ladleConfig from '../../.ladle/config.mjs';
 
-// MB.38 — the two workshop guards, as tests. Both were standalone scripts
-// under scripts/ because Vitest had not landed when they were written (M0.33,
-// M0.35); it has since M1.7, and a mechanical guard in this repo is a Vitest
-// file — in tests/guards/ since MB.41, in src/test/ when MB.38 moved them.
-// Moving them into Vitest is what puts the theme-default guard in CI at all —
-// as a script it ran from pre-commit only, which a `--no-verify` skips.
+// MB.38 — the two workshop guards, as tests rather than as the standalone
+// scripts under scripts/ they started as. That is what puts them in CI at all:
+// a script runs from pre-commit only, which a `--no-verify` skips.
 //
 //   1. Every standalone component ships a story: a directory under
 //      src/components/ holding an `index.tsx` has a sibling

@@ -155,18 +155,11 @@ describe('ingredients schema', () => {
   });
 });
 
-// The behaviour half, against the real table. This worker's sorrel_test_<n>
-// clone arrives with every migration applied and the `standard` scenario
-// seeded (M1.27, tests/support/db-setup.ts), and re-cloned that way before
-// this file runs — so what is asserted below is the SQL production runs, with
-// no schema built here and nothing to put back afterwards. Until M1.27 the
-// template was empty: this file applied the one migration that ships the
-// table and stubbed `users`/`workspaces` to a bare `id` column.
-//
-// The author and the workspace are the seed's, not invented ids: the real
-// `users` and `workspaces` have NOT NULL names, slugs and audit stamps, and a
-// row that exists is cheaper to point at than one to construct. Bound to the
-// old names so the tests read as they did.
+// The behaviour half, against the real table: a clone carrying every migration
+// and the `standard` seed, re-cloned before this file runs
+// (tests/support/db-setup.ts). The author and the workspace are the seed's —
+// the real `users` and `workspaces` demand NOT NULL names, slugs and audit
+// stamps.
 const AUTHOR = FIXTURE_USERS.A.id;
 const WORKSPACE = WORKSPACE_W_ID;
 
@@ -215,9 +208,8 @@ beforeAll(() => {
 
 // `truncate … cascade`, not `delete from`: the seeded compendium's rows have
 // category and folk-name links, and every child foreign key in the schema is
-// NO ACTION, so a delete would be refused. Truncating takes the links with
-// it, and the empty table is what every test below assumes — the same
-// starting state the old empty template gave, reached the other way round.
+// NO ACTION, so a delete would be refused. Truncating takes the links with it,
+// and the empty table is what every test below assumes.
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
 });
@@ -439,9 +431,7 @@ describe('ingredients table', () => {
       for (const element of ELEMENT_VALUES) {
         // Five rows in one workspace, so five identities: the factory's default
         // canonical name would make them one identity five times over, which
-        // `ingredients_workspace_identity_unique` (M4.7) refuses. Unseen before
-        // M1.27, when this file applied only the migration that created the
-        // table and never met the index a later one added.
+        // `ingredients_workspace_identity_unique` (M4.7) refuses.
         await insert({
           element,
           name: `Mugwort (${element})`,

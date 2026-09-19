@@ -5,9 +5,9 @@ import { REPO_ROOT } from '../support/paths';
 
 // M1.20's mechanical guard over the repository itself. CLAUDE.md rule 4 —
 // soft-delete filtering happens in the repository, never at call sites — is a
-// code sweep, so per CLAUDE.md's sweep-task rule it lands as a mechanism (the
-// finder builder in src/db/repository.ts) plus this guard, and every later
-// finder adopts it in that finder's own PR.
+// code sweep, so it lands as a mechanism (the finder builder in
+// src/db/repository.ts) plus this guard, adopted by each later finder in its
+// own PR (CLAUDE.md's sweep-task rule).
 //
 // What it makes impossible rather than merely absent:
 //

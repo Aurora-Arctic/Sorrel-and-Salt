@@ -6,26 +6,17 @@ import postgres from 'postgres';
 // (one seeded template per Vitest run, cloned once per worker slot and again
 // before every test file by db-setup.ts) and e2e/global-setup.ts (one seeded
 // template per Playwright run, cloned into `sorrel_e2e` between spec files).
-// Both used to clone `sorrel_template` directly, which carried nothing but
-// extensions — every db test file then built its own tables.
-//
-// The template is populated here, at test-run setup, rather than baked into
-// the Postgres image at build time as TASKS.md first specified. The reasons
-// are in claude-docs/design-decisions/m1.27-template-at-setup-not-in-image.md;
-// the short form is that `db:migrate` + `db:seed` cost about a second, once
-// per run, and a template built from the checkout cannot disagree with it,
-// whereas one baked into an image can and — after `git pull` without
-// `make docker-rebuild` — quietly would.
+// Built here at test-run setup rather than baked into the Postgres image:
+// claude-docs/design-decisions/m1.27-template-at-setup-not-in-image.md.
 //
 // Migrate and seed run as **the same two npm scripts docker-compose's
 // `db-init` service runs** (M1.24), spawned with `DATABASE_URL` pointed at the
-// template, rather than by importing the migrator and the seed here. That is
-// deliberate twice over: it is what makes "local and CI run the same
-// migrations and the same seed" literally true, and it is how this file stays
-// out of both import boundaries — nothing in tests/support/ may build a
-// Drizzle handle (CLAUDE.md rule 4, MB.33), and the four files that may
-// import the client are pinned by tests/guards/lint-db-client-boundary.test.ts.
-// scripts/db-seed.ts is one of those four, and it is what `db:seed` runs.
+// template, rather than by importing the migrator and the seed here. Deliberate
+// twice over: it is what makes "local and CI run the same migrations and the
+// same seed" literally true, and it is how this file stays out of both import
+// boundaries — nothing in tests/support/ may build a Drizzle handle (CLAUDE.md
+// rule 4, MB.33), and scripts/db-seed.ts, which `db:seed` runs, is one of the
+// four files that may import the client.
 
 /** M0.18's baked-in base: extensions only, no schema. Never written to. */
 export const BASE_TEMPLATE = 'sorrel_template';

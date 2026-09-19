@@ -15,9 +15,8 @@ import { fromRoot } from '../support/paths';
 //      still starts everything; the app just races an unmigrated database.
 //
 // Both are configuration, so both are unreachable from a runtime test and
-// neither shows up as a failure until a developer hits it by hand. That is the
-// sweep-task rule's "can it be made impossible, or only absent?" — this one
-// can only be made absent, so it gets a mechanical guard (CLAUDE.md).
+// neither shows up as a failure until a developer hits it by hand — absent,
+// never impossible, so it gets a mechanical guard (CLAUDE.md's sweep-task rule).
 //
 // The compose file is parsed rather than grepped: `condition:
 // service_completed_successfully` appearing *somewhere* in the file is not the

@@ -122,20 +122,11 @@ describe('workspace_invitations schema', () => {
   });
 });
 
-// The behaviour half, against the real table. This worker's sorrel_test_<n>
-// clone arrives with every migration applied and the `standard` scenario
-// seeded (M1.27, tests/support/db-setup.ts), re-cloned that way before this
-// file runs — so what is asserted below is the SQL production runs, with no
-// schema built here and nothing to put back afterwards. Until M1.27 the
-// template was empty: this file applied the one migration that ships the
-// table, stubbed `users`/`workspaces` to a bare `id` column and created the
-// `workspace_role` enum by hand; 0004's real one is now already there.
-//
-// The owner, the invitee and the coven are the seed's, not invented ids: the
-// real `users` and `workspaces` have NOT NULL names, slugs and audit stamps,
-// and a row that exists is cheaper to point at than one to construct. Bound
-// to the old names so the tests read as they did — A owns W, and B is the
-// one who accepts.
+// The behaviour half, against the real table: a clone carrying every migration
+// and the `standard` seed, re-cloned before this file runs
+// (tests/support/db-setup.ts). The owner, the invitee and the coven are the
+// seed's — the real `users` and `workspaces` demand NOT NULL names, slugs and
+// audit stamps. A owns W, and B is the one who accepts.
 const OWNER = FIXTURE_USERS.A.id;
 const INVITEE = FIXTURE_USERS.B.id;
 const COVEN = WORKSPACE_W_ID;

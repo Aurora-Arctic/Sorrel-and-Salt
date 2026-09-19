@@ -177,6 +177,21 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
     files that are _about_ seeding (`tests/db/seed/*`,
     `updated-at-trigger.test.ts`) call `truncateAllTables(sql)` from
     `seeded-database.ts` first.
+    - **What a `tests/db/` file may therefore assume**, and what its own
+      header need not re-argue: every migration applied, the `standard`
+      scenario present, and a database nothing else will touch. No file builds
+      a table, stubs a parent table down to a bare `id`, or puts anything back
+      in an `afterAll`.
+    - **A db test names the seed's ids rather than inventing them.** The real
+      `users`, `workspaces`, `ingredients` and `categories` all carry NOT NULL
+      names, slugs and audit stamps, so a row that already exists is cheaper to
+      point at than one to construct — `FIXTURE_USERS.A.id`, `WORKSPACE_W_ID`
+      and friends out of `src/db/seed/standard`. Where the seed generates an id
+      rather than fixing it (§6's categories, the compendium's entries, a
+      seeded form), the file reads it back by name in `beforeAll`. That is the
+      opposite of the fixture-factory rule below: a fixture invents because it
+      is writing a new row, a db test binds because it is pointing at a seeded
+      one.
     - **The slot is `VITEST_POOL_ID`, not `VITEST_WORKER_ID`** (MB.14).
       Vitest sets both, and only the first is bounded by `maxWorkers`
       ("Value is between 1-`maxWorkers`", per its own typedef);
@@ -522,6 +537,15 @@ single shared server.
 - **No Neon connection anywhere** — `e2eDatabaseUrl()`/`adminUrl()` only ever
   rewrite the pathname of the ambient `DATABASE_URL`, which points at the
   local `postgres` Docker service exactly as Vitest's does.
+- **The browser may be remote** (MB.22). `playwright.config.ts` reads
+  `PLAYWRIGHT_WS_ENDPOINT`, set by the `devcontainer` compose service alone,
+  and when it is present passes it as `connectOptions.wsEndpoint` and switches
+  `baseURL` to `http://devcontainer:8001` — a remote browser cannot resolve the
+  runner's `localhost`. `webServer.url`'s readiness poll deliberately stays on
+  `localhost`, because that poll runs in the runner's own process wherever the
+  browser lives; making both sides match breaks one of them. Why the browser
+  moves at all (Alpine/musl has no Chromium), why the variable must not be set
+  any more broadly, and the full setup: `claude-docs/debugging.md`.
 
 `npm run e2e` (`playwright test`) runs the suite. Browser binaries
 (`npx playwright install chromium`) are a one-time local step. CI (M1.14)

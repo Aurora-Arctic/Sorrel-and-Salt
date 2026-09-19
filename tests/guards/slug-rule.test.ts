@@ -8,9 +8,7 @@ import { slugify } from '@/lib/slugify';
 
 // CLAUDE.md's slug rule: every slug in this repo comes from
 // `src/lib/slugify.ts`, which is the `slugify` package under one pinned set of
-// options. This is the mechanical half of it — the sweep-task rule says a
-// mechanism lands with a guard, as early as the mechanism can be written,
-// rather than being retrofitted once a second implementation already exists.
+// options. This is the mechanical half of it (CLAUDE.md's sweep-task rule).
 //
 // A second implementation is the failure it is built to catch, and it is a
 // quiet one: two slug rules do not collide, they simply disagree, and the

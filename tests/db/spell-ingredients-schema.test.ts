@@ -179,19 +179,11 @@ describe('spell_ingredients schema', () => {
   });
 });
 
-// The behaviour half, against the real table. This worker's sorrel_test_<n>
-// clone arrives with every migration applied — 0014 creates the table, 0017
-// reshapes it — and the `standard` scenario seeded (M1.27,
-// tests/support/db-setup.ts), re-cloned that way before this file runs. So
-// what is asserted below is the SQL production runs, with no schema built here
-// and nothing to put back afterwards. Until M1.27 the template was empty: this
-// file applied the two migrations itself and stubbed `users`, `ingredients`
-// and `inventory_items` to a bare `id` column.
-//
-// The author and the workspace are the seed's, not invented ids: the real
-// `users` and `workspaces` have NOT NULL names, slugs and audit stamps, and a
-// row that exists is cheaper to point at than one to construct. Bound to the
-// old names so the tests read as they did.
+// The behaviour half, against the real table: a clone carrying every migration
+// — 0014 creates the table, 0017 reshapes it — and the `standard` seed,
+// re-cloned before this file runs (tests/support/db-setup.ts). The author and
+// the workspace are the seed's — the real `users` and `workspaces` demand NOT
+// NULL names, slugs and audit stamps.
 const AUTHOR = FIXTURE_USERS.A.id;
 const COVEN = WORKSPACE_W_ID;
 const ABSENT = '99999999-9999-9999-9999-999999999999';

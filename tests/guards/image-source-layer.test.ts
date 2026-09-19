@@ -11,26 +11,17 @@ import { fromRoot } from '../support/paths';
 // `.github/actions/checkout-to-app` lays the PR checkout into `/app` with
 // `cp -a`. Nothing reads a baked-in tree.
 //
-// It used to be baked anyway — `COPY . .` after the dependency layer — and
-// CI was the one place the copy showed through. `cp -a` overlays without
-// deleting, so a file the repo had removed since the image was built was
-// still on disk in every container job: untracked, not ignored, and
-// indistinguishable from a file that had just been written. The first fix
-// was `git clean` after the copy, which needed `safe.directory` for a
-// `node`-owned `/app` under a root job, and a job to manufacture the
-// condition and prove the clean ran. That is stale files made *absent*. An
-// image with no source layer makes them *impossible* — the overlay has
-// nothing to delete, and nothing runs git in `/app` at all — which is the
-// sweep-task rule's test (CLAUDE.md), and this guard is what keeps it true.
+// Why a baked layer was a bug rather than dead weight, and why the first fix
+// (`git clean` after the copy) was replaced:
+// claude-docs/design-decisions/mb.42-no-source-layer.md.
 //
 // The mechanism is a build instruction, so it is unreachable from any runtime
-// test: a `COPY . .` re-added tomorrow fails nothing until CI next runs
-// against a deleted file. The guard parses every `COPY`/`ADD` in both files
-// and checks each source against an allowlist. An allowlist rather than a
-// `.` denylist for the reason lint-db-client-boundary.test.ts pins its
-// exemption set instead of matching a pattern: `COPY src src` is as much a
-// source layer as `COPY . .`, and a new COPY is a decision, not a
-// convenience. Adding one means adding it here, in the diff that adds it.
+// test: a `COPY . .` re-added tomorrow fails nothing until CI next runs against
+// a deleted file. The guard parses every `COPY`/`ADD` in both files and checks
+// each source against an allowlist rather than a `.` denylist, for the reason
+// lint-db-client-boundary.test.ts pins its exemption set instead of matching a
+// pattern: `COPY src src` is as much a source layer as `COPY . .`, so a new
+// COPY is a decision, not a convenience.
 
 /** The one directory-free copy each image is allowed, by file. */
 const ALLOWED_SOURCES: Record<string, readonly string[]> = {

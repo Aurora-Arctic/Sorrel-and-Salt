@@ -121,19 +121,11 @@ describe('spell_categories schema', () => {
   });
 });
 
-// The behaviour half, against the real table. This worker's sorrel_test_<n>
-// clone arrives with every migration applied and the `standard` scenario
-// seeded (M1.27, tests/support/db-setup.ts), and re-cloned that way before
-// this file runs — so what is asserted below is the SQL production runs, with
-// no schema built here and nothing to put back afterwards. Until M1.27 the
-// template was empty: this file applied the one migration that ships the
-// table and stubbed `users`, `spells` and `categories` to a bare `id` column.
-//
-// The authors and the categories are the seed's, not invented ids: the real
-// `users` and `categories` have NOT NULL names, slugs and audit stamps, and a
-// row that exists is cheaper to point at than one to construct. The two spells
-// are this file's own, because `standard` seeds none. Bound to the old names
-// so the tests read as they did.
+// The behaviour half, against the real table: a clone carrying every migration
+// and the `standard` seed, re-cloned before this file runs
+// (tests/support/db-setup.ts). The authors and the categories are the seed's —
+// the real `users` and `categories` demand NOT NULL names, slugs and audit
+// stamps. The two spells are this file's own, because `standard` seeds none.
 const AUTHOR = FIXTURE_USERS.A.id;
 const SECOND_AUTHOR = FIXTURE_USERS.B.id;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
