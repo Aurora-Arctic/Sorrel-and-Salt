@@ -3313,6 +3313,10 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.42 | CI container jobs run against files the repo has deleted                                       | Wave 4  | —            |
 | MB.43 | Map service errors to GraphQL errors with field-level detail                                   | Wave 7  | M5.9, M8.8   |
 | MB.44 | ~~Release to `main`, then drop the coverage excludes MB.42 made dead~~ — **retired, not done** | —       | —            |
+| MB.45 | `vercel pull --git-branch` is rejected on the production target                                | Wave 5  | MB.27        |
+| MB.46 | CI accepts a placeholder as a database connection string                                       | Wave 5  | MB.45        |
+| MB.47 | staging's branch-scoped `DATABASE_URL` is unusable by CI — **on hold**                         | Wave 5  | MB.46        |
+| MB.48 | A destructive-DDL acknowledgement does not survive the release PR                              | Wave 5  | MB.37        |
 
 **MB.5 — Restore `users` foreign keys on `auditColumns`** · 2h
 
@@ -4248,6 +4252,79 @@ _Acceptance criteria:_
 > **What survives it.** A release is still worth cutting on its own terms —
 > everything that has accumulated on `staging` protects nothing until it is
 > on `main` — via `/create-release`, as a release rather than as this task.
+
+**MB.45 — `vercel pull --git-branch` is rejected on the production target** · 1h
+
+_Story:_ As a maintainer, I want a push to `main` to reach production so that a merged release actually ships.
+
+Every push to `main` fails at `vercel pull` with ``Invalid request: `target` must be "preview" when specifying a `gitBranch` ``. Branch-scoped environment variables are a Preview-only Vercel feature, and MB.27 added `--git-branch="$GIT_BRANCH"` to both workflows unconditionally while `resolve-target` emits `git_branch=main` for the production arm. v0.2.0 merged and was tagged but never deployed: `migrate` dies at the pull, and `deploy` is gated behind it, so production still serves v0.1.1 — stale rather than broken, since code and schema still agree.
+
+MB.27's own commit recorded two acceptance criteria as open, both needing live Vercel access. This is one of them, found the only way it could be.
+
+**Two steps, not one command with an optional flag.** Each workflow pulls through a preview arm and a production arm, selected by a YAML `if:` on the resolved environment. The condition is then data `tests/guards/vercel-pull-git-branch.test.ts` already parses, each arm spells its `--environment` literally so an invocation can be classified, and the run's step list shows which fired. `== 'preview'` rather than `!= 'production'`, so a third environment skips both arms and fails at `migrate.yml`'s existing named error rather than silently pulling the wrong one.
+
+Two shapes were rejected. Making `git-branch` optional and gating on emptiness reintroduces exactly what MB.27 fixed — a caller that forgets it gets the environment-wide value and nothing fails. Computing a `--git-branch=…` string in `resolve-target` and interpolating it would mean the flag never appears as literal text on any line the guard's `INVOCATION` regex matches, so the sweep goes blind on the half that can only be made absent.
+
+_Acceptance criteria:_
+
+- The guard rewritten rather than deleted, written first and watched fail — six of its seven sweep assertions red against the workflows as they stood
+- New assertion: a pull naming `--environment=production` carries no `--git-branch`, with the Vercel error quoted in the comment so nobody re-adds it
+- New assertion: each arm's `if:` names the same target its command does — what makes the pairing structural rather than two `run:` lines that happen to agree
+- MB.27's assertions kept, narrowed to preview; the sweep precondition becomes two pulls per workflow
+- The honest limit stated in the test header: a YAML `if:` is still text to this test, so it proves the conditions are complementary and paired, not that GitHub evaluates them as written
+- `ci.md`, `secrets.md` and `m1.1-neon-branch-strategy.md` corrected, the last superseded in place
+- **Not done when CI is green.** MB.27 shipped green and broke production; the criterion is a live deploy on `main`
+
+**MB.46 — CI accepts a placeholder as a database connection string** · 2h
+
+_Story:_ As a maintainer, I want CI to refuse a `DATABASE_URL` that is not one, naming the cause, so that a bad value fails legibly instead of inside drizzle-kit.
+
+Every push to `staging` dies in `migrate` with `TypeError: Invalid URL`. The load step's only guard is `[ -z "$db_url" ]`, so anything non-empty reaches `$GITHUB_ENV`: Vercel's `[SENSITIVE]` placeholder, a `psql '…'` wrapper, a stray quote, a trailing newline. This task fixes the **guard**, not the value — MB.47 owns the value — and it is what makes the cause legible, because the step masks the value before anything can print it, so today CI cannot say which of those it hit.
+
+**A script, not shell.** This repo tests scripts and cannot test a `run:` block, so `scripts/assert-database-url.ts` exports a pure `validateDatabaseUrl` and its CLI reads the candidate from **env, never argv** — argv is visible to `ps` and echoed by `set -x`. Ordered rules, each with its own named cause; the `[SENSITIVE]` message names it as a Sensitive Vercel variable being unreadable by design, and says a retry will not help.
+
+**Two call sites, and that is the sweep.** `migrate.yml` hard-fails rather than warn-and-skip: by then the Vercel secrets are set, and skipping migrations while `deploy` proceeds ships code against an unmigrated schema. `deploy.yml` gets a new step before `Build`, because a placeholder is **not** harmless there — `src/app/api/auth/[...all]/route.ts` → `src/lib/auth.ts` → `src/db/connection.ts` calls `postgres()` at module scope and postgres.js parses eagerly, so `vercel build` dies on it the moment `migrate` stops failing first.
+
+_Acceptance criteria:_
+
+- `tests/guards/database-url-validation.test.ts` written before the script and watched fail; a case per rule, plus green cases for a Neon pooled URL, the local compose URL, and a `%`-escaped password
+- `::add-mask::` moves to immediately after extraction and **before** validation, so a real URL cannot leak through a validation failure; every message describes shape, never content, pinned by an assertion that the message does not contain the value
+- A directory sweep: every workflow running `vercel pull` also runs the validator in the same job, so the next pull added is caught in the diff that adds it
+- Branches off `main` **after** MB.45 merges — on a branch still carrying MB.45's bug the production pull fails first and the new deploy-job step never executes, so the guard would merge unverified
+
+**MB.47 — staging's branch-scoped `DATABASE_URL` is unusable by CI** · **ON HOLD**
+
+_Story:_ As a maintainer, I want the staging migration to reach the staging database so that staging tests the schema it will serve.
+
+With `--git-branch=staging`, the `DATABASE_URL` `vercel pull` returns does not parse as a URL. Without it, it does — but then it is the environment-wide Preview value, the wrong database, which is the bug MB.27 existed to fix. So the branch-scoped override is the bad value.
+
+**Blocked, and deliberately unspecified.** Whether that value is Vercel's `[SENSITIVE]` placeholder or a malformed paste cannot be told from CI: `migrate.yml` calls `::add-mask::` before anything prints it, so the `input: '***'` in the stack trace is GitHub masking, not evidence. An early reading of this bug blamed the variable being marked Sensitive; that does not survive its own evidence — the "3 Secret values cannot be pulled" line is byte-identical in the passing and failing runs, and had `DATABASE_URL` joined that set the count should have risen to four. Settling it needs the Vercel dashboard, which the devcontainer cannot reach: no CLI, no token, and the MCP server needs an interactive OAuth flow.
+
+A malformed value means correcting the row, and this task reduces to a docs note — MB.46's validator is then the whole permanent defence. A Sensitive value means CI needs another source, and the shape to reach for is GitHub Environments carrying a `DATABASE_URL` secret each, which keeps `Sensitive` on the Vercel side and adds the branch restrictions CLAUDE.md already claims staging has; `vercel pull` would survive only for the hotfix-preview arm, whose ephemeral per-deployment Neon branch no static secret can name. Its cost — the connection string in two places, so rotation is two operations and a drifted copy migrates the wrong database silently — goes into `secrets.md` as a rule, not a hope.
+
+Whether **production**'s value has the same problem is also unknown; that run died at the pull before reading anything. MB.45 and MB.46 answer it in one run.
+
+Considered and deferred so it is not re-derived: resolving from the Neon API, which would put the credential in exactly one place and cover ephemeral branches — but `NEON_API_KEY` is unset (MB.12), and a project-wide key is a more powerful credential than one connection string.
+
+**MB.48 — A destructive-DDL acknowledgement does not survive the release PR** · 3h
+
+_Story:_ As a reviewer, I want a destructive migration to carry its own acknowledgement so that the gate still works at the release, not only at the PR that wrote it.
+
+Release 0.2.0's PR failed `checks / destructive-ddl` and was merged past it. `resolveDefaultBase()` maps `release/*` to `origin/main`, so a release PR rescans every migration since the last release — 17 files, 5 destructive statements in `0002` and `0017`. The acknowledgement lives only in a PR body. #126 acknowledged `0017`; #73 never acknowledged `0002`, having merged before MB.37 restored the gate. So "carry the acknowledgement forward from the staging PR" could not have worked: one of the two never existed.
+
+**Not urgent, and the entry should say why.** With the release merged, both migrations are in `origin/main` and the next release will not rescan them — the instance is self-resolving. What remains is the class: the next destructive migration hits the same wall at the next release, and at every `main-sync/*` PR carrying a hotfix migration.
+
+**The acknowledgement moves beside the migration**, as `src/db/migrations/<tag>.ack.md`. A PR body is the wrong home for a fact about a file: visible from one branch base, gone on merge. The scanner's pathspec is already `*.sql`, so sidecars are never scanned; and because `ACK_LINE_RE` anchors at line start, a Markdown sidecar matches it unchanged where an in-`.sql` comment would not. Findings group by file, so an acknowledgement covers exactly the migration it was written for — strictly stronger than today, where one line blesses every finding in the diff, which is precisely how a release carrying acknowledged `0017` and unacknowledged `0002` would have passed on `0017`'s line alone.
+
+**The PR-body path is retired, not OR-ed.** An `OR` keeps the uncorrelated hole open, and with two migrations carrying findings there is nothing to migrate. The check then depends on GitHub not at all, so `make act-check CHECK=destructive-ddl` finally proves the scan rather than the wiring, and `--all` becomes a usable audit instead of permanently red.
+
+_Acceptance criteria:_
+
+- Per-file correlation cases written first and watched fail: two files with one acknowledged exits 1; sidecar absent; sidecar present with an empty reason; a sidecar for another migration does not cover this one
+- Both sidecars written — `0017` ports #126's wording, `0002` is new and says it was written retroactively and why
+- `npm run check:destructive-ddl -- --all` green with both, red again when one is deleted — the proof the sidecar is load-bearing rather than decorative
+- CLAUDE.md rule 10 and `ci.md` updated; `db.md`'s claim that `0002` "was acknowledged when [it] landed" corrected — #73 carries no acknowledgement and never did, so the **doc** is what is wrong
+- Sized at 3h rather than split for the sake of the number, per CLAUDE.md
 
 ## MW — Wave close-out
 

@@ -230,7 +230,10 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         run: npm install --global vercel@59
 
-      # --git-branch is load-bearing, not decoration: Vercel resolves a
+      # Two pulls, one per target, because --git-branch is legal on exactly
+      # one of them.
+      #
+      # On preview it is load-bearing, not decoration: Vercel resolves a
       # branch-scoped environment variable only when the pull names a branch,
       # and the staging DATABASE_URL is exactly such a variable — the one
       # thing keeping staging off the Neon integration's per-preview
@@ -239,11 +242,36 @@ jobs:
       # the pull still succeeds and the build simply talks to another
       # database, so tests/guards/vercel-pull-git-branch.test.ts is what
       # notices.
-      - name: Pull Vercel environment
-        if: steps.guard.outputs.enabled == 'true'
-        run: vercel pull --yes --environment=${{ needs.resolve-target.outputs.environment }} --git-branch="$GIT_BRANCH" --token="$VERCEL_DEPLOY_TOKEN"
+      #
+      # On production it is rejected outright (MB.45):
+      #
+      #   Invalid request: `target` must be "preview" when specifying a `gitBranch`
+      #
+      # Branch-scoped overrides are a Preview-only feature, so production has
+      # no branch-resolved value to miss — omitting the flag there costs
+      # nothing, and MB.27 passing it unconditionally broke every production
+      # deploy. Two steps rather than one command with an optional flag: a
+      # command that merely *might* carry the flag cannot satisfy the preview
+      # half, and a YAML `if:` is data the guard can read where a shell `if`
+      # would be a string it had to parse.
+      #
+      # `== 'preview'` rather than `!= 'production'`: a third environment then
+      # skips both arms and fails at migrate.yml's named "$env_file not found
+      # after vercel pull", rather than silently pulling the wrong one.
+      - name: Pull Vercel environment (preview)
+        if: steps.guard.outputs.enabled == 'true' && needs.resolve-target.outputs.environment == 'preview'
+        run: vercel pull --yes --environment=preview --git-branch="$GIT_BRANCH" --token="$VERCEL_DEPLOY_TOKEN"
         env:
+          # Quoted and passed through env rather than interpolated: a branch
+          # name may legally contain shell metacharacters, and a hotfix
+          # branch's name arrives from a pull request.
           GIT_BRANCH: ${{ needs.resolve-target.outputs.git_branch }}
+          VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
+
+      - name: Pull Vercel environment (production)
+        if: steps.guard.outputs.enabled == 'true' && needs.resolve-target.outputs.environment == 'production'
+        run: vercel pull --yes --environment=production --token="$VERCEL_DEPLOY_TOKEN"
+        env:
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
       - name: Build
