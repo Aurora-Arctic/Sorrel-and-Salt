@@ -3297,6 +3297,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.39 | Settle whether a job-level `if:` really renames a check                                      | Wave 3  | —            |
 | MB.40 | Custom one-off spell ingredients (schema)                                                    | Wave 4  | M1.23, M10.5 |
 | MB.41 | Move Vitest tests into `tests/`                                                              | Wave 4  | M1.23        |
+| MB.42 | CI container jobs run against files the repo has deleted                                     | Wave 4  | —            |
 
 **MB.5 — Restore `users` foreign keys on `auditColumns`** · 2h
 
@@ -4166,6 +4167,26 @@ _Acceptance criteria:_
 - `pr-gate.yml`'s `vitest` filter matches `tests/**`
 - Ride-along named in the PR body (MB.31): `.oxlintrc.json` listed `vitest.config.ts`, but the file is `vitest.config.mts`
 - CLAUDE.md's component convention and Testing section, DESIGN.md's "Component — Vitest + RTL, colocated" heading and its two component-folder listings, `testing.md`, `workshop.md`, `ci.md`, `db.md`, `auth.md`, `components/theme-toggle.md` and the live decision records corrected in this PR; `archive/` and `transcripts/` untouched, and migration `0016`'s comment left alone as committed history
+
+**MB.42 — CI container jobs run against files the repo has deleted** · 1h
+
+_Story:_ As a developer, I want a CI job to see exactly the code on my branch so that a check cannot pass or fail on a file the repo no longer has.
+
+Every container job — `vitest`, `playwright`, `gitflow`, and all four of `checks.yml`'s legs — runs against a working tree holding every file deleted from the repo since the testing image was last built. `Docker/Dockerfile.node` bakes the whole repo into `/app` with `COPY . .`; `.github/actions/checkout-to-app` then lays the checkout over it with `cp -a`, which overlays but never deletes. A file the checkout no longer contains survives on disk, untracked and not ignored.
+
+**Found by MB.41**, whose location guard failed on its first CI run reporting 34 test files outside `tests/` — every one that move's own predecessor at its pre-move path. The count is the tell: 34, not that branch's 39, because the image predates the five test files added since it was built. MB.41 scans the index instead, which is right for that guard on its own merits and leaves this untouched.
+
+**Why it went unnoticed, and why it still matters.** Until MB.41 the repo mostly added files, so the overlay was harmless; and the checks that enumerate files read _contents_ rather than _locations_, where a stale duplicate says the same thing and passes — `slug-rule.test.ts` is the example. But `oxlint` and `tsc` both walk `src/**`, so a file deleted precisely because it was wrong is still linted and typechecked: a leg can fail on a reason absent from the diff, or pass because the copy left behind is the one that satisfies it.
+
+The likely fix is `git clean -fd` after the copy — without `-x` it respects `.gitignore`, so the image's `node_modules` and `.next` survive while untracked leftovers go. **Sequencing note:** the action is referenced at `@main`, so the fix has no effect on its own PR's runs and only takes effect once merged — which is also why MB.41 could not simply fix it.
+
+_Acceptance criteria:_
+
+- `checkout-to-app` leaves `/app` holding exactly the checkout plus the image's ignored build artifacts; no file absent from the checkout survives
+- Demonstrated rather than asserted: a job asserts a path deleted on the branch is absent from `/app`, and that assertion is shown to fail against the current action
+- `node_modules` survives — no job reinstalls dependencies, and job times do not regress
+- All four consuming workflows still pass
+- `ci.md` documents the overlay and why the clean step exists, so it is not later removed as redundant
 
 ## MW — Wave close-out
 
