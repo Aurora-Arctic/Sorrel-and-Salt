@@ -54,7 +54,10 @@ on:
           branch-scoped environment variables rather than the environment-wide
           ones. Required: a caller that cannot say which branch it is
           migrating cannot be given the right DATABASE_URL, and guessing is
-          what MB.27 fixed.
+          what MB.27 fixed. Used by the preview pull only — branch-scoped
+          overrides are a Preview-only Vercel feature and production rejects
+          the flag (MB.45) — but still required of every caller, because one
+          that cannot name its branch cannot be trusted with preview either.
         required: true
         type: string
       seed-reference:
@@ -112,14 +115,31 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         run: npm install --global vercel@59
 
-      - name: Pull Vercel environment
-        if: steps.guard.outputs.enabled == 'true'
-        run: vercel pull --yes --environment=${{ inputs.environment }} --git-branch="$GIT_BRANCH" --token="$VERCEL_DEPLOY_TOKEN"
+      # Two pulls, one per target. --git-branch resolves the branch-scoped
+      # DATABASE_URL on preview (MB.27) and is rejected outright on production
+      # (MB.45):
+      #
+      #   Invalid request: `target` must be "preview" when specifying a `gitBranch`
+      #
+      # Branch-scoped overrides are a Preview-only feature, so production has
+      # nothing to resolve and loses nothing by omitting the flag. The two arms
+      # are steps rather than one command with an optional flag so that
+      # tests/guards/vercel-pull-git-branch.test.ts can read the condition as
+      # data and pair it with the flags it makes legal.
+      - name: Pull Vercel environment (preview)
+        if: steps.guard.outputs.enabled == 'true' && inputs.environment == 'preview'
+        run: vercel pull --yes --environment=preview --git-branch="$GIT_BRANCH" --token="$VERCEL_DEPLOY_TOKEN"
         env:
           # Quoted and passed through env rather than interpolated: a branch
           # name may legally contain shell metacharacters, and a hotfix
           # branch's name arrives from a pull request.
           GIT_BRANCH: ${{ inputs.git-branch }}
+          VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
+
+      - name: Pull Vercel environment (production)
+        if: steps.guard.outputs.enabled == 'true' && inputs.environment == 'production'
+        run: vercel pull --yes --environment=production --token="$VERCEL_DEPLOY_TOKEN"
+        env:
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
       - name: Load DATABASE_URL from pulled environment
