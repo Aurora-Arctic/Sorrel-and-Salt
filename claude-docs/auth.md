@@ -287,6 +287,10 @@ a success that did nothing.
 | `Forbidden` | The thing exists and you may not have it. |
 | `NotFound`  | There is nothing here under that id.      |
 
+They are types rather than message strings so a test can assert on the type:
+wording gets edited, and a test pinned to a message keeps passing against a
+service that has stopped checking anything.
+
 They are two types rather than one because **the route decides which of them
 the browser is shown, and it can only decide if the service said which
 happened**: `/coven/[slug]` answers 404 to a non-member, since the existence of

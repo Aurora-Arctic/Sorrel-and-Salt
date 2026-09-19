@@ -20,18 +20,14 @@ describe('GET /api/auth/*', () => {
   });
 });
 
-// M2.4: a `POST /api/auth/sign-in/social` test lived here briefly and broke
-// CI — unlike `/ok`, that endpoint persists a `verifications` row (PKCE
-// state) before redirecting, so it needs real schema. This `unit`-project
-// test runs against the plain `sorrel` database (not a per-worker
-// `sorrel_test_<n>` clone — only the `db` project's setupFiles rewrite
-// DATABASE_URL for that), which has no schema applied in CI — nothing
-// migrates `sorrel` there; M1.27's seeded template is the `db` project's,
-// and this test never sees it (`claude-docs/db.md`).
-// It passed locally only because this session had already run
-// `drizzle-kit migrate` against its own local `sorrel` by hand; CI's never
-// has. `socialProviders()`'s tests (`src/lib/auth.test.ts`) already cover
-// the config wiring without touching the database; the real authorization
-// URL shape (real Google/GitHub redirect, PKCE params, callback path) was
-// verified by hand against a running server and is recorded in
-// `claude-docs/transcripts/auth.md` rather than re-asserted here.
+// A `POST /api/auth/sign-in/social` test lived here briefly and broke CI.
+// Unlike `/ok`, that endpoint persists a `verifications` row (PKCE state)
+// before redirecting, so it needs real schema — and this `unit`-project test
+// runs against the plain `sorrel` database, which nothing migrates in CI. Only
+// the `db` project's setup rewrites DATABASE_URL to a seeded per-worker clone.
+// It passed locally only because a hand-run `drizzle-kit migrate` had already
+// reached this machine's own `sorrel`.
+//
+// `tests/lib/auth.test.ts` covers the config wiring without a database, and the
+// real authorization URL shape was verified by hand against a running server —
+// recorded in claude-docs/auth.md, "Config".
