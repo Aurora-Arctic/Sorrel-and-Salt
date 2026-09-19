@@ -7,11 +7,18 @@ The local development stack: one image, `docker compose`, a real local Postgres,
 no Neon connection and no host Node-version juggling.
 
 - **`Docker/Dockerfile.node`** — two stages on `node:26.6.0-alpine`:
-  `development` (deps + source, `CMD ["npm","run","dev"]`) and `testing`
+  `development` (dependencies only, `CMD ["npm","run","dev"]`) and `testing`
   (`FROM development`, `NODE_ENV=test`, a vitest default command; also carries
   `bash` + `git`, which the alpine base lacks and the CI workflows require).
-  Deps install from the manifests before `COPY . .`, so a source edit keeps the
-  `npm ci` layer cached. ~862 MB.
+  **Neither stage carries source** (MB.42): the image copies in the two
+  manifests, runs `npm ci`, and stops. Source arrives from outside — the
+  `..:/app` bind mount in every compose service and the devcontainer, or
+  `checkout-to-app`'s copy in CI — and
+  `tests/guards/image-source-layer.test.ts` allowlists each Dockerfile's
+  `COPY` sources so a source layer cannot come back unnoticed. Until MB.42 a
+  `COPY . .` followed the dependency layer; the bind mount shadowed it
+  everywhere but CI, where a file the repo had deleted survived the copy and
+  was linted, typechecked and globbed as if the branch still had it.
   - **Always `npm ci`, never `npm i`.** `libc6-compat` is the only `apk` package
     in the base stage; keep it that way.
   - **Playwright and any other browser tooling goes in a NEW stage**, never
