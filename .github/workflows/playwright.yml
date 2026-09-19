@@ -1,14 +1,9 @@
 name: Playwright E2E
 
-# Reusable check running the Playwright e2e suite against a built and served
-# site. Called via workflow_call from pr-gate, never triggered directly.
-# claude-docs/ci.md is the walkthrough.
-#
-# **This job's `container:` is NOT build-image.yml's shared `testing` image**,
-# unlike every other check here. That image is Alpine/musl and Playwright's
-# Chromium has no official musl support, so this runs in the dedicated
-# Docker/Dockerfile.e2e image instead — which is why pr-gate.yml's
-# `playwright` job depends on `build-e2e-image` rather than `build-image`.
+# The Playwright e2e suite against a built and served site. workflow_call
+# only, from pr-gate. claude-docs/ci.md, "Reusable checks" is the walkthrough.
+# Runs in Docker/Dockerfile.e2e's image, not the Alpine `testing` one:
+# Playwright's Chromium has no musl support.
 on:
   workflow_call:
     inputs:
@@ -44,7 +39,7 @@ on:
 
 permissions:
   contents: read
-  # read, not write: this job only pulls already-published images.
+  # read: this job pulls images and pushes none.
   packages: read
   pull-requests: write
 
@@ -56,17 +51,12 @@ jobs:
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-      # `--ipc=host` because Chromium crashes on the container default 64 MB
-      # /dev/shm. The Playwright base image already runs as root, so the
-      # `--user root` the other jobs need would add nothing; Chromium under
-      # root expects `--no-sandbox`, which playwright.config.ts owns if it
-      # ever launches non-headless — the headless default here does not.
+      # Chromium crashes on the container default 64 MB /dev/shm. The base
+      # image already runs as root, and headless needs no `--no-sandbox`.
       options: --ipc=host
     services:
-      # Same shape as vitest.yml's service, from the same caller-built image:
-      # reachable by service name, `POSTGRES_*` inert because PGDATA is
-      # populated at image build time, kept as documentation of the
-      # credentials Docker/postgres-init/enable-extensions.sql bakes in.
+      # As vitest.yml's service; `POSTGRES_*` are inert, PGDATA being populated
+      # at image build.
       postgres:
         image: ${{ inputs.db-image }}
         env:
@@ -85,26 +75,20 @@ jobs:
         shell: bash
     env:
       # playwright.config.ts's webServer.reuseExistingServer reads this and
-      # always starts a fresh server rather than reusing one on its port.
+      # always starts a fresh server.
       CI: true
-      # Where the json reporter writes — read by summarize-playwright.mjs.
+      # Read by summarize-playwright.mjs.
       PLAYWRIGHT_JSON_OUTPUT_NAME: /app/playwright-results.json
-      # The same shape docker-compose.yaml's `app` service uses locally.
-      # e2e/database.ts and playwright.config.ts's webServer.env both derive
-      # sorrel_e2e's URL from it.
+      # e2e/database.ts derives sorrel_e2e's URL from it.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
-      # The webServer runs `npm run build && npm run start` at
-      # NODE_ENV=production, where Better Auth requires a real secret — this
-      # fixed, non-secret placeholder satisfies it.
+      # The webServer's production build needs a Better Auth secret.
       BETTER_AUTH_SECRET: local-dev-not-a-real-secret
     steps:
       - name: Checkout into /app
         if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
-      # The webServer builds and serves the app itself, so there is no
-      # separate build step; the browser and its OS deps are already in
-      # `inputs.image`, so there is no install step either.
+      # The webServer builds and serves; the browser is in the image.
       - name: Run Playwright e2e tests
         id: run
         if: inputs.should-run
@@ -122,8 +106,7 @@ jobs:
             /app/test-results/
           retention-days: 7
 
-      # Unlike the report above, deliberately not failure-only: the point is a
-      # coverage report to track on every run, same as vitest.yml's.
+      # Not failure-only: a coverage report on every run.
       - name: Upload coverage artifact
         if: always() && inputs.should-run
         uses: actions/upload-artifact@v7
@@ -147,8 +130,7 @@ jobs:
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
 
-      # Always comments pass/fail from pr-gate, same as vitest.yml; fail-only
-      # on a separate thread for a merge-queue caller.
+      # .github/actions/pr-comment has the modes.
       - name: Comment on PR
         if: always() && inputs.pr-number && inputs.should-run
         uses: ./.github/actions/pr-comment

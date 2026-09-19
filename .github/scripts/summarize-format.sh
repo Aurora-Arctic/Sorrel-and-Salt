@@ -1,16 +1,8 @@
 #!/usr/bin/env bash
-# Moved verbatim out of .github/workflows/format.yml's "Summarize output" step
-# when MB.32 collapsed the five check workflows onto checks.yml's one matrix.
-#
-# prettier --check prints one `[warn] <file>` line per non-conforming file plus
-# a trailing summary sentence — count the file lines directly rather than parse
-# the sentence (singular/plural wording differs).
-#
-# Reads /app/output.log — the tee'd output of the matrix leg's own run step —
-# and appends `summary` and `details` to $GITHUB_OUTPUT for the job-summary
-# and pr-comment composite actions to render. Deliberately no `set -e`: the
-# body leans on `cmd || true` and on `[ "$n" -eq 1 ] && word=singular`, whose
-# false branch exits non-zero.
+# Summarises the format leg's tee'd /app/output.log into `summary` and
+# `details` on $GITHUB_OUTPUT. prettier --check prints one `[warn] <file>` per
+# file, counted directly since the trailing sentence varies. No `set -e`:
+# `[ "$n" -eq 1 ] && word=singular` exits non-zero on its false branch.
 
 files=$(grep -E '^\[warn\] ' /app/output.log | grep -v 'Code style issues found' | wc -l | tr -d ' ' || true)
 if [ "$files" -eq 0 ]; then
@@ -22,8 +14,7 @@ else
 fi
 echo "summary=$summary" >> "$GITHUB_OUTPUT"
 
-# Collapsible list of non-conforming files (capped, with a pointer
-# to the full raw log below for anything past the cap).
+# Collapsible file list, capped.
 max=15
 file_list=$(grep -E '^\[warn\] ' /app/output.log | grep -v 'Code style issues found' | sed -E 's/^\[warn\] //' || true)
 delim="ghadelim_$RANDOM$RANDOM"

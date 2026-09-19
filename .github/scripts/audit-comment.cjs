@@ -1,19 +1,7 @@
-// Moved out of .github/workflows/audit.yml's "Comment audit results on PR"
-// step when MB.32 collapsed the five check workflows onto checks.yml's one
-// matrix, then extended in MB.37 to write the same report to the job summary.
-// It builds its own report rather than going through the job-summary and
-// pr-comment composite actions: the audit is non-blocking, so it reports the
-// vulnerabilities it found as a [!WARNING] on a step that passed, which the
-// pass/fail vocabulary of both actions has no way to say. Until MB.37 the leg
-// wrote no job summary at all for that reason — "Dependency Audit passed"
-// above a table of vulnerabilities is worse than nothing — which left the
-// audit invisible on the run's summary page. Now the summary carries the same
-// callout the PR comment does.
-//
-// checks.yml calls this through actions/github-script, which supplies
-// `github`, `context` and `core`. `PR_NUMBER` arrives as an environment
-// variable and is optional: the job summary is always written, the PR comment
-// only when there is a PR to comment on (under `act` there is not).
+// The audit leg's own report, under actions/github-script: a [!WARNING] on a
+// step that passed, which the job-summary and pr-comment actions' pass/fail
+// vocabulary cannot say. `PR_NUMBER` is optional — the summary is always
+// written, the comment only with a PR (under `act` there is none).
 module.exports = async ({ github, context, core }) => {
   const fs = require('fs');
   const marker = '<!-- ci-audit -->';
@@ -80,8 +68,7 @@ module.exports = async ({ github, context, core }) => {
     report = `> [!WARNING]\n> ⚠️ **npm audit: could not parse audit output** (${error.message}) · ${meta}`;
   }
 
-  // The job summary first, unconditionally — it is the one place the audit's
-  // result is visible on a run with no PR to comment on.
+  // Summary first: the one place the result shows on a run with no PR.
   await core.summary.addRaw(report, true).write();
 
   const prNumber = Number(process.env.PR_NUMBER);

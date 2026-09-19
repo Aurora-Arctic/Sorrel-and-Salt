@@ -1,9 +1,5 @@
-// Ported from resume-2026/.github/scripts/lib/coverage-table.mjs (M1.14).
-// Shared by summarize-vitest.mjs and summarize-playwright.mjs — both
-// @vitest/coverage-v8 and monocart-coverage-reports' `json-summary` report
-// emit the same istanbul-style coverage-summary.json shape: a `total` key
-// plus one key per file, each holding
-// { lines, statements, functions, branches: { total, covered, skipped, pct } }.
+// Shared by summarize-vitest.mjs and summarize-playwright.mjs: coverage-v8
+// and monocart both emit the same istanbul-style coverage-summary.json.
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -14,15 +10,9 @@ function formatPct(pct) {
   return typeof pct === 'number' ? `${pct}%` : '—';
 }
 
-// Builds the short coverage stat (for the `summary` output) and a collapsible
-// per-file coverage table (for the `details` output) from a coverage-summary.json
-// at `summaryPath`. Returns null if the file doesn't exist (the run step may not
-// have gotten far enough to produce one).
-//
-// File keys aren't always absolute filesystem paths — @vitest/coverage-v8 uses
-// them (e.g. /app/src/pages/404.tsx), but monocart-coverage-reports' V8-derived
-// keys are webpack-namespaced instead (e.g. sorrel-and-salt/src/pages/404.tsx) —
-// so only paths under repoRoot get relativized; anything else is left as-is.
+// The short stat and a collapsible per-file table, or null when the run never
+// wrote the file. Keys are absolute under coverage-v8 but webpack-namespaced
+// under monocart, so only paths under repoRoot are relativized.
 export function buildCoverageSection(summaryPath, repoRoot) {
   if (!fs.existsSync(summaryPath)) return null;
 
@@ -36,8 +26,7 @@ export function buildCoverageSection(summaryPath, repoRoot) {
       file: path.isAbsolute(file) ? path.relative(repoRoot, file) : file,
       metrics,
     }))
-    // Skip files with nothing to measure (e.g. ambient .d.ts declarations) —
-    // they always show a meaningless 100%.
+    // Files with nothing to measure (ambient .d.ts) always show a meaningless 100%.
     .filter(({ metrics }) => METRICS.some((m) => metrics[m].total > 0))
     .sort((a, b) => {
       const aPct = typeof a.metrics.lines.pct === 'number' ? a.metrics.lines.pct : 0;

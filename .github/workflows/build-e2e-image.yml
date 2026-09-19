@@ -1,10 +1,7 @@
 name: Build E2E Image
 
-# Builds (or reuses, if unchanged) the dedicated Playwright e2e image
-# (Docker/Dockerfile.e2e) and publishes its ref as an output. Called via
-# workflow_call from pr-gate, same content-addressed tagging as
-# build-image.yml. Its own file rather than a job there because it shares no
-# base image with Dockerfile.node — only the tagging convention.
+# Builds or reuses the Playwright e2e image (Docker/Dockerfile.e2e), tagged as
+# build-image.yml tags. Its own file because it shares no base image.
 on:
   workflow_call:
     outputs:
@@ -42,9 +39,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # Most pushes touch neither file, so the tag from a prior run usually
-      # already exists — skip rather than re-run buildx, and re-download
-      # Chromium, to re-push the same content.
+      # Skip rather than re-run buildx and re-download Chromium for identical content.
       - name: Check if image already exists
         id: check
         run: |
@@ -60,9 +55,7 @@ jobs:
         with:
           context: .
           file: Docker/Dockerfile.e2e
-          # **Explicit, and must stay so.** Dockerfile.e2e has a second
-          # (`headed`) stage, and an unqualified build picks the LAST one —
-          # so without this line CI would silently publish the display stage.
+          # Must stay explicit: an unqualified build picks the LAST stage, `headed`.
           target: e2e
           push: true
           tags: ${{ steps.tag.outputs.image }}

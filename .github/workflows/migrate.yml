@@ -1,30 +1,17 @@
 name: Migrate
 
-# Prepares a target database ahead of a Vercel deploy: applies pending
-# Drizzle migrations, then — when `seed-reference` says so — seeds DESIGN.md
-# §6's category vocabulary and §5's ingredient forms into the schema those
-# migrations just created. Called via workflow_call from deploy.yml, never
-# triggered directly, with a `needs:` dependency so `deploy` never promotes a
-# build against a schema its migrations have not reached.
+# Applies pending migrations to the deploy target, then seeds the reference
+# vocabularies when `seed-reference` says so. workflow_call only, from
+# deploy.yml, which `needs:` it so a deploy never promotes past a schema its
+# migrations have not reached. claude-docs/ci.md, "Deploy" is the walkthrough.
 #
-# The seed is a step here rather than a workflow of its own: it needs exactly
-# what the migration needs and nothing else, so a second job would pay for a
-# checkout, `npm ci` and the Vercel CLI twice to run one `npm run`, and would
-# need its own lock against this one to avoid seeding mid-migration. Sharing
-# the job makes that ordering structural. The two still report separately —
-# one job summary each — so a failed seed is not read as a failed migration.
-#
-# `environment` and `git-branch` both come from deploy.yml's resolved target,
-# and **the two workflows must resolve DATABASE_URL identically**;
-# tests/guards/vercel-pull-git-branch.test.ts and
-# tests/guards/ci-secret-environments.test.ts hold them to it.
-# claude-docs/ci.md's "Deploy" section is the walkthrough, and
-# claude-docs/design-decisions/m1.1-neon-branch-strategy.md is why each
-# target resolves to the database it does.
-#
-# Production alone snapshots before migrating — see claude-docs/ci.md's
-# "Neon snapshots" section. Preview never does; a staging or hotfix database
-# is already disposable.
+# The seed rides in this job so it shares the migration lock and never seeds
+# mid-migration; it reports separately so a failed seed is not read as a
+# failed migration. `environment` and `git-branch` come from deploy.yml's
+# resolved target, and the two workflows must resolve DATABASE_URL
+# identically — tests/guards/vercel-pull-git-branch.test.ts and
+# tests/guards/ci-secret-environments.test.ts hold them to it. Production
+# alone snapshots before migrating; preview databases are disposable.
 on:
   workflow_call:
     inputs:
@@ -61,7 +48,7 @@ permissions:
 jobs:
   migrate:
     runs-on: ubuntu-26.04
-    # Bare runner, not the `testing` GHCR image: this needs the Vercel CLI.
+    # Bare runner: this needs the Vercel CLI.
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -86,7 +73,7 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         uses: actions/setup-node@v7
         with:
-          # Must match Docker/Dockerfile.node and deploy.yml — see there.
+          # Must match Docker/Dockerfile.node and deploy.yml.
           node-version: 26.6.0
           cache: npm
 
@@ -98,23 +85,15 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         run: npm install --global vercel@59
 
-      # Two pulls, one per target. `--git-branch` resolves the branch-scoped
-      # DATABASE_URL on preview and is rejected outright on production:
-      #
-      #   Invalid request: `target` must be "preview" when specifying a `gitBranch`
-      #
-      # Branch-scoped overrides are Preview-only, so production has nothing to
-      # resolve and loses nothing by omitting the flag. Two steps rather than
-      # one command with an optional flag, so that
-      # tests/guards/vercel-pull-git-branch.test.ts can read the condition as
-      # data and pair it with the flags it makes legal.
+      # Two pulls, one per target: `--git-branch` resolves the branch-scoped
+      # DATABASE_URL on preview and production rejects the flag. Two steps so
+      # tests/guards/vercel-pull-git-branch.test.ts reads the condition as data.
       - name: Pull Vercel environment (preview)
         if: steps.guard.outputs.enabled == 'true' && inputs.environment == 'preview'
         run: vercel pull --yes --environment=preview --git-branch="$GIT_BRANCH" --token="$VERCEL_DEPLOY_TOKEN"
         env:
-          # Through env rather than interpolated: a branch name may legally
-          # contain shell metacharacters, and a hotfix branch's name arrives
-          # from a pull request.
+          # Through env: a hotfix branch name comes from a PR and may carry
+          # shell metacharacters.
           GIT_BRANCH: ${{ inputs.git-branch }}
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
@@ -124,35 +103,21 @@ jobs:
         env:
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
-      # Report what the pull returned, before anything consumes it.
-      #
-      # **Report-only**: DATABASE_URL no longer comes from this file on either
-      # long-lived target, so requiring it here would fail on a value nothing
-      # reads. The report answers the question CI could not answer at all
-      # before — which variables a pull carries, and which came back as
-      # `[SENSITIVE]` — and the hotfix-preview arm below still depends on
-      # POSTGRES_URL being in here. It never prints a value, which
-      # tests/guards/pulled-env-assertion.test.ts asserts rather than assumes.
+      # Report-only: DATABASE_URL comes from a secret on both long-lived
+      # targets, so requiring it here would fail on a value nothing reads. It
+      # never prints a value (tests/guards/pulled-env-assertion.test.ts).
       - name: Assert the pulled environment
         if: steps.guard.outputs.enabled == 'true'
         run: |
           node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/assert-pulled-env.ts \
             --file ".vercel/.env.${{ inputs.environment }}.local"
 
-      # DATABASE_URL comes from a GitHub secret, not from the pull: it is
-      # marked Sensitive in Vercel, so `vercel pull` writes the literal string
-      # `[SENSITIVE]` in its place, with or without `--git-branch`. That is
-      # what the setting means, not a fault to route around, so CI holds its
-      # own copy for the two long-lived databases.
-      #
-      # One secret per target rather than a GitHub Environment, which would
-      # need a new workflow_call input, a new resolve-target output and an
-      # `environment:` key on two jobs to say what the secret's name says.
-      #
-      # The fallback covers the one target no static secret can name: a hotfix
-      # preview's Neon branch is created per deployment, and the integration
-      # writes its string into the pulled file as POSTGRES_URL — which is NOT
-      # Sensitive and so can be read. That is why this step reads the file.
+      # DATABASE_URL is Sensitive in Vercel, so the pull writes `[SENSITIVE]`
+      # and CI holds its own secret per long-lived target — named secrets
+      # rather than GitHub Environments, which would add an input, an output
+      # and an `environment:` key to say what the name says. A hotfix
+      # preview's Neon branch is per deployment, so it falls back to the pulled
+      # POSTGRES_URL, which is not Sensitive.
       - name: Resolve DATABASE_URL
         if: steps.guard.outputs.enabled == 'true'
         env:
@@ -163,9 +128,8 @@ jobs:
           ENV_FILE: .vercel/.env.${{ inputs.environment }}.local
           RESOLVED_ENV_FILE: ${{ runner.temp }}/resolved.env
         run: |
-          # Production is decided by the Vercel environment rather than the
-          # branch name — a mis-picked production secret is the failure with
-          # no second chance.
+          # Production by Vercel environment, not branch name: a mis-picked
+          # production secret has no second chance.
           if [ "$ENVIRONMENT" = "production" ]; then
             db_url="$DATABASE_URL_PRODUCTION"
             source="the DATABASE_URL_PRODUCTION secret"
@@ -185,30 +149,16 @@ jobs:
           echo "::add-mask::$db_url"
           echo "DATABASE_URL=$db_url" >> "$GITHUB_ENV"
 
-          # To a file, because the probe below reads a file path — for the
-          # same reason assert-pulled-env.ts does: **argv is visible to `ps`
-          # and echoed by `set -x`**, and a step-level `env:` carrying the
-          # value is printed in that step's own env block. `umask 077` first,
-          # so the file is never briefly world-readable. It lives in
-          # RUNNER_TEMP, which the runner deletes with the job, rather than in
-          # the workspace, which later steps archive.
+          # A file for the probe, under `umask 077` and in RUNNER_TEMP: argv is
+          # visible to `ps`, and a step-level `env:` is printed in the env block.
           (umask 077 && printf 'DATABASE_URL="%s"\n' "$db_url" > "$RESOLVED_ENV_FILE")
 
-          # Which source won, never the value: every candidate is masked, so
-          # the value itself can never tell you which database you migrated.
+          # The source, never the value — every candidate is masked.
           echo "Resolved DATABASE_URL from $source"
 
-      # Connect before migrating, so a failure has a cause. **`drizzle-kit
-      # migrate` catches whatever postgres.js throws and exits 1 without
-      # printing it** — an unreachable host, a wrong password, an `sslmode`
-      # mismatch and a `channel_binding` parameter all produce the same
-      # spinner frame and the same bare `exit code 1`.
-      #
-      # It reads the RESOLVED value rather than the pulled file, so it covers
-      # whichever source won; tests/guards/database-probe.test.ts asserts that
-      # it is pointed there. Fatal here, and advisory in deploy.yml: a
-      # migration cannot proceed without a connection, so a probe that warned
-      # would leave this job as silent as it was.
+      # `drizzle-kit migrate` swallows the driver error and exits 1, so connect
+      # first for a cause. Reads the RESOLVED value, whichever source won
+      # (tests/guards/database-probe.test.ts). Fatal here, advisory in deploy.yml.
       - name: Probe the database
         if: steps.guard.outputs.enabled == 'true'
         env:
@@ -289,12 +239,10 @@ jobs:
           log-file: migrate.log
           summary: ${{ steps.migrate.outcome == 'success' && 'Migrations applied' || 'Migration failed' }}
 
-      # After the migrations, because the tables they write into are the ones
-      # those create. This is how the two vocabularies reach staging and
-      # production at all: deploys are CI-only and there is no shell on either
-      # database, so reference data arrives with the deploy that needs it. One
-      # step rather than two — a form vocabulary seeded while the categories
-      # failed is not a state worth reporting separately.
+      # After the migrations that create its tables. Deploys are CI-only and
+      # neither database has a shell, so this is how reference data arrives at
+      # all. One step for both vocabularies: half-seeded is not a state worth
+      # reporting.
       - name: Seed the reference vocabularies
         id: seed
         if: steps.guard.outputs.enabled == 'true' && inputs.seed-reference

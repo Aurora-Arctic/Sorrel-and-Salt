@@ -1,16 +1,8 @@
 #!/usr/bin/env bash
-# Moved verbatim out of .github/workflows/typecheck.yml's "Summarize output"
-# step when MB.32 collapsed the five check workflows onto checks.yml's one
-# matrix.
-#
-# tsc prints one line per error (`<file>(<line>,<col>): error TS<code>: ...`)
-# and no trailing summary of its own — count errors/files ourselves.
-#
-# Reads /app/output.log — the tee'd output of the matrix leg's own run step —
-# and appends `summary` and `details` to $GITHUB_OUTPUT for the job-summary
-# and pr-comment composite actions to render. Deliberately no `set -e`: the
-# body leans on `cmd || true` and on `[ "$n" -eq 1 ] && word=singular`, whose
-# false branch exits non-zero.
+# Summarises the typecheck leg's tee'd /app/output.log into `summary` and
+# `details` on $GITHUB_OUTPUT. tsc prints one line per error and no total.
+# No `set -e`: `[ "$n" -eq 1 ] && word=singular` exits non-zero on its false
+# branch.
 
 errors=$(grep -cE '^[^(]+\([0-9]+,[0-9]+\): error TS[0-9]+:' /app/output.log || true)
 files=$(grep -E '^[^(]+\([0-9]+,[0-9]+\): error TS[0-9]+:' /app/output.log | sed -E 's/\([0-9]+,[0-9]+\).*$//' | sort -u | wc -l | tr -d ' ' || true)
@@ -23,8 +15,7 @@ else
 fi
 echo "summary=$summary" >> "$GITHUB_OUTPUT"
 
-# Collapsible, per-error breakdown (capped, with a pointer to the
-# full raw log below for anything past the cap).
+# Collapsible per-error breakdown, capped.
 max=15
 matches=$(grep -E '^[^(]+\([0-9]+,[0-9]+\): error TS[0-9]+:' /app/output.log || true)
 delim="ghadelim_$RANDOM$RANDOM"

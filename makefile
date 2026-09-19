@@ -1,12 +1,8 @@
-# Sorrel & Salt — make wrapper. Every target is a thin wrapper over an npm
-# script or a docker compose invocation, and every one is named unprefixed
-# (`build`, not `npm-build`) because that is how DESIGN.md and CLAUDE.md name
-# them. Only `codegen` is a placeholder — it exits non-zero until
-# graphql-codegen is wired up.
+# Every target wraps an npm script or a docker compose invocation, named as
+# DESIGN.md and CLAUDE.md name them.
 #
-# `## ` lines are FUNCTIONAL: the `help` target below awk-parses them into the
-# list a human reads. Only the LAST `## ` line before a target survives, so
-# each one is a single line, sitting immediately above its target.
+# `## ` lines are FUNCTIONAL: `help` awk-parses them. Only the LAST `## `
+# line before a target survives, so each is one line immediately above it.
 
 .DEFAULT_GOAL := help
 
@@ -68,7 +64,7 @@ format-check:
 typecheck:
 	npm run typecheck
 
-## Flag destructive DDL (DROP/RENAME/type change/NOT NULL additions) in migrations new on this branch
+## Flag destructive DDL in migrations new on this branch
 check-destructive-ddl:
 	npm run check:destructive-ddl
 
@@ -136,12 +132,9 @@ workshop:
 workshop-build:
 	npm run workshop:build
 
-# Host-level docker compose wrappers — claude-docs/docker.md is the
-# walkthrough. `docker-build`, `docker-down` and `docker-rebuild` all pass
-# every profile, so a new profiled service that forgets one of the three is
-# left orphaned by `docker-down`. The devcontainer is its own compose overlay
-# under `.devcontainer/`, started by the editor rather than by `docker-up`;
-# refresh its Claude token explicitly with `make docker-update-token`.
+# Docker compose wrappers — claude-docs/docker.md. `docker-build`,
+# `docker-down` and `docker-rebuild` pass every profile; a new profiled
+# service missing from one of them is left orphaned by `docker-down`.
 
 ## Build the local dev images (app + workshop + studio + e2e)
 docker-build:
@@ -159,9 +152,7 @@ docker-workshop:
 docker-studio:
 	$(COMPOSE) --profile studio up -d
 
-# `e2e` is named out on purpose — it is a one-shot suite run, not a service
-# to leave up — even though enabling its profile is what makes
-# `playwright-server` startable here.
+# `e2e` itself is a one-shot suite run, not a service to leave up.
 ## Start every long-running service: app, Postgres, workshop, studio, browser server
 docker-all:
 	$(COMPOSE) --profile workshop --profile studio --profile e2e up -d app postgres workshop studio playwright-server
@@ -186,8 +177,7 @@ docker-logs:
 docker-update-token:
 	./Docker/update-token.sh
 
-# So `npm run e2e` can run from inside the Alpine, browser-less devcontainer
-# against a Chromium in the Debian e2e image.
+# For `npm run e2e` from the browser-less devcontainer.
 ## Start the long-lived Playwright browser server (compose profile: e2e)
 playwright-server-up:
 	$(COMPOSE) --profile e2e up -d playwright-server
@@ -196,28 +186,18 @@ playwright-server-up:
 playwright-server-down:
 	$(COMPOSE) --profile e2e stop playwright-server
 
-# `sorrel-app`, not `app`: `.app` is an HSTS-preloaded gTLD in every real
-# browser, so a genuine Chrome navigating to plain http://app:8000 is upgraded
-# to https and fails. `sorrel-app` is a second, non-reserved DNS alias on the
-# same container — see Docker/docker-compose.yaml's `app` service.
+# `sorrel-app`, not `app`: browsers HSTS-preload the `app` gTLD.
 ## Record a Playwright spec on the browser server's display (:7900) — pass NAME=<spec>
 docker-codegen: playwright-server-up
 	$(COMPOSE) exec -u $$(id -u):$$(id -g) playwright-server \
 		npx playwright codegen --target playwright-test \
 		--output e2e/$(NAME).spec.ts http://sorrel-app:8000
 
-# Local CI via act — see claude-docs/ci.md's "Running CI locally" section for
-# what each target buys and which legs cannot work locally.
-#
-# Three facts the recipes below depend on. Each check workflow is
-# workflow_call-only with a required `image` input, so `act-image` builds the
-# same Dockerfile.node `testing` target locally under the tag the job asks
-# for — `docker run` then never reaches GHCR and the container
-# `credentials:` block is a no-op, hence the dummy GITHUB_TOKEN. Every job's
-# first step resolves checkout-to-app by a remote owner/repo/path@main ref
-# rather than `./`, so act needs a real clone of this repo's main at its cache
-# path, which `--action-offline-mode` then stops it re-fetching. And
-# `--matrix name:<leg>` is what keeps act from running all six legs at once.
+# Local CI via act — claude-docs/ci.md, "Running CI locally". `act-image`
+# builds the `testing` target under the tag the job asks for, so GHCR is
+# never reached and the `credentials:` block is a no-op (hence the dummy
+# token); checkout-to-app resolves by remote ref, so act needs a clone at its
+# cache path; `--matrix` keeps act from running all six legs.
 ACT_IMAGE := sorrel-and-salt-testing:local
 ACT_CHECKOUT_CACHE := $(HOME)/.cache/act/Aurora-Arctic-Sorrel-and-Salt-.github-actions-checkout-to-app@main
 CHECK ?= lint
@@ -231,12 +211,8 @@ act-cache-checkout:
 	@[ -d "$(ACT_CHECKOUT_CACHE)" ] || \
 		git clone --branch main https://github.com/Aurora-Arctic/Sorrel-and-Salt "$(ACT_CHECKOUT_CACHE)"
 
-# The destructive-ddl leg scans *nothing* locally: its `destructive-ddl-files`
-# input comes from pr-gate.yml's paths-filter job, which act's `-j` invocation
-# has no equivalent of, and checks.yml reads set-but-empty as "no migrations
-# changed". So this proves the wiring, not the scan — the scan is
-# tests/guards/destructive-ddl-check.test.ts and
-# `npm run check:destructive-ddl -- --self-test`.
+# The destructive-ddl leg scans nothing locally: its file list comes from
+# pr-gate.yml's paths-filter job. This proves the wiring, not the scan.
 ## Run one checks.yml leg locally via act — CHECK=lint|format|typecheck|build|audit|destructive-ddl
 act-check: act-image act-cache-checkout
 	act -W .github/workflows/checks.yml -j check --matrix name:$(CHECK) --input image=$(ACT_IMAGE) -s GITHUB_TOKEN=dummy-token --action-offline-mode

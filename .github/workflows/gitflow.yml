@@ -1,9 +1,7 @@
 name: Gitflow Rules
 
-# This file is the source of truth for which source branch may PR into which
-# target. Branch rulesets can gate a target branch — required checks, no
-# force-push — but cannot express "only branch X may merge into Y", and that
-# gap is what this fills.
+# The source of truth for which branch may PR into which target — a ruleset
+# cannot express "only X may merge into Y".
 #
 #   target `main`        <- `release/MAJOR.MINOR.PATCH` or `hotfix/*`
 #   target `staging`     <- `feature/*`, `release/MAJOR.MINOR.PATCH`, `hotfix/*`,
@@ -11,18 +9,9 @@ name: Gitflow Rules
 #                           when the PR author is `dependabot[bot]`
 #   target `release/*`   <- `staging` or `hotfix/*`
 #
-# The two timestamped/semver patterns are exact, and .claude/skills/'s
-# create-release and create-main-sync always produce a matching name.
-#
-# **Dependabot is checked by PR author, never by branch name.** Its branches
-# match none of the patterns above, but a naming exception would let anyone
-# bypass the rule by calling a branch `dependabot/...`.
-#
-# Called via workflow_call from pr-gate. A merge-queue caller passes
-# `should-run: false`: `merge_group` exposes only a synthetic head ref, so
-# there is nothing to validate — but the job must still report under the same
-# name, or a queued merge waits forever on a check that never posts. It needs
-# no container and no testing tooling; it reads two ref names.
+# Dependabot is checked by PR author, never by branch name, which anyone could
+# claim. A merge-queue caller passes `should-run: false`: `merge_group` has
+# only a synthetic head ref, but the job must still report under its name.
 on:
   workflow_call:
     inputs:
@@ -55,9 +44,7 @@ jobs:
   gitflow:
     runs-on: ubuntu-26.04
     steps:
-      # The `./.github/actions/...` references below resolve against
-      # $GITHUB_WORKSPACE, so a checkout is needed even though this job reads
-      # no repo content. A plain one: nothing here runs npm.
+      # The `./.github/actions/...` references resolve against $GITHUB_WORKSPACE.
       - name: Checkout
         if: inputs.should-run
         uses: actions/checkout@v7
@@ -100,8 +87,7 @@ jobs:
           log-file: output.log
           summary: ${{ github.event.pull_request.head.ref }} -> ${{ github.event.pull_request.base.ref }}
 
-      # Fail-only from pr-gate, resolving a prior failure comment on success;
-      # fail-only on a separate thread for a merge-queue caller.
+      # .github/actions/pr-comment has the modes.
       - name: Comment on PR
         if: always() && inputs.pr-number && inputs.should-run
         uses: ./.github/actions/pr-comment

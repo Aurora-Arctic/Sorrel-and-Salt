@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
-# Regenerates the Claude Code OAuth token and upserts CLAUDE_CODE_OAUTH_TOKEN
-# in Docker/.env, so the devcontainer picks it up on its next rebuild.
-# `claude setup-token` runs an interactive browser login and prints the token
-# at the end, which is what this captures.
-#
-# It does not touch GITHUB_PERSONAL_ACCESS_TOKEN — set that by hand in
-# Docker/.env (see Docker/.env.example).
+# Runs `claude setup-token` (an interactive browser login) and upserts
+# CLAUDE_CODE_OAUTH_TOKEN in Docker/.env. GITHUB_PERSONAL_ACCESS_TOKEN is set
+# by hand (see Docker/.env.example).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -22,7 +18,7 @@ echo "This opens a browser login flow — follow the prompts."
 OUTPUT_FILE="$(mktemp)"
 trap 'rm -f "$OUTPUT_FILE"' EXIT
 
-# tee to the terminal so the user still sees/can complete the interactive flow.
+# tee so the user can complete the interactive flow.
 claude setup-token | tee "$OUTPUT_FILE"
 
 TOKEN="$(grep -oE 'sk-ant-oat[0-9]+-[A-Za-z0-9_-]+' "$OUTPUT_FILE" | tail -n1 || true)"
