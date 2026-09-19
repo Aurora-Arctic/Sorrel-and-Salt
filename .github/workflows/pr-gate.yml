@@ -2,17 +2,20 @@ name: PR Gate
 
 # Runs on every pull request targeting `main`, `staging`, or `release/*`. Fans
 # out to every check ported so far — `checks` (lint, format, typecheck, build,
-# destructive-ddl and a non-blocking npm audit, as one matrix), `vitest`,
-# `playwright` and `gitflow` — gating the PR before it can be merged.
-# format, audit and gitflow always run; the rest are path-filtered by the
-# `changes` job below so a PR only pays for the checks its changed files could
-# actually affect.
+# destructive-ddl and a non-blocking npm audit as one matrix, plus `overlay`),
+# `vitest`, `playwright` and `gitflow` — gating the PR before it can be merged.
+# format, audit, overlay and gitflow always run; the rest are path-filtered by
+# the `changes` job below so a PR only pays for the checks its changed files
+# could actually affect.
 #
 # `checks` is one job calling checks.yml once (MB.32), where lint, format,
 # typecheck, build and audit used to be five jobs calling five near-identical
 # reusable workflows. Each leg reports as `checks / <name>`. `destructive-ddl`
 # joined them as a sixth leg in MB.37 — MB.32 had deleted its calling job here
 # without folding it in, so it ran on nothing between PR #104 and MB.37.
+# `checks / overlay` (MB.42) is a seventh check name from that same job but not
+# a seventh leg: it is checks.yml's own second job, verifying the
+# checkout-to-app step the six legs and vitest/playwright all begin with.
 #
 # `vitest` and `playwright` (M1.14) are real `workflow_call` checks now, not
 # the M0-era no-op stubs — job names are unchanged from the stubs, so no

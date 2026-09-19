@@ -4184,21 +4184,28 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want a CI job to see exactly the code on my branch so that a check cannot pass or fail on a file the repo no longer has.
 
-Every container job — `vitest`, `playwright`, `gitflow`, and all four of `checks.yml`'s legs — runs against a working tree holding every file deleted from the repo since the testing image was last built. `Docker/Dockerfile.node` bakes the whole repo into `/app` with `COPY . .`; `.github/actions/checkout-to-app` then lays the checkout over it with `cp -a`, which overlays but never deletes. A file the checkout no longer contains survives on disk, untracked and not ignored.
+Every container job — `vitest`, `playwright`, and all six of `checks.yml`'s legs — runs against a working tree holding every file deleted from the repo since its image was last built. `Docker/Dockerfile.node` and `Docker/Dockerfile.e2e` both bake the whole repo into `/app` with `COPY . .`; `.github/actions/checkout-to-app` then lays the checkout over it with `cp -a`, which overlays but never deletes. A file the checkout no longer contains survives on disk, untracked and not ignored.
+
+**Two corrections to the entry as minted.** `gitflow` was named as a fourth consuming workflow and is not one: it runs on a bare `ubuntu-26.04` runner with a plain `actions/checkout` and never touches `/app` — three workflows consume the action, not four. And `checks.yml` has six legs, not four. Neither changes the bug or the fix.
 
 **Found by MB.41**, whose location guard failed on its first CI run reporting 34 test files outside `tests/` — every one that move's own predecessor at its pre-move path. The count is the tell: 34, not that branch's 39, because the image predates the five test files added since it was built. MB.41 scans the index instead, which is right for that guard on its own merits and leaves this untouched.
 
 **Why it went unnoticed, and why it still matters.** Until MB.41 the repo mostly added files, so the overlay was harmless; and the checks that enumerate files read _contents_ rather than _locations_, where a stale duplicate says the same thing and passes — `slug-rule.test.ts` is the example. But `oxlint` and `tsc` both walk `src/**`, so a file deleted precisely because it was wrong is still linted and typechecked: a leg can fail on a reason absent from the diff, or pass because the copy left behind is the one that satisfies it.
 
-The likely fix is `git clean -fd` after the copy — without `-x` it respects `.gitignore`, so the image's `node_modules` and `.next` survive while untracked leftovers go. **Sequencing note:** the action is referenced at `@main`, so the fix has no effect on its own PR's runs and only takes effect once merged — which is also why MB.41 could not simply fix it.
+The fix is `git clean -fd` after the copy — without `-x` it respects `.gitignore`, so the image's `node_modules` and `.next` survive while untracked leftovers go. It must run _after_ the copy: `.dockerignore` keeps `.git` and `.gitignore` out of the image, so before the overlay lands there is neither an index to compare against nor an ignore list.
+
+**The demonstration is `checks / overlay`**, a second job in `checks.yml` rather than a seventh leg. It plants an untracked file, an untracked directory and an ignored file in `/app`, runs the action, and asserts the first two are gone, the third and `node_modules` survived, and `git status --porcelain --untracked-files=all` in `/app` is empty. Manufacturing the condition is the point: the image is rebuilt whenever `Dockerfile.node` or `package-lock.json` changes, so on most PRs there is nothing stale and every leg passes with the bug fully present.
+
+The job reaches the action as `./.github/actions/checkout-to-app` rather than the `@main` ref its real callers use, so an edit to the action is verified on the PR that makes it. The callers cannot: they run the action to _get_ a checkout, and a local `./` reference needs one already. **Sequencing note:** for them the `@main` reference still holds, so the fix takes effect on the first run after it reaches `main` rather than on its own PR's — which is also why MB.41 could not simply fix it.
 
 _Acceptance criteria:_
 
 - `checkout-to-app` leaves `/app` holding exactly the checkout plus the image's ignored build artifacts; no file absent from the checkout survives
 - Demonstrated rather than asserted: a job asserts a path deleted on the branch is absent from `/app`, and that assertion is shown to fail against the current action
 - `node_modules` survives — no job reinstalls dependencies, and job times do not regress
-- All four consuming workflows still pass
-- `ci.md` documents the overlay and why the clean step exists, so it is not later removed as redundant
+- All three consuming workflows still pass
+- `ci.md` documents the overlay and why the clean step exists, so it is not later removed as redundant — including the correction to its own "every action is exercised by the checks that use it" claim, which is what let this go unguarded
+- `make act-overlay` runs the new job locally, per `ci.md`'s rule that a new check ships its `act-*` target in the same PR
 
 **MB.43 — Map service errors to GraphQL errors with field-level detail** · 2h
 

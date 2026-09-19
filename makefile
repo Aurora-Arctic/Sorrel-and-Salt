@@ -35,7 +35,7 @@
 	workshop workshop-build \
 	docker-build docker-up docker-workshop docker-studio docker-all docker-e2e docker-down docker-rebuild docker-logs \
 	docker-update-token playwright-server-up playwright-server-down docker-codegen \
-	act-image act-cache-checkout act-check act-test
+	act-image act-cache-checkout act-check act-overlay act-test
 
 COMPOSE := docker compose -f Docker/docker-compose.yaml
 
@@ -287,6 +287,19 @@ act-cache-checkout:
 ## Run one checks.yml leg locally via act — CHECK=lint|format|typecheck|build|audit|destructive-ddl
 act-check: act-image act-cache-checkout
 	act -W .github/workflows/checks.yml -j check --matrix name:$(CHECK) --input image=$(ACT_IMAGE) -s GITHUB_TOKEN=dummy-token --action-offline-mode
+
+# checks.yml's second job (MB.42), which `act-check` cannot reach: that target
+# is `-j check --matrix name:<leg>`, and overlay is a job rather than a leg. It
+# needs no act-cache-checkout — it references checkout-to-app as `./` precisely
+# so it tests the action in the working tree rather than the one on main.
+#
+# Deliberately not in act-test: its last assertion is that /app matches the
+# checkout exactly, and act runs against the working tree rather than a commit,
+# so a dirty tree fails it for a reason that has nothing to do with the action.
+# Run it with a clean tree, or read the three named-path assertions above it.
+## Verify checkout-to-app deletes what the checkout no longer contains (checks / overlay)
+act-overlay: act-image
+	act -W .github/workflows/checks.yml -j overlay --input image=$(ACT_IMAGE) -s GITHUB_TOKEN=dummy-token --action-offline-mode
 
 ## Run every locally runnable act check in sequence
 act-test:
