@@ -5,33 +5,16 @@
 @use '../scss/primitives' as *;
 
 // The single global stylesheet, imported once by the root layout. Everything
-// else is componentized Sass (§9) — this file exists because two things have
-// to be emitted exactly once and nowhere else:
+// else is componentized Sass (§9). This file exists because the theme token
+// assignments and the three `*-base` mixins have to be emitted exactly once —
+// each component's index.scss is its own compilation unit, so a shared partial
+// emitting them would duplicate them into every compiled stylesheet. Nothing
+// component-specific belongs here.
 //
-//   1. _typography.scss's global element rules.
-//   2. The theme token assignments below.
-//
-// Both would be duplicated into every compiled stylesheet if a shared partial
-// emitted them, since each component's index.scss is its own compilation unit.
-// Nothing component-specific belongs here.
-//
-// M0.32: _typography.scss's rules are now a `typography-base` mixin rather than
-// bare top-level rules; `@include`ing it inside `body` below is what emits
-// them. The output is the same set of rules, one `body` ancestor deeper. The
-// Ladle workshop `@include`s the same mixin scoped to its story frame.
-
-// M0.6 — three theme states, not two. Dark is the default, and a system that
-// asks for light gets light.
-//
-//   :root                        dark — the default, and what a system with no
-//                                preference or a dark preference gets
-//   prefers-color-scheme: light  light, but only while no explicit choice
-//                                overrides it — hence the :not()
-//   [data-theme='light']         an explicit choice, which beats the system
-//
-// The :not([data-theme='dark']) guard is what lets a future theme toggle
-// (nothing sets the attribute yet) pin dark on a light-preference system. Both
-// light blocks include the same mixin so the two spellings cannot drift.
+// Three theme states, not two, and the :not([data-theme='dark']) guard is what
+// lets an explicit dark choice beat a light system preference. Both light
+// blocks include the same mixin so the two spellings cannot drift. The table:
+// claude-docs/styling.md, "Theme resolution".
 :root {
   @include theme-dark;
 }

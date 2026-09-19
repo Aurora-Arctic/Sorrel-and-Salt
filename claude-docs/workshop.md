@@ -28,9 +28,16 @@ without a page routed to it.
   forces each component's `Default` story first and leaves the rest in Ladle's
   own order; it is a global-config hook only (no per-story-file equivalent) and
   must stay a self-contained function, since Ladle serializes it with
-  `.toString()`. `addons.theme.defaultState: 'dark'` matches the app's
-  dark-first default in `globals.scss`; `tests/guards/workshop-guards.test.ts`
-  asserts it stays that way.
+  `.toString()`. `hmrPort` is pinned only so the HMR socket lands on a known
+  port rather than a random free one — it stays reachable when the workshop is
+  opened over the LAN instead of at `localhost`, and it does not move between
+  restarts.
+  - **`addons.theme.defaultState: 'dark'`** matches the app's dark-first default
+    in `globals.scss` (`:root { @include theme-dark }`), so the workshop opens
+    the same way a viewer who has never touched the toggle sees the app.
+    M0.31 briefly set it to `'auto'` (the control's unset position, letting
+    `prefers-color-scheme` decide) and M0.32 moved it back; `'dark'` is the
+    confirmed intent, and `tests/guards/workshop-guards.test.ts` pins it.
 - **`config.d.mts`** — a hand-written declaration of the slice of `config.mjs`
   that guard reads, for `tsc` alone: `allowJs` is off, so the
   `@type {import('@ladle/react').UserConfig}` JSDoc in `config.mjs` reaches
@@ -103,10 +110,8 @@ without a page routed to it.
   and React Fast Refresh. Only edits to the `.ladle/` files themselves need the
   dev server restarted.
 - `npm run workshop:build` / `make workshop-build` — static build to the
-  gitignored `./build`, via `scripts/build-workshop.ts`. The wrapper exists
-  because `@ladle/react` 5.1.1's own CLI always exits 0 even when the underlying
-  Vite build fails; it turns Vite's `✗ Build failed` marker into a real
-  non-zero exit.
+  gitignored `./build`, via `scripts/build-workshop.ts`. See **The build gate**
+  below for why the wrapper exists.
 - `tests/guards/workshop-guards.test.ts` (MB.38) — the two mechanical guards, as
   ordinary Vitest tests in the `unit` project. One fails if a directory under
   `src/components/` has an `index.tsx` but no sibling `index.stories.tsx` —
@@ -129,6 +134,28 @@ without a page routed to it.
   `workshop:build` on `checks.yml`'s `build` leg. Pre-commit is lint,
   `format:check` and typecheck, test-free by decision (MB.38): a hook that
   runs tests is a hook people start skipping, and a PR cannot skip CI.
+
+## The build gate
+
+`scripts/build-workshop.ts` runs `ladle build`, mirrors its output verbatim, and
+exits non-zero if Vite's own `Build failed` marker appears in it. That is a
+workaround for an upstream gap, not a reimplementation of the build.
+
+**`@ladle/react` 5.1.1's CLI always exits 0.** Its `lib/cli/vite-prod.js` wraps
+Vite's `build()` in a try/catch, logs the error and returns `false`; its
+`lib/cli/build.js` awaits that call and discards the return value, so nothing
+ever becomes a non-zero exit code. Verified directly: a story importing a module
+that does not exist prints Vite's `✗ Build failed` / `Could not resolve …` and
+`ladle build` still exits 0.
+
+**Neither of the two tidier fixes is available.** There is no CLI flag for it,
+and the CLI's build function cannot be imported directly — `lib/cli/build.js` is
+not in the package's `exports` map, so a deep import throws
+`ERR_PACKAGE_PATH_NOT_EXPORTED`.
+
+The marker never appears on a clean run, so the wrapper passes through unchanged
+if a future `@ladle/react` fixes the exit code, and can be deleted whenever this
+repo bumps past the fixed version.
 
 ## Stopgaps to unwind
 

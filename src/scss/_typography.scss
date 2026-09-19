@@ -1,32 +1,16 @@
 @use './variables' as *;
 @use './mixins' as *;
 
-// Global body/heading rules. Ported from resume-2026 in M0.5; M0.6 swapped the
-// families for Cormorant Unicase / Lexend and moved every colour onto the
-// theme tokens.
+// Document prose. A mixin rather than bare top-level rules so it can be scoped:
+// `@include` it on the element standing in for the page body — `body` in the
+// app, `.ladle-story-frame` in the workshop, where unscoped element selectors
+// would land on Ladle's own `<ul>`/`<li>`/`<a>` chrome too. The bare
+// declarations below land on that element; the rest are descendant rules.
 //
-// The `@media print` and `html[data-print-mode='...']` tiers are deliberately
-// not carried over — this project has no print styles outside the spell recipe
-// view (M10.22).
-//
-// Every `html[data-theme='light']` duplicate that the port carried is gone
-// too: the tokens resolve per theme at runtime, so one rule now covers dark,
-// light and system-preference. Nothing here should name a palette colour
-// directly — if a rule needs a hue that isn't a token yet, the token is the
-// thing to add.
-//
-// M0.32 turned the file's rules into a mixin. The app still gets them at the
-// document `<body>` (globals.scss `@include`s it there — same rules, one `body`
-// ancestor deeper), and the Ladle workshop gets the identical set scoped to its
-// story frame (.ladle/typography.scss), so a story renders prose exactly as a
-// page does without `_typography.scss`'s bare element selectors bleeding onto
-// Ladle's own `<ul>`/`<li>`/`<a>` chrome. The rules live in exactly one place;
-// only the selector they hang off differs between the two callers.
-
-// Document prose. `@include` this on the element that stands in for the page
-// body — `body` in the app, `.ladle-story-frame` in the workshop. The bare
-// declarations at the top land on that element; everything else is a
-// descendant rule.
+// Nothing here names a palette colour directly — the tokens resolve per theme
+// at runtime, so one rule covers dark, light and system-preference. A rule
+// needing a hue that is not a token yet adds the token. No print tier: print
+// styling is scoped to the spell recipe view (M10.22).
 @mixin typography-base {
   font-family: $font-body;
   font-weight: 300;
@@ -36,22 +20,17 @@
   h3,
   h4 {
     font-family: $font-heading;
-    // Cormorant Unicase is a high-contrast display serif — delicate hairlines
-    // that thin out the smaller it's set and the darker the ground. All four
-    // levels run at 700, its heaviest weight (the face has no variable axis;
-    // src/app/fonts.ts loads 500/600/700), because 600 was hard to read at h3
-    // (1.375rem) and h4 (1.125rem) on the dark theme. There's nothing above
-    // 700 for this face — if it still reads light, the display face itself is
-    // the lever (an M0.6 decision), not the weight.
+    // All four levels run at 700, Cormorant Unicase's heaviest: its hairlines
+    // thin out the smaller it is set and the darker the ground. Nothing above
+    // 700 exists for this face, so if it still reads light the display face
+    // itself is the lever, not the weight. claude-docs/styling.md, "Type".
     font-weight: 700;
     letter-spacing: 0.01em;
     margin: 0 0 1rem;
     text-wrap: balance;
   }
 
-  // Scale anchored at h4 = 1.5rem and stepped up by roughly a 1.2 ratio. The
-  // display face carries size well and the old scale (h4 1.125rem) set the
-  // smallest headings too close to body copy — see the M0.32 weight work.
+  // Anchored at h4 = 1.5rem, stepped up by roughly 1.2.
   h1 {
     font-size: clamp(2.5rem, 5vw, 3.75rem);
     line-height: 1.1;
@@ -90,8 +69,7 @@
   kbd,
   samp {
     font-family: $font-mono;
-    // Platform monospace runs large next to Lexend; nudge it down so an inline
-    // `code` span sits on the same visual line as the prose around it.
+    // Platform monospace runs large next to Lexend.
     font-size: 0.9em;
   }
 
@@ -112,11 +90,9 @@
     }
   }
 
-  // Reuse the body ink (already ≥13:1 in both themes) rather than pushing the
-  // sorrel hue further with another derived token, and add an underline so
-  // links don't depend on the colour difference at all — WCAG's "don't rely on
-  // colour alone", for users who have explicitly asked for more contrast than
-  // the baseline above already provides.
+  // The body ink (already ≥13:1 in both themes) rather than pushing the sorrel
+  // hue further, plus an underline so the link does not depend on colour at
+  // all — WCAG's "don't rely on colour alone".
   @media (prefers-contrast: more) {
     a {
       color: $text-primary;
@@ -163,9 +139,8 @@
     color: $text-muted;
   }
 
-  // Trims heading bottom margin when multiple levels stack directly — a type
-  // sample or a compact heading group — rather than each leading its own
-  // block of prose.
+  // For headings that stack directly — a type sample, a compact heading group
+  // — rather than each leading its own block of prose.
   .tight-headings {
     h1,
     h2,

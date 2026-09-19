@@ -1,15 +1,13 @@
 import type { Story } from '@ladle/react';
 import DesignLanguage from './design-language';
 
-// The design-language reference — type, colour tokens, category-group colours,
-// chips, badges, the raised panel and the focus ring, all rendered from the
-// real _variables.scss / _mixins.scss / _typography.scss (M0.32).
-//
-// This story file sits in .ladle/ rather than a component directory because
-// DesignLanguage isn't a component — the app never imports it. The `stories`
-// glob in config.mjs was widened to pick this location up. Render-only: no test
-// ids, no snapshots (CLAUDE.md). `workshop:build` in CI (M0.33) is the smoke
-// test — a throw here fails the build.
+// The design-language reference, rendered from the real partials. This story
+// file sits in .ladle/ rather than a component directory because DesignLanguage
+// is not a component — the app never imports it, and config.mjs's second
+// `stories` glob exists for exactly this. Render-only: no test ids, no
+// snapshots (CLAUDE.md). Nothing asserts it renders — `workshop:build` catches
+// an unresolvable import and not a throw. See
+// claude-docs/workshop.md, "Commands and gates".
 export default {
   title: 'Design language',
 };
@@ -19,8 +17,7 @@ export default {
 export const Default: Story = () => <DesignLanguage />;
 
 // The whole vocabulary on the light (parchment) surface, pinned regardless of
-// the toolbar — the app's non-default theme, and the one M0.6 tuned the eight
-// group colours hardest against.
+// the toolbar — the theme the eight group colours were tuned hardest against.
 export const Light: Story = () => <DesignLanguage />;
 Light.meta = { theme: 'light' };
 

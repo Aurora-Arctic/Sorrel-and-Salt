@@ -3,14 +3,13 @@
 import { type ReactElement, useEffect, useRef } from 'react';
 import './index.scss';
 
-// Keep in sync with the pre-paint init script in src/app/layout.tsx — both
-// read/write the same key so the toggle and the flash-prevention script never
-// disagree on where the stored choice lives.
+// Keep in sync with the pre-paint init script in src/app/layout.tsx, which
+// re-implements the read half inline because it must run before any module
+// loads.
 export const STORAGE_KEY = 'theme';
 
-// The one place a theme gets applied, so anything that wants to change the
-// theme — this component, and M0.31's Ladle decorator — goes through the same
-// function rather than each re-implementing the attribute + storage write.
+// The one place a theme gets applied: this component and the Ladle decorator
+// both call it rather than each re-implementing the attribute + storage write.
 export const applyTheme = (theme: 'light' | 'dark'): void => {
   document.documentElement.setAttribute('data-theme', theme);
   try {
@@ -21,13 +20,12 @@ export const applyTheme = (theme: 'light' | 'dark'): void => {
   }
 };
 
-// globals.scss resolves three theme states, not two: `data-theme` when it's
-// there, else a light *system* preference, else dark. Only a stored choice
-// ever puts the attribute on `<html>` (the layout.tsx init script), so the
-// attribute alone can't answer "what is showing right now" — on a light
-// system with nothing stored it reads as absent while the page is light.
-// Mirrors that cascade exactly, including asking for `light` rather than
-// `dark`: "no preference" resolves to dark, matching the `:root` default.
+// Mirrors globals.scss's three-state cascade exactly. The attribute alone
+// cannot answer "what is showing right now": only a stored choice ever sets it,
+// so on a light system with nothing stored it is absent while the page is
+// light. Asking for `light` rather than `dark` is deliberate — "no preference"
+// has to resolve to dark, matching the `:root` default.
+// claude-docs/components/theme-toggle.md, "Shared contract".
 const resolveCurrentTheme = (): 'light' | 'dark' => {
   const stated = document.documentElement.getAttribute('data-theme');
   if (stated === 'light' || stated === 'dark') {
@@ -36,33 +34,28 @@ const resolveCurrentTheme = (): 'light' | 'dark' => {
   return window.matchMedia?.('(prefers-color-scheme: light)').matches === true ? 'light' : 'dark';
 };
 
-// The dark (moon) facet starts resting/visible and the light (sun) facet
-// starts parked off to the side (--pre-enter), matching this component's
-// dark-mode-by-default markup. If the real starting theme turns out to be
-// light (system preference or a stored choice), the effect below corrects
-// this pre-paint so there's no flash of the wrong icon.
+// The moon starts resting and the sun parked off to the side (--pre-enter),
+// matching the dark-by-default markup; index.scss corrects a light start before
+// paint.
 const OUT_CLASS = 'theme-toggle__facet--out';
 const PRE_ENTER_CLASS = 'theme-toggle__facet--pre-enter';
 
-// Move a facet that has finished exiting from --out back to --pre-enter —
-// instant, since that class carries its own zero-duration transition — so
-// it's parked and ready for its next entrance rather than retracing back down
-// through the top it just exited through.
+// Moves a finished facet from --out back to --pre-enter, instantly (that class
+// carries its own zero-duration transition), so its next entrance starts from
+// the parked side rather than retracing back through the top it exited by.
 const parkFacet = (facet: Element): void => {
   facet.classList.remove(OUT_CLASS);
   facet.classList.add(PRE_ENTER_CLASS);
 };
 
-// index.scss zeroes this component's transitions under
-// `prefers-reduced-motion: reduce`, which means no transition runs and
-// `transitionend` never fires — so the exit has to be parked by hand instead
-// of being waited on. Read live at click time rather than at mount, so
-// changing the OS setting mid-session takes effect without a reload.
+// index.scss zeroes this component's transitions under reduced motion, so no
+// `transitionend` fires and the exit has to be parked by hand. Read live at
+// click time, not at mount, so changing the OS setting mid-session takes effect
+// without a reload.
 const prefersReducedMotion = (): boolean =>
   window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
-// When a facet finishes animating out (rotate 0 -> arc, through the top),
-// park it back where its next entrance starts.
+// When a facet finishes animating out, park it where its next entrance starts.
 const handleFacetTransitionEnd = (event: TransitionEvent): void => {
   const facet = event.target;
   if (
@@ -90,15 +83,10 @@ const ThemeToggle = (): ReactElement => {
     };
   }, []);
 
-  // MB.2: this used to be the only place a light starting theme got
-  // corrected, which ran after the first paint and let the sun visibly swing
-  // in from its parked position. index.scss now settles the *visible* state
-  // pre-paint via a `html[data-theme='light']` rule, keyed off the same
-  // attribute the pre-paint init script (src/app/layout.tsx) stamps before
-  // the browser paints anything — so by the time this runs, the classes below
-  // only need to match what's already showing. It still has to run: a later
-  // click reads these real classes, not the CSS override, to know which facet
-  // is primed to animate in.
+  // index.scss already settles the *visible* facets before paint, so by the
+  // time this runs the classes below only match what is showing. It still has
+  // to run: a later click reads these real classes, not the CSS override, to
+  // know which facet is primed to animate in.
   useEffect(() => {
     const isLight = resolveCurrentTheme() === 'light';
     buttonRef.current?.setAttribute('aria-pressed', String(isLight));
@@ -112,20 +100,16 @@ const ThemeToggle = (): ReactElement => {
     const isLight = resolveCurrentTheme() === 'light';
     const outgoingFacet = isLight ? lightFacetRef.current : darkFacetRef.current;
     const enteringFacet = isLight ? darkFacetRef.current : lightFacetRef.current;
-    // Don't assume either facet is in its "normal" resting class state — a
-    // click before the previous transition/transitionend finished can leave a
-    // facet holding the other modifier (e.g. still --out from an exit that
-    // got interrupted), so clear both explicitly rather than toggling just
-    // the one each side is expected to have. Otherwise the entering facet can
-    // get stuck never losing --out, staying parked out of view instead of
-    // coming back to rest.
+    // Clear both classes rather than toggling the one each side is expected to
+    // hold: a click before the previous transitionend can leave a facet still
+    // --out from an interrupted exit, and it would then stay parked out of view
+    // instead of coming back to rest.
     outgoingFacet?.classList.remove(PRE_ENTER_CLASS);
     outgoingFacet?.classList.add(OUT_CLASS);
     enteringFacet?.classList.remove(OUT_CLASS, PRE_ENTER_CLASS);
-    // With transitions zeroed there's no `transitionend` coming to park the
-    // outgoing facet, and it would stay stuck holding --out: rotated askew and
-    // still opaque, on top of the facet that just entered. Park it now, which
-    // is the same jump-cut the reduced-motion rules ask for anyway.
+    // No `transitionend` is coming, so the outgoing facet would stay holding
+    // --out — rotated askew and still opaque over the one that just entered.
+    // Parking it now is the jump-cut reduced motion asks for anyway.
     if (outgoingFacet && prefersReducedMotion()) {
       parkFacet(outgoingFacet);
     }
@@ -145,10 +129,9 @@ const ThemeToggle = (): ReactElement => {
       <span className="theme-toggle__facets">
         {/*
           Celtic knotwork facets — a woven crescent for dark, an interlaced
-          solar disc for light. Filled artwork rather than stroked line icons;
-          the fill is fixed per facet in index.scss (crescent near-black, sun
-          parchment) and never themed, so there's no stroke and no fill here.
-          See claude-docs/components/theme-toggle.md.
+          solar disc for light. Filled artwork, so no stroke; the fill is fixed
+          per facet in index.scss and never themed.
+          See claude-docs/components/theme-toggle.md, "Icons".
         */}
         <svg
           ref={darkFacetRef}

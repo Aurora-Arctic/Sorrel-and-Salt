@@ -1,14 +1,13 @@
-// Hand-written declaration for config.mjs, for `tsc` only. tsconfig has
-// `allowJs: false`, so the `@type {import('@ladle/react').UserConfig}` JSDoc
-// in config.mjs is read by editors and by nothing else — and without this
-// file, tests/guards/workshop-guards.test.ts (MB.38) cannot import the config
-// without tripping TS7016. It is not `UserConfig` itself: @ladle/react's types
-// ship as `.ts`/`.tsx` sources under typings-for-build/ that do not pass this
-// repo's `strict` (the reason *.stories.tsx is excluded from tsc), and a
-// declaration that imports them would drag them back in.
+// Hand-written declaration for config.mjs, for `tsc` only — Ladle never reads
+// it. tsconfig has `allowJs: false`, so config.mjs's
+// `@type {import('@ladle/react').UserConfig}` JSDoc reaches editors and
+// nothing else, and tests/guards/workshop-guards.test.ts could not import the
+// config without this file (TS7016). Deliberately not `UserConfig` itself:
+// @ladle/react's types ship as `.ts`/`.tsx` sources that do not pass this
+// repo's `strict` — the reason *.stories.tsx is excluded from tsc — and a
+// declaration importing them would drag them back in.
 //
-// Declares only what the guard reads. Anything else the config sets is
-// Ladle's business, typed by the JSDoc above it.
+// Declares only what the guard reads; the rest is Ladle's business.
 declare const config: {
   addons?: {
     theme?: {
