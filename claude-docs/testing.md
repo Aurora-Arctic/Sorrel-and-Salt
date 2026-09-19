@@ -33,8 +33,14 @@ Three consequences worth knowing before writing a test:
 
 `tests/guards/test-location.test.ts` holds the rule. It is a test rather than
 a lint rule because Oxlint has no custom-rule API and cannot express a
-statement about the tree; it scans tracked _and_ untracked files, so a test
-written in `src/` fails in the diff that adds it. The failure it prevents is
+statement about the tree; it scans the git index, so a test written in `src/`
+fails in the diff that adds it as soon as it is staged. It deliberately does
+not scan untracked files the way `slug-rule.test.ts` does: that guard reads
+file contents, where a duplicate is harmless, while this one enumerates
+locations, where a stray copy is the finding. CI's container keeps every file
+deleted since its image was built — `checkout-to-app` lays the checkout over
+a baked `/app` with `cp -a`, which never deletes — and an untracked scan
+reports all of them. The failure it prevents is
 silent: `include` is scoped to `tests/`, so a misplaced test is not a red
 test, it is a file nothing runs.
 
