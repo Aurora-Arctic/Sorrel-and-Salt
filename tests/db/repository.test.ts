@@ -12,11 +12,13 @@ import {
   withAudit,
 } from '@/db/repository';
 
-// sorrel_template carries no tables until M1.27, so these tests write to a
-// scratch table of their own — created here in this worker's disposable
-// sorrel_test_<n> clone. It spreads the real `auditColumns`, minus their FKs
-// to `users` (no users table exists to point at yet), so what's exercised is
-// the same six columns every real table will carry.
+// These tests write to a scratch table of their own — created here in this
+// worker's disposable sorrel_test_<n> clone — rather than to a real one. It
+// spreads the real `auditColumns`, minus their FKs to `users`, so what's
+// exercised is the six columns every real table carries and nothing a real
+// table's other constraints would add. Written when the template carried no
+// tables at all (before M1.27); kept that way since, because the repository's
+// contract is about the audit columns, not about any one table.
 const herbs = pgTable('repository_probe_herbs', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
