@@ -2,13 +2,11 @@ import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from './schema/users';
 
-// DESIGN.md §5: every audit id references users.id — including for `users`'
-// own rows, so this module and schema/users.ts import each other. Drizzle's
-// `() => users.id` thunk defers evaluation past module load, so the runtime
-// cycle resolves; the explicit `AnyPgColumn` annotation is what stops
-// TypeScript reporting "audit.ts circularly references itself" trying to infer
-// it. The cycle also constrains import *order* inside a seed module
-// (claude-docs/db.md, "The seed module").
+// Every audit id references users.id, `users`' own rows included, so this
+// module and schema/users.ts import each other: the thunk defers the runtime
+// cycle and the explicit `AnyPgColumn` stops TypeScript reporting "audit.ts
+// circularly references itself". The cycle also constrains import order in
+// seed modules (claude-docs/db.md, "The seed module").
 export const auditStampColumns = {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   createdBy: uuid('created_by')
@@ -20,9 +18,8 @@ export const auditStampColumns = {
     .references((): AnyPgColumn => users.id),
 };
 
-// The six-column set is the four stamps plus the two delete columns, defined
-// once rather than listed twice so they cannot drift. Which tables take which:
-// claude-docs/db.md, "Hard delete on the three join tables".
+// Defined as the four stamps plus two, so the six-column set cannot drift.
+// Which tables take which: claude-docs/db.md, "Hard delete on the three join tables".
 export const auditColumns = {
   ...auditStampColumns,
   deletedAt: timestamp('deleted_at'),
@@ -64,9 +61,8 @@ function stripAuditFields<T extends object>(payload: T): WithoutAuditFields<T> {
 }
 
 /**
- * Stamps audit columns for one write, ignoring any `*_by`/`*_at` audit
- * fields the caller's payload might carry — those always come from the
- * session, never the request body (CLAUDE.md rule 3).
+ * Stamps audit columns for one write. Any audit fields in the payload are
+ * dropped: they come from the session, never the request body (CLAUDE.md rule 3).
  */
 export function applyAudit<T extends object>(
   operation: 'insert',

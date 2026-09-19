@@ -11,15 +11,12 @@ import {
 import { auditColumns } from '../audit';
 import { users } from './users';
 
-// DESIGN.md §5's roles, ordered viewer < member < owner — the ordering M6.3's
-// assertMembership implements. `owner` is a role but not an invitable one;
-// workspace_invitations carries the CHECK that narrows it.
+// Ordered viewer < member < owner, the order `assertMembership` compares by.
+// `owner` is not invitable — workspace_invitations carries the CHECK.
 export const workspaceRole = pgEnum('workspace_role', ['viewer', 'member', 'owner']);
 
-// DESIGN.md §5: `id`, `name`, `slug`, + audit — and nothing else. There is no
-// `kind` column and no automatically created workspace: every workspace takes
-// members and is deleted by an owner. The entity is `workspaces`; only the URL
-// segment says coven (§5).
+// No `kind` column and no automatic workspace: every workspace takes members
+// and is deleted by an owner. Only the URL segment says coven.
 export const workspaces = pgTable(
   'workspaces',
   {
@@ -31,18 +28,14 @@ export const workspaces = pgTable(
     ...auditColumns,
   },
   (table) => [
-    // Partial per CLAUDE.md rule 4 — a plain unique constraint would
-    // permanently reserve a soft-deleted workspace's slug, and the slug is
-    // what /coven/[slug] routes on.
+    // Partial per CLAUDE.md rule 4: the slug is what /coven/[slug] routes on.
     uniqueIndex('workspaces_slug_unique')
       .on(table.slug)
       .where(sql`${table.deletedAt} is null`),
   ],
 );
 
-// DESIGN.md §5's membership row, keyed on the pair: a surrogate id would let
-// the same user join the same workspace twice. M6.3's `assertMembership` reads
-// it to decide who may see a workspace's rows.
+// Keyed on the pair; a surrogate id would let a user join twice.
 export const workspaceMembers = pgTable(
   'workspace_members',
   {
@@ -53,8 +46,8 @@ export const workspaceMembers = pgTable(
       .notNull()
       .references(() => users.id),
     role: workspaceRole('role').notNull(),
-    // Distinct from `created_at`: a membership row can be rewritten (a role
-    // change) without changing when the person joined.
+    // Distinct from `created_at`: a role change rewrites the row without
+    // changing when the person joined.
     joinedAt: timestamp('joined_at').notNull().defaultNow(),
     ...auditColumns,
   },
