@@ -32,6 +32,15 @@ edit at any call site; nothing passes it today.
   - It must run _after_ the copy, not before: `.dockerignore` keeps both `.git`
     and `.gitignore` out of the image, so the clean has neither an index to
     compare against nor an ignore list until the checkout has landed.
+  - **The `git config --global --add safe.directory /app` beside it is not
+    boilerplate.** `Dockerfile.node` chowns `/app` to `node` and every consuming
+    job runs its container `--user root`; git as root requires a root-owned
+    repository, and refuses any other with `fatal: detected dubious ownership`.
+    `actions/checkout` makes the same call for `$GITHUB_WORKSPACE`, which is
+    exactly why the checkout works there and a copy of it at `/app` does not.
+    `--add` rather than `--replace-all`, so the workspace's own entry survives.
+    It is also what lets `checks / overlay`'s assertion step run `git status` in
+    `/app` without repeating the call.
   - Found by MB.41, whose new test-location guard failed on its first CI run
     reporting 34 test files outside `tests/` — every one of them that move's own
     predecessor, still sitting where the image had baked it. The count is the
