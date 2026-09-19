@@ -64,7 +64,7 @@
     "jsdom": "^30.0.1",
     "monocart-coverage-reports": "^2.13.0",
     "msw": "^2.15.0",
-    "oxlint": "^1.82.0",
+    "oxlint": "^1.83.0",
     "pre-commit": "^2.0.0",
     "prettier": "^3.9.6",
     "sass": "^1.104.1",
