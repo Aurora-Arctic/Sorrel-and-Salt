@@ -976,6 +976,7 @@ _Acceptance criteria:_
 - Overrides merge rather than replace nested defaults
 - Factories are used by at least one existing test
 - `makeIngredient()` defaults to a valid `nomenclature`/`canonicalName` pair; overriding `nomenclature` still produces a valid row
+- Every default identity a factory can supply on its own is absent from the `standard` scenario, pinned by a test that reads the seed's own lists — M1.27 bakes `standard` into every db worker's clone, and the partial unique indexes would otherwise make the zero-argument fixture uninsertable
 
 **M1.26 — asUser helper and Forbidden error type** · 1h
 

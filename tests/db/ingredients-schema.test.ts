@@ -334,14 +334,14 @@ describe('ingredients table', () => {
 
     // A blank form is rejected; an *absent* one is not — form is optional.
     it('accepts a null form', async () => {
-      const id = await insert({ form: null });
+      const id = await insert({ form: null, canonicalName: 'Artemisia vulgaris' });
       expect(await canonicalKeyOf(id)).toBe('artemisia vulgaris');
     });
 
     // The vocabulary is an autofill, not a constraint: `rhizome` is writable
     // before anyone has curated it (DESIGN.md §5).
     it('accepts a form absent from the curated vocabulary', async () => {
-      const id = await insert({ form: 'rhizome' });
+      const id = await insert({ form: 'rhizome', canonicalName: 'Artemisia vulgaris' });
       expect(await canonicalKeyOf(id)).toBe('artemisia vulgaris :: rhizome');
     });
   });
@@ -367,7 +367,7 @@ describe('ingredients table', () => {
     });
 
     it('folds case and surrounding space, so Root Bark and root bark are one key', async () => {
-      const shouted = await insert({ form: 'Root Bark' });
+      const shouted = await insert({ form: 'Root Bark', canonicalName: 'Artemisia vulgaris' });
       const muttered = await insert({
         form: '  root bark  ',
         name: 'Mugwort (second jar)',
@@ -442,7 +442,7 @@ describe('ingredients table', () => {
       });
 
       it('recomputes the key whenever the form changes, formal name or not', async () => {
-        const named = await insert({ form: 'herb' });
+        const named = await insert({ form: 'herb', canonicalName: 'Artemisia vulgaris' });
         await sql`update ingredients set form = 'leaf' where id = ${named}`;
         expect(await canonicalKeyOf(named)).toBe('artemisia vulgaris :: leaf');
 
