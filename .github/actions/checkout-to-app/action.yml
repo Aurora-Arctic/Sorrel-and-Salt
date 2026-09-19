@@ -9,39 +9,16 @@ runs:
     - name: Checkout
       uses: actions/checkout@v7
 
-    # `cp -a` overlays; it never deletes. Docker/Dockerfile.node and
-    # Docker/Dockerfile.e2e both bake the whole repo into /app with `COPY . .`
-    # at image build time, so a file the checkout no longer contains is still
-    # sitting there afterwards — untracked, not gitignored, and indistinguishable
-    # to oxlint/tsc/vitest from a file the branch actually has. The clean step
-    # below is what removes it; the two steps are one operation (MB.42).
+    # `cp -a` overlays; it never deletes. That is safe only because the image
+    # carries no source layer: node_modules and the two package manifests are
+    # all Docker/Dockerfile.node contributes to /app, so a checkout lands on
+    # nothing it does not itself contain and a file the branch deleted has
+    # nothing to survive as. Until MB.42
+    # the image baked the whole repo with `COPY . .`, and every such file was
+    # still sitting there afterwards — untracked, not gitignored, and
+    # indistinguishable to oxlint/tsc/vitest from a file the branch actually
+    # has. tests/guards/image-source-layer.test.ts is what keeps the image
+    # that way, so this step stays a copy and never grows a clean.
     - name: Copy checkout into /app
       shell: bash
       run: cp -a "$GITHUB_WORKSPACE"/. /app/
-
-    # Deletes what the copy above could not: every path in /app that the
-    # checkout does not contain. `-x` is deliberately absent, so .gitignore
-    # still applies and the image's own build artifacts — node_modules above
-    # all, plus .next — survive untouched; no job reinstalls dependencies.
-    # `-d` is what reaches a whole stale directory rather than only loose files.
-    #
-    # Removals are printed rather than quieted: on a PR that deletes files,
-    # this step's log is the only place the overlay's leftovers are ever named.
-    #
-    # `.git` comes from the checkout (`.dockerignore` keeps it out of the
-    # image), and so does `.gitignore` — both are in place by the time this
-    # runs, which is why the clean cannot precede the copy.
-    - name: Remove files the checkout no longer contains
-      shell: bash
-      working-directory: /app
-      run: |
-        # Dockerfile.node chowns /app to `node`, and every consuming job runs
-        # the container `--user root`. Git as root requires a repository to be
-        # root-owned — SUDO_UID, its one exception, is unset here — so without
-        # this it refuses /app outright: "detected dubious ownership". This is
-        # the same call actions/checkout makes for $GITHUB_WORKSPACE, which is
-        # why the checkout works and a copy of it at another path does not.
-        # `--add`, never `--replace-all`: the workspace's own entry is already
-        # in this file and must survive.
-        git config --global --add safe.directory /app
-        git clean -fd
