@@ -1012,8 +1012,9 @@ mid-rollout. Never do it in one step. Instead:
   ```
 
   and the schema/service code drops the fallback and the dual-write, reading
-  and writing `title` only. **This migration is destructive** — it needs the
-  acknowledgement line below in its PR body, precisely because a same-release
+  and writing `title` only. **This migration is destructive** — it needs an
+  acknowledgement sidecar beside it — `src/db/migrations/00MM_drop-spells-name.ack.md`,
+  in the form described below — precisely because a same-release
   rollback of Release N+1 back to Release N would otherwise break (Release
   N's dual-write still tries to write `name`, which no longer exists). That
   tradeoff — Release N+1 can no longer safely roll back to Release N, only
@@ -1047,8 +1048,16 @@ ever scanned: the `meta/*.json` files Drizzle writes beside each migration are
 excluded by the paths filter in `pr-gate.yml` **and** by the script, which
 ignores anything else it is handed.
 
-It passes automatically when none of those forms appear. When one does, the PR
-body must contain a line of the exact form:
+It passes automatically when none of those forms appear. When one does, that
+migration must carry an **acknowledgement sidecar** beside it (MB.48), named
+for the migration it covers:
+
+```
+src/db/migrations/0002_solid_marauders.sql
+  → src/db/migrations/0002_solid_marauders.ack.md
+```
+
+containing, anywhere in the file, a line of the exact form:
 
 ```
 Destructive DDL acknowledged: <reason>
@@ -1059,15 +1068,55 @@ comment for the regex and the reasoning. There's no such line format
 elsewhere in the repo to stay consistent with; this is the one place it's
 defined, so `claude-docs/ci.md` and the script both point back here.
 
+**It used to live in the PR body, and that was wrong twice over.** A PR body is
+visible from one branch base and gone on merge, so a release PR — which
+`resolveDefaultBase` sends at `origin/main`, rescanning every migration since
+the last release — sees none of the acknowledgements that let those migrations
+land; release 0.2.0's PR failed this check for exactly that reason and was
+merged past it. And one line in a body blessed **every** finding in the diff,
+whatever file it was in, so a release carrying an acknowledged `0017` and an
+unacknowledged `0002` would have passed on `0017`'s line alone. The sidecar
+fixes both: it travels with the file, and it covers only the file beside it.
+The PR-body path is retired rather than OR-ed with the sidecar — an `OR` would
+keep the uncorrelated hole open — so the check now reads nothing from GitHub
+at all, which is what lets `make act-check CHECK=destructive-ddl` prove the
+scan rather than the wiring.
+
+A `.md` sidecar rather than a comment inside the `.sql`: the regex anchors at
+the start of a line, so Markdown matches it unchanged where
+`-- Destructive DDL acknowledged: …` would not. And every file list here is
+scoped to `*.sql`, so a sidecar is never itself scanned.
+
 **Locally, `npm run check:destructive-ddl` scans what this branch adds** —
 every migration new or changed against its Gitflow base (`origin/staging`, or
 `origin/main` for a `hotfix/*` or `release/*` branch), including one
 `db:generate` has just written and not yet committed. `--base <ref>` picks
 another base. `--all` scans every committed migration instead, which is an
-audit rather than a gate: it stays red on `0002_solid_marauders.sql`, whose
-`DROP CONSTRAINT` and two `NOT NULL` columns were acknowledged when they
-landed. Before MB.37 the bare command _was_ that full scan, so it was
-permanently red and told you nothing about your own branch.
+audit rather than a gate — and since MB.48 it is a **usable** one: both
+migrations carrying destructive DDL ship their sidecars, so `--all` is green
+and goes red on a real omission. It was permanently red before, first because
+the bare command _was_ that full scan (fixed in MB.37) and then because the
+acknowledgements it needed only ever existed in PR bodies.
+
+Two migrations carry findings today, and each has its sidecar:
+
+| Migration                           | Findings                                                                                           |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `0002_solid_marauders.sql`          | `DROP CONSTRAINT users_email_unique`, and `created_by` / `updated_by` added `NOT NULL`             |
+| `0017_custom-spell-ingredients.sql` | the `(spell_id, ingredient_id)` primary key and the `(spell_id, layer_order)` unique index dropped |
+
+**`0002`'s sidecar was written retroactively, and says so.** This document
+previously claimed its `DROP CONSTRAINT` and two `NOT NULL` columns "were
+acknowledged when they landed". That was false: [PR #73][pr73] carries no
+acknowledgement line and never did, because it merged during the window MB.32
+opened and MB.37 closed, when `destructive-ddl` had been dropped from
+`pr-gate.yml` and ran on nothing. The migration was never asked for a line, so
+the reasoning in its sidecar is reconstructed from the migration and the schema
+rather than recovered. `0017`'s ports [PR #126][pr126]'s wording verbatim,
+which was correct and argued at the time.
+
+[pr73]: https://github.com/Aurora-Arctic/Sorrel-and-Salt/pull/73
+[pr126]: https://github.com/Aurora-Arctic/Sorrel-and-Salt/pull/126
 
 ## Audit columns and `applyAudit` (M1.15, FKs restored MB.5, split MB.34)
 
