@@ -67,8 +67,9 @@ export default defineConfig({
       // MB.42's own PR. Every caller reaches the action at
       // `checkout-to-app@main`, so the fix is live only once it is on `main`,
       // which a merge to `staging` does not do; until then CI still sees the
-      // leftovers and still needs these. Once it is live they match nothing,
-      // cost nothing, and can go in a PR that can watch the number hold.
+      // leftovers and still needs these. MB.44 is the follow-up: it cuts that
+      // release, then deletes these two and this paragraph with them. If the
+      // number moves when they go, they were not dead — see that task.
       exclude: [
         'src/**/*.test.{ts,tsx}',
         'src/test/**',
