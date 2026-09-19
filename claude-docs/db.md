@@ -85,6 +85,26 @@ output or CI behaviour changes when it's unset. Full setup:
   `__drizzle_migrations` table it creates on first run. That table is what
   makes re-running idempotent: a migration already recorded is skipped, not
   reapplied.
+- **A failed migration names its cause, since MB.49.** `drizzle-kit migrate`
+  catches whatever the driver throws and exits 1 without printing it, so a
+  failure against staging once read in full:
+
+  ```
+  Using 'postgres' driver for database querying
+  [⣟] applying migrations...
+  ##[error]Process completed with exit code 1.
+  ```
+
+  An unreachable host, a wrong password, an `sslmode` mismatch and a
+  `channel_binding` parameter all produce that byte-identical output — the
+  shape carries no information at all. `migrate.yml` therefore runs
+  `scripts/probe-database.ts` first, which opens the connection itself and
+  prints the driver's error code and message (`ECONNREFUSED`, `ENOTFOUND`,
+  `28P01`, `3D000`, `42704`) before drizzle-kit can swallow it. Locally the
+  same script is the fastest way to tell a bad URL from a stopped container:
+  `node scripts/probe-database.ts --file <a dotenv file holding DATABASE_URL>`.
+  `claude-docs/ci.md` carries the CI wiring.
+
 - **`0000_enable-extensions.sql`** runs `CREATE EXTENSION IF NOT EXISTS pg_trgm`
   — the only extension DESIGN.md §5 names (the fuzzy duplicate-name
   warning's `gin_trgm_ops` index). `IF NOT EXISTS` also makes it a no-op

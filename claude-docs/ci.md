@@ -606,11 +606,18 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
 
 - **Both jobs assert the pulled environment before using it** (MB.46), via
   `scripts/assert-pulled-env.ts`. It does two things. It **asserts** the keys
-  that job needs — `migrate` needs `DATABASE_URL`, `deploy` needs that and
-  `BETTER_AUTH_SECRET` — failing with a named cause (missing · empty ·
-  placeholder · not a postgres URL · scheme without `user@host/database` ·
-  surviving quotes or whitespace) rather than letting the value reach a
-  consumer that cannot describe it. And it **reports** every key the pull
+  that job needs, failing with a named cause (missing · empty · placeholder ·
+  not a postgres URL · scheme without `user@host/database` · surviving quotes
+  or whitespace · a libpq client-only parameter, MB.49) rather than letting the
+  value reach a consumer that cannot describe it. `deploy` requires
+  `DATABASE_URL` and `BETTER_AUTH_SECRET`, both of which the override step
+  above has just written into the file. `migrate` requires **nothing** and runs
+  report-only: since MB.47 its `DATABASE_URL` no longer comes from this file on
+  either long-lived target, so requiring it here would fail on a value nothing
+  reads. What that job validates instead is the **resolved** URL, one step
+  later — see the probe below.
+
+  And it **reports** every key the pull
   returned, with a classification and its length, never a value; that report
   prints even when the run is about to fail.
 
@@ -632,6 +639,59 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   `auth.ts` throws on an unset secret, and `connection.ts` calls `postgres()`
   at module scope, which parses its URL eagerly. A placeholder is therefore not
   harmless to a build that issues no query.
+
+- **Both jobs then open the connection, before anything consumes it** (MB.49),
+  via `scripts/probe-database.ts`. It reads a connection string from a file,
+  connects, and runs `select 1`; on success it prints the role, database and
+  server version that answered, and on failure the driver's own error code and
+  message — scrubbed of the credentials, never the URL.
+
+  It exists because `drizzle-kit migrate` catches whatever postgres.js throws
+  and exits 1 without printing it. A failed staging migration said exactly
+  this, and nothing else:
+
+  ```
+  Using 'postgres' driver for database querying
+  [⣟] applying migrations...
+  ##[error]Process completed with exit code 1.
+  ```
+
+  Reproduced locally, an unreachable host, a wrong password, an `sslmode`
+  mismatch and a `channel_binding` parameter **all produce that byte-identical
+  output**. Four different fixes, one indistinguishable failure — which is why
+  MB.45, MB.46 and MB.47 each ended on a hypothesis rather than a diagnosis.
+  `ECONNREFUSED`, `ENOTFOUND`, `28P01`, `3D000` and `42704` now each name
+  themselves, and the codes worth a sentence carry one.
+
+  **It is fatal in `migrate` and advisory in `deploy`, deliberately.** A
+  migration cannot proceed without a connection, so a probe that warned there
+  would leave the job as silent as it was. A build genuinely does not need the
+  database — it parses the URL without issuing a query — so failing a deploy on
+  a transient blip would trade one outage for another; what the warning buys is
+  that a deploy about to serve 500s says so at build time.
+  `tests/guards/database-probe.test.ts` asserts the two apart, and sweeps the
+  workflow directory so a job that migrates or builds without probing first
+  fails in the diff that adds it.
+
+  **In `migrate` it reads the resolved URL, not the pulled file**, and that is
+  the point rather than a detail. MB.46 validated what `vercel pull` wrote;
+  MB.47 then took `DATABASE_URL` from a GitHub secret instead and handed it
+  straight to drizzle-kit, reopening the gap one task after it closed. So
+  `Resolve DATABASE_URL` now writes whichever value won to
+  `$RUNNER_TEMP/resolved.env` under `umask 077`, and the probe reads that —
+  secret or pulled `POSTGRES_URL` alike. The value reaches the script as a file
+  path for the same reason MB.46's does: argv is visible to `ps` and echoed by
+  `set -x`, and a step-level `env:` is printed in that step's own env block.
+
+  **`channel_binding` has its own rule**, in the validator rather than the
+  probe, so it fails before a connection is even attempted. postgres.js
+  consumes `sslmode` and the keys in its own `defaults`, then forwards every
+  remaining query parameter to the server as a **startup parameter** — so a
+  libpq _client-side_ option reaches a server that has never heard of it and
+  gets `42704 unrecognized configuration parameter "channel_binding"`. Neon's
+  console puts it in the connection strings it hands you by default, which is
+  why it is worth a named rule rather than a note; `sslmode=require` on its own
+  is fine and is what actually requests TLS.
 
 - **The reference seeds (M4.3, M4.3a) are one step inside `migrate.yml`, not a
   workflow of their own.** After the migrations, `npm run db:seed:categories`
