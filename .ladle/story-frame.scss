@@ -1,15 +1,10 @@
-// The app-surface frame the decorator (.ladle/components.tsx) wraps every story
-// in — see claude-docs/workshop.md, ".ladle/". Colour and motion come only from
-// the shared tokens and mixins; the one plain length is the padding, which is
-// workshop chrome rather than component design (there is no spacing scale to
-// name).
+// The app-surface frame the decorator wraps every story in; the padding is the
+// one plain length. claude-docs/workshop.md, ".ladle/".
 
 @use '../src/scss/variables' as *;
 @use '../src/scss/mixins' as *;
 
-// Ladle renders a non-iframed story straight into .ladle-main, which carries a
-// 3em gutter. The frame supplies its own, so zero Ladle's and let the app
-// surface reach every edge of the story area.
+// Ladle gives .ladle-main a 3em gutter; the frame supplies its own.
 .ladle-main {
   padding: 0;
 }
@@ -17,15 +12,12 @@
 .ladle-story-frame {
   box-sizing: border-box;
   min-height: 100%;
-  // Restores the gutter the cancelled .ladle-main padding gave the story.
+  // The gutter .ladle-main gave up.
   padding: 3rem;
-  // Any non-`none` transform makes this the containing block for a descendant
-  // `position: fixed`, so ThemeToggle pins to this frame's corner rather than
-  // the viewport, where it would float over Ladle's chrome.
+  // Any transform makes this the containing block for `position: fixed`, so
+  // ThemeToggle pins to the frame rather than the viewport.
   transform: translateZ(0);
-  // The frame stands in for the app viewport, so it clips like one: a
-  // corner-pinned component is trimmed to the frame instead of adding a page
-  // scrollbar.
+  // Clips like the viewport it stands in for.
   overflow: hidden;
   background-color: $surface-page;
   color: $text-primary;
@@ -38,11 +30,8 @@
   }
 }
 
-// Half of the `reducedMotion` story pin; components.tsx's
-// `useSimulatedReducedMotion` is the other. A `!important` blanket rather than
-// the app's `reduced-motion` mixin, which only reaches call sites that opted
-// in: the real media feature turns off every transition on the page, not just
-// the component a story happens to render.
+// The CSS half of the `reducedMotion` story pin (components.tsx is the other).
+// A `!important` blanket, as the real media feature turns off every transition.
 .ladle-story-frame--reduced-motion,
 .ladle-story-frame--reduced-motion * {
   transition: none !important;

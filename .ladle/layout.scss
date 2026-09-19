@@ -1,6 +1,4 @@
-// Document structure in the workshop — same reasoning as ./typography.scss:
-// `layout-base`'s bare `section` selector, pulled in globally, would land on
-// Ladle's own chrome as much as on a story.
+// layout-base scoped to the frame, so its bare `section` rule stays off Ladle's chrome.
 
 @use '../src/scss/layout' as *;
 

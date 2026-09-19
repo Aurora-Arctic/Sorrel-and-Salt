@@ -1,11 +1,7 @@
-// Workshop surface — the token layer of src/app/globals.scss, and only that.
-// The workshop cannot import globals.scss whole: its `@use './typography'`
-// would drop document-wide element rules onto Ladle's own `<ul>`/`<li>`/`<a>`
-// chrome. Those rules reach a story through ./typography.scss instead, scoped
-// to the frame.
-//
-// The three theme blocks below are a verbatim copy and must stay in step with
-// globals.scss. They must not grow layout rules of their own.
+// The token layer of src/app/globals.scss, and only that: importing it whole
+// would drop _typography.scss's element rules onto Ladle's own chrome. The
+// three theme blocks are a verbatim copy, kept in step with globals.scss, and
+// must not grow layout rules of their own.
 
 @use '../src/scss/variables' as *;
 @use '../src/scss/mixins' as *;

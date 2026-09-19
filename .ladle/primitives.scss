@@ -1,6 +1,4 @@
-// UI primitives in the workshop — the same `primitives-base` mixin the app's
-// globals.scss uses, scoped to the story frame so a story gets identical
-// classes to a page.
+// primitives-base scoped to the frame, so a story gets the same classes a page does.
 
 @use '../src/scss/primitives' as *;
 

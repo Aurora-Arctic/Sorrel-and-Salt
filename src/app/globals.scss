@@ -4,17 +4,11 @@
 @use '../scss/layout' as *;
 @use '../scss/primitives' as *;
 
-// The single global stylesheet, imported once by the root layout. Everything
-// else is componentized Sass (§9). This file exists because the theme token
-// assignments and the three `*-base` mixins have to be emitted exactly once —
-// each component's index.scss is its own compilation unit, so a shared partial
-// emitting them would duplicate them into every compiled stylesheet. Nothing
-// component-specific belongs here.
-//
-// Three theme states, not two, and the :not([data-theme='dark']) guard is what
-// lets an explicit dark choice beat a light system preference. Both light
-// blocks include the same mixin so the two spellings cannot drift. The table:
-// claude-docs/styling.md, "Theme resolution".
+// The single global stylesheet, imported once by the root layout: the theme
+// tokens and the three `*-base` mixins must be emitted exactly once, and every
+// component's index.scss is its own compilation unit. Three theme states, not
+// two; the :not([data-theme='dark']) guard lets an explicit dark beat a light
+// system preference. claude-docs/styling.md, "Theme resolution".
 :root {
   @include theme-dark;
 }

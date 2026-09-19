@@ -1,21 +1,14 @@
-// Ladle — the component workshop. Ladle over Storybook and Histoire because it
-// is Vite + React only, so it never couples the workshop to a Next.js major.
-// claude-docs/workshop.md is the summary; the Vite half of the config — the
-// Sass wiring that keeps `@use` resolving the way `next dev` resolves it —
-// lives in .ladle/vite.config.ts.
+// Ladle — the component workshop; the Vite half (the Sass wiring) is in
+// ./vite.config.ts. See claude-docs/workshop.md, ".ladle/".
 
 /** @type {import('@ladle/react').UserConfig} */
 export default {
-  // One story file per component directory, beside index.tsx — the shape the
-  // workshop guard is written against. The second glob is for workshop-only
-  // pages the app never imports (currently just the design-language
-  // reference), and is deliberately out of the guard's scope.
+  // One story file per component directory, the shape the workshop guard checks;
+  // the second glob is workshop-only pages the guard deliberately ignores.
   stories: ['src/components/**/index.stories.tsx', '.ladle/*.stories.tsx'],
-  // Forces `Default` to the top of every component's group and leaves the rest
-  // as Ladle sorted them. A global-config hook only — there is no per-story-file
-  // equivalent — taking the fully-sorted list of story ids
-  // (`themetoggle--default`, `forms--input--default`, …). Must stay a
-  // self-contained function: Ladle serializes it with `.toString()`.
+  // `Default` first in every group, the rest as Ladle sorted them. A global hook
+  // only, over the fully-sorted ids; must stay self-contained because Ladle
+  // serializes it with `.toString()`.
   storyOrder: (stories) => {
     const groupOf = (id) => id.split('--').slice(0, -1).join('--');
     const isDefault = (id) => id.split('--').pop() === 'default';
@@ -34,19 +27,12 @@ export default {
   port: 61000,
   previewPort: 61001,
   outDir: 'build',
-  // Pinned so the HMR socket lands on a known port rather than a random free
-  // one: reachable over the LAN, and unmoved between restarts. Editing a file
-  // in this folder still needs the dev server restarted — Vite cannot hot-swap
-  // them.
+  // Pinned so the HMR socket is reachable over the LAN and unmoved between restarts.
   hmrPort: 61002,
   addons: {
-    // The toolbar's theme control; the decorator (.ladle/components.tsx) reads
-    // its state and applies it through ThemeToggle's own helper.
-    //
-    // `defaultState` must stay `'dark'` — it matches the app's dark-first
-    // default in globals.scss, and tests/guards/workshop-guards.test.ts pins
-    // it. It was briefly 'auto'; 'dark' is the confirmed intent
-    // (claude-docs/workshop.md, ".ladle/").
+    // The toolbar's theme control, read by the decorator (./components.tsx).
+    // `defaultState` stays `'dark'` — the app's dark-first default — and
+    // tests/guards/workshop-guards.test.ts pins it.
     theme: {
       enabled: true,
       defaultState: 'dark',

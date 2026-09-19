@@ -1,19 +1,14 @@
-// Document prose in the workshop: the same `typography-base` mixin the app's
-// globals.scss uses, hung off .ladle-story-frame (the wrapper
-// .ladle/components.tsx puts around every story) instead of `body`. Scoping is
-// the point — unscoped, its bare element selectors land on Ladle's own sidebar
-// and toolbar chrome as much as on a story.
+// typography-base hung off .ladle-story-frame rather than `body`, so its bare
+// element selectors stay off Ladle's own chrome.
 
 @use '../src/scss/variables' as *;
 @use '../src/scss/mixins' as *;
 @use '../src/scss/typography' as *;
 
-// src/app/fonts.ts defines these on <html> via next/font, which the workshop
-// has no equivalent of; point them at the families .ladle/head.html loads by
-// name. Without this every element renders in Ladle's default font: a bare
-// `var(--font-body)` resolving to nothing takes the whole `font-family`
-// declaration down with it and does NOT fall through to the quoted families
-// behind it. claude-docs/styling.md, "Known issue".
+// next/font defines these on <html>; the workshop has no equivalent, so point
+// them at the families head.html loads. Without this a bare `var(--font-body)`
+// resolving to nothing takes the whole `font-family` declaration down and does
+// NOT fall through to the named families. claude-docs/styling.md, "Known issue".
 :root {
   --font-body: 'Lexend';
   --font-display: 'Cormorant Unicase';

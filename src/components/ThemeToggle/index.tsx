@@ -3,28 +3,22 @@
 import { type ReactElement, useEffect, useRef } from 'react';
 import './index.scss';
 
-// Keep in sync with the pre-paint init script in src/app/layout.tsx, which
-// re-implements the read half inline because it must run before any module
-// loads.
+// The pre-paint script in src/app/layout.tsx reads this key inline; keep in sync.
 export const STORAGE_KEY = 'theme';
 
-// The one place a theme gets applied: this component and the Ladle decorator
-// both call it rather than each re-implementing the attribute + storage write.
+// The one theme write; the Ladle decorator calls it too.
 export const applyTheme = (theme: 'light' | 'dark'): void => {
   document.documentElement.setAttribute('data-theme', theme);
   try {
     window.localStorage.setItem(STORAGE_KEY, theme);
   } catch {
-    // localStorage unavailable (private browsing, disabled storage) — theme
-    // still applies for this page view, just won't persist across reloads
+    // storage blocked — the theme applies for this page view and does not persist
   }
 };
 
-// Mirrors globals.scss's three-state cascade exactly. The attribute alone
-// cannot answer "what is showing right now": only a stored choice ever sets it,
-// so on a light system with nothing stored it is absent while the page is
-// light. Asking for `light` rather than `dark` is deliberate — "no preference"
-// has to resolve to dark, matching the `:root` default.
+// Mirrors globals.scss's three-state cascade: only a stored choice sets the
+// attribute, so on a light system with nothing stored it is absent while the
+// page is light. Asks for `light` so "no preference" resolves to dark.
 // claude-docs/components/theme-toggle.md, "Shared contract".
 const resolveCurrentTheme = (): 'light' | 'dark' => {
   const stated = document.documentElement.getAttribute('data-theme');
@@ -34,24 +28,19 @@ const resolveCurrentTheme = (): 'light' | 'dark' => {
   return window.matchMedia?.('(prefers-color-scheme: light)').matches === true ? 'light' : 'dark';
 };
 
-// The moon starts resting and the sun parked off to the side (--pre-enter),
-// matching the dark-by-default markup; index.scss corrects a light start before
-// paint.
+// Dark-by-default markup: the moon rests, the sun is parked (--pre-enter).
 const OUT_CLASS = 'theme-toggle__facet--out';
 const PRE_ENTER_CLASS = 'theme-toggle__facet--pre-enter';
 
-// Moves a finished facet from --out back to --pre-enter, instantly (that class
-// carries its own zero-duration transition), so its next entrance starts from
-// the parked side rather than retracing back through the top it exited by.
+// --out back to --pre-enter, instantly (that class zeroes its own transition),
+// so the next entrance starts from the parked side rather than retracing.
 const parkFacet = (facet: Element): void => {
   facet.classList.remove(OUT_CLASS);
   facet.classList.add(PRE_ENTER_CLASS);
 };
 
-// index.scss zeroes this component's transitions under reduced motion, so no
-// `transitionend` fires and the exit has to be parked by hand. Read live at
-// click time, not at mount, so changing the OS setting mid-session takes effect
-// without a reload.
+// Under reduced motion index.scss zeroes the transitions, so no `transitionend`
+// fires. Read at click time, so an OS change mid-session takes effect.
 const prefersReducedMotion = (): boolean =>
   window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
@@ -83,10 +72,8 @@ const ThemeToggle = (): ReactElement => {
     };
   }, []);
 
-  // index.scss already settles the *visible* facets before paint, so by the
-  // time this runs the classes below only match what is showing. It still has
-  // to run: a later click reads these real classes, not the CSS override, to
-  // know which facet is primed to animate in.
+  // index.scss settles the visible facets before paint; this keeps the real
+  // class list correct, which is what the next click reads.
   useEffect(() => {
     const isLight = resolveCurrentTheme() === 'light';
     buttonRef.current?.setAttribute('aria-pressed', String(isLight));
@@ -100,16 +87,13 @@ const ThemeToggle = (): ReactElement => {
     const isLight = resolveCurrentTheme() === 'light';
     const outgoingFacet = isLight ? lightFacetRef.current : darkFacetRef.current;
     const enteringFacet = isLight ? darkFacetRef.current : lightFacetRef.current;
-    // Clear both classes rather than toggling the one each side is expected to
-    // hold: a click before the previous transitionend can leave a facet still
-    // --out from an interrupted exit, and it would then stay parked out of view
-    // instead of coming back to rest.
+    // Clear both rather than toggling: a click before the previous transitionend
+    // can leave a facet still --out, which would then stay parked out of view.
     outgoingFacet?.classList.remove(PRE_ENTER_CLASS);
     outgoingFacet?.classList.add(OUT_CLASS);
     enteringFacet?.classList.remove(OUT_CLASS, PRE_ENTER_CLASS);
-    // No `transitionend` is coming, so the outgoing facet would stay holding
-    // --out — rotated askew and still opaque over the one that just entered.
-    // Parking it now is the jump-cut reduced motion asks for anyway.
+    // No `transitionend` is coming, so park the outgoing facet now — the
+    // jump-cut reduced motion asks for anyway.
     if (outgoingFacet && prefersReducedMotion()) {
       parkFacet(outgoingFacet);
     }
@@ -127,12 +111,9 @@ const ThemeToggle = (): ReactElement => {
       onClick={handleToggle}
     >
       <span className="theme-toggle__facets">
-        {/*
-          Celtic knotwork facets — a woven crescent for dark, an interlaced
-          solar disc for light. Filled artwork, so no stroke; the fill is fixed
-          per facet in index.scss and never themed.
-          See claude-docs/components/theme-toggle.md, "Icons".
-        */}
+        {/* Celtic knotwork: a woven crescent for dark, an interlaced solar disc
+            for light. Filled, so no stroke; the fill is fixed per facet in
+            index.scss. claude-docs/components/theme-toggle.md, "Icons". */}
         <svg
           ref={darkFacetRef}
           className="theme-toggle__facet theme-toggle__facet--dark"

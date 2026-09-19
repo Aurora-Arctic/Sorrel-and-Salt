@@ -1,10 +1,7 @@
 #!/usr/bin/env node
-// Makes `ladle build` actually fail when the build fails: @ladle/react 5.1.1's
-// CLI always exits 0, so this runs it, mirrors its output, and fails on Vite's
-// own failure marker. A workaround for an upstream gap, deletable once this
-// repo bumps past a version that fixes the exit code — the marker never appears
-// on a clean run. Why neither tidier fix is available:
-// claude-docs/workshop.md, "The build gate".
+// `ladle build` always exits 0 (@ladle/react 5.1.1), so this mirrors its output
+// and fails on Vite's own failure marker, which never appears on a clean run.
+// Deletable once upstream fixes it. See claude-docs/workshop.md, "The build gate".
 //
 // Usage: npm run workshop:build
 

@@ -2,14 +2,11 @@
 @use './variables' as *;
 @use './mixins' as *;
 
-// The class layer over _mixins.scss: a component applies `.chip--mind` rather
-// than re-deriving chip(), plus the shapes the mixins do not cover (panel,
-// button, modal actions, specimen layout). Emitted once via this mixin, the
-// same way typography-base and layout-base are — `body` in the app,
-// `.ladle-story-frame` in the workshop.
+// The class layer over _mixins.scss — `.chip--mind` rather than re-deriving
+// chip() — plus the shapes the mixins do not cover. Emitted once, like
+// typography-base: `body` in the app, `.ladle-story-frame` in the workshop.
 @mixin primitives-base {
-  // Not modal-surface(): that carries a shadow and a bigger radius meant for a
-  // floating panel, which would read as "this is a dialog".
+  // Not modal-surface(): its shadow and radius would read as a dialog.
   .panel {
     background-color: $surface-card;
     border-radius: 0.25rem;
@@ -43,9 +40,8 @@
     }
   }
 
-  // modal-surface() excludes width/padding/position — the component owning a
-  // real modal decides those. This adds only the padding and heading trim
-  // every instance of the shape wants.
+  // modal-surface() leaves width/padding/position to the owner; this adds only
+  // the padding and heading trim every instance wants.
   .modal {
     @include modal-surface;
     padding: 1.5rem;
@@ -96,8 +92,7 @@
     }
   }
 
-  // Chips and badges laid out the way an IngredientCard will need. Composes
-  // with `.modal` for the raised surface; adds only the internal layout.
+  // Chips and badges laid out as an IngredientCard will need; composes with `.modal`.
   .specimen {
     display: flex;
     flex-direction: column;
@@ -107,8 +102,7 @@
   .specimen__top {
     display: flex;
     justify-content: space-between;
-    // So the badge cluster hugs its own content instead of stretching to the
-    // height of the name + binomial beside it.
+    // The badge cluster hugs its own content rather than stretching.
     align-items: flex-start;
     gap: 1rem;
 

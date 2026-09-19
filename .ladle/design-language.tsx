@@ -1,17 +1,12 @@
 import { type ReactElement, type ReactNode } from 'react';
 import './design-language.scss';
 
-// The design-language reference: a single workshop page rendering every shared
-// primitive at shipping size, so a reviewer sees the whole vocabulary in one
-// place and in either theme. It lives in .ladle/ because the app never imports
-// it. Nothing here re-types a value — every colour, type rule, chip, badge,
-// panel and ring comes from the app's own .scss, scoped into the workshop by
-// the sheets in this folder. "The design will change" (CLAUDE.md): this is a
-// reference for the tokens and mixins, not a candidate layout.
+// Every shared primitive at shipping size, in either theme, with no value
+// re-typed: all of it comes from the app's own .scss. A reference for the
+// tokens and mixins, not a candidate layout.
 
-// §6's eight groups, slug → the name the category seed uses. The hue behind
-// each is derived rather than picked. See
-// claude-docs/styling.md, "Category-group colours".
+// §6's eight groups, slug → seed name; the hue behind each is derived.
+// See claude-docs/styling.md, "Category-group colours".
 const CATEGORY_GROUPS: readonly (readonly [slug: string, name: string])[] = [
   ['protection', 'Protection & defense'],
   ['cleansing', 'Cleansing & release'],
@@ -23,8 +18,7 @@ const CATEGORY_GROUPS: readonly (readonly [slug: string, name: string])[] = [
   ['practice', 'Practice & place'],
 ];
 
-// The raw palette. Hex is hardcoded on purpose — these are compile-time Sass
-// constants, not `var()`s, so they do not move with the theme.
+// Compile-time Sass constants, so these do not move with the theme.
 const RAW_PALETTE: readonly (readonly [name: string, hex: string, purpose: string])[] = [
   ['$soot', '#14120e', 'dark-theme page ground — a warm near-black, not neutral'],
   ['$soot-raised', '#1f1c16', 'dark-theme card / raised surface'],
@@ -36,8 +30,7 @@ const RAW_PALETTE: readonly (readonly [name: string, hex: string, purpose: strin
   ['$wax', '#8c3b2e', 'the secondary hue; the safety badge is derived from it'],
 ];
 
-// The `var(--token)` layer components actually read, resolved per theme by the
-// theme mixins — so these swatches re-paint with the toolbar control.
+// The `var(--token)` layer, resolved per theme, so these re-paint with the toolbar.
 const RUNTIME_TOKENS: readonly (readonly [token: string, purpose: string])[] = [
   ['--surface-page', 'the page background — what a full-bleed view sits on'],
   ['--surface-card', 'a raised surface: cards, the modal panel, table headers'],
