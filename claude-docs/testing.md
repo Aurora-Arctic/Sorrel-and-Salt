@@ -15,6 +15,7 @@ tests/
   app/ components/ lib/ db/   # mirror the src/ path of the code under test
   guards/                     # the mechanical guards
   support/                    # the harness: as-user, db-setup, msw, paths
+  support/fixtures/           # makeIngredient / makeSpell / makeWorkspace
 ```
 
 Three consequences worth knowing before writing a test:
@@ -241,6 +242,110 @@ answers an unauthorized read with an empty list or an unauthorized write with a
 success. Both look like success to a caller, and only an assertion that
 demands a rejection tells them apart. A `NotFound` is held to the same
 standard: it does not satisfy a test written for a `Forbidden`.
+
+## Fixture factories (M1.25)
+
+**`tests/support/fixtures/`** is `makeIngredient`, `makeSpell` and
+`makeWorkspace` — plain objects with sensible defaults, so a test states the
+one thing it is about and the factory answers the rest:
+
+```ts
+makeIngredient({ categories: ['Protection'] });
+makeSpell({ layers: [{ ingredientId: mugwort }] });
+makeWorkspace({ name: 'Ninebark Coven' });
+```
+
+**They are objects, not inserts.** Nothing here opens a connection, which is
+what lets the `unit` project test them with no Postgres in sight and leaves
+every caller to write its row the way it already does. Each fixture is typed
+against its table's own `$inferInsert` — the same idiom `src/db/seed`'s types
+use — so a column renamed in `src/db/schema/` is a compile error in every
+fixture that names it. The schema import is `import type`: a runtime import of
+the schema is a runtime import of drizzle-orm, and `tests/support/` is not
+among the paths allowed to make one (CLAUDE.md rule 4 / MB.33).
+
+### Overrides merge; arrays replace
+
+`mergeFixture` applies an override as a sentence about the default rather than
+as a replacement for it — a nested object merges key by key, and a field the
+override does not mention keeps its default. Three decisions make that useful:
+
+- **An array replaces wholesale.** `makeIngredient({ categories: ['Protection'] })`
+  is filed under protection and nothing else. Merging element by element would
+  leave the default's other entries behind and the test would be about
+  categories it never named.
+- **`undefined` says nothing; `null` says null.** `undefined` is what an absent
+  optional property reads as, so treating it as a value would let
+  `{ form: maybeForm }` erase a default whenever the caller's own variable
+  happened to be unset.
+- **Every call gets its own copy.** The defaults are cloned before anything is
+  written into them, so a test that pushes a category onto one fixture is not
+  editing the next test's — the hazard `asUser` returns a fresh session to
+  avoid.
+
+There is no `deepmerge` dependency: those three rules are the whole library,
+and the one that matters most is the one a general-purpose merge is least
+likely to agree with us about.
+
+### The fields that have to agree with each other
+
+This is what the factories are actually for. Several of §5's tables bind two
+columns together with a CHECK, and a factory that merged a partial override
+into its defaults would hand back a row Postgres refuses — failing a test for
+a reason it was never about.
+
+- **`makeIngredient` derives `canonicalName` from `nomenclature`.**
+  `ingredients_nomenclature_declares_canonical_name` is a biconditional, so
+  `{ nomenclature: 'none' }` drops the formal name and `{ nomenclature:
+'mineral' }` supplies one. Every one of §5's seven kinds has an answer.
+- **`makeSpell` derives a layer's shape from whether it names an ingredient.**
+  A layer points at an ingredient _or_ names one of its own
+  (`num_nonnulls(ingredient_id, name) = 1`, MB.40), with `form` allowed only
+  beside a name, so `{ ingredientId: … }` clears both. Defaulted layers take
+  distinct names, because `spell_ingredients_spell_id_custom_name_unique`
+  folds `Salt` onto `salt` within one jar; `layerOrder` is the position in the
+  array, 1-based, so the two cannot disagree.
+- **`makeWorkspace` derives the slug from the name**, through
+  `src/lib/slugify` — CLAUDE.md's slug rule, and a fixture is exactly where a
+  second spelling would get written down.
+
+**Derivation stops the moment the caller states the field**, including when
+they state it as `null`. That is how a test writes the row a constraint exists
+to reject: `makeIngredient({ nomenclature: 'none', canonicalName: 'Artemisia
+vulgaris' })` is the CHECK's own counterexample, and it has to stay writable.
+
+### `…Columns` for the raw-SQL tests
+
+The db tests talk to Postgres through `postgres` directly, so they insert by
+column name rather than by field. `ingredientColumns`, `spellColumns`,
+`spellLayerColumns` and `workspaceColumns` translate, dropping what belongs to
+another table — an ingredient's folk names and categories, a spell's
+categories and layers, a workspace's members.
+
+They carry **no audit columns**: the stamps come from the session and never
+from a fixture (CLAUDE.md rule 3), so a raw-SQL test spreads its own author
+beside them:
+
+```ts
+insert into ingredients ${sql({ ...ingredientColumns(makeIngredient(overrides)), created_by: AUTHOR, updated_by: AUTHOR })}
+```
+
+The camelCase→snake_case mapping is a string transform rather than a read of
+Drizzle's column metadata, which would be the obvious source of truth:
+`getTableColumns` is a runtime drizzle-orm import, and `tests/support/` may not
+make one.
+
+### Who uses them
+
+`tests/db/ingredients-schema.test.ts` and `tests/db/ingredients-indexes.test.ts`
+were carrying byte-identical copies of the same untyped `row()` helper, which
+is where a partial identity would have gone on quietly disagreeing between the
+two; both now build through `makeIngredient`. `tests/db/spells-schema.test.ts`
+records through `makeSpell` — dropping `status` from the insert, so the
+column's own default is still what "defaults a new spell to draft" observes —
+and `tests/db/updated-at-trigger.test.ts` writes its workspace through
+`makeWorkspace`, which is what took the hand-written `'hearth'` slug out of
+that file.
 
 ## E2E — Playwright (M1.11)
 
