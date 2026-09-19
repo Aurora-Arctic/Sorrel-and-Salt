@@ -3,7 +3,41 @@ import { seedDemo } from './demo';
 import { seedMinimal } from './minimal';
 import { seedStandard } from './standard';
 
-export type SeedScenario = 'minimal' | 'standard' | 'demo';
+/**
+ * The three scenarios, in the order they build on each other — `standard` is
+ * `minimal` plus a cast and a compendium, `demo` is `standard` plus a
+ * grimoire. Exported as the list rather than only as the union so
+ * `resolveScenario` can name the valid values in its error and a test can
+ * iterate them, instead of either restating them.
+ */
+export const SEED_SCENARIOS = ['minimal', 'standard', 'demo'] as const;
+
+export type SeedScenario = (typeof SEED_SCENARIOS)[number];
+
+/**
+ * A `SEED_SCENARIO` environment value turned into a scenario (M1.24). Both
+ * consumers of that variable go through this: `scripts/db-seed.ts` and, by way
+ * of it, the `db-init` compose service that seeds a clean volume on the first
+ * `make docker-up`.
+ *
+ * Unset or blank means `minimal` — the bare install, the safe default for a
+ * developer who never thought about scenarios. Anything else that is not a
+ * scenario **throws**: falling back would mean someone who asked for `demo`
+ * and mistyped it gets one admin and one user, and then debugs the app rather
+ * than the variable.
+ */
+export function resolveScenario(value: string | undefined): SeedScenario {
+  const name = value?.trim();
+  if (!name) return 'minimal';
+
+  const scenario = SEED_SCENARIOS.find((candidate) => candidate === name);
+  if (!scenario) {
+    throw new Error(
+      `Unknown seed scenario "${name}". SEED_SCENARIO must be one of: ${SEED_SCENARIOS.join(', ')}.`,
+    );
+  }
+  return scenario;
+}
 
 /**
  * What `drizzle(client)` actually returns. `PostgresJsDatabase` bare defaults

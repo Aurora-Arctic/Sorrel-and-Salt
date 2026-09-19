@@ -6,7 +6,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { MIGRATIONS_DIR } from '../../support/paths';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { MINIMAL_USER_ID } from '@/db/seed/minimal';
-import { seed } from '@/db/seed/index';
+import { SEED_SCENARIOS, resolveScenario, seed } from '@/db/seed/index';
 
 // M1.21 — the `minimal` scenario: one admin, one user, empty compendium.
 //
@@ -220,6 +220,46 @@ describe('seed(db, { scenario: "minimal" })', () => {
     expect(await countOf('users')).toBe(0);
     await seed(db, { scenario: 'minimal' });
     expect(await countOf('users')).toBe(2);
+  });
+});
+
+// M1.24 — the seed CLI and the Docker hook both pick a scenario from the
+// `SEED_SCENARIO` environment variable, and neither may pick one by guessing.
+// The parse lives beside the union it produces rather than in scripts/, so the
+// compose service and `npm run db:seed` cannot disagree about what "demo"
+// means, and so it is testable at all (scripts/ is outside tsconfig's
+// `include` and runs its work at import time).
+describe('resolveScenario', () => {
+  it('defaults to minimal when nothing is set', () => {
+    expect(resolveScenario(undefined)).toBe('minimal');
+  });
+
+  // Compose interpolates `${SEED_SCENARIO:-minimal}`, but a shell that exports
+  // the variable empty reaches this as '' rather than undefined — the same
+  // "unset" in every sense a caller means it.
+  it('defaults to minimal when the variable is set but blank', () => {
+    expect(resolveScenario('')).toBe('minimal');
+    expect(resolveScenario('   ')).toBe('minimal');
+  });
+
+  it.each([...SEED_SCENARIOS])('accepts %s, the name seed() takes', (scenario) => {
+    expect(resolveScenario(scenario)).toBe(scenario);
+  });
+
+  it('accepts a name with surrounding whitespace', () => {
+    expect(resolveScenario(' demo\n')).toBe('demo');
+  });
+
+  // The failure that matters: a typo must not quietly seed `minimal`. Someone
+  // asking for `demo` and getting one admin and one user would debug the app,
+  // not the variable.
+  it('refuses an unknown name rather than falling back, and names the ones that exist', () => {
+    expect(() => resolveScenario('Standard')).toThrow(/minimal, standard, demo/);
+    expect(() => resolveScenario('everything')).toThrow(/everything/);
+  });
+
+  it('lists exactly the scenarios seed() switches on', () => {
+    expect([...SEED_SCENARIOS]).toEqual(['minimal', 'standard', 'demo']);
   });
 });
 
