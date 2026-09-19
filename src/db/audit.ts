@@ -2,16 +2,11 @@ import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from './schema/users';
 
-// DESIGN.md §5: every audit id references users.id. audit.ts and
-// schema/users.ts import each other — users.ts spreads auditColumns, and
-// auditColumns points back at users.id, including for users' own rows
-// (users.created_by -> users.id). Drizzle's `() => users.id` thunk defers
-// evaluation until the FK is actually built (migration generation, not
-// module load), so the runtime cycle resolves fine; TypeScript still needs
-// the explicit `AnyPgColumn` return annotation below or it reports "audit.ts
-// circularly references itself", because it can't otherwise infer the
-// thunk's return type without first fully resolving users.ts, which is
-// still resolving audit.ts.
+// Every audit id references users.id, `users`' own rows included, so this
+// module and schema/users.ts import each other: the thunk defers the runtime
+// cycle and the explicit `AnyPgColumn` stops TypeScript reporting "audit.ts
+// circularly references itself". The cycle also constrains import order in
+// seed modules (claude-docs/db.md, "The seed module").
 export const auditStampColumns = {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   createdBy: uuid('created_by')
@@ -23,11 +18,8 @@ export const auditStampColumns = {
     .references((): AnyPgColumn => users.id),
 };
 
-// MB.34: the six-column set is the four stamps plus the two delete columns,
-// defined here once rather than listed twice — see DESIGN.md §5 for which
-// tables take which, and CLAUDE.md rules 3 and 4 for why the three join tables
-// are the exception. `created_by` on a join row still answers "who added this
-// ingredient to this spell"; only the tombstone goes.
+// Defined as the four stamps plus two, so the six-column set cannot drift.
+// Which tables take which: claude-docs/db.md, "Hard delete on the three join tables".
 export const auditColumns = {
   ...auditStampColumns,
   deletedAt: timestamp('deleted_at'),
@@ -69,9 +61,8 @@ function stripAuditFields<T extends object>(payload: T): WithoutAuditFields<T> {
 }
 
 /**
- * Stamps audit columns for one write, ignoring any `*_by`/`*_at` audit
- * fields the caller's payload might carry — those always come from the
- * session, never the request body (CLAUDE.md rule 3).
+ * Stamps audit columns for one write. Any audit fields in the payload are
+ * dropped: they come from the session, never the request body (CLAUDE.md rule 3).
  */
 export function applyAudit<T extends object>(
   operation: 'insert',

@@ -1,11 +1,4 @@
-// UI primitives in the workshop — same reasoning as ./typography.scss and
-// ./layout.scss: `primitives-base` emits classes (`.panel`, `.badge--*`,
-// `.chip--*`, `.modal`, `.btn`, `.specimen*`, …), scoped to the story frame so
-// a story gets identical classes to a page.
-//
-// Same `primitives-base` mixin the app's globals.scss uses; the only
-// difference is the selector it hangs off. .ladle-story-frame is the wrapper
-// .ladle/components.tsx puts around every story.
+// primitives-base scoped to the frame, so a story gets the same classes a page does.
 
 @use '../src/scss/primitives' as *;
 

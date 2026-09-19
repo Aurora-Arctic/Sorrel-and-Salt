@@ -3,31 +3,14 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
-// M1.20's mechanical guard over the repository itself. CLAUDE.md rule 4 —
-// soft-delete filtering happens in the repository, never at call sites — is a
-// code sweep, so per CLAUDE.md's sweep-task rule it lands as a mechanism (the
-// finder builder in src/db/repository.ts) plus this guard, and every later
-// finder adopts it in that finder's own PR.
+// The inside of the repository — claude-docs/db.md, "Soft-delete filtering":
+// every SELECT is built in the one private `selectFrom`, the exported surface
+// is pinned, and every exported finder but the escape hatch filters. A SELECT
+// built *outside* the repository is the linter's job, asserted by
+// lint-db-client-boundary.test.ts.
 //
-// What it makes impossible rather than merely absent:
-//
-//   1. A finder added to the repository that skips `notSoftDeleted(...)`.
-//   2. A SELECT built anywhere in the repository but its one private
-//      `selectFrom`, which is not exported.
-//   3. A second escape hatch appearing quietly — the exported surface is
-//      pinned, so widening it is an argument in the diff.
-//
-// The other half of the sweep — a SELECT built *outside* the repository — is
-// no longer checked here. MB.33 moved it to a `no-restricted-imports` rule
-// banning a runtime `drizzle-orm` import outside the database layer, asserted
-// by tests/guards/lint-db-client-boundary.test.ts: a query cannot be built without
-// that import, so the linter bans the capability, where reading every tracked
-// file as text only ever banned one spelling of it (`function findX()`, not
-// `const findX = () =>`).
-//
-// This is a source-shape test, so it reads the file rather than importing it:
-// importing the repository would instantiate a Postgres client, which the
-// `unit` project has no business doing (CLAUDE.md's Testing section).
+// Read as text rather than imported: importing the repository would
+// instantiate a Postgres client, which the `unit` project must not.
 
 const REPOSITORY = 'src/db/repository.ts';
 

@@ -1,11 +1,5 @@
 import { sql } from 'drizzle-orm';
-// `./bootstrap-admin` first, and load-bearing for the reason categories.ts and
-// minimal.ts both record: audit.ts and schema/users.ts import each other, and
-// whichever is entered first sees the other half-initialised. bootstrap-admin
-// imports schema/users, so putting it above schema/ingredient-forms — which
-// reaches audit.ts directly — is what makes `users` build its table with
-// `auditColumns` already defined. Reverse these two and every insert below
-// silently drops its created_by and fails NOT NULL.
+// `./bootstrap-admin` first, and load-bearing — see minimal.ts.
 import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
 import { ingredientFormGroups, ingredientForms } from '../schema/ingredient-forms';
 import { applyAudit } from '../audit';
@@ -13,42 +7,14 @@ import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import { slugify } from '../../lib/slugify';
 import type { SeedDatabase, SeedTransaction } from './index';
 
-// M4.3a — DESIGN.md §5's form vocabulary: six groups and every form §5's table
-// lists under them, seeded as a *starting* set an admin may edit afterwards.
-//
-// It is reference data rather than a scenario, exactly as M4.3's categories
-// are, and lands a task ahead of M1.22 for the same reason: M1.22's ingredients
-// carry `form` values, and those should come from a vocabulary that already
-// exists. It also ships to staging and production on its own — migrate.yml
-// seeds after migrating — so it assumes nothing about what else has run and
-// inserts the bootstrap admin itself.
-//
-// **The groups answer "what are you holding", not "how was it made".** Three
-// by source — Botanical, Animal, Mineral — for what still has the shape it
-// grew or was dug in; three by state for what has lost that shape: Fluid for
-// what flows, Curio for a made or found thing with a shape of its own, and
-// Substance for what has neither and takes the shape of its jar. A powdered
-// mineral is therefore a `powder`, and the ingredient's name says what it was.
-// There is no `Other`: a value that fits nothing is typed as free text and
-// surfaces on /admin/forms for curation, where a catch-all row would swallow
-// it (§5).
-//
-// **No slug is written down here.** Every one is `slugify(name)` — CLAUDE.md's
-// slug rule, the shared `src/lib/slugify.ts` — applied to the name beside it,
-// so there is no second list to keep in step and no way to seed a row whose
-// slug and name disagree. Every name here is a single ordinary word, so unlike
-// §6's ampersanded group names the derived slug is simply the lowercased name.
-//
-// **The descriptions are the point, not decoration.** §5 requires them
-// non-empty at the database level: a curated value that cannot explain itself
-// is no better than free text. Each one defines its own form and stops there —
-// no "if it is X it is really Y" tail, since that is the dropdown's job and
-// reads as an instruction rather than a description.
-//
-// Where a value could sit in two groups — wax is both a part of the bee and a
-// substance rendered from it, which is §5's own example — the seed takes one
-// sense, says which in the description, and leaves the second row for an admin
-// to add. Uniqueness is on the slug alone, so that second row is permitted.
+// DESIGN.md §5's form vocabulary: six groups and every form, a starting set an
+// admin may edit. Reference data, not a scenario — migrate.yml seeds it alone,
+// so it inserts the bootstrap admin itself. The groups answer "what are you
+// holding", not "how was it made": three by source (Botanical, Animal, Mineral),
+// three by state (Fluid, Curio, Substance), and no `Other` — an unfitting value
+// stays free text and surfaces for curation. No slug is written down; every one
+// is `slugify(name)`. Where a value fits two groups the seed takes one sense and
+// leaves the other row for an admin (claude-docs/db.md, "The form vocabulary seed").
 
 export interface SeedIngredientFormGroup {
   name: string;
@@ -63,10 +29,8 @@ export interface SeedIngredientForm {
 }
 
 /**
- * §5's six groups, in §5's table order — which is not the order they render
- * in. Groups list alphabetically by name (§5, M4.2a), so there is no order
- * column and nothing downstream reads the sequence below; it matches §5 so the
- * two can be compared by eye and by test.
+ * §5's six groups in §5's order, which nothing reads — groups list
+ * alphabetically — kept so the two compare by eye and by test.
  */
 export const FORM_GROUPS: SeedIngredientFormGroup[] = [
   { name: 'Botanical', description: 'Parts of a plant or fungus - grown in the dirt.' },
@@ -80,12 +44,7 @@ export const FORM_GROUPS: SeedIngredientFormGroup[] = [
   { name: 'Curio', description: 'Made or found objects.' },
 ];
 
-/**
- * Every form §5's table lists, in the table's order, grouped as the table
- * groups it. Order is documentation here too — nothing reads it — but keeping
- * it means forms.test.ts can compare the list against §5 row by row rather
- * than as a set.
- */
+/** Every form §5 lists, in §5's order, so forms.test.ts can compare row by row. */
 export const FORMS: SeedIngredientForm[] = [
   // Botanical
   {
@@ -389,22 +348,9 @@ export const FORMS: SeedIngredientForm[] = [
 ];
 
 /**
- * Seeds §5's form groups and then its forms. Safe to run repeatedly, against a
- * fresh database or a populated one.
- *
- * Idempotency keys on the slug and **ignores `deleted_at`**, exactly as
- * `seedCategories` does and for the same reason: the partial unique index stops
- * only a second *live* row, so a slug an admin had soft-deleted would be
- * re-inserted on the next deploy, and removing a form is a decision. Nothing
- * already present is updated either — a form an admin has renamed, regrouped or
- * rewritten the description of survives untouched.
- *
- * The writes go through the handle the caller gives, not through `withAudit`,
- * for the reason recorded in
- * claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md — and
- * what `withAudit` guarantees is kept rather than re-argued: one transaction,
- * the acting user published as `app.current_user_id` in the same parameterised
- * form, and every stamp produced by the shared `applyAudit`.
+ * Seeds §5's groups, then its forms. Idempotent on the slug and ignoring
+ * `deleted_at`, as `seedCategories` is; nothing present is updated. Writes go
+ * through the handle the caller gives, not `withAudit` — see minimal.ts.
  */
 export async function seedForms(db: SeedDatabase): Promise<void> {
   await db.transaction(async (tx) => {
@@ -415,17 +361,12 @@ export async function seedForms(db: SeedDatabase): Promise<void> {
 }
 
 /**
- * The same seed, inside a transaction the caller already opened — separate for
- * the reason `seedCategoryVocabulary` is: M1.22's `standard` scenario writes
- * this vocabulary alongside its own compendium, whose `form` values are drawn
- * from it, and applies the lot as one transaction.
- *
- * It assumes what `seedForms` does for itself: the GUC is published and the
- * bootstrap admin exists, since every row here is stamped as that user's.
+ * The same seed inside a transaction the caller opened, since `standard` writes
+ * this vocabulary alongside the compendium drawing on it. Assumes the GUC is
+ * published and the bootstrap admin exists.
  */
 export async function seedFormVocabulary(tx: SeedTransaction): Promise<void> {
-  // Groups first: `ingredient_forms.group_id` is a NOT NULL foreign key, so
-  // there is nothing for a form to point at until they exist.
+  // Groups first: `group_id` is a NOT NULL foreign key.
   await insertMissingGroups(tx);
   await insertMissingForms(tx, await groupIdByName(tx));
 }
@@ -473,10 +414,8 @@ async function insertMissingForms(
     missing.map(({ name, description, group }) => {
       const groupId = groupIds.get(group);
 
-      // Unreachable while FORMS and FORM_GROUPS agree, which the tests pin —
-      // but a form whose group an admin has since renamed or deleted would
-      // otherwise be inserted with `undefined` and fail on NOT NULL several
-      // rows later, naming the wrong row.
+      // Unreachable while FORMS and FORM_GROUPS agree; a silent `undefined`
+      // would fail NOT NULL later, naming the wrong row.
       if (groupId === undefined) {
         throw new Error(`Form "${name}" names group "${group}", which is not in the database.`);
       }

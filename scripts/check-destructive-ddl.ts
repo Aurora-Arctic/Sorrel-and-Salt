@@ -1,111 +1,25 @@
 #!/usr/bin/env node
-// M1.5 gate — flag destructive DDL in new/changed migrations unless the
-// migration carries an explicit acknowledgement sidecar beside it.
+// Flags destructive DDL in the migrations this branch adds or changes unless an
+// acknowledgement sidecar (`<migration>.ack.md`, carrying a line matching
+// ACK_LINE_RE) sits beside the migration. The policy, the five forms and the
+// sidecar are in claude-docs/db.md, "Expand/contract and the destructive-DDL
+// check"; keep ACK_LINE_RE and that doc in sync. It reads nothing from GitHub.
 //
-// CLAUDE.md's "Non-negotiable architecture rules" #10: migrations are
-// expand/contract and forward-only — no down migrations exist in this repo
-// (Drizzle doesn't generate them, and nothing here should either), so the
-// only rollback path is a deploy rollback to older app code running against
-// the *same* schema. That only works if every migration is backward
-// compatible with the previous release: adding a column is safe, but a DROP,
-// a RENAME, a column type change, or a new NOT NULL constraint can all break
-// code that hasn't been redeployed yet. See claude-docs/db.md's Migrations
-// section for the full policy and a worked rename example across two
-// releases.
+// The file list, in precedence order: DESTRUCTIVE_DDL_FILES (CI's changed-file
+// list, JSON or newline-separated; set-but-empty means "nothing changed" and
+// checks nothing), then positional filenames, then a diff against the
+// branch's Gitflow base. Whatever the source, only `*.sql` is scanned.
 //
-// This script does two things:
-//   1. Scans a set of migration .sql files for destructive DDL forms.
-//   2. Requires each file with findings to carry an acknowledgement sidecar.
-//
-// It never blocks a migration that contains no destructive DDL.
-//
-// THE SIDECAR (MB.48) — beside the migration, named for it:
-//
-//   src/db/migrations/0002_solid_marauders.sql
-//     -> src/db/migrations/0002_solid_marauders.ack.md
-//
-// containing, anywhere in the file and case-insensitively, a line:
-//
-//   Destructive DDL acknowledged: <reason>
-//
-// (a non-empty reason is required after the colon). See ACK_LINE_RE below —
-// keep it and claude-docs/db.md in sync if the wording ever changes.
-//
-// It used to be a line in the PR BODY, and that was wrong twice over. A PR
-// body is visible from one branch base and gone on merge, so a release PR —
-// which `resolveDefaultBase` sends at `origin/main`, rescanning every
-// migration since the last release — sees none of the acknowledgements that
-// let those migrations land. Release 0.2.0's PR failed this check for exactly
-// that reason and was merged past it. And one line in a body blessed every
-// finding in the diff whatever file it was in, so a release carrying an
-// acknowledged 0017 and an unacknowledged 0002 would have passed on 0017's
-// line alone. The sidecar fixes both: it travels with the file, and it covers
-// only the file it sits beside.
-//
-// The PR-body path is retired rather than OR-ed with this one — an OR would
-// keep the uncorrelated hole open. The check now reads nothing from GitHub at
-// all, which is what lets `make act-check CHECK=destructive-ddl` prove the
-// scan rather than the wiring.
-//
-// A `.md` sidecar rather than a comment inside the `.sql`: ACK_LINE_RE anchors
-// at the start of a line, so Markdown matches it unchanged where
-// `-- Destructive DDL acknowledged: …` would not. And every git query here is
-// scoped to `*.sql`, so a sidecar is never itself scanned.
-//
-// WHICH FILES ARE CHECKED — not every migration ever committed (those were
-// already reviewed when they landed), only the ones new or changed *in this
-// branch*. Three sources, in precedence order:
-//
-//   1. DESTRUCTIVE_DDL_FILES, when set — how CI passes the real changed-file
-//      list. Set-but-empty means "no migrations changed", which checks
-//      nothing rather than falling through to the diff below.
-//   2. Explicit filenames as positional arguments.
-//   3. Otherwise, a diff of this branch against its Gitflow base (see
-//      resolveDefaultBase) — every migration the branch adds or edits,
-//      including one just generated and not yet committed. `--base <ref>`
-//      overrides the base; `--all` scans every committed migration instead,
-//      which is an audit rather than a gate. Since MB.48 that audit is
-//      usable: every acknowledged migration carries its sidecar in the
-//      repository, so `--all` is green and goes red on a real omission,
-//      where it used to be red permanently.
-//
-// Whatever the source, only `*.sql` is ever scanned. CI's file list comes
-// from a `src/db/migrations/**` paths filter, which also matches the
-// `meta/*.snapshot.json` and `meta/_journal.json` Drizzle writes beside each
-// migration — MB.4 fixed the same defect for YAML one layer up, at the
-// filter; MB.37 made it unbuildable here, where the list is consumed.
-//
-// LIMITATIONS
-//   - Type-narrowing detection is unreliable from raw SQL text (telling
-//     `varchar(50) -> varchar(100)` apart from the reverse would need a real
-//     SQL parser and the previous column definition). Rather than guess,
-//     every `ALTER COLUMN ... TYPE` is flagged for human review, whether or
-//     not it actually narrows.
-//   - `ALTER INDEX ... RENAME` is flagged, though renaming an index cannot
-//     break a deploy rollback. Drizzle never emits one; a hand-written one
-//     costs an acknowledgement sidecar saying so.
-//   - Statements are split on `;` with no awareness of dollar-quoted bodies,
-//     so a PL/pgSQL function (M1.18's audit trigger, when it lands) is judged
-//     as several fragments rather than one statement. Harmless for the rules
-//     as they stand — none of them spans a `BEGIN ... END` — but it is the
-//     thing to fix first if a rule ever needs to read a whole body.
+// Limitations: every `ALTER COLUMN ... TYPE` is flagged whether or not it
+// narrows, since telling the two apart needs a real SQL parser; `ALTER INDEX
+// ... RENAME` is flagged though it cannot break a rollback.
 //
 // Usage:
 //   npm run check:destructive-ddl                        # what this branch adds
 //   npm run check:destructive-ddl -- --base origin/main  # against another base
 //   npm run check:destructive-ddl -- --all               # every committed migration
 //   npm run check:destructive-ddl -- <file> [file...]    # scan only these files
-//   npm run check:destructive-ddl -- --self-test         # run the fixtures under
-//                                                        # scripts/__fixtures__/destructive-ddl/
-//
-// Env:
-//   DESTRUCTIVE_DDL_FILES    the file list, as either a JSON array (what
-//                            dorny/paths-filter's `list-files: json` emits,
-//                            passed through checks.yml) or newline-separated
-//                            paths. Takes precedence over argv when *set*
-//                            (even to an empty string) — this is how CI
-//                            distinguishes "no migrations changed" from "run
-//                            locally with no args".
+//   npm run check:destructive-ddl -- --self-test         # the fixtures under scripts/__fixtures__/destructive-ddl/
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -126,21 +40,12 @@ export interface Finding {
   statement: string;
 }
 
-// One rule per destructive DDL form named in CLAUDE.md rule 10. Matched
-// per-statement (the file is split on `;`) rather than per-line so a
-// multi-line `ALTER TABLE ... ADD COLUMN ... NOT NULL` is judged as a whole —
-// in particular so "does this statement contain DEFAULT anywhere" isn't fooled
-// by DEFAULT appearing on its own line.
+// One rule per form in CLAUDE.md rule 10, matched per statement rather than
+// per line so a DEFAULT on its own line still counts.
 export const RULES: { name: string; test: (statement: string) => boolean }[] = [
   {
-    // Rule 10 says "DROP", not "DROP COLUMN and DROP TABLE" — a dropped type,
-    // constraint, index, function or view breaks a rolled-back release just as
-    // readily as a dropped column. The two exceptions widen rather than
-    // narrow: dropping a NOT NULL or a DEFAULT only admits values the old code
-    // was already writing. An index rebuild (Drizzle emits DROP INDEX +
-    // CREATE INDEX when a predicate changes) is deliberately inside the rule —
-    // dropping a unique index gives up a guarantee, and one line in a sidecar
-    // saying which is cheap.
+    // "DROP" means any object; `DROP NOT NULL` and `DROP DEFAULT` widen and are
+    // exempt. A unique-index rebuild is deliberately inside.
     name: 'DROP (any object)',
     test: (s) => /\bdrop\s+(?!not\s+null\b)(?!default\b)\w/i.test(s),
   },
@@ -163,17 +68,12 @@ export const RULES: { name: string; test: (statement: string) => boolean }[] = [
   },
 ];
 
-// Removes what a rule must never read as SQL: `--` line comments (including
-// Drizzle's `--> statement-breakpoint` marker), `/* */` block comments, and
-// the contents of string literals. A single left-to-right scan rather than
-// three regex passes, because the three forms nest in both directions — an
-// apostrophe inside a comment (`-- don't`) would otherwise open a literal that
-// swallows the next statement, and a `--` inside a literal would otherwise
-// comment out the rest of the line. Double-quoted identifiers are copied
-// through as-is: their contents are still SQL to the rules, but they cannot
-// start a comment or a literal.
-//
-// Dollar-quoted bodies are not handled — see LIMITATIONS in the header.
+// Removes what a rule must never read as SQL: `--` comments (including
+// `--> statement-breakpoint`), `/* */` comments and string literal contents,
+// in one left-to-right scan because the three nest in both directions. Quoted
+// identifiers pass through. Dollar-quoted bodies are not handled: a PL/pgSQL
+// function is judged as `;`-split fragments, harmless while no rule spans
+// `BEGIN ... END`.
 function stripCommentsAndLiterals(sql: string): string {
   let out = '';
   let index = 0;
@@ -266,9 +166,8 @@ export function scanFile(path: string): Finding[] {
 }
 
 /**
- * The branch a local run diffs against, from the branch's own prefix — the
- * same source/target rules .github/workflows/gitflow.yml enforces on a PR.
- * Anything unrecognised gets `staging`, the target every feature branch has.
+ * The base a local run diffs against, from the branch prefix — gitflow.yml's
+ * rules. Unrecognised gets `staging`.
  */
 export function resolveDefaultBase(branch: string): string {
   if (/^(hotfix\/|release\/)/.test(branch)) return 'origin/main';
@@ -287,9 +186,8 @@ function lines(output: string): string[] {
 }
 
 /**
- * Every migration this branch adds or edits, against `base`. Compares the
- * working tree (not HEAD) to the merge base, and adds untracked files, so a
- * migration `db:generate` has just written counts before it is committed.
+ * Every migration this branch adds or edits against `base`: working tree
+ * against the merge base, plus untracked, so a just-generated migration counts.
  */
 export function changedMigrations(base: string, cwd: string = REPO_ROOT): string[] {
   let mergeBase: string;
@@ -318,9 +216,7 @@ export function currentBranch(cwd: string = REPO_ROOT): string {
   return git(['rev-parse', '--abbrev-ref', 'HEAD'], cwd).trim();
 }
 
-// Every *.sql directly under src/db/migrations — drizzle-kit doesn't nest
-// migrations, so this doesn't need to recurse the way the story guard in
-// tests/guards/workshop-guards.test.ts does for src/components.
+// drizzle-kit does not nest migrations, so no recursion.
 function allCommittedMigrations(): string[] {
   if (!existsSync(MIGRATIONS_DIR)) return [];
   return readdirSync(MIGRATIONS_DIR)
@@ -328,10 +224,7 @@ function allCommittedMigrations(): string[] {
     .map((name) => join(MIGRATIONS_DIR, name));
 }
 
-/**
- * The file list, from whichever source applies — and never anything but
- * `*.sql`, whatever the source handed over.
- */
+/** The file list from whichever source applies, `*.sql` only. */
 export function resolveFilesToScan(
   argv: string[],
   // Deliberately not NodeJS.ProcessEnv: Next augments that type with a
@@ -373,26 +266,14 @@ export function resolveFilesToScan(
   return files;
 }
 
-/**
- * MB.48 — the acknowledgement lives beside the migration it is about.
- *
- * `src/db/migrations/0002_solid_marauders.sql`
- *   → `src/db/migrations/0002_solid_marauders.ack.md`
- *
- * A `.md` sidecar rather than a comment inside the `.sql`: `ACK_LINE_RE`
- * anchors at the start of a line, so a Markdown file matches it unchanged
- * where `-- Destructive DDL acknowledged: …` would not. And the scanner's
- * pathspec is `*.sql` throughout (`MIGRATIONS_PATHSPEC` plus `sqlOnly`), so a
- * sidecar is never itself scanned for destructive DDL.
- */
+/** `0002_x.sql` → `0002_x.ack.md`. */
 export function sidecarPath(sqlPath: string): string {
   return sqlPath.replace(/\.sql$/, '.ack.md');
 }
 
 /**
- * The sidecar's text, or undefined when there is none. Accepts the
- * repo-relative path a `Finding` carries as readily as an absolute one, since
- * `scanFile` reports relative and callers scan absolute.
+ * The sidecar's text, or undefined. Accepts the relative path a `Finding`
+ * carries as readily as an absolute one.
  */
 export function readAcknowledgement(sqlPath: string): string | undefined {
   const sidecar = sidecarPath(sqlPath.startsWith('/') ? sqlPath : join(REPO_ROOT, sqlPath));
@@ -404,16 +285,9 @@ export function readAcknowledgement(sqlPath: string): string | undefined {
 }
 
 /**
- * Grouped by file, and that grouping is the whole point of MB.48.
- *
- * The acknowledgement used to be one line in the PR body, which blessed every
- * finding in the diff whatever file it was in. Release 0.2.0's PR carried an
- * acknowledged `0017` and an unacknowledged `0002` and would have passed on
- * `0017`'s line alone — so the rule was not merely in the wrong place, it was
- * uncorrelated. A sidecar covers exactly the migration it sits beside.
- *
- * `readSidecar` is injected so the correlation can be tested without writing
- * files; CI and a local run both take the default.
+ * Grouped by file, so an acknowledgement covers exactly the migration it sits
+ * beside. `readSidecar` is injected so the correlation can be tested without
+ * writing files.
  */
 export function report(
   findings: Finding[],
@@ -466,10 +340,8 @@ export function report(
   return 1;
 }
 
-// Exercises the checked-in fixtures end to end. tests/guards/destructive-ddl-check.test.ts
-// is where the rules and the file-list resolution are actually pinned; this
-// stays because it needs no test runner, which is what `make act-*` and a bare
-// clone have.
+// Exercises the checked-in fixtures end to end; needs no test runner, which is
+// what `make act-*` and a bare clone have.
 function selfTest(): number {
   let failed = false;
 
@@ -491,10 +363,8 @@ function selfTest(): number {
     }
   }
 
-  // The fixtures have no sidecars on disk and must not: `bad.sql` exists to
-  // fail. Both outcomes are exercised by handing `report` a reader rather than
-  // by writing files next to the fixtures, where a stray `bad.ack.md` would
-  // quietly turn this self-test green forever.
+  // The fixtures have no sidecars on disk and must not; both outcomes come from
+  // an injected reader, where a stray `bad.ack.md` would turn this green forever.
   const noAck = report(bad, () => undefined);
   if (noAck !== 1) {
     console.error('self-test FAILED: bad.sql with no sidecar should exit 1.');
@@ -509,8 +379,7 @@ function selfTest(): number {
     failed = true;
   }
 
-  // The correlation MB.48 exists for: an acknowledgement covers the file it
-  // sits beside and no other.
+  // An acknowledgement covers the file it sits beside and no other.
   const otherFileOnly = report(bad, (file) =>
     file.endsWith('good.sql') ? 'Destructive DDL acknowledged: wrong file.\n' : undefined,
   );

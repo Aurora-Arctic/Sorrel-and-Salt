@@ -12,30 +12,20 @@ import {
   withAudit,
 } from '@/db/repository';
 
-// These tests write to a scratch table of their own — created here in this
-// worker's disposable sorrel_test_<n> clone — rather than to a real one. It
-// spreads the real `auditColumns`, minus their FKs to `users`, so what's
-// exercised is the six columns every real table carries and nothing a real
-// table's other constraints would add. Written when the template carried no
-// tables at all (before M1.27); kept that way since, because the repository's
-// contract is about the audit columns, not about any one table.
+// A scratch table spreading the real `auditColumns` minus their FKs to
+// `users`: the contract is about the six columns, not any one table.
 const herbs = pgTable('repository_probe_herbs', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
-  // Defaulted from the GUC rather than written by the writer: it records what
-  // `app.current_user_id` held *inside* the transaction that inserted the row,
-  // which is how M1.19's tests observe a setting the narrow `AuditWriter` gives
-  // them no other way to read. `current_setting(.., true)` is the missing_ok
-  // form — null when the setting was never set, rather than an error.
+  // Defaulted from the GUC, so it records what `app.current_user_id` held
+  // inside the inserting transaction — the only way a narrow `AuditWriter`
+  // lets a test observe it. `current_setting(.., true)` is missing_ok.
   actingUser: text('acting_user'),
   ...auditColumns,
 });
 
-// M1.20's partial-index convention (CLAUDE.md rule 4 / DESIGN.md §5): a scratch
-// table carrying a *plain* unique index would fail the "reuse a soft-deleted
-// name" test below for a reason that has nothing to do with the repository —
-// so this one is built `WHERE deleted_at IS NULL`, the same shape as
-// `users_email_unique` (src/db/schema/users.ts).
+// Built `WHERE deleted_at IS NULL`: a plain unique index would fail the reuse
+// test below for a reason unrelated to the repository.
 const charms = pgTable(
   'repository_probe_charms',
   {
@@ -50,10 +40,7 @@ const charms = pgTable(
   ],
 );
 
-// MB.34's third scratch table: a join table in the shape `ingredient_categories`,
-// `spell_categories` and `spell_ingredients` take — the four stamp columns, a
-// composite primary key, and no delete columns at all, so a pair that is taken
-// off leaves no row and needs no partial index to be re-added.
+// The join-table shape: four stamps, a composite key, no delete columns (MB.34).
 const pairs = pgTable(
   'repository_probe_pairs',
   {
@@ -239,8 +226,7 @@ describe('app.current_user_id (M1.19)', () => {
   });
 
   it('does not leak across pooled connections under concurrency', async () => {
-    // More callers than the pool has connections, all at once: each must see
-    // its own id, never a neighbour's left behind on a reused connection.
+    // More callers than pool connections, at once; each must see its own id.
     // Transaction-scoped `set_config(.., true)` is what makes that true — a
     // session-level `SET` would fail this.
     const actors = Array.from({ length: 24 }, (_, index) => ({
@@ -325,9 +311,7 @@ describe('soft-delete filtering (M1.20)', () => {
     expect(restorable).toMatchObject({ id: row.id, deletedAt: expect.any(Date) });
   });
 
-  // The partial-index convention CLAUDE.md rule 4 documents: a soft-deleted
-  // row must not permanently reserve its name — see claude-docs/db.md's
-  // "Soft-delete filtering and the partial-index convention".
+  // claude-docs/db.md, "Soft-delete filtering and the partial-index convention".
   describe('the partial unique index convention', () => {
     it('still blocks a live duplicate', async () => {
       await withAudit(session, (write) => write.insert(charms, { name: 'Ward' }));
@@ -355,10 +339,8 @@ describe('soft-delete filtering (M1.20)', () => {
   });
 });
 
-// MB.34: the three join tables — ingredient_categories, spell_categories and
-// spell_ingredients — carry the four stamp columns and no delete columns, so a
-// chip toggled off leaves no row. `write.delete` is how they are written, and
-// it is typed so it cannot be pointed at anything else.
+// `write.delete` is how the three join tables are written, typed so it cannot
+// be pointed at anything else (MB.34).
 describe('hard delete on a table with no delete columns (MB.34)', () => {
   const herbId = '22222222-2222-2222-2222-222222222222';
   const charmId = '33333333-3333-3333-3333-333333333333';
@@ -442,10 +424,8 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
     await expect(findManyIncludingSoftDeleted(herbs)).resolves.toHaveLength(1);
   });
 
-  // The type-level half of the same rule, and the reason the escape hatch is a
-  // named method rather than a flag: neither body ever runs — each `@ts-expect-error`
-  // fails `npm run typecheck` the moment the constraint that rejects it is
-  // loosened, which a runtime assertion cannot see at all.
+  // Neither body runs: each `@ts-expect-error` fails `npm run typecheck` the
+  // moment its constraint is loosened, which a runtime assertion cannot see.
   it('refuses the wrong table at compile time in both directions', () => {
     const hardDeleteASoftDeletableTable = (write: AuditWriter) =>
       // @ts-expect-error — `herbs` carries deletedAt, so it is soft-deleted or

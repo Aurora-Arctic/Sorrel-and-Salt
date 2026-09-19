@@ -33,9 +33,8 @@ describe('ingredient_categories schema', () => {
     );
   });
 
-  // MB.34, and the whole reason this table is shaped unlike every other one:
-  // the four stamps, not the six. `created_by` still answers who added this
-  // category to this ingredient; there is simply no tombstone per chip toggle.
+  // Four stamps and no tombstone (MB.34) —
+  // claude-docs/db.md, "Hard delete on the three join tables".
   it('spreads the four audit stamps, each required', () => {
     for (const column of STAMP_COLUMNS) {
       expect(byName[column]).toBeDefined();
@@ -49,8 +48,7 @@ describe('ingredient_categories schema', () => {
     }
   });
 
-  // A surrogate id would let the same pair be assigned twice, which is exactly
-  // what the composite key exists to refuse — as on `workspace_members`.
+  // A surrogate id would let the same pair be assigned twice.
   it('has no surrogate id, keying on the pair instead', () => {
     expect(byName.id).toBeUndefined();
 
@@ -78,13 +76,11 @@ describe('ingredient_categories schema', () => {
       expect(foreignKeyByColumn[column].foreignColumnName).toBe('id');
       expect(foreignKeyByColumn[column].foreignTable).toBe(users);
     }
-    // The delete stamp every other table carries has no counterpart here.
     expect(foreignKeyByColumn.deleted_by).toBeUndefined();
   });
 
-  // The primary key indexes (ingredient_id, category_id), which answers "what
-  // is this ingredient tagged with"; the reverse question — "what is in this
-  // category" — needs its own index, `category_id` leading.
+  // The key answers "what is this ingredient tagged with"; the reverse question
+  // needs its own index, `category_id` leading.
   it('indexes the reverse direction, category to ingredient', () => {
     const reverse = indexes.find((index) => index.config.name === REVERSE_INDEX);
 
@@ -96,9 +92,7 @@ describe('ingredient_categories schema', () => {
     ]);
   });
 
-  // Rule 4's partial-index convention exists to stop a tombstone reserving a
-  // name, and this table has no tombstone to dodge: the pair is either there or
-  // it is not. A `WHERE deleted_at IS NULL` here would not even compile.
+  // No tombstone, so there is no soft-delete predicate to write.
   it('carries no partial index: there is no soft-delete predicate to write', () => {
     for (const index of indexes) {
       expect(index.config.where).toBeUndefined();
@@ -106,19 +100,6 @@ describe('ingredient_categories schema', () => {
   });
 });
 
-// The behaviour half, against the real table. This worker's sorrel_test_<n>
-// clone arrives with every migration applied and the `standard` scenario
-// seeded (M1.27, tests/support/db-setup.ts), and re-cloned that way before
-// this file runs — so what is asserted below is the SQL production runs, with
-// no schema built here and nothing to put back afterwards. Until M1.27 the
-// template was empty: this file applied the one migration that ships the
-// table and stubbed `users`/`ingredients`/`categories` to a bare `id` column.
-//
-// Both authors, both ingredients and both categories are the seed's, not
-// invented ids: the real parent tables have NOT NULL names, slugs and audit
-// stamps, and a row that exists is cheaper to point at than one to construct.
-// Bound to the old names so the tests read as they did — the ingredients and
-// categories are looked up in beforeAll, since the seed generates their ids.
 const AUTHOR = FIXTURE_USERS.A.id;
 const SECOND_AUTHOR = FIXTURE_USERS.B.id;
 let MUGWORT: string;
@@ -183,10 +164,8 @@ async function pairs(): Promise<Pair[]> {
   }));
 }
 
-// The order `pairs()` reads in, for an expectation naming more than one row.
-// The seed generates its ids, so which of two rows sorts first is not known
-// when the test is written; a uuid orders bytewise, which for its canonical
-// lowercase text is the plain string comparison used here.
+// Sorted as `pairs()` reads: the seed generates the ids, and a uuid orders
+// bytewise, which for its lowercase text is plain string comparison.
 function inPairOrder(expected: Pair[]): Pair[] {
   const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
   return [...expected].sort(
@@ -213,10 +192,6 @@ beforeAll(async () => {
   CLEANSING = await categoryIdOf('Cleansing');
 });
 
-// The seed files the compendium under its categories through this table, and
-// every test below assumes it empty: it is a leaf, so a truncate reaches
-// nothing else — the same starting state the old empty template gave, reached
-// the other way round.
 beforeEach(async () => {
   await sql`truncate ingredient_categories`;
 });
@@ -234,8 +209,7 @@ describe('ingredient_categories table', () => {
 
   describe('the composite primary key', () => {
     // Story 22, and the precondition for the refusal below: several categories
-    // per ingredient insert fine, so what stops the duplicate is the key on the
-    // pair rather than the insert never working at all.
+    // insert fine, so the key on the pair is what stops the duplicate.
     it('lets an ingredient carry several categories, and a category several ingredients', async () => {
       await assign(MUGWORT, PROTECTION);
       await assign(MUGWORT, CLEANSING);
@@ -255,14 +229,12 @@ describe('ingredient_categories table', () => {
 
       const error = await failureOf(assign(MUGWORT, PROTECTION));
 
-      // 23505 is unique_violation, named: proof the insert reached the primary
-      // key rather than failing some other constraint first.
+      // 23505 is unique_violation, named: the primary key refused, not something earlier.
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(PRIMARY_KEY);
     });
 
-    // The pair is the identity; the stamps are only who touched it. A second
-    // member toggling the same chip on is the same row, not a second one.
+    // The pair is the identity: a second member toggling the same chip is the same row.
     it('refuses the duplicate whoever is adding it', async () => {
       await assign(MUGWORT, PROTECTION);
 
@@ -311,10 +283,8 @@ describe('ingredient_categories table', () => {
     });
   });
 
-  // Both directions, asserted from the catalogue: a chip section on an
-  // ingredient page reads the pair one way, and a category filter reads it the
-  // other. The primary key covers the first; without the second index the
-  // category filter is a sequential scan over every assignment in the database.
+  // Without the reverse index a category filter is a sequential scan over
+  // every assignment in the database.
   describe('lookup in both directions', () => {
     it('indexes the pair from the ingredient side, as the primary key', async () => {
       const index = await indexDefinition(PRIMARY_KEY);
@@ -328,17 +298,14 @@ describe('ingredient_categories table', () => {
       const index = await indexDefinition(REVERSE_INDEX);
 
       expect(index).toBeDefined();
-      // Not unique: the pair's uniqueness is the primary key's job, and a
-      // unique index here would refuse a category its second ingredient.
+      // Not unique: a unique index here would refuse a category its second ingredient.
       expect(index.unique).toBe(false);
       expect(index.definition).toContain('(category_id, ingredient_id)');
     });
   });
 });
 
-// MB.34's type constraints exercised against the real table rather than
-// `repository.test.ts`'s scratch pair: `write.delete` compiles against this one
-// because it carries no `deletedAt`, and what it leaves behind is nothing.
+// `write.delete` against the real table rather than repository.test.ts's scratch pair.
 describe('a pair removed through write.delete', () => {
   const session = { userId: AUTHOR };
 
@@ -365,9 +332,8 @@ describe('a pair removed through write.delete', () => {
 
     expect(removed).toHaveLength(1);
     expect(await pairs()).toEqual([]);
-    // Not merely filtered out of the finder: `findMany` writes no
-    // `deleted_at IS NULL` for a table that has no such column, so an empty
-    // read here is an empty table.
+    // `findMany` writes no `deleted_at IS NULL` for this table, so an empty
+    // read is an empty table.
     expect(await findMany(ingredientCategories)).toEqual([]);
   });
 
@@ -378,8 +344,8 @@ describe('a pair removed through write.delete', () => {
     const [readded] = await add(MUGWORT, PROTECTION, SECOND_AUTHOR);
 
     expect(await pairs()).toEqual([{ ingredientId: MUGWORT, categoryId: PROTECTION }]);
-    // Re-adding is an ordinary insert, so the row's stamps are the second
-    // member's — not the first author's, resurrected.
+    // An ordinary insert: the stamps are the second member's, not the first
+    // author's resurrected.
     expect(readded.createdBy).toBe(SECOND_AUTHOR);
   });
 

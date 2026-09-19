@@ -1,34 +1,11 @@
 name: Checks
 
-# Reusable check matrix (MB.32): one job description for lint, format,
-# typecheck, build and audit, which were five near-identical ~140-line
-# workflows until this file replaced them. They only ever differed in one npm
-# script and one step that summarised that script's output — the container,
-# the root-user option, the checkout, the job-summary and the pr-comment
-# scaffolding were copied five times. The summarising steps now live beside
-# summarize-vitest.mjs in .github/scripts/, one file per leg.
+# One matrix job for lint, format, typecheck, build, destructive-ddl and
+# audit, each reporting as `checks / <name>`. workflow_call only, from
+# pr-gate.yml. claude-docs/ci.md, "Reusable checks" is the walkthrough.
 #
-# Called via workflow_call from pr-gate.yml, never triggered directly. Each
-# leg reports as `checks / <name>` — the caller's job id, then this job's
-# `name:`, which is why `name: ${{ matrix.name }}` below is load-bearing
-# rather than cosmetic: without it every leg would report as
-# `checks / check (lint)` and friends.
-#
-# vitest.yml and playwright.yml are deliberately NOT legs here. Both bring a
-# `services: postgres:` block, a `db-image` input and their own artifact
-# uploads, which is a different job shape rather than a different npm script.
-#
-# destructive-ddl IS a leg, as of MB.37 — it was its own workflow until MB.32
-# collapsed the other five and dropped its calling job from pr-gate.yml
-# without replacing it, so nothing ran it between PR #104 and MB.37 and two
-# migrations landed ungated. It is the one leg needing something a
-# `workflow_call` file cannot read off its own trigger: the list of migration
-# files this PR changed, and the PR's body text (for the acknowledgement
-# line). `workflow_call` workflows have no `pull_request` event of their own —
-# only the caller sees `github.event.pull_request` — so both arrive as plain
-# string inputs, the file list from pr-gate.yml's `changes` job (which already
-# runs dorny/paths-filter with `list-files: json`) and the body straight from
-# `github.event.pull_request.body` at the call site.
+# vitest.yml and playwright.yml are not legs: a `services: postgres:` block
+# and artifact uploads are a different job shape, not a different script.
 on:
   workflow_call:
     inputs:
@@ -53,18 +30,11 @@ on:
         required: false
         type: boolean
         default: false
-      # One flag per path-filtered leg, rather than one `should-run` for the
-      # whole matrix: pr-gate.yml filters lint, typecheck, build and
-      # destructive-ddl independently. format and audit have no flag at all — format because
-      # Prettier covers .md/.json too and "did formatting change" is cheap and
-      # universal, audit because it is non-blocking and PR-only.
-      #
-      # These skip the work inside the leg; pr-gate must never put an `if:` on
-      # the job that calls this workflow. A job-level `if:` makes GitHub report
-      # a differently-named, bare check run ("checks" instead of
-      # "checks / lint") when skipped, which never satisfies a
-      # "checks / lint" required status check and leaves the PR stuck. Every
-      # leg runs either way; a leg whose flag is false exits after checkout.
+      # One flag per path-filtered leg, since pr-gate.yml filters them
+      # independently; format and audit are unfiltered. The flags skip work
+      # INSIDE the leg: a job-level `if:` on the calling job would make GitHub
+      # report a bare check name ("checks", not "checks / lint") that never
+      # satisfies a required check, leaving the PR stuck forever.
       run-lint:
         description: Set false to skip the lint run while still completing its leg under its normal name
         required: false
@@ -106,15 +76,12 @@ permissions:
 
 jobs:
   check:
-    # What each leg reports as, after the caller's own job id: `checks / lint`,
-    # `checks / format`, and so on. See this file's header comment.
+    # Dropping this renames every leg to `checks / check (<name>)`.
     name: ${{ matrix.name }}
     runs-on: ubuntu-26.04
     strategy:
-      # Never fail-fast. A cancelled leg reports its check as cancelled, which
-      # a required status check treats as unsatisfied — so one failing leg
-      # would block the PR on four checks that never got to run, and a rerun
-      # would be the only way to see the rest.
+      # A cancelled leg reports cancelled, which a required check reads as
+      # unsatisfied — one failure would block the PR on five legs never run.
       fail-fast: false
       matrix:
         include:
@@ -133,36 +100,21 @@ jobs:
             command: npm run typecheck
             summarize: .github/scripts/summarize-typecheck.sh
             comment: minimize
-          # M0.36's wrapper around `ladle build` (a story that fails to bundle)
-          # rides along on the build leg, chained with `&&` so a failed app
-          # build still fails the check before the workshop is tried: a story
-          # that does not bundle is a build-time finding, and this leg already
-          # runs on every push that could touch a component. M0.33's gate
-          # (missing index.stories.tsx) rode here too until MB.38 made it a
-          # test — tests/guards/workshop-guards.test.ts, on the vitest job.
-          # No PR comment, matching build.yml before the collapse — a failing
-          # build's own check and job summary are the report.
+          # The workshop build is chained so a failed app build stops first.
+          # No PR comment: the check itself is the report.
           - name: build
             label: Build
             command: npm run build && npm run workshop:build
             summarize: ''
             comment: ''
-          # Blocking, unlike audit below — this gates a merge, since a
-          # destructive migration slipping through breaks the "revert is a
-          # deploy rollback" guarantee CLAUDE.md rule 10 exists for. No
-          # summarising step: the script's own output is already the report, a
-          # rule and a statement per finding, which job-summary and pr-comment
-          # render from the log.
+          # Blocking. The script's own output is the report, so no summariser.
           - name: destructive-ddl
             label: Destructive DDL
             command: npm run check:destructive-ddl
             summarize: ''
             comment: minimize
-          # Non-blocking: `npm audit` exits non-zero when it finds
-          # vulnerabilities, and the trailing `|| true` is what keeps that from
-          # failing the PR gate. It reports through its own script rather than
-          # job-summary and pr-comment — see the "Summarize and comment audit
-          # results" step below.
+          # Non-blocking and never a required check, hence `|| true`. Reports
+          # through its own step below.
           - name: audit
             label: Dependency Audit
             command: 'npm audit --json > audit-results.json || true'
@@ -173,48 +125,26 @@ jobs:
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-      # The image's default user (node, non-root) can't write to the runner's
-      # bind-mounted _temp/_runner_file_commands dir, which actions/checkout (and
-      # any JS action using core.saveState/setOutput) needs — EACCES otherwise.
+      # The image's default user cannot write the runner's bind-mounted
+      # _temp/_runner_file_commands; actions/checkout fails EACCES without it.
       options: --user root
     defaults:
       run:
         working-directory: /app
-        # container: jobs default to sh, not bash, unlike normal runs-on jobs —
-        # https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/run-jobs-in-a-container
-        # sh (dash) doesn't support `set -o pipefail`, used below.
+        # A `container:` job defaults to sh, which has no `set -o pipefail`.
         shell: bash
     env:
-      # Both are for the build leg only, and inert in the other four.
-      # `npm run build` traces /api/auth/[...all] (M2.2), which imports
-      # src/lib/auth.ts and, through it, src/db/connection.ts.
-      # DATABASE_URL: connection.ts throws at import if unset, always — no
-      # `services: postgres:` needed, since the driver connects lazily and
-      # the build never issues a query, only a syntactically valid URL.
-      # BETTER_AUTH_SECRET: `npm run build` runs at NODE_ENV=production,
-      # where Better Auth's own check (src/lib/auth.ts) requires a real
-      # value — this fixed, non-secret placeholder satisfies it.
+      # Build leg only. `npm run build` traces src/db/connection.ts (throws at
+      # import on an unset URL, issues no query) and src/lib/auth.ts (needs a
+      # secret at NODE_ENV=production, which the `build` script forces).
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       BETTER_AUTH_SECRET: local-dev-not-a-real-secret
-      # For the destructive-ddl leg only, and inert in the other five.
-      # Deliberately always *set*, even to an empty string: the script treats
-      # "set but empty" as "no migrations changed, check nothing" and an unset
-      # variable as "work out what this branch changed from git", and the
-      # second is a local convenience that must never be what CI does. Under
-      # `act` these arrive empty for the same reason — no PR, no paths-filter
-      # job — so a local `make act-check CHECK=destructive-ddl` proves the
-      # wiring, not the scan.
+      # destructive-ddl leg only. Always set: the script reads set-but-empty
+      # as "scan nothing" and unset as "diff the branch", which CI must never do.
       DESTRUCTIVE_DDL_FILES: ${{ inputs.destructive-ddl-files }}
     steps:
-      # Resolves the three `run-*` inputs down to one flag for this leg, so
-      # every step below reads a single step output instead of re-deriving
-      # which input belongs to which matrix name. Runs before the checkout —
-      # it needs nothing from the repository.
-      #
-      # An unset flag means "run": a caller that omits an input gets GitHub's
-      # `default: true`, and `act` (which does not apply workflow_call input
-      # defaults) gets the same answer from the `:-true` fallback instead of
-      # silently passing a check it never ran.
+      # One flag for this leg. Unset means run: `act` applies no workflow_call
+      # defaults, and must not pass a check it never ran.
       - name: Resolve this leg's should-run flag
         id: flags
         env:
@@ -229,7 +159,7 @@ jobs:
             typecheck) flag="$RUN_TYPECHECK" ;;
             build) flag="$RUN_BUILD" ;;
             destructive-ddl) flag="$RUN_DESTRUCTIVE_DDL" ;;
-            # format and audit are deliberately unfiltered — see the inputs.
+            # format and audit are unfiltered.
             *) flag=true ;;
           esac
           echo "should-run=${flag:-true}" >> "$GITHUB_OUTPUT"
@@ -238,18 +168,9 @@ jobs:
         if: steps.flags.outputs.should-run == 'true'
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
-      # Next.js persists an incremental build cache to .next/cache — see
-      # https://nextjs.org/docs/app/guides/ci-build-caching. checkout-to-app
-      # populates both $GITHUB_WORKSPACE (what hashFiles reads) and /app
-      # (where npm run build actually writes .next/cache), so the cache path
-      # below is the absolute /app location, same reasoning as the /app
-      # log-file paths passed to job-summary and pr-comment.
-      #
-      # Restore and save both run inside the container, so the `tar` they
-      # use is the image's. The Alpine base ships only busybox tar, which has
-      # no `--posix` and exited 1 on every save — so from the day this step
-      # landed until MB.37 put GNU tar (and zstd) in the testing stage, the
-      # cache never hit once and every run carried a "Failed to save" warning.
+      # The absolute /app path: hashFiles reads $GITHUB_WORKSPACE, the build
+      # writes /app. Restore and save run inside the container, hence GNU tar
+      # and zstd in Dockerfile.node's `testing` stage.
       - name: Cache Next.js build cache
         if: matrix.name == 'build' && steps.flags.outputs.should-run == 'true'
         uses: actions/cache@v6
@@ -259,9 +180,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
 
-      # The brace group keeps `2>&1 | tee` applying to the whole command rather
-      # than to the last thing in it — `cmd || true 2>&1 | tee` would redirect
-      # `true`, not the audit.
+      # The brace group keeps `2>&1 | tee` on the whole command, not on `|| true`.
       - name: Run ${{ matrix.name }}
         id: run
         if: steps.flags.outputs.should-run == 'true'
@@ -271,20 +190,14 @@ jobs:
             ${{ matrix.command }}
           } 2>&1 | tee /app/output.log
 
-      # Turns the tool's raw output into the one-line stat and the capped,
-      # collapsible breakdown that job-summary and pr-comment render. Runs
-      # regardless of outcome — a technically passing lint can still have
-      # warnings worth reporting. The build and audit legs have no summarising
-      # step, so `matrix.summarize` is empty and this step is skipped.
+      # Regardless of outcome: a passing lint can still carry warnings.
       - name: Summarize output
         id: summarize
         if: always() && matrix.summarize != '' && steps.flags.outputs.should-run == 'true'
         run: bash ${{ matrix.summarize }}
 
-      # Skipped for audit: the step it reports on cannot fail (see the matrix
-      # entry), so this would write "Dependency Audit passed" directly above
-      # the vulnerabilities the leg's own step below then reports. That step
-      # writes audit's job summary and its PR comment together.
+      # Skipped for audit, whose own step below writes both summary and
+      # comment — "passed" above a table of vulnerabilities would mislead.
       - name: Write job summary
         if: always() && matrix.name != 'audit' && steps.flags.outputs.should-run == 'true'
         uses: ./.github/actions/job-summary
@@ -295,10 +208,7 @@ jobs:
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
 
-      # Fail-only from pr-gate (resolving a prior failure comment on success),
-      # fail-only on a separate merge-queue-labeled thread when
-      # merge-queue: true (no action at all on success) — see
-      # .github/actions/pr-comment. Legs with an empty `comment` don't call it.
+      # An empty `comment` skips the step; .github/actions/pr-comment has the modes.
       - name: Comment on PR
         if: always() && inputs.pr-number && matrix.comment != '' && steps.flags.outputs.should-run == 'true'
         uses: ./.github/actions/pr-comment
@@ -313,15 +223,10 @@ jobs:
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
 
-      # The audit leg's own report: a severity table and a package breakdown,
-      # reported as a [!WARNING] on a step that passed, which job-summary's
-      # and pr-comment's pass/fail vocabulary cannot express. Written to the
-      # job summary always (MB.37 — until then audit wrote no summary and was
-      # invisible on the run page), and to a PR comment only when the caller
-      # passed a pr-number. The script checks for one itself rather than this
-      # step being guarded on it, so the summary still appears under `act`;
-      # the rule M0.17 set still holds — a reusable check must not use an
-      # input unguarded that its caller can leave empty.
+      # The audit's own report: a [!WARNING] on a step that passed, which
+      # job-summary and pr-comment's pass/fail vocabulary cannot say. The
+      # script checks for a PR number itself, so the summary still appears
+      # under `act`.
       - name: Summarize and comment audit results
         if: matrix.name == 'audit'
         uses: actions/github-script@v9

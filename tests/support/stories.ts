@@ -1,15 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { fromRoot } from './paths';
 
-// M1.28 — the v1 user stories, read out of DESIGN.md §10.
-//
-// The checklist `make test-stories` prints has one line per story, and the
-// stories are written down exactly once: as the numbered list under
-// "## 10. User stories". A second list here — 45 ids and titles in a
-// constant — would drift from that one without a test failing, the way a
-// second copy of the fixture ids would (as-user.ts). So the spec is the
-// source and this file is the parse; stories.test.ts pins what the parse
-// must find, so a §10 rewording that empties it fails loudly.
+// The v1 user stories, parsed out of DESIGN.md §10 rather than copied: a second
+// list here would drift without a test failing. stories.test.ts pins what the
+// parse must find.
 
 export interface Story {
   /** The story's number in §10. 35–46 are v2 and never appear. */
@@ -40,10 +34,8 @@ export function parseStories(design: string): Story[] {
 }
 
 /**
- * A describe name written the way §11's example writes it —
- * `Story 12: a viewer reads everything and writes nothing` — split into its
- * id and title. Anything else, including a lower-case `story` or a missing
- * colon, is not a citation and answers `undefined`.
+ * `Story 12: …` split into id and title; anything else, including a lower-case
+ * `story` or a missing colon, answers `undefined`.
  */
 export function parseStoryHeading(name: string): Story | undefined {
   const match = /^Story (\d+): (.+)$/.exec(name);

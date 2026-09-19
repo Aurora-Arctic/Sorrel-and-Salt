@@ -1,27 +1,9 @@
 name: Playwright E2E
 
-# Reusable check (M1.14) that runs the Playwright e2e suite against a built
-# and served site. Called via workflow_call from pr-gate, never triggered
-# directly. Ported from resume-2026's playwright.yml for the
-# parts that transfer directly — workflow_call inputs, container/checkout/
-# summarize/job-summary/pr-comment steps, webServer building the app
-# itself so no separate build step is needed here, and the coverage artifact
-# upload. `secrets.RESUME_CONTACT_KEY` does not transfer — that decrypts a
-# resume-2026-only contact-encryption fixture with no Sorrel & Salt
-# equivalent.
-#
-# One deliberate divergence from resume-2026 (and from this repo's own
-# checks.yml/vitest pattern): this job's `container:` is NOT
-# build-image.yml's shared `testing` image. Docker/Dockerfile.node's own
-# header comment says why directly — "Playwright's system libraries and
-# browser download are left out entirely — e2e is not run from this image"
-# — and that image is Alpine/musl-based, which Playwright's Chromium build
-# does not support at all (no official musl builds upstream). Instead this
-# job runs in the dedicated `Docker/Dockerfile.e2e` image, built and
-# published by `build-e2e-image.yml` under the same content-addressed-tag
-# pattern `build-image.yml`/`build-db-image.yml` already use — see that
-# workflow's header comment. `pr-gate.yml`'s `playwright` job therefore
-# depends on `build-e2e-image`, not `build-image`.
+# The Playwright e2e suite against a built and served site. workflow_call
+# only, from pr-gate. claude-docs/ci.md, "Reusable checks" is the walkthrough.
+# Runs in Docker/Dockerfile.e2e's image, not the Alpine `testing` one:
+# Playwright's Chromium has no musl support.
 on:
   workflow_call:
     inputs:
@@ -57,9 +39,7 @@ on:
 
 permissions:
   contents: read
-  # read, not write — same reasoning as vitest.yml's identical comment: this
-  # job only pulls inputs.db-image, an already-built, already-pushed image,
-  # into its services: block. It never pushes anything itself.
+  # read: this job pulls images and pushes none.
   packages: read
   pull-requests: write
 
@@ -71,23 +51,12 @@ jobs:
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-      # --ipc=host: Chromium needs more than the container default 64MB /dev/shm,
-      # or it crashes. The base Playwright image already runs as root, so
-      # unlike lint/typecheck/build/vitest's `--user root` this is the only
-      # override actually needed here; Chromium under root already expects
-      # --no-sandbox, which playwright.config.ts is responsible for passing
-      # if/when it launches non-headless — headless Chromium (the default
-      # here) doesn't need it.
+      # Chromium crashes on the container default 64 MB /dev/shm. The base
+      # image already runs as root, and headless needs no `--no-sandbox`.
       options: --ipc=host
     services:
-      # Reachable by service name ("postgres") from this job's own
-      # `container:`, per DESIGN.md §11's CI table — same shape as
-      # vitest.yml's service. `inputs.db-image` is the hash tag the caller's
-      # own build-db-image job computed and pushed — never reconstructed
-      # here. `POSTGRES_*` env vars are inert the same way they are in
-      # Docker/docker-compose.yaml's `postgres` service (PGDATA is already
-      # populated at image build time) — kept only as documentation of the
-      # credentials actually baked in (Docker/postgres-init/enable-extensions.sql).
+      # As vitest.yml's service; `POSTGRES_*` are inert, PGDATA being populated
+      # at image build.
       postgres:
         image: ${{ inputs.db-image }}
         env:
@@ -102,37 +71,24 @@ jobs:
     defaults:
       run:
         working-directory: /app
-        # container: jobs default to sh, not bash, unlike normal runs-on jobs —
-        # https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/run-jobs-in-a-container
-        # sh (dash) doesn't support `set -o pipefail`, used below.
+        # A `container:` job defaults to sh, which has no `set -o pipefail`.
         shell: bash
     env:
-      # playwright.config.ts's webServer.reuseExistingServer reads this to decide
-      # whether to always start a fresh server rather than reusing one already
-      # on its port (8001 by default — see playwright.config.ts).
+      # playwright.config.ts's webServer.reuseExistingServer reads this and
+      # always starts a fresh server.
       CI: true
-      # Path the json reporter writes to — read by summarize-playwright.mjs.
+      # Read by summarize-playwright.mjs.
       PLAYWRIGHT_JSON_OUTPUT_NAME: /app/playwright-results.json
-      # Same host/credentials shape Docker/docker-compose.yaml's `app` service
-      # uses locally — `postgres` is this job's service container, reachable
-      # by name since `playwright` itself runs inside a `container:`.
-      # e2e/database.ts and playwright.config.ts's webServer.env both derive
-      # sorrel_e2e's URL from this.
+      # e2e/database.ts derives sorrel_e2e's URL from it.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
-      # This job's webServer runs `npm run build && npm run start`
-      # (playwright.config.ts), which runs at NODE_ENV=production — Better
-      # Auth's production-only check (src/lib/auth.ts) requires a real value
-      # there, even though it's just this fixed, non-secret placeholder.
+      # The webServer's production build needs a Better Auth secret.
       BETTER_AUTH_SECRET: local-dev-not-a-real-secret
     steps:
       - name: Checkout into /app
         if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
-      # playwright.config.ts's webServer runs `npm run build && npm run
-      # start` itself, so no separate build step is needed here. Browsers
-      # and OS deps are already baked into `inputs.image` — no install step
-      # needed either, unlike a bare-runner job.
+      # The webServer builds and serves; the browser is in the image.
       - name: Run Playwright e2e tests
         id: run
         if: inputs.should-run
@@ -150,9 +106,7 @@ jobs:
             /app/test-results/
           retention-days: 7
 
-      # Unlike the report above, deliberately not failure-only — the point is
-      # a downloadable coverage report to review/track on every run, pass or
-      # fail, same as vitest.yml's equivalent step.
+      # Not failure-only: a coverage report on every run.
       - name: Upload coverage artifact
         if: always() && inputs.should-run
         uses: actions/upload-artifact@v7
@@ -176,9 +130,7 @@ jobs:
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
 
-      # Always comments pass/fail from pr-gate, same convention as vitest.yml;
-      # fail-only on a separate merge-queue-labeled thread when merge-queue: true
-      # (no action at all on success) — see .github/actions/pr-comment.
+      # .github/actions/pr-comment has the modes.
       - name: Comment on PR
         if: always() && inputs.pr-number && inputs.should-run
         uses: ./.github/actions/pr-comment

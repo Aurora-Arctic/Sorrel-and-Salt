@@ -1,30 +1,12 @@
 import { type ReactElement, type ReactNode } from 'react';
 import './design-language.scss';
 
-// The design-language reference (M0.32). Not a screen the app routes to and not
-// a component the app imports — a single workshop page that renders every
-// shared primitive at the size it ships at, so a reviewer sees the whole
-// vocabulary in one place and in either theme. It lives in .ladle/ rather than
-// src/components/ for that reason; see
-// claude-docs/design-decisions/m0.32-component-stories.md.
-//
-// Everything visible here is the real thing, pulled from the app's own .scss:
-//   - all prose — headings, body, links, lists, `code` — from _typography.scss,
-//     scoped into the workshop by .ladle/typography.scss
-//   - the swatches are `var(--token)` straight from M0.6's theme mixins
-//   - the chips, badges, raised panel and focus ring are M0.8's `chip()`,
-//     `badge()`, `modal-surface()` and `focus-ring()` mixins
-//   - `.panel`, `.badge`/`.chip`/`.modal`/`.btn`/`.specimen*` are
-//     `_primitives.scss`'s `primitives-base`, scoped in by .ladle/primitives.scss
-//
-// design-language.scss's header lists the few things that are local (layout
-// lengths, the demo backdrop/width, `.dl-binomial`) and why the app has no
-// home for them yet. "The design will change" (CLAUDE.md) — this is a
-// reference for the tokens and mixins, not a candidate layout.
+// Every shared primitive at shipping size, in either theme, with no value
+// re-typed: all of it comes from the app's own .scss. A reference for the
+// tokens and mixins, not a candidate layout.
 
-// §6's eight category groups, slug → the group name the category seed uses.
-// The hue behind each is in _variables.scss ($category-groups) and derived, not
-// picked; see claude-docs/design-decisions/m0.7-category-and-safety-tokens.md.
+// §6's eight groups, slug → seed name; the hue behind each is derived.
+// See claude-docs/styling.md, "Category-group colours".
 const CATEGORY_GROUPS: readonly (readonly [slug: string, name: string])[] = [
   ['protection', 'Protection & defense'],
   ['cleansing', 'Cleansing & release'],
@@ -36,11 +18,7 @@ const CATEGORY_GROUPS: readonly (readonly [slug: string, name: string])[] = [
   ['practice', 'Practice & place'],
 ];
 
-// The raw palette — eight hand-picked hues, compile-time Sass values in
-// _variables.scss ("named for the materials rather than for their role, since a
-// role can change and #14120e cannot"). Every runtime token and every M0.7
-// colour is a `color.adjust()` of one of these; nothing downstream is picked by
-// eye. Hex is hardcoded here on purpose — these are constants, not `var()`s.
+// Compile-time Sass constants, so these do not move with the theme.
 const RAW_PALETTE: readonly (readonly [name: string, hex: string, purpose: string])[] = [
   ['$soot', '#14120e', 'dark-theme page ground — a warm near-black, not neutral'],
   ['$soot-raised', '#1f1c16', 'dark-theme card / raised surface'],
@@ -52,9 +30,7 @@ const RAW_PALETTE: readonly (readonly [name: string, hex: string, purpose: strin
   ['$wax', '#8c3b2e', 'the secondary hue; the safety badge is derived from it'],
 ];
 
-// Runtime tokens — the `var(--token)` layer components actually read. Each is a
-// `color.adjust()` of the raw palette, resolved per theme by M0.6's theme-dark /
-// theme-light mixins, so these swatches re-paint with the toolbar control.
+// The `var(--token)` layer, resolved per theme, so these re-paint with the toolbar.
 const RUNTIME_TOKENS: readonly (readonly [token: string, purpose: string])[] = [
   ['--surface-page', 'the page background — what a full-bleed view sits on'],
   ['--surface-card', 'a raised surface: cards, the modal panel, table headers'],
@@ -177,8 +153,8 @@ export default function DesignLanguage(): ReactElement {
           The <code>var(--token)</code> layer every component is coloured from — a{' '}
           <code>color.adjust()</code> of the raw palette above, resolved per theme by M0.6&#8217;s
           theme mixins. Every pairing clears WCAG AA against both surfaces of its theme (ratios in{' '}
-          <code>claude-docs/design-decisions/m0.6-typography-and-palette.md</code>). These swatches
-          re-paint when the toolbar control changes.
+          <code>claude-docs/styling.md</code>). These swatches re-paint when the toolbar control
+          changes.
         </SectionHead>
         <div className="panel dl-swatches">
           {RUNTIME_TOKENS.map(([token, purpose]) => (
@@ -301,7 +277,7 @@ export default function DesignLanguage(): ReactElement {
           <code>src/scss/_typography.scss</code> and <code>src/scss/_primitives.scss</code> (the{' '}
           <code>.panel</code>/<code>.badge</code>/<code>.chip</code>/<code>.modal</code>/
           <code>.btn</code>/<code>.specimen</code> classes). Reasoning in{' '}
-          <code>claude-docs/design-decisions/</code> — M0.6, M0.7, M0.8.
+          <code>claude-docs/styling.md</code>.
         </p>
       </footer>
     </div>

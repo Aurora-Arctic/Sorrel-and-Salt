@@ -6,22 +6,13 @@ import { describe, expect, it } from 'vitest';
 import { storyNamingViolations } from '../support/story-naming';
 import { REPO_ROOT } from '../support/paths';
 
-// M1.28 — every top-level describe under tests/acceptance/ names a v1 story.
-//
-// DESIGN.md §11: "Each test carries its story id, so a failure points at a
-// requirement rather than an implementation detail." The checklist
-// (tests/support/story-checklist.ts) is built from those names, so a suite
-// that leaves its story off is not a red line on the checklist — it is a
-// line that never appears, and a story that reads "no test yet" while a
-// test for it is failing. The sweep-task rule says a mechanism lands with a
-// guard, as early as it can be written, and each later acceptance scaffold
-// (M2.1, M5.1, …) adopts it in its own PR.
+// Every top-level describe under tests/acceptance/ names a v1 story
+// (claude-docs/testing.md, "Acceptance"). A suite that leaves its story off is
+// not a red line on the checklist — it is a line that never appears.
 //
 // Tracked plus untracked, as slug-rule.test.ts scans: the file this guard
-// exists to catch is the one just written, which is untracked until it is
-// committed. The directory's README is tracked, so the scan of a directory
-// that CI's container may have polluted with deleted files (MB.42) is scoped
-// to `*.test.ts(x)` and read by name rather than by walking the disk.
+// exists to catch was just written. Scoped to `*.test.ts(x)` by name rather
+// than by walking the disk.
 
 const ACCEPTANCE_DIR = 'tests/acceptance';
 const TEST_FILE = /\.test\.tsx?$/;
@@ -36,10 +27,8 @@ function acceptanceFiles(): string[] {
 describe('M1.28: acceptance tests name their story', () => {
   const files = acceptanceFiles();
 
-  // The precondition. An empty list is what a wrong path or a broken
-  // `git ls-files` returns too, and the directory has no test files until
-  // M2.1 — so the thing asserted to exist is the directory's own README,
-  // which is tracked, and the scan is shown to reach the directory at all.
+  // Precondition: an empty list is what a wrong path or a broken `git
+  // ls-files` returns too, so the thing asserted to exist is the tracked README.
   it('finds the acceptance directory', () => {
     const listed = execFileSync('git', ['-c', 'safe.directory=*', 'ls-files', ACCEPTANCE_DIR], {
       cwd: REPO_ROOT,

@@ -3,10 +3,9 @@ import { render, screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from './msw/server';
 
-// These exercise vitest.setup.ts's global hooks rather than any app code —
-// each assertion depends on the previous test in the same describe having
-// run and NOT been undone by hand, so the hook under test is the only thing
-// that could have reset the state.
+// Each assertion depends on the previous test in the same describe having run
+// and not been undone by hand, so the hook under test is the only thing that
+// could have reset the state.
 
 describe('vitest.setup.ts — RTL cleanup', () => {
   it('renders a marker element', () => {

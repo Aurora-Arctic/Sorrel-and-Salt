@@ -12,11 +12,8 @@ const AUDIT_COLUMNS = [
   'deleted_by',
 ];
 
-// Pure schema-shape assertions via Drizzle's own introspection, the same
-// shape as users-schema.test.ts. "Migration applies cleanly" is verified by
-// the harness itself since M1.27 — tests/support/seeded-database.ts runs
-// db:migrate into the template every clone is made from, so a migration that
-// fails to apply fails the whole db project before this file runs.
+// Schema shape via Drizzle's introspection; "migration applies cleanly" is the
+// harness's, which migrates the template every clone is made from.
 describe('workspaces schema', () => {
   const { columns, indexes } = getTableConfig(workspaces);
   const byName = Object.fromEntries(columns.map((c) => [c.name, c]));
@@ -27,10 +24,8 @@ describe('workspaces schema', () => {
     expect(byName.slug.notNull).toBe(true);
   });
 
-  // DESIGN.md §5: "There is no `kind` column and no automatically created
-  // workspace. Every workspace behaves identically." Pinning the whole column
-  // set is what makes that enforceable rather than merely intended — a later
-  // `kind`/`type`/`personal` column turns this red.
+  // §5: no `kind` column and no automatic workspace. Pinning the whole set is
+  // what reddens a later `kind`/`type`/`personal` column.
   it('carries no column distinguishing one class of workspace from another', () => {
     expect(Object.keys(byName).sort()).toEqual(['id', 'name', 'slug', ...AUDIT_COLUMNS].sort());
   });
@@ -80,8 +75,7 @@ describe('workspace_members schema', () => {
     expect(byName.joined_at.notNull).toBe(true);
   });
 
-  // DESIGN.md §5's role table: owner > member > viewer, the ordering M6.3's
-  // assertMembership implements.
+  // owner > member > viewer, the ordering `assertMembership` implements.
   it('constrains role to viewer | member | owner', () => {
     expect(byName.role.enumValues).toEqual(['viewer', 'member', 'owner']);
   });

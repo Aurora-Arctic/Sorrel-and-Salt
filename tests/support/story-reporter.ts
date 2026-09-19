@@ -3,18 +3,14 @@ import { dirname, resolve } from 'node:path';
 import type { Reporter, SerializedError, TestModule, TestRunEndReason, Vitest } from 'vitest/node';
 import { buildChecklist, formatChecklist } from './story-checklist';
 
-// M1.28 — the Vitest reporter behind `make test-stories`.
+// The Vitest reporter behind `make test-stories`: prints the checklist at the
+// end of the run and, when an output file is configured, writes it as JSON for
+// .github/scripts/summarize-stories.mjs. Runs beside the default reporter so a
+// failing story still shows its assertion.
 //
-// It does one thing at the end of the run: build the checklist from the
-// modules Vitest reports, print it, and — when an output file is configured
-// — write the same checklist as JSON for .github/scripts/summarize-stories.mjs
-// to turn into the PR comment. It runs beside the default reporter rather
-// than instead of it (vitest.stories.config.mts), so a failing story still
-// shows its assertion; this only adds the view §11 asks for.
-//
-// The output file is taken the way the built-in json reporter takes its own:
-// `--outputFile=stories.json` reaches every reporter as one string, and
-// `--outputFile.stories=…` addresses this one by name.
+// `--outputFile=stories.json` reaches every reporter as one string;
+// `--outputFile.stories=…` addresses this one by name, as the built-in json
+// reporter is addressed.
 
 export interface StoryReporterOptions {
   /** Where to write the checklist as JSON; relative paths resolve against the root. */

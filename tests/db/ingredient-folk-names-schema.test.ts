@@ -6,11 +6,8 @@ import { ingredients } from '@/db/schema/ingredients';
 import { users } from '@/db/schema/users';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
-// The full six, not `ingredient_categories`' four: MB.34 hard-deletes the three
-// join tables and this is not one of them. A folk name is content — "Devil's
-// Shoestring" is a thing someone wrote down, not a link between two rows — so
-// removing one leaves a tombstone, and the tombstone is what makes the partial
-// index below necessary.
+// The full six, not the join tables' four: a folk name is content rather than
+// a link, so removing one leaves a tombstone and the unique index is partial.
 const AUDIT_COLUMNS = [
   'created_at',
   'created_by',
@@ -42,11 +39,8 @@ describe('ingredient_folk_names schema', () => {
     );
   });
 
-  // Unlike `ingredient_categories`, which keys on its pair: the pair is not the
-  // identity here, because `(ingredient_id, lower(name))` is unique only among
-  // *live* rows and a primary key carries no predicate. A surrogate id is also
-  // what M8.3a's promotion swaps against — one row to name, not a pair to
-  // reconstruct.
+  // Not keyed on the pair: `(ingredient_id, lower(name))` is unique only among
+  // live rows, and a primary key carries no predicate.
   it('carries a surrogate id as its primary key', () => {
     expect(byName.id.primary).toBe(true);
     expect(byName.id.hasDefault).toBe(true);
@@ -69,7 +63,6 @@ describe('ingredient_folk_names schema', () => {
     for (const column of ['created_at', 'created_by', 'updated_at', 'updated_by']) {
       expect(byName[column].notNull).toBe(true);
     }
-    // The tombstone is null on a live row, which is the whole predicate below.
     expect(byName.deleted_at.notNull).toBe(false);
     expect(byName.deleted_by.notNull).toBe(false);
   });
@@ -86,40 +79,24 @@ describe('ingredient_folk_names schema', () => {
     expect(Object.keys(indexByName).sort()).toEqual([UNIQUE_INDEX, TRIGRAM_INDEX].sort());
   });
 
-  // Rule 4: without the predicate a soft-deleted folk name reserves its spelling
-  // on that ingredient forever, and nothing at a call site could get it back.
+  // Rule 4: without the predicate a soft-deleted folk name reserves its spelling forever.
   it('makes the uniqueness index unique and partial', () => {
     expect(indexByName[UNIQUE_INDEX].config.unique).toBe(true);
     expect(indexByName[UNIQUE_INDEX].config.where).toBeDefined();
   });
 
-  // Uniqueness is the other index's job. A unique trigram index is not even
-  // buildable, but the non-uniqueness matters for a different reason: two
-  // ingredients sharing a common name must both be indexed under it.
+  // Two ingredients sharing a common name must both be indexed under it.
   it('makes the trigram index neither unique nor partial', () => {
     expect(indexByName[TRIGRAM_INDEX].config.unique).toBe(false);
     expect(indexByName[TRIGRAM_INDEX].config.where).toBeUndefined();
   });
 });
 
-// The behaviour half, against the real table. This worker's sorrel_test_<n>
-// clone arrives with every migration applied and the `standard` scenario
-// seeded (M1.27, tests/support/db-setup.ts), and re-cloned that way before
-// this file runs — so what is asserted below is the SQL production runs, with
-// no schema built here and nothing to put back afterwards. Until M1.27 the
-// template was empty: this file applied the one migration that ships the
-// table and stubbed `users`/`ingredients` to a bare `id` column.
-//
-// The author and both ingredients are the seed's, not invented ids: the real
-// `users` and `ingredients` have NOT NULL names and audit stamps, and a row
-// that exists is cheaper to point at than one to construct. Bound to the old
-// names so the tests read as they did.
 const AUTHOR = FIXTURE_USERS.A.id;
 // Uncaria tomentosa, the vine. Displays "Cat's Claw".
 let UNCARIA: string;
-// Senegalia greggii — the shrub that was Acacia greggii until it was renamed
-// out of Acacia — and an unrelated plant. Also displays "Cat's Claw": §5's own
-// example, and the reason uniqueness here is per ingredient rather than global.
+// Senegalia greggii, an unrelated plant that also displays "Cat's Claw" — §5's
+// own example, and why uniqueness is per ingredient rather than global.
 let ACACIA: string;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
@@ -196,10 +173,6 @@ beforeAll(async () => {
   ACACIA = await compendiumIdOf('Senegalia greggii');
 });
 
-// The seed gives both ingredients folk names of their own, and every test
-// below assumes an empty table: this table is a leaf, so a truncate reaches
-// nothing else — the same starting state the old empty template gave,
-// reached the other way round.
 beforeEach(async () => {
   await sql`truncate ingredient_folk_names`;
 });
@@ -215,18 +188,15 @@ describe('ingredient_folk_names table', () => {
     );
   });
 
-  // Asserting the rendered predicate rather than merely "some predicate exists"
-  // is the point: a dropped WHERE widens the reservation to forever, and the
-  // re-add test below is the only one that would notice.
+  // The rendered predicate, not "some predicate": a dropped WHERE widens the
+  // reservation to forever, and only the re-add test below would notice.
   describe('catalogue introspection', () => {
     it('makes the folded name unique per ingredient, among live rows only', async () => {
       const index = await indexRow(UNIQUE_INDEX);
 
       expect(index?.unique).toBe(true);
       expect(index?.predicate).toBe('(deleted_at IS NULL)');
-      // `(ingredient_id, lower(name))`, in that order: the ingredient leads, so
-      // the index scopes uniqueness to one ingredient rather than the table, and
-      // `lower(name)` is what folds "Cat's Claw" onto "cat's claw".
+      // `ingredient_id` leads, so uniqueness is per ingredient; `lower(name)` folds case.
       expect(index?.definition).toContain('USING btree (ingredient_id, lower(name))');
     });
 
@@ -260,8 +230,7 @@ describe('ingredient_folk_names table', () => {
 
       const error = await failureOf(addFolkName(UNCARIA, "Cat's Claw"));
 
-      // 23505 is unique_violation, named: proof the insert reached this index
-      // rather than failing some other constraint first.
+      // 23505 is unique_violation, named: this index refused, not something earlier.
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(UNIQUE_INDEX);
     });
@@ -275,8 +244,7 @@ describe('ingredient_folk_names table', () => {
       expect(error.constraint_name).toBe(UNIQUE_INDEX);
     });
 
-    // §5's documented case, and deliberately not an error: Uncaria tomentosa and
-    // Acacia greggii are unrelated plants that both answer to "Cat's Claw".
+    // §5's documented case: two unrelated plants both answer to "Cat's Claw".
     it('lets two unrelated ingredients both claim one common name', async () => {
       await addFolkName(UNCARIA, "Cat's Claw");
 
@@ -284,10 +252,8 @@ describe('ingredient_folk_names table', () => {
 
       expect(await liveNames(UNCARIA)).toEqual(["Cat's Claw"]);
       expect(await liveNames(ACACIA)).toEqual(["Cat's Claw"]);
-      // Why it could have failed: the same spelling on one ingredient *is*
-      // refused, so what admitted the second row is the ingredient scoping and
-      // not a missing index. Drop `ingredient_id` from the index and this line
-      // is what reddens.
+      // Why it could have passed: the same spelling on one ingredient is
+      // refused, so the ingredient scoping admitted the second row.
       const error = await failureOf(addFolkName(ACACIA, "cat's claw"));
       expect(error.constraint_name).toBe(UNIQUE_INDEX);
     });
@@ -300,9 +266,7 @@ describe('ingredient_folk_names table', () => {
     });
   });
 
-  // Rule 4's reason for the partial predicate, exercised end to end: a folk name
-  // removed by mistake must be re-addable, and under a plain unique index the
-  // tombstone would hold its spelling forever.
+  // Rule 4 end to end: a folk name removed by mistake must be re-addable.
   describe('re-adding a removed folk name', () => {
     it('succeeds after a soft delete', async () => {
       const id = await addFolkName(UNCARIA, "Cat's Claw");

@@ -1,47 +1,17 @@
 # syntax=docker/dockerfile:1
 
-# Sorrel & Salt — preseeded Postgres 18 image, published to GHCR (M0.18).
+# Postgres 18 image for CI and docker-compose; the walkthrough is
+# claude-docs/ci.md, "Database image".
 #
-# Every environment — CI and docker-compose — starts from this one image so
-# a data-layer bug reproduces identically everywhere. Two things are baked in
-# at image *build* time, not left to a container's first boot:
+# Baked in at build time: pg_trgm, an empty `sorrel_template` to clone, and
+# the `sorrel` role/database. No schema and no seed data, ever — `db-init` and
+# the test harness populate those at runtime, so a migration never rebuilds
+# this image.
 #
-#   - the extensions the design actually names (today just pg_trgm, for the
-#     fuzzy duplicate warning in DESIGN.md §5 — nothing else is specified
-#     anywhere, so nothing else is enabled),
-#   - an empty `sorrel_template` database with those extensions already
-#     applied, ready for `CREATE DATABASE ... TEMPLATE sorrel_template` to
-#     clone (each Vitest worker's database, per CLAUDE.md's Testing section),
-#     and
-#   - the `sorrel` role/database that `app`/`devcontainer` connect to
-#     (Docker/docker-compose.yaml's DATABASE_URL), also with pg_trgm applied.
-#
-# No schema and no seed data are baked in here, and none will be. `sorrel` is
-# an empty database with only extensions applied, just like `sorrel_template`;
-# docker-compose's `db-init` one-shot (M1.24) migrates and seeds `sorrel` at
-# container start, and the test harness clones `sorrel_template` and runs the
-# same two npm scripts against the clone at test-run setup (M1.27,
-# tests/support/seeded-database.ts). That was M1.27's decision — TASKS.md
-# first had it baking the migrated, seeded template into this image, and
-# claude-docs/design-decisions/m1.27-template-at-setup-not-in-image.md says
-# why not: migrate + seed is about a second, once per run, and a template
-# built from the checkout can never disagree with it the way a baked one
-# would after a `git pull` without `make docker-rebuild`. So this image's
-# contents depend on nothing under src/, and a migration never rebuilds it.
-#
-# The extensions/database are created by running the official image's own
-# first-boot initialization (docker-entrypoint.sh, which starts a temporary
-# local Postgres, runs everything under /docker-entrypoint-initdb.d/, then
-# stops it again) during the `docker build`, instead of waiting for a
-# container's first start. Its very last line unconditionally
-# `exec "$@"`s into a foreground `postgres` server, which would hang this
-# RUN step forever, so it's neutered for the one invocation below and
-# restored immediately after — the same technique the official image's docs
-# point to for "preloading a database" (used by e.g. the postgis/postgis
-# image). The result: PGDATA ends up populated inside this image's layers,
-# and Docker copies that content into a container's named volume the first
-# time it mounts an empty one over PGDATA — exactly what happens the first
-# time docker-compose.yaml's `postgres_data` volume is created.
+# Build time rather than first boot, because a populated PGDATA is what Docker
+# copies into a fresh named volume. The official entrypoint's last line
+# `exec "$@"`s into a foreground server, so it is neutered for that one run
+# and restored after.
 FROM postgres:18
 
 ENV PGDATA=/var/lib/postgresql/data
@@ -49,14 +19,10 @@ ENV POSTGRES_DB=sorrel_template
 
 COPY Docker/postgres-init/enable-extensions.sql /docker-entrypoint-initdb.d/
 
-# initdb needs *some* superuser password (or POSTGRES_HOST_AUTH_METHOD=trust,
-# which would instead bake passwordless auth into every container run from
-# this image — worse). Generated fresh in-shell and exported for this one
-# RUN only, never a Dockerfile ARG/ENV, so it never becomes an image layer a
-# secrets scanner (rightly) flags: it's discarded the moment this step ends,
-# and every real container built from this image already has PGDATA
-# populated, so the entrypoint skips initialization — and reading this
-# value — entirely.
+# initdb needs a superuser password. Exported in-shell, never ARG/ENV (GitHub's
+# SecretsUsedInArgOrEnv check, and a layer would carry it);
+# POSTGRES_HOST_AUTH_METHOD=trust would bake passwordless auth into
+# pg_hba.conf. Discarded when the step ends; nothing reads it again.
 RUN set -eux; \
 	export POSTGRES_PASSWORD="$(head -c 32 /dev/urandom | base64)"; \
 	sed -ri 's/^[[:blank:]]*exec "\$@"[[:blank:]]*$/echo "sorrel: build-time init complete, not starting postgres"/' /usr/local/bin/docker-entrypoint.sh; \
