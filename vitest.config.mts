@@ -8,7 +8,7 @@ import { defineConfig } from 'vitest/config';
 // onward), so `passWithNoTests` keeps an empty suite from failing the run.
 // `globalSetup`/`setupFiles` wire each worker to its own
 // `sorrel_test_${VITEST_POOL_ID}` clone of `sorrel_template` (M1.9) — the pool
-// *slot*, not `VITEST_WORKER_ID`; see src/test/worker-database.ts (MB.14).
+// *slot*, not `VITEST_WORKER_ID`; see tests/support/worker-database.ts (MB.14).
 
 // Vitest only resolves its actual worker count internally — `project.config
 // .maxWorkers` is `undefined` unless set explicitly here — so `db`'s
@@ -24,6 +24,18 @@ import { defineConfig } from 'vitest/config';
 // rather than hopeful: diverge from the default and the run fails loudly.
 const dbMaxWorkers = Math.max((os.availableParallelism?.() ?? os.cpus().length) - 1, 1);
 export default defineConfig({
+  // MB.41 — tests live in tests/ and reach the code under test by the `@/*`
+  // alias tsconfig already declares, so moving a test never re-levels a
+  // `../../` chain. Vite does not read tsconfig `paths` unless asked, so
+  // without this every such import fails to resolve at runtime. This is
+  // Vite's own resolver rather than the `vite-tsconfig-paths` plugin, which
+  // it now supersedes — the plugin warns as much on load.
+  //
+  // Each project spells out `extends: true` to inherit this. That is already
+  // the default, and it is written anyway because it is load-bearing here:
+  // the projects are what actually run, and a future `extends: false` would
+  // leave them resolving `@/` nowhere.
+  resolve: { tsconfigPaths: true },
   test: {
     coverage: {
       provider: 'v8',
@@ -32,15 +44,27 @@ export default defineConfig({
       // for local/human consumption and untouched by CI.
       reporter: ['text', 'lcov', 'html', 'json-summary'],
       include: ['src/**/*.{ts,tsx}'],
-      // src/db/seed and src/test are fixture/harness code that runs test
-      // infrastructure rather than product logic — a bug there fails the
-      // tests that consume it, so it doesn't need its own coverage.
+      // src/db/seed is fixture code that runs test infrastructure rather
+      // than product logic — a bug there fails the tests that consume it, so
+      // it doesn't need its own coverage.
+      //
+      // The first two look dead since MB.41: no test and no harness file
+      // lives under src/ any more, so nothing should match them. They stay
+      // because `include` enumerates the *disk*, not the repo, and in CI
+      // those are different. The container's image bakes the repo at
+      // Docker/Dockerfile.node's `COPY . .` and checkout-to-app lays the
+      // checkout over it with `cp -a`, which never deletes — so every file
+      // the repo has deleted is still there, uncovered, dragging the
+      // denominator down (MB.42). Removing these two entries dropped CI from
+      // 92% to 78.54% and failed the 80% gate while every test passed. They
+      // are what makes the number describe the repo rather than the
+      // container, and they are free.
       exclude: [
         'src/**/*.test.{ts,tsx}',
+        'src/test/**',
         'src/**/*.stories.tsx',
         'src/db/migrations/**',
         'src/db/seed/**',
-        'src/test/**',
       ],
       thresholds: {
         lines: 80,
@@ -51,25 +75,27 @@ export default defineConfig({
     },
     projects: [
       {
+        extends: true,
         test: {
           name: 'unit',
           environment: 'jsdom',
           globals: true,
-          include: ['src/**/*.test.{ts,tsx}'],
-          exclude: ['src/db/**', 'src/services/**'],
+          include: ['tests/**/*.test.{ts,tsx}'],
+          exclude: ['tests/db/**', 'tests/services/**'],
           setupFiles: ['@testing-library/jest-dom/vitest', './vitest.setup.ts'],
         },
       },
       {
+        extends: true,
         test: {
           name: 'db',
           environment: 'node',
           globals: true,
-          include: ['src/db/**/*.test.ts', 'src/services/**/*.test.ts'],
+          include: ['tests/db/**/*.test.ts', 'tests/services/**/*.test.ts'],
           passWithNoTests: true,
           maxWorkers: dbMaxWorkers,
-          globalSetup: ['./src/test/db-global-setup.ts'],
-          setupFiles: ['./src/test/db-setup.ts'],
+          globalSetup: ['./tests/support/db-global-setup.ts'],
+          setupFiles: ['./tests/support/db-setup.ts'],
         },
       },
     ],

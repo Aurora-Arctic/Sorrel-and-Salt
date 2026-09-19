@@ -147,9 +147,9 @@ db-reset`, drop-and-recreate from a broken state) is M1.24.
   within that build step (`Dockerfile.postgres`), so `sorrel` is the only
   role any runtime connection can ever authenticate as — and cloning a
   database as a template requires either owning it or being a superuser.
-  This is what lets the Vitest `db` project's `globalSetup` (`src/test/
-db-global-setup.ts`) run `CREATE DATABASE sorrel_test_<n> TEMPLATE
-sorrel_template` as `sorrel`. See `testing.md`.
+  This is what lets the Vitest `db` project's `globalSetup`
+  (`tests/support/db-global-setup.ts`) run `CREATE DATABASE sorrel_test_<n>
+TEMPLATE sorrel_template` as `sorrel`. See `testing.md`.
 - **`npm run db:studio`** (`make db-studio`, MB.21) is `drizzle-kit studio
 --host 0.0.0.0 --port 4983`. It reads the same `drizzle.config.ts` as
   `db:generate`/`db:migrate` — no separate configuration — and needs no
@@ -348,7 +348,7 @@ against this database on 18.6); the limitation is Drizzle's.
 
 **How the table is tested before M1.27 bakes it into the template.**
 `sorrel_template` still carries no application tables, so
-`src/db/ingredients-schema.test.ts` applies the migration that ships this
+`tests/db/ingredients-schema.test.ts` applies the migration that ships this
 table into the worker's own `sorrel_test_<n>` clone — locating it by
 searching `src/db/migrations` for the file that creates `ingredients`, then
 executing its statements — and drops it again afterwards. What the
@@ -393,7 +393,7 @@ one over `(workspace_id, canonical_key)` for the same reason: without
 distinct from every other's and the single index would reserve nothing there.
 
 **The predicates are asserted from the catalogue, not just the behaviour**
-(`src/db/ingredients-indexes.test.ts`, which applies `0005` and `0006` into
+(`tests/db/ingredients-indexes.test.ts`, which applies `0005` and `0006` into
 the worker clone the same way described above). Each index's
 `pg_get_expr(indpred, indrelid)` is pinned to its rendered predicate and its
 `pg_get_indexdef` to its key columns, and one test asserts the table carries
@@ -1112,7 +1112,7 @@ disambiguate.
   always overwritten.** Both paths stamp, but only one value is ever stored —
   the database's — so an application whose clock has drifted cannot write a
   timestamp that disagrees with its neighbours.
-  `src/db/updated-at-trigger.test.ts` proves it by faking `Date` alone
+  `tests/db/updated-at-trigger.test.ts` proves it by faking `Date` alone
   (`toFake: ['Date']`, leaving the driver's timers real), running a
   `withAudit` update whose payload says the year 2000, and reading back this
   year.
@@ -1130,7 +1130,7 @@ An event trigger would attach one automatically on `CREATE TABLE`, but
 `CREATE OR REPLACE TRIGGER` line in its own migration** — one line, copied.
 
 What makes forgetting that a failing test rather than a review note is
-`src/db/updated-at-trigger.test.ts`, the catalogue-introspection guard the
+`tests/db/updated-at-trigger.test.ts`, the catalogue-introspection guard the
 sweep-task rule requires. It applies the whole migration set into the worker's
 clone — which tables the sweep reached is the thing under test, so unlike the
 per-table schema tests it stubs nothing — and then compares two catalogue
@@ -1231,7 +1231,7 @@ wrapper rather than to its own statement scope, and one test user's identity
 would survive into the next assertion — see
 [`m1.9-test-db-isolation.md`](design-decisions/m1.9-test-db-isolation.md).
 
-**Testing against a scratch table.** `src/db/repository.test.ts` runs in the
+**Testing against a scratch table.** `tests/db/repository.test.ts` runs in the
 `db` project against this worker's `sorrel_test_<n>` clone, which carries no
 application tables until M1.27 — so it creates its own
 `repository_probe_herbs` table spreading the real `auditColumns` (minus the
@@ -1274,7 +1274,7 @@ as `AuditWriter` gives writes no path around `applyAudit`.
 so it landed as the mechanism above plus a guard — and since MB.33 the sweep is
 divided between two of them, by what each can make impossible.
 
-`src/test/soft-delete-finder-guard.test.ts` covers the inside of the
+`tests/guards/soft-delete-finder-guard.test.ts` covers the inside of the
 repository. It reads `repository.ts` as text and asserts: `repository.ts`
 builds exactly one `.select(`/`db.query.` call, and it is inside
 `selectFrom`; `selectFrom` is not exported, so no caller can reach an
@@ -1559,7 +1559,7 @@ an admin adds lands in the same shape as a seeded one.
 
 That is now a repo-wide rule rather than this seed's habit (CLAUDE.md,
 Conventions): `src/lib/slugify.ts` is the only file that may import the
-package or name a slug character class, and `src/test/slug-rule.test.ts` is
+package or name a slug character class, and `tests/guards/slug-rule.test.ts` is
 the mechanical half — it scans untracked files as well as tracked ones, so a
 second implementation fails in the diff that adds it rather than after it
 ships. The failure it exists to catch is quiet: two slug rules do not collide,
@@ -1593,10 +1593,10 @@ Two rules a later scenario inherits. Import a schema module **before**
 `audit` in a seed file: `audit.ts` and `schema/users.ts` import each other,
 and entered via `audit.ts` the `users` table is built while `auditColumns` is
 still undefined, so the insert carries no `created_by` (every db test under
-`src/db/` already orders them this way). And write through the handle,
+`tests/db/` already orders them this way). And write through the handle,
 stamping via `applyAudit`, in `minimal.ts`'s shape.
 
-`src/db/seed/index.test.ts` is the `db`-project test: it applies the full
+`tests/db/seed/index.test.ts` is the `db`-project test: it applies the full
 migration set into the worker's clone (the M1.18 pattern — the seed writes
 into the real `users` table with its real self-referencing FKs, and "the
 compendium is empty" needs tables to count), hands `seed()` a handle of its
@@ -1692,7 +1692,7 @@ transcribed copy is exactly what rots.
 `src/db/seed/standard.ts` implements DESIGN.md §"Seed data"'s second scenario:
 five fixture users, workspaces W and X, and a populated compendium. It is the
 fixture every authorization test reads against, which is why the cast is fixed
-rather than generated — `asUser(A)` (M1.26, `src/test/as-user.ts`, which
+rather than generated — `asUser(A)` (M1.26, `tests/support/as-user.ts`, which
 re-exports this module's own `FIXTURE_USERS`) has to mean the same person in
 every suite, and an id a test can name beats one this run happened to produce.
 
@@ -1873,15 +1873,15 @@ the import itself, not config: oxlint 1.82 **ignores** a rule set to `"off"`
 or `"allow"` inside an `overrides` block, so a per-file exemption there would
 look like it worked and silently do nothing. Four files carry one:
 
-| File                                     | Why it needs a client, not a writer                                                                                                                                                                                                                             |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/db/repository.ts`                   | The choke point itself — the rule exists to protect it.                                                                                                                                                                                                         |
-| `src/lib/auth.ts`                        | Better Auth's `drizzleAdapter(db, …)` takes the Drizzle client. It runs its own inserts through its adapter and database hooks (`claude-docs/auth.md`), so there is no session to hand `withAudit`; the user-create hook stamps `createdBy`/`updatedBy` itself. |
-| `scripts/db-seed.ts`                     | The seed CLI constructs the handle it passes to `seed(db, …)`, which writes as the bootstrap user rather than through a session.                                                                                                                                |
-| `src/db/test-database-isolation.test.ts` | The connection _is_ the subject: it asserts `db` points at this worker's `sorrel_test_<n>` clone (M1.9).                                                                                                                                                        |
+| File                                       | Why it needs a client, not a writer                                                                                                                                                                                                                             |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/db/repository.ts`                     | The choke point itself — the rule exists to protect it.                                                                                                                                                                                                         |
+| `src/lib/auth.ts`                          | Better Auth's `drizzleAdapter(db, …)` takes the Drizzle client. It runs its own inserts through its adapter and database hooks (`claude-docs/auth.md`), so there is no session to hand `withAudit`; the user-create hook stamps `createdBy`/`updatedBy` itself. |
+| `scripts/db-seed.ts`                       | The seed CLI constructs the handle it passes to `seed(db, …)`, which writes as the bootstrap user rather than through a session.                                                                                                                                |
+| `tests/db/test-database-isolation.test.ts` | The connection _is_ the subject: it asserts `db` points at this worker's `sorrel_test_<n>` clone (M1.9).                                                                                                                                                        |
 
-That list is pinned by `src/test/lint-db-client-boundary.test.ts`, which lints
-deliberate violations written to a temp directory and asserts the exemption
+That list is pinned by `tests/guards/lint-db-client-boundary.test.ts`, which
+lints deliberate violations written to a temp directory and asserts the exemption
 set is exactly those four. Adding a fifth turns that test red, so it has to be
 argued for in the diff rather than appearing quietly beside an import. The
 violations are written at test time rather than committed as fixtures because
@@ -1897,8 +1897,9 @@ is enforced by a second `no-restricted-imports` group in the same config
 entry, banning `drizzle-orm` and `drizzle-orm/*`. A Drizzle query cannot be
 built without importing the query builder at runtime, so banning the import
 bans the capability: `src/services`, `src/graphql`, `src/app`,
-`src/components`, `src/lib` and `e2e` fail `npm run lint` on a runtime
-import, whatever the resulting finder is named or declared as.
+`src/components`, `src/lib`, `e2e` and every part of `tests/` outside
+`tests/db` fail `npm run lint` on a runtime import, whatever the resulting
+finder is named or declared as.
 
 `allowTypeImports` keeps `import type` legal everywhere, which is the point
 rather than a concession: a type import is erased at compile time and can
@@ -1907,7 +1908,8 @@ build nothing, and it is how DESIGN.md §7's "the GraphQL layer imports
 in prose.
 
 The database layer is exempted by an `overrides` block matching
-`src/db/**/*.ts`, `scripts/**/*.ts` and `drizzle.config.ts`. Two oxlint 1.82
+`src/db/**/*.ts`, `tests/db/**/*.ts` (its own tests, since MB.41 moved them
+out of `src/`), `scripts/**/*.ts` and `drizzle.config.ts`. Two oxlint 1.82
 behaviours shape it, and both are load-bearing:
 
 - A rule set to `"off"` or `"allow"` inside `overrides` is **ignored**, so the

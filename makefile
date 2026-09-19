@@ -275,7 +275,7 @@ act-cache-checkout:
 # the script reads "set but empty" as "no migrations changed", so this leg
 # locally scans *nothing* and never has an ack line to find. Good enough to
 # catch "does the workflow/script wiring itself work"; the scan and the
-# ack-line gating are covered by src/test/destructive-ddl-check.test.ts and by
+# ack-line gating are covered by tests/guards/destructive-ddl-check.test.ts and by
 # `npm run check:destructive-ddl -- --self-test`.
 ## Run one checks.yml leg locally via act — CHECK=lint|format|typecheck|build|audit|destructive-ddl
 act-check: act-image act-cache-checkout

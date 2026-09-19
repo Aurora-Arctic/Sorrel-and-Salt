@@ -148,7 +148,7 @@ jobs:
           # that does not bundle is a build-time finding, and this leg already
           # runs on every push that could touch a component. M0.33's gate
           # (missing index.stories.tsx) rode here too until MB.38 made it a
-          # test — src/test/workshop-guards.test.ts, on the vitest job.
+          # test — tests/guards/workshop-guards.test.ts, on the vitest job.
           # No PR comment, matching build.yml before the collapse — a failing
           # build's own check and job summary are the report.
           - name: build

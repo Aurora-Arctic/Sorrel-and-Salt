@@ -97,7 +97,7 @@ of the app shares, so it is not a token.
 
 [`index.stories.tsx`](../../src/components/ThemeToggle/index.stories.tsx) —
 four renders, no test ids and no snapshots; behaviour is asserted in
-`index.test.tsx`, not here.
+`tests/components/ThemeToggle/index.test.tsx`, not here.
 
 - **Default** — follows the toolbar theme control.
 - **Light** / **Dark** — pin their theme with `.meta = { theme: '…' }`, which the
@@ -112,7 +112,7 @@ four renders, no test ids and no snapshots; behaviour is asserted in
 
 ## Testing
 
-`index.test.tsx` covers the accessible name, click-to-light and click-to-dark
+`tests/components/ThemeToggle/index.test.tsx` covers the accessible name, click-to-light and click-to-dark
 with storage persistence, `aria-pressed`, the correct initial facet classes when
 mounted already in light mode, the `transitionend` park back to `--pre-enter`, a
 non-`transform` `transitionend` being ignored, and listener cleanup on unmount.

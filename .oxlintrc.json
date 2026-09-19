@@ -31,7 +31,7 @@
       "files": [
         "next.config.ts",
         "drizzle.config.ts",
-        "vitest.config.ts",
+        "vitest.config.mts",
         "playwright.config.ts",
         ".ladle/*.{ts,mjs}",
         "e2e/**/*.ts",
@@ -55,13 +55,20 @@
       }
     },
     {
+      "files": ["tests/**/*.{ts,tsx}"],
+      "env": {
+        "browser": true,
+        "node": true
+      }
+    },
+    {
       "files": ["scripts/**/*.ts"],
       "rules": {
         "no-console": "off"
       }
     },
     {
-      "files": ["src/db/**/*.ts", "scripts/**/*.ts", "drizzle.config.ts"],
+      "files": ["src/db/**/*.ts", "tests/db/**/*.ts", "scripts/**/*.ts", "drizzle.config.ts"],
       "rules": {
         "no-restricted-imports": [
           "error",
