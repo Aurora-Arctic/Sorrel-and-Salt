@@ -71,6 +71,7 @@ jobs:
     runs-on: ubuntu-26.04
     outputs:
       environment: ${{ steps.target.outputs.environment }}
+      git_branch: ${{ steps.target.outputs.git_branch }}
       prod_flag: ${{ steps.target.outputs.prod_flag }}
       alias: ${{ steps.target.outputs.alias }}
     steps:
@@ -91,14 +92,17 @@ jobs:
             slug="${slug:0:56}"
             slug="${slug%-}"
             echo "environment=preview" >> "$GITHUB_OUTPUT"
+            echo "git_branch=$HEAD_REF" >> "$GITHUB_OUTPUT"
             echo "prod_flag=" >> "$GITHUB_OUTPUT"
             echo "alias=hotfix-${slug}.sorrelandsalt.com" >> "$GITHUB_OUTPUT"
           elif [ "$REF_NAME" = "main" ]; then
             echo "environment=production" >> "$GITHUB_OUTPUT"
+            echo "git_branch=$REF_NAME" >> "$GITHUB_OUTPUT"
             echo "prod_flag=--prod" >> "$GITHUB_OUTPUT"
             echo "alias=" >> "$GITHUB_OUTPUT"
           else
             echo "environment=preview" >> "$GITHUB_OUTPUT"
+            echo "git_branch=$REF_NAME" >> "$GITHUB_OUTPUT"
             echo "prod_flag=" >> "$GITHUB_OUTPUT"
             echo "alias=staging.sorrelandsalt.com" >> "$GITHUB_OUTPUT"
           fi
@@ -173,6 +177,7 @@ jobs:
     uses: ./.github/workflows/migrate.yml
     with:
       environment: ${{ needs.resolve-target.outputs.environment }}
+      git-branch: ${{ needs.resolve-target.outputs.git_branch }}
       seed-reference: ${{ needs.seed-changed.outputs.changed == 'true' }}
     secrets: inherit
 
@@ -225,10 +230,20 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         run: npm install --global vercel@59
 
+      # --git-branch is load-bearing, not decoration: Vercel resolves a
+      # branch-scoped environment variable only when the pull names a branch,
+      # and the staging DATABASE_URL is exactly such a variable — the one
+      # thing keeping staging off the Neon integration's per-preview
+      # ephemeral branches (MB.27, and
+      # claude-docs/design-decisions/m1.1-neon-branch-strategy.md). Without it
+      # the pull still succeeds and the build simply talks to another
+      # database, so tests/guards/vercel-pull-git-branch.test.ts is what
+      # notices.
       - name: Pull Vercel environment
         if: steps.guard.outputs.enabled == 'true'
-        run: vercel pull --yes --environment=${{ needs.resolve-target.outputs.environment }} --token="$VERCEL_DEPLOY_TOKEN"
+        run: vercel pull --yes --environment=${{ needs.resolve-target.outputs.environment }} --git-branch="$GIT_BRANCH" --token="$VERCEL_DEPLOY_TOKEN"
         env:
+          GIT_BRANCH: ${{ needs.resolve-target.outputs.git_branch }}
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
       - name: Build
@@ -243,10 +258,26 @@ jobs:
         env:
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
           PROD_FLAG: ${{ needs.resolve-target.outputs.prod_flag }}
+          GIT_BRANCH: ${{ needs.resolve-target.outputs.git_branch }}
         run: |
+          # The --meta pair is the deploy-side half of MB.27's fix, and it is
+          # not optional here: the CLI infers a deployment's branch from the
+          # local checkout, and actions/checkout leaves a detached HEAD, so
+          # without it the deployment has no branch association at all. Branch
+          # association is what makes Vercel resolve branch-scoped Preview
+          # variables — so the pull's --git-branch fixes the *build's*
+          # DATABASE_URL and this fixes the *runtime's*, which is the one
+          # src/db/connection.ts actually reads. Both halves are required;
+          # either alone leaves staging on the integration's Preview-wide
+          # value. A production deploy uses Production settings regardless of
+          # this metadata, so main carries it harmlessly rather than needing a
+          # branch of its own here.
+          #
           # stdout is always the deployment URL; stderr carries build/progress
           # logs — keep them apart (Vercel's own CI example does this).
-          if vercel deploy --prebuilt $PROD_FLAG --token="$VERCEL_DEPLOY_TOKEN" \
+          if vercel deploy --prebuilt $PROD_FLAG \
+              --meta githubDeployment=1 --meta githubCommitRef="$GIT_BRANCH" \
+              --token="$VERCEL_DEPLOY_TOKEN" \
               > deploy-url.txt 2> deploy.log; then
             url="$(cat deploy-url.txt)"
             echo "url=$url" >> "$GITHUB_OUTPUT"
