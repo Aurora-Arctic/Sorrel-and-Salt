@@ -186,6 +186,7 @@ jobs:
           ENVIRONMENT: ${{ inputs.environment }}
           GIT_BRANCH: ${{ inputs.git-branch }}
           ENV_FILE: .vercel/.env.${{ inputs.environment }}.local
+          RESOLVED_ENV_FILE: ${{ runner.temp }}/resolved.env
         run: |
           # Production is decided by the Vercel environment rather than the
           # branch name: `main` is the only push that resolves `production`,
@@ -209,9 +210,46 @@ jobs:
 
           echo "::add-mask::$db_url"
           echo "DATABASE_URL=$db_url" >> "$GITHUB_ENV"
+
+          # MB.49 — and to a file, because the probe below reads a file path.
+          #
+          # Same reason assert-pulled-env.ts does: argv is visible to `ps` and
+          # is echoed by `set -x`, and a step-level `env:` carrying the value
+          # gets printed in that step's own env block. `umask 077` first, so
+          # the file is never briefly world-readable between creation and a
+          # chmod. It lives in RUNNER_TEMP, which the runner deletes with the
+          # job, rather than in the workspace, which later steps archive.
+          (umask 077 && printf 'DATABASE_URL="%s"\n' "$db_url" > "$RESOLVED_ENV_FILE")
+
           # Which source won, never the value: every candidate is masked, so
           # the value itself can never tell you which database you migrated.
           echo "Resolved DATABASE_URL from $source"
+
+      # MB.49 — connect before migrating, so a failure has a cause.
+      #
+      # `drizzle-kit migrate` catches whatever postgres.js throws and exits 1
+      # without printing it. An unreachable host, a wrong password, an
+      # `sslmode` mismatch and a `channel_binding` parameter all produce the
+      # same spinner frame and the same bare `exit code 1` — four fixes, one
+      # indistinguishable failure. That is what left MB.45-47 guessing.
+      #
+      # It reads the RESOLVED value, not the pulled file. MB.46 validated what
+      # `vercel pull` wrote; MB.47 then took DATABASE_URL from a GitHub secret
+      # instead and handed it straight to drizzle-kit, reopening that gap one
+      # task after it was closed. Pointing the probe at the resolved file is
+      # what keeps it closed whichever source wins — and
+      # tests/guards/database-probe.test.ts asserts that it is pointed there.
+      #
+      # Fatal, deliberately. A migration cannot proceed without a connection,
+      # so a probe that warned and carried on would leave the job exactly as
+      # silent as it is today.
+      - name: Probe the database
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          RESOLVED_ENV_FILE: ${{ runner.temp }}/resolved.env
+        run: |
+          node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probe-database.ts \
+            --file "$RESOLVED_ENV_FILE"
 
       - name: Check Neon secrets
         id: neon-guard
