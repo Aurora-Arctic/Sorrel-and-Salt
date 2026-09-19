@@ -127,6 +127,27 @@ jobs:
         if: always() && inputs.should-run
         run: node .github/scripts/summarize-vitest.mjs
 
+      # M1.28 — the acceptance suite, printed as the per-story checklist
+      # (DESIGN.md §11). A second run on its own config
+      # (vitest.stories.config.mts) rather than a third project in the run
+      # above, and without `--coverage`: a red or green story never moves the
+      # 80% threshold, and its pass/fail is its own step outcome. `always()`
+      # because the checklist is a progress report, wanted even when the unit
+      # run above is red. The step fails the job when a story fails — M2.1,
+      # which lands the first acceptance file deliberately red, decides how
+      # that is tolerated until its milestone closes (TASKS.md, M2 sequencing).
+      - name: Run acceptance stories
+        id: stories
+        if: always() && inputs.should-run
+        run: |
+          set -o pipefail
+          npm run test:stories -- --outputFile=/app/stories.json 2>&1 | tee /app/stories.log
+
+      - name: Summarize stories
+        id: summarize-stories
+        if: always() && inputs.should-run
+        run: node .github/scripts/summarize-stories.mjs
+
       # Unlike playwright.yml's report upload, this is deliberately not
       # failure-only — the point is a downloadable coverage report to review/
       # track on every run, pass or fail.
@@ -148,6 +169,18 @@ jobs:
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
 
+      # Its own section and its own PR comment thread (marker `stories`), so
+      # the checklist reads on its own rather than under the coverage table.
+      - name: Write stories job summary
+        if: always() && inputs.should-run
+        uses: ./.github/actions/job-summary
+        with:
+          check-name: Stories
+          outcome: ${{ steps.stories.outcome }}
+          log-file: /app/stories.log
+          summary: ${{ steps.summarize-stories.outputs.summary }}
+          details: ${{ steps.summarize-stories.outputs.details }}
+
       # Always comments pass/fail from pr-gate; fail-only on a separate
       # merge-queue-labeled thread when merge-queue: true (no action at all on
       # success) — see .github/actions/pr-comment.
@@ -164,3 +197,17 @@ jobs:
           success-mode: comment
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
+
+      - name: Comment stories on PR
+        if: always() && inputs.pr-number && inputs.should-run
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Stories
+          marker-slug: stories
+          pr-number: ${{ inputs.pr-number }}
+          merge-queue: ${{ inputs.merge-queue }}
+          outcome: ${{ steps.stories.outcome }}
+          log-file: /app/stories.log
+          success-mode: comment
+          summary: ${{ steps.summarize-stories.outputs.summary }}
+          details: ${{ steps.summarize-stories.outputs.details }}

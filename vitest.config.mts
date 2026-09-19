@@ -1,31 +1,21 @@
-import os from 'node:os';
 import { defineConfig } from 'vitest/config';
+import { dbHarness } from './tests/support/db-project.mts';
 
 // Two projects per CLAUDE.md's Testing section: `unit` runs pure logic and
 // components in jsdom with no network; `db` runs against a real local
 // Postgres (never Neon — see docker-compose.yaml's `postgres` service).
 // `db` includes `tests/services/**`, which has no files yet (services land
 // from Wave 5), so `passWithNoTests` keeps that half from failing the run.
-// `globalSetup`/`setupFiles` wire each worker to its own
-// `sorrel_test_${VITEST_POOL_ID}` clone (M1.9) — the pool *slot*, not
-// `VITEST_WORKER_ID`; see tests/support/worker-database.ts (MB.14) — of
-// `sorrel_test_template`, which `globalSetup` migrates and seeds with the
-// `standard` scenario once per run, and `setupFiles` re-clones before every
-// test file (M1.27; tests/support/seeded-database.ts).
-
-// Vitest only resolves its actual worker count internally — `project.config
-// .maxWorkers` is `undefined` unless set explicitly here — so `db`'s
-// `globalSetup` (which needs a real number to know how many clones to make)
-// gets one pinned in config instead.
+// The Postgres wiring itself — the per-slot clone of the seeded template,
+// and the pinned `maxWorkers` that wiring depends on — is
+// tests/support/db-project.mts's `dbHarness`, spread into `db` below and
+// into the acceptance suite's own config.
 //
-// It must keep mirroring Vitest's own default (`os.availableParallelism() - 1`,
-// floored at 1), and not merely as a courtesy: both projects' specs land in the
-// same pool group (neither sets `sequence.groupOrder`), the group's `maxWorkers`
-// comes from whichever project's spec sorts first, and Vitest throws outright if
-// two projects in one group disagree. That throw is what makes
-// `VITEST_POOL_ID <= dbMaxWorkers` — every slot has a clone (MB.14) — true
-// rather than hopeful: diverge from the default and the run fails loudly.
-const dbMaxWorkers = Math.max((os.availableParallelism?.() ?? os.cpus().length) - 1, 1);
+// The acceptance suite (tests/acceptance/, DESIGN.md §11) is deliberately
+// not a third project here: it runs from vitest.stories.config.mts (M1.28),
+// so a red story never fails this run and a green one never counts toward
+// the coverage threshold below. That is why `unit` excludes it — its glob
+// would otherwise sweep those files up under jsdom.
 export default defineConfig({
   // MB.41 — tests live in tests/ and reach the code under test by the `@/*`
   // alias tsconfig already declares, so moving a test never re-levels a
@@ -66,7 +56,7 @@ export default defineConfig({
           environment: 'jsdom',
           globals: true,
           include: ['tests/**/*.test.{ts,tsx}'],
-          exclude: ['tests/db/**', 'tests/services/**'],
+          exclude: ['tests/db/**', 'tests/services/**', 'tests/acceptance/**'],
           setupFiles: ['@testing-library/jest-dom/vitest', './vitest.setup.ts'],
         },
       },
@@ -74,13 +64,9 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'db',
-          environment: 'node',
-          globals: true,
           include: ['tests/db/**/*.test.ts', 'tests/services/**/*.test.ts'],
           passWithNoTests: true,
-          maxWorkers: dbMaxWorkers,
-          globalSetup: ['./tests/support/db-global-setup.ts'],
-          setupFiles: ['./tests/support/db-setup.ts'],
+          ...dbHarness,
         },
       },
     ],

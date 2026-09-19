@@ -191,16 +191,20 @@ jobs:
             # src/**, so without this entry a test-only PR — the one kind of
             # PR whose entire content is the thing this job runs — would skip
             # the job altogether and report green.
+            # vitest.stories.config.mts and summarize-stories.mjs are the
+            # acceptance run (M1.28), a second step of the same job.
             vitest:
               - *shared
               - '.github/workflows/vitest.yml'
               - '.github/workflows/build-db-image.yml'
               - '.github/scripts/summarize-vitest.mjs'
+              - '.github/scripts/summarize-stories.mjs'
               - '.github/scripts/lib/**'
               - 'src/**'
               - 'tests/**'
               - '.ladle/config.mjs'
               - 'vitest.config.mts'
+              - 'vitest.stories.config.mts'
               - 'vitest.setup.ts'
               - 'package.json'
               - 'package-lock.json'
