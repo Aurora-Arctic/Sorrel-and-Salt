@@ -224,6 +224,17 @@ edit at any call site; nothing passes it today.
   scripts beside them) for the PR comment's stat line
   and coverage table. `should-run` path-filters the same way `lint`/
   `typecheck` do.
+- **`vitest.yml`'s second step (M1.28)** — `npm run test:stories`, the
+  acceptance suite on `vitest.stories.config.mts`, run after the coverage
+  step with `always()` and no `--coverage` of its own, so a story never
+  counts toward the 80% threshold (`claude-docs/testing.md`). Its reporter
+  writes the checklist as JSON (`--outputFile=/app/stories.json`) and
+  `.github/scripts/summarize-stories.mjs` renders it — "3 of 45 stories
+  passing" and a markdown checklist — into a second job-summary section and a
+  second PR comment thread (`marker-slug: stories`). A failing story fails
+  the job; M2.1 decides how a deliberately red scaffold is tolerated.
+  `pr-gate.yml`'s `vitest` filter lists `vitest.stories.config.mts` and the
+  script, so editing either reruns the job.
 - **`playwright.yml`** (M1.14) — `npm run e2e` against the app
   `webServer` already builds and serves on 8001 (see `testing.md`'s E2E
   section). Runs in `build-e2e-image.yml`'s dedicated image, **not**

@@ -32,6 +32,7 @@
         "next.config.ts",
         "drizzle.config.ts",
         "vitest.config.mts",
+        "vitest.stories.config.mts",
         "playwright.config.ts",
         ".ladle/*.{ts,mjs}",
         "e2e/**/*.ts",
