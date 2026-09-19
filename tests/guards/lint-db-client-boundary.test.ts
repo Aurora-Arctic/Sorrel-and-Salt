@@ -4,30 +4,21 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
-// The mechanical guard for both import boundaries in `.oxlintrc.json`, each a
-// `no-restricted-imports` group: only `src/db/repository.ts` may import the
-// database *client* (M1.17, CLAUDE.md rule 2), and only the database layer may
-// import `drizzle-orm` at *runtime* (MB.33, CLAUDE.md rule 4, DESIGN.md §7) — a
-// query cannot be built without that import, so the ban is on the capability
-// rather than on a spelling. This asserts both actually fire, so neither can be
-// weakened by a typo'd glob or a renamed module without a red test.
+// Both `no-restricted-imports` boundaries in `.oxlintrc.json` actually fire:
+// only `src/db/repository.ts` may import the database client (CLAUDE.md rule
+// 2), and only the database layer may import `drizzle-orm` at runtime (rule 4)
+// — claude-docs/db.md, "Where queries may be built".
 //
-// Two oxlint facts shape the second rule. oxlint 1.82 *ignores* a rule set to
-// `"off"` inside an `overrides` block — so the database layer's exemption is a
-// narrower copy of the rule rather than "off" — and an `overrides` block
-// *replaces* the top-level rule config for the files it matches rather than
-// merging with it, so that copy has to restate the client ban. The regression
-// that shape invites (the database layer quietly losing rule 2) is asserted
-// below, not assumed.
+// Two oxlint 1.82 facts shape the config: a rule set to `"off"` inside an
+// `overrides` block is ignored, so the database layer's exemption is a
+// narrower copy of the rule; and an `overrides` block *replaces* the top-level
+// rule config rather than merging with it, so that copy must restate the
+// client ban — the regression that invites is asserted below.
 //
-// Deliberate violations are written to throwaway `__lint-probe__` directories
-// inside the repo rather than to `tmpdir`, because both rules are scoped by
-// path: a file outside the tree matches no `overrides` block and so could only
-// ever prove the default. They are not committed as fixtures because oxlint
-// skips anything matched by the config's `ignorePatterns` even when the path is
-// passed explicitly (`--no-ignore` does not override it), so a committed fixture
-// would have to be lintable by `npm run lint` too, and would then fail the very
-// check it exists to prove.
+// Probes are written to throwaway `__lint-probe__` directories inside the
+// repo, since both rules are path-scoped and a file in `tmpdir` matches no
+// `overrides` block; not committed, since oxlint skips anything matched by
+// `ignorePatterns` even when passed explicitly (`--no-ignore` does not override it).
 
 const RULE = 'eslint(no-restricted-imports)';
 const oxlint = join(REPO_ROOT, 'node_modules/.bin/oxlint');
@@ -37,11 +28,9 @@ const config = join(REPO_ROOT, '.oxlintrc.json');
 const PROBE = '__lint-probe__';
 
 /**
- * Everywhere the query-builder ban applies — application code, and the test
- * directories that are not the database layer's own (MB.41). `tests/db` is
- * exempt below; the rest of `tests/` is application code as far as rule 4 is
- * concerned, and a probe in each proves the move did not quietly widen the
- * exemption to the whole suite.
+ * Everywhere the query-builder ban applies. `tests/db` is exempt below; the
+ * rest of `tests/` is application code as far as rule 4 is concerned, and a
+ * probe in each proves the exemption has not widened to the whole suite.
  */
 const RESTRICTED = [
   'src/services',
@@ -81,13 +70,9 @@ function probe(directory: string, name: string, source: string): string {
   return file;
 }
 
-// Rule 1 — every shape an importer in this repo can reach connection.ts by:
-// a sibling inside src/db, a module one or two directories up inside src, the
-// extension-carrying specifier scripts/ must use, and — since MB.41 moved the
-// suite out of src/ and pointed it at the `@/` alias — the aliased form every
-// test now writes. The alias is the reason this entry matters rather than a
-// completeness exercise: the ban is a set of path globs, and a specifier that
-// starts `@/` is not the relative shape any of the first four describe.
+// Rule 1 — every shape an importer can reach connection.ts by. The `@/` alias
+// is the one that matters: the ban is a set of path globs, and `@/db/connection`
+// is not the relative shape any of the other four describe.
 const CLIENT_SPECIFIERS = [
   './connection',
   '../db/connection',
@@ -163,13 +148,12 @@ beforeAll(() => {
     writeFileSync(join(REPO_ROOT, file), source);
   }
 
-  // One spawn for every case: oxlint costs ~200ms of process start, and there
-  // are thirty-odd probes. Diagnostics carry the filename they came from, so
-  // the cases partition the one result rather than each paying for a run.
+  // One spawn for every case: oxlint costs ~200ms of process start, and
+  // diagnostics carry their filename, so the cases partition one result.
   let stdout: string;
   try {
-    // oxlint exits non-zero when it reports errors, which execFileSync throws
-    // on — the diagnostics are still on stdout, so read them off the error.
+    // oxlint exits non-zero when it reports errors; the diagnostics are still
+    // on the thrown error's stdout.
     stdout = execFileSync(
       oxlint,
       ['-c', config, '--format', 'json', ...probes.keys(), ...CLIENT_EXEMPT, 'drizzle.config.ts'],
@@ -203,19 +187,14 @@ describe('CLAUDE.md rule 2 — the db client import boundary', () => {
     expect(restricted(siblingModuleProbe)).toBe(0);
   });
 
-  // The database layer is exempted from the *query-builder* ban by an
-  // `overrides` block, and an override replaces the top-level rule rather than
-  // merging with it. Without this, dropping the client group from that copy
-  // would leave every file under src/db free to import the client, and every
-  // other assertion here would stay green.
+  // The `overrides` copy replaces the top-level rule (see above): drop the
+  // client group from it and every file under src/db could import the client
+  // while every other assertion here stayed green.
   it('still bans the client inside the database layer, which is exempt only from the query-builder ban', () => {
     expect(restricted(exemptClientProbe)).toBe(1);
   });
 
-  // The four infrastructure exceptions (claude-docs/db.md): Better Auth's
-  // drizzleAdapter and the seed CLI both need a client rather than a writer,
-  // the isolation test's subject *is* the connection, and the repository is
-  // the choke point the rule exists to protect.
+  // The four exceptions, each needing a client rather than a writer (see above).
   it.each(CLIENT_EXEMPT)(
     'exempts %s, which cannot reach the database through withAudit',
     (file) => {
@@ -223,17 +202,13 @@ describe('CLAUDE.md rule 2 — the db client import boundary', () => {
     },
   );
 
-  // The exemptions are disable comments rather than config, because oxlint
-  // 1.82 ignores a rule set to "off"/"allow" inside an `overrides` block. That
-  // makes a fifth exemption cheap to add by hand, so pin the whole set: a new
-  // one has to be argued for here, in the diff, rather than appearing quietly
-  // beside an import.
+  // The exemptions are disable comments rather than config (oxlint ignores
+  // "off" inside `overrides`), which makes a fifth cheap to add by hand — so
+  // the set is pinned and a new one is argued for in the diff.
   it('has exactly four files carrying the exemption, and no others', () => {
-    // `-c safe.directory=*`, because the vitest job runs its container as root
-    // over a checkout owned by uid 1000 and git refuses that as "dubious
-    // ownership" — the bare call fails in CI while passing locally. Still
-    // `git ls-files` rather than a filesystem walk: tracked files are what
-    // "and no others" means, and a walk would go red on untracked scratch.
+    // `-c safe.directory=*`: CI's vitest job runs as root over a checkout
+    // owned by uid 1000, which git refuses as "dubious ownership". `git
+    // ls-files` rather than a walk: tracked files are what "no others" means.
     const tracked = execFileSync('git', ['-c', 'safe.directory=*', 'ls-files', '*.ts', '*.tsx'], {
       cwd: REPO_ROOT,
       encoding: 'utf8',
@@ -256,7 +231,7 @@ describe('CLAUDE.md rule 4 — the query-builder import boundary', () => {
   });
 
   // DESIGN.md §7: the GraphQL layer imports drizzle-orm for types only. A type
-  // import is erased at compile time and so cannot build a query.
+  // import is erased at compile time and can build nothing.
   it.each(RESTRICTED)('allows a type-only drizzle-orm import from %s', (directory) => {
     expect(restricted(typeOnlyProbes[directory])).toBe(0);
   });

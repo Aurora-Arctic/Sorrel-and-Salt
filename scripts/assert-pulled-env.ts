@@ -1,31 +1,21 @@
 /**
- * Assert, and report on, the environment `vercel pull` wrote. Run by
- * deploy.yml and migrate.yml before anything consumes that file;
- * claude-docs/ci.md's "Deploy" section is the walkthrough.
+ * Assert, and report on, the environment `vercel pull` wrote — run by
+ * deploy.yml and migrate.yml before anything consumes that file
+ * (claude-docs/ci.md, "Deploy").
  *
- *   ASSERT — a required key that is missing, empty, a placeholder or not a
- *   connection string fails the job with its own named cause, rather than
- *   reaching a consumer that cannot describe it.
- *
- *   REPORT — every key the pull returned, with a classification and never a
- *   value, printed even when the run is about to fail. This is the half worth
- *   having: before it, CI could not answer "what did the pull return?" at all.
- *   Key names are not secret (claude-docs/secrets.md enumerates them); that no
- *   value is ever printed is asserted in
- *   tests/guards/pulled-env-assertion.test.ts rather than intended.
- *
- * **The input is read from a FILE PATH**, never from argv and never from an
- * environment variable carrying the value: argv is visible to `ps` and is
- * echoed by `set -x`.
+ * A required key that is missing, empty, a placeholder or not a connection
+ * string fails the job with its own named cause; every key the pull returned
+ * is reported with a classification and never a value, even when the run is
+ * about to fail. The input is a FILE PATH, never argv or an environment
+ * variable carrying the value: argv is visible to `ps` and echoed by `set -x`.
  */
 
 import { readFileSync } from 'node:fs';
 
 /**
  * What `vercel pull` writes in place of a value it cannot read back. Listed
- * rather than pattern-matched so the set is reviewable: the CLI has used more
- * than one spelling across versions, and a placeholder that goes unrecognised
- * is precisely the failure this script exists to end.
+ * rather than pattern-matched so the set is reviewable — the CLI has used
+ * more than one spelling across versions.
  */
 export const PLACEHOLDERS = ['[SENSITIVE]', '[REDACTED]', '<REDACTED>'] as const;
 
@@ -47,8 +37,7 @@ export interface AssertionResult {
 
 /**
  * The dotenv shape `vercel pull` writes: `KEY="value"`, one per line. Split on
- * the *first* `=` only — a password may legally contain one, and `cut -f2-`
- * was doing the same thing in shell.
+ * the *first* `=` only — a password may legally contain one.
  */
 export function parseEnvFile(text: string): Map<string, string> {
   const entries = new Map<string, string>();
@@ -62,9 +51,8 @@ export function parseEnvFile(text: string): Map<string, string> {
 
     const key = trimmed.slice(0, separator);
     const raw = trimmed.slice(separator + 1);
-    // Only a *matched* pair of wrapping quotes is the file's own syntax.
-    // A stray quote on one side is a malformed value, and unwrapping it here
-    // would hide exactly what `validateDatabaseUrl` is meant to catch.
+    // Only a *matched* pair of wrapping quotes is the file's own syntax; a
+    // stray quote on one side is the malformed value `validateDatabaseUrl` reports.
     const unwrapped =
       (raw.startsWith('"') && raw.endsWith('"') && raw.length >= 2) ||
       (raw.startsWith("'") && raw.endsWith("'") && raw.length >= 2)
@@ -105,21 +93,16 @@ const SCHEME = /^postgres(?:ql)?:\/\//;
 const CONNECTION = /^postgres(?:ql)?:\/\/[^\s/@]+(?::[^\s/@]*)?@[^\s/:]+(?::\d+)?\/[^\s?]+/;
 
 /**
- * libpq parameters postgres.js does not consume, and so forwards.
- *
+ * libpq parameters postgres.js does not consume, and so forwards. Its
  * `parseOptions` deletes `sslmode`, reads the keys in its own `defaults`, and
- * spreads EVERY REMAINING query parameter into `connection` — which the driver
- * sends verbatim as a Postgres *startup parameter*. So a libpq CLIENT-side
- * option reaches the server, which has never heard of it and answers 42704.
- *
- * `channel_binding` is the confirmed one, and Neon's console adds it to the
- * connection strings it hands you by default. The rest are the same defect.
- * Listed rather than derived, because deriving would mean reading node_modules
- * at runtime and a list is reviewable.
+ * sends every remaining query parameter to the server verbatim as a *startup
+ * parameter* — which the server rejects with 42704. `channel_binding` is the
+ * confirmed one, and Neon's console adds it by default. Listed rather than
+ * derived: deriving would mean reading node_modules at runtime.
  *
  * Deliberately NOT here: `sslmode` (consumed, mapped to `ssl`),
  * `application_name` and `options` (real server parameters), and the keys
- * postgres.js already names — `connect_timeout`, `target_session_attrs`,
+ * postgres.js names itself — `connect_timeout`, `target_session_attrs`,
  * `sslnegotiation`, `prepare`, `max`, `fetch_types`.
  */
 export const CLIENT_ONLY_PARAMS = [
@@ -136,10 +119,9 @@ export const CLIENT_ONLY_PARAMS = [
 ] as const;
 
 /**
- * Which of the above a URL carries, in the order the list declares them so the
- * message is stable. Returns [] for a URL with no query string, and for one
- * `new URL` cannot parse — by this point `CONNECTION` has already matched, and
- * a parse failure here is not this rule's to report.
+ * Which of the above a URL carries, in list order so the message is stable.
+ * `[]` for a URL with no query string, and for one `new URL` cannot parse —
+ * `CONNECTION` has already matched, so a parse failure is not this rule's.
  */
 function clientOnlyParams(value: string): string[] {
   let params: URLSearchParams;
@@ -152,12 +134,9 @@ function clientOnlyParams(value: string): string[] {
 }
 
 /**
- * **Ordered, and the order is load-bearing.** `"postgres://…"` is a quoted URL
- * rather than a non-URL, and saying so is the difference between "fix the
- * extraction" and "fix the value" — so UNTRIMMED is judged before the scheme.
- *
- * No message interpolates the value. It is masked in CI, so a message quoting
- * it would print `***` and say nothing.
+ * Ordered, and the order is load-bearing: `"postgres://…"` is a quoted URL
+ * rather than a non-URL, so UNTRIMMED is judged before the scheme. No message
+ * interpolates the value — it is masked in CI, so quoting it prints `***`.
  */
 export function validateDatabaseUrl(raw: string | undefined): Verdict {
   const kind = classify(raw);
@@ -210,9 +189,7 @@ export function validateDatabaseUrl(raw: string | undefined): Verdict {
     };
   }
 
-  // Last, because it is the only rule that needs a well-formed URL to apply:
-  // everything above decides whether this is a connection string at all, and
-  // this decides whether it is one postgres.js can actually open.
+  // Last: the only rule that needs a well-formed URL to apply.
   const forwarded = clientOnlyParams(value);
   if (forwarded.length > 0) {
     return {
@@ -243,9 +220,8 @@ export function reportLines(env: Map<string, string>): string[] {
 
 /**
  * `DATABASE_URL` is held to the connection-string rules; every other required
- * key only has to be a real value. Every failure is collected rather than
- * thrown on the first, because a run that names one missing variable and hides
- * the next costs a second round trip to learn the same thing.
+ * key only has to be present. Every failure is collected rather than thrown
+ * at the first, so one run names them all.
  */
 export function assertPulledEnv(text: string, required: string[]): AssertionResult {
   const env = parseEnvFile(text);
@@ -312,8 +288,8 @@ function main(): void {
 
   const result = assertPulledEnv(text, required);
 
-  // The report prints first and prints always: a failure that does not say
-  // what the pull returned is the defect this script exists to end.
+  // The report prints first and always: a failure that does not say what the
+  // pull returned is the defect this script exists to end.
   console.log(`Pulled environment (${file}) — ${result.report.length} variable(s):\n`);
   for (const line of result.report) console.log(line);
   console.log('');
