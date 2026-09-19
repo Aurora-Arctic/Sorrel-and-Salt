@@ -109,7 +109,7 @@ _33 tasks · 45 hours_
 - M0.6 blocks M0.7, M0.8 and M0.29 — the semantic tokens, the mixins and the theme toggle all derive from the base palette, so picking it late means redoing them.
 - M0.30 stands up the component workshop and blocks M0.31, M0.32 and M0.33. It needs M0.5's Sass partials; the theme decorator (M0.31) and the first stories (M0.32) also need M0.29. The workshop numbers sit after M0.29 for the same reason it does — added after the original breakdown.
 - M0.18 blocks M0.19 and the final image tag in M0.13.
-- M0.18 ships an image with extensions and an empty template only. Migrations and seed are baked in later, by M1.27. Do not try to bake a schema that does not exist yet.
+- M0.18 ships an image with extensions and an empty template only. That is also its final form: M1.27 was to bake migrations and seed in later and instead populates a clone of that template at test-run setup, so do not bake a schema into it — not because it does not exist yet, but because it never belongs there.
 
 ### Repo bootstrap
 
@@ -439,7 +439,7 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want one database image shared by CI and local development so that every environment starts from an identical Postgres in seconds.
 
-Workflow building a Postgres 18 image with required extensions enabled and an empty `sorrel_template` database, published to GHCR. Tag by content hash of `src/db/**` plus `latest`; rebuild only when that path changes. Migrations and seed are baked into the template by M1.27, once they exist — this task deliberately ships the image before there is a schema to put in it.
+Workflow building a Postgres 18 image with required extensions enabled and an empty `sorrel_template` database, published to GHCR. Tag by content hash of `src/db/**` plus `latest`; rebuild only when that path changes. Migrations and seed were to be baked into the template by M1.27, once they existed — this task deliberately shipped the image before there was a schema to put in it. M1.27 then decided against baking at all and took `src/db/**` out of the hash: the empty template is the image's final form, and the harness populates clones of it at test-run setup.
 
 _Acceptance criteria:_
 
@@ -976,7 +976,7 @@ _Acceptance criteria:_
 - Overrides merge rather than replace nested defaults
 - Factories are used by at least one existing test
 - `makeIngredient()` defaults to a valid `nomenclature`/`canonicalName` pair; overriding `nomenclature` still produces a valid row
-- Every ingredient or workspace name a factory supplies on its own is invented, never a real one — M1.27 bakes `standard` into every db worker's clone, and a real name is only safe until someone seeds it; a test that reads the seed's own lists backstops it
+- Every ingredient or workspace name a factory supplies on its own is invented, never a real one — M1.27 seeds `standard` into every db worker's clone, and a real name is only safe until someone seeds it; a test that reads the seed's own lists backstops it
 
 **M1.26 — asUser helper and Forbidden error type** · 1h
 
@@ -990,19 +990,21 @@ _Acceptance criteria:_
 - Forbidden is distinguishable from a not-found error
 - A denied call rejects rather than returning empty
 
-**M1.27 — Bake migrations and the standard seed into the database image** · 2h
+**M1.27 — Populate the clone template with migrations and the standard seed at test setup** · 6h _(was "Bake migrations and the standard seed into the database image" · 2h; retitled and resized in its own PR — see below)_
 
 _Story:_ As a developer, I want the shared image to carry a ready-to-clone template so that no environment spends time migrating or seeding before it can run a test.
 
-Extend the M0.18 image build: apply migrations and the standard scenario into `sorrel_template` at build time. This closes the dependency that M0.18 deliberately left open, and is what makes M1.7 a clone rather than a setup routine.
+The story's "shared image" is where the template was going to live, and the task as first written extended the M0.18 image build to apply migrations and the standard scenario into `sorrel_template` at build time. It lives in the harness instead: `tests/support/seeded-database.ts` clones the image's extensions-only `sorrel_template`, runs `db:migrate` and `SEED_SCENARIO=standard db:seed` against the clone — the same two scripts compose's `db-init` runs — and Vitest's `globalSetup` and Playwright's each build one such template per run and clone from it, Vitest re-cloning each worker's database before every test file. Migrate + seed measured at ~1 s once per run against a 30 ms clone, so a Node toolchain in the Postgres image, a DB-image rebuild per migration, and a template that goes stale against the checkout after `git pull` were all cost with nothing to buy ([`design-decisions/m1.27-template-at-setup-not-in-image.md`](design-decisions/m1.27-template-at-setup-not-in-image.md)). This still closes the dependency M0.18 left open and is what makes M1.9 a clone rather than a setup routine.
+
+The 2h was for an image change. The harness half was about that; the rest was the twenty `tests/db/` files that had each built their own tables against an empty template and are made wrong by a template that carries the schema — reworked here rather than in a follow-up, since the two halves cannot merge apart.
 
 _Acceptance criteria:_
 
-- Template contains the full schema and the standard scenario
-- Image tag changes when migrations or seed change
-- A cloned database is immediately usable with no further setup
-- CI and compose both pick up the new tag from one place
-- Local and CI clones are byte-identical in content
+- Every `db` worker's clone contains the full schema and the standard scenario, and does so afresh for every test file
+- No file under `tests/db/` builds schema of its own or restores anything for the next file
+- The DB image tag no longer depends on `src/db/**`; a migration does not rebuild the image
+- Vitest and Playwright prepare their databases through one shared function, so local and CI run the same migrations and the same seed — the same scripts `db-init` runs
+- `sorrel_template` itself stays as M0.18 built it: extensions only, never written to
 
 **M1.28 — make test-stories with a per-story checklist** · 2h
 

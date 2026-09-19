@@ -6,6 +6,7 @@ import { getTableConfig } from 'drizzle-orm/pg-core';
 import { MIGRATIONS_DIR } from '../support/paths';
 import { ingredientFolkNames } from '@/db/schema/ingredient-folk-names';
 import { ingredients } from '@/db/schema/ingredients';
+import { FIXTURE_USERS } from '@/db/seed/standard';
 
 // DESIGN.md §9's one multicolumn index, beside `ingredient_folk_names`' own
 // (M4.4a). A multicolumn `gin_trgm_ops` index serves a query on either column
@@ -45,12 +46,14 @@ describe('ingredients trigram index declaration', () => {
   });
 });
 
-// The behaviour half, following M4.1a/M4.4a's idiom: apply the shipped
-// migrations into this worker's disposable clone rather than hand-copying their
-// DDL, so what is asserted below is the SQL production runs. `users` and
-// `workspaces` are stubbed to the one column the foreign keys point at —
-// applying their own migrations here would leave a __drizzle_migrations table
-// behind for the next test file in this worker to trip over.
+// The behaviour half, against the real tables and indexes. This worker's
+// sorrel_test_<n> clone arrives with every migration applied and the
+// `standard` scenario seeded (M1.27, tests/support/db-setup.ts), re-cloned
+// that way before this file runs — so what is asserted below is the SQL
+// production runs, with no schema built here and nothing to put back
+// afterwards. Until M1.27 the template was empty and this file applied the
+// three migrations itself; the reader survives for the one test that still
+// needs the shipped statement, the idempotency check at the bottom.
 
 function migrationStatementsContaining(marker: string): string[] {
   const file = readdirSync(MIGRATIONS_DIR)
@@ -69,7 +72,10 @@ function migrationStatementsContaining(marker: string): string[] {
 
 const TRIGRAM_MIGRATION = `CREATE INDEX IF NOT EXISTS "${TRIGRAM_INDEX}"`;
 
-const AUTHOR = '11111111-1111-1111-1111-111111111111';
+// The seed's user rather than an invented id: the real `users` table has NOT
+// NULL names, emails and audit stamps, and a row that exists is cheaper to
+// point at than one to construct.
+const AUTHOR = FIXTURE_USERS.A.id;
 
 let sql: ReturnType<typeof postgres>;
 
@@ -141,38 +147,20 @@ async function indexDefinition(table: string, name: string): Promise<string | un
   return found?.definition as string | undefined;
 }
 
-beforeAll(async () => {
+beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-
-  await sql`drop table if exists ingredient_folk_names`;
-  await sql`drop table if exists ingredients`;
-  await sql`create table if not exists users (id uuid primary key)`;
-  await sql`create table if not exists workspaces (id uuid primary key)`;
-  await sql`insert into users (id) values (${AUTHOR}) on conflict do nothing`;
-
-  for (const statement of migrationStatementsContaining('CREATE TABLE "ingredients"')) {
-    await sql.unsafe(statement);
-  }
-  for (const statement of migrationStatementsContaining('CREATE TABLE "ingredient_folk_names"')) {
-    await sql.unsafe(statement);
-  }
-  for (const statement of migrationStatementsContaining(TRIGRAM_MIGRATION)) {
-    await sql.unsafe(statement);
-  }
 });
 
+// `truncate … cascade`, not `delete from`: the seeded compendium's rows have
+// category and folk-name links, and every child foreign key in the schema is
+// NO ACTION, so a delete would be refused. Truncating ingredients takes its
+// folk names with it, and the empty tables are what the planner assertions
+// below build their own rows on.
 beforeEach(async () => {
-  await sql`delete from ingredient_folk_names`;
-  await sql`delete from ingredients`;
+  await sql`truncate ingredients cascade`;
 });
 
 afterAll(async () => {
-  await sql`drop table if exists ingredient_folk_names`;
-  await sql`drop table if exists ingredients`;
-  await sql`drop type if exists nomenclature_kind`;
-  await sql`drop type if exists ingredient_element`;
-  await sql`drop table if exists workspaces`;
-  await sql`drop table if exists users`;
   await sql.end();
 });
 

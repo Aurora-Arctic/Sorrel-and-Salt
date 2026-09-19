@@ -1,9 +1,7 @@
-import { join } from 'node:path';
-import { readFileSync, readdirSync } from 'node:fs';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import { MIGRATIONS_DIR } from '../../support/paths';
+import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { CATEGORIES } from '@/db/seed/categories';
 import { FORMS } from '@/db/seed/forms';
@@ -19,30 +17,24 @@ import { seed } from '@/db/seed/index';
 // M1.22 — the `standard` scenario: DESIGN.md §"Seed data"'s five fixture users,
 // workspaces W and X, and a populated compendium.
 //
-// Like index.test.ts (M1.21) and categories.test.ts (M4.3), this applies the
-// whole migration set into the worker's clone rather than stubbing a table or
-// two. It has to: `workspace_members` is keyed on two real foreign keys, the
-// compendium's identity lives in a *generated* column over three others, and
-// "W and X share no members" is a claim about rows in the real tables, not
-// about the shape of an object this module returns.
+// Like index.test.ts (M1.21) and categories.test.ts (M4.3), this runs against
+// the real schema rather than a stubbed table or two. It has to:
+// `workspace_members` is keyed on two real foreign keys, the compendium's
+// identity lives in a *generated* column over three others, and "W and X
+// share no members" is a claim about rows in the real tables, not about the
+// shape of an object this module returns. The worker's sorrel_test_<n> clone
+// arrives with every migration applied and — since this very scenario is what
+// the template carries (M1.27, tests/support/db-setup.ts) — already seeded
+// with it, re-cloned that way before this file runs. A test *about* the seed
+// needs the tables empty, so `beforeEach` truncates every one of them; nothing
+// is built here and nothing put back afterwards. Until M1.27 the template was
+// empty and this file applied the migration set itself.
 //
 // The scenario exists to be awkward on purpose (TASKS.md M1.22): four plants
 // and a cat all labelled "Cat's Claw", a mineral variety, a `none`, an
 // `unknown`, and a form nobody has curated. Every assertion below that looks
 // like trivia is one of those cases, and M4.7/M4.7a and M8.3/M8.3a are what
 // consume them.
-
-function migrationStatements(): string[] {
-  return readdirSync(MIGRATIONS_DIR)
-    .filter((name) => name.endsWith('.sql'))
-    .sort()
-    .flatMap((name) =>
-      readFileSync(join(MIGRATIONS_DIR, name), 'utf8')
-        .split('--> statement-breakpoint')
-        .map((statement) => statement.trim())
-        .filter(Boolean),
-    );
-}
 
 const PROBE = 'standard_probe_acting_user';
 
@@ -77,22 +69,6 @@ interface IngredientRow {
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
-let preexistingTables: string[] = [];
-let preexistingTypes: string[] = [];
-
-async function tableNames(): Promise<string[]> {
-  const rows = await sql`select tablename from pg_tables where schemaname = 'public'`;
-  return rows.map((row) => row.tablename as string);
-}
-
-async function enumTypeNames(): Promise<string[]> {
-  const rows = await sql`
-    select t.typname from pg_type t
-    join pg_namespace n on n.oid = t.typnamespace
-    where n.nspname = 'public' and t.typtype = 'e'
-  `;
-  return rows.map((row) => row.typname as string);
-}
 
 async function allUsers(): Promise<UserRow[]> {
   return sql<UserRow[]>`select * from users order by email`;
@@ -123,13 +99,6 @@ beforeAll(async () => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
 
-  preexistingTables = await tableNames();
-  preexistingTypes = await enumTypeNames();
-
-  for (const statement of migrationStatements()) {
-    await sql.unsafe(statement);
-  }
-
   // The same observation trick index.test.ts uses: `app.current_user_id` is
   // transaction-local, so it is gone by the time a test could read it. This
   // records what it held *inside* the transaction that inserted each
@@ -150,36 +119,29 @@ beforeAll(async () => {
   );
 });
 
+// Every table in `public` emptied, the probe included — one `truncate …
+// cascade` rather than the ordered `delete from` list this used to be: the
+// clone arrives already holding this scenario, every child foreign key is
+// NO ACTION, and a table-by-table delete would be refused. The empty tables
+// are the starting state every test below assumes: the one the old empty
+// template gave, reached the other way round.
 beforeEach(async () => {
-  await sql`delete from ${sql(PROBE)}`;
-  await sql`delete from ingredient_categories`;
-  await sql`delete from ingredient_folk_names`;
-  await sql`delete from ingredients`;
-  await sql`delete from categories`;
-  await sql`delete from category_groups`;
-  await sql`delete from ingredient_forms`;
-  await sql`delete from ingredient_form_groups`;
-  await sql`delete from workspace_members`;
-  await sql`delete from workspaces`;
-  await sql`delete from users`;
+  await truncateAllTables(sql);
 });
 
+// Only this file's own objects come down; the schema is the clone's and the
+// next file gets a fresh one.
 afterAll(async () => {
-  for (const table of (await tableNames()).filter((name) => !preexistingTables.includes(name))) {
-    await sql.unsafe(`drop table if exists "${table}" cascade`);
-  }
-  for (const type of (await enumTypeNames()).filter((name) => !preexistingTypes.includes(name))) {
-    await sql.unsafe(`drop type if exists "${type}" cascade`);
-  }
   await sql.unsafe(`drop function if exists ${PROBE}() cascade`);
-  await sql.unsafe('drop function if exists set_updated_at() cascade');
+  await sql`drop table if exists ${sql(PROBE)}`;
   await sql.end();
 });
 
 describe('the cast: five fixture users, A–E', () => {
   it('creates all five, under the ids the fixtures name, plus the bootstrap admin', async () => {
-    // The precondition for every count below: the clone really starts empty,
-    // so these rows are this seed's rather than a previous test's.
+    // The precondition for every count below: the truncated clone really
+    // starts empty, so these rows are this seed's rather than the template's
+    // copy of the same scenario or a previous test's.
     expect(await countOf('users')).toBe(0);
 
     await seedStandard(db);

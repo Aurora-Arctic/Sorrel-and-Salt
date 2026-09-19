@@ -4,11 +4,14 @@ import { defineConfig } from 'vitest/config';
 // Two projects per CLAUDE.md's Testing section: `unit` runs pure logic and
 // components in jsdom with no network; `db` runs against a real local
 // Postgres (never Neon — see docker-compose.yaml's `postgres` service).
-// `db` has no test files yet (repository/service layers land from M1.16
-// onward), so `passWithNoTests` keeps an empty suite from failing the run.
+// `db` includes `tests/services/**`, which has no files yet (services land
+// from Wave 5), so `passWithNoTests` keeps that half from failing the run.
 // `globalSetup`/`setupFiles` wire each worker to its own
-// `sorrel_test_${VITEST_POOL_ID}` clone of `sorrel_template` (M1.9) — the pool
-// *slot*, not `VITEST_WORKER_ID`; see tests/support/worker-database.ts (MB.14).
+// `sorrel_test_${VITEST_POOL_ID}` clone (M1.9) — the pool *slot*, not
+// `VITEST_WORKER_ID`; see tests/support/worker-database.ts (MB.14) — of
+// `sorrel_test_template`, which `globalSetup` migrates and seeds with the
+// `standard` scenario once per run, and `setupFiles` re-clones before every
+// test file (M1.27; tests/support/seeded-database.ts).
 
 // Vitest only resolves its actual worker count internally — `project.config
 // .maxWorkers` is `undefined` unless set explicitly here — so `db`'s
