@@ -17,21 +17,36 @@ import { REPO_ROOT } from '../support/paths';
 // directory" is a statement about the tree rather than about the contents of
 // any one file, which a single-file linter cannot express.
 //
-// The scan reads tracked *and* untracked files, as slug-rule.test.ts does, so
-// a misplaced test fails in the diff that adds it rather than after it lands.
+// The scan reads the *index* — `--cached`, so a `git add`ed file counts
+// before it is committed, and a misplaced test fails in the diff that adds it
+// rather than after it lands. It deliberately does **not** pass `--others`,
+// which slug-rule.test.ts does: that guard reads file *contents*, where a
+// duplicate copy of a file is harmless, while this one enumerates *locations*,
+// where a stray copy is the whole finding.
+//
+// The difference is not hypothetical. CI runs this suite inside a container
+// whose image bakes the repo at `Docker/Dockerfile.node`'s `COPY . .`, and
+// `.github/actions/checkout-to-app` lays the checkout over it with `cp -a`,
+// which overlays without deleting. So every file deleted since that image was
+// built is still on disk in CI, untracked and not ignored — and `--others`
+// reported all 34 of this move's own predecessors as violations. A file that
+// is untracked because it was just written and one that is untracked because
+// it was deleted from the repo are indistinguishable to `git ls-files`; the
+// index is the question that actually separates them, because it describes
+// the repo rather than the disk.
+//
 // Playwright's specs are outside this by construction — they end `.spec.ts`,
 // which is what keeps `e2e/` from having to be named as an exception here.
 
 const TEST_FILE = /\.test\.tsx?$/;
 const HOME = 'tests/';
 
-/** Every test file in the working tree, committed or not. */
+/** Every test file the repo holds — the index, so staged counts as held. */
 function testFiles(): string[] {
-  return execFileSync(
-    'git',
-    ['-c', 'safe.directory=*', 'ls-files', '--cached', '--others', '--exclude-standard'],
-    { cwd: REPO_ROOT, encoding: 'utf8' },
-  )
+  return execFileSync('git', ['-c', 'safe.directory=*', 'ls-files', '--cached'], {
+    cwd: REPO_ROOT,
+    encoding: 'utf8',
+  })
     .split('\n')
     .filter((file) => TEST_FILE.test(file));
 }
