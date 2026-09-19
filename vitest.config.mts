@@ -52,16 +52,23 @@ export default defineConfig({
       // it doesn't need its own coverage.
       //
       // The first two look dead since MB.41: no test and no harness file
-      // lives under src/ any more, so nothing should match them. They stay
+      // lives under src/ any more, so nothing should match them. They stayed
       // because `include` enumerates the *disk*, not the repo, and in CI
-      // those are different. The container's image bakes the repo at
-      // Docker/Dockerfile.node's `COPY . .` and checkout-to-app lays the
+      // those were different. The container's image bakes the repo at
+      // Docker/Dockerfile.node's `COPY . .` and checkout-to-app laid the
       // checkout over it with `cp -a`, which never deletes — so every file
-      // the repo has deleted is still there, uncovered, dragging the
-      // denominator down (MB.42). Removing these two entries dropped CI from
-      // 92% to 78.54% and failed the 80% gate while every test passed. They
-      // are what makes the number describe the repo rather than the
-      // container, and they are free.
+      // the repo had deleted was still there, uncovered, dragging the
+      // denominator down. Removing these two entries dropped CI from 92% to
+      // 78.54% and failed the 80% gate while every test passed.
+      //
+      // MB.42 closed that: the action now runs `git clean -fd` after the copy,
+      // so /app holds the checkout and nothing else. These two are therefore
+      // on their way out rather than load-bearing — but not yet, and not in
+      // MB.42's own PR. Every caller reaches the action at
+      // `checkout-to-app@main`, so the fix is live only once it is on `main`,
+      // which a merge to `staging` does not do; until then CI still sees the
+      // leftovers and still needs these. Once it is live they match nothing,
+      // cost nothing, and can go in a PR that can watch the number hold.
       exclude: [
         'src/**/*.test.{ts,tsx}',
         'src/test/**',

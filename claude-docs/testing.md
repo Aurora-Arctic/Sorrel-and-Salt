@@ -191,10 +191,15 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
 branches, functions, and statements, `include: ['src/**/*.{ts,tsx}']`,
 excluding `src/**/*.test.{ts,tsx}`, `src/test/**`, `*.stories.tsx`,
 `src/db/migrations/**`, and `src/db/seed/**`. The first two read as dead
-since MB.41 — no test or harness file lives under `src/` — and they are
-kept deliberately: `include` enumerates the disk rather than the repo, and
-CI's container still holds every file the repo has deleted (MB.42). Dropping
-them took CI from 92% to 78.54% with every test passing. Coverage has been above the threshold
+since MB.41 — no test or harness file lives under `src/` — and were kept
+deliberately: `include` enumerates the disk rather than the repo, and CI's
+container held every file the repo had deleted. Dropping them took CI from
+92% to 78.54% with every test passing. **MB.42 closed that condition** —
+`checkout-to-app` now runs `git clean -fd` after its copy — so the two are
+on their way out rather than load-bearing. They stay until the fixed action
+is live, which needs it on `main`, since every caller references it at
+`@main` and a merge to `staging` does not reach that; removing them before
+then fails the 80% gate on the PR that does it. Coverage has been above the threshold
 since Wave 3's schema tests landed (~92% of lines at M1.21), so
 `npm run test:coverage` exits non-zero only on a test failure or on a change
 that pulls a metric back under 80% — which is the threshold doing its job,

@@ -360,7 +360,7 @@ jobs:
   # a violation left its violating copy behind. MB.41 hit it as 34 phantom test
   # files reported by a guard that had just moved all of them.
   #
-  # Nothing else can catch this. The image is rebuilt whenever
+  # Nothing else can catch this. The `testing` image is rebuilt whenever
   # Dockerfile.node/package-lock.json change, so on most PRs the leftovers are
   # few or none and every leg passes with the bug fully present; it only bites
   # on the PRs that delete files, which is to say rarely and unpredictably. So
