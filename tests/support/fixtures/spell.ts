@@ -59,7 +59,11 @@ export type SpellOverrides = Omit<Overrides<SpellFixture>, 'layers'> & {
   layers?: SpellLayerOverrides[];
 };
 
-const DEFAULT_LAYER_NAME = 'Hearth Ash';
+// Invented, like every ingredient name a fixture supplies on its own: a custom
+// layer's name is scoped to its spell, so nothing here can collide with a
+// seeded row — but the rule is one rule, and `Hearth Ash` was the demo
+// scenario's own workspace ingredient.
+const DEFAULT_LAYER_NAME = 'Fixture Ash';
 
 // A custom layer rather than a linked one, and that is the whole reason
 // `makeSpell()` is insertable on its own: a layer pointing at an ingredient

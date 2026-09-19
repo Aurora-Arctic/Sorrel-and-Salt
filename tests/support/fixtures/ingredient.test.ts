@@ -31,7 +31,7 @@ describe('makeIngredient', () => {
   it('builds a whole ingredient with no arguments', () => {
     const ingredient = makeIngredient();
 
-    expect(ingredient.name).toBe('Yarrow');
+    expect(ingredient.name).toBe('Testwort');
     expect(ingredient.form).toBe('herb');
     // The compendium tier — what exists, rather than what one workspace has.
     expect(ingredient.workspaceId).toBeNull();
@@ -41,15 +41,15 @@ describe('makeIngredient', () => {
     const ingredient = makeIngredient();
 
     expect(ingredient.nomenclature).toBe('botanical');
-    expect(ingredient.canonicalName).toBe('Achillea millefolium');
+    expect(ingredient.canonicalName).toBe('Fixtura testalis');
   });
 
   it('keeps every field the override does not name', () => {
     const ingredient = makeIngredient({ form: 'root' });
 
     expect(ingredient.form).toBe('root');
-    expect(ingredient.name).toBe('Yarrow');
-    expect(ingredient.canonicalName).toBe('Achillea millefolium');
+    expect(ingredient.name).toBe('Testwort');
+    expect(ingredient.canonicalName).toBe('Fixtura testalis');
   });
 
   it('files the ingredient under exactly the categories the override names', () => {
@@ -117,9 +117,10 @@ describe('makeIngredient', () => {
   // M1.27 bakes the `standard` scenario into the template every db worker
   // clones, and `ingredients_compendium_identity_unique` reserves each seeded
   // identity — so a default that matched one would be a fixture no test could
-  // insert. Checked for every identity the factory can supply on its own, not
-  // just the zero-argument one: `{ nomenclature }` swaps in a formal name of
-  // the factory's choosing, and that name has to miss the seed too.
+  // insert. The defaults are invented names, which is what makes a collision
+  // impossible; this is the backstop, checked for every identity the factory
+  // can supply on its own rather than just the zero-argument one, since
+  // `{ nomenclature }` swaps in a formal name of the factory's choosing.
   describe('an identity the standard seed does not carry', () => {
     it('by default', () => {
       expect(SEEDED_IDENTITIES.size).toBeGreaterThan(0);

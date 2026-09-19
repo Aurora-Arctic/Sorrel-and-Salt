@@ -21,8 +21,8 @@ describe('makeWorkspace', () => {
   it('builds a whole workspace with no arguments', () => {
     const workspace = makeWorkspace();
 
-    expect(workspace.name).toBe('Blackthorn Coven');
-    expect(workspace.slug).toBe('blackthorn-coven');
+    expect(workspace.name).toBe('Fixture Coven');
+    expect(workspace.slug).toBe('fixture-coven');
   });
 
   // M1.27 bakes the `standard` scenario — W and X — into the template every db
@@ -39,10 +39,10 @@ describe('makeWorkspace', () => {
   });
 
   it('re-derives the slug from a name the override gives', () => {
-    const workspace = makeWorkspace({ name: 'Rowan Coven' });
+    const workspace = makeWorkspace({ name: 'Fixture Coven Two' });
 
-    expect(workspace.slug).toBe('rowan-coven');
-    expect(workspace.slug).toBe(slugify('Rowan Coven'));
+    expect(workspace.slug).toBe('fixture-coven-two');
+    expect(workspace.slug).toBe(slugify('Fixture Coven Two'));
   });
 
   // Through the one shared implementation, so a fixture and M3.3's mutation
@@ -56,7 +56,7 @@ describe('makeWorkspace', () => {
   // `whitethorn-coven` is W's slug: the collision a test would actually want
   // to write, once M1.27 has W in every clone.
   it('leaves a slug the override names, so a test can write a colliding one', () => {
-    expect(makeWorkspace({ name: 'Rowan Coven', slug: 'whitethorn-coven' }).slug).toBe(
+    expect(makeWorkspace({ name: 'Fixture Coven Two', slug: 'whitethorn-coven' }).slug).toBe(
       'whitethorn-coven',
     );
   });
@@ -85,6 +85,6 @@ describe('workspaceColumns', () => {
   it('names each field the way the database spells it, and leaves the members out', () => {
     const columns = workspaceColumns(makeWorkspace());
 
-    expect(columns).toEqual({ name: 'Blackthorn Coven', slug: 'blackthorn-coven' });
+    expect(columns).toEqual({ name: 'Fixture Coven', slug: 'fixture-coven' });
   });
 });

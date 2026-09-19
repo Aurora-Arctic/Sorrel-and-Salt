@@ -70,24 +70,26 @@ export interface IngredientFixture extends Required<
  *
  * This table *is* the acceptance criterion: `ingredients_nomenclature_declares
  * _canonical_name` is a biconditional, so a fixture that let `{ nomenclature:
- * 'none' }` keep the default's `Achillea millefolium` would hand back a row
+ * 'none' }` keep the default's `Fixtura testalis` would hand back a row
  * Postgres refuses — and the test using it would fail for a reason having
  * nothing to do with what it was testing.
  *
- * Every entry is a real name the `standard` compendium does **not** carry, and
- * that is deliberate: M1.27 bakes `standard` into the template every db worker
- * clones, and `ingredients_compendium_identity_unique` reserves each seeded
- * identity — so a default that matched one (Mugwort, *Artemisia vulgaris*, is
- * the seed's first row) would be a fixture no test could insert. A fixture is
- * what a test writes *beside* the seeded world. ingredient.test.ts pins this
- * for every identity the factory can supply on its own.
+ * **Every name here is invented.** M1.27 bakes `standard` into the template
+ * every db worker clones, and `ingredients_compendium_identity_unique`
+ * reserves each seeded identity — so a default that matched one (Mugwort,
+ * *Artemisia vulgaris*, is the seed's first row) would be a fixture no test
+ * could insert. A real name merely absent from the seed today is only safe
+ * until someone seeds it; a name that does not exist can never be. A fixture
+ * is what a test writes *beside* the seeded world. ingredient.test.ts still
+ * checks every identity the factory can supply on its own against the seed,
+ * as a backstop rather than the mechanism.
  */
 const CANONICAL_NAME_BY_NOMENCLATURE: Record<Nomenclature, string | null> = {
-  botanical: 'Achillea millefolium',
-  fungal: 'Fomes fomentarius',
-  zoological: 'Corvus corax',
-  mineral: 'Quartz var. citrine',
-  chemical: 'Sodium bicarbonate',
+  botanical: 'Fixtura testalis',
+  fungal: 'Fixturomyces testalis',
+  zoological: 'Fixturus testalis',
+  mineral: 'Fixturite var. test',
+  chemical: 'Fixturium chloride',
   unknown: null,
   none: null,
 };
@@ -97,7 +99,7 @@ const DEFAULTS: IngredientFixture = {
   // one workspace has. A workspace-local fixture says so: `makeIngredient({
   // workspaceId: W })`.
   workspaceId: null,
-  name: 'Yarrow',
+  name: 'Testwort',
   canonicalName: CANONICAL_NAME_BY_NOMENCLATURE.botanical,
   nomenclature: 'botanical',
   form: 'herb',
@@ -117,7 +119,7 @@ const DEFAULTS: IngredientFixture = {
  * One ingredient, with `nomenclature` and `canonicalName` guaranteed to agree.
  *
  * ```ts
- * makeIngredient()                              // Yarrow, botanical, Achillea millefolium
+ * makeIngredient()                              // Testwort, botanical, Fixtura testalis
  * makeIngredient({ categories: ['Protection'] }) // filed under protection and nothing else
  * makeIngredient({ nomenclature: 'none' })      // graveyard-dirt shaped: no formal name
  * ```
