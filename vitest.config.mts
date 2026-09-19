@@ -46,10 +46,26 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       // src/db/seed is fixture code that runs test infrastructure rather
       // than product logic — a bug there fails the tests that consume it, so
-      // it doesn't need its own coverage. The test files and the harness that
-      // used to be excluded here now live in tests/, which `include` never
-      // reaches (MB.41).
-      exclude: ['src/**/*.stories.tsx', 'src/db/migrations/**', 'src/db/seed/**'],
+      // it doesn't need its own coverage.
+      //
+      // The first two look dead since MB.41: no test and no harness file
+      // lives under src/ any more, so nothing should match them. They stay
+      // because `include` enumerates the *disk*, not the repo, and in CI
+      // those are different. The container's image bakes the repo at
+      // Docker/Dockerfile.node's `COPY . .` and checkout-to-app lays the
+      // checkout over it with `cp -a`, which never deletes — so every file
+      // the repo has deleted is still there, uncovered, dragging the
+      // denominator down (MB.42). Removing these two entries dropped CI from
+      // 92% to 78.54% and failed the 80% gate while every test passed. They
+      // are what makes the number describe the repo rather than the
+      // container, and they are free.
+      exclude: [
+        'src/**/*.test.{ts,tsx}',
+        'src/test/**',
+        'src/**/*.stories.tsx',
+        'src/db/migrations/**',
+        'src/db/seed/**',
+      ],
       thresholds: {
         lines: 80,
         branches: 80,
