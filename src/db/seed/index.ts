@@ -1,4 +1,5 @@
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { seedDemo } from './demo';
 import { seedMinimal } from './minimal';
 import { seedStandard } from './standard';
 
@@ -28,9 +29,9 @@ export type SeedTransaction = Parameters<Parameters<SeedDatabase['transaction']>
  * it — see src/db/seed/minimal.ts for why that is a handle and not
  * `withAudit`.
  *
- * Scenario content lands scenario by scenario: `minimal` in M1.21,
- * `standard` in M1.22, `demo` in M1.23. A scenario whose task has not landed
- * throws before touching the database.
+ * The three scenarios landed one task at a time — `minimal` in M1.21,
+ * `standard` in M1.22, `demo` in M1.23 — and each builds on the one before:
+ * `demo` is `standard` plus a grimoire, inside the same transaction.
  */
 export async function seed(
   db: SeedDatabase,
@@ -42,6 +43,6 @@ export async function seed(
     case 'standard':
       return seedStandard(db);
     case 'demo':
-      throw new Error(`Seed scenario "${scenario}" is not implemented yet.`);
+      return seedDemo(db);
   }
 }

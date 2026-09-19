@@ -12,11 +12,10 @@ import { workspaceMembers, workspaces } from '../schema/workspaces';
 import { ingredients } from '../schema/ingredients';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
 import { ingredientCategories } from '../schema/ingredient-categories';
-import { categories } from '../schema/categories';
 import { applyAudit } from '../audit';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import { slugify } from '../../lib/slugify';
-import { seedCategoryVocabulary } from './categories';
+import { categoryIdByName, seedCategoryVocabulary } from './categories';
 import { seedFormVocabulary } from './forms';
 import type { SeedDatabase, SeedTransaction } from './index';
 
@@ -454,24 +453,39 @@ export async function seedStandard(db: SeedDatabase): Promise<void> {
     // bind parameter, transaction-local.
     await tx.execute(sql`select set_config('app.current_user_id', ${BOOTSTRAP_USER_ID}, true)`);
     await insertBootstrapAdmin(tx);
-
-    // The admin-curated reference data first — §6's categories and §5's forms.
-    // `standard` is "a populated compendium", which is all of it: an ingredient
-    // is filed under a category by foreign key, so M4.3's rows have to exist
-    // before this scenario's assignments can point at them. Inside this
-    // transaction rather than by calling `seedCategories(db)`, so a scenario is
-    // never half-applied.
-    await seedFormVocabulary(tx);
-    await seedCategoryVocabulary(tx);
-
-    await insertMissingUsers(tx);
-    await insertMissingWorkspaces(tx);
-    await insertMissingMemberships(tx);
-
-    const ingredientIds = await insertMissingIngredients(tx);
-    await insertMissingFolkNames(tx, ingredientIds);
-    await insertMissingCategoryAssignments(tx, ingredientIds, await categoryIdByName(tx));
+    await seedStandardContent(tx);
   });
+}
+
+/**
+ * The same scenario, inside a transaction the caller already opened — which is
+ * the only reason it is separate, and the shape `seedCategoryVocabulary` and
+ * `seedFormVocabulary` already take. M1.23's `demo` is "standard plus spells",
+ * so it writes its grimoire alongside these rows rather than after them: a
+ * half-applied scenario (a compendium seeded, the spells that reference it
+ * not) is worse than one that never ran, and two transactions is two chances
+ * at one.
+ *
+ * It assumes what `seedStandard` does for itself: the GUC is published and the
+ * bootstrap admin exists, since every row here is stamped as that user's.
+ */
+export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
+  // The admin-curated reference data first — §6's categories and §5's forms.
+  // `standard` is "a populated compendium", which is all of it: an ingredient
+  // is filed under a category by foreign key, so M4.3's rows have to exist
+  // before this scenario's assignments can point at them. Inside this
+  // transaction rather than by calling `seedCategories(db)`, so a scenario is
+  // never half-applied.
+  await seedFormVocabulary(tx);
+  await seedCategoryVocabulary(tx);
+
+  await insertMissingUsers(tx);
+  await insertMissingWorkspaces(tx);
+  await insertMissingMemberships(tx);
+
+  const ingredientIds = await insertMissingIngredients(tx);
+  await insertMissingFolkNames(tx, ingredientIds);
+  await insertMissingCategoryAssignments(tx, ingredientIds, await categoryIdByName(tx));
 }
 
 // Everything below is idempotent the way seedCategories is: it inserts what is
@@ -556,8 +570,13 @@ async function insertMissingMemberships(tx: SeedTransaction): Promise<void> {
  * columns that expression reads instead of recomputing it in TypeScript: a
  * second implementation of §5's normalisation is a second thing to keep in
  * step, and the one that lies is the one nobody runs.
+ *
+ * Exported because M1.23's `demo` keys W's own ingredients the same way. The
+ * tier is the caller's business — `workspace_id` is what tells a local entry
+ * from a compendium one, and this key says nothing about it — so a caller
+ * builds its map from one tier's rows, never from both at once.
  */
-function identityOf(entry: {
+export function identityOf(entry: {
   name: string;
   canonicalName?: string | null;
   form?: string | null;
@@ -646,16 +665,6 @@ async function insertMissingFolkNames(
   await tx
     .insert(ingredientFolkNames)
     .values(missing.map((folkName) => applyAudit('insert', folkName, BOOTSTRAP_SESSION)));
-}
-
-/** Category ids keyed by *name*, which is what an entry above names. */
-async function categoryIdByName(tx: SeedTransaction): Promise<Map<string, string>> {
-  const rows = await tx
-    .select({ id: categories.id, name: categories.name })
-    .from(categories)
-    .where(isNull(categories.deletedAt));
-
-  return new Map(rows.map((row) => [row.name, row.id]));
 }
 
 async function insertMissingCategoryAssignments(

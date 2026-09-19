@@ -125,11 +125,11 @@ output or CI behaviour changes when it's unset. Full setup:
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
   `seed(db, { scenario: 'minimal' })` from `src/db/seed/index.ts` and then
   closes the pool `connection.ts` opened, or the process never exits.
-  `minimal` and `standard` are implemented (M1.21, M1.22 — "The seed
-  module" and "The standard scenario" below); `demo` (M1.23) throws before
-  touching the database. The script always seeds `minimal`: scenario
-  selection by environment variable is M1.24, so `standard` is reached from a
-  test or from `seed(db, { scenario: 'standard' })` rather than from the CLI. The script runs
+  All three scenarios are implemented (M1.21, M1.22, M1.23 — "The seed
+  module", "The standard scenario" and "The demo scenario" below). The script
+  always seeds `minimal`: scenario
+  selection by environment variable is M1.24, so `standard` and `demo` are
+  reached from a test or from `seed(db, { scenario })` rather than from the CLI. The script runs
   through **`tsx`**, alone among the scripts: bare Node's type stripping
   resolves no extensionless relative import, and the seed is the first thing
   under `src/` a script executes that has one.
@@ -1518,7 +1518,7 @@ user is `MINIMAL_USER_ID` (`…0002`), created by the bootstrap user. Both
 keep `canCreateWorkspace` false — a bare install has granted nothing. It is
 **idempotent by fixed id** (`ON CONFLICT (id) DO NOTHING`), not by
 truncating: a re-run adds nothing, and nothing is dropped — the reset that
-drops is M1.24's. `standard` is M1.22's, below; `demo` throws until M1.23.
+drops is M1.24's. `standard` is M1.22's and `demo` M1.23's, both below.
 
 ## The category seed (M4.3)
 
@@ -1769,6 +1769,16 @@ those now splits into a public `seedX(db)` that opens a transaction and a
 admin present. A half-applied scenario (categories seeded, users not) is worse
 than one that never ran, and three transactions is three chances at one.
 
+`standard` itself takes that same shape since M1.23: `seedStandard(db)` opens
+the transaction, publishes the GUC and inserts the bootstrap admin, then hands
+over to **`seedStandardContent(tx)`** — which is what `demo` calls, one level
+up and for the same reason. Two of its internals are shared rather than copied
+for the same argument: `categoryIdByName(tx)` moved into `categories.ts`, since
+both scenarios file rows under §6's vocabulary by name, and `identityOf` is
+exported, since `demo` keys W's own ingredients on the same three columns. That
+key says nothing about which tier a row is in, so a caller builds its map from
+one tier's rows rather than from both at once.
+
 Idempotency is the category seed's, keyed on identity and **ignoring
 `deleted_at`**: users and workspaces by their fixed ids, memberships by their
 composite key, compendium entries by `(name, canonicalName, form)`, folk names
@@ -1782,6 +1792,73 @@ The entry key is `(name, canonicalName, form)` rather than `canonicalKey`
 deliberately: those are the three columns §5's generated expression reads, and
 recomputing that normalisation in TypeScript would be a second implementation
 to keep in step — the one that lies is the one nobody runs.
+
+## The demo scenario (M1.23)
+
+`src/db/seed/demo.ts` implements DESIGN.md §"Seed data"'s third scenario:
+`standard` plus spells in W's grimoire, with ingredients and layer order. It is
+the scenario a screenshot is taken against, which is why the two jars are
+written out the way a member would write them — an intent in a sentence,
+instructions that read like instructions, a stack that names what went in and
+in what order — rather than generated as "Spell 1" and "Spell 2".
+
+| Spell              | Id      | Status     | Layers                                                                              |
+| ------------------ | ------- | ---------- | ----------------------------------------------------------------------------------- |
+| Hearth Warding Jar | `…0001` | `complete` | sea salt · black salt · hearth ash · **dust from the front step** · garden rosemary |
+| Dreaming Sachet    | `…0002` | `draft`    | mugwort · lavender · house chamomile · amethyst                                     |
+
+The ids are fixed and take a block of their own, `…0002-…`, after the users
+(`…0000-…`) and the workspaces (`…0001-…`), so a stray id is never ambiguous
+about what it names. A draft sits beside a finished spell because the status
+badge (M10.20) has to have both to show, and one layer carries no quantity at
+all — a sprig laid on top is not a measurement, and `quantity`/`unit` are
+nullable precisely so it does not have to be one.
+
+**Three things in it are fixtures rather than decoration:**
+
+- **W's own ingredients**, the workspace tier of §5's one table: `Garden
+Rosemary`, `Hearth Ash` and `House Chamomile`. A grimoire that only ever
+  reached the compendium would exercise half of §5, and the jars mix the two
+  the way a real one does.
+- **Garden Rosemary shadows the compendium's Rosemary** — same formal name,
+  same form, different tier, which the two partial unique indexes permit. That
+  pair is exactly what M8.3's local-beats-compendium resolution collapses, and
+  it can only be resolved where both rows exist.
+- **One custom, one-off layer** (MB.40, story 57): "Dust from the front step",
+  `form` `dust`, no `ingredient_id`, sitting between two linked layers in the
+  same jar. It is never an `ingredients` row anywhere, and `dust` is nowhere in
+  M4.3a's curated 78 — free text is what lets a member write it. Wave 13
+  renders, reorders and prints both kinds of row, and this is its row of the
+  second kind.
+
+Layer order is the position in the `layers` array, never a number written
+beside it: one list, so the stack and its depths cannot disagree, and each jar
+is numbered from 1 — what M10.16's reorder rewrites and M10.9's read orders by.
+
+### A jar's stack is seeded whole or not at all
+
+Idempotency is `standard`'s — insert what is missing, keyed on identity,
+ignoring `deleted_at` — for the spells (fixed id), W's ingredients
+(`identityOf`, within the workspace tier) and the assigned categories (the
+pair). **`spell_ingredients` is the exception: the unit keyed on is the spell,
+not the layer.**
+
+Every other seeded row stands on its own, so "insert what is missing" is well
+defined per row. A layer does not — its identity is a depth in a sequence, and
+the sequence is shared. Patch one row back into a stack a member has since
+edited and the arithmetic is against you both ways: a layer pulled out of the
+middle leaves the ones below it renumbered, so the depth the seed wants is
+occupied by a different ingredient (the primary key) and the ingredient it
+wants is already at another depth
+(`spell_ingredients_spell_id_ingredient_id_unique`). Either collision fails the
+whole scenario rather than the row.
+
+So a jar that already has layers is left exactly as it is. What that gives up
+is a demo jar healing itself after someone empties it by hand, which `make
+db-reset` (M1.24) does properly anyway; what it buys is that a reseed over an
+edited grimoire is a no-op rather than an error. Both halves are asserted in
+`demo.test.ts` — the edited jar and the reordered one — and the assertions were
+checked to fail without the rule.
 
 ## Who may import the client (M1.17)
 
