@@ -274,6 +274,69 @@ jobs:
         env:
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
+      # MB.47 — put back what the pull could not read.
+      #
+      # `DATABASE_URL` and `BETTER_AUTH_SECRET` are marked Sensitive in Vercel,
+      # and a Sensitive variable cannot be read back by `vercel pull` — that is
+      # what the setting means. A diagnostic run pulled staging both with and
+      # without `--git-branch` and got the literal string `[SENSITIVE]` for
+      # both, either way. No arrangement of flags fixes it, so CI keeps its own
+      # copy of exactly those two.
+      #
+      # The runtime is untouched: a deployed function reads its environment
+      # from the platform, not from this file. Only `vercel build` reads it,
+      # and it reads the FILE — a step-level `env:` would not reach the Next
+      # build — so the values are written in rather than exported.
+      #
+      # DATABASE_URL differs per target and so has a secret per target;
+      # BETTER_AUTH_SECRET is one value for both and so has one. The selection
+      # mirrors migrate.yml's, and tests/guards/ci-secret-environments.test.ts
+      # is what holds the two together: choosing differently would migrate one
+      # database and serve another.
+      - name: Override what the pull could not read
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          ENV_FILE: .vercel/.env.${{ needs.resolve-target.outputs.environment }}.local
+          ENVIRONMENT: ${{ needs.resolve-target.outputs.environment }}
+          GIT_BRANCH: ${{ needs.resolve-target.outputs.git_branch }}
+          DATABASE_URL_PRODUCTION: ${{ secrets.DATABASE_URL_PRODUCTION }}
+          DATABASE_URL_STAGING: ${{ secrets.DATABASE_URL_STAGING }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+        run: |
+          if [ ! -f "$ENV_FILE" ]; then
+            echo "::error::$ENV_FILE not found after vercel pull"
+            exit 1
+          fi
+
+          if [ "$ENVIRONMENT" = "production" ]; then
+            db_url="$DATABASE_URL_PRODUCTION"
+          elif [ "$GIT_BRANCH" = "staging" ]; then
+            db_url="$DATABASE_URL_STAGING"
+          else
+            # A hotfix preview has no named secret — its Neon branch is created
+            # per deployment. Leave whatever the pull carried; the build issues
+            # no query, and the assertion below reports what it got.
+            db_url=""
+          fi
+
+          # Drop the pulled line, append ours. Never echoes a value. An empty
+          # secret leaves the pulled value alone rather than blanking it.
+          override() {
+            key="$1"
+            value="$2"
+            if [ -z "$value" ]; then
+              echo "no GitHub secret for $key — leaving whatever the pull carried"
+              return 0
+            fi
+            grep -v "^${key}=" "$ENV_FILE" > "$ENV_FILE.tmp" || true
+            mv "$ENV_FILE.tmp" "$ENV_FILE"
+            printf '%s="%s"\n' "$key" "$value" >> "$ENV_FILE"
+            echo "overrode $key from a GitHub secret"
+          }
+
+          override DATABASE_URL "$db_url"
+          override BETTER_AUTH_SECRET "$BETTER_AUTH_SECRET"
+
       # MB.46 — read what the pull actually returned, before handing it to a
       # build that cannot say. `vercel build` runs `next build` with
       # NODE_ENV=production, which traces /api/auth/[...all] -> src/lib/auth.ts
