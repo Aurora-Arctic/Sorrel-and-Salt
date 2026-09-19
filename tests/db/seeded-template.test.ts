@@ -20,11 +20,9 @@ import {
 // seeds nothing — what it asserts is the baseline every other file under
 // tests/db/ may assume.
 //
-// The template is populated at test-run setup rather than baked into the
-// Postgres image, which is where TASKS.md originally put it —
-// claude-docs/design-decisions/m1.27-template-at-setup-not-in-image.md has
-// the measurement (migrate + seed is ~1s, once) and the argument (a baked
-// schema can go stale against the checkout; one populated at setup cannot).
+// Why the template is populated at test-run setup rather than baked into the
+// Postgres image:
+// claude-docs/design-decisions/m1.27-template-at-setup-not-in-image.md.
 
 let sql: ReturnType<typeof postgres>;
 

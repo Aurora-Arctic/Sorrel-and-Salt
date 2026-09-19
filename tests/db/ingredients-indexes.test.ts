@@ -46,19 +46,11 @@ describe('ingredients index declarations', () => {
   });
 });
 
-// The behaviour half, against the real table and indexes. This worker's
-// sorrel_test_<n> clone arrives with every migration applied and the
-// `standard` scenario seeded (M1.27, tests/support/db-setup.ts), re-cloned
-// that way before this file runs — so what is asserted below is the SQL
-// production runs, with no schema built here and nothing to put back
-// afterwards. Until M1.27 the template was empty: this file applied the two
-// migrations that ship the table and its indexes, and stubbed
-// `users`/`workspaces` to a bare `id` column.
-//
-// The author and the two workspaces are the seed's, not invented ids: the
-// real `users` and `workspaces` have NOT NULL names, slugs and audit stamps,
-// and a row that exists is cheaper to point at than one to construct. Bound
-// to the old names so the tests read as they did.
+// The behaviour half, against the real table and indexes: a clone carrying
+// every migration and the `standard` seed, re-cloned before this file runs
+// (tests/support/db-setup.ts). The author and the two workspaces are the
+// seed's — the real `users` and `workspaces` demand NOT NULL names, slugs and
+// audit stamps.
 const AUTHOR = FIXTURE_USERS.A.id;
 const WORKSPACE_A = WORKSPACE_W_ID;
 const WORKSPACE_B = WORKSPACE_X_ID;

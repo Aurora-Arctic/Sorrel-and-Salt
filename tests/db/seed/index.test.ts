@@ -8,24 +8,18 @@ import { SEED_SCENARIOS, resolveScenario, seed } from '@/db/seed/index';
 
 // M1.21 — the `minimal` scenario: one admin, one user, empty compendium.
 //
-// This runs against the real schema: the seed writes into the real `users`
-// table, with its real self-referencing audit FKs (MB.5), and "the compendium
-// is empty" is a claim about tables that have to exist to be counted. The
-// worker's sorrel_test_<n> clone arrives with every migration applied and the
-// `standard` scenario seeded (M1.27, tests/support/db-setup.ts), re-cloned
-// that way before this file runs — so nothing is built here and nothing is
-// put back afterwards. What this file is *about* is seeding, though, so it
-// needs those tables empty: `beforeEach` truncates every one of them. Until
-// M1.27 the template was empty and this file applied the migration set
-// itself.
+// Against the real schema: the seed writes into the real `users` table, with its
+// real self-referencing audit FKs (MB.5), and "the compendium is empty" is a
+// claim about tables that have to exist to be counted. The clone carries every
+// migration and the `standard` seed (tests/support/db-setup.ts), and what this
+// file is *about* is seeding, so `beforeEach` truncates every table first.
 //
 // The handle passed to `seed()` is this file's own, built over its own client.
-// That the seed writes through it rather than through some handle of its own
-// is enforced mechanically, not by this test: src/db/seed/ is not one of the
-// four files allowed to import connection.ts (tests/guards/lint-db-client-
-// boundary.test.ts pins that set), so the handle it is given is the only one
-// it can hold. See claude-docs/design-decisions/m1.21-seed-writes-through-
-// its-handle.md for why it is a handle at all rather than `withAudit`.
+// That the seed writes through it rather than through some handle of its own is
+// enforced mechanically, not by this test: src/db/seed/ is not one of the four
+// files allowed to import connection.ts, a set
+// tests/guards/lint-db-client-boundary.test.ts pins. Why it is a handle at all
+// rather than `withAudit`: claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md
 
 // DESIGN.md §5's compendium: the global, admin-curated reference. Every table
 // an admin curates and nothing workspace-scoped — `minimal` leaves all of them
@@ -92,11 +86,10 @@ beforeAll(async () => {
 });
 
 // Every table in `public` emptied, the probe included — `truncate … cascade`
-// rather than a `delete from users`, because the seeded cast is referenced
-// from `workspace_members` and the audit stamps, every child foreign key is
-// NO ACTION, and a delete would be refused. The empty tables are the starting
-// state every test below assumes: the one the old empty template gave,
-// reached the other way round.
+// rather than a `delete from users`, because the seeded cast is referenced from
+// `workspace_members` and the audit stamps, every child foreign key is NO ACTION,
+// and a delete would be refused. The empty tables are the starting state every
+// test below assumes.
 beforeEach(async () => {
   await truncateAllTables(sql);
 });
@@ -233,10 +226,7 @@ describe('resolveScenario', () => {
   });
 });
 
-// The other two scenarios are asserted where they live — standard.test.ts
-// (M1.22) and demo.test.ts (M1.23), each of which ends by routing its own name
-// through `seed(db, { scenario })`. There is no longer a scenario that throws:
-// M1.23 was the last to land, and the block that asserted `demo` did went with
-// it. This file's probe watches `users` alone, which is only enough for a
-// scenario that writes users and nothing else — another reason the other two
-// are exercised against their own fixtures rather than here.
+// The other two scenarios are asserted where they live — standard.test.ts and
+// demo.test.ts, each of which ends by routing its own name through
+// `seed(db, { scenario })`. This file's probe watches `users` alone, which is
+// only enough for a scenario that writes users and nothing else.

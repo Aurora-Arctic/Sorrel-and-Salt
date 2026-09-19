@@ -46,14 +46,11 @@ describe('ingredients trigram index declaration', () => {
   });
 });
 
-// The behaviour half, against the real tables and indexes. This worker's
-// sorrel_test_<n> clone arrives with every migration applied and the
-// `standard` scenario seeded (M1.27, tests/support/db-setup.ts), re-cloned
-// that way before this file runs — so what is asserted below is the SQL
-// production runs, with no schema built here and nothing to put back
-// afterwards. Until M1.27 the template was empty and this file applied the
-// three migrations itself; the reader survives for the one test that still
-// needs the shipped statement, the idempotency check at the bottom.
+// The behaviour half, against the real tables and indexes: a clone carrying
+// every migration and the `standard` seed, re-cloned before this file runs
+// (tests/support/db-setup.ts). The migration reader below survives for the one
+// test that still needs the shipped statement — the idempotency check at the
+// bottom.
 
 function migrationStatementsContaining(marker: string): string[] {
   const file = readdirSync(MIGRATIONS_DIR)

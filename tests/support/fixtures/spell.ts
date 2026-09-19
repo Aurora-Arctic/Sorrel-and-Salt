@@ -14,9 +14,8 @@ import { type Overrides, mergeFixture, stated } from './merge';
 // bug CLAUDE.md names by hand.
 
 /**
- * One layer of the stack, typed against `spell_ingredients`' own insert model.
- *
- * A layer points at an ingredient *or* names one of its own (MB.40, story 57):
+ * One layer of the stack. It points at an ingredient *or* names one of its own
+ * (MB.40, story 57):
  * `num_nonnulls(ingredient_id, name) = 1`, with `form` allowed only beside a
  * name. `makeSpell` keeps that true rather than leaving it to the caller — see
  * below.
@@ -59,10 +58,10 @@ export type SpellOverrides = Omit<Overrides<SpellFixture>, 'layers'> & {
   layers?: SpellLayerOverrides[];
 };
 
-// Invented, like every ingredient name a fixture supplies on its own: a custom
-// layer's name is scoped to its spell, so nothing here can collide with a
-// seeded row — but the rule is one rule, and `Hearth Ash` was the demo
-// scenario's own workspace ingredient.
+// Invented, like every ingredient name a fixture supplies on its own. A custom
+// layer's name is scoped to its spell and so could not collide with a seeded
+// row, but the rule is one rule — and `Hearth Ash` was the demo scenario's own
+// workspace ingredient.
 const DEFAULT_LAYER_NAME = 'Fixture Ash';
 
 // A custom layer rather than a linked one, and that is the whole reason

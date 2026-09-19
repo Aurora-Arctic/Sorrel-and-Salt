@@ -11,7 +11,6 @@ import { type Overrides, mergeFixture, stated } from './merge';
 // authorization test needs beside it, since a workspace nobody belongs to
 // denies everyone and proves nothing.
 
-/** One row of `workspace_members`, typed against the table's own insert model. */
 export type WorkspaceMemberFixture = Pick<typeof workspaceMembers.$inferInsert, 'userId' | 'role'>;
 
 /**
@@ -25,13 +24,11 @@ export interface WorkspaceFixture extends Required<
   members: WorkspaceMemberFixture[];
 }
 
-// Neither W nor X, and not a name anyone would seed. M1.27 bakes the
-// `standard` scenario into the template every db worker clones, and
-// `workspaces_slug_unique` reserves both their slugs — so a default named
-// after either would be a fixture no test could insert, and a plausible coven
-// name is only safe until someone seeds it. A fixture is what a test writes
-// *beside* the seeded covens; workspace.test.ts checks it against the seed's
-// own list as a backstop.
+// Neither W nor X, and not a name anyone would seed. `workspaces_slug_unique`
+// reserves both seeded slugs, so a default named after either would be a fixture
+// no test could insert — and a plausible coven name is only safe until someone
+// seeds it. workspace.test.ts checks it against the seed's own list as a
+// backstop.
 const DEFAULT_NAME = 'Fixture Coven';
 
 const DEFAULTS: WorkspaceFixture = {

@@ -6,14 +6,14 @@ import { e2eDatabaseUrl } from './e2e/database';
 const PORT = 8001;
 
 // MB.22 — set only by `.devcontainer/docker-compose.yml`'s `devcontainer`
-// service, never by an npm script or the one-shot `e2e` compose service.
-// When present, the *browser* runs remotely in the `playwright-server`
-// compose service (`ws://playwright-server:4444/` — a WebSocket for
-// Playwright's own remote-browser protocol, not a page); the test *runner*
-// still runs locally, wherever it was started, and its own `webServer`
-// readiness check below always polls `localhost` because that check runs
-// from the runner's process, not the browser's. See
-// claude-docs/design-decisions/mb.22-playwright-in-devcontainer.md.
+// service, never by an npm script or the one-shot `e2e` compose service. When
+// present, the *browser* runs remotely in the `playwright-server` compose
+// service (`ws://playwright-server:4444/` — a WebSocket for Playwright's own
+// remote-browser protocol, not a page); the test *runner* still runs locally,
+// and the `webServer` readiness check below always polls `localhost` because
+// that check runs from the runner's process, not the browser's. Why the browser
+// moves at all, and why the variable stays this narrowly scoped:
+// claude-docs/debugging.md, "Test debugging".
 const wsEndpoint = process.env.PLAYWRIGHT_WS_ENDPOINT;
 const webServerUrl = `http://localhost:${PORT}`;
 // A remote browser can't resolve the runner's `localhost`; `next start

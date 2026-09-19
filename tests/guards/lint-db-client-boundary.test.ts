@@ -5,35 +5,29 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
 // The mechanical guard for both import boundaries in `.oxlintrc.json`, each a
-// `no-restricted-imports` group:
+// `no-restricted-imports` group: only `src/db/repository.ts` may import the
+// database *client* (M1.17, CLAUDE.md rule 2), and only the database layer may
+// import `drizzle-orm` at *runtime* (MB.33, CLAUDE.md rule 4, DESIGN.md §7) — a
+// query cannot be built without that import, so the ban is on the capability
+// rather than on a spelling. This asserts both actually fire, so neither can be
+// weakened by a typo'd glob or a renamed module without a red test.
 //
-//   1. M1.17 — only `src/db/repository.ts` may import the database *client*
-//      (CLAUDE.md rule 2).
-//   2. MB.33 — only the database layer may import `drizzle-orm` at *runtime*
-//      (CLAUDE.md rule 4, DESIGN.md §7). A Drizzle query cannot be built
-//      without that import, so banning it bans building a query anywhere but
-//      the repository — the capability rather than the spelling, which is why
-//      this replaced M1.20's regex over every tracked file.
-//
-// This asserts both rules actually fire, so neither can be silently weakened
-// (a typo'd glob, a renamed module) without a red test.
-//
-// Two things make the second rule's shape worth pinning. oxlint 1.82 *ignores*
-// a rule set to `"off"` inside an `overrides` block — so the exemption for the
-// database layer is not "off" but a narrower copy of the rule — and an
-// `overrides` block *replaces* the top-level rule config for the files it
-// matches rather than merging with it, so that copy has to restate the client
-// ban. The regression that shape invites (the database layer quietly losing
-// rule 2) is asserted below, not assumed.
+// Two oxlint facts shape the second rule. oxlint 1.82 *ignores* a rule set to
+// `"off"` inside an `overrides` block — so the database layer's exemption is a
+// narrower copy of the rule rather than "off" — and an `overrides` block
+// *replaces* the top-level rule config for the files it matches rather than
+// merging with it, so that copy has to restate the client ban. The regression
+// that shape invites (the database layer quietly losing rule 2) is asserted
+// below, not assumed.
 //
 // Deliberate violations are written to throwaway `__lint-probe__` directories
 // inside the repo rather than to `tmpdir`, because both rules are scoped by
 // path: a file outside the tree matches no `overrides` block and so could only
 // ever prove the default. They are not committed as fixtures because oxlint
-// skips anything matched by the config's `ignorePatterns` even when the path
-// is passed explicitly (`--no-ignore` does not override it), so a committed
-// fixture would have to be lintable by `npm run lint` too, and would then fail
-// the very check it exists to prove.
+// skips anything matched by the config's `ignorePatterns` even when the path is
+// passed explicitly (`--no-ignore` does not override it), so a committed fixture
+// would have to be lintable by `npm run lint` too, and would then fail the very
+// check it exists to prove.
 
 const RULE = 'eslint(no-restricted-imports)';
 const oxlint = join(REPO_ROOT, 'node_modules/.bin/oxlint');

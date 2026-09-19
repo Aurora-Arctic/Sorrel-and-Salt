@@ -142,15 +142,10 @@ describe('inventory_items schema', () => {
     });
 
     // The acceptance criterion — "adding a unit means editing one module, not
-    // three" — as a property of the file rather than of the values, which is
-    // the only form of it a later edit can fail. Equal lists stay equal when
-    // someone pastes the vocabulary in beside the import; a literal `'tsp'`
-    // in this file's code does not survive it.
-    //
-    // Comments are stripped first, and that is not a loophole: prose quoting
-    // `unit_dimension = 'weight'` to explain the constraint is what a reader
-    // needs, and a comment cannot drift from the module because nothing reads
-    // it. What must not exist is a *value* this file spells for itself.
+    // three" — as a property of the file rather than of the values, which is the
+    // only form of it a later edit can fail. Equal lists stay equal when someone
+    // pastes the vocabulary in beside the import; a literal `'tsp'` in this
+    // file's code does not survive it.
     it('names no unit of its own in the schema file’s code', () => {
       const named: readonly string[] = UNITS;
 
@@ -165,21 +160,12 @@ describe('inventory_items schema', () => {
   });
 });
 
-// The behaviour half, against the real table. This worker's sorrel_test_<n>
-// clone arrives with every migration applied and the `standard` scenario
-// seeded (M1.27, tests/support/db-setup.ts), re-cloned that way before this
-// file runs — so what is asserted below is the SQL production runs, with no
-// schema built here and nothing to put back afterwards. Until M1.27 the
-// template was empty: this file applied the one migration that ships the
-// table and stubbed `users`, `workspaces` and `ingredients` to a bare `id`
-// column.
-//
-// The member, the two covens and the two ingredients are the seed's, not
-// invented ids: the real parent tables have NOT NULL names, slugs and audit
-// stamps, and a row that exists is cheaper to point at than one to construct.
-// Bound to the old names so the tests read as they did. The compendium's ids
-// are generated rather than fixed, so the two ingredients are looked up by
-// name in `beforeAll` — Mugwort and Rosemary really are what they were.
+// The behaviour half, against the real table: a clone carrying every migration
+// and the `standard` seed, re-cloned before this file runs
+// (tests/support/db-setup.ts). The member, the two covens and the two
+// ingredients are the seed's — the real parent tables demand NOT NULL names,
+// slugs and audit stamps. The compendium's ids are generated rather than
+// fixed, so the two ingredients are looked up by name in `beforeAll`.
 const MEMBER = FIXTURE_USERS.A.id;
 const COVEN = WORKSPACE_W_ID;
 const OTHER_COVEN = WORKSPACE_X_ID;

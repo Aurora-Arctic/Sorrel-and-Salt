@@ -5,38 +5,19 @@ import { REPO_ROOT } from '../support/paths';
 
 // MB.41 — every Vitest file lives under tests/.
 //
-// The mechanism that puts a test in a run is `vitest.config.mts`'s `include`
-// glob, and it is scoped to `tests/`. That makes the failure mode silent in
-// the worst way: a `*.test.ts` written next to the code it covers is not a
-// failing test, it is a file nothing ever runs, and a suite that never runs
-// is indistinguishable from one that passes. Reviewing a diff for it means
-// noticing an absence.
+// The failure is silent: `vitest.config.mts`'s `include` glob is scoped to
+// `tests/`, so a `*.test.ts` written beside the code it covers is not a failing
+// test, it is a file nothing runs. A test rather than an Oxlint rule for the
+// reason workshop-guards.ts gives: Oxlint has no custom-rule API, and "this file
+// is in the wrong directory" is a statement about the tree.
 //
-// This is a test rather than an Oxlint rule for the reason workshop-guards.ts
-// gives: Oxlint has no custom-rule API, and "this file is in the wrong
-// directory" is a statement about the tree rather than about the contents of
-// any one file, which a single-file linter cannot express.
-//
-// The scan reads the *index* — `--cached`, so a `git add`ed file counts
-// before it is committed, and a misplaced test fails in the diff that adds it
-// rather than after it lands. It deliberately does **not** pass `--others`,
-// which slug-rule.test.ts does: that guard reads file *contents*, where a
-// duplicate copy of a file is harmless, while this one enumerates *locations*,
-// where a stray copy is the whole finding.
-//
-// The difference was not hypothetical. Until MB.42, CI ran this suite inside a
-// container whose image baked the repo at `Docker/Dockerfile.node`'s
-// `COPY . .`, and `.github/actions/checkout-to-app` laid the checkout over it
-// with `cp -a`, which overlays without deleting. So every file deleted since
-// that image was built was still on disk in CI, untracked and not ignored —
-// and `--others` reported all 34 of this move's own predecessors as
-// violations. The image no longer carries source (MB.42;
-// tests/guards/image-source-layer.test.ts pins it), but the argument stands
-// on its own: a file that is untracked because it was just written and one
-// that is untracked because it was deleted from the repo are indistinguishable
-// to `git ls-files`, and the index is the question that actually separates
-// them, because it describes the repo rather than the disk. The scan stays
-// `--cached`.
+// The scan reads the *index* — `--cached`, so a staged file counts before it is
+// committed. It deliberately does **not** pass `--others`, which
+// slug-rule.test.ts does: that guard reads file *contents*, where a duplicate is
+// harmless, while this one enumerates *locations*, where a stray copy is the
+// whole finding — and a file untracked because it was just written is
+// indistinguishable from one untracked because it was deleted. See
+// claude-docs/testing.md, "Where tests live".
 //
 // Playwright's specs are outside this by construction — they end `.spec.ts`,
 // which is what keeps `e2e/` from having to be named as an exception here.

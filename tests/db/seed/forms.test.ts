@@ -21,12 +21,9 @@ import { slugify } from '@/lib/slugify';
 // Against the real tables, not stubs: `ingredient_forms.group_id` is a real
 // foreign key and every row carries audit ids pointing at `users`, so "the
 // groups land before the forms" is only a claim if both tables are the real
-// ones. This worker's clone arrives with every migration applied and the
-// `standard` scenario seeded (M1.27, tests/support/db-setup.ts), re-cloned
-// that way before this file runs — nothing is built here and nothing put back
-// afterwards. What the file *is* about is seeding, so beforeEach empties every
-// table first. Until M1.27 the template was empty and this file applied the
-// migration set itself.
+// ones. The clone carries every migration and the `standard` seed
+// (tests/support/db-setup.ts); what the file *is* about is seeding, so
+// beforeEach empties every table first.
 
 const DESIGN_DOC = fromRoot('claude-docs/DESIGN.md');
 

@@ -3,14 +3,11 @@ import { toColumns } from './columns';
 import { type Overrides, mergeFixture, stated } from './merge';
 
 // M1.25 — the compendium entry a test writes when the ingredient itself is not
-// what is under test.
-//
-// Typed against the table's own insert model, the way src/db/seed's types are:
-// a column renamed in schema/ingredients.ts fails here at compile time rather
-// than at the first insert. The import is `import type` deliberately — the
-// fixtures carry no runtime dependency on the database layer at all, which is
-// what lets the `unit` project run their tests with no Postgres anywhere near
-// them.
+// what is under test. Typed against the table's own insert model, so a column
+// renamed in schema/ingredients.ts fails at compile time rather than at the
+// first insert. The import is `import type` deliberately: the fixtures carry no
+// runtime dependency on the database layer, which is what lets the `unit`
+// project run their tests with no Postgres anywhere near them.
 
 /**
  * §5's seven values, in the design doc's own order. Written out rather than
@@ -33,10 +30,9 @@ export const NOMENCLATURE_KINDS = [
 type Nomenclature = typeof ingredients.$inferInsert.nomenclature;
 
 /**
- * An ingredient, plus the two things about it that live in other tables: its
- * folk names (`ingredient_folk_names`) and the categories it is filed under
- * (`ingredient_categories`, by §6 name rather than by id — a test names
- * `'Protection'`, not a UUID it would have to look up first).
+ * An ingredient, plus its folk names and the categories it is filed under — by
+ * §6 name rather than by id, so a test names `'Protection'` and not a UUID it
+ * would have to look up first.
  *
  * `canonicalKey` is absent because it is GENERATED ALWAYS: Postgres refuses a
  * direct write and Drizzle omits it from the insert model, so there is nothing
@@ -74,15 +70,12 @@ export interface IngredientFixture extends Required<
  * Postgres refuses — and the test using it would fail for a reason having
  * nothing to do with what it was testing.
  *
- * **Every name here is invented.** M1.27 bakes `standard` into the template
- * every db worker clones, and `ingredients_compendium_identity_unique`
- * reserves each seeded identity — so a default that matched one (Mugwort,
- * *Artemisia vulgaris*, is the seed's first row) would be a fixture no test
- * could insert. A real name merely absent from the seed today is only safe
- * until someone seeds it; a name that does not exist can never be. A fixture
- * is what a test writes *beside* the seeded world. ingredient.test.ts still
- * checks every identity the factory can supply on its own against the seed,
- * as a backstop rather than the mechanism.
+ * **Every name here is invented.** `standard` is baked into the template every
+ * db worker clones and `ingredients_compendium_identity_unique` reserves each
+ * seeded identity, so a default matching one would be a fixture no test could
+ * insert — and a real name merely absent from the seed today is only safe until
+ * someone seeds it. ingredient.test.ts checks the factory's own identities
+ * against the seed as a backstop rather than as the mechanism.
  */
 const CANONICAL_NAME_BY_NOMENCLATURE: Record<Nomenclature, string | null> = {
   botanical: 'Fixtura testalis',

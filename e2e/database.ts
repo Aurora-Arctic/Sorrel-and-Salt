@@ -16,11 +16,6 @@ import {
 //     `beforeAll` (see e2e/smoke.spec.ts) — a clone, tens of milliseconds —
 //     which is what DESIGN.md's "reseeded between spec files" resolves to.
 //   - global-teardown.ts drops the template again.
-//
-// Until M1.27 "reseeding" was a clone of `sorrel_template` itself, which
-// carried no schema and no rows: the known baseline every file started from
-// was an empty database. claude-docs/design-decisions/m1.11-e2e-reseed-
-// without-seed.md records that and why it was enough at the time.
 const E2E_DATABASE = 'sorrel_e2e';
 const E2E_TEMPLATE = 'sorrel_e2e_template';
 

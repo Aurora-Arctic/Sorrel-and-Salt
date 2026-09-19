@@ -14,17 +14,13 @@ import { seed } from '@/db/seed/index';
 
 // M1.23 — the `demo` scenario: DESIGN.md §"Seed data"'s third, "standard plus
 // spells with ingredients and layer order". Like standard.test.ts it runs
-// against the real schema rather than a stubbed table or two, and for a
-// sharper version of the same reason: a layer's integrity is three CHECK
-// constraints, two partial unique indexes and a composite primary key
-// (MB.40), none of which an object this module returns can demonstrate. The
-// worker's sorrel_test_<n> clone arrives with every migration applied and the
-// `standard` scenario seeded (M1.27, tests/support/db-setup.ts), re-cloned
-// that way before this file runs — so nothing is built here and nothing put
-// back afterwards. A test *about* the seed needs the tables empty, so
-// `beforeEach` truncates every one of them, and `seedDemo` then lays
-// `standard` down itself, inside its one transaction, exactly as it did
-// against the empty template this file used to migrate by hand.
+// against the real schema rather than a stubbed table or two, and for a sharper
+// version of the same reason: a layer's integrity is three CHECK constraints,
+// two partial unique indexes and a composite primary key (MB.40), none of which
+// an object this module returns can demonstrate. The clone carries every
+// migration and the `standard` seed (tests/support/db-setup.ts); a test *about*
+// the seed needs the tables empty, so `beforeEach` truncates every one of them
+// and `seedDemo` lays `standard` down itself, inside its one transaction.
 
 const PROBE = 'demo_probe_acting_user';
 
@@ -124,12 +120,10 @@ beforeAll(async () => {
   );
 });
 
-// Every table in `public` emptied, the probe included — one `truncate …
-// cascade` rather than the ordered `delete from` list this used to be: the
-// clone arrives already holding `standard`, every child foreign key is
-// NO ACTION, and a table-by-table delete would be refused. The empty tables
-// are the starting state every test below assumes: the one the old empty
-// template gave, reached the other way round.
+// Every table in `public` emptied, the probe included — one `truncate … cascade`
+// rather than a table-by-table delete: the clone arrives already holding
+// `standard`, every child foreign key is NO ACTION, and a delete would be
+// refused. The empty tables are the starting state every test below assumes.
 beforeEach(async () => {
   await truncateAllTables(sql);
 });

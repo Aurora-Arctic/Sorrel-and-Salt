@@ -12,10 +12,9 @@ import { REPO_ROOT } from '../support/paths';
 // requirement rather than an implementation detail." The checklist
 // (tests/support/story-checklist.ts) is built from those names, so a suite
 // that leaves its story off is not a red line on the checklist — it is a
-// line that never appears, and a story that reads "no test yet" while a
-// test for it is failing. The sweep-task rule says a mechanism lands with a
-// guard, as early as it can be written, and each later acceptance scaffold
-// (M2.1, M5.1, …) adopts it in its own PR.
+// line that never appears, and a story that reads "no test yet" while a test
+// for it is failing. Each later acceptance scaffold (M2.1, M5.1, …) adopts the
+// guard in its own PR.
 //
 // Tracked plus untracked, as slug-rule.test.ts scans: the file this guard
 // exists to catch is the one just written, which is untracked until it is

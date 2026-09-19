@@ -4,40 +4,34 @@ import { parse } from 'yaml';
 
 import { fromRoot } from '../support/paths';
 
-// MB.27 — `vercel pull` only resolves branch-scoped environment variables when
-// it is told which branch it is resolving for. Without `--git-branch`, a push
-// to `staging` pulls the Preview-wide `DATABASE_URL` the Neon integration
-// injects rather than the branch-scoped override pinned to `staging` — which
-// is the entire mechanism keeping staging's database out of the pool of
-// per-deployment ephemeral ones (claude-docs/design-decisions/
-// m1.1-neon-branch-strategy.md).
+// `vercel pull` resolves branch-scoped environment variables only when told
+// which branch (MB.27). Without `--git-branch`, a push to `staging` pulls the
+// Preview-wide `DATABASE_URL` the Neon integration injects rather than the
+// override pinned to `staging` — the mechanism keeping staging's database out
+// of the pool of per-deployment ephemeral ones. See
+// claude-docs/design-decisions/m1.1-neon-branch-strategy.md.
 //
-// Nothing fails when the flag is missing. The pull succeeds, the deploy
-// succeeds, and the build simply talks to the wrong database — so this is a
-// guard rather than a test of behaviour: the mechanism can only be made
-// *absent*, never impossible (CLAUDE.md's sweep-task rule). The sweep below is
-// deliberately over the whole workflow directory rather than the two files
-// this task edits, because the next `vercel pull` to be added is exactly where
-// the flag gets dropped again.
+// Nothing fails when the flag is missing: the pull succeeds, the deploy
+// succeeds, and the build talks to the wrong database. So this is a guard
+// rather than a test of behaviour, and it sweeps the whole workflow directory
+// rather than the two files that carry a pull today — the next `vercel pull`
+// added is exactly where the flag gets dropped again.
 //
-// MB.45 — and the flag is legal on exactly one target. Branch-scoped overrides
-// are a Preview-only Vercel feature; a production pull carrying one is rejected
+// The flag is legal on exactly one target (MB.45). Branch-scoped overrides are
+// a Preview-only Vercel feature, and a production pull carrying one is rejected
 // outright:
 //
 //   Error: Invalid request: `target` must be "preview" when specifying a `gitBranch`
 //
-// MB.27 added it unconditionally and broke every production deploy. So each
-// workflow now pulls through two steps, one per target, and this file asserts
-// both halves: preview must carry the flag, production must not. Two steps
-// rather than one command with an optional flag, because a command that merely
-// *might* carry `--git-branch` cannot satisfy the preview half — and because a
-// YAML `if:` is data this test can read, where a shell `if` is a string it
-// would have to parse.
+// So each workflow pulls through two steps, one per target, and this file
+// asserts both halves. Two steps rather than one command with an optional flag,
+// because a command that merely *might* carry `--git-branch` cannot satisfy the
+// preview half — and because a YAML `if:` is data this test can read, where a
+// shell `if` is a string it would have to parse.
 //
-// Honest limit: a YAML `if:` is still text to this test. What it proves is that
-// the two conditions are complementary and correctly paired with their flags.
-// What it cannot prove is that GitHub evaluates them as written — that needs a
-// live deploy, which is precisely the step MB.27 skipped.
+// Honest limit: a YAML `if:` is still text to this test. It proves the two
+// conditions are complementary and correctly paired with their flags, not that
+// GitHub evaluates them as written — that needs a live deploy.
 
 interface Step {
   name?: string;

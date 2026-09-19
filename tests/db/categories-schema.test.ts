@@ -180,17 +180,10 @@ describe('categories schema', () => {
   });
 });
 
-// The behaviour half, against the real tables. This worker's sorrel_test_<n>
-// clone arrives with every migration applied and the `standard` scenario
-// seeded (M1.27, tests/support/db-setup.ts), and re-cloned that way before
-// this file runs — so what is asserted below is the SQL production runs, with
-// no schema built here and nothing to put back afterwards. Until M1.27 the
-// template was empty: this file applied the one migration that ships these
-// two tables and stubbed `users` to a bare `id` column.
-//
-// The author is the seed's, not an invented id: the real `users` has NOT NULL
-// name, email and audit stamps, and a row that exists is cheaper to point at
-// than one to construct. Bound to the old name so the tests read as they did.
+// The behaviour half, against the real tables: a clone carrying every
+// migration and the `standard` seed, re-cloned before this file runs
+// (tests/support/db-setup.ts). The author is the seed's — the real `users` has
+// a NOT NULL name, email and audit stamps.
 const AUTHOR = FIXTURE_USERS.A.id;
 const ABSENT_GROUP = '99999999-9999-9999-9999-999999999999';
 
@@ -265,11 +258,9 @@ beforeAll(() => {
 });
 
 // `truncate … cascade`, not `delete from`: the seeded vocabulary is filed
-// against the compendium through ingredient_categories, and every child
-// foreign key in the schema is NO ACTION, so a delete would be refused.
-// Truncating takes the links with it, and the empty tables are what every
-// test below assumes — the same starting state the old empty template gave,
-// reached the other way round.
+// against the compendium through ingredient_categories, and every child foreign
+// key in the schema is NO ACTION, so a delete would be refused. Truncating takes
+// the links with it, and the empty tables are what every test below assumes.
 beforeEach(async () => {
   await sql`truncate categories, category_groups cascade`;
 });

@@ -166,15 +166,13 @@ describe('ThemeToggle', () => {
   });
 
   // Regression (MB.2): the light facet's --pre-enter class is baked into the
-  // server-rendered markup, so it's what paints first regardless of theme.
-  // The mount effect above used to be the only correction for a light
-  // starting theme, and it ran after that first paint — letting the sun
-  // visibly swing in from parked. jsdom doesn't apply real stylesheets, so
-  // the paint-timing fix itself isn't observable here (see the `Light` story
-  // for the manual check); this instead guards the index.scss rule that
-  // settles both facets' visible state pre-paint, off the same `data-theme`
-  // attribute the layout.tsx init script stamps before the browser paints
-  // anything — so a future edit can't quietly drop it back to effect-only.
+  // server-rendered markup, so it paints first regardless of theme, and a mount
+  // effect corrects it only after that paint. jsdom applies no real stylesheets,
+  // so the paint-timing fix itself isn't observable here (see the `Light` story
+  // for the manual check); this instead guards the index.scss rule that settles
+  // both facets' visible state pre-paint, off the same `data-theme` attribute
+  // the layout.tsx init script stamps before the browser paints anything — so a
+  // future edit can't quietly drop it back to effect-only.
   it('settles both facets pre-paint via CSS keyed off data-theme, not just the mount effect', () => {
     // Not `fileURLToPath(new URL('./index.scss', import.meta.url))`: Vitest's
     // jsdom environment resolves `import.meta.url` against the mocked

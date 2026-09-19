@@ -45,14 +45,10 @@ const AUDITED_TABLES = [
 // counter-example rather than against nothing.
 const UNAUDITED_TABLES = ['accounts', 'sessions', 'verifications'].sort();
 
-// *Which* tables the sweep reached is the thing under test, so every table
-// has to be the real one — and it is: this worker's clone arrives with every
-// migration applied and the `standard` scenario seeded (M1.27,
-// tests/support/db-setup.ts), re-cloned that way before this file runs. The
-// catalogue queries below read the schema as production carries it, with
-// nothing built here and nothing put back afterwards; the function and its
-// triggers are the schema's own. Until M1.27 the template was empty and this
-// file applied the migration set itself, dropping it again in afterAll.
+// *Which* tables the sweep reached is the thing under test, so every table has
+// to be the real one — and it is: a clone carrying every migration and the
+// `standard` seed, re-cloned before this file runs (tests/support/db-setup.ts).
+// The function and its triggers are the schema's own.
 let sql: ReturnType<typeof postgres>;
 
 const AUTHOR = '11111111-1111-1111-1111-111111111111';

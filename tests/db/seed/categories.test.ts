@@ -18,14 +18,11 @@ import { slugify } from '@/lib/slugify';
 //
 // Against the real tables, not stubs: `categories.group_id` is a real foreign
 // key and every row carries audit ids that point at `users`, so "the groups
-// land before the categories" is only a claim if both tables are the real
-// ones. This worker's clone arrives with every migration applied and the
-// `standard` scenario seeded (M1.27, tests/support/db-setup.ts), re-cloned
-// that way before this file runs — so nothing is built here and nothing put
-// back afterwards. What the file *is* about is seeding, so beforeEach empties
-// every table first: the counts below are this seed's rows and no one else's.
-// Until M1.27 the template was empty and this file applied the migration set
-// itself.
+// land before the categories" is only a claim if both tables are the real ones.
+// The clone carries every migration and the `standard` seed
+// (tests/support/db-setup.ts); what the file *is* about is seeding, so
+// beforeEach empties every table first and the counts below are this seed's
+// rows and no one else's.
 //
 // Three things are asserted against their *sources* rather than against a copy
 // of them, because a copy is exactly what would rot:

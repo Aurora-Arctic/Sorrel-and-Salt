@@ -19,13 +19,12 @@ const AUDIT_COLUMNS = [
   'deleted_by',
 ];
 
-// DESIGN.md §5's column list, transcribed — minus `visibility`, which is
-// M10.3's column and lands in Wave 5 with the service rule that reads it. The
-// split is deliberate (TASKS.md, "Breaking the M1.23 ↔ M10.3 cycle"): M1.23
-// seeds spells against this table, and M10.3's "existing seeded spells migrate
-// to workspace visibility" is only testable if there are seeded rows first.
-// This list failing is the reminder that adding the column here would quietly
-// take that criterion away.
+// DESIGN.md §5's column list, transcribed — minus `visibility`, which lands
+// with the service rule that reads it (M10.3). The split is deliberate
+// (TASKS.md, "Breaking the M1.23 ↔ M10.3 cycle"): M10.3's "existing seeded
+// spells migrate to workspace visibility" is only testable if there are seeded
+// rows first, so this list failing is the reminder that adding the column early
+// would quietly take that criterion away.
 const OWN_COLUMNS = [
   'id',
   'workspace_id',
@@ -133,19 +132,11 @@ describe('spells schema', () => {
   });
 });
 
-// The behaviour half, against the real table. This worker's sorrel_test_<n>
-// clone arrives with every migration applied and the `standard` scenario
-// seeded (M1.27, tests/support/db-setup.ts), and re-cloned that way before
-// this file runs — so what is asserted below is the SQL production runs, with
-// no schema built here and nothing to put back afterwards. Until M1.27 the
-// template was empty: this file applied the one migration that ships the
-// table and stubbed `users`, `workspaces` and `ingredients` to a bare `id`
-// column.
-//
-// The author and the two covens are the seed's, not invented ids: the real
-// `users` and `workspaces` have NOT NULL names, slugs and audit stamps, and a
-// row that exists is cheaper to point at than one to construct. Bound to the
-// old names so the tests read as they did.
+// The behaviour half, against the real table: a clone carrying every migration
+// and the `standard` seed, re-cloned before this file runs
+// (tests/support/db-setup.ts). The author and the two covens are the seed's —
+// the real `users` and `workspaces` demand NOT NULL names, slugs and audit
+// stamps.
 const AUTHOR = FIXTURE_USERS.A.id;
 const COVEN = WORKSPACE_W_ID;
 const OTHER_COVEN = WORKSPACE_X_ID;
