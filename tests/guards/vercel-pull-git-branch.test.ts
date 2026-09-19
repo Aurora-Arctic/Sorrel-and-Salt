@@ -19,9 +19,31 @@ import { fromRoot } from '../support/paths';
 // deliberately over the whole workflow directory rather than the two files
 // this task edits, because the next `vercel pull` to be added is exactly where
 // the flag gets dropped again.
+//
+// MB.45 — and the flag is legal on exactly one target. Branch-scoped overrides
+// are a Preview-only Vercel feature; a production pull carrying one is rejected
+// outright:
+//
+//   Error: Invalid request: `target` must be "preview" when specifying a `gitBranch`
+//
+// MB.27 added it unconditionally and broke every production deploy. So each
+// workflow now pulls through two steps, one per target, and this file asserts
+// both halves: preview must carry the flag, production must not. Two steps
+// rather than one command with an optional flag, because a command that merely
+// *might* carry `--git-branch` cannot satisfy the preview half — and because a
+// YAML `if:` is data this test can read, where a shell `if` is a string it
+// would have to parse.
+//
+// Honest limit: a YAML `if:` is still text to this test. What it proves is that
+// the two conditions are complementary and correctly paired with their flags.
+// What it cannot prove is that GitHub evaluates them as written — that needs a
+// live deploy, which is precisely the step MB.27 skipped.
 
 interface Step {
   name?: string;
+  // MB.45 — the condition is now part of the mechanism, not decoration around
+  // it: it is what ties an invocation to the one target its flags are legal on.
+  if?: string;
   run?: string;
   env?: Record<string, string>;
 }
@@ -56,41 +78,138 @@ function stepNamed(job: Job, name: string): Step {
  */
 const INVOCATION = /(?:^|&&|\|\||;|\|)\s*vercel pull\b/;
 
+interface Pull {
+  file: string;
+  job: string;
+  /** The step the invocation lives in, so its `if:` can be read alongside it. */
+  step: Step;
+  command: string;
+}
+
 /** Every `run:` line that invokes `vercel pull`, across every workflow. */
-function everyVercelPull(): { file: string; job: string; command: string }[] {
+function everyVercelPull(): Pull[] {
   return readdirSync(WORKFLOWS_DIR)
     .filter((file) => file.endsWith('.yml') || file.endsWith('.yaml'))
     .flatMap((file) =>
       Object.entries(workflow(file).jobs ?? {}).flatMap(([job, definition]) =>
-        (definition.steps ?? [])
-          .flatMap((step) => (step.run ?? '').split('\n'))
-          .map((line) => line.trim())
-          .filter((line) => INVOCATION.test(line))
-          .map((command) => ({ file, job, command })),
+        (definition.steps ?? []).flatMap((step) =>
+          (step.run ?? '')
+            .split('\n')
+            .map((line) => line.trim())
+            .filter((line) => INVOCATION.test(line))
+            .map((command) => ({ file, job, step, command })),
+        ),
       ),
     );
 }
 
+/**
+ * Which target an invocation is for, read from the command itself rather than
+ * from its `if:`. Each arm must spell its `--environment` literally — an
+ * invocation that interpolates the environment cannot be classified, and an
+ * unclassifiable pull is one whose flags nothing can check.
+ */
+const isProductionPull = (pull: Pull) => pull.command.includes('--environment=production');
+const isPreviewPull = (pull: Pull) => pull.command.includes('--environment=preview');
+
 describe('every `vercel pull` in CI', () => {
   const pulls = everyVercelPull();
 
-  // The precondition for the assertion below: the sweep actually found the
+  // The precondition for every assertion below: the sweep actually found the
   // pulls it claims to be checking. Without this, a rename of `run:` or a move
   // of the deploy steps would empty the list and leave the suite green.
-  it('is found by the sweep — deploy.yml and migrate.yml both pull', () => {
-    expect(pulls.map(({ file }) => file).sort()).toEqual(['deploy.yml', 'migrate.yml']);
+  //
+  // Two per file as of MB.45 — one arm per target. A file that has lost an arm
+  // fails here rather than leaving the assertions below vacuously true over
+  // whichever arm survived.
+  it('is found by the sweep — deploy.yml and migrate.yml each pull once per target', () => {
+    expect(pulls.map(({ file }) => file).sort()).toEqual([
+      'deploy.yml',
+      'deploy.yml',
+      'migrate.yml',
+      'migrate.yml',
+    ]);
   });
 
-  it.each(pulls)('names the branch it is resolving for ($file, $job)', ({ command }) => {
-    expect(command).toContain('--git-branch=');
+  it('names its target literally, so every invocation is classifiable', () => {
+    for (const pull of pulls) {
+      expect(
+        isPreviewPull(pull) !== isProductionPull(pull),
+        `${pull.file} (${pull.job}) is neither exactly preview nor exactly production: ${pull.command}`,
+      ).toBe(true);
+    }
+  });
+
+  it('pulls each target exactly once per workflow', () => {
+    expect(
+      pulls
+        .filter(isProductionPull)
+        .map(({ file }) => file)
+        .sort(),
+    ).toEqual(['deploy.yml', 'migrate.yml']);
+    expect(
+      pulls
+        .filter(isPreviewPull)
+        .map(({ file }) => file)
+        .sort(),
+    ).toEqual(['deploy.yml', 'migrate.yml']);
+  });
+
+  // MB.27's assertion, narrowed by MB.45 to the target it is true on. Dropping
+  // the flag here still costs nothing at run time and still silently puts
+  // staging on the Preview-wide `DATABASE_URL`.
+  it('names the branch every preview pull is resolving for', () => {
+    const previews = pulls.filter(isPreviewPull);
+    expect(previews.length).toBeGreaterThan(0);
+
+    for (const { file, job, command } of previews) {
+      expect(command, `${file} (${job})`).toContain('--git-branch="$GIT_BRANCH"');
+    }
   });
 
   // A hardcoded branch would satisfy the assertion above and still pull the
-  // wrong variables for two of the three deploy targets. The value is either a
-  // workflow expression or a shell variable the step's `env:` defines — the
-  // two forms the steps below are asserted against individually.
-  it.each(pulls)('takes that branch from the resolved target ($file, $job)', ({ command }) => {
-    expect(command).toMatch(/--git-branch="?(\$\{\{|\$[A-Z_]+)/);
+  // wrong variables for two of the three deploy targets. The value comes from
+  // the resolved target — `resolve-target`'s output in `deploy.yml`, the
+  // caller's input in `migrate.yml` — and through `env:` rather than
+  // interpolated into the command, because a branch name may legally contain
+  // `$`, a backtick or a `;`, and a hotfix branch's name arrives from a PR.
+  it('takes that branch from the resolved target', () => {
+    for (const { file, job, step } of pulls.filter(isPreviewPull)) {
+      expect(step.env?.GIT_BRANCH, `${file} (${job})`).toMatch(
+        /^\$\{\{\s*(needs\.resolve-target\.outputs\.git_branch|inputs\.git-branch)\s*\}\}$/,
+      );
+    }
+  });
+
+  // MB.45's own half. Unlike the flag going missing on preview, this one fails
+  // loudly — but it fails the entire production deploy, so it is worth catching
+  // in the diff that reintroduces it rather than on the push to `main`.
+  it('never passes --git-branch on the production target', () => {
+    const production = pulls.filter(isProductionPull);
+    expect(production.length).toBeGreaterThan(0);
+
+    for (const { file, job, command } of production) {
+      expect(command, `${file} (${job})`).not.toContain('--git-branch');
+    }
+  });
+
+  // What makes the pairing structural rather than two `run:` lines that happen
+  // to agree: each arm is reachable only for the target its command names. Swap
+  // either condition and this fails.
+  //
+  // `== 'preview'` rather than `!= 'production'` is deliberate — a third
+  // environment then skips both arms and fails at migrate.yml's existing
+  // "$env_file not found after vercel pull", which is a named failure rather
+  // than a silent pull of the wrong environment.
+  it('runs each arm only for the environment its command names', () => {
+    for (const pull of pulls) {
+      const target = isProductionPull(pull) ? 'production' : 'preview';
+      expect(pull.step.if, `${pull.file} (${pull.job})`).toMatch(
+        new RegExp(
+          `(needs\\.resolve-target\\.outputs\\.environment|inputs\\.environment)\\s*==\\s*'${target}'`,
+        ),
+      );
+    }
   });
 });
 
@@ -112,6 +231,14 @@ describe('deploy.yml resolve-target', () => {
 
     expect(environments.length).toBeGreaterThan(1);
     expect(branches).toHaveLength(environments.length);
+  });
+
+  // MB.45 — `--environment=production` is now the classifier the pull steps are
+  // selected by, so which arms answer `production` has to be pinned. Two
+  // preview arms (hotfix PR, pushed branch) and exactly one production arm.
+  it('answers production for exactly one arm and preview for the rest', () => {
+    expect(script.match(/echo "environment=production"/g) ?? []).toHaveLength(1);
+    expect(script.match(/echo "environment=preview"/g) ?? []).toHaveLength(2);
   });
 
   // `github.ref_name` on a pull_request is the PR's merge ref (`123/merge`),
@@ -136,30 +263,63 @@ describe('deploy.yml resolve-target', () => {
 
 describe('deploy.yml', () => {
   const deploy = workflow('deploy.yml');
-  const step = stepNamed(deploy.jobs.deploy, 'Pull Vercel environment');
-  const pull = step.run ?? '';
 
-  // Through `env:` and quoted, not interpolated into the command: a branch
-  // name may legally contain `$`, a backtick or a `;`, and a hotfix branch's
-  // name reaches this step from a pull request.
-  it('pulls for the branch resolve-target named', () => {
-    expect(pull).toContain('--git-branch="$GIT_BRANCH"');
-    expect(step.env?.GIT_BRANCH).toBe('${{ needs.resolve-target.outputs.git_branch }}');
+  describe('the preview pull', () => {
+    const step = stepNamed(deploy.jobs.deploy, 'Pull Vercel environment (preview)');
+
+    // Through `env:` and quoted, not interpolated into the command: a branch
+    // name may legally contain `$`, a backtick or a `;`, and a hotfix branch's
+    // name reaches this step from a pull request.
+    it('pulls for the branch resolve-target named', () => {
+      expect(step.run ?? '').toContain('--git-branch="$GIT_BRANCH"');
+      expect(step.env?.GIT_BRANCH).toBe('${{ needs.resolve-target.outputs.git_branch }}');
+    });
+
+    // The precondition: this is still the real pull step, environment and all —
+    // not a step that has lost its `--environment` and would pull development
+    // variables while passing the assertion above.
+    it('still pulls for the preview environment', () => {
+      expect(step.run ?? '').toContain('--environment=preview');
+    });
   });
 
-  // The precondition: this is still the real pull step, environment and all —
-  // not a step that has lost its `--environment` and would pull development
-  // variables while passing the assertion above.
-  it('still pulls for the resolved environment', () => {
-    expect(pull).toContain('--environment=${{ needs.resolve-target.outputs.environment }}');
+  describe('the production pull', () => {
+    const step = stepNamed(deploy.jobs.deploy, 'Pull Vercel environment (production)');
+
+    it('pulls production without naming a branch', () => {
+      expect(step.run ?? '').toContain('--environment=production');
+      expect(step.run ?? '').not.toContain('--git-branch');
+    });
+
+    // The duplicated `env:` block is the drift risk two steps introduce: an arm
+    // that loses its token fails at run time with an auth error rather than
+    // here.
+    it('still has the token it authenticates with', () => {
+      expect(step.env?.VERCEL_DEPLOY_TOKEN).toBe('${{ secrets.VERCEL_DEPLOY_TOKEN }}');
+    });
   });
 
-  // The other half of the same defect. `vercel pull --git-branch` fixes what
-  // the *build* sees; the deployment's own environment is resolved from its
-  // branch association, which the CLI infers from the checkout — and
-  // actions/checkout leaves a detached HEAD, which has none. Without the
-  // metadata the running app reads the Preview-wide DATABASE_URL however the
-  // build was pulled, so this is not decoration either.
+  it('gives both arms the token they authenticate with', () => {
+    for (const name of [
+      'Pull Vercel environment (preview)',
+      'Pull Vercel environment (production)',
+    ]) {
+      expect(stepNamed(deploy.jobs.deploy, name).env?.VERCEL_DEPLOY_TOKEN).toBe(
+        '${{ secrets.VERCEL_DEPLOY_TOKEN }}',
+      );
+    }
+  });
+
+  // The other half of MB.27's defect. `vercel pull --git-branch` fixes what the
+  // *build* sees; the deployment's own environment is resolved from its branch
+  // association, which the CLI infers from the checkout — and actions/checkout
+  // leaves a detached HEAD, which has none. Without the metadata the running app
+  // reads the Preview-wide DATABASE_URL however the build was pulled, so this is
+  // not decoration either.
+  //
+  // It stays on *every* arm, production included: this is deployment metadata,
+  // not environment resolution, and Vercel does not reject it the way it rejects
+  // `gitBranch` on a non-preview target.
   describe('the deploy itself', () => {
     const step = stepNamed(deploy.jobs.deploy, 'Deploy');
     const command = step.run ?? '';
@@ -191,22 +351,38 @@ describe('deploy.yml', () => {
 describe('migrate.yml', () => {
   const migrate = workflow('migrate.yml');
   const inputs = migrate.on?.workflow_call?.inputs ?? {};
-  const step = stepNamed(migrate.jobs.migrate, 'Pull Vercel environment');
-  const pull = step.run ?? '';
 
-  // Required rather than defaulted: a caller that forgets it should fail to
-  // start, not quietly migrate whatever branch-agnostic DATABASE_URL comes
-  // back.
+  // Required rather than defaulted, and required even though the production arm
+  // ignores it: a caller that cannot say which branch it is migrating cannot be
+  // trusted with the preview arm either, and defaulting is how it would quietly
+  // migrate whatever branch-agnostic DATABASE_URL came back.
   it('requires its caller to name the branch', () => {
     expect(inputs['git-branch']).toMatchObject({ required: true, type: 'string' });
   });
 
-  it('pulls for that branch', () => {
-    expect(pull).toContain('--git-branch="$GIT_BRANCH"');
-    expect(step.env?.GIT_BRANCH).toBe('${{ inputs.git-branch }}');
+  describe('the preview pull', () => {
+    const step = stepNamed(migrate.jobs.migrate, 'Pull Vercel environment (preview)');
+
+    it('pulls for the branch its caller named', () => {
+      expect(step.run ?? '').toContain('--git-branch="$GIT_BRANCH"');
+      expect(step.env?.GIT_BRANCH).toBe('${{ inputs.git-branch }}');
+    });
+
+    it('still pulls for the preview environment', () => {
+      expect(step.run ?? '').toContain('--environment=preview');
+    });
   });
 
-  it('still pulls for the environment it was given', () => {
-    expect(pull).toContain('--environment=${{ inputs.environment }}');
+  describe('the production pull', () => {
+    const step = stepNamed(migrate.jobs.migrate, 'Pull Vercel environment (production)');
+
+    it('pulls production without naming a branch', () => {
+      expect(step.run ?? '').toContain('--environment=production');
+      expect(step.run ?? '').not.toContain('--git-branch');
+    });
+
+    it('still has the token it authenticates with', () => {
+      expect(step.env?.VERCEL_DEPLOY_TOKEN).toBe('${{ secrets.VERCEL_DEPLOY_TOKEN }}');
+    });
   });
 });
