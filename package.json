@@ -16,6 +16,7 @@
     "pre-commit": "npm run lint && npm run format:check && npm run typecheck",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:stories": "vitest run --config vitest.stories.config.mts",
     "test:debug": "vitest run --inspectBrk=0.0.0.0:9230 --no-file-parallelism --maxWorkers=1",
     "test:ui": "vitest --ui",
     "e2e": "playwright test",

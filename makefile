@@ -30,7 +30,7 @@
 
 .PHONY: help install dev dev-debug build start \
 	lint lint-fix format format-check typecheck check-destructive-ddl pre-commit \
-	test-debug test-ui e2e-ui e2e-trace \
+	test-stories test-debug test-ui e2e-ui e2e-trace \
 	db-generate db-migrate db-seed db-drop db-reset db-studio db-psql codegen \
 	workshop workshop-build \
 	docker-build docker-up docker-workshop docker-studio docker-all docker-e2e docker-down docker-rebuild docker-logs \
@@ -93,6 +93,10 @@ check-destructive-ddl:
 ## The pre-commit checks: lint, format:check, typecheck
 pre-commit:
 	npm run pre-commit
+
+## The acceptance suite only, printed as a checklist of the v1 user stories (M1.28)
+test-stories:
+	npm run test:stories
 
 ## Vitest under --inspect-brk, single-worker, halted until a debugger attaches on 9230 (MB.22)
 test-debug:
