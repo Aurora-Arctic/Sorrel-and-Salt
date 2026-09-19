@@ -580,6 +580,35 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   start rather than migrating the wrong database. M1.1's "Cross-task impact"
   requires the two workflows to resolve `DATABASE_URL` identically, and that is
   the requirement in mechanical form.
+- **Both jobs assert the pulled environment before using it** (MB.46), via
+  `scripts/assert-pulled-env.ts`. It does two things. It **asserts** the keys
+  that job needs — `migrate` needs `DATABASE_URL`, `deploy` needs that and
+  `BETTER_AUTH_SECRET` — failing with a named cause (missing · empty ·
+  placeholder · not a postgres URL · scheme without `user@host/database` ·
+  surviving quotes or whitespace) rather than letting the value reach a
+  consumer that cannot describe it. And it **reports** every key the pull
+  returned, with a classification and its length, never a value; that report
+  prints even when the run is about to fail.
+
+  The report is the half worth having. CI previously could not answer "what did
+  the pull actually return?" — `migrate.yml` masked the value before anything
+  could print it, and `deploy.yml` never read the file at all, handing it
+  straight to `vercel build`. So MB.27 dropping variables produced
+  `ERR_INVALID_URL` with the input shown as `***` in one job and
+  `BETTER_AUTH_SECRET is not set` in the other, and neither said which
+  variables had survived the pull. Key names are not secret —
+  `claude-docs/secrets.md` enumerates them — and that no value is ever printed
+  is asserted in `tests/guards/pulled-env-assertion.test.ts` rather than
+  intended. The same file sweeps the workflow directory, so a `vercel pull`
+  added without an assertion beside it fails in the diff that adds it.
+
+  Why `deploy` needs `BETTER_AUTH_SECRET` in particular: `vercel build` runs
+  `next build` with `NODE_ENV=production`, which traces
+  `/api/auth/[...all]` → `src/lib/auth.ts` → `src/db/connection.ts`.
+  `auth.ts` throws on an unset secret, and `connection.ts` calls `postgres()`
+  at module scope, which parses its URL eagerly. A placeholder is therefore not
+  harmless to a build that issues no query.
+
 - **The reference seeds (M4.3, M4.3a) are one step inside `migrate.yml`, not a
   workflow of their own.** After the migrations, `npm run db:seed:categories`
   and `npm run db:seed:forms` write DESIGN.md §6's category vocabulary and §5's

@@ -71,6 +71,17 @@ for a pull that names the branch, so `deploy.yml` and `migrate.yml` both pass
 branch-scoped form is necessary and not sufficient — dropping the flag puts
 staging back on the environment-wide value with nothing failing.
 
+**A variable marked Sensitive in Vercel cannot be read back by `vercel pull`**
+— that is what the setting means. The pull says so ("Secret values cannot be
+pulled from the `<env>` Environment") and writes `[SENSITIVE]` in place of the
+value, which is a perfectly non-empty string and will sail through any check
+that only asks whether something is set. So: do not mark a variable Sensitive
+if CI has to read it. `scripts/assert-pulled-env.ts` (MB.46) is what now
+refuses the placeholder by name rather than passing it on, and it reports every
+key the pull returned — classification and length, never a value — so which
+variables survived a pull is a fact CI states rather than one you infer from
+which consumer broke first.
+
 The production pull passes no branch at all, and must not: branch-scoped
 overrides are a Preview-only feature, and Vercel rejects the pair with
 ``Invalid request: `target` must be "preview" when specifying a `gitBranch` ``.
