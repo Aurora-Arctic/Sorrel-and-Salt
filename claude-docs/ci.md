@@ -491,6 +491,32 @@ nothing and this workflow is the only path.
 - **`VERCEL_DEPLOY_TOKEN` must be minted against the `aurora-arctic` team
   scope**, not a personal scope. A personal-scope token is accepted as valid and
   then fails at `vercel pull` with `Could not retrieve Project Settings…`.
+- **Every `vercel pull` passes `--git-branch`** (MB.27). Vercel resolves a
+  branch-scoped environment variable only when the pull names the branch, and
+  `staging`'s `DATABASE_URL` is precisely such a variable — the override that
+  keeps staging off the Neon integration's per-preview ephemeral branches
+  (`claude-docs/design-decisions/m1.1-neon-branch-strategy.md`). Drop the flag
+  and nothing fails: the pull succeeds, the deploy succeeds, and both the build
+  and the migration quietly address whichever database the integration last
+  injected Preview-wide. `resolve-target` therefore emits a `git_branch`
+  output alongside `environment` — `github.head_ref` for a hotfix PR (`ref_name`
+  there is the `refs/pull/N/merge` ref, which nothing is scoped to),
+  `github.ref_name` for a push — and hands it to both the deploy job's pull and
+  `migrate.yml`'s `git-branch` input. `tests/guards/vercel-pull-git-branch.test.ts`
+  is the guard: it sweeps every workflow, so the next `vercel pull` added
+  without the flag fails in the diff that adds it.
+- **The `deploy` step passes `--meta githubDeployment=1 --meta
+githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
+  equally load-bearing. `--git-branch` fixes what the **build** pulls; the
+  running deployment resolves its own environment from its **branch
+  association**, which the CLI infers from the local checkout — and
+  `actions/checkout` leaves a detached HEAD, which has none. So without the
+  metadata the deployed app reads the Preview-wide `DATABASE_URL` no matter how
+  the build was pulled, and `src/db/connection.ts` reads that variable at
+  runtime. Vercel's own docs pair the two commands for exactly this
+  prebuilt-in-CI case. A production deploy uses Production settings regardless
+  of the metadata, so `main` carries it harmlessly rather than branching the
+  command.
 - **`vercel.json`'s catch-all must stay `"**": false`.** Keys are minimatch, so
   `"*"` stops at `/` and would miss `feature/*`; and any single `true` rule wins
   the tiebreak. Re-enabling a branch means adding a key, never loosening the
@@ -509,12 +535,18 @@ nothing and this workflow is the only path.
   `secrets: inherit`, and carries its own `group: migrate` /
   `cancel-in-progress: false` concurrency lock so two merges never migrate at
   once), and `deploy`. Same guard-skip stub as `deploy.yml` when the `VERCEL_*` secrets
-  are absent. `vercel pull --environment=<preview|production>` resolves the
-  right `DATABASE_URL` for each target the same way `deploy.yml`'s own pull
-  does — the branch-scoped override for `staging`, the integration's
-  per-deployment ephemeral Neon branch for a hotfix preview (see
+  are absent. `vercel pull --environment=<preview|production>
+--git-branch=<branch>` resolves the right `DATABASE_URL` for each target the
+  same way `deploy.yml`'s own pull does — the branch-scoped override for
+  `staging`, the integration's per-deployment ephemeral Neon branch for a
+  hotfix preview (see
   `claude-docs/design-decisions/m1.1-neon-branch-strategy.md`) — read from
-  `.vercel/.env.<environment>.local` and masked before use.
+  `.vercel/.env.<environment>.local` and masked before use. Both halves of that
+  come from `resolve-target`: `git-branch` is a **required** `workflow_call`
+  input, so a caller that cannot say which branch it is migrating fails to
+  start rather than migrating the wrong database. M1.1's "Cross-task impact"
+  requires the two workflows to resolve `DATABASE_URL` identically, and that is
+  the requirement in mechanical form.
 - **The reference seeds (M4.3, M4.3a) are one step inside `migrate.yml`, not a
   workflow of their own.** After the migrations, `npm run db:seed:categories`
   and `npm run db:seed:forms` write DESIGN.md §6's category vocabulary and §5's
