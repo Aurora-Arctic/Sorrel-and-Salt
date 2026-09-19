@@ -79,4 +79,7 @@ deliberately unbuilt (see [`CLAUDE.md`](../CLAUDE.md), "The design will change")
 `next/font`, so anything rendered **outside the root layout** — a workshop story,
 a standalone render — loses its entire `font-family` declaration rather than
 falling back. `.ladle/typography.scss` works around it by redefining both in its
-own `:root`. A real fix gives the stacks a concrete fallback family.
+own `:root`. A real fix puts the fallback **inside** the `var()` —
+`var(--font-body, 'Lexend')` — since the concrete families already trailing
+each stack don't rescue it: an unresolved `var()` invalidates the whole
+declaration at computed-value time, rest of the stack included.

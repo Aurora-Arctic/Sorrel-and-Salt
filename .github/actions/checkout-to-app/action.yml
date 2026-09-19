@@ -9,6 +9,16 @@ runs:
     - name: Checkout
       uses: actions/checkout@v7
 
+    # `cp -a` overlays; it never deletes. That is safe only because the image
+    # carries no source layer: node_modules and the two package manifests are
+    # all Docker/Dockerfile.node contributes to /app, so a checkout lands on
+    # nothing it does not itself contain and a file the branch deleted has
+    # nothing to survive as. Until MB.42
+    # the image baked the whole repo with `COPY . .`, and every such file was
+    # still sitting there afterwards — untracked, not gitignored, and
+    # indistinguishable to oxlint/tsc/vitest from a file the branch actually
+    # has. tests/guards/image-source-layer.test.ts is what keeps the image
+    # that way, so this step stays a copy and never grows a clean.
     - name: Copy checkout into /app
       shell: bash
       run: cp -a "$GITHUB_WORKSPACE"/. /app/

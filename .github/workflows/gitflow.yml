@@ -31,18 +31,20 @@ name: Gitflow Rules
 #
 # Branch protection/rulesets can gate a target branch (required checks, no
 # force-push, etc.) but can't express "only branch X may merge into target
-# Y" — this check fills that gap. Called via workflow_call from both
-# pr-gate and merge-queue — merge_group events only expose a synthetic head
-# ref (refs/heads/gh-readonly-queue/<base>/pr-<n>-<sha>), not the PR's real
+# Y" — this check fills that gap. Called via workflow_call from pr-gate.
+# A merge queue needs it too, and with should-run: false — merge_group events
+# only expose a synthetic head ref
+# (refs/heads/gh-readonly-queue/<base>/pr-<n>-<sha>), not the PR's real
 # source branch, so there's nothing to actually validate there; but the
 # same repo ruleset that requires "gitflow / gitflow" for a PR also gates
 # the merge queue, so the job still has to run and report success under
 # that name or a queued merge stalls forever waiting on a check that never
-# posts. merge-queue.yml calls this with should-run: false for that reason
-# — see should-run below, same pattern lint/typecheck/vitest/build/
-# playwright already use for path-filtered skips. Doesn't need the testing
-# container or a checkout when it does run for real — it only reads the
-# PR's head/base ref names, no npm/build tooling involved.
+# posts. merge-queue.yml called it that way until MB.32 deleted it, and is
+# restored from git history when M7.A.1 turns the queue on — see should-run
+# below, the same pattern checks.yml's legs, vitest and playwright already
+# use for path-filtered skips. Doesn't need the testing container or a
+# checkout when it does run for real — it only reads the PR's head/base ref
+# names, no npm/build tooling involved.
 on:
   workflow_call:
     inputs:
@@ -51,14 +53,14 @@ on:
         required: false
         type: string
       merge-queue:
-        description: Set true when called from merge-queue.yml — uses a separate, merge-queue-labeled comment thread and posts only on failure (no minimize-on-success)
+        description: Set true when called for a merge queue — uses a separate, merge-queue-labeled comment thread and posts only on failure (no minimize-on-success). Nothing passes it today — merge-queue.yml was deleted with the five check workflows (MB.32) and is restored from git history when M7.A.1 turns the merge queue on.
         required: false
         type: boolean
         default: false
       should-run:
         description: >-
           Set false to skip the actual source->target validation while still completing
-          this job under its normal name. merge-queue.yml passes false — merge_group
+          this job under its normal name. A merge-queue caller passes false — merge_group
           events have no real PR source branch to validate, but the job still needs to
           report success so the "gitflow / gitflow" required status check isn't left
           permanently pending. Defaults true so pr-gate (which has a real PR to check)
@@ -73,7 +75,7 @@ permissions:
 
 jobs:
   gitflow:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       # Local action references (./.github/actions/...) below resolve against
       # $GITHUB_WORKSPACE, so a checkout is needed even though this job never
@@ -82,11 +84,6 @@ jobs:
       - name: Checkout
         if: inputs.should-run
         uses: actions/checkout@v7
-
-      - name: Start timer
-        id: timer-start
-        if: inputs.should-run
-        uses: ./.github/actions/timer-start
 
       - name: Validate source -> target branch
         id: run
@@ -117,13 +114,6 @@ jobs:
             echo "No Gitflow violation for '$HEAD_REF' -> '$BASE_REF'." | tee -a output.log
           fi
 
-      - name: Compute duration
-        id: timer
-        if: always() && inputs.should-run
-        uses: ./.github/actions/timer-elapsed
-        with:
-          start: ${{ steps.timer-start.outputs.start }}
-
       - name: Write job summary
         if: always() && inputs.should-run
         uses: ./.github/actions/job-summary
@@ -131,11 +121,10 @@ jobs:
           check-name: Gitflow Rules
           outcome: ${{ steps.run.outcome }}
           log-file: output.log
-          duration: ${{ steps.timer.outputs.duration }}
           summary: ${{ github.event.pull_request.head.ref }} -> ${{ github.event.pull_request.base.ref }}
 
       # Fail-only from pr-gate (resolves a prior failure comment on success),
-      # fail-only on a separate merge-queue-labeled thread from merge-queue
+      # fail-only on a separate merge-queue-labeled thread when merge-queue: true
       # (no action at all on success) — see .github/actions/pr-comment.
       - name: Comment on PR
         if: always() && inputs.pr-number && inputs.should-run
@@ -148,5 +137,4 @@ jobs:
           outcome: ${{ steps.run.outcome }}
           log-file: output.log
           success-mode: minimize
-          duration: ${{ steps.timer.outputs.duration }}
           summary: ${{ github.event.pull_request.head.ref }} -> ${{ github.event.pull_request.base.ref }}

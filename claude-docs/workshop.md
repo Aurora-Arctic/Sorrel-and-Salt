@@ -9,13 +9,17 @@ without a page routed to it.
 - **Ladle**, not Storybook or Histoire — Vite + React only, so it never couples
   the workshop to a Next.js major; one dependency, one config file.
 - **Component stories live at exactly `src/components/<Name>/index.stories.tsx`**,
-  beside `index.tsx` and `index.test.tsx`. The `stories` glob also picks up
+  beside `index.tsx`. The `stories` glob also picks up
   `.ladle/*.stories.tsx`, for workshop-only pages the app never imports.
-- Stories carry no test ids, no snapshots and no assertions — behaviour is
-  `index.test.tsx`'s job.
-- `*.stories.tsx` is excluded from `tsc` (mirroring `*.test.tsx`) while
-  `@ladle/react`'s bundled types don't pass `strict`; `ladle build` still
-  compiles stories through esbuild.
+- Stories carry no test ids, no snapshots and no assertions — behaviour is the
+  test's job, and since MB.41 the test is not beside the story: it lives at
+  `tests/components/<Name>/index.test.tsx`. The story stays in the component
+  directory because Ladle discovers components by that file, which is the one
+  thing the move could not relocate.
+- `*.stories.tsx` is excluded from `tsc` while `@ladle/react`'s bundled types
+  don't pass `strict`; `ladle build` still compiles stories through esbuild.
+  Test files are not excluded — `tests/` is in tsconfig's `include` and `tsc`
+  is the only thing that typechecks it.
 
 ## `.ladle/`
 
@@ -25,8 +29,14 @@ without a page routed to it.
   own order; it is a global-config hook only (no per-story-file equivalent) and
   must stay a self-contained function, since Ladle serializes it with
   `.toString()`. `addons.theme.defaultState: 'dark'` matches the app's
-  dark-first default in `globals.scss`; `npm run check:theme-default` asserts
-  it stays that way.
+  dark-first default in `globals.scss`; `tests/guards/workshop-guards.test.ts`
+  asserts it stays that way.
+- **`config.d.mts`** — a hand-written declaration of the slice of `config.mjs`
+  that guard reads, for `tsc` alone: `allowJs` is off, so the
+  `@type {import('@ladle/react').UserConfig}` JSDoc in `config.mjs` reaches
+  editors and nothing else, and the test could not import the config without
+  it. Deliberately not `UserConfig` itself — see the `tsconfig` note under
+  Commands and gates. Ladle never reads it.
 - **`vite.config.ts`** — Sass API pinned to `modern-compiler`. Resolution is
   left at Vite/Sass defaults **because** that is what `next dev` does: relative
   `@use`, empty load paths. This file is the seam for keeping the two aligned
@@ -97,22 +107,28 @@ without a page routed to it.
   because `@ladle/react` 5.1.1's own CLI always exits 0 even when the underlying
   Vite build fails; it turns Vite's `✗ Build failed` marker into a real
   non-zero exit.
-- `npm run check:stories` (`scripts/check-component-stories.ts`) — exits
-  non-zero if a directory under `src/components/` has an `index.tsx` but no
-  sibling `index.stories.tsx`. Not an Oxlint rule: Oxlint has no custom-rule API
-  and this is a cross-file filesystem assertion. Scoped to `src/components/` —
-  `.ladle/*.stories.tsx` is deliberately out of scope.
-- `npm run check:theme-default` (`scripts/check-workshop-theme-default.ts`) —
-  exits non-zero if `config.mjs`'s `addons.theme.defaultState` is not `'dark'`.
+- `tests/guards/workshop-guards.test.ts` (MB.38) — the two mechanical guards, as
+  ordinary Vitest tests in the `unit` project. One fails if a directory under
+  `src/components/` has an `index.tsx` but no sibling `index.stories.tsx` —
+  not an Oxlint rule, because Oxlint has no custom-rule API and this is a
+  cross-file filesystem assertion; scoped to `src/components/`, with
+  `.ladle/*.stories.tsx` deliberately out of scope; and proven on a throwaway
+  tree before it is trusted on the real one. The other fails if
+  `config.mjs`'s `addons.theme.defaultState` is not `'dark'`. Both were
+  standalone scripts under `scripts/` until MB.38, written that way only
+  because Vitest had not landed yet.
 - ⚠️ **`workshop:build` is not a render smoke test.** It cannot catch a story
   that throws, at render time or module-eval time — Ladle code-splits stories
   into browser-only chunks that the static build never executes. The one thing
   it genuinely catches is an unresolvable import.
 - **`tsconfig` does not reach `.ladle/` or `scripts/`.** Oxlint and the build
   are the only checks covering those files; `tsc --noEmit` will not flag them.
-- `check:stories` and `workshop:build` run in pre-commit **and** in CI's build
-  job (`.github/workflows/build.yml`), so a PR can't skip them by skipping the
-  local hook; `check:theme-default` runs in pre-commit only.
+- **Both gates run in CI, and neither in pre-commit.** The guards run with the
+  rest of the suite on the `vitest` job — whose path filter names
+  `.ladle/config.mjs` explicitly, since it is not under `src/**` — and
+  `workshop:build` on `checks.yml`'s `build` leg. Pre-commit is lint,
+  `format:check` and typecheck, test-free by decision (MB.38): a hook that
+  runs tests is a hook people start skipping, and a PR cannot skip CI.
 
 ## Stopgaps to unwind
 

@@ -28,7 +28,7 @@ Bring commits that landed on `main` but not yet on `staging` (most commonly a `h
    - `git rev-parse --verify --quiet refs/heads/main-sync/<timestamp>` and `git ls-remote --exit-code --heads origin main-sync/<timestamp>`. A collision is only realistically possible from running this twice within the same second — if it happens, just recompute the timestamp and retry.
 
 7. **Create the branch off the latest `main`.**
-   - `git checkout -b main-sync/<timestamp> origin/main`.
+   - `git checkout --no-track -b main-sync/<timestamp> origin/main` — `--no-track` so the branch’s upstream is its own remote branch once the next step pushes it, never `origin/main` (MB.13).
 
 8. **Push the branch.**
    - `git push -u origin main-sync/<timestamp>`. Unlike `/create-feature`/`/create-hotfix` (which leave pushing to `/create-pr`), the sync PR is the point of this skill — push directly, same as `/create-release` does for its release branch.

@@ -19,7 +19,7 @@
 #     `docker-up` no longer runs an `update-token` step.
 #
 # The `postgres` service (M0.13) gives local development and local tests a
-# real Postgres 17 — RLS, triggers, `pg_trgm`, array columns — with no Neon
+# real Postgres 18 — triggers, `pg_trgm`, generated columns, array columns — with no Neon
 # connection anywhere. `app` waits for it to pass its health check and reaches
 # it by service name through `DATABASE_URL`. It `build:`s straight from
 # `Docker/Dockerfile.postgres` (M0.18), the same way `app`/`workshop` build
@@ -28,19 +28,21 @@
 # and deployment; that would mean network + registry auth for something a
 # local build handles directly.
 #
-# The `sorrel` role/database (M1.3) and the empty `sorrel_template` used to
-# clone each Vitest worker's database (CLAUDE.md's Testing section) are both
-# baked into the image at build time — see Docker/postgres-init's comment for
-# why it has to happen there rather than at a container's first boot. The
-# `POSTGRES_*` env vars below are inert either way (PGDATA is already
-# populated by build time, so the entrypoint's own first-boot init never
-# runs); they're kept here only as documentation that matches the baked-in
-# credentials. `sorrel` has no schema and no seed data until M1.27 bakes
-# those into this same image.
+# The `sorrel` role/database (M1.3) and the empty `sorrel_template` the test
+# harness clones its own seeded templates from (CLAUDE.md's Testing section,
+# M1.27) are both baked into the image at build time — see
+# Docker/postgres-init's comment for why it has to happen there rather than
+# at a container's first boot. The `POSTGRES_*` env vars below are inert
+# either way (PGDATA is already populated by build time, so the entrypoint's
+# own first-boot init never runs); they're kept here only as documentation
+# that matches the baked-in credentials. `sorrel` has no schema and no seed
+# data baked in — `db-init` below applies both at start (M1.24).
 #
-# A `postgres_data` volume populated by the *old* `postgres:17` image (i.e.
-# from before this file switched images) still only has the `sorrel`
-# role/database that image's own first-boot init created from the
+# A `postgres_data` volume populated by the *old* stock `postgres:17` image
+# (i.e. from before M0.19 switched this file from `image:` to `build:`; that
+# `17` is history, not the current base — Dockerfile.postgres is on 18) still
+# only has the `sorrel` role/database that image's own first-boot init
+# created from the
 # `POSTGRES_*` env vars — a named volume isn't reset just because `image:`
 # changed. `make docker-rebuild` (`down -v`) clears it so the next start
 # populates fresh from this image instead. Until then, expect a `FATAL:
@@ -49,14 +51,30 @@
 # connection attempt regardless; it's not a failing check (`pg_isready`
 # doesn't require the role to be valid, only that the server responds).
 #
-# The `workshop` service is behind the `workshop` compose profile, so
-# `make docker-up` starts only the app and Postgres.
-# `make docker-workshop` brings the Ladle workshop up alongside them.
+# The `workshop` and `studio` services are behind compose profiles of the same
+# name, so `make docker-up` starts only the app and Postgres.
+# `make docker-workshop` brings the Ladle workshop up alongside them, and
+# `make docker-studio` does the same for Drizzle Studio.
 #
 #   make docker-up        build if needed, then start the app + Postgres detached
 #   make docker-workshop   also start the workshop (profile: workshop)
+#   make docker-studio     also start Drizzle Studio (profile: studio)
+#   make docker-e2e        run the Playwright suite once (profile: e2e)
 #   make docker-down      stop and remove everything, profiles included
 #   make docker-logs      follow
+#
+# The `e2e` service (M1.14, profile: e2e) is how a devcontainer session runs
+# the full Playwright suite locally: it builds `Docker/Dockerfile.e2e`, the
+# same dedicated image `.github/workflows/build-e2e-image.yml` publishes for
+# CI's `playwright` job, rather than duplicating its `apt`/`playwright
+# install --with-deps` steps into `Dockerfile.node`. That image is
+# Debian-based (Microsoft's own Playwright base) where `Dockerfile.node` is
+# Alpine — Playwright's Chromium build has no official musl support at all,
+# so the devcontainer's own `development`/`testing` stages, which the
+# `app`/`workshop`/`studio`/`devcontainer` services all build, stay Alpine and simply
+# don't run e2e directly; `e2e` is a separate, one-shot service instead of a
+# long-running one (see `command: ['npm', 'run', 'e2e']` below), started
+# on demand from inside (or alongside) the devcontainer with `make docker-e2e`.
 #
 # Build context is the repo root (`..`); `Docker/Dockerfile.node` reads it
 # through the root `.dockerignore`.
@@ -80,6 +98,13 @@ volumes:
   # files.
   node_modules_app:
   node_modules_workshop:
+  node_modules_e2e:
+  node_modules_studio:
+  node_modules_playwright_server:
+  # `db-init` runs to completion before `app` starts, so the two never race for
+  # a shared volume in practice — it gets its own anyway, because "one per
+  # service" is the rule that makes that reasoning unnecessary (M1.24).
+  node_modules_db_init:
 
   # Postgres data directory. Persists across `docker compose restart` and
   # `make docker-down`; only `make docker-rebuild` (`down -v`) clears it.
@@ -101,7 +126,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      # Published so the host-side Vitest `db` project (M0.7) can reach it at
+      # Published so the host-side Vitest `db` project (M1.7) can reach it at
       # localhost:5432; inside the compose network services use the `postgres`
       # hostname instead.
       - '5432:5432'
@@ -117,6 +142,54 @@ services:
       retries: 10
       start_period: 10s
 
+  # M1.24 — the Docker seed hook. A one-shot container, not a long-running
+  # service: it applies the migrations, seeds a scenario, and exits, and `app`
+  # waits for that exit to succeed. What that buys is the acceptance criterion
+  # "first `make docker-up` on a clean volume seeds automatically" — a fresh
+  # `postgres_data` carries only the `sorrel` role/database and pg_trgm that
+  # Dockerfile.postgres bakes in, with no schema and no rows.
+  #
+  # It lives here rather than in `Docker/postgres-init/` because the seed is
+  # TypeScript and the Postgres image has no Node — and because that directory
+  # never runs at container start anyway: Dockerfile.postgres populates PGDATA
+  # during the image *build*, so `docker-entrypoint.sh` finds an initialised
+  # data directory and skips `/docker-entrypoint-initdb.d/` entirely. The
+  # "Postgres init script" this task was written against cannot exist; a
+  # Node-side one-shot is what the same outcome actually costs. (The test
+  # harness's templates are a different job: M1.27 clones `sorrel_template`
+  # and runs these same two commands against the clone at test-run setup —
+  # tests/support/seeded-database.ts — and that is what the Vitest workers
+  # and Playwright clone, not what `app` connects to.)
+  #
+  # Re-running on every `docker compose up` is deliberate and cheap: migrations
+  # are journal-guarded and every scenario is idempotent by fixed id, so this
+  # is also how a developer who just pulled new migrations gets them applied.
+  # No profile — `docker-up` must reach it.
+  db-init:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.node
+      target: development
+    image: sorrel-node:development
+    working_dir: /app
+    volumes:
+      - ..:/app:cached
+      - node_modules_db_init:/app/node_modules
+    init: true
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
+      # "Scenario is selectable by environment variable". Compose reads it from
+      # the host environment or Docker/.env; `minimal` is the bare install a
+      # developer gets without thinking about it. A name that is not a scenario
+      # fails this container rather than quietly seeding `minimal`, which is
+      # what stops `app` — see src/db/seed/index.ts's resolveScenario.
+      SEED_SCENARIO: ${SEED_SCENARIO:-minimal}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ['sh', '-c', 'npm run db:migrate && npm run db:seed']
+
   app:
     build:
       context: ..
@@ -131,6 +204,12 @@ services:
     tty: true
     ports:
       - '8000:8000'
+      # Node inspector (MB.22). Only listens when the container's process is
+      # started with `npm run dev:debug` (`next dev --inspect=0.0.0.0:9229`,
+      # next's own native flag) — the Dockerfile CMD (`npm run dev`) below
+      # opens no inspector, so this publish is a no-op for a bare
+      # `make docker-up`.
+      - '9229:9229'
     environment:
       NODE_ENV: development
       # Reaches Postgres by its compose service name; no Neon connection is
@@ -139,8 +218,41 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      # Health alone is not enough as of M1.24: a healthy Postgres with no
+      # schema is exactly what a clean volume gives, and `next dev` would serve
+      # a database the Better Auth route handlers cannot query. Waiting on the
+      # one-shot's *exit status* also means a failed migration stops the app
+      # rather than producing a running app that 500s on first request.
+      db-init:
+        condition: service_completed_successfully
     # Command comes from the Dockerfile `CMD` (`npm run dev`), which already
-    # binds 0.0.0.0:8000 — see the `dev` script in package.json.
+    # binds 0.0.0.0:8000 — see the `dev` script in package.json. `next dev`
+    # runs at NODE_ENV=development, so Better Auth's own BETTER_AUTH_SECRET
+    # policy (src/lib/auth.ts) never requires one here.
+    networks:
+      default:
+        aliases:
+          # `sorrel-app` (MB.23), alongside the implicit `app` alias every
+          # service already gets: `.app` is a real, Google-registered gTLD,
+          # and every major browser ships a hard-coded HSTS-preload entry
+          # for the bare domain `app` (mandated at `.app`'s registration,
+          # covering the naked TLD as well as `*.app` subdomains) — not
+          # something a Chromium launch flag can turn off, since the
+          # preload list is compiled into the binary, not loaded at
+          # runtime. A real browser navigating to `http://app:8000`
+          # therefore gets silently upgraded to `https://app:8000` before
+          # the TCP connection even opens, and fails with
+          # `ERR_SSL_PROTOCOL_ERROR` against a plain-HTTP dev server.
+          # `playwright-server`'s remote-browser e2e path (MB.22) never hit
+          # this because its `baseURL` is `http://devcontainer:8001`, not
+          # `app` — `docker-codegen` (MB.23) is the first thing to load
+          # `app` in a real, unconfigured Chrome, which is what surfaced
+          # it. `sorrel-app` isn't a reserved TLD, so it resolves to the
+          # same container without the upgrade. Keep using bare `app` for
+          # every non-browser reference (DATABASE_URL-style service-to-
+          # service traffic, `curl`, etc.) — this alias exists solely for
+          # URLs a real browser will load.
+          - sorrel-app
 
   workshop:
     # Opt-in: only started by `docker compose --profile workshop up` (i.e.
@@ -165,3 +277,153 @@ services:
     # `npm run workshop` is `ladle serve`, which binds localhost by default;
     # `--host 0.0.0.0` makes it reachable through the port mapping.
     command: ['npm', 'run', 'workshop', '--', '--host', '0.0.0.0']
+
+  studio:
+    # Opt-in, same shape as `workshop`: only started by
+    # `docker compose --profile studio up` (i.e. `make docker-studio`), never
+    # by a bare `make docker-up`. A database browser is a thing you reach for
+    # occasionally, not a thing that should be running all day.
+    #
+    # `drizzle-kit studio` (MB.21) serves data only — the UI itself is hosted
+    # at https://local.drizzle.studio, and the browser connects back to
+    # 127.0.0.1:4983 through the port mapping below. Nothing is served from
+    # this container to look at directly.
+    #
+    # It reads the repo's `drizzle.config.ts`, which takes its connection
+    # string from `DATABASE_URL`, so this service needs the same value `app`
+    # has and the same health-gated `depends_on`. `drizzle.config.ts` throws
+    # when `DATABASE_URL` is unset rather than falling back to anything.
+    profiles: ['studio']
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.node
+      target: development
+    image: sorrel-node:development
+    working_dir: /app
+    volumes:
+      - ..:/app:cached
+      - node_modules_studio:/app/node_modules
+    init: true
+    tty: true
+    ports:
+      - '4983:4983' # drizzle-kit studio (the `db:studio` script pins it)
+    environment:
+      NODE_ENV: development
+      # Reaches Postgres by its compose service name, same as `app`.
+      DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # `npm run db:studio` passes `--host 0.0.0.0` explicitly so the server is
+    # reachable through the port mapping rather than only inside the container.
+    command: ['npm', 'run', 'db:studio']
+
+  e2e:
+    # Opt-in and one-shot, unlike `workshop`: `make docker-e2e` runs
+    # `docker compose --profile e2e run --rm e2e`, which builds this image
+    # if needed, runs the suite once, and exits — there's no long-running
+    # server to leave up the way `workshop`'s `ladle serve` is.
+    profiles: ['e2e']
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.e2e
+      # Explicit since MB.23 added a second (`headed`) stage to
+      # Dockerfile.e2e — without this, "last stage wins" would build that
+      # one instead, and `playwright-server` below shares this Dockerfile
+      # but must not share this image (see its own `image:` comment).
+      target: e2e
+    image: sorrel-e2e
+    working_dir: /app
+    volumes:
+      - ..:/app:cached
+      - node_modules_e2e:/app/node_modules
+    init: true
+    ports:
+      - '8001:8001' # next start (production build), matching playwright.config.ts
+    environment:
+      NODE_ENV: test
+      CI: 'true'
+      # Reaches Postgres by its compose service name, same as `app`.
+      # e2e/database.ts swaps the pathname to sorrel_e2e.
+      DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
+      # Unlike `app` (`next dev`), `npm run e2e` runs `npm run build &&
+      # npm run start` (playwright.config.ts's webServer.command), and the
+      # `build` script's own `NODE_ENV=production` prefix overrides the
+      # `NODE_ENV: test` above for that one process — so Better Auth's
+      # production-only check (src/lib/auth.ts) does apply here.
+      BETTER_AUTH_SECRET: local-dev-not-a-real-secret
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ['npm', 'run', 'e2e']
+
+  playwright-server:
+    # MB.22 — a long-lived browser for the devcontainer to drive remotely.
+    # `Docker/Dockerfile.node`'s `development` stage is Alpine/musl, and
+    # Chromium has no musl build (see that Dockerfile's header comment), so
+    # a devcontainer session cannot launch a local browser. The Playwright
+    # *runner* has no such constraint — it is plain Node — so instead of
+    # rebasing the devcontainer off Debian, this service runs `playwright
+    # run-server` from the same `Docker/Dockerfile.e2e` image `build-e2e-
+    # image.yml` already publishes for CI, and the runner (wherever it
+    # starts) dials in over Playwright's own remote-browser protocol.
+    #
+    # `ws://playwright-server:4444/` is not a page — it is the WebSocket
+    # address `connectOptions.wsEndpoint` in playwright.config.ts reads from
+    # `PLAYWRIGHT_WS_ENDPOINT`. `.devcontainer/docker-compose.yml` sets that
+    # variable on the `devcontainer` service only, so a run started from the
+    # editor takes this path and `make docker-e2e` / CI (which never set it)
+    # keep launching Chromium locally in the one-shot `e2e` service above —
+    # same image, same Playwright/browser version pin, no drift between the
+    # two paths.
+    #
+    # Opt-in and long-running, unlike `e2e`: behind the `e2e` profile (so
+    # `make docker-e2e`'s `--profile e2e` still builds it, and `docker-down`/
+    # `docker-rebuild` still tear it down), but started and stopped on its
+    # own via `make playwright-server-up` / `-down`, the way `studio` is
+    # started independently of a bare `make docker-up`.
+    #
+    # MB.23 gave this service a display: `target: headed` builds
+    # Dockerfile.e2e's second stage (Xvfb + openbox + x11vnc/novnc), which
+    # `run-server` above never needed and CI's `e2e` service never builds
+    # (both pin `target: e2e`). `image:` must diverge from the `e2e`
+    # service's `sorrel-e2e` — sharing one tag across two different stages
+    # is a silent last-build-wins bug the moment they build different
+    # content, so this service gets its own: `sorrel-e2e-headed`.
+    profiles: ['e2e']
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.e2e
+      target: headed
+    image: sorrel-e2e-headed
+    working_dir: /app
+    volumes:
+      - ..:/app:cached
+      - node_modules_playwright_server:/app/node_modules
+    init: true
+    # `entrypoint:` overrides the image's own ENTRYPOINT with the identical
+    # script by its bind-mounted path — belt-and-suspenders with the
+    # Dockerfile's own ENTRYPOINT, and explicit here so this service's
+    # display bring-up is visible without opening Dockerfile.e2e. `command:`
+    # (below) is unchanged from before this task: the entrypoint script
+    # raises the display, then `exec "$@"`s straight into it, so MB.22's
+    # `run-server` behaves identically to before.
+    entrypoint: ['/app/Docker/playwright-entrypoint.sh']
+    environment:
+      # `docker compose exec` (make docker-codegen) starts a brand-new
+      # process using the container's *initial* environment — it does not
+      # inherit `export DISPLAY=:99` from the entrypoint script's own shell,
+      # since that export only lives in that one running process. Without
+      # this, an exec'd `playwright codegen` sees no DISPLAY at all and
+      # fails with "Missing X server or $DISPLAY" even though Xvfb is
+      # actually up. Declaring it here makes it part of every process the
+      # container runs, entrypoint-launched or exec'd alike.
+      DISPLAY: ':99'
+    ports:
+      - '4444:4444' # playwright run-server — dialed by the runner, never opened in a browser
+      # noVNC (MB.23): open this in an ordinary host browser tab to watch
+      # (and interact with) the Chromium + Inspector windows this service's
+      # display now has somewhere to draw. 4444 above is a WebSocket a
+      # runner dials into code; 7900 is a page you actually open.
+      - '7900:7900'
+    command: ['npx', 'playwright', 'run-server', '--host', '0.0.0.0', '--port', '4444']

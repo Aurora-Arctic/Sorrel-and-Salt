@@ -28,30 +28,31 @@ Three domain nouns, each meaning exactly one thing. Used consistently in routes,
 
 ## 2. Decisions
 
-| Decision  | Choice                                  | Why                                                                                                                                                                                                                                                                                                                          |
-| --------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Framework | Next.js 16, App Router                  | Needs a server runtime for sessions and audit stamping. Was 15; moved to 16 at M0.1 because Next 15 transpiles `next.config.ts` through the TypeScript 5 JS API (`ts.sys`), which TypeScript 7 no longer exposes. `resume-2026` is on TypeScript 7 and keeping the toolchains aligned matters more than the framework minor. |
-| Database  | Neon Postgres                           | Supabase free tier pauses after 7 days; Neon scales to zero and resumes itself                                                                                                                                                                                                                                               |
-| ORM       | Drizzle                                 | Plain-TS schema, raw SQL where needed, no engine binary                                                                                                                                                                                                                                                                      |
-| Auth      | Better Auth, in-process                 | Organization plugin matches the workspace model; no extra service                                                                                                                                                                                                                                                            |
-| Sign-in   | OAuth only (Google, GitHub)             | No passwords means no reset flow and no admin recovery desk                                                                                                                                                                                                                                                                  |
-| API       | GraphQL Yoga + Pothos                   | Single route handler, zero hosting cost, typed contract                                                                                                                                                                                                                                                                      |
-| Hosting   | Vercel Hobby                            | Native Next.js, 6,000 build minutes, generous meters                                                                                                                                                                                                                                                                         |
-| Styling   | Componentized Sass                      | Matches `resume-2026` conventions                                                                                                                                                                                                                                                                                            |
-| Testing   | Vitest, RTL, Playwright, local Postgres | Ported from `resume-2026`; local DB keeps RLS testable                                                                                                                                                                                                                                                                       |
-| CI        | GitHub Actions, Gitflow                 | Ported wholesale from `resume-2026`                                                                                                                                                                                                                                                                                          |
+| Decision  | Choice                                  | Why                                                                                                                                                                                                                                                                                                                           |
+| --------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework | Next.js 16, App Router                  | Needs a server runtime for sessions and audit stamping. Was 15; moved to 16 at M0.1 because Next 15 transpiles `next.config.ts` through the TypeScript 5 JS API (`ts.sys`), which TypeScript 7 no longer exposes. `resume-2026` is on TypeScript 7 and keeping the toolchains aligned matters more than the framework minor.  |
+| Database  | Neon Postgres                           | Supabase free tier pauses after 7 days; Neon scales to zero and resumes itself                                                                                                                                                                                                                                                |
+| ORM       | Drizzle                                 | Plain-TS schema, raw SQL where needed, no engine binary                                                                                                                                                                                                                                                                       |
+| Auth      | Better Auth, in-process                 | In-process, so no extra service or cost, and it carries only OAuth and sessions. Its organization plugin was spiked for workspaces and invitations and **not adopted** — hard deletes, unaudited writes and a plaintext token do not fit §5 ([`mb.30-organization-plugin.md`](design-decisions/mb.30-organization-plugin.md)) |
+| Sign-in   | OAuth only (Google, GitHub)             | No passwords means no reset flow and no admin recovery desk                                                                                                                                                                                                                                                                   |
+| API       | GraphQL Yoga + Pothos                   | Single route handler, zero hosting cost, typed contract                                                                                                                                                                                                                                                                       |
+| Hosting   | Vercel Hobby                            | Native Next.js, 6,000 build minutes, generous meters                                                                                                                                                                                                                                                                          |
+| Styling   | Componentized Sass                      | Matches `resume-2026` conventions                                                                                                                                                                                                                                                                                             |
+| Testing   | Vitest, RTL, Playwright, local Postgres | Ported from `resume-2026`; local DB keeps the real schema under test                                                                                                                                                                                                                                                          |
+| CI        | GitHub Actions, Gitflow                 | Ported wholesale from `resume-2026`                                                                                                                                                                                                                                                                                           |
 
 ### Why Drizzle
 
 The audit requirement decided it. `auditColumns` is a plain TypeScript object spread into every table — six columns, one line per table, no codegen step. Prisma would need those six fields written into all twelve models in its DSL, or a generator plugin, plus `prisma generate` after every change.
 
-Three more reasons:
+Two more reasons:
 
-- **Raw SQL where needed.** Partial unique indexes, `num_nonnulls` check constraints, `pg_trgm` similarity, RLS policies, and the v2 PL/pgSQL trigger all live inside typed migrations. Prisma's schema language can't express most of them.
+- **Raw SQL where needed.** Partial unique indexes, `num_nonnulls` check constraints, `pg_trgm` similarity, the v2 PL/pgSQL trigger, and the RLS policies deferred to the public launch (§8) all live inside typed migrations. Prisma's schema language can't express most of them.
 - **No engine binary.** Prisma ships a Rust query engine as a separate process — cold-start weight and deployment size for nothing on serverless.
-- **Pothos has a first-class Drizzle plugin**, which is how §7's resolvers stay thin.
 
-Trade-off: Prisma Studio is nicer than Drizzle Studio and Prisma's errors are friendlier. Kysely is the other reasonable pick, but has no GraphQL plugin story.
+A third reason — that Pothos has a first-class Drizzle plugin — **no longer applies**: the plugin is not used (MB.20), because its primary capability is resolver-level database access, which §3's rule 1 forbids. The ORM choice now rests on the two reasons above alone, and is correspondingly easier to revisit: `drizzle-orm` is reachable only from `src/db/repository.ts`. §7 carries the rules that decision sets for the GraphQL layer.
+
+Trade-off: Prisma Studio is nicer than Drizzle Studio and Prisma's errors are friendlier. Kysely remains the other reasonable pick — its lack of a GraphQL plugin no longer counts against it, but it is still `0.x` and so no steadier than what is here.
 
 ### Why Yoga + Pothos
 
@@ -61,7 +62,9 @@ Two separate decisions.
 
 **Pothos over SDL-first or Nexus.** Code-first means the schema is TypeScript, so a resolver returning the wrong shape is a compile error rather than a runtime one. SDL-first requires codegen to link schema and resolvers, and the link can silently break. Nexus has been effectively unmaintained for a while.
 
-Pothos specifically: its **auth-scopes plugin** gives declarative field-level guards, and its **Drizzle plugin** derives GraphQL types from table definitions, so `auditColumns` flows into the graph without retyping.
+Pothos specifically: its **auth-scopes plugin** gives declarative field-level guards.
+
+Its **Drizzle plugin is deliberately not used** (MB.20). That plugin's purpose is to let a resolver query the database from the GraphQL selection set, which §3's rule 1 forbids outright — and the graph does not mirror the tables anyway, so there is little to derive: audit columns surface as one nested `AuditInfo` object rather than six flat fields, and `Ingredient.isGlobal`, `Spell.derivedCategories` and `Spell.categoryGaps` are computed rather than stored. Object types are declared by hand against the row type the service returns, so a column whose type changes still fails the build. Keeping it out is also what leaves the GraphQL layer independent of `drizzle-orm`'s version.
 
 Trade-off: the schema isn't readable as a document without codegen. §11's schema snapshot test writes the SDL out on every run, so the file exists and diffs are visible in PRs.
 
@@ -91,7 +94,7 @@ This answers the risk GraphQL usually introduces. Field-level authorization scat
 src/
   app/                      # routes, layouts, server components
     api/graphql/route.ts    # Yoga handler
-  components/<Name>/        # index.tsx + index.scss + index.test.tsx
+  components/<Name>/        # index.tsx + index.scss
   services/                 # authz + business logic — THE choke point
   db/
     schema/                 # Drizzle tables
@@ -165,7 +168,7 @@ Deploys are **CLI-driven from CI**, not Vercel's Git integration. `.github/workf
 }
 ```
 
-`"**": false` (minimatch, matches names with and without slashes) disables an automatic deployment for every branch, so CI is the only path that ships code — even if the Git integration is left connected. This replaces M0.25's allow-list of `main`/`staging`/`hotfix/*`; the reason is Vercel Hobby (see `claude-docs/design-decisions/m0.26-disable-previews-and-alias-staging.md`): a named `staging` environment on `staging.sorrelandsalt.com` needs Pro, whereas `vercel alias` from CI puts staging on that hostname for free.
+`"**": false` (minimatch, matches names with and without slashes) disables an automatic deployment for every branch, so CI is the only path that ships code — even if the Git integration is left connected. This replaces M0.25's allow-list of `main`/`staging`/`hotfix/*`; the reason is Vercel Hobby (M0.26): a named `staging` environment on `staging.sorrelandsalt.com` needs Pro, whereas `vercel alias` from CI puts staging on that hostname for free.
 
 | Item            | Setting                                                                                                                                                             |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -181,17 +184,17 @@ Deploys are **CLI-driven from CI**, not Vercel's Git integration. `.github/workf
 
 - **Hobby is personal, non-commercial only.** If Sorrel and Salt ever earns money, it moves to Vercel Pro at $20/mo. This is a licensing constraint, not a technical one.
 - **Neon scale-to-zero cannot be disabled on the free plan.** Design for a ~1s cold start: skeleton states on first paint, no sub-50ms assumptions.
-- **Compute has a dollar cost at scale**, so an N+1 query is a billing problem as well as a performance one. DataLoader is not optional.
+- **Compute has a dollar cost at scale**, so an N+1 query is a billing problem as well as a performance one. DataLoader is not optional. It is also why the second authorization layer is a compile-time proof rather than a transaction per read (§8): I/O wait is billable here, so a layer that opens one costs money on every page.
 
 ---
 
 ## 5. Data model
 
-### Audit columns — on every table
+### Audit columns — on every table, and the join-table exception
 
 ```ts
 // src/db/audit.ts
-export const auditColumns = {
+export const auditStampColumns = {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   createdBy: uuid('created_by')
     .notNull()
@@ -200,22 +203,31 @@ export const auditColumns = {
   updatedBy: uuid('updated_by')
     .notNull()
     .references(() => users.id),
+};
+
+export const auditColumns = {
+  ...auditStampColumns,
   deletedAt: timestamp('deleted_at'),
   deletedBy: uuid('deleted_by').references(() => users.id),
 };
 ```
 
-Spread as `...auditColumns` into every table, including join tables.
+Spread as `...auditColumns` into every table **except the three join tables** — `ingredient_categories`, `spell_categories` and `spell_ingredients` spread `...auditStampColumns` and are hard-deleted (MB.34). The six-column set is defined as the four-column one plus the two delete columns, so it has one definition rather than two that can drift.
 
-**Three enforcement rules, because audit columns rot the moment one path skips them:**
+**Why those three and only those three.** Every chip toggled off in the ingredient form and every ingredient pulled out of a spell is a write to one of them, so a soft delete fills the highest-churn tables in the schema with tombstones nothing reads: there is no restore UI in v1, and the trash view is v2. Each would also need a partial unique index so the same pair could be re-added, and — the real argument — each would add a `deleted_at IS NULL` that a service joining _through_ the table must remember by hand. That is exactly the mistake the third enforcement rule below exists to prevent, and the one place the repository cannot prevent it, since a finder filters the table it selects from and not the tables it joins. The v2 history trigger records a `DELETE` as readily as an `UPDATE`, so nothing is lost to history.
+
+The four stamp columns stay on all three: `created_by` on a join row answers "who added this ingredient to this spell", which story 13 asks for. `workspace_members` keeps the full six — who removed whom, and when, is worth keeping — and so does `ingredient_folk_names`, which holds content rather than a link.
+
+**Four enforcement rules, because audit columns rot the moment one path skips them:**
 
 1. **`*_by` never comes from a request body.** All writes go through `withAudit(session, fn)`, which injects them. A lint rule bans importing `db` outside `src/db/repository.ts`.
 2. **`updated_at` is a database trigger**, so a manual `psql` fix still stamps it.
-3. **Soft-delete filtering happens in the repository**, never at call sites. There is no exported query that can forget `deleted_at IS NULL`.
+3. **Soft-delete filtering happens in the repository**, never at call sites. There is no exported query that can forget `deleted_at IS NULL`: `findMany`/`findOne` apply it where the column exists and read a join table that has none, deciding on the table's own shape rather than on a flag a caller passes.
+4. **The hard delete is a named method, not a flag.** `write.delete(table, where)` removes rows outright and is typed to reject any table carrying `deletedAt` at compile time; `softDelete` demands one. Same shape as `findManyIncludingSoftDeleted` — the escape hatch is narrow and impossible to point at the wrong thing.
 
-Every transaction sets `SET LOCAL app.current_user_id = '<uuid>'`. This serves RLS today and the v2 history trigger later — putting it in now is what makes history a one-migration addition rather than a re-audit of every write path.
+Every write transaction publishes the acting user as a transaction-local GUC, `app.current_user_id`. The statement is `select set_config('app.current_user_id', $1, true)` rather than a literal `SET LOCAL` — `is_local => true` _is_ `LOCAL`, and `SET LOCAL` accepts no bind parameters, so writing it literally would mean interpolating a user id into SQL text. Nothing in v1 reads it back: it is there for the v2 history trigger (§13) and for the policies deferred to the public launch (§8). That is the point of publishing it now — either one becomes a single migration rather than a re-audit of every write path.
 
-**Partial indexes only, everywhere.** Without the `WHERE deleted_at IS NULL`, deleting a record permanently blocks reusing its name.
+**Partial indexes only, on every table that has a `deleted_at`.** Without the `WHERE deleted_at IS NULL`, deleting a record permanently blocks reusing its name. The three join tables need none: their composite primary key has no tombstone to dodge, which is half the point of hard-deleting them.
 
 ### Naming note: `workspaces` vs `/coven/`
 
@@ -227,9 +239,9 @@ Code, schema, and prose use _workspace_. Only the URL segment says _coven_.
 
 ### Tables
 
-**`users`** — `id`, `email`, `displayName`, `avatarUrl`, `role` (`user` | `admin`), `canCreateWorkspace` (boolean, default `false`), + audit.
+**`users`** — `id`, `email`, `name`, `image`, `role` (`user` | `admin`), `canCreateWorkspace` (boolean, default `false`), + audit. `name`/`image` (not `displayName`/`avatarUrl`) deliberately — they're Better Auth's own core `User` field names (§2, §8), and renaming them would need a `user.fields` mapping in `src/lib/auth.ts` for no real benefit.
 
-`role` is a column, not a table; v1 needs no granular platform permissions. Admins can write the global compendium and global categories, and **nothing else** — an admin has no access to any workspace's ingredients or grimoire. Bootstrap promotes the first user by email via env var; there is no UI for granting admin in v1 (M2.9 scopes one).
+`role` is a column, not a table; v1 needs no granular platform permissions. Admins can write the global compendium, global categories, the ingredient form vocabulary, and the two group vocabularies that organise them (`category_groups`, `ingredient_form_groups`), and **nothing else** — an admin has no access to any workspace's ingredients or grimoire. Bootstrap promotes the first user by email via env var; there is no UI for granting admin in v1 (M2.9 scopes one).
 
 `canCreateWorkspace` defaults to `false`. Signing in with Google or GitHub earns an account and nothing more. The flag turns `true` by one of two routes — accepting a workspace invitation or an admin granting it — and once `true` it stays `true`, so an established user can create as many workspaces as they like. Admins can always create workspaces regardless of the flag, and nothing in the OAuth flow sets it.
 
@@ -253,31 +265,60 @@ At least one `owner` per workspace, enforced on demotion and removal.
 
 Only the hash is stored, and the token is generated with a CSPRNG (`crypto.randomBytes`, never `Math.random`). The mutation returns the full URL once, in the response body; the UI shows it in a copy field with a "this is the only time you'll see it" warning. Accepting an invitation also sets `canCreateWorkspace` on the accepting user, audited — someone vouched for by an existing member is an established user.
 
-**`ingredients`** — `id`, `workspaceId` (nullable), `name`, `folkNames[]`, `form`, `description`, `element`, `planet`, `zodiac`, `deities[]`, `color`, `safetyNotes`, `substitutes[]`, + audit.
+**`ingredients`** — `id`, `workspaceId` (nullable), `name`, `canonicalName`, `nomenclature`, `canonicalKey` (generated), `form`, `description`, `element`, `planet`, `zodiac`, `deities[]`, `color`, `safetyNotes`, `substitutes[]`, + audit. Folk names are a child table rather than an array column — see `ingredient_folk_names`.
 
 One table, two tiers, so `spell_ingredients` (and v2's `notes`) point at a single kind of thing:
 
-- `workspaceId IS NULL` — the global compendium. Everyone reads; only admins write.
-- `workspaceId` set — local to that workspace. Owners and members there write it. Invisible elsewhere.
+- `workspaceId IS NULL` — the global compendium. Everyone reads; only admins write. Every entry declares a `nomenclature`, and one naming a system carries a `canonicalName`.
+- `workspaceId` set — local to that workspace. Owners and members there write it. Invisible elsewhere. A formal name is optional here, so story 29's one-field stub still saves.
 - No user path promotes local to global. That's v2's suggestion flow.
 
+`name` is the display label and nothing more; identity is the formal name plus the form, spelled out below. `form` is free text drawn from an admin-curated vocabulary (`ingredient_forms`), not an enum.
+`element` values: earth, air, fire, water, spirit — a closed enum, and a correspondence rather than part of identity.
+
+**`ingredient_folk_names`** — `id`, `ingredientId`, `name`, + audit. The regional and common names an ingredient also answers to.
+
 ```sql
-CREATE UNIQUE INDEX ON ingredients (lower(name))
-  WHERE workspace_id IS NULL AND deleted_at IS NULL;
-CREATE UNIQUE INDEX ON ingredients (workspace_id, lower(name))
-  WHERE workspace_id IS NOT NULL AND deleted_at IS NULL;
+CREATE UNIQUE INDEX ingredient_folk_names_unique
+  ON ingredient_folk_names (ingredient_id, lower(name))
+  WHERE deleted_at IS NULL;
+
+CREATE INDEX ingredient_folk_names_trgm
+  ON ingredient_folk_names USING gin (name gin_trgm_ops);
 ```
 
-A workspace-local ingredient may share a name with a compendium entry. The local entry wins in that workspace's search, badged as local. Forbidding the collision would block someone who disagrees with an admin's correspondences from keeping their own version.
+Uniqueness is per ingredient, **deliberately not global** — several unrelated plants claiming "Cat's Claw" is precisely the thing being documented. A child table rather than the `folkNames text[]` column it replaces, because `array_to_string` is `STABLE` on Postgres 18 and so is legal in neither an expression index nor a generated column: indexing a flattened array would have needed a hand-written `IMMUTABLE` wrapper whose honesty depends on the column staying `text[]`. Folk names were unindexed under the array design; as `text` rows the trigram index is trivial. GraphQL keeps exposing them flattened as `folkNames: [String!]!` (§7), so what a client sees does not change.
 
-`form` values: herb, root, bark, resin, flower, crystal, oil, curio, salt, powder, liquid, ash.
-`element` values: earth, air, fire, water, spirit.
+**`ingredient_forms`** — `id`, `name`, `slug`, `groupId`, `description`, + audit. Global only, admin-curated, shaped like `categories` and managed at `/admin/forms` under the same gate as `/admin/categories`. It is the vocabulary behind `ingredients.form`, seeded with the table below (M4.3a). The groups answer the question `form` asks — _what kind of thing are you holding?_ — rather than how it was made: three by source (did it grow, did it come off a creature, was it dug), and three by state for what has lost its source's shape (does it flow, does it hold a shape of its own, or neither). A powdered mineral is therefore a _powder_, and the ingredient's name says what it was. There is no _Other_: a value that fits no form is typed as free text (below) and surfaces on `/admin/forms` for curation, where a catch-all row would hide it. `description` is required and non-empty, so a curated value explains itself — `rootBark` can say "the bark of the root, not the stem".
 
-**`categories`** — `id`, `name`, `slug`, `color`, `description`, `group`, + audit. Global only, admin-curated. Suggestions in v2. Seed list in §6.
+| Group     | Forms                                                                                                                                              |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Botanical | herb, root, bark, flower, leaf, seed, fruit, peel, stem, wood, sap, resin, pollen, whole, berry, nut, bud, petal, thorn, moss, mushroom, bulb, pod |
+| Animal    | bone, claw, feather, shell, tooth, fur, shed, egg, horn, antler, scale, skin, pearl, coral, specimen                                               |
+| Mineral   | crystal, salt, stone, clay, sand, earth, metal, chalk                                                                                              |
+| Substance | powder, ash, wax, charcoal, pigment, ointment, soap, incense, paste                                                                                |
+| Fluid     | liquid, oil, water, vinegar, spirit, concoction, ink, syrup, honey, perfume                                                                        |
+| Curio     | curio, candle, cord, coin, nail, key, charm, bead, bottle, poppet, paper, mirror, bell                                                             |
 
-**`ingredient_categories`** — `ingredientId`, `categoryId`, + audit.
+Twelve of those are the vocabulary as MB.28 first wrote it — herb, root, bark, resin, flower, crystal, oil, curio, salt, powder, liquid and ash — and seventeen more were added for the animal-derived and whole-organism cases (leaf, seed, fruit, peel, stem, wood, sap, pollen, bone, claw, feather, shell, tooth, fur, shed, wax, whole). The rest were chosen when M4.3a seeded the table, and the groups were settled there too: the original three (organism part, preparation, matter) put 21 of 29 rows in one section and named a group after a process rather than a thing. The table above is the seed's source and the seed's test parses it, so the two cannot drift.
 
-**`spell_categories`** — `spellId`, `categoryId`, + audit.
+**Uniqueness is on the `slug`, and a display name carries no constraint** — the rule MB.35 set for all four vocabulary tables, and on `ingredient_forms` it leaves one gap open deliberately. Two live forms may both be called "Wax", one an _animal_ part (the comb as it came from the hive) and one a _substance_ (rendered and set), and since `ingredients.form` stores the string rather than an id, nothing downstream can tell the two rows apart. The autofill is where that ambiguity is resolved instead: a suggestion carries its group and is rendered with it, so the dropdown offers "Wax (animal)" beside "Wax (substance)" and the reader picks the one they mean. A unique index on the name would have refused the second row instead, deciding for the admin that wax is one thing; the group label buys the disambiguation without deciding that question. The seed takes only the substance sense and leaves the other row for an admin to add. M4.7a returns the group, M5.10a renders it, and M4.2a's schema test asserts the pair of same-named rows is accepted so the gap stays a decision rather than becoming an oversight.
+
+**`ingredient_form_groups`** — `id`, `name`, `slug`, `description`, + audit. Global only, admin-curated. Seeded with the six above, and open to a seventh: a vocabulary that has already grown twice should not need a migration to grow a third time. No colour — form groups section an autofill dropdown, they are not chips. Groups render alphabetically by `name`, so there is no order column to maintain and an admin-added group lands where a reader would look for it.
+
+**`ingredients.form` is `text`, not a foreign key to this table**, and that is the property the whole design rests on. An FK would key identity on an id and make an unlisted value impossible to write; text lets `canonicalKey` normalise the string and lets a member write `rhizome` before anyone has curated it. The curated set is a _vocabulary_, not a constraint: the entry form's autofill offers curated values first, each labelled with its group, then in-scope values already in use that are not in it, visibly distinguished. That second bucket is the admin's curation to-do list — the same idea as `WHERE nomenclature = 'unknown'` — and `/admin/forms` surfaces it so a stray `Rhizomes` is findable and fixable rather than invisible. Soft-deleting a vocabulary row rewrites no ingredient: the value stays on the rows and moves into the uncurated bucket.
+
+**`categories`** — `id`, `name`, `slug`, `description`, `groupId`, + audit. Global only, admin-curated. Suggestions in v2. Seed list in §6. **No colour of its own** (M4.2): MB.35 moved the chip colour onto the group as a pair of hexes, one per theme, and a single `color` column here could hold neither half of it. A category wears its group's pair — which is also what §6's grouping is for, eight families rather than 63 individually-tinted chips.
+
+**`category_groups`** — `id`, `name`, `slug`, `colorDark`, `colorLight`, `description`, + audit. Global only, admin-curated, managed at `/admin/category-groups` under the same gate as the rest of `/admin`. §6 seeds eight; an admin may add a ninth, and groups render alphabetically by `name`. The two colours are the chip colour every category in the group wears, one per theme, stored as hexes on the row rather than looked up from a build-time token — the point of the change, since a group created at runtime cannot have a Sass variable. Two columns rather than one because the grounds differ: M0.7 already tunes every group separately per theme (a dark-theme colour is lifted, a light-theme colour is darkened), and one hex cannot clear 4.5:1 on both soot and parchment without being mud on at least one. Each is validated on write against its own ground only — `colorDark` against the dark ground, `colorLight` against the light — so the check is exact rather than a compromise, and the admin sees both swatches while picking.
+
+**Two group tables, not one with a `kind` column.** A shared table would let `categories.groupId` point at a form group: the failure would be invisible until something rendered, where two tables make it a foreign-key violation. That is the _impossible-versus-absent_ distinction the rest of this document turns on, applied to the cheapest possible case.
+
+**`categories.groupId` and `ingredient_forms.groupId` are foreign keys, unlike `ingredients.form`** — and the asymmetry is deliberate rather than an inconsistency. `ingredients.form` stays free text because a _member_ writes it, and must be able to write `rhizome` before an admin has curated it. Only an admin writes a category or a form, and only an admin writes the groups they point at, so there is no one to be blocked by a group that does not exist yet — and the referential integrity is worth having, since a typo'd group silently empties a chip section. The rule generalises: a vocabulary a member writes is text, a vocabulary only an admin writes is a foreign key.
+
+**`ingredient_categories`** — `ingredientId`, `categoryId`, + audit stamps. Composite primary key on the pair, no `deleted_at`, hard-deleted. A second, non-unique index leads on `categoryId` so the pair is readable in both directions: the key answers "what is this ingredient tagged with", and the index answers "what is in this category" without scanning every assignment.
+
+**`spell_categories`** — `spellId`, `categoryId`, + audit stamps. Composite primary key on the pair, no `deleted_at`, hard-deleted. A second, non-unique index leads on `categoryId`, exactly as on `ingredient_categories`: the key answers "what is this spell tagged for", and the index answers "which spells are tagged for prosperity" — §9's grimoire list is filterable by category (M10.11), so that direction has a reader. `spell_ingredients` gets no such index because no v1 feature lists spells by ingredient; the asymmetry between the three join tables is which directions are actually queried, not an oversight in any of them.
 
 **`inventory_items`** — `id`, `workspaceId`, `ingredientId`, `quantityOnHand`, `unit`, `unitDimension`, `lowStockThreshold`, `source`, `acquiredDate`, + audit.
 
@@ -289,13 +330,135 @@ Unique on `(workspaceId, ingredientId) WHERE deleted_at IS NULL`. Units cover th
 
 **Visibility.** A `workspace` spell is readable by every member, viewers included. A `private` spell is readable only by its author — against owners too. Owners and members create and edit; viewers create and edit nothing, including private spells.
 
-**The transition is one-way:** `private` may be widened to `workspace`, and `workspace` may never be narrowed back to `private`. Once a spell is part of the shared grimoire the others have read it and may have built on it; hiding it afterwards would retract something they were relying on. Widening is a gift, narrowing is a retraction, so only one is allowed. Enforced in the service and backstopped by RLS (§8), not merely absent from the UI. This rule governs visibility, not existence — a shared spell can still be deleted.
+**The transition is one-way:** `private` may be widened to `workspace`, and `workspace` may never be narrowed back to `private`. Once a spell is part of the shared grimoire the others have read it and may have built on it; hiding it afterwards would retract something they were relying on. Widening is a gift, narrowing is a retraction, so only one is allowed. Enforced in the service and asserted by test (§8, §11), not merely absent from the UI. This rule governs visibility, not existence — a shared spell can still be deleted.
 
-**`spell_ingredients`** — `spellId`, `ingredientId`, `quantity`, `unit`, `layerOrder`, `note`, + audit. (`note` here is a short free-text line on one ingredient's role in the jar, unrelated to the deferred notes subsystem.)
+**`spell_ingredients`** — `spellId`, `ingredientId` (nullable), `name`, `form`, `quantity`, `unit`, `layerOrder`, `note`, + audit stamps. Composite primary key on `(spellId, layerOrder)`, no `deleted_at`, hard-deleted. (`note` here is a short free-text line on one ingredient's role in the jar, unrelated to the deferred notes subsystem.)
 
 References the ingredient, not the inventory item, so a saved spell survives running out of something.
 
+**A layer is either an ingredient or a custom name — never both, never neither** (MB.40, story 57). `ingredientId` points at an `ingredients` row; `name`, with an optional free-text `form` (not a foreign key, for the same reason `ingredients.form` is not), is a one-off ingredient written for this jar alone. `CHECK (num_nonnulls(ingredient_id, name) = 1)` holds the exclusive-or — the same idiom §14 blesses for the deferred notes model — `CHECK (ingredient_id IS NULL OR form IS NULL)` keeps `form` off a linked row, where it would shadow half the ingredient's identity, and both text columns are checked non-blank. Two partial unique indexes carry the two identities: `(spellId, ingredientId) WHERE ingredient_id IS NOT NULL` is one ingredient per jar, what the original `(spellId, ingredientId)` key used to give, and `(spellId, lower(name)) WHERE ingredient_id IS NULL` is one custom name per jar, in the shape of the workspace label index. The key moved onto the layer because the pair no longer exists on every row.
+
+A custom row lives inside its spell and shares its visibility. It is never an `ingredients` row: it does not appear on the workspace's ingredients page, does not enter local-beats-compendium suppression, contributes nothing to derived categories, has no safety note to surface and no stock to be held or not held. Reusable is a different thing and already exists — a workspace-local `ingredients` row with only a `name` (story 29). MB.34's hard delete still holds: derived categories join _through_ this table to `ingredient_categories`, which is exactly the case that rule protects, and a custom row's content is addressable only through its spell. [`mb.40-custom-spell-ingredients.md`](design-decisions/mb.40-custom-spell-ingredients.md) carries the alternatives.
+
 **Notes are deferred to v2.** The first-class `notes` model and its `private | workspace | public` visibility model are specified in §13. Nothing in v1 writes a note, and no v1 table references one. `notes` is the reason the ingredient detail page (§9) is built to take a section beneath it without restructuring.
+
+### Ingredient identity — the formal name plus the form
+
+Common names are regional and ambiguous. "Cat's Claw" is _Uncaria tomentosa_, _Uncaria guianensis_, _Senegalia greggii_, _Dolichandra unguis-cati_ — and a literal claw from a cat. "Snakeroot" is five unrelated plants. Story 21's own example, finding "Devil's Shoestring" without recalling it is honeysuckle root, is itself an ambiguous name. A safety note hung on an ambiguous label is the dangerous case, because comfrey and foxglove leaf are confused in the real world: `safetyNotes` is the argument for demanding a formal name in the curated tier, and uniqueness on `lower(name)` was what stopped the compendium holding the ambiguity at all. So identity moved off the label.
+
+Five columns are easy to confuse, so the division is stated once:
+
+| Column          | Answers                                                  | Constrained                                                   | Why it is that way                                                                                                                                                                                                        |
+| --------------- | -------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`          | What is this called **here**?                            | free text; unique per workspace, not unique in the compendium | The display label, freely relabellable now that identity has moved off it                                                                                                                                                 |
+| `canonicalName` | What is its **formal name**?                             | free text, no format regex                                    | Identity. Required in the compendium, optional in a workspace                                                                                                                                                             |
+| `nomenclature`  | **Which naming system** does that formal name belong to? | enum, `NOT NULL`, no default                                  | Separates "no system names this" from "one does and nobody looked it up"; drives rendering, since a scientific name is italicised and a mineral or chemical name is not; and makes the compendium requirement enforceable |
+| `form`          | What kind of thing are you **holding**?                  | free text, autofilled from `ingredient_forms`                 | Identity-bearing: valerian root and valerian leaf are different ingredients. Open-ended, so no enum and no foreign key                                                                                                    |
+| `element`       | Which classical element does it **correspond to**?       | enum, five values                                             | A **correspondence**, beside `planet`, `zodiac`, `deities[]` and `color` — not identity. Earth/air/fire/water/spirit is a closed, fixed set: the exact opposite of `form`                                                 |
+
+**`nomenclature` names which naming system the formal name belongs to, not which rank within it.** `canonicalName` is the most specific accepted name _at the granularity the entry exists at_, written in that system's conventional form. Miss that rule and the crystal drawer collapses: amethyst, citrine, rose quartz, smoky quartz, agate, carnelian and onyx are all the species _Quartz_, selenite, satin spar and desert rose are all _Gypsum_, and the compendium could hold exactly one of each set. Outside minerals, sea, kosher and Himalayan pink salt are all sodium chloride, and `'Hidcote'` and `'Munstead'` lavender are both _Lavandula angustifolia_.
+
+| Entry                                | `nomenclature` | `canonicalName`                     |
+| ------------------------------------ | -------------- | ----------------------------------- |
+| Amethyst                             | `mineral`      | `Quartz var. amethyst`              |
+| Selenite                             | `mineral`      | `Gypsum var. selenite`              |
+| Lapis lazuli — a rock, not a species | `mineral`      | `Lapis lazuli`                      |
+| Hidcote lavender                     | `botanical`    | `Lavandula angustifolia 'Hidcote'`  |
+| A cat's claw                         | `zoological`   | `Felis catus`, with `form = 'claw'` |
+| Graveyard dirt                       | `none`         | — no system names it                |
+
+Where a system genuinely gives two entries the same most-specific name — sea salt and Himalayan pink salt are both `Sodium chloride` — the form is what separates them; where the form does not separate them either, they are one identity by this model, and that is the answer rather than a bug.
+
+**No format regex on `canonicalName`.** Real names include `Artemisia spp.`, `Lavandula angustifolia 'Hidcote'`, `subsp.` and `var.` ranks, and author citations like `Salvia officinalis L.` — a binomial regex rejects valid names, which is the same silent guess §11's `unitConvert` rule already forbids. Two of the four Cat's Claws were renamed at genus level in the last two decades, which is the argument again. For related reasons there is **no external identifier column** — POWO, IPNI, GBIF, CAS, IMA — in v1: nothing reads one, taxonomic ids churn, and a nullable text column is purely additive later.
+
+`nomenclature` has seven values:
+
+| Value        | Governs                                                                | Examples                                                                                                               |
+| ------------ | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `botanical`  | ICN                                                                    | _Uncaria tomentosa_, _Laurus nobilis_, _Artemisia spp._                                                                |
+| `fungal`     | ICN — see the note below                                               | _Amanita muscaria_, _Ganoderma lingzhi_                                                                                |
+| `zoological` | ICZN                                                                   | _Apis mellifera_ (beeswax), _Felis catus_ (a claw)                                                                     |
+| `mineral`    | IMA species and varieties, plus rocks, mineraloids and natural glasses | `Quartz var. amethyst`, `Lapis lazuli`, `Moldavite`                                                                    |
+| `chemical`   | IUPAC, or the accepted chemical name                                   | `Sodium chloride`, `Potassium nitrate`, `Sulphur`                                                                      |
+| `unknown`    | —                                                                      | There **is** a formal name and nobody has looked it up. `canonicalName IS NULL`                                        |
+| `none`       | —                                                                      | No system names this: graveyard dirt, moon water, a coffin nail, black salt (a _preparation_). `canonicalName IS NULL` |
+
+**`fungal` splits on organism, not code, and that is deliberate.** Fungi are governed by the ICN alongside plants, so `fungal` is the one value that does not correspond to a nomenclatural code of its own. It is kept because curators shelve mushrooms separately from herbs. A later reader should not "correct" the departure away — it is recorded in §14 for exactly that reason.
+
+`unknown` earns its place because `none` is a **positive claim**. Without `unknown`, an admin's only truthful option for an un-researched plant is to lie into `none`, and `WHERE nomenclature = 'unknown'` is a findable curation to-do list. This is the project's own idiom: `unitConvert` refuses a cross-dimension conversion as an explicit result the caller must handle rather than guessing.
+
+```sql
+  nomenclature   nomenclature_kind NOT NULL,          -- no DEFAULT, deliberately
+  canonical_name text,
+  form           text,                                -- vocabulary, not a foreign key
+  canonical_key  text NOT NULL GENERATED ALWAYS AS (
+                   lower(COALESCE(canonical_name, name))
+                   || COALESCE(' :: ' || lower(btrim(form)), '')
+                 ) STORED,
+
+  CONSTRAINT ingredients_nomenclature_declares_canonical_name
+    CHECK ((nomenclature IN ('none','unknown')) = (canonical_name IS NULL)),
+  CONSTRAINT ingredients_canonical_name_not_blank
+    CHECK (canonical_name IS NULL OR btrim(canonical_name) <> ''),
+  CONSTRAINT ingredients_form_not_blank
+    CHECK (form IS NULL OR btrim(form) <> '')
+```
+
+The first CHECK is a biconditional and is asserted in both directions: `none` or `unknown` carrying a formal name is rejected, and any other kind carrying none is rejected too. Folding the form into the key is what makes _Valeriana officinalis_ root and leaf two identities — two entries, two sets of correspondences, two safety notes — and what separates the cat's-claw vine from the literal claw. Every function in the expression (`lower`, `btrim`, `||`, `COALESCE`) is `IMMUTABLE` and no enum cast is involved, so the generated column is legal: freeing `form` from an enum is in fact what makes the expression possible. `lower(btrim(...))` collapses `Root Bark` onto `root bark`; `rootbark` is left to the autofill, exactly as with folk names. `canonicalKey` is `GENERATED ALWAYS`, so Postgres refuses a direct write — and Drizzle omits generated columns from `$inferInsert`, so TypeScript refuses first.
+
+**The missing default binds code paths, not users.** The workspace-local Zod variant supplies `nomenclature: 'none'` when the formal-name field is blank, so story 29 and "saving with only a name succeeds" hold verbatim; the compendium variant makes the admin answer. The kind↔name coupling is enforced in Zod as well as in the database, so the CHECK is never what a user sees.
+
+Three partial unique indexes, where the label alone previously needed two:
+
+```sql
+CREATE UNIQUE INDEX ingredients_compendium_identity_unique
+  ON ingredients (canonical_key)
+  WHERE workspace_id IS NULL AND deleted_at IS NULL;
+
+CREATE UNIQUE INDEX ingredients_workspace_identity_unique
+  ON ingredients (workspace_id, canonical_key)
+  WHERE workspace_id IS NOT NULL AND deleted_at IS NULL;
+
+-- Label uniqueness survives in the workspace tier only: inside one drawer an
+-- ambiguous label is a mistake, not a distinction.
+CREATE UNIQUE INDEX ingredients_workspace_label_unique
+  ON ingredients (workspace_id, lower(name))
+  WHERE workspace_id IS NOT NULL AND deleted_at IS NULL;
+```
+
+In the compendium four rows may display "Cat's Claw", told apart by their formal names; that is what the dropped label index buys. A unique _constraint_ cannot carry `WHERE deleted_at IS NULL`, and `NULLS NOT DISTINCT` exists only on constraints, so the two tiers stay separate partial indexes rather than one index over `(workspace_id, canonical_key)`.
+
+**Relabelling is safe, with one narrow exception worth stating:** identity is stable under relabelling only for rows that _carry_ a formal name. A `none` row's key **is** its label, so relabelling such a row does change its key.
+
+One consequence of the `COALESCE` merging two namespaces into one key: a `none` entry whose _label_ equals another entry's _formal name_ collides, and the raw error names a column the admin never filled in. Rare, arguably correct, and M5.2/M5.5 must translate it into a readable message naming the colliding entry.
+
+**Display name: no new column.** `name` remains the display label in both tiers. Choosing a folk name as the display name is a **swap** between `ingredients.name` and one `ingredient_folk_names` row — a two-value exchange in one transaction, which rows make cleaner than array juggling. Absent a selection, `name` is prefilled from `canonicalName` at write time, matching `lowStockThreshold`'s idiom of writing the default onto the row rather than defaulting at read time. A swap on a compendium row is **global**: a workspace cannot hold its own display preference for a shared entry without another table, which is out of scope for v1, and the UI says so before the swap.
+
+**Local beats compendium on identity, and on the label only as a fallback.** A compendium row is suppressed in a workspace's results when a non-deleted local row in that workspace matches it on `canonical_key`, **or — only when the local row declares no formal name — on the display label**, case-insensitively. The local entry wins, badged as local. Keying purely on `canonical_key` would regress the common case, since a local stub has no formal name and local "Mugwort" would stop suppressing compendium "Mugwort / _Artemisia vulgaris_"; keying purely on the label hides the wrong plant. The `canonicalName IS NULL` gate is the crux: a local that _declared_ an identity must not suppress a differently-identified row for merely sharing a label, and a local that declared nothing has only its label to go on. Suppression is an anti-join in SQL (§3's rule 7) — never both sets fetched and filtered in the resolver — and it is served by the two workspace-tier indexes, so it needs no index of its own.
+
+```sql
+SELECT c.* FROM ingredients c
+WHERE c.workspace_id IS NULL AND c.deleted_at IS NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM ingredients l
+    WHERE l.workspace_id = $1 AND l.deleted_at IS NULL
+      AND ( l.canonical_key = c.canonical_key
+            OR (l.canonical_name IS NULL AND lower(l.name) = lower(c.name)) ) );
+```
+
+| Local (label / formal name) | Compendium                | Result                                                                                          |
+| --------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------- |
+| Mugwort / —                 | Mugwort / _A. vulgaris_   | compendium suppressed                                                                           |
+| Cronewort / _A. vulgaris_   | Mugwort / _A. vulgaris_   | suppressed — labels differ, identity matches                                                    |
+| Mugwort / _A. vulgaris_     | Mugwort / _A. absinthium_ | **both shown** — different plants                                                               |
+| Graveyard dirt / `none`     | Graveyard dirt / `none`   | compendium suppressed                                                                           |
+| Cat's Claw / —              | Cat's Claw ×4             | all four suppressed — over-suppression, and what the fuzzy warning flags before the stub exists |
+
+A workspace-local ingredient may therefore share a label, and an identity, with a compendium entry. Forbidding the collision would block someone who disagrees with an admin's correspondences from keeping their own version.
+
+**Entry-time lookups are permission-scoped, and that is a leak rather than a nicety.** When someone types a common name or a form, the field suggests from the compendium and the current workspace only, never another workspace — and both halves are scoped: the suggested **strings** as well as the attribution list of which in-scope ingredients already claim them, each shown with its formal name so the ambiguity is visible at the moment of entry. A naive implementation gathers distinct values globally and scopes only the attribution, which reveals that another workspace holds the string. `ingredient_forms` is global and admin-curated, so its rows need no scoping; the in-use values outside it do. A curated form suggestion is shown with its group — "Wax (substance)" — because the vocabulary permits two live rows to share a display name (§5), and the group is the only thing that tells them apart. Picking a suggestion writes the string into this ingredient's own folk-name row — it links no records, and each ingredient keeps its own list.
+
+**A curated form is matched on its description as well as its name.** The vocabulary is deliberately short — one row per kind of thing, not one per word people use for it — so `ointment` covers what a reader may call a salve or a balm, and `shed` what they may call a moult. Matching the name alone would offer nothing for either, and the value would be typed uncurated: the vocabulary would look thin exactly where it is doing its job. So each row's description carries the words it stands in for ("a salve or a balm"), the suggestion query matches them, and the row is offered under its own name — the reader searches in their words and picks the vocabulary's. **A name match always outranks a description match**, so typing `wax` offers _Wax_ above _Ointment_ rather than beside it, and a description match is only ever offered, never filled in automatically. Only the curated vocabulary is searched this way; an in-use uncurated value has no description to search.
 
 ### Two kinds of spell category
 
@@ -308,29 +471,46 @@ The spell builder shows both side by side, flagging intent categories with no in
 `pg_trgm`, available on Neon:
 
 ```sql
-CREATE INDEX ON ingredients USING gin (name gin_trgm_ops);
+CREATE INDEX ON ingredients USING gin (name gin_trgm_ops, canonical_name gin_trgm_ops);
 ```
 
-Debounced on the create form's name field. Returns compendium and in-workspace matches above ~0.4 similarity on `name` or any `folkNames` element. Non-blocking — renders as "Did you mean Bay Laurel?" with a link, plus a Create Anyway button. Merge tooling is v2.
+One multicolumn index over both names, plus `ingredient_folk_names`' own trigram index (§5). A multicolumn `gin_trgm_ops` index serves a query on either column alone, so the two names need one index rather than two.
+
+Debounced on the create form's name field. Returns compendium and in-workspace matches above 0.4 similarity on `name`, on `canonicalName`, or on any of the ingredient's folk-name rows.
+
+**The threshold is set explicitly, and the match uses the `%` operator.** Those are two requirements that pull against each other, and getting the combination wrong silently discards the index: `similarity(a, b) > 0.4` is a function call the planner cannot answer from a trigram index, so a query written that way sequentially scans `ingredients` no matter what indexes exist. Only the operators — `%`, `<->` — are indexable. But `%` alone means "similar by `pg_trgm.similarity_threshold`", which defaults to **0.3**, not the 0.4 this design wants. So the threshold is set per transaction and the predicate stays an operator:
+
+```sql
+SET LOCAL pg_trgm.similarity_threshold = 0.4;
+SELECT … WHERE name % $1 ORDER BY similarity(name, $1) DESC;
+```
+
+`%` filters through the index; `similarity()` only ranks what survives, which needs no index. Leaving the threshold to the default and leaving the predicate as a bare `similarity()` comparison are both wrong, in opposite directions — one changes the meaning, the other throws away the index.
+
+Every result carries its formal name: "Did you mean Cat's Claw?" is useless when it could mean five things. Non-blocking — renders as "Did you mean Bay Laurel?" with a link, plus a Create Anyway button. Merge tooling is v2.
 
 ---
 
 ## 6. Category seed
 
-52 categories, grouped. The `group` field lets the chip selector collapse into sections rather than presenting 52 flat chips, which would be unusable on a phone.
+63 categories in eight groups, and both are a **starting set rather than a closed one** — rows in `categories` and `category_groups`, seeded by M4.3 and editable by an admin afterwards. The grouping lets the chip selector collapse into sections rather than presenting 63 flat chips, which would be unusable on a phone; that a ninth group is addable without a migration is why the group is a table rather than an enum (§5).
 
-| Group                | Categories                                                                                                       |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Protection & defense | protection, warding, banishing, hex-breaking, uncrossing, reversal, nightmare protection, binding                |
-| Cleansing & release  | cleansing, purification, release, forgiveness, grief work, shadow work                                           |
-| Prosperity & work    | prosperity, wealth, abundance, success, career, business, legal matters, justice, gambling                       |
-| Love & connection    | love, attraction, lust, self-love, friendship, reconciliation, fidelity, harmony                                 |
-| Mind & spirit        | psychic work, divination, prophecy, dream work, intuition, wisdom, knowledge, memory, clarity, meditation, truth |
-| Wellbeing            | healing, peace, sleep, joy, longevity, strength, courage, confidence                                             |
-| Craft & change       | grounding, manifestation, transformation, creativity, inspiration, glamour                                       |
-| Practice & place     | ancestor work, spirit work, home blessing, safe travel, communication, fertility, familiar work                  |
+| Group                | Slug                     | Categories                                                                                                       |
+| -------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| Protection & defense | `protection-and-defense` | protection, warding, banishing, hex-breaking, uncrossing, reversal, nightmare protection, binding                |
+| Cleansing & release  | `cleansing-and-release`  | cleansing, purification, release, forgiveness, grief work, shadow work                                           |
+| Prosperity & work    | `prosperity-and-work`    | prosperity, wealth, abundance, success, career, business, legal matters, justice, gambling                       |
+| Love & connection    | `love-and-connection`    | love, attraction, lust, self-love, friendship, reconciliation, fidelity, harmony                                 |
+| Mind & spirit        | `mind-and-spirit`        | psychic work, divination, prophecy, dream work, intuition, wisdom, knowledge, memory, clarity, meditation, truth |
+| Wellbeing            | `wellbeing`              | healing, peace, sleep, joy, longevity, strength, courage, confidence                                             |
+| Craft & change       | `craft-and-change`       | grounding, manifestation, transformation, creativity, inspiration, glamour                                       |
+| Practice & place     | `practice-and-place`     | ancestor work, spirit work, home blessing, safe travel, communication, fertility, familiar work                  |
 
-Each carries `name`, `slug`, `color`, `description`, and `group`.
+**Every slug in this section is derived from the name beside it**, by the project's one slug rule (`src/lib/slugify.ts`, the `slugify` package under pinned options) rather than picked by hand — which is why seven of the eight groups read `…-and-…`: the rule expands an ampersand. M4.3 seeds them that way and M5.6's admin mutations slug a new one identically, so a category an admin adds lands in the same shape as a seeded one. The column previously named eight hand-picked short slugs, one of which — `grounding`, for "Craft & change" — collided with a category slug inside its own group.
+
+Each category carries `name`, `slug`, `description`, and `groupId`; each group carries `name`, `slug`, `colorDark`, `colorLight` and `description` — the colour lives on the group only (§5, M4.2). The table above is grouped for reading; the app lists groups alphabetically by `name`.
+
+**The eight seeded colours come from M0.7's `$category-groups` map, which is now a seed source rather than a runtime lookup.** Its hue rotation and per-theme contrast tuning are what make the starting eight read as one family, and M4.3 resolves each to two hexes — the map already carries a `dark` and a `light` value per group — and writes both onto the group row. What an admin adds afterwards is theirs to pick and will not join that rotation — the write-time contrast floor guarantees it is legible, not that it is harmonious. That is the accepted cost of an open set; a closed one was the alternative.
 
 ---
 
@@ -338,9 +518,18 @@ Each carries `name`, `slug`, `color`, `description`, and `group`.
 
 Single route handler at `/api/graphql`. No separate service, no additional hosting cost.
 
-**Stack:** GraphQL Yoga (server), Pothos with the Drizzle plugin (code-first schema), DataLoader, graphql-codegen for client types.
+**Stack:** GraphQL Yoga (server), Pothos (code-first schema, no ORM plugin — §2), DataLoader, graphql-codegen for client types.
 
-**Client:** `graphql-request` plus TanStack Query, not Apollo. Apollo's normalized cache duplicates what TanStack Query already does here and adds ~40 kB. Codegen generates typed document nodes and hooks.
+**Client:** `graphql-request` plus TanStack Query, not Apollo. Apollo's normalized cache duplicates what TanStack Query already does here and adds ~40 kB. Codegen generates typed document nodes and hooks. Forms are react-hook-form with the Zod resolver; the suggesting fields of M5.10a are a headless combobox on Downshift, not react-select — §14 carries both arguments.
+
+**Four rules follow from dropping the Drizzle plugin (MB.20), and bind every M3 task:**
+
+- **Object types are declared by hand**, against the row type the service returns (`typeof ingredients.$inferSelect` and friends) — never a table-derived object type. TypeScript still fails the build when a column's type changes under a field.
+- **`auditColumns` maps to one shared `AuditInfo` object type, defined once.** A per-table audit shape is a bug.
+- **Every Pothos package in the stack is a stable major.** A `0.x` Pothos plugin entering the dependency tree is a decision argued for in the diff, not a convenience.
+- **The GraphQL layer imports `drizzle-orm` for _types_ only.** Runtime query building stays behind `src/db/repository.ts` (§3's rule 2). A `no-restricted-imports` rule enforces it rather than leaving it to review (MB.33): a runtime import from `src/graphql` fails `npm run lint`, while `import type` — erased at compile time, and so unable to build anything — passes.
+
+None of this rules the plugin out permanently — it is additive, and re-adopting it once it reaches a stable major is a contained change.
 
 ### Resolvers are thin
 
@@ -365,6 +554,41 @@ No database access in a resolver, ever. Same lint rule as `db`.
 
 **Client-composable expense.** `graphql-armor` applies a depth limit of 7, a cost limit, and disables introspection and field suggestions in production. Aliasing and directive-overload protections come with it.
 
+### Errors — one shape, so a message can land beside its field
+
+Services throw rather than answering with an empty list or a success that did nothing — §11 asserts it as "not a silent no-op", and `auth.md` carries the full argument. Three types live in `src/lib/errors.ts`: `Forbidden`, `NotFound`, and `ValidationError`, which carries `issues: { path: (string | number)[]; message: string }[]`. None of the three carries a status code or a GraphQL error code — a service called from a seed or a script has no use for one — so the mapping below belongs to the transport, and MB.43 is where it lives.
+
+Yoga maps them on the way out through `maskedErrors.maskError`, which keeps masking on: anything that is _not_ one of the three leaves as "Unexpected error", so no stack trace and no constraint name reaches a client. M11.10 makes the same promise for pages.
+
+| Thrown            | `extensions.code` | Also carries                              |
+| ----------------- | ----------------- | ----------------------------------------- |
+| `ValidationError` | `VALIDATION`      | `extensions.fieldErrors`, from its issues |
+| `Forbidden`       | `FORBIDDEN`       | —                                         |
+| `NotFound`        | `NOT_FOUND`       | —                                         |
+| anything else     | masked            | —                                         |
+
+The message is the service's, verbatim. That is what carries M5.6b's "which column failed and what the ratio was", M5.2's duplicate naming the colliding entry, and M10.3's explaining refusal all the way to the person reading the form — a rewrite at the transport is how those become "Invalid input" again.
+
+```json
+{
+  "errors": [
+    {
+      "message": "Invalid input",
+      "path": ["createWorkspaceIngredient"],
+      "extensions": {
+        "code": "VALIDATION",
+        "fieldErrors": [{ "path": ["canonicalName"], "message": "A botanical name is required" }]
+      }
+    }
+  ],
+  "data": null
+}
+```
+
+**An issue's `path` names the input field**, in the shape of the mutation's own `input` — `['canonicalName']`, `['folkNames', 2]`. A rule belonging to no single field uses the empty path and the form renders it above the fields. Most refusals do have a field: the duplicate-identity collision of §5 names `canonicalName`, a slug collision names `slug`, the contrast floor names `colorDark` or `colorLight`. What is genuinely not a field stays a `Forbidden` with a message — the last-owner guard refuses an action and offers a remedy, which is not a bad value in a box. Either way: **never a bare constraint name.**
+
+**The client validates first and renders both sources the same way.** The Zod resolver runs the shared schema before the mutation is sent, so a well-behaved form never asks the server to reject what it could have caught; the service runs that same schema again, because the browser is not the only caller. Returned `fieldErrors` go into react-hook-form through `setError(path, { message })`, an empty path through `setError('root', …)`, and both render through the same inline error element the resolver's own errors use — one component, two sources, so a server-only rule is not a second visual language. `FORBIDDEN` and `NOT_FOUND` are not form errors; the page decides what to do with them (§9).
+
 ### Caching — three layers in v1
 
 **One rule above all: never cache anything not keyed by viewer identity.** A cache is the easiest way to leak one workspace's data into another's response.
@@ -373,7 +597,7 @@ No database access in a resolver, ever. Same lint rule as `db`.
 
 **2. React `cache()` — per-request memoization.** Wraps service functions so a layout and a page requesting the same workspace hit Postgres once. Scoped to the request, no staleness risk.
 
-**3. Next.js data cache with tag invalidation.** The compendium and categories are read on nearly every page, mutated only by admins, and identical for every viewer. Ideal cache target.
+**3. Next.js data cache with tag invalidation.** The compendium, the categories and the form vocabulary are read on nearly every page, mutated only by admins, and identical for every viewer. Ideal cache target — all three share the `compendium` tag, and every admin mutation across the three fires `revalidateTag`.
 
 ```ts
 export const getCompendium = unstable_cache(() => compendiumService.listGlobal(), ['compendium'], {
@@ -381,10 +605,16 @@ export const getCompendium = unstable_cache(() => compendiumService.listGlobal()
   revalidate: 3600,
 });
 // admin mutation:
-revalidateTag('compendium');
+revalidateTag('compendium', { expire: 0 });
 ```
 
+`revalidateTag` takes two arguments in Next 16 — the single-argument form is deprecated and a type error, so `npm run typecheck` rejects the one-argument call outright. The second argument is `{ expire: 0 }`, not the otherwise-recommended `'max'`, because an admin who has just edited the compendium must see that edit on the very next read: `'max'` serves stale content for up to a year while the revalidation runs behind it, whereas `{ expire: 0 }` never serves stale and makes the next request a blocking miss.
+
 Persistent across requests and shared across instances. Should remove most compendium reads from Postgres entirely. Vercel's native Next.js support makes `revalidateTag` and ISR first-class, so this layer does most of the work.
+
+**`updateTag` is unavailable to this project.** It is the read-your-own-writes call — it expires the tag immediately rather than serving stale — but it may only be called from a Server Action and throws anywhere else, Route Handlers included. Every mutation here goes through the `/api/graphql` route handler (§3), and there are no server actions, so `revalidateTag(tag, { expire: 0 })` is the documented substitute wherever `updateTag` cannot be reached.
+
+**`unstable_cache` is the legacy path, deliberately.** Its successor is the `use cache` directive under the `cacheComponents` flag, which `next.config.ts` does not set — so nothing changes today, and the two caches coexist as separate layers when it eventually does. The swap is not free either: `unstable_cache` persists values across deployments, while a `use cache` entry never carries over to a new deploy because its cache key includes the build id. A compendium that survives a deploy is worth more here than the newer directive.
 
 **Not cached:** anything workspace-scoped. Ingredients and notes change from under you when a co-member edits, and stale shared state in a collaborative app is worse than an extra query.
 
@@ -396,13 +626,17 @@ Persistent across requests and shared across instances. Should remove most compe
 type Query {
   me: User!
   workspace(slug: String!): Workspace
-  compendium(search: String, categoryIds: [ID!], form: Form): [Ingredient!]!
+  compendium(search: String, categoryIds: [ID!], form: String): [Ingredient!]!
   ingredient(id: ID!): Ingredient
+  ingredientFormValues: [IngredientFormValue!]! # the admin-curated form vocabulary
   workspaceIngredients(workspaceId: ID!, search: String, categoryIds: [ID!]): [InventoryItem!]!
   grimoire(workspaceId: ID!): [Spell!]! # workspace-visible + own private spells
   spell(id: ID!): Spell
 }
 
+# Mutations return the entity. A refusal travels in `errors[].extensions` —
+# a code, and `fieldErrors` for a validation failure — rather than in a payload
+# type pairing an entity with a userErrors list. See Errors above.
 type Mutation {
   createWorkspace(input: WorkspaceInput!): Workspace! # gated on canCreateWorkspace or admin
   createWorkspaceIngredient(input: IngredientInput!): Ingredient!
@@ -416,11 +650,25 @@ type Mutation {
 
 type Ingredient {
   id: ID!
-  name: String!
+  name: String! # the display label
+  canonicalName: String # the formal name; null exactly when nomenclature is none or unknown
+  nomenclature: Nomenclature!
+  folkNames: [String!]! # flattened from ingredient_folk_names
+  form: String # free text, not an enum — the vocabulary is data
   isGlobal: Boolean!
   categories: [Category!]!
   audit: AuditInfo!
   # a v2 notes section slots in here
+}
+
+enum Nomenclature {
+  botanical
+  fungal
+  zoological
+  mineral
+  chemical
+  unknown
+  none
 }
 
 type Spell {
@@ -429,9 +677,20 @@ type Spell {
   intent: String
   visibility: SpellVisibility! # private | workspace
   categories: [Category!]! # assigned intent
-  derivedCategories: [Category!]! # union across ingredients
+  derivedCategories: [Category!]! # union across linked ingredients; a custom row contributes none
   categoryGaps: CategoryComparison! # intended-not-present, present-not-intended
-  ingredients: [SpellIngredient!]!
+  ingredients: [SpellIngredient!]! # in layer order
+  audit: AuditInfo!
+}
+
+type SpellIngredient {
+  ingredient: Ingredient # null on a custom, one-off row (MB.40)
+  name: String! # the ingredient's display label when linked; the custom name otherwise
+  form: String # the ingredient's form when linked; the custom row's free text otherwise
+  quantity: Float
+  unit: InventoryUnit # M9.2's inventory_unit enum
+  layerOrder: Int!
+  note: String
   audit: AuditInfo!
 }
 
@@ -445,6 +704,14 @@ type InvitationResult {
 }
 ```
 
+There is no `Form` enum in the schema. `ingredients.form` is free text over an admin-curated vocabulary (§5), so an enum would rewrite the SDL every time an admin curates a value; the vocabulary is read as data through `ingredientFormValues` and the filter argument is a `String`.
+
+**The type is `IngredientFormValue`, not `IngredientForm`, deliberately.** One row is one permitted _value_ of `ingredients.form`. Naming it after its table (`ingredient_forms`) would be the conventional mapping, but `IngredientForm` is already the entry-form component (§11) — and per this project's vocabulary rule a term means exactly one thing, so the newer of the two yields. The table keeps its name; only the GraphQL type diverges from it.
+
+Adding `canonicalName`, `nomenclature` and `folkNames` moves M3.4's SDL snapshot, which is what that snapshot is for.
+
+`SpellIngredient.ingredient` is nullable from the first line of the SDL, not widened later: a custom, one-off row (§5, MB.40) has no ingredient, and a consumer that has always had to branch on that never meets it as a breaking change. `name` and `form` resolve from the linked ingredient when there is one, so a recipe view reads one shape whichever kind of row it is rendering.
+
 Cursor pagination on every list that can grow — the grimoire and compendium especially — through one shared helper: default page size 25, hard server-side maximum 100, cursors encoding a stable sort key plus id, never an offset.
 
 ---
@@ -457,22 +724,31 @@ Cursor pagination on every list that can grow — the grimoire and compendium es
 
 **The site is invite-gated.** Signing in creates an account with `canCreateWorkspace = false` and no workspace. Creation rights are granted by accepting a workspace invitation or by an admin (`grantWorkspaceCreation`), and persist once held. The first user matching the bootstrap env email is promoted to `admin` on first sign-in; nothing else grants admin in v1.
 
-**Two layers of authorization, deliberately.**
+**Two layers of authorization, deliberately — the check, and a proof the check happened.**
 
-Application layer: every workspace-scoped call passes `assertMembership(userId, workspaceId, minRole)` inside `withAudit()`, so a write can't reach the database without both a membership check and audit stamping.
+Belt and braces is warranted here: an application bug leaks one person's grimoire to another, and the realistic bug is a forgotten check in one service rather than a wrong one everywhere. So the first layer is the check and the second makes forgetting it a compile error.
 
-Database layer: RLS policies using the `app.current_user_id` GUC already set per transaction.
+Layer one: every workspace-scoped call passes `assertMembership(session, workspaceId, minRole)` in the service. A write additionally runs inside `withAudit()`, so it cannot reach the database without both a membership check and audit stamping.
 
-```sql
-CREATE POLICY ingredients_workspace_access ON inventory_items
-  USING (workspace_id IN (
-    SELECT workspace_id FROM workspace_members
-    WHERE user_id = current_setting('app.current_user_id')::uuid
-      AND deleted_at IS NULL
-  ));
+Layer two: what that call returns.
+
+```ts
+declare const brand: unique symbol;
+export type Membership = {
+  readonly workspaceId: string;
+  readonly userId: string;
+  readonly role: WorkspaceRole;
+  readonly [brand]: true;
+};
 ```
 
-Belt and braces is warranted: an application bug here leaks one person's grimoire to another. The same two-layer pattern covers spell `visibility` — the service decides who may read a spell, and an RLS policy independently admits a `private` spell only to its author.
+The brand is unconstructible outside the membership service — no object literal, no cast a reviewer would miss. Every workspace-scoped repository finder and every `AuditWriter` method takes a `Membership` as its first argument and ANDs `workspace_id = membership.workspaceId` onto the query itself, rather than trusting a `workspaceId` its caller passed alongside; `write.insert` fills the column from the proof for the same reason. A service therefore cannot _write_ a workspace-scoped query without having passed the check first. That is the difference between the two layers being redundant and the second one being real: it makes the omission impossible instead of merely absent, and because the type is erased it costs nothing at runtime — no second connection, no transaction on the read path, no per-environment credentials.
+
+The same shape covers spell `visibility`: the service decides who may read a spell, and the finders that reach a `private` one take the proof and the author id together. Note that "workspace-scoped" is not the same as "has a `workspace_id` column" — `spell_ingredients` and `spell_categories` reach their workspace through `spells` and cannot self-scope, so their services load the parent spell under the proof and derive scope from it. A guard that infers the set from a column name silently exempts the tables holding what a spell is made of.
+
+**Where this is weaker than a database policy**, stated rather than glossed: a service holding a valid proof for W that hand-writes a `where` clause naming X's ids satisfies the type and still reads across workspaces. The join tables above are the second gap. Both are covered by §11's per-entity direct-id denial tests, which is the same coverage that would have caught a policy written wrong.
+
+**RLS is deferred to the public launch, not rejected.** `withAudit` keeps publishing the `app.current_user_id` GUC on every write (§5), so adding policies is one migration and its tests rather than a re-audit of every write path. [`mb.24-rls-role-split.md`](design-decisions/mb.24-rls-role-split.md) is the specification for that migration — the role split, `FORCE`, the `security definer` `app.is_member()` helper, the compendium's nullable `workspace_id`, and why a policy test connected as the table owner proves nothing. It is superseded as a plan for v1 and stands unchanged as a plan for then. Reasoning for the deferral: §14.
 
 ---
 
@@ -480,27 +756,33 @@ Belt and braces is warranted: an application bug here leaks one person's grimoir
 
 **Workspace lives in the URL, not the session.** Session-held workspace state produces the classic bug where two tabs disagree about context and a write lands in the wrong workspace.
 
-| Route                        | Page                                                                                                                                                   |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/`                          | Post-sign-in landing: into their workspace if they have one; the create form if they hold creation rights; otherwise a plain "invite-only" explanation |
-| `/compendium`                | Global ingredient reference, read-only for non-admins                                                                                                  |
-| `/ingredients/[id]`          | Detail — correspondences, safety notes, substitutes (built to take a v2 notes section beneath)                                                         |
-| `/coven/[slug]/ingredients`  | Workspace ingredients and stock                                                                                                                        |
-| `/coven/[slug]/grimoire`     | Workspace spells (plus the viewer's own private spells)                                                                                                |
-| `/coven/[slug]/grimoire/new` | Spell builder                                                                                                                                          |
-| `/coven/[slug]/members`      | Members and invitations (owner only)                                                                                                                   |
-| `/admin/compendium`          | Admin CRUD on global ingredients                                                                                                                       |
-| `/admin/categories`          | Admin CRUD on global categories                                                                                                                        |
-| `/invite/[token]`            | Accept invitation                                                                                                                                      |
-| `/sign-in`                   | OAuth                                                                                                                                                  |
+| Route                         | Page                                                                                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/`                           | Post-sign-in landing: into their workspace if they have one; the create form if they hold creation rights; otherwise a plain "invite-only" explanation |
+| `/compendium`                 | Global ingredient reference, read-only for non-admins                                                                                                  |
+| `/ingredients/[id]`           | Detail — correspondences, safety notes, substitutes (built to take a v2 notes section beneath)                                                         |
+| `/coven/[slug]/ingredients`   | Workspace ingredients and stock                                                                                                                        |
+| `/coven/[slug]/grimoire`      | Workspace spells (plus the viewer's own private spells)                                                                                                |
+| `/coven/[slug]/grimoire/new`  | Spell builder                                                                                                                                          |
+| `/coven/[slug]/grimoire/[id]` | Spell recipe view — the read surface for a saved spell, and the only page carrying print styles                                                        |
+| `/coven/[slug]/members`       | Members and invitations (owner only)                                                                                                                   |
+| `/admin/compendium`           | Admin CRUD on global ingredients                                                                                                                       |
+| `/admin/categories`           | Admin CRUD on global categories                                                                                                                        |
+| `/admin/category-groups`      | Admin CRUD on the category groups, including each group's chip colour                                                                                  |
+| `/admin/forms`                | Admin CRUD on the ingredient form vocabulary, plus the in-use values outside it                                                                        |
+| `/admin/form-groups`          | Admin CRUD on the ingredient form groups                                                                                                               |
+| `/invite/[token]`             | Accept invitation                                                                                                                                      |
+| `/sign-in`                    | OAuth                                                                                                                                                  |
 
 Workspace ingredients and stock are **one page**, not two. A filter chip distinguishes local entries from compendium entries; a separate page would be a distinction without a difference.
 
 ### Components
 
-Component folders follow the `resume-2026` convention exactly — `src/components/IngredientCard/` with `index.tsx`, `index.scss`, `index.test.tsx`, imported `from '../components/IngredientCard'`.
+Component folders follow the `resume-2026` convention — `src/components/IngredientCard/` with `index.tsx` and `index.scss`, imported `from '../components/IngredientCard'`. The test is the one departure from that convention: it lives at `tests/components/IngredientCard/index.test.tsx` rather than beside the component, because MB.41 moved every Vitest file under `tests/`.
 
-**`IngredientSearch`** is shared by compendium, ingredients, and spell builder. Debounced text match on `name` and `folkNames`; multi-select category chips grouped by §6's `group` field, AND by default with an OR toggle; secondary filters for form, element, in-stock-only; filter state in the URL query string. Each consumer supplies the action slot — Compendium passes "Add ingredient," Ingredients passes Edit/Delete, Spell Builder passes "Add to jar."
+**`AppShell`** is the application-wide navigation frame, not a route. It wraps every signed-in page — compendium and ingredient detail included, which sit outside `/coven/` — and carries the primary nav, the `WorkspaceSwitcher`, and the global affordances for adding and editing an ingredient from any page. It is a layout component rather than a route because the nav must persist across navigation between workspace-scoped and global pages; the coven layout nests inside it and adds only workspace-scoped chrome.
+
+**`IngredientSearch`** is shared by compendium, ingredients, and spell builder. Debounced text match on `name`, on the folk names, and on `canonicalName` — searching the formal name is how someone who knows the binomial finds the right one of four rows labelled "Cat's Claw"; multi-select category chips grouped by the category's `groupId`, groups alphabetical by name, AND by default with an OR toggle; secondary filters for form, element, in-stock-only, where the form filter's options come from the curated vocabulary plus the in-use values outside it (§5) rather than a fixed set; filter state in the URL query string. Each consumer supplies the action slot — Compendium passes "Add ingredient," Ingredients passes Edit/Delete, Spell Builder passes "Add to jar."
 
 ### Componentized Sass
 
@@ -510,18 +792,17 @@ Every component folder carries its own `index.scss`, imported by its `index.tsx`
 src/components/IngredientCard/
   index.tsx      → imports './index.scss'
   index.scss     → @use '../../scss/variables' as *;
-  index.test.tsx
 ```
 
 Shared partials in `src/scss/`, `@use`'d directly by whichever component needs them — never routed through a parent:
 
-| Partial            | Carried over from `resume-2026`                                                             | Added                                         |
-| ------------------ | ------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| `_variables.scss`  | Screen/print colors, shadows, transitions, font stacks                                      | 8 category-group colors, safety-badge palette |
-| `_mixins.scss`     | `theme-transition()`, `reduced-motion`, `focus-ring()`, `card-surface()`, `tooltip-arrow()` | `modal-surface()`, `chip()`, `badge()`        |
-| `_typography.scss` | Global body/heading rules                                                                   | unchanged                                     |
-| `_buttons.scss`    | Button fill system, `.dismiss-button`                                                       | unchanged                                     |
-| `_print.scss`      | Print-URL reveal, print tiers                                                               | Spell recipe print layout                     |
+| Partial            | Carried over from `resume-2026`                                                             | Added                                             |
+| ------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `_variables.scss`  | Screen/print colors, shadows, transitions, font stacks                                      | The eight seed group colors, safety-badge palette |
+| `_mixins.scss`     | `theme-transition()`, `reduced-motion`, `focus-ring()`, `card-surface()`, `tooltip-arrow()` | `modal-surface()`, `chip()`, `badge()`            |
+| `_typography.scss` | Global body/heading rules                                                                   | unchanged                                         |
+| `_buttons.scss`    | Button fill system, `.dismiss-button`                                                       | unchanged                                         |
+| `_print.scss`      | Print-URL reveal, print tiers                                                               | Spell recipe print layout                         |
 
 Modern module system throughout — `@use '../../scss/variables' as *;`, never the deprecated `@import`.
 
@@ -577,7 +858,7 @@ Modern module system throughout — `@use '../../scss/variables' as *;`, never t
 
 ### Notes — deferred to v2
 
-Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, so a v1 count is 44 stories (1–34, 47–56).
+Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, and story 57 (MB.40) took the next free number rather than one of the twelve, so a v1 count is 45 stories (1–34, 47–57).
 
 ### Grimoire
 
@@ -591,6 +872,7 @@ Stories 35–46 covered the three-tier experience-notes system. They move to v2 
 54. See when I'm adding something I have none of.
 55. Save as draft.
 56. As any workspace member including viewers, read every workspace-visible spell in the grimoire (a private spell stays with its author).
+57. Add a one-off ingredient by name and form, so a spell can call for something I will never stock — it goes in the jar and nowhere else.
 
 Keeping a spell `private` while building it, and the one-way widen to `workspace`, are governed by §5's visibility rule rather than a numbered story.
 
@@ -602,25 +884,27 @@ Every story becomes a failing test first: **write test → watch it fail → min
 
 ### Test database: local Postgres, not Neon, not SQLite
 
-**Postgres 17 in Docker, everywhere except deployment.**
+**Postgres 18 in Docker, everywhere except deployment.**
 
 | Context              | How                                                                                           |
 | -------------------- | --------------------------------------------------------------------------------------------- |
 | Local dev            | `postgres` service in `docker-compose.yaml`, seeded on first boot                             |
 | Local tests          | Same container, separate database per Vitest worker                                           |
-| CI unit + db         | Actions `services: postgres:17`, reachable by service name from the existing job `container:` |
+| CI unit + db         | Actions `services: postgres:18`, reachable by service name from the existing job `container:` |
 | CI e2e               | Same service container                                                                        |
 | Staging + production | Neon                                                                                          |
 
-**SQLite was considered and rejected.** It cannot run RLS policies, `num_nonnulls` check constraints, `pg_trgm` fuzzy matching, PL/pgSQL triggers, native array columns for `folkNames`, or `SET LOCAL app.current_user_id`. The RLS tests are the point: the suite deliberately stubs out `assertMembership` to prove the database layer independently blocks cross-workspace reads. Under SQLite that test cannot exist, and the failure mode it guards against is one user's grimoire visible to another.
+**SQLite was considered and rejected.** It cannot run `num_nonnulls` check constraints, `pg_trgm` fuzzy matching, PL/pgSQL triggers, native array columns for `deities[]` and `substitutes[]`, stored generated columns for `canonical_key`, or `set_config('app.current_user_id', …)`. The isolation tests are the point: they query every workspace-scoped entity by direct id as a non-member and assert refusal, against the real schema — the same partial unique indexes, generated columns and constraints production runs. Under SQLite that suite tests a different database than the one that ships, and the failure mode it guards against is one user's grimoire visible to another.
 
 **Using local Postgres instead of Neon branches is a net simplification.** It removes the `NEON_API_KEY` secret, `globalSetup` branch creation, the 10-branch-per-project limit, the CU-hour budget, and the branch-reaper workflow. Neon becomes deployment-only infrastructure. Tests get faster too — a local socket beats a network round trip per query.
 
-**Isolation.** Each Vitest worker gets `sorrel_test_${VITEST_WORKER_ID}`, created from a template database with migrations pre-applied, so setup is a fast `CREATE DATABASE ... TEMPLATE` rather than a full migration run. Playwright gets `sorrel_e2e`, truncated and reseeded between spec files.
+**Isolation.** Each Vitest worker gets `sorrel_test_${VITEST_POOL_ID}` (the pool slot — `VITEST_WORKER_ID` counts test files, not workers, and outruns the clones that exist; MB.14), created from a template database with migrations pre-applied and the `standard` scenario seeded — built once per run at test setup from the image's extensions-only `sorrel_template` (M1.27; not baked into the image, so it can never disagree with the checkout) — so per-worker setup is a fast `CREATE DATABASE ... TEMPLATE` rather than a migration run, and the clone is re-made from the template before every test file. Playwright gets `sorrel_e2e`, recreated the same way from its own seeded template between spec files.
 
 ### Seed data — one module, three consumers
 
-`src/db/seed/index.ts` exports `seed(db, { scenario })`. Docker Postgres runs it on first boot; the Vitest `db` project and Playwright's `globalSetup` call it directly. Identical data everywhere, so a bug reproduces in all three.
+`src/db/seed/index.ts` exports `seed(db, { scenario })`. A one-shot `db-init` compose container runs it before the app starts; the Vitest `db` project and Playwright's `globalSetup` call it directly. Identical data everywhere, so a bug reproduces in all three.
+
+The Docker side is a Node container rather than a Postgres init script, corrected at M1.24 from "Docker Postgres runs it on first boot": the seed is TypeScript and the Postgres image has no Node, and `Docker/postgres-init/` does not run at container start in any case, since `Dockerfile.postgres` populates PGDATA at image build time and the entrypoint then skips `/docker-entrypoint-initdb.d/`. The outcome the line described — a clean volume comes up seeded — is unchanged.
 
 Scenarios: `minimal` (one admin, one user, empty compendium), `standard` (five users, workspaces W and X, populated compendium), `demo` (standard plus spells with ingredients and layer order).
 
@@ -634,7 +918,7 @@ Scenarios: `minimal` (one admin, one user, empty compendium), `standard` (five u
 | D    | Member of unrelated workspace X    |
 | E    | Site admin, member of no workspace |
 
-`make db-reset` reseeds local.
+`make db-reset` drops, migrates and reseeds local; `SEED_SCENARIO` picks the scenario for it and for `make docker-up`, defaulting to `minimal`.
 
 ### Acceptance tests — story traceability
 
@@ -646,7 +930,7 @@ tests/acceptance/
   02-compendium.test.ts     # stories 14-16
   03-ingredients.test.ts    # stories 20-27
   04-modals.test.tsx        # stories 28-34
-  06-grimoire.test.ts       # stories 47-56
+  06-grimoire.test.ts       # stories 47-57
   07-admin.test.ts          # stories 17-18  (story 19 via the workspace-isolation suite)
 ```
 
@@ -688,7 +972,7 @@ Acceptance coverage is tracked separately from the 80% line threshold, because t
 
 `src/lib/` carries the heaviest coverage:
 
-- `filterIngredients()` — name and folk-name match, AND vs OR, case and accent insensitivity, empty query returns all
+- `filterIngredients()` — match on name, folk names and formal name, AND vs OR, case and accent insensitivity, empty query returns all
 - `unitConvert()` — within a single dimension only: weight↔weight, volume↔volume, to a defined precision. Weight↔volume and anything involving count are refused as an explicit result the caller must handle, never null or a guess. No density table exists anywhere in the codebase
 - `summarizeSpellCategories()` — union and dedupe across ingredients
 - `compareSpellCategories()` — intended-not-present and present-not-intended, both directions
@@ -708,7 +992,7 @@ The highest-risk tests in the project.
 - Admin E cannot read W's ingredients or grimoire
 - A non-admin write to a compendium entry fails; E's succeeds and stamps `updated_by`
 - A user without `canCreateWorkspace` (and not admin) cannot create a workspace; accepting an invitation sets the flag and audits it
-- RLS blocks a cross-workspace read **with `assertMembership` stubbed out** — deliberately bypassing the application layer to prove the second layer works
+- A workspace-scoped finder **cannot be called without a `Membership`**, asserted at compile time with `@ts-expect-error` rather than at runtime — the second layer's whole claim is that the omission does not typecheck, so the test has to be a type error rather than a thrown one
 
 **Spell visibility**
 
@@ -724,14 +1008,21 @@ The highest-risk tests in the project.
 - Insert stamps `created_by`/`updated_by` from session, ignoring payload ids
 - Update leaves `created_at`/`created_by` untouched
 - Soft delete sets `deleted_at`/`deleted_by`; row vanishes from finders
-- Re-adding a name after soft delete succeeds — the partial-index test
+- Re-adding a **formal** name after soft delete succeeds — the partial-index test. It must be the formal name, not the display label: display labels are no longer unique in the compendium, so a label-based assertion would pass even with the `WHERE deleted_at IS NULL` stripped off the index, and the test would silently stop testing anything. M5.3 exists to exercise that index and carries the same correction
 
 **Compendium and ingredients**
 
 - A workspace-local ingredient is invisible to every other workspace
-- A local may share a name with a compendium entry; two locals in one workspace may not
-- A local entry wins over a compendium entry of the same name in that workspace's search
-- Fuzzy match returns near-misses above threshold, nothing below
+- A compendium insert omitting `nomenclature` is rejected — the column has no database default
+- The biconditional holds both ways: `none`/`unknown` carrying a formal name is rejected, and any other kind carrying none is rejected
+- `canonical_key` cannot be written or updated directly; Postgres refuses, and the column is absent from `$inferInsert` so TypeScript refuses first
+- Two compendium entries may share a display label when their formal names differ; two may not share an identity
+- A local may share a label — and an identity — with a compendium entry; two locals in one workspace may share neither
+- Local-beats-compendium suppression, one assertion per row of §5's resolution table: an identity match suppresses across differing labels, a label match suppresses only when the local declares no formal name, and two differently-identified rows sharing a label are both returned
+- Promoting a folk name to the display name leaves `canonical_key` unchanged on a row carrying a formal name, and changes it on a `none` row
+- A folk name, or a form value in use, present only in unrelated workspace X never surfaces in W's lookup — asserted against the service directly, not merely by its absence from a list
+- Fuzzy match returns near-misses above the explicit 0.4 threshold and nothing below, and each result carries its formal name
+- The fuzzy query plan uses the trigram index rather than a sequential scan — `EXPLAIN` asserted, because a `similarity()` comparison silently cannot use one and the results look identical either way
 
 **Grimoire**
 
@@ -756,13 +1047,14 @@ The highest-risk tests in the project.
 - Introspection disabled in production config
 - DataLoader batches — assert query count, not just correctness, on a 50-ingredient fetch
 - Every mutation delegates to a service; no resolver touches `db`
+- Error mapping — each of the three service error types leaves carrying its own `extensions.code`, a `ValidationError` leaves carrying `fieldErrors` matching its issues and its message verbatim, and a plain `Error` leaves masked with no message and no stack
 
-### Component — Vitest + RTL, colocated
+### Component — Vitest + RTL
 
-`src/components/<Name>/index.test.tsx`, importing the sibling `from '.'`. Role and label queries only; no test ids for anything a user can see.
+`tests/components/<Name>/index.test.tsx`, importing the component as `@/components/<Name>`. Mirrored under `tests/` rather than colocated: MB.41 moved the whole suite out of `src/`, so the directory a component test sits in is the component's own path with the tree swapped, and nothing under `src/` is a test. Role and label queries only; no test ids for anything a user can see.
 
 - `IngredientSearch` — filtering, chip toggle, grouped chips collapse, clear, debounce via fake timers
-- `IngredientForm` — fuzzy warning renders, Create Anyway proceeds, compendium entries read-only for non-admins
+- `IngredientForm` — fuzzy warning renders and names each match's formal name, Create Anyway proceeds, compendium entries read-only for non-admins, the formal-name and form fields suggest in scope and accept free text outside the vocabulary
 - `AddIngredientModal` / `EditIngredientModal` — validation, submit payload, Escape, focus trap, focus restore, pre-population, dirty-discard warning
 - `InviteDialog` — link shown once, copy works, warning present, role selector offers viewer and member only (never owner)
 - `MemberList` — role controls hidden from non-owners
@@ -792,7 +1084,7 @@ Specs: admin adds a compendium entry; A adds it to W's ingredients with a quanti
 
 ### Ported verbatim from `resume-2026`
 
-`.github/workflows/` (`pr-gate.yml`, `merge-queue.yml`, the reusable per-check workflows `lint`/`format`/`typecheck`/`vitest`/`build`/`playwright`/`audit`/`gitflow`, the shared composite actions, `build-image.yml`), `.actrc` and the `make act-*` targets, `Docker/` (multi-stage `Dockerfile.node` with `development`/`testing`/`devcontainer`, plus `docker-compose.yaml`), `.devcontainer/`, `makefile`, `.oxlintrc.json`, `.prettierrc`, `.prettierignore`, the `"pre-commit": ["lint", "format:check", "typecheck"]` array, and `.claude/skills/`.
+`.github/workflows/` (`pr-gate.yml`, `merge-queue.yml`, the reusable per-check workflows `lint`/`format`/`typecheck`/`vitest`/`build`/`playwright`/`audit`/`gitflow`, the shared composite actions, `build-image.yml`) — MB.32 has since collapsed the five `lint`/`format`/`typecheck`/`build`/`audit` workflows into one `checks.yml` matrix and deleted `merge-queue.yml` until M7.A.1, so `claude-docs/ci.md` is the current inventory, `.actrc` and the `make act-*` targets, `Docker/` (multi-stage `Dockerfile.node` with `development`/`testing`/`devcontainer`, plus `docker-compose.yaml`), `.devcontainer/`, `makefile`, `.oxlintrc.json`, `.prettierrc`, `.prettierignore`, the `"pre-commit": ["lint", "format:check", "typecheck"]` array, and `.claude/skills/`.
 
 ### Gitflow — unchanged
 
@@ -800,24 +1092,24 @@ Specs: admin adds a compendium entry; A adds it to W's ingredients with a quanti
 
 ### Changes in the port
 
-| File                        | Change                                                                                                                                                                                              |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `package.json`              | `build`/`start`/`dev` → Next.js; drop `predevelop`/`prebuild`/`postclean` and the `link-public.js`/`clean.js` Gatsby workarounds; add `db:generate`, `db:migrate`, `db:seed`, `db:reset`, `codegen` |
-| `playwright.config.ts`      | `webServer` → `npm run build && npm run start`, port 8001; local Postgres setup in `globalSetup`                                                                                                    |
-| `vitest.config.ts`          | Two projects — `unit` (jsdom) and `db` (node, local Postgres); keep 80% thresholds                                                                                                                  |
-| `.oxlintrc.json`            | Node-globals override swaps `gatsby-*.ts` for `next.config.ts`, `drizzle.config.ts`, `src/db/**`, `src/app/**/route.ts`                                                                             |
-| `docker-compose.yaml`       | Drop the Gatsby LMDB volume; keep `node_modules`; **add `postgres` service** with seed init script; `devcontainer` depends on it                                                                    |
-| `netlify.toml`              | Replaced by `vercel.json` — config only; `vercel.json` disables the Git integration and does not drive deploys (see below)                                                                          |
-| **New** `codegen.yml` check | Fails if generated GraphQL types are stale relative to the schema                                                                                                                                   |
-| **New** `deploy.yml`        | CLI-driven Vercel deploy on push to `main`/`staging`/`hotfix/**` (§4). Not ported — `resume-2026` deployed via Netlify's own Git integration with no workflow file                                  |
-| **New** `migrate.yml`       | Applies migrations to staging on merge to `staging`, production on merge to `main`; must complete before `deploy.yml` ships the new deployment (a `needs:` job or a `workflow_run` predecessor)     |
-| Secrets                     | `DATABASE_URL` per environment, `BETTER_AUTH_SECRET`, Google and GitHub OAuth client credentials, `VERCEL_DEPLOY_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` / `VERCEL_SCOPE` for `deploy.yml`   |
+| File                        | Change                                                                                                                                                                                                                                                                                                                                                                           |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `package.json`              | `build`/`start`/`dev` → Next.js; drop `predevelop`/`prebuild`/`postclean` and the `link-public.js`/`clean.js` Gatsby workarounds; add `db:generate`, `db:migrate`, `db:seed`, `db:reset`, `codegen`                                                                                                                                                                              |
+| `playwright.config.ts`      | `webServer` → `npm run build && npm run start`, port 8001; local Postgres setup in `globalSetup`                                                                                                                                                                                                                                                                                 |
+| `vitest.config.ts`          | Two projects — `unit` (jsdom) and `db` (node, local Postgres); keep 80% thresholds                                                                                                                                                                                                                                                                                               |
+| `.oxlintrc.json`            | Node-globals override swaps `gatsby-*.ts` for `next.config.ts`, `drizzle.config.ts`, `src/db/**`, `src/app/**/route.ts`                                                                                                                                                                                                                                                          |
+| `docker-compose.yaml`       | Drop the Gatsby LMDB volume; keep `node_modules`; **add `postgres` service**, plus the one-shot `db-init` container that migrates and seeds before `app` starts (M1.24); `devcontainer` depends on it                                                                                                                                                                            |
+| `netlify.toml`              | Replaced by `vercel.json` — config only; `vercel.json` disables the Git integration and does not drive deploys (see below)                                                                                                                                                                                                                                                       |
+| **New** `codegen.yml` check | Fails if generated GraphQL types are stale relative to the schema                                                                                                                                                                                                                                                                                                                |
+| **New** `deploy.yml`        | CLI-driven Vercel deploy on push to `main`/`staging`/`hotfix/**` (§4). Not ported — `resume-2026` deployed via Netlify's own Git integration with no workflow file                                                                                                                                                                                                               |
+| **New** `migrate.yml`       | Applies migrations to staging on merge to `staging`, production on merge to `main`; must complete before `deploy.yml` ships the new deployment (a `needs:` job or a `workflow_run` predecessor). Also seeds the two reference vocabularies — §6's categories (M4.3) and §5's ingredient forms (M4.3a) — in the same job and one step, and only when the push changed one of them |
+| Secrets                     | `DATABASE_URL` per environment, `BETTER_AUTH_SECRET`, Google and GitHub OAuth client credentials, `VERCEL_DEPLOY_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` / `VERCEL_SCOPE` for `deploy.yml`                                                                                                                                                                                |
 
 `make docker-up` gives a working local database with no Neon connection at all.
 
-**Manual setup:** enable "Require merge queue" in Settings → Branches on both `main` and `staging`, or `merge-queue.yml` never fires.
+**Manual setup:** enable "Require merge queue" in Settings → Branches on both `main` and `staging`, or `merge_group` never fires — and restore `merge-queue.yml` from git history with it, since MB.32 deleted the workflow rather than leaving it idle (M7.A.1).
 
-**Docs:** adopt the `claude-docs/` convention — summary per subsystem, append-only transcript, one doc per component.
+**Docs:** adopt the `claude-docs/` convention — a summary per subsystem, corrected in the PR that stales it, and one doc per component. The append-only transcript and the scheduled compression pass were part of this convention and are retired (MB.31, §14).
 
 ---
 
@@ -855,7 +1147,7 @@ Nullable FKs with a check constraint rather than a polymorphic `subject_type`/`s
 | ----------- | ---------------------------------------------------- |
 | `private`   | Author only, always                                  |
 | `workspace` | Every member of `note.workspaceId`, viewers included |
-| `public`    | Every signed-in user, attributed by `displayName`    |
+| `public`    | Every signed-in user, attributed by `name`           |
 
 Default is `workspace` in the authoring workspace — co-members seeing what you wrote is the useful default — with one click to `private`.
 
@@ -1001,26 +1293,52 @@ The nullable `spellId` on `notes` already accommodates it.
 
 Choices made during design that a future reader might otherwise revisit.
 
-| Question                         | Answer                                    | Reason                                                                                                                                                                                   |
-| -------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Gatsby, like `resume-2026`?      | No                                        | SSG has no server runtime for sessions or audit stamping                                                                                                                                 |
-| Vite SPA?                        | No                                        | Neon has no browser-facing API; client-set `created_by` is forgeable                                                                                                                     |
-| Supabase?                        | No                                        | Free tier pauses after 7 days and needs manual restore                                                                                                                                   |
-| Render Postgres?                 | No                                        | Free instance expires 30 days after creation                                                                                                                                             |
-| SQLite for tests?                | No                                        | Cannot run RLS, triggers, `pg_trgm`, or array columns                                                                                                                                    |
-| Neon branches for CI?            | No                                        | Local Postgres is faster and removes the branch limit and API key                                                                                                                        |
-| Netlify?                         | No                                        | Vercel Hobby has 6,000 build minutes vs 300 and native Next.js                                                                                                                           |
-| Apollo Client?                   | No                                        | Duplicates TanStack Query's cache, adds ~40 kB                                                                                                                                           |
-| Polymorphic note subject?        | No                                        | Nullable FKs plus `num_nonnulls` keeps real referential integrity                                                                                                                        |
-| Shadow history tables?           | No (v2 uses generic)                      | One trigger survives schema drift; per-model tables don't                                                                                                                                |
-| Email/password in v1?            | No                                        | Copy-link reset isn't self-service; OAuth removes the subsystem                                                                                                                          |
-| Bulk add: all-or-nothing?        | No — partial with a report                | Skipping an already-present entry is the expected case on a re-run, not a failure; the call only aborts on ids the user couldn't act on anyway                                           |
-| Notes in v1?                     | No — v2                                   | Cuts 17 tasks / 29 hours; the three-tier visibility model and its UI are a milestone on their own and the core loop is provable without it                                               |
-| Personal workspaces?             | No                                        | A `kind` column plus "can't gain members / can't be deleted" special-casing for a one-person space that otherwise behaves like every workspace; drop it and every workspace is identical |
-| Open sign-up?                    | No — invite-gated                         | Signing in earns an account only; `canCreateWorkspace` is granted by an invitation or an admin and persists once held. Keeps the compendium curator off the hook for unbounded sign-ups  |
-| Private spells in v1?            | Yes — `private \| workspace`              | One enum column and one RLS clause; a member drafting a working unseen is a real need. `private → workspace` is one-way so shared history can't be retracted                             |
-| Invitations can grant owner?     | No — `viewer \| member` only, DB-enforced | A link only proves receipt and can be forwarded; ownership is granted by an existing owner on the members page once there's an identifiable account                                      |
-| Cross-dimension unit conversion? | No                                        | g→tsp depends on the substance; a wrong factor silently doubles or halves an ingredient. Convert within weight or within volume only; count converts to nothing; no density table        |
+| Question                                                          | Answer                                                                      | Reason                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Gatsby, like `resume-2026`?                                       | No                                                                          | SSG has no server runtime for sessions or audit stamping                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Vite SPA?                                                         | No                                                                          | Neon has no browser-facing API; client-set `created_by` is forgeable                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Supabase?                                                         | No                                                                          | Free tier pauses after 7 days and needs manual restore                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Render Postgres?                                                  | No                                                                          | Free instance expires 30 days after creation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| SQLite for tests?                                                 | No                                                                          | Cannot run PL/pgSQL triggers, `pg_trgm`, `num_nonnulls`, generated columns, or array columns (`deities[]`, `substitutes[]`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| A second authorization layer?                                     | Yes — a branded `Membership` proof                                          | A forgotten check in one service is the realistic bug and the blast radius is another coven's grimoire. A finder that demands the proof `assertMembership` returns makes the omission a compile error, and the type is erased, so the layer costs nothing at runtime (MB.29)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| RLS in v1?                                                        | No — deferred to the public launch                                          | Real policies need the app to stop owning its tables, plus derived credentials on every environment and a transaction on every read to carry the GUC — four round trips where a read is one, on a meter that bills I/O wait (§4). The `Membership` proof covers the same bug for free. `withAudit` keeps publishing the GUC, so policies stay one migration away; [`mb.24-rls-role-split.md`](design-decisions/mb.24-rls-role-split.md) is that migration's specification                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| A read-side `withViewer` wrapper?                                 | No — never built                                                            | It existed only to give a read a transaction for the RLS GUC to be `LOCAL` to. With policies deferred there is no reader, so reads open no transaction and rule 3 covers writes alone (MB.29 retires MB.26)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Neon branches for CI?                                             | No                                                                          | Local Postgres is faster and removes the branch limit and API key                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Netlify?                                                          | No                                                                          | Vercel Hobby has 6,000 build minutes vs 300 and native Next.js                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Apollo Client?                                                    | No                                                                          | Duplicates TanStack Query's cache, adds ~40 kB                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Polymorphic note subject?                                         | No                                                                          | Nullable FKs plus `num_nonnulls` keeps real referential integrity                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Shadow history tables?                                            | No (v2 uses generic)                                                        | One trigger survives schema drift; per-model tables don't                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Email/password in v1?                                             | No                                                                          | Copy-link reset isn't self-service; OAuth removes the subsystem                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Bulk add: all-or-nothing?                                         | No — partial with a report                                                  | Skipping an already-present entry is the expected case on a re-run, not a failure; the call only aborts on ids the user couldn't act on anyway                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Notes in v1?                                                      | No — v2                                                                     | Cuts 17 tasks / 29 hours; the three-tier visibility model and its UI are a milestone on their own and the core loop is provable without it                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Personal workspaces?                                              | No                                                                          | A `kind` column plus "can't gain members / can't be deleted" special-casing for a one-person space that otherwise behaves like every workspace; drop it and every workspace is identical                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Open sign-up?                                                     | No — invite-gated                                                           | Signing in earns an account only; `canCreateWorkspace` is granted by an invitation or an admin and persists once held. Keeps the compendium curator off the hook for unbounded sign-ups                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Private spells in v1?                                             | Yes — `private \| workspace`                                                | One enum column and one clause in the finders that reach a spell; a member drafting a working unseen is a real need. `private → workspace` is one-way so shared history can't be retracted                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Invitations can grant owner?                                      | No — `viewer \| member` only, DB-enforced                                   | A link only proves receipt and can be forwarded; ownership is granted by an existing owner on the members page once there's an identifiable account                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Cross-dimension unit conversion?                                  | No                                                                          | g→tsp depends on the substance; a wrong factor silently doubles or halves an ingredient. Convert within weight or within volume only; count converts to nothing; no density table                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| A formal name required everywhere?                                | No — in the compendium only                                                 | A safety note on an ambiguous label is the dangerous case, so the curated tier must carry one; demanding it locally would break story 29's one-field stub, and salt's formal name is chemical while graveyard dirt has none in any system                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Identity on the display label?                                    | No — on the generated `canonicalKey`                                        | `lower(name)` uniqueness forbade the compendium holding four Cat's Claws at all, so the ambiguity could not even be documented. Moving identity onto the formal name is also what makes `name` freely relabellable                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Is `form` part of identity?                                       | Yes — folded into `canonicalKey`                                            | Valerian root and valerian leaf are different ingredients with different correspondences and different safety notes; the European Pharmacopoeia names taxon plus part for the same reason. It is also what separates the cat's-claw vine from a literal claw                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `form` as a pgEnum?                                               | No — free text over an admin-curated vocabulary, and **not** a foreign key  | The value set must grow (animal parts, preparations) and stay writable before curation catches up. An FK would key identity on an id and make an unlisted value impossible; text lets `canonicalKey` normalise the string, and every function in that expression must be `IMMUTABLE`, which an enum cast is not                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Admins curate a third resource?                                   | Yes — the form vocabulary                                                   | It is global, viewer-independent, and needs a description per value; a hard-coded list would need a deploy to add `rhizome`. `/admin/forms` is gated exactly like `/admin/categories`, and the invariant was extended to name it — see the group-vocabularies row below, which extended it again (MB.35)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `fungal` as its own nomenclature?                                 | Yes — split by organism, not by code                                        | Fungi are governed by the ICN alongside plants, so this is the one value with no code of its own. Kept because curators shelve mushrooms separately from herbs. The departure is deliberate: do not "correct" it into `botanical`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| A category's `group` as a pgEnum?                                 | No — its own table (MB.35)                                                  | An enum was right for the closed set §6 described and wrong once an admin may add a ninth group: `ALTER TYPE … ADD VALUE` is DDL, migrations here are forward-only and CI-gated, and an admin mutation cannot run DDL at all. As a table the group also gains the per-row colour pair an open set needs; ordering is alphabetical by name, so no order column `ingredient_forms.group` moves the same way in the same pass, since M4.2a is the adjacent task and the two would otherwise diverge                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| One group table with a `kind`, or two?                            | Two — `category_groups`, `ingredient_form_groups` (MB.35)                   | A shared table with a discriminator would let `categories.groupId` point at a form group, failing invisibly at render time; two tables make the same mistake a foreign-key violation. Impossible rather than merely absent, for the price of one extra `CREATE TABLE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| A group as a foreign key, when `ingredients.form` is not?         | Yes — and the asymmetry is the rule, not an exception (MB.35)               | `form` is written by a _member_, who must be able to write `rhizome` before anyone curates it. Groups are written only by admins, on both sides, so an FK blocks nobody — and a typo'd group would otherwise empty a chip section silently. The generalisation: a vocabulary a member writes is text, a vocabulary only an admin writes is a foreign key                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Where a group's colour comes from                                 | Two hexes on the row, one per theme, each contrast-checked on write (MB.35) | A group created at runtime cannot have a Sass variable, so M0.7's eight build-time tokens stop being the runtime lookup and become M4.3's seed values — the hue rotation and per-theme tuning still give the starting eight their family resemblance. Generalising the rotation to N groups was the alternative and was rejected as more machinery than the feature is worth; one column per theme because M0.7 already tunes each group separately per theme and one hex cannot clear 4.5:1 on both soot and parchment; each is checked on write against its own ground only, so the floor is exact and the admin picks both swatches side by side                                                                                                                                                                                                                                                                                                                                   |
+| A colour on a category as well as its group?                      | No — the group's pair is the chip colour (M4.2)                             | MB.35 made a group's colour two hexes, one per theme, and a single `color` on a category could hold neither half of that pair — nor did M4.3 have anything to seed it with, since the resolution it describes writes onto the group row. Dropping it keeps one source for a chip's colour rather than a per-category override shadowing a per-group value, and §6's grouping exists precisely so 52 chips read as eight families. A per-category colour is addable later as a widening if one is ever wanted                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Admins curate a fifth and sixth resource?                         | Yes — the two group vocabularies (MB.35)                                    | They are global, viewer-independent and admin-only, exactly like the three before them, and the whole point of the change is that adding one needs no deploy. The invariant now reads "the compendium, global categories, the ingredient form vocabulary, and the two group vocabularies that organise them — and nothing else", and M6.6 still asserts an admin reaches no workspace's data                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| A separate `displayName` column?                                  | No                                                                          | `name` already is the display label. Promoting a folk name is a swap between `ingredients.name` and one `ingredient_folk_names` row in one transaction, and the fallback is a write-time prefill from `canonicalName` — the `lowStockThreshold` idiom, not a read-time default                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| External taxonomic identifiers (POWO, IPNI, GBIF, CAS, IMA)?      | No — not in v1                                                              | Nothing reads one, CLAUDE.md forbids hooks for unbuilt features, and taxonomic ids churn. A nullable text column is purely additive later                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Server functions instead of GraphQL?                              | No — GraphQL kept                                                           | Weighed in full (MB.31). Only ~14h of the plan exists purely for the transport; the rest is services, validation, pagination and batching wearing it. A single typed contract, an SDL that makes schema changes visible in a PR, and introspection while building were judged worth that. The cost is accepted with it: `updateTag` is Server-Actions-only and so unreachable behind the route handler (§7)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Trunk-based instead of Gitflow?                                   | No — Gitflow kept as ported                                                 | Weighed in full (MB.31). Trunk plus per-PR previews would remove `gitflow.yml`, `merge-queue.yml` (since deleted by MB.32), three skills, the `staging` branch and its Neon branch-scoped override — but it also removes the staging soak, and the ported workflow is understood and working. Revisit if the promotion pipeline starts costing more than it catches                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Soft-delete the three join tables too?                            | No — they are hard-deleted, and keep the four stamp columns (MB.34)         | A chip toggled off or an ingredient pulled out of a spell is a write to the highest-churn tables in the schema, and nothing in v1 reads a deleted join row: there is no restore UI, and the trash view is v2. The deciding cost is not the tombstones but the `deleted_at IS NULL` a service joining _through_ the table must remember by hand — the one place the repository's finder cannot apply rule 4 for it, since it filters the table it selects from and not the tables it joins. `created_by` stays because "who added this ingredient to this spell" is story 13. `workspace_members` and `ingredient_folk_names` keep the full spread: the first records who removed whom, the second holds content rather than a link. The v2 history trigger records a `DELETE` as readily as an `UPDATE`, so history is unaffected                                                                                                                                                     |
+| Custom spell ingredients in their own table?                      | No — columns on `spell_ingredients`, nullable FK + `num_nonnulls` (MB.40)   | A layer is a layer: quantity, unit, layer order and note are the same whichever kind of row it is, and a second table would split layer ordering across two tables, where no constraint can hold it — every jar read a `UNION`, every reorder a two-table rewrite, every client a union type. Same table, on the idiom the "Polymorphic note subject?" row already blesses. One-off rather than reusable, because reusable is a workspace-local `ingredients` row and already exists (story 29); `form` is text by the "`form` as a pgEnum?" row. The key moves onto `(spell_id, layer_order)` because the old pair no longer exists on every row, and one-ingredient-per-jar survives as a partial index. Done in Wave 4 against an empty table rather than as a fast-follow, which would have cost a retrofit across every Wave 13 consumer and a breaking nullability change in the SDL. [`mb.40-custom-spell-ingredients.md`](design-decisions/mb.40-custom-spell-ingredients.md) |
+| Per-task transcripts and scheduled compression passes?            | No — retired (MB.31)                                                        | A PR body already carries what a transcript said, and a statement is cheapest to fix in the diff that stales it rather than in a sweep weeks later. The rule survives in CLAUDE.md; only the schedule and the append-only file are gone. `MW.15` still closes v1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Better Auth's organization plugin for workspaces and invitations? | No — spiked and not adopted (MB.30)                                         | Run against a real database, not read from its docs: every write is unaudited and every delete is hard; the invitation id is the token, stored in plaintext and returned to every member; acceptance is bound to the invited email with no option; an omitted `organizationId` falls back to a session-held active workspace (§9's two-tabs bug); and ~20 `/api/auth/organization/*` routes carry workspace data outside GraphQL. What it gets right — the last-owner guard, the creation gate — the service wraps anyway. [`mb.30-organization-plugin.md`](design-decisions/mb.30-organization-plugin.md)                                                                                                                                                                                                                                                                                                                                                                            |
+| A form library?                                                   | Yes — react-hook-form, with `@hookform/resolvers/zod`                       | Form state is the one client concern the stack left unnamed, and every form task (M5.9, M5.6a, M10.12) validates with the shared Zod schema of M4.5/MB.8, so the resolver runs the schema the service will run again — one set of rules in two places, the same shape as the two transports. `useFieldArray` covers the three array fields (folkNames, deities, substitutes). Closed enums — nomenclature, element, planet, zodiac, unit, visibility, status — are native `<select>`s; category chips are the custom component M8.11 and M0.8's `chip()` mixin already describe. No server actions, per §2: the form submits a GraphQL mutation                                                                                                                                                                                                                                                                                                                                       |
+| react-select for the suggesting fields?                           | No — one `Combobox` component on Downshift's `useCombobox`                  | Only M5.10a's two lookup fields need a combobox, and its criteria decide the library: the group is part of the option's _accessible name_, curated and in-use values are visibly distinguished, and the list ends in an explicit "use what you typed" row. react-select renders its own DOM through Emotion, so each of those is a fight with `formatOptionLabel` and a second theming system beside the Sass tokens the design says not to build past — and it is ~30 kB for one field pair, the same argument that rejected Apollo. A hand-rolled combobox is the wrong fix in the other direction: keyboard and `aria-activedescendant` handling is a known trap. The headless hook owns the ARIA and keyboard state and nothing else; the markup, the option content and the Sass are ours. Free text is its default behaviour — selecting an item fills `inputValue` and links nothing, which is what M5.10a asks. Installed by M5.9/M5.10a, not before                          |
+| A `userErrors` payload type on mutations?                         | No — a code and `fieldErrors` in `errors[].extensions` (MB.43)              | The Shopify shape makes a rejected write a successful response carrying a list, which is the opposite of what it is: every mutation here either wrote or refused. Taking it would also rewrite every mutation signature in §7's sketch into a payload type, and every resolver and test that reads one, to gain nothing the extensions do not already carry — a path per issue is a path per issue either way. `graphql-request` throws on `errors`, so TanStack Query's existing error path is the one the form already handles, where a payload type would need each mutation's own success branch to remember to look. The argument that would move this is a client that must render a partial success; v1 has none, and the three refusal types are a closed set                                                                                                                                                                                                                 |
 
 ---
 
@@ -1037,7 +1355,7 @@ All other prior questions resolved:
 - Compendium edit rights — admin only in v1, suggestions in v2
 - Invitation delivery — copy-link, viewer/member only, §5
 - Dedupe — fuzzy warn in v1, merge in v2
-- Categories — global admin-curated, 52 seeded, §6
-- Ingredient properties — confirmed complete, no additions
+- Categories — global admin-curated, 63 seeded, §6
+- Ingredient **correspondences** — confirmed complete, no additions. Recorded here as "ingredient properties", the question closed the correspondence set: form, element, planet, zodiac, deities, colour, safety notes, substitutes. It stays closed; nothing has been added to it. **Naming is identity, not correspondence** — a separate question, opened and answered separately in §5, which added `canonicalName`, `nomenclature`, the generated `canonicalKey` and folk names as their own table. The one column those two questions share is `form`, which keeps its meaning and its place in the set and only loses its enum
 - Local dev database — Docker Postgres, shared seed, §11
 - v1 scope — notes deferred; everything else built, not deferred

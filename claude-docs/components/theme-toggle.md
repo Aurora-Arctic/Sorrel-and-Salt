@@ -20,8 +20,21 @@ places drive the same attribute and key:
   branch clears **both** `data-theme` and `localStorage['theme']` — clearing
   only the attribute leaves a stale pin that reasserts itself on reload.
 
-**The component reads `data-theme` only in mount effects** — it has no
-subscription to a later attribute change. In the app that is fine: the attribute
+**Reading the theme back is `resolveCurrentTheme()`, not a bare attribute
+read** (MB.23). Because the attribute is absent unless a choice is stored, it
+cannot by itself say what is on screen: on a light system with nothing stored
+the page is light and the attribute is missing. So the component mirrors
+`globals.scss`'s cascade — `data-theme` when present, else
+`matchMedia('(prefers-color-scheme: light)')`, else dark. It asks for `light`
+rather than `dark` deliberately: "no preference" has to resolve to dark to
+match the `:root` default. Reading the attribute alone made the first click on
+such a system apply `light`, the theme already showing, so it visibly did
+nothing. `index.scss` mirrors the same two light tiers through the
+`theme-toggle-light-facets` mixin, for the same reason and with the same
+selectors; if that cascade is ever restructured, all three move together.
+
+**The component reads the theme only in mount effects and its own click
+handler** — it has no subscription to a later attribute change. In the app that is fine: the attribute
 changes only when this component's own click handler changes it. The workshop
 gets around it by remounting the story on theme change (a `key` on the frame
 wrapper). Any future component that renders `ThemeToggle` indirectly and needs
@@ -84,7 +97,7 @@ of the app shares, so it is not a token.
 
 [`index.stories.tsx`](../../src/components/ThemeToggle/index.stories.tsx) —
 four renders, no test ids and no snapshots; behaviour is asserted in
-`index.test.tsx`, not here.
+`tests/components/ThemeToggle/index.test.tsx`, not here.
 
 - **Default** — follows the toolbar theme control.
 - **Light** / **Dark** — pin their theme with `.meta = { theme: '…' }`, which the
@@ -99,7 +112,7 @@ four renders, no test ids and no snapshots; behaviour is asserted in
 
 ## Testing
 
-`index.test.tsx` covers the accessible name, click-to-light and click-to-dark
+`tests/components/ThemeToggle/index.test.tsx` covers the accessible name, click-to-light and click-to-dark
 with storage persistence, `aria-pressed`, the correct initial facet classes when
 mounted already in light mode, the `transitionend` park back to `--pre-enter`, a
 non-`transform` `transitionend` being ignored, and listener cleanup on unmount.
@@ -111,6 +124,4 @@ of the branch — the facet still waiting on `transitionend` when motion is not
 reduced. They stub `window.matchMedia` via `vi.stubGlobal`, since jsdom's own
 implementation always answers `false` for `(prefers-reduced-motion: reduce)`.
 
-**Not yet run through the repo's own runner.** Vitest is not wired up until
-M1.7; this suite was verified against an ad-hoc Vitest + Testing Library harness
-outside the repo, and should be re-verified once M1.7 lands.
+Runs in the `unit` (jsdom) Vitest project — `npm run test:coverage`.

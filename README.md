@@ -4,7 +4,7 @@ A compendium, ingredient store and grimoire — the admin-curated ingredient
 reference (**compendium**), each workspace's own stock (**ingredients**), and
 the spells a workspace makes (**grimoire**).
 
-Next.js 16 · React 19 · TypeScript · PostgreSQL 17 + Drizzle · GraphQL.
+Next.js 16 · React 19 · TypeScript · PostgreSQL 18 + Drizzle · GraphQL.
 The specification is [`claude-docs/DESIGN.md`](claude-docs/DESIGN.md); the rules
 every change follows are in [`CLAUDE.md`](CLAUDE.md).
 
@@ -23,15 +23,14 @@ every change follows are in [`CLAUDE.md`](CLAUDE.md).
 4. `npm run dev` — Next.js dev server on <http://localhost:8000>.
 5. `make help` — lists every make target and marks the ones that are still
    placeholders.
-6. Before every commit: `npm run pre-commit` (lint, `format:check`, typecheck,
-   `check:stories`).
+6. Before every commit: `npm run pre-commit` (lint, `format:check`, typecheck).
 
 The Docker stack (`make docker-up`) and the component workshop
-(`npm run workshop`, on 61000) both work today. Still to come: the database and
-seed data (M1.3) and GraphQL codegen (M3.5) — `npm run db:*` and
-`npm run codegen` exit non-zero until then. Once Vitest is wired (M1.7), verify
-with the **`:coverage`** script variants — a plain `npm run test` pass can
-still fail CI's 80% threshold.
+(`npm run workshop`, on 61000) both work today, as do `npm run db:migrate` and
+`npm run db:seed` (the `minimal` scenario, M1.21; `standard` and `demo` land in
+M1.22–M1.23). Still to come: GraphQL codegen (M3.5) — `npm run codegen` exits
+non-zero until then. Verify with the **`:coverage`** script variants — a plain
+`npm run test` pass can still fail CI's 80% threshold.
 
 `make` and `docker` are host-level; the devcontainer has neither, so run the
 npm scripts directly inside it.
@@ -53,6 +52,6 @@ Vercel's own Git integration; nothing else deploys.
 
 - [`CLAUDE.md`](CLAUDE.md) — architecture rules, domain invariants, conventions.
 - [`claude-docs/DESIGN.md`](claude-docs/DESIGN.md) — the specification.
-- [`claude-docs/`](claude-docs/) — subsystem summaries, append-only transcripts,
-  a doc per component, and per-task design decisions.
+- [`claude-docs/`](claude-docs/) — subsystem summaries, a doc per component, and
+  per-task design decisions.
   [`claude-docs/README.md`](claude-docs/README.md) explains the layout.
