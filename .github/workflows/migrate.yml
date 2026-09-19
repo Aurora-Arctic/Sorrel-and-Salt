@@ -142,32 +142,76 @@ jobs:
         env:
           VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
 
-      # MB.46 — the guard below used to be `[ -z "$db_url" ]` and nothing else,
-      # so anything non-empty reached drizzle-kit: Vercel's `[SENSITIVE]`
-      # placeholder, a quote the `sed` failed to strip, a `psql '…'` wrapper
-      # pasted from the Neon console. drizzle-kit then died on `new URL()` with
-      # the value masked out of its own stack trace, which is a failure that
-      # tells you nothing.
+      # MB.46 — report what the pull returned, before anything consumes it.
       #
-      # The script reads the file itself rather than being handed the value:
-      # it never prints a value (asserted, not assumed, in
-      # tests/guards/pulled-env-assertion.test.ts), so it is safe to run before
-      # the mask exists — and it reports every key it found, which is the half
-      # that would have made MB.27's dropped variables visible.
+      # Report-only as of MB.47: DATABASE_URL no longer comes from this file on
+      # the two long-lived targets, so requiring it here would fail on a value
+      # nothing reads. What the report is still for is the question CI could
+      # not answer at all before — which variables a pull actually carries, and
+      # which came back as `[SENSITIVE]` placeholders. That is what turned
+      # MB.27's silent variable loss from a guess into a fact, and the
+      # hotfix-preview arm below still depends on POSTGRES_URL being in here.
+      #
+      # It never prints a value — asserted, not assumed, in
+      # tests/guards/pulled-env-assertion.test.ts.
       - name: Assert the pulled environment
         if: steps.guard.outputs.enabled == 'true'
         run: |
           node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/assert-pulled-env.ts \
-            --file ".vercel/.env.${{ inputs.environment }}.local" \
-            --require DATABASE_URL
+            --file ".vercel/.env.${{ inputs.environment }}.local"
 
-      - name: Load DATABASE_URL from pulled environment
+      # MB.47 — DATABASE_URL comes from a GitHub secret, not from the pull.
+      #
+      # It is marked Sensitive in Vercel, so `vercel pull` writes the literal
+      # string `[SENSITIVE]` in place of it — with or without `--git-branch`,
+      # as a diagnostic run confirmed on staging. A Sensitive variable being
+      # unreadable is the point of the setting, not a fault to route around,
+      # so CI holds its own copy for the two long-lived databases.
+      #
+      # One secret per target rather than a GitHub Environment: an environment
+      # would need a new `workflow_call` input, a new `resolve-target` output
+      # and an `environment:` key on two jobs, to express what the secret's
+      # name already says.
+      #
+      # The fallback is the one target no static secret can name — a hotfix
+      # preview's Neon branch is created per deployment. The integration writes
+      # its connection string into the pulled file as POSTGRES_URL, which is
+      # NOT marked Sensitive and so can actually be read; the same diagnostic
+      # run saw 153 characters of it. That is why this step reads the file too.
+      - name: Resolve DATABASE_URL
         if: steps.guard.outputs.enabled == 'true'
+        env:
+          DATABASE_URL_PRODUCTION: ${{ secrets.DATABASE_URL_PRODUCTION }}
+          DATABASE_URL_STAGING: ${{ secrets.DATABASE_URL_STAGING }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          GIT_BRANCH: ${{ inputs.git-branch }}
+          ENV_FILE: .vercel/.env.${{ inputs.environment }}.local
         run: |
-          env_file=".vercel/.env.${{ inputs.environment }}.local"
-          db_url=$(grep -m1 '^DATABASE_URL=' "$env_file" | cut -d '=' -f2- | sed -e 's/^"//' -e 's/"$//')
+          # Production is decided by the Vercel environment rather than the
+          # branch name: `main` is the only push that resolves `production`,
+          # and a mis-picked production secret is the failure with no second
+          # chance.
+          if [ "$ENVIRONMENT" = "production" ]; then
+            db_url="$DATABASE_URL_PRODUCTION"
+            source="the DATABASE_URL_PRODUCTION secret"
+          elif [ "$GIT_BRANCH" = "staging" ]; then
+            db_url="$DATABASE_URL_STAGING"
+            source="the DATABASE_URL_STAGING secret"
+          else
+            db_url=$(grep -m1 '^POSTGRES_URL=' "$ENV_FILE" | cut -d '=' -f2- | sed -e 's/^"//' -e 's/"$//')
+            source="the pulled POSTGRES_URL (a per-deployment Neon branch)"
+          fi
+
+          if [ -z "$db_url" ]; then
+            echo "::error::No DATABASE_URL for $ENVIRONMENT / $GIT_BRANCH. A named secret is missing, or the pull carried no POSTGRES_URL."
+            exit 1
+          fi
+
           echo "::add-mask::$db_url"
           echo "DATABASE_URL=$db_url" >> "$GITHUB_ENV"
+          # Which source won, never the value: every candidate is masked, so
+          # the value itself can never tell you which database you migrated.
+          echo "Resolved DATABASE_URL from $source"
 
       - name: Check Neon secrets
         id: neon-guard
