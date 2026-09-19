@@ -1713,7 +1713,7 @@ _Acceptance criteria:_
 
 _Stories 29 and 31 — As a workspace member, I want to save an ingredient with only a name and see errors beside the field that caused them, so that I can capture something quickly and fix mistakes without hunting._
 
-Form covering every ingredient property, validating with the shared Zod schema, showing errors inline next to their field. Gains a formal-name field and a nomenclature-kind selector wired to the kind↔name coupling rule, and `form` becomes a free-text field rather than a fixed selector.
+Form covering every ingredient property, on react-hook-form with the Zod resolver (§14), validating with the shared Zod schema, showing errors inline next to their field. Installs react-hook-form and `@hookform/resolvers`; closed-enum fields are native `<select>`s and the array fields use `useFieldArray`. Gains a formal-name field and a nomenclature-kind selector wired to the kind↔name coupling rule, and `form` becomes a free-text field rather than a fixed selector.
 
 _Acceptance criteria:_
 
@@ -1743,7 +1743,7 @@ _Acceptance criteria:_
 
 _Story 16 — As a workspace member, I want the common-name and form fields to suggest from what already exists, so that I don't duplicate what three other entries already call the same thing._
 
-Adopts M4.7a. Both fields debounce and suggest, with curated values visibly distinguished from in-use uncurated ones and each suggestion showing which ingredients already claim it, by formal name. Picking one fills the text and links nothing; free text outside the vocabulary is accepted without a warning. Lands after M5.10, before M5.5, which consumes `IngredientForm`.
+Adopts M4.7a. Both fields are one `Combobox` component built on Downshift's `useCombobox` — headless, not react-select (§14) — which this task installs. Both fields debounce and suggest, with curated values visibly distinguished from in-use uncurated ones and each suggestion showing which ingredients already claim it, by formal name. Picking one fills the text and links nothing; free text outside the vocabulary is accepted without a warning. Lands after M5.10, before M5.5, which consumes `IngredientForm`.
 
 _Acceptance criteria:_
 
