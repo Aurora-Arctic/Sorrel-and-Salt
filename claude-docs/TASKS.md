@@ -3318,6 +3318,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.47 | CI cannot read the Sensitive Vercel variables it needs                                         | Wave 5  | MB.46        |
 | MB.48 | A destructive-DDL acknowledgement does not survive the release PR                              | Wave 5  | MB.37        |
 | MB.49 | `drizzle-kit` fails silently, so a bad `DATABASE_URL` has no cause                             | Wave 5  | MB.47        |
+| MB.50 | Make code comments concise; move the arguments into `claude-docs/`                             | Wave 5  | —            |
 
 **MB.5 — Restore `users` foreign keys on `auditColumns`** · 2h
 
@@ -4374,6 +4375,31 @@ _Acceptance criteria:_
 - The resolved `DATABASE_URL` is validated whatever its source, secret or pulled `POSTGRES_URL`, pinned by a guard — the point is that the gap cannot reopen a second time
 - Docs corrected: `ci.md` and `db.md` on what a failed migration now tells you, `secrets.md` on deleting `channel_binding` from what the Neon console hands you
 - **Not done when CI is green** — done when a live staging push either migrates, or fails with a named cause somebody can act on
+
+**MB.50 — Make code comments concise; move the arguments into `claude-docs/`** · 6h
+
+_Story:_ As someone reading this code, I want a comment to tell me what the code is and why it is not the obvious alternative, so that I can follow a file without a board or a decision-record index open.
+
+Comments are 28% of the lines in scope — 7,905 of 27,847 across 203 tracked files, which is two thirds the volume of `claude-docs/` itself and much of it paraphrase of the docs it already cites. Two problems, and they are not the same problem. **Verbosity:** eight paragraphs are duplicated near-verbatim across 3–16 files each, the M1.27 template boilerplate alone running ~120 lines across 16 db test files. **Task-reference clutter:** board identifiers and scheduling narrative — `The table is inert at Wave 3. Nothing queries it until M10.5's service and M10.9's queries land in Wave 13` — are threaded through nearly every schema, seed and test file, and mean nothing to a human reading the code.
+
+**The rule is a division of labour, not a length limit.** A comment says what the code is and why it is not the obvious alternative; the argument lives in `claude-docs/`, because the doc is the copy that can be corrected in one place where the comment is the copy that gets pasted into sixteen files and drifts. This inverts nothing in `claude-docs/README.md`: a summary still gives its reason in a clause rather than a link out, and still stands on its own. CLAUDE.md had **no rule about comments at all**, which is why the prose grew — so the convention lands first, and the sweep cites it.
+
+**What brevity may not cost.** Behaviour not visible from the code, hard-won tool facts (`VITEST_POOL_ID` counts workers where `VITEST_WORKER_ID` counts files; oxlint's `overrides` replacing rather than merging; a job-level `if:` renaming a check and permanently blocking a PR), the "why the access could have succeeded" reasoning the Testing section mandates, and every comment a tool reads — `oxlint-disable`, `@ts-expect-error` and its message, the Ladle `@type` JSDoc, shebangs, the makefile's awk-parsed `## ` lines — are kept whatever their length.
+
+**The dangling citations are the finding, and there are fourteen.** Scoping expected four; the guard found `.ladle/` citing m0.30, m0.32 and m0.34 as well, plus `tests/app/api/auth/[...all]/route.test.ts` citing `claude-docs/transcripts/auth.md`, which has never existed — so a hand-verification of the real OAuth URL shape is described as "recorded" nowhere. Thirteen of the fourteen resolve only under `claude-docs/archive/`, and were cited **without** the `archive/` prefix: the path was wrong and the destination is out of bounds, README.md having declared the archive never-read. Those comments are long precisely because the live doc was never written, so the prose moves into `styling.md`, `workshop.md` and `testing.md` and the citations are repointed.
+
+**A guard on citation, deliberately none on density.** `tests/guards/doc-citation.test.ts` fails a `claude-docs/` path that does not resolve, points into `archive/`, wraps across two comment lines, or names a section heading that was never written. Density cannot be guarded without penalising exactly the comments the rule protects, so it stays prose enforced in review — a conscious deviation from the sweep-task rule's "mechanism plus a mechanical guard" default, recorded here rather than left to be noticed. The guard also makes MW.15's `grep -r 'claude-docs/archive'` criterion continuous instead of a one-time check at close-out.
+
+_Acceptance criteria:_
+
+- The guard is written first and watched fail — it finds all fourteen dangling citations and all four wrapped ones before anything is fixed
+- CLAUDE.md carries the comment convention; `claude-docs/README.md` carries the code-vs-doc division of labour and says prose leaving a comment lands in a live summary, never in `archive/`
+- The eight duplicated paragraphs collapse to one pointer each
+- Task-reference narrative gone; a task ID survives only as provenance for a constraint that would otherwise look arbitrary
+- Prose relocated per subsystem, **doc section written first and trim second in the same commit**, so no intermediate commit has lost the reasoning
+- Coverage summary **counts** identical before and after — 185/201 statements, 49/52 branches, 73/83 functions, 183/199 lines. Comments are not executable, so any drift means non-comment code moved
+- `make help` renders the full target list; `workshop:build`, `test:stories` and `check:destructive-ddl` green
+- Out of scope, and the PR says so: `src/db/migrations/*.sql` (drizzle hashes migration file content, so editing one to fix a comment is not the harmless change it looks like), `claude-docs/archive/**`, and any non-comment code change
 
 ## MW — Wave close-out
 
