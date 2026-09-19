@@ -3314,7 +3314,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.43 | Map service errors to GraphQL errors with field-level detail                                   | Wave 7  | M5.9, M8.8   |
 | MB.44 | ~~Release to `main`, then drop the coverage excludes MB.42 made dead~~ — **retired, not done** | —       | —            |
 | MB.45 | `vercel pull --git-branch` is rejected on the production target                                | Wave 5  | MB.27        |
-| MB.46 | CI accepts a placeholder as a database connection string                                       | Wave 5  | MB.45        |
+| MB.46 | CI cannot see what `vercel pull` actually returned                                             | Wave 5  | MB.45        |
 | MB.47 | staging's branch-scoped `DATABASE_URL` is unusable by CI — **on hold**                         | Wave 5  | MB.46        |
 | MB.48 | A destructive-DDL acknowledgement does not survive the release PR                              | Wave 5  | MB.37        |
 
@@ -4275,22 +4275,29 @@ _Acceptance criteria:_
 - `ci.md`, `secrets.md` and `m1.1-neon-branch-strategy.md` corrected, the last superseded in place
 - **Not done when CI is green.** MB.27 shipped green and broke production; the criterion is a live deploy on `main`
 
-**MB.46 — CI accepts a placeholder as a database connection string** · 2h
+**MB.46 — CI cannot see what `vercel pull` actually returned** · 2h
 
-_Story:_ As a maintainer, I want CI to refuse a `DATABASE_URL` that is not one, naming the cause, so that a bad value fails legibly instead of inside drizzle-kit.
+_Story:_ As a maintainer, I want CI to state what the pull returned and refuse what it cannot use, so that a bad environment fails by name instead of inside someone else's stack trace.
 
-Every push to `staging` dies in `migrate` with `TypeError: Invalid URL`. The load step's only guard is `[ -z "$db_url" ]`, so anything non-empty reaches `$GITHUB_ENV`: Vercel's `[SENSITIVE]` placeholder, a `psql '…'` wrapper, a stray quote, a trailing newline. This task fixes the **guard**, not the value — MB.47 owns the value — and it is what makes the cause legible, because the step masks the value before anything can print it, so today CI cannot say which of those it hit.
+Re-scoped mid-task. It began as "CI accepts a placeholder as a database connection string" — `migrate.yml`'s load step guarded `[ -z "$db_url" ]` and nothing else, so Vercel's `[SENSITIVE]` placeholder, a quote the `sed` failed to strip, or a `psql '…'` wrapper pasted from the Neon console all reached drizzle-kit, which died on `new URL()`. **MB.45's own PR showed the defect is wider than `DATABASE_URL`**: `migrate` passed on a hotfix preview while `deploy` failed on the same pull at `vercel build` with `BETTER_AUTH_SECRET is not set` — and the last staging deploy before MB.27 added `--git-branch` had that secret, and even warned it was low-entropy.
 
-**A script, not shell.** This repo tests scripts and cannot test a `run:` block, so `scripts/assert-database-url.ts` exports a pure `validateDatabaseUrl` and its CLI reads the candidate from **env, never argv** — argv is visible to `ps` and echoed by `set -x`. Ordered rules, each with its own named cause; the `[SENSITIVE]` message names it as a Sensitive Vercel variable being unreadable by design, and says a retry will not help.
+**The common defect is that nothing between the pull and its consumer could say what the pull returned.** `migrate.yml` masked the value before anything could print it; `deploy.yml` never read the file at all. That is why MB.27 dropping variables took a production outage to surface: one job said `ERR_INVALID_URL` with its input shown as `***`, the other said a secret was unset, and neither said which variables had survived.
 
-**Two call sites, and that is the sweep.** `migrate.yml` hard-fails rather than warn-and-skip: by then the Vercel secrets are set, and skipping migrations while `deploy` proceeds ships code against an unmigrated schema. `deploy.yml` gets a new step before `Build`, because a placeholder is **not** harmless there — `src/app/api/auth/[...all]/route.ts` → `src/lib/auth.ts` → `src/db/connection.ts` calls `postgres()` at module scope and postgres.js parses eagerly, so `vercel build` dies on it the moment `migrate` stops failing first.
+So `scripts/assert-pulled-env.ts` does two things, and the second is the one worth having. It **asserts** the keys a job needs, each failing with its own named cause. It **reports** every key the pull returned — classification and length, never a value — and prints that report even when the run is about to fail.
+
+A script rather than shell, because this repo tests scripts and cannot test a `run:` block. Its input is a **file path**, never argv and never an env var carrying the value: argv is visible to `ps` and echoed by `set -x`. Because it reads the file itself and provably never prints a value, it is safe to run **before** the mask exists — which is a stronger guarantee than the sequencing this task was originally specified with, and replaces it.
 
 _Acceptance criteria:_
 
-- `tests/guards/database-url-validation.test.ts` written before the script and watched fail; a case per rule, plus green cases for a Neon pooled URL, the local compose URL, and a `%`-escaped password
-- `::add-mask::` moves to immediately after extraction and **before** validation, so a real URL cannot leak through a validation failure; every message describes shape, never content, pinned by an assertion that the message does not contain the value
-- A directory sweep: every workflow running `vercel pull` also runs the validator in the same job, so the next pull added is caught in the diff that adds it
-- Branches off `main` **after** MB.45 merges — on a branch still carrying MB.45's bug the production pull fails first and the new deploy-job step never executes, so the guard would merge unverified
+- Tests written before the script and watched fail — 38 of 40 green on the first run of the implementation, the two red ones being the workflow sweep, which the wiring then satisfied
+- A case per rule, plus green cases for a Neon pooled URL, the local compose URL, and a `%`-escaped password
+- **No value ever printed**, asserted rather than intended: every failure message and every report line checked against a realistic secret, including the cases where the rejected value is a real connection string wearing a wrapper
+- A placeholder's message says a Sensitive Vercel variable is unreadable _by design_ and that a retry will not fix it — it is not a flake
+- Every failure collected rather than stopping at the first, so one run names every unusable key
+- `deploy.yml` requires `BETTER_AUTH_SECRET` as well, because `vercel build` runs `next build` with `NODE_ENV=production` and traces `/api/auth/[...all]` → `src/lib/auth.ts` → `src/db/connection.ts` — `auth.ts` throws on an unset secret and `connection.ts` calls `postgres()` at module scope, which parses eagerly
+- A directory sweep ties the assertion to the pull rather than to these two workflows, so the next pull added without one fails in the diff that adds it
+
+Stacked on MB.45. Its PR targets `main` and `staging` and carries MB.45's commit until that merges — deliberate, because a PR based on the MB.45 branch would not trigger `deploy.yml`, which only runs on PRs into `main`, and the preview deploy is the run this task exists to read.
 
 **MB.47 — staging's branch-scoped `DATABASE_URL` is unusable by CI** · **ON HOLD**
 
