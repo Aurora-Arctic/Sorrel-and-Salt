@@ -199,7 +199,9 @@ container held every file the repo had deleted. Dropping them took CI from
 on their way out rather than load-bearing. They stay until the fixed action
 is live, which needs it on `main`, since every caller references it at
 `@main` and a merge to `staging` does not reach that; removing them before
-then fails the 80% gate on the PR that does it. Coverage has been above the threshold
+then fails the 80% gate on the PR that does it. **MB.44 is the follow-up** —
+it cuts that release and then removes both entries and this sentence.
+Coverage has been above the threshold
 since Wave 3's schema tests landed (~92% of lines at M1.21), so
 `npm run test:coverage` exits non-zero only on a test failure or on a change
 that pulls a metric back under 80% — which is the threshold doing its job,

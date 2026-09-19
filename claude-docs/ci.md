@@ -46,7 +46,8 @@ edit at any call site; nothing passes it today.
     makes them dead, but only once it is live, and it is live only on `main`:
     every caller references the action at `@main`, which a merge to `staging`
     does not reach. Removing them before then fails the 80% gate on the PR that
-    does it. See `testing.md`'s Coverage paragraph.
+    does it. **MB.44** is the follow-up that cuts the release and then removes
+    them, this note included. See `testing.md`'s Coverage paragraph.
   - Verified by `checks / overlay` — see below.
 - **`job-summary`** — a pass/fail `$GITHUB_STEP_SUMMARY` callout, with a tailed
   log excerpt on failure.
