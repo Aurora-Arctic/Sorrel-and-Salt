@@ -1,58 +1,30 @@
 name: PR Gate
 
-# Runs on every pull request targeting `main`, `staging`, or `release/*`. Fans
-# out to every check ported so far — `checks` (lint, format, typecheck, build,
-# destructive-ddl and a non-blocking npm audit as one matrix), `vitest`,
-# `playwright` and `gitflow` — gating the PR before it can be merged. format,
-# audit and gitflow always run; the rest are path-filtered by the `changes`
-# job below so a PR only pays for the checks its changed files could actually
-# affect.
+# The gate on every PR into `main`, `staging` or `release/*`: it fans out to
+# `checks` (lint, format, typecheck, build, destructive-ddl and a
+# non-blocking npm audit, as one matrix), `vitest`, `playwright` and
+# `gitflow`. format, audit and gitflow always run; the rest are path-filtered
+# by the `changes` job below. claude-docs/ci.md is the walkthrough.
 #
-# `checks` is one job calling checks.yml once (MB.32), where lint, format,
-# typecheck, build and audit used to be five jobs calling five near-identical
-# reusable workflows. Each leg reports as `checks / <name>`. `destructive-ddl`
-# joined them as a sixth leg in MB.37 — MB.32 had deleted its calling job here
-# without folding it in, so it ran on nothing between PR #104 and MB.37.
+# ⚠️ **NO JOB IN THIS FILE MAY CARRY A JOB-LEVEL `if:`.** Every check reports
+# as "<caller job> / <called job>" — `checks / lint`, `vitest / vitest`,
+# `gitflow / gitflow` — and those are the names a branch ruleset requires. A
+# job-level `if:` does not stop the check reporting; it makes GitHub report it
+# under a different, BARE name ("checks" instead of "checks / lint"), and that
+# bare name never satisfies the required check, **permanently blocking the
+# PR**. So every job here runs unconditionally and passes its filter result
+# down as a `workflow_call` input instead — `run-lint`/`run-typecheck`/
+# `run-build`/`run-destructive-ddl` on checks.yml, `should-run` elsewhere —
+# which skips the work inside the called workflow and leaves the job, and its
+# check name, unchanged either way.
 #
-# `vitest` and `playwright` (M1.14) are real `workflow_call` checks now, not
-# the M0-era no-op stubs — job names are unchanged from the stubs, so no
-# required-status-check rename was ever needed. `playwright` runs in its own
-# dedicated e2e image (`build-e2e-image` below), not `build-image`'s shared
-# `testing` image — see playwright.yml's header comment for why. Both also
-# need the CI Postgres image — `build-db-image` below builds it once (same
-# shape as `build-image`/`build-e2e-image`) and both `vitest`/`playwright`
-# take it as their `db-image` input, rather than each independently calling
-# build-db-image.yml itself: two nested `workflow_call`s to the same file
-# would each pay for their own checkout/docker-login/buildx-setup for a
-# result the content-addressed tag makes identical either way.
+# `edited` is in the trigger types so that retargeting a PR's base branch
+# re-runs gitflow's source->target validation without a new push.
 #
-# Every check here reports as "<caller job> / <called job>", the name GitHub
-# gives a job inside a called reusable workflow — so `checks / lint`,
-# `vitest / vitest`, `gitflow / gitflow`. Those are the names a branch ruleset
-# would require (none does yet — see claude-docs/ci.md), and filtering must
-# therefore never skip a calling job itself: a job-level `if:` makes GitHub
-# report the check under a different, bare name ("checks" instead of
-# "checks / lint") instead of not reporting it at all, and that bare name never
-# satisfies the required check, permanently blocking the PR. So every job below
-# runs unconditionally and passes its filter result through as a workflow_call
-# input instead — `run-lint`/`run-typecheck`/`run-build` on checks.yml,
-# `should-run` elsewhere — which skips the actual work internally but keeps the
-# job, and its check name, the same either way.
-#
-# `edited` (in addition to the default opened/synchronize/reopened) is kept
-# from upstream so retargeting a PR's base branch re-triggers gitflow's
-# source->target validation even without a new push.
-#
-# checks/playwright/vitest also `needs: gitflow`, so a PR from the wrong
-# source/target branch never burns CI time on them — see the gitflow job
-# below.
-#
-# Every job here and in the workflows this file calls pins `runs-on:
-# ubuntu-26.04` rather than `ubuntu-latest` (MB.37). GitHub moves the
-# floating label to 26.04 from 2026-10-19 and annotated every job with a
-# notice until then; a pinned label means the move happened on a PR that was
-# watched. Bumping it is one sed across .github/workflows/ — and .actrc's
-# `-P` platform mapping goes with it.
+# `build-db-image` is a job here rather than a nested `workflow_call` inside
+# vitest.yml and playwright.yml: two nested calls would each pay for their own
+# checkout, docker login and buildx setup for an image the content-addressed
+# tag makes identical either way.
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
@@ -71,18 +43,13 @@ permissions:
   pull-requests: write
 
 jobs:
-  # Determines which downstream checks a given push actually needs to run,
-  # so e.g. a docs-only edit doesn't pay for lint/typecheck/build/audit.
-  # format is deliberately NOT gated by this — Prettier covers .md/.json too,
-  # and "did formatting change" is cheap and universal enough that it should
-  # just run on every push rather than be filtered. Each filter also matches
-  # the workflow that runs it — checks.yml for lint/typecheck/build, its own
-  # file for the rest — plus its summarising script where it has one, and
-  # pr-gate.yml and .github/actions/** for all of them, so editing what runs a
-  # check always reruns it rather than silently going unverified. checks.yml
-  # sits on three filters now rather than one each: a change to it reruns lint,
-  # typecheck and build together, which is what collapsing them onto one
-  # workflow costs.
+  # Which downstream checks this push actually needs, so a docs-only edit
+  # does not pay for lint/typecheck/build. format is deliberately ungated —
+  # Prettier covers .md and .json too.
+  #
+  # **Every filter also matches whatever runs its check**: the workflow, its
+  # summarising script, this file and .github/actions/**. Editing what runs a
+  # check must rerun it rather than leave it silently unverified.
   changes:
     runs-on: ubuntu-26.04
     outputs:
@@ -98,27 +65,20 @@ jobs:
         uses: dorny/paths-filter@v4
         id: filter
         with:
-          # list-files: json adds a `<filter>_files` output (JSON array
-          # string) alongside every filter's boolean — only
-          # destructive_ddl_migrations's is used (destructive-ddl.yml's list
-          # of migration files to scan), but it's a step-level setting, not
-          # per-filter, so it applies uniformly; the other filters' _files
-          # outputs are simply unused.
+          # Adds a `<filter>_files` JSON array beside every filter's boolean.
+          # Only destructive_ddl_migrations's is read; it is a step-level
+          # setting rather than per-filter, so the rest are simply unused.
           list-files: json
           filters: |
             shared: &shared
               - '.github/workflows/pr-gate.yml'
               - '.github/actions/**'
-            # `Docker/Dockerfile.node` is listed on lint/typecheck/build (and
-            # only those three) because it defines the `testing` image every
-            # one of them runs inside — a change to it can break the check
-            # without touching a single source file. It is deliberately NOT in
-            # `*shared` above: that anchor also feeds destructive_ddl, and
-            # flipping its should-run true on a Dockerfile change would hand
-            # destructive-ddl.yml an empty changed-files list for nothing.
-            # Until MB.15 this coverage came from the two smoke-check
-            # workflows, which listed the Dockerfile and have since been
-            # deleted as strict subsets of this gate.
+            # `Docker/Dockerfile.node` is on lint/typecheck/build and only
+            # those three: it defines the `testing` image each of them runs
+            # inside, so a change to it can break the check without touching a
+            # source file. Deliberately NOT in `*shared`, which also feeds
+            # destructive_ddl — flipping that leg true on a Dockerfile change
+            # would hand the script an empty file list for nothing.
             lint:
               - *shared
               - '.github/workflows/checks.yml'
@@ -157,42 +117,26 @@ jobs:
               - '.github/workflows/checks.yml'
               - 'scripts/check-destructive-ddl.ts'
               - 'src/db/migrations/**'
-            # Deliberately narrower than destructive_ddl above: this filter's
-            # only job is to produce a `_files` list of the migration files to
-            # scan. destructive_ddl's `*shared` entries exist so the leg
-            # reruns when the workflow running it changes, but
-            # dorny/paths-filter's list-files output for a filter includes
-            # every changed file matching *any* of that filter's patterns — so
-            # destructive_ddl's own `_files` output would include a changed
-            # pr-gate.yml itself, and check-destructive-ddl.ts would then be
-            # handed that YAML file as if it were a SQL migration (see MB.4).
-            # destructive_ddl still drives run-destructive-ddl; this one only
-            # feeds destructive-ddl-files.
+            # Deliberately narrower than destructive_ddl above, whose job is
+            # to decide whether the leg runs at all. paths-filter's list-files
+            # output includes every changed file matching ANY of a filter's
+            # patterns, so destructive_ddl's own `_files` would hand a changed
+            # pr-gate.yml to check-destructive-ddl.ts as if it were SQL. This
+            # filter only feeds `destructive-ddl-files`.
             #
             # `*.sql` rather than `**`, so the meta/*.json Drizzle writes
-            # beside each migration never reaches the script. MB.37 also made
-            # the script itself ignore anything that is not `.sql` — this is
-            # the belt, that is the braces.
+            # beside each migration never reaches the script — the script
+            # ignores non-`.sql` too, and this is the belt to that braces.
             destructive_ddl_migrations:
               - 'src/db/migrations/*.sql'
-            # vitest also matches build-db-image.yml/Dockerfile.postgres/
-            # postgres-init — the build-db-image job below (its `db-image`
-            # input) is what actually consumes that image, so a change there
-            # needs vitest to rerun even though `changes` filters by
-            # checks.yml's own narrower conventions. vitest.config.mts
-            # and vitest.setup.ts aren't under src/**, so they're listed
-            # explicitly. So is .ladle/config.mjs: the workshop guard in
-            # tests/guards/ (MB.38) pins its theme default, and without the
-            # entry the one edit that guard exists to catch is the one edit
-            # that would not run it.
-            #
-            # tests/** is listed for the same reason and is the sharpest case
-            # of it: since MB.41 the suite lives there rather than under
-            # src/**, so without this entry a test-only PR — the one kind of
-            # PR whose entire content is the thing this job runs — would skip
-            # the job altogether and report green.
-            # vitest.stories.config.mts and summarize-stories.mjs are the
-            # acceptance run (M1.28), a second step of the same job.
+            # `tests/**` is the entry that matters most: the suite lives
+            # there rather than under `src/**`, so without it a test-only PR —
+            # the one kind of PR whose entire content is what this job runs —
+            # would skip the job and report green. `.ladle/config.mjs` is the
+            # same trap one level down: tests/guards/ pins its theme default,
+            # and the edit that guard exists to catch is the edit that would
+            # not have run it. The configs and setup file are listed
+            # explicitly because they are not under `src/**` either.
             vitest:
               - *shared
               - '.github/workflows/vitest.yml'
@@ -208,10 +152,9 @@ jobs:
               - 'vitest.setup.ts'
               - 'package.json'
               - 'package-lock.json'
-            # playwright also matches build-e2e-image.yml/Dockerfile.e2e —
-            # the image playwright.yml's container actually runs in — and
-            # build-db-image.yml/Dockerfile.postgres/postgres-init, same
-            # reasoning as vitest's filter above.
+            # Matches build-e2e-image.yml/Dockerfile.e2e — the image this
+            # job's container runs in — and build-db-image.yml, same reasoning
+            # as vitest's filter above.
             playwright:
               - *shared
               - '.github/workflows/playwright.yml'
@@ -227,35 +170,22 @@ jobs:
               - 'package.json'
               - 'package-lock.json'
 
-  # build-image pushes to a shared, content-addressed GHCR tag and GHA layer
-  # cache (cache-to: type=gha,mode=max) keyed off Dockerfile.node +
-  # package-lock.json. Cancelling it mid-push can freeze a half-written layer
-  # into that cache/tag, which every later run with the same hash would then
-  # keep reusing — a corruption that doesn't self-heal on retry. So
-  # cancel-in-progress is false here: a superseded run's build-image queues
-  # behind the one in flight instead of being killed. The jobs below are
-  # cheap to rerun and don't share mutable state, so they get their own
-  # cancellable concurrency groups instead. Always runs unconditionally (not
-  # gated on `changes`) since format always needs its image output regardless
-  # of what changed.
+  # `cancel-in-progress: false`, unlike every job below: cancelling this
+  # mid-push can freeze a half-written layer into the shared GHA layer cache
+  # and its content-addressed tag, which every later run with the same hash
+  # then keeps reusing — a corruption that does not self-heal on retry. A
+  # superseded run queues behind the one in flight instead. The jobs below
+  # share no mutable state and are cheap to rerun, so they stay cancellable.
   build-image:
     concurrency:
       group: pr-gate-build-image-${{ github.event.pull_request.number }}
       cancel-in-progress: false
     uses: ./.github/workflows/build-image.yml
 
-  # One matrix job covering lint, format, typecheck, build and audit —
-  # MB.32 collapsed five near-identical reusable workflows into
-  # checks.yml, which reports each leg as `checks / <name>`. The three
-  # path-filtered legs take their flag from `changes` below; format and audit
-  # are unfiltered inside that workflow.
-  #
-  # The audit leg now waits on gitflow and build-image with the rest, where
-  # audit.yml was its own job needing only build-image: a PR from the wrong
-  # source branch no longer pays for it. It is still non-blocking and PR-only,
-  # and `if: github.event_name == 'pull_request'` is gone with it — pr-gate only
-  # runs on pull_request, and checks.yml guards its own optional pr-number
-  # rather than assuming a caller passed one (the rule M0.17 set).
+  # One matrix job covering lint, format, typecheck, build, destructive-ddl
+  # and audit, each reporting as `checks / <name>`. The four path-filtered
+  # legs take their flag from `changes`; format and audit are unfiltered
+  # inside that workflow.
   checks:
     needs: [build-image, changes, gitflow]
     concurrency:
@@ -270,20 +200,15 @@ jobs:
       run-typecheck: ${{ needs.changes.outputs.typecheck == 'true' }}
       run-build: ${{ needs.changes.outputs.build == 'true' }}
       run-destructive-ddl: ${{ needs.changes.outputs.destructive_ddl == 'true' }}
-      # The destructive-ddl leg's two extra inputs — neither readable from
-      # inside a called workflow, which sees no `pull_request` event of its
-      # own. See checks.yml's header.
+      # The one thing a called workflow cannot read off its own trigger: it
+      # sees no `pull_request` event, so only the caller can say which
+      # migration files changed.
       destructive-ddl-files: ${{ needs.changes.outputs.destructive_ddl_migrations_files }}
 
-  # Publishes (or reuses, if content-addressed and unchanged) the preseeded
-  # Postgres 18 image both vitest and playwright below need for their
-  # `services: postgres:` block — built once here, same shape as
-  # build-image/build-e2e-image, rather than each of vitest.yml/
-  # playwright.yml separately calling build-db-image.yml as a nested
-  # workflow_call (which used to mean two independent checkout/docker-login/
-  # buildx-setup sequences for what the content-addressed tag makes an
-  # identical result either way). Unconditional, like build-image, for the
-  # same "the jobs below need its output either way" reasoning.
+  # The preseeded Postgres image both vitest and playwright need for their
+  # `services: postgres:` block — built once here and passed down as
+  # `db-image`. Unconditional and uncancellable for the same reasons
+  # build-image above is.
   build-db-image:
     concurrency:
       group: pr-gate-build-db-image-${{ github.event.pull_request.number }}
@@ -303,12 +228,9 @@ jobs:
       # No job-level `if:` here on purpose — see vitest.yml's should-run input for why.
       should-run: ${{ needs.changes.outputs.vitest == 'true' }}
 
-  # build-e2e-image (M1.14) publishes the dedicated Playwright image —
-  # build-image.yml's shared `testing` image deliberately excludes
-  # Playwright's browser/system deps (see Docker/Dockerfile.node's header
-  # comment), so playwright.yml runs in this image instead. Unconditional,
-  # like build-image above, for the same "the job below needs its output
-  # either way" reasoning.
+  # The dedicated Playwright image: build-image.yml's shared `testing` image
+  # is Alpine and carries no browser, so playwright.yml runs in this one
+  # instead. Unconditional and uncancellable, like build-image above.
   build-e2e-image:
     concurrency:
       group: pr-gate-build-e2e-image-${{ github.event.pull_request.number }}
@@ -328,11 +250,9 @@ jobs:
       # No job-level `if:` here on purpose — see playwright.yml's should-run input for why.
       should-run: ${{ needs.changes.outputs.playwright == 'true' }}
 
-  # Deliberately ungated — runs on every push regardless of what changed, and
-  # doesn't need build-image since it never touches the testing container.
-  # gitflow.yml's should-run input exists for a merge-queue caller, which
-  # passes false — see that file for why the actual check only makes sense
-  # here, against a PR's real source branch.
+  # Ungated, and needs no image — it reads the PR's head and base refs and
+  # nothing else. Every check job above `needs: gitflow`, so a PR from the
+  # wrong source branch burns no CI time on the rest.
   gitflow:
     concurrency:
       group: pr-gate-gitflow-${{ github.event.pull_request.number }}

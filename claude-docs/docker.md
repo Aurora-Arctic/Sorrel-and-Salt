@@ -27,8 +27,12 @@ no Neon connection and no host Node-version juggling.
   - **No `tini`.** PID-1 signal handling is delegated to compose's `init: true`,
     so any new service (or a bare `docker run`) needs that flag or it inherits
     zombie-reaping and signal problems.
-- **`Docker/docker-compose.yaml`** — `name: sorrel-and-salt`, pinned so it does
-  not collide with another project's compose stack on the same machine.
+- **`Docker/docker-compose.yaml`** — `name: sorrel-and-salt`. Pinned rather
+  than derived from the file's parent directory, which would make the project
+  `docker` — the name `resume-2026`, also under a `Docker/` directory, already
+  claims on the same machine; the two would then share `node_modules` volumes
+  and clobber each other. Build context is the repo root (`..`), read through
+  the root `.dockerignore`.
 
   - **`db-init`** (M1.24) — the Docker seed hook: a **one-shot** container on
     the same `development` stage, running
@@ -110,6 +114,13 @@ no Neon connection and no host Node-version juggling.
     - **Switching `image:`/`build:` never resets an existing named volume** — a
       stale `postgres_data` keeps serving whatever the previous image's init
       created. `make docker-rebuild` (`down -v`) is what gets a fresh one.
+      The tell that you have one, from before this file moved off the stock
+      `postgres` image, is a `FATAL: role "postgres" does not exist` line on
+      every health-check tick: that volume has only the `sorrel` role the old
+      image's first-boot init created from the `POSTGRES_*` vars, and Postgres
+      logs any rejected connection. It is **not** a failing check —
+      `pg_isready` asks only whether the server answers, not whether the role
+      it names is valid.
   - **Volumes** — one `node_modules` volume per service
     (`node_modules_app`, `node_modules_workshop`, `node_modules_studio`,
     `node_modules_e2e`, `node_modules_playwright_server`,

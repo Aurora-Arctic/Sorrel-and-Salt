@@ -1,30 +1,12 @@
-# Sorrel & Salt — make wrapper.
+# Sorrel & Salt — make wrapper. Every target is a thin wrapper over an npm
+# script or a docker compose invocation, and every one is named unprefixed
+# (`build`, not `npm-build`) because that is how DESIGN.md and CLAUDE.md name
+# them. Only `codegen` is a placeholder — it exits non-zero until
+# graphql-codegen is wired up.
 #
-# Ported from resume-2026. Every target is a thin wrapper over an npm script or
-# a docker compose invocation, so the same muscle memory works in both repos.
-# The one deliberate change from the source: targets are unprefixed (`build`,
-# not `npm-build`), because that is how every target is named in DESIGN.md and
-# CLAUDE.md — `make db-reset`, `make docker-up`, `make test-stories`.
-#
-# Targets arrive with the milestone that needs them:
-#
-#   test, test-watch, test-coverage   M0.9
-#   docker-*                          M0.11–M0.13
-#   test-stories                      M1.28
-#   act-*                             M0.23
-#   workshop, workshop-build          M0.30
-#   db-studio, docker-studio          MB.21
-#   dev-debug, test-debug, test-ui,
-#     e2e-ui, e2e-trace, db-psql,
-#     playwright-server-up/-down      MB.22
-#   docker-codegen                    MB.23
-#
-# The codegen target below is a placeholder: the script name exists so nothing
-# has to be renamed later, but it exits non-zero until M3.x wires
-# graphql-codegen. Everything else is live — the workshop targets as of M0.30,
-# db-generate and db-migrate as of M1.3, db-studio as of MB.21, and
-# db-seed/db-drop/db-reset as of M1.24, once M1.21–M1.23 had scenarios for them
-# to run.
+# `## ` lines are FUNCTIONAL: the `help` target below awk-parses them into the
+# list a human reads. Only the LAST `## ` line before a target survives, so
+# each one is a single line, sitting immediately above its target.
 
 .DEFAULT_GOAL := help
 
@@ -54,7 +36,7 @@ install:
 dev:
 	npm run dev
 
-## Next.js dev server with the Node inspector on 9229 (MB.22)
+## Next.js dev server with the Node inspector on 9229
 dev-debug:
 	npm run dev:debug
 
@@ -86,7 +68,7 @@ format-check:
 typecheck:
 	npm run typecheck
 
-## Flag destructive DDL (DROP/RENAME/type change/NOT NULL additions) in migrations new on this branch (M1.5)
+## Flag destructive DDL (DROP/RENAME/type change/NOT NULL additions) in migrations new on this branch
 check-destructive-ddl:
 	npm run check:destructive-ddl
 
@@ -94,23 +76,23 @@ check-destructive-ddl:
 pre-commit:
 	npm run pre-commit
 
-## The acceptance suite only, printed as a checklist of the v1 user stories (M1.28)
+## The acceptance suite only, printed as a checklist of the v1 user stories
 test-stories:
 	npm run test:stories
 
-## Vitest under --inspect-brk, single-worker, halted until a debugger attaches on 9230 (MB.22)
+## Vitest under --inspect-brk, single-worker, halted until a debugger attaches on 9230
 test-debug:
 	npm run test:debug
 
-## Vitest UI on its default port, forwarded via devcontainer.json (MB.22)
+## Vitest UI on its default port, forwarded via devcontainer.json
 test-ui:
 	npm run test:ui
 
-## Playwright UI mode on 9324 (MB.22)
+## Playwright UI mode on 9324
 e2e-ui:
 	npm run e2e:ui
 
-## Serve a written Playwright trace on 9323 — pass TRACE=path/to/trace.zip (MB.22)
+## Serve a written Playwright trace on 9323 — pass TRACE=path/to/trace.zip
 e2e-trace:
 	npm run e2e:trace -- $(TRACE)
 
@@ -122,27 +104,27 @@ db-generate:
 db-migrate:
 	npm run db:migrate
 
-## Seed a scenario — SEED_SCENARIO=minimal|standard|demo, default minimal (M1.24)
+## Seed a scenario — SEED_SCENARIO=minimal|standard|demo, default minimal
 db-seed:
 	npm run db:seed
 
-## Drop the public and drizzle schemas, leaving an empty database (M1.24)
+## Drop the public and drizzle schemas, leaving an empty database
 db-drop:
 	npm run db:drop
 
-## Drop, migrate and reseed — the one command for a wedged local database (M1.24)
+## Drop, migrate and reseed — the one command for a wedged local database
 db-reset:
 	npm run db:reset
 
-## Drizzle Studio on 4983 — browse the local database (MB.21)
+## Drizzle Studio on 4983 — browse the local database
 db-studio:
 	npm run db:studio
 
-## psql against the compose postgres service (MB.22)
+## psql against the compose postgres service
 db-psql:
 	$(COMPOSE) exec postgres psql -U sorrel sorrel
 
-## Run graphql-codegen (placeholder until M3.x)
+## Run graphql-codegen (not wired up yet — exits non-zero)
 codegen:
 	npm run codegen
 
@@ -154,27 +136,18 @@ workshop:
 workshop-build:
 	npm run workshop:build
 
-# Host-level docker compose wrappers. `docker-up` starts the app on 8000 and
-# Postgres 18 (M0.13), waiting for the database health check and then for the
-# one-shot `db-init` container to migrate and seed before the app starts
-# (M1.24; `SEED_SCENARIO` picks the scenario, default `minimal`);
-# the Ladle workshop (61000), Drizzle Studio (4983, MB.21) and the
-# Playwright browser server (4444/7900, MB.22/MB.23) are behind the
-# `workshop`/`studio`/`e2e` compose profiles, so they only come up with
-# `docker-workshop`/`docker-studio`/`docker-all` (`playwright-server`) or
-# `make playwright-server-up` directly. The one-shot Playwright suite run
-# (`docker-e2e`) is never part of `docker-all` — it's a job, not a service to
-# leave running. No Neon connection and no local Node version juggling.
-# Unlike resume-2026, `docker-up` does not run `update-token` — the
-# devcontainer (M0.14) is its own compose overlay under `.devcontainer/`,
-# started by the editor, not by `make docker-up`. Refresh its Claude token
-# explicitly with `make docker-update-token`.
+# Host-level docker compose wrappers — claude-docs/docker.md is the
+# walkthrough. `docker-build`, `docker-down` and `docker-rebuild` all pass
+# every profile, so a new profiled service that forgets one of the three is
+# left orphaned by `docker-down`. The devcontainer is its own compose overlay
+# under `.devcontainer/`, started by the editor rather than by `docker-up`;
+# refresh its Claude token explicitly with `make docker-update-token`.
 
 ## Build the local dev images (app + workshop + studio + e2e)
 docker-build:
 	$(COMPOSE) --profile workshop --profile studio --profile e2e build
 
-## Start the app (8000) and Postgres detached, migrating and seeding first (M1.24)
+## Start the app (8000) and Postgres detached, migrating and seeding first
 docker-up:
 	$(COMPOSE) up -d
 
@@ -186,11 +159,10 @@ docker-workshop:
 docker-studio:
 	$(COMPOSE) --profile studio up -d
 
-## Start every long-running service: app, Postgres, workshop, studio and the
-## Playwright browser server (MB.23 gave it a display at :7900). `e2e` itself
-## is excluded on purpose — it's a one-shot suite run (`docker compose run
-## --rm`), not a service to leave up, so it's named out even though enabling
-## its profile is what makes `playwright-server` startable here.
+# `e2e` is named out on purpose — it is a one-shot suite run, not a service
+# to leave up — even though enabling its profile is what makes
+# `playwright-server` startable here.
+## Start every long-running service: app, Postgres, workshop, studio, browser server
 docker-all:
 	$(COMPOSE) --profile workshop --profile studio --profile e2e up -d app postgres workshop studio playwright-server
 
@@ -214,8 +186,9 @@ docker-logs:
 docker-update-token:
 	./Docker/update-token.sh
 
-## Start the long-lived Playwright browser server (compose profile: e2e) — MB.22, so `npm run e2e`
-## can run from inside the (Alpine, browser-less) devcontainer against a Chromium in the Debian e2e image
+# So `npm run e2e` can run from inside the Alpine, browser-less devcontainer
+# against a Chromium in the Debian e2e image.
+## Start the long-lived Playwright browser server (compose profile: e2e)
 playwright-server-up:
 	$(COMPOSE) --profile e2e up -d playwright-server
 
@@ -223,48 +196,28 @@ playwright-server-up:
 playwright-server-down:
 	$(COMPOSE) --profile e2e stop playwright-server
 
-## Record a Playwright spec on the browser server's display — see :7900 (MB.23)
-## Pass NAME=<spec-name>; writes e2e/<name>.spec.ts
-## `sorrel-app`, not `app`: `.app` is an HSTS-preloaded gTLD in every real
-## browser, so a genuine Chrome navigating to plain http://app:8000 gets
-## silently upgraded to https and fails — see docker-compose.yaml's `app`
-## service for the full explanation. `sorrel-app` is the same container
-## under a second, non-reserved DNS alias.
+# `sorrel-app`, not `app`: `.app` is an HSTS-preloaded gTLD in every real
+# browser, so a genuine Chrome navigating to plain http://app:8000 is upgraded
+# to https and fails. `sorrel-app` is a second, non-reserved DNS alias on the
+# same container — see Docker/docker-compose.yaml's `app` service.
+## Record a Playwright spec on the browser server's display (:7900) — pass NAME=<spec>
 docker-codegen: playwright-server-up
 	$(COMPOSE) exec -u $$(id -u):$$(id -g) playwright-server \
 		npx playwright codegen --target playwright-test \
 		--output e2e/$(NAME).spec.ts http://sorrel-app:8000
 
-# Local CI via act (M0.23). Runs the real reusable check workflows against a
-# locally-built testing image, so a failing check surfaces here instead of only
-# in pr-gate. Ported from resume-2026; act-vitest / act-playwright arrive with
-# their workflows. The published build-image is deliberately left out.
+# Local CI via act — see claude-docs/ci.md's "Running CI locally" section for
+# what each target buys and which legs cannot work locally.
 #
-# One `act-check` target covers every leg of checks.yml (MB.32), where there
-# was one target per check workflow before the collapse: `make act-check`
-# runs lint, `make act-check CHECK=typecheck` runs typecheck, and so on
-# through `format`, `build`, `audit` and `destructive-ddl`. `--matrix name:<leg>`
-# is what keeps act from running all six.
-#
-# `CHECK=build` still needs actions/cache@v6 pre-cached the way
-# act-cache-checkout pre-caches checkout-to-app, and `CHECK=audit` wants a real
-# PR to comment on — both are expected to fail locally, and neither is in
-# act-test below.
-#
-# Each check workflow is workflow_call-only with a required `image` input
-# (normally build-image.yml's GHCR push). `act-image` builds the same
-# Dockerfile.node `testing` target locally under the tag the job asks for, so
-# `docker run` never reaches GHCR and the container `credentials:` block is a
-# no-op — hence the dummy GITHUB_TOKEN. Every job's first step resolves
-# checkout-to-app by a remote owner/repo/path@main ref (not ./), so act needs a
-# real clone of this repo's main at its cache path; --action-offline-mode then
-# keeps act from re-fetching it. The clone only runs the first time per machine
-# (or whenever ~/.cache/act is cleared).
-#
-# act does not apply `workflow_call` input defaults, so a `should-run`-style
-# flag arrives empty under `-W`. checks.yml needs no flag passed for that: its
-# "Resolve this leg's should-run flag" step treats an empty flag as true,
-# precisely so a local run cannot quietly skip the work it was asked to do.
+# Three facts the recipes below depend on. Each check workflow is
+# workflow_call-only with a required `image` input, so `act-image` builds the
+# same Dockerfile.node `testing` target locally under the tag the job asks
+# for — `docker run` then never reaches GHCR and the container
+# `credentials:` block is a no-op, hence the dummy GITHUB_TOKEN. Every job's
+# first step resolves checkout-to-app by a remote owner/repo/path@main ref
+# rather than `./`, so act needs a real clone of this repo's main at its cache
+# path, which `--action-offline-mode` then stops it re-fetching. And
+# `--matrix name:<leg>` is what keeps act from running all six legs at once.
 ACT_IMAGE := sorrel-and-salt-testing:local
 ACT_CHECKOUT_CACHE := $(HOME)/.cache/act/Aurora-Arctic-Sorrel-and-Salt-.github-actions-checkout-to-app@main
 CHECK ?= lint
@@ -278,15 +231,11 @@ act-cache-checkout:
 	@[ -d "$(ACT_CHECKOUT_CACHE)" ] || \
 		git clone --branch main https://github.com/Aurora-Arctic/Sorrel-and-Salt "$(ACT_CHECKOUT_CACHE)"
 
-# The destructive-ddl leg's `destructive-ddl-files`/`pr-body` inputs come from
-# pr-gate.yml reading dorny/paths-filter's list-files output and
-# github.event.pull_request.body — neither exists under act's local `-j`
-# invocation (no real PR, no paths-filter job to feed it), so both arrive
-# empty. checks.yml sets DESTRUCTIVE_DDL_FILES from the input either way, and
-# the script reads "set but empty" as "no migrations changed", so this leg
-# locally scans *nothing* and never has an ack line to find. Good enough to
-# catch "does the workflow/script wiring itself work"; the scan and the
-# ack-line gating are covered by tests/guards/destructive-ddl-check.test.ts and by
+# The destructive-ddl leg scans *nothing* locally: its `destructive-ddl-files`
+# input comes from pr-gate.yml's paths-filter job, which act's `-j` invocation
+# has no equivalent of, and checks.yml reads set-but-empty as "no migrations
+# changed". So this proves the wiring, not the scan — the scan is
+# tests/guards/destructive-ddl-check.test.ts and
 # `npm run check:destructive-ddl -- --self-test`.
 ## Run one checks.yml leg locally via act — CHECK=lint|format|typecheck|build|audit|destructive-ddl
 act-check: act-image act-cache-checkout

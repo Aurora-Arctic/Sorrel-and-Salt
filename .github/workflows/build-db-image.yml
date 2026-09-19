@@ -1,56 +1,30 @@
 name: Build DB Image
 
-# Builds the preseeded Postgres 18 image (Docker/Dockerfile.postgres, M0.18)
-# and publishes it to GHCR for CI and deployment — docker-compose.yaml builds
-# the same Dockerfile locally instead of pulling this (M0.19), since it's
-# purely a local-dev concern. Content-addressed: the image is tagged with a
-# hash of everything that actually determines its contents — the Dockerfile
-# and its init script — so identical inputs always produce the identical tag
-# and every caller pins to it exactly. There is deliberately no
-# `latest` tag (MB.17): nothing in the repo ever reads it — docker-compose.yaml
-# builds the Dockerfile locally instead of pulling any tag, and every CI
-# caller below pins the hash tag — so publishing it was pure upkeep with no
-# reader.
+# Builds the preseeded Postgres 18 image (Docker/Dockerfile.postgres) and
+# publishes it to GHCR for CI. docker-compose.yaml builds the same Dockerfile
+# locally rather than pulling this. claude-docs/ci.md's "Database image"
+# section is the walkthrough.
 #
-# Two separate mechanisms skip redundant work, one per trigger. The `push`
-# path filter below is a workflow-level skip: an unrelated push never
-# triggers this workflow at all, rather than triggering a job that runs and
-# no-ops. But `workflow_call` — the path every PR takes, via pr-gate.yml's
-# own `build-db-image` job — bypasses that path filter
-# entirely, so it needed its own job-level skip: the `Check if image already
-# exists` step below inspects GHCR directly and short-circuits `Build and
-# push db image` when the content-addressed tag is already published
-# (MB.18). Between the two, buildx only actually runs when the tag is a
-# genuine miss.
+# Content-addressed on the Dockerfile and its init script, so identical
+# inputs always produce the identical tag and every caller pins it exactly.
+# **No `latest` tag**: nothing in the repo ever read one.
 #
-# The `push` trigger's real job is seeding the GHA layer cache
-# (cache-to: type=gha,mode=max,scope=db-image below) for branches that
-# haven't built this image yet. That cache is branch-isolated — a
-# `pull_request` run writes only to its own merge-ref scope, and reads fall
-# back to the PR's base branch and the repo's default branch. So only a push
-# to `staging` (the base every `feature/*` branch forks from) or `main` (the
-# default branch) writes an entry any other branch can restore; without one,
-# a fresh branch's first build pays the full cold-build cost instead of
-# restoring a warm cache. Measured on this repo: a fully cold build step is
-# ~25s, a warm one (including a brand-new feature branch's very first run)
-# ~6-8s. `src/db/**` sat in the hash and the path filter too, from M0.18
-# until M1.27, against the day the schema would be baked into this image —
-# and since it was never in the build context (Dockerfile.postgres only
-# COPYs Docker/postgres-init's SQL), every migration republished
-# byte-identical layers under a new tag. M1.27 populates the test template
-# from the checkout at test-run setup instead (tests/support/
-# seeded-database.ts; claude-docs/design-decisions/
-# m1.27-template-at-setup-not-in-image.md), so this image's contents never
-# depend on `src/db/**` and it left both lists: a migration no longer
-# touches this workflow at all.
+# Two mechanisms skip redundant work, one per trigger, because they cover
+# different paths. The `push` path filter below is workflow-level — it gates
+# this workflow's own direct triggers only, and `workflow_call` (the path
+# every PR takes) bypasses it entirely. So the `Check if image already
+# exists` step is the job-level skip that covers that path. Between them
+# buildx runs only on a genuine miss.
 #
-# There is deliberately no `pull_request` trigger: this workflow used to
-# carry one, path-filtered the same way, on the argument that a
-# content-addressed PR build is free reuse rather than throwaway work. That
-# was written before M1.14 gave `pr-gate.yml` an unconditional
-# `build-db-image` job of its own. That job now does the early
-# build on every PR, so the trigger bought a second workflow run pushing the
-# identical tag — a duplicate status check, not extra coverage (MB.15).
+# The `push` trigger's real job is seeding the GHA layer cache for branches
+# that have not built this image yet. That cache is branch-isolated — reads
+# fall back to the PR's base branch and the default branch — so only a push
+# to `staging` or `main` writes an entry another branch can restore. A cold
+# build step is ~25s, a warm one ~6-8s.
+#
+# **No `pull_request` trigger**: pr-gate.yml has an unconditional
+# `build-db-image` job of its own, so one would only push the identical tag
+# a second time and report a duplicate status check.
 on:
   push:
     branches: [staging, main]
@@ -59,20 +33,10 @@ on:
       - 'Docker/postgres-init/**'
       - '.github/workflows/build-db-image.yml'
   workflow_dispatch:
-  # M1.14's `pr-gate.yml` is the real consumer §11 always
-  # pointed at — it has its own top-level `build-db-image` job
-  # (`uses: ./.github/workflows/build-db-image.yml`), built once and passed
-  # as a `db-image` input to both `vitest.yml` and `playwright.yml`, which
-  # each key their own `services: postgres:` block off it — same shape
-  # `verify-db-image` below used to prove out. `vitest.yml`/`playwright.yml`
-  # deliberately don't call this workflow themselves: they used to, each as
-  # its own nested `workflow_call`, which meant two independent checkout/
-  # docker-login/buildx-setup sequences for what the content-addressed tag
-  # makes an identical image either way. workflow_call coexists with the
-  # triggers above on the same `on:` block; a call bypasses `push`'s path
-  # filter entirely (that filter only gates *this* workflow's own direct
-  # triggers), so every vitest/playwright run gets a real, current image
-  # regardless of whether this specific PR touched `src/db/**`.
+  # The caller is pr-gate.yml's own top-level `build-db-image` job, which
+  # passes the result down as a `db-image` input to both vitest.yml and
+  # playwright.yml. A call bypasses `push`'s path filter entirely, so every
+  # run gets a current image whatever the PR touched.
   workflow_call:
     outputs:
       image:
@@ -110,13 +74,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # Most pushes to a PR don't touch anything in the hash
-      # (Dockerfile.postgres, postgres-init/**), so the content-addressed tag
-      # from a prior run (this PR, staging, or main) usually already exists —
-      # skip the build entirely rather than re-running buildx just to
-      # re-push the same content. This only matters on the workflow_call
-      # path: the push trigger above is already gated by its own path
-      # filter, so a push run that fires here is always a genuine miss.
+      # Most pushes touch nothing in the hash, so the tag from a prior run
+      # usually already exists — skip rather than re-push the same content.
+      # This only matters on the workflow_call path; a `push` run that fires
+      # at all is already a genuine miss, by its path filter.
       - name: Check if image already exists
         id: check
         run: |
@@ -136,19 +97,3 @@ jobs:
           tags: ${{ steps.tags.outputs.hash-tag }}
           cache-from: type=gha,scope=db-image
           cache-to: type=gha,mode=max,scope=db-image
-
-  # A `verify-db-image` job used to live here, proving the image just
-  # published was pullable and usable via a job-level `services:` container
-  # + `docker exec ... psql -c 'SELECT 1'` (`local`/Unix-socket `trust` auth,
-  # since the `postgres` superuser's password is generated and discarded at
-  # build time — see Dockerfile.postgres and
-  # design-decisions/m0.18-build-db-image.md). It was always scaffolding —
-  # ci.md said so directly — standing in for the real M1 consumer DESIGN.md
-  # §11 describes. `vitest.yml`/`playwright.yml` (M1.14) are that consumer
-  # now, via `pr-gate.yml`'s own `build-db-image` job and
-  # the `db-image` input it passes down: they pull it into their own
-  # `services: postgres:` block (reachable by service name from their
-  # `container:`), connecting over TCP as the `sorrel` role — which does
-  # have a known, non-discarded password (`Docker/postgres-init/enable-extensions.sql`)
-  # — so every real vitest/playwright run now proves the image works, and
-  # this standalone job would only be exercising a redundant path.
