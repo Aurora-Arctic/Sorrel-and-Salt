@@ -3315,7 +3315,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.44 | ~~Release to `main`, then drop the coverage excludes MB.42 made dead~~ — **retired, not done** | —       | —            |
 | MB.45 | `vercel pull --git-branch` is rejected on the production target                                | Wave 5  | MB.27        |
 | MB.46 | CI cannot see what `vercel pull` actually returned                                             | Wave 5  | MB.45        |
-| MB.47 | staging's branch-scoped `DATABASE_URL` is unusable by CI — **on hold**                         | Wave 5  | MB.46        |
+| MB.47 | CI cannot read the Sensitive Vercel variables it needs                                         | Wave 5  | MB.46        |
 | MB.48 | A destructive-DDL acknowledgement does not survive the release PR                              | Wave 5  | MB.37        |
 
 **MB.5 — Restore `users` foreign keys on `auditColumns`** · 2h
@@ -4299,19 +4299,30 @@ _Acceptance criteria:_
 
 Stacked on MB.45. Its PR targets `main` and `staging` and carries MB.45's commit until that merges — deliberate, because a PR based on the MB.45 branch would not trigger `deploy.yml`, which only runs on PRs into `main`, and the preview deploy is the run this task exists to read.
 
-**MB.47 — staging's branch-scoped `DATABASE_URL` is unusable by CI** · **ON HOLD**
+**MB.47 — CI cannot read the Sensitive Vercel variables it needs** · 2h
 
-_Story:_ As a maintainer, I want the staging migration to reach the staging database so that staging tests the schema it will serve.
+_Story:_ As a maintainer, I want CI to hold the two values Vercel will not give it, so that a migration and a build can run without turning off a security setting.
 
-With `--git-branch=staging`, the `DATABASE_URL` `vercel pull` returns does not parse as a URL. Without it, it does — but then it is the environment-wide Preview value, the wrong database, which is the bug MB.27 existed to fix. So the branch-scoped override is the bad value.
+`DATABASE_URL` and `BETTER_AUTH_SECRET` are marked Sensitive in Vercel. A Sensitive variable cannot be read back by `vercel pull` — that is what the setting means, not a fault to route around. The pull writes the literal string `[SENSITIVE]`, which is non-empty and so passes any check that only asks whether something is set; that is how it reached drizzle-kit and produced an `ERR_INVALID_URL` with its own input masked out of the stack trace, and how it reached `vercel build` and produced `BETTER_AUTH_SECRET is not set`.
 
-**Blocked, and deliberately unspecified.** Whether that value is Vercel's `[SENSITIVE]` placeholder or a malformed paste cannot be told from CI: `migrate.yml` calls `::add-mask::` before anything prints it, so the `input: '***'` in the stack trace is GitHub masking, not evidence. An early reading of this bug blamed the variable being marked Sensitive; that does not survive its own evidence — the "3 Secret values cannot be pulled" line is byte-identical in the passing and failing runs, and had `DATABASE_URL` joined that set the count should have risen to four. Settling it needs the Vercel dashboard, which the devcontainer cannot reach: no CLI, no token, and the MCP server needs an interactive OAuth flow.
+**A diagnostic branch settled it.** Using MB.46's reporter, it pulled staging's preview environment both with and without `--git-branch` in one run: `DATABASE_URL` came back as `[SENSITIVE]` either way, and the flag changed only which _other_ keys resolved. That also answered two things the plan had wrong. `--git-branch` must stay — the two GitHub OAuth secrets exist only as `staging`-branch-scoped rows and vanish from an unscoped pull — so MB.45's two-arm split stands. And an earlier reading of this bug had blamed Sensitive, then withdrawn it because the "3 Secret values" count did not change between a passing and a failing run. That reasoning was wrong: the count describes whichever set that pull resolved, and the two modes resolve different sets.
 
-A malformed value means correcting the row, and this task reduces to a docs note — MB.46's validator is then the whole permanent defence. A Sensitive value means CI needs another source, and the shape to reach for is GitHub Environments carrying a `DATABASE_URL` secret each, which keeps `Sensitive` on the Vercel side and adds the branch restrictions CLAUDE.md already claims staging has; `vercel pull` would survive only for the hotfix-preview arm, whose ephemeral per-deployment Neon branch no static secret can name. Its cost — the connection string in two places, so rotation is two operations and a drifted copy migrates the wrong database silently — goes into `secrets.md` as a rule, not a hope.
+**CI keeps its own copy of exactly the two values it cannot read.** `DATABASE_URL_PRODUCTION` and `DATABASE_URL_STAGING`, because it differs per target; `BETTER_AUTH_SECRET`, one value for both. The runtime is untouched — a deployed function reads its environment from the platform, not from the pulled file — so the Sensitive flag stays on and only CI changes.
 
-Whether **production**'s value has the same problem is also unknown; that run died at the pull before reading anything. MB.45 and MB.46 answer it in one run.
+**Named secrets rather than GitHub Environments.** The environment version was built first and reverted: it needed a new `workflow_call` input, a new `resolve-target` output and an `environment:` key on two jobs, to express what a secret's name already says. The three GitHub Environments that exist stay Vercel's.
 
-Considered and deferred so it is not re-derived: resolving from the Neon API, which would put the credential in exactly one place and cover ephemeral branches — but `NEON_API_KEY` is unset (MB.12), and a project-wide key is a more powerful credential than one connection string.
+`deploy.yml` writes the values **into the pulled dotfile** rather than exporting them, because `vercel build` reads the file and a step-level `env:` would not reach the Next build. The hotfix-preview arm has no named secret — its Neon branch is created per deployment — so it falls back to the pulled `POSTGRES_URL`, which the integration provides and which is _not_ Sensitive.
+
+_Acceptance criteria:_
+
+- Guard written first and watched fail, asserting the selection rather than the values: production chosen by the Vercel environment and not the branch name, staging by the branch, the fallback present, a named error when every source is empty, and the mask before the export
+- The two workflows assert to select **identically** — M1.1's "Cross-task impact" in mechanical form, since choosing differently migrates one database and serves another
+- The override runs after the pull and before both the build and MB.46's assertion, so the assertion checks the file the build will actually read
+- `secrets.md` rewritten: its claim that "no separate GitHub Actions copy of `DATABASE_URL` is needed" is what this task disproves, and the two-places rotation cost is written in as a rule rather than hoped away
+- `secrets.md`'s `BETTER_AUTH_SECRET` row corrected — it specified a separate Preview value, and one shared value is now a deliberate decision with its reasoning recorded, plus the known low-entropy value as an explicit pre-launch item
+- **Not done when CI is green.** The criterion is a live `staging` push that migrates against the staging database, and a `main` push that reaches production
+
+_Deferred, recorded so it is not re-derived:_ pulling connection strings from Neon directly (`GET /projects/{id}/connection_uri?branch_id=…`) would put the credential in exactly one place and cover ephemeral branches too, retiring both `DATABASE_URL_*` secrets. It waits on MB.12 setting `NEON_API_KEY`/`NEON_PROJECT_ID`, costs a broader credential than one connection string, and would not replace `BETTER_AUTH_SECRET` regardless.
 
 **MB.48 — A destructive-DDL acknowledgement does not survive the release PR** · 3h
 
