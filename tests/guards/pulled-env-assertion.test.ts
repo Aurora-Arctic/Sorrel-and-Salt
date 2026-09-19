@@ -13,26 +13,11 @@ import {
 } from '../../scripts/assert-pulled-env';
 import { fromRoot } from '../support/paths';
 
-// MB.46 — `vercel pull` writes a dotfile and CI trusts it. `migrate.yml`'s only
-// guard was `[ -z "$db_url" ]`, so every value that is not a connection string
-// but is also not empty — Vercel's `[SENSITIVE]` placeholder, a `psql '…'`
-// wrapper, a quote the extraction failed to strip — reached drizzle-kit, which
-// died on `new URL()` with the value masked out of its own stack trace.
-// `deploy.yml` was worse: it never read the file at all, handing it straight to
-// `vercel build`, which died on `BETTER_AUTH_SECRET is not set`.
-//
-// So this file pins two different things, and the second is the point.
-//
-// The ASSERTION — a required key that is missing, empty, a placeholder, or not
-// a postgres URL fails the job with its own named cause, rather than an
-// `ERR_INVALID_URL` forty frames down.
-//
-// The REPORT — every key the pull returned, with a classification and never a
-// value. CI could not previously answer "what did the pull actually return?",
-// which is why `--git-branch` silently dropping variables took a production
-// outage to notice. Key names are not secret; they are already enumerated in
-// claude-docs/secrets.md. Values never appear, and that is asserted here rather
-// than merely intended.
+// What the pulled environment file has to satisfy before CI trusts it
+// (claude-docs/ci.md, "Deploy"). Two things are pinned: a required key that
+// is missing, empty, a placeholder or not a postgres URL fails with its own
+// named cause; and every key the pull returned is reported with a
+// classification and never a value — asserted, not intended.
 
 const NEON =
   'postgresql://sorrel:np_x9Kq2@ep-cool-bird-a1b2c3-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require';
@@ -68,10 +53,9 @@ describe('validateDatabaseUrl', () => {
     expect(verdict.message.length).toBeGreaterThan(0);
   });
 
-  // The whole reason the original bug was invisible: the value is masked, so an
-  // error carrying it reads `***` and tells you nothing. Every message describes
-  // shape, and none may quote what it rejected — including the cases where the
-  // rejected value is a real connection string wearing a wrapper.
+  // The value is masked in CI, so an error carrying it reads `***`. Every
+  // message describes shape, and none may quote what it rejected — even when
+  // that is a real connection string wearing a wrapper.
   it.each([
     ['a quoted Neon URL', `"${NEON}"`, 'np_x9Kq2'],
     ['a psql-wrapped local URL', `psql '${LOCAL}'`, 'sorrel:sorrel'],
@@ -84,9 +68,8 @@ describe('validateDatabaseUrl', () => {
     expect(verdict.message).not.toContain(raw);
   });
 
-  // A placeholder is not a transient failure and a retry cannot fix it — the
-  // message has to say so, or the next person reruns the job twice before
-  // reading it.
+  // A placeholder is not transient and a retry cannot fix it; the message has
+  // to say so.
   it('explains that a placeholder is unreadable by design', () => {
     const verdict = validateDatabaseUrl('[SENSITIVE]');
     expect(verdict.ok).toBe(false);
@@ -96,20 +79,12 @@ describe('validateDatabaseUrl', () => {
   });
 });
 
-// MB.49 — the one cause confirmed by reproduction rather than inferred.
-//
-// Neon's console puts `channel_binding=require` in the connection strings it
-// hands you. It is a libpq CLIENT parameter, not a server GUC, and postgres.js
-// does not consume it: `parseOptions` deletes `sslmode` and reads the keys in
-// its own `defaults` list, then spreads EVERY REMAINING query parameter into
-// `connection`, which is sent verbatim as a startup parameter
-// (node_modules/postgres/src/index.js, the `connection:` key of parseOptions).
-// Postgres then answers `42704 unrecognized configuration parameter
-// "channel_binding"` and drizzle-kit swallows it, which is the silent exit 1.
-//
-// So this is not a style rule about tidy URLs. It is the difference between a
-// migration that fails saying nothing and one that names a parameter you can
-// delete.
+// postgres.js consumes `sslmode` and the keys in its own `defaults`, then
+// forwards every remaining query parameter verbatim as a startup parameter;
+// the server answers `42704 unrecognized configuration parameter` and
+// drizzle-kit swallows it. Neon's console adds `channel_binding=require` by
+// default, so this is the difference between a migration that fails saying
+// nothing and one that names a parameter you can delete.
 describe('validateDatabaseUrl — libpq client-only parameters', () => {
   it('rejects the `channel_binding=require` Neon hands out by default', () => {
     const verdict = validateDatabaseUrl(`${NEON}&channel_binding=require`);
@@ -119,9 +94,9 @@ describe('validateDatabaseUrl — libpq client-only parameters', () => {
     expect(verdict.message).toContain('channel_binding');
   });
 
-  // `disable` is as unrecognised as `require`: postgres.js forwards the
-  // parameter whatever its value, so the server rejects the NAME. A rule that
-  // matched only `=require` would pass a URL that fails identically.
+  // postgres.js forwards the parameter whatever its value, so the server
+  // rejects the NAME; a rule matching only `=require` would pass a URL that
+  // fails identically.
   it.each(['require', 'disable', 'prefer'])(
     'rejects channel_binding=%s — the name is what Postgres refuses',
     (value) => {
@@ -137,10 +112,8 @@ describe('validateDatabaseUrl — libpq client-only parameters', () => {
     expect(verdict.message).toContain('42704');
   });
 
-  // The green case that makes the rule safe to have: `sslmode` is the one TLS
-  // parameter postgres.js DOES consume (it deletes it and maps it to `ssl`), so
-  // a Neon URL carrying `sslmode=require` alone must stay valid. Rejecting it
-  // would break every working connection string in the project.
+  // `sslmode` is the one TLS parameter postgres.js DOES consume (mapped to
+  // `ssl`), so a URL carrying it alone must stay valid.
   it('accepts `sslmode=require` alone — postgres.js consumes that one', () => {
     expect(validateDatabaseUrl(NEON)).toEqual({ ok: true });
     expect(validateDatabaseUrl(`${LOCAL}?sslmode=disable`)).toEqual({ ok: true });
@@ -150,9 +123,8 @@ describe('validateDatabaseUrl — libpq client-only parameters', () => {
     expect(validateDatabaseUrl(LOCAL)).toEqual({ ok: true });
   });
 
-  // Every member of the list is the same defect, so every member is tested
-  // rather than the one that happened to bite. The list is exported so it can
-  // be pinned here instead of duplicated as a literal.
+  // Every member of the list is the same defect; the list is exported so it
+  // can be pinned rather than duplicated as a literal.
   it.each(CLIENT_ONLY_PARAMS)('rejects `%s`, which postgres.js also forwards', (param) => {
     const verdict = validateDatabaseUrl(`${NEON}&${param}=something`);
     expect(verdict.ok).toBe(false);
@@ -168,8 +140,7 @@ describe('validateDatabaseUrl — libpq client-only parameters', () => {
     expect(verdict.message).not.toContain('passfile');
   });
 
-  // Same no-leak discipline as every other rule: the parameter name is safe to
-  // print, the credentials beside it are not.
+  // The parameter name is safe to print; the credentials beside it are not.
   it('never quotes the value it rejected', () => {
     const verdict = validateDatabaseUrl(`${NEON}&channel_binding=require`);
     expect(verdict.ok).toBe(false);
@@ -178,9 +149,8 @@ describe('validateDatabaseUrl — libpq client-only parameters', () => {
     expect(verdict.message).not.toContain('ep-cool-bird');
   });
 
-  // Ordering: a value that is BOTH quoted and carrying the parameter is an
-  // extraction fault first. Fixing the quoting may remove the parameter too,
-  // and reporting the inner defect of an outer one sends you to the wrong file.
+  // A value both quoted and carrying the parameter is an extraction fault
+  // first; reporting the inner defect of an outer one sends you to the wrong file.
   it('reports UNTRIMMED ahead of the parameter it wraps', () => {
     const verdict = validateDatabaseUrl(`"${NEON}&channel_binding=require"`);
     expect(verdict.ok).toBe(false);
@@ -247,8 +217,7 @@ describe('reportLines', () => {
     expect(lines.find((line) => line.includes('GOOGLE_CLIENT_SECRET'))).toContain('empty');
   });
 
-  // The assertion that makes the report safe to print in a log anyone can read.
-  // Not "we intend not to leak" — "no line contains the value".
+  // Not "we intend not to leak" — no line contains the value.
   it('never prints a value', () => {
     const text = lines.join('\n');
     expect(text).not.toContain(NEON);
@@ -280,9 +249,7 @@ describe('assertPulledEnv', () => {
     expect(result.failures.map((failure) => failure.key)).toEqual(['DATABASE_URL']);
   });
 
-  // The report is the point of this task, so it must survive the failure that
-  // makes it interesting. A run that fails without saying what it saw is the
-  // state this task exists to end.
+  // The report must survive the failure that makes it interesting.
   it('reports every key even when it is about to fail', () => {
     const result = assertPulledEnv('BETTER_AUTH_SECRET="[SENSITIVE]"', ['DATABASE_URL']);
     expect(result.ok).toBe(false);
@@ -311,10 +278,8 @@ describe('assertPulledEnv', () => {
   });
 });
 
-// The sweep, in the shape tests/guards/vercel-pull-git-branch.test.ts
-// established: a pull whose result nothing checks is the defect, so the check is
-// tied to the pull across the whole directory rather than to the two workflows
-// this task happens to edit.
+// The sweep: a pull whose result nothing checks is the defect, so the check is
+// tied to every pull in the directory rather than to two named workflows.
 describe('every workflow that pulls a Vercel environment', () => {
   const WORKFLOWS_DIR = fromRoot('.github/workflows');
   const INVOCATION = /(?:^|&&|\|\||;|\|)\s*vercel pull\b/;

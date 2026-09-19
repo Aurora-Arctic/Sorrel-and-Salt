@@ -4,28 +4,12 @@ import { parse } from 'yaml';
 
 import { fromRoot } from '../support/paths';
 
-// MB.47 — a Vercel variable marked Sensitive cannot be read back by
-// `vercel pull`. That is what the setting means, and it is not a state CI can
-// route around: a diagnostic run pulled staging's preview environment both
-// with and without `--git-branch`, and `DATABASE_URL` came back as the literal
-// string `[SENSITIVE]` either way, alongside `BETTER_AUTH_SECRET`.
-//
-// Both are values the build needs — `src/lib/auth.ts` throws on an unset
-// secret whenever NODE_ENV=production, and `src/db/connection.ts` calls
-// `postgres()` at module scope, which parses its URL eagerly. So CI keeps its
-// own copy of exactly the two it cannot read, as repository secrets named per
-// target. The runtime is untouched: a deployed function reads its environment
-// from the platform, not from the pulled file.
-//
-// Named secrets rather than GitHub Environments deliberately. An environment
-// would mean a new `workflow_call` input, a new `resolve-target` output and an
-// `environment:` key on two jobs — three pieces of plumbing to express what a
-// secret's name already says.
-//
-// What this file guards is the selection. Picking the wrong one is silent:
-// `secrets.X` for a secret that does not exist resolves to the empty string
-// rather than erroring, so a typo or a missed arm migrates the wrong database
-// with nothing failing. That is the same shape as the bug this task ends.
+// `DATABASE_URL` and `BETTER_AUTH_SECRET` are marked Sensitive in Vercel, so
+// `vercel pull` writes `[SENSITIVE]` in their place and CI keeps its own copy
+// of each as a repository secret named per target (claude-docs/ci.md,
+// "Deploy"). What this file guards is the selection: `secrets.X` for a secret
+// that does not exist resolves to the empty string rather than erroring, so a
+// typo or a missed arm migrates the wrong database with nothing failing.
 
 const WORKFLOWS_DIR = fromRoot('.github/workflows');
 
@@ -71,11 +55,8 @@ describe('migrate.yml resolving DATABASE_URL', () => {
   });
 
   // Production is decided by the Vercel environment rather than the branch
-  // name: `main` is the only push that resolves `production`, and a mis-picked
-  // production secret is the one failure with no second chance.
-  //
-  // Through `env:` rather than interpolated into the script, for the reason
-  // MB.27 established for `GIT_BRANCH`: a branch name may legally carry shell
+  // name — `main` is the only push that resolves `production`. Through `env:`
+  // rather than interpolated: a branch name may legally carry shell
   // metacharacters, and a hotfix branch's name arrives from a pull request.
   it('picks production by the environment, not by the branch name', () => {
     expect(step.env?.ENVIRONMENT).toBe('${{ inputs.environment }}');
@@ -89,9 +70,8 @@ describe('migrate.yml resolving DATABASE_URL', () => {
   });
 
   // The one target no static secret can name: a hotfix preview's Neon branch
-  // is created per deployment. The integration writes its connection string
-  // into the pulled file as POSTGRES_URL, which — unlike DATABASE_URL — is not
-  // marked Sensitive and so can actually be read.
+  // is created per deployment. The integration writes it into the pulled file
+  // as POSTGRES_URL, which is not marked Sensitive.
   it('falls back to the integration-provided POSTGRES_URL', () => {
     expect(run).toContain('POSTGRES_URL');
   });
@@ -106,9 +86,8 @@ describe('migrate.yml resolving DATABASE_URL', () => {
     expect(run.indexOf('::add-mask::')).toBeLessThan(run.indexOf('GITHUB_ENV'));
   });
 
-  // Reporting which source won is what makes a wrong-database migration
-  // visible at all: every candidate is masked, so the value itself can never
-  // say. The name of the source is not a secret.
+  // Every candidate is masked, so only the source's name can say which
+  // database was chosen — and the name is not a secret.
   it('says which source it used', () => {
     expect(run).toMatch(/Resolved DATABASE_URL from/);
   });
@@ -139,9 +118,8 @@ describe('deploy.yml overriding what the pull could not read', () => {
     expect(override).toBeLessThan(names.indexOf('Build'));
   });
 
-  // MB.46's assertion checks the file the build will actually read, so it has
-  // to come after the overrides — otherwise it passes or fails on values that
-  // are about to be replaced.
+  // The assertion checks the file the build will read, so it has to run after
+  // the overrides rather than on values about to be replaced.
   it('runs before the assertion that checks its work', () => {
     const names = (job.steps ?? []).map((candidate) => candidate.name);
     expect(names.indexOf('Override what the pull could not read')).toBeLessThan(
@@ -150,9 +128,8 @@ describe('deploy.yml overriding what the pull could not read', () => {
   });
 });
 
-// Both workflows choose between the same two secrets, and they must choose the
-// same way or the migration runs against one database while the deploy serves
-// another — M1.1's "Cross-task impact", in mechanical form.
+// Both workflows choose between the same two secrets and must choose the same
+// way, or the migration runs against one database while the deploy serves another.
 describe('both workflows', () => {
   const migrateRun =
     stepNamed(workflow('migrate.yml').jobs.migrate, 'Resolve DATABASE_URL').run ?? '';

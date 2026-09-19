@@ -4,27 +4,18 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
-// MB.50's mechanical half. A comment defers its argument to claude-docs/, so a
-// citation that does not resolve costs the reader the argument entirely — and
-// it fails silently, because nothing reads a comment.
-//
-// Fourteen existed when the convention landed. Thirteen resolved only under
-// claude-docs/archive/, which README.md declares write-once and never-read, and
-// every one was cited without the archive/ prefix — so the path was wrong and
-// the destination was out of bounds. The fourteenth named a transcript that has
-// never existed at all.
+// A comment defers its argument to claude-docs/, so a citation that does not
+// resolve costs the reader the argument — and fails silently, because nothing
+// reads a comment.
 
 // Assembled so this file does not match its own assertions and report itself.
 const DOCS = 'claude-docs';
 const CITATION = new RegExp(`${DOCS}/[\\w./-]*\\.md`, 'g');
-// A citation left hanging on a line break, with the rest on the next comment
-// line. A filename splits as readily as a directory does
-// (`m1.21-seed-writes-through-` / `its-handle.md`), and either form is
-// invisible to the resolve check above, which reads one line at a time.
-//
-// Only a fragment running to end-of-line counts. Naming the directory
-// mid-sentence is ordinary prose, and trailing sentence punctuation is not part
-// of the path.
+// A citation left hanging on a line break, the rest on the next comment line.
+// A filename splits as readily as a directory does, and either form is
+// invisible to the resolve check, which reads one line at a time. Only a
+// fragment running to end-of-line counts: naming the directory mid-sentence
+// is ordinary prose, and trailing sentence punctuation is not part of the path.
 const PATH_CHARS = new RegExp(`${DOCS}/[\\w./-]*`, 'g');
 
 function wrappedCitation(text: string): boolean {
@@ -43,13 +34,10 @@ function unwrap(section: string): string {
 }
 
 /**
- * Tracked files plus untracked ones git would not ignore, so a citation written
- * in the diff that adds it is caught there rather than after it ships — the
- * reasoning tests/guards/slug-rule.test.ts records for the same listing.
- *
- * `src/db/migrations/` is excluded deliberately: drizzle hashes each migration's
- * file content, so editing one to fix a comment is not the harmless change it
- * looks like. Their citations go unchecked, which is the price of immutability.
+ * Tracked files plus untracked ones git would not ignore, so a citation is
+ * caught in the diff that adds it. `src/db/migrations/` is excluded: drizzle
+ * hashes each migration's content, so fixing a comment there is not the
+ * harmless edit it looks like.
  */
 function citingFiles(): string[] {
   const args = ['-c', 'safe.directory=*', 'ls-files', '--cached', '--others', '--exclude-standard'];
@@ -73,9 +61,8 @@ const FILES = citingFiles();
 const CITED = FILES.flatMap((file) => citationsIn(file).map((path) => ({ file, path })));
 
 describe('every claude-docs citation resolves', () => {
-  // The precondition behind every assertion below: an empty listing, or one
-  // that missed the files carrying citations, would satisfy each `toEqual([])`
-  // without a single path having been checked.
+  // Precondition: an empty listing would satisfy every `toEqual([])` below
+  // with nothing checked.
   it('is scanning files that actually cite the docs', () => {
     expect(FILES.length).toBeGreaterThan(50);
     expect(CITED.length).toBeGreaterThan(10);
@@ -88,26 +75,22 @@ describe('every claude-docs citation resolves', () => {
     expect(missing).toEqual([]);
   });
 
-  // archive/ is write-once and never-read (claude-docs/README.md). A comment
-  // sending its reader there is that rule's own failure one level down: the
-  // reasoning exists, somewhere the reader is told to treat as out of context.
+  // archive/ is write-once and never-read (claude-docs/README.md).
   it('never sends the reader into the archive', () => {
     const archived = CITED.filter(({ path }) => path.startsWith(`${DOCS}/archive/`));
 
     expect(archived).toEqual([]);
   });
 
-  // Keeping a path whole is what makes the resolve check sound — it reads one
-  // line at a time, so a split path is checked by nothing.
+  // The resolve check reads one line at a time, so a split path is checked by nothing.
   it('keeps each citation on one line', () => {
     const wrapped = FILES.filter((file) => wrappedCitation(read(file)));
 
     expect(wrapped).toEqual([]);
   });
 
-  // The `"Slugs"` class of error: a real file, a section never written.
-  // Headings carry a trailing task-ID parenthetical, so the quoted name is
-  // matched as a prefix rather than for equality.
+  // A real file, a section never written. Headings carry a trailing task-ID
+  // parenthetical, so the quoted name is matched as a prefix.
   it('names a section that exists, where it names one', () => {
     const dangling = FILES.flatMap((file) => {
       const cited = citationsIn(file);
