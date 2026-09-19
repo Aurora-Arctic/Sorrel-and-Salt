@@ -1,11 +1,5 @@
 import { inArray, isNull, sql } from 'drizzle-orm';
-// `./bootstrap-admin` first, and load-bearing for the reason minimal.ts records
-// at length: audit.ts and schema/users.ts import each other, and whichever is
-// entered first sees the other half-initialised. bootstrap-admin imports
-// schema/users, so putting it above the schema modules that reach audit.ts
-// directly is what makes `users` build its table with `auditColumns` already
-// defined. Reverse them and every insert below silently drops its created_by
-// and fails NOT NULL.
+// `./bootstrap-admin` first, and load-bearing — see minimal.ts.
 import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
 import { users } from '../schema/users';
 import { workspaceMembers, workspaces } from '../schema/workspaces';
@@ -19,36 +13,27 @@ import { categoryIdByName, seedCategoryVocabulary } from './categories';
 import { seedFormVocabulary } from './forms';
 import type { SeedDatabase, SeedTransaction } from './index';
 
-// M1.22 — the `standard` scenario (DESIGN.md §"Seed data"): five fixture users,
+// The `standard` scenario (DESIGN.md §"Seed data"): five fixture users,
 // workspaces W and X, and a populated compendium. The fixture every
 // authorization test reads against, which is why the cast is fixed rather than
-// generated: `asUser(A)` (M1.26) means the same person in every suite.
+// generated — `asUser(A)` means the same person in every suite.
 //
-// The compendium here is deliberately awkward. A clean list of herbs would
-// exercise nothing the identity model exists for, so it carries §5's own hard
-// cases: four unrelated plants and a literal cat's claw all labelled "Cat's
-// Claw", a mineral *variety*, a `none` and an `unknown`, and one in-use `form`
-// nobody has curated. M4.7/M4.7a (fuzzy duplicates, scoped suggestions) and
-// M8.3/M8.3a (local-beats-compendium resolution, folk-name promotion) resolve
-// against these rows, and none of those tasks can be tested against tidy data.
+// **The compendium here is deliberately awkward**, because a clean list of
+// herbs would exercise nothing the identity model exists for: five rows
+// labelled "Cat's Claw", a mineral *variety*, a `none` and an `unknown`, and
+// one in-use `form` nobody has curated. M4.7/M4.7a and M8.3/M8.3a resolve
+// against these rows and none of them can be tested against tidy data
+// (claude-docs/db.md, "The compendium is awkward on purpose").
 //
 // The writes go through the handle `seed()` was given rather than through
-// `withAudit`, for the reason recorded in claude-docs/design-decisions/
-// m1.21-seed-writes-through-its-handle.md — and what `withAudit` guarantees is
-// kept rather than re-argued: one transaction, the acting user published as
-// `app.current_user_id` in the same parameterised form, and every stamp
-// produced by the shared `applyAudit`.
+// `withAudit` (claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md).
 
 /**
- * The columns a fixture user names, typed against the table's own insert model
- * so a column renamed in users.ts fails here rather than at the first seed.
- *
- * `id` is restated as required rather than picked: the table defaults it, so
- * the insert model makes it optional — and an optional id is exactly what this
- * scenario must not have. The ids are fixed for the same reason
- * `BOOTSTRAP_USER_ID` is: a test asserting against A names one id, not
- * whichever UUID this run generated. `…0003`–`…0007` continue the series
- * `…0001` (bootstrap) and `…0002` (`minimal`'s plain user) opened.
+ * Typed against the table's own insert model, so a column renamed in users.ts
+ * fails here rather than at the first seed. `id` is restated as required rather
+ * than picked: the table defaults it, so the insert model makes it optional,
+ * and a test asserting against A has to name one id rather than whichever UUID
+ * this run generated. `…0003`–`…0007` continue the bootstrap's series.
  */
 type SeedUser = Pick<
   typeof users.$inferInsert,
@@ -56,15 +41,13 @@ type SeedUser = Pick<
 > & { id: string };
 
 /**
- * DESIGN.md §"Seed data"'s fixture table, and CLAUDE.md's Testing section:
- * A owns W, B is a member of W, C a viewer in W, D a member of unrelated X,
- * E a site admin in no workspace.
+ * DESIGN.md §"Seed data"'s fixture table: A owns W, B is a member of W, C a
+ * viewer in W, D a member of unrelated X, E a site admin in no workspace.
  *
  * `canCreateWorkspace` follows the invite gate rather than convenience. A–D are
- * in a workspace, which under §5 is how the flag comes to be true — an
- * invitation was accepted. E is in none and has never been invited, so E's
- * false flag is correct and E creates workspaces by being an admin instead.
- * Seeding E `true` would hide exactly the distinction M3.2's gate turns on.
+ * in a workspace, which is how the flag comes to be true; E has never been
+ * invited, so E's false flag is correct and E creates workspaces by being an
+ * admin instead. Seeding E `true` would hide the distinction M3.2 turns on.
  */
 export const FIXTURE_USERS = {
   A: {
@@ -111,12 +94,9 @@ export const WORKSPACE_X_ID = '00000000-0000-0000-0001-000000000002';
 
 type SeedWorkspace = Pick<typeof workspaces.$inferInsert, 'name'> & { id: string };
 
-// No slug is written down, per CLAUDE.md's slug rule: it is `slugify(name)`,
-// through the one shared implementation, so a seeded workspace resolves at
-// /coven/<slug> under the same rule M3.3's mutation will slug a real one with.
-//
-// Exported beside `FIXTURE_USERS` for the same reason: the M1.25 factories
-// have to know what W and X are called, so their own default can be neither.
+// No slug is written down, per CLAUDE.md's slug rule. Exported beside
+// `FIXTURE_USERS` because the M1.25 factories have to know what W and X are
+// called, so their own defaults can be neither.
 export const FIXTURE_WORKSPACES: SeedWorkspace[] = [
   { id: WORKSPACE_W_ID, name: 'Whitethorn Coven' },
   { id: WORKSPACE_X_ID, name: 'Ninebark Coven' },
@@ -135,10 +115,9 @@ const MEMBERSHIPS: SeedMembership[] = [
 ];
 
 /**
- * One compendium entry, typed against the table's own insert model so a column
- * renamed in ingredients.ts fails here rather than at the first `db:seed`, plus
- * the two things that live in other tables: its folk names (M4.4a's child
- * table) and the categories it is filed under (§6's vocabulary, by name).
+ * One compendium entry, typed against the table's own insert model, plus the
+ * two things that live in other tables: its folk names and the categories it is
+ * filed under, named rather than keyed.
  */
 type SeedIngredient = Pick<
   typeof ingredients.$inferInsert,
@@ -157,21 +136,11 @@ type SeedIngredient = Pick<
 
 /**
  * The compendium `standard` populates. Every entry declares a `nomenclature`,
- * and the awkward ones are the point:
- *
- *   - five rows labelled **Cat's Claw** — _Uncaria tomentosa_, _U. guianensis_,
- *     _Senegalia greggii_, _Dolichandra unguis-cati_ and a claw from _Felis
- *     catus_ — told apart only by the generated `canonicalKey` (§5)
- *   - two **mineral varieties**, `Quartz var. amethyst` and `Gypsum var.
- *     selenite`, which is the rule that stops the crystal drawer collapsing
- *     onto two species
- *   - three **`none`** entries and one **`unknown`**: no system names graveyard
- *     dirt, and one does name Devil's Shoestring but nobody has looked it up
- *   - one **uncurated form**, `rhizome` — §5's own example of a value a member
- *     writes before an admin curates it, and the second half of M4.7a's list
- *   - **comfrey beside foxglove**, both `leaf`: §5's argument for demanding a
- *     formal name in the curated tier is that those two are confused in the
- *     real world and one of them carries a safety note that matters
+ * and the awkward ones are the point: five rows labelled **Cat's Claw** told
+ * apart only by `canonicalKey`, two **mineral varieties**, three **`none`**
+ * entries and one **`unknown`**, one **uncurated form** (`rhizome`), and
+ * **comfrey beside foxglove**, both `leaf`, one of which carries a safety note
+ * that matters.
  */
 export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
   {
@@ -452,8 +421,8 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
 
 export async function seedStandard(db: SeedDatabase): Promise<void> {
   await db.transaction(async (tx) => {
-    // Published exactly as withAudit publishes it (M1.19): `set_config` with a
-    // bind parameter, transaction-local.
+    // Published exactly as withAudit publishes it: `set_config` with a bind
+    // parameter, transaction-local.
     await tx.execute(sql`select set_config('app.current_user_id', ${BOOTSTRAP_USER_ID}, true)`);
     await insertBootstrapAdmin(tx);
     await seedStandardContent(tx);
@@ -461,24 +430,19 @@ export async function seedStandard(db: SeedDatabase): Promise<void> {
 }
 
 /**
- * The same scenario, inside a transaction the caller already opened — which is
- * the only reason it is separate, and the shape `seedCategoryVocabulary` and
- * `seedFormVocabulary` already take. M1.23's `demo` is "standard plus spells",
- * so it writes its grimoire alongside these rows rather than after them: a
- * half-applied scenario (a compendium seeded, the spells that reference it
- * not) is worse than one that never ran, and two transactions is two chances
- * at one.
+ * The same scenario, inside a transaction the caller already opened — the only
+ * reason it is separate. `demo` is "standard plus spells", so it writes its
+ * grimoire alongside these rows: a compendium seeded without the spells that
+ * reference it is worse than a scenario that never ran.
  *
  * It assumes what `seedStandard` does for itself: the GUC is published and the
  * bootstrap admin exists, since every row here is stamped as that user's.
  */
 export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
-  // The admin-curated reference data first — §6's categories and §5's forms.
-  // `standard` is "a populated compendium", which is all of it: an ingredient
-  // is filed under a category by foreign key, so M4.3's rows have to exist
-  // before this scenario's assignments can point at them. Inside this
-  // transaction rather than by calling `seedCategories(db)`, so a scenario is
-  // never half-applied.
+  // The admin-curated reference data first: an ingredient is filed under a
+  // category by foreign key, so those rows have to exist before this scenario's
+  // assignments can point at them. Inside this transaction rather than by
+  // calling `seedCategories(db)`, so a scenario is never half-applied.
   await seedFormVocabulary(tx);
   await seedCategoryVocabulary(tx);
 
@@ -491,12 +455,10 @@ export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
   await insertMissingCategoryAssignments(tx, ingredientIds, await categoryIdByName(tx));
 }
 
-// Everything below is idempotent the way seedCategories is: it inserts what is
-// missing, keyed on identity, and **ignores `deleted_at`**. The partial unique
-// indexes stop only a second *live* row, so an entry an admin soft-deleted
-// would otherwise be re-inserted on the next run and the deletion quietly
-// undone. Nothing already present is updated either, so a renamed workspace or
-// a retitled ingredient survives a reseed.
+// Idempotent the way seedCategories is: it inserts what is missing, keyed on
+// identity, and **ignores `deleted_at`** — the partial unique indexes stop only
+// a second *live* row, so a soft-deleted entry would otherwise be re-inserted
+// and the deletion quietly undone. Nothing already present is updated either.
 
 async function insertMissingUsers(tx: SeedTransaction): Promise<void> {
   const present = new Set(
@@ -568,16 +530,13 @@ async function insertMissingMemberships(tx: SeedTransaction): Promise<void> {
 }
 
 /**
- * A compendium entry's identity is its formal name plus its form, which the
- * database computes into `canonical_key` for itself. This keys on the three
- * columns that expression reads instead of recomputing it in TypeScript: a
- * second implementation of §5's normalisation is a second thing to keep in
- * step, and the one that lies is the one nobody runs.
+ * Keys on the three columns `canonical_key`'s generated expression reads,
+ * rather than recomputing that expression in TypeScript: a second
+ * implementation of §5's normalisation is a second thing to keep in step.
  *
- * Exported because M1.23's `demo` keys W's own ingredients the same way. The
- * tier is the caller's business — `workspace_id` is what tells a local entry
- * from a compendium one, and this key says nothing about it — so a caller
- * builds its map from one tier's rows, never from both at once.
+ * It says nothing about the tier — `workspace_id` is what tells a local entry
+ * from a compendium one — so a caller builds its map from one tier's rows,
+ * never from both at once.
  */
 export function identityOf(entry: {
   name: string;
@@ -624,10 +583,9 @@ async function insertMissingIngredients(tx: SeedTransaction): Promise<Map<string
 }
 
 /**
- * The id a seeded entry landed under. Unreachable while every entry above went
- * through `insertMissingIngredients`, which either found or inserted each one —
- * but a lookup that silently returned `undefined` would insert a null
- * `ingredient_id` and fail NOT NULL several rows later, naming the wrong row.
+ * The id a seeded entry landed under. Unreachable today — but a lookup that
+ * silently returned `undefined` would insert a null `ingredient_id` and fail
+ * NOT NULL several rows later, naming the wrong row.
  */
 function ingredientIdFor(entry: SeedIngredient, ingredientIds: Map<string, string>): string {
   const id = ingredientIds.get(identityOf(entry));
@@ -707,9 +665,8 @@ async function insertMissingCategoryAssignments(
 
   if (missing.length === 0) return;
 
-  // `ingredient_categories` is one of MB.34's three hard-deleted join tables,
-  // so the stamps here are the four-column `auditStampColumns` set — there is
-  // no tombstone to dodge and `applyAudit` simply stamps fewer columns.
+  // `ingredient_categories` is hard-deleted (MB.34), so these carry the
+  // four-column stamp set and `applyAudit` simply stamps fewer columns.
   await tx
     .insert(ingredientCategories)
     .values(missing.map((assignment) => applyAudit('insert', assignment, BOOTSTRAP_SESSION)));

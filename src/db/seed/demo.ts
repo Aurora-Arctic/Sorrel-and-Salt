@@ -1,11 +1,5 @@
 import { eq, inArray, isNull, sql } from 'drizzle-orm';
-// `./bootstrap-admin` first, and load-bearing for the reason minimal.ts records
-// at length: audit.ts and schema/users.ts import each other, so whichever is
-// entered first sees the other half-initialised. bootstrap-admin imports
-// schema/users, so putting it above the schema modules that reach audit.ts
-// directly is what makes `users` build its table with `auditColumns` already
-// defined. Reverse them and every insert below silently drops its created_by
-// and fails NOT NULL.
+// `./bootstrap-admin` first, and load-bearing — see minimal.ts.
 import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
 import { ingredients } from '../schema/ingredients';
 import { spells } from '../schema/spells';
@@ -22,35 +16,20 @@ import {
 } from './standard';
 import type { SeedDatabase, SeedTransaction } from './index';
 
-// M1.23 — the `demo` scenario (DESIGN.md §"Seed data"): "standard plus spells
-// with ingredients and layer order". The scenario a screenshot is taken
-// against, which is why the jars below are written out as a member would write
-// them — an intent in a sentence, instructions that read like instructions,
-// and a stack that names what went in and in what order — rather than
-// generated as "Spell 1" through "Spell 3".
+// The `demo` scenario (DESIGN.md §"Seed data"): "standard plus spells with
+// ingredients and layer order". The scenario a screenshot is taken against,
+// which is why the jars below are written as a member would write them rather
+// than generated as "Spell 1" through "Spell 3".
 //
-// It adds two things `standard` does not have:
-//
-//   - **W's own ingredients.** A grimoire that only ever reached the
-//     compendium would exercise one half of §5's two tiers, and the jars here
-//     mix the two the way a real one does: sea salt out of the compendium,
-//     hearth ash the coven wrote down itself.
-//   - **A custom, one-off layer** (MB.40, story 57) — a name written for one
-//     jar, with no `ingredient_id`, which never becomes an ingredient
-//     anywhere. Wave 13 renders, reorders and prints both kinds of row, and
-//     this is the row of the second kind it has to work against.
+// It adds two things `standard` does not have: **W's own ingredients**, so the
+// jars mix §5's two tiers the way a real one does; and **a custom, one-off
+// layer** (MB.40, story 57) — a name written for one jar, with no
+// `ingredient_id`, which never becomes an ingredient anywhere.
 //
 // The writes go through the handle `seed()` was given rather than through
-// `withAudit`, for the reason recorded in claude-docs/design-decisions/
-// m1.21-seed-writes-through-its-handle.md — one transaction, the acting user
-// published as `app.current_user_id` in the same parameterised form, every
-// stamp produced by the shared `applyAudit`.
+// `withAudit` (claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md).
 
-/**
- * W's own ingredients — the workspace tier of §5's one table, `workspace_id`
- * set rather than null. Typed against the table's insert model so a column
- * renamed in ingredients.ts fails here rather than at the first `db:seed`.
- */
+/** W's own ingredients — the workspace tier, `workspace_id` set rather than null. */
 type SeedWorkspaceIngredient = Pick<
   typeof ingredients.$inferInsert,
   'name' | 'canonicalName' | 'nomenclature' | 'form' | 'description' | 'element'
@@ -58,11 +37,10 @@ type SeedWorkspaceIngredient = Pick<
 
 /**
  * Rosemary the coven grows, beside the compendium's own entry for the same
- * species. **The duplication is the fixture**: this is exactly the pair M8.3's
- * local-beats-compendium resolution has to collapse, and it can only be
- * resolved where both rows exist. The two share an identity — same formal
- * name, same form — which the two partial unique indexes permit precisely
- * because they are in different tiers.
+ * species. **The duplication is the fixture** — the pair M8.3's
+ * local-beats-compendium resolution has to collapse. The two share an identity,
+ * which the two partial unique indexes permit because they are in different
+ * tiers.
  */
 const GARDEN_ROSEMARY: SeedWorkspaceIngredient = {
   name: 'Garden Rosemary',
@@ -75,8 +53,8 @@ const GARDEN_ROSEMARY: SeedWorkspaceIngredient = {
 
 /**
  * Story 29's one-field stub, near enough: a thing this household keeps that no
- * naming system names, so `nomenclature` is `none` and there is no formal name
- * to give it. The local tier is where a row like this is allowed to live.
+ * naming system names, so `nomenclature` is `none`. The local tier is where a
+ * row like this is allowed to live.
  */
 const HEARTH_ASH: SeedWorkspaceIngredient = {
   name: 'Hearth Ash',
@@ -104,8 +82,7 @@ export const WORKSPACE_W_INGREDIENTS: SeedWorkspaceIngredient[] = [
 
 /**
  * What a layer points at: an ingredient in one of the two tiers, or nothing at
- * all — the custom row, which carries its own name and form instead
- * (`num_nonnulls(ingredient_id, name) = 1`, MB.40).
+ * all — the custom row, which carries its own name and form instead.
  */
 type SeedLayerIngredient =
   | {
@@ -115,10 +92,9 @@ type SeedLayerIngredient =
   | { tier: 'custom'; name: string; form: string };
 
 /**
- * One layer of a jar, typed against `spell_ingredients`' own insert model.
- * `layerOrder` is not among the picked columns: it is the position in the
- * array below, so the two can never disagree and a layer cannot be given the
- * same depth as its neighbour.
+ * One layer of a jar. `layerOrder` is deliberately not a picked column: it is
+ * the position in the array below, so the two cannot disagree and a layer
+ * cannot be given the same depth as its neighbour.
  */
 type SeedLayer = Pick<typeof spellIngredients.$inferInsert, 'quantity' | 'unit' | 'note'> & {
   ingredient: SeedLayerIngredient;
@@ -142,11 +118,10 @@ type SeedSpell = Pick<
 };
 
 /**
- * A compendium entry, named by what `standard` actually seeds rather than by a
- * second copy of its columns. The lookup runs at module load, so a demo layer
- * naming an entry the compendium does not carry fails on import — loudly, and
- * before a seed has written anything — rather than at a foreign key several
- * inserts later.
+ * A compendium entry, named by what `standard` seeds rather than by a second
+ * copy of its columns. The lookup runs at module load, so a layer naming an
+ * entry the compendium does not carry fails on import — before a seed has
+ * written anything — rather than at a foreign key several inserts later.
  */
 function fromCompendium(name: string, canonicalName?: string): SeedLayerIngredient {
   const entry = COMPENDIUM_INGREDIENTS.find(
@@ -201,9 +176,9 @@ export const DEMO_SPELLS: SeedSpell[] = [
         note: 'From our own grate, which is the whole point of the jar.',
       },
       {
-        // The custom, one-off layer (MB.40). Never an `ingredients` row, never
-        // on W's ingredients page, and `form` is free text — `dust` is nowhere
-        // in M4.3a's curated 78, exactly as a member would write it.
+        // The custom, one-off layer (MB.40). Never an `ingredients` row, and
+        // `dust` is nowhere in the curated forms — exactly as a member would
+        // write it.
         ingredient: { tier: 'custom', name: 'Dust from the front step', form: 'dust' },
         quantity: '1.000',
         unit: 'pinch',
@@ -260,15 +235,15 @@ export const DEMO_SPELLS: SeedSpell[] = [
 
 export async function seedDemo(db: SeedDatabase): Promise<void> {
   await db.transaction(async (tx) => {
-    // Published exactly as withAudit publishes it (M1.19): `set_config` with a
-    // bind parameter, transaction-local.
+    // Published exactly as withAudit publishes it: `set_config` with a bind
+    // parameter, transaction-local.
     await tx.execute(sql`select set_config('app.current_user_id', ${BOOTSTRAP_USER_ID}, true)`);
     await insertBootstrapAdmin(tx);
 
-    // `demo` is "standard plus", and the plus is inside the same transaction:
-    // every spell below points at a workspace, a category and — mostly — a
-    // compendium entry that `standard` writes, so a half-applied scenario
-    // would be a grimoire referencing rows that are not there.
+    // The plus is inside the same transaction: every spell below points at a
+    // workspace, a category and — mostly — a compendium entry `standard`
+    // writes, so a half-applied scenario is a grimoire referencing rows that
+    // are not there.
     await seedStandardContent(tx);
 
     await insertMissingWorkspaceIngredients(tx);
@@ -280,12 +255,10 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
   });
 }
 
-// Everything below is idempotent the way `standard` is: it inserts what is
-// missing, keyed on identity, and **ignores `deleted_at`**. The partial unique
-// indexes stop only a second *live* row, so a spell someone soft-deleted would
-// otherwise be re-inserted on the next run and the deletion quietly undone.
-// Nothing already present is updated either, so a retitled spell, a reordered
-// stack or a rewritten note survives a reseed.
+// Idempotent the way `standard` is: it inserts what is missing, keyed on
+// identity, and **ignores `deleted_at`** — the partial unique indexes stop only
+// a second *live* row, so a soft-deleted spell would otherwise be re-inserted
+// and the deletion quietly undone. Nothing already present is updated either.
 
 async function insertMissingWorkspaceIngredients(tx: SeedTransaction): Promise<void> {
   const present = new Set(
@@ -342,10 +315,9 @@ async function insertMissingSpells(tx: SeedTransaction): Promise<void> {
 
 /**
  * Every id a layer below could name, keyed by `identityOf`. Both tiers in one
- * map, which is safe here and only here: W's own three entries and the
- * compendium's share no identity except Garden Rosemary's, whose local row
- * wins — and a layer of W's jar naming rosemary means W's rosemary, which is
- * M8.3's rule arrived at from the other end.
+ * map, which is safe here and only here: the two share no identity except
+ * Garden Rosemary's, whose local row wins — and a layer of W's jar naming
+ * rosemary means W's rosemary, which is M8.3's rule from the other end.
  */
 async function ingredientIdByIdentity(tx: SeedTransaction): Promise<Map<string, string>> {
   const rows = await tx
@@ -371,11 +343,10 @@ async function ingredientIdByIdentity(tx: SeedTransaction): Promise<Map<string, 
 }
 
 /**
- * The id a layer's ingredient landed under. Unreachable while every entry it
- * can name was either seeded by `standard` or inserted above — but a lookup
- * that silently returned `undefined` would write a null `ingredient_id`, and a
- * null one is a *custom* row under MB.40's CHECK, so the failure would be a
- * blank-named layer rather than an error.
+ * The id a layer's ingredient landed under. Unreachable today — but a lookup
+ * that silently returned `undefined` would write a null `ingredient_id`, which
+ * is a *custom* row under MB.40's CHECK, so the failure would be a blank-named
+ * layer rather than an error.
  */
 function ingredientIdFor(
   ingredient: SeedLayerIngredient & { tier: 'compendium' | 'workspace' },
@@ -391,11 +362,9 @@ function ingredientIdFor(
 }
 
 /**
- * The columns that say *which* ingredient a layer is, whichever kind it is.
- * Exactly one of `ingredientId` and `name` is set — MB.40's
- * `num_nonnulls(ingredient_id, name) = 1` — and `form` rides with `name`,
- * since beside an ingredient id it would shadow half that ingredient's own
- * identity.
+ * The columns that say *which* ingredient a layer is. Exactly one of
+ * `ingredientId` and `name` is set — MB.40's `num_nonnulls(ingredient_id,
+ * name) = 1` — and `form` rides with `name`.
  */
 function layerIdentity(
   ingredient: SeedLayerIngredient,
@@ -409,24 +378,17 @@ function layerIdentity(
 }
 
 /**
- * **A jar's stack is seeded whole or not at all**, which is where this table's
- * idempotency departs from every other seed here: the unit keyed on is the
- * spell, not the layer.
+ * **A jar's stack is seeded whole or not at all** — the unit keyed on is the
+ * spell, not the layer, unlike every other seed here.
  *
- * Every other seeded row stands on its own, so "insert what is missing" is
- * well defined per row. A layer does not: its identity is a depth in a
- * sequence, and the sequence is shared. Patch one row back into a stack a
- * member has since edited and the arithmetic is against you both ways — a
- * layer pulled out of the middle leaves the ones below it renumbered, so the
- * depth the seed wants is occupied by a different ingredient (primary key), and
- * the ingredient it wants is already at another depth (`spell_ingredients_
- * spell_id_ingredient_id_unique`). Either collision fails the whole seed, not
- * the row.
- *
- * So a jar that already has layers is left exactly as it is. What that gives
- * up is a demo jar healing itself after someone empties it by hand, which
- * `make db-reset` (M1.24) does properly anyway; what it buys is that a reseed
- * over an edited grimoire is a no-op rather than an error.
+ * A layer's identity is a depth in a shared sequence, so "insert what is
+ * missing" is not well defined per row: patch one back into a stack a member
+ * has edited and both indexes collide — the depth the seed wants is occupied by
+ * a different ingredient, and the ingredient it wants is already at another
+ * depth. Either collision fails the whole seed. So a jar that already has
+ * layers is left as it is, which trades a demo jar that heals itself for a
+ * reseed over an edited grimoire being a no-op rather than an error
+ * (claude-docs/db.md, "A jar's stack is seeded whole or not at all").
  */
 async function insertMissingLayers(
   tx: SeedTransaction,
@@ -441,9 +403,8 @@ async function insertMissingLayers(
 
   if (missing.length === 0) return;
 
-  // `spell_ingredients` is one of MB.34's three hard-deleted join tables, so
-  // these carry the four-column `auditStampColumns` set — there is no
-  // tombstone to dodge and `applyAudit` simply stamps fewer columns.
+  // `spell_ingredients` is hard-deleted (MB.34), so these carry the four-column
+  // stamp set and `applyAudit` simply stamps fewer columns.
   await tx.insert(spellIngredients).values(
     missing.flatMap((spell) =>
       spell.layers.map((layer, index) =>
@@ -455,9 +416,8 @@ async function insertMissingLayers(
             quantity: layer.quantity,
             unit: layer.unit,
             // The position in the array, so the stack is written down once —
-            // one per jar from 1, which is what M10.16's reorder rewrites and
-            // M10.9's read orders by, and what a second list beside the layers
-            // could disagree with.
+            // one per jar from 1, which M10.16's reorder rewrites and M10.9's
+            // read orders by.
             layerOrder: index + 1,
             note: layer.note,
           },

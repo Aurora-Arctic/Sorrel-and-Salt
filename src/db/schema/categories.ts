@@ -2,28 +2,20 @@ import { sql } from 'drizzle-orm';
 import { pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../audit';
 
-// DESIGN.md §5: `id`, `name`, `slug`, `colorDark`, `colorLight`,
-// `description`, + audit. Global only and admin-curated, managed at
-// `/admin/category-groups`.
+// DESIGN.md §5's category groups: global, admin-curated at
+// `/admin/category-groups`. A table rather than the `category_group` pgEnum
+// M4.2 first shipped — right for a closed set of eight, wrong the moment an
+// admin may add a ninth, since `ALTER TYPE … ADD VALUE` is DDL and an admin
+// mutation cannot run DDL at all (MB.35). §6's eight are a starting set.
 //
-// A table rather than the `category_group` pgEnum M4.2 first shipped, which
-// was the right call for the closed set of eight §6 described and the wrong
-// one the moment an admin may add a ninth: `ALTER TYPE … ADD VALUE` is DDL,
-// migrations here are forward-only and CI-gated, and an admin mutation cannot
-// run DDL at all (MB.35). §6's eight are now a starting set, seeded by M4.3.
+// Two colours rather than one because the grounds differ: one hex cannot clear
+// 4.5:1 on both soot and parchment without being mud on at least one. Stored as
+// hexes on the row rather than looked up from a Sass token because a group
+// created at runtime cannot have a build-time one. Neither carries a CHECK —
+// M5.6b validates each in the service, where the failure can name the column
+// and the ratio it missed.
 //
-// Two colours rather than one because the grounds differ: M0.7 already tunes
-// every group separately per theme, and one hex cannot clear 4.5:1 on both
-// soot and parchment without being mud on at least one. They are stored as
-// hexes on the row rather than looked up from a build-time Sass token because
-// a group created at runtime cannot have one — that is the whole point of the
-// change. Neither carries a CHECK: validating each against its own theme's
-// ground is M5.6b's job in the service, where the failure can name the column
-// and the ratio it missed (§5, M5.6b).
-//
-// No order column, deliberately: groups render alphabetically by `name`, so
-// there is nothing to maintain and an admin-added group lands where a reader
-// would look for it rather than at the end.
+// No order column: groups render alphabetically by `name`.
 export const categoryGroups = pgTable(
   'category_groups',
   {
@@ -48,28 +40,18 @@ export const categoryGroups = pgTable(
   ],
 );
 
-// DESIGN.md §5: `id`, `name`, `slug`, `description`, `groupId`, + audit.
-// Global only and admin-curated — there is deliberately no `workspaceId`
-// here, and that absence is the table's whole scoping story. Categories are
-// one shared vocabulary: a workspace-scoped category could not be compared
-// against another workspace's, and §12's assigned-versus-derived comparison
-// is only meaningful because both sides draw from the same set. User
-// suggestions are v2.
+// DESIGN.md §5's categories: global, admin-curated, and deliberately carrying
+// no `workspaceId`. That absence is the table's whole scoping story —
+// categories are one shared vocabulary, and §12's assigned-versus-derived
+// comparison is only meaningful because both sides draw from the same set.
+// User suggestions are v2.
 //
-// No colour of its own. MB.35 moved the chip colour onto the group, as a pair
-// of hexes one per theme, and a category wears its group's — a single `color`
-// column here could hold neither half of that pair, and §6's 63 categories
-// are grouped precisely so they read as eight families rather than 63
-// individually-tinted chips. §5, §6 and db.md listed `color` on this table
-// until this task; the decision is recorded in §14.
+// No colour of its own: MB.35 moved the chip colour onto the group as a pair
+// of hexes, and a single `color` column here could hold neither half.
 //
 // `groupId` is a real foreign key, unlike `ingredients.form`, and the
-// asymmetry is deliberate: a vocabulary a *member* writes is text, so
-// `rhizome` stays writable before anyone has curated it, where a vocabulary
-// only an *admin* writes can be a foreign key because the same admin writes
-// both sides and nobody is blocked by a group that does not exist yet (§5).
-// The integrity is worth having — a typo'd group silently empties a chip
-// section, where a foreign key refuses the row.
+// asymmetry is §5's: a vocabulary a *member* writes is text, one only an
+// *admin* writes can be a foreign key because the same admin writes both sides.
 export const categories = pgTable(
   'categories',
   {

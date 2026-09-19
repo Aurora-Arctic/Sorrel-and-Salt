@@ -11,17 +11,15 @@ import {
 import { auditColumns } from '../audit';
 import { users } from './users';
 
-// DESIGN.md §5's role table, ordered viewer < member < owner — the ordering
-// M6.3's assertMembership implements. `owner` is a role here but deliberately
-// not an invitable one; M7.1's check constraint on workspace_invitations is
-// where that narrowing lives.
+// DESIGN.md §5's roles, ordered viewer < member < owner — the ordering M6.3's
+// assertMembership implements. `owner` is a role but not an invitable one;
+// workspace_invitations carries the CHECK that narrows it.
 export const workspaceRole = pgEnum('workspace_role', ['viewer', 'member', 'owner']);
 
 // DESIGN.md §5: `id`, `name`, `slug`, + audit — and nothing else. There is no
-// `kind` column and no automatically created workspace: every workspace
-// behaves identically, taking members and being deleted by an owner. The
-// entity is `workspaces` even though its URL prefix is `/coven/` (§5's naming
-// note); only the URL segment says coven.
+// `kind` column and no automatically created workspace: every workspace takes
+// members and is deleted by an owner. The entity is `workspaces`; only the URL
+// segment says coven (§5).
 export const workspaces = pgTable(
   'workspaces',
   {
@@ -42,10 +40,9 @@ export const workspaces = pgTable(
   ],
 );
 
-// DESIGN.md §5: `workspaceId`, `userId`, `role`, `joinedAt`, + audit, keyed on
-// the pair. The composite primary key is the membership's identity — a
-// surrogate id would let the same user join the same workspace twice. M6.3's
-// `assertMembership` reads this table to decide who may see a workspace's rows.
+// DESIGN.md §5's membership row, keyed on the pair: a surrogate id would let
+// the same user join the same workspace twice. M6.3's `assertMembership` reads
+// it to decide who may see a workspace's rows.
 export const workspaceMembers = pgTable(
   'workspace_members',
   {
