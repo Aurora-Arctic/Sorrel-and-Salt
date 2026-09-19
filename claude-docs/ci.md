@@ -413,12 +413,13 @@ itself gone now (MB.32) until M7.A.1 restores it.
   extension §5 names) and an empty `sorrel_template` database baked in at
   _build_ time, by running the official image's own `docker-entrypoint.sh`
   inside a `RUN` step instead of leaving it to first boot. No schema or seed
-  data is baked in yet; M1.27 extends the image to bake in the migrated
-  schema. (`src/db/schema/` itself is no longer empty — Wave 1 added
-  `users.ts`/`auth.ts` and migrations `0001`–`0003` — the image just doesn't
-  carry them.)
+  data is baked in, and none will be: M1.27 was specified to extend this
+  image with the migrated, seeded template and instead builds that template
+  at test-run setup (`tests/support/seeded-database.ts`;
+  [`design-decisions/m1.27-template-at-setup-not-in-image.md`](design-decisions/m1.27-template-at-setup-not-in-image.md)),
+  so the image's contents depend on nothing under `src/`.
 - **`build-db-image.yml`** — builds and publishes it to GHCR, tagged with a
-  `hashFiles()` hash of `src/db/**` / `Docker/Dockerfile.postgres` /
+  `hashFiles()` hash of `Docker/Dockerfile.postgres` /
   `Docker/postgres-init/**`. No `latest` tag (MB.17) — nothing in the repo
   ever read it: `docker-compose.yaml` builds the Dockerfile locally rather
   than pulling any tag, and every CI caller pins the hash tag. Its only
@@ -434,12 +435,14 @@ itself gone now (MB.32) until M7.A.1 restores it.
   (every `feature/*` branch's base) or `main` (the default branch) writes an
   entry another branch can restore. Measured: a fully cold build step is
   ~25s, a warm one (including a brand-new feature branch's very first run)
-  ~6–8s. `src/db/**` sits in the hash and the path filter but not in the
-  build context — `Dockerfile.postgres` only `COPY`s
-  `Docker/postgres-init`'s SQL — so through Wave 1 a `src/db/**` change
-  republishes byte-identical layers under a new tag far more often than the
-  image's actual contents change, which is exactly when the warm cache still
-  earns its keep. M1.27 baking the schema in changes that.
+  ~6–8s. `src/db/**` sat in the hash and the path filter from M0.18 to
+  M1.27, against the day the schema would be baked in — and since it was
+  never in the build context (`Dockerfile.postgres` only `COPY`s
+  `Docker/postgres-init`'s SQL), every migration republished byte-identical
+  layers under a new tag. M1.27 removed it from both: the template is
+  populated at test-run setup, so a migration no longer touches this
+  workflow at all, and the image rebuilds only when the Dockerfile or its
+  init script changes.
 
   Two separate mechanisms skip redundant work, one per trigger (MB.18). The
   `push` path filter above is a workflow-level skip — it only gates this

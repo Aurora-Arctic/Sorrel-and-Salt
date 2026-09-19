@@ -1,5 +1,3 @@
-import { join } from 'node:path';
-import { readFileSync, readdirSync } from 'node:fs';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { getTableConfig } from 'drizzle-orm/pg-core';
@@ -9,8 +7,8 @@ import {
   ingredientColumns,
   makeIngredient,
 } from '../support/fixtures';
-import { MIGRATIONS_DIR } from '../support/paths';
 import { ingredients } from '@/db/schema/ingredients';
+import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 
 // DESIGN.md §5's three partial unique indexes, transcribed by name. Identity
 // is `canonical_key` — the formal name plus the normalised form — so the
@@ -48,32 +46,22 @@ describe('ingredients index declarations', () => {
   });
 });
 
-// The behaviour half, following M4.1's idiom: apply the migrations that ship
-// this table and these indexes into this worker's disposable sorrel_test_<n>
-// clone rather than hand-copying their DDL, so what is asserted below is the
-// SQL production runs. `users` and `workspaces` are stubbed to the one column
-// the ingredients foreign keys point at — they are M2.2/M6.2's tables, and
-// applying their migrations here would leave a __drizzle_migrations table
-// behind for the next test file in this worker to trip over.
-
-function migrationStatementsContaining(marker: string): string[] {
-  const file = readdirSync(MIGRATIONS_DIR)
-    .filter((name) => name.endsWith('.sql'))
-    .sort()
-    .map((name) => join(MIGRATIONS_DIR, name))
-    .find((path) => readFileSync(path, 'utf8').includes(marker));
-
-  if (!file) throw new Error(`No migration in src/db/migrations contains ${marker}`);
-
-  return readFileSync(file, 'utf8')
-    .split('--> statement-breakpoint')
-    .map((statement) => statement.trim())
-    .filter(Boolean);
-}
-
-const AUTHOR = '11111111-1111-1111-1111-111111111111';
-const WORKSPACE_A = '22222222-2222-2222-2222-222222222222';
-const WORKSPACE_B = '33333333-3333-3333-3333-333333333333';
+// The behaviour half, against the real table and indexes. This worker's
+// sorrel_test_<n> clone arrives with every migration applied and the
+// `standard` scenario seeded (M1.27, tests/support/db-setup.ts), re-cloned
+// that way before this file runs — so what is asserted below is the SQL
+// production runs, with no schema built here and nothing to put back
+// afterwards. Until M1.27 the template was empty: this file applied the two
+// migrations that ship the table and its indexes, and stubbed
+// `users`/`workspaces` to a bare `id` column.
+//
+// The author and the two workspaces are the seed's, not invented ids: the
+// real `users` and `workspaces` have NOT NULL names, slugs and audit stamps,
+// and a row that exists is cheaper to point at than one to construct. Bound
+// to the old names so the tests read as they did.
+const AUTHOR = FIXTURE_USERS.A.id;
+const WORKSPACE_A = WORKSPACE_W_ID;
+const WORKSPACE_B = WORKSPACE_X_ID;
 
 // M1.25 — the shared factory, plus this file's own author; the audit stamps
 // are not the fixture's to give (CLAUDE.md rule 3). It is the same
@@ -137,35 +125,19 @@ async function indexRow(name: string): Promise<IndexRow | undefined> {
   return found as IndexRow | undefined;
 }
 
-beforeAll(async () => {
+beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-
-  await sql`drop table if exists ingredients`;
-  await sql`create table if not exists users (id uuid primary key)`;
-  await sql`create table if not exists workspaces (id uuid primary key)`;
-  await sql`insert into users (id) values (${AUTHOR}) on conflict do nothing`;
-  await sql`
-    insert into workspaces (id) values (${WORKSPACE_A}), (${WORKSPACE_B}) on conflict do nothing
-  `;
-
-  for (const statement of migrationStatementsContaining('CREATE TABLE "ingredients"')) {
-    await sql.unsafe(statement);
-  }
-  for (const statement of migrationStatementsContaining(COMPENDIUM_IDENTITY)) {
-    await sql.unsafe(statement);
-  }
 });
 
+// `truncate … cascade`, not `delete from`: the seeded compendium's rows have
+// category and folk-name links, and every child foreign key in the schema is
+// NO ACTION, so a delete would be refused. Truncating takes the links with
+// it, and the empty table is what every test below assumes.
 beforeEach(async () => {
-  await sql`delete from ingredients`;
+  await sql`truncate ingredients cascade`;
 });
 
 afterAll(async () => {
-  await sql`drop table if exists ingredients`;
-  await sql`drop type if exists nomenclature_kind`;
-  await sql`drop type if exists ingredient_element`;
-  await sql`drop table if exists workspaces`;
-  await sql`drop table if exists users`;
   await sql.end();
 });
 

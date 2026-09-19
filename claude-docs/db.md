@@ -161,15 +161,19 @@ db:migrate && db:seed`, and that first step is what makes it a reset rather
   from `Dockerfile.postgres` would never get a `sorrel` role/database at
   all: `PGDATA` is already populated at image build time, so the entrypoint's
   usual first-boot "create `POSTGRES_USER`/`POSTGRES_DB` from env" step never
-  runs for it. Still no schema or seed data — that's M1.27.
+  runs for it. Still no schema or seed data: `db-init` applies both to
+  `sorrel` at container start (M1.24), and the test harness applies them to
+  its own clones of `sorrel_template` at test-run setup (M1.27) — nothing is
+  baked in.
 - **`sorrel` holds `CREATEDB` and owns `sorrel_template`** (M1.9), granted in
   the same init script. `postgres`'s own password is generated and discarded
   within that build step (`Dockerfile.postgres`), so `sorrel` is the only
   role any runtime connection can ever authenticate as — and cloning a
   database as a template requires either owning it or being a superuser.
-  This is what lets the Vitest `db` project's `globalSetup`
-  (`tests/support/db-global-setup.ts`) run `CREATE DATABASE sorrel_test_<n>
-TEMPLATE sorrel_template` as `sorrel`. See `testing.md`.
+  This is what lets the test harness (`tests/support/seeded-database.ts`)
+  run `CREATE DATABASE sorrel_test_template TEMPLATE sorrel_template` as
+  `sorrel`, migrate and seed that, and clone `sorrel_test_<n>` and
+  `sorrel_e2e` from it. See `testing.md`.
 - **`npm run db:studio`** (`make db-studio`, MB.21) is `drizzle-kit studio
 --host 0.0.0.0 --port 4983`. It reads the same `drizzle.config.ts` as
   `db:generate`/`db:migrate` — no separate configuration — and needs no
@@ -366,19 +370,21 @@ still being built, so there is nothing to interpolate from. Postgres itself
 would accept a table-qualified self-reference in either place (verified
 against this database on 18.6); the limitation is Drizzle's.
 
-**How the table is tested before M1.27 bakes it into the template.**
-`sorrel_template` still carries no application tables, so
-`tests/db/ingredients-schema.test.ts` applies the migration that ships this
-table into the worker's own `sorrel_test_<n>` clone — locating it by
-searching `src/db/migrations` for the file that creates `ingredients`, then
-executing its statements — and drops it again afterwards. What the
-constraint assertions exercise is therefore the SQL production runs rather
-than a hand-copied paraphrase of it. `users` and `workspaces` are stubbed to
-the single `id` column the foreign keys point at rather than migrated:
-running Drizzle's migrator here would leave a `__drizzle_migrations` table
-behind in a clone the next test file in that worker expects not to have one
-(`test-database-isolation.test.ts` asserts exactly that). The shape half of
-the file needs no database at all and reads `getTableConfig`, the same as
+**How the table is tested.** The worker's `sorrel_test_<n>` clone arrives
+with every migration applied and the `standard` scenario seeded, re-cloned
+that way before each test file (M1.27, `testing.md`), so
+`tests/db/ingredients-schema.test.ts` asserts against the real table as
+production's migrations built it: no DDL is applied or hand-copied in the
+test, and nothing is dropped afterwards. Its `beforeEach` is `truncate
+ingredients cascade` — the seeded compendium has category and folk-name
+links behind `NO ACTION` foreign keys, so a `delete` would be refused — and
+its author and workspace are the seed's (`FIXTURE_USERS.A`, workspace W).
+Until M1.27 the template was empty, and the file applied the one migration
+that creates `ingredients` while stubbing `users`/`workspaces` to a bare
+`id`; that is also why one of its tests met
+`ingredients_workspace_identity_unique` for the first time when the full
+schema arrived, and now gives its five rows five identities. The shape half
+of the file needs no database at all and reads `getTableConfig`, the same as
 `workspaces-schema.test.ts`.
 
 **Three partial unique indexes, not two, and indexes rather than
@@ -1252,10 +1258,11 @@ would survive into the next assertion — see
 [`m1.9-test-db-isolation.md`](design-decisions/m1.9-test-db-isolation.md).
 
 **Testing against a scratch table.** `tests/db/repository.test.ts` runs in the
-`db` project against this worker's `sorrel_test_<n>` clone, which carries no
-application tables until M1.27 — so it creates its own
+`db` project against this worker's `sorrel_test_<n>` clone. The clone has
+carried the full schema since M1.27, and the test still creates its own
 `repository_probe_herbs` table spreading the real `auditColumns` (minus the
-FKs to a `users` table that doesn't exist yet) and drops it afterwards. The
+FKs to `users`) and drops it afterwards: the repository's contract is the
+six audit columns, not any one table's other constraints. The
 six columns exercised are the ones every real table will carry.
 
 That table carries one extra column no real table will:

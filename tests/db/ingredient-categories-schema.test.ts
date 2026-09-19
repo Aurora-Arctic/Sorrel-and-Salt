@@ -1,15 +1,13 @@
-import { join } from 'node:path';
-import { readFileSync, readdirSync } from 'node:fs';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { and, eq } from 'drizzle-orm';
 import { getTableConfig } from 'drizzle-orm/pg-core';
-import { MIGRATIONS_DIR } from '../support/paths';
 import { categories } from '@/db/schema/categories';
 import { ingredientCategories } from '@/db/schema/ingredient-categories';
 import { ingredients } from '@/db/schema/ingredients';
 import { users } from '@/db/schema/users';
 import { findMany, withAudit } from '@/db/repository';
+import { FIXTURE_USERS } from '@/db/seed/standard';
 
 const STAMP_COLUMNS = ['created_at', 'created_by', 'updated_at', 'updated_by'];
 const DELETE_COLUMNS = ['deleted_at', 'deleted_by'];
@@ -108,38 +106,45 @@ describe('ingredient_categories schema', () => {
   });
 });
 
-function migrationFiles(): string[] {
-  return readdirSync(MIGRATIONS_DIR)
-    .filter((name) => name.endsWith('.sql'))
-    .sort()
-    .map((name) => readFileSync(join(MIGRATIONS_DIR, name), 'utf8'));
-}
-
-function migrationStatementsContaining(marker: string): string[] {
-  const file = migrationFiles().find((contents) => contents.includes(marker));
-
-  if (!file) throw new Error(`No migration in src/db/migrations contains ${marker}`);
-
-  return file
-    .split('--> statement-breakpoint')
-    .map((statement) => statement.trim())
-    .filter(Boolean);
-}
-
-// The behaviour half, applying the shipped migration into this worker's
-// disposable clone rather than hand-copying its DDL — what is asserted below is
-// then the SQL production runs. `users`, `ingredients` and `categories` are
-// stubbed to the one column this table's foreign keys point at, exactly as the
-// categories and ingredient-forms tests stub `users`.
-const AUTHOR = '11111111-1111-1111-1111-111111111111';
-const SECOND_AUTHOR = '22222222-2222-2222-2222-222222222222';
-const MUGWORT = '33333333-3333-3333-3333-333333333333';
-const ROSEMARY = '44444444-4444-4444-4444-444444444444';
-const PROTECTION = '55555555-5555-5555-5555-555555555555';
-const CLEANSING = '66666666-6666-6666-6666-666666666666';
+// The behaviour half, against the real table. This worker's sorrel_test_<n>
+// clone arrives with every migration applied and the `standard` scenario
+// seeded (M1.27, tests/support/db-setup.ts), and re-cloned that way before
+// this file runs — so what is asserted below is the SQL production runs, with
+// no schema built here and nothing to put back afterwards. Until M1.27 the
+// template was empty: this file applied the one migration that ships the
+// table and stubbed `users`/`ingredients`/`categories` to a bare `id` column.
+//
+// Both authors, both ingredients and both categories are the seed's, not
+// invented ids: the real parent tables have NOT NULL names, slugs and audit
+// stamps, and a row that exists is cheaper to point at than one to construct.
+// Bound to the old names so the tests read as they did — the ingredients and
+// categories are looked up in beforeAll, since the seed generates their ids.
+const AUTHOR = FIXTURE_USERS.A.id;
+const SECOND_AUTHOR = FIXTURE_USERS.B.id;
+let MUGWORT: string;
+let ROSEMARY: string;
+let PROTECTION: string;
+let CLEANSING: string;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
+
+async function compendiumIdOf(canonicalName: string): Promise<string> {
+  const [found] = await sql`
+    select id from ingredients
+    where workspace_id is null and canonical_name = ${canonicalName} and deleted_at is null
+  `;
+  if (!found) throw new Error(`The standard seed carries no compendium row for ${canonicalName}`);
+  return found.id as string;
+}
+
+async function categoryIdOf(name: string): Promise<string> {
+  const [found] = await sql`
+    select id from categories where name = ${name} and deleted_at is null
+  `;
+  if (!found) throw new Error(`The standard seed carries no category named ${name}`);
+  return found.id as string;
+}
 
 async function assign(ingredientId: string, categoryId: string, author = AUTHOR): Promise<void> {
   await sql`
@@ -165,7 +170,9 @@ async function columnNames(table: string): Promise<string[]> {
   return rows.map((r) => r.column_name as string);
 }
 
-async function pairs(): Promise<{ ingredientId: string; categoryId: string }[]> {
+type Pair = { ingredientId: string; categoryId: string };
+
+async function pairs(): Promise<Pair[]> {
   const rows = await sql`
     select ingredient_id, category_id from ingredient_categories
     order by ingredient_id, category_id
@@ -174,6 +181,17 @@ async function pairs(): Promise<{ ingredientId: string; categoryId: string }[]> 
     ingredientId: row.ingredient_id as string,
     categoryId: row.category_id as string,
   }));
+}
+
+// The order `pairs()` reads in, for an expectation naming more than one row.
+// The seed generates its ids, so which of two rows sorts first is not known
+// when the test is written; a uuid orders bytewise, which for its canonical
+// lowercase text is the plain string comparison used here.
+function inPairOrder(expected: Pair[]): Pair[] {
+  const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+  return [...expected].sort(
+    (a, b) => compare(a.ingredientId, b.ingredientId) || compare(a.categoryId, b.categoryId),
+  );
 }
 
 async function indexDefinition(name: string): Promise<{ unique: boolean; definition: string }> {
@@ -189,34 +207,21 @@ async function indexDefinition(name: string): Promise<{ unique: boolean; definit
 beforeAll(async () => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
 
-  await sql`drop table if exists ingredient_categories`;
-  await sql`create table if not exists users (id uuid primary key)`;
-  await sql`create table if not exists ingredients (id uuid primary key)`;
-  await sql`create table if not exists categories (id uuid primary key)`;
-  await sql`
-    insert into users (id) values (${AUTHOR}), (${SECOND_AUTHOR}) on conflict do nothing
-  `;
-  await sql`
-    insert into ingredients (id) values (${MUGWORT}), (${ROSEMARY}) on conflict do nothing
-  `;
-  await sql`
-    insert into categories (id) values (${PROTECTION}), (${CLEANSING}) on conflict do nothing
-  `;
-
-  for (const statement of migrationStatementsContaining('CREATE TABLE "ingredient_categories"')) {
-    await sql.unsafe(statement);
-  }
+  MUGWORT = await compendiumIdOf('Artemisia vulgaris');
+  ROSEMARY = await compendiumIdOf('Salvia rosmarinus');
+  PROTECTION = await categoryIdOf('Protection');
+  CLEANSING = await categoryIdOf('Cleansing');
 });
 
+// The seed files the compendium under its categories through this table, and
+// every test below assumes it empty: it is a leaf, so a truncate reaches
+// nothing else — the same starting state the old empty template gave, reached
+// the other way round.
 beforeEach(async () => {
-  await sql`delete from ingredient_categories`;
+  await sql`truncate ingredient_categories`;
 });
 
 afterAll(async () => {
-  await sql`drop table if exists ingredient_categories`;
-  await sql`drop table if exists categories`;
-  await sql`drop table if exists ingredients`;
-  await sql`drop table if exists users`;
   await sql.end();
 });
 
@@ -236,11 +241,13 @@ describe('ingredient_categories table', () => {
       await assign(MUGWORT, CLEANSING);
       await assign(ROSEMARY, PROTECTION);
 
-      expect(await pairs()).toEqual([
-        { ingredientId: MUGWORT, categoryId: PROTECTION },
-        { ingredientId: MUGWORT, categoryId: CLEANSING },
-        { ingredientId: ROSEMARY, categoryId: PROTECTION },
-      ]);
+      expect(await pairs()).toEqual(
+        inPairOrder([
+          { ingredientId: MUGWORT, categoryId: PROTECTION },
+          { ingredientId: MUGWORT, categoryId: CLEANSING },
+          { ingredientId: ROSEMARY, categoryId: PROTECTION },
+        ]),
+      );
     });
 
     it('refuses to assign the same category to the same ingredient twice', async () => {

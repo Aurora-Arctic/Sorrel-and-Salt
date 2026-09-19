@@ -1,11 +1,9 @@
-import { join } from 'node:path';
-import { readFileSync, readdirSync } from 'node:fs';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { getTableConfig } from 'drizzle-orm/pg-core';
-import { MIGRATIONS_DIR } from '../support/paths';
 import { categories, categoryGroups } from '@/db/schema/categories';
 import { users } from '@/db/schema/users';
+import { FIXTURE_USERS } from '@/db/seed/standard';
 
 const AUDIT_COLUMNS = [
   'created_at',
@@ -182,29 +180,18 @@ describe('categories schema', () => {
   });
 });
 
-// The behaviour half, applying the shipped migration into this worker's
-// disposable clone rather than hand-copying its DDL, exactly as M4.1's test
-// does — what is asserted below is then the SQL production runs. `users` is
-// stubbed to the one column the audit foreign keys point at; it is M2.2's
-// table, and applying its migrations here would leave a __drizzle_migrations
-// row behind for the next test file in this worker to trip over.
-
-function migrationStatementsContaining(marker: string): string[] {
-  const file = readdirSync(MIGRATIONS_DIR)
-    .filter((name) => name.endsWith('.sql'))
-    .sort()
-    .map((name) => join(MIGRATIONS_DIR, name))
-    .find((path) => readFileSync(path, 'utf8').includes(marker));
-
-  if (!file) throw new Error(`No migration in src/db/migrations contains ${marker}`);
-
-  return readFileSync(file, 'utf8')
-    .split('--> statement-breakpoint')
-    .map((statement) => statement.trim())
-    .filter(Boolean);
-}
-
-const AUTHOR = '11111111-1111-1111-1111-111111111111';
+// The behaviour half, against the real tables. This worker's sorrel_test_<n>
+// clone arrives with every migration applied and the `standard` scenario
+// seeded (M1.27, tests/support/db-setup.ts), and re-cloned that way before
+// this file runs — so what is asserted below is the SQL production runs, with
+// no schema built here and nothing to put back afterwards. Until M1.27 the
+// template was empty: this file applied the one migration that ships these
+// two tables and stubbed `users` to a bare `id` column.
+//
+// The author is the seed's, not an invented id: the real `users` has NOT NULL
+// name, email and audit stamps, and a row that exists is cheaper to point at
+// than one to construct. Bound to the old name so the tests read as they did.
+const AUTHOR = FIXTURE_USERS.A.id;
 const ABSENT_GROUP = '99999999-9999-9999-9999-999999999999';
 
 type Row = Record<string, string | null>;
@@ -273,28 +260,21 @@ async function columnNames(table: string): Promise<string[]> {
   return rows.map((r) => r.column_name as string);
 }
 
-beforeAll(async () => {
+beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-
-  await sql`drop table if exists categories`;
-  await sql`drop table if exists category_groups`;
-  await sql`create table if not exists users (id uuid primary key)`;
-  await sql`insert into users (id) values (${AUTHOR}) on conflict do nothing`;
-
-  for (const statement of migrationStatementsContaining('CREATE TABLE "category_groups"')) {
-    await sql.unsafe(statement);
-  }
 });
 
+// `truncate … cascade`, not `delete from`: the seeded vocabulary is filed
+// against the compendium through ingredient_categories, and every child
+// foreign key in the schema is NO ACTION, so a delete would be refused.
+// Truncating takes the links with it, and the empty tables are what every
+// test below assumes — the same starting state the old empty template gave,
+// reached the other way round.
 beforeEach(async () => {
-  await sql`delete from categories`;
-  await sql`delete from category_groups`;
+  await sql`truncate categories, category_groups cascade`;
 });
 
 afterAll(async () => {
-  await sql`drop table if exists categories`;
-  await sql`drop table if exists category_groups`;
-  await sql`drop table if exists users`;
   await sql.end();
 });
 
