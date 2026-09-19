@@ -15,10 +15,40 @@ print an elapsed time into a job summary. `duration` stays an **optional**
 input on `job-summary` and `pr-comment`, so restoring a timer would need no
 edit at any call site; nothing passes it today.
 
-- **`checkout-to-app`** — `actions/checkout` + `cp -a "$GITHUB_WORKSPACE"/. /app/`.
+- **`checkout-to-app`** — `actions/checkout`, then
+  `cp -a "$GITHUB_WORKSPACE"/. /app/`, then `git clean -fd` in `/app`.
   Every other local action resolves as `./.github/actions/<name>` once checked
   out; this one runs _before_ that checkout exists, so **callers must reference
   it by full `Aurora-Arctic/Sorrel-and-Salt/...@main` path**.
+  - **The clean step is not redundant, and removing it reopens MB.42.** Both
+    `Dockerfile.node` and `Dockerfile.e2e` bake the whole repo into `/app` with
+    `COPY . .` at image build time; the `cp -a` then _overlays_ that, and an
+    overlay never deletes. Every file dropped from the repo since the image was
+    last built therefore stays on disk — untracked, not gitignored, and
+    indistinguishable to `oxlint`, `tsc` or a `tests/**` glob from a file the
+    branch actually has. `git clean -fd` is what deletes it. **No `-x`**: the
+    image's own `node_modules` and `.next` are gitignored and must survive, or
+    every job reinstalls its dependencies.
+  - It must run _after_ the copy, not before: `.dockerignore` keeps both `.git`
+    and `.gitignore` out of the image, so the clean has neither an index to
+    compare against nor an ignore list until the checkout has landed.
+  - Found by MB.41, whose new test-location guard failed on its first CI run
+    reporting 34 test files outside `tests/` — every one of them that move's own
+    predecessor, still sitting where the image had baked it. The count is the
+    tell: 34, not that branch's 39, because the image predated the five test
+    files added since. The guard was changed to scan the git index instead,
+    which is right on its own merits and left the condition itself untouched
+    until MB.42.
+  - **One workaround is left standing on purpose.** `vitest.config.mts`
+    excludes `src/**/*.test.{ts,tsx}` and `src/test/**` from coverage, paths
+    MB.41 emptied and the overlay kept alive — without them CI measured the
+    container rather than the repo and fell from 92% to 78.54%. The clean step
+    makes them dead, but only once it is live, and it is live only on `main`:
+    every caller references the action at `@main`, which a merge to `staging`
+    does not reach. Removing them before then fails the 80% gate on the PR that
+    does it. **MB.44** is the follow-up that cuts the release and then removes
+    them, this note included. See `testing.md`'s Coverage paragraph.
+  - Verified by `checks / overlay` — see below.
 - **`job-summary`** — a pass/fail `$GITHUB_STEP_SUMMARY` callout, with a tailed
   log excerpt on failure.
 - **`pr-comment`** — upserts one marked comment per check (`<!-- ci-<slug> -->`),
@@ -28,7 +58,8 @@ edit at any call site; nothing passes it today.
 ## Reusable checks (`workflow_call`, never triggered directly)
 
 - **`checks.yml`** (MB.32) — one matrix job running `lint`, `format`,
-  `typecheck`, `build` and `audit`, each reporting as `checks / <name>`. These
+  `typecheck`, `build` and `audit`, each reporting as `checks / <name>`, plus a
+  second job, `overlay` (MB.42). These
   were five near-identical workflows until MB.32: the same
   `image`/`pr-number`/`merge-queue`/`should-run` inputs, the same
   `container: image: ${{ inputs.image }}` job (`options: --user root`), the
@@ -97,6 +128,29 @@ edit at any call site; nothing passes it today.
   - **`vitest` and `playwright` are deliberately not legs.** Each brings a
     `services: postgres:` block, a `db-image` input and its own artifact
     uploads — a different job shape, not a different npm script.
+
+- **`checks / overlay`** (MB.42, a second job in `checks.yml` rather than a
+  seventh leg) — the one check in the repo that tests `checkout-to-app` instead
+  of merely starting with it. It plants an untracked file, an untracked
+  directory and an ignored file in the image's `/app`, runs the action, and
+  asserts the first two are gone, the third survived, `node_modules` survived,
+  the checkout landed, and `git status --porcelain --untracked-files=all` in
+  `/app` is empty. Against the pre-MB.42 action — copy, no clean — every one of
+  the untracked assertions fails.
+  - **Why it has to manufacture the condition.** The `testing` image is rebuilt
+    whenever `Dockerfile.node` or `package-lock.json` changes, so on most PRs
+    there are few leftovers or none and every leg passes with the bug fully
+    present. It bites only on the PRs that delete files — rarely, and never on
+    the PR that would explain it.
+  - **It references the action as `./.github/actions/checkout-to-app`**, not by
+    the `@main` path its real callers use, so an edit to the action is verified
+    on the PR that makes it rather than after merge. That is why the job checks
+    out first: a local `./` reference is read from `$GITHUB_WORKSPACE`, so it
+    needs a checkout the real callers are calling the action to _get_. They pay
+    one checkout; this job pays two.
+  - **The `@main` reference is still how every other caller reaches it**, which
+    means a fix to the action has no effect on its own PR's other jobs and
+    takes hold on the first run after it reaches `main`.
 
 - **`checks / destructive-ddl`** (M1.5, a `checks.yml` leg since MB.37) —
   flags destructive DDL in migration files new or changed in the PR, via
@@ -315,6 +369,17 @@ use it on the same push — a broken `job-summary` or `pr-comment` fails
 `checks`, `vitest` and `playwright` at once — and `checkout-to-app` is the
 first step of nearly every job in the repo.
 
+**That argument has one hole, and MB.42 fell into it.** "Exercised by the
+checks that use it" only covers the behaviour those checks would notice. Every
+job in the repo ran `checkout-to-app` on every push for months while it was
+leaving deleted files on disk, and not one of them failed, because a check that
+reads a file's _contents_ cannot tell a stale copy from a live one. `checks /
+overlay` is the narrow answer: not a smoke check restored, but one job inside
+the gate that manufactures the condition its callers cannot produce on demand.
+The general lesson is the sweep-task rule's — a mechanism that can be made
+_impossible_ to get wrong needs a guard, and "something else would have
+noticed" is not one.
+
 **A workflow must never publish a status-check context `pr-gate.yml` also
 publishes.** `lint-format-typecheck-check.yml` (M0.16) and
 `build-audit-check.yml` (M0.17) did, and MB.15 deleted them. They were written
@@ -357,12 +422,13 @@ itself gone now (MB.32) until M7.A.1 restores it.
   extension §5 names) and an empty `sorrel_template` database baked in at
   _build_ time, by running the official image's own `docker-entrypoint.sh`
   inside a `RUN` step instead of leaving it to first boot. No schema or seed
-  data is baked in yet; M1.27 extends the image to bake in the migrated
-  schema. (`src/db/schema/` itself is no longer empty — Wave 1 added
-  `users.ts`/`auth.ts` and migrations `0001`–`0003` — the image just doesn't
-  carry them.)
+  data is baked in, and none will be: M1.27 was specified to extend this
+  image with the migrated, seeded template and instead builds that template
+  at test-run setup (`tests/support/seeded-database.ts`;
+  [`design-decisions/m1.27-template-at-setup-not-in-image.md`](design-decisions/m1.27-template-at-setup-not-in-image.md)),
+  so the image's contents depend on nothing under `src/`.
 - **`build-db-image.yml`** — builds and publishes it to GHCR, tagged with a
-  `hashFiles()` hash of `src/db/**` / `Docker/Dockerfile.postgres` /
+  `hashFiles()` hash of `Docker/Dockerfile.postgres` /
   `Docker/postgres-init/**`. No `latest` tag (MB.17) — nothing in the repo
   ever read it: `docker-compose.yaml` builds the Dockerfile locally rather
   than pulling any tag, and every CI caller pins the hash tag. Its only
@@ -378,12 +444,14 @@ itself gone now (MB.32) until M7.A.1 restores it.
   (every `feature/*` branch's base) or `main` (the default branch) writes an
   entry another branch can restore. Measured: a fully cold build step is
   ~25s, a warm one (including a brand-new feature branch's very first run)
-  ~6–8s. `src/db/**` sits in the hash and the path filter but not in the
-  build context — `Dockerfile.postgres` only `COPY`s
-  `Docker/postgres-init`'s SQL — so through Wave 1 a `src/db/**` change
-  republishes byte-identical layers under a new tag far more often than the
-  image's actual contents change, which is exactly when the warm cache still
-  earns its keep. M1.27 baking the schema in changes that.
+  ~6–8s. `src/db/**` sat in the hash and the path filter from M0.18 to
+  M1.27, against the day the schema would be baked in — and since it was
+  never in the build context (`Dockerfile.postgres` only `COPY`s
+  `Docker/postgres-init`'s SQL), every migration republished byte-identical
+  layers under a new tag. M1.27 removed it from both: the template is
+  populated at test-run setup, so a migration no longer touches this
+  workflow at all, and the image rebuilds only when the Dockerfile or its
+  init script changes.
 
   Two separate mechanisms skip redundant work, one per trigger (MB.18). The
   `push` path filter above is a workflow-level skip — it only gates this
@@ -545,6 +613,14 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   typecheck and destructive-ddl.
 - `make act-cache-checkout` pre-clones this repo's `main` so the remote
   `checkout-to-app@main` ref resolves offline.
+- **`make act-overlay` is its own target** (MB.42), because `act-check` is
+  `-j check --matrix name:<leg>` and `overlay` is a second job rather than a
+  seventh leg. It needs no `act-cache-checkout` — it reaches the action as
+  `./.github/actions/checkout-to-app`, which is the point of it. It is
+  deliberately **not** in `act-test`: its closing assertion is that `/app`
+  matches the checkout exactly, and `act` runs against the working tree rather
+  than a commit, so a dirty tree fails it for a reason that has nothing to do
+  with the action.
 - **act does not apply `workflow_call` input defaults**, so a flag arrives
   empty under `-W`. `act-check` needs none passed: `checks.yml` resolves an
   empty flag to true precisely so a local run cannot quietly skip the work it
@@ -580,4 +656,5 @@ vitest` would have to either execute `build-db-image.yml` for real (a
 - **Every new reusable check workflow ships its `act-<name>` target in the same
   PR**, plus an `act-cache-*` pre-clone for any action that isn't cached yet
   — except where that isn't possible yet, as above. A new `checks.yml` leg
-  needs no new target: it is `make act-check CHECK=<leg>` the day it lands.
+  needs no new target: it is `make act-check CHECK=<leg>` the day it lands. A
+  new `checks.yml` **job** does need one, as `overlay` did.

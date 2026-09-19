@@ -7,6 +7,7 @@ import { MIGRATIONS_DIR } from '../support/paths';
 import { ingredientFormGroups, ingredientForms } from '@/db/schema/ingredient-forms';
 import { ingredients } from '@/db/schema/ingredients';
 import { users } from '@/db/schema/users';
+import { FIXTURE_USERS } from '@/db/seed/standard';
 
 const AUDIT_COLUMNS = [
   'created_at',
@@ -171,22 +172,14 @@ describe('ingredient_forms schema', () => {
   });
 });
 
+// Still read from disk, for the one assertion below that a hand-edited
+// migration would hide from the Drizzle schema: no shipped SQL points
+// `ingredients.form` at this vocabulary.
 function migrationFiles(): string[] {
   return readdirSync(MIGRATIONS_DIR)
     .filter((name) => name.endsWith('.sql'))
     .sort()
     .map((name) => readFileSync(join(MIGRATIONS_DIR, name), 'utf8'));
-}
-
-function migrationStatementsContaining(marker: string): string[] {
-  const file = migrationFiles().find((contents) => contents.includes(marker));
-
-  if (!file) throw new Error(`No migration in src/db/migrations contains ${marker}`);
-
-  return file
-    .split('--> statement-breakpoint')
-    .map((statement) => statement.trim())
-    .filter(Boolean);
 }
 
 // DESIGN.md §5: "`ingredients.form` is `text`, not a foreign key to this
@@ -223,11 +216,18 @@ describe('ingredients.form is text over this vocabulary, not a foreign key to it
   });
 });
 
-// The behaviour half, applying the shipped migration into this worker's
-// disposable clone rather than hand-copying its DDL — what is asserted below is
-// then the SQL production runs. `users` is stubbed to the one column the audit
-// foreign keys point at, exactly as the categories and ingredients tests do.
-const AUTHOR = '11111111-1111-1111-1111-111111111111';
+// The behaviour half, against the real tables. This worker's sorrel_test_<n>
+// clone arrives with every migration applied and the `standard` scenario
+// seeded (M1.27, tests/support/db-setup.ts), and re-cloned that way before
+// this file runs — so what is asserted below is the SQL production runs, with
+// no schema built here and nothing to put back afterwards. Until M1.27 the
+// template was empty: this file applied the one migration that ships these
+// two tables and stubbed `users` to a bare `id` column.
+//
+// The author is the seed's, not an invented id: the real `users` has NOT NULL
+// name, email and audit stamps, and a row that exists is cheaper to point at
+// than one to construct. Bound to the old name so the tests read as they did.
+const AUTHOR = FIXTURE_USERS.A.id;
 const ABSENT_GROUP = '99999999-9999-9999-9999-999999999999';
 
 type Row = Record<string, string | null>;
@@ -297,28 +297,22 @@ async function columnNames(table: string): Promise<string[]> {
   return rows.map((r) => r.column_name as string);
 }
 
-beforeAll(async () => {
+beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-
-  await sql`drop table if exists ingredient_forms`;
-  await sql`drop table if exists ingredient_form_groups`;
-  await sql`create table if not exists users (id uuid primary key)`;
-  await sql`insert into users (id) values (${AUTHOR}) on conflict do nothing`;
-
-  for (const statement of migrationStatementsContaining('CREATE TABLE "ingredient_form_groups"')) {
-    await sql.unsafe(statement);
-  }
 });
 
+// `truncate … cascade`, not `delete from`: the seed fills both tables and
+// every child foreign key in the schema is NO ACTION, so a delete from the
+// groups would be refused while the forms still point at them. Nothing points
+// at either from outside this pair — `ingredients.form` is text, which is the
+// point of the file — so the cascade reaches no further. The empty tables are
+// what every test below assumes: the same starting state the old empty
+// template gave, reached the other way round.
 beforeEach(async () => {
-  await sql`delete from ingredient_forms`;
-  await sql`delete from ingredient_form_groups`;
+  await sql`truncate ingredient_forms, ingredient_form_groups cascade`;
 });
 
 afterAll(async () => {
-  await sql`drop table if exists ingredient_forms`;
-  await sql`drop table if exists ingredient_form_groups`;
-  await sql`drop table if exists users`;
   await sql.end();
 });
 

@@ -4,11 +4,14 @@ import { defineConfig } from 'vitest/config';
 // Two projects per CLAUDE.md's Testing section: `unit` runs pure logic and
 // components in jsdom with no network; `db` runs against a real local
 // Postgres (never Neon — see docker-compose.yaml's `postgres` service).
-// `db` has no test files yet (repository/service layers land from M1.16
-// onward), so `passWithNoTests` keeps an empty suite from failing the run.
+// `db` includes `tests/services/**`, which has no files yet (services land
+// from Wave 5), so `passWithNoTests` keeps that half from failing the run.
 // `globalSetup`/`setupFiles` wire each worker to its own
-// `sorrel_test_${VITEST_POOL_ID}` clone of `sorrel_template` (M1.9) — the pool
-// *slot*, not `VITEST_WORKER_ID`; see tests/support/worker-database.ts (MB.14).
+// `sorrel_test_${VITEST_POOL_ID}` clone (M1.9) — the pool *slot*, not
+// `VITEST_WORKER_ID`; see tests/support/worker-database.ts (MB.14) — of
+// `sorrel_test_template`, which `globalSetup` migrates and seeds with the
+// `standard` scenario once per run, and `setupFiles` re-clones before every
+// test file (M1.27; tests/support/seeded-database.ts).
 
 // Vitest only resolves its actual worker count internally — `project.config
 // .maxWorkers` is `undefined` unless set explicitly here — so `db`'s
@@ -49,16 +52,24 @@ export default defineConfig({
       // it doesn't need its own coverage.
       //
       // The first two look dead since MB.41: no test and no harness file
-      // lives under src/ any more, so nothing should match them. They stay
+      // lives under src/ any more, so nothing should match them. They stayed
       // because `include` enumerates the *disk*, not the repo, and in CI
-      // those are different. The container's image bakes the repo at
-      // Docker/Dockerfile.node's `COPY . .` and checkout-to-app lays the
+      // those were different. The container's image bakes the repo at
+      // Docker/Dockerfile.node's `COPY . .` and checkout-to-app laid the
       // checkout over it with `cp -a`, which never deletes — so every file
-      // the repo has deleted is still there, uncovered, dragging the
-      // denominator down (MB.42). Removing these two entries dropped CI from
-      // 92% to 78.54% and failed the 80% gate while every test passed. They
-      // are what makes the number describe the repo rather than the
-      // container, and they are free.
+      // the repo had deleted was still there, uncovered, dragging the
+      // denominator down. Removing these two entries dropped CI from 92% to
+      // 78.54% and failed the 80% gate while every test passed.
+      //
+      // MB.42 closed that: the action now runs `git clean -fd` after the copy,
+      // so /app holds the checkout and nothing else. These two are therefore
+      // on their way out rather than load-bearing — but not yet, and not in
+      // MB.42's own PR. Every caller reaches the action at
+      // `checkout-to-app@main`, so the fix is live only once it is on `main`,
+      // which a merge to `staging` does not do; until then CI still sees the
+      // leftovers and still needs these. MB.44 is the follow-up: it cuts that
+      // release, then deletes these two and this paragraph with them. If the
+      // number moves when they go, they were not dead — see that task.
       exclude: [
         'src/**/*.test.{ts,tsx}',
         'src/test/**',

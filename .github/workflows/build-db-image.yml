@@ -4,9 +4,9 @@ name: Build DB Image
 # and publishes it to GHCR for CI and deployment — docker-compose.yaml builds
 # the same Dockerfile locally instead of pulling this (M0.19), since it's
 # purely a local-dev concern. Content-addressed: the image is tagged with a
-# hash of everything that actually determines its contents — src/db/**, the
-# Dockerfile, and its init script — so identical inputs always produce the
-# identical tag and every caller pins to it exactly. There is deliberately no
+# hash of everything that actually determines its contents — the Dockerfile
+# and its init script — so identical inputs always produce the identical tag
+# and every caller pins to it exactly. There is deliberately no
 # `latest` tag (MB.17): nothing in the repo ever reads it — docker-compose.yaml
 # builds the Dockerfile locally instead of pulling any tag, and every CI
 # caller below pins the hash tag — so publishing it was pure upkeep with no
@@ -33,12 +33,16 @@ name: Build DB Image
 # a fresh branch's first build pays the full cold-build cost instead of
 # restoring a warm cache. Measured on this repo: a fully cold build step is
 # ~25s, a warm one (including a brand-new feature branch's very first run)
-# ~6-8s. `src/db/**` is in the hash and the path filter but not in the build
-# context — Dockerfile.postgres only COPYs Docker/postgres-init's SQL — so
-# through Wave 1 a `src/db/**` change republishes byte-identical layers under
-# a new tag far more often than the image's actual contents change, which is
-# exactly when a warm cache still earns its keep. M1.27 baking the schema in
-# changes that.
+# ~6-8s. `src/db/**` sat in the hash and the path filter too, from M0.18
+# until M1.27, against the day the schema would be baked into this image —
+# and since it was never in the build context (Dockerfile.postgres only
+# COPYs Docker/postgres-init's SQL), every migration republished
+# byte-identical layers under a new tag. M1.27 populates the test template
+# from the checkout at test-run setup instead (tests/support/
+# seeded-database.ts; claude-docs/design-decisions/
+# m1.27-template-at-setup-not-in-image.md), so this image's contents never
+# depend on `src/db/**` and it left both lists: a migration no longer
+# touches this workflow at all.
 #
 # There is deliberately no `pull_request` trigger: this workflow used to
 # carry one, path-filtered the same way, on the argument that a
@@ -51,7 +55,6 @@ on:
   push:
     branches: [staging, main]
     paths:
-      - 'src/db/**'
       - 'Docker/Dockerfile.postgres'
       - 'Docker/postgres-init/**'
       - '.github/workflows/build-db-image.yml'
@@ -93,7 +96,7 @@ jobs:
         id: tags
         run: |
           repo_lower=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          hash="${{ hashFiles('src/db/**', 'Docker/Dockerfile.postgres', 'Docker/postgres-init/**') }}"
+          hash="${{ hashFiles('Docker/Dockerfile.postgres', 'Docker/postgres-init/**') }}"
           hash_tag="ghcr.io/${repo_lower}/db:${hash}"
           echo "hash-tag=${hash_tag}" >> "$GITHUB_OUTPUT"
 
@@ -107,8 +110,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # Most pushes to a PR don't touch anything in the hash (src/db/**,
-      # Dockerfile.postgres, postgres-init/**), so the content-addressed tag
+      # Most pushes to a PR don't touch anything in the hash
+      # (Dockerfile.postgres, postgres-init/**), so the content-addressed tag
       # from a prior run (this PR, staging, or main) usually already exists —
       # skip the build entirely rather than re-running buildx just to
       # re-push the same content. This only matters on the workflow_call

@@ -138,7 +138,10 @@ PRIVILEGES` so future migrations are covered without anyone remembering a
 ## Cross-task impact
 
 - **MB.25** implements the role split, the derived connection and the startup
-  assertion. It must land before **M1.27** bakes the Postgres image.
+  assertion. It must land before **M1.27** bakes the Postgres image. _(Both
+  halves of that are now moot: MB.25 was retired by MB.29, and M1.27 does not
+  bake the image — see
+  [`m1.27-template-at-setup-not-in-image.md`](m1.27-template-at-setup-not-in-image.md).)_
 - **MB.26** implements `withViewer`. It must land before **M6.4**, or M6.4's
   policies make every workspace-scoped read return nothing.
 - **M6.4** is reduced to the policies themselves plus `FORCE` and the two
