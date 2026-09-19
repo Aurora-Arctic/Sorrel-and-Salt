@@ -580,6 +580,30 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   start rather than migrating the wrong database. M1.1's "Cross-task impact"
   requires the two workflows to resolve `DATABASE_URL` identically, and that is
   the requirement in mechanical form.
+- **`DATABASE_URL` and `BETTER_AUTH_SECRET` come from GitHub secrets, not from
+  the pull** (MB.47). Both are marked Sensitive in Vercel, and a Sensitive
+  variable cannot be read back by `vercel pull` — the pull writes the literal
+  string `[SENSITIVE]` instead, which is non-empty and so passes any check that
+  only asks whether something is set. A diagnostic run pulled staging both with
+  and without `--git-branch` and got the placeholder either way, so no
+  arrangement of flags fixes it.
+
+  `migrate.yml` picks `DATABASE_URL_PRODUCTION` or `DATABASE_URL_STAGING` — the
+  first by the Vercel environment, the second by the branch — and falls back to
+  the pulled `POSTGRES_URL` for a hotfix preview, whose Neon branch is created
+  per deployment and which no static secret can name. `deploy.yml` makes the
+  same choice and writes the result **into the pulled dotfile**, because
+  `vercel build` reads the file and a step-level `env:` would not reach the
+  Next build. `tests/guards/ci-secret-environments.test.ts` holds the two
+  selections together: choosing differently would migrate one database and
+  serve another.
+
+  Named secrets rather than GitHub Environments, deliberately — an environment
+  would need a new `workflow_call` input, a new `resolve-target` output and an
+  `environment:` key on two jobs, to say what the secret's name already says.
+  `claude-docs/secrets.md` carries the rotation rule this creates, and the
+  Neon-API route that would retire it once MB.12 sets `NEON_API_KEY`.
+
 - **Both jobs assert the pulled environment before using it** (MB.46), via
   `scripts/assert-pulled-env.ts`. It does two things. It **asserts** the keys
   that job needs — `migrate` needs `DATABASE_URL`, `deploy` needs that and

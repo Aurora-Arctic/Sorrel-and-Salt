@@ -34,10 +34,26 @@ a row below says otherwise.
 | Variable                       | Production                                     | Preview (staging + hotfix)                                                                                                                                                                                                                                                                          | Read by                                                                                                                                                                                                  |
 | ------------------------------ | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `DATABASE_URL`                 | `main`-backed Neon branch connection string    | `staging`-backed Neon branch, pinned with a **branch-scoped** override (`vercel env add DATABASE_URL preview staging`) — see `design-decisions/m1.1-neon-branch-strategy.md`. A hotfix preview gets its own ephemeral branch from the Neon/Vercel integration instead, unaffected by that override. | `src/db/connection.ts` — throws if unset, always                                                                                                                                                         |
-| `BETTER_AUTH_SECRET`           | real, high-entropy (`openssl rand -base64 32`) | a separate real value (safer than reusing Production's)                                                                                                                                                                                                                                             | `src/lib/auth.ts` — required whenever `NODE_ENV=production`, which every Vercel build is                                                                                                                 |
+| `BETTER_AUTH_SECRET`           | real, high-entropy (`openssl rand -base64 32`) | **one value shared with Production** (MB.47) — see the note below                                                                                                                                                                                                                                   | `src/lib/auth.ts` — required whenever `NODE_ENV=production`, which every Vercel build is                                                                                                                 |
 | `GOOGLE_CLIENT_ID` / `_SECRET` | Production OAuth client                        | reuse the same client registered for `staging` below                                                                                                                                                                                                                                                | `src/lib/auth.ts`'s `socialProviders()` — omitted entirely, not broken, if unset                                                                                                                         |
 | `GITHUB_CLIENT_ID` / `_SECRET` | Production OAuth client                        | reuse the same client registered for `staging` below                                                                                                                                                                                                                                                | same                                                                                                                                                                                                     |
 | `ADMIN_BOOTSTRAP_EMAIL`        | the real admin's email                         | can differ from Production's                                                                                                                                                                                                                                                                        | `src/lib/auth.ts`'s `isAdminBootstrapEmail()` — compared case-insensitively; promotes the matching sign-in to `admin` on `databaseHooks.user.create.before`, omitted entirely (nobody promoted) if unset |
+
+**`BETTER_AUTH_SECRET` is one value across both environments** (MB.47), which
+reverses what this table used to say. The old advice — a separate Preview value,
+"safer than reusing Production's" — is sound in general: a leaked preview secret
+that also signs production sessions is a forged login. It was set aside
+deliberately, because CI needs a readable copy of this value and one shared
+secret is one thing to keep in step rather than two. Revisit it at the public
+launch, when a leaked preview secret stops being a pre-launch inconvenience.
+
+**Known, and deliberately not fixed yet:** the current value is short and
+low-entropy — Better Auth says so itself in every build log ("your
+`BETTER_AUTH_SECRET` should be at least 32 characters long", "appears
+low-entropy"). Regenerating it with `openssl rand -base64 32` invalidates every
+existing session, which is free now and expensive after launch. **Do it before
+the site is public**, and while the sessions being thrown away are still only
+yours.
 
 **No `BETTER_AUTH_URL` row — deliberately.** A single Preview-scoped value
 can't be correct for both `staging` (a fixed alias) and a hotfix preview
@@ -62,30 +78,58 @@ domains are known ahead of time. If a hotfix build ever needs to exercise
 a real sign-in, do it against `staging`'s URL rather than the hotfix
 preview's own.
 
-`vercel pull` (`migrate.yml`) resolves `DATABASE_URL` per environment
-automatically once Preview/Production have it — no separate GitHub Actions
-copy of `DATABASE_URL` is needed, unlike everything below. The **branch-scoped**
-Preview row above is the exception to "automatically": Vercel resolves it only
-for a pull that names the branch, so `deploy.yml` and `migrate.yml` both pass
-`--git-branch` **on their preview pull** (MB.27). Setting that row in the
-branch-scoped form is necessary and not sufficient — dropping the flag puts
-staging back on the environment-wide value with nothing failing.
-
-**A variable marked Sensitive in Vercel cannot be read back by `vercel pull`**
-— that is what the setting means. The pull says so ("Secret values cannot be
+**`vercel pull` cannot give CI `DATABASE_URL` or `BETTER_AUTH_SECRET`, and that
+is by design** (MB.47). Both are marked Sensitive in Vercel, and a Sensitive
+variable cannot be read back — the pull says so ("Secret values cannot be
 pulled from the `<env>` Environment") and writes `[SENSITIVE]` in place of the
-value, which is a perfectly non-empty string and will sail through any check
-that only asks whether something is set. So: do not mark a variable Sensitive
-if CI has to read it. `scripts/assert-pulled-env.ts` (MB.46) is what now
-refuses the placeholder by name rather than passing it on, and it reports every
-key the pull returned — classification and length, never a value — so which
-variables survived a pull is a fact CI states rather than one you infer from
-which consumer broke first.
+value. That is a perfectly non-empty string, so it sails through any check that
+only asks whether something is set, which is how it once reached `drizzle-kit`
+and produced an `ERR_INVALID_URL` with its own input masked out of the stack
+trace. A diagnostic run pulled staging both with and without `--git-branch` and
+got the placeholder either way; no arrangement of flags changes it.
 
-The production pull passes no branch at all, and must not: branch-scoped
-overrides are a Preview-only feature, and Vercel rejects the pair with
-``Invalid request: `target` must be "preview" when specifying a `gitBranch` ``.
-So each workflow pulls through two steps, one per target (MB.45).
+So **CI keeps its own copy of exactly those two**, and nothing else:
+
+| Value                | CI source                                          | Why                                                                 |
+| -------------------- | -------------------------------------------------- | ------------------------------------------------------------------- |
+| `DATABASE_URL`       | `DATABASE_URL_PRODUCTION` / `DATABASE_URL_STAGING` | Differs per target, so one named secret each                        |
+| `BETTER_AUTH_SECRET` | `BETTER_AUTH_SECRET`                               | One value for both environments, so one secret                      |
+| a hotfix preview     | the pulled `POSTGRES_URL`                          | Its Neon branch is created per deployment; no static value names it |
+
+**The runtime is untouched.** A deployed function reads its environment from
+the Vercel platform, not from the pulled file. Only `vercel build` and
+`drizzle-kit migrate` read that file, and both run in CI — so this is a CI
+problem with a CI answer, and the Sensitive flag stays on.
+
+**Named secrets rather than GitHub Environments**, deliberately: an environment
+would need a new `workflow_call` input, a new `resolve-target` output and an
+`environment:` key on two jobs, to express what the secret's name already says.
+
+**The cost, stated as a rule rather than hoped away: the connection string now
+lives in two places.** Rotating a database credential means changing it in
+Vercel _and_ in the matching GitHub secret. A drifted copy does not error — it
+migrates the wrong database silently. `deploy.yml` and `migrate.yml` select
+between the same two secrets the same way, and
+`tests/guards/ci-secret-environments.test.ts` is what holds those two
+selections together.
+
+**Worth retiring once MB.12 lands.** With `NEON_API_KEY`/`NEON_PROJECT_ID` set,
+`GET /projects/{id}/connection_uri?branch_id=…` would give every branch its own
+connection string from Neon directly — one source of truth, no second copy, and
+ephemeral branches covered too. It is not done now because those keys do not
+exist, and because a project-wide Neon API key is a broader credential than one
+connection string. It would not replace `BETTER_AUTH_SECRET` either way.
+
+`--git-branch` stays on the preview pull regardless (MB.27): the two GitHub
+OAuth secrets exist _only_ as `staging`-branch-scoped rows and are absent from
+an unscoped pull. The production pull passes no branch and must not — Vercel
+rejects the pair with
+``Invalid request: `target` must be "preview" when specifying a `gitBranch` `` —
+so each workflow pulls through two steps, one per target (MB.45).
+
+`scripts/assert-pulled-env.ts` (MB.46) reports every key a pull returned, with
+a classification and a length and never a value, so which variables survived is
+a fact CI states rather than one inferred from which consumer broke first.
 
 ## GitHub Actions repository secrets
 
@@ -96,14 +140,17 @@ production only, a pre-migration Neon snapshot (`claude-docs/db.md`,
 credential is required to run tests locally or in a PR check**, per
 M0.27's own acceptance criteria.
 
-| Secret                | Status          | Where it comes from                                               |
-| --------------------- | --------------- | ----------------------------------------------------------------- |
-| `VERCEL_DEPLOY_TOKEN` | **Already set** | Vercel account settings → Tokens                                  |
-| `VERCEL_ORG_ID`       | **Already set** | `vercel link` locally, or the Vercel project's Settings → General |
-| `VERCEL_PROJECT_ID`   | **Already set** | same                                                              |
-| `VERCEL_SCOPE`        | Not set         | the Vercel team/org slug                                          |
-| `NEON_API_KEY`        | Not set         | Neon console → Account settings → API keys                        |
-| `NEON_PROJECT_ID`     | Not set         | Neon console → the project's Settings → General                   |
+| Secret                    | Status          | Where it comes from                                                       |
+| ------------------------- | --------------- | ------------------------------------------------------------------------- |
+| `VERCEL_DEPLOY_TOKEN`     | **Already set** | Vercel account settings → Tokens                                          |
+| `VERCEL_ORG_ID`           | **Already set** | `vercel link` locally, or the Vercel project's Settings → General         |
+| `VERCEL_PROJECT_ID`       | **Already set** | same                                                                      |
+| `VERCEL_SCOPE`            | Not set         | the Vercel team/org slug                                                  |
+| `DATABASE_URL_PRODUCTION` | **Already set** | Neon console → the `main` branch → Connection Details (MB.47)             |
+| `DATABASE_URL_STAGING`    | **Already set** | Neon console → the `staging` branch → Connection Details (MB.47)          |
+| `BETTER_AUTH_SECRET`      | **Already set** | the same value set in Vercel; one shared across both environments (MB.47) |
+| `NEON_API_KEY`            | Not set         | Neon console → Account settings → API keys                                |
+| `NEON_PROJECT_ID`         | Not set         | Neon console → the project's Settings → General                           |
 
 ## How to set each row (manual — needs your accounts)
 
