@@ -213,9 +213,8 @@ EXISTS` / `CREATE DATABASE ... TEMPLATE sorrel_template` M1.9 already does
   built app can connect to it.
 - **Reseeding between spec files** is each spec file's own `test.beforeAll`,
   not a Playwright hook that runs implicitly — see `e2e/smoke.spec.ts`. It
-  calls the same `recreateE2eDatabase()`, not `src/db/seed`: `seed()` throws
-  for every scenario until M1.21-23, and `sorrel_template` itself carries no
-  schema or seed data until M1.27 bakes them into the Postgres image
+  calls the same `recreateE2eDatabase()`, not `src/db/seed`: `sorrel_template`
+  itself carries no schema or seed data until M1.27 bakes them into the Postgres image
   (`Docker/docker-compose.yaml`'s comment). Recreating from the template is
   therefore what "reseed" resolves to today; once M1.27 lands, the same call
   picks up real seeded content with no change needed here. Full reasoning in
