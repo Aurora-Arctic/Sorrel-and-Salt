@@ -73,7 +73,7 @@ staging back on the environment-wide value with nothing failing.
 
 The production pull passes no branch at all, and must not: branch-scoped
 overrides are a Preview-only feature, and Vercel rejects the pair with
-`Invalid request: \`target\` must be "preview" when specifying a \`gitBranch\``.
+``Invalid request: `target` must be "preview" when specifying a `gitBranch` ``.
 So each workflow pulls through two steps, one per target (MB.45).
 
 ## GitHub Actions repository secrets
