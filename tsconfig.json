@@ -12,6 +12,13 @@
     "resolveJsonModule": true,
     "allowJs": false,
     "noEmit": true,
+    // MB.49 — `scripts/` runs under Node's own type stripping (`node foo.ts`),
+    // and ESM there does no extension resolution: `probe-database.ts` importing
+    // `./assert-pulled-env` fails with ERR_MODULE_NOT_FOUND, so the `.ts` is
+    // required at runtime and this flag is what lets `tsc` accept it. Safe with
+    // `noEmit`, which is the condition TypeScript attaches to it; it permits the
+    // extension rather than requiring it, so nothing else changes.
+    "allowImportingTsExtensions": true,
     "incremental": true,
     "isolatedModules": true,
     "plugins": [

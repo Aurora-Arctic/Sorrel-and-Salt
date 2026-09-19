@@ -116,6 +116,56 @@ const SCHEME = /^postgres(?:ql)?:\/\//;
 const CONNECTION = /^postgres(?:ql)?:\/\/[^\s/@]+(?::[^\s/@]*)?@[^\s/:]+(?::\d+)?\/[^\s?]+/;
 
 /**
+ * MB.49 — libpq parameters postgres.js does not consume, and so forwards.
+ *
+ * `parseOptions` deletes `sslmode`, reads the keys named in its own `defaults`
+ * object, and spreads EVERY REMAINING query parameter into `connection` — which
+ * the driver sends verbatim as a Postgres startup parameter. A libpq parameter
+ * that the *client* is supposed to act on therefore reaches the *server*, which
+ * has never heard of it and answers 42704.
+ *
+ * `channel_binding` is the confirmed one: Neon's console puts it in the
+ * connection strings it hands you, and it is what made staging's migration exit
+ * 1 without a word. The rest are the same defect — libpq client-side options,
+ * absent from postgres.js's `defaults`, so forwarded identically. They are
+ * listed rather than derived because deriving them would mean reading
+ * node_modules at runtime, and a list is reviewable.
+ *
+ * Deliberately NOT here: `sslmode` (consumed and mapped to `ssl`),
+ * `application_name` and `options` (real server parameters), and the keys
+ * postgres.js already names — `connect_timeout`, `target_session_attrs`,
+ * `sslnegotiation`, `prepare`, `max`, `fetch_types`.
+ */
+export const CLIENT_ONLY_PARAMS = [
+  'channel_binding',
+  'gssencmode',
+  'krbsrvname',
+  'passfile',
+  'requiressl',
+  'service',
+  'sslcert',
+  'sslcompression',
+  'sslcrl',
+  'sslkey',
+] as const;
+
+/**
+ * Which of the above a URL carries, in the order the list declares them so the
+ * message is stable. Returns [] for a URL with no query string, and for one
+ * `new URL` cannot parse — by this point `CONNECTION` has already matched, and
+ * a parse failure here is not this rule's to report.
+ */
+function clientOnlyParams(value: string): string[] {
+  let params: URLSearchParams;
+  try {
+    params = new URL(value).searchParams;
+  } catch {
+    return [];
+  }
+  return CLIENT_ONLY_PARAMS.filter((name) => params.has(name));
+}
+
+/**
  * Ordered, and the order is load-bearing. `"postgres://…"` is a quoted URL
  * rather than a non-URL, and saying so is the difference between "fix the
  * extraction" and "fix the value" — so UNTRIMMED is judged before the scheme.
@@ -175,6 +225,23 @@ export function validateDatabaseUrl(raw: string | undefined): Verdict {
     };
   }
 
+  // Last, because it is the only rule that needs a well-formed URL to apply:
+  // everything above decides whether this is a connection string at all, and
+  // this decides whether it is one postgres.js can actually open.
+  const forwarded = clientOnlyParams(value);
+  if (forwarded.length > 0) {
+    return {
+      ok: false,
+      code: 'CLIENT_ONLY_PARAM',
+      message:
+        `DATABASE_URL carries ${forwarded.join(', ')}, which postgres.js does not consume. ` +
+        'It forwards every query parameter it does not recognise as a Postgres startup ' +
+        'parameter, and the server answers `42704 unrecognized configuration parameter`. ' +
+        'drizzle-kit swallows that error and exits 1 in silence. ' +
+        "Neon's console adds `channel_binding=require` by default — delete it from the URL; " +
+        '`sslmode=require` on its own is fine and is what actually requests TLS.',
+    };
+  }
   return { ok: true };
 }
 
