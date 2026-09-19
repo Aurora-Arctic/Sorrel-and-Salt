@@ -274,7 +274,6 @@ jobs:
       # inside a called workflow, which sees no `pull_request` event of its
       # own. See checks.yml's header.
       destructive-ddl-files: ${{ needs.changes.outputs.destructive_ddl_migrations_files }}
-      pr-body: ${{ github.event.pull_request.body }}
 
   # Publishes (or reuses, if content-addressed and unchanged) the preseeded
   # Postgres 18 image both vitest and playwright below need for their

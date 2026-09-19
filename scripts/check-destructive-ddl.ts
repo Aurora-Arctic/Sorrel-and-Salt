@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// M1.5 gate — flag destructive DDL in new/changed migrations unless the PR
-// body carries an explicit acknowledgement line.
+// M1.5 gate — flag destructive DDL in new/changed migrations unless the
+// migration carries an explicit acknowledgement sidecar beside it.
 //
 // CLAUDE.md's "Non-negotiable architecture rules" #10: migrations are
 // expand/contract and forward-only — no down migrations exist in this repo
@@ -15,19 +15,42 @@
 //
 // This script does two things:
 //   1. Scans a set of migration .sql files for destructive DDL forms.
-//   2. If any are found, requires an acknowledgement line in the PR body —
-//      exact format below — before allowing a pass.
+//   2. Requires each file with findings to carry an acknowledgement sidecar.
 //
-// It never blocks a migration that contains no destructive DDL, regardless
-// of the PR body.
+// It never blocks a migration that contains no destructive DDL.
 //
-// ACKNOWLEDGEMENT LINE — a line anywhere in the PR body, case-insensitive,
-// of the form:
+// THE SIDECAR (MB.48) — beside the migration, named for it:
+//
+//   src/db/migrations/0002_solid_marauders.sql
+//     -> src/db/migrations/0002_solid_marauders.ack.md
+//
+// containing, anywhere in the file and case-insensitively, a line:
 //
 //   Destructive DDL acknowledged: <reason>
 //
 // (a non-empty reason is required after the colon). See ACK_LINE_RE below —
 // keep it and claude-docs/db.md in sync if the wording ever changes.
+//
+// It used to be a line in the PR BODY, and that was wrong twice over. A PR
+// body is visible from one branch base and gone on merge, so a release PR —
+// which `resolveDefaultBase` sends at `origin/main`, rescanning every
+// migration since the last release — sees none of the acknowledgements that
+// let those migrations land. Release 0.2.0's PR failed this check for exactly
+// that reason and was merged past it. And one line in a body blessed every
+// finding in the diff whatever file it was in, so a release carrying an
+// acknowledged 0017 and an unacknowledged 0002 would have passed on 0017's
+// line alone. The sidecar fixes both: it travels with the file, and it covers
+// only the file it sits beside.
+//
+// The PR-body path is retired rather than OR-ed with this one — an OR would
+// keep the uncorrelated hole open. The check now reads nothing from GitHub at
+// all, which is what lets `make act-check CHECK=destructive-ddl` prove the
+// scan rather than the wiring.
+//
+// A `.md` sidecar rather than a comment inside the `.sql`: ACK_LINE_RE anchors
+// at the start of a line, so Markdown matches it unchanged where
+// `-- Destructive DDL acknowledged: …` would not. And every git query here is
+// scoped to `*.sql`, so a sidecar is never itself scanned.
 //
 // WHICH FILES ARE CHECKED — not every migration ever committed (those were
 // already reviewed when they landed), only the ones new or changed *in this
@@ -41,8 +64,10 @@
 //      resolveDefaultBase) — every migration the branch adds or edits,
 //      including one just generated and not yet committed. `--base <ref>`
 //      overrides the base; `--all` scans every committed migration instead,
-//      which is an audit rather than a gate and stays red on any migration
-//      that was acknowledged when it landed.
+//      which is an audit rather than a gate. Since MB.48 that audit is
+//      usable: every acknowledged migration carries its sidecar in the
+//      repository, so `--all` is green and goes red on a real omission,
+//      where it used to be red permanently.
 //
 // Whatever the source, only `*.sql` is ever scanned. CI's file list comes
 // from a `src/db/migrations/**` paths filter, which also matches the
@@ -58,7 +83,7 @@
 //     not it actually narrows.
 //   - `ALTER INDEX ... RENAME` is flagged, though renaming an index cannot
 //     break a deploy rollback. Drizzle never emits one; a hand-written one
-//     costs an acknowledgement line saying so.
+//     costs an acknowledgement sidecar saying so.
 //   - Statements are split on `;` with no awareness of dollar-quoted bodies,
 //     so a PL/pgSQL function (M1.18's audit trigger, when it lands) is judged
 //     as several fragments rather than one statement. Harmless for the rules
@@ -81,7 +106,6 @@
 //                            (even to an empty string) — this is how CI
 //                            distinguishes "no migrations changed" from "run
 //                            locally with no args".
-//   DESTRUCTIVE_DDL_PR_BODY  the PR body text to search for the ack line.
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
@@ -115,7 +139,7 @@ export const RULES: { name: string; test: (statement: string) => boolean }[] = [
     // narrow: dropping a NOT NULL or a DEFAULT only admits values the old code
     // was already writing. An index rebuild (Drizzle emits DROP INDEX +
     // CREATE INDEX when a predicate changes) is deliberately inside the rule —
-    // dropping a unique index gives up a guarantee, and one line in the PR body
+    // dropping a unique index gives up a guarantee, and one line in a sidecar
     // saying which is cheap.
     name: 'DROP (any object)',
     test: (s) => /\bdrop\s+(?!not\s+null\b)(?!default\b)\w/i.test(s),
@@ -349,32 +373,96 @@ export function resolveFilesToScan(
   return files;
 }
 
-export function report(findings: Finding[], prBody: string | undefined): number {
+/**
+ * MB.48 — the acknowledgement lives beside the migration it is about.
+ *
+ * `src/db/migrations/0002_solid_marauders.sql`
+ *   → `src/db/migrations/0002_solid_marauders.ack.md`
+ *
+ * A `.md` sidecar rather than a comment inside the `.sql`: `ACK_LINE_RE`
+ * anchors at the start of a line, so a Markdown file matches it unchanged
+ * where `-- Destructive DDL acknowledged: …` would not. And the scanner's
+ * pathspec is `*.sql` throughout (`MIGRATIONS_PATHSPEC` plus `sqlOnly`), so a
+ * sidecar is never itself scanned for destructive DDL.
+ */
+export function sidecarPath(sqlPath: string): string {
+  return sqlPath.replace(/\.sql$/, '.ack.md');
+}
+
+/**
+ * The sidecar's text, or undefined when there is none. Accepts the
+ * repo-relative path a `Finding` carries as readily as an absolute one, since
+ * `scanFile` reports relative and callers scan absolute.
+ */
+export function readAcknowledgement(sqlPath: string): string | undefined {
+  const sidecar = sidecarPath(sqlPath.startsWith('/') ? sqlPath : join(REPO_ROOT, sqlPath));
+  try {
+    return readFileSync(sidecar, 'utf8');
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Grouped by file, and that grouping is the whole point of MB.48.
+ *
+ * The acknowledgement used to be one line in the PR body, which blessed every
+ * finding in the diff whatever file it was in. Release 0.2.0's PR carried an
+ * acknowledged `0017` and an unacknowledged `0002` and would have passed on
+ * `0017`'s line alone — so the rule was not merely in the wrong place, it was
+ * uncorrelated. A sidecar covers exactly the migration it sits beside.
+ *
+ * `readSidecar` is injected so the correlation can be tested without writing
+ * files; CI and a local run both take the default.
+ */
+export function report(
+  findings: Finding[],
+  readSidecar: (file: string) => string | undefined = readAcknowledgement,
+): number {
   if (findings.length === 0) {
     console.log('check:destructive-ddl — no destructive DDL found.');
     return 0;
   }
 
-  console.error(`check:destructive-ddl — ${findings.length} destructive statement(s) found:\n`);
+  const byFile = new Map<string, Finding[]>();
   for (const finding of findings) {
-    console.error(`  ${finding.file} — ${finding.rule}`);
-    console.error(`    ${finding.statement}`);
+    const forFile = byFile.get(finding.file) ?? [];
+    forFile.push(finding);
+    byFile.set(finding.file, forFile);
   }
 
-  if (ACK_LINE_RE.test(prBody ?? '')) {
-    console.log(
-      '\nAcknowledged — the PR body carries a "Destructive DDL acknowledged: <reason>" line. Passing.',
-    );
+  const unacknowledged: string[] = [];
+
+  console.error(`check:destructive-ddl — ${findings.length} destructive statement(s) found:\n`);
+
+  for (const [file, forFile] of [...byFile].sort(([a], [b]) => a.localeCompare(b))) {
+    const acknowledged = ACK_LINE_RE.test(readSidecar(file) ?? '');
+    console.error(`  ${file} — ${acknowledged ? 'acknowledged' : 'NOT ACKNOWLEDGED'}`);
+    for (const finding of forFile) {
+      console.error(`    ${finding.rule}`);
+      console.error(`      ${finding.statement}`);
+    }
+    if (!acknowledged) unacknowledged.push(file);
+    console.error('');
+  }
+
+  if (unacknowledged.length === 0) {
+    console.log('Every migration above carries an acknowledgement sidecar. Passing.');
     return 0;
   }
 
   console.error(
-    '\nDestructive DDL needs an explicit acknowledgement in the PR body (CLAUDE.md · ' +
-      'Non-negotiable architecture rules #10). Add a line reading:\n\n' +
-      '  Destructive DDL acknowledged: <reason this is safe / how it was expand/contracted>\n\n' +
-      "or, better, avoid the destructive change entirely — see claude-docs/db.md's Migrations " +
-      'section for the expand/contract convention and a worked rename example.',
+    `${unacknowledged.length} migration(s) need an acknowledgement (CLAUDE.md · ` +
+      'Non-negotiable architecture rules #10). Create each file below and put a line ' +
+      'reading `Destructive DDL acknowledged: <reason>` in it:\n',
   );
+  for (const file of unacknowledged) console.error(`  ${sidecarPath(file)}`);
+  console.error(
+    '\nThe reason should say why the change is safe, or how it was expand/contracted — ' +
+      "see claude-docs/db.md's Migrations section for the convention and a worked rename " +
+      'example. Better still, avoid the destructive change entirely.',
+  );
+
   return 1;
 }
 
@@ -403,17 +491,31 @@ function selfTest(): number {
     }
   }
 
-  const noAck = report(bad, undefined);
+  // The fixtures have no sidecars on disk and must not: `bad.sql` exists to
+  // fail. Both outcomes are exercised by handing `report` a reader rather than
+  // by writing files next to the fixtures, where a stray `bad.ack.md` would
+  // quietly turn this self-test green forever.
+  const noAck = report(bad, () => undefined);
   if (noAck !== 1) {
-    console.error('self-test FAILED: bad.sql with no PR body should exit 1.');
+    console.error('self-test FAILED: bad.sql with no sidecar should exit 1.');
     failed = true;
   }
   const withAck = report(
     bad,
-    'Some description.\n\nDestructive DDL acknowledged: this is a throwaway fixture.\n',
+    () => '# bad\n\nDestructive DDL acknowledged: this is a throwaway fixture.\n',
   );
   if (withAck !== 0) {
-    console.error('self-test FAILED: bad.sql with an ack line should exit 0.');
+    console.error('self-test FAILED: bad.sql with an acknowledged sidecar should exit 0.');
+    failed = true;
+  }
+
+  // The correlation MB.48 exists for: an acknowledgement covers the file it
+  // sits beside and no other.
+  const otherFileOnly = report(bad, (file) =>
+    file.endsWith('good.sql') ? 'Destructive DDL acknowledged: wrong file.\n' : undefined,
+  );
+  if (otherFileOnly !== 1) {
+    console.error("self-test FAILED: another migration's sidecar must not cover bad.sql.");
     failed = true;
   }
 
@@ -426,10 +528,10 @@ function selfTest(): number {
   } else {
     console.log('self-test: good.sql triggered no findings, as expected.');
   }
-  const goodResult = report(good, undefined);
+  const goodResult = report(good, () => undefined);
   if (goodResult !== 0) {
     console.error(
-      'self-test FAILED: good.sql with no PR body should still exit 0 (nothing to acknowledge).',
+      'self-test FAILED: good.sql with no sidecar should still exit 0 (nothing to acknowledge).',
     );
     failed = true;
   }
@@ -470,7 +572,7 @@ function main(): void {
   }
 
   const findings = toScan.flatMap(scanFile);
-  process.exit(report(findings, process.env.DESTRUCTIVE_DDL_PR_BODY));
+  process.exit(report(findings));
 }
 
 if (import.meta.main) {
