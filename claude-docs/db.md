@@ -777,8 +777,8 @@ What a workspace _makes_, as against what exists (the compendium) and what it
 holds (`inventory_items`).
 
 - **`spells`** — `id`, `workspaceId`, `title`, `intent`, `jarSize`,
-  `sealWaxColor`, `moonPhase`, `dayOfWeek`, `instructions`, `status`, + the full
-  six-column audit spread. Stories 47 and 50's table.
+  `sealWaxColor`, `moonPhase`, `dayOfWeek`, `instructions`, `status`,
+  `visibility`, + the full six-column audit spread. Stories 47 and 50's table.
 - **`spell_ingredients`** — `spellId`, `ingredientId` (nullable), `name`,
   `form`, `quantity`, `unit`, `layerOrder`, `note`, + the four audit stamps,
   keyed on `(spell_id, layer_order)` and hard-deleted (MB.34). Stories 50 and
@@ -787,14 +787,12 @@ holds (`inventory_items`).
   `(spell_id, ingredient_id)`; MB.40 moved the key (`0017`) once a row could
   exist without the pair.
 
-**`visibility` is not on `spells` yet, and its absence is scheduled rather than
-forgotten.** §5 lists the column and M10.3 adds it in Wave 5, after M1.23 has
-seeded spells against this table — which is what makes M10.3's criterion,
-"existing seeded spells migrate to workspace visibility", something that can
-actually be tested (TASKS.md, "Breaking the M1.23 ↔ M10.3 cycle"). Adding it
-early would quietly delete that criterion, so `spells-schema.test.ts` asserts
-the column list exactly and names the column as the one that must still be
-absent.
+**`visibility` arrived a wave later than the rest of the table** (M10.3,
+`0018_spell-visibility.sql`), after M1.23 had seeded spells against it — which
+is what made "existing seeded spells migrate to workspace visibility" a
+criterion that could be tested rather than one an empty table satisfied for
+free (TASKS.md, "Breaking the M1.23 ↔ M10.3 cycle"). The rule it carries is
+["Spell visibility"](#spell-visibility-m103) below.
 
 ### The join names the ingredient, never the stock row
 
@@ -1389,14 +1387,18 @@ construction rather than by a branch someone could add later.
 The repository splits on the table's own shape, the way it already splits
 `softDelete` from `delete`:
 
-| The table              | Reads                                                     | Writes                                                                         |
-| ---------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| carries `workspace_id` | `findManyInWorkspace` / `findOneInWorkspace`, proof first | `insertInWorkspace`, `updateInWorkspace`, `softDeleteInWorkspace`, proof first |
-| does not               | `findMany` / `findOne` / `findManyIncludingSoftDeleted`   | `insert`, `update`, `softDelete`, `delete`                                     |
+| The table                                | Reads                                                     | Writes                                                                                                  |
+| ---------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| carries `workspace_id`                   | `findManyInWorkspace` / `findOneInWorkspace`, proof first | `insertInWorkspace`, `updateInWorkspace`, `updateByIdInWorkspace`, `softDeleteInWorkspace`, proof first |
+| carries `visibility` (`spells` alone)    | `findManySpells` / `findOneSpell`, proof first            | the workspace-scoped writes above                                                                       |
+| carries `spell_id` (the two join tables) | `findManyInSpell`, proof first                            | `insert`, `update`, `delete`                                                                            |
+| none of those                            | `findMany` / `findOne` / `findManyIncludingSoftDeleted`   | `insert`, `update`, `softDelete`, `delete`                                                              |
 
 `{ workspaceId: AnyPgColumn }` and `{ workspaceId?: never }` are the two
 constraints, so each finder admits exactly one of the two sets and a table
-cannot go through the wrong one. A scoped finder ANDs `workspace_id =
+cannot go through the wrong one. The two middle rows are M10.3's, added by
+excluding `visibility` and `spell_id` from the finders above and below them:
+["Spell visibility"](#spell-visibility-m103). A scoped finder ANDs `workspace_id =
 membership.workspaceId` onto the query **itself** rather than trusting a
 `workspaceId` beside the proof — a second source is a second thing to
 disagree — and `insertInWorkspace` fills the column from the proof for the same
@@ -1437,12 +1439,14 @@ which is the same coverage that would have caught a policy written wrong:
   X's ids satisfies the type and still reads across workspaces. The proof
   constrains which workspace the query is scoped to, not which ids the caller
   chose to ask about.
-- **`spell_ingredients` and `spell_categories` carry no `workspace_id`** and so
-  land on the unscoped side, where nothing demands a proof at all. They reach
-  their workspace through `spells`, and their services load the parent spell
-  under the proof first. A guard inferring the scoped set from a column name
-  cannot see this, which is why DESIGN.md §8 says "workspace-scoped" is not the
-  same as "has a `workspace_id` column".
+- **`spell_ingredients` and `spell_categories` carry no `workspace_id`**, so
+  the column name a guard would infer the scoped set from says "unscoped" about
+  the two tables holding what a spell is made of — which is why DESIGN.md §8
+  says "workspace-scoped" is not the same as "has a `workspace_id` column".
+  M10.3 closed this one by making it a third shape rather than a subset of the
+  unscoped side: both tables carry a `spell_id`, the unscoped finders now
+  refuse them on it, and `findManyInSpell` reaches them through the parent
+  spell. That leaves the first gap above as the live one.
 
 A cast is the third gap, and it is review's job rather than the type's: a value
 that already has the proof's public shape is _comparable_ to it, so
@@ -1452,6 +1456,94 @@ does catch — the object literal and the forgery from a session — as
 `@ts-expect-error` lines, which fail `npm run typecheck` the moment the brand
 stops being required. A runtime assertion could not see that at all: it would
 pass just as happily against a signature that had quietly gone optional.
+
+## Spell visibility (M10.3)
+
+DESIGN.md §5: a `workspace` spell is readable by every member of its coven,
+viewers included; a `private` spell is readable by its **author alone**, owners
+not excepted. `spells.visibility` is a `spell_visibility` enum —
+`'private' | 'workspace'` — `NOT NULL DEFAULT 'workspace'`.
+
+**The author is `created_by`.** §5 gives spells no separate author column, and
+nothing in v1 transfers authorship, so the audit stamp is the answer rather
+than a second column that could disagree with it.
+
+An enum rather than a `CHECK`, for the reason `status` is one: §13's notes
+model carries a third tier, `public`, and adding a value to an enum is an
+`ALTER TYPE … ADD VALUE` where widening a `CHECK` re-validates every row.
+
+**The default is on the column, not in a service.** A spell written by any
+path — a seed, a fixture, a service that never mentions visibility — joins the
+shared grimoire. The failure mode of the other default is silent: a spell
+nobody but its author can see, in a coven that cannot tell it is missing.
+
+### Reading: three finders, and why the generic ones refuse
+
+`readableSpells(membership)` is the predicate, and the only one: the coven from
+the proof, `deleted_at IS NULL`, and `visibility = 'workspace' OR created_by =
+membership.userId`. Both halves come out of the proof, so there is no id a
+caller could pass that disagrees with the check that minted it — the argument
+`scopedTo` already makes one layer down.
+
+| Finder                                        | Reads                                                       |
+| --------------------------------------------- | ----------------------------------------------------------- |
+| `findManySpells(membership)`                  | every spell of the coven this member may read               |
+| `findOneSpell(membership, spellId)`           | one by id, `undefined` when it is another's private spell   |
+| `findManyInSpell(membership, table, spellId)` | a spell's rows in `spell_ingredients` or `spell_categories` |
+
+The generic finders refuse all three tables, and that refusal is the point.
+`spells` carries `visibility`, so `findManyInWorkspace` will not compile
+against it; the two join tables carry a `spell_id`, so `findMany`, `findOne`
+and `findManyIncludingSoftDeleted` will not compile against them. Two
+`{ column?: never }` constraints do it, in the shape `{ workspaceId?: never }`
+already had: `spells` and the join tables each go through one finder because
+every other finder's signature excludes them. A private spell that a service
+merely forgot to exclude is
+_absent_; one the type will not let that service query is _impossible_, and
+only the second survives the next service written in a hurry.
+
+**Why the join tables need a finder of their own.** Neither carries a
+`workspace_id`, so neither can scope itself, and a spell's visibility rule
+would hold for the spell while its contents stayed readable to anyone who knew
+the id — the rule holding for the jar and leaking what is in it. Both reach
+their coven and their visibility through the parent spell, which
+`findManyInSpell` expresses as a correlated `EXISTS` over `readableSpells` —
+in SQL, per CLAUDE.md rule 7, so a row a caller may not see is never fetched to
+be filtered out afterwards. It is written as a `sql` fragment rather than a
+Drizzle subquery because a subquery needs a second select builder, and the
+repository holding exactly one is what `soft-delete-finder-guard.test.ts` reads
+to prove no unfiltered read exists.
+
+### Writing: the one-way rule
+
+`src/services/spell-visibility.ts`'s `setSpellVisibility(session, workspaceId,
+spellId, visibility)`. `private` may be widened to `workspace`; `workspace` may
+never be narrowed back. Once the coven has read a spell and built on it, hiding
+it retracts something they were relying on — widening is a gift, narrowing is a
+retraction, so only one direction is allowed. The narrowing is refused with a
+`Forbidden` **carrying a message that says so**, not the bare one: the caller
+holds the permission, and a two-word refusal would send them looking for a
+role they already have. The rule governs visibility and not existence — a
+shared spell can still be deleted.
+
+**There is no author clause in that service, and none is missing.**
+`findOneSpell` has already answered `undefined` to everyone but the author, so
+a member who cannot see a private spell cannot widen it either, and what they
+get is `NotFound` rather than a refusal that confirms the spell exists.
+Restating the visibility a spell already has is permitted: it is not a
+narrowing, and refusing it would make an idempotent call an error.
+
+M10.6 adds the pure `resolveSpellVisibility()` and the exhaustive transition
+matrix; this is the half that runs against the database.
+
+### `updateByIdInWorkspace`, and why it exists
+
+MB.33 bars everything outside the database layer from importing `drizzle-orm`
+at runtime, so a service cannot build the `where` that `updateInWorkspace`
+takes. The eighth `AuditWriter` method builds the one predicate every entity
+update needs — `id = $1`, ANDed onto the proof's own clause — below that
+boundary. `repository.test.ts` pins the method count, so a ninth is a decision
+argued for in its own PR rather than a convenience.
 
 ## Soft-delete filtering and the partial-index convention (M1.20)
 

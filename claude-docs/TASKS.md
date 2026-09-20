@@ -75,7 +75,11 @@ The authorization rules must not come early for the opposite reason. A rule writ
 
 There is no cycle at task granularity, only at milestone granularity: M1.23 needs the `spells` **table** (M10.2), while M10.3 adds the `visibility` **column**. Splitting across waves linearises it — M10.2 (W3) → M1.23 (W4) → M10.3 (W5) — and M10.3's criterion "existing seeded spells migrate to workspace visibility" becomes genuinely testable, which is the signal it wanted this order all along.
 
-M10.3 stays whole in Wave 5 rather than moving its column into Wave 3. Its PR needs the M1.5 destructive-DDL acknowledgement line, because it adds NOT NULL to a table that now has rows. That is the deliberate price of keeping the migration criterion meaningful, and it makes M10.3 the first migration to exercise expand/contract against seeded rows — MB.40's reshaping of `spell_ingredients` came first, and carried the first acknowledgement line, but against an empty table — worth rehearsing once on seed data rather than discovering it later on production rows.
+M10.3 stays whole in Wave 5 rather than moving its column into Wave 3, which makes it the first migration to add a column to a table that already holds rows — MB.40's reshaping of `spell_ingredients` came first and against an empty one.
+
+**It needed no acknowledgement line, and the criterion saying it would was wrong.** The expectation was that adding NOT NULL to a populated table is destructive DDL. It is when the column arrives bare: `ADD COLUMN … NOT NULL` with no `DEFAULT` fails against every existing row, and `SET NOT NULL` after the fact fails against any row left null. `0018` does neither — `ADD COLUMN "visibility" "spell_visibility" DEFAULT 'workspace' NOT NULL` is one statement, Postgres 11+ keeps the default in the catalogue rather than rewriting the table, and every row already written reads `workspace` the moment it commits. M1.5's check exempts exactly that shape for exactly that reason (`claude-docs/db.md`, "Expand/contract and the destructive-DDL check"), so a sidecar beside `0018` would have acknowledged an empty findings list, which is the correlation MB.48 existed to restore.
+
+What the criterion was reaching for — proof that rows written before the column get `workspace` — is a test rather than a sentence, and `spells-schema.test.ts` carries it: it drops the column and re-applies `0018`'s own `ADD COLUMN` text, read off disk, against a spell written beforehand. A migration edited to lose its `DEFAULT` reddens there instead of on production rows.
 
 ### The sweep-task rule
 
@@ -2778,8 +2782,8 @@ _Acceptance criteria:_
 - A private spell's rows in `spell_ingredients` and `spell_categories` are refused to everyone but its author — **by direct id**, not merely absent from a list
 - Each denial test asserts why the read could have succeeded: the row exists, the fixture is populated, and the same call as the author returns it
 - Widening `private → workspace` is allowed and `workspace → private` is refused with an explaining error, not a bare `Forbidden` (the service half of M10.6's rule)
-- Existing seeded spells migrate to workspace visibility
-- The PR carries the M1.5 destructive-DDL acknowledgement line: this adds NOT NULL to a table that now holds seeded rows
+- Existing seeded spells migrate to workspace visibility — asserted against a row written before the column existed, not only against the default a fresh insert takes
+- ~~The PR carries the M1.5 destructive-DDL acknowledgement line: this adds NOT NULL to a table that now holds seeded rows~~ — **struck.** `ADD COLUMN … DEFAULT … NOT NULL` in one statement is not destructive DDL and the check does not flag it, so there is nothing for a sidecar to acknowledge. See "Breaking the M1.23 ↔ M10.3 cycle" above
 
 **M10.4 — spell_categories join table** · 1h
 

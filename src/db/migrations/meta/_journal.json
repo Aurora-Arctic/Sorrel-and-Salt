@@ -127,6 +127,13 @@
       "when": 1789772030503,
       "tag": "0017_custom-spell-ingredients",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1789871297832,
+      "tag": "0018_spell-visibility",
+      "breakpoints": true
     }
   ]
 }

@@ -1,15 +1,17 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from './support/database';
 import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
+import { MIGRATIONS_DIR } from '../support/paths';
 import { type SpellOverrides, makeSpell, spellColumns } from '../support/fixtures';
-import { spellStatus, spells } from '@/db/schema/spells';
+import { spellStatus, spellVisibility, spells } from '@/db/schema/spells';
 import { workspaces } from '@/db/schema/workspaces';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 
-// §5's columns minus `visibility`, which lands with the service rule that
-// reads it so seeded spells exist to migrate; this list failing is the
-// reminder — claude-docs/db.md, "The grimoire".
+// §5's columns, `visibility` included as of M10.3 — claude-docs/db.md,
+// "The grimoire".
 const OWN_COLUMNS = [
   'id',
   'workspace_id',
@@ -21,6 +23,7 @@ const OWN_COLUMNS = [
   'day_of_week',
   'instructions',
   'status',
+  'visibility',
 ];
 
 const WORKSPACE_FK = 'spells_workspace_id_workspaces_id_fk';
@@ -33,8 +36,9 @@ describe('spells schema', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
 
-  it('does not carry M10.3’s visibility column yet', () => {
-    expect(byName.visibility).toBeUndefined();
+  it('requires a visibility and defaults it to workspace (M10.3)', () => {
+    expect(byName.visibility.notNull).toBe(true);
+    expect(byName.visibility.hasDefault).toBe(true);
   });
 
   it('carries a surrogate id as its primary key', () => {
@@ -81,6 +85,12 @@ describe('spells schema', () => {
   it('stocks the status enum with §5’s two values, in order', () => {
     expect(spellStatus.enumValues).toEqual(['draft', 'complete']);
   });
+
+  // An enum for the same reason `status` is one: v2's notes model has a third
+  // tier, and `ALTER TYPE … ADD VALUE` expands where a widened CHECK re-validates.
+  it('stocks the visibility enum with §5’s two values, in order', () => {
+    expect(spellVisibility.enumValues).toEqual(['private', 'workspace']);
+  });
 });
 
 const AUTHOR = FIXTURE_USERS.A.id;
@@ -92,13 +102,15 @@ let sql: ReturnType<typeof postgres>;
 const catalogue = useTestDatabase((client) => (sql = client));
 
 // The factory writes the row; this file supplies the coven and the author.
-// `status` is dropped so the column's own default is what the tests observe —
-// a status spelled out in the insert would make "defaults to draft" assert
-// what it just wrote. `cast` takes the status path.
+// `status` and `visibility` are dropped so each column's own default is what
+// the tests observe — a value spelled out in the insert would make "defaults
+// to draft" assert what it just wrote. `cast` and `share` take those paths.
 async function record(overrides: SpellOverrides = {}): Promise<string> {
-  const { status: _status, ...columns } = spellColumns(
-    makeSpell({ workspaceId: COVEN, ...overrides }),
-  );
+  const {
+    status: _status,
+    visibility: _visibility,
+    ...columns
+  } = spellColumns(makeSpell({ workspaceId: COVEN, ...overrides }));
 
   const [inserted] = await sql`
     insert into spells ${sql({ ...columns, created_by: AUTHOR, updated_by: AUTHOR })}
@@ -114,6 +126,30 @@ async function cast(status: string): Promise<string> {
     returning id
   `;
   return inserted.id as string;
+}
+
+async function share(visibility: string | null): Promise<string> {
+  const [inserted] = await sql`
+    insert into spells (workspace_id, title, visibility, created_by, updated_by)
+    values (${COVEN}, 'Hearth Guard', ${visibility}::spell_visibility, ${AUTHOR}, ${AUTHOR})
+    returning id
+  `;
+  return inserted.id as string;
+}
+
+/** The sentinel `rewind` throws to roll its transaction back; never seen by a caller. */
+class Rewound extends Error {}
+
+/** Runs `body` in a transaction and rolls it back, whether or not it threw. */
+async function rewind(body: (tx: postgres.TransactionSql) => Promise<void>): Promise<void> {
+  await sql
+    .begin(async (tx) => {
+      await body(tx);
+      throw new Rewound();
+    })
+    .catch((error: unknown) => {
+      if (!(error instanceof Rewound)) throw error;
+    });
 }
 
 beforeEach(async () => {
@@ -243,6 +279,81 @@ describe('spells table', () => {
 
       expect(error.code).toBe('23502');
       expect(error.column_name).toBe('status');
+    });
+  });
+
+  describe('visibility (M10.3)', () => {
+    // In the column, so a spell written by any path — a seed, a fixture, a
+    // service that never mentions visibility — joins the shared grimoire
+    // rather than disappearing into its author's.
+    it('defaults a new spell to workspace', async () => {
+      const id = await record();
+
+      const [row] = await sql`select visibility::text from spells where id = ${id}`;
+
+      expect(row.visibility).toBe('workspace');
+    });
+
+    for (const visibility of ['private', 'workspace']) {
+      it(`stores ${visibility}`, async () => {
+        const id = await share(visibility);
+
+        const [row] = await sql`select visibility::text from spells where id = ${id}`;
+
+        expect(row.visibility).toBe(visibility);
+      });
+    }
+
+    // Exactly two in v1; §13's notes carry a third tier, `public`, and adding
+    // it there is an `ALTER TYPE ... ADD VALUE` rather than a CHECK rewrite.
+    it('holds exactly the two labels and no more', async () => {
+      const [row] = await sql`select enum_range(null::spell_visibility)::text[] as labels`;
+
+      expect(row.labels).toEqual(['private', 'workspace']);
+    });
+
+    it('refuses a visibility outside the two', async () => {
+      const error = await failureOf(share('public'));
+
+      expect(error.code).toBe('22P02');
+    });
+
+    it('refuses a null visibility', async () => {
+      const error = await failureOf(share(null));
+
+      expect(error.code).toBe('23502');
+      expect(error.column_name).toBe('visibility');
+    });
+
+    // The criterion the whole wave-5 scheduling exists for: M1.23 seeded
+    // spells against this table before the column arrived, and those rows have
+    // to come out shared rather than null or private.
+    //
+    // Every migration in the template ran before this file's first insert, so
+    // there is no pre-migration row left to read. The column is dropped and
+    // re-added from `0018`'s own text instead — read off disk, so a migration
+    // edited to drop the DEFAULT fails here rather than on production rows.
+    it('fills a spell written before the column existed with workspace', async () => {
+      const id = await record();
+
+      const migration = readFileSync(join(MIGRATIONS_DIR, '0018_spell-visibility.sql'), 'utf8');
+      const addColumn = migration
+        .split('--> statement-breakpoint')
+        .map((statement) => statement.trim())
+        .find((statement) => /alter table "spells" add column "visibility"/i.test(statement));
+      expect(addColumn, '0018 no longer adds spells.visibility').toBeDefined();
+
+      // DDL is transactional in Postgres, and `rewind` rolls the whole thing
+      // back: the column is gone for the length of this test and no further,
+      // so an `ADD COLUMN` that fails here fails this assertion rather than
+      // every test after it in the file.
+      await rewind(async (tx) => {
+        await tx`alter table spells drop column visibility`;
+        await tx.unsafe(addColumn as string);
+
+        const [row] = await tx`select visibility::text from spells where id = ${id}`;
+        expect(row.visibility).toBe('workspace');
+      });
     });
   });
 
