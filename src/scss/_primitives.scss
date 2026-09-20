@@ -57,19 +57,30 @@
     margin-top: 1rem;
   }
 
+  // Shape shared by every button in the app, `SignInPanel`'s included
+  // (claude-docs/components/sign-in-panel.md, "Provider branding") — that
+  // component's brand buttons carry their own colour and mark instead of
+  // this rule's `background-color`/`border-color`/`color`, but the same
+  // padding, radius, shadow, icon-friendly layout and focus treatment.
   .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
     font-family: $font-body;
     font-size: 0.875rem;
     font-weight: 500;
-    padding: 0.375rem 0.875rem;
-    border-radius: 0.25rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
     border: 1px solid $accent;
     background-color: transparent;
     color: $accent;
     cursor: pointer;
-    @include theme-transition(background-color, border-color, color);
+    box-shadow: $shadow-floating;
+    @include theme-transition(background-color, border-color, color, box-shadow);
 
-    &:hover {
+    &:hover,
+    &:focus-visible {
       background-color: $accent;
       color: $text-on-color;
     }
@@ -89,6 +100,39 @@
 
     &:hover {
       background-color: $secondary;
+    }
+  }
+
+  // `[aria-disabled='true']` rather than a modifier class: a disabled `.btn`
+  // is a state, not a variant a caller opts into separately, and the
+  // attribute is what SignInPanel already sets to keep the button in the tab
+  // order (`disabled` itself would remove it — see claude-docs/components/sign-in-panel.md,
+  // "Unavailable providers"). Desaturated toward
+  // $text-muted rather than removed, so it still reads as a button rather
+  // than a blank slot. `:hover`/`:focus-visible` restate every property
+  // rather than leaving `.btn`'s own hover free to compete: a caller adding
+  // its own colour modifier (SignInPanel's brand classes) would otherwise
+  // tie this rule in specificity and the winner would depend on source
+  // order — SignInPanel avoids the whole question by not applying its
+  // brand-colour class to a disabled button at all.
+  .btn[aria-disabled='true'] {
+    background-color: $surface-card;
+    border-color: $text-muted;
+    color: $text-muted;
+    opacity: 0.7;
+    cursor: not-allowed;
+    box-shadow: none;
+
+    &:hover,
+    &:focus-visible {
+      background-color: $surface-card;
+      border-color: $text-muted;
+      color: $text-muted;
+      box-shadow: none;
+    }
+
+    svg {
+      opacity: 0.5;
     }
   }
 

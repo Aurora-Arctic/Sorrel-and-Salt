@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import ThemeToggle from '../components/ThemeToggle';
 import { body, display } from './fonts';
 import './globals.scss';
 
@@ -22,7 +23,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {/* Every page gets it, signed in or not — M2.6 moved it here from the
+            home page, which was the only page that existed yet. */}
+        <ThemeToggle />
+        {children}
+      </body>
     </html>
   );
 }

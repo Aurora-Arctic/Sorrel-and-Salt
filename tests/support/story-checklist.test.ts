@@ -49,7 +49,7 @@ describe('buildChecklist', () => {
     ]);
 
     expect(checklist.stories[0].title).toBe(
-      "Sign in with Google or GitHub, so I don't manage another password.",
+      "Sign in with an account I already have, so I don't manage another password.",
     );
     expect(checklist.stories[0].suites).toEqual(['tests/acceptance/01-accounts.test.ts']);
   });
@@ -112,7 +112,7 @@ describe('formatChecklist', () => {
 
   it('prints one line per story with its id, title and status', () => {
     expect(lines).toContain(
-      "[x] Story 1: Sign in with Google or GitHub, so I don't manage another password.",
+      "[x] Story 1: Sign in with an account I already have, so I don't manage another password.",
     );
     expect(lines.find((line) => line.startsWith('[ ] Story 2:'))).toMatch(/— FAILING$/);
     expect(lines.find((line) => line.startsWith('[ ] Story 3:'))).toMatch(/— skipped$/);
