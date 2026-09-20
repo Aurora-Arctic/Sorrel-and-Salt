@@ -416,3 +416,14 @@ migrations.
   `tests/db/updated-at-trigger.test.ts` reads `accounts`, `sessions` and
   `verifications` from the catalogue as its named counter-example — the
   three tables that carry `updated_at` and no trigger.
+- **`tests/acceptance/01-accounts.test.ts` (M2.1)** — stories 1 and 2,
+  deliberately red. Both are blocked on UI Wave 6 hasn't built yet, not on
+  the wiring above: story 1 checks for `/sign-in` (DESIGN.md §9) at
+  `src/app/sign-in/page.tsx`, which M2.6 adds; story 2 reads `src/app/
+page.tsx`'s own source for the invite-only explanation M2.8 adds, since
+  today's `/` is the same static splash for every visitor. Each reads its
+  route's source from disk rather than importing or rendering it — the
+  files don't exist yet (story 1) or don't yet say what the story needs
+  (story 2), and a static import of a page that isn't there would fail
+  typecheck rather than the test. `claude-docs/testing.md`, "Acceptance"
+  covers how CI tolerates this suite failing until M2 closes.
