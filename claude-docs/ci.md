@@ -9,8 +9,8 @@ archived and are not required reading.
 
 ## Composite actions
 
-`.github/actions/` — three actions. `timer-start` and `timer-elapsed` were a
-fourth and fifth until MB.32 deleted them: 46 lines across twelve workflows to
+`.github/actions/` — five actions. `timer-start` and `timer-elapsed` were two
+more until MB.32 deleted them: 46 lines across twelve workflows to
 print an elapsed time into a job summary. `duration` stays an **optional**
 input on `job-summary` and `pr-comment`, so restoring a timer would need no
 edit at any call site; nothing passes it today.
@@ -56,6 +56,39 @@ edit at any call site; nothing passes it today.
 - **`pr-comment`** — upserts one marked comment per check (`<!-- ci-<slug> -->`),
   in `minimize` (resolve-on-pass) or `comment` (always post) mode, plus a
   separate fail-only thread for `merge-queue: true` callers.
+- **`build-image`** — the build-or-reuse sequence `build-image.yml`,
+  `build-e2e-image.yml` and `build-db-image.yml` share: compute the
+  content-addressed GHCR tag, log in, set up buildx, `docker buildx imagetools inspect`
+  the tag, and `docker/build-push-action` only on a miss; the `image`
+  output is the ref. Three things stay in the caller because the action cannot
+  take them: `actions/checkout` (a local action resolves from the checked-out
+  tree), the `hashFiles(...)` call (it takes literal globs, so the hashed list
+  is written where it can be read; the action fails on an empty hash rather
+  than pushing an untagged ref), and `secrets.GITHUB_TOKEN` (`secrets` is out
+  of scope inside a composite, so the registry password is an input — the same
+  route `vercel-secrets-guard` takes). `cache-scope` is optional: set, it emits
+  `type=gha,scope=<name>`; empty, it emits the unscoped `type=gha` that
+  `build-image.yml` has always used, so no image's layer-cache key moved when
+  the three workflows were folded onto it.
+- **`vercel-secrets-guard`** — the warn-and-skip check on
+  `VERCEL_DEPLOY_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID`, at `id: guard`
+  in `migrate.yml`'s `migrate` job and `deploy.yml`'s `deploy` and `teardown`
+  jobs; `skipping` is the word the warning names. Every later step in those
+  jobs is gated on `steps.guard.outputs.enabled == 'true'`, which is why the id
+  is fixed. The three secrets arrive as inputs, and a reference to a secret
+  that does not exist is `''`, so a misspelt name still reads as unset. The
+  Neon guards — `migrate.yml`'s `neon-guard` and `neon-snapshot-prune.yml`'s
+  `guard` — stay inline: a different, two-secret shape, and the prune workflow
+  has no checkout to resolve a local action from.
+
+**What cannot become a composite action**, so it is not re-proposed: the
+`container:` / `defaults:` preamble `checks.yml`, `vitest.yml` and
+`playwright.yml` share, and the `services: postgres:` block `vitest.yml` and
+`playwright.yml` share. Those are job-level keys, evaluated before the first
+step runs; a composite contributes steps and nothing above them, and the only
+job-level `uses:` is a reusable workflow, which is a whole job rather than a
+piece spliced into one. That repetition is the price of the shape and stays
+where Container jobs describes it.
 
 ## Container jobs
 
@@ -221,10 +254,12 @@ matrix's generated job name, not the leg's.
     it.
 
 - **`build-image.yml`** — builds the shared `testing` image once and exposes its
-  ref as an `image` output. Tag is content-addressed:
-  `ghcr.io/${github.repository,,}/testing:${{ hashFiles('Docker/Dockerfile.node', 'package-lock.json') }}`,
-  and a `docker buildx imagetools inspect` check skips the build entirely when
-  that hash already has a pushed image. **This image excludes Playwright
+  ref as an `image` output. A checkout, then the `build-image` action with
+  `hashFiles('Docker/Dockerfile.node', 'package-lock.json')` as the hash, so
+  the tag is content-addressed — `ghcr.io/${github.repository,,}/testing:<hash>`
+  — and the build is skipped entirely when that tag already has a pushed
+  image. No `cache-scope`: its layer cache has always been the unscoped
+  `type=gha` key. **This image excludes Playwright
   entirely** — it's Alpine/musl-based and Playwright's Chromium build has no
   official musl support — so every `checks.yml` leg and `vitest` consume it,
   but `playwright` does not; see `build-e2e-image.yml` below.
@@ -275,8 +310,8 @@ matrix's generated job name, not the leg's.
   see `testing.md`'s Coverage section for why, and for the
   `fullyParallel`/`test.describe.configure({ mode: 'serial' })` fix the CI
   Postgres service surfaced (a real race, not CI-only flakiness).
-- **`build-e2e-image.yml`** (M1.14) — same content-addressed-tag /
-  skip-if-exists shape as `build-image.yml`, but for `Docker/Dockerfile.e2e`:
+- **`build-e2e-image.yml`** (M1.14) — the same `build-image` action as
+  `build-image.yml`, under `cache-scope: e2e-image`, but for `Docker/Dockerfile.e2e`:
   `FROM mcr.microsoft.com/playwright:v1.63.0-noble` (Microsoft's own image,
   which bundles a matching Node runtime, every OS dep Chromium needs, and
   the browser itself, all pinned together) — pinned to
@@ -481,7 +516,8 @@ itself gone now (MB.32) until M7.A.1 restores it.
   at test-run setup (`tests/support/seeded-database.ts`;
   [`design-decisions/m1.27-template-at-setup-not-in-image.md`](design-decisions/m1.27-template-at-setup-not-in-image.md)),
   so the image's contents depend on nothing under `src/`.
-- **`build-db-image.yml`** — builds and publishes it to GHCR, tagged with a
+- **`build-db-image.yml`** — builds and publishes it to GHCR through the
+  `build-image` action (Composite actions, above), tagged with a
   `hashFiles()` hash of `Docker/Dockerfile.postgres` /
   `Docker/postgres-init/**`. No `latest` tag (MB.17) — nothing in the repo
   ever read it: `docker-compose.yaml` builds the Dockerfile locally rather
@@ -491,7 +527,8 @@ itself gone now (MB.32) until M7.A.1 restores it.
   trigger itself, not a no-op job.
 
   The `push` trigger's real job is seeding the GHA layer cache
-  (`cache-to: type=gha,mode=max,scope=db-image`) for branches that haven't
+  (`cache-scope: db-image`, which the action emits as
+  `cache-to: type=gha,mode=max,scope=db-image`) for branches that haven't
   built this image yet. That cache is branch-isolated — a `pull_request` run
   writes only to its own merge-ref scope, and reads fall back to the PR's
   base branch and the repo's default branch — so only a push to `staging`
@@ -511,10 +548,10 @@ itself gone now (MB.32) until M7.A.1 restores it.
   `push` path filter above is a workflow-level skip — it only gates this
   workflow's own direct triggers, so it protects `push` but not
   `workflow_call`, which bypasses it entirely and is the path every PR takes
-  (see below). For that path, `build-db-image.yml` carries the same
-  `Check if image already exists` / `docker buildx imagetools inspect`
-  step `build-image.yml` and `build-e2e-image.yml` use, skipping
-  `Build and push db image` whenever the hash tag is already published.
+  (see below). For that path, the `build-image` action's
+  `Check if image already exists` step (`docker buildx imagetools inspect`,
+  the one `build-image.yml` and `build-e2e-image.yml` run too) skips
+  `Build and push image` whenever the hash tag is already published.
   Between the path filter and the skip-if-exists check, buildx only actually
   runs when the tag is a genuine miss — on either trigger.
 
@@ -623,8 +660,13 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   `"*"` stops at `/` and would miss `feature/*`; and any single `true` rule wins
   the tiebreak. Re-enabling a branch means adding a key, never loosening the
   catch-all.
-- A guard step skips every real step unless `VERCEL_DEPLOY_TOKEN` /
-  `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` are set. All three are set as repo
+- The `vercel-secrets-guard` action (`id: guard`) skips every later step unless
+  `VERCEL_DEPLOY_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` are set. One
+  step precedes it ungated: `actions/checkout`, which a local action needs in
+  order to resolve at all, so a run with the secrets absent still pays for a
+  checkout — full in `migrate` and `deploy`, where it was already the next
+  step, and `sparse-checkout: .github/actions` in `teardown`, which had no
+  checkout before and reads nothing else from the repo. All three are set as repo
   secrets, so **the guard passes and deploys run for real** — as of v0.2.0 both
   `staging` and `main` reach `vercel pull`. `VERCEL_SCOPE` is **not** part of
   the guard and never was; it is still unset, and MB.12 owns it alongside
@@ -641,8 +683,8 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   once), and `deploy`, whose `if: success()` is load-bearing: a custom `if:`
   on a job with `needs:` replaces the implicit needs-all-succeeded check, so
   any other condition there would let a failed `migrate` through to the
-  deploy. Same guard-skip stub as `deploy.yml` when the `VERCEL_*` secrets
-  are absent. `vercel pull --environment=preview --git-branch=<branch>`, or
+  deploy. Same `vercel-secrets-guard` skip as `deploy.yml` when the `VERCEL_*`
+  secrets are absent. `vercel pull --environment=preview --git-branch=<branch>`, or
   `vercel pull --environment=production` with no branch (MB.45), resolves the
   right `DATABASE_URL` for each target the same way `deploy.yml`'s own two
   pulls do — the branch-scoped override for
@@ -818,8 +860,9 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   total**, and `production`, `staging`, every retained snapshot and every open
   hotfix preview's ephemeral branch draw on that one quota, so `snapshot-*`
   branches cannot be left to accumulate: the workflow keeps the newest
-  `KEEP_SNAPSHOTS` (3) and deletes the rest. It carries the same
-  warn-and-skip secrets guard.
+  `KEEP_SNAPSHOTS` (3) and deletes the rest. It carries the same inline
+  warn-and-skip guard on those two secrets — not the `vercel-secrets-guard`
+  action, which checks three others (Composite actions, above).
 
 ## Running CI locally
 
