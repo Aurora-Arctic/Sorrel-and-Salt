@@ -45,7 +45,7 @@ They separate cleanly because they are already different migrations and differen
 
 The DDL is safe early because §5 already specifies every column, type, enum set and index predicate — writing it in Drizzle is transcription, not design. Additive DDL is inert: a table nobody queries yet changes no behaviour, and under expand/contract this is the free direction. Empty tables are also the cheapest moment for constraints, so land every constraint §5 specifies at **full strength** — NOT NULL, CHECK, enum sets, three partial unique indexes on `ingredients`, composite PKs. Tightening later needs a backfill, an M1.5 acknowledgement line, and can fail on rows that already exist.
 
-The authorization rules must not come early for the opposite reason. A rule written before its service tends not to match it: the `Membership` proof M6.3 threads through every workspace-scoped finder mirrors the role hierarchy `assertMembership` defines in the same task, and the two-layer design only works if both layers agree. Behaviour is also where the real uncertainty lives — whether an owner can read a member's private spell is worth deciding with the service in front of you; column types are not. The wave order follows: tables (W3), then seeds run against them (W4), then the service rules land and are proved against real seeded rows (W5).
+The authorization rules must not come early for the opposite reason. A rule written before its service tends not to match it: the `Membership` proof M6.3 threads through every workspace-scoped finder mirrors the permission statements `assertMembership` checks in the same task, and the two-layer design only works if both layers agree. Behaviour is also where the real uncertainty lives — whether an owner can read a member's private spell is worth deciding with the service in front of you; column types are not. The wave order follows: tables (W3), then seeds run against them (W4), then the service rules land and are proved against real seeded rows (W5).
 
 **MB.29 removed the second half of this argument**, which used to be that RLS interferes with seeding — a policy on a table you are about to seed will filter your seed. With policies deferred to the public launch there is no seed interference to dodge, and the wave order stands on the first reason alone. When policies do land, that constraint comes back with them: [`mb.24-rls-role-split.md`](design-decisions/mb.24-rls-role-split.md) answers it with `BYPASSRLS` on the seeding role.
 
@@ -1814,7 +1814,9 @@ _Acceptance criteria:_
 
 _Story 12 — As a viewer, I want to read everything in a workspace but change nothing, so that I can be included without putting shared records at risk._
 
-Implement `assertMembership(session, workspaceId, minRole)` with the ordering viewer < member < owner, called for every workspace-scoped operation. Unit test every role and threshold combination.
+Implement `assertMembership(session, workspaceId, permission)`, called for every workspace-scoped operation. Test every role against every permission the statements declare.
+
+**Re-specified while being built.** The original signature took a `minRole` compared against the rank viewer < member < owner. It is now a permission request — `{ spell: ['create'] }` — checked against per-role statements built with better-auth's `createAccessControl`, which is already in the dependency tree. A rank assumes every role sits on one line, and the first role that does not would leave every "at least member" call site meaning something nobody checked; the statements also type the vocabulary, so a misspelled action is a compile error. The `Membership` proof below is unchanged — it is the substance of the task and identical under either signature. DESIGN.md §8 and CLAUDE.md rule 5 corrected in the same PR; the argument and its costs are [`m6.3-permission-statements.md`](design-decisions/m6.3-permission-statements.md).
 
 **Re-scoped by MB.29**, which made this task the whole of the second authorization layer rather than the first half of it. `assertMembership` **returns** a branded `Membership` — `{ workspaceId, userId, role }` carrying a `unique symbol` brand, so it is unconstructible outside this service: no object literal satisfies it and no cast to it survives review. Every workspace-scoped repository finder and every `AuditWriter` method then takes a `Membership` as its first argument and ANDs `workspace_id = membership.workspaceId` onto the query _itself_, rather than trusting a `workspaceId` its caller passed alongside; `write.insert` fills the column from the proof for the same reason. A service cannot write a workspace-scoped query without having passed the check — impossible rather than absent, which is the test CLAUDE.md's sweep-task rule applies, and free at runtime because the brand is erased at compile time.
 
@@ -1826,7 +1828,7 @@ Where the proof is weaker than a policy — a service that holds a valid proof f
 
 _Acceptance criteria:_
 
-- Every role/threshold pair is covered by a test
+- Every role/permission pair the statements declare is covered by a test
 - A non-member is rejected with Forbidden
 - `assertMembership` returns a `Membership` that cannot be constructed anywhere else — asserted by a `@ts-expect-error` on an object literal and on a plain cast
 - Every workspace-scoped finder and `AuditWriter` method takes a `Membership` first and applies `workspace_id = membership.workspaceId` itself; `write.insert` sets the column from it

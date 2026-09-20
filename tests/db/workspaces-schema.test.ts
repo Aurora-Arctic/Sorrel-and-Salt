@@ -40,7 +40,8 @@ describe('workspace_members schema', () => {
     expect(byName.joined_at.notNull).toBe(true);
   });
 
-  // owner > member > viewer, the ordering `assertMembership` implements.
+  // Declared low to high. Read as documentation: each role carries its own
+  // permission statements, and nothing compares two of them.
   it('constrains role to viewer | member | owner', () => {
     expect(byName.role.enumValues).toEqual(['viewer', 'member', 'owner']);
   });
