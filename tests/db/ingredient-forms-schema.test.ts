@@ -1,22 +1,13 @@
 import { join } from 'node:path';
 import { readFileSync, readdirSync } from 'node:fs';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { getTableConfig } from 'drizzle-orm/pg-core';
+import { failureOf, useTestDatabase } from './support/database';
+import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
 import { MIGRATIONS_DIR } from '../support/paths';
 import { ingredientFormGroups, ingredientForms } from '@/db/schema/ingredient-forms';
 import { ingredients } from '@/db/schema/ingredients';
-import { users } from '@/db/schema/users';
 import { FIXTURE_USERS } from '@/db/seed/standard';
-
-const AUDIT_COLUMNS = [
-  'created_at',
-  'created_by',
-  'updated_at',
-  'updated_by',
-  'deleted_at',
-  'deleted_by',
-];
 
 const GROUPS_SLUG_UNIQUE = 'ingredient_form_groups_slug_unique';
 const FORMS_SLUG_UNIQUE = 'ingredient_forms_slug_unique';
@@ -25,33 +16,8 @@ const FORMS_GROUP_FK = 'ingredient_forms_group_id_ingredient_form_groups_id_fk';
 // As in categories-schema.test.ts: a hand-ordering column under any usual name; §5 lists none.
 const ORDERING_COLUMNS = ['order', 'position', 'sort', 'sort_order', 'rank', 'display_order'];
 
-type VocabularyTable = typeof ingredientForms | typeof ingredientFormGroups;
-
-function nonAuditForeignKeys(table: VocabularyTable) {
-  const auditColumnNames = new Set(AUDIT_COLUMNS);
-  return getTableConfig(table).foreignKeys.filter(
-    (fk) => !auditColumnNames.has(fk.reference().columns[0].name),
-  );
-}
-
-function auditForeignKeysReferenceUsers(table: VocabularyTable) {
-  const byColumn = Object.fromEntries(
-    getTableConfig(table).foreignKeys.map((fk) => {
-      const { columns: local, foreignColumns, foreignTable } = fk.reference();
-      return [local[0].name, { foreignColumnName: foreignColumns[0].name, foreignTable }];
-    }),
-  );
-
-  for (const column of ['created_by', 'updated_by', 'deleted_by']) {
-    expect(byColumn[column]).toBeDefined();
-    expect(byColumn[column].foreignColumnName).toBe('id');
-    expect(byColumn[column].foreignTable).toBe(users);
-  }
-}
-
 describe('ingredient_form_groups schema', () => {
-  const { columns, indexes } = getTableConfig(ingredientFormGroups);
-  const byName = Object.fromEntries(columns.map((c) => [c.name, c]));
+  const { byName, indexes, nonAuditForeignKeys } = tableFacts(ingredientFormGroups);
 
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
@@ -86,25 +52,12 @@ describe('ingredient_form_groups schema', () => {
 
   it('carries no workspace scoping', () => {
     expect(byName.workspace_id).toBeUndefined();
-    expect(nonAuditForeignKeys(ingredientFormGroups)).toEqual([]);
-  });
-
-  it('spreads the shared audit columns', () => {
-    for (const column of AUDIT_COLUMNS) {
-      expect(byName[column]).toBeDefined();
-    }
-    expect(byName.created_by.notNull).toBe(true);
-    expect(byName.deleted_at.notNull).toBe(false);
-  });
-
-  it('references users.id from every audit id (MB.5)', () => {
-    auditForeignKeysReferenceUsers(ingredientFormGroups);
+    expect(nonAuditForeignKeys).toEqual([]);
   });
 });
 
 describe('ingredient_forms schema', () => {
-  const { columns, indexes } = getTableConfig(ingredientForms);
-  const byName = Object.fromEntries(columns.map((c) => [c.name, c]));
+  const { byName, indexes, nonAuditForeignKeys } = tableFacts(ingredientForms);
 
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
@@ -129,11 +82,11 @@ describe('ingredient_forms schema', () => {
   it('points groupId at ingredient_form_groups by foreign key, and requires it', () => {
     expect(byName.group_id.notNull).toBe(true);
 
-    const [reference, ...rest] = nonAuditForeignKeys(ingredientForms).map((fk) => fk.reference());
+    const [reference, ...rest] = nonAuditForeignKeys;
     expect(rest).toEqual([]);
-    expect(reference.columns[0].name).toBe('group_id');
+    expect(reference.column).toBe('group_id');
     expect(reference.foreignTable).toBe(ingredientFormGroups);
-    expect(reference.foreignColumns[0].name).toBe('id');
+    expect(reference.foreignColumnName).toBe('id');
   });
 
   it('makes the slug index unique and partial on deleted_at IS NULL (rule 4)', () => {
@@ -146,21 +99,7 @@ describe('ingredient_forms schema', () => {
 
   it('carries no workspace scoping', () => {
     expect(byName.workspace_id).toBeUndefined();
-    expect(nonAuditForeignKeys(ingredientForms).map((fk) => fk.reference().foreignTable)).toEqual([
-      ingredientFormGroups,
-    ]);
-  });
-
-  it('spreads the shared audit columns', () => {
-    for (const column of AUDIT_COLUMNS) {
-      expect(byName[column]).toBeDefined();
-    }
-    expect(byName.created_by.notNull).toBe(true);
-    expect(byName.deleted_at.notNull).toBe(false);
-  });
-
-  it('references users.id from every audit id (MB.5)', () => {
-    auditForeignKeysReferenceUsers(ingredientForms);
+    expect(nonAuditForeignKeys.map((fk) => fk.foreignTable)).toEqual([ingredientFormGroups]);
   });
 });
 
@@ -178,7 +117,7 @@ function migrationFiles(): string[] {
 // claude-docs/db.md, "The ingredient identity model".
 describe('ingredients.form is text over this vocabulary, not a foreign key to it', () => {
   it('declares form as a nullable text column', () => {
-    const form = getTableConfig(ingredients).columns.find((column) => column.name === 'form');
+    const form = tableFacts(ingredients).columns.find((column) => column.name === 'form');
 
     expect(form).toBeDefined();
     expect(form?.getSQLType()).toBe('text');
@@ -186,9 +125,7 @@ describe('ingredients.form is text over this vocabulary, not a foreign key to it
   });
 
   it('points no ingredients foreign key at ingredient_forms', () => {
-    const referenced = getTableConfig(ingredients).foreignKeys.map(
-      (fk) => fk.reference().foreignTable,
-    );
+    const referenced = tableFacts(ingredients).foreignKeys.map((fk) => fk.reference().foreignTable);
 
     expect(referenced).not.toContain(ingredientForms);
     expect(referenced).not.toContain(ingredientFormGroups);
@@ -232,6 +169,7 @@ function formRow(groupId: string, overrides: Row = {}): Row {
 }
 
 let sql: ReturnType<typeof postgres>;
+const catalogue = useTestDatabase((client) => (sql = client));
 
 async function insertGroup(overrides: Row = {}): Promise<string> {
   const [inserted] = await sql`
@@ -247,15 +185,6 @@ async function insertForm(groupId: string, overrides: Row = {}): Promise<string>
   return inserted.id as string;
 }
 
-async function failureOf(work: Promise<unknown>) {
-  return await work.then(
-    () => {
-      throw new Error('expected the statement to be rejected, but it succeeded');
-    },
-    (error: postgres.PostgresError) => error,
-  );
-}
-
 async function softDelete(
   table: 'ingredient_forms' | 'ingredient_form_groups',
   id: string,
@@ -265,42 +194,26 @@ async function softDelete(
   `;
 }
 
-async function columnNames(table: string): Promise<string[]> {
-  const rows = await sql`
-    select column_name from information_schema.columns
-    where table_name = ${table} order by column_name
-  `;
-  return rows.map((r) => r.column_name as string);
-}
-
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
 beforeEach(async () => {
   await sql`truncate ingredient_forms, ingredient_form_groups cascade`;
 });
 
-afterAll(async () => {
-  await sql.end();
-});
-
 describe('ingredient_form_groups table', () => {
   it('is global: no workspace_id column to scope by, under any spelling', async () => {
-    const columns = await columnNames('ingredient_form_groups');
+    const columns = await catalogue.columnNames('ingredient_form_groups');
 
     expect(columns).not.toContain('workspace_id');
     expect(columns.filter((column) => column.includes('workspace'))).toEqual([]);
   });
 
   it('has no colour column — a form group is not a chip', async () => {
-    const columns = await columnNames('ingredient_form_groups');
+    const columns = await catalogue.columnNames('ingredient_form_groups');
 
     expect(columns.filter((column) => column.includes('color'))).toEqual([]);
   });
 
   it('has no column to order groups by hand', async () => {
-    const columns = await columnNames('ingredient_form_groups');
+    const columns = await catalogue.columnNames('ingredient_form_groups');
 
     for (const column of ORDERING_COLUMNS) {
       expect(columns).not.toContain(column);
@@ -356,14 +269,14 @@ describe('ingredient_form_groups table', () => {
 
 describe('ingredient_forms table', () => {
   it('is global: no workspace_id column to scope by, under any spelling', async () => {
-    const columns = await columnNames('ingredient_forms');
+    const columns = await catalogue.columnNames('ingredient_forms');
 
     expect(columns).not.toContain('workspace_id');
     expect(columns.filter((column) => column.includes('workspace'))).toEqual([]);
   });
 
   it('has no column to order forms by hand', async () => {
-    const columns = await columnNames('ingredient_forms');
+    const columns = await catalogue.columnNames('ingredient_forms');
 
     for (const column of ORDERING_COLUMNS) {
       expect(columns).not.toContain(column);

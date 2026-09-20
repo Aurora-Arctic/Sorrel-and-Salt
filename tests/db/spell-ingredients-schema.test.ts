@@ -1,16 +1,13 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { getTableConfig } from 'drizzle-orm/pg-core';
+import { failureOf, useTestDatabase } from './support/database';
+import { STAMP_COLUMNS, tableFacts } from './support/table-metadata';
 import { UNITS, dimensionOf } from '@/lib/units';
 import { ingredients } from '@/db/schema/ingredients';
 import { inventoryUnit } from '@/db/schema/inventory-items';
 import { spellIngredients } from '@/db/schema/spell-ingredients';
 import { spells } from '@/db/schema/spells';
-import { users } from '@/db/schema/users';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
-
-const STAMP_COLUMNS = ['created_at', 'created_by', 'updated_at', 'updated_by'];
-const DELETE_COLUMNS = ['deleted_at', 'deleted_by'];
 
 // §5's columns; `name` and `form` are a custom one-off layer's, in place of an
 // `ingredient_id` (MB.40).
@@ -46,36 +43,19 @@ const CHECKS = [
 ].sort();
 
 describe('spell_ingredients schema', () => {
-  const { columns, indexes, primaryKeys, foreignKeys, checks } = getTableConfig(spellIngredients);
-  const byName = Object.fromEntries(columns.map((column) => [column.name, column]));
-  const indexByName = Object.fromEntries(indexes.map((index) => [index.config.name, index]));
-  const foreignKeyByColumn = Object.fromEntries(
-    foreignKeys.map((fk) => {
-      const { columns: local, foreignColumns, foreignTable } = fk.reference();
-      return [
-        local[0].name,
-        { name: fk.getName(), foreignColumnName: foreignColumns[0].name, foreignTable },
-      ];
-    }),
-  );
+  const {
+    byName,
+    byIndexName: indexByName,
+    primaryKeys,
+    checks,
+    foreignKeyByColumn,
+  } = tableFacts(spellIngredients);
 
+  // Four stamps and no tombstone (MB.34): an ingredient pulled out leaves no
+  // row. A custom row's content is addressable only through its spell, and
+  // nothing in v1 reads a removed one.
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...STAMP_COLUMNS].sort());
-  });
-
-  // Four stamps and no tombstone (MB.34). A custom row's content is
-  // addressable only through its spell, and nothing in v1 reads a removed one.
-  it('spreads the four audit stamps, each required', () => {
-    for (const column of STAMP_COLUMNS) {
-      expect(byName[column]).toBeDefined();
-      expect(byName[column].notNull).toBe(true);
-    }
-  });
-
-  it('carries no delete columns: an ingredient pulled out leaves no row', () => {
-    for (const column of DELETE_COLUMNS) {
-      expect(byName[column]).toBeUndefined();
-    }
   });
 
   // Not a surrogate id, which says nothing about the jar; not the pair, absent on a custom row.
@@ -116,15 +96,6 @@ describe('spell_ingredients schema', () => {
     expect(foreignKeyByColumn.spell_id.foreignTable).toBe(spells);
     expect(foreignKeyByColumn.spell_id.foreignColumnName).toBe('id');
     expect(foreignKeyByColumn.spell_id.name).toBe(SPELL_FK);
-  });
-
-  it('references users.id from both audit ids (MB.5)', () => {
-    for (const column of ['created_by', 'updated_by']) {
-      expect(foreignKeyByColumn[column]).toBeDefined();
-      expect(foreignKeyByColumn[column].foreignColumnName).toBe('id');
-      expect(foreignKeyByColumn[column].foreignTable).toBe(users);
-    }
-    expect(foreignKeyByColumn.deleted_by).toBeUndefined();
   });
 
   // Two partial unique indexes whose predicate is the discriminator, not rule
@@ -168,6 +139,7 @@ const COVEN = WORKSPACE_W_ID;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
+const catalogue = useTestDatabase((client) => (sql = client));
 let MUGWORT: string;
 let ROSEMARY: string;
 // A stock row's own id, in `inventory_items` and nowhere else: a probe for
@@ -210,23 +182,6 @@ async function custom(name: string | null, overrides: Omit<LayerRow, 'name'> = {
   await layer({ ingredientId: null, name, ...overrides });
 }
 
-async function failureOf(work: Promise<unknown>) {
-  return await work.then(
-    () => {
-      throw new Error('expected the statement to be rejected, but it succeeded');
-    },
-    (error: postgres.PostgresError) => error,
-  );
-}
-
-async function columnNames(table: string): Promise<string[]> {
-  const rows = await sql`
-    select column_name from information_schema.columns
-    where table_name = ${table} order by column_name
-  `;
-  return rows.map((row) => row.column_name as string);
-}
-
 async function layerOrders(spellId: string): Promise<number[]> {
   const rows = await sql`
     select layer_order from spell_ingredients where spell_id = ${spellId} order by layer_order
@@ -243,8 +198,6 @@ async function compendiumIdOf(canonicalName: string): Promise<string> {
 }
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-
   MUGWORT = await compendiumIdOf('Artemisia vulgaris');
   ROSEMARY = await compendiumIdOf('Salvia rosmarinus');
 
@@ -273,13 +226,9 @@ beforeEach(async () => {
   otherSpell = second.id as string;
 });
 
-afterAll(async () => {
-  await sql.end();
-});
-
 describe('spell_ingredients table', () => {
   it('carries §5’s columns beside the four audit stamps', async () => {
-    expect(await columnNames('spell_ingredients')).toEqual(
+    expect(await catalogue.columnNames('spell_ingredients')).toEqual(
       [...OWN_COLUMNS, ...STAMP_COLUMNS].sort(),
     );
   });

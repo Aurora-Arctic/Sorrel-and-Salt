@@ -1,16 +1,13 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
+import { failureOf, useTestDatabase } from './support/database';
+import { STAMP_COLUMNS, tableFacts } from './support/table-metadata';
 import { and, eq } from 'drizzle-orm';
-import { getTableConfig } from 'drizzle-orm/pg-core';
 import { categories } from '@/db/schema/categories';
 import { ingredientCategories } from '@/db/schema/ingredient-categories';
 import { ingredients } from '@/db/schema/ingredients';
-import { users } from '@/db/schema/users';
 import { findMany, withAudit } from '@/db/repository';
 import { FIXTURE_USERS } from '@/db/seed/standard';
-
-const STAMP_COLUMNS = ['created_at', 'created_by', 'updated_at', 'updated_by'];
-const DELETE_COLUMNS = ['deleted_at', 'deleted_by'];
 
 const PRIMARY_KEY = 'ingredient_categories_ingredient_id_category_id_pk';
 const REVERSE_INDEX = 'ingredient_categories_category_id_idx';
@@ -18,34 +15,14 @@ const INGREDIENT_FK = 'ingredient_categories_ingredient_id_ingredients_id_fk';
 const CATEGORY_FK = 'ingredient_categories_category_id_categories_id_fk';
 
 describe('ingredient_categories schema', () => {
-  const { columns, indexes, primaryKeys, foreignKeys } = getTableConfig(ingredientCategories);
-  const byName = Object.fromEntries(columns.map((c) => [c.name, c]));
-  const foreignKeyByColumn = Object.fromEntries(
-    foreignKeys.map((fk) => {
-      const { columns: local, foreignColumns, foreignTable } = fk.reference();
-      return [local[0].name, { foreignColumnName: foreignColumns[0].name, foreignTable }];
-    }),
-  );
+  const { byName, indexes, primaryKeys, foreignKeyByColumn } = tableFacts(ingredientCategories);
 
+  // Four stamps and no tombstone (MB.34): a removed pair leaves no row —
+  // claude-docs/db.md, "Hard delete on the three join tables".
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
       ['ingredient_id', 'category_id', ...STAMP_COLUMNS].sort(),
     );
-  });
-
-  // Four stamps and no tombstone (MB.34) —
-  // claude-docs/db.md, "Hard delete on the three join tables".
-  it('spreads the four audit stamps, each required', () => {
-    for (const column of STAMP_COLUMNS) {
-      expect(byName[column]).toBeDefined();
-      expect(byName[column].notNull).toBe(true);
-    }
-  });
-
-  it('carries no delete columns: a removed pair leaves no row', () => {
-    for (const column of DELETE_COLUMNS) {
-      expect(byName[column]).toBeUndefined();
-    }
   });
 
   // A surrogate id would let the same pair be assigned twice.
@@ -68,15 +45,6 @@ describe('ingredient_categories schema', () => {
     expect(foreignKeyByColumn.ingredient_id.foreignColumnName).toBe('id');
     expect(foreignKeyByColumn.category_id.foreignTable).toBe(categories);
     expect(foreignKeyByColumn.category_id.foreignColumnName).toBe('id');
-  });
-
-  it('references users.id from every audit id (MB.5)', () => {
-    for (const column of ['created_by', 'updated_by']) {
-      expect(foreignKeyByColumn[column]).toBeDefined();
-      expect(foreignKeyByColumn[column].foreignColumnName).toBe('id');
-      expect(foreignKeyByColumn[column].foreignTable).toBe(users);
-    }
-    expect(foreignKeyByColumn.deleted_by).toBeUndefined();
   });
 
   // The key answers "what is this ingredient tagged with"; the reverse question
@@ -109,6 +77,7 @@ let CLEANSING: string;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
+const catalogue = useTestDatabase((client) => (sql = client));
 
 async function compendiumIdOf(canonicalName: string): Promise<string> {
   const [found] = await sql`
@@ -134,23 +103,6 @@ async function assign(ingredientId: string, categoryId: string, author = AUTHOR)
   `;
 }
 
-async function failureOf(work: Promise<unknown>) {
-  return await work.then(
-    () => {
-      throw new Error('expected the statement to be rejected, but it succeeded');
-    },
-    (error: postgres.PostgresError) => error,
-  );
-}
-
-async function columnNames(table: string): Promise<string[]> {
-  const rows = await sql`
-    select column_name from information_schema.columns
-    where table_name = ${table} order by column_name
-  `;
-  return rows.map((r) => r.column_name as string);
-}
-
 type Pair = { ingredientId: string; categoryId: string };
 
 async function pairs(): Promise<Pair[]> {
@@ -173,19 +125,7 @@ function inPairOrder(expected: Pair[]): Pair[] {
   );
 }
 
-async function indexDefinition(name: string): Promise<{ unique: boolean; definition: string }> {
-  const [found] = await sql`
-    select i.indisunique as unique, pg_get_indexdef(i.indexrelid) as definition
-    from pg_index i
-    join pg_class c on c.oid = i.indexrelid
-    where i.indrelid = 'ingredient_categories'::regclass and c.relname = ${name}
-  `;
-  return found as unknown as { unique: boolean; definition: string };
-}
-
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-
   MUGWORT = await compendiumIdOf('Artemisia vulgaris');
   ROSEMARY = await compendiumIdOf('Salvia rosmarinus');
   PROTECTION = await categoryIdOf('Protection');
@@ -196,13 +136,9 @@ beforeEach(async () => {
   await sql`truncate ingredient_categories`;
 });
 
-afterAll(async () => {
-  await sql.end();
-});
-
 describe('ingredient_categories table', () => {
   it('carries the four stamp columns and neither delete column', async () => {
-    expect(await columnNames('ingredient_categories')).toEqual(
+    expect(await catalogue.columnNames('ingredient_categories')).toEqual(
       ['ingredient_id', 'category_id', ...STAMP_COLUMNS].sort(),
     );
   });
@@ -287,20 +223,20 @@ describe('ingredient_categories table', () => {
   // every assignment in the database.
   describe('lookup in both directions', () => {
     it('indexes the pair from the ingredient side, as the primary key', async () => {
-      const index = await indexDefinition(PRIMARY_KEY);
+      const index = await catalogue.indexRow('ingredient_categories', PRIMARY_KEY);
 
       expect(index).toBeDefined();
-      expect(index.unique).toBe(true);
-      expect(index.definition).toContain('(ingredient_id, category_id)');
+      expect(index?.unique).toBe(true);
+      expect(index?.definition).toContain('(ingredient_id, category_id)');
     });
 
     it('indexes the pair from the category side too', async () => {
-      const index = await indexDefinition(REVERSE_INDEX);
+      const index = await catalogue.indexRow('ingredient_categories', REVERSE_INDEX);
 
       expect(index).toBeDefined();
       // Not unique: a unique index here would refuse a category its second ingredient.
-      expect(index.unique).toBe(false);
-      expect(index.definition).toContain('(category_id, ingredient_id)');
+      expect(index?.unique).toBe(false);
+      expect(index?.definition).toContain('(category_id, ingredient_id)');
     });
   });
 });

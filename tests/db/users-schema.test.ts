@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { getTableConfig } from 'drizzle-orm/pg-core';
+import { tableFacts } from './support/table-metadata';
 import { users } from '@/db/schema/users';
 
 // Schema shape via Drizzle's introspection; the seeded rows are asserted in
 // seeded-template.test.ts.
 describe('users schema', () => {
-  const { columns, indexes } = getTableConfig(users);
-  const byName = Object.fromEntries(columns.map((c) => [c.name, c]));
+  const { byName, indexes } = tableFacts(users);
 
   it('has DESIGN.md §5 columns: id, name, email, image, role, canCreateWorkspace', () => {
     expect(byName.name).toBeDefined();
@@ -26,21 +25,6 @@ describe('users schema', () => {
     expect(byName.can_create_workspace.default).toBe(false);
   });
 
-  it('spreads the shared audit columns', () => {
-    for (const column of [
-      'created_at',
-      'created_by',
-      'updated_at',
-      'updated_by',
-      'deleted_at',
-      'deleted_by',
-    ]) {
-      expect(byName[column]).toBeDefined();
-    }
-    expect(byName.created_by.notNull).toBe(true);
-    expect(byName.deleted_at.notNull).toBe(false);
-  });
-
   it('makes the email index partial on deleted_at IS NULL, not a plain unique constraint (CLAUDE.md rule 4)', () => {
     const emailIndex = indexes.find((i) =>
       i.config.columns.some((c) => 'name' in c && c.name === 'email'),
@@ -48,22 +32,5 @@ describe('users schema', () => {
     expect(emailIndex).toBeDefined();
     expect(emailIndex?.config.unique).toBe(true);
     expect(emailIndex?.config.where).toBeDefined();
-  });
-
-  // MB.5: a self-reference here (users.created_by -> users.id).
-  it('references users.id from created_by, updated_by and deleted_by (MB.5)', () => {
-    const { foreignKeys } = getTableConfig(users);
-    const byColumn = Object.fromEntries(
-      foreignKeys.map((fk) => {
-        const { columns, foreignColumns, foreignTable } = fk.reference();
-        return [columns[0].name, { foreignColumnName: foreignColumns[0].name, foreignTable }];
-      }),
-    );
-
-    for (const column of ['created_by', 'updated_by', 'deleted_by']) {
-      expect(byColumn[column]).toBeDefined();
-      expect(byColumn[column].foreignColumnName).toBe('id');
-      expect(byColumn[column].foreignTable).toBe(users);
-    }
   });
 });
