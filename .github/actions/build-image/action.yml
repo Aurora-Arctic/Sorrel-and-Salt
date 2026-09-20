@@ -1,0 +1,104 @@
+name: Build or reuse a CI image
+description: >-
+  Computes a content-addressed GHCR tag for one of the CI images, logs in,
+  and builds and pushes it only when that tag is not already published.
+  Shared by build-image.yml, build-e2e-image.yml and build-db-image.yml;
+  claude-docs/ci.md, "Composite actions" is the walkthrough.
+
+# The caller checks out first (a local action needs the repo on disk) and
+# passes `hashFiles()` in, since that function takes literal globs and the
+# hashed list belongs in the workflow where it can be read. `secrets` is not
+# in scope inside a composite action, so the registry password arrives as an
+# input, as vercel-secrets-guard's three do.
+inputs:
+  path:
+    description: GHCR path segment under the repository, e.g. "testing" -> ghcr.io/<owner>/<repo>/testing
+    required: true
+  content-hash:
+    description: The caller's hashFiles() over every file that determines the image's contents; becomes the tag
+    required: true
+  dockerfile:
+    description: Dockerfile to build, relative to the context
+    required: true
+  target:
+    description: Build stage to stop at; empty builds the Dockerfile's last stage
+    required: false
+    default: ''
+  context:
+    description: Build context
+    required: false
+    default: .
+  cache-scope:
+    description: >-
+      GHA layer-cache scope. Empty keeps the unscoped `type=gha` key rather
+      than emitting `scope=`, so an image that never had a scope keeps its
+      warm cache.
+    required: false
+    default: ''
+  registry-username:
+    description: GHCR login user, normally github.actor
+    required: true
+  registry-password:
+    description: GHCR login token, normally secrets.GITHUB_TOKEN
+    required: true
+
+outputs:
+  image:
+    description: Fully qualified, content-addressed image ref
+    value: ${{ steps.tag.outputs.image }}
+
+runs:
+  using: composite
+  steps:
+    - name: Compute content-addressed image tag
+      id: tag
+      shell: bash
+      env:
+        REPOSITORY: ${{ github.repository }}
+        IMAGE_PATH: ${{ inputs.path }}
+        CONTENT_HASH: ${{ inputs.content-hash }}
+      run: |
+        # hashFiles() over globs that match nothing is '', and an empty tag is
+        # an invalid ref two steps later, with a worse message.
+        if [ -z "$CONTENT_HASH" ]; then
+          echo "::error::content-hash is empty — the caller's hashFiles() matched no files."
+          exit 1
+        fi
+        repo_lower=$(echo "$REPOSITORY" | tr '[:upper:]' '[:lower:]')
+        echo "image=ghcr.io/${repo_lower}/${IMAGE_PATH}:${CONTENT_HASH}" >> "$GITHUB_OUTPUT"
+
+    - name: Log in to GHCR
+      uses: docker/login-action@v4
+      with:
+        registry: ghcr.io
+        username: ${{ inputs.registry-username }}
+        password: ${{ inputs.registry-password }}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v4
+
+    # Skip rather than re-push identical content. The real build below is
+    # what the caller's concurrency group protects from cancellation.
+    - name: Check if image already exists
+      id: check
+      shell: bash
+      env:
+        IMAGE: ${{ steps.tag.outputs.image }}
+      run: |
+        if docker buildx imagetools inspect "$IMAGE" > /dev/null 2>&1; then
+          echo "exists=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "exists=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Build and push image
+      if: steps.check.outputs.exists != 'true'
+      uses: docker/build-push-action@v7
+      with:
+        context: ${{ inputs.context }}
+        file: ${{ inputs.dockerfile }}
+        target: ${{ inputs.target }}
+        push: true
+        tags: ${{ steps.tag.outputs.image }}
+        cache-from: ${{ inputs.cache-scope && format('type=gha,scope={0}', inputs.cache-scope) || 'type=gha' }}
+        cache-to: ${{ inputs.cache-scope && format('type=gha,mode=max,scope={0}', inputs.cache-scope) || 'type=gha,mode=max' }}
