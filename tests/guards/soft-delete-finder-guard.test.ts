@@ -21,15 +21,27 @@ const SELECT_CALL = /\.select(?:Distinct)?(?:Fields)?\s*\(|\bdb\.query\./g;
 const EXPORTED_FUNCTIONS = [
   'findMany',
   'findManyIncludingSoftDeleted',
+  'findManyInSpell',
   'findManyInWorkspace',
+  'findManySpells',
   'findOne',
   'findOneInWorkspace',
+  'findOneSpell',
   'findWorkspaceRole',
   'withAudit',
 ];
 
 /** Rule 5's half: a finder over a table carrying `workspace_id` scopes by the proof. */
 const SCOPED_FINDERS = ['findManyInWorkspace', 'findOneInWorkspace'];
+
+/**
+ * M10.3's half: a finder reaching a spell, or what a spell is made of, narrows
+ * by `readableSpells` — the coven from the proof and the author rule together.
+ * Asserted separately from `SCOPED_FINDERS` because `findManyInSpell` reads a
+ * table with no `workspace_id` to AND on, so `scopedTo(` alone would pass it
+ * for the wrong reason.
+ */
+const VISIBILITY_FINDERS = ['findManySpells', 'findOneSpell', 'findManyInSpell'];
 
 /** The one exported finder allowed to skip the filter — the escape hatch. */
 const ESCAPE_HATCH = 'findManyIncludingSoftDeleted';
@@ -85,9 +97,11 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     expect(finders.length).toBeGreaterThan(0);
     for (const finder of finders) {
       const body = functionBody(text, finder);
-      // Either it filters itself, or it delegates to a finder that does.
+      // Either it filters itself, or it delegates to something that does: a
+      // sibling finder, or `readableSpells`, which carries the filter for the
+      // three spell finders along with the visibility rule.
       expect(
-        /notSoftDeleted\(|findMany\w*\(/.test(body),
+        /notSoftDeleted\(|findMany\w*\(|readableSpells\(/.test(body),
         `${finder} reaches the database without notSoftDeleted(...)`,
       ).toBe(true);
     }
@@ -105,6 +119,31 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
         `${finder} reaches the database without scopedTo(membership, ...)`,
       ).toBe(true);
     }
+  });
+
+  // DESIGN.md §5 and CLAUDE.md rule 7: a private spell is excluded in SQL, so
+  // it never reaches a caller to be filtered out there.
+  it('narrows every spell finder by the visibility rule', () => {
+    const text = source(REPOSITORY);
+
+    for (const finder of VISIBILITY_FINDERS) {
+      const body = functionBody(text, finder);
+      expect(
+        /readableSpells\(/.test(body),
+        `${finder} reaches the database without readableSpells(membership)`,
+      ).toBe(true);
+    }
+  });
+
+  // Where that predicate gets its two halves. `created_by` is the author
+  // column; a `readableSpells` that stopped consulting it would still read as
+  // a visibility rule and admit everyone to everything private.
+  it('builds that rule from the proof’s workspace and the proof’s user', () => {
+    const body = functionBody(source(REPOSITORY), 'readableSpells');
+
+    expect(body).toMatch(/scopedTo\(/);
+    expect(body).toMatch(/notSoftDeleted\(/);
+    expect(body).toMatch(/membership\.userId/);
   });
 
   it('names the escape hatch so a reviewer cannot miss it, and keeps it alone', () => {

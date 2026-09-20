@@ -38,6 +38,7 @@ export interface SpellFixture extends Required<
     | 'dayOfWeek'
     | 'instructions'
     | 'status'
+    | 'visibility'
   >
 > {
   /** §6 categories by name — what the spell *intends*, never what its contents imply (§9). */
@@ -73,9 +74,12 @@ const DEFAULTS: SpellFixture = {
   moonPhase: null,
   dayOfWeek: null,
   instructions: null,
-  // Restated rather than left to the column: a fixture arriving `complete`
-  // would be a finished spell in every test that never mentioned status.
+  // Both restated rather than left to the column: a fixture arriving
+  // `complete` would be a finished spell in every test that never mentioned
+  // status, and one arriving `private` would be a spell only its author can
+  // read in every test that never mentioned visibility.
   status: 'draft',
+  visibility: 'workspace',
   categories: [],
   layers: [DEFAULT_LAYER],
 };

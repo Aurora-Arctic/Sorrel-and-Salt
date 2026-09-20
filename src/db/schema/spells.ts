@@ -7,10 +7,11 @@ import { workspaces } from './workspaces';
 // `ALTER TYPE … ADD VALUE` expands where widening a CHECK re-validates every row.
 export const spellStatus = pgEnum('spell_status', ['draft', 'complete']);
 
-// The grimoire: what a workspace makes. `visibility` is absent here on
-// purpose — it is added after the demo seed exists so its migration criterion
-// is testable, and spells-schema.test.ts pins the column list
-// (claude-docs/db.md, "The grimoire").
+// An enum for the same reason, and §13's notes carry the third tier this one
+// does not: `public`.
+export const spellVisibility = pgEnum('spell_visibility', ['private', 'workspace']);
+
+// The grimoire: what a workspace makes (claude-docs/db.md, "The grimoire").
 export const spells = pgTable('spells', {
   id: uuid('id')
     .default(sql`pg_catalog.gen_random_uuid()`)
@@ -30,5 +31,10 @@ export const spells = pgTable('spells', {
   instructions: text('instructions'),
   // Defaulted on the column so a spell written by any path is a draft.
   status: spellStatus('status').notNull().default('draft'),
+  // Defaulted on the column for the stronger version of the same reason: a
+  // spell that fell back to `private` would be invisible to the coven that
+  // cannot see it is missing, and widening it back is the author's alone.
+  // The author is `created_by` — §5 gives spells no separate author column.
+  visibility: spellVisibility('visibility').notNull().default('workspace'),
   ...auditColumns,
 });

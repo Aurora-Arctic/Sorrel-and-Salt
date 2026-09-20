@@ -21,6 +21,16 @@ describe('makeSpell', () => {
     expect(makeSpell().status).toBe('draft');
   });
 
+  // The shared default, so a test that never mentions visibility is not
+  // quietly about a private spell (M10.3).
+  it('opens visible to the whole coven', () => {
+    expect(makeSpell().visibility).toBe('workspace');
+  });
+
+  it('takes the private visibility a test states', () => {
+    expect(makeSpell({ visibility: 'private' }).visibility).toBe('private');
+  });
+
   it('keeps every field the override does not name', () => {
     const spell = makeSpell({ intent: 'Keep the lane quiet' });
 
