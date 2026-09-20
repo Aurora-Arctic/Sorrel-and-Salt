@@ -398,9 +398,11 @@ the checklist is written even when that run is red;
 `.github/scripts/summarize-stories.mjs` turns the JSON into a "3 of 45
 stories passing" stat and a collapsible markdown checklist for its own job
 summary section and its own PR comment thread (marker `stories`). The step
-fails the job when a story fails. M2.1, which lands the first acceptance
-file deliberately red, decides how that is tolerated until its milestone
-closes (TASKS.md, M2 sequencing) — nothing here pre-empts it.
+fails the job when a story fails — except across M2 (M2.1): that step carries
+`continue-on-error: true` so a story still red while the rest of Wave 6 lands
+cannot block a PR, while `steps.stories.outcome` (read by the summarize and
+comment steps below it) still carries the real pass/fail, unaffected by
+`continue-on-error`. Revert once every M2 story is green.
 
 ## Acting as a fixture user, and asserting a refusal (M1.26)
 
