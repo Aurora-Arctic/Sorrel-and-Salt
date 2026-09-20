@@ -14,6 +14,9 @@ import {
   findWorkspaceRole,
   withAudit,
 } from '@/db/repository';
+import { spellCategories } from '@/db/schema/spell-categories';
+import { spellIngredients } from '@/db/schema/spell-ingredients';
+import { spells } from '@/db/schema/spells';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/services/membership';
 import { A, B, C, D, asUser } from '../support/as-user';
@@ -151,9 +154,12 @@ describe('repository public API', () => {
       [
         'findMany',
         'findManyIncludingSoftDeleted',
+        'findManyInSpell',
         'findManyInWorkspace',
+        'findManySpells',
         'findOne',
         'findOneInWorkspace',
+        'findOneSpell',
         'findWorkspaceRole',
         'withAudit',
       ].sort(),
@@ -388,7 +394,11 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
   const isPair = (herb: string, charm: string) =>
     and(eq(pairs.herbId, herb), eq(pairs.charmId, charm)) as ReturnType<typeof eq>;
 
-  it('offers exactly seven writer methods — an eighth is a decision, not a convenience', async () => {
+  // Eight since M10.3, which argued for `updateByIdInWorkspace` in its own PR:
+  // MB.33 bars a service from importing `drizzle-orm`, so a service cannot
+  // build the `where` `updateInWorkspace` wants and the by-id predicate has to
+  // be built below the boundary. A ninth is the next such decision.
+  it('offers exactly eight writer methods — a ninth is a decision, not a convenience', async () => {
     const methods = await withAudit(session, async (write) => Object.keys(write).sort());
 
     expect(methods).toEqual(
@@ -399,6 +409,7 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
         'softDelete',
         'softDeleteInWorkspace',
         'update',
+        'updateByIdInWorkspace',
         'updateInWorkspace',
       ].sort(),
     );
@@ -627,5 +638,47 @@ describe('the Membership proof (M6.3)', () => {
     expect(writeItUnscoped).toBeInstanceOf(Function);
     expect(nameAWorkspaceBesideTheProof).toBeInstanceOf(Function);
     expect(scopeAnUnscopedTable).toBeInstanceOf(Function);
+  });
+
+  // The same shape for M10.3's two extra scopes. A private spell excluded by a
+  // predicate the caller could simply not have written is absent; a private
+  // spell the generic finders will not compile against is impossible, and only
+  // the second survives the next service that forgets.
+  it('refuses the generic finders a spell and its contents at compile time', () => {
+    const readSpellsWithoutTheVisibilityRule = (membership: Membership) =>
+      // @ts-expect-error — `spells` carries `visibility`, so the generic scoped
+      // finder refuses it: findManySpells is the only way in.
+      findManyInWorkspace(membership, spells);
+
+    const readOneSpellWithoutTheVisibilityRule = (membership: Membership) =>
+      // @ts-expect-error — and the same one row at a time.
+      findOneInWorkspace(membership, spells, eq(spells.id, WORKSPACE_W_ID));
+
+    const readLayersUnscoped = () =>
+      // @ts-expect-error — `spell_ingredients` carries no workspace_id and so
+      // would pass as unscoped; the `spell_id` is what refuses it, because its
+      // scope and its visibility are the parent spell's (findManyInSpell).
+      findMany(spellIngredients);
+
+    const readAssignmentsUnscoped = () =>
+      // @ts-expect-error — the same for `spell_categories`.
+      findOne(spellCategories);
+
+    const readLayersThroughTheHatch = () =>
+      // @ts-expect-error — the escape hatch takes the unscoped side too, and a
+      // hard-deleted table has no soft-deleted row to include anyway (MB.34).
+      findManyIncludingSoftDeleted(spellIngredients);
+
+    const scopeAJoinTableByWorkspace = (membership: Membership) =>
+      // @ts-expect-error — `spell_categories` has no workspace_id to AND on,
+      // which is exactly why it goes through its spell instead.
+      findManyInWorkspace(membership, spellCategories);
+
+    expect(readSpellsWithoutTheVisibilityRule).toBeInstanceOf(Function);
+    expect(readOneSpellWithoutTheVisibilityRule).toBeInstanceOf(Function);
+    expect(readLayersUnscoped).toBeInstanceOf(Function);
+    expect(readAssignmentsUnscoped).toBeInstanceOf(Function);
+    expect(readLayersThroughTheHatch).toBeInstanceOf(Function);
+    expect(scopeAJoinTableByWorkspace).toBeInstanceOf(Function);
   });
 });

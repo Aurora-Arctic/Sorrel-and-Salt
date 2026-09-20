@@ -7,8 +7,10 @@ import { makeSpell, spellColumns } from '../support/fixtures';
 import { categories } from '@/db/schema/categories';
 import { spellCategories } from '@/db/schema/spell-categories';
 import { spells } from '@/db/schema/spells';
-import { findMany, withAudit } from '@/db/repository';
-import { FIXTURE_USERS } from '@/db/seed/standard';
+import { findManyInSpell, withAudit } from '@/db/repository';
+import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
+import { assertMembership } from '@/services/membership';
+import { A, asUser } from '../support/as-user';
 
 // DESIGN.md §5's column list, transcribed.
 const OWN_COLUMNS = ['spell_id', 'category_id'];
@@ -297,9 +299,12 @@ describe('an assignment removed through write.delete', () => {
 
     expect(removed).toHaveLength(1);
     expect(await pairs()).toEqual([]);
-    // `findMany` writes no `deleted_at IS NULL` for this table, so an empty
-    // read is an empty table.
-    expect(await findMany(spellCategories)).toEqual([]);
+    // The finder writes no `deleted_at IS NULL` for this table, so an empty
+    // read is an empty table rather than a tombstone being filtered out. It
+    // goes through the spell (M10.3): `spell_categories` has no workspace of
+    // its own, so `findMany` refuses it.
+    const membership = await assertMembership(asUser(A), WORKSPACE_W_ID, { spell: ['read'] });
+    expect(await findManyInSpell(membership, spellCategories, HEARTH_GUARD)).toEqual([]);
   });
 
   it('can be re-added afterwards, with no partial index to make it possible', async () => {
