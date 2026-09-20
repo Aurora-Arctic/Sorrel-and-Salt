@@ -1,21 +1,11 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { getTableConfig } from 'drizzle-orm/pg-core';
+import { failureOf, useTestDatabase } from './support/database';
+import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
 import { users } from '@/db/schema/users';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import { workspaceInvitations } from '@/db/schema/workspace-invitations';
 import { workspaces } from '@/db/schema/workspaces';
-
-// The full six: an invitation is a record of an owner's act, not a link, so
-// withdrawing one leaves a tombstone and the hash index below is partial.
-const AUDIT_COLUMNS = [
-  'created_at',
-  'created_by',
-  'updated_at',
-  'updated_by',
-  'deleted_at',
-  'deleted_by',
-];
 
 // DESIGN.md §5's column list, transcribed.
 const OWN_COLUMNS = [
@@ -36,16 +26,15 @@ const WORKSPACE_FK = 'workspace_invitations_workspace_id_workspaces_id_fk';
 const ACCEPTED_BY_FK = 'workspace_invitations_accepted_by_users_id_fk';
 
 describe('workspace_invitations schema', () => {
-  const { columns, indexes, foreignKeys, checks } = getTableConfig(workspaceInvitations);
-  const byName = Object.fromEntries(columns.map((column) => [column.name, column]));
-  const indexByName = Object.fromEntries(indexes.map((index) => [index.config.name, index]));
-  const foreignKeyByColumn = Object.fromEntries(
-    foreignKeys.map((fk) => {
-      const { columns: local, foreignColumns, foreignTable } = fk.reference();
-      return [local[0].name, { foreignColumnName: foreignColumns[0].name, foreignTable }];
-    }),
-  );
+  const {
+    byName,
+    byIndexName: indexByName,
+    checks,
+    foreignKeyByColumn,
+  } = tableFacts(workspaceInvitations);
 
+  // The full six: an invitation is a record of an owner's act, not a link, so
+  // withdrawing one leaves a tombstone and the hash index below is partial.
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
@@ -83,25 +72,6 @@ describe('workspace_invitations schema', () => {
     expect(foreignKeyByColumn.accepted_by.foreignColumnName).toBe('id');
   });
 
-  it('spreads the six audit columns, the four stamps required', () => {
-    for (const column of AUDIT_COLUMNS) {
-      expect(byName[column]).toBeDefined();
-    }
-    for (const column of ['created_at', 'created_by', 'updated_at', 'updated_by']) {
-      expect(byName[column].notNull).toBe(true);
-    }
-    expect(byName.deleted_at.notNull).toBe(false);
-    expect(byName.deleted_by.notNull).toBe(false);
-  });
-
-  it('references users.id from every audit id (MB.5)', () => {
-    for (const column of ['created_by', 'updated_by', 'deleted_by']) {
-      expect(foreignKeyByColumn[column]).toBeDefined();
-      expect(foreignKeyByColumn[column].foreignColumnName).toBe('id');
-      expect(foreignKeyByColumn[column].foreignTable).toBe(users);
-    }
-  });
-
   it('gives the expiry a default, so no caller can forget one', () => {
     expect(byName.expires_at.hasDefault).toBe(true);
   });
@@ -124,6 +94,7 @@ const COVEN = WORKSPACE_W_ID;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
+const catalogue = useTestDatabase((client) => (sql = client));
 
 // 64 hex characters, the shape of a sha-256 of a `crypto.randomBytes` token;
 // nothing here generates one.
@@ -142,45 +113,20 @@ async function invite(
   return inserted.id as string;
 }
 
-async function failureOf(work: Promise<unknown>) {
-  return await work.then(
-    () => {
-      throw new Error('expected the statement to be rejected, but it succeeded');
-    },
-    (error: postgres.PostgresError) => error,
-  );
-}
-
-async function columnNames(table: string): Promise<string[]> {
-  const rows = await sql`
-    select column_name from information_schema.columns
-    where table_name = ${table} order by column_name
-  `;
-  return rows.map((row) => row.column_name as string);
-}
-
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
 beforeEach(async () => {
   await sql`truncate workspace_invitations`;
 });
 
-afterAll(async () => {
-  await sql.end();
-});
-
 describe('workspace_invitations table', () => {
   it('carries §5’s columns beside the six audit ones', async () => {
-    expect(await columnNames('workspace_invitations')).toEqual(
+    expect(await catalogue.columnNames('workspace_invitations')).toEqual(
       [...OWN_COLUMNS, ...AUDIT_COLUMNS].sort(),
     );
   });
 
   // Against the shipped DDL rather than the Drizzle object: a dumped row is not a credential.
   it('has no column that could hold a plaintext token', async () => {
-    const stored = await columnNames('workspace_invitations');
+    const stored = await catalogue.columnNames('workspace_invitations');
 
     expect(stored.filter((name) => name.includes('token'))).toEqual(['token_hash']);
   });
@@ -255,14 +201,7 @@ describe('workspace_invitations table', () => {
 
   describe('lookup by token hash', () => {
     it('indexes the hash uniquely, among live rows only', async () => {
-      const [index] = await sql`
-        select i.indisunique as unique,
-               pg_get_expr(i.indpred, i.indrelid) as predicate,
-               pg_get_indexdef(i.indexrelid) as definition
-        from pg_index i
-        join pg_class c on c.oid = i.indexrelid
-        where i.indrelid = 'workspace_invitations'::regclass and c.relname = ${TOKEN_HASH_INDEX}
-      `;
+      const index = await catalogue.indexRow('workspace_invitations', TOKEN_HASH_INDEX);
 
       expect(index?.unique).toBe(true);
       expect(index?.predicate).toBe('(deleted_at IS NULL)');

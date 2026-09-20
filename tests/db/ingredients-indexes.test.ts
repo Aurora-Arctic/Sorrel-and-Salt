@@ -1,6 +1,7 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { getTableConfig } from 'drizzle-orm/pg-core';
+import { failureOf, useTestDatabase } from './support/database';
+import { tableFacts } from './support/table-metadata';
 import {
   type IngredientFixture,
   type Overrides,
@@ -20,8 +21,7 @@ const WORKSPACE_LABEL = 'ingredients_workspace_label_unique';
 const TRIGRAM = 'ingredients_trgm';
 
 describe('ingredients index declarations', () => {
-  const { indexes } = getTableConfig(ingredients);
-  const byName = Object.fromEntries(indexes.map((index) => [index.config.name, index]));
+  const { byIndexName: byName } = tableFacts(ingredients);
 
   // "Exactly", not "at least": a fourth unique index is what this list exists to catch.
   it('declares exactly §5’s three unique indexes and §9’s trigram one', () => {
@@ -54,6 +54,7 @@ function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
 }
 
 let sql: ReturnType<typeof postgres>;
+const catalogue = useTestDatabase((client) => (sql = client));
 
 type Inserted = { id: string; canonicalKey: string };
 
@@ -62,15 +63,6 @@ async function insert(overrides: IngredientOverrides = {}): Promise<Inserted> {
     insert into ingredients ${sql(row(overrides))} returning id, canonical_key
   `;
   return { id: inserted.id as string, canonicalKey: inserted.canonical_key as string };
-}
-
-async function failureOf(work: Promise<unknown>) {
-  return await work.then(
-    () => {
-      throw new Error('expected the statement to be rejected, but it succeeded');
-    },
-    (error: postgres.PostgresError) => error,
-  );
 }
 
 async function softDelete(id: string): Promise<void> {
@@ -85,30 +77,8 @@ async function liveCount(): Promise<number> {
   return count as number;
 }
 
-type IndexRow = { unique: boolean; predicate: string | null; definition: string };
-
-async function indexRow(name: string): Promise<IndexRow | undefined> {
-  const [found] = await sql`
-    select i.indisunique as unique,
-           pg_get_expr(i.indpred, i.indrelid) as predicate,
-           pg_get_indexdef(i.indexrelid) as definition
-    from pg_index i
-    join pg_class c on c.oid = i.indexrelid
-    where i.indrelid = 'ingredients'::regclass and c.relname = ${name}
-  `;
-  return found as IndexRow | undefined;
-}
-
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 describe('ingredients unique indexes', () => {
@@ -116,7 +86,7 @@ describe('ingredients unique indexes', () => {
   // deleted identity forever, and no test below re-uses one without deleting first.
   describe('catalogue introspection', () => {
     it('makes the compendium unique on identity, among live compendium rows only', async () => {
-      const index = await indexRow(COMPENDIUM_IDENTITY);
+      const index = await catalogue.indexRow('ingredients', COMPENDIUM_IDENTITY);
 
       expect(index?.unique).toBe(true);
       expect(index?.predicate).toBe('((workspace_id IS NULL) AND (deleted_at IS NULL))');
@@ -124,7 +94,7 @@ describe('ingredients unique indexes', () => {
     });
 
     it('makes each workspace unique on identity, among its live rows only', async () => {
-      const index = await indexRow(WORKSPACE_IDENTITY);
+      const index = await catalogue.indexRow('ingredients', WORKSPACE_IDENTITY);
 
       expect(index?.unique).toBe(true);
       expect(index?.predicate).toBe('((workspace_id IS NOT NULL) AND (deleted_at IS NULL))');
@@ -132,7 +102,7 @@ describe('ingredients unique indexes', () => {
     });
 
     it('makes each workspace unique on the folded label, among its live rows only', async () => {
-      const index = await indexRow(WORKSPACE_LABEL);
+      const index = await catalogue.indexRow('ingredients', WORKSPACE_LABEL);
 
       expect(index?.unique).toBe(true);
       expect(index?.predicate).toBe('((workspace_id IS NOT NULL) AND (deleted_at IS NULL))');
@@ -143,15 +113,7 @@ describe('ingredients unique indexes', () => {
     // A fourth unique index — most likely a label index over the compendium —
     // is exactly the constraint §5 dropped.
     it('carries no unique index beyond those three and the primary key', async () => {
-      const rows = await sql`
-        select c.relname as name
-        from pg_index i
-        join pg_class c on c.oid = i.indexrelid
-        where i.indrelid = 'ingredients'::regclass and i.indisunique
-        order by c.relname
-      `;
-
-      expect(rows.map((r) => r.name)).toEqual(
+      expect(await catalogue.uniqueIndexNames('ingredients')).toEqual(
         [COMPENDIUM_IDENTITY, WORKSPACE_IDENTITY, WORKSPACE_LABEL, 'ingredients_pkey'].sort(),
       );
     });

@@ -1,8 +1,9 @@
 import { join } from 'node:path';
 import { readFileSync, readdirSync } from 'node:fs';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { getTableConfig } from 'drizzle-orm/pg-core';
+import { useTestDatabase } from './support/database';
+import { tableFacts } from './support/table-metadata';
 import { MIGRATIONS_DIR } from '../support/paths';
 import { ingredientFolkNames } from '@/db/schema/ingredient-folk-names';
 import { ingredients } from '@/db/schema/ingredients';
@@ -22,8 +23,7 @@ const UNIQUE_INDEXES = [
 ];
 
 describe('ingredients trigram index declaration', () => {
-  const { indexes } = getTableConfig(ingredients);
-  const byName = Object.fromEntries(indexes.map((index) => [index.config.name, index]));
+  const { byIndexName: byName } = tableFacts(ingredients);
 
   it('declares the trigram index beside M4.1a’s three unique ones', () => {
     expect(Object.keys(byName).sort()).toEqual([...UNIQUE_INDEXES, TRIGRAM_INDEX].sort());
@@ -64,6 +64,7 @@ const TRIGRAM_MIGRATION = `CREATE INDEX IF NOT EXISTS "${TRIGRAM_INDEX}"`;
 const AUTHOR = FIXTURE_USERS.A.id;
 
 let sql: ReturnType<typeof postgres>;
+const catalogue = useTestDatabase((client) => (sql = client));
 
 async function addIngredient(name: string, canonicalName: string | null): Promise<string> {
   const [inserted] = await sql`
@@ -116,26 +117,8 @@ async function matchingNames(term: string, threshold?: number): Promise<string[]
   return rows.map((row) => row.name as string);
 }
 
-async function indexDefinition(table: string, name: string): Promise<string | undefined> {
-  const [found] = await sql`
-    select pg_get_indexdef(i.indexrelid) as definition
-    from pg_index i
-    join pg_class c on c.oid = i.indexrelid
-    where i.indrelid = ${table}::regclass and c.relname = ${name}
-  `;
-  return found?.definition as string | undefined;
-}
-
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 describe('pg_trgm', () => {
@@ -150,21 +133,18 @@ describe('pg_trgm', () => {
 describe('ingredients trigram index', () => {
   describe('catalogue introspection', () => {
     it('covers name and canonical_name in one gin index (DESIGN.md §9)', async () => {
-      const definition = await indexDefinition('ingredients', TRIGRAM_INDEX);
+      const index = await catalogue.indexRow('ingredients', TRIGRAM_INDEX);
 
-      expect(definition).toContain('USING gin (name gin_trgm_ops, canonical_name gin_trgm_ops)');
+      expect(index?.definition).toContain(
+        'USING gin (name gin_trgm_ops, canonical_name gin_trgm_ops)',
+      );
     });
 
     it('carries no predicate, so every live row is reachable through it', async () => {
-      const [found] = await sql`
-        select i.indisunique as unique, pg_get_expr(i.indpred, i.indrelid) as predicate
-        from pg_index i
-        join pg_class c on c.oid = i.indexrelid
-        where i.indrelid = 'ingredients'::regclass and c.relname = ${TRIGRAM_INDEX}
-      `;
+      const index = await catalogue.indexRow('ingredients', TRIGRAM_INDEX);
 
-      expect(found?.unique).toBe(false);
-      expect(found?.predicate).toBeNull();
+      expect(index?.unique).toBe(false);
+      expect(index?.predicate).toBeNull();
     });
   });
 
@@ -289,7 +269,7 @@ describe('ingredients trigram index', () => {
 // would redden it as "wrong index chosen". This reddens beside it, correctly.
 describe('folk-names index name is the one M4.4a declared', () => {
   it('matches the constant this file plans against', () => {
-    const { indexes } = getTableConfig(ingredientFolkNames);
+    const { indexes } = tableFacts(ingredientFolkNames);
 
     expect(indexes.map((index) => index.config.name)).toContain(FOLK_NAMES_TRIGRAM_INDEX);
   });

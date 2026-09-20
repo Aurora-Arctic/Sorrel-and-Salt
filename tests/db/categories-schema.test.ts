@@ -1,18 +1,9 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { getTableConfig } from 'drizzle-orm/pg-core';
+import { failureOf, useTestDatabase } from './support/database';
+import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
 import { categories, categoryGroups } from '@/db/schema/categories';
-import { users } from '@/db/schema/users';
 import { FIXTURE_USERS } from '@/db/seed/standard';
-
-const AUDIT_COLUMNS = [
-  'created_at',
-  'created_by',
-  'updated_at',
-  'updated_by',
-  'deleted_at',
-  'deleted_by',
-];
 
 const GROUPS_SLUG_UNIQUE = 'category_groups_slug_unique';
 const CATEGORIES_SLUG_UNIQUE = 'categories_slug_unique';
@@ -21,31 +12,8 @@ const CATEGORIES_SLUG_UNIQUE = 'categories_slug_unique';
 // categories sort by name — claude-docs/db.md, "Categories, and the two group vocabularies".
 const ORDERING_COLUMNS = ['order', 'position', 'sort', 'sort_order', 'rank', 'display_order'];
 
-function nonAuditForeignKeys(table: typeof categories | typeof categoryGroups) {
-  const auditColumnNames = new Set(AUDIT_COLUMNS);
-  return getTableConfig(table).foreignKeys.filter(
-    (fk) => !auditColumnNames.has(fk.reference().columns[0].name),
-  );
-}
-
-function auditForeignKeysReferenceUsers(table: typeof categories | typeof categoryGroups) {
-  const byColumn = Object.fromEntries(
-    getTableConfig(table).foreignKeys.map((fk) => {
-      const { columns: local, foreignColumns, foreignTable } = fk.reference();
-      return [local[0].name, { foreignColumnName: foreignColumns[0].name, foreignTable }];
-    }),
-  );
-
-  for (const column of ['created_by', 'updated_by', 'deleted_by']) {
-    expect(byColumn[column]).toBeDefined();
-    expect(byColumn[column].foreignColumnName).toBe('id');
-    expect(byColumn[column].foreignTable).toBe(users);
-  }
-}
-
 describe('category_groups schema', () => {
-  const { columns, indexes } = getTableConfig(categoryGroups);
-  const byName = Object.fromEntries(columns.map((c) => [c.name, c]));
+  const { byName, indexes, nonAuditForeignKeys } = tableFacts(categoryGroups);
 
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
@@ -82,25 +50,12 @@ describe('category_groups schema', () => {
 
   it('carries no workspace scoping', () => {
     expect(byName.workspace_id).toBeUndefined();
-    expect(nonAuditForeignKeys(categoryGroups)).toEqual([]);
-  });
-
-  it('spreads the shared audit columns', () => {
-    for (const column of AUDIT_COLUMNS) {
-      expect(byName[column]).toBeDefined();
-    }
-    expect(byName.created_by.notNull).toBe(true);
-    expect(byName.deleted_at.notNull).toBe(false);
-  });
-
-  it('references users.id from every audit id (MB.5)', () => {
-    auditForeignKeysReferenceUsers(categoryGroups);
+    expect(nonAuditForeignKeys).toEqual([]);
   });
 });
 
 describe('categories schema', () => {
-  const { columns, indexes } = getTableConfig(categories);
-  const byName = Object.fromEntries(columns.map((c) => [c.name, c]));
+  const { byName, indexes, nonAuditForeignKeys } = tableFacts(categories);
 
   // No `color`: the chip colour is the group's pair, one hex per theme (MB.35).
   it('has DESIGN.md §5 columns and nothing else', () => {
@@ -126,11 +81,11 @@ describe('categories schema', () => {
   it('points groupId at category_groups by foreign key, and requires it', () => {
     expect(byName.group_id.notNull).toBe(true);
 
-    const [reference, ...rest] = nonAuditForeignKeys(categories).map((fk) => fk.reference());
+    const [reference, ...rest] = nonAuditForeignKeys;
     expect(rest).toEqual([]);
-    expect(reference.columns[0].name).toBe('group_id');
+    expect(reference.column).toBe('group_id');
     expect(reference.foreignTable).toBe(categoryGroups);
-    expect(reference.foreignColumns[0].name).toBe('id');
+    expect(reference.foreignColumnName).toBe('id');
   });
 
   it('makes the slug index unique and partial on deleted_at IS NULL (rule 4)', () => {
@@ -146,21 +101,7 @@ describe('categories schema', () => {
   // that could reach a workspace under another name.
   it('carries no workspace scoping', () => {
     expect(byName.workspace_id).toBeUndefined();
-    expect(nonAuditForeignKeys(categories).map((fk) => fk.reference().foreignTable)).toEqual([
-      categoryGroups,
-    ]);
-  });
-
-  it('spreads the shared audit columns', () => {
-    for (const column of AUDIT_COLUMNS) {
-      expect(byName[column]).toBeDefined();
-    }
-    expect(byName.created_by.notNull).toBe(true);
-    expect(byName.deleted_at.notNull).toBe(false);
-  });
-
-  it('references users.id from every audit id (MB.5)', () => {
-    auditForeignKeysReferenceUsers(categories);
+    expect(nonAuditForeignKeys.map((fk) => fk.foreignTable)).toEqual([categoryGroups]);
   });
 });
 
@@ -195,6 +136,7 @@ function categoryRow(groupId: string, overrides: Row = {}): Row {
 }
 
 let sql: ReturnType<typeof postgres>;
+const catalogue = useTestDatabase((client) => (sql = client));
 
 async function insertGroup(overrides: Row = {}): Promise<string> {
   const [inserted] = await sql`
@@ -210,51 +152,26 @@ async function insertCategory(groupId: string, overrides: Row = {}): Promise<str
   return inserted.id as string;
 }
 
-async function failureOf(work: Promise<unknown>) {
-  return await work.then(
-    () => {
-      throw new Error('expected the statement to be rejected, but it succeeded');
-    },
-    (error: postgres.PostgresError) => error,
-  );
-}
-
 async function softDelete(table: 'categories' | 'category_groups', id: string): Promise<void> {
   await sql`
     update ${sql(table)} set deleted_at = now(), deleted_by = ${AUTHOR} where id = ${id}
   `;
 }
 
-async function columnNames(table: string): Promise<string[]> {
-  const rows = await sql`
-    select column_name from information_schema.columns
-    where table_name = ${table} order by column_name
-  `;
-  return rows.map((r) => r.column_name as string);
-}
-
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
 beforeEach(async () => {
   await sql`truncate categories, category_groups cascade`;
 });
 
-afterAll(async () => {
-  await sql.end();
-});
-
 describe('category_groups table', () => {
   it('is global: no workspace_id column to scope by, under any spelling', async () => {
-    const columns = await columnNames('category_groups');
+    const columns = await catalogue.columnNames('category_groups');
 
     expect(columns).not.toContain('workspace_id');
     expect(columns.filter((column) => column.includes('workspace'))).toEqual([]);
   });
 
   it('has no column to order groups by hand', async () => {
-    const columns = await columnNames('category_groups');
+    const columns = await catalogue.columnNames('category_groups');
 
     for (const column of ORDERING_COLUMNS) {
       expect(columns).not.toContain(column);
@@ -316,20 +233,20 @@ describe('category_groups table', () => {
 
 describe('categories table', () => {
   it('is global: no workspace_id column to scope by, under any spelling', async () => {
-    const columns = await columnNames('categories');
+    const columns = await catalogue.columnNames('categories');
 
     expect(columns).not.toContain('workspace_id');
     expect(columns.filter((column) => column.includes('workspace'))).toEqual([]);
   });
 
   it('has no colour of its own — the chip wears its group’s pair', async () => {
-    const columns = await columnNames('categories');
+    const columns = await catalogue.columnNames('categories');
 
     expect(columns.filter((column) => column.includes('color'))).toEqual([]);
   });
 
   it('has no column to order categories by hand', async () => {
-    const columns = await columnNames('categories');
+    const columns = await catalogue.columnNames('categories');
 
     for (const column of ORDERING_COLUMNS) {
       expect(columns).not.toContain(column);

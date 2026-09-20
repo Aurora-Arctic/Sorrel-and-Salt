@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
+import { AUDITED_TABLES, UNAUDITED_TABLES } from './support/table-metadata';
 import { eq } from 'drizzle-orm';
 import { makeWorkspace, workspaceColumns } from '../support/fixtures';
 import { truncateAllTables } from '../support/seeded-database';
@@ -12,30 +13,6 @@ import { findOne, withAudit } from '@/db/repository';
 const FUNCTION = 'set_updated_at';
 // Same name on every table: a trigger name is scoped to its table.
 const TRIGGER = 'set_updated_at';
-
-// Transcribed so the two-query comparison below cannot pass on two empty sets.
-const AUDITED_TABLES = [
-  'categories',
-  'category_groups',
-  'ingredient_categories',
-  'ingredient_folk_names',
-  'ingredient_form_groups',
-  'ingredient_forms',
-  'ingredients',
-  'inventory_items',
-  'spell_categories',
-  'spell_ingredients',
-  'spells',
-  'users',
-  'workspace_invitations',
-  'workspace_members',
-  'workspaces',
-].sort();
-
-// Better Auth's adapter tables carry an `updated_at` and no `*_by` columns;
-// Better Auth's own `$onUpdate` stamps them. A real counter-example for "only
-// the audited tables".
-const UNAUDITED_TABLES = ['accounts', 'sessions', 'verifications'].sort();
 
 let sql: ReturnType<typeof postgres>;
 

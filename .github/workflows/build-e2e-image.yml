@@ -1,7 +1,8 @@
 name: Build E2E Image
 
-# Builds or reuses the Playwright e2e image (Docker/Dockerfile.e2e), tagged as
-# build-image.yml tags. Its own file because it shares no base image.
+# Builds or reuses the Playwright e2e image (Docker/Dockerfile.e2e), through
+# the same action as build-image.yml. Its own file because it shares no base
+# image.
 on:
   workflow_call:
     outputs:
@@ -17,47 +18,20 @@ jobs:
   build-e2e-image:
     runs-on: ubuntu-26.04
     outputs:
-      image: ${{ steps.tag.outputs.image }}
+      image: ${{ steps.image.outputs.image }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Compute content-addressed image tag
-        id: tag
-        run: |
-          repo_lower=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          hash="${{ hashFiles('Docker/Dockerfile.e2e', 'package-lock.json') }}"
-          echo "image=ghcr.io/${repo_lower}/e2e:${hash}" >> "$GITHUB_OUTPUT"
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v4
+      - name: Build or reuse the e2e image
+        id: image
+        uses: ./.github/actions/build-image
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      # Skip rather than re-run buildx and re-download Chromium for identical content.
-      - name: Check if image already exists
-        id: check
-        run: |
-          if docker buildx imagetools inspect ${{ steps.tag.outputs.image }} > /dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Build and push e2e image
-        if: steps.check.outputs.exists != 'true'
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: Docker/Dockerfile.e2e
+          path: e2e
+          content-hash: ${{ hashFiles('Docker/Dockerfile.e2e', 'package-lock.json') }}
+          dockerfile: Docker/Dockerfile.e2e
           # Must stay explicit: an unqualified build picks the LAST stage, `headed`.
           target: e2e
-          push: true
-          tags: ${{ steps.tag.outputs.image }}
-          cache-from: type=gha,scope=e2e-image
-          cache-to: type=gha,mode=max,scope=e2e-image
+          cache-scope: e2e-image
+          registry-username: ${{ github.actor }}
+          registry-password: ${{ secrets.GITHUB_TOKEN }}

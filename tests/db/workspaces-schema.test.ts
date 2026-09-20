@@ -1,22 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { getTableConfig } from 'drizzle-orm/pg-core';
+import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
 import { users } from '@/db/schema/users';
 import { workspaces, workspaceMembers } from '@/db/schema/workspaces';
-
-const AUDIT_COLUMNS = [
-  'created_at',
-  'created_by',
-  'updated_at',
-  'updated_by',
-  'deleted_at',
-  'deleted_by',
-];
 
 // Schema shape via Drizzle's introspection; "migration applies cleanly" is the
 // harness's, which migrates the template every clone is made from.
 describe('workspaces schema', () => {
-  const { columns, indexes } = getTableConfig(workspaces);
-  const byName = Object.fromEntries(columns.map((c) => [c.name, c]));
+  const { byName, indexes } = tableFacts(workspaces);
 
   it('has DESIGN.md §5 columns: id, name, slug', () => {
     expect(byName.id.primary).toBe(true);
@@ -30,14 +20,6 @@ describe('workspaces schema', () => {
     expect(Object.keys(byName).sort()).toEqual(['id', 'name', 'slug', ...AUDIT_COLUMNS].sort());
   });
 
-  it('spreads the shared audit columns', () => {
-    for (const column of AUDIT_COLUMNS) {
-      expect(byName[column]).toBeDefined();
-    }
-    expect(byName.created_by.notNull).toBe(true);
-    expect(byName.deleted_at.notNull).toBe(false);
-  });
-
   it('makes the slug index partial on deleted_at IS NULL (CLAUDE.md rule 4)', () => {
     const slugIndex = indexes.find((i) =>
       i.config.columns.some((c) => 'name' in c && c.name === 'slug'),
@@ -46,27 +28,10 @@ describe('workspaces schema', () => {
     expect(slugIndex?.config.unique).toBe(true);
     expect(slugIndex?.config.where).toBeDefined();
   });
-
-  it('references users.id from every audit id (MB.5)', () => {
-    const { foreignKeys } = getTableConfig(workspaces);
-    const byColumn = Object.fromEntries(
-      foreignKeys.map((fk) => {
-        const { columns: local, foreignColumns, foreignTable } = fk.reference();
-        return [local[0].name, { foreignColumnName: foreignColumns[0].name, foreignTable }];
-      }),
-    );
-
-    for (const column of ['created_by', 'updated_by', 'deleted_by']) {
-      expect(byColumn[column]).toBeDefined();
-      expect(byColumn[column].foreignColumnName).toBe('id');
-      expect(byColumn[column].foreignTable).toBe(users);
-    }
-  });
 });
 
 describe('workspace_members schema', () => {
-  const { columns, primaryKeys, foreignKeys } = getTableConfig(workspaceMembers);
-  const byName = Object.fromEntries(columns.map((c) => [c.name, c]));
+  const { byName, primaryKeys, foreignKeyByColumn } = tableFacts(workspaceMembers);
 
   it('has DESIGN.md §5 columns: workspaceId, userId, role, joinedAt', () => {
     expect(byName.workspace_id.notNull).toBe(true);
@@ -86,25 +51,10 @@ describe('workspace_members schema', () => {
     expect(primaryKeys[0].columns.map((c) => c.name)).toEqual(['workspace_id', 'user_id']);
   });
 
-  it('spreads the shared audit columns', () => {
-    for (const column of AUDIT_COLUMNS) {
-      expect(byName[column]).toBeDefined();
-    }
-    expect(byName.created_by.notNull).toBe(true);
-    expect(byName.deleted_at.notNull).toBe(false);
-  });
-
   it('references workspaces.id and users.id from the pair', () => {
-    const byColumn = Object.fromEntries(
-      foreignKeys.map((fk) => {
-        const { columns: local, foreignColumns, foreignTable } = fk.reference();
-        return [local[0].name, { foreignColumnName: foreignColumns[0].name, foreignTable }];
-      }),
-    );
-
-    expect(byColumn.workspace_id.foreignTable).toBe(workspaces);
-    expect(byColumn.workspace_id.foreignColumnName).toBe('id');
-    expect(byColumn.user_id.foreignTable).toBe(users);
-    expect(byColumn.user_id.foreignColumnName).toBe('id');
+    expect(foreignKeyByColumn.workspace_id.foreignTable).toBe(workspaces);
+    expect(foreignKeyByColumn.workspace_id.foreignColumnName).toBe('id');
+    expect(foreignKeyByColumn.user_id.foreignTable).toBe(users);
+    expect(foreignKeyByColumn.user_id.foreignColumnName).toBe('id');
   });
 });

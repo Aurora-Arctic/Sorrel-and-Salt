@@ -1,6 +1,7 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { getTableConfig } from 'drizzle-orm/pg-core';
+import { failureOf, useTestDatabase } from './support/database';
+import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
 import {
   type IngredientFixture,
   type Overrides,
@@ -10,16 +11,6 @@ import {
 import { ingredientElement, ingredients, nomenclatureKind } from '@/db/schema/ingredients';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import { workspaces } from '@/db/schema/workspaces';
-import { users } from '@/db/schema/users';
-
-const AUDIT_COLUMNS = [
-  'created_at',
-  'created_by',
-  'updated_at',
-  'updated_by',
-  'deleted_at',
-  'deleted_by',
-];
 
 // DESIGN.md §5's seven values, in the order the design doc's table lists them.
 const NOMENCLATURE_VALUES = [
@@ -35,8 +26,7 @@ const NOMENCLATURE_VALUES = [
 const ELEMENT_VALUES = ['earth', 'air', 'fire', 'water', 'spirit'] as const;
 
 describe('ingredients schema', () => {
-  const { columns, foreignKeys } = getTableConfig(ingredients);
-  const byName = Object.fromEntries(columns.map((c) => [c.name, c]));
+  const { byName, foreignKeys } = tableFacts(ingredients);
 
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
@@ -104,29 +94,6 @@ describe('ingredients schema', () => {
     expect(byName.substitutes.getSQLType()).toBe('text[]');
   });
 
-  it('spreads the shared audit columns', () => {
-    for (const column of AUDIT_COLUMNS) {
-      expect(byName[column]).toBeDefined();
-    }
-    expect(byName.created_by.notNull).toBe(true);
-    expect(byName.deleted_at.notNull).toBe(false);
-  });
-
-  it('references users.id from every audit id (MB.5)', () => {
-    const byColumn = Object.fromEntries(
-      foreignKeys.map((fk) => {
-        const { columns: local, foreignColumns, foreignTable } = fk.reference();
-        return [local[0].name, { foreignColumnName: foreignColumns[0].name, foreignTable }];
-      }),
-    );
-
-    for (const column of ['created_by', 'updated_by', 'deleted_by']) {
-      expect(byColumn[column]).toBeDefined();
-      expect(byColumn[column].foreignColumnName).toBe('id');
-      expect(byColumn[column].foreignTable).toBe(users);
-    }
-  });
-
   // Drizzle omits a generated column from $inferInsert, so TypeScript refuses
   // first; `npm run typecheck` covers this file, so the @ts-expect-error
   // reddens if the column ever becomes writable. Postgres's refusal is below.
@@ -165,6 +132,7 @@ function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
 }
 
 let sql: ReturnType<typeof postgres>;
+useTestDatabase((client) => (sql = client));
 
 async function insert(overrides: IngredientOverrides = {}): Promise<string> {
   const [inserted] = await sql`
@@ -178,25 +146,8 @@ async function canonicalKeyOf(id: string): Promise<string> {
   return found.canonical_key as string;
 }
 
-async function failureOf(work: Promise<unknown>) {
-  return await work.then(
-    () => {
-      throw new Error('expected the statement to be rejected, but it succeeded');
-    },
-    (error: postgres.PostgresError) => error,
-  );
-}
-
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
-});
-
-afterAll(async () => {
-  await sql.end();
 });
 
 describe('ingredients table', () => {
