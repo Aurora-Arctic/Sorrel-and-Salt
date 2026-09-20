@@ -180,6 +180,19 @@ describe('the grimoire', () => {
     expect(detailed.filter((s) => (s.jar_size ?? '').length > 0).length).toBeGreaterThanOrEqual(1);
   });
 
+  // The seed names no visibility, so what these rows carry is the column's own
+  // default (M10.3). A demo coven whose jars were invisible to everyone but
+  // the bootstrap admin would be a demo of nothing.
+  it('shares every seeded spell with the coven', async () => {
+    await seedDemo(db);
+
+    const visibilities = await sql<{ visibility: string }[]>`
+      select visibility::text from spells
+    `;
+    expect(visibilities).toHaveLength(DEMO_SPELLS.length);
+    expect(visibilities.every((row) => row.visibility === 'workspace')).toBe(true);
+  });
+
   it('seeds a draft beside a finished spell, so the status badge has both to show', async () => {
     await seedDemo(db);
 

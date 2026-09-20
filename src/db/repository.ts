@@ -1,6 +1,7 @@
-import { and, eq, sql, type SQL } from 'drizzle-orm';
+import { and, eq, or, sql, type SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { applyAudit, auditColumns, type AuditSession } from './audit';
+import { spells } from './schema/spells';
 import { workspaceMembers } from './schema/workspaces';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
 // oxlint-disable-next-line no-restricted-imports
@@ -29,12 +30,23 @@ type HardDeletable = { deletedAt?: never };
 
 // The same shape for rule 5's proof: a table carrying `workspace_id` scopes
 // itself and may only be reached with a `Membership`, and `{ workspaceId?:
-// never }` is the complement — every other table. `spell_ingredients` and
-// `spell_categories` are neither, since they reach their workspace through
-// `spells`; claude-docs/db.md, "The Membership proof", names that gap and the
-// tests that cover it.
+// never }` is the complement — every other table.
 type WorkspaceScoped = { workspaceId: AnyPgColumn };
 type Unscoped = { workspaceId?: never };
+
+// And once more for visibility (M10.3), so that a table goes through exactly
+// one finder — claude-docs/db.md, "Spell visibility". `spells` is
+// workspace-scoped *and* carries a per-row reader rule, so `NotVisibilityScoped`
+// takes it off the generic scoped finders and `findManySpells`/`findOneSpell`
+// name it directly; the two join tables carry a `spell_id` and no workspace of
+// their own, so `NotSpellScoped` takes them off the unscoped finders and
+// `findManyInSpell` derives both scopes from the parent spell.
+type NotVisibilityScoped = { visibility?: never };
+type SpellScoped = { spellId: AnyPgColumn };
+type NotSpellScoped = { spellId?: never };
+
+/** A table with a surrogate key, which is every one but the three join tables. */
+type Identified = { id: AnyPgColumn };
 
 /** A table's own columns, with every audit column removed — they come from the session. */
 type Writable<TTable extends PgTable> = Omit<TTable['$inferInsert'], AuditColumnName>;
@@ -66,6 +78,18 @@ export interface AuditWriter {
     table: TTable,
     values: Partial<WritableInWorkspace<TTable>>,
     where: SQL,
+  ): Promise<TTable['$inferSelect'][]>;
+  /**
+   * The same, naming the one row by its own id. A service cannot build the
+   * `where` the method above wants — MB.33 bars it from importing
+   * `drizzle-orm` at runtime — so the predicate every entity update needs is
+   * built here instead.
+   */
+  updateByIdInWorkspace<TTable extends PgTable & WorkspaceScoped & Identified>(
+    membership: Membership,
+    table: TTable,
+    id: string,
+    values: Partial<WritableInWorkspace<TTable>>,
   ): Promise<TTable['$inferSelect'][]>;
   /** Soft-delete matching rows: stamps deleted_*, leaving the row in place (CLAUDE.md rule 4). */
   softDelete<TTable extends PgTable & SoftDeletable & Unscoped>(
@@ -135,6 +159,8 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     update,
     updateInWorkspace: (membership, table, values, where) =>
       update(table, values, and(scopedTo(membership, table), where)),
+    updateByIdInWorkspace: (membership, table, id, values) =>
+      update(table, values, and(scopedTo(membership, table), eq(table.id, id))),
     softDelete,
     softDeleteInWorkspace: (membership, table, where) =>
       softDelete(table, and(scopedTo(membership, table), where)),
@@ -190,7 +216,7 @@ function selectFrom<TTable extends PgTable>(
 }
 
 /** All matching, non-soft-deleted rows. The default and normal-use finder. */
-export function findMany<TTable extends PgTable & Unscoped>(
+export function findMany<TTable extends PgTable & Unscoped & NotSpellScoped>(
   table: TTable,
   where?: SQL,
 ): Promise<TTable['$inferSelect'][]> {
@@ -200,7 +226,7 @@ export function findMany<TTable extends PgTable & Unscoped>(
 }
 
 /** The first matching, non-soft-deleted row, or `undefined`. */
-export async function findOne<TTable extends PgTable & Unscoped>(
+export async function findOne<TTable extends PgTable & Unscoped & NotSpellScoped>(
   table: TTable,
   where?: SQL,
 ): Promise<TTable['$inferSelect'] | undefined> {
@@ -209,7 +235,7 @@ export async function findOne<TTable extends PgTable & Unscoped>(
 }
 
 /** All matching, non-soft-deleted rows inside the workspace the proof names. */
-export function findManyInWorkspace<TTable extends PgTable & WorkspaceScoped>(
+export function findManyInWorkspace<TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped>(
   membership: Membership,
   table: TTable,
   where?: SQL,
@@ -218,13 +244,69 @@ export function findManyInWorkspace<TTable extends PgTable & WorkspaceScoped>(
 }
 
 /** The first such row, or `undefined` — including when it belongs to another workspace. */
-export async function findOneInWorkspace<TTable extends PgTable & WorkspaceScoped>(
-  membership: Membership,
-  table: TTable,
-  where?: SQL,
-): Promise<TTable['$inferSelect'] | undefined> {
+export async function findOneInWorkspace<
+  TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped,
+>(membership: Membership, table: TTable, where?: SQL): Promise<TTable['$inferSelect'] | undefined> {
   const [row] = await findManyInWorkspace(membership, table, where);
   return row;
+}
+
+/**
+ * §5's reader rule, as a predicate: the coven's own spells, shared ones plus
+ * this reader's private ones. `created_by` is the author — §5 gives spells no
+ * separate author column — so the proof supplies both halves and a caller has
+ * no id to pass that could disagree with it.
+ */
+function readableSpells(membership: Membership): SQL | undefined {
+  return and(
+    scopedTo(membership, spells),
+    notSoftDeleted(spells),
+    or(eq(spells.visibility, 'workspace'), eq(spells.createdBy, membership.userId)),
+  );
+}
+
+/** Every spell of this coven this member may read. */
+export function findManySpells(membership: Membership): Promise<(typeof spells.$inferSelect)[]> {
+  return selectFrom(spells, readableSpells(membership));
+}
+
+/**
+ * One spell by id, or `undefined` — which is also the answer for another
+ * coven's spell and for a private spell that is not this reader's. A caller
+ * holding an id it saw elsewhere learns nothing from the difference.
+ */
+export async function findOneSpell(
+  membership: Membership,
+  spellId: string,
+): Promise<typeof spells.$inferSelect | undefined> {
+  const [row] = await selectFrom(spells, and(readableSpells(membership), eq(spells.id, spellId)));
+  return row;
+}
+
+/**
+ * A spell's rows in `spell_ingredients` or `spell_categories` — readable
+ * exactly when the spell is. Neither table carries a `workspace_id` to scope
+ * itself by, so the correlated `EXISTS` below is where both the coven and the
+ * visibility come from; filtering after the fetch would hand a caller the
+ * contents of a jar it may not open (rule 7).
+ *
+ * Written as `sql` rather than a Drizzle subquery on purpose: a subquery needs
+ * a second select builder, and the repository holding exactly one is what
+ * `soft-delete-finder-guard.test.ts` reads to prove no unfiltered read exists.
+ */
+export function findManyInSpell<TTable extends PgTable & SpellScoped & Unscoped>(
+  membership: Membership,
+  table: TTable,
+  spellId: string,
+): Promise<TTable['$inferSelect'][]> {
+  return selectFrom(
+    table,
+    and(
+      notSoftDeleted(table),
+      eq(table.spellId, spellId),
+      sql`exists (select 1 from ${spells} where ${spells.id} = ${table.spellId} and ${readableSpells(membership)})`,
+    ),
+  );
 }
 
 /**
@@ -233,7 +315,7 @@ export async function findOneInWorkspace<TTable extends PgTable & WorkspaceScope
  * the diff. Workspace-scoped tables are not reachable through it — v1 has no
  * restore UI, and the task that adds one adds its proof-scoped counterpart.
  */
-export function findManyIncludingSoftDeleted<TTable extends PgTable & Unscoped>(
+export function findManyIncludingSoftDeleted<TTable extends PgTable & Unscoped & NotSpellScoped>(
   table: TTable,
   where?: SQL,
 ): Promise<TTable['$inferSelect'][]> {
