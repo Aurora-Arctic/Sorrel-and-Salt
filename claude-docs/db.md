@@ -1622,10 +1622,37 @@ entered first sees the other half-initialised. A seed module that reaches
 before importing anything that pulls in `users` — makes `users.ts` build its
 table while `auditColumns` is still `undefined`, so the spread contributes
 nothing and every insert goes out without a `created_by`, failing `NOT NULL`.
-Every module under `src/db/seed/` therefore imports `users` (directly, or via
-`./bootstrap-admin`, which imports it) **above** the schema modules that reach
-`audit.ts`, and `src/db/seed/minimal.ts` carries the note. Nothing enforces it:
-reordering the imports is a clean-looking edit that reddens the seed tests.
+Every module under `src/db/seed/` therefore imports `users` (directly, via
+`./bootstrap-admin`, or via `./idempotent`, whose own first import is
+`./bootstrap-admin`) **above** the schema modules that reach `audit.ts`, and
+`src/db/seed/minimal.ts` carries the note. Nothing enforces it: reordering the
+imports is a clean-looking edit that reddens the seed tests.
+
+**Two helper modules carry what every seed repeats** (MB.51).
+`src/db/seed/idempotent.ts` exports three functions. `beginSeedTransaction(db,
+body)` opens the one transaction, publishes the GUC in `withAudit`'s
+parameterised `set_config` form, inserts the bootstrap admin and then runs
+`body(tx)`; every entry point — `seedMinimal`, `seedStandard`, `seedDemo`,
+`seedCategories`, `seedForms` — is that call. `insertMissing(tx, table, wanted,
+{ existing, keyOf, toRow })` inserts each `wanted` whose key `existing` did not
+return, stamped by the bootstrap admin through `applyAudit`, and updates
+nothing. `requireFrom(map, key, describe)` is a `Map` lookup that throws
+`describe()`'s message rather than handing `undefined` to a NOT NULL column.
+`existing` is the caller's own query on purpose: each site scopes it — fixture
+ids by `inArray`, W's ingredients by `workspace_id`, the compendium by
+`workspace_id IS NULL`, folk names case-folded — and each ignores `deleted_at`
+where that choice can be read, rather than the helper deciding it once for
+every table. The one insert that needs its rows back, `standard`'s compendium
+entries, stays hand-written around `.returning()`.
+`src/db/seed/two-tier-vocabulary.ts` exports `seedTwoTierVocabulary(tx, {
+groupTable, itemTable, groups, items, itemNoun })` — groups, then the items
+filed under them, each by slug — which `seedCategoryVocabulary` and
+`seedFormVocabulary` call with their own tables and literals. The literals
+(`CATEGORY_GROUPS`, `CATEGORIES`, `FORM_GROUPS`, `FORMS`) stay in
+`categories.ts` and `forms.ts`, where the tests comparing them against
+DESIGN.md import them from. The two table pairs are typed as a union rather
+than a generic: their columns are identical, so the row type survives without
+a cast.
 
 **`minimal`** (`src/db/seed/minimal.ts`): one admin, one user, empty
 compendium. The admin is the bootstrap user under the fixed
@@ -1738,12 +1765,13 @@ values, and those should come from a vocabulary that already exists.
 the second target on the same script, because the client import there is one
 of the four pinned exemptions below.
 
-Everything structural is the category seed's, deliberately: groups first
-(`ingredient_forms.group_id` is a NOT NULL foreign key), idempotency keyed on
-the slug and **ignoring `deleted_at`**, no update to anything already present,
-every slug derived by `slugify(name)` rather than written down, and the whole
-run inside one transaction that publishes `app.current_user_id` and stamps
-through `applyAudit`. What it does not share is a colour: form groups section
+Everything structural is the category seed's, and since MB.51 literally so —
+both call `seedTwoTierVocabulary` (above) with their own tables and literals:
+groups first (`ingredient_forms.group_id` is a NOT NULL foreign key),
+idempotency keyed on the slug and **ignoring `deleted_at`**, no update to
+anything already present, every slug derived by `slugify(name)` rather than
+written down, and the whole run inside one transaction that publishes
+`app.current_user_id` and stamps through `applyAudit`. What it does not share is a colour: form groups section
 an autofill dropdown rather than tinting a chip, so there is no Sass map to
 resolve and no contrast floor to clear (§5, MB.35).
 
@@ -1890,8 +1918,9 @@ admin present. A half-applied scenario (categories seeded, users not) is worse
 than one that never ran, and three transactions is three chances at one.
 
 `standard` itself takes that same shape since M1.23: `seedStandard(db)` opens
-the transaction, publishes the GUC and inserts the bootstrap admin, then hands
-over to **`seedStandardContent(tx)`** — which is what `demo` calls, one level
+the transaction, publishes the GUC and inserts the bootstrap admin (the three
+moves `beginSeedTransaction` makes), then hands over to
+**`seedStandardContent(tx)`** — which is what `demo` calls, one level
 up and for the same reason. Two of its internals are shared rather than copied
 for the same argument: `categoryIdByName(tx)` moved into `categories.ts`, since
 both scenarios file rows under §6's vocabulary by name, and `identityOf` is
