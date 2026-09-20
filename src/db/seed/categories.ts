@@ -1,10 +1,8 @@
-import { isNull, sql } from 'drizzle-orm';
-// `./bootstrap-admin` first, and load-bearing — see minimal.ts.
-import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
+import { isNull } from 'drizzle-orm';
+// `./idempotent` (and through it `./bootstrap-admin`) first, and load-bearing — see minimal.ts.
+import { beginSeedTransaction } from './idempotent';
 import { categories, categoryGroups } from '../schema/categories';
-import { applyAudit } from '../audit';
-import { BOOTSTRAP_USER_ID } from '../bootstrap';
-import { slugify } from '../../lib/slugify';
+import { seedTwoTierVocabulary } from './two-tier-vocabulary';
 import type { SeedDatabase, SeedTransaction } from './index';
 
 // DESIGN.md §6's vocabulary: eight groups and every category, a starting set
@@ -442,17 +440,11 @@ export const CATEGORIES: SeedCategory[] = [
 ];
 
 /**
- * Seeds §6's groups, then its categories. Idempotent on the slug and ignoring
- * `deleted_at`, so a slug an admin soft-deleted is not re-inserted on the next
- * deploy; nothing present is updated, so a retitle or retuned colour survives.
- * Writes go through the handle the caller gives, not `withAudit` — see minimal.ts.
+ * Seeds §6's groups, then its categories, in a transaction of its own. Writes
+ * go through the handle the caller gives, not `withAudit` — see minimal.ts.
  */
 export async function seedCategories(db: SeedDatabase): Promise<void> {
-  await db.transaction(async (tx) => {
-    await tx.execute(sql`select set_config('app.current_user_id', ${BOOTSTRAP_USER_ID}, true)`);
-    await insertBootstrapAdmin(tx);
-    await seedCategoryVocabulary(tx);
-  });
+  await beginSeedTransaction(db, seedCategoryVocabulary);
 }
 
 /**
@@ -460,26 +452,13 @@ export async function seedCategories(db: SeedDatabase): Promise<void> {
  * half-applied. Assumes the GUC is published and the bootstrap admin exists.
  */
 export async function seedCategoryVocabulary(tx: SeedTransaction): Promise<void> {
-  // Groups first: `group_id` is a NOT NULL foreign key.
-  await insertMissingGroups(tx);
-  await insertMissingCategories(tx, await groupIdByName(tx));
-}
-
-async function insertMissingGroups(tx: SeedTransaction): Promise<void> {
-  const present = new Set(
-    (await tx.select({ slug: categoryGroups.slug }).from(categoryGroups)).map((row) => row.slug),
-  );
-  const missing = CATEGORY_GROUPS.filter((group) => !present.has(slugify(group.name)));
-
-  if (missing.length === 0) return;
-
-  await tx
-    .insert(categoryGroups)
-    .values(
-      missing.map((group) =>
-        applyAudit('insert', { ...group, slug: slugify(group.name) }, BOOTSTRAP_SESSION),
-      ),
-    );
+  await seedTwoTierVocabulary(tx, {
+    groupTable: categoryGroups,
+    itemTable: categories,
+    groups: CATEGORY_GROUPS,
+    items: CATEGORIES,
+    itemNoun: 'Category',
+  });
 }
 
 /**
@@ -493,43 +472,4 @@ export async function categoryIdByName(tx: SeedTransaction): Promise<Map<string,
     .where(isNull(categories.deletedAt));
 
   return new Map(rows.map((row) => [row.name, row.id]));
-}
-
-/** Group ids keyed by *name*, which is what a category in CATEGORIES names. */
-async function groupIdByName(tx: SeedTransaction): Promise<Map<string, string>> {
-  const rows = await tx
-    .select({ id: categoryGroups.id, name: categoryGroups.name })
-    .from(categoryGroups);
-
-  return new Map(rows.map((row) => [row.name, row.id]));
-}
-
-async function insertMissingCategories(
-  tx: SeedTransaction,
-  groupIds: Map<string, string>,
-): Promise<void> {
-  const present = new Set(
-    (await tx.select({ slug: categories.slug }).from(categories)).map((row) => row.slug),
-  );
-  const missing = CATEGORIES.filter((category) => !present.has(slugify(category.name)));
-
-  if (missing.length === 0) return;
-
-  await tx.insert(categories).values(
-    missing.map(({ name, description, group }) => {
-      const groupId = groupIds.get(group);
-
-      // Unreachable while CATEGORIES and CATEGORY_GROUPS agree; a silent
-      // `undefined` would fail NOT NULL later, naming the wrong row.
-      if (groupId === undefined) {
-        throw new Error(`Category "${name}" names group "${group}", which is not in the database.`);
-      }
-
-      return applyAudit(
-        'insert',
-        { name, slug: slugify(name), description, groupId },
-        BOOTSTRAP_SESSION,
-      );
-    }),
-  );
 }

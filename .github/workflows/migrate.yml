@@ -53,21 +53,18 @@ jobs:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
+      # Ahead of the guard, ungated: a local action needs the repo on disk.
+      - name: Checkout
+        uses: actions/checkout@v7
+
       - name: Check secrets
         id: guard
-        env:
-          VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
-        run: |
-          if [ -z "$VERCEL_DEPLOY_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
-            echo "::warning::Vercel secrets not configured yet (M0.27) — skipping migrate."
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Checkout
-        if: steps.guard.outputs.enabled == 'true'
-        uses: actions/checkout@v7
+        uses: ./.github/actions/vercel-secrets-guard
+        with:
+          token: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
+          org-id: ${{ secrets.VERCEL_ORG_ID }}
+          project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          skipping: migrate
 
       - name: Set up Node
         if: steps.guard.outputs.enabled == 'true'

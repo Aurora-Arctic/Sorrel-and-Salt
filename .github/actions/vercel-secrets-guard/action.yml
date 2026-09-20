@@ -1,0 +1,47 @@
+name: Vercel secrets guard
+description: >-
+  Reports whether the three Vercel secrets a deploy-side job needs are all
+  set, so the job can warn and skip rather than fail while they are not.
+  Callers keep `id: guard` and gate every later step on
+  `steps.guard.outputs.enabled == 'true'`.
+
+# `secrets` is not in scope inside a composite action, so the three arrive
+# as inputs; a `${{ secrets.X }}` for a secret that does not exist is '', which
+# is what the check reads as unset.
+inputs:
+  token:
+    description: secrets.VERCEL_DEPLOY_TOKEN
+    required: true
+  org-id:
+    description: secrets.VERCEL_ORG_ID
+    required: true
+  project-id:
+    description: secrets.VERCEL_PROJECT_ID
+    required: true
+  skipping:
+    description: What the warning says is being skipped, e.g. "deploy"
+    required: true
+
+outputs:
+  enabled:
+    description: "'true' when all three secrets are set, 'false' otherwise"
+    value: ${{ steps.check.outputs.enabled }}
+
+runs:
+  using: composite
+  steps:
+    - name: Check secrets
+      id: check
+      shell: bash
+      env:
+        VERCEL_DEPLOY_TOKEN: ${{ inputs.token }}
+        VERCEL_ORG_ID: ${{ inputs.org-id }}
+        VERCEL_PROJECT_ID: ${{ inputs.project-id }}
+        SKIPPING: ${{ inputs.skipping }}
+      run: |
+        if [ -z "$VERCEL_DEPLOY_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+          echo "::warning::Vercel secrets not configured yet (M0.27) — skipping ${SKIPPING}."
+          echo "enabled=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+        fi

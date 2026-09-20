@@ -1,17 +1,14 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
+import { failureOf, useTestDatabase } from './support/database';
+import { STAMP_COLUMNS, tableFacts } from './support/table-metadata';
 import { and, eq } from 'drizzle-orm';
-import { getTableConfig } from 'drizzle-orm/pg-core';
 import { makeSpell, spellColumns } from '../support/fixtures';
 import { categories } from '@/db/schema/categories';
 import { spellCategories } from '@/db/schema/spell-categories';
 import { spells } from '@/db/schema/spells';
-import { users } from '@/db/schema/users';
 import { findMany, withAudit } from '@/db/repository';
 import { FIXTURE_USERS } from '@/db/seed/standard';
-
-const STAMP_COLUMNS = ['created_at', 'created_by', 'updated_at', 'updated_by'];
-const DELETE_COLUMNS = ['deleted_at', 'deleted_by'];
 
 // DESIGN.md §5's column list, transcribed.
 const OWN_COLUMNS = ['spell_id', 'category_id'];
@@ -22,35 +19,12 @@ const SPELL_FK = 'spell_categories_spell_id_spells_id_fk';
 const CATEGORY_FK = 'spell_categories_category_id_categories_id_fk';
 
 describe('spell_categories schema', () => {
-  const { columns, indexes, primaryKeys, foreignKeys, checks } = getTableConfig(spellCategories);
-  const byName = Object.fromEntries(columns.map((column) => [column.name, column]));
-  const foreignKeyByColumn = Object.fromEntries(
-    foreignKeys.map((fk) => {
-      const { columns: local, foreignColumns, foreignTable } = fk.reference();
-      return [
-        local[0].name,
-        { name: fk.getName(), foreignColumnName: foreignColumns[0].name, foreignTable },
-      ];
-    }),
-  );
+  const { byName, indexes, primaryKeys, checks, foreignKeyByColumn } = tableFacts(spellCategories);
 
+  // Four stamps and no tombstone (MB.34): a removed assignment leaves no row —
+  // claude-docs/db.md, "Hard delete on the three join tables".
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...STAMP_COLUMNS].sort());
-  });
-
-  // Four stamps and no tombstone (MB.34) —
-  // claude-docs/db.md, "Hard delete on the three join tables".
-  it('spreads the four audit stamps, each required', () => {
-    for (const column of STAMP_COLUMNS) {
-      expect(byName[column]).toBeDefined();
-      expect(byName[column].notNull).toBe(true);
-    }
-  });
-
-  it('carries no delete columns: a removed assignment leaves no row', () => {
-    for (const column of DELETE_COLUMNS) {
-      expect(byName[column]).toBeUndefined();
-    }
   });
 
   // A surrogate id would let the same pair be assigned twice.
@@ -75,15 +49,6 @@ describe('spell_categories schema', () => {
     expect(foreignKeyByColumn.category_id.foreignTable).toBe(categories);
     expect(foreignKeyByColumn.category_id.foreignColumnName).toBe('id');
     expect(foreignKeyByColumn.category_id.name).toBe(CATEGORY_FK);
-  });
-
-  it('references users.id from every audit id (MB.5)', () => {
-    for (const column of ['created_by', 'updated_by']) {
-      expect(foreignKeyByColumn[column]).toBeDefined();
-      expect(foreignKeyByColumn[column].foreignColumnName).toBe('id');
-      expect(foreignKeyByColumn[column].foreignTable).toBe(users);
-    }
-    expect(foreignKeyByColumn.deleted_by).toBeUndefined();
   });
 
   // The key answers "what is this spell tagged with"; the category filter needs
@@ -118,6 +83,7 @@ const SECOND_AUTHOR = FIXTURE_USERS.B.id;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
+const catalogue = useTestDatabase((client) => (sql = client));
 // Read back in `beforeAll`: the seed generates the category ids.
 let HEARTH_GUARD: string;
 let SWEET_JAR: string;
@@ -145,23 +111,6 @@ async function assign(spellId: string, categoryId: string, author = AUTHOR): Pro
   `;
 }
 
-async function failureOf(work: Promise<unknown>) {
-  return await work.then(
-    () => {
-      throw new Error('expected the statement to be rejected, but it succeeded');
-    },
-    (error: postgres.PostgresError) => error,
-  );
-}
-
-async function columnNames(table: string): Promise<string[]> {
-  const rows = await sql`
-    select column_name from information_schema.columns
-    where table_name = ${table} order by column_name
-  `;
-  return rows.map((row) => row.column_name as string);
-}
-
 interface Pair {
   spellId: string;
   categoryId: string;
@@ -184,19 +133,7 @@ function inReadOrder(expected: Pair[]): Pair[] {
   );
 }
 
-async function indexDefinition(name: string): Promise<{ unique: boolean; definition: string }> {
-  const [found] = await sql`
-    select i.indisunique as unique, pg_get_indexdef(i.indexrelid) as definition
-    from pg_index i
-    join pg_class c on c.oid = i.indexrelid
-    where i.indrelid = 'spell_categories'::regclass and c.relname = ${name}
-  `;
-  return found as unknown as { unique: boolean; definition: string };
-}
-
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-
   HEARTH_GUARD = await recordSpell('Hearth Guard');
   SWEET_JAR = await recordSpell('Sweet Jar');
   PROTECTION = await categoryIdNamed('Protection');
@@ -207,13 +144,9 @@ beforeEach(async () => {
   await sql`truncate spell_categories`;
 });
 
-afterAll(async () => {
-  await sql.end();
-});
-
 describe('spell_categories table', () => {
   it('carries the four stamp columns and neither delete column', async () => {
-    expect(await columnNames('spell_categories')).toEqual(
+    expect(await catalogue.columnNames('spell_categories')).toEqual(
       [...OWN_COLUMNS, ...STAMP_COLUMNS].sort(),
     );
   });
@@ -321,20 +254,20 @@ describe('spell_categories table', () => {
   // scan over every assignment in the database.
   describe('lookup in both directions', () => {
     it('indexes the pair from the spell side, as the primary key', async () => {
-      const index = await indexDefinition(PRIMARY_KEY);
+      const index = await catalogue.indexRow('spell_categories', PRIMARY_KEY);
 
       expect(index).toBeDefined();
-      expect(index.unique).toBe(true);
-      expect(index.definition).toContain('(spell_id, category_id)');
+      expect(index?.unique).toBe(true);
+      expect(index?.definition).toContain('(spell_id, category_id)');
     });
 
     it('indexes the pair from the category side too', async () => {
-      const index = await indexDefinition(REVERSE_INDEX);
+      const index = await catalogue.indexRow('spell_categories', REVERSE_INDEX);
 
       expect(index).toBeDefined();
       // Not unique: a unique index here would refuse a category its second spell.
-      expect(index.unique).toBe(false);
-      expect(index.definition).toContain('(category_id, spell_id)');
+      expect(index?.unique).toBe(false);
+      expect(index?.definition).toContain('(category_id, spell_id)');
     });
   });
 });

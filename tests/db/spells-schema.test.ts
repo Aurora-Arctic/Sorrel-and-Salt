@@ -1,21 +1,11 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { getTableConfig } from 'drizzle-orm/pg-core';
+import { failureOf, useTestDatabase } from './support/database';
+import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
 import { type SpellOverrides, makeSpell, spellColumns } from '../support/fixtures';
 import { spellStatus, spells } from '@/db/schema/spells';
-import { users } from '@/db/schema/users';
 import { workspaces } from '@/db/schema/workspaces';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-
-// The full six: story 54's delete is recoverable. Only the three join tables take four (MB.34).
-const AUDIT_COLUMNS = [
-  'created_at',
-  'created_by',
-  'updated_at',
-  'updated_by',
-  'deleted_at',
-  'deleted_by',
-];
 
 // §5's columns minus `visibility`, which lands with the service rule that
 // reads it so seeded spells exist to migrate; this list failing is the
@@ -36,18 +26,9 @@ const OWN_COLUMNS = [
 const WORKSPACE_FK = 'spells_workspace_id_workspaces_id_fk';
 
 describe('spells schema', () => {
-  const { columns, indexes, checks, foreignKeys } = getTableConfig(spells);
-  const byName = Object.fromEntries(columns.map((column) => [column.name, column]));
-  const foreignKeyByColumn = Object.fromEntries(
-    foreignKeys.map((fk) => {
-      const { columns: local, foreignColumns, foreignTable } = fk.reference();
-      return [
-        local[0].name,
-        { name: fk.getName(), foreignColumnName: foreignColumns[0].name, foreignTable },
-      ];
-    }),
-  );
+  const { byName, indexes, checks, foreignKeyByColumn } = tableFacts(spells);
 
+  // The full six: story 54's delete is recoverable. Only the three join tables take four (MB.34).
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
@@ -91,25 +72,6 @@ describe('spells schema', () => {
     expect(foreignKeyByColumn.workspace_id.name).toBe(WORKSPACE_FK);
   });
 
-  it('spreads the six audit columns, the four stamps required', () => {
-    for (const column of AUDIT_COLUMNS) {
-      expect(byName[column]).toBeDefined();
-    }
-    for (const column of ['created_at', 'created_by', 'updated_at', 'updated_by']) {
-      expect(byName[column].notNull).toBe(true);
-    }
-    expect(byName.deleted_at.notNull).toBe(false);
-    expect(byName.deleted_by.notNull).toBe(false);
-  });
-
-  it('references users.id from every audit id (MB.5)', () => {
-    for (const column of ['created_by', 'updated_by', 'deleted_by']) {
-      expect(foreignKeyByColumn[column]).toBeDefined();
-      expect(foreignKeyByColumn[column].foreignColumnName).toBe('id');
-      expect(foreignKeyByColumn[column].foreignTable).toBe(users);
-    }
-  });
-
   // §5 names no index and no CHECK; a title is not unique, so two workings may share a name.
   it('declares no index and no check of its own', () => {
     expect(indexes).toEqual([]);
@@ -127,6 +89,7 @@ const OTHER_COVEN = WORKSPACE_X_ID;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
+const catalogue = useTestDatabase((client) => (sql = client));
 
 // The factory writes the row; this file supplies the coven and the author.
 // `status` is dropped so the column's own default is what the tests observe —
@@ -153,38 +116,15 @@ async function cast(status: string): Promise<string> {
   return inserted.id as string;
 }
 
-async function failureOf(work: Promise<unknown>) {
-  return await work.then(
-    () => {
-      throw new Error('expected the statement to be rejected, but it succeeded');
-    },
-    (error: postgres.PostgresError) => error,
-  );
-}
-
-async function columnNames(table: string): Promise<string[]> {
-  const rows = await sql`
-    select column_name from information_schema.columns
-    where table_name = ${table} order by column_name
-  `;
-  return rows.map((row) => row.column_name as string);
-}
-
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-});
-
 beforeEach(async () => {
   await sql`truncate spells cascade`;
 });
 
-afterAll(async () => {
-  await sql.end();
-});
-
 describe('spells table', () => {
   it('carries §5’s columns beside the six audit ones', async () => {
-    expect(await columnNames('spells')).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
+    expect(await catalogue.columnNames('spells')).toEqual(
+      [...OWN_COLUMNS, ...AUDIT_COLUMNS].sort(),
+    );
   });
 
   // What §8's example writes, and so the least a spell can be.

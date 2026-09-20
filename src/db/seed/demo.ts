@@ -1,12 +1,10 @@
-import { eq, inArray, isNull, sql } from 'drizzle-orm';
-// `./bootstrap-admin` first, and load-bearing — see minimal.ts.
-import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
+import { eq, inArray, isNull } from 'drizzle-orm';
+// `./idempotent` (and through it `./bootstrap-admin`) first, and load-bearing — see minimal.ts.
+import { beginSeedTransaction, insertMissing, requireFrom } from './idempotent';
 import { ingredients } from '../schema/ingredients';
 import { spells } from '../schema/spells';
 import { spellCategories } from '../schema/spell-categories';
 import { spellIngredients } from '../schema/spell-ingredients';
-import { applyAudit } from '../audit';
-import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import { categoryIdByName } from './categories';
 import {
   COMPENDIUM_INGREDIENTS,
@@ -211,11 +209,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
 ];
 
 export async function seedDemo(db: SeedDatabase): Promise<void> {
-  await db.transaction(async (tx) => {
-    // Published exactly as withAudit publishes it.
-    await tx.execute(sql`select set_config('app.current_user_id', ${BOOTSTRAP_USER_ID}, true)`);
-    await insertBootstrapAdmin(tx);
-
+  await beginSeedTransaction(db, async (tx) => {
     // Inside the same transaction: every spell points at rows `standard` writes.
     await seedStandardContent(tx);
 
@@ -233,56 +227,43 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
 // nothing already present.
 
 async function insertMissingWorkspaceIngredients(tx: SeedTransaction): Promise<void> {
-  const present = new Set(
-    (
-      await tx
-        .select({
-          name: ingredients.name,
-          canonicalName: ingredients.canonicalName,
-          form: ingredients.form,
-        })
-        .from(ingredients)
-        .where(eq(ingredients.workspaceId, WORKSPACE_W_ID))
-    ).map(identityOf),
-  );
-  const missing = WORKSPACE_W_INGREDIENTS.filter((entry) => !present.has(identityOf(entry)));
-
-  if (missing.length === 0) return;
-
-  await tx
-    .insert(ingredients)
-    .values(
-      missing.map((entry) =>
-        applyAudit('insert', { ...entry, workspaceId: WORKSPACE_W_ID }, BOOTSTRAP_SESSION),
-      ),
-    );
+  await insertMissing(tx, ingredients, WORKSPACE_W_INGREDIENTS, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({
+            name: ingredients.name,
+            canonicalName: ingredients.canonicalName,
+            form: ingredients.form,
+          })
+          .from(ingredients)
+          .where(eq(ingredients.workspaceId, WORKSPACE_W_ID))
+      ).map(identityOf),
+    keyOf: identityOf,
+    toRow: (entry) => ({ ...entry, workspaceId: WORKSPACE_W_ID }),
+  });
 }
 
 async function insertMissingSpells(tx: SeedTransaction): Promise<void> {
-  const present = new Set(
-    (
-      await tx
-        .select({ id: spells.id })
-        .from(spells)
-        .where(
-          inArray(
-            spells.id,
-            DEMO_SPELLS.map((spell) => spell.id),
-          ),
-        )
-    ).map((row) => row.id),
-  );
-  const missing = DEMO_SPELLS.filter((spell) => !present.has(spell.id));
-
-  if (missing.length === 0) return;
-
-  await tx
-    .insert(spells)
-    .values(
-      missing.map(({ categories: _categories, layers: _layers, ...spell }) =>
-        applyAudit('insert', { ...spell, workspaceId: WORKSPACE_W_ID }, BOOTSTRAP_SESSION),
-      ),
-    );
+  await insertMissing(tx, spells, DEMO_SPELLS, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({ id: spells.id })
+          .from(spells)
+          .where(
+            inArray(
+              spells.id,
+              DEMO_SPELLS.map((spell) => spell.id),
+            ),
+          )
+      ).map((row) => row.id),
+    keyOf: (spell) => spell.id,
+    toRow: ({ categories: _categories, layers: _layers, ...spell }) => ({
+      ...spell,
+      workspaceId: WORKSPACE_W_ID,
+    }),
+  });
 }
 
 /**
@@ -321,13 +302,11 @@ function ingredientIdFor(
   ingredient: SeedLayerIngredient & { tier: 'compendium' | 'workspace' },
   ingredientIds: Map<string, string>,
 ): string {
-  const id = ingredientIds.get(identityOf(ingredient.entry));
-
-  if (id === undefined) {
-    throw new Error(`A demo layer names "${ingredient.entry.name}", which is not in the database.`);
-  }
-
-  return id;
+  return requireFrom(
+    ingredientIds,
+    identityOf(ingredient.entry),
+    () => `A demo layer names "${ingredient.entry.name}", which is not in the database.`,
+  );
 }
 
 /** Exactly one of `ingredientId` and `name` is set, and `form` rides with `name`. */
@@ -352,35 +331,28 @@ async function insertMissingLayers(
   tx: SeedTransaction,
   ingredientIds: Map<string, string>,
 ): Promise<void> {
-  const stocked = new Set(
-    (await tx.select({ spellId: spellIngredients.spellId }).from(spellIngredients)).map(
-      (row) => row.spellId,
-    ),
+  const wanted = DEMO_SPELLS.flatMap((spell) =>
+    spell.layers.map((layer, index) => ({ spellId: spell.id, layer, index })),
   );
-  const missing = DEMO_SPELLS.filter((spell) => !stocked.has(spell.id));
 
-  if (missing.length === 0) return;
-
+  // Keyed by the jar, not the layer, so a stocked jar keeps every layer out.
   // Hard-deleted (MB.34): the four-column stamp set.
-  await tx.insert(spellIngredients).values(
-    missing.flatMap((spell) =>
-      spell.layers.map((layer, index) =>
-        applyAudit(
-          'insert',
-          {
-            spellId: spell.id,
-            ...layerIdentity(layer.ingredient, ingredientIds),
-            quantity: layer.quantity,
-            unit: layer.unit,
-            // The position in the array, one per jar from 1.
-            layerOrder: index + 1,
-            note: layer.note,
-          },
-          BOOTSTRAP_SESSION,
-        ),
+  await insertMissing(tx, spellIngredients, wanted, {
+    existing: async (tx) =>
+      (await tx.select({ spellId: spellIngredients.spellId }).from(spellIngredients)).map(
+        (row) => row.spellId,
       ),
-    ),
-  );
+    keyOf: ({ spellId }) => spellId,
+    toRow: ({ spellId, layer, index }) => ({
+      spellId,
+      ...layerIdentity(layer.ingredient, ingredientIds),
+      quantity: layer.quantity,
+      unit: layer.unit,
+      // The position in the array, one per jar from 1.
+      layerOrder: index + 1,
+      note: layer.note,
+    }),
+  });
 }
 
 async function insertMissingSpellCategories(
@@ -388,33 +360,24 @@ async function insertMissingSpellCategories(
   categoryIds: Map<string, string>,
 ): Promise<void> {
   const wanted = DEMO_SPELLS.flatMap((spell) =>
-    spell.categories.map((name) => {
-      const categoryId = categoryIds.get(name);
-
-      // Unreachable while these spells and §6's vocabulary agree; a silent
-      // `undefined` would fail NOT NULL later, naming the wrong row.
-      if (categoryId === undefined) {
-        throw new Error(`"${spell.title}" names category "${name}", which is not in the database.`);
-      }
-
-      return { spellId: spell.id, categoryId };
-    }),
+    spell.categories.map((name) => ({
+      spellId: spell.id,
+      categoryId: requireFrom(
+        categoryIds,
+        name,
+        () => `"${spell.title}" names category "${name}", which is not in the database.`,
+      ),
+    })),
   );
 
-  const present = new Set(
-    (
-      await tx
-        .select({ spellId: spellCategories.spellId, categoryId: spellCategories.categoryId })
-        .from(spellCategories)
-    ).map((row) => `${row.spellId}|${row.categoryId}`),
-  );
-  const missing = wanted.filter(
-    (assignment) => !present.has(`${assignment.spellId}|${assignment.categoryId}`),
-  );
-
-  if (missing.length === 0) return;
-
-  await tx
-    .insert(spellCategories)
-    .values(missing.map((assignment) => applyAudit('insert', assignment, BOOTSTRAP_SESSION)));
+  await insertMissing(tx, spellCategories, wanted, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({ spellId: spellCategories.spellId, categoryId: spellCategories.categoryId })
+          .from(spellCategories)
+      ).map((row) => `${row.spellId}|${row.categoryId}`),
+    keyOf: (assignment) => `${assignment.spellId}|${assignment.categoryId}`,
+    toRow: (assignment) => assignment,
+  });
 }

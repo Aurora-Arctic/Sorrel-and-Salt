@@ -1,10 +1,7 @@
-import { sql } from 'drizzle-orm';
-// `./bootstrap-admin` first, and load-bearing — see minimal.ts.
-import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
+// `./idempotent` (and through it `./bootstrap-admin`) first, and load-bearing — see minimal.ts.
+import { beginSeedTransaction } from './idempotent';
 import { ingredientFormGroups, ingredientForms } from '../schema/ingredient-forms';
-import { applyAudit } from '../audit';
-import { BOOTSTRAP_USER_ID } from '../bootstrap';
-import { slugify } from '../../lib/slugify';
+import { seedTwoTierVocabulary } from './two-tier-vocabulary';
 import type { SeedDatabase, SeedTransaction } from './index';
 
 // DESIGN.md §5's form vocabulary: six groups and every form, a starting set an
@@ -348,16 +345,11 @@ export const FORMS: SeedIngredientForm[] = [
 ];
 
 /**
- * Seeds §5's groups, then its forms. Idempotent on the slug and ignoring
- * `deleted_at`, as `seedCategories` is; nothing present is updated. Writes go
+ * Seeds §5's groups, then its forms, in a transaction of its own. Writes go
  * through the handle the caller gives, not `withAudit` — see minimal.ts.
  */
 export async function seedForms(db: SeedDatabase): Promise<void> {
-  await db.transaction(async (tx) => {
-    await tx.execute(sql`select set_config('app.current_user_id', ${BOOTSTRAP_USER_ID}, true)`);
-    await insertBootstrapAdmin(tx);
-    await seedFormVocabulary(tx);
-  });
+  await beginSeedTransaction(db, seedFormVocabulary);
 }
 
 /**
@@ -366,65 +358,11 @@ export async function seedForms(db: SeedDatabase): Promise<void> {
  * published and the bootstrap admin exists.
  */
 export async function seedFormVocabulary(tx: SeedTransaction): Promise<void> {
-  // Groups first: `group_id` is a NOT NULL foreign key.
-  await insertMissingGroups(tx);
-  await insertMissingForms(tx, await groupIdByName(tx));
-}
-
-async function insertMissingGroups(tx: SeedTransaction): Promise<void> {
-  const present = new Set(
-    (await tx.select({ slug: ingredientFormGroups.slug }).from(ingredientFormGroups)).map(
-      (row) => row.slug,
-    ),
-  );
-  const missing = FORM_GROUPS.filter((group) => !present.has(slugify(group.name)));
-
-  if (missing.length === 0) return;
-
-  await tx
-    .insert(ingredientFormGroups)
-    .values(
-      missing.map((group) =>
-        applyAudit('insert', { ...group, slug: slugify(group.name) }, BOOTSTRAP_SESSION),
-      ),
-    );
-}
-
-/** Group ids keyed by *name*, which is what a form in FORMS names. */
-async function groupIdByName(tx: SeedTransaction): Promise<Map<string, string>> {
-  const rows = await tx
-    .select({ id: ingredientFormGroups.id, name: ingredientFormGroups.name })
-    .from(ingredientFormGroups);
-
-  return new Map(rows.map((row) => [row.name, row.id]));
-}
-
-async function insertMissingForms(
-  tx: SeedTransaction,
-  groupIds: Map<string, string>,
-): Promise<void> {
-  const present = new Set(
-    (await tx.select({ slug: ingredientForms.slug }).from(ingredientForms)).map((row) => row.slug),
-  );
-  const missing = FORMS.filter((form) => !present.has(slugify(form.name)));
-
-  if (missing.length === 0) return;
-
-  await tx.insert(ingredientForms).values(
-    missing.map(({ name, description, group }) => {
-      const groupId = groupIds.get(group);
-
-      // Unreachable while FORMS and FORM_GROUPS agree; a silent `undefined`
-      // would fail NOT NULL later, naming the wrong row.
-      if (groupId === undefined) {
-        throw new Error(`Form "${name}" names group "${group}", which is not in the database.`);
-      }
-
-      return applyAudit(
-        'insert',
-        { name, slug: slugify(name), description, groupId },
-        BOOTSTRAP_SESSION,
-      );
-    }),
-  );
+  await seedTwoTierVocabulary(tx, {
+    groupTable: ingredientFormGroups,
+    itemTable: ingredientForms,
+    groups: FORM_GROUPS,
+    items: FORMS,
+    itemNoun: 'Form',
+  });
 }

@@ -1,24 +1,14 @@
 import { readFileSync } from 'node:fs';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { getTableConfig } from 'drizzle-orm/pg-core';
+import { failureOf, useTestDatabase } from './support/database';
+import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
 import { fromRoot } from '../support/paths';
 import { UNITS, UNITS_BY_DIMENSION, UNIT_DIMENSIONS, dimensionOf } from '@/lib/units';
 import { ingredients } from '@/db/schema/ingredients';
 import { inventoryItems, inventoryUnit, unitDimension } from '@/db/schema/inventory-items';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import { users } from '@/db/schema/users';
 import { workspaces } from '@/db/schema/workspaces';
-
-// The full six: story 25's delete is recoverable, so the unique index below is partial.
-const AUDIT_COLUMNS = [
-  'created_at',
-  'created_by',
-  'updated_at',
-  'updated_by',
-  'deleted_at',
-  'deleted_by',
-];
 
 // DESIGN.md §5's column list, transcribed.
 const OWN_COLUMNS = [
@@ -50,16 +40,14 @@ function quotedLiteralsIn(path: string): string[] {
 }
 
 describe('inventory_items schema', () => {
-  const { columns, indexes, foreignKeys, checks } = getTableConfig(inventoryItems);
-  const byName = Object.fromEntries(columns.map((column) => [column.name, column]));
-  const indexByName = Object.fromEntries(indexes.map((index) => [index.config.name, index]));
-  const foreignKeyByColumn = Object.fromEntries(
-    foreignKeys.map((fk) => {
-      const { columns: local, foreignColumns, foreignTable } = fk.reference();
-      return [local[0].name, { foreignColumnName: foreignColumns[0].name, foreignTable }];
-    }),
-  );
+  const {
+    byName,
+    byIndexName: indexByName,
+    checks,
+    foreignKeyByColumn,
+  } = tableFacts(inventoryItems);
 
+  // The full six: story 25's delete is recoverable, so the unique index below is partial.
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
@@ -95,25 +83,6 @@ describe('inventory_items schema', () => {
     expect(foreignKeyByColumn.workspace_id.foreignColumnName).toBe('id');
     expect(foreignKeyByColumn.ingredient_id.foreignTable).toBe(ingredients);
     expect(foreignKeyByColumn.ingredient_id.foreignColumnName).toBe('id');
-  });
-
-  it('spreads the six audit columns, the four stamps required', () => {
-    for (const column of AUDIT_COLUMNS) {
-      expect(byName[column]).toBeDefined();
-    }
-    for (const column of ['created_at', 'created_by', 'updated_at', 'updated_by']) {
-      expect(byName[column].notNull).toBe(true);
-    }
-    expect(byName.deleted_at.notNull).toBe(false);
-    expect(byName.deleted_by.notNull).toBe(false);
-  });
-
-  it('references users.id from every audit id (MB.5)', () => {
-    for (const column of ['created_by', 'updated_by', 'deleted_by']) {
-      expect(foreignKeyByColumn[column]).toBeDefined();
-      expect(foreignKeyByColumn[column].foreignColumnName).toBe('id');
-      expect(foreignKeyByColumn[column].foreignTable).toBe(users);
-    }
   });
 
   it('declares exactly one index: one live row per ingredient per workspace', () => {
@@ -160,6 +129,7 @@ let ROSEMARY: string;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
+const catalogue = useTestDatabase((client) => (sql = client));
 
 interface StockRow {
   workspaceId?: string;
@@ -194,23 +164,6 @@ async function hold({
   return inserted.id as string;
 }
 
-async function failureOf(work: Promise<unknown>) {
-  return await work.then(
-    () => {
-      throw new Error('expected the statement to be rejected, but it succeeded');
-    },
-    (error: postgres.PostgresError) => error,
-  );
-}
-
-async function columnNames(table: string): Promise<string[]> {
-  const rows = await sql`
-    select column_name from information_schema.columns
-    where table_name = ${table} order by column_name
-  `;
-  return rows.map((row) => row.column_name as string);
-}
-
 async function compendiumIdOf(name: string): Promise<string> {
   const [found] = await sql`
     select id from ingredients where workspace_id is null and name = ${name}
@@ -220,8 +173,6 @@ async function compendiumIdOf(name: string): Promise<string> {
 }
 
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-
   MUGWORT = await compendiumIdOf('Mugwort');
   ROSEMARY = await compendiumIdOf('Rosemary');
 });
@@ -230,13 +181,11 @@ beforeEach(async () => {
   await sql`truncate inventory_items`;
 });
 
-afterAll(async () => {
-  await sql.end();
-});
-
 describe('inventory_items table', () => {
   it('carries §5’s columns beside the six audit ones', async () => {
-    expect(await columnNames('inventory_items')).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
+    expect(await catalogue.columnNames('inventory_items')).toEqual(
+      [...OWN_COLUMNS, ...AUDIT_COLUMNS].sort(),
+    );
   });
 
   describe('one live row per ingredient per workspace', () => {
@@ -265,14 +214,7 @@ describe('inventory_items table', () => {
     });
 
     it('scopes the index to live rows only', async () => {
-      const [index] = await sql`
-        select i.indisunique as unique,
-               pg_get_expr(i.indpred, i.indrelid) as predicate,
-               pg_get_indexdef(i.indexrelid) as definition
-        from pg_index i
-        join pg_class c on c.oid = i.indexrelid
-        where i.indrelid = 'inventory_items'::regclass and c.relname = ${HELD_ONCE_INDEX}
-      `;
+      const index = await catalogue.indexRow('inventory_items', HELD_ONCE_INDEX);
 
       expect(index?.unique).toBe(true);
       expect(index?.predicate).toBe('(deleted_at IS NULL)');
