@@ -45,7 +45,14 @@ const RESTRICTED = [
 ];
 
 /** The database layer, which builds queries for a living — and its tests. */
-const EXEMPT = ['src/db', 'src/db/schema', 'scripts', 'tests/db', 'tests/db/seed'];
+const EXEMPT = [
+  'src/db',
+  'src/db/schema',
+  'scripts',
+  'tests/db',
+  'tests/db/seed',
+  'tests/db/support',
+];
 
 /** Files whose import of the client is exempted by a disable comment. */
 const CLIENT_EXEMPT = [

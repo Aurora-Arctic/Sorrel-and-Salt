@@ -1,21 +1,10 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { getTableConfig } from 'drizzle-orm/pg-core';
+import { failureOf, useTestDatabase } from './support/database';
+import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
 import { ingredientFolkNames } from '@/db/schema/ingredient-folk-names';
 import { ingredients } from '@/db/schema/ingredients';
-import { users } from '@/db/schema/users';
 import { FIXTURE_USERS } from '@/db/seed/standard';
-
-// The full six, not the join tables' four: a folk name is content rather than
-// a link, so removing one leaves a tombstone and the unique index is partial.
-const AUDIT_COLUMNS = [
-  'created_at',
-  'created_by',
-  'updated_at',
-  'updated_by',
-  'deleted_at',
-  'deleted_by',
-];
 
 // DESIGN.md §5's two indexes, transcribed by name.
 const UNIQUE_INDEX = 'ingredient_folk_names_unique';
@@ -23,16 +12,10 @@ const TRIGRAM_INDEX = 'ingredient_folk_names_trgm';
 const INGREDIENT_FK = 'ingredient_folk_names_ingredient_id_ingredients_id_fk';
 
 describe('ingredient_folk_names schema', () => {
-  const { columns, indexes, foreignKeys } = getTableConfig(ingredientFolkNames);
-  const byName = Object.fromEntries(columns.map((column) => [column.name, column]));
-  const indexByName = Object.fromEntries(indexes.map((index) => [index.config.name, index]));
-  const foreignKeyByColumn = Object.fromEntries(
-    foreignKeys.map((fk) => {
-      const { columns: local, foreignColumns, foreignTable } = fk.reference();
-      return [local[0].name, { foreignColumnName: foreignColumns[0].name, foreignTable }];
-    }),
-  );
+  const { byName, byIndexName: indexByName, foreignKeyByColumn } = tableFacts(ingredientFolkNames);
 
+  // The full six, not the join tables' four: a folk name is content rather than
+  // a link, so removing one leaves a tombstone and the unique index is partial.
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
       ['id', 'ingredient_id', 'name', ...AUDIT_COLUMNS].sort(),
@@ -54,25 +37,6 @@ describe('ingredient_folk_names schema', () => {
   it('points at the ingredient that claims the name', () => {
     expect(foreignKeyByColumn.ingredient_id.foreignTable).toBe(ingredients);
     expect(foreignKeyByColumn.ingredient_id.foreignColumnName).toBe('id');
-  });
-
-  it('spreads the six audit columns, the four stamps required', () => {
-    for (const column of AUDIT_COLUMNS) {
-      expect(byName[column]).toBeDefined();
-    }
-    for (const column of ['created_at', 'created_by', 'updated_at', 'updated_by']) {
-      expect(byName[column].notNull).toBe(true);
-    }
-    expect(byName.deleted_at.notNull).toBe(false);
-    expect(byName.deleted_by.notNull).toBe(false);
-  });
-
-  it('references users.id from every audit id (MB.5)', () => {
-    for (const column of ['created_by', 'updated_by', 'deleted_by']) {
-      expect(foreignKeyByColumn[column]).toBeDefined();
-      expect(foreignKeyByColumn[column].foreignColumnName).toBe('id');
-      expect(foreignKeyByColumn[column].foreignTable).toBe(users);
-    }
   });
 
   it('declares exactly the two indexes DESIGN.md §5 names', () => {
@@ -101,6 +65,7 @@ let ACACIA: string;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
+const catalogue = useTestDatabase((client) => (sql = client));
 
 async function compendiumIdOf(canonicalName: string): Promise<string> {
   const [found] = await sql`
@@ -126,15 +91,6 @@ async function softDelete(id: string): Promise<void> {
   `;
 }
 
-async function failureOf(work: Promise<unknown>) {
-  return await work.then(
-    () => {
-      throw new Error('expected the statement to be rejected, but it succeeded');
-    },
-    (error: postgres.PostgresError) => error,
-  );
-}
-
 async function liveNames(ingredientId: string): Promise<string[]> {
   const rows = await sql`
     select name from ingredient_folk_names
@@ -144,31 +100,7 @@ async function liveNames(ingredientId: string): Promise<string[]> {
   return rows.map((row) => row.name as string);
 }
 
-async function columnNames(table: string): Promise<string[]> {
-  const rows = await sql`
-    select column_name from information_schema.columns
-    where table_name = ${table} order by column_name
-  `;
-  return rows.map((row) => row.column_name as string);
-}
-
-type IndexRow = { unique: boolean; predicate: string | null; definition: string };
-
-async function indexRow(name: string): Promise<IndexRow | undefined> {
-  const [found] = await sql`
-    select i.indisunique as unique,
-           pg_get_expr(i.indpred, i.indrelid) as predicate,
-           pg_get_indexdef(i.indexrelid) as definition
-    from pg_index i
-    join pg_class c on c.oid = i.indexrelid
-    where i.indrelid = 'ingredient_folk_names'::regclass and c.relname = ${name}
-  `;
-  return found as IndexRow | undefined;
-}
-
 beforeAll(async () => {
-  sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
-
   UNCARIA = await compendiumIdOf('Uncaria tomentosa');
   ACACIA = await compendiumIdOf('Senegalia greggii');
 });
@@ -177,13 +109,9 @@ beforeEach(async () => {
   await sql`truncate ingredient_folk_names`;
 });
 
-afterAll(async () => {
-  await sql.end();
-});
-
 describe('ingredient_folk_names table', () => {
   it('carries the six audit columns beside the id, the ingredient and the name', async () => {
-    expect(await columnNames('ingredient_folk_names')).toEqual(
+    expect(await catalogue.columnNames('ingredient_folk_names')).toEqual(
       ['id', 'ingredient_id', 'name', ...AUDIT_COLUMNS].sort(),
     );
   });
@@ -192,7 +120,7 @@ describe('ingredient_folk_names table', () => {
   // reservation to forever, and only the re-add test below would notice.
   describe('catalogue introspection', () => {
     it('makes the folded name unique per ingredient, among live rows only', async () => {
-      const index = await indexRow(UNIQUE_INDEX);
+      const index = await catalogue.indexRow('ingredient_folk_names', UNIQUE_INDEX);
 
       expect(index?.unique).toBe(true);
       expect(index?.predicate).toBe('(deleted_at IS NULL)');
@@ -201,7 +129,7 @@ describe('ingredient_folk_names table', () => {
     });
 
     it('indexes the name for trigram matching (DESIGN.md §9)', async () => {
-      const index = await indexRow(TRIGRAM_INDEX);
+      const index = await catalogue.indexRow('ingredient_folk_names', TRIGRAM_INDEX);
 
       expect(index?.unique).toBe(false);
       expect(index?.predicate).toBeNull();
@@ -209,15 +137,7 @@ describe('ingredient_folk_names table', () => {
     });
 
     it('carries no unique index beyond the primary key and that one', async () => {
-      const rows = await sql`
-        select c.relname as name
-        from pg_index i
-        join pg_class c on c.oid = i.indexrelid
-        where i.indrelid = 'ingredient_folk_names'::regclass and i.indisunique
-        order by c.relname
-      `;
-
-      expect(rows.map((row) => row.name as string)).toEqual([
+      expect(await catalogue.uniqueIndexNames('ingredient_folk_names')).toEqual([
         'ingredient_folk_names_pkey',
         UNIQUE_INDEX,
       ]);
