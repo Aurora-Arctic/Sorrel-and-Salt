@@ -124,8 +124,10 @@ test, it is a file nothing runs.
   M1.27 every file in it runs against a clone that already carries the full
   migrated schema and the `standard` scenario, so a schema test asserts
   against the real table (`tests/db/seeded-template.test.ts` states that
-  baseline) and no file builds tables of its own. `src/services/` doesn't
-  exist yet, so `passWithNoTests: true` stays. Nothing in this
+  baseline) and no file builds tables of its own. The `tests/services/**` half
+  is real as of M6.3 (`membership`, `access-control`) — a service test lands
+  here rather than in `unit` because a service reads Postgres, and the split is
+  a path glob. Nothing in this
   project's config ever points at
   Neon (`Docker/docker-compose.yaml`'s `postgres` service publishes **5432**
   for exactly this — "the host-side Vitest `db` project").
