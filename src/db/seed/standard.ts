@@ -1,16 +1,16 @@
-import { inArray, isNull, sql } from 'drizzle-orm';
+import { inArray, isNull } from 'drizzle-orm';
 // `./bootstrap-admin` first, and load-bearing — see minimal.ts.
-import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
+import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { users } from '../schema/users';
 import { workspaceMembers, workspaces } from '../schema/workspaces';
 import { ingredients } from '../schema/ingredients';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
 import { ingredientCategories } from '../schema/ingredient-categories';
 import { applyAudit } from '../audit';
-import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import { slugify } from '../../lib/slugify';
 import { categoryIdByName, seedCategoryVocabulary } from './categories';
 import { seedFormVocabulary } from './forms';
+import { beginSeedTransaction, insertMissing, requireFrom } from './idempotent';
 import type { SeedDatabase, SeedTransaction } from './index';
 
 // The `standard` scenario: five fixture users, workspaces W and X, and a
@@ -396,12 +396,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
 ];
 
 export async function seedStandard(db: SeedDatabase): Promise<void> {
-  await db.transaction(async (tx) => {
-    // Published exactly as withAudit publishes it.
-    await tx.execute(sql`select set_config('app.current_user_id', ${BOOTSTRAP_USER_ID}, true)`);
-    await insertBootstrapAdmin(tx);
-    await seedStandardContent(tx);
-  });
+  await beginSeedTransaction(db, seedStandardContent);
 }
 
 /**
@@ -430,72 +425,56 @@ export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
 // updates nothing already present.
 
 async function insertMissingUsers(tx: SeedTransaction): Promise<void> {
-  const present = new Set(
-    (
-      await tx
-        .select({ id: users.id })
-        .from(users)
-        .where(
-          inArray(
-            users.id,
-            Object.values(FIXTURE_USERS).map((user) => user.id),
-          ),
-        )
-    ).map((row) => row.id),
-  );
-  const missing = Object.values(FIXTURE_USERS).filter((user) => !present.has(user.id));
+  const wanted = Object.values(FIXTURE_USERS);
 
-  if (missing.length === 0) return;
-
-  await tx
-    .insert(users)
-    .values(missing.map((user) => applyAudit('insert', user, BOOTSTRAP_SESSION)));
+  await insertMissing(tx, users, wanted, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({ id: users.id })
+          .from(users)
+          .where(
+            inArray(
+              users.id,
+              wanted.map((user) => user.id),
+            ),
+          )
+      ).map((row) => row.id),
+    keyOf: (user) => user.id,
+    toRow: (user) => user,
+  });
 }
 
 async function insertMissingWorkspaces(tx: SeedTransaction): Promise<void> {
-  const present = new Set(
-    (
-      await tx
-        .select({ id: workspaces.id })
-        .from(workspaces)
-        .where(
-          inArray(
-            workspaces.id,
-            FIXTURE_WORKSPACES.map((workspace) => workspace.id),
-          ),
-        )
-    ).map((row) => row.id),
-  );
-  const missing = FIXTURE_WORKSPACES.filter((workspace) => !present.has(workspace.id));
-
-  if (missing.length === 0) return;
-
-  await tx
-    .insert(workspaces)
-    .values(
-      missing.map((workspace) =>
-        applyAudit('insert', { ...workspace, slug: slugify(workspace.name) }, BOOTSTRAP_SESSION),
-      ),
-    );
+  await insertMissing(tx, workspaces, FIXTURE_WORKSPACES, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({ id: workspaces.id })
+          .from(workspaces)
+          .where(
+            inArray(
+              workspaces.id,
+              FIXTURE_WORKSPACES.map((workspace) => workspace.id),
+            ),
+          )
+      ).map((row) => row.id),
+    keyOf: (workspace) => workspace.id,
+    toRow: (workspace) => ({ ...workspace, slug: slugify(workspace.name) }),
+  });
 }
 
 async function insertMissingMemberships(tx: SeedTransaction): Promise<void> {
-  const present = new Set(
-    (
-      await tx
-        .select({ workspaceId: workspaceMembers.workspaceId, userId: workspaceMembers.userId })
-        .from(workspaceMembers)
-    ).map((row) => `${row.workspaceId}|${row.userId}`),
-  );
-  const missing = MEMBERSHIPS.filter(
-    (membership) => !present.has(`${membership.workspaceId}|${membership.userId}`),
-  );
-
-  if (missing.length === 0) return;
-
-  await tx
-    .insert(workspaceMembers)
-    .values(missing.map((membership) => applyAudit('insert', membership, BOOTSTRAP_SESSION)));
+  await insertMissing(tx, workspaceMembers, MEMBERSHIPS, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({ workspaceId: workspaceMembers.workspaceId, userId: workspaceMembers.userId })
+          .from(workspaceMembers)
+      ).map((row) => `${row.workspaceId}|${row.userId}`),
+    keyOf: (membership) => `${membership.workspaceId}|${membership.userId}`,
+    toRow: (membership) => membership,
+  });
 }
 
 /**
@@ -511,7 +490,11 @@ export function identityOf(entry: {
   return `${entry.name}|${entry.canonicalName ?? ''}|${entry.form ?? ''}`;
 }
 
-/** Inserts what is missing and returns every seeded entry's id, by identity. */
+/**
+ * Inserts what is missing and returns every seeded entry's id, by identity.
+ * Not `insertMissing`: the one caller that needs the inserted rows back, and
+ * `.returning()` for one caller is not worth a second helper.
+ */
 async function insertMissingIngredients(tx: SeedTransaction): Promise<Map<string, string>> {
   const existing = await tx
     .select({
@@ -547,15 +530,12 @@ async function insertMissingIngredients(tx: SeedTransaction): Promise<Map<string
   return ids;
 }
 
-/** Unreachable today, but a silent `undefined` would fail NOT NULL several rows later, naming the wrong row. */
 function ingredientIdFor(entry: SeedIngredient, ingredientIds: Map<string, string>): string {
-  const id = ingredientIds.get(identityOf(entry));
-
-  if (id === undefined) {
-    throw new Error(`Compendium entry ${entry.name} was neither found nor inserted.`);
-  }
-
-  return id;
+  return requireFrom(
+    ingredientIds,
+    identityOf(entry),
+    () => `Compendium entry ${entry.name} was neither found nor inserted.`,
+  );
 }
 
 async function insertMissingFolkNames(
@@ -569,23 +549,20 @@ async function insertMissingFolkNames(
     })),
   );
 
-  const present = new Set(
-    (
-      await tx
-        .select({ ingredientId: ingredientFolkNames.ingredientId, name: ingredientFolkNames.name })
-        .from(ingredientFolkNames)
-    ).map((row) => `${row.ingredientId}|${row.name.toLowerCase()}`),
-  );
   // Case-folded because the unique index is on `lower(name)`.
-  const missing = wanted.filter(
-    (folkName) => !present.has(`${folkName.ingredientId}|${folkName.name.toLowerCase()}`),
-  );
-
-  if (missing.length === 0) return;
-
-  await tx
-    .insert(ingredientFolkNames)
-    .values(missing.map((folkName) => applyAudit('insert', folkName, BOOTSTRAP_SESSION)));
+  await insertMissing(tx, ingredientFolkNames, wanted, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({
+            ingredientId: ingredientFolkNames.ingredientId,
+            name: ingredientFolkNames.name,
+          })
+          .from(ingredientFolkNames)
+      ).map((row) => `${row.ingredientId}|${row.name.toLowerCase()}`),
+    keyOf: (folkName) => `${folkName.ingredientId}|${folkName.name.toLowerCase()}`,
+    toRow: (folkName) => folkName,
+  });
 }
 
 async function insertMissingCategoryAssignments(
@@ -594,38 +571,29 @@ async function insertMissingCategoryAssignments(
   categoryIds: Map<string, string>,
 ): Promise<void> {
   const wanted = COMPENDIUM_INGREDIENTS.flatMap((entry) =>
-    entry.categories.map((name) => {
-      const categoryId = categoryIds.get(name);
-
-      // Unreachable while these entries and §6's vocabulary agree; a silent
-      // `undefined` would fail NOT NULL later, naming the wrong row.
-      if (categoryId === undefined) {
-        throw new Error(`"${entry.name}" names category "${name}", which is not in the database.`);
-      }
-
-      return { ingredientId: ingredientIdFor(entry, ingredientIds), categoryId };
-    }),
+    entry.categories.map((name) => ({
+      ingredientId: ingredientIdFor(entry, ingredientIds),
+      categoryId: requireFrom(
+        categoryIds,
+        name,
+        () => `"${entry.name}" names category "${name}", which is not in the database.`,
+      ),
+    })),
   );
-
-  const present = new Set(
-    (
-      await tx
-        .select({
-          ingredientId: ingredientCategories.ingredientId,
-          categoryId: ingredientCategories.categoryId,
-        })
-        .from(ingredientCategories)
-    ).map((row) => `${row.ingredientId}|${row.categoryId}`),
-  );
-  const missing = wanted.filter(
-    (assignment) => !present.has(`${assignment.ingredientId}|${assignment.categoryId}`),
-  );
-
-  if (missing.length === 0) return;
 
   // Hard-deleted (MB.34): the four-column stamp set, so `applyAudit` stamps
   // fewer columns.
-  await tx
-    .insert(ingredientCategories)
-    .values(missing.map((assignment) => applyAudit('insert', assignment, BOOTSTRAP_SESSION)));
+  await insertMissing(tx, ingredientCategories, wanted, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({
+            ingredientId: ingredientCategories.ingredientId,
+            categoryId: ingredientCategories.categoryId,
+          })
+          .from(ingredientCategories)
+      ).map((row) => `${row.ingredientId}|${row.categoryId}`),
+    keyOf: (assignment) => `${assignment.ingredientId}|${assignment.categoryId}`,
+    toRow: (assignment) => assignment,
+  });
 }
