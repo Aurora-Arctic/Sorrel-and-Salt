@@ -18,7 +18,18 @@ const REPOSITORY = 'src/db/repository.ts';
 const SELECT_CALL = /\.select(?:Distinct)?(?:Fields)?\s*\(|\bdb\.query\./g;
 
 /** The repository's exported surface, pinned. A finder is added here too. */
-const EXPORTED_FUNCTIONS = ['findMany', 'findManyIncludingSoftDeleted', 'findOne', 'withAudit'];
+const EXPORTED_FUNCTIONS = [
+  'findMany',
+  'findManyIncludingSoftDeleted',
+  'findManyInWorkspace',
+  'findOne',
+  'findOneInWorkspace',
+  'findWorkspaceRole',
+  'withAudit',
+];
+
+/** Rule 5's half: a finder over a table carrying `workspace_id` scopes by the proof. */
+const SCOPED_FINDERS = ['findManyInWorkspace', 'findOneInWorkspace'];
 
 /** The one exported finder allowed to skip the filter — the escape hatch. */
 const ESCAPE_HATCH = 'findManyIncludingSoftDeleted';
@@ -76,8 +87,22 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
       const body = functionBody(text, finder);
       // Either it filters itself, or it delegates to a finder that does.
       expect(
-        /notSoftDeleted\(|findMany\(/.test(body),
+        /notSoftDeleted\(|findMany\w*\(/.test(body),
         `${finder} reaches the database without notSoftDeleted(...)`,
+      ).toBe(true);
+    }
+  });
+
+  // Rule 5, the same shape one layer up: the proof is not merely demanded by
+  // the signature, it is what the query is narrowed by.
+  it('ANDs the proof’s workspace onto every scoped finder', () => {
+    const text = source(REPOSITORY);
+
+    for (const finder of SCOPED_FINDERS) {
+      const body = functionBody(text, finder);
+      expect(
+        /scopedTo\(|findMany\w*\(/.test(body),
+        `${finder} reaches the database without scopedTo(membership, ...)`,
       ).toBe(true);
     }
   });

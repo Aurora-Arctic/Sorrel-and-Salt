@@ -11,8 +11,10 @@ import {
 import { auditColumns } from '../audit';
 import { users } from './users';
 
-// Ordered viewer < member < owner, the order `assertMembership` compares by.
-// `owner` is not invitable — workspace_invitations carries the CHECK.
+// Declared viewer, member, owner. Nothing compares two roles: each carries its
+// own permission statements (src/services/access-control.ts), so the order here
+// is documentation. `owner` is not invitable — workspace_invitations carries
+// the CHECK.
 export const workspaceRole = pgEnum('workspace_role', ['viewer', 'member', 'owner']);
 
 // No `kind` column and no automatic workspace: every workspace takes members

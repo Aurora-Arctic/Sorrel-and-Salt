@@ -210,8 +210,10 @@ docker-studio` starts it as a profiled compose service (`studio`), the
 ## Workspaces and membership (M6.2)
 
 `src/db/schema/workspaces.ts` holds DESIGN.md §5's two workspace tables and
-the `workspace_role` enum (`viewer`, `member`, `owner` — declared in that
-order, which is the hierarchy M6.3's `assertMembership` implements).
+the `workspace_role` enum (`viewer`, `member`, `owner`). The declaration
+order reads as a hierarchy and is not one: M6.3 gives each role its own
+permission statements, so nothing compares two roles (see "The Membership
+proof" below).
 `0004_black_slyde.sql` is the migration.
 
 - **`workspaces`** — `id`, `name`, `slug`, + audit, and **nothing else**.
@@ -1300,9 +1302,8 @@ today.
 branded `Membership` — the value `assertMembership` returns, which every
 workspace-scoped finder and `AuditWriter` method demands as its first argument
 so the omission is a compile error rather than a missing runtime check. M6.3
-builds it. Until then `assertMembership` does not exist either, so treat the
-service check as the only layer, and a workspace-scoped query as unguarded
-until it takes a proof. The specification for the eventual policies —
+built it; "The Membership proof" below is how it works. The specification for
+the eventual policies —
 the role split they need, `FORCE`, the `security definer` helper, and why a
 policy test connected as the table owner proves nothing — is
 [`mb.24-rls-role-split.md`](design-decisions/mb.24-rls-role-split.md),
@@ -1344,6 +1345,113 @@ which is how the M1.19 tests observe a setting the narrow `AuditWriter`
 gives them no other way to read — without widening the write API for the
 benefit of a test. The `missing_ok` second argument is what makes it null,
 rather than an error, when the setting was never set.
+
+## The Membership proof (M6.3)
+
+CLAUDE.md rule 5 asks for two authorization layers: the check, and a proof the
+check ran. `assertMembership` is the first and its return value is the second.
+
+```ts
+const membership = await assertMembership(session, workspaceId, { spell: ['create'] });
+const drafts = await findManyInWorkspace(membership, spells, eq(spells.status, 'draft'));
+await withAudit(session, (write) => write.insertInWorkspace(membership, spells, { title }));
+```
+
+`Membership` is `{ workspaceId, userId, role }` carrying a `unique symbol`
+brand that `src/services/membership.ts` does not export. No other module can
+name the property, so no object literal satisfies the type and the one cast to
+it in the codebase sits past both of `assertMembership`'s refusals. The brand
+is erased at compile time: the layer costs nothing at runtime — no second
+connection, no transaction on the read path, no per-environment credentials,
+which is the trade MB.29 made when it deferred RLS.
+
+### What the check asks
+
+The third argument is a **permission**, not a minimum role: `{ spell:
+['create'] }`, checked against per-role statements built with better-auth's
+`createAccessControl` (`src/services/access-control.ts`). Naming a resource or
+an action the statements do not declare is a compile error. Several resources
+in one request are ANDed. An empty request throws an `Error` rather than a
+`Forbidden` — it would authorize vacuously, so it is a caller's bug and reads
+as one.
+
+Why statements rather than the rank the design doc originally specified, and
+what that costs while most of the services are still unwritten:
+[`m6.3-permission-statements.md`](design-decisions/m6.3-permission-statements.md).
+
+The **site role** is not consulted. `session.role` is `'user' | 'admin'` and a
+site admin curates the compendium and reaches no workspace at all, so
+`assertMembership` never reads it — which is what makes that invariant true by
+construction rather than by a branch someone could add later.
+
+### The finder convention
+
+The repository splits on the table's own shape, the way it already splits
+`softDelete` from `delete`:
+
+| The table              | Reads                                                     | Writes                                                                         |
+| ---------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| carries `workspace_id` | `findManyInWorkspace` / `findOneInWorkspace`, proof first | `insertInWorkspace`, `updateInWorkspace`, `softDeleteInWorkspace`, proof first |
+| does not               | `findMany` / `findOne` / `findManyIncludingSoftDeleted`   | `insert`, `update`, `softDelete`, `delete`                                     |
+
+`{ workspaceId: AnyPgColumn }` and `{ workspaceId?: never }` are the two
+constraints, so each finder admits exactly one of the two sets and a table
+cannot go through the wrong one. A scoped finder ANDs `workspace_id =
+membership.workspaceId` onto the query **itself** rather than trusting a
+`workspaceId` beside the proof — a second source is a second thing to
+disagree — and `insertInWorkspace` fills the column from the proof for the same
+reason, which is why its `values` type has `workspaceId` removed the way it has
+the audit columns removed. `updateInWorkspace` cannot reassign it either, so a
+row cannot be moved between workspaces by an update.
+
+`findManyIncludingSoftDeleted` takes the unscoped side: v1 has no restore UI
+and the trash view is v2, so the task that adds one adds its proof-scoped
+counterpart then rather than leaving a widened hatch waiting.
+
+**`ingredients` is on the scoped side, and its compendium tier therefore has no
+finder yet.** The column is nullable — `workspace_id IS NULL` is the
+compendium, everything else is a workspace's own — so the table matches
+`{ workspaceId: AnyPgColumn }` and `findMany(ingredients)` does not compile.
+Nothing reads the compendium today. Whichever of M5.2 or M8 gets there first
+adds a finder that ANDs `workspace_id IS NULL` as explicitly as the scoped one
+ANDs its proof; the local-beats-compendium resolution (§5) wants both tiers and
+is a third, named finder over `workspace_id = $1 OR workspace_id IS NULL`. The
+point of the narrowing is that a read of that table has to say which tier it
+means instead of getting whichever the default was.
+
+### The one read that takes no proof
+
+`findWorkspaceRole(userId, workspaceId)` is what mints a proof, so it cannot
+demand one. It is narrow on purpose — it answers with a role, not with rows —
+so it cannot stand in for a finder, and `repository.test.ts` pins the
+repository's export list so a second exception is a decision rather than an
+addition.
+
+### Where the proof is weaker than a policy
+
+Stated rather than glossed, because the type looks like it closes more than it
+does. **Both gaps are covered by M6.6's per-entity direct-id denial tests**,
+which is the same coverage that would have caught a policy written wrong:
+
+- A service holding a **valid proof for W** that hand-writes a `where` naming
+  X's ids satisfies the type and still reads across workspaces. The proof
+  constrains which workspace the query is scoped to, not which ids the caller
+  chose to ask about.
+- **`spell_ingredients` and `spell_categories` carry no `workspace_id`** and so
+  land on the unscoped side, where nothing demands a proof at all. They reach
+  their workspace through `spells`, and their services load the parent spell
+  under the proof first. A guard inferring the scoped set from a column name
+  cannot see this, which is why DESIGN.md §8 says "workspace-scoped" is not the
+  same as "has a `workspace_id` column".
+
+A cast is the third gap, and it is review's job rather than the type's: a value
+that already has the proof's public shape is _comparable_ to it, so
+`{ workspaceId, userId, role } as Membership` compiles where `session as
+Membership` does not. `tests/services/membership.test.ts` pins the two the type
+does catch — the object literal and the forgery from a session — as
+`@ts-expect-error` lines, which fail `npm run typecheck` the moment the brand
+stops being required. A runtime assertion could not see that at all: it would
+pass just as happily against a signature that had quietly gone optional.
 
 ## Soft-delete filtering and the partial-index convention (M1.20)
 

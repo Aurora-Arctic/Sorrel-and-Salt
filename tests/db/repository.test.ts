@@ -8,9 +8,15 @@ import {
   type AuditWriter,
   findMany,
   findManyIncludingSoftDeleted,
+  findManyInWorkspace,
   findOne,
+  findOneInWorkspace,
+  findWorkspaceRole,
   withAudit,
 } from '@/db/repository';
+import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
+import { type Membership, assertMembership } from '@/services/membership';
+import { A, B, C, D, asUser } from '../support/as-user';
 
 // A scratch table spreading the real `auditColumns` minus their FKs to
 // `users`: the contract is about the six columns, not any one table.
@@ -50,6 +56,16 @@ const pairs = pgTable(
   },
   (table) => [primaryKey({ columns: [table.herbId, table.charmId] })],
 );
+
+// The workspace-scoped shape: its own `workspace_id`, which is what makes it
+// reachable only with a proof. No FK to `workspaces`, as the probes above
+// carry none to `users`.
+const jars = pgTable('repository_probe_jars', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id').notNull(),
+  label: text('label').notNull(),
+  ...auditColumns,
+});
 
 const session = { userId: '11111111-1111-1111-1111-111111111111' };
 const impostor = { userId: '99999999-9999-9999-9999-999999999999' };
@@ -95,6 +111,19 @@ beforeAll(async () => {
     )
   `;
   await sql`
+    create table repository_probe_jars (
+      id uuid primary key default gen_random_uuid(),
+      workspace_id uuid not null,
+      label text not null,
+      created_at timestamp not null default now(),
+      created_by uuid not null,
+      updated_at timestamp not null default now(),
+      updated_by uuid not null,
+      deleted_at timestamp,
+      deleted_by uuid
+    )
+  `;
+  await sql`
     create unique index repository_probe_charms_name_unique
       on repository_probe_charms (name)
       where deleted_at is null
@@ -105,6 +134,7 @@ afterAll(async () => {
   await sql`drop table if exists repository_probe_herbs`;
   await sql`drop table if exists repository_probe_charms`;
   await sql`drop table if exists repository_probe_pairs`;
+  await sql`drop table if exists repository_probe_jars`;
   await sql.end();
 });
 
@@ -112,12 +142,21 @@ beforeEach(async () => {
   await sql`truncate repository_probe_herbs`;
   await sql`truncate repository_probe_charms`;
   await sql`truncate repository_probe_pairs`;
+  await sql`truncate repository_probe_jars`;
 });
 
 describe('repository public API', () => {
-  it('exports exactly withAudit and the three soft-delete-aware finders', () => {
+  it('exports exactly withAudit, the finders, and the one read that mints a proof', () => {
     expect(Object.keys(repository).sort()).toEqual(
-      ['findMany', 'findManyIncludingSoftDeleted', 'findOne', 'withAudit'].sort(),
+      [
+        'findMany',
+        'findManyIncludingSoftDeleted',
+        'findManyInWorkspace',
+        'findOne',
+        'findOneInWorkspace',
+        'findWorkspaceRole',
+        'withAudit',
+      ].sort(),
     );
   });
 });
@@ -349,10 +388,20 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
   const isPair = (herb: string, charm: string) =>
     and(eq(pairs.herbId, herb), eq(pairs.charmId, charm)) as ReturnType<typeof eq>;
 
-  it('offers exactly four writer methods — a fifth is a decision, not a convenience', async () => {
+  it('offers exactly seven writer methods — an eighth is a decision, not a convenience', async () => {
     const methods = await withAudit(session, async (write) => Object.keys(write).sort());
 
-    expect(methods).toEqual(['delete', 'insert', 'softDelete', 'update'].sort());
+    expect(methods).toEqual(
+      [
+        'delete',
+        'insert',
+        'insertInWorkspace',
+        'softDelete',
+        'softDeleteInWorkspace',
+        'update',
+        'updateInWorkspace',
+      ].sort(),
+    );
   });
 
   it('stamps a join row with the four stamp columns and gives it no delete columns', async () => {
@@ -439,5 +488,144 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
 
     expect(hardDeleteASoftDeletableTable).toBeInstanceOf(Function);
     expect(softDeleteATableWithNothingToStamp).toBeInstanceOf(Function);
+  });
+});
+
+// CLAUDE.md rule 5's second layer. The proofs below are real ones, minted by
+// `assertMembership` against the seeded cast: there is no other way to get one,
+// which is the property under test.
+describe('the Membership proof (M6.3)', () => {
+  let inW: Membership;
+  let inX: Membership;
+
+  beforeAll(async () => {
+    // A owns W and D is a member of X — `standard`, the scenario every db
+    // worker's clone carries.
+    inW = await assertMembership(asUser(A), WORKSPACE_W_ID, { ingredient: ['create'] });
+    inX = await assertMembership(asUser(D), WORKSPACE_X_ID, { ingredient: ['create'] });
+  });
+
+  const insertJar = (membership: Membership, label: string) =>
+    withAudit(session, (write) => write.insertInWorkspace(membership, jars, { label }));
+
+  describe('findWorkspaceRole, the one read that takes no proof', () => {
+    it('answers with the role the seeded membership names', async () => {
+      await expect(findWorkspaceRole(A.id, WORKSPACE_W_ID)).resolves.toBe('owner');
+      await expect(findWorkspaceRole(B.id, WORKSPACE_W_ID)).resolves.toBe('member');
+      await expect(findWorkspaceRole(C.id, WORKSPACE_W_ID)).resolves.toBe('viewer');
+    });
+
+    it('answers undefined across workspaces, so there is nothing to mint a proof from', async () => {
+      // Why this could have answered a role: A holds one, in the workspace
+      // above, so the finder is reached and the table is not empty.
+      await expect(findWorkspaceRole(A.id, WORKSPACE_X_ID)).resolves.toBeUndefined();
+    });
+  });
+
+  describe('write.insertInWorkspace', () => {
+    it('fills workspace_id from the proof rather than from the values', async () => {
+      const [row] = await insertJar(inW, 'Rosehip');
+
+      expect(row.workspaceId).toBe(WORKSPACE_W_ID);
+      expect(row.createdBy).toBe(session.userId);
+    });
+  });
+
+  describe('findManyInWorkspace', () => {
+    it('returns this workspace’s rows and not the other’s', async () => {
+      await insertJar(inW, 'Rosehip');
+      await insertJar(inX, 'Nettle');
+
+      await expect(findManyInWorkspace(inW, jars)).resolves.toEqual([
+        expect.objectContaining({ label: 'Rosehip' }),
+      ]);
+      await expect(findManyInWorkspace(inX, jars)).resolves.toEqual([
+        expect.objectContaining({ label: 'Nettle' }),
+      ]);
+    });
+
+    it('still applies deleted_at IS NULL on top of the workspace predicate', async () => {
+      const [row] = await insertJar(inW, 'Rosehip');
+      await withAudit(session, (write) =>
+        write.softDeleteInWorkspace(inW, jars, eq(jars.id, row.id)),
+      );
+
+      await expect(findManyInWorkspace(inW, jars)).resolves.toEqual([]);
+    });
+  });
+
+  describe('a direct id belonging to another workspace', () => {
+    it('is not readable, though the row exists and its own workspace finds it', async () => {
+      const [row] = await insertJar(inX, 'Nettle');
+
+      // Why the read below could have succeeded: this exact id resolves under
+      // X's own proof, so the row is present and the finder is reached.
+      await expect(findOneInWorkspace(inX, jars, eq(jars.id, row.id))).resolves.toMatchObject({
+        label: 'Nettle',
+      });
+
+      await expect(findOneInWorkspace(inW, jars, eq(jars.id, row.id))).resolves.toBeUndefined();
+    });
+
+    it('is not updatable, and the row is left as it was', async () => {
+      const [row] = await insertJar(inX, 'Nettle');
+
+      const updated = await withAudit(session, (write) =>
+        write.updateInWorkspace(inW, jars, { label: 'Rewritten' }, eq(jars.id, row.id)),
+      );
+
+      expect(updated).toEqual([]);
+      await expect(findOneInWorkspace(inX, jars, eq(jars.id, row.id))).resolves.toMatchObject({
+        label: 'Nettle',
+      });
+    });
+
+    it('is not soft-deletable, and keeps its null deleted_at', async () => {
+      const [row] = await insertJar(inX, 'Nettle');
+
+      const deleted = await withAudit(session, (write) =>
+        write.softDeleteInWorkspace(inW, jars, eq(jars.id, row.id)),
+      );
+
+      expect(deleted).toEqual([]);
+      await expect(findOneInWorkspace(inX, jars, eq(jars.id, row.id))).resolves.toMatchObject({
+        deletedAt: null,
+      });
+    });
+  });
+
+  // None of these bodies run: each `@ts-expect-error` fails `npm run typecheck`
+  // the moment the proof stops being required, which a runtime assertion cannot
+  // see — it would pass just as happily against a signature gone optional.
+  it('refuses a workspace-scoped table without a proof at compile time', () => {
+    const readItUnscoped = () =>
+      // @ts-expect-error — `jars` carries workspace_id, so the unscoped finder
+      // refuses it: a read of it is scoped by a proof or it is not written.
+      findMany(jars);
+
+    const readItWithoutTheProof = () =>
+      // @ts-expect-error — the proof is the first argument and is not optional.
+      findManyInWorkspace(jars);
+
+    const writeItUnscoped = (write: AuditWriter) =>
+      // @ts-expect-error — the same on the write side; `workspace_id` has no
+      // source but a proof.
+      write.insert(jars, { workspaceId: WORKSPACE_W_ID, label: 'Rosehip' });
+
+    const nameAWorkspaceBesideTheProof = (write: AuditWriter, membership: Membership) =>
+      // @ts-expect-error — a `workspaceId` passed alongside the proof is a
+      // second source that can disagree with it.
+      write.insertInWorkspace(membership, jars, { workspaceId: WORKSPACE_X_ID, label: 'Rosehip' });
+
+    const scopeAnUnscopedTable = (membership: Membership) =>
+      // @ts-expect-error — `herbs` has no workspace_id to AND onto the query,
+      // so the scoped finder refuses it rather than filtering on nothing.
+      findManyInWorkspace(membership, herbs);
+
+    expect(readItUnscoped).toBeInstanceOf(Function);
+    expect(readItWithoutTheProof).toBeInstanceOf(Function);
+    expect(writeItUnscoped).toBeInstanceOf(Function);
+    expect(nameAWorkspaceBesideTheProof).toBeInstanceOf(Function);
+    expect(scopeAnUnscopedTable).toBeInstanceOf(Function);
   });
 });
