@@ -26,17 +26,24 @@ describe('auth secret', () => {
 });
 
 // Both id and secret, never an empty string, which Better Auth reads as a
-// configured provider.
+// configured provider. The roster is Google, Discord, Facebook and Microsoft
+// (M2.6) — GitHub (M2.5) was removed when the roster was re-scoped, and
+// Apple was considered and dropped for a client secret that expires every
+// six months (claude-docs/auth.md, "Social providers").
 describe('social providers', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
 
-  it('registers neither Google nor GitHub when no client credentials are set', async () => {
+  it('registers none of the four when no client credentials are set', async () => {
     vi.stubEnv('GOOGLE_CLIENT_ID', '');
     vi.stubEnv('GOOGLE_CLIENT_SECRET', '');
-    vi.stubEnv('GITHUB_CLIENT_ID', '');
-    vi.stubEnv('GITHUB_CLIENT_SECRET', '');
+    vi.stubEnv('DISCORD_CLIENT_ID', '');
+    vi.stubEnv('DISCORD_CLIENT_SECRET', '');
+    vi.stubEnv('FACEBOOK_CLIENT_ID', '');
+    vi.stubEnv('FACEBOOK_CLIENT_SECRET', '');
+    vi.stubEnv('MICROSOFT_CLIENT_ID', '');
+    vi.stubEnv('MICROSOFT_CLIENT_SECRET', '');
     vi.resetModules();
 
     const { auth } = await import('@/lib/auth');
@@ -47,8 +54,12 @@ describe('social providers', () => {
   it('registers a provider once both its id and secret are set', async () => {
     vi.stubEnv('GOOGLE_CLIENT_ID', 'test-google-id');
     vi.stubEnv('GOOGLE_CLIENT_SECRET', 'test-google-secret');
-    vi.stubEnv('GITHUB_CLIENT_ID', '');
-    vi.stubEnv('GITHUB_CLIENT_SECRET', '');
+    vi.stubEnv('DISCORD_CLIENT_ID', '');
+    vi.stubEnv('DISCORD_CLIENT_SECRET', '');
+    vi.stubEnv('FACEBOOK_CLIENT_ID', '');
+    vi.stubEnv('FACEBOOK_CLIENT_SECRET', '');
+    vi.stubEnv('MICROSOFT_CLIENT_ID', '');
+    vi.stubEnv('MICROSOFT_CLIENT_SECRET', '');
     vi.resetModules();
 
     const { auth } = await import('@/lib/auth');
@@ -56,6 +67,65 @@ describe('social providers', () => {
     expect(auth.options.socialProviders).toEqual({
       google: { clientId: 'test-google-id', clientSecret: 'test-google-secret' },
     });
+  });
+
+  it('registers Microsoft with tenantId "common" so personal accounts can sign in', async () => {
+    vi.stubEnv('GOOGLE_CLIENT_ID', '');
+    vi.stubEnv('GOOGLE_CLIENT_SECRET', '');
+    vi.stubEnv('DISCORD_CLIENT_ID', '');
+    vi.stubEnv('DISCORD_CLIENT_SECRET', '');
+    vi.stubEnv('FACEBOOK_CLIENT_ID', '');
+    vi.stubEnv('FACEBOOK_CLIENT_SECRET', '');
+    vi.stubEnv('MICROSOFT_CLIENT_ID', 'test-microsoft-id');
+    vi.stubEnv('MICROSOFT_CLIENT_SECRET', 'test-microsoft-secret');
+    vi.resetModules();
+
+    const { auth } = await import('@/lib/auth');
+
+    expect(auth.options.socialProviders?.microsoft).toMatchObject({ tenantId: 'common' });
+  });
+
+  it('lets MICROSOFT_TENANT_ID override the "common" default', async () => {
+    vi.stubEnv('GOOGLE_CLIENT_ID', '');
+    vi.stubEnv('GOOGLE_CLIENT_SECRET', '');
+    vi.stubEnv('DISCORD_CLIENT_ID', '');
+    vi.stubEnv('DISCORD_CLIENT_SECRET', '');
+    vi.stubEnv('FACEBOOK_CLIENT_ID', '');
+    vi.stubEnv('FACEBOOK_CLIENT_SECRET', '');
+    vi.stubEnv('MICROSOFT_CLIENT_ID', 'test-microsoft-id');
+    vi.stubEnv('MICROSOFT_CLIENT_SECRET', 'test-microsoft-secret');
+    vi.stubEnv('MICROSOFT_TENANT_ID', 'a-specific-tenant');
+    vi.resetModules();
+
+    const { auth } = await import('@/lib/auth');
+
+    expect(auth.options.socialProviders?.microsoft).toMatchObject({
+      tenantId: 'a-specific-tenant',
+    });
+  });
+
+  it('registers every configured provider consistently with configuredProviders()', async () => {
+    vi.stubEnv('GOOGLE_CLIENT_ID', 'g-id');
+    vi.stubEnv('GOOGLE_CLIENT_SECRET', 'g-secret');
+    vi.stubEnv('DISCORD_CLIENT_ID', 'd-id');
+    vi.stubEnv('DISCORD_CLIENT_SECRET', 'd-secret');
+    vi.stubEnv('FACEBOOK_CLIENT_ID', '');
+    vi.stubEnv('FACEBOOK_CLIENT_SECRET', '');
+    vi.stubEnv('MICROSOFT_CLIENT_ID', '');
+    vi.stubEnv('MICROSOFT_CLIENT_SECRET', '');
+    vi.resetModules();
+
+    const { auth } = await import('@/lib/auth');
+    // A test is a legitimate exception to the client-boundary rule below —
+    // it needs to assert the server-only mapping directly, the same as
+    // tests/db/test-database-isolation.test.ts is exempt from the db-client
+    // boundary (CLAUDE.md rule 2).
+    // oxlint-disable-next-line no-restricted-imports
+    const { configuredProviders } = await import('@/lib/social-providers-config');
+
+    expect(Object.keys(auth.options.socialProviders ?? {}).sort()).toEqual(
+      configuredProviders().sort(),
+    );
   });
 });
 

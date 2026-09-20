@@ -13,17 +13,25 @@ secrets so `deploy.yml`/`migrate.yml` could exist and stub-skip cleanly
 (M0.26/M0.28). Resumed and this doc written on 2026-09-11, alongside
 M2.2/M2.4/M2.5's auth code.
 
-**Status as of MW.2 (2026-09-17), unchanged since MW.1:** the three deploy
-secrets above are set,
-and the Google/GitHub OAuth apps are registered with their four client
-id/secret variables set locally and in Vercel. Four rows are still
-outstanding — `ADMIN_BOOTSTRAP_EMAIL`, `VERCEL_SCOPE`, `NEON_API_KEY`,
-`NEON_PROJECT_ID` — so no account can be promoted to admin and
-`migrate.yml` still stub-skips instead of applying migrations. **MB.12 owns
-closing those rows and confirming a real browser sign-in**, and it waits on
-M2.6's sign-in page. See "How to set each row" for the exact manual steps —
-none can be done from this repo or by an agent without your
-Vercel/Neon/Google/GitHub accounts.
+**Status as of M2.6 (2026-09-20):** the three deploy secrets above are set,
+and the Google OAuth app is registered with its client id/secret set
+locally and in Vercel. **The roster changed in M2.6**: GitHub is out,
+Discord/Facebook/Microsoft are in, and none of the three is registered
+yet — that registration, plus `ADMIN_BOOTSTRAP_EMAIL`, `VERCEL_SCOPE`,
+`NEON_API_KEY`, `NEON_PROJECT_ID`, are still outstanding, so no account can
+be promoted to admin and `migrate.yml` still stub-skips instead of applying
+migrations. **MB.12 owns closing those rows and confirming a real browser
+sign-in for every provider**, and it waits on M2.6's sign-in page (now
+built). See "How to set each row" for the exact manual steps — none can be
+done from this repo or by an agent without your Vercel/Neon/Google/Discord/Meta/Microsoft
+accounts.
+
+**The GitHub OAuth App is not deleted by this doc or this task.** It was
+registered under M2.5, which M2.6 reverses (`claude-docs/TASKS.md`). Its
+client id/secret can come out of `.env.local` and Vercel once nothing reads
+them (they already have, in `.env.local` — this task removed the lines),
+but deleting the OAuth App itself on GitHub's side is a manual step: GitHub
+→ Settings → Developer settings → OAuth Apps → the app → Delete.
 
 ## Vercel environment variables
 
@@ -31,13 +39,16 @@ Set per Vercel **Environment** (Production, Preview), not per branch —
 `staging` and any `hotfix/**` preview both resolve through Preview, unless
 a row below says otherwise.
 
-| Variable                       | Production                                     | Preview (staging + hotfix)                                                                                                                                                                                                                                                                          | Read by                                                                                                                                                                                                  |
-| ------------------------------ | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                 | `main`-backed Neon branch connection string    | `staging`-backed Neon branch, pinned with a **branch-scoped** override (`vercel env add DATABASE_URL preview staging`) — see `design-decisions/m1.1-neon-branch-strategy.md`. A hotfix preview gets its own ephemeral branch from the Neon/Vercel integration instead, unaffected by that override. | `src/db/connection.ts` — throws if unset, always                                                                                                                                                         |
-| `BETTER_AUTH_SECRET`           | real, high-entropy (`openssl rand -base64 32`) | **one value shared with Production** (MB.47) — see the note below                                                                                                                                                                                                                                   | `src/lib/auth.ts` — required whenever `NODE_ENV=production`, which every Vercel build is                                                                                                                 |
-| `GOOGLE_CLIENT_ID` / `_SECRET` | Production OAuth client                        | reuse the same client registered for `staging` below                                                                                                                                                                                                                                                | `src/lib/auth.ts`'s `socialProviders()` — omitted entirely, not broken, if unset                                                                                                                         |
-| `GITHUB_CLIENT_ID` / `_SECRET` | Production OAuth client                        | reuse the same client registered for `staging` below                                                                                                                                                                                                                                                | same                                                                                                                                                                                                     |
-| `ADMIN_BOOTSTRAP_EMAIL`        | the real admin's email                         | can differ from Production's                                                                                                                                                                                                                                                                        | `src/lib/auth.ts`'s `isAdminBootstrapEmail()` — compared case-insensitively; promotes the matching sign-in to `admin` on `databaseHooks.user.create.before`, omitted entirely (nobody promoted) if unset |
+| Variable                          | Production                                     | Preview (staging + hotfix)                                                                                                                                                                                                                                                                          | Read by                                                                                                                                                                                                  |
+| --------------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                    | `main`-backed Neon branch connection string    | `staging`-backed Neon branch, pinned with a **branch-scoped** override (`vercel env add DATABASE_URL preview staging`) — see `design-decisions/m1.1-neon-branch-strategy.md`. A hotfix preview gets its own ephemeral branch from the Neon/Vercel integration instead, unaffected by that override. | `src/db/connection.ts` — throws if unset, always                                                                                                                                                         |
+| `BETTER_AUTH_SECRET`              | real, high-entropy (`openssl rand -base64 32`) | **one value shared with Production** (MB.47) — see the note below                                                                                                                                                                                                                                   | `src/lib/auth.ts` — required whenever `NODE_ENV=production`, which every Vercel build is                                                                                                                 |
+| `GOOGLE_CLIENT_ID` / `_SECRET`    | Production OAuth client                        | reuse the same client registered for `staging` below                                                                                                                                                                                                                                                | `src/lib/auth.ts`'s `socialProviders()` — omitted entirely, not broken, if unset                                                                                                                         |
+| `DISCORD_CLIENT_ID` / `_SECRET`   | Production OAuth client                        | reuse the same client registered for `staging` below                                                                                                                                                                                                                                                | same                                                                                                                                                                                                     |
+| `FACEBOOK_CLIENT_ID` / `_SECRET`  | Production OAuth client                        | reuse the same client registered for `staging` below                                                                                                                                                                                                                                                | same                                                                                                                                                                                                     |
+| `MICROSOFT_CLIENT_ID` / `_SECRET` | Production OAuth client                        | reuse the same client registered for `staging` below                                                                                                                                                                                                                                                | same                                                                                                                                                                                                     |
+| `MICROSOFT_TENANT_ID`             | unset (defaults to `common`)                   | unset (defaults to `common`)                                                                                                                                                                                                                                                                        | `src/lib/auth.ts`'s `socialProviders()` — override only; personal-account sign-in needs `common`, which is also Better Auth's own default (M2.6)                                                         |
+| `ADMIN_BOOTSTRAP_EMAIL`           | the real admin's email                         | can differ from Production's                                                                                                                                                                                                                                                                        | `src/lib/auth.ts`'s `isAdminBootstrapEmail()` — compared case-insensitively; promotes the matching sign-in to `admin` on `databaseHooks.user.create.before`, omitted entirely (nobody promoted) if unset |
 
 **`BETTER_AUTH_SECRET` is one value across both environments** (MB.47), which
 reverses what this table used to say. The old advice — a separate Preview value,
@@ -68,15 +79,15 @@ production URL rather than being reflected into a redirect — verified by
 curling a built server with a spoofed `Host: evil.example.com`. Nothing to
 set in Vercel for this one.
 
-**Hotfix previews still can't complete a real Google/GitHub sign-in.**
-`allowedHosts` above only fixes what URL this app _tells_ Google/GitHub to
-redirect back to — it can't make Google or GitHub accept a redirect URI
-that was never registered. Both require an exact, pre-registered URI, and
-there's no way to register one for a hotfix slug that doesn't exist yet.
-The sign-in flow only works end-to-end on `staging` and Production, whose
-domains are known ahead of time. If a hotfix build ever needs to exercise
-a real sign-in, do it against `staging`'s URL rather than the hotfix
-preview's own.
+**Hotfix previews still can't complete a real sign-in with any provider.**
+`allowedHosts` above only fixes what URL this app _tells_ a provider to
+redirect back to — it can't make Google, Discord, Facebook or Microsoft
+accept a redirect URI that was never registered. All four require an
+exact, pre-registered URI, and there's no way to register one for a
+hotfix slug that doesn't exist yet. The sign-in flow only works end-to-end
+on `staging` and Production, whose domains are known ahead of time. If a
+hotfix build ever needs to exercise a real sign-in, do it against
+`staging`'s URL rather than the hotfix preview's own.
 
 **`vercel pull` cannot give CI `DATABASE_URL` or `BETTER_AUTH_SECRET`, and that
 is by design** (MB.47). Both are marked Sensitive in Vercel, and a Sensitive
@@ -120,8 +131,8 @@ ephemeral branches covered too. It is not done now because those keys do not
 exist, and because a project-wide Neon API key is a broader credential than one
 connection string. It would not replace `BETTER_AUTH_SECRET` either way.
 
-`--git-branch` stays on the preview pull regardless (MB.27): the two GitHub
-OAuth secrets exist _only_ as `staging`-branch-scoped rows and are absent from
+`--git-branch` stays on the preview pull regardless (MB.27): the OAuth
+secrets exist _only_ as `staging`-branch-scoped rows and are absent from
 an unscoped pull. The production pull passes no branch and must not — Vercel
 rejects the pair with
 ``Invalid request: `target` must be "preview" when specifying a `gitBranch` `` —
@@ -191,19 +202,71 @@ configuration parameter "channel_binding"`, which `drizzle-kit migrate`
    - Local: `http://localhost:8000/api/auth/callback/google`
    - Staging: `https://staging.sorrelandsalt.com/api/auth/callback/google`
    - Production: `https://sorrelandsalt.com/api/auth/callback/google`
-4. **GitHub OAuth App**: GitHub → Settings → Developer settings → OAuth
-   Apps → New OAuth App. GitHub allows only **one** callback URL per OAuth
-   App (unlike Google), so this needs either three separate GitHub OAuth
-   Apps (one per environment, each with its own client id/secret) or one
-   App per non-local environment plus a local-only one — register
-   `.../api/auth/callback/github` under whichever split you'd rather
-   maintain.
-5. **`NEON_API_KEY`/`NEON_PROJECT_ID`** (the only two GitHub Actions
+4. **Discord OAuth application**: Discord Developer Portal
+   (discord.com/developers/applications) → New Application → OAuth2 →
+   General. Discord allows multiple redirect URIs on one application, so
+   register all three on the same client — no per-environment split
+   needed, unlike GitHub:
+   - Local: `http://localhost:8000/api/auth/callback/discord`
+   - Staging: `https://staging.sorrelandsalt.com/api/auth/callback/discord`
+   - Production: `https://sorrelandsalt.com/api/auth/callback/discord`
+
+   `DISCORD_CLIENT_ID` is the "Application ID" on the General Information
+   page; `DISCORD_CLIENT_SECRET` is under OAuth2 → Client Secret ("Reset
+   Secret" if one was never generated). **Discord returns an email only for
+   an account with a verified one** — an unverified Discord account
+   completes the OAuth handshake and still leaves `users.email` unset,
+   which today dead-ends the sign-in with the `email_not_found` message
+   (`src/lib/sign-in.ts`). MB.54 is the fix in progress for that case, not
+   a workaround to apply here.
+
+5. **Facebook Login**: Meta for Developers (developers.facebook.com/apps)
+   → Create App → use case "Authenticate and request data from users with
+   Facebook Login" → Facebook Login → Settings, and set "Valid OAuth
+   Redirect URIs":
+   - Local: `http://localhost:8000/api/auth/callback/facebook` — Facebook
+     permits plain `http://localhost` for development only; every other
+     redirect URI **must be HTTPS**, which staging and production already
+     are.
+   - Staging: `https://staging.sorrelandsalt.com/api/auth/callback/facebook`
+   - Production: `https://sorrelandsalt.com/api/auth/callback/facebook`
+
+   `FACEBOOK_CLIENT_ID` is the App ID and `FACEBOOK_CLIENT_SECRET` is under
+   App Settings → Basic → App Secret. **The app stays in Development Mode
+   until Meta's App Review approves the `email` permission** — until then,
+   only accounts added as testers/developers/admins under App Roles can
+   complete a real sign-in; everyone else sees Facebook's own "app not
+   set up" screen before ever reaching this app's code. Submit for review
+   before relying on this provider for anyone outside that list. Facebook
+   can also return no email (same MB.54 case as Discord).
+
+6. **Microsoft identity platform (Entra ID)**: Azure Portal → Microsoft
+   Entra ID → App registrations → New registration.
+   - **Supported account types must be "Accounts in any organizational
+     directory and personal Microsoft accounts"** — the multitenant +
+     personal option. Registering single-tenant (the portal's own default
+     selection) rejects every personal Microsoft account at Microsoft's
+     login screen regardless of what `tenantId` this app sends
+     (`src/lib/auth.ts` sends `'common'`, per `MICROSOFT_TENANT_ID`'s
+     default), so this checkbox is the one step that actually determines
+     whether personal accounts work.
+   - Redirect URIs, platform "Web":
+     - Local: `http://localhost:8000/api/auth/callback/microsoft`
+     - Staging: `https://staging.sorrelandsalt.com/api/auth/callback/microsoft`
+     - Production: `https://sorrelandsalt.com/api/auth/callback/microsoft`
+   - `MICROSOFT_CLIENT_ID` is the "Application (client) ID" on the
+     registration's Overview page; `MICROSOFT_CLIENT_SECRET` is under
+     Certificates & secrets → Client secrets → New client secret (pick the
+     longest expiry offered — unlike Apple's, this one isn't capped at six
+     months, but it still expires and needs rotating before it does).
+     Leave `MICROSOFT_TENANT_ID` unset unless a future need narrows the
+     tenant back down from `common`.
+7. **`NEON_API_KEY`/`NEON_PROJECT_ID`** (the only two GitHub Actions
    secrets still missing): this repo's Settings → Secrets and variables →
    Actions → New repository secret, or `gh secret set <NAME>` from a
    machine whose `gh` token has the Actions-secrets permission (this
    session's doesn't).
-6. **M0.26's Vercel dashboard settings** — already done (deploy previews
+8. **M0.26's Vercel dashboard settings** — already done (deploy previews
    off, `staging` aliased to `staging.sorrelandsalt.com`; M0.26 is
    Completed in Asana). Recorded here for completeness: Project → Settings
    → Git (deploy previews) and → Domains (the staging alias). Nothing in
@@ -220,12 +283,12 @@ configuration parameter "channel_binding"`, which `drizzle-kit migrate`
   run with **no** real secret, using the fixed non-secret
   `local-dev-not-a-real-secret` placeholder for `BETTER_AUTH_SECRET` where
   a production-mode build needs one at all (`claude-docs/auth.md`).
-- `src/lib/auth.ts` already reads all four OAuth env var names
-  (`GOOGLE_CLIENT_ID`/`_SECRET`, `GITHUB_CLIENT_ID`/`_SECRET`) and a
-  provider is registered the moment both halves of a pair are set, and
-  already resolves the right `baseURL` for Production/staging/any hotfix
-  preview with no env var at all — no further code change is needed once
-  real credentials land in Vercel.
+- `src/lib/auth.ts` already reads every roster provider's env var names
+  (`src/lib/social-providers-config.ts` — Google, Discord, Facebook,
+  Microsoft) and a provider is registered the moment both halves of its
+  pair are set, and already resolves the right `baseURL` for
+  Production/staging/any hotfix preview with no env var at all — no
+  further code change is needed once real credentials land in Vercel.
 - `deploy.yml`/`migrate.yml` already guard on every secret above being
   absent and skip cleanly rather than failing (`claude-docs/ci.md`
   describes the guard-skip steps) — setting these rows turns those jobs
