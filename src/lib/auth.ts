@@ -6,6 +6,10 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '../db/connection';
 import { users } from '../db/schema/users';
 import { sessions, accounts, verifications } from '../db/schema/auth';
+import { SOCIAL_PROVIDERS } from './social-providers';
+// Server-only — see social-providers-config.ts's own header.
+// oxlint-disable-next-line no-restricted-imports
+import { clientCredentials } from './social-providers-config';
 
 // Better Auth's own `validateSecret` is swallowed — with the secret unset it
 // logs and still answers 200 on the well-known default. Production-only:
@@ -20,21 +24,30 @@ function authSecret(): string | undefined {
 
 // Registered only when id and secret are both present, so `next dev` runs with
 // neither. A sign-in earns an account and nothing else (CLAUDE.md invariants).
+// The roster itself lives in social-providers.ts, shared with the sign-in
+// page, so a provider added or removed there needs no second edit here.
 function socialProviders(): BetterAuthOptions['socialProviders'] {
   const providers: NonNullable<BetterAuthOptions['socialProviders']> = {};
 
-  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-    providers.google = {
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    };
-  }
+  for (const provider of SOCIAL_PROVIDERS) {
+    const credentials = clientCredentials(provider.id);
+    if (!credentials) continue;
 
-  if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
-    providers.github = {
-      clientId: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    };
+    if (provider.id === 'microsoft') {
+      // Personal Microsoft accounts must be able to sign in, so the tenant is
+      // stated explicitly rather than left to Better Auth's own "common"
+      // default — a dependency bump silently narrowing that default would
+      // otherwise fail every personal-account sign-in with no code change
+      // here to review. The app registration itself must also allow personal
+      // accounts (claude-docs/secrets.md); the tenant alone can't grant that.
+      providers.microsoft = {
+        ...credentials,
+        tenantId: process.env.MICROSOFT_TENANT_ID || 'common',
+      };
+      continue;
+    }
+
+    providers[provider.id] = credentials;
   }
 
   return providers;

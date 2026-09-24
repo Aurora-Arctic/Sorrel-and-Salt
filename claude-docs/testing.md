@@ -336,7 +336,7 @@ module there is never run as a test.
 the v1 user stories, one line each:
 
 ```
-[x] Story 1: Sign in with Google or GitHub, so I don't manage another password.
+[x] Story 1: Sign in with an account I already have, so I don't manage another password.
 [ ] Story 2: As a newly signed-in user, be told plainly what I can do next, … — FAILING
 [ ] Story 3: Create a workspace once I hold creation rights, … — skipped
 [ ] Story 4: Generate an invitation link with a chosen role … — no test yet
