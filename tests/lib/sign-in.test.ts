@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { safeReturnPath, signInErrorMessage } from '@/lib/sign-in';
+import { safeReturnPath, signInErrorMessage, signInPath } from '@/lib/sign-in';
 
 // safeReturnPath is the open-redirect guard for ?next=: without it, a crafted
 // link could make /sign-in redirect anywhere after a real sign-in.
@@ -65,4 +65,37 @@ describe('signInErrorMessage', () => {
     const code = 'unable_to_get_user_info';
     expect(signInErrorMessage(code)).not.toContain(code);
   });
+});
+
+// Where route protection sends a signed-out visitor, and one half of the return
+// path's round trip: /sign-in reads `next` back through safeReturnPath, so what
+// goes in must be what comes out.
+describe('signInPath', () => {
+  const roundTrip = (returnPath: string) => {
+    const next = new URL(signInPath(returnPath), 'http://localhost').searchParams.get('next');
+    return safeReturnPath(next ?? undefined);
+  };
+
+  it('points at /sign-in carrying the return path', () => {
+    expect(signInPath('/coven/hearth')).toBe('/sign-in?next=%2Fcoven%2Fhearth');
+  });
+
+  it.each([
+    '/',
+    '/coven/hearth/grimoire',
+    '/coven/hearth/ingredients?tab=stock&q=salt',
+    '/compendium?q=rose%20petal',
+    '/coven/hearth/grimoire/new?from=a%26b',
+  ])('survives the round trip through /sign-in: %s', (returnPath) => {
+    expect(roundTrip(returnPath)).toBe(returnPath);
+  });
+
+  // The proxy builds the return path from the request URL, and `//evil.example`
+  // is a pathname a request can really carry.
+  it.each(['//evil.example', 'https://evil.example', '/\\evil.example'])(
+    'falls back to / for an unsafe return path: %s',
+    (unsafe) => {
+      expect(signInPath(unsafe)).toBe('/sign-in?next=%2F');
+    },
+  );
 });

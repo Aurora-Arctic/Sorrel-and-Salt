@@ -80,5 +80,5 @@ tmp
 .cache
 .env*
 
-# Deliberate lint violations written by tests/guards/lint-db-client-boundary.test.ts
-__lint-probe__/
+# Deliberate lint violations written by the tests/guards/lint-*-boundary.test.ts guards
+__lint-probe*__/

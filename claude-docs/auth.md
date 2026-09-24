@@ -255,10 +255,11 @@ of identity and lives behind `/api/auth`; a `Session` is what the server has
 already resolved out of it. Keeping the two apart is part of why MB.30 turned
 the organization plugin down — calling its server API from a service would have
 made every fixture user a `sessions` row and a signed cookie, and `asUser(A)`
-would have stopped being a service-level value at all. M2.7 adds the helper
-that produces one from a request; M1.26 defined the shape ahead of it so
-authorization tests could be written first, and `tests/support/as-user.ts` produces
-one from a fixture user (`claude-docs/testing.md`).
+would have stopped being a service-level value at all. `src/lib/request-session.ts`
+produces one from a request (M2.7, "Route protection" below); M1.26 defined the
+shape ahead of it so authorization tests could be written first, and
+`tests/support/as-user.ts` produces one from a fixture user
+(`claude-docs/testing.md`).
 
 - **It extends `AuditSession` rather than restating `userId`.** The identity a
   call acts under and the identity it is stamped with are one field, so
@@ -304,6 +305,86 @@ Both take a message and default to a short one, because DESIGN.md §5's one-way
 widen requires an _explaining_ error where a bare refusal would mislead:
 narrowing a spell's visibility is refused with the reason, not with a one-word
 `Forbidden`.
+
+## Route protection (M2.7)
+
+Every page is protected unless it is named public, and two layers do the
+protecting: a cheap one that owns the redirect, and a secure one that owns the
+answer.
+
+| Layer                       | Where                        | Checks                                           | On failure                              |
+| --------------------------- | ---------------------------- | ------------------------------------------------ | --------------------------------------- |
+| Proxy (optimistic)          | `src/proxy.ts`               | A Better Auth session cookie is present          | 307 to `/sign-in?next=<path and query>` |
+| `requireSession()` (secure) | `src/lib/request-session.ts` | Better Auth finds a live session in the database | The same redirect, from the page        |
+
+- **Deny by default.** `PUBLIC_ROUTES` in `src/proxy.ts` is a plain list of
+  the pages a signed-out visitor may reach — `/`, the general entry page
+  (MB.57); `/sign-in`; and `/invite/*`. Everything else redirects, so a
+  route added without anyone thinking about auth is protected, not open. An
+  entry is an exact path, or a path ending `/*` for everything beneath it:
+  `/` admits only `/`, `/sign-in` does not admit `/sign-in-help`, and
+  `/invite/*` does not admit `/invites`. Adding a public page is adding a
+  line there.
+- **The matcher only keeps the proxy off what is never a page:** Next's own
+  `/_next/*` assets and `/api/*`. It must be a literal Next can read at
+  build time, which is why the public list is not expressed in it — as a
+  regex negative lookahead it was unreadable, and would have got worse with
+  every route. The cost of the split is that the proxy also runs on the
+  public pages, which is a cookie-free no-op there beyond forwarding the
+  return path. `tests/proxy.test.ts` pins the matcher with Next's
+  `unstable_doesMiddlewareMatch` (the installed 16.3 name for the docs'
+  `unstable_doesProxyMatch`), and the public list through the proxy itself.
+- **`/api/*` is public to the proxy, not to the data.** Better Auth's handshake
+  has to be reachable signed out, and `/api/graphql` must refuse in its own
+  error shape rather than answer a `fetch` with a redirect to an HTML page. The
+  GraphQL context calls `getSession()` and the services refuse.
+- **Why a proxy at all, when the page checks anyway.** A server component
+  cannot read its own URL, so only the proxy knows the path to send the visitor
+  back to. It also covers what a page check would not: a layout does not re-run
+  on client-side navigation (Next's authentication guide, "Layouts and auth
+  checks"), and a route that forgets to call `requireSession()` still
+  redirects. It never touches the database — Next runs it on every page
+  request, prefetches included — so its cost is a cookie read per navigation.
+- **Why the page checks anyway.** A present cookie is not a valid one: expired,
+  revoked, or forged all pass the proxy. `requireSession()` asks Better Auth,
+  which verifies the cookie's HMAC and looks the session up. It redirects on
+  failure with the path the proxy forwarded in the `x-sorrel-return-path`
+  request header (`RETURN_PATH_HEADER`). The proxy sets that header on every
+  request it passes, overwriting any value the client sent, and the read still
+  goes through `safeReturnPath`. The proxy forwards it on public pages too, so
+  `/invite/[token]` can send a signed-out visitor to `/sign-in` and back when
+  M7 makes acceptance require a sign-in. A page that is public but
+  personalised, as `/` may become, reads the session with `getSession()`;
+  `requireSession()` would redirect its signed-out visitors.
+  No page calls `requireSession()` yet: every protected route so far is still
+  to be built, and each adopts it in its own PR.
+- **The return path round trip.** The proxy builds `next` from the request's
+  pathname and query, through `signInPath()` (`src/lib/sign-in.ts`), which
+  runs `safeReturnPath` first — a request can really carry a pathname of
+  `//evil.example`. `/sign-in` reads `next` back through the same guard and
+  hands it to `SignInPanel` as Better Auth's `callbackURL`, and its
+  `errorCallbackURL` is `signInPath(next)`, so a failed attempt keeps the
+  destination too. One guard on the way out and on the way back is what makes
+  the round trip lossless for a safe path and closed for an unsafe one.
+- **`getSession()` is `cache()`-wrapped**, so a layout and a page asking in the
+  same render cost one lookup. It returns exactly `{ userId, role }`, the
+  service-level `Session` above. It throws on a `role` outside the column's
+  enum rather than reading it as `'user'`, because Better Auth types the
+  additional field as a plain string and a wrong value there is a bug to
+  surface, not a default to apply.
+
+**Services receive the session; they never read it.** Every service takes a
+`Session` as its first argument. The page calls `requireSession()` (or the
+GraphQL context calls `getSession()`) and passes the result in. That is what
+keeps a service callable from a test with `asUser(A)`, from a script, and from
+both transports alike. `.oxlintrc.json`'s `src/services/**` override makes it
+an import error: a service may not import `next/headers`, `better-auth/cookies`,
+`lib/auth` or `lib/request-session`. It may still `import type { Session }`
+and better-auth's `createAccessControl`. The override restates the three
+top-level bans because an override replaces the rule rather than merging
+(`claude-docs/db.md`). `tests/guards/lint-service-session-boundary.test.ts`
+asserts all of it with probe files, in a probe directory of its own so it
+cannot race `lint-db-client-boundary.test.ts`'s.
 
 ## The organization plugin is not used (MB.30)
 
@@ -427,3 +508,19 @@ page.tsx`'s own source for the invite-only explanation M2.8 adds, since
   (story 2), and a static import of a page that isn't there would fail
   typecheck rather than the test. `claude-docs/testing.md`, "Acceptance"
   covers how CI tolerates this suite failing until M2 closes.
+- **Route protection (M2.7)** — `tests/proxy.test.ts` pins the matcher and
+  the public list, lookalikes included, and asserts the proxy's
+  redirect, its return path, and the header it forwards, overwriting a
+  client-supplied one. `tests/lib/request-session.test.ts` mocks Better Auth and
+  asserts the mapping to `{ userId, role }`, the refusal of an unknown role, and
+  `requireSession()`'s redirect. `tests/lib/sign-in.test.ts` round-trips a set
+  of return paths through `signInPath()` and `safeReturnPath()`.
+  `e2e/route-protection.spec.ts` runs the whole thing against the built
+  server: a signed-out visit to a protected route lands on `/sign-in` with
+  its `next`, and `/invite/*` is not redirected; `e2e/smoke.spec.ts` renders `/`
+  signed out. `requireSession()` has no end-to-end test until the first page
+  calls it: a forged cookie passes the proxy by design, and only a real page
+  can show the database-backed check refusing it. That page's PR adds the test,
+  signing in with a `sessions` row plus a signed cookie (the MB.30 recipe) —
+  in a spec that does not also reset `sorrel_e2e`, or one that shares
+  smoke.spec.ts's, since two files resetting it from different workers race.
