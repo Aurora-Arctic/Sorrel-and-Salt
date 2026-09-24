@@ -31,7 +31,7 @@ describe('V1_STORIES', () => {
   it('carries each story under its own number with its §10 wording', () => {
     expect(V1_STORIES[0]).toEqual({
       id: 1,
-      title: "Sign in with Google or GitHub, so I don't manage another password.",
+      title: "Sign in with an account I already have, so I don't manage another password.",
     });
     expect(V1_STORIES.find((story) => story.id === 57)?.title).toMatch(
       /^Add a one-off ingredient by name and form/,

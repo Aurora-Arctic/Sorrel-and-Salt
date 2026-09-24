@@ -212,6 +212,13 @@ describe('CLAUDE.md rule 2 — the db client import boundary', () => {
   // The exemptions are disable comments rather than config (oxlint ignores
   // "off" inside `overrides`), which makes a fifth cheap to add by hand — so
   // the set is pinned and a new one is argued for in the diff.
+  //
+  // The scan below correlates a directive with the import line right after
+  // it, rather than asking only "does this file contain the string
+  // anywhere" — `.oxlintrc.json` gained a second `no-restricted-imports`
+  // pattern at M2.6 (social-providers-config.ts, a different boundary
+  // entirely), and a file can legitimately carry a disable comment for that
+  // one without being an exemption from *this* one.
   it('has exactly four files carrying the exemption, and no others', () => {
     // `-c safe.directory=*`: CI's vitest job runs as root over a checkout
     // owned by uid 1000, which git refuses as "dubious ownership". `git
@@ -223,10 +230,13 @@ describe('CLAUDE.md rule 2 — the db client import boundary', () => {
       .split('\n')
       .filter(Boolean);
 
-    const directive = /^[ \t]*\/\/[ \t]*oxlint-disable(-next-line)? no-restricted-imports\b/m;
-    const exempt = tracked.filter((file) =>
-      directive.test(readFileSync(join(REPO_ROOT, file), 'utf8')),
-    );
+    const directive = /^[ \t]*\/\/[ \t]*oxlint-disable(-next-line)? no-restricted-imports\b/;
+    const clientImport =
+      /(?:from\s+['"]|import\(\s*['"])(?:\.\/connection|.*\/db\/connection)(?:\.ts)?['"]/;
+    const exempt = tracked.filter((file) => {
+      const lines = readFileSync(join(REPO_ROOT, file), 'utf8').split('\n');
+      return lines.some((line, i) => directive.test(line) && clientImport.test(lines[i + 1] ?? ''));
+    });
 
     expect(exempt.sort()).toEqual([...CLIENT_EXEMPT].sort());
   });

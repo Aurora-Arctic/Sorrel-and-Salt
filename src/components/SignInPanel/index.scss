@@ -1,0 +1,191 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The page-level frame for the one page reachable while signed out — there
+// is no AppShell to center it (DESIGN.md §9 scopes that to signed-in pages).
+// 32rem keeps the frame itself inside a comfortable reading measure without
+// stretching a short button list edge to edge on a wide viewport; the panel
+// below is narrower still.
+.sign-in-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 2rem 1rem;
+  max-width: 32rem;
+  margin-inline: auto;
+}
+
+// `align-items: center` rather than the flex default `stretch`, so every
+// child — the heading, the error, the button column — sizes to its own
+// content and centers on the same axis, instead of each one separately
+// re-deriving how to center itself within a full-width parent.
+// `margin-inline: auto` self-centers the panel even where nothing else
+// does — the real page's `.sign-in-page` already centers via flex, but
+// the Ladle workshop renders this component bare, with no such wrapper.
+.sign-in-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 22rem;
+  margin-inline: auto;
+}
+
+.sign-in-panel__heading {
+  margin: 0;
+  text-align: center;
+}
+
+// Centered by the parent's `align-items: center`, same as every other
+// child. `max-width` is matched to the button column's own width rather
+// than measured from it (grid's `max-content` sizing would otherwise let a
+// long message dominate the column, widening the buttons to fit an
+// unwrapped sentence instead of wrapping within their width) — an
+// approximation tied to the current padding and the longest label,
+// "Continue with Microsoft"; revisit if either changes. The smaller font
+// size is what keeps every message (`src/lib/sign-in.ts`'s
+// `ERROR_MESSAGES`) to two lines at that width.
+.sign-in-panel__error {
+  margin: 0;
+  max-width: 14.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.25rem;
+  border: 1px solid $secondary;
+  color: $secondary;
+  font-size: 0.8rem;
+  text-align: center;
+  @include theme-transition(background-color, border-color, color);
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+// A single `max-content` column rather than `flex` + `width: 100%`: a grid
+// track sizes to the widest item's own content, so every button shrinks to
+// fit and then stretches to match the widest one, without measuring text in
+// JS. `justify-content: center` centers that one column within the panel.
+.sign-in-panel__providers {
+  display: grid;
+  grid-template-columns: max-content;
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+.sign-in-panel__provider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+// Every roster button carries `.btn` (_primitives.scss) for its shape —
+// padding, radius, shadow, focus ring, transition — the same primitive any
+// other button in the app uses. This rule is only the two ways a
+// provider's brand button differs from `.btn`'s own defaults: the icon
+// sits at the left edge rather than centered, and the button fills its
+// grid column rather than sizing to its own content. Compounded with
+// `.btn` (`.sign-in-panel__button.btn`) so these two overrides apply
+// regardless of the two stylesheets' load order. Colour is never here —
+// every provider's own colour and mark replaces `.btn`'s
+// (claude-docs/components/sign-in-panel.md, "Provider branding").
+.sign-in-panel__button.btn {
+  justify-content: flex-start;
+  width: 100%;
+  border-color: transparent;
+}
+
+// A small backing circle behind Facebook's mark, whose own path is the
+// circle's outline merged with the "f" as a hole in it (icons.tsx) — filled
+// white, the "f" is only visible where this chip's own blue shows through.
+.sign-in-panel__icon-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sign-in-panel__icon-chip--facebook {
+  background-color: #1877f2;
+}
+
+// Each brand's own published colour (see icons.tsx's header for why these
+// are hex literals rather than $accent/$secondary tokens, and for each
+// icon's own source). Compounded with `.btn` — same reason as the two rules
+// above: `.btn`'s `border` shorthand sets a border-color too, and without
+// the extra specificity, whichever of `.btn` or this rule's own stylesheet
+// happens to load second would win, rather than always this one.
+//
+// `.btn` itself changes text colour on hover/focus (to `$text-on-color`,
+// for a plain outlined button); a brand button's text colour is part of the
+// brand and stays fixed, so every hover/focus block below restates its own
+// `color` rather than leaving `.btn`'s free to compete — an omitted `color`
+// here would tie with `.btn`'s in specificity and so depend on the same
+// cross-stylesheet load order this whole compounding exists to avoid.
+.sign-in-panel__button--google.btn {
+  background-color: #ffffff;
+  border-color: #dadce0;
+  color: #000000;
+
+  &:hover,
+  &:focus-visible {
+    background-color: #e8eaed;
+    color: #000000;
+  }
+}
+
+.sign-in-panel__button--discord.btn {
+  background-color: #5865f2;
+  color: #ffffff;
+
+  &:hover {
+    background-color: #4752c4;
+    color: #ffffff;
+  }
+}
+
+.sign-in-panel__button--facebook.btn {
+  background-color: #1877f2;
+  color: #ffffff;
+
+  &:hover {
+    background-color: #166fe5;
+    color: #ffffff;
+  }
+}
+
+.sign-in-panel__button--microsoft.btn {
+  background-color: #ffffff;
+  border-color: #8c8c8c;
+  color: #000000;
+
+  &:hover,
+  &:focus-visible {
+    background-color: #e0e0e0;
+    color: #000000;
+  }
+}
+
+// The disabled look itself is `.btn[aria-disabled='true']` — a universal
+// primitive (_primitives.scss), not a sign-in-only style. All that is left
+// here is Facebook's own wrinkle: its mark is a white shape with the "f" as
+// a hole in it (icons.tsx), so the hole shows whatever sits behind the
+// chip. Dropping the chip's own blue while disabled lets the hole show
+// this button's own (greyed) background instead of staying blue against a
+// greyed button. Scoped off the button's own `aria-disabled`, not a brand
+// class — a disabled button carries no `--facebook` class (see the
+// `className` comment in index.tsx), but `FacebookIcon` still renders its
+// chip regardless of availability.
+.sign-in-panel__button[aria-disabled='true'] .sign-in-panel__icon-chip--facebook {
+  background-color: transparent;
+}
+
+.sign-in-panel__note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: $text-muted;
+}
