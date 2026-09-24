@@ -586,10 +586,27 @@ that file.
 **production build**, not `next dev` — `webServer.command` is `npm run build
 && npm run start`, on **8001** (`PORT` env override; `start` defaults to
 8000). Distinct from Vitest's `db` project, which clones one database per
-worker — Playwright needs only one, `sorrel_e2e`, since `webServer` is a
-single shared server. `reuseExistingServer` is off whenever `CI` is set, so a
+worker — Playwright needs only one, `sorrel_e2e`, since every server reads
+the same database. `reuseExistingServer` is off whenever `CI` is set, so a
 CI run always builds and starts its own server rather than attaching to one
 left over on the port.
+
+**There are two servers over one build**, because the sign-in page reads OAuth
+credentials per request and its two provider states cannot share a process.
+`webServer` is an array: the first entry builds and serves on 8001 with every
+provider variable set to `''` — blank rather than absent, because Next never
+lets `.env.local` override a variable already set, so a developer's real
+credentials cannot leak into it; the second runs only `npm run start` on
+**8002** with placeholder credentials for all four. Playwright starts the
+entries in order, which is what lets the second serve the first's build. Two
+projects split the specs between them: `chromium` (everything except
+`e2e/sign-in-configured-providers.spec.ts`, against 8001) and
+`chromium-configured-providers` (that spec alone, against 8002, with
+`reducedMotion: 'reduce'` so a hover scan never samples a colour
+mid-transition). Only `chromium` collects JS coverage (`e2e/fixtures.ts`) —
+the second project runs the same bundle. Placeholder ids are useless to a real
+authorization endpoint, so nothing may click a provider button against 8002;
+the spec aborts and fails on any request to `/api/auth/sign-in/`.
 
 - **`e2e/database.ts`** — the same two-tier shape as the Vitest harness,
   through the same `tests/support/seeded-database.ts` (M1.27).

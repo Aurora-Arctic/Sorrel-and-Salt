@@ -110,7 +110,7 @@
 }
 
 .sign-in-panel__icon-chip--facebook {
-  background-color: #1877f2;
+  background-color: #0866ff;
 }
 
 // Each brand's own published colour (see icons.tsx's header for why these
@@ -142,18 +142,24 @@
   background-color: #5865f2;
   color: #ffffff;
 
-  &:hover {
+  &:hover,
+  &:focus-visible {
     background-color: #4752c4;
     color: #ffffff;
   }
 }
 
+// Facebook's post-2023 blue, not the older #1877f2: white-on-#1877f2 is
+// 4.23:1, under WCAG AA's 4.5:1 floor, and axe fails the page on it. #0866ff
+// is 4.82:1 and is the mark Facebook publishes today, so the accessible
+// value and the brand-correct one are the same colour.
 .sign-in-panel__button--facebook.btn {
-  background-color: #1877f2;
+  background-color: #0866ff;
   color: #ffffff;
 
-  &:hover {
-    background-color: #166fe5;
+  &:hover,
+  &:focus-visible {
+    background-color: #0653d4;
     color: #ffffff;
   }
 }
