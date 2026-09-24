@@ -2,7 +2,7 @@
 
 import { type ReactElement, useState } from 'react';
 import { signIn } from '../../lib/auth-client';
-import { GENERIC_SIGN_IN_ERROR } from '../../lib/sign-in';
+import { GENERIC_SIGN_IN_ERROR, signInPath } from '../../lib/sign-in';
 import { SOCIAL_PROVIDERS, type ProviderId } from '../../lib/social-providers';
 import { DiscordIcon, FacebookIcon, GoogleIcon, MicrosoftIcon } from './icons';
 import './index.scss';
@@ -40,7 +40,7 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
     const result = await signIn.social({
       provider: providerId,
       callbackURL: next,
-      errorCallbackURL: `/sign-in?next=${encodeURIComponent(next)}`,
+      errorCallbackURL: signInPath(next),
     });
     if (result?.error) {
       setMessage(GENERIC_SIGN_IN_ERROR);
