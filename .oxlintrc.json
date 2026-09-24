@@ -20,6 +20,15 @@
             "group": ["drizzle-orm", "drizzle-orm/*"],
             "allowTypeImports": true,
             "message": "Build queries only in src/db/repository.ts (CLAUDE.md rule 4) — a Drizzle query cannot be built without importing drizzle-orm at runtime, so this is that rule rather than a style. Reach the database through a service; `import type` is allowed everywhere, which is how the GraphQL layer names Drizzle types (DESIGN.md §7)."
+          },
+          {
+            "group": [
+              "**/social-providers-config",
+              "**/social-providers-config.ts",
+              "./social-providers-config",
+              "./social-providers-config.ts"
+            ],
+            "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
           }
         ]
       }

@@ -2,17 +2,16 @@ import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { fromRoot } from '../support/paths';
 
-// Both stories are blocked on UI Wave 6 hasn't built yet, not on the OAuth
-// wiring itself — Better Auth, both providers and the users table are
-// already live (M2.2-M2.5; claude-docs/auth.md, "Social providers"). These
-// read the route's own source rather than importing or rendering it: the
-// pages below don't exist yet, and importing one that isn't there would fail
+// Story 2 is blocked on UI Wave 10 hasn't built yet. Story 1's page now
+// exists (M2.6) — Better Auth, the current provider roster (Google, Discord,
+// Facebook, Microsoft) and the users table are all live (M2.2-M2.6;
+// claude-docs/auth.md, "Social providers"). Story 2's check reads the
+// route's own source rather than importing or rendering it: the page below
+// doesn't exist yet, and importing one that isn't there would fail
 // typecheck instead of the test it belongs to.
 
-describe("Story 1: Sign in with Google or GitHub, so I don't manage another password.", () => {
+describe("Story 1: Sign in with an account I already have, so I don't manage another password.", () => {
   it("offers a sign-in page at /sign-in, DESIGN.md §9's OAuth entry point", () => {
-    // Better Auth already issues a real Google/GitHub authorization URL
-    // (claude-docs/auth.md) — nobody can reach it until M2.6 builds this page.
     expect(existsSync(fromRoot('src/app/sign-in/page.tsx'))).toBe(true);
   });
 });
