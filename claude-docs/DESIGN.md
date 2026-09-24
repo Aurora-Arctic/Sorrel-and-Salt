@@ -1072,7 +1072,7 @@ Specs: admin adds a compendium entry; A adds it to W's ingredients with a quanti
 
 `@axe-core/playwright` scans each page and each open modal. Accessibility is asserted here, matching the `resume-2026` pattern — no `vitest-axe`.
 
-`webServer` runs `npm run build && npm run start` on **8001**, preserving the deliberate separation from the dev server's 8000. Coverage via `monocart-coverage-reports`.
+`webServer` runs `npm run build && npm run start` on **8001**, preserving the deliberate separation from the dev server's 8000, and a second `npm run start` over the same build on **8002** with every OAuth provider configured — the sign-in page's two availability states need a server each. Coverage via `monocart-coverage-reports`.
 
 ### Rules
 
