@@ -32,8 +32,8 @@ Start a new Gitflow hotfix branch off the latest `main`, asking what to call it 
 7. **Mark the Asana task `In Progress`.**
    - Skip this step entirely if step 2 produced no task ID.
    - The hotfix branch now exists and work is starting — exactly the `Not Started → In Progress` trigger in [`CLAUDE.md`](../../../CLAUDE.md)'s Asana section. Do it now, in this same turn.
-   - Find the task: `asana_search_tasks` with `projects.any` = `1218257926462425` and `text` = the task ID, then match a result whose `Task ID` custom field equals it exactly (the text search is fuzzy — don't rely on it alone).
-   - If exactly one task matches: add a short progress note with `asana_create_task_story` — e.g. "Branch `hotfix/<slug>` created off `origin/main`; work started." — and, **only if its current `Status` is `Not Started`**, `asana_update_task` with `custom_fields` = `{"1218259502689548": "1218259502689550"}` (the `In Progress` option). Status moves forward only: if it's already `In Progress` or later, leave it.
+   - Find the task by the two-call lookup in that section: `asana_get_tasks` with `project` = `1218814916390986` returns the wave cards and the top-level `MB.*` tasks; if the id isn't among them, `asana_get_task` on the wave card whose `notes` name it, with `opt_fields=subtasks.name,subtasks.gid,subtasks.completed`, and match the subtask's id segment exactly — strip the marker, then compare the text up to the `—` that follows it, because thirty of the board's ids are a strict prefix of another (`M2.1` and `M2.10`, `M4.1` and `M4.1a`). There is no text search — `asana_search_tasks` is premium and returns `payment_required`.
+   - If exactly one task matches: add a short progress note with `asana_create_task_story` — e.g. "Branch `hotfix/<slug>` created off `origin/main`; work started." — and, **only if its name carries no status marker** (which is what `Not Started` looks like), `asana_update_task` with `name` set to the existing name prefixed with `▶ `. Rewrite only the marker, never the id or title. Status moves forward only: if the name already starts with `▶ ` or `◔ `, or the task is ticked complete, leave it.
    - If zero or more than one task matches, don't guess — tell the user you couldn't uniquely identify the task and that they'll need to move it to `In Progress` themselves.
 
 8. **Report the result.**
@@ -44,4 +44,4 @@ Start a new Gitflow hotfix branch off the latest `main`, asking what to call it 
 - Never pushes the new branch — `/create-pr` handles pushing once there's work to send.
 - Never force-pushes or deletes anything; this skill only ever creates a branch.
 - If `git fetch origin main` fails (no network, no remote), stop and report the error rather than branching off a possibly-stale local `main`.
-- The Asana project / field / option GIDs used in step 7 are mirrored from [`CLAUDE.md`](../../../CLAUDE.md)'s "Asana task tracking" table — that table is the source of truth if they ever drift.
+- The project GID, the status markers and the lookup used in step 7 are mirrored from [`CLAUDE.md`](../../../CLAUDE.md)'s "Asana task tracking" section — that section is the source of truth if they ever drift. The workspace is on Asana's free plan, so status lives in the task **name** and there are no custom fields to set.

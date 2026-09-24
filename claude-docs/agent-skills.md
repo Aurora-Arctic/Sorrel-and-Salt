@@ -9,7 +9,7 @@ this page holds the shape.
 
 | Skill              | Does                                                                                                                                                                          |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `start-task`       | Reads an Asana task's `Type` and dispatches to `create-feature` (`Feature`/`Task`/`Bugfix`) or `create-hotfix` (`Hotfix`), passing the task through.                          |
+| `start-task`       | Finds an Asana task by the name-prefix lookup and dispatches to `create-hotfix` if the task reads as a hotfix, `create-feature` otherwise, passing the task through.          |
 | `create-feature`   | Branches `feature/<slug>` off latest `origin/staging`, asking for the name first.                                                                                             |
 | `create-hotfix`    | Branches `hotfix/<slug>` off latest `origin/main`, asking for the name first.                                                                                                 |
 | `create-pr`        | Commits (after asking), pushes, opens a PR against the Gitflow-appropriate target. `hotfix/*` opens PRs into both `main` and `staging` — see `create-pr/reference-hotfix.md`. |
