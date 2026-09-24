@@ -125,5 +125,22 @@ described by its note, still lacks `disabled`, and its click never reaches
 `signIn.social`. Role and label queries only.
 
 Runs in the `unit` (jsdom) Vitest project — `npm run test:coverage`. Real
-keyboard reachability and the axe scan are asserted in `e2e/sign-in.spec.ts`,
-per CLAUDE.md's "Accessibility is asserted in Playwright."
+keyboard reachability and the axe scans are asserted in Playwright, per
+CLAUDE.md's "Accessibility is asserted in Playwright", once per provider
+state — each state has a surface the other lacks, so neither scan stands in
+for the other:
+
+| Spec                                       | Server state                                | Covers                                                                                                                                                             |
+| ------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `e2e/sign-in.spec.ts`                      | No provider configured (8001)               | Every button `aria-disabled` and still reached by Tab; axe over the greyed page (the `.sign-in-panel__note` text, Facebook's transparent chip) and the error state |
+| `e2e/sign-in-configured-providers.spec.ts` | All four configured, placeholder ids (8002) | Every button available with no note; axe over the brand colours at rest, then once per button while hovered — after asserting its background actually changed      |
+
+**The configured scan exists because the greyed one could not see the
+brand colours**: an unavailable button drops its brand class, so a CI with
+no credentials scanned a page on which `#1877f2` did not exist, and passed a
+4.23:1 contrast failure three times. Reverting `#0866ff` to `#1877f2` fails
+the configured project's resting scan and every hover scan but Facebook's
+own. Each spec also asserts its own state before scanning, so a server that
+picked up the wrong credentials fails rather than quietly scanning the other
+page. See [`testing.md`](../testing.md), "E2E — Playwright", for how the two
+servers are wired.
