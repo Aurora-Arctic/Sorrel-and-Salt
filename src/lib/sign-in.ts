@@ -1,6 +1,6 @@
-// Two pure helpers for /sign-in?next=&error=. Both are reused by M2.7's
-// route protection, which is the other place a "where do I send them back
-// to" and a "what do I tell them" decision gets made.
+// Pure helpers for /sign-in?next=&error=, shared by the sign-in page and route
+// protection (src/proxy.ts, src/lib/request-session.ts) — one rule for which
+// return paths are safe, applied on the way out and on the way back.
 
 /**
  * The open-redirect guard for `?next=`. A same-site absolute path is kept
@@ -19,6 +19,19 @@ export function safeReturnPath(raw: string | string[] | undefined): string {
   // whatever eventually turns it into a redirect response.
   if (/[\r\n]/.test(raw)) return '/';
   return raw;
+}
+
+/**
+ * The request header the proxy forwards a protected page's own path and query
+ * in. A server component cannot read its URL, and `requireSession()` needs it
+ * for a redirect the proxy's cookie check did not catch. The proxy overwrites
+ * any client-supplied value; `safeReturnPath` still guards the read.
+ */
+export const RETURN_PATH_HEADER = 'x-sorrel-return-path';
+
+/** `/sign-in`, carrying `returnPath` as `?next=` once it has passed `safeReturnPath`. */
+export function signInPath(returnPath: string | undefined): `/sign-in?next=${string}` {
+  return `/sign-in?next=${encodeURIComponent(safeReturnPath(returnPath))}`;
 }
 
 // Better Auth's own OAuth callback error codes (node_modules/better-auth/dist/
