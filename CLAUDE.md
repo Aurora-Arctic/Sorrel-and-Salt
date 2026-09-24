@@ -243,6 +243,7 @@ Skills live in `.claude/skills/<name>/SKILL.md` and are invoked as `/<name>`. Th
 | `create-release`   | "cut a release", "create a release branch", `/create-release` — bumps semver, branches `release/<version>` off `staging`, tags `v<version>`, opens a PR into `main`.                                                                                              |
 | `create-main-sync` | "sync main into staging", "bring the hotfix back to staging", `/create-main-sync` — branches `main-sync/<timestamp>` off `main`, opens a PR into `staging`.                                                                                                       |
 | `prune-branches`   | "clean up my branches", "prune stale branches", "delete branches gone on remote" — deletes merged/gone local branches, asks about never-pushed ones. Never touches `main`/`staging`.                                                                              |
+| `project-progress` | "project progress", "task progress", "how many hours are left", `/project-progress` — tasks and hours completed, remaining and total, from TASKS.md and git merge history; no Asana calls unless asked to verify against the board.                               |
 
 <!-- BEGIN:nextjs-agent-rules -->
 

@@ -7,17 +7,18 @@ Claude skills for this repo, at `.claude/skills/<name>/SKILL.md`, invoked as
 `/<name>`. [`CLAUDE.md`](../CLAUDE.md)'s Skills section is the trigger table;
 this page holds the shape.
 
-| Skill              | Does                                                                                                                                                                          |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `start-task`       | Finds an Asana task by the name-prefix lookup and dispatches to `create-hotfix` if the task reads as a hotfix, `create-feature` otherwise, passing the task through.          |
-| `create-feature`   | Branches `feature/<slug>` off latest `origin/staging`, asking for the name first.                                                                                             |
-| `create-hotfix`    | Branches `hotfix/<slug>` off latest `origin/main`, asking for the name first.                                                                                                 |
-| `create-pr`        | Commits (after asking), pushes, opens a PR against the Gitflow-appropriate target. `hotfix/*` opens PRs into both `main` and `staging` — see `create-pr/reference-hotfix.md`. |
-| `create-release`   | Computes the next semver, branches `release/<version>` off `staging`, tags `v<version>`, opens a PR into `main`.                                                              |
-| `create-main-sync` | Branches `main-sync/<timestamp>` off `main`, opens a PR bringing `main`-only commits back into `staging`.                                                                     |
-| `prune-branches`   | Deletes merged/gone local branches automatically, asks about never-pushed ones. Never touches `main`/`staging`.                                                               |
+| Skill              | Does                                                                                                                                                                                                                                                           |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start-task`       | Finds an Asana task by the name-prefix lookup and dispatches to `create-hotfix` if the task reads as a hotfix, `create-feature` otherwise, passing the task through.                                                                                           |
+| `create-feature`   | Branches `feature/<slug>` off latest `origin/staging`, asking for the name first.                                                                                                                                                                              |
+| `create-hotfix`    | Branches `hotfix/<slug>` off latest `origin/main`, asking for the name first.                                                                                                                                                                                  |
+| `create-pr`        | Commits (after asking), pushes, opens a PR against the Gitflow-appropriate target. `hotfix/*` opens PRs into both `main` and `staging` — see `create-pr/reference-hotfix.md`.                                                                                  |
+| `create-release`   | Computes the next semver, branches `release/<version>` off `staging`, tags `v<version>`, opens a PR into `main`.                                                                                                                                               |
+| `create-main-sync` | Branches `main-sync/<timestamp>` off `main`, opens a PR bringing `main`-only commits back into `staging`.                                                                                                                                                      |
+| `prune-branches`   | Deletes merged/gone local branches automatically, asks about never-pushed ones. Never touches `main`/`staging`.                                                                                                                                                |
+| `project-progress` | Tasks and hours completed, remaining and total, from local data only: TASKS.md estimates joined to what has merged into `origin/staging`. Asana is read only in its opt-in verify mode; work done outside git is a short list in `project-progress/tally.mjs`. |
 
-All but `start-task` implement the Gitflow lane in `CLAUDE.md` → Conventions.
+All but `start-task` and `project-progress` implement the Gitflow lane in `CLAUDE.md` → Conventions.
 
 - **`.claude/settings.json` is shared, committed config** — it carries the
   `permissions.ask` entries (`git push origin *`,
