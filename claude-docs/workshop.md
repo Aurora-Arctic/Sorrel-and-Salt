@@ -92,6 +92,13 @@ without a page routed to it.
   its `src/scss/` `*-base` mixin into `.ladle-story-frame`, so a story gets the
   identical prose, document structure and class layer a page does while Ladle's
   own `<ul>` / `<li>` / `<a>` chrome, outside the frame, stays untouched.
+- **`UnoptimizedLink.tsx`** — what `next/link` resolves to here, via the alias in
+  `vite.config.ts`: a plain anchor, the substitution Ladle's Next.js guide
+  prescribes. Vite has no Next router and no `process.env`, and the first
+  story to import `next/link` (Welcome) rendered blank without it. That was
+  also when `vite.config.ts` turned out never to have been loaded: Ladle passes
+  `viteConfig` to Vite's loader as given and Vite otherwise looks in the
+  project root, so `config.mjs` now names the file explicitly.
 - **`head.html`** — injected into `<head>`; loads Cormorant Unicase + Lexend by
   name from Google Fonts so the workshop's type matches the app's (the app
   self-hosts them via `next/font`, which the workshop has no equivalent of).
