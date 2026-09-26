@@ -1,6 +1,6 @@
 import { afterEach, afterAll, beforeAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
-import { server } from './tests/support/msw/server';
+import { server } from './msw/server';
 
 // RTL registers this itself under `globals: true` (its entry checks for a
 // global `afterEach`); the explicit call is a harmless duplicate from the port.

@@ -24,7 +24,7 @@ without a page routed to it.
 ## `.ladle/`
 
 - **`config.mjs`** — `stories` glob, `port` 61000, `previewPort` 61001
-  (`ladle preview`), `outDir` `build`, pinned `hmrPort` 61002. `storyOrder`
+  (`ladle preview`), `outDir` `.reports/workshop`, pinned `hmrPort` 61002. `storyOrder`
   forces each component's `Default` story first and leaves the rest in Ladle's
   own order; it is a global-config hook only (no per-story-file equivalent) and
   must stay a self-contained function, since Ladle serializes it with
@@ -117,7 +117,7 @@ without a page routed to it.
   and React Fast Refresh. Only edits to the `.ladle/` files themselves need the
   dev server restarted.
 - `npm run workshop:build` / `make workshop-build` — static build to the
-  gitignored `./build`, via `scripts/build-workshop.ts`. See **The build gate**
+  gitignored `.reports/workshop/`, via `scripts/build-workshop.ts`. See **The build gate**
   below for why the wrapper exists.
 - `tests/guards/workshop-guards.test.ts` (MB.38) — the two mechanical guards, as
   ordinary Vitest tests in the `unit` project. One fails if a directory under

@@ -657,9 +657,9 @@ page.tsx`'s own source for the invite-only explanation M2.8 adds, since
   asserts the mapping to `{ userId, role }`, the refusal of an unknown role, and
   `requireSession()`'s redirect. `tests/lib/sign-in.test.ts` round-trips a set
   of return paths through `signInPath()` and `safeReturnPath()`.
-  `e2e/route-protection.spec.ts` runs the whole thing against the built
+  `tests/e2e/route-protection.spec.ts` runs the whole thing against the built
   server: a signed-out visit to a protected route lands on `/sign-in` with
-  its `next`, and `/invite/*` is not redirected; `e2e/smoke.spec.ts` renders `/`
+  its `next`, and `/invite/*` is not redirected; `tests/e2e/smoke.spec.ts` renders `/`
   signed out. `requireSession()` has no end-to-end test until the first page
   calls it: a forged cookie passes the proxy by design, and only a real page
   can show the database-backed check refusing it. That page's PR adds the test,

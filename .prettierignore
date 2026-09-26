@@ -9,8 +9,5 @@ next-env.d.ts
 # Machine-generated lockfile
 package-lock.json
 
-# Test output
-coverage
-coverage-e2e
-playwright-report
-test-results
+# Generated reports and builds
+.reports

@@ -182,7 +182,7 @@ services:
     environment:
       NODE_ENV: test
       CI: 'true'
-      # e2e/database.ts swaps the pathname to sorrel_e2e.
+      # tests/e2e/database.ts swaps the pathname to sorrel_e2e.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       # The `build` script forces NODE_ENV=production, where Better Auth
       # requires a secret and auth.ts a primary admin address — this one on

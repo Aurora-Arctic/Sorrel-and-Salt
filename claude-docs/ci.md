@@ -301,10 +301,13 @@ matrix's generated job name, not the leg's.
   `build-image.yml`'s — same `inputs.db-image`/`services: postgres:` shape
   as `vitest.yml`, fed by the same caller-built `build-db-image` job (one
   build, shared by both — see `vitest.yml`'s entry above). Uploads
-  `playwright-report/`/`test-results/` on failure and
-  `coverage-e2e/` always (parallel to `vitest.yml`'s `coverage/` upload).
-  `should-run` path-filters the same way. `next.config.ts`'s
-  `productionBrowserSourceMaps: true` and `e2e/coverage.config.ts`'s
+  `.reports/playwright-report/`/`.reports/test-results/` on failure and
+  `.reports/coverage-e2e/` always (parallel to `vitest.yml`'s
+  `.reports/coverage/` upload). Its reporters (`list`, `json`, `html`) come
+  from `playwright.config.ts` under `CI`, not from the command line: a CLI
+  `--reporter` replaces the config's list and with it the html report's
+  `outputFolder`. `should-run` path-filters the same way. `next.config.ts`'s
+  `productionBrowserSourceMaps: true` and `tests/e2e/coverage.config.ts`'s
   `sourceFilter` (JS-only coverage, `src/**` only) apply here since it's the
   same production build both `npm run e2e` locally and this job exercise —
   see `testing.md`'s Coverage section for why, and for the

@@ -5,7 +5,7 @@ import path from 'node:path';
 import { buildCoverageSection } from './lib/coverage-table.mjs';
 
 const RESULTS_PATH = '/app/vitest-results.json';
-const COVERAGE_SUMMARY_PATH = '/app/coverage/coverage-summary.json';
+const COVERAGE_SUMMARY_PATH = '/app/.reports/coverage/coverage-summary.json';
 const REPO_ROOT = '/app';
 const MAX_DETAILS = 15;
 

@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import postgres from 'postgres';
 
 // The one place a test database is made from the migrated schema and the
-// `standard` scenario; db-global-setup.ts and e2e/global-setup.ts both clone
+// `standard` scenario; db-global-setup.ts and tests/e2e/global-setup.ts both clone
 // from what it builds. Built at test-run setup rather than baked into the
 // Postgres image: claude-docs/testing.md, "Where tests live".
 //
@@ -58,7 +58,7 @@ export async function dropDatabase(name: string): Promise<void> {
 }
 
 // No `cwd`: both runners start at the repo root, and paths.ts's REPO_ROOT is
-// `import.meta.dirname`, which e2e/ cannot use under Playwright's CommonJS
+// `import.meta.dirname`, which tests/e2e/ cannot use under Playwright's CommonJS
 // transform. `Record<string, string>` rather than `NodeJS.ProcessEnv`: the
 // repo's augmentation requires NODE_ENV, which a two-key bag need not carry.
 function run(script: string, url: string, env: Record<string, string> = {}): void {

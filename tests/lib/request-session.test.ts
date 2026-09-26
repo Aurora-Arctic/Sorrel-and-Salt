@@ -3,7 +3,7 @@ import { RETURN_PATH_HEADER } from '@/lib/sign-in';
 
 // The helper turns Better Auth's session into the service-level `Session` and
 // nothing more. Better Auth itself is mocked: whether a cookie is a real
-// session is its job, and e2e/route-protection.spec.ts proves it end to end
+// session is its job, and tests/e2e/route-protection.spec.ts proves it end to end
 // against the built server.
 
 const getSessionMock = vi.fn();
