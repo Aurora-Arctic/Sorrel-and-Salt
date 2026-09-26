@@ -113,9 +113,12 @@ primary admin, which is already true of `DATABASE_URL`.
   sign-in. The previous primary admin keeps `role: 'admin'` and simply stops
   being protected. Set it to an address that can sign in through Google or
   Discord, or nobody will be protected.
-- **Until MB.61's follow-ups, have the owner sign in before anyone else can
-  sign up with the address.** An unverified Discord or Facebook account
-  already holding it blocks the owner's verified sign-in with a generic error.
+- **Until MB.67, have the owner sign in before anyone else can sign up with
+  the address.** An unverified Discord or Facebook account already holding it
+  blocks the owner's verified sign-in with a generic error. MB.67 makes such
+  an account provisional, expiring one verification window after its last
+  mail
+  ([`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md)).
 
 **No `BETTER_AUTH_URL` row — deliberately.** A single Preview-scoped value
 can't be correct for both `staging` (a fixed alias) and a hotfix preview
