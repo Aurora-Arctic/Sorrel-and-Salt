@@ -642,6 +642,17 @@ the spec aborts and fails on any request to `/api/auth/sign-in/`.
   concurrently and threw `duplicate key value violates unique constraint
 "pg_database_datname_index"` before this was added. `serial` pins the
   whole file to one worker, so the reset genuinely happens once.
+- **Mail is read back from Mailpit** (MB.65). `tests/e2e/mailpit.ts`'s
+  `latestMessageTo(address)` searches Mailpit's REST API at `MAILPIT_URL` for
+  the newest message to that address and returns its sender, recipients,
+  subject, text and HTML, polling up to ten seconds because the app sends in
+  the background of the request that caused it. The address goes in quoted:
+  unquoted, Mailpit's query language splits it at a `+`. A spec that follows
+  a mailed link gives its recipient a fresh address, so a retry or a parallel
+  worker cannot read another's message; `tests/e2e/mail-transport.spec.ts`
+  is the example, and sends from the runner because nothing in the app mails
+  yet. Compose and `playwright.yml` both run Mailpit; outside them the helper
+  throws on the unset URL rather than reporting that no mail arrived.
 - **`next.config.ts`'s `distDir`** reads `NEXT_DIST_DIR`, defaulting to
   `.next`. `webServer.env` sets it to `.next-e2e` so a concurrent `next dev`
   on 8000 (CLAUDE.md's Commands table promises both can run at once) never
