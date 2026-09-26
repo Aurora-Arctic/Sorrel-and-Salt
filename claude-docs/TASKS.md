@@ -1149,7 +1149,7 @@ _Acceptance criteria:_
 - A user with neither sees a clear explanation, not an empty dashboard or an error
 - The explanation says how to get in, and does not imply the account is faulty or pending review
 - No workspace is created implicitly by signing in
-- The page is `src/app/coven/page.tsx` behind `requireSession()`, and `src/components/Welcome`'s "Continue" link becomes a typed `<Link>` now that the route exists
+- The page is `src/app/coven/page.tsx` behind `requireSession()`; `src/components/Welcome`'s "Continue" link stays a plain anchor (`components/welcome.md`)
 - Story 2 acceptance test passes
 
 **M2.9 — Scope a UI for granting admin** · 2h
