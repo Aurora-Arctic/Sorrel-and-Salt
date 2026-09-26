@@ -11,7 +11,8 @@ were waiting on it:
   Discord, or we vouched.
 - **Squatting is resolved for every address**, not only the bootstrap one. An
   unverified account is provisional and expires; it cannot hold an address
-  against its owner for longer than one verification window.
+  against its owner for longer than one verification window after its last
+  mail, or three hours after its sign-up.
 - **MB.54 becomes the email page**: prefilled from the provider, editable,
   effective once verified, and the same page changes an email later.
 - **Invitations go by email**, workspace and admin alike, accepted only by a
@@ -330,28 +331,49 @@ shows.
 ## Provisional accounts and the sweep
 
 **Expiry is one token lifetime from the last verification mail.** The row's
-`updated_at` carries that clock: a sign-up sets it, and a resend touches the
-row through `withAudit` before mailing, so every send pushes the window
-forward. A row with `emailVerified` false and `updated_at` older than the
-lifetime is expired.
+`updated_at` carries that clock: a sign-up sets it, and a resend from a
+session holding the row touches it through `withAudit` before mailing, so
+every such send pushes the window forward. A resend from no session, which
+Better Auth allows, mails but extends nothing; otherwise anyone could keep a
+row alive by posting its address. A row with `emailVerified` false and
+`updated_at` older than the lifetime is expired.
+
+**And three hours from sign-up at most, added in MB.67.** A resend from the
+row's own session still restarts the hour, so without a cap a squatter
+resending hourly would hold the address indefinitely and mail its owner each
+time. `created_at` older than three hours expires the row whatever it has
+resent. Three hours leaves a real user room to find the mail and resend twice;
+a link sent in the last hour can outlive the account, and following it finds
+no user.
+
+**Only a row someone can sign in to is provisional.** The sweep also requires
+a provider `accounts` row. Seeded rows have none. Without that clause the
+sweep reaches the seeded bootstrap admin, which is unverified and referenced
+by every seeded category, and the foreign key fails the whole statement on
+every callback. Marking the seed verified instead was rejected: a verified
+row takes an implicit link from any provider vouching for its address, and
+that row is an admin.
 
 **The sweep runs in `hooks.before` on `/callback/:id`.** It runs before the
 code exchange, on every OAuth callback, and removes every expired row in one
 statement rather than looking for the one that matters, because at that point
 nothing knows which address is arriving. A partial index on the predicate
-keeps it a cheap no-op almost always.
+keeps it a cheap no-op almost always. A failure is logged and the sign-in
+carries on.
 
-**It removes the `accounts` and `sessions` rows with the user.** Better Auth
-resolves a returning provider account through `accounts` before it looks at
-`users`, so a soft-deleted user with a live account row would still sign in.
-Whether `users` is soft- or hard-deleted is MB.67's to decide under rule 4's
-`write.delete` escape hatch; the linked rows go either way.
+**It hard-deletes, decided in MB.67.** Better Auth resolves a returning
+provider account through `accounts` before it looks at `users`, so a live
+account row would sign a deleted user back in. It also finds a user by
+address with no `deleted_at` filter, so a soft-deleted row would still be
+matched and still refuse the owner's link. That settled it: the row goes, and
+its `accounts` and `sessions` rows go with it by `ON DELETE CASCADE`. The
+delete is the repository's named `deleteProvisionalUsers`, beside
+`write.delete`, which rejects a table carrying `deleted_at` by design.
 
-**The actor is the row itself.** The sweep has no session, and neither does
-the create hook it sits beside: the row came to exist by stamping itself, and
-it ceases to exist the same way, `deleted_by` its own id. That is the one
-existing exception's mirror, not a third one: same file, same self-stamp, same
-reason. It publishes no GUC, for the reason the create hook cannot.
+**Nothing is stamped.** This record first had the row stamp itself as
+`deleted_by`, the create hook's mirror. A hard delete leaves no row to carry
+the stamp, and the sweep has no session to name. It publishes no GUC, for the
+reason the create hook cannot. The swept ids go to the server log.
 
 **The blocked owner sees the generic sentence.** `account_not_linked` is
 mapped in `src/lib/sign-in.ts` to one sentence, the same whatever the cause:
@@ -365,9 +387,11 @@ is taken (MB.71, [`mb.71-plan.md`](mb.71-plan.md)).
 **Rule 1.** The mail is sent from Better Auth's `sendVerificationEmail`
 option, which runs inside `/api/auth/*` on sign-up and on
 `/send-verification-email`. That is the existing transport exception, and it
-still carries no application data. The app's own writes around the flow, the
-email page's change of address and the resend touch, go through `/api/graphql`
-to a service under `withAudit`, as every write does.
+still carries no application data. The email page's change of address goes
+through `/api/graphql` to a service under `withAudit`, as every write does.
+The resend touch runs inside `/send-verification-email`, since that is where
+the resend happens, and still writes through a service under `withAudit` with
+the row's own session.
 
 **Rule 3, the verify write.** `/verify-email` writes `emailVerified` through
 Better Auth's adapter, outside `withAudit`. It carries the right stamp anyway:
@@ -382,8 +406,9 @@ otherwise is corrected in this PR.
 
 **The two writes outside the wrapper stay two, plus their mirror.** The create
 hook and the seed are how an identity comes to exist. The verify write and the
-sweep are the same identity completing or lapsing, in the same file, stamped
-the same way. They are recorded here, beside the two, as rule 3 asks; neither
+sweep are the same identity completing or lapsing, in the same file. The
+verify write is stamped as the user. The sweep deletes the row, so nothing is
+left to stamp. They are recorded here, beside the two, as rule 3 asks; neither
 is a request with a session that could have been used instead.
 
 ## Delivery

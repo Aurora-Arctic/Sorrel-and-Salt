@@ -141,6 +141,13 @@
       "when": 1790447788157,
       "tag": "0019_users-email-lower-case",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790466726710,
+      "tag": "0020_provisional-accounts",
+      "breakpoints": true
     }
   ]
 }
