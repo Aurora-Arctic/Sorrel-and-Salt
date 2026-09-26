@@ -90,6 +90,9 @@ describe('public routes', () => {
     '/sign-in',
     '/sign-in?next=%2Fcoven%2Fhearth&error=access_denied',
     '/invite/2b7c5e2f8a',
+    // A mail client fetches the mail's images and fonts with no cookie.
+    '/email/images/salt-dark.png',
+    '/email/fonts/lexend-latin.woff2',
   ])('lets a signed-out request to %s through', async (path) => {
     const response = await proxy(request(path));
 
@@ -99,12 +102,16 @@ describe('public routes', () => {
 
   // Deny-by-default holds for lookalikes: an entry names a whole path, or a
   // whole segment with `/*`, so a route that merely starts with one is protected.
-  it.each(['/sign-in-help', '/sign-in/elsewhere', '/invites', '/invite', '/compendium'])(
-    'redirects a signed-out request to the lookalike %s',
-    async (path) => {
-      expect((await proxy(request(path))).status).toBe(307);
-    },
-  );
+  it.each([
+    '/sign-in-help',
+    '/sign-in/elsewhere',
+    '/invites',
+    '/invite',
+    '/emails/x.png',
+    '/compendium',
+  ])('redirects a signed-out request to the lookalike %s', async (path) => {
+    expect((await proxy(request(path))).status).toBe(307);
+  });
 
   // A public page that asks for a sign-in part-way — accepting an invitation —
   // needs its own path back, the same as a protected one.

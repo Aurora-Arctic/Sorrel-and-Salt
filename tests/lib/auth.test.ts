@@ -297,3 +297,69 @@ describe('options that would move the primary admin', () => {
     expect(account?.accountLinking?.trustedProviders ?? []).toEqual([]);
   });
 });
+
+// First-party verification (claude-docs/auth.md, "First-party verification").
+// Each value is pinned because each one, changed, changes who can verify what.
+describe('email verification', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  async function configuredAuth() {
+    for (const provider of ['GOOGLE', 'DISCORD', 'FACEBOOK', 'MICROSOFT']) {
+      vi.stubEnv(`${provider}_CLIENT_ID`, `test-${provider.toLowerCase()}-id`);
+      vi.stubEnv(`${provider}_CLIENT_SECRET`, `test-${provider.toLowerCase()}-secret`);
+    }
+    vi.resetModules();
+    return (await import('@/lib/auth')).auth;
+  }
+
+  it('mails a one-hour link at sign-up and never signs anyone in from it', async () => {
+    const { emailVerification } = (await configuredAuth()).options as BetterAuthOptions;
+
+    expect(emailVerification?.sendVerificationEmail).toEqual(expect.any(Function));
+    expect(emailVerification?.beforeEmailVerification).toEqual(expect.any(Function));
+    expect(emailVerification?.expiresIn).toBe(3600);
+    expect(emailVerification?.sendOnSignUp).toBe(true);
+    expect(emailVerification?.autoSignInAfterVerification).toBe(false);
+  });
+
+  it('leaves requireLocalEmailVerified at its default, so an unverified row refuses a link', async () => {
+    const { account } = (await configuredAuth()).options as BetterAuthOptions;
+
+    expect(account?.accountLinking?.requireLocalEmailVerified).toBeUndefined();
+  });
+
+  it('withholds a session from no provider: verification is offered, not required', async () => {
+    const providers = Object.entries((await configuredAuth()).options.socialProviders ?? {});
+
+    expect(providers).toHaveLength(4);
+    for (const [id, config] of providers) {
+      expect(
+        (config as { requireEmailVerification?: boolean }).requireEmailVerification,
+        id,
+      ).toBeFalsy();
+    }
+  });
+
+  it('pins Facebook and Microsoft unverified and leaves Google and Discord their own mapping', async () => {
+    const providers = (await configuredAuth()).options.socialProviders ?? {};
+    const mapper = (id: keyof typeof providers) =>
+      (providers[id] as { mapProfileToUser?: (profile: unknown) => unknown }).mapProfileToUser;
+
+    expect(await mapper('facebook')?.({ email_verified: true })).toEqual({ emailVerified: false });
+    expect(await mapper('microsoft')?.({ email_verified: true })).toEqual({
+      emailVerified: false,
+    });
+    expect(mapper('google')).toBeUndefined();
+    expect(mapper('discord')).toBeUndefined();
+  });
+
+  it('stamps nothing on a write with no known actor', async () => {
+    const before = (await configuredAuth()).options.databaseHooks?.user?.update?.before;
+    if (!before) throw new Error('databaseHooks.user.update.before is not configured');
+
+    // Outside any request: no request state, no endpoint context.
+    expect(await before({ name: 'Renamed Person' } as never, undefined as never)).toBeUndefined();
+  });
+});

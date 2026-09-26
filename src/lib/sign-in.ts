@@ -63,7 +63,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   // Discord and Facebook can both return a profile with no usable email;
   // MB.54 replaces this dead end with a way to supply one.
   email_not_found: "That provider didn't share an email address.",
-  email_not_verified: 'Please verify your email address with the provider and try again.',
+  // Reached only if a provider ever requires verification; none does today.
+  email_not_verified:
+    'Please confirm your email address first: open the link we sent you, or change the address on your email page.',
   // The state is single-use and lives ten minutes, so retrying from the
   // provider's tab replays a dead one; the sentence sends the visitor here.
   state_mismatch: 'That sign-in expired or was started in another tab. Please start again here.',

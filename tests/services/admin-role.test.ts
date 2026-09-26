@@ -1,10 +1,16 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
-import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { promotePrimaryAdmin, type SignInProfile } from '@/services/admin-role';
 import { asUser } from '../support/as-user';
+import {
+  expectSignedIn,
+  signIn as signInThrough,
+  stubProviderCredentials,
+  type Profile,
+  type ProviderId,
+} from '../support/oauth';
 
 // The primary admin is promoted at a sign-in whose fresh provider profile is
 // Google or Discord and verified —
@@ -14,7 +20,6 @@ import { asUser } from '../support/as-user';
 // flow with our hooks attached, not a hand-built context.
 
 const PRIMARY = 'owner@primary-admin.test';
-const ORIGIN = 'http://localhost:8000';
 
 let sql: ReturnType<typeof postgres>;
 
@@ -210,111 +215,6 @@ describe('promotePrimaryAdmin', () => {
 
 // ─── Through Better Auth's own callback ─────────────────────────────────────
 
-type ProviderId = 'google' | 'discord' | 'facebook' | 'microsoft';
-
-interface Profile {
-  /** The provider's own stable account id. */
-  sub: string;
-  email: string;
-  verified: boolean;
-}
-
-// An unsigned JWT: Google and Microsoft decode the id token they received from
-// their own token endpoint without re-verifying it, which is what makes the
-// code exchange, not the token's signature, the trust boundary here.
-function idToken(claims: Record<string, unknown>): string {
-  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
-  const now = Math.floor(Date.now() / 1000);
-  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({ iat: now, exp: now + 3600, ...claims })}.`;
-}
-
-const TENANT = '9188040d-6c67-4c5b-b112-36a304b66dad';
-
-function providerHandlers(provider: ProviderId, profile: Profile) {
-  const token = { access_token: 'test-access-token', token_type: 'Bearer', expires_in: 3600 };
-  switch (provider) {
-    case 'google':
-      return [
-        http.post('https://oauth2.googleapis.com/token', () =>
-          HttpResponse.json({
-            ...token,
-            id_token: idToken({
-              iss: 'https://accounts.google.com',
-              aud: 'test-google-id',
-              sub: profile.sub,
-              email: profile.email,
-              email_verified: profile.verified,
-              name: 'Fixture Person',
-            }),
-          }),
-        ),
-      ];
-    case 'discord':
-      return [
-        http.post('https://discord.com/api/oauth2/token', () => HttpResponse.json(token)),
-        // Better Auth percent-encodes the `@`, which MSW's path matcher does not decode.
-        http.get('https://discord.com/api/users/%40me', () =>
-          HttpResponse.json({
-            id: profile.sub,
-            username: 'fixtureperson',
-            global_name: 'Fixture Person',
-            discriminator: '0',
-            avatar: null,
-            email: profile.email,
-            verified: profile.verified,
-          }),
-        ),
-      ];
-    case 'facebook':
-      return [
-        http.get('https://graph.facebook.com/v24.0/oauth/access_token', () =>
-          HttpResponse.json(token),
-        ),
-        http.post('https://graph.facebook.com/v24.0/oauth/access_token', () =>
-          HttpResponse.json(token),
-        ),
-        http.get('https://graph.facebook.com/debug_token', () =>
-          HttpResponse.json({
-            data: { is_valid: true, app_id: 'test-facebook-id', user_id: profile.sub },
-          }),
-        ),
-        http.get('https://graph.facebook.com/me', () =>
-          HttpResponse.json({
-            id: profile.sub,
-            name: 'Fixture Person',
-            email: profile.email,
-            // Facebook's graph never sends this; were it honoured, this
-            // profile would qualify on every field but the provider.
-            email_verified: profile.verified,
-            picture: { data: { url: 'https://example.test/p.png' } },
-          }),
-        ),
-      ];
-    case 'microsoft':
-      return [
-        http.post(`https://login.microsoftonline.com/common/oauth2/v2.0/token`, () =>
-          HttpResponse.json({
-            ...token,
-            id_token: idToken({
-              iss: `https://login.microsoftonline.com/${TENANT}/v2.0`,
-              aud: 'test-microsoft-id',
-              tid: TENANT,
-              oid: profile.sub,
-              sub: profile.sub,
-              email: profile.email,
-              email_verified: profile.verified,
-              name: 'Fixture Person',
-            }),
-          }),
-        ),
-        http.get(
-          'https://graph.microsoft.com/v1.0/me/photos/*',
-          () => new HttpResponse(null, { status: 404 }),
-        ),
-      ];
-  }
-}
-
 describe('Promotion at sign-in', () => {
   const server = setupServer();
 
@@ -325,47 +225,14 @@ describe('Promotion at sign-in', () => {
   let auth: typeof import('@/lib/auth').auth;
 
   beforeEach(async () => {
-    for (const provider of ['GOOGLE', 'DISCORD', 'FACEBOOK', 'MICROSOFT']) {
-      vi.stubEnv(`${provider}_CLIENT_ID`, `test-${provider.toLowerCase()}-id`);
-      vi.stubEnv(`${provider}_CLIENT_SECRET`, `test-${provider.toLowerCase()}-secret`);
-    }
-    vi.stubEnv('MICROSOFT_TENANT_ID', '');
+    stubProviderCredentials(vi.stubEnv);
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'Owner@Primary-Admin.test');
     vi.resetModules();
     ({ auth } = await import('@/lib/auth'));
   });
 
-  /** One full round trip: start the sign-in, then land on the callback. Returns the redirect. */
-  async function signIn(provider: ProviderId, profile: Profile): Promise<Response> {
-    server.use(...providerHandlers(provider, profile));
-
-    const start = await auth.handler(
-      new Request(`${ORIGIN}/api/auth/sign-in/social`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', origin: ORIGIN },
-        body: JSON.stringify({ provider, callbackURL: '/coven' }),
-      }),
-    );
-    expect(start.status, await start.clone().text()).toBe(200);
-    const { url } = (await start.json()) as { url: string };
-    const state = new URL(url).searchParams.get('state');
-    const cookie = start.headers
-      .getSetCookie()
-      .map((header) => header.split(';')[0])
-      .join('; ');
-
-    return auth.handler(
-      new Request(`${ORIGIN}/api/auth/callback/${provider}?code=test-code&state=${state}`, {
-        headers: { cookie },
-      }),
-    );
-  }
-
-  /** The callback redirected to where the sign-in asked to go, not to an error page. */
-  function expectSignedIn(response: Response) {
-    expect(response.status).toBe(302);
-    expect(response.headers.get('location')).toMatch(/\/coven$/);
-  }
+  const signIn = (provider: ProviderId, profile: Profile) =>
+    signInThrough(auth, server, provider, profile);
 
   it('promotes a new account signing up through verified Google', async () => {
     const response = await signIn('google', { sub: 'g-1', email: PRIMARY, verified: true });
@@ -430,9 +297,11 @@ describe('Promotion at sign-in', () => {
   it('decides on the fresh profile, not the stored emailVerified', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    // Microsoft marks the stored row verified on the way in…
+    // Microsoft arrives unverified whatever it claims; the row is then marked
+    // verified as our own mail would mark it…
     expectSignedIn(await signIn('microsoft', { sub: 'ms-2', email: PRIMARY, verified: true }));
-    expect(await userRow(PRIMARY)).toMatchObject({ email_verified: true, role: 'user' });
+    expect(await userRow(PRIMARY)).toMatchObject({ email_verified: false, role: 'user' });
+    await sql`update users set email_verified = true where email = ${PRIMARY}`;
 
     // …and a second Microsoft sign-in, over a row that now reads verified, still does not promote.
     expectSignedIn(await signIn('microsoft', { sub: 'ms-2', email: PRIMARY, verified: true }));

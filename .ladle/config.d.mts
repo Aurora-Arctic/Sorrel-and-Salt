@@ -3,6 +3,7 @@
 // itself: Ladle's types ship as sources that fail this repo's `strict`.
 // Declares only what the guard reads.
 declare const config: {
+  stories?: string[];
   addons?: {
     theme?: {
       enabled?: boolean;
