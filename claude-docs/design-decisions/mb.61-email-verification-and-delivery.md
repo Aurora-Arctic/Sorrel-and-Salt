@@ -154,8 +154,9 @@ stays at its default.
 
 - **Cost: the owner blocked inside the window waits.** Their verified sign-in
   is refused with `account_not_linked` until the sweep runs, at most one token
-  lifetime after the squatter's last mail. The sign-in page says so and says
-  when to retry.
+  lifetime after the squatter's last mail. The sign-in page shows the one
+  generic `account_not_linked` sentence (MB.71) and does not say when to
+  retry, since saying so would confirm the address is held.
 - **Cost: the sweep is a delete with no session behind it.** It runs in
   `src/lib/auth.ts` beside the create hook and stamps the row as itself. The
   argument is below, under the audit trail.
@@ -352,11 +353,12 @@ it ceases to exist the same way, `deleted_by` its own id. That is the one
 existing exception's mirror, not a third one: same file, same self-stamp, same
 reason. It publishes no GUC, for the reason the create hook cannot.
 
-**The blocked owner sees why.** `account_not_linked` is mapped in
-`src/lib/sign-in.ts` to a sentence saying an unverified account holds the
-address and that it lapses within the hour. Only someone who just signed in
-with a provider vouching for that address sees it, so it reveals nothing to a
-stranger.
+**The blocked owner sees the generic sentence.** `account_not_linked` is
+mapped in `src/lib/sign-in.ts` to one sentence, the same whatever the cause:
+sign in the way you did before, then add this provider under Account. A
+squatted address and a never-vouching provider over an existing row redirect
+with the same code, and a sentence naming the squat would confirm the address
+is taken (MB.71, [`mb.71-plan.md`](mb.71-plan.md)).
 
 ## The audit trail, against rules 1 and 3
 
@@ -492,7 +494,10 @@ revocable on `/admin/users`.
 - **Kept:** the sign-in promotion still decides on the callback's fresh
   Google or Discord profile and never on the stored column, so a Microsoft
   sign-in over a verified row still promotes nobody. Microsoft and Facebook
-  never vouch. The three pinned options stay pinned.
+  never vouch at sign-in, and so are never matched to an existing row by
+  address: either is added to an account only by an explicit link from a
+  signed-in session (MB.71), where the session and the account-id binding
+  guard what the vouch would have. The three pinned options stay pinned.
 
 ## What is simplified, and the hole it leaves
 
