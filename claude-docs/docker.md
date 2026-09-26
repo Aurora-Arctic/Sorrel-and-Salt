@@ -169,10 +169,10 @@ no Neon connection and no host Node-version juggling.
   standalone, not a prerequisite of `docker-up`), and `docker-codegen
 NAME=<spec>` (MB.23) — starts `playwright-server` if needed, then `exec`s
   `playwright codegen` into it as the caller's uid, writing
-  `e2e/<spec>.spec.ts`; see `claude-docs/debugging.md` for the recording
+  `tests/e2e/<spec>.spec.ts`; see `claude-docs/debugging.md` for the recording
   workflow itself.
 - **`.dockerignore`** (repo root) — excludes `node_modules`, `.next`, `.git`,
-  `build`, coverage and local env/state from the build context.
+  the generated `.reports/` and local env/state from the build context.
 - **`.devcontainer/`** — `devcontainer.json` plus a `docker-compose.yml` overlay
   merged on top of `Docker/docker-compose.yaml`. The overlay adds one service,
   `devcontainer`, mirroring `app` (same `development` stage, `..:/app` bind

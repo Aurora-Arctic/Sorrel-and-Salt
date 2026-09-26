@@ -79,7 +79,7 @@ jobs:
       CI: true
       # Read by summarize-playwright.mjs.
       PLAYWRIGHT_JSON_OUTPUT_NAME: /app/playwright-results.json
-      # e2e/database.ts derives sorrel_e2e's URL from it.
+      # tests/e2e/database.ts derives sorrel_e2e's URL from it.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       # The webServer's production build needs a Better Auth secret, and a
       # primary admin address on the reserved `.invalid` domain.
@@ -90,13 +90,16 @@ jobs:
         if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
-      # The webServer builds and serves; the browser is in the image.
+      # The webServer builds and serves; the browser is in the image. The
+      # reporters (list, json, html) come from playwright.config.ts under CI:
+      # a `--reporter` here would replace them and lose the html report's
+      # output folder.
       - name: Run Playwright e2e tests
         id: run
         if: inputs.should-run
         run: |
           set -o pipefail
-          npm run e2e -- --reporter=list,json,html 2>&1 | tee /app/output.log
+          npm run e2e 2>&1 | tee /app/output.log
 
       - name: Upload Playwright report
         if: failure()
@@ -104,8 +107,8 @@ jobs:
         with:
           name: playwright-report
           path: |
-            /app/playwright-report/
-            /app/test-results/
+            /app/.reports/playwright-report/
+            /app/.reports/test-results/
           retention-days: 7
 
       # Not failure-only: a coverage report on every run.
@@ -114,7 +117,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: playwright-coverage
-          path: /app/coverage-e2e/
+          path: /app/.reports/coverage-e2e/
           retention-days: 7
 
       - name: Summarize output

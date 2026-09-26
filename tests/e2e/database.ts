@@ -1,9 +1,4 @@
-import {
-  cloneDatabase,
-  databaseUrl,
-  dropDatabase,
-  seedTemplate,
-} from '../tests/support/seeded-database';
+import { cloneDatabase, databaseUrl, dropDatabase, seedTemplate } from '../support/seeded-database';
 
 // Playwright's single `sorrel_e2e`, as against one clone per Vitest worker:
 // global-setup.ts builds the seeded template once per run, each db-touching

@@ -1,9 +1,9 @@
 import type { CoverageReportOptions } from 'monocart-coverage-reports';
 
-// Separate from Vitest's `coverage/` so the two suites stay visible independently.
+// Separate from Vitest's `.reports/coverage` so the two suites stay visible independently.
 const coverageOptions: CoverageReportOptions = {
   name: 'Sorrel & Salt E2E Coverage',
-  outputDir: './coverage-e2e',
+  outputDir: './.reports/coverage-e2e',
   // 'json-summary' feeds .github/scripts/summarize-playwright.mjs.
   reports: ['v8', 'console-details', 'json-summary'],
   // Order-sensitive: the first matching pattern wins, and plenty of packages

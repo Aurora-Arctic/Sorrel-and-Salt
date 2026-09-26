@@ -28,10 +28,11 @@ export default {
     }
     return ordered;
   },
-  // Ladle's own defaults, stated anyway because the makefile targets name them.
+  // Ladle's own default ports, stated anyway because the makefile targets name them.
   port: 61000,
   previewPort: 61001,
-  outDir: 'build',
+  // With the other generated output rather than Ladle's default `build/`.
+  outDir: '.reports/workshop',
   // Pinned so the HMR socket is reachable over the LAN and unmoved between restarts.
   hmrPort: 61002,
   addons: {
