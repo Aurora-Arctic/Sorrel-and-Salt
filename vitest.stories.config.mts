@@ -9,7 +9,7 @@ import { dbHarness } from './tests/support/db-project.mts';
 // The reporter is named by path, not imported: Vitest loads a path through
 // its module runner, where an import here runs at config-load time. `default`
 // stays first so a failing story still prints its assertion.
-// `passWithNoTests` because 45 stories with no test is a true report.
+// `passWithNoTests` because 50 stories with no test is a true report.
 export default defineConfig({
   // As vitest.config.mts: tests reach src/ by the `@/*` alias.
   resolve: { tsconfigPaths: true },

@@ -10,13 +10,13 @@ const range = (from: number, to: number) =>
   Array.from({ length: to - from + 1 }, (_, i) => from + i);
 
 describe('V1_STORIES', () => {
-  it('reads the v1 stories out of DESIGN.md §10 — 1–34 and 47–57 today, never 35–46', () => {
+  it('reads the v1 stories out of DESIGN.md §10 — 1–34 and 47–62 today, never 35–46', () => {
     // Pinned by rule rather than frozen: a story added to §10 joins without a
     // harness edit, and 35–46 are not reused.
     expect(V1_STORY_IDS).toEqual([...V1_STORY_IDS].sort((a, b) => a - b));
     expect(new Set(V1_STORY_IDS).size).toBe(V1_STORY_IDS.length);
     expect(V1_STORY_IDS.filter((id) => id >= 35 && id <= 46)).toEqual([]);
-    expect(V1_STORY_IDS).toEqual(expect.arrayContaining([...range(1, 34), ...range(47, 57)]));
+    expect(V1_STORY_IDS).toEqual(expect.arrayContaining([...range(1, 34), ...range(47, 62)]));
   });
 
   it('agrees with the count §10 states for itself', () => {
