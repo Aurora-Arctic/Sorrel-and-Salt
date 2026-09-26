@@ -276,18 +276,14 @@ move the protection to whoever holds it now:
 - `account.accountLinking.trustedProviders` — a trusted provider skips the
   verified-email check when linking.
 
-**The squat is left open, deliberately, until MB.67.** Refusing to create an
-account that holds the address unverified would close it today. It was left
-out because first-party verification lands before launch and settles
-squatting for every address, not just this one: an unverified account is
-provisional and expires one verification window after its last mail
-([`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md)).
-The hole until then:
-an unverified Discord or Facebook sign-up carrying the address, made before
-the owner's first sign-in or after a database reset, makes Better Auth refuse
-to link the owner's verified sign-in to it (`requireLocalEmailVerified`), and
-the owner sees a generic `account_not_linked` error. Pre-launch the site has
-no such users.
+**A squat lasts three hours at most (MB.67).** An unverified
+sign-up carrying the address, made before the owner's first sign-in or after a
+database reset, makes Better Auth refuse to link the owner's verified sign-in
+to it (`requireLocalEmailVerified`), and the owner sees the generic
+`account_not_linked` sentence. The row is provisional: one verification
+window after its last mail, and three hours after its sign-up whatever it
+resends, the next OAuth callback deletes it and the owner's sign-in lands in a
+fresh account. "Provisional accounts" below has the shape.
 
 ### First-party verification (MB.66)
 
@@ -305,7 +301,8 @@ this is the shape.
   and signed in. No provider sets `requireEmailVerification`; what needs a
   verified address checks the column. `requireLocalEmailVerified` stays at
   its default, so a provider cannot link into an unverified row: the owner of
-  a squatted address is refused with `account_not_linked` until MB.67's sweep.
+  a squatted address is refused with `account_not_linked` until the squatting
+  row lapses (below).
 - **The token is Better Auth's**: an HS256 JWT signed with
   `BETTER_AUTH_SECRET`, `expiresIn: 3600`, never stored and not single-use.
   A second use finds the row verified and writes nothing.
@@ -330,6 +327,63 @@ this is the shape.
   `sendVerificationEmail`, and names the providers linked to the account so
   a reader can tell whether they signed up at all. The template is
   `src/emails/verify-email.tsx` ([`email.md`](email.md)).
+
+### Provisional accounts (MB.67)
+
+An unverified account cannot hold an address against its owner for longer
+than a verification link lives. The argument is
+[`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md),
+"Provisional accounts and the sweep"; this is the shape.
+
+- **What is provisional.** A `users` row with `emailVerified` false that
+  holds at least one provider `accounts` row. It has lapsed once its
+  `updated_at` is older than `VERIFICATION_LIFETIME_SECONDS` (3600, the same
+  constant as the link's `expiresIn`), or its `created_at` is older than
+  `PROVISIONAL_CAP_SECONDS` (three hours). Both are measured by the
+  database's `now()`, since the database writes both columns.
+- **Why a cap.** Each resend from the squatter's own session restarts the
+  hour and mails the owner. Without the cap, a squatter resending hourly
+  would hold the address for as long as they kept it up. With it, a real
+  user has three hours from sign-up to follow a link, and resending does not
+  extend that. A link sent in the cap's last hour can outlive the account;
+  following it finds no user, and signing in again starts a fresh account.
+- **What restarts the window.** A sign-up sets it. A resend through
+  `/send-verification-email` from a session holding the row calls
+  `extendVerificationWindow` in `src/services/provisional-accounts.ts`, an
+  empty `withAudit` update stamped as that user, before the mail goes out.
+  A resend from no session still mails, as Better Auth always does, but
+  extends nothing: otherwise anyone could keep a row alive by posting its
+  address. Any other write to the row touches `updated_at` too, through the
+  trigger. None of these move `created_at`, so none of them move the cap.
+- **The sweep.** `hooks.before` on `/callback/:id` deletes every lapsed row
+  in one statement, before the code exchange, so a lapsed row holding the
+  arriving address is gone before Better Auth looks it up. Its `accounts`
+  and `sessions` rows go with it by `ON DELETE CASCADE`, so the squatter's
+  cookie signs nobody in and its provider account resolves to nothing. Two
+  partial indexes, `users_provisional_updated_at_idx` and
+  `users_provisional_created_at_idx`, hold only unverified rows, one for each
+  half of the predicate, which keeps the usual empty sweep cheap. The swept ids go to the
+  server log at `info`.
+- **A failed sweep never fails a sign-in.** It is logged at `error` and the
+  callback carries on. One lapsed row that another row references makes the
+  whole statement fail, because every audit foreign key is `NO ACTION`.
+  Nothing in v1 lets an unverified account write beyond its own row, so this
+  needs a bug or a hand edit.
+- **Hard delete, outside `withAudit`.** Better Auth finds a user by address
+  without our `deleted_at` filter, so a tombstone would go on blocking the
+  owner. The row never verified, so it holds nothing worth keeping, and no
+  row survives to carry a stamp. The delete is the repository's one named
+  `deleteProvisionalUsers`, since `write.delete` rejects a table carrying
+  `deleted_at` by design.
+- **Seeded rows are never swept.** They hold no `accounts` row, so nobody
+  can sign in to them. The bootstrap admin stays unverified on purpose. A
+  verified row would take an implicit link from any provider vouching for
+  its address, and that row is an admin.
+- **The refusal.** `account_not_linked` is one sentence in
+  `src/lib/sign-in.ts`, the same whatever the cause: sign in the way you did
+  before, then add this provider under Account. A squatted address and a
+  provider that never vouches over an existing row share the code, and naming
+  either would confirm the address is taken (MB.71).
 
 ### Granting a second admin — decided, not built (M2.9)
 
