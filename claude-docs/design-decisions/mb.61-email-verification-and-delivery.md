@@ -405,9 +405,10 @@ Both directions are pinned by test in MB.65.
 **Keys are read at send time, never at build.** `RESEND_API_KEY` in
 Production, `MAILTRAP_SANDBOX_TOKEN` and `MAILTRAP_SANDBOX_ID` in Preview, all
 Sensitive: a deployed function reads them from the platform, so `deploy.yml`'s
-pulled-environment assertion does not name them and CI keeps no copy. The
-build legs and compose's `e2e` service set `MAIL_TRANSPORT=mailpit` and
-`MAILPIT_URL`, no secret. `MAIL_FROM` is the from-address on Resend's verified
+pulled-environment assertion does not name them and CI keeps no copy.
+Compose's services and CI's Playwright job set `MAIL_TRANSPORT=mailpit` and
+`MAILPIT_URL`, no secret; the build leg sets neither, having nothing that
+reads them. `MAIL_FROM` is the from-address on Resend's verified
 domain.
 
 **A failed send is logged, not thrown.** Better Auth already swallows a send

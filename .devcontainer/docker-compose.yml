@@ -52,6 +52,11 @@ services:
       # playwright-server-up`) instead of a Chromium Alpine cannot run.
       # `make docker-e2e` and CI never set it.
       PLAYWRIGHT_WS_ENDPOINT: ws://playwright-server:4444/
+      # As `app`, so `npm run dev` and `npm run e2e` here mail into Mailpit.
+      MAIL_TRANSPORT: mailpit
+      MAILPIT_URL: http://mailpit:8025
     depends_on:
       postgres:
+        condition: service_healthy
+      mailpit:
         condition: service_healthy
