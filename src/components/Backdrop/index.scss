@@ -1,0 +1,68 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// Each photograph is tone and shape, not a picture: a grey image whose alpha
+// is the subject, with the ground it was shot on transparent. The theme
+// decides how the grey meets the page — `screen` lifts it out of soot,
+// `multiply` sinks it into parchment — so the salt is the bright thing and
+// the wood the dark thing on both, and nothing reads inverted. Each corner
+// is two of these, one per blend, and the theme tokens fade one out as the
+// other comes in. `z-index: -1` on a body child paints it above the page
+// colour and beneath every in-flow element
+// (claude-docs/components/backdrop.md, "Stacking").
+.backdrop {
+  position: fixed;
+  z-index: -1;
+  width: calc(var(--backdrop-width, clamp(8.75rem, 17.5vw, 13.75rem)) * var(--backdrop-scale, 1));
+  pointer-events: none;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  @include theme-transition(opacity);
+
+  @include reduced-motion {
+    transition: none;
+  }
+
+  // A shape behind text is what someone asking for more contrast is asking
+  // to be rid of.
+  @media (prefers-contrast: more) {
+    display: none;
+  }
+}
+
+.backdrop--screen {
+  mix-blend-mode: screen;
+  opacity: $ornament-screen;
+}
+
+.backdrop--multiply {
+  mix-blend-mode: multiply;
+  opacity: $ornament-multiply;
+}
+
+// The images sit beside this file and are imported through it, so Next serves
+// them from /_next/static/media under a content hash: a rebuilt image is a
+// new URL, and no cache can keep showing the old one. Each keeps its
+// photograph's own proportions; `background-size: 100% 100%` relies on the
+// box matching them. The sorrel runs at three quarters of the
+// shared width: its subject fills more of its frame than the salt does.
+.backdrop--sorrel {
+  top: 0;
+  left: 0;
+  --backdrop-scale: 0.75;
+  aspect-ratio: 4 / 3;
+  background-image: url('./sorrel-plate.webp');
+}
+
+.backdrop--salt {
+  right: 0;
+  bottom: 0;
+  aspect-ratio: 3 / 2;
+  background-image: url('./salt-spoon.webp');
+}
+
+// Larger on the front door, the one page with room for it; the page's own
+// wrapper class is the hook, so the layout needs no route awareness.
+body:has(.welcome-page) .backdrop {
+  --backdrop-width: clamp(20rem, 47.5vw, 45rem);
+}

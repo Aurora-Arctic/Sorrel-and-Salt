@@ -42,7 +42,11 @@ export function proxy(request: NextRequest): NextResponse {
 export const config = {
   // Everything except what is never a page: Next's own assets, and `/api/*`,
   // which answers for itself — Better Auth's handshake, and GraphQL refusing in
-  // its own error shape rather than redirecting a fetch. Must be a literal:
-  // Next reads it at build time.
+  // its own error shape rather than redirecting a fetch. Nothing else is
+  // exempt, so a file dropped into public/ is a protected page to this matcher
+  // until it gets its own entry here — which is why the backdrop's images are
+  // imported by their stylesheet and served under /_next/ instead. A named
+  // prefix, never a file-extension pattern: what is public is listed, as in
+  // PUBLIC_ROUTES. Must be a literal: Next reads it at build time.
   matcher: ['/((?!api/|_next/).*)'],
 };

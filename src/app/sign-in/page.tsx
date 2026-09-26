@@ -17,8 +17,8 @@ interface SignInPageProps {
   searchParams: Promise<{ next?: string | string[]; error?: string | string[] }>;
 }
 
-// No AppShell: DESIGN.md §9 scopes it to signed-in pages, and this is the one
-// page reachable while signed out.
+// No AppShell: DESIGN.md §9 scopes it to signed-in pages, and this page is
+// reachable while signed out.
 export default async function SignInPage({ searchParams }: SignInPageProps) {
   const params = await searchParams;
   const next = safeReturnPath(params.next);
