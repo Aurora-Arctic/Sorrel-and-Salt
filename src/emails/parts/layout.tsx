@@ -56,8 +56,10 @@ function stylesheet(origin: string): string {
   return (
     faces +
     `${LIGHT_MEDIA}{` +
-    // React Email's Body repeats the page style on the one cell it wraps everything in.
-    `.ss-page,.ss-page>table>tbody>tr>td{background-color:${light.page}!important;color:${light.text}!important;}` +
+    // A bare class, on <body> and on the page table below: iOS Mail and iCloud
+    // Mail apply class selectors but do not expose Body's cell chain, so a
+    // rule written through it left light text on the dark cell there.
+    `.ss-page{background-color:${light.page}!important;color:${light.text}!important;}` +
     `.ss-text{color:${light.text}!important;}` +
     `.ss-muted{color:${light.muted}!important;}` +
     `.ss-link{color:${light.accent}!important;}` +
@@ -110,62 +112,66 @@ export function EmailLayout({ preview, heading, origin, children }: EmailLayoutP
         className="ss-page"
         style={{
           margin: 0,
-          padding: '0 0 24px',
+          padding: 0,
           backgroundColor: dark.page,
           color: dark.text,
           fontFamily: BODY_FONT,
           fontWeight: 300,
         }}
       >
-        {/* Backgrounds rather than images, so the text can run over their edges:
-            Gmail strips the negative margins an overlap would otherwise take. */}
-        <Container style={{ maxWidth: '600px' }}>
-          <Section className="ss-sorrel" style={ornament('sorrel', origin, 'left top')}>
-            <Section className="ss-salt" style={ornament('salt', origin, 'right bottom')}>
-              <Section style={{ padding: `${WORDMARK_TOP}px 32px 0` }}>
-                <Text style={{ margin: 0, textAlign: 'right', lineHeight: `${WORDMARK_LINE}px` }}>
-                  <Link
-                    href={origin}
-                    className="ss-wordmark"
-                    style={{
-                      color: dark.text,
-                      fontFamily: HEADING_FONT,
-                      fontSize: '21px',
-                      fontWeight: 700,
-                      letterSpacing: '0.01em',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    Sorrel &amp; Salt
-                  </Link>
-                </Text>
-              </Section>
-              <Section
-                style={{
-                  // The heading starts OVERLAP above the sorrel's lower edge.
-                  padding: `${ORNAMENTS.sorrel.height - OVERLAP - WORDMARK_TOP - WORDMARK_LINE}px 32px ${ORNAMENTS.salt.height - OVERLAP}px`,
-                }}
-              >
-                <Heading
-                  as="h1"
-                  className="ss-text"
+        {/* The page colour on a table of our own, filling Body's cell, for the
+            clients that drop <body> or its cell before the stylesheet sees them. */}
+        <Section className="ss-page" style={{ backgroundColor: dark.page, padding: '0 0 24px' }}>
+          {/* Backgrounds rather than images, so the text can run over their edges:
+              Gmail strips the negative margins an overlap would otherwise take. */}
+          <Container style={{ maxWidth: '600px' }}>
+            <Section className="ss-sorrel" style={ornament('sorrel', origin, 'left top')}>
+              <Section className="ss-salt" style={ornament('salt', origin, 'right bottom')}>
+                <Section style={{ padding: `${WORDMARK_TOP}px 32px 0` }}>
+                  <Text style={{ margin: 0, textAlign: 'right', lineHeight: `${WORDMARK_LINE}px` }}>
+                    <Link
+                      href={origin}
+                      className="ss-wordmark"
+                      style={{
+                        color: dark.text,
+                        fontFamily: HEADING_FONT,
+                        fontSize: '21px',
+                        fontWeight: 700,
+                        letterSpacing: '0.01em',
+                        textDecoration: 'none',
+                      }}
+                    >
+                      Sorrel &amp; Salt
+                    </Link>
+                  </Text>
+                </Section>
+                <Section
                   style={{
-                    margin: '0 0 16px',
-                    color: dark.text,
-                    fontFamily: HEADING_FONT,
-                    fontSize: '32px',
-                    fontWeight: 700,
-                    letterSpacing: '0.01em',
-                    lineHeight: 1.2,
+                    // The heading starts OVERLAP above the sorrel's lower edge.
+                    padding: `${ORNAMENTS.sorrel.height - OVERLAP - WORDMARK_TOP - WORDMARK_LINE}px 32px ${ORNAMENTS.salt.height - OVERLAP}px`,
                   }}
                 >
-                  {heading}
-                </Heading>
-                {children}
+                  <Heading
+                    as="h1"
+                    className="ss-text"
+                    style={{
+                      margin: '0 0 16px',
+                      color: dark.text,
+                      fontFamily: HEADING_FONT,
+                      fontSize: '32px',
+                      fontWeight: 700,
+                      letterSpacing: '0.01em',
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {heading}
+                  </Heading>
+                  {children}
+                </Section>
               </Section>
             </Section>
-          </Section>
-        </Container>
+          </Container>
+        </Section>
       </Body>
     </Html>
   );
