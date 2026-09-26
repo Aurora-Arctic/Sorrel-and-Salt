@@ -20,15 +20,24 @@ function toUserRole(role: unknown): UserRole {
 }
 
 /**
- * The signed-in user, or `null`. Asks the database through Better Auth, so an
- * expired, revoked or forged cookie is `null` here even though the proxy let
- * it through. Cached per request: a layout and a page asking both cost one query.
+ * The signed-in user for these request headers, or `null`. Asks the database
+ * through Better Auth, so an expired, revoked or forged cookie is `null` here
+ * even though the proxy's cookie check let it through. For the proxy, which
+ * has the request but no `headers()`; a page calls `getSession()`.
  */
-export const getSession = cache(async (): Promise<Session | null> => {
-  const result = await auth.api.getSession({ headers: await headers() });
+export async function sessionFromHeaders(requestHeaders: Headers): Promise<Session | null> {
+  const result = await auth.api.getSession({ headers: requestHeaders });
   if (!result) return null;
   return { userId: result.user.id, role: toUserRole(result.user.role) };
-});
+}
+
+/**
+ * The signed-in user, or `null`. Cached per request: a layout and a page
+ * asking both cost one query.
+ */
+export const getSession = cache(async (): Promise<Session | null> =>
+  sessionFromHeaders(await headers()),
+);
 
 /**
  * The signed-in user, or a redirect to `/sign-in` carrying the page's own path
