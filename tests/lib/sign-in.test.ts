@@ -1,5 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { safeReturnPath, signInErrorMessage, signInPath } from '@/lib/sign-in';
+import {
+  POST_SIGN_IN_LANDING,
+  safeReturnPath,
+  signInErrorMessage,
+  signInPath,
+} from '@/lib/sign-in';
+
+// The fallback is the post-sign-in landing, not `/`: `/` is the public front
+// door, and someone who just signed in has been through it already
+// (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
+describe('POST_SIGN_IN_LANDING', () => {
+  it('is the /coven landing', () => {
+    expect(POST_SIGN_IN_LANDING).toBe('/coven');
+  });
+
+  it('is what signInPath sends a visitor to when there is no return path', () => {
+    expect(signInPath(undefined)).toBe('/sign-in?next=%2Fcoven');
+  });
+});
 
 // safeReturnPath is the open-redirect guard for ?next=: without it, a crafted
 // link could make /sign-in redirect anywhere after a real sign-in.
@@ -12,32 +30,32 @@ describe('safeReturnPath', () => {
     expect(safeReturnPath('/coven/hearth?tab=stock')).toBe('/coven/hearth?tab=stock');
   });
 
-  it('falls back to / for undefined', () => {
-    expect(safeReturnPath(undefined)).toBe('/');
+  it('falls back to the landing for undefined', () => {
+    expect(safeReturnPath(undefined)).toBe('/coven');
   });
 
-  it('falls back to / for an empty string', () => {
-    expect(safeReturnPath('')).toBe('/');
+  it('falls back to the landing for an empty string', () => {
+    expect(safeReturnPath('')).toBe('/coven');
   });
 
-  it('falls back to / for a protocol-relative URL', () => {
-    expect(safeReturnPath('//evil.example')).toBe('/');
+  it('falls back to the landing for a protocol-relative URL', () => {
+    expect(safeReturnPath('//evil.example')).toBe('/coven');
   });
 
-  it('falls back to / for an absolute URL', () => {
-    expect(safeReturnPath('https://evil.example')).toBe('/');
+  it('falls back to the landing for an absolute URL', () => {
+    expect(safeReturnPath('https://evil.example')).toBe('/coven');
   });
 
-  it('falls back to / for a backslash-prefixed path some browsers treat as a host', () => {
-    expect(safeReturnPath('/\\evil.example')).toBe('/');
+  it('falls back to the landing for a backslash-prefixed path some browsers treat as a host', () => {
+    expect(safeReturnPath('/\\evil.example')).toBe('/coven');
   });
 
-  it('falls back to / for a path with no leading slash', () => {
-    expect(safeReturnPath('coven/hearth')).toBe('/');
+  it('falls back to the landing for a path with no leading slash', () => {
+    expect(safeReturnPath('coven/hearth')).toBe('/coven');
   });
 
-  it('falls back to / for an array-valued query param', () => {
-    expect(safeReturnPath(['/coven/hearth', '/coven/other'])).toBe('/');
+  it('falls back to the landing for an array-valued query param', () => {
+    expect(safeReturnPath(['/coven/hearth', '/coven/other'])).toBe('/coven');
   });
 });
 
@@ -93,9 +111,9 @@ describe('signInPath', () => {
   // The proxy builds the return path from the request URL, and `//evil.example`
   // is a pathname a request can really carry.
   it.each(['//evil.example', 'https://evil.example', '/\\evil.example'])(
-    'falls back to / for an unsafe return path: %s',
+    'falls back to the landing for an unsafe return path: %s',
     (unsafe) => {
-      expect(signInPath(unsafe)).toBe('/sign-in?next=%2F');
+      expect(signInPath(unsafe)).toBe('/sign-in?next=%2Fcoven');
     },
   );
 });

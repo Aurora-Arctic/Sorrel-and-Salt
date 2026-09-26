@@ -79,14 +79,14 @@ describe('requireSession', () => {
     );
   });
 
-  it('falls back to / when no return path was forwarded', async () => {
+  it('falls back to the post-sign-in landing when no return path was forwarded', async () => {
     getSessionMock.mockResolvedValue(null);
-    await expect(requireSession()).rejects.toThrow('redirect:/sign-in?next=%2F');
+    await expect(requireSession()).rejects.toThrow('redirect:/sign-in?next=%2Fcoven');
   });
 
   it('does not trust a forwarded return path that leaves the site', async () => {
     getSessionMock.mockResolvedValue(null);
     requestHeaders.set(RETURN_PATH_HEADER, '//evil.example');
-    await expect(requireSession()).rejects.toThrow('redirect:/sign-in?next=%2F');
+    await expect(requireSession()).rejects.toThrow('redirect:/sign-in?next=%2Fcoven');
   });
 });

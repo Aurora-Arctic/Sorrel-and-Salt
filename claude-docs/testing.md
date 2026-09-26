@@ -678,7 +678,7 @@ asserting accessibility in Playwright, not via `vitest-axe`. It runs
 test with a per-rule summary (rule id, help text, node count) if any
 violations are returned; a page with zero violations resolves silently.
 
-- **`e2e/smoke.spec.ts`** calls it after `page.goto('/')`, so the home page
+- **`e2e/smoke.spec.ts`** calls it after `page.goto('/')`, so the entry page
   is scanned as part of the existing smoke spec.
 - **`e2e/axe.spec.ts`** seeds a violation directly (`page.setContent` with an
   `<img>` missing `alt`) and asserts the helper's promise rejects — proof the

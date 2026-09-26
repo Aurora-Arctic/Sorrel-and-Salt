@@ -3,21 +3,29 @@
 // return paths are safe, applied on the way out and on the way back.
 
 /**
+ * Where a sign-in goes when no page asked for the visitor back: the
+ * post-sign-in landing (M2.8), not `/` — `/` is the public front door, and a
+ * visitor who has just signed in has been through it already
+ * (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
+ */
+export const POST_SIGN_IN_LANDING = '/coven';
+
+/**
  * The open-redirect guard for `?next=`. A same-site absolute path is kept
  * verbatim; anything else — an absolute URL, a protocol-relative `//host`, a
  * `/\host` some browsers still resolve as one, a relative path, a missing
  * value, or Next's array-valued searchParams for a repeated key — falls back
- * to `/`. Without this, `?next=https://evil.example` would make /sign-in
- * redirect anywhere after a real sign-in.
+ * to the landing. Without this, `?next=https://evil.example` would make
+ * /sign-in redirect anywhere after a real sign-in.
  */
 export function safeReturnPath(raw: string | string[] | undefined): string {
-  if (typeof raw !== 'string' || raw.length === 0) return '/';
+  if (typeof raw !== 'string' || raw.length === 0) return POST_SIGN_IN_LANDING;
   // A single leading slash, not a second slash or backslash right after it —
   // both are how a URL parser can be tricked into reading the rest as a host.
-  if (!/^\/(?!\/|\\)/.test(raw)) return '/';
+  if (!/^\/(?!\/|\\)/.test(raw)) return POST_SIGN_IN_LANDING;
   // A newline anywhere would let this value smuggle a second header into
   // whatever eventually turns it into a redirect response.
-  if (/[\r\n]/.test(raw)) return '/';
+  if (/[\r\n]/.test(raw)) return POST_SIGN_IN_LANDING;
   return raw;
 }
 

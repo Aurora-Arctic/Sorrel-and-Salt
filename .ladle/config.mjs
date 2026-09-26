@@ -1,8 +1,13 @@
-// Ladle — the component workshop; the Vite half (the Sass wiring) is in
-// ./vite.config.ts. See claude-docs/workshop.md, ".ladle/".
+import { fileURLToPath } from 'node:url';
+
+// Ladle — the component workshop; the Vite half (the Sass wiring and the
+// next/link alias) is in ./vite.config.ts. See claude-docs/workshop.md, ".ladle/".
 
 /** @type {import('@ladle/react').UserConfig} */
 export default {
+  // Ladle hands Vite's config loader this path as-is and, given none, Vite
+  // looks in the project root — so without it ./vite.config.ts is never read.
+  viteConfig: fileURLToPath(new URL('./vite.config.ts', import.meta.url)),
   // One story file per component directory, the shape the workshop guard checks;
   // the second glob is workshop-only pages the guard deliberately ignores.
   stories: ['src/components/**/index.stories.tsx', '.ladle/*.stories.tsx'],
