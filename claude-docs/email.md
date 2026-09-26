@@ -85,6 +85,9 @@ does it, so each piece has an email-safe stand-in.
   `src/emails/ornaments.ts`. Re-run `node scripts/email-ornaments.ts` after changing a
   photograph or the palette; `tests/guards/email-ornaments.test.ts` compares
   the committed pixels with what the script produces and fails until you do.
+  It allows each channel a step or two of rounding, because libvips takes a
+  different SIMD path on x64 than on arm64 and the two round a few pixels
+  apart, so an image built on either architecture passes on the other.
 - **The text sits on the page, and the photographs run under it.** No card:
   the text is on the page colour, as on the site. The photographs are the
   backgrounds of two nested sections, top left and bottom right, and the
