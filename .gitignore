@@ -10,6 +10,7 @@ next-env.d.ts
 
 # Build output
 dist
+public/workshop
 
 # Generated reports and builds, all under one directory: Vitest coverage and
 # json, Playwright's report, traces and e2e coverage, the Ladle workshop build.
