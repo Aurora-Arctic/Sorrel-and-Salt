@@ -3,13 +3,16 @@
 // and fails on Vite's own failure marker, which never appears on a clean run.
 // Deletable once upstream fixes it. See claude-docs/workshop.md, "The build gate".
 //
-// Usage: npm run workshop:build
+// Usage: npm run workshop:build [-- <ladle build options>]
+//   e.g. npm run workshop:build -- --base /workshop/ --outDir public/workshop
 
 import { spawn } from 'node:child_process';
 
 const FAILURE_MARKER = 'Build failed';
 
-const child = spawn('npx', ['ladle', 'build'], { stdio: ['inherit', 'pipe', 'pipe'] });
+const child = spawn('npx', ['ladle', 'build', ...process.argv.slice(2)], {
+  stdio: ['inherit', 'pipe', 'pipe'],
+});
 
 let output = '';
 const relay = (target: NodeJS.WriteStream) => (chunk: Buffer) => {

@@ -25,7 +25,7 @@ Story references point at the numbered user stories in §10 of the design doc. I
 
 Notes are out of scope for v1. That removes stories 35–46 and the whole notes data layer, UI and visibility model — 17 tasks and 29 hours. Two consequences carried into the tasks below: viewers are now strictly read-only, since their own private notes were the sole exception; and the ingredient detail page (M8.19) is built so a notes section can be added beneath it without restructuring the page.
 
-Also deferred: edit history, viewer spell approval, compendium suggestions and merge tooling, GraphQL response caching, and email/password sign-in.
+Also deferred: edit history, viewer spell approval, compendium suggestions and merge tooling, GraphQL response caching, email/password sign-in, and a workshop-viewer role that opens the staging workshop without admin rights (M2.10; DESIGN.md §13).
 
 ## Execution order
 

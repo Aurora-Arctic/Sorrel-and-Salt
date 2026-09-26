@@ -142,6 +142,59 @@ without a page routed to it.
   `format:check` and typecheck, test-free by decision (MB.38): a hook that
   runs tests is a hook people start skipping, and a PR cannot skip CI.
 
+## On staging (M2.10)
+
+Staging serves the workshop at `https://staging.sorrelandsalt.com/workshop`,
+to admins only. Local `npm run workshop` / `make workshop` on 61000 is
+untouched and unauthenticated — local development is the one relaxed
+environment. Production and hotfix previews never carry it.
+
+- **How it ships.** `deploy.yml` runs, on a staging deploy alone (the step's
+  `if:` reads `git_branch == 'staging'`), `npm run workshop:build -- --base
+/workshop/ --outDir public/workshop` before `vercel build`. The build
+  wrapper forwards its arguments to `ladle build`. Next then serves the files
+  from `public/` as it would any static asset; `public/workshop` is
+  gitignored. `--base` is what makes Ladle's asset URLs absolute under
+  `/workshop/`; drift it from the proxy's prefix and the page ships with every
+  asset 404ing. `tests/guards/workshop-deploy.test.ts` reads the step as data
+  and pins the flags, the staging-only `if:`, and its place before
+  `vercel build`.
+- **How it is gated: in `src/proxy.ts`, and nowhere else can do it.** Next
+  runs the proxy before it serves `public/`, and a static file has no page to
+  call `requireSession()`, so the proxy's usual cookie-only check would admit
+  any signed-in account — and signing in with any provider earns one. For
+  `/workshop` and everything beneath it (`/workshopping` is not beneath it),
+  and only there, the proxy asks Better Auth for the live session through
+  `sessionFromHeaders()` and hands it to `assertWorkshopAccess()`
+  (`src/services/workshop-access.ts` — the rule is a service's, per rule 1).
+
+  | Request                      | Answer                                                       |
+  | ---------------------------- | ------------------------------------------------------------ |
+  | No session cookie            | 307 to `/sign-in?next=<path>`, as any protected route        |
+  | A cookie Better Auth rejects | The same redirect                                            |
+  | A live session, role `user`  | 403, plain text                                              |
+  | A live session, role `admin` | The file, with `Content-Security-Policy: connect-src 'none'` |
+
+  The 403 is plain rather than the styled page `/admin` will have: it answers
+  asset requests as well as the page, and nothing styled exists to rewrite to
+  yet. The lookup module is imported dynamically inside the workshop branch,
+  so no other request loads the database client in the proxy.
+
+- **Bare `/workshop` is rewritten to `/workshop/index.html`, query kept.**
+  Ladle is a single page routed by `?story=`, and Next serves no directory
+  index.
+- **No application data is reachable through it.** The build is static — no
+  story calls GraphQL, and `meta.json` is the story index. The workshop's own
+  scripts nonetheless run on the app's origin carrying an admin's cookie, so
+  every workshop response carries `connect-src 'none'`: `fetch`, XHR and
+  WebSockets from the page are refused by the browser, `/api/graphql`
+  included. Ladle's static build makes no request of its own that this breaks;
+  the one `fetch` in its bundle is Vite's modulepreload polyfill, which a
+  browser with native `modulepreload` never runs.
+- **Admin only for now.** A role that can open the workshop without admin's
+  other powers is v2 (DESIGN.md §13, "A workshop-viewer role"); when it
+  lands, `assertWorkshopAccess()` is the one line that changes.
+
 ## The build gate
 
 `scripts/build-workshop.ts` runs `ladle build`, mirrors its output verbatim, and
