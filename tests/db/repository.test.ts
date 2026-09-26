@@ -1,6 +1,6 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
-import { and, eq, sql as dsql } from 'drizzle-orm';
+import { and, eq, getTableColumns, sql as dsql } from 'drizzle-orm';
 import { pgTable, primaryKey, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns, auditStampColumns } from '@/db/audit';
 import * as repository from '@/db/repository';
@@ -397,8 +397,10 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
   // Eight since M10.3, which argued for `updateByIdInWorkspace` in its own PR:
   // MB.33 bars a service from importing `drizzle-orm`, so a service cannot
   // build the `where` `updateInWorkspace` wants and the by-id predicate has to
-  // be built below the boundary. A ninth is the next such decision.
-  it('offers exactly eight writer methods — a ninth is a decision, not a convenience', async () => {
+  // be built below the boundary. Nine since MB.60, whose promotion of the
+  // primary admin is the first by-id write to an unscoped table (`users`),
+  // for the same reason. A tenth is the next such decision.
+  it('offers exactly nine writer methods — a tenth is a decision, not a convenience', async () => {
     const methods = await withAudit(session, async (write) => Object.keys(write).sort());
 
     expect(methods).toEqual(
@@ -409,6 +411,7 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
         'softDelete',
         'softDeleteInWorkspace',
         'update',
+        'updateById',
         'updateByIdInWorkspace',
         'updateInWorkspace',
       ].sort(),
@@ -680,5 +683,23 @@ describe('the Membership proof (M6.3)', () => {
     expect(readAssignmentsUnscoped).toBeInstanceOf(Function);
     expect(readLayersThroughTheHatch).toBeInstanceOf(Function);
     expect(scopeAJoinTableByWorkspace).toBeInstanceOf(Function);
+  });
+});
+
+// `audit.ts` and `schema/users.ts` import each other, and whichever is entered
+// second sees the first half-built. Entered through `audit.ts`, `users` is
+// built while `auditColumns` is still undefined: the spread adds nothing and
+// every write to `users` silently skips its stamps (claude-docs/db.md, "The
+// seed module"). A service's first database import is the repository, so the
+// repository must enter through `users`.
+describe('entering the database layer through the repository', () => {
+  it('builds users with its audit columns', async () => {
+    vi.resetModules();
+    await import('@/db/repository');
+    const { users: freshUsers } = await import('@/db/schema/users');
+
+    expect(Object.keys(getTableColumns(freshUsers))).toEqual(
+      expect.arrayContaining(['createdBy', 'updatedBy', 'deletedAt']),
+    );
   });
 });

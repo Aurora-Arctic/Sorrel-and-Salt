@@ -253,7 +253,7 @@ jobs:
         run: |
           node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/assert-pulled-env.ts \
             --file ".vercel/.env.${{ needs.resolve-target.outputs.environment }}.local" \
-            --require DATABASE_URL,BETTER_AUTH_SECRET
+            --require DATABASE_URL,BETTER_AUTH_SECRET,ADMIN_BOOTSTRAP_EMAIL
 
       # The assertion reads the file's shape; this opens the connection, which
       # a build never does. Advisory here and fatal in migrate.yml — a build

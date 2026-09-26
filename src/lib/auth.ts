@@ -1,5 +1,7 @@
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
+import { createAuthMiddleware } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { defineRequestState } from '@better-auth/core/context';
 // Better Auth's drizzleAdapter takes the client itself rather than a writer, so
 // this cannot go through withAudit — claude-docs/db.md, "Who may import the client".
 // oxlint-disable-next-line no-restricted-imports
@@ -10,6 +12,12 @@ import { SOCIAL_PROVIDERS } from './social-providers';
 // Server-only — see social-providers-config.ts's own header.
 // oxlint-disable-next-line no-restricted-imports
 import { clientCredentials } from './social-providers-config';
+import type { UserRole } from './session';
+import {
+  promotePrimaryAdmin,
+  type PrimaryAdminOutcome,
+  type SignInProfile,
+} from '../services/admin-role';
 
 // Better Auth's own `validateSecret` is swallowed — with the secret unset it
 // logs and still answers 200 on the well-known default. Production-only:
@@ -73,11 +81,33 @@ function baseURL(): BetterAuthOptions['baseURL'] {
   return 'http://localhost:8000';
 }
 
-// DESIGN.md §5's admin bootstrap; case-insensitive, and unset promotes nobody.
-function isAdminBootstrapEmail(email: string): boolean {
-  const bootstrapEmail = process.env.ADMIN_BOOTSTRAP_EMAIL;
-  return !!bootstrapEmail && email.toLowerCase() === bootstrapEmail.toLowerCase();
+// Names the primary admin (claude-docs/auth.md, "Admin bootstrap"). Required
+// wherever BETTER_AUTH_SECRET is, and for the same reason: every deploy runs at
+// NODE_ENV=production. Unset elsewhere, it promotes nobody.
+function primaryAdminEmail(): string | undefined {
+  const email = process.env.ADMIN_BOOTSTRAP_EMAIL;
+  if (!email && process.env.NODE_ENV === 'production') {
+    throw new Error('ADMIN_BOOTSTRAP_EMAIL is not set');
+  }
+  return email || undefined;
 }
+
+// The provider's fresh profile, carried from `validateUserInfo` — the one hook
+// that sees it, on sign-up, link and sign-in alike — to the after-callback hook,
+// which sees only the stored row. Per request, so nothing leaks between sign-ins.
+const signInProfile = defineRequestState<SignInProfile | undefined>(() => undefined);
+
+// Refusals are logged by user id, never address: a sign-in page must not
+// reveal that an address is special.
+const UNQUALIFIED = new Set<PrimaryAdminOutcome>([
+  'no-profile',
+  'provider-does-not-vouch',
+  'unverified',
+  'profile-email-differs',
+]);
+
+// Checked at load, so a deploy without it fails its build rather than its first sign-in.
+primaryAdminEmail();
 
 // /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
 export const auth = betterAuth({
@@ -96,6 +126,18 @@ export const auth = betterAuth({
     },
   },
   user: {
+    // Off, pinned by test: on, a user could move the primary admin's address
+    // to another account. An email changes through MB.54's verified flow.
+    changeEmail: { enabled: false },
+    // Never refuses: it only records what the provider said, for the hook below.
+    validateUserInfo: async ({ user, source }) => {
+      if (source.method !== 'oauth' || !source.oauth) return;
+      await signInProfile.set({
+        providerId: source.oauth.providerId,
+        email: String(user.email ?? ''),
+        emailVerified: user.emailVerified === true,
+      });
+    },
     additionalFields: {
       // `input: false`: Better Auth drops any client-supplied value, so only the
       // hook below can set these. No `defaultValue`, so Postgres's own applies.
@@ -105,6 +147,25 @@ export const auth = betterAuth({
       createdBy: { type: 'string', input: false, returned: false },
       updatedBy: { type: 'string', input: false, returned: false },
     },
+  },
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      const newSession = ctx.context.newSession;
+      if (ctx.path !== '/callback/:id' || !newSession) return;
+
+      const { user } = newSession;
+      const outcome = await promotePrimaryAdmin(
+        { userId: user.id, role: user.role as UserRole },
+        {
+          accountEmail: user.email,
+          profile: await signInProfile.get(),
+          primaryAdminEmail: primaryAdminEmail(),
+        },
+      );
+      if (UNQUALIFIED.has(outcome)) {
+        ctx.context.logger.warn(`primary admin not promoted: user ${user.id} (${outcome})`);
+      }
+    }),
   },
   databaseHooks: {
     user: {
@@ -120,7 +181,6 @@ export const auth = betterAuth({
               id,
               createdBy: id,
               updatedBy: id,
-              ...(isAdminBootstrapEmail(user.email) ? { role: 'admin' } : {}),
             },
           };
         },

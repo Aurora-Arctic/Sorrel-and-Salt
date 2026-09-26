@@ -185,8 +185,10 @@ services:
       # e2e/database.ts swaps the pathname to sorrel_e2e.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       # The `build` script forces NODE_ENV=production, where Better Auth
-      # requires a secret.
+      # requires a secret and auth.ts a primary admin address — this one on
+      # the reserved `.invalid` domain, so no sign-in can match it.
       BETTER_AUTH_SECRET: local-dev-not-a-real-secret
+      ADMIN_BOOTSTRAP_EMAIL: placeholder@admin-bootstrap.invalid
     depends_on:
       postgres:
         condition: service_healthy

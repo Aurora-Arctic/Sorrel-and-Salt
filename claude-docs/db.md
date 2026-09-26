@@ -1392,7 +1392,7 @@ The repository splits on the table's own shape, the way it already splits
 | carries `workspace_id`                   | `findManyInWorkspace` / `findOneInWorkspace`, proof first | `insertInWorkspace`, `updateInWorkspace`, `updateByIdInWorkspace`, `softDeleteInWorkspace`, proof first |
 | carries `visibility` (`spells` alone)    | `findManySpells` / `findOneSpell`, proof first            | the workspace-scoped writes above                                                                       |
 | carries `spell_id` (the two join tables) | `findManyInSpell`, proof first                            | `insert`, `update`, `delete`                                                                            |
-| none of those                            | `findMany` / `findOne` / `findManyIncludingSoftDeleted`   | `insert`, `update`, `softDelete`, `delete`                                                              |
+| none of those                            | `findMany` / `findOne` / `findManyIncludingSoftDeleted`   | `insert`, `update`, `updateById`, `softDelete`, `delete`                                                |
 
 `{ workspaceId: AnyPgColumn }` and `{ workspaceId?: never }` are the two
 constraints, so each finder admits exactly one of the two sets and a table
@@ -1542,8 +1542,14 @@ MB.33 bars everything outside the database layer from importing `drizzle-orm`
 at runtime, so a service cannot build the `where` that `updateInWorkspace`
 takes. The eighth `AuditWriter` method builds the one predicate every entity
 update needs — `id = $1`, ANDed onto the proof's own clause — below that
-boundary. `repository.test.ts` pins the method count, so a ninth is a decision
-argued for in its own PR rather than a convenience.
+boundary. `repository.test.ts` pins the method count, so each new one is a
+decision argued for in its own PR rather than a convenience.
+
+**`updateById` is the ninth** (MB.60), for the same reason on a table no proof
+scopes: the primary admin's promotion writes `users.role` by the signed-in
+user's own id, and the service cannot build `id = $1` either. It is the
+unscoped twin, typed to refuse a table carrying `workspace_id`, so a scoped
+update cannot take this route around the proof.
 
 ## Soft-delete filtering and the partial-index convention (M1.20)
 
@@ -1614,6 +1620,13 @@ second scratch table (`repository_probe_charms`) carries a unique index built
 exactly this way, and the tests assert a live duplicate name is still
 rejected, while soft-deleting the original row and reinserting the same name
 succeeds — the row that comes back is a new id, and `findMany` sees only it.
+
+**`users.email` is also held to lower case** (`users_email_lower_case`,
+migration 0019, MB.60). The unique index is on the raw column, so without it
+two live rows could differ by case alone, and both would match
+`ADMIN_BOOTSTRAP_EMAIL`, which is compared case-insensitively. Better Auth
+lowercases every address it writes; the constraint catches a row written by
+hand. `tests/db/users-schema.test.ts` inserts one.
 
 ## Hard delete on the three join tables (MB.34)
 
@@ -1827,6 +1840,14 @@ Every module under `src/db/seed/` therefore imports `users` (directly, via
 `./bootstrap-admin`) **above** the schema modules that reach `audit.ts`, and
 `src/db/seed/minimal.ts` carries the note. Nothing enforces it: reordering the
 imports is a clean-looking edit that reddens the seed tests.
+
+**The repository enters through `users` for the same reason** (MB.60). A
+service's first database import is `repository.ts`, whose own first was
+`./audit`, so any process that reached the database through a service first
+built `users` with no audit columns. Every `withAudit` write to `users` then
+went out unstamped, silently rather than failing. It imports `./schema/users`
+above `./audit`, and `tests/db/repository.test.ts` asserts the stamps are there
+in a fresh module graph entered through the repository.
 
 **Two helper modules carry what every seed repeats** (MB.51).
 `src/db/seed/idempotent.ts` exports three functions. `beginSeedTransaction(db,
