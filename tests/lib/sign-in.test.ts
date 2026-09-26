@@ -95,6 +95,17 @@ describe('signInErrorMessage', () => {
     },
   );
 
+  // One sentence whatever the cause — a squatted address or a provider that
+  // never vouches over an existing row share the code — so it confirms
+  // nothing about whether an account holds the address (MB.71's plan).
+  it('gives account_not_linked a sentence that names no address and no squat', () => {
+    const message = signInErrorMessage('account_not_linked');
+
+    expect(message).not.toBe(GENERIC_SIGN_IN_ERROR);
+    expect(message).toMatch(/sign in that way, then add this one under Account/);
+    expect(message).not.toMatch(/unverified|already|taken|holds/i);
+  });
+
   it('falls back to a generic sentence for an unrecognised code', () => {
     const message = signInErrorMessage('something_unexpected');
     expect(message).toMatch(/[a-z]/i);

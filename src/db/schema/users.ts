@@ -1,5 +1,14 @@
 import { sql } from 'drizzle-orm';
-import { pgTable, text, boolean, uuid, pgEnum, uniqueIndex, check } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  boolean,
+  uuid,
+  pgEnum,
+  uniqueIndex,
+  index,
+  check,
+} from 'drizzle-orm/pg-core';
 import { auditColumns } from '../audit';
 
 // Admins curate the global vocabularies and nothing else, so a column is enough.
@@ -32,5 +41,14 @@ export const users = pgTable(
     // the same, so the unique index above is case-insensitive in effect and at
     // most one live row can match ADMIN_BOOTSTRAP_EMAIL.
     check('users_email_lower_case', sql`${table.email} = lower(${table.email})`),
+    // The provisional-account sweep's two halves, the window and the cap, run
+    // on every OAuth callback and almost always empty: only unverified rows are
+    // in them (claude-docs/auth.md, "Provisional accounts").
+    index('users_provisional_updated_at_idx')
+      .on(table.updatedAt)
+      .where(sql`${table.emailVerified} = false`),
+    index('users_provisional_created_at_idx')
+      .on(table.createdAt)
+      .where(sql`${table.emailVerified} = false`),
   ],
 );

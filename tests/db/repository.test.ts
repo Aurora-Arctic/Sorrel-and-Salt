@@ -149,9 +149,11 @@ beforeEach(async () => {
 });
 
 describe('repository public API', () => {
-  it('exports exactly withAudit, the finders, and the one read that mints a proof', () => {
+  // The provisional-account delete is the one `users` delete (claude-docs/db.md).
+  it('exports exactly withAudit, the finders, the one read that mints a proof, and the provisional-account delete', () => {
     expect(Object.keys(repository).sort()).toEqual(
       [
+        'deleteProvisionalUsers',
         'findMany',
         'findManyIncludingSoftDeleted',
         'findManyInSpell',
