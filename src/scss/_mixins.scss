@@ -156,6 +156,8 @@
   --secondary-hover: #{$wax-glow};
   --shadow-elevated: 0 20px 45px #{$shadow-dark};
   --shadow-floating: 0 2px 8px #{$shadow-dark};
+  --ornament-screen: 0.3;
+  --ornament-multiply: 0;
 
   @include semantic-tokens(dark);
   @include font-smoothing-antialiased;
@@ -174,6 +176,8 @@
   --secondary-hover: #{$wax-deep};
   --shadow-elevated: 0 20px 45px #{$shadow-light};
   --shadow-floating: 0 2px 8px #{$shadow-light};
+  --ornament-screen: 0;
+  --ornament-multiply: 0.4;
 
   @include semantic-tokens(light);
 

@@ -373,7 +373,15 @@ answer.
   `/invite/*` does not admit `/invites`. Adding a public page is adding a
   line there.
 - **The matcher only keeps the proxy off what is never a page:** Next's own
-  `/_next/*` assets and `/api/*`. It must be a literal Next can read at
+  `/_next/*` assets and `/api/*`. Nothing in `public/` is exempt: a file placed
+  there is a protected page to the matcher, redirected to `/sign-in` — HTML
+  where the browser asked for an image — until the PR that adds it also adds
+  its entry, and `tests/proxy.test.ts` pins that for `/favicon.ico` and
+  `/robots.txt`. MB.57 found this with the backdrop's images and answered it
+  by importing them from their stylesheet instead, so they ship under
+  `/_next/static/media` with a content hash. Any future exemption is a named
+  prefix, never a file-extension pattern, for the same reason `PUBLIC_ROUTES`
+  is a list: what is public is listed, never inferred. It must be a literal Next can read at
   build time, which is why the public list is not expressed in it — as a
   regex negative lookahead it was unreadable, and would have got worse with
   every route. The cost of the split is that the proxy also runs on the
@@ -400,9 +408,10 @@ answer.
   request it passes, overwriting any value the client sent, and the read still
   goes through `safeReturnPath`. The proxy forwards it on public pages too, so
   `/invite/[token]` can send a signed-out visitor to `/sign-in` and back when
-  M7 makes acceptance require a sign-in. A page that is public but
-  personalised, as `/` may become, reads the session with `getSession()`;
-  `requireSession()` would redirect its signed-out visitors.
+  M7 makes acceptance require a sign-in. `/` is public but personalised
+  (MB.57): it reads the session with `getSession()` to offer a signed-in
+  visitor the landing rather than sign-in, and `requireSession()` would
+  redirect the signed-out visitors it exists for.
   No page calls `requireSession()` yet: every protected route so far is still
   to be built, and each adopts it in its own PR.
 - **The return path round trip.** The proxy builds `next` from the request's
@@ -412,7 +421,11 @@ answer.
   hands it to `SignInPanel` as Better Auth's `callbackURL`, and its
   `errorCallbackURL` is `signInPath(next)`, so a failed attempt keeps the
   destination too. One guard on the way out and on the way back is what makes
-  the round trip lossless for a safe path and closed for an unsafe one.
+  the round trip lossless for a safe path and closed for an unsafe one. The
+  guard's fallback is `POST_SIGN_IN_LANDING` — `/coven`, the post-sign-in
+  landing M2.8 builds — not `/`: someone who has just signed in has been
+  through the front door already
+  ([`design-decisions/mb.57-post-sign-in-landing.md`](design-decisions/mb.57-post-sign-in-landing.md)).
 - **`getSession()` is `cache()`-wrapped**, so a layout and a page asking in the
   same render cost one lookup. It returns exactly `{ userId, role }`, the
   service-level `Session` above. It throws on a `role` outside the column's

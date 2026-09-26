@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import Backdrop from '../components/Backdrop';
 import ThemeToggle from '../components/ThemeToggle';
 import { body, display } from './fonts';
 import './globals.scss';
@@ -28,6 +29,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             home page, which was the only page that existed yet. */}
         <ThemeToggle />
         {children}
+        {/* Last, so it never precedes the page in reading order even for a
+            tool that ignores aria-hidden. */}
+        <Backdrop />
       </body>
     </html>
   );

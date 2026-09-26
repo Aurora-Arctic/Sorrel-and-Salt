@@ -174,6 +174,20 @@ the fill's ratio against the page surface is exactly the `vs page` figure alread
 measured for every group and every ink — the two questions have the same
 arithmetic. **Worst pairing in the set is 4.74:1.**
 
+### `$ornament-screen` and `$ornament-multiply`
+
+How `Backdrop`'s grey corner ornaments meet the page: the opacity of its
+`screen` layer (`--ornament-screen`, 0.3 on dark, 0 on light) and of its
+`multiply` layer (`--ornament-multiply`, 0 on dark, 0.4 on light). The image
+carries the photograph's levelled luminance, so a blend mode is what keeps its
+tones the right way round on both themes — the salt bright, the wood dark —
+where any single tint, lighter or darker than the page, moved the whole subject
+one way. Two opacities rather than one blend-mode token because a blend mode
+cannot animate and an opacity can: the toggle cross-fades the layers on the
+same 400ms as every other colour. Decorative, so no contrast table: nothing is
+read against them, and `prefers-contrast: more` removes the ornaments entirely
+([`components/backdrop.md`](components/backdrop.md)).
+
 ## Chips, badges and the solid-fill rule
 
 `chip()` draws a pill, always edged in its group's colour, in one of two states:

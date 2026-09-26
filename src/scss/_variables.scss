@@ -235,6 +235,14 @@ $secondary-hover: var(--secondary-hover);
 $shadow-elevated: var(--shadow-elevated);
 $shadow-floating: var(--shadow-floating);
 
+// How `Backdrop`'s grey ornaments meet the page: the opacity of its `screen`
+// layer, which lifts them out of soot, and of its `multiply` layer, which sinks
+// them into parchment. One is zero on each theme, and the toggle cross-fades
+// them. Decorative, so held to no contrast ratio (claude-docs/styling.md,
+// "$ornament-screen").
+$ornament-screen: var(--ornament-screen);
+$ornament-multiply: var(--ornament-multiply);
+
 // The label on a solid fill — the selected chip, the safety badge. An alias for
 // the page surface: on dark the fill is the light thing and the label goes
 // dark, on light the reverse. Worst pairing 4.74:1. See

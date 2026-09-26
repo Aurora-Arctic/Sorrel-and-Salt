@@ -41,10 +41,24 @@ describe('the proxy matcher', () => {
     expect(matches(path)).toBe(true);
   });
 
+  // Imported assets ship under /_next/static/media, which is why the backdrop's
+  // images are imported rather than dropped into public/.
+  // Nothing in public/ is exempt: a file placed there is a protected page to
+  // the matcher — redirected to /sign-in, HTML where the browser asked for an
+  // image — until the PR that adds it also adds its entry. Pinned so the
+  // first favicon or robots.txt does not ship redirected.
+  it.each(['/favicon.ico', '/robots.txt', '/images/anything.webp'])(
+    'still runs on a public-file path with no entry, %s',
+    (path) => {
+      expect(matches(path)).toBe(true);
+    },
+  );
+
   it.each([
     '/api/auth/callback/google?code=x',
     '/api/graphql',
     '/_next/static/chunks/main.js',
+    '/_next/static/media/salt-spoon.1a2b3c4d.webp',
     '/_next/image?url=%2Fx.png&w=64&q=75',
   ])('stays off %s', (path) => {
     expect(matches(path)).toBe(false);
@@ -94,7 +108,7 @@ describe('proxy', () => {
 
   it('does not reflect a protocol-relative pathname into the return path', () => {
     const response = proxy(request('//evil.example/x'));
-    expect(getRedirectUrl(response)).toBe(`${ORIGIN}/sign-in?next=%2F`);
+    expect(getRedirectUrl(response)).toBe(`${ORIGIN}/sign-in?next=%2Fcoven`);
   });
 
   // An unrelated cookie is not a session: the check is for Better Auth's name.

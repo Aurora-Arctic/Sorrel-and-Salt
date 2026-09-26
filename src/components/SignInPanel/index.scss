@@ -1,12 +1,15 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The page-level frame for the one page reachable while signed out — there
-// is no AppShell to center it (DESIGN.md §9 scopes that to signed-in pages).
+// The page-level frame for a page reachable while signed out — there is no
+// AppShell to center it (DESIGN.md §9 scopes that to signed-in pages).
 // 32rem keeps the frame itself inside a comfortable reading measure without
 // stretching a short button list edge to edge on a wide viewport; the panel
 // below is narrower still.
 .sign-in-page {
+  // Or the viewport-high frame plus its own padding overflows by the padding
+  // and the page scrolls by 4rem with nothing to scroll to.
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;

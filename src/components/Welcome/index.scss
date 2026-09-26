@@ -1,0 +1,59 @@
+@use '../../scss/variables' as *;
+
+// The page-level frame, like `.sign-in-page`: no AppShell centers a page
+// reachable while signed out (DESIGN.md §9 scopes it to signed-in pages).
+.welcome-page {
+  // Or the viewport-high frame plus its own padding overflows by the padding
+  // and every page scrolls by 4rem with nothing to scroll to.
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 2rem 1rem;
+}
+
+// A reading measure, not a panel: three short paragraphs and a button, so
+// the width is the longest comfortable line rather than a card.
+.welcome {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 36rem;
+  margin-inline: auto;
+}
+
+.welcome__title {
+  margin: 0;
+}
+
+.welcome__lede {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.welcome__gate {
+  margin: 0;
+}
+
+.welcome__way-in {
+  margin: 0.5rem 0 0;
+}
+
+// The first `.btn` on an anchor. `_typography.scss`'s `a:visited` outranks
+// `.btn` alone and would recolour the button once followed, and an anchor
+// underlines by default; a button has neither, so restate `.btn`'s own text
+// colour at rest and on hover.
+.welcome__way-in .btn {
+  text-decoration: none;
+
+  &:visited {
+    color: $accent;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $text-on-color;
+  }
+}
