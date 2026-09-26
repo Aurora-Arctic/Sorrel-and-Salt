@@ -18,6 +18,13 @@ const script = (await import(pathToFileURL(fromRoot('scripts/email-ornaments.ts'
   ) => Promise<Buffer>;
 };
 
+// libvips resizes and blends through whichever SIMD path the CPU offers, and
+// the x64 and arm64 paths round a few channels one step apart, so the pixels
+// are compared within this rather than byte for byte. A changed photograph or
+// palette moves them by far more; a palette change alone is also caught
+// exactly, by the bare-corner check below.
+const ROUNDING = 2;
+
 const THEMES = Object.keys(EMAIL_THEMES) as (keyof typeof EMAIL_THEMES)[];
 const CORNERS = Object.keys(ORNAMENTS) as (keyof typeof ORNAMENTS)[];
 const CASES = CORNERS.flatMap((corner) => THEMES.map((theme) => [corner, theme] as const));
@@ -27,13 +34,30 @@ async function pixels(image: ReturnType<typeof sharp>) {
   return { data, info };
 }
 
+/** The largest per-channel difference and how many channels differ at all. */
+function compare(a: Buffer, b: Buffer) {
+  let max = 0;
+  let differing = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    const diff = Math.abs(a[i] - b[i]);
+    if (diff > 0) differing += 1;
+    if (diff > max) max = diff;
+  }
+  return { max, differing };
+}
+
 describe('email ornament images', () => {
   it.each(CASES)('%s on %s is what the script produces', async (corner, theme) => {
     const committed = await pixels(sharp(fromRoot('public', ornamentPath(corner, theme))));
     const fresh = await pixels(sharp(await script.composeOrnament(corner, theme)));
 
     expect(committed.info).toMatchObject({ width: fresh.info.width, height: fresh.info.height });
-    expect(committed.data.equals(fresh.data)).toBe(true);
+    const { max, differing } = compare(committed.data, fresh.data);
+    expect(
+      max,
+      `${differing} of ${fresh.data.length} channels differ, by up to ${max}; ` +
+        'run `node scripts/email-ornaments.ts` if the photograph or palette changed',
+    ).toBeLessThanOrEqual(ROUNDING);
   });
 
   it.each(CASES)(
