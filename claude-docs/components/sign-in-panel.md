@@ -15,6 +15,12 @@ reuse — the route-protection redirect writes the same `?next=` this page
 reads, so the validation has to live in one place or the two can disagree
 about what counts as safe.
 
+The three state failures (`state_mismatch`, `state_not_found`,
+`state_invalid`) share one sentence, and it tells the visitor to start again
+from this page. The state is single-use and expires after ten minutes, so the
+obvious retry, going back through the provider's tab, replays a state that is
+already dead. That is how MB.12's Facebook check first failed.
+
 `errorCallbackURL` is built here, not passed in, as `` `/sign-in?next=${encodeURIComponent(next)}` ``
 — carrying `next` forward is what keeps a failed attempt from losing the
 destination and landing back at a bare `/sign-in`. Better Auth appends its own

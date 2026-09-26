@@ -13,18 +13,50 @@ secrets so `deploy.yml`/`migrate.yml` could exist and stub-skip cleanly
 (M0.26/M0.28). Resumed and this doc written on 2026-09-11, alongside
 M2.2/M2.4/M2.5's auth code.
 
-**Status as of M2.6 (2026-09-20):** the three deploy secrets above are set,
-and the Google OAuth app is registered with its client id/secret set
-locally and in Vercel. **The roster changed in M2.6**: GitHub is out,
-Discord/Facebook/Microsoft are in, and none of the three is registered
-yet — that registration, plus `ADMIN_BOOTSTRAP_EMAIL`, `VERCEL_SCOPE`,
-`NEON_API_KEY`, `NEON_PROJECT_ID`, are still outstanding, so no account can
-be promoted to admin and `migrate.yml` still stub-skips instead of applying
-migrations. **MB.12 owns closing those rows and confirming a real browser
-sign-in for every provider**, and it waits on M2.6's sign-in page (now
-built). See "How to set each row" for the exact manual steps — none can be
-done from this repo or by an agent without your Vercel/Neon/Google/Discord/Meta/Microsoft
-accounts.
+**Status as of MB.12 (2026-09-26):** every GitHub Actions secret below is
+set, and all four OAuth applications — Google, Discord, Facebook, Microsoft —
+are registered, with credentials in the local `.env.local`.
+`ADMIN_BOOTSTRAP_EMAIL` is set in Preview and Production. The secrets were
+read off CI rather than assumed, since this devcontainer's `gh` token cannot
+list them: the staging deploy's alias step receives a non-empty
+`VERCEL_SCOPE`, production's pre-migration Neon snapshot has run (so both
+Neon secrets resolve), and MB.46's pulled-environment report lists
+`ADMIN_BOOTSTRAP_EMAIL` as present in Preview. See "How to set each row" for the manual
+steps — none can be done from this repo or by an agent without your
+Vercel/Neon/Google/Discord/Meta/Microsoft accounts.
+
+**The OAuth variables read as empty in CI's pull, and that is harmless.**
+MB.46's report lists all eight as `empty` on the staging pull. Nothing
+reads them at build time: `/sign-in` and `/api/auth/[...all]` are both
+dynamic routes, so `configuredProviders()` and `socialProviders()` run
+against the deployed function's own environment and not the pulled file.
+The real test is whether staging's sign-in page offers the providers, and
+whether a real browser can complete a sign-in through them.
+
+**Real browser sign-in, as of MB.12:**
+
+| Provider  | `localhost:8000`        | `staging`               |
+| --------- | ----------------------- | ----------------------- |
+| Google    | verified                | verified                |
+| Discord   | verified                | verified                |
+| Facebook  | verified (app roles)    | verified (app roles)    |
+| Microsoft | verified (see the note) | verified (see the note) |
+
+A Microsoft sign-in carrying an address that already has an account is
+refused with a generic `account_not_linked` error, and that is the guard
+working rather than a setup fault. Microsoft sends no `email_verified`
+claim, so Better Auth treats its address as unverified and will not link it
+to an existing verified account. If it did, anyone who registered a
+Microsoft account under someone else's address would get into that
+account. So verify Microsoft with an address that has no account here yet.
+
+The primary admin was promoted on staging, at a verified Google or Discord
+sign-in: `/workshop` loads for that account and refuses a plain user.
+
+**Stale in Vercel Preview: `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`.**
+The same report still lists both, as Sensitive placeholders. Nothing reads
+them since M2.6. Delete them from Vercel, alongside the GitHub OAuth App
+below.
 
 **The GitHub OAuth App is not deleted by this doc or this task.** It was
 registered under M2.5, which M2.6 reverses (`claude-docs/TASKS.md`). Its
@@ -138,17 +170,26 @@ would need a new `workflow_call` input, a new `resolve-target` output and an
 **The cost, stated as a rule rather than hoped away: the connection string now
 lives in two places.** Rotating a database credential means changing it in
 Vercel _and_ in the matching GitHub secret. A drifted copy does not error — it
-migrates the wrong database silently. `deploy.yml` and `migrate.yml` select
+migrates the wrong database silently. MB.12 hit exactly this: staging's
+Vercel `DATABASE_URL` named a database in a different Neon account, so
+every migration landed on the database CI checks while the deployed app
+queried one that had never been migrated. The first real sign-in failed
+with `column "role" does not exist`, and no CI step could have caught it,
+because CI never connects with Vercel's copy. After a rotation, sign in on
+staging before trusting it. `deploy.yml` and `migrate.yml` select
 between the same two secrets the same way, and
 `tests/guards/ci-secret-environments.test.ts` is what holds those two
 selections together.
 
-**Worth retiring once MB.12 lands.** With `NEON_API_KEY`/`NEON_PROJECT_ID` set,
-`GET /projects/{id}/connection_uri?branch_id=…` would give every branch its own
-connection string from Neon directly — one source of truth, no second copy, and
-ephemeral branches covered too. It is not done now because those keys do not
-exist, and because a project-wide Neon API key is a broader credential than one
-connection string. It would not replace `BETTER_AUTH_SECRET` either way.
+**Could be retired, and deliberately is not yet.** `NEON_API_KEY`/`NEON_PROJECT_ID`
+are set, so `GET /projects/{id}/connection_uri?branch_id=…` could give every
+branch its own connection string from Neon directly — one source of truth, no
+second copy, and ephemeral branches covered too. The key already exists for the
+production snapshot, so the reason not to do it is scope rather than missing
+keys: the snapshot key can create branches, and reading connection strings with
+it would put that key on every deploy's path, including staging's. That is a
+broader credential than one connection string. It would not replace
+`BETTER_AUTH_SECRET` either way.
 
 `--git-branch` stays on the preview pull regardless (MB.27): the OAuth
 secrets exist _only_ as `staging`-branch-scoped rows and are absent from
@@ -175,12 +216,12 @@ M0.27's own acceptance criteria.
 | `VERCEL_DEPLOY_TOKEN`     | **Already set** | Vercel account settings → Tokens                                          |
 | `VERCEL_ORG_ID`           | **Already set** | `vercel link` locally, or the Vercel project's Settings → General         |
 | `VERCEL_PROJECT_ID`       | **Already set** | same                                                                      |
-| `VERCEL_SCOPE`            | Not set         | the Vercel team/org slug                                                  |
+| `VERCEL_SCOPE`            | **Already set** | the Vercel team/org slug                                                  |
 | `DATABASE_URL_PRODUCTION` | **Already set** | Neon console → the `main` branch → Connection Details (MB.47)             |
 | `DATABASE_URL_STAGING`    | **Already set** | Neon console → the `staging` branch → Connection Details (MB.47)          |
 | `BETTER_AUTH_SECRET`      | **Already set** | the same value set in Vercel; one shared across both environments (MB.47) |
-| `NEON_API_KEY`            | Not set         | Neon console → Account settings → API keys                                |
-| `NEON_PROJECT_ID`         | Not set         | Neon console → the project's Settings → General                           |
+| `NEON_API_KEY`            | **Already set** | Neon console → Account settings → API keys                                |
+| `NEON_PROJECT_ID`         | **Already set** | Neon console → the project's Settings → General                           |
 
 ## How to set each row (manual — needs your accounts)
 
@@ -259,6 +300,13 @@ configuration parameter "channel_binding"`, which `drizzle-kit migrate`
    before relying on this provider for anyone outside that list. Facebook
    can also return no email (same MB.54 case as Discord).
 
+   **Add `email` to the use case, even in Development Mode.** Better Auth
+   always requests `email` and `public_profile`. If `email` has not been
+   added under Use cases → Facebook Login → Customize → Permissions, Meta
+   refuses the whole dialog with "Invalid Scopes: email" before the app
+   role check even runs. Adding it needs no review. Review only decides
+   whether people without an app role can grant it.
+
 6. **Microsoft identity platform (Entra ID)**: Azure Portal → Microsoft
    Entra ID → App registrations → New registration.
    - **Supported account types must be "Accounts in any organizational
@@ -280,9 +328,9 @@ configuration parameter "channel_binding"`, which `drizzle-kit migrate`
      months, but it still expires and needs rotating before it does).
      Leave `MICROSOFT_TENANT_ID` unset unless a future need narrows the
      tenant back down from `common`.
-7. **`NEON_API_KEY`/`NEON_PROJECT_ID`** (the only two GitHub Actions
-   secrets still missing): this repo's Settings → Secrets and variables →
-   Actions → New repository secret, or `gh secret set <NAME>` from a
+7. **GitHub Actions secrets** (all set; this is for rotation): this repo's
+   Settings → Secrets and variables → Actions → New repository secret, or
+   `gh secret set <NAME>` from a
    machine whose `gh` token has the Actions-secrets permission (this
    session's doesn't).
 8. **M0.26's Vercel dashboard settings** — already done (deploy previews

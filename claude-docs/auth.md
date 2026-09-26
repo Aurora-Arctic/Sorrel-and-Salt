@@ -564,12 +564,9 @@ token)>`); the recipe is in the record.
 Every variable this subsystem needs, and the manual steps to set each one,
 is `claude-docs/secrets.md` (M0.27) — not duplicated here. Short version:
 `src/lib/auth.ts` is wired and the OAuth credentials are set (see "Social
-providers" above). Still unset, all owned by MB.12: `ADMIN_BOOTSTRAP_EMAIL`
-— and since MB.60 a deploy **fails its build** without it (`deploy.yml`'s
-pulled-environment assertion names it first), so it must be set in both Vercel
-environments before a build containing MB.60 deploys; and
-`VERCEL_SCOPE`/`NEON_API_KEY`/`NEON_PROJECT_ID`, so `migrate.yml` still
-skips rather than applying migrations.
+providers" above). `ADMIN_BOOTSTRAP_EMAIL` is set in Preview and Production.
+Since MB.60 a deploy **fails its build** without it (`deploy.yml`'s
+pulled-environment assertion names it first).
 
 ## Tests
 
