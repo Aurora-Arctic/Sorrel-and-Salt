@@ -17,13 +17,13 @@ Nothing else on the page depends on who is looking, and the page never
 redirects. Where the landing lives, and why it is not `/`, is
 [`design-decisions/mb.57-post-sign-in-landing.md`](../design-decisions/mb.57-post-sign-in-landing.md).
 
-**Both links are plain `<a>` elements, not `next/link`.** The workshop renders
-this component under Vite, where `next/link` throws `process is not defined`
-and the story goes blank; and a full navigation is the right behaviour for a
-front door's one link, where prefetching buys nothing. It also sidesteps
-`typedRoutes`, which would refuse an `href` for `/coven` until M2.8 builds the
-route. Until then a signed-in visitor who follows _Continue_ reaches a 404
-behind the proxy, which the decision record names as the interim state.
+**The sign-in link is a `next/link`; the landing link is a plain `<a>`.**
+`typedRoutes` refuses an `href` for a route the build does not contain, and
+`/coven` has no page until M2.8, which switches it to `<Link>` in its own PR.
+Until then a signed-in visitor who follows _Continue_ reaches a 404 behind
+the proxy, which the decision record names as the interim state. In the workshop, `next/link`
+is aliased to a plain anchor (`.ladle/UnoptimizedLink.tsx`), as Ladle's
+Next.js guide prescribes.
 
 ## Copy
 
