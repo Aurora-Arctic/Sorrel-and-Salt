@@ -25,6 +25,11 @@ import {
   type PrimaryAdminOutcome,
   type SignInProfile,
 } from '../services/admin-role';
+import {
+  VERIFICATION_LIFETIME_SECONDS,
+  extendVerificationWindow,
+  sweepProvisionalAccounts,
+} from '../services/provisional-accounts';
 
 // Better Auth's own `validateSecret` is swallowed — with the secret unset it
 // logs and still answers 200 on the well-known default. Production-only:
@@ -150,12 +155,17 @@ export const auth = betterAuth({
   // address checks the column. claude-docs/auth.md, "First-party verification".
   emailVerification: {
     sendOnSignUp: true,
-    expiresIn: 3600,
+    expiresIn: VERIFICATION_LIFETIME_SECONDS,
     autoSignInAfterVerification: false,
     sendVerificationEmail: async ({ user, url }) => {
-      const accounts = await getCurrentAuthEndpointContext().context.internalAdapter.findAccounts(
-        user.id,
-      );
+      const ctx = getCurrentAuthEndpointContext();
+      // A resend restarts the provisional window, but only from the row's own
+      // session. A sign-up needs no touch: the insert has just set the clock.
+      if (ctx.path === '/send-verification-email') {
+        const session = await getSessionFromCtx(ctx as Parameters<typeof getSessionFromCtx>[0]);
+        if (session?.user.id === user.id) await extendVerificationWindow({ userId: user.id });
+      }
+      const accounts = await ctx.context.internalAdapter.findAccounts(user.id);
       await send(
         await verifyEmailMessage({
           to: user.email,
@@ -214,6 +224,21 @@ export const auth = betterAuth({
     },
   },
   hooks: {
+    // Before the code exchange, so a lapsed account holding the arriving
+    // address is gone before Better Auth looks it up. Nothing yet knows which
+    // address that is, so it sweeps every lapsed row. A failure is logged and
+    // never fails the sign-in: the sweep is housekeeping.
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== '/callback/:id') return;
+      try {
+        const swept = await sweepProvisionalAccounts();
+        if (swept.length > 0) {
+          ctx.context.logger.info(`provisional accounts swept: ${swept.join(', ')}`);
+        }
+      } catch (error) {
+        ctx.context.logger.error('provisional-account sweep failed', error);
+      }
+    }),
     after: createAuthMiddleware(async (ctx) => {
       const newSession = ctx.context.newSession;
       if (ctx.path !== '/callback/:id' || !newSession) return;

@@ -19,6 +19,7 @@ const SELECT_CALL = /\.select(?:Distinct)?(?:Fields)?\s*\(|\bdb\.query\./g;
 
 /** The repository's exported surface, pinned. A finder is added here too. */
 const EXPORTED_FUNCTIONS = [
+  'deleteProvisionalUsers',
   'findMany',
   'findManyIncludingSoftDeleted',
   'findManyInSpell',
