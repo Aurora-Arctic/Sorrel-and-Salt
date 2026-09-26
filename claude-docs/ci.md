@@ -312,7 +312,13 @@ matrix's generated job name, not the leg's.
   same production build both `npm run e2e` locally and this job exercise —
   see `testing.md`'s Coverage section for why, and for the
   `fullyParallel`/`test.describe.configure({ mode: 'serial' })` fix the CI
-  Postgres service surfaced (a real race, not CI-only flakiness).
+  Postgres service surfaced (a real race, not CI-only flakiness). A second
+  service, `mailpit` on the same `axllent/mailpit` tag compose pins, is the
+  inbox: the job sets `MAIL_TRANSPORT=mailpit` and
+  `MAILPIT_URL=http://mailpit:8025`, which the runner and the served site
+  both read, and `tests/e2e/mail-transport.spec.ts` sends through it and
+  reads the message back (MB.65). No mail variable is set on `checks.yml`'s
+  `build` leg: `src/lib/mail.ts` reads them at send time, never at build.
 - **`build-e2e-image.yml`** (M1.14) — the same `build-image` action as
   `build-image.yml`, under `cache-scope: e2e-image`, but for `Docker/Dockerfile.e2e`:
   `FROM mcr.microsoft.com/playwright:v1.63.0-noble` (Microsoft's own image,

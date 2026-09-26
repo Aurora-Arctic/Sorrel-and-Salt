@@ -68,6 +68,15 @@ jobs:
           --health-interval=5s
           --health-timeout=5s
           --health-retries=10
+      # The inbox src/lib/mail.ts's `mailpit` transport sends to and
+      # tests/e2e/mailpit.ts reads back; pinned to compose's tag.
+      mailpit:
+        image: axllent/mailpit:v1.31.2
+        options: >-
+          --health-cmd="/mailpit readyz"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
     defaults:
       run:
         working-directory: /app
@@ -85,6 +94,9 @@ jobs:
       # primary admin address on the reserved `.invalid` domain.
       BETTER_AUTH_SECRET: local-dev-not-a-real-secret
       ADMIN_BOOTSTRAP_EMAIL: placeholder@admin-bootstrap.invalid
+      # Read at send time by the runner and the served site alike; no secret.
+      MAIL_TRANSPORT: mailpit
+      MAILPIT_URL: http://mailpit:8025
     steps:
       - name: Checkout into /app
         if: inputs.should-run
