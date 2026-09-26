@@ -266,6 +266,14 @@ jobs:
             --file ".vercel/.env.${{ needs.resolve-target.outputs.environment }}.local" \
             --on-failure warn
 
+      # Staging only: the component workshop, as static files under public/
+      # for `vercel build` to pick up, served at /workshop behind the proxy's
+      # admin gate. claude-docs/workshop.md, "On staging";
+      # tests/guards/workshop-deploy.test.ts holds the flags to the gated path.
+      - name: Build the workshop (staging)
+        if: steps.guard.outputs.enabled == 'true' && needs.resolve-target.outputs.git_branch == 'staging'
+        run: npm run workshop:build -- --base /workshop/ --outDir public/workshop
+
       - name: Build
         if: steps.guard.outputs.enabled == 'true'
         run: vercel build ${{ needs.resolve-target.outputs.prod_flag }} --token="$VERCEL_DEPLOY_TOKEN"

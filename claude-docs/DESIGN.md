@@ -1299,6 +1299,10 @@ Better Auth adds it without migration. Would reintroduce the reset problem, so: 
 
 The nullable `spellId` on `notes` already accommodates it.
 
+### A workshop-viewer role
+
+The staging component workshop is admin-only in v1 (M2.10): reviewers who should see real component states — a developer, a product reviewer — would otherwise need admin's powers over the compendium and the admin roll to get them. A site role, or a grant beside `role`, that opens the workshop and nothing else. `assertWorkshopAccess()` (`src/services/workshop-access.ts`) is the one rule that changes; how the role is granted and revoked follows whatever MB.59 settles for admin.
+
 ---
 
 ## 14. Decision log
