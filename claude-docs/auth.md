@@ -118,6 +118,13 @@ build`), `.github/workflows/playwright.yml` and `Docker/docker-compose.yaml`'s
   convention as the `sorrel`/`sorrel` Postgres credentials already there).
   Production and staging get a real value via M0.27's secrets matrix
   (`claude-docs/secrets.md`).
+- **`ADMIN_BOOTSTRAP_EMAIL` is required on the same terms** (MB.60): unset at
+  `NODE_ENV=production`, importing `src/lib/auth.ts` throws
+  `ADMIN_BOOTSTRAP_EMAIL is not set`, so a deploy fails its build rather than
+  running with no primary admin. The three places above that build set the
+  fixed placeholder `placeholder@admin-bootstrap.invalid` — `.invalid` is
+  reserved (RFC 2606), so no sign-in can ever match it. `next dev` and Vitest
+  are exempt, and unset there promotes nobody.
 - **`baseURL()` resolves the right origin per request, in code, with no
   `BETTER_AUTH_URL` env var at all.** Production actually spans three real
   origins — `sorrelandsalt.com`, the fixed `staging.sorrelandsalt.com`
@@ -193,28 +200,98 @@ it sits in Wave 6 behind M2.6 rather than with the rest of Wave 1.
 is what `route.test.ts`'s other case uses to confirm the route is mounted
 and responding independent of any provider being configured at all.
 
-## Admin bootstrap and the self-created user (M2.3)
+## Admin bootstrap and the self-created user (M2.3, MB.60)
 
-DESIGN.md §5: the user matching `ADMIN_BOOTSTRAP_EMAIL` (`claude-docs/
-secrets.md`) is promoted to `role: 'admin'` on first sign-in; everyone else
-gets the column defaults (`role: 'user'`, `canCreateWorkspace: false`).
-Nothing else grants admin in v1 — no UI, no other API path.
+DESIGN.md §5: the account matching `ADMIN_BOOTSTRAP_EMAIL`
+(`claude-docs/secrets.md`) is the **primary admin**. Everyone else gets the
+column defaults (`role: 'user'`, `canCreateWorkspace: false`) on sign-up.
 
-**Granting a second admin is decided but not built** (M2.9,
-[`design-decisions/m2.9-granting-admin.md`](design-decisions/m2.9-granting-admin.md)).
+### Promotion at sign-in, from Google or Discord only (MB.60)
 
-- **The primary admin** is the live admin whose email matches
-  `ADMIN_BOOTSTRAP_EMAIL`. MB.60 moves its promotion to sign-in and accepts it
-  only from a verified Google or Discord profile (Microsoft's claims can be
-  minted by a foreign tenant, Facebook never reports verified). Until MB.61's
-  follow-ups land, an unverified account holding the address can still block
-  the owner's sign-in; the decision doc states that hole and why it is left.
-  - Nobody can revoke or delete it, itself included (MB.59).
-  - Changing who it is means setting the variable to the new address,
-    redeploying, and having that address sign in verified. The previous
-    primary admin stays an admin and becomes revocable.
-  - The UI calls it "Primary admin", and its refusal is in plain language
-    that names no variable.
+The primary admin is promoted at a **sign-in**, not when the account is
+created, and only when that sign-in's provider vouches for the address:
+
+- **Google and Discord qualify; Microsoft and Facebook never do.** Google
+  marks an address verified only for a domain its owner has proved to Google,
+  and Discord only for one it has mailed a code to. Facebook never reports
+  verified in Better Auth's mapping. Microsoft is excluded on purpose: with
+  `tenantId: 'common'`, an attacker's own Entra tenant can issue an id token
+  carrying any `email` and `email_verified` claim (the 2023 "nOAuth"
+  surface). First-party verification (MB.61) is what would let them in.
+- **The decision uses the provider's fresh profile at that callback**, never
+  the stored `users.emailVerified`. A Microsoft sign-in can mark the row
+  verified, and a later Microsoft sign-in over that verified row still
+  promotes nobody. So nothing that later sets the column can widen who
+  qualifies. The profile must also carry the account's own address: a linked
+  Google account whose address has since moved vouches for the new one, not
+  this one.
+- **Match is case-insensitive**, and at most one live row can match:
+  `users_email_lower_case` (migration 0019) holds every address to lower
+  case, so the raw-column unique index cannot admit two rows differing by
+  case alone. Better Auth lowercases on every write; the constraint is for a
+  row written by hand.
+- **An already-admin user is not rewritten**, and an address the variable
+  does not name is never promoted. With the variable unset (`next dev`,
+  Vitest), nobody is.
+- **A refused match signs in as an ordinary user.** The reason goes to the
+  server log as `primary admin not promoted: user <id> (<reason>)`. It uses
+  the id, never the address, because a sign-in screen should not reveal that
+  an address is special.
+
+**How it is wired** (`src/lib/auth.ts`, `src/services/admin-role.ts`):
+
+- The after-callback hook (`hooks.after`, matching `/callback/:id`) has
+  `ctx.context.newSession.user` loaded, so it costs no query. But that is
+  the **stored** row. The fresh profile is seen only by
+  `user.validateUserInfo`, which Better Auth calls with it on sign-up, link
+  and sign-in alike.
+- `validateUserInfo` never refuses. It records `{ providerId, email,
+emailVerified }` into a Better Auth request state
+  (`defineRequestState` from `@better-auth/core/context`). That is an
+  `AsyncLocalStorage` store scoped to one request, so nothing carries
+  between sign-ins. The after hook reads it back. `@better-auth/core` is a
+  declared dependency, at `better-auth`'s own version, so npm dedupes the two
+  to one copy.
+- The hook builds an ordinary `Session` from the row it holds and calls
+  `promotePrimaryAdmin`. That writes `role: 'admin'` through
+  `withAudit`, stamped as the user themselves, with
+  `write.updateById(users, …)`. So CLAUDE.md rule 3's identity bootstraps
+  stay two; the create-time promotion that was one of them is gone. The role
+  write is the one MB.59's grant and revoke will share, adding the ledger row.
+- **Changing the variable** promotes the new address at its next qualifying
+  sign-in, even if that account already exists. The previous primary admin
+  keeps `role: 'admin'` and simply stops being protected (MB.59). This is
+  also the recovery path if the primary admin loses their OAuth account.
+
+**Three Better Auth options stay off, pinned by `tests/lib/auth.test.ts`.**
+Each would let the address on an account change under the primary admin and
+move the protection to whoever holds it now:
+
+- `user.changeEmail.enabled` — set `false` explicitly. An email changes
+  through MB.54's verified flow.
+- `overrideUserInfoOnSignIn` on every provider — on, a sign-in rewrites
+  the stored email from the provider's profile.
+- `account.accountLinking.trustedProviders` — a trusted provider skips the
+  verified-email check when linking.
+
+**The squat is left open, deliberately, until MB.61's follow-ups.** Refusing
+to create an account that holds the address unverified would close it today.
+It was left out because first-party verification lands before launch and
+settles squatting for every address, not just this one. The hole until then:
+an unverified Discord or Facebook sign-up carrying the address, made before
+the owner's first sign-in or after a database reset, makes Better Auth refuse
+to link the owner's verified sign-in to it (`requireLocalEmailVerified`), and
+the owner sees a generic `account_not_linked` error. Pre-launch the site has
+no such users.
+
+### Granting a second admin — decided, not built (M2.9)
+
+[`design-decisions/m2.9-granting-admin.md`](design-decisions/m2.9-granting-admin.md)
+carries the argument.
+
+- **The primary admin** cannot be revoked or deleted by anyone, itself
+  included (MB.59). The UI calls it "Primary admin", and its refusal is in
+  plain language that names no variable.
 - **Every other admin** is granted and revoked by an admin from
   `/admin/users`, verified or not (MB.59). A grant also sets
   `canCreateWorkspace`. A revoke that would leave zero admins is refused, as a
@@ -231,31 +308,24 @@ Nothing else grants admin in v1 — no UI, no other API path.
 - **MB.53.** Better Auth's `admin` plugin mounts `set-role`, `update-user`
   and `remove-user` alongside impersonation. MB.53 therefore allows only the
   two impersonation endpoints.
-
 - **MB.61** scopes verifying addresses ourselves, which lifts the provider
   restriction, moves invitations to email, and lets a user set or change
   their email (MB.54, re-scoped to follow it).
 
 Until MB.58 and MB.59 land, a second admin is an `UPDATE` in `psql`.
 
-**The hook matches the email string and ignores `emailVerified`.** Discord
-and Facebook can both return an unverified address. Until the real owner has
-an account, whoever first signs up carrying `ADMIN_BOOTSTRAP_EMAIL` is made
-admin, and a freshly reset database opens the gap again. Worse, once an
-unverified account holds the address, Better Auth refuses to link the owner's
-verified sign-in to it (`requireLocalEmailVerified`), so the owner is locked
-out. MB.60 fixes both. It has to land before MB.12 sets the variable in a
-deployed environment.
+### The self-created user
 
-- **Why this can't go through `withAudit(session, fn)`.** CLAUDE.md rule 3
-  says every write does; OAuth sign-up is the one write that can't, because
-  there's no session yet — the write _is_ how one comes to exist. This is
-  the same "no third access path" exception `/api/auth/*` already is (see
-  the top of this doc), one level deeper: not just a different transport,
-  but a write Better Auth's own create-user flow performs directly against
-  the adapter, with no service function in between to call `withAudit`.
-- **`databaseHooks.user.create.before`** (`src/lib/auth.ts`) is where both
-  the promotion and the audit stamping happen, in one hook:
+- **Why sign-up can't go through `withAudit(session, fn)`.** CLAUDE.md
+  rule 3 says every write does; OAuth sign-up is the one write that can't,
+  because there's no session yet — the write _is_ how one comes to exist.
+  This is the same "no third access path" exception `/api/auth/*` already is
+  (see the top of this doc), one level deeper: a write Better Auth's own
+  create-user flow performs directly against the adapter, with no service
+  function in between to call `withAudit`. The promotion above is not such a
+  write: by the callback's after hook the user is authenticated.
+- **`databaseHooks.user.create.before`** (`src/lib/auth.ts`) does the audit
+  stamping, and nothing else:
   - Generates a `uuid` itself (`crypto.randomUUID()`) rather than letting
     Postgres's column default assign one, so `createdBy`/`updatedBy` (NOT
     NULL, no database default) can reference it before the row exists —
@@ -264,11 +334,10 @@ deployed environment.
     bootstrap row, applied generally: a self-created account is its own
     creator. `forceAllowId` (Better Auth's own `createWithHooks`) is what
     lets a hook-supplied id override the adapter's default id generation.
-  - Sets `role: 'admin'` only when the incoming email matches
-    `ADMIN_BOOTSTRAP_EMAIL` (compared case-insensitively); otherwise leaves
-    `role` and `canCreateWorkspace` absent from the returned data entirely,
+  - Leaves `role` and `canCreateWorkspace` absent from the returned data,
     so Postgres's own column defaults apply — not duplicated as a second
-    `'user'`/`false` literal in application code.
+    `'user'`/`false` literal in application code. It never sets `role`,
+    whatever the address.
 - **`user.additionalFields`** registers `role`, `canCreateWorkspace`,
   `createdBy`, `updatedBy` with the core Better Auth user model — without
   this, the adapter silently drops any key in the hook's returned data
@@ -487,10 +556,12 @@ token)>`); the recipe is in the record.
 Every variable this subsystem needs, and the manual steps to set each one,
 is `claude-docs/secrets.md` (M0.27) — not duplicated here. Short version:
 `src/lib/auth.ts` is wired and the OAuth credentials are set (see "Social
-providers" above). Still unset, all owned by MB.12: `ADMIN_BOOTSTRAP_EMAIL`,
-so no account can become admin yet; and `VERCEL_SCOPE`/`NEON_API_KEY`/
-`NEON_PROJECT_ID`, so `migrate.yml` still skips rather than applying
-migrations.
+providers" above). Still unset, all owned by MB.12: `ADMIN_BOOTSTRAP_EMAIL`
+— and since MB.60 a deploy **fails its build** without it (`deploy.yml`'s
+pulled-environment assertion names it first), so it must be set in both Vercel
+environments before a build containing MB.60 deploys; and
+`VERCEL_SCOPE`/`NEON_API_KEY`/`NEON_PROJECT_ID`, so `migrate.yml` still
+skips rather than applying migrations.
 
 ## Tests
 
@@ -511,14 +582,25 @@ migrations.
   reusing one `import('@/lib/auth')` across cases in the same test file would
   otherwise replay the first result instead of re-evaluating against new
   env vars.
-- **`tests/lib/auth.test.ts` (M2.3 additions)** — asserts `role` and
-  `canCreateWorkspace` are registered with `input: false`; and calls
+- **`tests/lib/auth.test.ts` (M2.3, MB.60 additions)** — asserts `role` and
+  `canCreateWorkspace` are registered with `input: false`; calls
   `databaseHooks.user.create.before` directly (no real Better Auth request,
   no database) to assert a new user is stamped as its own `createdBy`/
-  `updatedBy`, that `role` is promoted to `'admin'` only for an email
-  matching `ADMIN_BOOTSTRAP_EMAIL` (case-insensitively), and left
-  `undefined` — not `'user'` — for everyone else, so the column default is
-  what actually applies rather than a second copy of it in this code.
+  `updatedBy` and that `role` stays `undefined` even for the address
+  `ADMIN_BOOTSTRAP_EMAIL` names; asserts the import throws on an unset
+  `ADMIN_BOOTSTRAP_EMAIL` at `NODE_ENV=production` and does not outside it;
+  and pins the three options above off, with all four providers registered so
+  the per-provider check cannot pass on an empty list.
+- **`tests/services/admin-role.test.ts` (MB.60)** — `promotePrimaryAdmin`'s
+  outcomes against the database, then the whole round trip through
+  `auth.handler`: `POST /sign-in/social`, then `GET /callback/:id` with
+  MSW standing in for each provider's token and profile endpoints (Google's
+  and Microsoft's id tokens are unsigned, which is safe to fake because both
+  decode the token they got from their own token endpoint without
+  re-verifying it). Each refusal differs from a promoting case in one field,
+  so it is the provider rule refusing and not a mismatched address. Every
+  user it makes is on `@primary-admin.test`, deleted before each test, since
+  the harness re-clones per file, not per test.
 - **`tests/lib/errors.test.ts` (M1.26)** — asserts `Forbidden` and
   `NotFound` are distinguishable by type in a `catch` and in an
   `expect().rejects.toThrow(Class)`, and that neither an empty list nor a

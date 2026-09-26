@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { pgTable, text, boolean, uuid, pgEnum, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, text, boolean, uuid, pgEnum, uniqueIndex, check } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../audit';
 
 // Admins curate the global vocabularies and nothing else, so a column is enough.
@@ -28,5 +28,9 @@ export const users = pgTable(
     uniqueIndex('users_email_unique')
       .on(table.email)
       .where(sql`${table.deletedAt} is null`),
+    // Better Auth lowercases on every write; this holds a hand-written row to
+    // the same, so the unique index above is case-insensitive in effect and at
+    // most one live row can match ADMIN_BOOTSTRAP_EMAIL.
+    check('users_email_lower_case', sql`${table.email} = lower(${table.email})`),
   ],
 );

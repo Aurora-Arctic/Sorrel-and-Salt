@@ -1,4 +1,5 @@
 import { describe, expect, it, afterEach, vi } from 'vitest';
+import type { BetterAuthOptions } from 'better-auth';
 
 // Better Auth's own production check swallows its rejection and answers 200
 // on the default secret, so the repo enforces it synchronously before
@@ -10,6 +11,7 @@ describe('auth secret', () => {
 
   it('throws when unset at NODE_ENV=production', async () => {
     vi.stubEnv('BETTER_AUTH_SECRET', '');
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'placeholder@admin-bootstrap.invalid');
     vi.stubEnv('NODE_ENV', 'production');
     vi.resetModules();
 
@@ -151,6 +153,7 @@ describe('baseURL', () => {
   it('allows sorrelandsalt.com, the staging alias, and any hotfix-* preview at production', async () => {
     vi.stubEnv('NODE_ENV', 'production');
     vi.stubEnv('BETTER_AUTH_SECRET', 'production-test-secret-at-least-32-characters-long');
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'placeholder@admin-bootstrap.invalid');
     vi.resetModules();
 
     const { auth } = await import('@/lib/auth');
@@ -184,64 +187,113 @@ describe('user field mapping', () => {
 });
 
 // The one write to `users` outside withAudit: there is no session yet, so the
-// new user is its own creator (`createdBy` is NOT NULL with no default).
-describe('admin bootstrap', () => {
+// new user is its own creator (`createdBy` is NOT NULL with no default). It
+// never sets `role`: the primary admin is promoted at sign-in, through
+// withAudit (tests/services/admin-role.test.ts).
+describe('sign-up hook', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
 
-  async function beforeCreateHook() {
+  it('stamps a new user as its own creator and updater, and never promotes', async () => {
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'owner@example.com');
     vi.resetModules();
     const { auth } = await import('@/lib/auth');
-    const hook = auth.options.databaseHooks?.user?.create?.before;
-    if (!hook) throw new Error('databaseHooks.user.create.before is not configured');
-    return hook;
-  }
+    const before = auth.options.databaseHooks?.user?.create?.before;
+    if (!before) throw new Error('databaseHooks.user.create.before is not configured');
 
-  it('stamps a new user as its own creator and updater', async () => {
-    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', '');
-    const before = await beforeCreateHook();
+    const result = await before({ email: 'owner@example.com', name: 'Site Owner' } as never);
 
-    const result = await before({ email: 'new.member@example.com', name: 'New Member' } as never);
-
-    expect(result).toBeTruthy();
     const data = (result as { data: Record<string, unknown> }).data;
     expect(data.id).toEqual(expect.any(String));
     expect(data.createdBy).toBe(data.id);
     expect(data.updatedBy).toBe(data.id);
+    // The address matches the variable, so only the hook's own rule keeps this unset.
     expect(data.role).toBeUndefined();
   });
+});
 
-  it('promotes the user matching ADMIN_BOOTSTRAP_EMAIL to admin', async () => {
-    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'owner@sorrelandsalt.com');
-    const before = await beforeCreateHook();
-
-    const result = await before({ email: 'owner@sorrelandsalt.com', name: 'Site Owner' } as never);
-
-    const data = (result as { data: Record<string, unknown> }).data;
-    expect(data.role).toBe('admin');
+// Everything the primary admin's protection rests on holds only while the
+// variable is set, so a deployed build refuses to start without it; the check
+// keys on NODE_ENV=production, as BETTER_AUTH_SECRET's does.
+describe('ADMIN_BOOTSTRAP_EMAIL', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
-  it('matches the bootstrap email case-insensitively', async () => {
-    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'Owner@SorrelAndSalt.com');
-    const before = await beforeCreateHook();
-
-    const result = await before({ email: 'owner@sorrelandsalt.com', name: 'Site Owner' } as never);
-
-    const data = (result as { data: Record<string, unknown> }).data;
-    expect(data.role).toBe('admin');
-  });
-
-  it('leaves every other user at the column default (no role set) when unset', async () => {
+  it('throws when unset at NODE_ENV=production', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('BETTER_AUTH_SECRET', 'production-test-secret-at-least-32-characters-long');
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', '');
-    const before = await beforeCreateHook();
+    vi.resetModules();
 
-    const result = await before({
-      email: 'someone.else@example.com',
-      name: 'Someone Else',
-    } as never);
+    await expect(import('@/lib/auth')).rejects.toThrow('ADMIN_BOOTSTRAP_EMAIL is not set');
+  });
 
-    const data = (result as { data: Record<string, unknown> }).data;
-    expect(data.role).toBeUndefined();
+  it('starts at NODE_ENV=production once it is set', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('BETTER_AUTH_SECRET', 'production-test-secret-at-least-32-characters-long');
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'placeholder@admin-bootstrap.invalid');
+    vi.resetModules();
+
+    await expect(import('@/lib/auth')).resolves.toBeDefined();
+  });
+
+  it('does not throw when unset outside production', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', '');
+    vi.resetModules();
+
+    await expect(import('@/lib/auth')).resolves.toBeDefined();
+  });
+});
+
+// Each of these, turned on, would let the address on an account change under
+// the primary admin and move the protection to whoever now holds it.
+describe('options that would move the primary admin', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  async function configuredAuth() {
+    for (const provider of ['GOOGLE', 'DISCORD', 'FACEBOOK', 'MICROSOFT']) {
+      vi.stubEnv(`${provider}_CLIENT_ID`, `test-${provider.toLowerCase()}-id`);
+      vi.stubEnv(`${provider}_CLIENT_SECRET`, `test-${provider.toLowerCase()}-secret`);
+    }
+    vi.resetModules();
+    return (await import('@/lib/auth')).auth;
+  }
+
+  it('keeps user.changeEmail off: a user could retarget the address themselves', async () => {
+    const auth = await configuredAuth();
+
+    expect(auth.options.user?.changeEmail?.enabled).toBe(false);
+  });
+
+  it('keeps overrideUserInfoOnSignIn off on every provider: a sign-in would rewrite the stored email', async () => {
+    const auth = await configuredAuth();
+    const providers = Object.entries(auth.options.socialProviders ?? {});
+
+    // All four registered, so an empty list cannot pass this vacuously.
+    expect(providers.map(([id]) => id).sort()).toEqual([
+      'discord',
+      'facebook',
+      'google',
+      'microsoft',
+    ]);
+    for (const [id, config] of providers) {
+      expect(
+        (config as { overrideUserInfoOnSignIn?: boolean }).overrideUserInfoOnSignIn,
+        id,
+      ).toBeFalsy();
+    }
+  });
+
+  it('trusts no provider for linking: a trusted one skips the verified-email check', async () => {
+    const auth = await configuredAuth();
+
+    const { account } = auth.options as BetterAuthOptions;
+
+    expect(account?.accountLinking?.trustedProviders ?? []).toEqual([]);
   });
 });

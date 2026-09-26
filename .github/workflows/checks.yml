@@ -139,6 +139,9 @@ jobs:
       # secret at NODE_ENV=production, which the `build` script forces).
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       BETTER_AUTH_SECRET: local-dev-not-a-real-secret
+      # auth.ts refuses to load without it at NODE_ENV=production. `.invalid`
+      # is reserved (RFC 2606), so no real sign-in can ever match it.
+      ADMIN_BOOTSTRAP_EMAIL: placeholder@admin-bootstrap.invalid
       # destructive-ddl leg only. Always set: the script reads set-but-empty
       # as "scan nothing" and unset as "diff the branch", which CI must never do.
       DESTRUCTIVE_DDL_FILES: ${{ inputs.destructive-ddl-files }}

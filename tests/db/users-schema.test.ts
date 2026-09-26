@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import type postgres from 'postgres';
+import { failureOf, useTestDatabase } from './support/database';
 import { tableFacts } from './support/table-metadata';
+import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { users } from '@/db/schema/users';
 
 // Schema shape via Drizzle's introspection; the seeded rows are asserted in
@@ -32,5 +35,41 @@ describe('users schema', () => {
     expect(emailIndex).toBeDefined();
     expect(emailIndex?.config.unique).toBe(true);
     expect(emailIndex?.config.where).toBeDefined();
+  });
+});
+
+// The primary admin is whichever live row matches ADMIN_BOOTSTRAP_EMAIL
+// case-insensitively, and `users_email_unique` is on the raw column. Better
+// Auth lowercases every email it writes, but a row inserted by hand need not,
+// so the database holds the addresses to lower case and two rows can never
+// differ by case alone.
+describe('users email case', () => {
+  let sql: postgres.Sql;
+  useTestDatabase((client) => {
+    sql = client;
+  });
+
+  const insert = (email: string) => sql`
+    insert into users (name, email, created_by, updated_by)
+    values ('Fixture Person', ${email}, ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+  `;
+
+  it('refuses a mixed-case row beside its lower-case twin, leaving one match', async () => {
+    await insert('owner@case-check.test');
+
+    const error = await failureOf(insert('Owner@Case-Check.test'));
+
+    // 23514 is check_violation: the unique index alone would have let it in.
+    expect(error.code).toBe('23514');
+    expect(error.constraint_name).toBe('users_email_lower_case');
+    const matches = await sql`
+      select id from users
+      where lower(email) = lower('OWNER@case-check.test') and deleted_at is null
+    `;
+    expect(matches).toHaveLength(1);
+  });
+
+  it('accepts a lower-case address, so the check is the case and not the insert', async () => {
+    await expect(insert('someone@case-check.test')).resolves.toBeDefined();
   });
 });

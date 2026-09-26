@@ -12,6 +12,13 @@ updates:
           - 'react-dom'
           - '@types/react'
           - '@types/react-dom'
+      # better-auth pins its own @better-auth/* packages to its exact version,
+      # and src/lib/auth.ts imports @better-auth/core directly; bumped apart,
+      # npm installs two copies of core.
+      better-auth:
+        patterns:
+          - 'better-auth'
+          - '@better-auth/*'
 
   - package-ecosystem: github-actions
     directory: /

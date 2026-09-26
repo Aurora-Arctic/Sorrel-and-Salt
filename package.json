@@ -41,6 +41,7 @@
     "typecheck"
   ],
   "dependencies": {
+    "@better-auth/core": "^1.7.5",
     "better-auth": "^1.7.5",
     "drizzle-orm": "^0.45.2",
     "next": "^16.3.5",
