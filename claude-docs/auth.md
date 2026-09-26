@@ -63,7 +63,7 @@ convention) and split across two schema files:
   alters schema at request time.
 - **Don't regenerate this schema with `@better-auth/cli`.** The documented
   path (`npx @better-auth/cli generate`) is the wrong one here: that package
-  is still on 1.4.x/1.5.0-beta, behind the installed 1.7.4 core, so it emits
+  is still on 1.4.x/1.5.0-beta, behind the installed 1.7.5 core, so it emits
   a schema for a different major. M2.2 instead used the generator the
   installed `@better-auth/drizzle-adapter` bundles internally
   (`generateDrizzleSchema`, in its `generate-drizzle-schema-*.mjs` — not in
@@ -217,7 +217,10 @@ created, and only when that sign-in's provider vouches for the address:
   verified in Better Auth's mapping. Microsoft is excluded on purpose: with
   `tenantId: 'common'`, an attacker's own Entra tenant can issue an id token
   carrying any `email` and `email_verified` claim (the 2023 "nOAuth"
-  surface). First-party verification (MB.61) is what would let them in.
+  surface). First-party verification lets them in another way: MB.68
+  promotes the address when its owner verifies it by mail, from a session
+  holding that row
+  ([`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md)).
 - **The decision uses the provider's fresh profile at that callback**, never
   the stored `users.emailVerified`. A Microsoft sign-in can mark the row
   verified, and a later Microsoft sign-in over that verified row still
@@ -274,10 +277,13 @@ move the protection to whoever holds it now:
 - `account.accountLinking.trustedProviders` — a trusted provider skips the
   verified-email check when linking.
 
-**The squat is left open, deliberately, until MB.61's follow-ups.** Refusing
-to create an account that holds the address unverified would close it today.
-It was left out because first-party verification lands before launch and
-settles squatting for every address, not just this one. The hole until then:
+**The squat is left open, deliberately, until MB.67.** Refusing to create an
+account that holds the address unverified would close it today. It was left
+out because first-party verification lands before launch and settles
+squatting for every address, not just this one: an unverified account is
+provisional and expires one verification window after its last mail
+([`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md)).
+The hole until then:
 an unverified Discord or Facebook sign-up carrying the address, made before
 the owner's first sign-in or after a database reset, makes Better Auth refuse
 to link the owner's verified sign-in to it (`requireLocalEmailVerified`), and
@@ -298,7 +304,7 @@ carries the argument.
   fallback for the gap after the variable changes, and the primary admin can
   pause granting and revoking for every other admin through a `site_settings`
   row (MB.62, MB.63).
-- **Inviting an admin by email** follows MB.61's follow-ups (story 62): the
+- **Inviting an admin by email** is MB.69 and MB.70 (story 62): the
   invitation names an address, the link is mailed to it, and only a signed-in
   account whose verified email matches can accept. Accepting is a grant, so it
   writes the ledger row, sets `canCreateWorkspace`, and is refused while
@@ -308,9 +314,12 @@ carries the argument.
 - **MB.53.** Better Auth's `admin` plugin mounts `set-role`, `update-user`
   and `remove-user` alongside impersonation. MB.53 therefore allows only the
   two impersonation endpoints.
-- **MB.61** scopes verifying addresses ourselves, which lifts the provider
-  restriction, moves invitations to email, and lets a user set or change
-  their email (MB.54, re-scoped to follow it).
+- **MB.61** decided first-party verification
+  ([`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md)):
+  MB.65 builds the mail transport, MB.66 turns Better Auth's verification on,
+  MB.67 makes unverified accounts provisional, MB.68 promotes the primary
+  admin at verification, and MB.54, re-scoped to follow them, is the email
+  page where a user sets or changes their address.
 
 Until MB.58 and MB.59 land, a second admin is an `UPDATE` in `psql`.
 
