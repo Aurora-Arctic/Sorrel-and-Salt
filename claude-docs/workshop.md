@@ -111,6 +111,25 @@ without a page routed to it.
   holds only reference-page chrome, and **must stay nested under `.dl`** —
   `.ladle-story-frame p` (0,1,1) outranks `.eyebrow` (0,1,0) otherwise.
 
+## Mail templates (MB.66)
+
+- **`src/emails/*.stories.tsx`** is the second story glob in `config.mjs`: one
+  story file beside each mail template, titled `Emails / …`. The shared frame
+  in `src/emails/parts/` has none; every template previews it.
+- **`EmailPreview.tsx`** renders a template's `Message` and shows the HTML part
+  in an iframe, so the workshop's styles and document never reach the mail,
+  with the plain-text part in a `<details>` beneath. Images and fonts load
+  from the workshop's own origin: Vite serves `public/` in `ladle serve` and
+  copies it into the build, and on staging `/email/*` is the app's own public
+  prefix.
+- **The toolbar's theme reaches the mail by rewriting it.** A framed
+  document's `prefers-color-scheme` follows the browser, not the frame's
+  `color-scheme` — checked in the Playwright Chromium, where a light page left
+  the mail dark. So the preview reads the page's computed `color-scheme` and
+  turns the mail's one `LIGHT_MEDIA` block into `@media all` or `@media not
+all`: the same rules a client in that scheme applies, nothing re-styled. A
+  story's `meta.theme` pin wins, as for components.
+
 ## Commands and gates
 
 - `npm run workshop` / `make workshop` — dev server on **61000**, with Vite HMR
@@ -119,13 +138,15 @@ without a page routed to it.
 - `npm run workshop:build` / `make workshop-build` — static build to the
   gitignored `.reports/workshop/`, via `scripts/build-workshop.ts`. See **The build gate**
   below for why the wrapper exists.
-- `tests/guards/workshop-guards.test.ts` (MB.38) — the two mechanical guards, as
+- `tests/guards/workshop-guards.test.ts` (MB.38, MB.66) — the mechanical guards, as
   ordinary Vitest tests in the `unit` project. One fails if a directory under
   `src/components/` has an `index.tsx` but no sibling `index.stories.tsx` —
   not an Oxlint rule, because Oxlint has no custom-rule API and this is a
   cross-file filesystem assertion; scoped to `src/components/`, with
   `.ladle/*.stories.tsx` deliberately out of scope; and proven on a throwaway
-  tree before it is trusted on the real one. The other fails if
+  tree before it is trusted on the real one. Its twin (MB.66) fails if a
+  top-level `src/emails/<name>.tsx` has no sibling `<name>.stories.tsx`, or
+  if `config.mjs` stops globbing them. The last fails if
   `config.mjs`'s `addons.theme.defaultState` is not `'dark'`. Both were
   standalone scripts under `scripts/` until MB.38, written that way only
   because Vitest had not landed yet.

@@ -222,9 +222,8 @@ created, and only when that sign-in's provider vouches for the address:
   holding that row
   ([`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md)).
 - **The decision uses the provider's fresh profile at that callback**, never
-  the stored `users.emailVerified`. A Microsoft sign-in can mark the row
-  verified, and a later Microsoft sign-in over that verified row still
-  promotes nobody. So nothing that later sets the column can widen who
+  the stored `users.emailVerified`. A row our own mail has marked verified
+  still promotes nobody at a later Microsoft sign-in. So nothing that later sets the column can widen who
   qualifies. The profile must also carry the account's own address: a linked
   Google account whose address has since moved vouches for the new one, not
   this one.
@@ -289,6 +288,48 @@ the owner's first sign-in or after a database reset, makes Better Auth refuse
 to link the owner's verified sign-in to it (`requireLocalEmailVerified`), and
 the owner sees a generic `account_not_linked` error. Pre-launch the site has
 no such users.
+
+### First-party verification (MB.66)
+
+The site vouches for an address itself by mailing a link, so
+`users.emailVerified` means one thing: **Google, Discord or our own mail
+said so.** The argument is
+[`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md);
+this is the shape.
+
+- **Facebook and Microsoft arrive unverified**, whatever they report:
+  `mapProfileToUser: () => ({ emailVerified: false })` on both, spread after
+  the provider's own mapping. Google and Discord keep theirs.
+- **Offered, never required for a session.** `emailVerification.sendOnSignUp`
+  is on, so an OAuth sign-up whose address is unverified is created, mailed
+  and signed in. No provider sets `requireEmailVerification`; what needs a
+  verified address checks the column. `requireLocalEmailVerified` stays at
+  its default, so a provider cannot link into an unverified row: the owner of
+  a squatted address is refused with `account_not_linked` until MB.67's sweep.
+- **The token is Better Auth's**: an HS256 JWT signed with
+  `BETTER_AUTH_SECRET`, `expiresIn: 3600`, never stored and not single-use.
+  A second use finds the row verified and writes nothing.
+  `autoSignInAfterVerification` is off, so the link never issues a session.
+- **Only from a session holding that row.** `beforeEmailVerification`
+  reads the request's session and refuses unless it is the row's own. With
+  the link's `callbackURL` present it redirects there with
+  `?error=SIGN_IN_TO_VERIFY`, the same way Better Auth's own refusals on the
+  endpoint do; without it, `403`. Without the check, a stranger's sign-up
+  carrying your address would be verified by your click on a mail you never
+  asked for, and your own verified sign-in would then link into their row.
+- **The write is stamped.** `/verify-email` updates `emailVerified` through
+  Better Auth's adapter, outside `withAudit`. `beforeEmailVerification`
+  records the user's id in a per-request store, and
+  `databaseHooks.user.update.before` merges `updatedBy` from it into the
+  same `UPDATE`; the trigger sets `updated_at`. `validateUserInfo` records
+  the id the same way on a sign-in or link, which is when Better Auth flips
+  the column for a provider that vouches later, and the hook falls back to the
+  endpoint's session (`/update-user`). A write with neither is left
+  unstamped rather than refused. No GUC is published, as for the create hook.
+- **The mail** is sent through `src/lib/mail.ts` from
+  `sendVerificationEmail`, and names the providers linked to the account so
+  a reader can tell whether they signed up at all. The template is
+  `src/emails/verify-email.tsx` ([`email.md`](email.md)).
 
 ### Granting a second admin — decided, not built (M2.9)
 
@@ -445,7 +486,9 @@ answer.
 
 - **Deny by default.** `PUBLIC_ROUTES` in `src/proxy.ts` is a plain list of
   the pages a signed-out visitor may reach — `/`, the general entry page
-  (MB.57); `/sign-in`; and `/invite/*`. Everything else redirects, so a
+  (MB.57); `/sign-in`; `/invite/*`; and `/email/*`, the one prefix under
+  `public/`, whose images and fonts a mail client fetches with no cookie
+  (MB.66, [`email.md`](email.md)). Everything else redirects, so a
   route added without anyone thinking about auth is protected, not open. An
   entry is an exact path, or a path ending `/*` for everything beneath it:
   `/` admits only `/`, `/sign-in` does not admit `/sign-in-help`, and
@@ -615,6 +658,17 @@ pulled-environment assertion names it first).
   so it is the provider rule refusing and not a mismatched address. Every
   user it makes is on `@primary-admin.test`, deleted before each test, since
   the harness re-clones per file, not per test.
+- **`tests/lib/auth.test.ts` (MB.66 additions)** — pins every
+  `emailVerification` value, `requireLocalEmailVerified` at its default, no
+  provider requiring verification, and the Facebook and Microsoft mappers.
+- **`tests/db/email-verification.test.ts` (MB.66)** — the same
+  `auth.handler` round trip, through `tests/support/oauth.ts` (shared with
+  the admin-role test), with `@/lib/mail` mocked. A sign-up mails once and
+  signs in; the mailed link verifies from the owner's session and is refused,
+  row unchanged, from none or another user's, and the same link then
+  succeeds from the owner's session, so the refusal was the session's. Each
+  stamp assertion first hands `updated_by` to the bootstrap user, because
+  the create hook already stamps a new row as itself.
 - **`tests/lib/errors.test.ts` (M1.26)** — asserts `Forbidden` and
   `NotFound` are distinguishable by type in a `catch` and in an
   `expect().rejects.toThrow(Class)`, and that neither an empty list nor a

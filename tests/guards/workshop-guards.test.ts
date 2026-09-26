@@ -89,6 +89,58 @@ describe('every standalone component ships a story', () => {
   });
 });
 
+// A mail template is a top-level `src/emails/<name>.tsx` and its story the
+// sibling `<name>.stories.tsx`; the shared frame lives in `src/emails/parts/`,
+// which is not a template and is previewed through every one that uses it.
+const EMAILS_DIR = join(REPO_ROOT, 'src', 'emails');
+
+/** Templates directly in `dir` with no sibling story, by file name. */
+function templatesMissingStories(dir: string): string[] {
+  const files = readdirSync(dir);
+  return files
+    .filter((file) => file.endsWith('.tsx') && !file.endsWith('.stories.tsx'))
+    .filter((file) => !files.includes(file.replace(/\.tsx$/, '.stories.tsx')));
+}
+
+describe('every email template ships a story', () => {
+  let fixture: string;
+
+  beforeAll(() => {
+    fixture = mkdtempSync(join(tmpdir(), 'workshop-email-guards-'));
+    mkdirSync(join(fixture, 'parts'));
+    for (const file of [
+      'bare.tsx',
+      'covered.tsx',
+      'covered.stories.tsx',
+      'theme.ts',
+      'parts/layout.tsx',
+    ]) {
+      writeFileSync(join(fixture, file), '');
+    }
+  });
+
+  afterAll(() => {
+    rmSync(fixture, { recursive: true, force: true });
+  });
+
+  it('reports a template with no story, and nothing else', () => {
+    expect(templatesMissingStories(fixture)).toEqual(['bare.tsx']);
+  });
+
+  // Precondition, as for components: a walk that found nothing reports nothing missing.
+  it('finds the templates that exist in src/emails/', () => {
+    expect(readdirSync(EMAILS_DIR)).toContain('verify-email.tsx');
+  });
+
+  it('finds no template under src/emails/ without one', () => {
+    expect(templatesMissingStories(EMAILS_DIR)).toEqual([]);
+  });
+
+  it('is discovered by the workshop', () => {
+    expect(ladleConfig.stories).toContain('src/emails/*.stories.tsx');
+  });
+});
+
 describe('.ladle/config.mjs', () => {
   it("opens the workshop dark — addons.theme.defaultState is 'dark'", () => {
     expect(ladleConfig.addons?.theme?.defaultState).toBe('dark');

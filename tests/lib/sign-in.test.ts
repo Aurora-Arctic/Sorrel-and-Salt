@@ -75,6 +75,14 @@ describe('signInErrorMessage', () => {
     expect(signInErrorMessage('email_not_found')).toMatch(/email/i);
   });
 
+  it('points email_not_verified at the mailed link and the email page, not the provider', () => {
+    const message = signInErrorMessage('email_not_verified');
+
+    expect(message).toMatch(/link we (sent|emailed)/i);
+    expect(message).toMatch(/email page/i);
+    expect(message).not.toMatch(/with the provider/i);
+  });
+
   // Better Auth's state failures (oauth2/state.mjs folds state_security_mismatch
   // into state_mismatch). Retrying from the provider's tab replays the dead
   // state, so the sentence must send the visitor back here instead.
