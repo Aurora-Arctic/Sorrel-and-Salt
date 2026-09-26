@@ -1,18 +1,25 @@
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
-import { createAuthMiddleware } from 'better-auth/api';
+import { APIError, createAuthMiddleware, getSessionFromCtx } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { defineRequestState } from '@better-auth/core/context';
+import {
+  defineRequestState,
+  getCurrentAuthEndpointContext,
+  hasRequestState,
+} from '@better-auth/core/context';
+import { appendQueryParams } from '@better-auth/core/utils/url';
 // Better Auth's drizzleAdapter takes the client itself rather than a writer, so
 // this cannot go through withAudit — claude-docs/db.md, "Who may import the client".
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../db/connection';
 import { users } from '../db/schema/users';
 import { sessions, accounts, verifications } from '../db/schema/auth';
-import { SOCIAL_PROVIDERS } from './social-providers';
+import { SOCIAL_PROVIDERS, type ProviderId } from './social-providers';
 // Server-only — see social-providers-config.ts's own header.
 // oxlint-disable-next-line no-restricted-imports
 import { clientCredentials } from './social-providers-config';
 import type { UserRole } from './session';
+import { send } from './mail';
+import { verifyEmailMessage } from '../emails/verify-email';
 import {
   promotePrimaryAdmin,
   type PrimaryAdminOutcome,
@@ -41,6 +48,14 @@ function socialProviders(): BetterAuthOptions['socialProviders'] {
     const credentials = clientCredentials(provider.id);
     if (!credentials) continue;
 
+    // Neither vouches for an address (claude-docs/auth.md, "First-party
+    // verification"), so a true users.emailVerified means Google, Discord or
+    // our own mail did. Spread after the provider's own mapping, so it wins.
+    if (provider.id === 'facebook') {
+      providers.facebook = { ...credentials, mapProfileToUser: () => ({ emailVerified: false }) };
+      continue;
+    }
+
     if (provider.id === 'microsoft') {
       // Personal Microsoft accounts must be able to sign in, so the tenant is
       // stated explicitly rather than left to Better Auth's own "common"
@@ -51,6 +66,7 @@ function socialProviders(): BetterAuthOptions['socialProviders'] {
       providers.microsoft = {
         ...credentials,
         tenantId: process.env.MICROSOFT_TENANT_ID || 'common',
+        mapProfileToUser: () => ({ emailVerified: false }),
       };
       continue;
     }
@@ -97,6 +113,11 @@ function primaryAdminEmail(): string | undefined {
 // which sees only the stored row. Per request, so nothing leaks between sign-ins.
 const signInProfile = defineRequestState<SignInProfile | undefined>(() => undefined);
 
+// Who a Better Auth write to `users` is made for, when no session names them:
+// the user following their verification link, or signing in over their own
+// row. Read by the update hook, which sees only the patch.
+const actingUser = defineRequestState<string | undefined>(() => undefined);
+
 // Refusals are logged by user id, never address: a sign-in page must not
 // reveal that an address is special.
 const UNQUALIFIED = new Set<PrimaryAdminOutcome>([
@@ -125,6 +146,47 @@ export const auth = betterAuth({
       generateId: 'uuid',
     },
   },
+  // Offered at sign-up, never required for a session: what needs a verified
+  // address checks the column. claude-docs/auth.md, "First-party verification".
+  emailVerification: {
+    sendOnSignUp: true,
+    expiresIn: 3600,
+    autoSignInAfterVerification: false,
+    sendVerificationEmail: async ({ user, url }) => {
+      const accounts = await getCurrentAuthEndpointContext().context.internalAdapter.findAccounts(
+        user.id,
+      );
+      await send(
+        await verifyEmailMessage({
+          to: user.email,
+          url,
+          providers: accounts.map((account) => account.providerId as ProviderId),
+        }),
+      );
+    },
+    // Only from a browser signed in to this very account. Without it, a
+    // stranger's sign-up carrying your address is verified by your click on a
+    // mail you never asked for.
+    beforeEmailVerification: async (user) => {
+      const ctx = getCurrentAuthEndpointContext();
+      const session = await getSessionFromCtx(ctx as Parameters<typeof getSessionFromCtx>[0]);
+      if (session?.user.id !== user.id) {
+        const callbackURL = ctx.query?.callbackURL;
+        if (typeof callbackURL === 'string') {
+          // Better Auth's own refusals on this endpoint redirect the same way.
+          const params = new URLSearchParams({ error: 'SIGN_IN_TO_VERIFY' });
+          throw new APIError('FOUND', undefined, {
+            Location: appendQueryParams(callbackURL, params),
+          });
+        }
+        throw new APIError('FORBIDDEN', {
+          code: 'SIGN_IN_TO_VERIFY',
+          message: 'Open the link from a browser signed in to this account.',
+        });
+      }
+      await actingUser.set(user.id);
+    },
+  },
   user: {
     // Off, pinned by test: on, a user could move the primary admin's address
     // to another account. An email changes through MB.54's verified flow.
@@ -132,6 +194,9 @@ export const auth = betterAuth({
     // Never refuses: it only records what the provider said, for the hook below.
     validateUserInfo: async ({ user, source }) => {
       if (source.method !== 'oauth' || !source.oauth) return;
+      // Absent on a create, which the create hook stamps; present on a sign-in
+      // or link, which may mark the row verified.
+      if (user.id) await actingUser.set(String(user.id));
       await signInProfile.set({
         providerId: source.oauth.providerId,
         email: String(user.email ?? ''),
@@ -183,6 +248,18 @@ export const auth = betterAuth({
               updatedBy: id,
             },
           };
+        },
+      },
+      update: {
+        // The same self-stamp as the create hook, outside `withAudit` for the
+        // same reason: the verify write is the identity completing. Merged into
+        // Better Auth's own UPDATE, so the row says who and the trigger says when.
+        before: async (_patch, ctx) => {
+          const actor =
+            ((await hasRequestState()) ? await actingUser.get() : undefined) ??
+            ctx?.context.session?.user.id;
+          if (!actor) return;
+          return { data: { updatedBy: actor } };
         },
       },
     },

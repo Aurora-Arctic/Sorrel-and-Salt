@@ -19,6 +19,7 @@ const PUBLIC_ROUTES = [
   '/', // the entry page
   '/sign-in',
   '/invite/*', // accepting an invitation
+  '/email/*', // public/email/: a mail client fetches its images and fonts with no cookie
 ];
 
 function isPublic(pathname: string): boolean {
