@@ -48,7 +48,7 @@ The schema entity is `workspaces`; the URL prefix is `/coven/`. This divergence 
 | `npm run db:seed:forms`                                                    | Seeds §5's six ingredient form groups and 78 forms (M4.3a) — reference data too, and `migrate.yml` runs it in the same step as the categories                                                                                                                 |
 | `npm run codegen`                                                          | **Not wired up yet.** Exits non-zero until M3.5 wires it to graphql-codegen                                                                                                                                                                                   |
 | `npm run test:coverage`                                                    | `vitest run --coverage` — `unit` (jsdom) + `db` (node/Postgres) projects, 80% threshold                                                                                                                                                                       |
-| `npm run test:stories` (`make test-stories`)                               | The acceptance suite only (`tests/acceptance/`, on `vitest.stories.config.mts`), printed as a checklist of the 45 v1 stories read from DESIGN.md §10 — passing, failing, skipped or _no test yet_ (M1.28). No coverage: a story never moves the 80% threshold |
+| `npm run test:stories` (`make test-stories`)                               | The acceptance suite only (`tests/acceptance/`, on `vitest.stories.config.mts`), printed as a checklist of the 50 v1 stories read from DESIGN.md §10 — passing, failing, skipped or _no test yet_ (M1.28). No coverage: a story never moves the 80% threshold |
 
 **Verify with `test:coverage`, not `test`.** A plain `npm run test` pass can still fail CI on the 80% threshold (lines, branches, functions, statements) alone.
 
@@ -99,7 +99,7 @@ A private spell must never reach a resolver. Same for cross-workspace rows.
 
 ## Domain invariants that are easy to get wrong
 
-- **The site is invite-gated.** Signing in with any registered provider (Google, Discord, Facebook, Microsoft — M2.6) earns an account and _nothing else_. `canCreateWorkspace` defaults to `false` and turns true only by accepting an invitation (M7.5) or an admin grant (M5.8). Once true it stays true. Nothing in the OAuth flow sets it.
+- **The site is invite-gated.** Signing in with any registered provider (Google, Discord, Facebook, Microsoft — M2.6) earns an account and _nothing else_. `canCreateWorkspace` defaults to `false` and turns true only by accepting an invitation (M7.5), an admin grant (M5.8), or being made admin (MB.59). Once true it stays true. Nothing in the OAuth flow sets it.
 - **There are no personal workspaces.** No `kind` column; every workspace can take members and be deleted by an owner.
 - **Admins curate the compendium, global categories, the ingredient form vocabulary, and the two group vocabularies that organise them — and nothing else.** A site admin has no access to any workspace's ingredients or grimoire — asserted by test (M6.6). `category_groups` and `ingredient_form_groups` are tables rather than enums precisely so an admin can add one without a migration (MB.35, §5); a category group carries `colorDark` and `colorLight` as hexes on the row, each contrast-checked on write against its own theme's ground, because a group created at runtime cannot have a build-time Sass token. Groups list alphabetically by name — there is no order column.
 - **An ingredient's identity is its formal name and its form.** `canonicalKey` is `lower(coalesce(canonical_name, name))` plus the normalised `form`; `name` is only what the ingredient is called _here_ and is freely relabellable, because identity moved off it. The compendium declares a `nomenclature` for every entry — `none` and `unknown` are answers, not absences, the same way `unitConvert` refuses rather than guesses. `ingredients.form` is text, **not a foreign key**: the curated vocabulary is an autofill, so an uncurated value stays writable. Local-beats-compendium resolution matches on identity, falling back to the label only when the local entry declares no formal name. Common-name and form lookups suggest from the compendium and the current workspace only — never another workspace, and that scoping covers the suggested strings themselves, not just their attribution.
@@ -108,7 +108,7 @@ A private spell must never reach a resolver. Same for cross-workspace rows.
 - **Viewers write nothing.** With notes deferred to v2, there is no exception.
 - **Unit conversion is within one dimension only.** weight↔weight and volume↔volume; anything crossing dimensions, and anything involving `count`, is refused as an explicit result the caller must handle — never null, NaN, or a guess. **No density table exists anywhere in the codebase.**
 - **Two kinds of spell category.** Assigned categories are what the spell _intends_; derived categories are the union of its ingredients'. Conflating them is a bug.
-- **Invitation tokens** use `crypto.randomBytes()`, never `Math.random()`. Only the hash is stored; the URL is returned once, in the mutation response.
+- **Invitation tokens** use `crypto.randomBytes()`, never `Math.random()`. Only the hash is stored; the URL is returned once, in the mutation response — until MB.61's follow-ups bring email delivery, after which it is mailed to the invited address and accepted only by its verified holder, never copied.
 - **`/admin` returns a styled "not authorized" page** to a signed-in non-admin. `/coven/[slug]` returns **404** to a non-member — workspace existence is private, `/admin` is a path everyone already knows.
 
 ---
@@ -224,7 +224,7 @@ Rules that follow from all this:
 
 Do not build, and do not leave hooks for beyond what the design doc names: the **entire notes subsystem** (stories 35–46; §13), edit history, viewer spell approval, compendium/category suggestions, duplicate merge tooling, bulk add from the compendium, GraphQL response caching, email/password sign-in, note moderation.
 
-Story numbers 35–46 are **not reused** — v1 is 45 stories, numbered 1–34 and 47–57.
+Story numbers 35–46 are **not reused** — v1 is 50 stories, numbered 1–34 and 47–62.
 
 The one v1 concession to v2: the ingredient detail page (M8.19) is built so a notes section can be added beneath it without restructuring.
 
