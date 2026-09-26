@@ -4383,7 +4383,7 @@ _Acceptance criteria:_
 - `secrets.md`'s `BETTER_AUTH_SECRET` row corrected — it specified a separate Preview value, and one shared value is now a deliberate decision with its reasoning recorded, plus the known low-entropy value as an explicit pre-launch item
 - **Not done when CI is green.** The criterion is a live `staging` push that migrates against the staging database, and a `main` push that reaches production
 
-_Deferred, recorded so it is not re-derived:_ pulling connection strings from Neon directly (`GET /projects/{id}/connection_uri?branch_id=…`) would put the credential in exactly one place and cover ephemeral branches too, retiring both `DATABASE_URL_*` secrets. It waits on MB.12 setting `NEON_API_KEY`/`NEON_PROJECT_ID`, costs a broader credential than one connection string, and would not replace `BETTER_AUTH_SECRET` regardless.
+_Deferred, recorded so it is not re-derived:_ pulling connection strings from Neon directly (`GET /projects/{id}/connection_uri?branch_id=…`) would put the credential in exactly one place and cover ephemeral branches too, retiring both `DATABASE_URL_*` secrets. The keys exist since MB.12, but it would put the snapshot key on every deploy's path, a broader credential than one connection string, and would not replace `BETTER_AUTH_SECRET` regardless.
 
 **MB.48 — A destructive-DDL acknowledgement does not survive the release PR** · 3h
 
