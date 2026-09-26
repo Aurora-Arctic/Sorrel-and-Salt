@@ -44,7 +44,7 @@ describe('StoryReporter', () => {
     expect(log).toHaveBeenCalledTimes(1);
     const printed = String(log.mock.calls[0][0]);
     expect(printed).toContain('[x] Story 1:');
-    expect(printed).toContain('1 of 45 stories passing');
+    expect(printed).toContain('1 of 50 stories passing');
   });
 
   it('writes nothing to disk unless an output file is configured', async () => {
@@ -68,7 +68,7 @@ describe('StoryReporter', () => {
     await reporter.onTestRunEnd(modules as never, [], 'passed');
 
     const written = JSON.parse(readFileSync(join(root, 'stories.json'), 'utf8'));
-    expect(written.total).toBe(45);
+    expect(written.total).toBe(50);
     expect(written.counts.passed).toBe(1);
     expect(written.stories[0]).toMatchObject({ id: 1, status: 'passed' });
   });
@@ -83,7 +83,7 @@ describe('StoryReporter', () => {
 
     await reporter.onTestRunEnd([], [], 'passed');
 
-    expect(JSON.parse(readFileSync(join(root, 'out/stories.json'), 'utf8')).total).toBe(45);
+    expect(JSON.parse(readFileSync(join(root, 'out/stories.json'), 'utf8')).total).toBe(50);
     expect(() => readFileSync(join(root, 'other.json'))).toThrow();
   });
 
@@ -95,7 +95,7 @@ describe('StoryReporter', () => {
 
     await reporter.onTestRunEnd([], [], 'passed');
 
-    expect(JSON.parse(readFileSync(join(root, 'chosen.json'), 'utf8')).total).toBe(45);
+    expect(JSON.parse(readFileSync(join(root, 'chosen.json'), 'utf8')).total).toBe(50);
     expect(() => readFileSync(join(root, 'ignored.json'))).toThrow();
   });
 });

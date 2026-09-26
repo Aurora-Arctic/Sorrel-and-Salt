@@ -200,6 +200,53 @@ secrets.md`) is promoted to `role: 'admin'` on first sign-in; everyone else
 gets the column defaults (`role: 'user'`, `canCreateWorkspace: false`).
 Nothing else grants admin in v1 — no UI, no other API path.
 
+**Granting a second admin is decided but not built** (M2.9,
+[`design-decisions/m2.9-granting-admin.md`](design-decisions/m2.9-granting-admin.md)).
+
+- **The primary admin** is the live admin whose email matches
+  `ADMIN_BOOTSTRAP_EMAIL`. MB.60 moves its promotion to sign-in and accepts it
+  only from a verified Google or Discord profile (Microsoft's claims can be
+  minted by a foreign tenant, Facebook never reports verified). Until MB.61's
+  follow-ups land, an unverified account holding the address can still block
+  the owner's sign-in; the decision doc states that hole and why it is left.
+  - Nobody can revoke or delete it, itself included (MB.59).
+  - Changing who it is means setting the variable to the new address,
+    redeploying, and having that address sign in verified. The previous
+    primary admin stays an admin and becomes revocable.
+  - The UI calls it "Primary admin", and its refusal is in plain language
+    that names no variable.
+- **Every other admin** is granted and revoked by an admin from
+  `/admin/users`, verified or not (MB.59). A grant also sets
+  `canCreateWorkspace`. A revoke that would leave zero admins is refused, as a
+  fallback for the gap after the variable changes, and the primary admin can
+  pause granting and revoking for every other admin through a `site_settings`
+  row (MB.62, MB.63).
+- **Inviting an admin by email** follows MB.61's follow-ups (story 62): the
+  invitation names an address, the link is mailed to it, and only a signed-in
+  account whose verified email matches can accept. Accepting is a grant, so it
+  writes the ledger row, sets `canCreateWorkspace`, and is refused while
+  changes are paused.
+- **The ledger.** Each change is appended to `admin_role_changes` (MB.58),
+  because the next update to the row overwrites `users.updated_by`.
+- **MB.53.** Better Auth's `admin` plugin mounts `set-role`, `update-user`
+  and `remove-user` alongside impersonation. MB.53 therefore allows only the
+  two impersonation endpoints.
+
+- **MB.61** scopes verifying addresses ourselves, which lifts the provider
+  restriction, moves invitations to email, and lets a user set or change
+  their email (MB.54, re-scoped to follow it).
+
+Until MB.58 and MB.59 land, a second admin is an `UPDATE` in `psql`.
+
+**The hook matches the email string and ignores `emailVerified`.** Discord
+and Facebook can both return an unverified address. Until the real owner has
+an account, whoever first signs up carrying `ADMIN_BOOTSTRAP_EMAIL` is made
+admin, and a freshly reset database opens the gap again. Worse, once an
+unverified account holds the address, Better Auth refuses to link the owner's
+verified sign-in to it (`requireLocalEmailVerified`), so the owner is locked
+out. MB.60 fixes both. It has to land before MB.12 sets the variable in a
+deployed environment.
+
 - **Why this can't go through `withAudit(session, fn)`.** CLAUDE.md rule 3
   says every write does; OAuth sign-up is the one write that can't, because
   there's no session yet — the write _is_ how one comes to exist. This is
