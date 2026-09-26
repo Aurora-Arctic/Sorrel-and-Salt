@@ -432,6 +432,7 @@ answer.
 | --------------------------- | ---------------------------- | ------------------------------------------------ | --------------------------------------- |
 | Proxy (optimistic)          | `src/proxy.ts`               | A Better Auth session cookie is present          | 307 to `/sign-in?next=<path and query>` |
 | `requireSession()` (secure) | `src/lib/request-session.ts` | Better Auth finds a live session in the database | The same redirect, from the page        |
+| Proxy, `/workshop/*` only   | `src/proxy.ts`               | The secure check, then `assertWorkshopAccess()`  | The redirect, or 403 for a non-admin    |
 
 - **Deny by default.** `PUBLIC_ROUTES` in `src/proxy.ts` is a plain list of
   the pages a signed-out visitor may reach — `/`, the general entry page
@@ -469,6 +470,11 @@ answer.
   checks"), and a route that forgets to call `requireSession()` still
   redirects. It never touches the database — Next runs it on every page
   request, prefetches included — so its cost is a cookie read per navigation.
+  **The one exception is `/workshop`** (M2.10): the staging component workshop
+  is static files under `public/`, with no page to run the secure check, so
+  the proxy runs it there itself — `sessionFromHeaders()`, imported only on
+  that branch — and applies the admin-only service rule.
+  [`workshop.md`](workshop.md), "On staging", has the whole gate.
 - **Why the page checks anyway.** A present cookie is not a valid one: expired,
   revoked, or forged all pass the proxy. `requireSession()` asks Better Auth,
   which verifies the cookie's HMAC and looks the session up. It redirects on
@@ -496,7 +502,9 @@ answer.
   through the front door already
   ([`design-decisions/mb.57-post-sign-in-landing.md`](design-decisions/mb.57-post-sign-in-landing.md)).
 - **`getSession()` is `cache()`-wrapped**, so a layout and a page asking in the
-  same render cost one lookup. It returns exactly `{ userId, role }`, the
+  same render cost one lookup. It is `sessionFromHeaders(await headers())`;
+  the proxy, which has the request but no `headers()`, calls
+  `sessionFromHeaders(request.headers)` directly. It returns exactly `{ userId, role }`, the
   service-level `Session` above. It throws on a `role` outside the column's
   enum rather than reading it as `'user'`, because Better Auth types the
   additional field as a plain string and a wrong value there is a bug to

@@ -19,7 +19,7 @@ vi.mock('next/navigation', () => ({
   },
 }));
 
-const { getSession, requireSession } = await import('@/lib/request-session');
+const { getSession, requireSession, sessionFromHeaders } = await import('@/lib/request-session');
 
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
@@ -59,6 +59,22 @@ describe('getSession', () => {
   it.each([undefined, null, 'owner', 'ADMIN'])('refuses a role of %s', async (role) => {
     getSessionMock.mockResolvedValue(betterAuthSession(role));
     await expect(getSession()).rejects.toThrow(/role/);
+  });
+});
+
+// The proxy has no `headers()` to call; it hands over the request's own.
+describe('sessionFromHeaders', () => {
+  it('asks Better Auth with the headers it is given, not the ambient request', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('admin'));
+    const given = new Headers({ cookie: 'better-auth.session_token=other.s' });
+
+    await expect(sessionFromHeaders(given)).resolves.toEqual({ userId: USER_ID, role: 'admin' });
+    expect(getSessionMock).toHaveBeenCalledWith({ headers: given });
+  });
+
+  it('is null when there is no session', async () => {
+    getSessionMock.mockResolvedValue(null);
+    await expect(sessionFromHeaders(new Headers())).resolves.toBeNull();
   });
 });
 

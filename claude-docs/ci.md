@@ -594,6 +594,10 @@ nothing and this workflow is the only path.
   removed by a `teardown` job on close). The `hotfix/** → staging` PR that
   `create-pr` also opens is skipped (`branches: [main]`).
 - `pull_request`, not `pull_request_target` — hotfix branches are never forks.
+- **A staging deploy also builds the component workshop** into
+  `public/workshop` ahead of `vercel build` (M2.10); no other target does.
+  [`workshop.md`](workshop.md), "On staging", covers the step and its admin
+  gate.
 - The per-hotfix domains need a wildcard `*.sorrelandsalt.com` (Vercel
   nameservers, Hobby-OK).
   The alias slug is `hotfix/<slug>` lowercased, non-`[a-z0-9-]` collapsed to
