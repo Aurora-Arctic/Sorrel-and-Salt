@@ -57,6 +57,11 @@ const ERROR_MESSAGES: Record<string, string> = {
   nonce_binding_missing: 'That sign-in link has expired. Please try again.',
   unable_to_get_user_info: "We couldn't retrieve your account details. Please try again.",
   no_callback_url: "Sign-in didn't complete. Please try again.",
+  // One sentence whatever the cause: a lapsing unverified account holding the
+  // address and a provider that never vouches over an existing row share the
+  // code, and a sentence naming either would confirm the address is taken.
+  account_not_linked:
+    "Sign-in didn't work. If you signed in before with a different provider, sign in that way, then add this one under Account.",
   unable_to_link_account: 'That account is already linked to a different sign-in method.',
   email_does_not_match: "The email address didn't match your existing account.",
   account_already_linked_to_different_user: 'That account is already linked to a different user.',

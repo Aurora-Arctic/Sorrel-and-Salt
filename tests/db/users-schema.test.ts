@@ -38,6 +38,30 @@ describe('users schema', () => {
   });
 });
 
+// The provisional-account sweep runs on every OAuth callback and almost always
+// finds nothing, so its predicate has an index that holds only unverified rows
+// (claude-docs/auth.md, "Provisional accounts").
+describe('users provisional-account index', () => {
+  const catalogue = useTestDatabase(() => {});
+
+  it('indexes updated_at over unverified rows only', async () => {
+    const index = await catalogue.indexRow('users', 'users_provisional_updated_at_idx');
+
+    expect(index?.unique).toBe(false);
+    expect(index?.definition).toMatch(/USING btree \(updated_at\)/);
+    expect(index?.predicate).toBe('(email_verified = false)');
+  });
+
+  // The cap from sign-up is the sweep's other half, ORed with the window.
+  it('indexes created_at over unverified rows only', async () => {
+    const index = await catalogue.indexRow('users', 'users_provisional_created_at_idx');
+
+    expect(index?.unique).toBe(false);
+    expect(index?.definition).toMatch(/USING btree \(created_at\)/);
+    expect(index?.predicate).toBe('(email_verified = false)');
+  });
+});
+
 // The primary admin is whichever live row matches ADMIN_BOOTSTRAP_EMAIL
 // case-insensitively, and `users_email_unique` is on the raw column. Better
 // Auth lowercases every email it writes, but a row inserted by hand need not,
