@@ -1,5 +1,9 @@
 import { and, eq, or, sql, type SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
+// Above `./audit`, which imports it back: entered through `audit.ts`, `users`
+// is built before `auditColumns` exists and loses its stamps (claude-docs/db.md,
+// "The seed module"). A service's first database import is this file.
+import './schema/users';
 import { applyAudit, auditColumns, type AuditSession } from './audit';
 import { spells } from './schema/spells';
 import { workspaceMembers } from './schema/workspaces';
@@ -71,6 +75,16 @@ export interface AuditWriter {
     table: TTable,
     values: Partial<Writable<TTable>>,
     where: SQL,
+  ): Promise<TTable['$inferSelect'][]>;
+  /**
+   * The same, naming the one row by its own id — for a table no proof scopes.
+   * A service cannot build the `where` above: MB.33 bars it from importing
+   * `drizzle-orm` at runtime.
+   */
+  updateById<TTable extends PgTable & Unscoped & Identified>(
+    table: TTable,
+    id: string,
+    values: Partial<Writable<TTable>>,
   ): Promise<TTable['$inferSelect'][]>;
   /** The same, with `workspace_id = membership.workspaceId` ANDed onto the `where`. */
   updateInWorkspace<TTable extends PgTable & WorkspaceScoped>(
@@ -157,6 +171,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     insertInWorkspace: (membership, table, values) =>
       insert(table, { ...values, workspaceId: membership.workspaceId }),
     update,
+    updateById: (table, id, values) => update(table, values, eq(table.id, id)),
     updateInWorkspace: (membership, table, values, where) =>
       update(table, values, and(scopedTo(membership, table), where)),
     updateByIdInWorkspace: (membership, table, id, values) =>

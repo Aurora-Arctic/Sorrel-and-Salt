@@ -81,8 +81,10 @@ jobs:
       PLAYWRIGHT_JSON_OUTPUT_NAME: /app/playwright-results.json
       # e2e/database.ts derives sorrel_e2e's URL from it.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
-      # The webServer's production build needs a Better Auth secret.
+      # The webServer's production build needs a Better Auth secret, and a
+      # primary admin address on the reserved `.invalid` domain.
       BETTER_AUTH_SECRET: local-dev-not-a-real-secret
+      ADMIN_BOOTSTRAP_EMAIL: placeholder@admin-bootstrap.invalid
     steps:
       - name: Checkout into /app
         if: inputs.should-run

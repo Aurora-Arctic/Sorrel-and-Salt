@@ -315,9 +315,12 @@ describe('every workflow that pulls a Vercel environment', () => {
     }
   });
 
-  it('requires BETTER_AUTH_SECRET where the build reads it', () => {
-    const deploy = jobsThatPull.find(({ file }) => file === 'deploy.yml');
-    const runs = (deploy?.definition.steps ?? []).map((step) => step.run ?? '').join('\n');
-    expect(runs).toContain('BETTER_AUTH_SECRET');
-  });
+  it.each(['BETTER_AUTH_SECRET', 'ADMIN_BOOTSTRAP_EMAIL'])(
+    'requires %s where the build reads it',
+    (key) => {
+      const deploy = jobsThatPull.find(({ file }) => file === 'deploy.yml');
+      const runs = (deploy?.definition.steps ?? []).map((step) => step.run ?? '').join('\n');
+      expect(runs).toMatch(new RegExp(`--require \\S*\\b${key}\\b`));
+    },
+  );
 });

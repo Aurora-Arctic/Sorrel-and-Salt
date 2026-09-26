@@ -134,6 +134,13 @@
       "when": 1789871297832,
       "tag": "0018_spell-visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790447788157,
+      "tag": "0019_users-email-lower-case",
+      "breakpoints": true
     }
   ]
 }

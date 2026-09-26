@@ -380,7 +380,10 @@ matrix's generated job name, not the leg's.
 - **Branch rulesets** — `Main`, `Staging` and `Release Branches`
   (`refs/heads/release/**`) exist and carry delete/force-push protection.
   `.github/dependabot.yml` targets `staging` on all three ecosystems (`npm`,
-  `github-actions`, `docker`).
+  `github-actions`, `docker`). Two npm groups bump together: `react` and
+  `better-auth` (with `@better-auth/*`), the second because `better-auth` pins
+  its `@better-auth/core` to its own exact version and `src/lib/auth.ts`
+  imports core directly (MB.60), so a split bump would install two copies.
 - ⚠️ **No ruleset currently requires any status check** — verified against the
   live API 2026-09-10, and still deliberately true: enabling branch protection
   is not part of MB.32. Adding `gitflow / gitflow` to `Main` and `Staging` needs
