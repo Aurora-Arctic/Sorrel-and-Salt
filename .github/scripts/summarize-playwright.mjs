@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { buildCoverageSection } from './lib/coverage-table.mjs';
 
 const RESULTS_PATH = '/app/playwright-results.json';
-const COVERAGE_SUMMARY_PATH = '/app/coverage-e2e/coverage-summary.json';
+const COVERAGE_SUMMARY_PATH = '/app/.reports/coverage-e2e/coverage-summary.json';
 const REPO_ROOT = '/app';
 const MAX_DETAILS = 15;
 

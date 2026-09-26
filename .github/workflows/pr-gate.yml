@@ -50,6 +50,9 @@ jobs:
         with:
           # Step-wide; only destructive_ddl_migrations's `_files` output is read.
           list-files: json
+          # Lets a filter carry `!` exclusions (vitest's below); a filter
+          # without one behaves exactly as under the default `some`.
+          predicate-quantifier: some-with-excludes
           filters: |
             shared: &shared
               - '.github/workflows/pr-gate.yml'
@@ -101,6 +104,7 @@ jobs:
               - 'src/db/migrations/*.sql'
             # `tests/**`, `.ladle/config.mjs` and the configs are not under
             # `src/**`, and a test-only PR is exactly what this job runs.
+            # tests/e2e/ is Playwright's and nothing Vitest runs imports it.
             vitest:
               - *shared
               - '.github/workflows/vitest.yml'
@@ -110,13 +114,14 @@ jobs:
               - '.github/scripts/lib/**'
               - 'src/**'
               - 'tests/**'
+              - '!tests/e2e/**'
               - '.ladle/config.mjs'
               - 'vitest.config.mts'
               - 'vitest.stories.config.mts'
-              - 'vitest.setup.ts'
               - 'package.json'
               - 'package-lock.json'
-            # Plus the e2e image's inputs, as with Dockerfile.node above.
+            # Plus the e2e image's inputs, as with Dockerfile.node above, and
+            # tests/support/**, which tests/e2e/database.ts imports.
             playwright:
               - *shared
               - '.github/workflows/playwright.yml'
@@ -126,7 +131,8 @@ jobs:
               - '.github/scripts/lib/**'
               - 'Docker/Dockerfile.e2e'
               - 'src/**'
-              - 'e2e/**'
+              - 'tests/e2e/**'
+              - 'tests/support/**'
               - 'playwright.config.ts'
               - 'next.config.ts'
               - 'package.json'

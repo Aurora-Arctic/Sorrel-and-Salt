@@ -38,7 +38,7 @@ const RESTRICTED = [
   'src/app',
   'src/components',
   'src/lib',
-  'e2e',
+  'tests/e2e',
   'tests/lib',
   'tests/support',
   'tests/guards',

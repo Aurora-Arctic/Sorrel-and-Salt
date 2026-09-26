@@ -237,7 +237,7 @@ forwarded for when you need it.
 
 `make docker-codegen NAME=<spec>` (host) starts `playwright-server` if it
 isn't already up, then `exec`s `playwright codegen` into it as your own
-uid — so the file it writes, `e2e/<spec>.spec.ts`, is owned by you rather
+uid — so the file it writes, `tests/e2e/<spec>.spec.ts`, is owned by you rather
 than root. Open **`http://localhost:7900`** in a host browser: a headed,
 interactive Chromium on the app's home page (`http://sorrel-app:8000` —
 **not** `http://app:8000`: `.app` is a real, HSTS-preloaded gTLD in every
@@ -278,7 +278,7 @@ scopes its one suppression to `<html>` for the same reason.
 A recorded spec is a draft, not something to open a PR with as-is:
 
 1. Import `test`/`expect` from `./fixtures`, never `@playwright/test` — the
-   coverage auto-fixture only runs through `./fixtures` (`e2e/fixtures.ts`).
+   coverage auto-fixture only runs through `./fixtures` (`tests/e2e/fixtures.ts`).
 2. Rewrite the absolute `http://sorrel-app:8000/...` URL codegen wrote to a
    `baseURL`-relative path — `sorrel-app` only exists to dodge the HSTS
    preload issue above and has no meaning outside a manually-recorded spec;
@@ -286,7 +286,7 @@ A recorded spec is a draft, not something to open a PR with as-is:
    `devcontainer`/`localhost`, never `sorrel-app`.
 3. If it touches the database, add `test.describe.configure({ mode: 'serial'
 })` and a `beforeAll` calling `recreateE2eDatabase()` from `./database` —
-   see the comment atop `e2e/smoke.spec.ts` for why parallel workers racing
+   see the comment atop `tests/e2e/smoke.spec.ts` for why parallel workers racing
    `DROP/CREATE DATABASE` isn't theoretical.
 4. Consider `assertNoAccessibilityViolations` from `./axe` for any new page.
 5. Strip codegen's redundant assertions and any brittle `nth()`-match

@@ -20,6 +20,8 @@
     // extension rather than requiring it, so nothing else changes.
     "allowImportingTsExtensions": true,
     "incremental": true,
+    // Out of the repo root; `next build` keeps its own under .next/cache.
+    "tsBuildInfoFile": "node_modules/.cache/tsc/tsconfig.tsbuildinfo",
     "isolatedModules": true,
     "plugins": [
       {
@@ -31,10 +33,10 @@
     }
   },
   // tests/ is listed because `tsc` is the only thing that typechecks it:
-  // Vitest strips types rather than checking them, so an omission here would
-  // not fail anything — it would silently stop checking the suite, which is
-  // the state e2e/ is already in. The `@ts-expect-error` assertions in
-  // tests/db/repository.test.ts and tests/support/as-user.test.ts are only
+  // Vitest strips types rather than checking them, and Playwright does the
+  // same for tests/e2e/, so an omission here would not fail anything — it
+  // would silently stop checking the suite. The `@ts-expect-error` assertions
+  // in tests/db/repository.test.ts and tests/support/as-user.test.ts are only
   // assertions while this line stands (MB.41).
   "include": [
     "next-env.d.ts",

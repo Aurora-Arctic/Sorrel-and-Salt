@@ -11,8 +11,9 @@ same reason, since a config's imports run at config-load time.
 
 ## Where tests live
 
-Every Vitest file is under `tests/`, mirroring `src/` (MB.41). Nothing under
-`src/` is a test.
+Every Vitest file is under `tests/`, mirroring `src/` (MB.41), and Playwright's
+specs live in `tests/e2e/` beside their harness; `tests/guards/test-location.test.ts`
+pins both. Nothing under `src/` is a test.
 
 ```
 tests/
@@ -20,6 +21,7 @@ tests/
   acceptance/                 # one describe per user story — make test-stories
   guards/                     # the mechanical guards
   support/                    # the harness: as-user, db-setup, seeded-database, msw, paths
+  e2e/                        # Playwright specs and their harness (database, fixtures, axe, coverage)
   support/fixtures/           # makeIngredient / makeSpell / makeWorkspace
   db/support/                 # the db-only half: useTestDatabase, tableFacts, the audit lists
 ```
@@ -83,7 +85,7 @@ test, it is a file nothing runs.
     one place still reading a file by convention is `ThemeToggle`'s test,
     which uses `path.join(process.cwd(), …)` to reach the component's
     `index.scss` now that the two no longer sit in the same directory.
-  - **`setupFiles` also runs `./vitest.setup.ts`** (M1.8, ported from
+  - **`setupFiles` also runs `./tests/support/setup.ts`** (M1.8, ported from
     `resume-2026`), which adds three global hooks on top of the RTL
     `cleanup()` that `globals: true` already registers on its own:
     - a second, explicit `afterEach(cleanup())` — redundant with the
@@ -99,7 +101,7 @@ test, it is a file nothing runs.
       `tests/support/msw/server.ts` (`setupServer()`, no base handlers — every
       operation is registered per test, see below).
     - Covered by `tests/support/vitest-setup.test.tsx`, which asserts each hook's
-      effect directly rather than testing `vitest.setup.ts` itself.
+      effect directly rather than testing `tests/support/setup.ts` itself.
   - **`tests/support/msw/graphql.ts`** (M1.10) scopes MSW's `graphql` helper to
     `/api/graphql` with `graphql.link('/api/graphql')`, and exports
     `mockGraphQLQuery(operationName, resolveData)` /
@@ -239,14 +241,16 @@ not a defect.
 
 **Wired into CI (M1.14).** `pr-gate.yml`'s `vitest` job
 calls the real `.github/workflows/vitest.yml`, path-filtered off `src/**`,
-`tests/**`, `vitest.config.mts`, `vitest.setup.ts`, and
-`package{,-lock}.json`. `tests/**` is load-bearing: without it a test-only
+`tests/**` less `tests/e2e/**` (Playwright's, and nothing Vitest runs imports
+it — the `!` exclusion is why the `changes` step sets `predicate-quantifier:
+some-with-excludes`), `vitest.config.mts`, and `package{,-lock}.json`.
+`tests/**` is load-bearing: without it a test-only
 PR — the one kind whose whole content is what this job runs — would skip the
 job and report green. It runs
 in `build-image.yml`'s shared `testing` container plus its own `services:
 postgres:` (a `build-db-image` job feeding
 `postgres://sorrel:sorrel@postgres:5432/sorrel`, reachable by service name —
-see `claude-docs/ci.md`), and uploads `coverage/` as an artifact on every
+see `claude-docs/ci.md`), and uploads `.reports/coverage/` as an artifact on every
 run. `vitest.config.mts`'s coverage `reporter` also gained `json-summary`
 alongside its existing `text`/`lcov`/`html`, so the PR comment can show a
 coverage table (`.github/scripts/summarize-vitest.mjs`).
@@ -582,7 +586,7 @@ that file.
 
 ## E2E — Playwright (M1.11)
 
-`playwright.config.ts` (repo root) runs specs under `e2e/` against a
+`playwright.config.ts` (repo root) runs specs under `tests/e2e/` against a
 **production build**, not `next dev` — `webServer.command` is `npm run build
 && npm run start`, on **8001** (`PORT` env override; `start` defaults to
 8000). Distinct from Vitest's `db` project, which clones one database per
@@ -600,15 +604,15 @@ credentials cannot leak into it; the second runs only `npm run start` on
 **8002** with placeholder credentials for all four. Playwright starts the
 entries in order, which is what lets the second serve the first's build. Two
 projects split the specs between them: `chromium` (everything except
-`e2e/sign-in-configured-providers.spec.ts`, against 8001) and
+`tests/e2e/sign-in-configured-providers.spec.ts`, against 8001) and
 `chromium-configured-providers` (that spec alone, against 8002, with
 `reducedMotion: 'reduce'` so a hover scan never samples a colour
-mid-transition). Only `chromium` collects JS coverage (`e2e/fixtures.ts`) —
+mid-transition). Only `chromium` collects JS coverage (`tests/e2e/fixtures.ts`) —
 the second project runs the same bundle. Placeholder ids are useless to a real
 authorization endpoint, so nothing may click a provider button against 8002;
 the spec aborts and fails on any request to `/api/auth/sign-in/`.
 
-- **`e2e/database.ts`** — the same two-tier shape as the Vitest harness,
+- **`tests/e2e/database.ts`** — the same two-tier shape as the Vitest harness,
   through the same `tests/support/seeded-database.ts` (M1.27).
   `e2eDatabaseUrl()` swaps `DATABASE_URL`'s pathname to `/sorrel_e2e` (handed
   to `webServer.env.DATABASE_URL` so the built app reads from it instead of
@@ -616,13 +620,13 @@ the spec aborts and fails on any request to `/api/auth/sign-in/`.
   `sorrel_template` cloned, migrated and `standard`-seeded, ~1 s;
   `recreateE2eDatabase()` clones `sorrel_e2e` from it, tens of milliseconds;
   `dropE2eTemplate()` removes the template again.
-- **`globalSetup: './e2e/global-setup.ts'`** calls `seedE2eTemplate()` and
+- **`globalSetup: './tests/e2e/global-setup.ts'`** calls `seedE2eTemplate()` and
   then `recreateE2eDatabase()` once, before `webServer` starts — `sorrel_e2e`
   has to exist before the built app can connect to it. `global-teardown.ts`
   drops the template after the last spec; `sorrel_e2e` itself is left for
   inspection.
 - **Reseeding between spec files** is each spec file's own `test.beforeAll`,
-  not a Playwright hook that runs implicitly — see `e2e/smoke.spec.ts`. It
+  not a Playwright hook that runs implicitly — see `tests/e2e/smoke.spec.ts`. It
   calls `recreateE2eDatabase()`, never `src/db/seed` directly: a clone of the
   seeded template _is_ the reseed, and it costs a clone rather than a seed.
   Until M1.27 the template it cloned was the empty `sorrel_template`, so the
@@ -671,31 +675,32 @@ Alpine-based image.
 
 ## Accessibility — axe-core (M1.12)
 
-**`e2e/axe.ts`** exports `assertNoAccessibilityViolations(page)`, the one
+**`tests/e2e/axe.ts`** exports `assertNoAccessibilityViolations(page)`, the one
 scan helper every spec imports — matching the `resume-2026` pattern of
 asserting accessibility in Playwright, not via `vitest-axe`. It runs
 `@axe-core/playwright`'s `AxeBuilder` against the current page and fails the
 test with a per-rule summary (rule id, help text, node count) if any
 violations are returned; a page with zero violations resolves silently.
 
-- **`e2e/smoke.spec.ts`** calls it after `page.goto('/')`, so the entry page
+- **`tests/e2e/smoke.spec.ts`** calls it after `page.goto('/')`, so the entry page
   is scanned as part of the existing smoke spec.
-- **`e2e/axe.spec.ts`** seeds a violation directly (`page.setContent` with an
+- **`tests/e2e/axe.spec.ts`** seeds a violation directly (`page.setContent` with an
   `<img>` missing `alt`) and asserts the helper's promise rejects — proof the
   scan actually fails a run instead of passing vacuously.
 
 **Wired into CI (M1.14).** `pr-gate.yml`'s `playwright`
 job calls the real `.github/workflows/playwright.yml`, path-filtered off
-`src/**`, `e2e/**`, `playwright.config.ts`, `next.config.ts`, and
-`package{,-lock}.json` — matching the M1.11/M1.12 precedent of configuring
+`src/**`, `tests/e2e/**`, `tests/support/**` (which `tests/e2e/database.ts`
+imports), `playwright.config.ts`, `next.config.ts`, and `package{,-lock}.json`
+— matching the M1.11/M1.12 precedent of configuring
 the local run first and wiring CI later.
 
 ## Coverage — monocart-coverage-reports (M1.13)
 
-**`e2e/coverage.config.ts`** exports the shared `CoverageReportOptions`:
-`outputDir: './coverage-e2e'` (separate from Vitest's `coverage/`, so the two
-suites' contributions stay visible independently — both already carved out
-in `.gitignore`), reports `['v8', 'console-details', 'json-summary']` (the
+**`tests/e2e/coverage.config.ts`** exports the shared `CoverageReportOptions`:
+`outputDir: './.reports/coverage-e2e'` (separate from Vitest's `.reports/coverage/`,
+so the two suites' contributions stay visible independently — both under the
+`.reports/` that `.gitignore` carves out), reports `['v8', 'console-details', 'json-summary']` (the
 last added in M1.14, so `.github/scripts/summarize-playwright.mjs` has an
 istanbul-style `coverage-summary.json` to build the PR comment's coverage
 table from — same shape Vitest's own `json-summary` reporter emits).
@@ -708,7 +713,7 @@ for the final bundled output, only internal sourcemaps `sass-loader`/
 `resolve-url-loader` use mid-build to resolve `url()` paths. Even if it did,
 CSS coverage has no statements/branches/functions concept, so it can't feed
 the same 80% threshold model the rest of this project's coverage uses. Decided
-not worth chasing for v1 — `e2e/fixtures.ts`'s auto fixture starts/stops only
+not worth chasing for v1 — `tests/e2e/fixtures.ts`'s auto fixture starts/stops only
 `page.coverage.startJSCoverage`/`stopJSCoverage`.
 
 **Source maps.** `next.config.ts` sets `productionBrowserSourceMaps: true` so
@@ -732,28 +737,31 @@ packages ship their own `src/` directory in their own sourcemaps, so a bare
 `'**/src/**'` matches those too and pulls dependency internals into the
 report unless `node_modules` is excluded first.
 
-- **`e2e/fixtures.ts`** re-exports `test`/`expect`; every spec imports from
+- **`tests/e2e/fixtures.ts`** re-exports `test`/`expect`; every spec imports from
   here instead of `@playwright/test` directly. It adds an auto fixture
   (`scope: 'test'`, `auto: true`) that starts `page.coverage.startJSCoverage`
   on every page the test's `context` opens (Chromium only — the coverage API
   doesn't exist on Firefox/WebKit, checked via `test.info().project.name`),
   stops it at the end of the test, and calls `MCR(coverageOptions).add(...)`
-  with the result. A test that never navigates (`e2e/axe.spec.ts`'s
+  with the result. A test that never navigates (`tests/e2e/axe.spec.ts`'s
   `page.setContent` case) collects an empty array, which is skipped rather
   than handed to `add()` — an empty array logs a spurious `MCR` warning
   otherwise.
-- **`e2e/global-setup.ts`** additionally calls `MCR(coverageOptions).cleanCache()`
+- **`tests/e2e/global-setup.ts`** additionally calls `MCR(coverageOptions).cleanCache()`
   after `recreateE2eDatabase()`, so a crashed previous run's cached coverage
   data never leaks into this run's report.
-- **`e2e/global-teardown.ts`** (new; wired via `playwright.config.ts`'s
+- **`tests/e2e/global-teardown.ts`** (new; wired via `playwright.config.ts`'s
   `globalTeardown`) calls `MCR(coverageOptions).generate()` once after every
-  spec's fixture has added its entries, producing `coverage-e2e/index.html`
+  spec's fixture has added its entries, producing `.reports/coverage-e2e/index.html`
   (the native V8 report) plus a `console-details` table printed at the end
   of the run.
 
 **Wired into CI (M1.14).** `playwright.yml`'s "Upload coverage artifact" step
-uploads `coverage-e2e/` on every run (pass or fail), parallel to
-`vitest.yml`'s `coverage/` upload.
+uploads `.reports/coverage-e2e/` on every run (pass or fail), parallel to
+`vitest.yml`'s `.reports/coverage/` upload. The run's reporters (`list`, `json`,
+`html`) come from `playwright.config.ts` under `CI`, not from the command line —
+a CLI `--reporter` replaces the config's list and with it the html report's
+`outputFolder`.
 
 ## Debugging tests (MB.22)
 

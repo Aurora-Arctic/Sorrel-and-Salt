@@ -128,7 +128,7 @@ codegen:
 workshop:
 	npm run workshop
 
-## Build the static component workshop to ./build
+## Build the static component workshop to .reports/workshop
 workshop-build:
 	npm run workshop:build
 
@@ -191,7 +191,7 @@ playwright-server-down:
 docker-codegen: playwright-server-up
 	$(COMPOSE) exec -u $$(id -u):$$(id -g) playwright-server \
 		npx playwright codegen --target playwright-test \
-		--output e2e/$(NAME).spec.ts http://sorrel-app:8000
+		--output tests/e2e/$(NAME).spec.ts http://sorrel-app:8000
 
 # Local CI via act — claude-docs/ci.md, "Running CI locally". `act-image`
 # builds the `testing` target under the tag the job asks for, so GHCR is

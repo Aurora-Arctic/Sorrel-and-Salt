@@ -136,6 +136,6 @@ The scroll fix that came with it — the page frames' `box-sizing` — is
 asserted by the smoke spec's check that `/` does not scroll at the default
 viewport.
 The visual result is checked by eye in the workshop and against the script's
-previews. `e2e/smoke.spec.ts` reads each layer's computed `background-image`, asserts
+previews. `tests/e2e/smoke.spec.ts` reads each layer's computed `background-image`, asserts
 it is a hashed `/_next/static/media` URL, and fetches it: served as
 `image/webp`, not redirected.
