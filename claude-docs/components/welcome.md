@@ -17,11 +17,13 @@ Nothing else on the page depends on who is looking, and the page never
 redirects. Where the landing lives, and why it is not `/`, is
 [`design-decisions/mb.57-post-sign-in-landing.md`](../design-decisions/mb.57-post-sign-in-landing.md).
 
-**The landing link is a plain `<a>`, not `<Link>`.** `typedRoutes` refuses an
-`href` for a route the build does not contain, and `/coven` has no page until
-M2.8. That task switches it to `<Link>` in its own PR; until then a signed-in
-visitor who follows it reaches a 404 behind the proxy, which the decision
-record names as the interim state.
+**Both links are plain `<a>` elements, not `next/link`.** The workshop renders
+this component under Vite, where `next/link` throws `process is not defined`
+and the story goes blank; and a full navigation is the right behaviour for a
+front door's one link, where prefetching buys nothing. It also sidesteps
+`typedRoutes`, which would refuse an `href` for `/coven` until M2.8 builds the
+route. Until then a signed-in visitor who follows _Continue_ reaches a 404
+behind the proxy, which the decision record names as the interim state.
 
 ## Copy
 

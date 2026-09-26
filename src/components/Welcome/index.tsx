@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { POST_SIGN_IN_LANDING } from '../../lib/sign-in';
 import './index.scss';
@@ -25,16 +24,17 @@ const Welcome = ({ signedIn }: WelcomeProps): ReactElement => (
       uses it — signing in gives you an account, and an invitation gives you somewhere to use it.
     </p>
     <p className="welcome__way-in">
+      {/* Plain anchors, not next/link: the workshop renders this component under
+          Vite, where next/link throws on `process` and the story goes blank, and
+          a full navigation is right for a front door's one link anyway. */}
       {signedIn ? (
-        // A plain anchor rather than <Link>: typed routes refuse a route that
-        // is not built yet, and M2.8 builds this one.
         <a className="btn" href={POST_SIGN_IN_LANDING}>
           Continue
         </a>
       ) : (
-        <Link className="btn" href="/sign-in">
+        <a className="btn" href="/sign-in">
           Sign in
-        </Link>
+        </a>
       )}
     </p>
   </div>
