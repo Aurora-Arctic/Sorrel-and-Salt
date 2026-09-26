@@ -289,7 +289,7 @@ matrix's generated job name, not the leg's.
   step with `always()` and no `--coverage` of its own, so a story never
   counts toward the 80% threshold (`claude-docs/testing.md`). Its reporter
   writes the checklist as JSON (`--outputFile=/app/stories.json`) and
-  `.github/scripts/summarize-stories.mjs` renders it — "3 of 45 stories
+  `.github/scripts/summarize-stories.mjs` renders it — "3 of 50 stories
   passing" and a markdown checklist — into a second job-summary section and a
   second PR comment thread (`marker-slug: stories`). A failing story fails
   the job; M2.1 decides how a deliberately red scaffold is tolerated.

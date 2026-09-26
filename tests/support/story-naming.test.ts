@@ -37,7 +37,7 @@ describe('storyNamingViolations', () => {
     const source = ["describe('Story 40: a notes story', () => {});"].join('\n');
 
     expect(storyNamingViolations(source)).toEqual([
-      `line 1: 'Story 40: a notes story' is not a v1 story — DESIGN.md §10 numbers 1–34, 47–57`,
+      `line 1: 'Story 40: a notes story' is not a v1 story — DESIGN.md §10 numbers 1–34, 47–62`,
     ]);
   });
 

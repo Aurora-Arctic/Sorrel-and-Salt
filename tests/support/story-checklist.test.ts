@@ -18,10 +18,10 @@ describe('buildChecklist', () => {
   it('lists every v1 story as untested when nothing has run', () => {
     const checklist = buildChecklist([]);
 
-    expect(checklist.total).toBe(45);
-    expect(checklist.stories).toHaveLength(45);
+    expect(checklist.total).toBe(50);
+    expect(checklist.stories).toHaveLength(50);
     expect(checklist.stories.every((story) => story.status === 'untested')).toBe(true);
-    expect(checklist.counts).toEqual({ passed: 0, failed: 0, skipped: 0, untested: 45 });
+    expect(checklist.counts).toEqual({ passed: 0, failed: 0, skipped: 0, untested: 50 });
     expect(checklist.unknown).toEqual([]);
   });
 
@@ -40,7 +40,7 @@ describe('buildChecklist', () => {
       { id: 3, status: 'failed' },
       { id: 4, status: 'untested' },
     ]);
-    expect(checklist.counts).toEqual({ passed: 1, failed: 1, skipped: 1, untested: 42 });
+    expect(checklist.counts).toEqual({ passed: 1, failed: 1, skipped: 1, untested: 47 });
   });
 
   it('keeps the §10 title on each line, not the describe wording', () => {
@@ -117,12 +117,12 @@ describe('formatChecklist', () => {
     expect(lines.find((line) => line.startsWith('[ ] Story 2:'))).toMatch(/— FAILING$/);
     expect(lines.find((line) => line.startsWith('[ ] Story 3:'))).toMatch(/— skipped$/);
     expect(lines.find((line) => line.startsWith('[ ] Story 4:'))).toMatch(/— no test yet$/);
-    expect(lines.filter((line) => /^\[[x ]\] Story \d+:/.test(line))).toHaveLength(45);
+    expect(lines.filter((line) => /^\[[x ]\] Story \d+:/.test(line))).toHaveLength(50);
   });
 
   it('ends with the tally', () => {
     expect(lines[lines.length - 1]).toBe(
-      '1 of 45 stories passing · 1 failing · 1 skipped · 42 without a test',
+      '1 of 50 stories passing · 1 failing · 1 skipped · 47 without a test',
     );
   });
 
@@ -134,7 +134,7 @@ describe('formatChecklist', () => {
 
   it('omits the tally parts that are zero, except the passing count', () => {
     expect(formatChecklist(buildChecklist([])).split('\n').pop()).toBe(
-      '0 of 45 stories passing · 45 without a test',
+      '0 of 50 stories passing · 50 without a test',
     );
   });
 });
