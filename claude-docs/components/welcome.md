@@ -58,7 +58,7 @@ sign-in offered anywhere on the page; and that the introduction is the same
 signed in. Role and label queries only. Runs in the `unit` (jsdom) Vitest
 project — `npm run test:coverage`.
 
-`e2e/smoke.spec.ts` renders `/` against the built server signed out: no
+`tests/e2e/smoke.spec.ts` renders `/` against the built server signed out: no
 redirect, the heading and the invite-only text visible, the link reaching
 `/sign-in`, and the axe scan. No e2e spec can sign in without a real
 provider, so the signed-in variant — which differs by one link — is covered

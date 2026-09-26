@@ -12,8 +12,16 @@ export default defineConfig({
   // load-bearing: the projects are what run.
   resolve: { tsconfigPaths: true },
   test: {
+    // Both under .reports/ with the rest of the generated output; without
+    // `outputFile`, the json and html reporters would write to `.vitest/`.
+    // CI's `--outputFile` on the command line still wins.
+    outputFile: {
+      json: '.reports/vitest/results.json',
+      html: '.reports/vitest/html/index.html',
+    },
     coverage: {
       provider: 'v8',
+      reportsDirectory: '.reports/coverage',
       // 'json-summary' feeds .github/scripts/summarize-vitest.mjs.
       reporter: ['text', 'lcov', 'html', 'json-summary'],
       include: ['src/**/*.{ts,tsx}'],
@@ -34,8 +42,9 @@ export default defineConfig({
           environment: 'jsdom',
           globals: true,
           include: ['tests/**/*.test.{ts,tsx}'],
-          exclude: ['tests/db/**', 'tests/services/**', 'tests/acceptance/**'],
-          setupFiles: ['@testing-library/jest-dom/vitest', './vitest.setup.ts'],
+          // tests/e2e/ is Playwright's; its specs end `.spec.ts`, but say so.
+          exclude: ['tests/db/**', 'tests/services/**', 'tests/acceptance/**', 'tests/e2e/**'],
+          setupFiles: ['@testing-library/jest-dom/vitest', './tests/support/setup.ts'],
         },
       },
       {

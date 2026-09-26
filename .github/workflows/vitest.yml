@@ -121,7 +121,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: vitest-coverage
-          path: /app/coverage/
+          path: /app/.reports/coverage/
           retention-days: 7
 
       - name: Write job summary

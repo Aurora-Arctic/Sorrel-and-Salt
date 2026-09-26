@@ -2267,8 +2267,8 @@ is enforced by a second `no-restricted-imports` group in the same config
 entry, banning `drizzle-orm` and `drizzle-orm/*`. A Drizzle query cannot be
 built without importing the query builder at runtime, so banning the import
 bans the capability: `src/services`, `src/graphql`, `src/app`,
-`src/components`, `src/lib`, `e2e` and every part of `tests/` outside
-`tests/db` fail `npm run lint` on a runtime import, whatever the resulting
+`src/components`, `src/lib` and every part of `tests/` outside `tests/db` —
+Playwright's `tests/e2e/` included — fail `npm run lint` on a runtime import, whatever the resulting
 finder is named or declared as.
 
 `allowTypeImports` keeps `import type` legal everywhere, which is the point

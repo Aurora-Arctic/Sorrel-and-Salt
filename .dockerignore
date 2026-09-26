@@ -12,19 +12,12 @@ node_modules
 .next
 out
 .vercel
-build
 dist
-*.tsbuildinfo
-tsconfig.tsbuildinfo
 
-# Tests and coverage
-coverage
-coverage-e2e
-playwright-report
+# Generated reports and builds (see .gitignore)
+.reports
 blob-report
-test-results
 playwright/.cache
-.vitest
 
 # Version control and CI
 .git

@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-import { e2eDatabaseUrl } from './e2e/database';
+import { e2eDatabaseUrl } from './tests/e2e/database';
 
 // Not the dev server's 8000, so `npm run dev` and an e2e run can sit side by side.
 const PORT = 8001;
@@ -52,14 +52,20 @@ const serverEnv = (port: number, providers: Record<string, string>) => ({
 
 const CONFIGURED_PROVIDERS_SPEC = /sign-in-configured-providers\.spec\.ts/;
 
+// Every output under .reports/ with the rest of the generated files. The
+// reporter list lives here rather than on CI's command line because a CLI
+// `--reporter` replaces this list and with it the html report's folder.
+const HTML_REPORT = { outputFolder: '.reports/playwright-report', open: 'never' } as const;
+
 export default defineConfig({
-  testDir: './e2e',
+  testDir: './tests/e2e',
+  outputDir: '.reports/test-results',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  reporter: 'html',
-  globalSetup: './e2e/global-setup.ts',
-  globalTeardown: './e2e/global-teardown.ts',
+  reporter: process.env.CI ? [['list'], ['json'], ['html', HTML_REPORT]] : [['html', HTML_REPORT]],
+  globalSetup: './tests/e2e/global-setup.ts',
+  globalTeardown: './tests/e2e/global-teardown.ts',
   use: {
     baseURL: browserUrl(PORT),
     // On CI a retry filters flake first; locally there is no retry, so the

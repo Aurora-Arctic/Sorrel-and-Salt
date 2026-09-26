@@ -44,8 +44,6 @@
         "vitest.stories.config.mts",
         "playwright.config.ts",
         ".ladle/*.{ts,mjs}",
-        "e2e/**/*.ts",
-        "Docker/clean.js",
         "scripts/**/*.ts"
       ],
       "env": {
