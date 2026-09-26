@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  GENERIC_SIGN_IN_ERROR,
   POST_SIGN_IN_LANDING,
   safeReturnPath,
   signInErrorMessage,
@@ -73,6 +74,18 @@ describe('signInErrorMessage', () => {
   it('gives email_not_found its own sentence mentioning email', () => {
     expect(signInErrorMessage('email_not_found')).toMatch(/email/i);
   });
+
+  // Better Auth's state failures (oauth2/state.mjs folds state_security_mismatch
+  // into state_mismatch). Retrying from the provider's tab replays the dead
+  // state, so the sentence must send the visitor back here instead.
+  it.each(['state_mismatch', 'state_not_found', 'state_invalid'])(
+    'gives %s a sentence that says to start again from this page',
+    (code) => {
+      const message = signInErrorMessage(code);
+      expect(message).not.toBe(GENERIC_SIGN_IN_ERROR);
+      expect(message).toMatch(/start again/i);
+    },
+  );
 
   it('falls back to a generic sentence for an unrecognised code', () => {
     const message = signInErrorMessage('something_unexpected');

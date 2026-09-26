@@ -679,8 +679,9 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   checkout before and reads nothing else from the repo. All three are set as repo
   secrets, so **the guard passes and deploys run for real** — as of v0.2.0 both
   `staging` and `main` reach `vercel pull`. `VERCEL_SCOPE` is **not** part of
-  the guard and never was; it is still unset, and MB.12 owns it alongside
-  `NEON_API_KEY`/`NEON_PROJECT_ID` for `migrate.yml`'s production snapshot.
+  the guard and never was. It is set, and only the alias step reads it.
+  `NEON_API_KEY`/`NEON_PROJECT_ID` are set too, for `migrate.yml`'s
+  production snapshot.
   `claude-docs/secrets.md` is the matrix and the source of truth for which rows
   are set.
 - **`migrate.yml` (M1.4)** — reusable (`workflow_call`-only) workflow, applying
@@ -731,7 +732,7 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   would need a new `workflow_call` input, a new `resolve-target` output and an
   `environment:` key on two jobs, to say what the secret's name already says.
   `claude-docs/secrets.md` carries the rotation rule this creates, and the
-  Neon-API route that would retire it once MB.12 sets `NEON_API_KEY`.
+  Neon-API route that could retire it, and why it has not.
 
 - **Both jobs assert the pulled environment before using it** (MB.46), via
   `scripts/assert-pulled-env.ts`. It does two things. It **asserts** the keys
