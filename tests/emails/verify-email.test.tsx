@@ -88,10 +88,24 @@ describe('verifyEmailMessage design', () => {
     const page = await html();
 
     expect(page).toMatch(/<body[^>]*background-color:#14120e/);
-    expect(page).toMatch(
-      /@media \(prefers-color-scheme: light\)\{[^}]*\.ss-page,\.ss-page>table>tbody>tr>td\{background-color:#efe9da!important/,
+    // The page colour is on a table the layout renders, not only on Body's cell.
+    expect(page).toMatch(/<table[^>]*class="ss-page"[^>]*background-color:#14120e/);
+    expect(page).toContain(
+      '@media (prefers-color-scheme: light){.ss-page{background-color:#efe9da!important;color:#23201a!important;}',
     );
     expect(page).toContain('<meta name="color-scheme" content="dark light"');
+  });
+
+  // iOS Mail and iCloud Mail apply class selectors but do not expose Body's
+  // body > table > tbody > tr > td chain, so a page rule written through that
+  // chain never matched there: every text override went light and the cell
+  // stayed dark, leaving dark text on a dark page.
+  it('selects the light page by a bare class, never through the body cell chain', async () => {
+    const page = await html();
+    const light = page.match(/@media \(prefers-color-scheme: light\)\{(.*?)\}\}/s)?.[1] ?? '';
+    const pageSelectors = light.match(/[^{}]*\.ss-page[^{]*\{/g) ?? [];
+
+    expect(pageSelectors).toEqual(['.ss-page{']);
   });
 
   // Backgrounds rather than <img>, so the text can run over their edges: Gmail
