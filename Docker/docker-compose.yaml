@@ -6,6 +6,9 @@
 #   make docker-e2e       run the Playwright suite once (profile: e2e)
 #   make docker-down      stop and remove everything, profiles included
 #
+# Mailpit comes up with the app: every message the app sends locally lands in
+# its UI on :8025 and never leaves the machine.
+#
 # `name` is pinned: derived from this directory it would be `docker`, which
 # another project on the same machine already claims.
 
@@ -96,8 +99,12 @@ services:
     environment:
       NODE_ENV: development
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
+      MAIL_TRANSPORT: mailpit
+      MAILPIT_URL: http://mailpit:8025
     depends_on:
       postgres:
+        condition: service_healthy
+      mailpit:
         condition: service_healthy
       # Healthy is not migrated: waiting on the one-shot's exit status also
       # stops `app` on a failed migration.
@@ -112,6 +119,19 @@ services:
           # gTLD and upgrade `http://app:8000` to https, which fails. Service-
           # to-service traffic keeps using `app`.
           - sorrel-app
+
+  mailpit:
+    # The local and e2e inbox: accepts mail over HTTP (`POST /api/v1/send`,
+    # src/lib/mail.ts's `mailpit` transport) and delivers none of it. The UI
+    # and the REST API tests/e2e/mailpit.ts reads share :8025. No profile.
+    image: axllent/mailpit:v1.31.2
+    ports:
+      - '8025:8025'
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   workshop:
     # Opt-in: `make docker-workshop`.
@@ -189,8 +209,12 @@ services:
       # the reserved `.invalid` domain, so no sign-in can match it.
       BETTER_AUTH_SECRET: local-dev-not-a-real-secret
       ADMIN_BOOTSTRAP_EMAIL: placeholder@admin-bootstrap.invalid
+      MAIL_TRANSPORT: mailpit
+      MAILPIT_URL: http://mailpit:8025
     depends_on:
       postgres:
+        condition: service_healthy
+      mailpit:
         condition: service_healthy
     command: ['npm', 'run', 'e2e']
 

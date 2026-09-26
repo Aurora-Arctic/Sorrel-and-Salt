@@ -79,6 +79,18 @@ no Neon connection and no host Node-version juggling.
       non-browser reference (`DATABASE_URL`-style service-to-service
       traffic) keeps using bare `app`; `sorrel-app` exists solely for URLs a
       real browser will load.
+  - **`mailpit`** (MB.65) — the local and e2e inbox, from the pinned
+    `axllent/mailpit` image, with no profile. It accepts mail over HTTP
+    (`POST /api/v1/send`) and delivers none of it; its UI and the REST API
+    `tests/e2e/mailpit.ts` reads a mailed link through share **8025**, and
+    `/mailpit readyz` is its health check. `app`, `e2e` and the
+    `devcontainer` overlay wait on it healthy and set
+    `MAIL_TRANSPORT=mailpit` and `MAILPIT_URL=http://mailpit:8025`, so every
+    message the app sends locally lands at `http://localhost:8025`. Over HTTP
+    rather than SMTP because every deployed target is HTTP too, and
+    `src/lib/mail.ts` keeps one shape of transport
+    ([`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md),
+    "Delivery").
   - **`workshop`** — behind the **`workshop` compose profile**, so a bare
     `make docker-up` does not start it. Same build stage; runs
     `npm run workshop -- --host 0.0.0.0` (`ladle serve` binds `localhost`
