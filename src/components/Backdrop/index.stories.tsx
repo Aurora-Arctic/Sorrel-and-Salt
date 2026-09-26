@@ -4,7 +4,7 @@ import Backdrop from '.';
 // Render-only. The element is fixed to the viewport corner, so the story frame
 // itself is not where it appears — look at the bottom right of the preview.
 export default {
-  title: 'Backdrop',
+  title: 'Layout / Backdrop',
 };
 
 // The size every page but the front door gets.

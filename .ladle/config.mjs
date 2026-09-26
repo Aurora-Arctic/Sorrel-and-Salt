@@ -8,9 +8,14 @@ export default {
   // Ladle hands Vite's config loader this path as-is and, given none, Vite
   // looks in the project root — so without it ./vite.config.ts is never read.
   viteConfig: fileURLToPath(new URL('./vite.config.ts', import.meta.url)),
-  // One story file per component directory, the shape the workshop guard checks;
-  // the second glob is workshop-only pages the guard deliberately ignores.
-  stories: ['src/components/**/index.stories.tsx', '.ladle/*.stories.tsx'],
+  // One story file per component directory and one per mail template, the
+  // shapes the workshop guard checks; the last glob is workshop-only pages the
+  // guard deliberately ignores.
+  stories: [
+    'src/components/**/index.stories.tsx',
+    'src/emails/*.stories.tsx',
+    '.ladle/*.stories.tsx',
+  ],
   // `Default` first in every group, the rest as Ladle sorted them. A global hook
   // only, over the fully-sorted ids; must stay self-contained because Ladle
   // serializes it with `.toString()`.
