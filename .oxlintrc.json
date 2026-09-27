@@ -29,6 +29,11 @@
               "./social-providers-config.ts"
             ],
             "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
+          },
+          {
+            "group": ["dataloader"],
+            "allowTypeImports": true,
+            "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
           }
         ]
       }
@@ -123,6 +128,11 @@
                   "./social-providers-config.ts"
                 ],
                 "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
+              },
+              {
+                "group": ["dataloader"],
+                "allowTypeImports": true,
+                "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
               }
             ]
           }
@@ -144,6 +154,11 @@
                   "./connection.ts"
                 ],
                 "message": "Import the database client only in src/db/repository.ts (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
+              },
+              {
+                "group": ["dataloader"],
+                "allowTypeImports": true,
+                "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
               }
             ]
           }

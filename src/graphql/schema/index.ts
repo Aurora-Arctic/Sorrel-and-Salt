@@ -1,16 +1,12 @@
-import { createSchema } from 'graphql-yoga';
+import { builder } from '../builder';
+import './audit';
 
-// A stand-in until the Pothos builder owns the schema: GraphQL needs one
-// Query field to be valid, and `ok` mirrors Better Auth's `/api/auth/ok`.
-export const schema = createSchema({
-  typeDefs: /* GraphQL */ `
-    type Query {
-      ok: Boolean!
-    }
-  `,
-  resolvers: {
-    Query: {
-      ok: () => true,
-    },
-  },
+// GraphQL needs one Query field to be valid. `ok` mirrors Better Auth's
+// `/api/auth/ok` and stands until the first real query field replaces it.
+builder.queryType({
+  fields: (t) => ({
+    ok: t.boolean({ resolve: () => true }),
+  }),
 });
+
+export const schema = builder.toSchema();
