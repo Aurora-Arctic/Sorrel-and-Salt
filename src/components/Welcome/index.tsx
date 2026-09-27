@@ -33,7 +33,7 @@ const Welcome = ({ signedIn }: WelcomeProps): ReactElement => (
         </a>
       ) : (
         <Link className="btn" href="/sign-in">
-          Sign in
+          Sign In
         </Link>
       )}
     </p>
