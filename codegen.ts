@@ -7,7 +7,7 @@ import type { CodegenConfig } from '@graphql-codegen/cli';
 const config: CodegenConfig = {
   schema: 'src/graphql/schema.graphql',
   documents: ['src/**/*.{ts,tsx}', '!src/gql/**'],
-  // Until M3.7 writes the first document; with none, codegen would fail.
+  // Until the first client document; with none, codegen would fail.
   ignoreNoDocuments: true,
   generates: {
     'src/gql/': {
