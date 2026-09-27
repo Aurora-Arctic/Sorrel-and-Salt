@@ -1348,6 +1348,8 @@ _Acceptance criteria:_
 - Another user's email is not exposed
 - Memberships resolve through a loader
 
+_Landed wider than written, at about 3–4h. `memberships` needed something to point at, so a minimal `Workspace` (`id`, `name`, `slug`) and `WorkspaceMember` land here for M6 to extend. The `self`-or-`admin` scope covers `role` and `canCreateWorkspace` beside `email`. A service cannot build a `where` (MB.33), so the repository gains `findOneById`, `findManyByIds` and a second read that takes no proof, `findMembershipsOfUsers`. The access-boundary lint now covers a module's `graphql/` and `loaders/`, which no override reached. `ok` stays: the route's tests and e2e probe with it ([`graphql.md`](graphql.md), "`me`, `User` and the first module types"; [`design-decisions/m3.10-plan.md`](design-decisions/m3.10-plan.md))._
+
 ## M4 — Compendium data layer
 
 _13 tasks · 21.5 hours_

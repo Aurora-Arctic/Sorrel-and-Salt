@@ -1,10 +1,11 @@
+import { membershipsByUser } from '@/modules/coven';
 import type { Session } from '../../lib/session';
 import type { LoaderFactory } from './define-loader';
 
 // Every loader the context builds, by the name a resolver reads it as. Each
-// is added by the task that adds its schema (claude-docs/graphql.md); a
-// module's loader factories (`@/modules/<name>/loaders`) are spread into it.
-const LOADERS = {} satisfies Record<string, LoaderFactory<never, unknown>>;
+// is added by the task that adds its schema, off its module's index
+// (claude-docs/graphql.md, "Loaders").
+const LOADERS = { membershipsByUser } satisfies Record<string, LoaderFactory<never, unknown>>;
 
 type Built<F extends Record<string, LoaderFactory<never, unknown>>> = {
   [Name in keyof F]: ReturnType<F[Name]>;
