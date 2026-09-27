@@ -2379,10 +2379,11 @@ the default tier.
 | Client ban (M1.17)              | Reaching `db` — and so a transaction, or an unaudited write — outside `repository.ts` and the four exempt files. |
 | Query-builder ban (MB.33)       | Building any query at all outside the database layer, including one that would skip `deleted_at IS NULL`.        |
 | `selectFrom` unexported (M1.20) | Reaching an unfiltered read from inside the repository.                                                          |
+| Access boundary (M3.9)          | A resolver, page or component reaching the repository, or anything under `src/db`, without passing a service.    |
 
-M3.9 adds the next one: a rule stopping `src/graphql/**` and
-`src/app/**` from importing the _repository_, so those layers reach a service
-and nothing below.
+The access boundary is described in [`graphql.md`](graphql.md), "The access
+boundary". Its second half, `server-only` on every service, stops a client
+component from importing a service at all.
 
 ## Snapshot before production migrations, and the restore runbook (M1.6)
 

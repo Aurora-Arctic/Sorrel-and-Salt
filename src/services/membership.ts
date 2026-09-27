@@ -1,3 +1,4 @@
+import 'server-only';
 import { findWorkspaceRole } from '../db/repository';
 import { Forbidden } from '../lib/errors';
 import type { Session } from '../lib/session';

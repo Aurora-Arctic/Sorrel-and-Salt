@@ -1,3 +1,4 @@
+import 'server-only';
 import { createAccessControl } from 'better-auth/plugins/access';
 import type { RoleAuthorizeRequest } from 'better-auth/plugins/access';
 import type { workspaceMembers } from '../db/schema/workspaces';
