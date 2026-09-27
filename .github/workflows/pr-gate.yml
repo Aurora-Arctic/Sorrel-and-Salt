@@ -118,6 +118,7 @@ jobs:
               - '.ladle/config.mjs'
               - 'vitest.config.mts'
               - 'vitest.stories.config.mts'
+              - 'codegen.ts'
               - 'package.json'
               - 'package-lock.json'
             # Plus the e2e image's inputs, as with Dockerfile.node above, and

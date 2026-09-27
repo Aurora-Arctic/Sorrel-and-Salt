@@ -35,8 +35,10 @@ export default defineConfig({
       // 'json-summary' feeds .github/scripts/summarize-vitest.mjs.
       reporter: ['text', 'lcov', 'html', 'json-summary'],
       include: ['src/**/*.{ts,tsx}'],
-      // src/db/seed is test infrastructure; a bug there fails the tests that consume it.
-      exclude: ['src/**/*.stories.tsx', 'src/db/migrations/**', 'src/db/seed/**'],
+      // src/db/seed is test infrastructure; a bug there fails the tests that
+      // consume it. src/gql is generated, and its guard compares it rather than
+      // running it.
+      exclude: ['src/**/*.stories.tsx', 'src/db/migrations/**', 'src/db/seed/**', 'src/gql/**'],
       thresholds: {
         lines: 80,
         branches: 80,
