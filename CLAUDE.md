@@ -222,7 +222,7 @@ Rules that follow from all this:
 
 ## Out of scope for v1
 
-Do not build, and do not leave hooks for beyond what the design doc names: the **entire notes subsystem** (stories 35–46; §13), edit history, viewer spell approval, compendium/category suggestions, duplicate merge tooling, bulk add from the compendium, GraphQL response caching, email/password sign-in, note moderation.
+Do not build, and do not leave hooks for beyond what the design doc names: the **entire notes subsystem** (stories 35–46; §13), edit history, viewer spell approval, compendium/category suggestions, duplicate merge tooling, bulk add from the compendium, GraphQL response caching, passkeys and every other first-party credential (email/password sign-in included), note moderation.
 
 Story numbers 35–46 are **not reused** — v1 is 50 stories, numbered 1–34 and 47–62.
 
