@@ -53,7 +53,7 @@ a service lands in the module that owns the table it writes.
 
 | Module        | Tables                                                                                                                            | Services today                                                                 |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `identity`    | `users`, `sessions`, `accounts`, `verifications`; later `admin_invitations`                                                       | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts` |
+| `identity`    | `users`, `sessions`, `accounts`, `verifications`, `rate_limits`; later `admin_invitations`                                        | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts` |
 | `coven`       | `workspaces`, `workspace_members`, `workspace_invitations`                                                                        | `membership.ts`, `memberships.ts`, `access-control.ts`                         |
 | `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`                                                     | none yet                                                                       |
 | `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_categories`, `inventory_items`; later `retired_ingredient_slugs` | none yet; `schema/units.ts` is the unit vocabulary                             |

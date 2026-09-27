@@ -51,6 +51,16 @@ convention) and split across two schema files:
   carries a `password` column that stays `null` in v1 (OAuth only) —
   DESIGN.md §2 notes the tables already accommodate email+password without
   a migration, so this column is that accommodation, not dead schema.
+- **`rate_limits`**, in the same file (MB.75) — the model Better Auth's
+  limiter asks for under `rateLimit.storage: 'database'`: `id`, `key` text
+  unique (the client IP and the path), `count` integer, and `last_request` a
+  `bigint` of epoch milliseconds, which outgrows an integer and is read back
+  as a number (`mode: 'number'`). It references nothing and carries no
+  `created_at` or `updated_at`, because Better Auth's model declares none;
+  the limiter alone writes and prunes it. It reaches the adapter as
+  `rateLimits` in `drizzleAdapter`'s `schema`, the key `usePlural` looks it
+  up by. Inert until MB.76 sets the storage: Better Auth only asks for the
+  model once the storage is `'database'`.
 - **`generateId: 'uuid'`** (`src/lib/auth.ts`'s `advanced.database` option)
   makes every primary key a Postgres `uuid` via `gen_random_uuid()`, not
   Better Auth's own default text id — matching `auditColumns`' `uuid`
@@ -75,8 +85,8 @@ convention) and split across two schema files:
   Auth's adapter reads plain schema tables, not the relational query API.
   The two schema files are hand-maintained from here; only the SQL is
   generated.
-- **`users` spreads `...auditColumns` (M2.3); the other three tables still
-  don't.** `sessions`/`accounts`/`verifications` are Better Auth's own
+- **`users` spreads `...auditColumns` (M2.3); the other four tables still
+  don't.** `sessions`/`accounts`/`verifications`/`rate_limits` are Better Auth's own
   adapter tables, not application data CLAUDE.md rule 3 governs, so they
   stay without `deleted_at`/`created_by`/etc. and `users_email_unique`
   moved from a plain unique constraint to a partial index (`WHERE

@@ -12,7 +12,7 @@ import { appendQueryParams } from '@better-auth/core/utils/url';
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../db/connection';
 import { users } from '../modules/identity/schema/users';
-import { sessions, accounts, verifications } from '../modules/identity/schema/auth';
+import { sessions, accounts, verifications, rateLimits } from '../modules/identity/schema/auth';
 import { SOCIAL_PROVIDERS, type ProviderId } from './social-providers';
 // Server-only — see social-providers-config.ts's own header.
 // oxlint-disable-next-line no-restricted-imports
@@ -300,7 +300,7 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: 'pg',
     usePlural: true,
-    schema: { users, sessions, accounts, verifications },
+    schema: { users, sessions, accounts, verifications, rateLimits },
   }),
   // Matches users.id's uuid type so every FK lines up without a cast.
   advanced: {
