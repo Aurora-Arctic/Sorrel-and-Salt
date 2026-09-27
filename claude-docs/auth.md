@@ -165,36 +165,20 @@ evil.example.com` — the first two resolve correctly, the third falls
   time. Real sign-in only completes on `staging` and Production;
   `claude-docs/secrets.md` covers this in more depth.
 
-## Social providers (M2.4/M2.5)
+## Social providers (M2.4/M2.5, M2.6)
 
-`socialProviders()` in `src/lib/auth.ts` registers `google`/`github` only
-when **both** halves of a pair (`GOOGLE_CLIENT_ID`+`GOOGLE_CLIENT_SECRET`,
-`GITHUB_CLIENT_ID`+`GITHUB_CLIENT_SECRET`) are set as non-empty strings —
-never with an empty string, which Better Auth would treat as a configured
-but broken provider rather than an absent one. Both pairs now hold real
-registered credentials locally (`.env.local`) and in Vercel; what is still
-unset is `ADMIN_BOOTSTRAP_EMAIL` and three CI secrets, which MB.12 owns
-(`claude-docs/secrets.md`).
-
-Verified with fake credentials (`GOOGLE_CLIENT_ID=test-google-id`, etc.,
-never real ones) against a running `next dev`: `POST
-/api/auth/sign-in/social {"provider":"google",...}` returns a real Google
-authorization URL (`https://accounts.google.com/o/oauth2/v2/auth?...
-client_id=test-google-id...&redirect_uri=.../api/auth/callback/google`),
-and the same for GitHub, whose default scope already includes
-`user:email` — satisfying M2.5's "matched by email, not duplicated"
-criterion via Better Auth's own `accountLinking` default (implicit linking
-on a verified email, enabled out of the box) rather than anything this
-repo added. `tests/app/api/auth/[...all]/route.test.ts` automates the Google
-half of that same check.
-
-**Not yet demonstrated, and not claimed as done:** M2.4/M2.5's actual
-acceptance criteria ("sign-in completes on local and staging") need a live
-callback round-trip through a real browser and consent screen. Real
-credentials are now registered and the live authorization endpoints accept
-them, but nobody has completed an interactive sign-in — and nobody can until
-M2.6 builds the sign-in page. MB.12 carries that verification, which is why
-it sits in Wave 6 behind M2.6 rather than with the rest of Wave 1.
+The roster is `SOCIAL_PROVIDERS` in `src/lib/social-providers.ts`: Discord,
+Google, Facebook and Microsoft, re-scoped at M2.6 (GitHub was the original
+second provider and was dropped). `socialProviders()` in `src/lib/auth.ts`
+registers a provider only when **both** halves of its pair are set as
+non-empty strings (`clientCredentials`, `src/lib/social-providers-config.ts`),
+never with an empty string, which Better Auth would treat as a configured but
+broken provider rather than an absent one. The sign-in page greys out a
+provider that is not configured. Facebook and Microsoft are pinned unverified
+on arrival (see "First-party verification" below), and Microsoft's tenant is
+stated as `common` so personal accounts can sign in. MB.12 completed a real
+browser sign-in with all four on staging; the credentials and the manual steps
+behind them are `claude-docs/secrets.md`.
 
 `/api/auth/ok` (Better Auth's built-in health endpoint, no database access)
 is what `route.test.ts`'s other case uses to confirm the route is mounted
@@ -662,6 +646,31 @@ top-level bans because an override replaces the rule rather than merging
 (`claude-docs/db.md`). `tests/guards/lint-service-session-boundary.test.ts`
 asserts all of it with probe files, in a probe directory of its own so it
 cannot race `lint-db-client-boundary.test.ts`'s.
+
+## Plugins (MB.74)
+
+No Better Auth plugin is registered yet. Every plugin mounts routes under
+`/api/auth/*`, the one path outside `/api/graphql`, and writes through the
+adapter, outside `withAudit`, so each has to earn its place. MB.74 weighed
+the whole roster against an OAuth-only, invite-gated site
+([`design-decisions/mb.74-better-auth-plugins.md`](design-decisions/mb.74-better-auth-plugins.md)).
+
+| Plugin or option                                                                                                                                                                    | Status                       | Why                                                                                                                                     |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Rate limiter, `storage: 'database'`                                                                                                                                                 | Scheduled (MB.75, MB.76)     | Already on in every deploy, counting in each instance's memory; an unresolved client IP puts every visitor in one bucket                |
+| `account.encryptOAuthTokens`                                                                                                                                                        | Scheduled (MB.76)            | Stored provider tokens are plaintext today; older rows keep reading after the switch                                                    |
+| `lastLoginMethod`, cookie only                                                                                                                                                      | Scheduled (MB.77)            | The browser remembers its own last provider, so the sign-in page can point at it without the server revealing anything about an address |
+| `oAuthProxy`, previews only                                                                                                                                                         | Scheduled (MB.78)            | Lets a hotfix preview finish a sign-in through staging's registered callback                                                            |
+| `admin`, impersonation endpoints only                                                                                                                                               | Scheduled (MB.53)            | Every other endpoint would grant admin or delete users outside `withAudit` (M2.9)                                                       |
+| `createAccessControl`                                                                                                                                                               | In use (M6.3)                | A helper, not a plugin: workspace permission statements                                                                                 |
+| Passkeys                                                                                                                                                                            | v2                           | The first-party credential DESIGN.md §13 names, in place of email and password                                                          |
+| Magic link, email OTP                                                                                                                                                               | v2, after passkeys           | Sign-in for someone with none of the four providers                                                                                     |
+| `@better-auth/stripe`                                                                                                                                                               | v2 (MB.79)                   | Subscription billing; DESIGN.md §13 sets it against what the owner wants to charge, and a test-mode spike decides                       |
+| Two-factor, `captcha`, `haveIBeenPwned`                                                                                                                                             | Only with email and password | Each guards a password sign-in; two-factor never challenges an OAuth one                                                                |
+| `organization`                                                                                                                                                                      | Never (MB.30)                | Unaudited writes, hard deletes, a plaintext invitation token, a session-held active workspace                                           |
+| `jwt`                                                                                                                                                                               | Never                        | Issues a token beside the cookie for a service this app does not have; its cookie mode needs the cookie cache MB.59 keeps off           |
+| `user.deleteUser`                                                                                                                                                                   | Never                        | A hard delete, which every audit foreign key to `users` refuses                                                                         |
+| `bearer`, `oneTimeToken`, `deviceAuthorization`, `oauthPopup`, `multiSession`, `oneTap`, `username`, `anonymous`, `phoneNumber`, `siwe`, `genericOAuth`, `openAPI`, `customSession` | Never                        | Other clients, other sign-in schemes, or nothing this app reads                                                                         |
 
 ## The organization plugin is not used (MB.30)
 
