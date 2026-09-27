@@ -66,7 +66,7 @@ describe('every claude-docs citation resolves', () => {
   it('is scanning files that actually cite the docs', () => {
     expect(FILES.length).toBeGreaterThan(50);
     expect(CITED.length).toBeGreaterThan(10);
-    expect(CITED.map(({ file }) => file)).toContain('src/db/repository.ts');
+    expect(CITED.map(({ file }) => file)).toContain('src/db/repository/write.ts');
   });
 
   it('names a file that exists', () => {

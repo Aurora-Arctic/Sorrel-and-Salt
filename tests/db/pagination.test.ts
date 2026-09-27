@@ -13,7 +13,7 @@ import { A, D, asUser } from '../support/as-user';
 // CLAUDE.md rule 8, end to end below the transport: `resolvePage` drives the
 // repository's keyset finders exactly as a connection resolver will.
 
-// Scratch tables, as in repository.test.ts: the contract is about the shape,
+// Scratch tables, as in tests/db/repository/: the contract is about the shape,
 // not any one domain table.
 const leaves = pgTable('pagination_probe_leaves', {
   id: uuid('id').defaultRandom().primaryKey(),

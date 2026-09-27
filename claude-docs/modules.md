@@ -31,7 +31,7 @@ nothing.
 
 What stays outside a module, and why:
 
-- **`src/db/`** — `connection.ts`, `repository.ts`, `audit.ts`, `bootstrap.ts`,
+- **`src/db/`** — `connection.ts`, `repository/`, `audit.ts`, `bootstrap.ts`,
   `migrations/`, `seed/`. The repository is the one query author for every
   module (CLAUDE.md rules 2 and 4), so it is shared rather than owned. The
   seed is the one legitimately cross-domain composer and reaches tables
@@ -157,8 +157,8 @@ The compendium's future extraction unit is the compendium tier of
 `ingredients` plus `vocabulary`. What would make that extraction a rewrite is
 an uncounted set of reads that cross from a workspace's rows into the
 compendium's. So the set is counted: **`TIER_SEAM` in
-`tests/guards/module-boundaries.test.ts` must name every exported finder in
-`src/db/repository.ts` whose SQL reads the compendium tier** — anything
+`tests/guards/module-boundaries.test.ts` must name every exported function in
+`src/db/repository/` whose SQL reads the compendium tier** — anything
 containing `workspace_id is null` or `isNull(workspaceId)`, and anything that
 reads both tiers in one statement. The guard fails an unlisted finder, and it
 fails a listed one that no longer exists.

@@ -50,7 +50,7 @@ Two more reasons:
 - **Raw SQL where needed.** Partial unique indexes, `num_nonnulls` check constraints, `pg_trgm` similarity, the v2 PL/pgSQL trigger, and the RLS policies deferred to the public launch (§8) all live inside typed migrations. Prisma's schema language can't express most of them.
 - **No engine binary.** Prisma ships a Rust query engine as a separate process — cold-start weight and deployment size for nothing on serverless.
 
-A third reason — that Pothos has a first-class Drizzle plugin — **no longer applies**: the plugin is not used (MB.20), because its primary capability is resolver-level database access, which §3's rule 1 forbids. The ORM choice now rests on the two reasons above alone, and is correspondingly easier to revisit: `drizzle-orm` is reachable only from `src/db/repository.ts`. §7 carries the rules that decision sets for the GraphQL layer.
+A third reason — that Pothos has a first-class Drizzle plugin — **no longer applies**: the plugin is not used (MB.20), because its primary capability is resolver-level database access, which §3's rule 1 forbids. The ORM choice now rests on the two reasons above alone, and is correspondingly easier to revisit: `drizzle-orm` is reachable only from `src/db/repository/`. §7 carries the rules that decision sets for the GraphQL layer.
 
 Trade-off: Prisma Studio is nicer than Drizzle Studio and Prisma's errors are friendlier. Kysely remains the other reasonable pick — its lack of a GraphQL plugin no longer counts against it, but it is still `0.x` and so no steadier than what is here.
 
@@ -103,7 +103,7 @@ src/
     loaders/                # DataLoader factories
   db/
     audit.ts                # shared audit columns
-    repository.ts           # only module allowed to import `db`
+    repository/             # only code allowed to import `db`; reached through its index.ts
     seed/                   # shared by docker, vitest, playwright
   graphql/
     schema/index.ts         # composes the modules' registrations into one schema
@@ -224,7 +224,7 @@ The four stamp columns stay on all three: `created_by` on a join row answers "wh
 
 **Four enforcement rules, because audit columns rot the moment one path skips them:**
 
-1. **`*_by` never comes from a request body.** All writes go through `withAudit(session, fn)`, which injects them. A lint rule bans importing `db` outside `src/db/repository.ts`.
+1. **`*_by` never comes from a request body.** All writes go through `withAudit(session, fn)`, which injects them. A lint rule bans importing `db` outside `src/db/repository/`.
 2. **`updated_at` is a database trigger**, so a manual `psql` fix still stamps it.
 3. **Soft-delete filtering happens in the repository**, never at call sites. There is no exported query that can forget `deleted_at IS NULL`: `findMany`/`findOne` apply it where the column exists and read a join table that has none, deciding on the table's own shape rather than on a flag a caller passes.
 4. **The hard delete is a named method, not a flag.** `write.delete(table, where)` removes rows outright and is typed to reject any table carrying `deletedAt` at compile time; `softDelete` demands one. Same shape as `findManyIncludingSoftDeleted` — the escape hatch is narrow and impossible to point at the wrong thing.
@@ -535,7 +535,7 @@ Single route handler at `/api/graphql`. No separate service, no additional hosti
 - **Object types are declared by hand**, against the row type the service returns (`typeof ingredients.$inferSelect` and friends) — never a table-derived object type. TypeScript still fails the build when a column's type changes under a field.
 - **`auditColumns` maps to one shared `AuditInfo` object type, defined once.** A per-table audit shape is a bug.
 - **Every Pothos package in the stack is a stable major.** A `0.x` Pothos plugin entering the dependency tree is a decision argued for in the diff, not a convenience.
-- **The GraphQL layer imports `drizzle-orm` for _types_ only.** Runtime query building stays behind `src/db/repository.ts` (§3's rule 2). A `no-restricted-imports` rule enforces it rather than leaving it to review (MB.33): a runtime import from `src/graphql` fails `npm run lint`, while `import type` — erased at compile time, and so unable to build anything — passes.
+- **The GraphQL layer imports `drizzle-orm` for _types_ only.** Runtime query building stays behind `src/db/repository/` (§3's rule 2). A `no-restricted-imports` rule enforces it rather than leaving it to review (MB.33): a runtime import from `src/graphql` fails `npm run lint`, while `import type` — erased at compile time, and so unable to build anything — passes.
 
 None of this rules the plugin out permanently — it is additive, and re-adopting it once it reaches a stable major is a contained change.
 
