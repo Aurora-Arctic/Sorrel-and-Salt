@@ -171,6 +171,29 @@ scope refusal throws `Forbidden` from `src/lib/errors.ts`, the same type a
 service throws, so the transport maps one refusal shape whichever check said
 no (MB.43).
 
+### The SDL snapshot
+
+The schema is TypeScript, so it has no readable document of its own.
+`src/graphql/schema.graphql` is that document: the printed SDL, committed, and
+checked by `tests/graphql/schema-snapshot.test.ts` through Vitest's
+`toMatchFileSnapshot`. It is one of the two permitted snapshots, beside the
+design tokens (DESIGN.md §11), because the schema is a contract and a change to
+it should show up in the diff rather than pass silently.
+
+- **A schema change fails the test until the file is regenerated.** Vitest
+  never overwrites an existing snapshot without `-u`, and under `CI` it does
+  not write a missing one either, so CI fails on a changed schema and on a
+  deleted file alike. Locally, a missing file is written on the first run.
+- **Regenerating is the deliberate step:**
+  `npm run test -- tests/graphql/schema-snapshot.test.ts -u`. The rewritten
+  file is committed with the change that moved it, and a reviewer reads the
+  contract change in `schema.graphql`'s diff.
+- **Only a contract change moves it.** Pothos's `toSchema()` sorts types and
+  fields lexicographically by default, so reordering the imports in
+  `src/graphql/schema/index.ts` changes nothing.
+- **Prettier ignores it.** `printSchema` owns the layout, and a reformat would
+  fail the test. `.prettierignore` carries it.
+
 ## The request context
 
 `src/graphql/context.ts`'s `createContext` runs once per request, as Yoga's

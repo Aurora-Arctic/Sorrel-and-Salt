@@ -66,7 +66,7 @@ Pothos specifically: its **auth-scopes plugin** gives declarative field-level gu
 
 Its **Drizzle plugin is deliberately not used** (MB.20). That plugin's purpose is to let a resolver query the database from the GraphQL selection set, which §3's rule 1 forbids outright — and the graph does not mirror the tables anyway, so there is little to derive: audit columns surface as one nested `AuditInfo` object rather than six flat fields, and `Ingredient.isGlobal`, `Spell.derivedCategories` and `Spell.categoryGaps` are computed rather than stored. Object types are declared by hand against the row type the service returns, so a column whose type changes still fails the build. Keeping it out is also what leaves the GraphQL layer independent of `drizzle-orm`'s version.
 
-Trade-off: the schema isn't readable as a document without codegen. §11's schema snapshot test writes the SDL out on every run, so the file exists and diffs are visible in PRs.
+Trade-off: the schema isn't readable as a document without codegen. §11's schema snapshot test keeps the printed SDL committed as `src/graphql/schema.graphql` and fails when the schema no longer matches it, so the file exists and diffs are visible in PRs.
 
 ### Why OAuth only
 
