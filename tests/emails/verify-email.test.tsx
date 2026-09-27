@@ -87,25 +87,33 @@ describe('verifyEmailMessage design', () => {
   it('is dark by default and light only under the media query', async () => {
     const page = await html();
 
-    expect(page).toMatch(/<body[^>]*background-color:#14120e/);
-    // The page colour is on a table the layout renders, not only on Body's cell.
-    expect(page).toMatch(/<table[^>]*class="ss-page"[^>]*background-color:#14120e/);
+    expect(page).toMatch(/<body[^>]*class="ss-body"[^>]*background-color:#14120e/);
+    // The page colour is on a cell the layout renders, not only on Body's cell.
+    expect(page).toMatch(/<td[^>]*class="ss-page"[^>]*background-color:#14120e/);
     expect(page).toContain(
       '@media (prefers-color-scheme: light){.ss-page{background-color:#efe9da!important;color:#23201a!important;}',
     );
     expect(page).toContain('<meta name="color-scheme" content="dark light"');
   });
 
-  // iOS Mail and iCloud Mail apply class selectors but do not expose Body's
-  // body > table > tbody > tr > td chain, so a page rule written through that
-  // chain never matched there: every text override went light and the cell
-  // stayed dark, leaving dark text on a dark page.
-  it('selects the light page by a bare class, never through the body cell chain', async () => {
+  // iOS Mail, iCloud, Yahoo, AOL, Zoho, o2.pl, Seznam and Outlook.com each
+  // applied the light text rules and not the light page rule, leaving dark
+  // text on the dark page. So every light rule hangs off the one cell that
+  // carries the page colour: a client that loses that rule loses them all.
+  it('scopes every light rule beneath the one cell that carries the page colour', async () => {
     const page = await html();
     const light = page.match(/@media \(prefers-color-scheme: light\)\{(.*?)\}\}/s)?.[1] ?? '';
-    const pageSelectors = light.match(/[^{}]*\.ss-page[^{]*\{/g) ?? [];
+    const selectors = light.match(/[^{}]+(?=\{)/g) ?? [];
 
-    expect(pageSelectors).toEqual(['.ss-page{']);
+    expect(selectors.length).toBeGreaterThan(5);
+    for (const selector of selectors) {
+      expect(selector).toMatch(/^(\.ss-page( \.ss-[a-z]+)?|\.ss-body)$/);
+    }
+    // No ss- rule lives outside the light block.
+    expect(page.replace(light, '')).not.toMatch(/\.ss-[a-z]+[^{]*\{/);
+    // The class is on exactly one element, the cell with the inline dark page.
+    expect(page.match(/class="[^"]*ss-page[^"]*"/g)).toEqual(['class="ss-page"']);
+    expect(page).toMatch(/<td class="ss-page" style="background-color:#14120e;color:#ebe4d4;/);
   });
 
   // Backgrounds rather than <img>, so the text can run over their edges: Gmail
@@ -120,7 +128,7 @@ describe('verifyEmailMessage design', () => {
         new RegExp(`class="ss-${corner}"[^>]*background-image:${escape(image(`${corner}-dark`))}`),
       );
       expect(page).toContain(
-        `.ss-${corner}{background-image:${image(`${corner}-light`)}!important;}`,
+        `.ss-page .ss-${corner}{background-image:${image(`${corner}-light`)}!important;}`,
       );
     }
     expect(page).not.toContain('<img');
