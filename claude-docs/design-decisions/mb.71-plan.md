@@ -59,7 +59,8 @@ linked provider's profile never rewrites the row.
 
 ## Scope: one new task, `MB.71 — Link a second sign-in method from the account page`
 
-Scheduled in Wave 6 after MB.54 (which creates the `/account/email` surface) and
+Scheduled after MB.54 (which creates the `/account/email` surface), and with it
+at the end of Wave 7 since MB.54 moved there for its `setEmail` mutation, and
 after MB.67 (whose `account_not_linked` sentence this supersedes; see error
 mapping below). Size ~3h with unlink. Story 1 ("sign in with any of the four providers") is the story it serves;
 consider a §10 line if a story number is wanted.
