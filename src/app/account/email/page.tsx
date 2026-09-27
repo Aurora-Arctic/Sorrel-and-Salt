@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { getMe, isPlaceholderEmail, verificationWaitSeconds } from '@/modules/identity';
 import EmailForm from '../../../components/EmailForm';
-import { verifyErrorMessage } from '../../../lib/account-email';
+import { hasVerifiedFlag, verifyErrorMessage } from '../../../lib/account-email';
 import { requireSession } from '../../../lib/request-session';
 import { safeReturnPath } from '../../../lib/sign-in';
 
@@ -33,7 +33,9 @@ export default async function EmailPage({ searchParams }: EmailPageProps) {
         verified={me.emailVerified}
         // A followed link lands here with the flag; the row, not the flag,
         // says whether the address is proved, and a refusal never carries it.
-        confirmed={me.emailVerified && params.verified === '1' && params.error === undefined}
+        confirmed={
+          me.emailVerified && hasVerifiedFlag(params.verified) && params.error === undefined
+        }
         next={safeReturnPath(params.next)}
         error={verifyErrorMessage(params.error)}
         waitSeconds={verificationWaitSeconds(me.verificationSentAt)}

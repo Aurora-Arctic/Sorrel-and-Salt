@@ -136,7 +136,7 @@ describe('Story 58: following the link', () => {
 
     expect(response.status).toBe(302);
     // The email page's confirmed view, not where the sign-in was going.
-    expect(response.headers.get('location')).toBe('/account/email?verified=1');
+    expect(response.headers.get('location')).toBe('/account/email?verified');
     expect(await userRow(OWNER)).toMatchObject({ email_verified: true, updated_by: before.id });
   });
 
@@ -188,7 +188,7 @@ describe('Story 58: following the link', () => {
 
     const response = await follow(link, cookie);
 
-    expect(response.headers.get('location')).toBe('/account/email?verified=1');
+    expect(response.headers.get('location')).toBe('/account/email?verified');
     expect(await userRow(OWNER)).toEqual(verified);
   });
 });
@@ -278,7 +278,7 @@ describe('the primary admin is promoted at first-party verification', () => {
 
     const response = await follow(link, cookie);
 
-    expect(response.headers.get('location')).toBe('/account/email?verified=1');
+    expect(response.headers.get('location')).toBe('/account/email?verified');
     expect(await roleOf(OWNER)).toBe('admin');
     expect((await userRow(OWNER))?.updated_by).toBe(before.id);
   });
@@ -330,7 +330,7 @@ describe('the primary admin is promoted at first-party verification', () => {
 
     const honoured = await follow(changeLink.href, cookie);
 
-    expect(honoured.headers.get('location')).toBe('/account/email?verified=1');
+    expect(honoured.headers.get('location')).toBe('/account/email?verified');
     expect(await userRow(OWNER)).toMatchObject({
       id: before.id,
       email_verified: true,
