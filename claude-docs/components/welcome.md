@@ -10,7 +10,7 @@ component renders the same page for everyone and changes only the last link.
 The page reads the session with **`getSession()`, never `requireSession()`**.
 `/` is in the proxy's `PUBLIC_ROUTES` and must stay reachable signed out;
 `requireSession()` would redirect exactly the visitors the page exists for.
-The session decides one thing: a signed-out visitor is offered **Sign in**
+The session decides one thing: a signed-out visitor is offered **Sign In**
 (`/sign-in`), a signed-in one **Continue** (`POST_SIGN_IN_LANDING`,
 `src/lib/sign-in.ts` — `/coven`, the post-sign-in landing M2.8 builds).
 Nothing else on the page depends on who is looking, and the page never

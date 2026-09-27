@@ -52,7 +52,7 @@ test("the entry page's backdrop images are served, hashed, under /_next/static",
 
 test('the entry page leads to /sign-in', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('link', { name: 'Sign in' }).click();
+  await page.getByRole('link', { name: 'Sign In' }).click();
 
   await expect(page).toHaveURL(/\/sign-in$/);
   await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
