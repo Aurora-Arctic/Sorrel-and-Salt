@@ -48,7 +48,9 @@ working rather than a setup fault. Microsoft sends no `email_verified`
 claim, so Better Auth treats its address as unverified and will not link it
 to an existing verified account. If it did, anyone who registered a
 Microsoft account under someone else's address would get into that
-account. So verify Microsoft with an address that has no account here yet.
+account. So verify Microsoft with an address that has no account here yet,
+or sign in to the existing account another way and add Microsoft under
+`/account` (MB.71, [`auth.md`](auth.md), "Linking a second provider").
 
 The primary admin was promoted on staging, at a verified Google or Discord
 sign-in: `/workshop` loads for that account and refuses a plain user.

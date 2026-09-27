@@ -291,13 +291,19 @@ locally, all over HTTP,** chosen by `MAIL_TRANSPORT` and guarded so that a
 wrong value in the wrong environment sends nothing.
 
 **`users.emailVerified` now means one thing.** Facebook and Microsoft are
-pinned unverified through `mapProfileToUser`, so a true value was set by
-Google, by Discord, or by our own mail. That is what lets the sweep, the
-invitation match and the admin invitation key on the column.
+pinned unverified through `mapProfileToUser` at every sign-in, so a true value
+was set by Google, by Discord, or by our own mail. That is what lets the sweep,
+the invitation match and the admin invitation key on the column. Inside an
+explicit link, where every provider vouches, the vouch never reaches the row
+(MB.71, [`auth.md`](../auth.md), "Linking a second provider").
 
 **What stays off** stays off: `user.changeEmail` (the email page replaces it),
 `overrideUserInfoOnSignIn`, `accountLinking.trustedProviders`, and now
 `requireLocalEmailVerified` stays at its default, pinned like the others.
+Verification does not make a never-vouching provider linkable at sign-in, and
+nothing here should: such a provider is added to an account by an explicit
+link from a signed-in session (MB.71), with `accountLinking.allowDifferentEmails`
+on and `allowUnlinkingAll` off pinned beside these.
 
 ## The token, and who may follow the link
 
