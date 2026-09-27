@@ -1382,6 +1382,18 @@ site admin curates the compendium and reaches no workspace at all, so
 `assertMembership` never reads it — which is what makes that invariant true by
 construction rather than by a branch someone could add later.
 
+### One lookup per render
+
+`assertMembership` reads the role through `cache(findWorkspaceRole)`, so a
+layout and a page asking about the same workspace in one server render cost one
+query, whatever permission each asks for; the permission check under it runs
+every time and costs nothing. The cache is keyed by `(userId, workspaceId)`
+rather than the session, because `cache()` compares object arguments by
+identity and two callers holding equal sessions would each miss. It lives as
+long as the render and no longer, and outside a render it is the plain finder:
+the GraphQL route handler has no React cache scope, so its dedupe is the
+request's DataLoaders ([`graphql.md`](graphql.md), "The two transports").
+
 ### The finder convention
 
 The repository splits on the table's own shape, the way it already splits

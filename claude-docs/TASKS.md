@@ -1318,6 +1318,8 @@ _Acceptance criteria:_
 - Every service used by a server component enforces authorization itself, not relying on the caller
 - A test proves the same denial occurs through both paths for one representative service
 
+_Landed at about 2h. No workspace read existed to wrap, so the representative service is `assertMembership` itself: its role lookup is `cache()`-wrapped, keyed by `(userId, workspaceId)` because `cache()` compares objects by identity, and every later caller inherits the dedupe without adopting anything. `cache()` is inert in a Next route handler, which has no React cache scope, so the GraphQL path's dedupe stays DataLoader. The dedupe is observable only inside a render, which needs the `react-server` condition `db` cannot carry, hence a third Vitest project, `rsc`. The GraphQL half of the denial test runs over a throwaway `createBuilder()` schema, since no production field reads a workspace yet. A guard fails any `'use server'` under `src/` ([`graphql.md`](graphql.md), "The two transports"; [`design-decisions/m3.8-plan.md`](design-decisions/m3.8-plan.md))._
+
 **M3.9 — Lint rules enforcing the access boundary** · 1h
 
 _Story:_ As a reviewer, I want the two access paths enforced mechanically so that the boundary does not erode one convenient import at a time.
