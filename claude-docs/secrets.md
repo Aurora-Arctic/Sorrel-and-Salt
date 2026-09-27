@@ -111,13 +111,17 @@ anything, and a Sensitive variable reaches CI's `vercel pull` as the literal
 `[SENSITIVE]`, which the assertion refuses. Whoever can set it chooses the
 primary admin, which is already true of `DATABASE_URL`.
 
-- **Its account becomes admin at its next Google or Discord sign-in with a
-  verified address**, new account or existing. Microsoft and Facebook never
-  promote.
+- **Its account becomes admin at either of two events**, new account or
+  existing: its next Google or Discord sign-in with a verified address, or
+  its owner following the verification link our mail sends to it, from a
+  browser signed in to that account (MB.68). A Microsoft or Facebook sign-in
+  never promotes by itself, so an owner with only those verifies by mail.
 - **Changing it** promotes the new address at that address's next qualifying
-  sign-in. The previous primary admin keeps `role: 'admin'` and simply stops
-  being protected. Set it to an address that can sign in through Google or
-  Discord, or nobody will be protected.
+  sign-in or verification. The previous primary admin keeps `role: 'admin'`
+  and simply stops being protected. An address its account has already
+  verified is not verified again, so set it to one that can sign in through
+  Google or Discord, or to an account that has not verified yet, or nobody
+  will be protected.
 
 **The mail variables are each scoped to the one environment that reads
 them, and none is read at build.** `src/lib/mail.ts` reads them when it sends

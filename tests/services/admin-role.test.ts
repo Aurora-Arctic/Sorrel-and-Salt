@@ -2,7 +2,11 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
-import { promotePrimaryAdmin, type SignInProfile } from '@/services/admin-role';
+import {
+  promotePrimaryAdmin,
+  promotePrimaryAdminAtVerification,
+  type SignInProfile,
+} from '@/services/admin-role';
 import { asUser } from '../support/as-user';
 import {
   expectSignedIn,
@@ -329,5 +333,61 @@ describe('Promotion at sign-in', () => {
     expectSignedIn(await signIn('google', { sub: 'g-5', email: other, verified: true }));
 
     expect((await userRow(other))?.role).toBe('user');
+  });
+});
+
+// ─── At first-party verification ───────────────────────────────────────────
+
+describe('promotePrimaryAdminAtVerification', () => {
+  it('promotes through withAudit, stamped as the verifying user themselves', async () => {
+    const id = await insertUser(PRIMARY);
+
+    const outcome = await promotePrimaryAdminAtVerification(asUser({ id, role: 'user' }), {
+      accountEmail: PRIMARY,
+      primaryAdminEmail: 'Owner@Primary-Admin.TEST',
+    });
+
+    expect(outcome).toBe('promoted');
+    const row = await userRow(PRIMARY);
+    expect(row?.role).toBe('admin');
+    expect(row?.created_by).toBe(BOOTSTRAP_USER_ID);
+    expect(row?.updated_by).toBe(id);
+  });
+
+  it('never promotes an address the variable does not name', async () => {
+    const other = 'someone.else@primary-admin.test';
+    const id = await insertUser(other);
+
+    const outcome = await promotePrimaryAdminAtVerification(asUser({ id, role: 'user' }), {
+      accountEmail: other,
+      primaryAdminEmail: PRIMARY,
+    });
+
+    expect(outcome).toBe('not-primary');
+    expect((await userRow(other))?.role).toBe('user');
+  });
+
+  it('promotes nobody when the variable is unset', async () => {
+    const id = await insertUser(PRIMARY);
+
+    const outcome = await promotePrimaryAdminAtVerification(asUser({ id, role: 'user' }), {
+      accountEmail: PRIMARY,
+      primaryAdminEmail: undefined,
+    });
+
+    expect(outcome).toBe('not-primary');
+    expect((await userRow(PRIMARY))?.role).toBe('user');
+  });
+
+  it('does not rewrite a user who is already admin', async () => {
+    const id = await insertUser(PRIMARY, 'admin');
+
+    const outcome = await promotePrimaryAdminAtVerification(asUser({ id, role: 'admin' }), {
+      accountEmail: PRIMARY,
+      primaryAdminEmail: PRIMARY,
+    });
+
+    expect(outcome).toBe('already-admin');
+    expect((await userRow(PRIMARY))?.updated_by).toBe(BOOTSTRAP_USER_ID);
   });
 });
