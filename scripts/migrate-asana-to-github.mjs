@@ -180,7 +180,12 @@ const bracketFor = (createdAt) => {
   return `[${date} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC]`;
 };
 
-export function buildPlan(board, tasksMd) {
+export function buildPlan(rawBoard, tasksMd) {
+  // Asana can list a task twice across pages; a gid identifies it once.
+  const board = {
+    ...rawBoard,
+    tasks: [...new Map(rawBoard.tasks.map((t) => [t.gid, t])).values()],
+  };
   const plan = readTasksMd(tasksMd);
   const byGid = new Map(board.tasks.map((task) => [task.gid, task]));
   const classify = (task) => {

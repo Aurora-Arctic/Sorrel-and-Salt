@@ -179,7 +179,13 @@ const KNOWN_URLS = /https?:\/\/(?:www\.)?(?:github\.com|app\.asana\.com)\/\S*/g;
 const GIT_SHA = /^[0-9a-f]{40}$/i;
 
 export const SECRET_PATTERNS = [
-  { name: 'connection string', pattern: /\bpostgres(?:ql)?:\/\/\S+/i },
+  {
+    name: 'connection string',
+    pattern: /\bpostgres(?:ql)?:\/\/\S+/i,
+    // The local Docker credential is checked in (Docker/docker-compose.yaml,
+    // the CI workflows) and is what a dev-stack comment cites.
+    reject: (match) => /^postgres(?:ql)?:\/\/sorrel:sorrel@/i.test(match),
+  },
   { name: 'dashboard URL', pattern: /\b(?:[\w-]+\.)*(?:vercel\.com|console\.neon\.tech)\b\S*/i },
   {
     name: 'token prefix',
@@ -188,13 +194,20 @@ export const SECRET_PATTERNS = [
   { name: 'bearer token', pattern: /\bBearer\s+[A-Za-z0-9._+/=-]{16,}/ },
   {
     name: 'token-like run',
-    pattern: /[A-Za-z0-9+/=_-]{40,}/,
-    // A github.com or app.asana.com link is long and harmless; a bare git SHA
-    // is exactly 40 hex characters and is what a PR body cites.
+    // No '/', '_' or '-', and both a digit and a letter: a file path, a URL
+    // path, a branch name or a SCREAMING_CASE constant is the long run a comment
+    // actually cites, and a token has none of those. A github.com or
+    // app.asana.com link is blanked first; a bare git SHA is exactly 40 hex
+    // characters and is what a PR body cites.
+    pattern: /(?=[A-Za-z0-9+=]*\d)(?=[A-Za-z0-9+=]*[A-Za-z])[A-Za-z0-9+=]{40,}/,
     prepare: (text) => text.replace(KNOWN_URLS, ' '),
     reject: (match) => GIT_SHA.test(match),
   },
-  { name: 'email address', pattern: /\b[\w.+-]+@[\w-]+(?:\.[\w-]+)+\b/ },
+  {
+    name: 'email address',
+    // An alphabetic top-level label: `typescript@5.9.3` is a version, not an address.
+    pattern: /\b[\w.+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}\b/,
+  },
 ];
 
 /** The first pattern the text trips, as `{ name, match }`, or null. */
