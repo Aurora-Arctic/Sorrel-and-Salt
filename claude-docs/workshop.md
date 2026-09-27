@@ -64,7 +64,11 @@ without a page routed to it.
   remount on theme change so a component that reads `data-theme` only on mount
   follows the switch. A story pins its own theme with
   `MyStory.meta = { theme: 'light' | 'dark' }`, which the `Provider` reads over
-  the toolbar.
+  the toolbar. It also wraps the frame in the app's `Providers`
+  (`src/app/providers.tsx`), so a component that uses TanStack Query
+  (`EmailForm`'s `useMutation`) finds the one client the root layout mounts —
+  a story never mounts a `QueryClientProvider` of its own, which
+  `tests/guards/graphql-client.test.ts` would refuse.
   - **`reducedMotion` pin (MB.1).** `prefers-reduced-motion: reduce` is a real
     OS/browser setting Ladle can't expose a toolbar control for — there's
     nothing to dispatch the way the theme control dispatches `data-theme`. A
