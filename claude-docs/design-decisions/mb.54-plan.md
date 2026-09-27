@@ -1,6 +1,6 @@
 # MB.54 — Set the account's email: prefilled from the provider, editable, verified before it counts
 
-Branch `feature/mb.54-accounts-email-prefilled-from-the-provider` off `origin/staging` (37179f4). Asana `1218815062887579` is `▶ In Progress`.
+Branch `feature/mb.54-accounts-email-prefilled-from-the-provider` off `origin/staging` (d4a5d90). Asana `1218815062887579` is `▶ In Progress`.
 
 ## Context
 
