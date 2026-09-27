@@ -59,8 +59,8 @@ convention) and split across two schema files:
   `created_at` or `updated_at`, because Better Auth's model declares none;
   the limiter alone writes and prunes it. It reaches the adapter as
   `rateLimits` in `drizzleAdapter`'s `schema`, the key `usePlural` looks it
-  up by. Inert until MB.76 sets the storage: Better Auth only asks for the
-  model once the storage is `'database'`.
+  up by. Better Auth asks for the model only because the storage is
+  `'database'` (MB.76; "Rate limiting" below).
 - **`generateId: 'uuid'`** (`src/lib/auth.ts`'s `advanced.database` option)
   makes every primary key a Postgres `uuid` via `gen_random_uuid()`, not
   Better Auth's own default text id — matching `auditColumns`' `uuid`
@@ -175,6 +175,61 @@ evil.example.com` — the first two resolve correctly, the third falls
   redirect URI, and a hotfix slug doesn't exist to register ahead of
   time. Real sign-in only completes on `staging` and Production;
   `claude-docs/secrets.md` covers this in more depth.
+- **Stored OAuth tokens are encrypted** (`account.encryptOAuthTokens`,
+  MB.76). Better Auth encrypts each provider's access and refresh token under
+  `BETTER_AUTH_SECRET` as it writes the `accounts` row; the id token is stored
+  as issued, since Better Auth does not encrypt it, and nothing in the app reads
+  any of the three. No migration came with it: Better Auth decrypts only a value
+  that looks like its own ciphertext (a `$ba$` prefix, or an even-length hex
+  string) and returns anything else as it is, so a row written before the switch
+  keeps reading. A plaintext token that happened to be even-length hex would
+  be misread; none of the four providers' token formats is. Rotating the
+  secret makes every stored token unreadable; the next sign-in with each
+  provider writes a fresh one.
+- **Session lifetimes are Better Auth's defaults, pinned by test** (MB.76).
+  DESIGN.md sets none, so `src/lib/auth.ts` sets none: a session lasts seven
+  days, is extended at most once a day while in use, and counts as fresh for a
+  day. `tests/lib/auth.test.ts` reads the resolved values off `auth.$context`,
+  so a dependency bump that moves a default fails there rather than changing
+  how long someone stays signed in.
+
+## Rate limiting (MB.76)
+
+Better Auth's limiter covers `/api/auth/*` and nothing else; GraphQL's
+protections are graphql-armor's (M3.3). MB.74 chose it over leaving the
+shipped defaults ([`design-decisions/mb.74-better-auth-plugins.md`](design-decisions/mb.74-better-auth-plugins.md)).
+
+- **On wherever `NODE_ENV` is `production`**, which is every deploy (staging and
+  hotfix previews included) and every `next start`, Playwright's server
+  among them. Off under `next dev`, which compose's `app` runs, and Vitest.
+  That is Better Auth's own default, written out in `rateLimit.enabled` so a
+  bump cannot move it.
+- **The limits are Better Auth's built-in rules**, keyed on client address
+  and path: `/sign-in/*` 3 requests per 10 seconds, `/send-verification-email`
+  3 per 60 seconds, and every other path 100 per 10 seconds. Past one, the
+  endpoint answers `429` with `X-Retry-After` in seconds and runs nothing.
+- **Counted in `rate_limits`** (`storage: 'database'`, the table in "Tables"
+  above). One row per `<address>|<path>` key, incremented atomically through the
+  adapter, with expired rows pruned in the background. In memory, Better
+  Auth's default, each Fluid Compute instance would keep its own count and a
+  cold one would forget. The cost is a read and a write per `/api/auth/*`
+  request.
+- **The client address is `x-vercel-forwarded-for`**
+  (`advanced.ipAddress.ipAddressHeaders`). Vercel sets it to the address the
+  connection came from, overwriting whatever a client sent, and it is the one
+  of Vercel's three copies (`x-forwarded-for`, `x-real-ip`) that a proxy placed
+  in front of Vercel could not overwrite. No other header is read, so a
+  client varying its own `x-forwarded-for` stays in its bucket.
+- **An unresolved address shares one bucket.** Better Auth trusts a header
+  only when it holds exactly one address. Otherwise, at production, the
+  request is keyed `no-trusted-ip|<path>` and one warning is logged per
+  instance; on `/sign-in/social` that bucket is three sign-ins per ten seconds
+  for everyone in it. Under `next dev` and Vitest it falls back to `127.0.0.1`
+  instead. Off Vercel the header is absent, so a local `next start` counts
+  every request in the shared bucket, which with one client is the same thing.
+- **What staging carries.** Vercel documents all three headers as the
+  client's single public address (its "Request headers" reference).
+  <!-- MB.76: replace with what staging's requests were observed to carry. -->
 
 ## Social providers (M2.4/M2.5, M2.6)
 
@@ -911,8 +966,8 @@ the whole roster against an OAuth-only, invite-gated site
 
 | Plugin or option                                                                                                                                                                    | Status                       | Why                                                                                                                                     |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Rate limiter, `storage: 'database'`                                                                                                                                                 | Scheduled (MB.75, MB.76)     | Already on in every deploy, counting in each instance's memory; an unresolved client IP puts every visitor in one bucket                |
-| `account.encryptOAuthTokens`                                                                                                                                                        | Scheduled (MB.76)            | Stored provider tokens are plaintext today; older rows keep reading after the switch                                                    |
+| Rate limiter, `storage: 'database'`                                                                                                                                                 | In use (MB.75, MB.76)        | One count across every instance, keyed on Vercel's own client-address header ("Rate limiting")                                          |
+| `account.encryptOAuthTokens`                                                                                                                                                        | In use (MB.76)               | Access and refresh tokens unreadable without the secret; older plaintext rows keep reading ("Config")                                   |
 | `lastLoginMethod`, cookie only                                                                                                                                                      | Scheduled (MB.77)            | The browser remembers its own last provider, so the sign-in page can point at it without the server revealing anything about an address |
 | `oAuthProxy`, previews only                                                                                                                                                         | Scheduled (MB.78)            | Lets a hotfix preview finish a sign-in through staging's registered callback                                                            |
 | `admin`, impersonation endpoints only                                                                                                                                               | Scheduled (MB.53)            | Every other endpoint would grant admin or delete users outside `withAudit` (M2.9)                                                       |
@@ -1040,6 +1095,22 @@ pulled-environment assertion names it first).
   two providers cannot remove the owner's. `tests/lib/auth.test.ts` pins
   `allowDifferentEmails` and `allowUnlinkingAll`, and
   `tests/e2e/account.spec.ts` scans `/account` signed in (`tests/e2e/session.ts`).
+- **`tests/db/rate-limiting.test.ts` (MB.76)**: `/sign-in/social` through
+  `auth.handler` at the staging origin, at `NODE_ENV=production` with Vitest's
+  `TEST` cleared. Better Auth reads `NODE_ENV` once, as it loads, so the stub
+  precedes the first import; with either left as Vitest sets it, an unresolved
+  address is taken for `127.0.0.1`. The fourth
+  start inside ten seconds answers `429` with `X-Retry-After`, and the table
+  holds that key at count 3, so the database counted. Two visitors whose
+  `x-forwarded-for` Better Auth would refuse get a row each. The same options
+  with only the header pin removed put both in one `no-trusted-ip` row, so
+  the pin is what separates them. A client varying its own
+  `x-forwarded-for` is still refused on the fourth start.
+- **`tests/db/oauth-token-encryption.test.ts` (MB.76)**: a Google sign-in
+  stores an access token that is not the one issued, and `getAccessToken`
+  hands back the one issued; a token overwritten in plaintext still reads.
+  `tests/lib/auth.test.ts` pins the limiter's `enabled`, `storage` and
+  header, `encryptOAuthTokens`, and the three session lifetimes.
 - **`tests/lib/errors.test.ts` (M1.26)** — asserts `Forbidden` and
   `NotFound` are distinguishable by type in a `catch` and in an
   `expect().rejects.toThrow(Class)`, and that neither an empty list nor a

@@ -76,8 +76,9 @@ not from its documentation.
   adapter implements `incrementOne`. The table does not exist yet.
 - **OAuth tokens are stored in plaintext.** `accounts` holds each provider's
   access, refresh and id tokens as the provider issued them.
-  `account.encryptOAuthTokens`, off by default, encrypts them under
-  `BETTER_AUTH_SECRET`. `oauth2/utils.mjs` decrypts only a value that looks
+  `account.encryptOAuthTokens`, off by default, encrypts the access and
+  refresh tokens under `BETTER_AUTH_SECRET`; the id token stays as issued
+  (corrected by MB.76, which read the write path). `oauth2/utils.mjs` decrypts only a value that looks
   encrypted, so rows written before the switch keep reading. Nothing in the app
   reads these tokens.
 - **Two-factor never challenges an OAuth sign-in.** The plugin's `after` hook
@@ -302,8 +303,8 @@ what MB.53 and MB.30 already decided.
 
 **The session lifetimes are pinned as they are.** DESIGN.md sets none, so
 Better Auth's defaults apply: a session lasts seven days, is extended once a
-day while in use, and counts as fresh for a day. MB.76 pins them by test
-beside MB.59's `cookieCache` pin, so a dependency bump that moves a default
+day while in use, and counts as fresh for a day. MB.76 pins them by test,
+in the block MB.59's `cookieCache` pin joins, so a dependency bump that moves a default
 fails a test rather than changing how long someone stays signed in.
 
 ## Out of scope
