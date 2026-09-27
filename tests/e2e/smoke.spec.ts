@@ -62,3 +62,14 @@ test('the entry page has no accessibility violations', async ({ page }) => {
   await page.goto('/');
   await assertNoAccessibilityViolations(page);
 });
+
+// Facebook appends `#_=_` to the redirect URI, and a fragment survives every
+// redirect whose Location carries none, so it reaches whatever page a sign-in
+// lands on; the root layout strips exactly that one before first paint.
+test("strips Facebook's #_=_ fragment and no other", async ({ page }) => {
+  await page.goto('/#_=_');
+  expect(new URL(page.url()).hash).toBe('');
+
+  await page.goto('/#top');
+  expect(new URL(page.url()).hash).toBe('#top');
+});
