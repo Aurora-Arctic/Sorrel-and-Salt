@@ -63,11 +63,16 @@ does it, so each piece has an email-safe stand-in.
   `!important` to beat the inline dark, for the clients that honour it —
   Apple Mail, iOS Mail, Outlook for Mac, Thunderbird. The `color-scheme` meta
   tells Apple Mail the mail brings its own dark, so it does not invert it.
-  Classes are `ss-`-prefixed. The page colour sits on a full-width section
-  the layout renders itself, as well as on `Body`, and the light page rule is
-  the bare class `.ss-page`: iOS Mail and iCloud Mail apply class selectors
-  but do not expose `Body`'s cell chain, so a rule written through it left
-  every text override light on a cell that stayed dark.
+  Classes are `ss-`-prefixed. **Every light rule hangs off one cell.** The
+  page colour sits on a `<td>` the layout renders itself, the one element
+  with the class `ss-page`, and every other light rule is scoped beneath it
+  (`.ss-page .ss-text`, `.ss-page .ss-button`, …), so a client applies all
+  of them or none. Written as a bare class per element, iOS Mail, iCloud,
+  Yahoo, AOL, Zoho, o2.pl, Seznam and Outlook.com each kept the text rules
+  and dropped the page rule, leaving dark text on the dark page. `Body`
+  carries `ss-body` and its own light rule for the surround, which is
+  readable whichever way it goes. `tests/emails/verify-email.test.tsx` pins
+  the shape.
 - **The palette is copied, and checked.** A client reads neither Sass nor
   custom properties, so `src/emails/theme.ts` carries each theme's hexes by
   hand. `tests/emails/theme.test.ts` compiles the site's `theme-dark` and
@@ -125,7 +130,10 @@ npm email linters are wrappers over that same data and cannot either. Before
 merging a template change, paste the HTML into a rendered client preview
 (unspam.email, or the Mailtrap Sandbox already used for staging previews)
 from a mail whose asset origin is public, since a compose mail points at
-`localhost` and no client can fetch its fonts or photographs.
+`localhost` and no client can fetch its fonts or photographs. Render the mail
+from the branch under test and check the pasted source carries its markup
+(`<td class="ss-page"`) before reading the screenshots: a preview of a stale
+render shows the previous fix's failure, not this one's result.
 
 ## What is sent
 
