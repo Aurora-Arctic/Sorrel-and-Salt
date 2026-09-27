@@ -161,6 +161,25 @@ describe('/api/graphql', () => {
     expect(result.errors[0].message).not.toMatch(/"ok"|did you mean/i);
   });
 
+  // The mapping is claude-docs/graphql.md's "Errors"; tests/graphql/errors.test.ts
+  // covers each type. This is the route carrying it: `me` signed out is refused
+  // by its scope, which throws the same `Forbidden` a service does.
+  it.each(['production', 'development'])('answers a refusal with its code in %s', async (env) => {
+    const { POST } = await loadRoute(env);
+    const response = await POST(post({ query: '{ me { id } }' }));
+
+    const result = await response.json();
+    expect(response.status).toBe(200);
+    expect(result.data).toBeNull();
+    expect(result.errors).toEqual([
+      expect.objectContaining({
+        message: 'Forbidden',
+        path: ['me'],
+        extensions: { code: 'FORBIDDEN' },
+      }),
+    ]);
+  });
+
   // Yoga's default reflects any Origin and allows credentials. The client is
   // same-origin, so another origin, a sibling preview subdomain included,
   // gets no CORS grant to read a response made with the visitor's cookie.

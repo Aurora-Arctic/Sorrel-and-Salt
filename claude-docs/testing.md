@@ -111,6 +111,14 @@ test, it is a file nothing runs.
     `mockGraphQLMutation(operationName, resolveData)` for a component test to
     register a one-off response for a single named operation
     (`server.use(graphqlLink.query(...))` / `.mutation(...)` under the hood).
+    `mockGraphQLError(operationName, { code, fieldErrors?, message? })` (MB.43)
+    answers the named query or mutation the way the route answers a service
+    that threw — `data: null` and one error carrying `extensions.code`, plus
+    `fieldErrors` for `VALIDATION`. It builds the body by throwing the matching
+    type through the route's own `maskError`, so it cannot drift from what the
+    route sends; its test holds it against a real Yoga instance's answer. It
+    carries no `path` or `locations`, since it answers for the operation rather
+    than for one field, and nothing a form reads is in either.
     A component test wraps its tree in a `QueryClientProvider` holding
     `makeQueryClient()`, a fresh client per test — `Providers` keeps one for the
     tab, which would carry one test's cache into the next — and
