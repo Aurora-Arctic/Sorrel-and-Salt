@@ -22,6 +22,12 @@ export interface SocialProvider {
   label: string;
 }
 
+/** One of a user's provider accounts: the row id `/unlink-account` takes, and its provider. */
+export interface LinkedAccount {
+  id: string;
+  providerId: ProviderId;
+}
+
 export const SOCIAL_PROVIDERS: readonly SocialProvider[] = [
   { id: 'discord', label: 'Discord' },
   { id: 'google', label: 'Google' },

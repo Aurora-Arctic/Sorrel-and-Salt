@@ -845,6 +845,7 @@ The same shape covers spell `visibility`: the finders that reach a `private` one
 | `/admin/form-groups`             | Admin CRUD on the ingredient form groups                                                                                                                                                                    |
 | `/invite/[token]`                | Accept invitation                                                                                                                                                                                           |
 | `/sign-in`                       | OAuth                                                                                                                                                                                                       |
+| `/account`                       | The account's sign-in methods: each provider linked or addable, removable while another is left (MB.71). The only way a second provider joins an account                                                    |
 | `/account/email`                 | The account's email: prefilled from the provider, editable, counting once a mailed link is followed (MB.54). Where every unverified sign-in lands, and the only page an unverified account can reach        |
 
 Workspace ingredients and stock are **one page**, not two. A filter chip distinguishes local entries from compendium entries; a separate page would be a distinction without a difference.

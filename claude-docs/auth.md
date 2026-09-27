@@ -303,6 +303,10 @@ move the protection to whoever holds it now:
 - `account.accountLinking.trustedProviders` — a trusted provider skips the
   verified-email check when linking.
 
+Two linking options are pinned beside them (MB.71):
+`accountLinking.allowDifferentEmails` on and `allowUnlinkingAll` off. Neither
+is read at sign-in; "Linking a second provider" below has why.
+
 **A squat lasts three hours at most (MB.67).** An unverified
 sign-up carrying the address, made before the owner's first sign-in or after a
 database reset, makes Better Auth refuse to link the owner's verified sign-in
@@ -320,9 +324,11 @@ said so.** The argument is
 [`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md);
 this is the shape.
 
-- **Facebook and Microsoft arrive unverified**, whatever they report:
-  `mapProfileToUser: () => ({ emailVerified: false })` on both, spread after
-  the provider's own mapping. Google and Discord keep theirs.
+- **Facebook and Microsoft arrive unverified**, whatever they report: their
+  `mapProfileToUser` answers `emailVerified: false`, spread after the
+  provider's own mapping. Google and Discord keep theirs. The one exception is
+  the callback of an explicit link, where every provider vouches ("Linking a
+  second provider" below); it writes nothing to the row.
 - **Offered, never required for a session.** `emailVerification.sendOnSignUp`
   is on, so an OAuth sign-up whose address is unverified is created, mailed
   and signed in. No provider sets `requireEmailVerification`; what needs a
@@ -354,6 +360,88 @@ this is the shape.
   `sendVerificationEmail`, and names the providers linked to the account so
   a reader can tell whether they signed up at all. The template is
   `src/emails/verify-email.tsx` ([`email.md`](email.md)).
+
+### Linking a second provider (MB.71)
+
+A signed-in user adds another provider from `/account`, and from then on
+either one signs in to the same account. Story 1; the scoping is
+[`design-decisions/mb.71-plan.md`](design-decisions/mb.71-plan.md).
+
+**Signing in cannot do it, and never will.** Better Auth's implicit link at
+sign-in attaches an unknown provider account to the row holding its email
+only when the _provider_ vouches for the address and the row is verified.
+Microsoft never vouches: with `tenantId: 'common'`, any Entra tenant can mint
+an id token carrying any `email` (nOAuth), so trusting it would let such a
+token sign in as any verified row, the primary admin's included. Verifying
+the row fixes the wrong half. A Microsoft or Facebook sign-in over an existing
+row is refused with `account_not_linked`, and stays refused.
+
+**An explicit link from a session does.** Better Auth's `/link-social`:
+
+- **It starts under a session.** `/link-social` answers 401 without one,
+  and writes `link: { userId, email }` into the OAuth state from that
+  session. The request body cannot name the user: `link` is spread after
+  any client `additionalData`, and whichever session carries the callback
+  does not matter either. Both are asserted.
+- **The callback's link branch creates the `accounts` row** and redirects to
+  `/account`, or to `/account?error=<code>`. It issues no session, so the
+  after-hook, the promotion and the email-page redirect never run, and with
+  `updateUserInfoOnLink` off it writes nothing to `users`: the row keeps the
+  address it verified, which invitations and the email page key on.
+- **Afterwards the provider signs in by its account id.** Better Auth
+  resolves `(providerId, accountId)` before any email lookup, so the linked
+  account's address claim is never consulted again and nOAuth cannot reach
+  it. The primary admin who signed up through Discord and linked Microsoft
+  signs in through either, still admin.
+
+**Inside a link every provider vouches.** The link branch refuses a
+provider that does not vouch (`unable_to_link_account`), and the pin above
+would refuse Microsoft and Facebook every time. `vouchWhenLinking` in
+`src/lib/auth.ts` answers `emailVerified: true` from all four mappers when
+Better Auth's `getOAuthState()` carries `link`, which only a flow
+`/link-social` began can. On every sign-in it is absent and each provider
+keeps its own answer, so the takeover surface is unchanged. Inside the link the
+value feeds Better Auth's gate alone; the guards that matter are the session
+that started the flow and the account-id binding after it. Google and Discord
+are included so that a Discord account with no verified address can be added
+too. `validateUserInfo` records no promotion profile on an explicit link,
+since the vouch was lent. It tells an explicit link from an implicit one by
+the state, not by `source.action`: Better Auth names both `link-account`, and
+the implicit one at sign-in must still reach promotion.
+
+**Different addresses are allowed.** `allowDifferentEmails` is on, because
+the Discord address and the Microsoft address are usually different
+mailboxes. Better Auth reads it only in the two link branches, never at
+sign-in. The row's own address is untouched. After an unlink, a sign-in
+through that provider carrying the row's address is refused again. One
+carrying some other address creates a new account, as any first sign-in does.
+
+**Removing one.** Better Auth's `/unlink-account` takes the `accounts`
+row's own id, and refuses another user's row (`ACCOUNT_NOT_FOUND`).
+`allowUnlinkingAll` stays off, so it refuses the last one
+(`FAILED_TO_UNLINK_LAST_ACCOUNT`) and a user is never left with no way in.
+The endpoint also wants a session younger than Better Auth's `freshAge`, a
+day (`SESSION_NOT_FRESH`); the page says to sign in again. Removal
+hard-deletes the `accounts` row, which is Better Auth's table and outside
+rule 4, and leaves `users` alone.
+
+**The page.** `src/app/account/page.tsx` calls `requireSession()`, so an
+unverified account never reaches it and stays on the email page. Better Auth
+itself would link to an unverified row. The page reads `linkedAccounts()`
+(`src/lib/request-session.ts`, Better Auth's `listUserAccounts` with the
+request headers) and renders `SignInMethods`
+([`components/sign-in-methods.md`](components/sign-in-methods.md)). A link's
+`?error=` goes through `linkErrorMessage` in `src/lib/sign-in.ts`, and an
+unlink refusal through `unlinkErrorMessage`. The page and the email page link
+to each other; the email page offers the way only to a verified account.
+
+**The sign-in page's side.** `account_not_linked` has one sentence: sign in
+the way you did before, then add this provider under Account ("Provisional
+accounts" below). At a sign-in, `unable_to_link_account` means only that
+writing the account row failed, and gets the plain retry sentence. The
+link-only codes (`email_does_not_match`,
+`account_already_linked_to_different_user`) land on `/account` and are
+`linkErrorMessage`'s.
 
 ### Provisional accounts (MB.67)
 
@@ -463,7 +551,7 @@ component is [`components/email-form.md`](components/email-form.md).
 - **Every link lands on the confirmed view.** Better Auth would land a
   sign-up's link where the sign-in asked to go; the `sendVerificationEmail`
   hook rewrites the link's `callbackURL` to `VERIFIED_LANDING`
-  (`/account/email?verified=1`, `src/lib/account-email.ts`), and the resend
+  (`/account/email?verified`, `src/lib/account-email.ts`), and the resend
   and change links carry it from the start. A refusal drops the flag before
   appending `?error=`, so the page never reads a refusal as a confirmation.
 - **Gated before the endpoint.** Better Auth's change branch calls no
@@ -519,11 +607,12 @@ component is [`components/email-form.md`](components/email-form.md).
   `safeReturnPath`, `?error=` through `src/lib/account-email.ts`'s
   `verifyErrorMessage` — one sentence per code Better Auth or the gate
   appends, never the code — and the seconds left on the mail clock. `EmailForm`
-  has two views: `?verified=1` on a verified row is the confirmed one, the
+  has two views: `?verified` on a verified row is the confirmed one, the
   address and Continue with nothing to edit; otherwise the field, prefilled
   and always editable, which is how any account changes its address later.
   Its success message names the typed address, since the row's is unchanged
-  until the link is followed.
+  until the link is followed. Below the form, a verified account gets a link to
+  `/account` ("Linking a second provider" above).
 - **No other page shows an unverified account anything.** `requireSession()`
   sends a session whose row is unverified to `/account/email?next=<its own
 path>` from every page but that one (`isEmailPage`, exact on the pathname),
@@ -928,6 +1017,19 @@ pulled-environment assertion names it first).
   by hand verifies with no session and promotes nobody, a case that fails
   with the acting-user check removed. `tests/modules/identity/services/admin-role.test.ts`
   covers `promotePrimaryAdminAtVerification`'s outcomes directly.
+- **`tests/db/account-linking.test.ts` (MB.71)**: `/link-social` and
+  `/unlink-account` through `auth.handler`, on `tests/support/oauth.ts`'s
+  `link` helper. A Microsoft profile reporting `email_verified: false` links
+  to the signed-in Discord user, and a later Microsoft sign-in lands there. The
+  guard is the same profile at a plain sign-in over that verified row, refused
+  with `account_not_linked`. It fails with the vouch made unconditional, so it
+  is the pin that refuses. The file also covers a link naming another user
+  in its body and landing under another user's session, which still attaches
+  to its starter; `/link-social` with no session; and unlinking. A removed
+  provider is refused again, the last one survives, and a stranger holding
+  two providers cannot remove the owner's. `tests/lib/auth.test.ts` pins
+  `allowDifferentEmails` and `allowUnlinkingAll`, and
+  `tests/e2e/account.spec.ts` scans `/account` signed in (`tests/e2e/session.ts`).
 - **`tests/lib/errors.test.ts` (M1.26)** — asserts `Forbidden` and
   `NotFound` are distinguishable by type in a `catch` and in an
   `expect().rejects.toThrow(Class)`, and that neither an empty list nor a

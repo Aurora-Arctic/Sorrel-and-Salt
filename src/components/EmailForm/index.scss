@@ -3,18 +3,27 @@
 
 // The page-level frame, like `.sign-in-page`: no AppShell exists yet to
 // center a page, and 32rem keeps one field and a sentence or two inside a
-// comfortable reading measure.
+// comfortable reading measure. A column, so the form and the way to the
+// account page stack.
 .email-page {
   // Or the viewport-high frame plus its own padding overflows by the padding
   // and the page scrolls by 4rem with nothing to scroll to.
   box-sizing: border-box;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 1.5rem;
   min-height: 100dvh;
   padding: 2rem 1rem;
   max-width: 32rem;
   margin-inline: auto;
+}
+
+.email-page__nav {
+  margin: 0;
+  width: 100%;
+  max-width: 28rem;
 }
 
 // Centred by `.email-page`, in the app and in the workshop alike: the

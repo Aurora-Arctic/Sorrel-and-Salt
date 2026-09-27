@@ -1,6 +1,7 @@
 // Pure helpers for /sign-in?next=&error=, shared by the sign-in page and route
 // protection (src/proxy.ts, src/lib/request-session.ts) — one rule for which
-// return paths are safe, applied on the way out and on the way back.
+// return paths are safe, applied on the way out and on the way back — and the
+// sentences for the account page's own OAuth round trip, the link.
 
 /**
  * Where a sign-in goes when no page asked for the visitor back: the
@@ -65,9 +66,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   // code, and a sentence naming either would confirm the address is taken.
   account_not_linked:
     "Sign-in didn't work. If you signed in before with a different provider, sign in that way, then add this one under Account.",
-  unable_to_link_account: 'That account is already linked to a different sign-in method.',
-  email_does_not_match: "The email address didn't match your existing account.",
-  account_already_linked_to_different_user: 'That account is already linked to a different user.',
+  // At a sign-in, only a failed write of the account row. The link flow's
+  // own codes land on /account instead (`linkErrorMessage`).
+  unable_to_link_account: "Sign-in didn't complete. Please try again.",
   // No `email_not_found`: a provider that shares no address gets a placeholder
   // and the email page asks (src/lib/auth.ts, `orPlaceholder`).
   // Reached only if a provider ever requires verification; none does today.
@@ -93,4 +94,48 @@ export const GENERIC_SIGN_IN_ERROR = "Sign-in didn't work. Please try again.";
 export function signInErrorMessage(code: string | string[] | undefined): string | undefined {
   if (typeof code !== 'string' || code.length === 0) return undefined;
   return ERROR_MESSAGES[code] ?? GENERIC_SIGN_IN_ERROR;
+}
+
+/** The account page, where a link starts and lands again, with `?error=` when it failed. */
+export const ACCOUNT_PATH = '/account';
+
+const STATE_EXPIRED = 'That expired or was started in another tab. Please start again here.';
+
+// The codes a link from /account lands back there with. With every provider
+// vouching inside a link and different addresses allowed, the rest are a
+// failed write or a misconfiguration, and share the generic sentence.
+const LINK_ERROR_MESSAGES: Record<string, string> = {
+  access_denied: 'Adding the sign-in method was cancelled before it finished.',
+  // Only the holder of that provider account can reach this, so saying so
+  // reveals nothing they could not learn by signing in with it.
+  account_already_linked_to_different_user:
+    'That account already signs in to a different Sorrel & Salt account.',
+  state_mismatch: STATE_EXPIRED,
+  state_not_found: STATE_EXPIRED,
+  state_invalid: STATE_EXPIRED,
+};
+
+/** Also what SignInMethods shows when `/link-social` itself fails, before any redirect. */
+export const GENERIC_LINK_ERROR = "That sign-in method couldn't be added. Please try again.";
+
+/** One readable sentence for a link callback's `?error=` code on /account; `undefined` for none. */
+export function linkErrorMessage(code: string | string[] | undefined): string | undefined {
+  if (typeof code !== 'string' || code.length === 0) return undefined;
+  return LINK_ERROR_MESSAGES[code] ?? GENERIC_LINK_ERROR;
+}
+
+// Better Auth's /unlink-account refusals, by the `code` in its JSON body.
+const UNLINK_ERROR_MESSAGES: Record<string, string> = {
+  // The page offers no Remove with one method left; two tabs can still race.
+  FAILED_TO_UNLINK_LAST_ACCOUNT: "Your only sign-in method can't be removed.",
+  // The endpoint wants a session younger than Better Auth's `freshAge`, a day.
+  SESSION_NOT_FRESH:
+    'Removing a sign-in method needs a recent sign-in. Sign in again, then remove it.',
+};
+
+export const GENERIC_UNLINK_ERROR = "That sign-in method couldn't be removed. Please try again.";
+
+/** One readable sentence for a refused `/unlink-account`. */
+export function unlinkErrorMessage(code: string | undefined): string {
+  return (code && UNLINK_ERROR_MESSAGES[code]) || GENERIC_UNLINK_ERROR;
 }

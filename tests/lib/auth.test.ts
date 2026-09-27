@@ -94,25 +94,29 @@ describe('social providers', () => {
     const map = (id: keyof typeof providers, profile: Record<string, unknown>) =>
       (providers[id] as { mapProfileToUser: (p: unknown) => unknown }).mapProfileToUser(profile);
 
-    expect(map('google', { sub: '1', email: 'a@b.test' })).toEqual({});
-    expect(map('google', { sub: '1' })).toEqual({
+    expect(await map('google', { sub: '1', email: 'a@b.test' })).toEqual({});
+    expect(await map('google', { sub: '1' })).toEqual({
       email: 'google-1@pending.invalid',
       emailVerified: false,
     });
-    expect(map('discord', { id: '2', email: null })).toEqual({
+    expect(await map('discord', { id: '2', email: null })).toEqual({
       email: 'discord-2@pending.invalid',
       emailVerified: false,
     });
-    expect(map('facebook', { id: '3' })).toEqual({
+    expect(await map('facebook', { id: '3' })).toEqual({
       email: 'facebook-3@pending.invalid',
       emailVerified: false,
     });
-    expect(map('facebook', { sub: '3', email: 'a@b.test' })).toEqual({ emailVerified: false });
-    expect(map('microsoft', { oid: 'ABC' })).toEqual({
+    expect(await map('facebook', { sub: '3', email: 'a@b.test' })).toEqual({
+      emailVerified: false,
+    });
+    expect(await map('microsoft', { oid: 'ABC' })).toEqual({
       email: 'microsoft-abc@pending.invalid',
       emailVerified: false,
     });
-    expect(map('microsoft', { oid: 'ABC', email: 'a@b.test' })).toEqual({ emailVerified: false });
+    expect(await map('microsoft', { oid: 'ABC', email: 'a@b.test' })).toEqual({
+      emailVerified: false,
+    });
   });
 
   it('registers Microsoft with tenantId "common" so personal accounts can sign in', async () => {
@@ -342,6 +346,28 @@ describe('options that would move the primary admin', () => {
   });
 });
 
+// The explicit link from a signed-in session (claude-docs/auth.md, "Linking a
+// second provider"). Neither option is read at sign-in.
+describe('linking a second provider', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  async function accountLinking() {
+    vi.resetModules();
+    const { auth } = await import('@/lib/auth');
+    return (auth.options as BetterAuthOptions).account?.accountLinking;
+  }
+
+  it('lets a linked account carry a different address: the second provider is usually another mailbox', async () => {
+    expect((await accountLinking())?.allowDifferentEmails).toBe(true);
+  });
+
+  it('keeps allowUnlinkingAll off, so the last provider cannot be removed', async () => {
+    expect((await accountLinking())?.allowUnlinkingAll).toBeFalsy();
+  });
+});
+
 // First-party verification (claude-docs/auth.md, "First-party verification").
 // Each value is pinned because each one, changed, changes who can verify what.
 describe('email verification', () => {
@@ -386,7 +412,7 @@ describe('email verification', () => {
     }
   });
 
-  it('pins Facebook and Microsoft unverified and leaves Google and Discord their own mapping', async () => {
+  it('pins Facebook and Microsoft unverified outside a link flow and leaves Google and Discord their own mapping', async () => {
     const providers = (await configuredAuth()).options.socialProviders ?? {};
     const mapper = (id: keyof typeof providers) =>
       (providers[id] as { mapProfileToUser?: (profile: unknown) => unknown }).mapProfileToUser;
