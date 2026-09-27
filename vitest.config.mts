@@ -2,6 +2,9 @@ import { createRequire } from 'node:module';
 import { defineConfig } from 'vitest/config';
 import { dbHarness } from './tests/support/db-project.mts';
 
+const require = createRequire(import.meta.url);
+const serverOnlyStub = require.resolve('next/dist/compiled/server-only/empty.js');
+
 // Two projects: `unit` in jsdom with no network, `db` against local Postgres
 // through tests/support/db-project.mts's `dbHarness`, which the acceptance
 // config spreads too. The acceptance suite is deliberately not a third
@@ -17,9 +20,17 @@ export default defineConfig({
   // externalized, so Node hands them the CommonJS build; a test file is
   // transformed by Vite, which would pick the ESM one. The alias gives test
   // code the copy the packages get.
+  //
+  // `server-only` is the marker every service carries so that a client bundle
+  // reaching one fails `next build`. Next resolves it itself and the package is
+  // not installed, so a test gets Next's own empty stub: a test is not a client
+  // bundle.
   resolve: {
     tsconfigPaths: true,
-    alias: [{ find: /^graphql$/, replacement: createRequire(import.meta.url).resolve('graphql') }],
+    alias: [
+      { find: /^graphql$/, replacement: require.resolve('graphql') },
+      { find: /^server-only$/, replacement: serverOnlyStub },
+    ],
   },
   test: {
     // Both under .reports/ with the rest of the generated output; without

@@ -1,3 +1,4 @@
+import 'server-only';
 import { findOneSpell, withAudit } from '../db/repository';
 import { spells } from '../db/schema/spells';
 import { Forbidden, NotFound } from '../lib/errors';

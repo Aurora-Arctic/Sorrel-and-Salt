@@ -1,3 +1,4 @@
+import 'server-only';
 import { withAudit } from '../db/repository';
 import { users } from '../db/schema/users';
 import type { Session } from '../lib/session';
