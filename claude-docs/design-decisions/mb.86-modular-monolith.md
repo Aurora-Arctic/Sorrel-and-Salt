@@ -4,7 +4,7 @@
 
 ## What the question was
 
-What would make a later move to separately deployed services a transport change rather than a rewrite. The rules already gave most of a modular monolith: a service takes a session value rather than a request, `src/db/repository.ts` is the only query author, audit columns reference users by id, and there are no server actions. What blocked a split was the layout, not the rules. `src/db/schema`, `src/services`, `src/graphql/schema` and `src/graphql/loaders` each mixed every domain, so no unit could be lifted out, and nothing said which code owned which table. At six services and one GraphQL field the move costs an afternoon; after Wave 8 adds the real services it costs a wave.
+What would make a later move to separately deployed services a transport change rather than a rewrite. The rules already gave most of a modular monolith: a service takes a session value rather than a request, `src/db/repository/` is the only query author, audit columns reference users by id, and there are no server actions. What blocked a split was the layout, not the rules. `src/db/schema`, `src/services`, `src/graphql/schema` and `src/graphql/loaders` each mixed every domain, so no unit could be lifted out, and nothing said which code owned which table. At six services and one GraphQL field the move costs an afternoon; after Wave 8 adds the real services it costs a wave.
 
 ## The five modules
 

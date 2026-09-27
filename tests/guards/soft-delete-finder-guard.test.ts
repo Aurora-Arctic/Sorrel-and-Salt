@@ -1,18 +1,22 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
 // The inside of the repository — claude-docs/db.md, "Soft-delete filtering":
-// every SELECT is built in the one private `selectFrom`, the exported surface
-// is pinned, and every exported finder but the escape hatch filters. A SELECT
-// built *outside* the repository is the linter's job, asserted by
-// lint-db-client-boundary.test.ts.
+// every SELECT is built in the one `selectFrom`, the index re-exports a pinned
+// surface that leaves it out, and every exported finder but the escape hatch
+// filters. `selectFrom` is exported from `select.ts` so its siblings can build
+// on it; that it goes no further than the folder is module-boundaries.test.ts's
+// deep-import rule and the lint group it backs. A SELECT built *outside* the
+// repository is the linter's job, asserted by lint-db-client-boundary.test.ts.
 //
 // Read as text rather than imported: importing the repository would
 // instantiate a Postgres client, which the `unit` project must not.
 
-const REPOSITORY = 'src/db/repository.ts';
+const REPOSITORY = 'src/db/repository';
+const INDEX = `${REPOSITORY}/index.ts`;
+const BUILDER = `${REPOSITORY}/select.ts`;
 
 /** Every shape Drizzle builds a read query by. */
 const SELECT_CALL = /\.select(?:Distinct)?(?:Fields)?\s*\(|\bdb\.query\./g;
@@ -37,6 +41,9 @@ const EXPORTED_FUNCTIONS = [
   'withAudit',
 ];
 
+/** Folder-internal: exported for the siblings, never re-exported by the index. */
+const INTERNAL = ['selectFrom', 'writerFor', 'scopedTo', 'notSoftDeleted', 'readableSpells'];
+
 /** Rule 5's half: a finder over a table carrying `workspace_id` scopes by the proof. */
 const SCOPED_FINDERS = ['findManyInWorkspace', 'findOneInWorkspace', 'findPageInWorkspace'];
 
@@ -54,11 +61,25 @@ const ESCAPE_HATCH = 'findManyIncludingSoftDeleted';
 
 const source = (file: string) => readFileSync(join(REPO_ROOT, file), 'utf8');
 
+/** Every file in the folder, by repo-relative path. Subdirectories are not the repository's. */
+const FILES = readdirSync(join(REPO_ROOT, REPOSITORY), { withFileTypes: true })
+  .filter((entry) => entry.isFile() && entry.name.endsWith('.ts'))
+  .map((entry) => `${REPOSITORY}/${entry.name}`);
+
+const declaration = (name: string) =>
+  new RegExp(`^(?:export )?(?:async )?function ${name}\\b`, 'm');
+
+/** The one file declaring `name` as a top-level function. */
+function fileDeclaring(name: string): string {
+  const files = FILES.filter((file) => declaration(name).test(source(file)));
+  expect(files, `${name} is declared as a top-level function in exactly one file`).toHaveLength(1);
+  return files[0];
+}
+
 /** The body of a top-level `function name(...) { ... }`, by brace matching. */
-function functionBody(text: string, name: string): string {
-  const declaration = new RegExp(`^(?:export )?(?:async )?function ${name}\\b`, 'm');
-  const start = text.search(declaration);
-  expect(start, `${name} is not declared as a top-level function`).toBeGreaterThan(-1);
+function functionBody(name: string): string {
+  const text = source(fileDeclaring(name));
+  const start = text.search(declaration(name));
 
   const open = text.indexOf('{', start);
   let depth = 0;
@@ -72,37 +93,56 @@ function functionBody(text: string, name: string): string {
   throw new Error(`unbalanced braces reading ${name}`);
 }
 
-describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', () => {
-  it('builds every SELECT inside the repository’s one private selectFrom', () => {
-    const text = source(REPOSITORY);
-    const selects = text.match(SELECT_CALL) ?? [];
-    const insideBuilder = functionBody(text, 'selectFrom').match(SELECT_CALL) ?? [];
+/** The value names the index re-exports, `type` re-exports left out. */
+function reexported(): string[] {
+  return [...source(INDEX).matchAll(/^export\s*\{([^}]*)\}\s*from\s*['"][^'"]+['"]/gm)]
+    .flatMap((match) => match[1].split(','))
+    .map((name) => name.trim())
+    .filter((name) => name && !name.startsWith('type '));
+}
 
+describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', () => {
+  // Precondition: an empty or misdirected listing would pass every count below.
+  it('is reading the repository folder', () => {
+    expect(FILES).toEqual(expect.arrayContaining([INDEX, BUILDER]));
+    expect(FILES.length).toBeGreaterThan(3);
+  });
+
+  it('builds every SELECT inside the one selectFrom', () => {
+    const selects = FILES.flatMap((file) => source(file).match(SELECT_CALL) ?? []);
+    const insideBuilder = functionBody('selectFrom').match(SELECT_CALL) ?? [];
+
+    expect(fileDeclaring('selectFrom')).toBe(BUILDER);
     expect(selects).toHaveLength(1);
     expect(insideBuilder).toHaveLength(1);
   });
 
-  it('does not export the builder, so no caller can reach an unfiltered read', () => {
-    expect(source(REPOSITORY)).not.toMatch(/^export (?:async )?function selectFrom\b/m);
+  // The index is the repository's only public file, so what it names is the
+  // surface: a helper it re-exports is a handle past the filter.
+  it('keeps the builder and its predicates inside the folder', () => {
+    const index = source(INDEX);
+
+    expect(index, 'the index re-exports by name, so the surface is readable').not.toMatch(
+      /^export\s*\*/m,
+    );
+    expect(index, 'the index declares nothing of its own').not.toMatch(
+      /^export (?:async )?(?:function|const|class)\b/m,
+    );
+    for (const name of INTERNAL) expect(reexported()).not.toContain(name);
   });
 
   it('exports exactly the pinned surface — a new finder is argued for here', () => {
-    const exported = [...source(REPOSITORY).matchAll(/^export (?:async )?function (\w+)/gm)].map(
-      (match) => match[1],
-    );
-
-    expect(exported.sort()).toEqual([...EXPORTED_FUNCTIONS].sort());
+    expect(reexported().sort()).toEqual([...EXPORTED_FUNCTIONS].sort());
   });
 
   it('applies the filter in every exported finder but the escape hatch', () => {
-    const text = source(REPOSITORY);
     const finders = EXPORTED_FUNCTIONS.filter(
       (name) => name !== ESCAPE_HATCH && name.startsWith('find'),
     );
 
     expect(finders.length).toBeGreaterThan(0);
     for (const finder of finders) {
-      const body = functionBody(text, finder);
+      const body = functionBody(finder);
       // Either it filters itself, or it delegates to something that does: a
       // sibling finder, or `readableSpells`, which carries the filter for the
       // three spell finders along with the visibility rule.
@@ -116,10 +156,8 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
   // Rule 5, the same shape one layer up: the proof is not merely demanded by
   // the signature, it is what the query is narrowed by.
   it('ANDs the proof’s workspace onto every scoped finder', () => {
-    const text = source(REPOSITORY);
-
     for (const finder of SCOPED_FINDERS) {
-      const body = functionBody(text, finder);
+      const body = functionBody(finder);
       expect(
         /scopedTo\(|findMany\w*\(/.test(body),
         `${finder} reaches the database without scopedTo(membership, ...)`,
@@ -130,10 +168,8 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
   // DESIGN.md §5 and CLAUDE.md rule 7: a private spell is excluded in SQL, so
   // it never reaches a caller to be filtered out there.
   it('narrows every spell finder by the visibility rule', () => {
-    const text = source(REPOSITORY);
-
     for (const finder of VISIBILITY_FINDERS) {
-      const body = functionBody(text, finder);
+      const body = functionBody(finder);
       expect(
         /readableSpells\(/.test(body),
         `${finder} reaches the database without readableSpells(membership)`,
@@ -145,7 +181,7 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
   // column; a `readableSpells` that stopped consulting it would still read as
   // a visibility rule and admit everyone to everything private.
   it('builds that rule from the proof’s workspace and the proof’s user', () => {
-    const body = functionBody(source(REPOSITORY), 'readableSpells');
+    const body = functionBody('readableSpells');
 
     expect(body).toMatch(/scopedTo\(/);
     expect(body).toMatch(/notSoftDeleted\(/);
@@ -157,6 +193,6 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
 
     expect(hatches).toEqual([ESCAPE_HATCH]);
     // It says what it is at the call site, and says why in its own doc comment.
-    expect(functionBody(source(REPOSITORY), ESCAPE_HATCH)).not.toMatch(/notSoftDeleted\(/);
+    expect(functionBody(ESCAPE_HATCH)).not.toMatch(/notSoftDeleted\(/);
   });
 });

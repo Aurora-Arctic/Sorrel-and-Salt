@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
 // Both `no-restricted-imports` boundaries in `.oxlintrc.json` actually fire:
-// only `src/db/repository.ts` may import the database client (CLAUDE.md rule
+// only `src/db/repository/` may import the database client (CLAUDE.md rule
 // 2), and only the database layer may import `drizzle-orm` at runtime (rule 4)
 // — claude-docs/db.md, "Where queries may be built".
 //
@@ -57,9 +57,15 @@ const EXEMPT = [
   'tests/support/db',
 ];
 
-/** Files whose import of the client is exempted by a disable comment. */
+/**
+ * Files whose import of the client is exempted by a disable comment: the
+ * repository's three that run a query — its transaction, its select and its
+ * one users delete — and three outside it that need a client, not a writer.
+ */
 const CLIENT_EXEMPT = [
-  'src/db/repository.ts',
+  'src/db/repository/write.ts',
+  'src/db/repository/select.ts',
+  'src/db/repository/provisional-users.ts',
   'src/lib/auth.ts',
   'scripts/db-seed.ts',
   'tests/db/test-database-isolation.test.ts',
@@ -82,9 +88,10 @@ function probe(directory: string, name: string, source: string): string {
 
 // Rule 1 — every shape an importer can reach connection.ts by. The `@/` alias
 // is the one that matters: the ban is a set of path globs, and `@/db/connection`
-// is not the relative shape any of the other four describe.
+// is not the relative shape any of the other five describe.
 const CLIENT_SPECIFIERS = [
   './connection',
+  '../connection',
   '../../db/connection',
   '../../../../db/connection',
   '../src/db/connection.ts',
@@ -133,7 +140,7 @@ const subpathProbe = probe(
 );
 
 // The exempt tier: the database layer builds queries, and still may not reach
-// the client outside repository.ts.
+// the client outside the repository.
 const exemptRuntimeProbes = Object.fromEntries(
   EXEMPT.map((directory) => [
     directory,
@@ -204,7 +211,7 @@ describe('CLAUDE.md rule 2 — the db client import boundary', () => {
     expect(restricted(exemptClientProbe)).toBe(1);
   });
 
-  // The four exceptions, each needing a client rather than a writer (see above).
+  // The six exceptions (see above).
   it.each(CLIENT_EXEMPT)(
     'exempts %s, which cannot reach the database through withAudit',
     (file) => {
@@ -213,7 +220,7 @@ describe('CLAUDE.md rule 2 — the db client import boundary', () => {
   );
 
   // The exemptions are disable comments rather than config (oxlint ignores
-  // "off" inside `overrides`), which makes a fifth cheap to add by hand — so
+  // "off" inside `overrides`), which makes a seventh cheap to add by hand — so
   // the set is pinned and a new one is argued for in the diff.
   //
   // The scan below correlates a directive with the import line right after
@@ -222,7 +229,7 @@ describe('CLAUDE.md rule 2 — the db client import boundary', () => {
   // pattern at M2.6 (social-providers-config.ts, a different boundary
   // entirely), and a file can legitimately carry a disable comment for that
   // one without being an exemption from *this* one.
-  it('has exactly four files carrying the exemption, and no others', () => {
+  it('has exactly six files carrying the exemption, and no others', () => {
     // `-c safe.directory=*`: CI's vitest job runs as root over a checkout
     // owned by uid 1000, which git refuses as "dubious ownership". `git
     // ls-files` rather than a walk: tracked files are what "no others" means.
@@ -235,7 +242,7 @@ describe('CLAUDE.md rule 2 — the db client import boundary', () => {
 
     const directive = /^[ \t]*\/\/[ \t]*oxlint-disable(-next-line)? no-restricted-imports\b/;
     const clientImport =
-      /(?:from\s+['"]|import\(\s*['"])(?:\.\/connection|.*\/db\/connection)(?:\.ts)?['"]/;
+      /(?:from\s+['"]|import\(\s*['"])(?:\.\.?\/connection|.*\/db\/connection)(?:\.ts)?['"]/;
     const exempt = tracked.filter((file) => {
       const lines = readFileSync(join(REPO_ROOT, file), 'utf8').split('\n');
       return lines.some((line, i) => directive.test(line) && clientImport.test(lines[i + 1] ?? ''));

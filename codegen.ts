@@ -6,7 +6,9 @@ import type { CodegenConfig } from '@graphql-codegen/cli';
 // through one reviewable file first: claude-docs/graphql.md, "Client types".
 const config: CodegenConfig = {
   schema: 'src/graphql/schema.graphql',
-  documents: ['src/**/*.{ts,tsx}', '!src/gql/**'],
+  // The lint guards' throwaway probes land under src/ and are deleted while a
+  // parallel codegen-staleness run is still reading the glob's matches.
+  documents: ['src/**/*.{ts,tsx}', '!src/gql/**', '!src/**/__lint-probe*__/**'],
   // Until the first client document; with none, codegen would fail.
   ignoreNoDocuments: true,
   generates: {
