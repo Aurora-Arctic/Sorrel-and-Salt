@@ -31,6 +31,9 @@ const BOUNDARY_MESSAGE = 'reach the database only through a service';
 /** The same for the module deep-import group. */
 const DEEP_IMPORT_MESSAGE = 'a deep import is a boundary violation';
 
+/** The same for the repository's internal files. */
+const REPOSITORY_INTERNAL_MESSAGE = 'Import the repository through its index';
+
 /**
  * The layers above services: resolvers, pages and layouts, components — and a
  * module's own resolvers and loaders, which sit beside its services rather
@@ -46,6 +49,13 @@ const ABOVE = [
 
 /** Where importing the database layer is the job. */
 const BELOW = ['src/modules/coven/services', 'src/lib'];
+
+/**
+ * Below services, and still outside the repository: each takes a different
+ * `overrides` block (services, the top level, the database layer), and each
+ * block must carry the repository's internal-file ban.
+ */
+const OUTSIDE_REPOSITORY = [...BELOW, 'src/db/seed', 'tests/db'];
 
 interface Diagnostic {
   code: string;
@@ -192,6 +202,36 @@ const belowProbes = BELOW.map(
     ] as const,
 );
 
+// The repository's folder-private files — the select builder and the writer
+// — by the alias, by a relative path, and as a type.
+const repositoryInternalProbes = OUTSIDE_REPOSITORY.flatMap((directory) =>
+  [
+    [
+      'alias',
+      "import { selectFrom } from '@/db/repository/select';\nexport const s = selectFrom;\n",
+    ],
+    [
+      'relative',
+      "import { writerFor } from '../../../../db/repository/write';\nexport const w = writerFor;\n",
+    ],
+    ['type', "import type { Keyset } from '@/db/repository/select';\nexport type K = Keyset;\n"],
+  ].map(
+    ([name, source]) =>
+      [directory, name, probe(directory, `repository-internal-${name}`, source)] as const,
+  ),
+);
+const repositoryIndexProbes = OUTSIDE_REPOSITORY.map(
+  (directory) =>
+    [
+      directory,
+      probe(
+        directory,
+        'repository-index',
+        "import { findMany } from '@/db/repository';\nexport const f = findMany;\n",
+      ),
+    ] as const,
+);
+
 let diagnostics: Diagnostic[];
 const restricted = (file: string) =>
   diagnostics.filter((d) => d.code === RULE && d.filename === file).length;
@@ -201,6 +241,7 @@ const withHelp = (file: string, phrase: string) =>
   ).length;
 const boundary = (file: string) => withHelp(file, BOUNDARY_MESSAGE);
 const deep = (file: string) => withHelp(file, DEEP_IMPORT_MESSAGE);
+const repositoryInternal = (file: string) => withHelp(file, REPOSITORY_INTERNAL_MESSAGE);
 
 beforeAll(() => {
   for (const [file, source] of probes) {
@@ -221,7 +262,7 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-  for (const directory of [...ABOVE, ...BELOW]) {
+  for (const directory of [...ABOVE, ...OUTSIDE_REPOSITORY]) {
     rmSync(join(REPO_ROOT, directory, PROBE), { recursive: true, force: true });
   }
 });
@@ -260,5 +301,18 @@ describe('M3.9: resolvers and server components reach services and nothing below
 
   it.each(belowProbes)('leaves %s free to import the database layer', (_directory, file) => {
     expect(restricted(file)).toBe(0);
+  });
+});
+
+describe('the repository is reached through its index (claude-docs/db.md)', () => {
+  it.each(repositoryInternalProbes)(
+    'bans %s importing a repository-internal file by its %s',
+    (_directory, _name, file) => {
+      expect(repositoryInternal(file)).toBe(1);
+    },
+  );
+
+  it.each(repositoryIndexProbes)('lets %s import the repository’s index', (_directory, file) => {
+    expect(repositoryInternal(file)).toBe(0);
   });
 });

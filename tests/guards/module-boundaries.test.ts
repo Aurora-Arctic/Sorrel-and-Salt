@@ -21,12 +21,15 @@ import { REPO_ROOT } from '../support/paths';
 // is erased at compile time but couples to the file all the same, and the
 // index exports the type too.
 //
-// The last block is a different boundary in the same place. `ingredients`
-// holds two tiers in one table, and the compendium tier is the one a later
-// extraction would take out (claude-docs/modules.md, "The tier seam"). A
-// finder in `src/db/repository.ts` that reads that tier (`workspace_id IS
-// NULL`) or both tiers in one statement crosses the seam, and is named in
-// `TIER_SEAM` so the next one is argued for rather than copied.
+// The last two blocks are different boundaries in the same place. The
+// repository is a folder whose files import each other's builders, so only
+// its `index.ts` may be imported from outside it (claude-docs/db.md,
+// "Soft-delete filtering"). And `ingredients` holds two tiers in one table,
+// the compendium tier being the one a later extraction would take out
+// (claude-docs/modules.md, "The tier seam"): a function in `src/db/repository/`
+// that reads that tier (`workspace_id IS NULL`) or both tiers in one
+// statement crosses the seam, and is named in `TIER_SEAM` so the next one is
+// argued for rather than copied.
 
 const MODULES = ['identity', 'coven', 'vocabulary', 'ingredients', 'grimoire'];
 
@@ -42,7 +45,7 @@ const ALLOWED: Record<string, string[]> = {
 /** What a module never imports: the surfaces above it, which import it. */
 const NEVER_FROM_A_MODULE = ['src/app', 'src/components', 'src/emails', 'src/proxy'];
 
-const REPOSITORY = 'src/db/repository.ts';
+const REPOSITORY = 'src/db/repository';
 
 /** Exported repository functions that read the compendium tier, or both tiers at once. */
 const TIER_SEAM: string[] = [];
@@ -169,7 +172,9 @@ describe('the module boundary (claude-docs/modules.md)', () => {
         expect.stringMatching(/^src\/modules\/grimoire\/.* → src\/modules\/coven\/index$/),
       ]),
     );
-    expect(EDGES.map(describeEdge)).toContain(`${REPOSITORY} → src/modules/identity/schema/users`);
+    expect(EDGES.map(describeEdge)).toContain(
+      `${REPOSITORY}/index.ts → src/modules/identity/schema/users`,
+    );
   });
 
   // R1, from outside: infrastructure and the app reach a module through its
@@ -210,16 +215,38 @@ describe('the module boundary (claude-docs/modules.md)', () => {
   });
 });
 
+describe('the repository’s surface (claude-docs/db.md)', () => {
+  const inside = (path: string) => path.startsWith(`${REPOSITORY}/`);
+
+  // Precondition: the folder's files do import each other, so an empty result
+  // below is the rule holding rather than the scan missing the folder.
+  it('is scanning the repository’s own imports', () => {
+    expect(EDGES.map(describeEdge)).toContain(`${REPOSITORY}/finders.ts → ${REPOSITORY}/select`);
+  });
+
+  // `selectFrom` is exported for the finders beside it; a caller outside the
+  // folder reaching it skips the soft-delete filter.
+  it('is imported from outside the folder only through its index', () => {
+    const violations = EDGES.filter(
+      ({ from, to }) => !inside(from) && inside(to) && to !== `${REPOSITORY}/index`,
+    );
+    expect(violations.map(describeEdge)).toEqual([]);
+  });
+});
+
 describe('the tier seam in the repository (claude-docs/modules.md)', () => {
-  /** The repository's text, cut at each top-level export so a match has a name. */
+  /** Every repository file's text, cut at each top-level export so a match has a name. */
   function chunks(): { name: string; body: string }[] {
-    const text = readFileSync(join(REPO_ROOT, REPOSITORY), 'utf8');
-    const heads = [...text.matchAll(/^export (?:async )?(?:function|const) (\w+)/gm)];
-    const cuts = [0, ...heads.map((head) => head.index)];
-    return cuts.map((start, i) => ({
-      name: i === 0 ? '(before the first export)' : heads[i - 1][1],
-      body: text.slice(start, cuts[i + 1] ?? text.length),
-    }));
+    const files = readdirSync(join(REPO_ROOT, REPOSITORY)).filter((file) => file.endsWith('.ts'));
+    return files.flatMap((file) => {
+      const text = readFileSync(join(REPO_ROOT, REPOSITORY, file), 'utf8');
+      const heads = [...text.matchAll(/^export (?:async )?(?:function|const) (\w+)/gm)];
+      const cuts = [0, ...heads.map((head) => head.index)];
+      return cuts.map((start, i) => ({
+        name: i === 0 ? `(${file}, before the first export)` : heads[i - 1][1],
+        body: text.slice(start, cuts[i + 1] ?? text.length),
+      }));
+    });
   }
 
   // The regex is the guard; pin what it does and does not match before

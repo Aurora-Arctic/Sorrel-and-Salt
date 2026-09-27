@@ -7,7 +7,7 @@ from the environment at module load and throws if it is unset — no default,
 no silent fallback.
 
 - **One driver call site.** Nothing outside `connection.ts` calls `postgres(...)`.
-  `src/db/repository.ts` (M1.16) is the only _application_ module that imports
+  `src/db/repository/` (M1.16) is the only _application_ code that imports
   `db` from here — everything else reaches the database through the
   repository. Three pieces of infrastructure are exempt; see "Who may import
   the client" below.
@@ -1150,8 +1150,8 @@ Every table spreads `...auditColumns` **except the three join tables**:
 three join tables" below for why, and note that `workspace_members` and
 `ingredient_folk_names` are _not_ in that set. Writing the six columns as the
 four plus two rather than listing them twice is what stops the two sets
-drifting, and `repository.test.ts` asserts each stamp column is literally the
-same builder object in both.
+drifting, and `tests/db/audit.test.ts` asserts each stamp column is literally
+the same builder object in both.
 
 `createdBy`/`updatedBy`/`deletedBy` carry
 `.references((): AnyPgColumn => users.id)` per DESIGN.md §5, including for
@@ -1252,9 +1252,39 @@ queries: the tables carrying all four audit stamps, and the tables carrying a
 file being edited. The list of fifteen is transcribed there as well, because
 two empty sets are equal and something has to say they aren't.
 
-## The write path — `repository.ts` and `withAudit` (M1.16)
+## The repository's files (MB.87)
 
-`src/db/repository.ts` is the only module that imports `db` from
+`src/db/repository/` is one file per concern, and callers import only its
+`index.ts` — `@/db/repository` resolves to it:
+
+| File                   | Holds                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------- |
+| `index.ts`             | Named re-exports only — the pinned surface below — and nothing declared                                 |
+| `shapes.ts`            | The table-shape types every signature is built from, and the `scopedTo` and `notSoftDeleted` predicates |
+| `write.ts`             | `withAudit` and the `AuditWriter` it hands out                                                          |
+| `select.ts`            | `selectFrom`, the one place a read query is built, and the keyset bounds a page is cut by               |
+| `finders.ts`           | The generic finders, scoped and unscoped, and the escape hatch                                          |
+| `spells.ts`            | The three spell finders and the `readableSpells` predicate they share                                   |
+| `memberships.ts`       | The two reads that take no proof                                                                        |
+| `provisional-users.ts` | The provisional-account delete                                                                          |
+
+**The rest of the folder is internal, and that is enforced rather than
+conventional.** `selectFrom` is exported from `select.ts` because the finders
+beside it build on it, so the language no longer keeps it private as it did
+when the repository was one file. What keeps it inside the folder is a
+`no-restricted-imports` group banning `@/db/repository/*` and
+`**/db/repository/*` everywhere (restated in each override, which replaces
+rather than merges), and `tests/guards/module-boundaries.test.ts`, which
+resolves every import in `src/` and fails any edge into the folder that is
+not its index — the spellings a glob cannot see included. The index itself
+declares nothing and has no `export *`, so what it names _is_ the surface;
+`soft-delete-finder-guard.test.ts` asserts both. Its first import is
+`schema/users.ts`, for the load-order reason under "The seed module" —
+`tests/db/repository/index.test.ts` pins it.
+
+## The write path — `withAudit` (M1.16)
+
+`src/db/repository/` is the only code that imports `db` from
 `connection.ts` (CLAUDE.md rule 2, DESIGN.md §5), and it exports exactly one
 write path: `withAudit(session, fn)`. `db` is not re-exported, and `fn` is not
 handed the Drizzle transaction — it gets a narrow `AuditWriter` whose three
@@ -1330,7 +1360,7 @@ parameter.
 
 Transaction scoping is the whole point of `LOCAL`: the value is discarded
 at `COMMIT` or `ROLLBACK`, so it cannot ride a pooled connection into the
-next request that reuses it. `repository.test.ts` asserts this directly —
+next request that reuses it. `tests/db/repository/write.test.ts` asserts this directly —
 24 concurrent `withAudit` calls with distinct user ids each see their own,
 and a connection outside any `withAudit` transaction sees the setting
 unset. Since the GUC is only ever set _inside_ the transaction, and a session
@@ -1343,11 +1373,13 @@ wrapper rather than to its own statement scope, and one test user's identity
 would survive into the next assertion — see
 [`m1.9-test-db-isolation.md`](design-decisions/m1.9-test-db-isolation.md).
 
-**Testing against a scratch table.** `tests/db/repository.test.ts` runs in the
-`db` project against this worker's `sorrel_test_<n>` clone. The clone has
-carried the full schema since M1.27, and the test still creates its own
-`repository_probe_herbs` table spreading the real `auditColumns` (minus the
-FKs to `users`) and drops it afterwards: the repository's contract is the
+**Testing against a scratch table.** `tests/db/repository/` mirrors the
+folder — `index.test.ts`, `write.test.ts`, `finders.test.ts` and
+`memberships.test.ts` — and runs in the `db` project against this worker's
+`sorrel_test_<n>` clone. The clone has carried the full schema since M1.27,
+and each file still creates its own `repository_probe_herbs` table spreading
+the real `auditColumns` (minus the FKs to `users`) and drops it afterwards,
+through `useProbeTables()` in `tests/support/db/probe-tables.ts`: the repository's contract is the
 six audit columns, not any one table's other constraints. The
 six columns exercised are the ones every real table will carry.
 
@@ -1470,9 +1502,9 @@ builder. Who may ask about which ids is the calling service's decision:
 `membershipsOf` in `coven` answers the caller's own id and refuses every
 other, an admin's included.
 
-`repository.test.ts` and `soft-delete-finder-guard.test.ts` both pin the
-repository's export list, so a third exception is a decision rather than an
-addition.
+`tests/db/repository/index.test.ts` and `soft-delete-finder-guard.test.ts`
+both pin the repository's export list, so a third exception is a decision
+rather than an addition.
 
 ### Where the proof is weaker than a policy
 
@@ -1587,7 +1619,7 @@ MB.33 bars everything outside the database layer from importing `drizzle-orm`
 at runtime, so a service cannot build the `where` that `updateInWorkspace`
 takes. The eighth `AuditWriter` method builds the one predicate every entity
 update needs — `id = $1`, ANDed onto the proof's own clause — below that
-boundary. `repository.test.ts` pins the method count, so each new one is a
+boundary. `tests/db/repository/write.test.ts` pins the method count, so each new one is a
 decision argued for in its own PR rather than a convenience.
 
 **`updateById` is the ninth** (MB.60), for the same reason on a table no proof
@@ -1599,9 +1631,9 @@ update cannot take this route around the proof.
 ## Soft-delete filtering and the partial-index convention (M1.20)
 
 CLAUDE.md rule 4 / DESIGN.md §5: **no exported query can return a soft-deleted
-row, and no call site does its own filtering.** `src/db/repository.ts` adds a
-private `selectFrom` beside `withAudit` — the one place a read query is
-built — and exports exactly three functions on top of it:
+row, and no call site does its own filtering.** `src/db/repository/select.ts`
+holds `selectFrom` — the one place a read query is built — and the
+repository exports three functions on top of it:
 
 - **`findMany(table, where?)`** — every matching row with `deleted_at IS
 NULL` ANDed onto whatever `where` the caller supplied — or the caller's
@@ -1616,20 +1648,22 @@ NULL` ANDed onto whatever `where` the caller supplied — or the caller's
   filter, so a second bypass is a decision argued for in the diff, not a
   convenience appearing quietly beside an import.
 
-`selectFrom` itself is not exported, so there is no public handle a finder
-could reach the database through while skipping the filter — the same shape
-as `AuditWriter` gives writes no path around `applyAudit`.
+`selectFrom` itself is not in the repository's surface — its siblings import
+it, and nothing outside the folder may ("The repository's files" above) — so
+there is no public handle a finder could reach the database through while
+skipping the filter — the same shape as `AuditWriter` gives writes no path
+around `applyAudit`.
 
 **The mechanical guard.** This is a code sweep (CLAUDE.md's sweep-task rule),
 so it landed as the mechanism above plus a guard — and since MB.33 the sweep is
 divided between two of them, by what each can make impossible.
 
 `tests/guards/soft-delete-finder-guard.test.ts` covers the inside of the
-repository. It reads `repository.ts` as text and asserts: `repository.ts`
-builds exactly one `.select(`/`db.query.` call, and it is inside
-`selectFrom`; `selectFrom` is not exported, so no caller can reach an
-unfiltered read; the repository's exported surface is pinned to the test's
-`EXPORTED_FUNCTIONS` list, so a further
+repository. It reads every file in `src/db/repository/` as text and asserts:
+the folder builds exactly one `.select(`/`db.query.` call, and it is inside
+`selectFrom` in `select.ts`; the index does not re-export `selectFrom` or the
+predicates, so no caller can reach an unfiltered read; the index's re-exports
+are pinned to the test's `EXPORTED_FUNCTIONS` list, so a further
 export — a new escape hatch, or a finder that reaches the database some other
 way — turns the test red rather than merely going unreviewed; and every
 exported finder other than the escape hatch either calls `notSoftDeleted(...)`
@@ -1643,7 +1677,7 @@ was caught and `const findX = () =>` was not, the global regex carried its
 `lastIndex` between files, the brace matcher broke on a brace inside a string,
 and it spawned `git` with a `safe.directory` workaround because CI runs the
 container as root over a uid-1000 checkout. At Wave 2 there is exactly one table
-(the scratch table in `repository.test.ts`), which is the point: the guard
+(the scratch table in the repository's tests), which is the point: the guard
 exists before there is anything to forget, and each later table's finder
 adopts the mechanism in that finder's own PR rather than a retrofit pass.
 
@@ -1660,7 +1694,7 @@ uniqueIndex('users_email_unique')
   .where(sql`${table.deletedAt} is null`);
 ```
 
-`repository.test.ts` proves the convention rather than merely stating it: a
+`tests/db/repository/finders.test.ts` proves the convention rather than merely stating it: a
 second scratch table (`repository_probe_charms`) carries a unique index built
 exactly this way, and the tests assert a live duplicate name is still
 rejected, while soft-deleting the original row and reinserting the same name
@@ -1759,7 +1793,7 @@ carries two partial unique indexes keyed on whether `ingredient_id` is null,
 which is MB.40's custom-row split rather than soft-delete filtering.
 
 **What makes it impossible to get wrong.** Two type constraints, both proved by
-`@ts-expect-error` lines in `repository.test.ts` (which fail `npm run typecheck`,
+`@ts-expect-error` lines in `tests/db/repository/write.test.ts` (which fail `npm run typecheck`,
 not `vitest`, if either constraint is ever loosened):
 
 - `write.delete` takes `PgTable & { deletedAt?: never }` — a table carrying the
@@ -1773,7 +1807,7 @@ returns the predicate when the table has a `deleted_at` and `undefined` when it
 does not, and `and()` drops an undefined condition. The decision is made from
 the table's own columns, never from an argument a caller supplies, so there is
 nothing to pass that would skip the filter where it applies. The third scratch
-table in `repository.test.ts` (`repository_probe_pairs`) exercises it: a delete
+table in `tests/db/repository/write.test.ts` (`repository_probe_pairs`) exercises it: a delete
 leaves no row, the same pair can be re-added afterwards with no partial index
 to make it possible, and a delete rolls back with the rest of its transaction.
 
@@ -2052,7 +2086,7 @@ compendium is empty" needs tables to count), hands `seed()` a handle of its
 own, and asserts the two rows, the fixed ids, the creator chain, idempotency,
 and — through an `AFTER INSERT` trigger recording `current_setting('app.
 current_user_id', true)` — that the GUC was published, the same
-observation trick `repository.test.ts` uses.
+observation trick `tests/db/repository/write.test.ts` uses.
 
 ## The form vocabulary seed (M4.3a)
 
@@ -2332,27 +2366,29 @@ each `WHERE email_verified = false`. The rest is [`auth.md`](auth.md), "Provisio
 
 ## Who may import the client (M1.17)
 
-CLAUDE.md rule 2 — only `src/db/repository.ts` may import `db` — is enforced
+CLAUDE.md rule 2 — only `src/db/repository/` may import `db` — is enforced
 by a `no-restricted-imports` entry in `.oxlintrc.json`. It bans every
 relative shape `connection.ts` can be reached by (`./connection`,
-`**/db/connection`, with or without the `.ts`), type-only imports included,
+`../connection`, `**/db/connection`, with or without the `.ts`), type-only imports included,
 so a new importer fails `npm run lint` and the pr-gate lint job.
 
 Exemptions are `// oxlint-disable-next-line no-restricted-imports` comments on
 the import itself, not config: oxlint 1.82 **ignores** a rule set to `"off"`
 or `"allow"` inside an `overrides` block, so a per-file exemption there would
-look like it worked and silently do nothing. Four files carry one:
+look like it worked and silently do nothing. Six files carry one:
 
 | File                                       | Why it needs a client, not a writer                                                                                                                                                                                                                             |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/db/repository.ts`                     | The choke point itself — the rule exists to protect it.                                                                                                                                                                                                         |
+| `src/db/repository/write.ts`               | The choke point itself — the rule exists to protect it. `withAudit` opens the transaction every write runs in.                                                                                                                                                  |
+| `src/db/repository/select.ts`              | The choke point again: `selectFrom`, the one read query builder.                                                                                                                                                                                                |
+| `src/db/repository/provisional-users.ts`   | The choke point again: the one `users` hard delete, which runs outside `withAudit` (see "The provisional-account delete").                                                                                                                                      |
 | `src/lib/auth.ts`                          | Better Auth's `drizzleAdapter(db, …)` takes the Drizzle client. It runs its own inserts through its adapter and database hooks (`claude-docs/auth.md`), so there is no session to hand `withAudit`; the user-create hook stamps `createdBy`/`updatedBy` itself. |
 | `scripts/db-seed.ts`                       | The seed CLI constructs the handle it passes to `seed(db, …)`, which writes as the bootstrap user rather than through a session.                                                                                                                                |
 | `tests/db/test-database-isolation.test.ts` | The connection _is_ the subject: it asserts `db` points at this worker's `sorrel_test_<n>` clone (M1.9).                                                                                                                                                        |
 
 That list is pinned by `tests/guards/lint-db-client-boundary.test.ts`, which
 lints deliberate violations written to a temp directory and asserts the exemption
-set is exactly those four. Adding a fifth turns that test red, so it has to be
+set is exactly those six. Adding a seventh turns that test red, so it has to be
 argued for in the diff rather than appearing quietly beside an import. The
 violations are written at test time rather than committed as fixtures because
 oxlint skips anything matching the config's `ignorePatterns` even when the
@@ -2406,7 +2442,7 @@ the default tier.
 
 | Rule                            | Impossible                                                                                                       |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Client ban (M1.17)              | Reaching `db` — and so a transaction, or an unaudited write — outside `repository.ts` and the four exempt files. |
+| Client ban (M1.17)              | Reaching `db` — and so a transaction, or an unaudited write — outside the repository and the three exempt files. |
 | Query-builder ban (MB.33)       | Building any query at all outside the database layer, including one that would skip `deleted_at IS NULL`.        |
 | `selectFrom` unexported (M1.20) | Reaching an unfiltered read from inside the repository.                                                          |
 | Access boundary (M3.9)          | A resolver, page or component reaching the repository, or anything under `src/db`, without passing a service.    |
