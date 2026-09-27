@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
+  GENERIC_LINK_ERROR,
   GENERIC_SIGN_IN_ERROR,
+  GENERIC_UNLINK_ERROR,
+  linkErrorMessage,
   POST_SIGN_IN_LANDING,
   safeReturnPath,
   signInErrorMessage,
   signInPath,
   SIGN_IN_TO_VERIFY_PATH,
+  unlinkErrorMessage,
 } from '@/lib/sign-in';
 
 // The fallback is the post-sign-in landing, not `/`: `/` is the public front
@@ -114,6 +118,13 @@ describe('signInErrorMessage', () => {
     expect(message).not.toMatch(/unverified|already|taken|holds/i);
   });
 
+  // At a sign-in the code means only that writing the account row failed;
+  // "already linked" was a link-flow reading, and a link never lands here.
+  it('gives unable_to_link_account the plain retry sentence', () => {
+    expect(signInErrorMessage('unable_to_link_account')).toMatch(/please try again/i);
+    expect(signInErrorMessage('unable_to_link_account')).not.toMatch(/already|linked/i);
+  });
+
   it('falls back to a generic sentence for an unrecognised code', () => {
     const message = signInErrorMessage('something_unexpected');
     expect(message).toMatch(/[a-z]/i);
@@ -122,6 +133,56 @@ describe('signInErrorMessage', () => {
   it('never echoes the code itself, or any provider-supplied text, verbatim', () => {
     const code = 'unable_to_get_user_info';
     expect(signInErrorMessage(code)).not.toContain(code);
+  });
+});
+
+// The account page's callback codes (claude-docs/auth.md, "Linking a second
+// provider"): a link lands on /account with `?error=`, never on /sign-in.
+describe('linkErrorMessage', () => {
+  it('is undefined with no code, or a repeated one', () => {
+    expect(linkErrorMessage(undefined)).toBeUndefined();
+    expect(linkErrorMessage('')).toBeUndefined();
+    expect(linkErrorMessage(['access_denied', 'access_denied'])).toBeUndefined();
+  });
+
+  it('says a cancelled link was cancelled', () => {
+    expect(linkErrorMessage('access_denied')).toMatch(/cancelled/i);
+  });
+
+  it('says an account signing in elsewhere is taken, which only its holder can learn', () => {
+    expect(linkErrorMessage('account_already_linked_to_different_user')).toMatch(
+      /different Sorrel & Salt account/,
+    );
+  });
+
+  it.each(['state_mismatch', 'state_not_found', 'state_invalid'])(
+    'gives %s a sentence that says to start again from this page',
+    (code) => {
+      expect(linkErrorMessage(code)).toMatch(/start again here/i);
+    },
+  );
+
+  it('falls back to its own generic sentence, not the sign-in one', () => {
+    expect(linkErrorMessage('unable_to_link_account')).toBe(GENERIC_LINK_ERROR);
+    expect(linkErrorMessage('something_unexpected')).toBe(GENERIC_LINK_ERROR);
+    expect(GENERIC_LINK_ERROR).not.toBe(GENERIC_SIGN_IN_ERROR);
+  });
+});
+
+// Better Auth's /unlink-account refusals, by the code in its JSON body.
+describe('unlinkErrorMessage', () => {
+  it('says the last sign-in method stays', () => {
+    expect(unlinkErrorMessage('FAILED_TO_UNLINK_LAST_ACCOUNT')).toMatch(/only sign-in method/i);
+  });
+
+  // /unlink-account wants a session younger than a day.
+  it('says to sign in again when the session is too old to remove one', () => {
+    expect(unlinkErrorMessage('SESSION_NOT_FRESH')).toMatch(/sign in again/i);
+  });
+
+  it('falls back to a generic sentence for anything else, or no code', () => {
+    expect(unlinkErrorMessage('ACCOUNT_NOT_FOUND')).toBe(GENERIC_UNLINK_ERROR);
+    expect(unlinkErrorMessage(undefined)).toBe(GENERIC_UNLINK_ERROR);
   });
 });
 
