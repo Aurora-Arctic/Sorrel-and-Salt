@@ -43,9 +43,9 @@ export const AUDITED_TABLES = [
   'workspaces',
 ].sort();
 
-// Better Auth's adapter tables carry an `updated_at` and no `*_by` columns;
-// Better Auth's own `$onUpdate` stamps them. A real counter-example for "only
-// the audited tables".
+// Better Auth's adapter tables that carry an `updated_at` and no `*_by`
+// columns; Better Auth's own `$onUpdate` stamps them. A real counter-example
+// for "only the audited tables". `rate_limits` has no `updated_at` to mistake.
 export const UNAUDITED_TABLES = ['accounts', 'sessions', 'verifications'].sort();
 
 export interface ForeignKeyFacts {
