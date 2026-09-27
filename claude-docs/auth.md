@@ -177,9 +177,17 @@ never with an empty string, which Better Auth would treat as a configured but
 broken provider rather than an absent one. The sign-in page greys out a
 provider that is not configured. Facebook and Microsoft are pinned unverified
 on arrival (see "First-party verification" below), and Microsoft's tenant is
-stated as `common` so personal accounts can sign in. MB.12 completed a real
-browser sign-in with all four on staging; the credentials and the manual steps
-behind them are `claude-docs/secrets.md`.
+stated as `common` so personal accounts can sign in. Every provider's
+`mapProfileToUser` also stands in a placeholder for a profile with no address
+(see "The email page" below). MB.12 completed a real browser sign-in with all
+four on staging; the credentials and the manual steps behind them are
+`claude-docs/secrets.md`.
+
+Facebook appends `#_=_` to the redirect URI it sends the browser back to, and
+a fragment survives every redirect whose `Location` carries none, so it would
+reach whatever page the sign-in lands on. The server never sees a fragment,
+so `src/app/layout.tsx` strips exactly that one before first paint, in an
+inline script beside the theme one; an in-page anchor keeps its own.
 
 `/api/auth/ok` (Better Auth's built-in health endpoint, no database access)
 is what `route.test.ts`'s other case uses to confirm the route is mounted
@@ -366,14 +374,18 @@ than a verification link lives. The argument is
   user has three hours from sign-up to follow a link, and resending does not
   extend that. A link sent in the cap's last hour can outlive the account;
   following it finds no user, and signing in again starts a fresh account.
-- **What restarts the window.** A sign-up sets it. A resend through
-  `/send-verification-email` from a session holding the row calls
-  `extendVerificationWindow` in `src/modules/identity/services/provisional-accounts.ts`, an
-  empty `withAudit` update stamped as that user, before the mail goes out.
-  A resend from no session still mails, as Better Auth always does, but
-  extends nothing: otherwise anyone could keep a row alive by posting its
-  address. Any other write to the row touches `updated_at` too, through the
-  trigger. None of these move `created_at`, so none of them move the cap.
+- **What restarts the window.** A sign-up sets it. Every verification mail
+  sent for the row's own account — the sign-up mail, a resend through
+  `/send-verification-email` from a session holding the row, or the email
+  page's change request — calls `recordVerificationSent` in
+  `src/modules/identity/services/email.ts`, a `withAudit` update stamped as
+  that user that sets `verification_sent_at` and so, through the trigger,
+  `updated_at`, before the mail goes out. A resend from no session still
+  refused outright — `requireOwnResend`, a `hooks.before` on
+  `/send-verification-email`, answers 401 unless the session holds the
+  address posted — so nobody can mail someone else, or keep a row alive by
+  posting its address. Any other write to the row touches `updated_at` too.
+  None of these move `created_at`, so none of them move the cap.
 - **The sweep.** `hooks.before` on `/callback/:id` deletes every lapsed row
   in one statement, before the code exchange, so a lapsed row holding the
   arriving address is gone before Better Auth looks it up. Its `accounts`
@@ -403,6 +415,129 @@ than a verification link lives. The argument is
   before, then add this provider under Account. A squatted address and a
   provider that never vouches over an existing row share the code, and naming
   either would confirm the address is taken (MB.71).
+- **A change never unverifies a row.** An established account asking for a
+  new address keeps its verified row until the new one is proven ("The email
+  page" below); marking it unverified would make it older than the cap and
+  swept on the next callback.
+
+### The email page (MB.54)
+
+`/account/email`, protected, is where an account's address is set and
+changed: prefilled from the provider, editable, and counting only once
+proved. Stories 58 and 59; the plan is
+[`design-decisions/mb.54-plan.md`](design-decisions/mb.54-plan.md), and the
+component is [`components/email-form.md`](components/email-form.md).
+
+- **One rule: an address becomes the account's at verification, never
+  before.** `setEmail(session, email, sender)` in
+  `src/modules/identity/services/email.ts` writes nothing to `users.email`.
+  It normalises and validates the address (`ValidationError` on `email`),
+  refuses one a live _verified_ account holds — a provisional holder lapses
+  first — stamps the row as mailed (`recordVerificationSent`, which is also
+  what restarts a provisional caller's window), and asks the sender to mail
+  the new address a change link. The row's own, still-unverified address is
+  mailed again instead; verified, there is nothing to do. The criterion this
+  replaced, "marks the row unverified", would have put an account older than
+  the cap under the sweep.
+- **One verification mail a minute per account.** `users.verification_sent_at`
+  is set by every mail sent for the row's own account, and `setEmail` refuses
+  the next within `RESEND_COOLDOWN_SECONDS` with a `VALIDATION` error on
+  `email` naming the seconds left, so the mutation cannot fill an inbox.
+  Better Auth's `sendVerificationEmail` hook reads the same clock through
+  `verificationWaitFor` and sends nothing inside it, which covers the resend
+  path; a direct post to `/send-verification-email` reaches the hook only
+  from the row's own session (`requireOwnResend`, above). The update hook
+  clears the clock in the write that sets `emailVerified`: the mail was
+  answered, so the next one — a change from a verified account — is not held
+  back by it. The page hands the form the seconds left, so a sign-up that
+  lands on it sees the countdown from the start rather than a refusal on its
+  first submit ([`components/email-form.md`](components/email-form.md)).
+- **The change link is Better Auth's own.** `src/lib/email-verification.ts`
+  mints `/verify-email`'s change token — `createEmailVerificationToken` with
+  `updateTo` and `requestType: 'change-email-verification'` — under the same
+  secret and the request's own base URL (`resolveBaseURL`, so a preview host
+  links to itself), and sends `verify-email.tsx` with `purpose: 'change'`.
+  Following it, `/verify-email` swaps `email` and sets `emailVerified` in one
+  adapter write, stamped by the update hook. `user.changeEmail` stays off:
+  this replaces it, and nothing on `/api/auth` is added.
+- **Every link lands on the confirmed view.** Better Auth would land a
+  sign-up's link where the sign-in asked to go; the `sendVerificationEmail`
+  hook rewrites the link's `callbackURL` to `VERIFIED_LANDING`
+  (`/account/email?verified=1`, `src/lib/account-email.ts`), and the resend
+  and change links carry it from the start. A refusal drops the flag before
+  appending `?error=`, so the page never reads a refusal as a confirmation.
+- **Gated before the endpoint.** Better Auth's change branch calls no
+  `beforeEmailVerification` and, given no session, mints one for whoever
+  opened the link. `gateEmailChange`, a `hooks.before` on `/verify-email` in
+  `src/lib/auth.ts`, decodes the token's claims (not verified: it only ever
+  refuses, and the endpoint verifies the signature after), refuses unless the
+  session holds the row named by `email` (`?error=SIGN_IN_TO_VERIFY`, or
+  403 with no `callbackURL`), runs the provisional sweep, refuses while
+  another live row holds `updateTo` (`?error=EMAIL_TAKEN`, which the unique
+  index would otherwise 500 on), and records the acting user so the write is
+  stamped and `afterEmailVerification` runs — so a change to the bootstrap
+  address, verified from the owner's session, promotes (MB.68).
+- **A link opened signed out goes to the sign-in page.** Both gates send a
+  browser with no session at all to `SIGN_IN_TO_VERIFY_PATH`
+  (`/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify`), whose sentence
+  says to sign in and open the link again — the token is still good, since
+  the gate refused before the endpoint saw it. Nothing from the link travels:
+  not the token, not the address, and `next` is the fixed email page, so
+  signing in with the right account lands there with no error to explain
+  away. Only a browser signed in as someone else is sent to the email page
+  with `?error=SIGN_IN_TO_VERIFY`: it is signed in, so the page can tell it
+  which account to use. Signed out, the email page itself is unreachable —
+  `requireSession()` would have bounced it to sign-in with the error in the
+  return path, which is the confusion this avoids.
+- **The sender comes through the GraphQL context.** A service may not import
+  `auth`, and `auth.ts` imports the identity module, so the Better Auth side
+  is `src/lib/email-verification.ts`'s `emailVerificationSender(request)`,
+  built per request in `src/graphql/context.ts` and passed to the service by
+  the `setEmail` resolver — the way loaders are. `resend` calls
+  `auth.api.sendVerificationEmail` with the request's own headers, so the
+  existing hook restarts the window and mails; `requestChange` mints and
+  sends as above. `auth` is imported at call time there, since the route is
+  built at `NODE_ENV=production` in its tests.
+- **A provider that shared no address gets a placeholder.** `orPlaceholder`
+  in `socialProviders()` maps a profile with no email to
+  `<providerId>-<providerAccountId>@pending.invalid`, `emailVerified: false`:
+  `.invalid` is reserved (RFC 2606), so nothing can receive it and no
+  invitation can match it. The sign-up mail is skipped for it and `mail.send`
+  refuses any `.invalid` recipient as the backstop. It is provisional like
+  any unverified row. `email_not_found` no longer occurs, and its sentence
+  in `src/lib/sign-in.ts` is gone.
+- **An unverified sign-in lands on the email page.** The `hooks.after` on
+  the callback replaces the endpoint's redirect with
+  `/account/email?next=<where it was going>` whenever the session's row is
+  unverified — a Facebook or Microsoft address, a Google or Discord one the
+  provider did not vouch for, or the placeholder — on every sign-in, not
+  only sign-up, since a provisional account can do nothing else. The
+  endpoint's cookies stay: Better Auth merges a hook's `Location` over its
+  own and appends cookies. A verified sign-in lands where it asked.
+- **The page.** `src/app/account/email/page.tsx` calls `requireSession()`
+  and `getMe`, passes `''` for a placeholder, `next` through
+  `safeReturnPath`, `?error=` through `src/lib/account-email.ts`'s
+  `verifyErrorMessage` — one sentence per code Better Auth or the gate
+  appends, never the code — and the seconds left on the mail clock. `EmailForm`
+  has two views: `?verified=1` on a verified row is the confirmed one, the
+  address and Continue with nothing to edit; otherwise the field, prefilled
+  and always editable, which is how any account changes its address later.
+  Its success message names the typed address, since the row's is unchanged
+  until the link is followed.
+- **No other page shows an unverified account anything.** `requireSession()`
+  sends a session whose row is unverified to `/account/email?next=<its own
+path>` from every page but that one (`isEmailPage`, exact on the pathname),
+  so the after-hook's landing is not the only way there: a bookmark, a
+  back button or a typed URL all end on the email page until the address is
+  proved. `/api/graphql` is not gated the same way — the context reads the
+  session and the services refuse what a provisional account may not do,
+  which is everything but `me` and `setEmail`.
+- **Tests.** `tests/modules/identity/services/email.test.ts` (the service,
+  with a fake sender), `tests/db/email-change.test.ts` (the whole round trip
+  through Better Auth's endpoints, including that an aged verified account
+  survives the sweep before and after a change), `tests/lib/auth.test.ts`
+  (the placeholder mapping), and `tests/acceptance/08-email-and-admin.test.ts`
+  (stories 58 and 59).
 
 ### Granting a second admin — decided, not built (M2.9)
 
@@ -628,8 +763,11 @@ answer.
   (MB.57): it reads the session with `getSession()` to offer a signed-in
   visitor the landing rather than sign-in, and `requireSession()` would
   redirect the signed-out visitors it exists for.
-  No page calls `requireSession()` yet: every protected route so far is still
-  to be built, and each adopts it in its own PR.
+  `requireSession()` has a second redirect (MB.54): a session whose address
+  is unverified goes to `/account/email?next=<its own path>` from every page
+  but that one, since a provisional account can do nothing else ("The email
+  page"). `/account/email` is the first page to call it; every later
+  protected route adopts it in its own PR.
 - **The return path round trip.** The proxy builds `next` from the request's
   pathname and query, through `signInPath()` (`src/lib/sign-in.ts`), which
   runs `safeReturnPath` first — a request can really carry a pathname of
