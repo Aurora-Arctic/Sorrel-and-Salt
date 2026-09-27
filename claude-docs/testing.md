@@ -686,6 +686,21 @@ the spec aborts and fails on any request to `/api/auth/sign-in/`.
   is the example, and sends from the runner because nothing in the app mails
   yet. Compose and `playwright.yml` both run Mailpit; outside them the helper
   throws on the unset URL rather than reporting that no mail arrived.
+- **A signed-in browser without a provider** (MB.71). No spec can finish a
+  real OAuth round trip, so `tests/e2e/session.ts`'s `signInAs(page, email,
+providers)` writes what a Discord sign-in would leave into `sorrel_e2e`: a
+  verified user stamped as its own creator, one `accounts` row per provider
+  named, and a session. It then hands the browser the session cookie Better
+  Auth would have set. The value is the token, a dot, and its base64
+  HMAC-SHA256 under `BETTER_AUTH_SECRET`, percent-encoded as better-call's
+  `signCookieValue` does it. The runner and the served build share that
+  secret: `playwright.yml` and compose set it at job level, and a local run
+  sets it on the command line, or the helper throws. The name is
+  `__Secure-better-auth.session_token` because a production build's base URL
+  forces https. It rides as an extra request header, not in the cookie jar,
+  since a browser never sends a `Secure` cookie to the plain-http
+  `devcontainer:8001` a remote browser uses. Give each call a fresh address:
+  the email index is unique.
 - **`next.config.ts`'s `distDir`** reads `NEXT_DIST_DIR`, defaulting to
   `.next`. `webServer.env` sets it to `.next-e2e` so a concurrent `next dev`
   on 8000 (CLAUDE.md's Commands table promises both can run at once) never
