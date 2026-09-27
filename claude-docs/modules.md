@@ -20,9 +20,14 @@ src/modules/<name>/
   loaders/*.ts    # defineLoader factories
 ```
 
-`graphql/` and `loaders/` exist as the places where those land; today no module
-has either, since M3.10's `User` is the first type and M4.8's is the first
-loader.
+A module's index re-exports its `graphql/` files, so loading the index is what
+registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`
+and `@/modules/coven` for that side effect, never the `graphql/` path, which
+is internal. `identity` has `User` and `me`; `coven` has `Workspace`,
+`WorkspaceMember`, the `membershipsByUser` loader and the `User.memberships`
+field. A field on another module's type is added from the module allowed to
+import it — `memberships` lives in `coven` because `identity` imports
+nothing.
 
 What stays outside a module, and why:
 
@@ -46,13 +51,13 @@ What stays outside a module, and why:
 Every table has exactly one owner. The services column is what exists today;
 a service lands in the module that owns the table it writes.
 
-| Module        | Tables                                                                                                                            | Services today                                                   |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `identity`    | `users`, `sessions`, `accounts`, `verifications`; later `admin_invitations`                                                       | `admin-role.ts`, `provisional-accounts.ts`, `workshop-access.ts` |
-| `coven`       | `workspaces`, `workspace_members`, `workspace_invitations`                                                                        | `membership.ts`, `access-control.ts`                             |
-| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`                                                     | none yet                                                         |
-| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_categories`, `inventory_items`; later `retired_ingredient_slugs` | none yet; `schema/units.ts` is the unit vocabulary               |
-| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                 | `spell-visibility.ts`                                            |
+| Module        | Tables                                                                                                                            | Services today                                                                 |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `identity`    | `users`, `sessions`, `accounts`, `verifications`; later `admin_invitations`                                                       | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts` |
+| `coven`       | `workspaces`, `workspace_members`, `workspace_invitations`                                                                        | `membership.ts`, `memberships.ts`, `access-control.ts`                         |
+| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`                                                     | none yet                                                                       |
+| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_categories`, `inventory_items`; later `retired_ingredient_slugs` | none yet; `schema/units.ts` is the unit vocabulary                             |
+| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                 | `spell-visibility.ts`                                                          |
 
 **The compendium is a tier inside `ingredients`, not a module.** Both tiers
 share one table, one identity model, one search component and one detail
@@ -140,7 +145,11 @@ and `server-only-services.test.ts` — point at `src/modules/*/services`. The
 `.oxlintrc.json` override that bans a service from reading a request
 (`next/headers`, `lib/auth`, `lib/request-session`) matches
 `src/modules/*/services/**/*.ts`; the database-layer override that permits a
-runtime `drizzle-orm` import covers `src/modules/*/schema/**/*.ts`.
+runtime `drizzle-orm` import covers `src/modules/*/schema/**/*.ts`. A module's
+`graphql/` and `loaders/` sit above its services rather than beside them, so
+the access-boundary override that bans `src/db` from resolvers and pages
+covers `src/modules/*/graphql/**/*.ts` and `src/modules/*/loaders/**/*.ts`
+too, and `lint-access-boundary.test.ts` probes both.
 
 ## The tier seam
 

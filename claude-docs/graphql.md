@@ -221,22 +221,56 @@ stays under `src/graphql/schema/` ([`modules.md`](modules.md)).
   loader resolves them to display names. A test walks every object type in the
   schema and fails on any type other than `AuditInfo` with an audit-named
   field, so a per-table audit shape fails in the PR that adds it.
-- **`ok: Boolean!` stands until the first real Query field.** GraphQL needs one
-  Query field to be valid. `ok` mirrors Better Auth's `/api/auth/ok`.
+- **`ok: Boolean!` stays beside the real fields.** It mirrors Better Auth's
+  `/api/auth/ok`: it answers without a session or the database, which is what
+  the route's tests and the e2e spec probe the endpoint with.
+
+### `me`, `User` and the first module types
+
+`me: User!` is the signed-in user, read through `getMe(session)` in the
+`identity` module. The service takes no id, so there is no other user a
+caller could name. A signed-out request is refused by the `signedIn` scope
+before the resolver runs, and the service's `Session` parameter means a null
+could not reach it anyway. A session whose user row is gone or soft-deleted
+gets `NotFound`: Better Auth reads the session's user without our filter, so
+the session can outlive the row.
+
+`User` carries `id`, `name`, `image`, `email`, `role`,
+`canCreateWorkspace`, `memberships` and `audit`. Three of those are private:
+`email`, `role` and `canCreateWorkspace` are the user's own business, not a
+co-member's, and carry the `self`-or-`admin` scope below. They stay
+non-null, so a query for another user's email fails with `Forbidden` rather
+than returning the user without it — ask for what you may read.
+
+`User.memberships: [WorkspaceMember!]!` is registered by the `coven` module,
+not `identity`, because `identity` may import no module
+([`modules.md`](modules.md)). It resolves through the `membershipsByUser`
+loader, whose service, `membershipsOf(session, userIds)`, answers each id with
+that user's live memberships in live workspaces — or a `Forbidden` in that
+id's slot for anyone but the caller, a site admin included, since an admin
+reaches no workspace. A `WorkspaceMember` carries `role`, `joinedAt`,
+`workspace` and `audit`; `Workspace` is `id`, `name`, `slug` and `audit`,
+the minimum a switcher needs, and M6 adds to it. `memberships` is a bare list,
+bounded by its parent, like every nested list (DESIGN.md §7).
 
 ### Auth scopes: the second check
 
-`@pothos/plugin-scope-auth` gives the schema two scopes, both read off the
+`@pothos/plugin-scope-auth` gives the schema three scopes, all read off the
 context without a query:
 
-| Scope      | Holds when                  |
-| ---------- | --------------------------- |
-| `signedIn` | the request has a session   |
-| `admin`    | the session's role is admin |
+| Scope      | Holds when                                   |
+| ---------- | -------------------------------------------- |
+| `signedIn` | the request has a session                    |
+| `admin`    | the session's role is admin                  |
+| `self`     | the user id it is given is the session's own |
 
 A scope is the second check, never the first. The service's own check is the
 gate (CLAUDE.md rule 1), and a scope on a field is a cheap early refusal in
-front of it: M3.10 puts one on `User.email`, M5.7 on every admin mutation. A
+front of it: `me` carries `signedIn`; `User.email`, `role` and
+`canCreateWorkspace` carry `{ self: user.id, admin: true }`, which holds if
+either does; M5.7 puts `admin` on every admin mutation. The private fields'
+test hands `me` another user's row, standing in for a service that chose the
+wrong one, which is the bug the scope is behind. A
 scope refusal throws `Forbidden` from `src/lib/errors.ts`, the same type a
 service throws, so the transport maps one refusal shape whichever check said
 no (MB.43).
@@ -486,10 +520,12 @@ merely absent:
   loader batches a service call and never bypasses one.
 - **`src/graphql/loaders/index.ts`** registers each factory in `LOADERS`, under
   the name a resolver reads it by. `createLoaders(session)` calls every factory
-  and is called only by `createContext`. The registry is empty until the first
-  loader lands. Each loader arrives with the schema it loads: M4.8
-  `categoriesByIngredient`, M6.11 `membersByWorkspace`, MB.9 `ingredientsById`,
-  MB.10 `usersById`. A factory is written in its module's `loaders/`, exported
+  and is called only by `createContext`. Each loader arrives with the schema it
+  loads: `membershipsByUser` (`coven`, for `User.memberships`) is the first;
+  M4.8 `categoriesByIngredient`, M6.11 `membersByWorkspace`, MB.9
+  `ingredientsById` and MB.10 `usersById` follow. A test that builds a context
+  by hand calls `createLoaders(session)` rather than passing `{}`, which the
+  `Loaders` type no longer admits. A factory is written in its module's `loaders/`, exported
   through the module's index, and spread into `LOADERS` here
   ([`modules.md`](modules.md)).
 - **Only `define-loader.ts` may import `dataloader` at runtime.**

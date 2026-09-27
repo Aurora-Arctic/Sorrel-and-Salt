@@ -688,6 +688,31 @@ type Ingredient {
   # a v2 notes section slots in here
 }
 
+type User {
+  id: ID!
+  name: String!
+  image: String
+  email: String! # self or admin: a Pothos scope behind the service (§7, "The three GraphQL costs")
+  role: UserRole! # self or admin
+  canCreateWorkspace: Boolean! # self or admin
+  memberships: [WorkspaceMember!]! # the caller's own only, through a loader
+  audit: AuditInfo!
+}
+
+type WorkspaceMember {
+  role: WorkspaceRole! # viewer | member | owner
+  joinedAt: DateTime!
+  workspace: Workspace!
+  audit: AuditInfo!
+}
+
+type Workspace {
+  id: ID!
+  name: String!
+  slug: String! # the /coven/[slug] segment
+  audit: AuditInfo!
+}
+
 enum Nomenclature {
   botanical
   fungal

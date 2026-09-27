@@ -1,10 +1,10 @@
-import { and, asc, desc, eq, getTableColumns, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, inArray, or, sql, type SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { auditColumns, users } from '../modules/identity/schema/users';
 import { applyAudit, type AuditSession } from './audit';
 import { accounts } from '../modules/identity/schema/auth';
 import { spells } from '../modules/grimoire/schema/spells';
-import { workspaceMembers } from '../modules/coven/schema/workspaces';
+import { workspaceMembers, workspaces } from '../modules/coven/schema/workspaces';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from './connection';
@@ -309,6 +309,26 @@ export async function findOne<TTable extends PgTable & Unscoped & NotSpellScoped
   return row;
 }
 
+/**
+ * The live row with this id, or `undefined`. The read-side twin of
+ * `write.updateById`: a service cannot build `eq(table.id, id)` itself (MB.33).
+ */
+export async function findOneById<TTable extends PgTable & Unscoped & NotSpellScoped & Identified>(
+  table: TTable,
+  id: string,
+): Promise<TTable['$inferSelect'] | undefined> {
+  const [row] = await findMany(table, eq(table.id, id));
+  return row;
+}
+
+/** The live rows among these ids, in no particular order — a loader's batch read. */
+export async function findManyByIds<
+  TTable extends PgTable & Unscoped & NotSpellScoped & Identified,
+>(table: TTable, ids: readonly string[]): Promise<TTable['$inferSelect'][]> {
+  if (ids.length === 0) return [];
+  return findMany(table, inArray(table.id, [...ids]));
+}
+
 /** All matching, non-soft-deleted rows inside the workspace the proof names. */
 export function findManyInWorkspace<TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped>(
   membership: Membership,
@@ -450,6 +470,31 @@ export async function findWorkspaceRole(
     ),
   );
   return row?.role;
+}
+
+/**
+ * Every live membership each of these users holds, in a workspace that is
+ * itself live. The second read that takes no proof, and for the reason the
+ * first does: a user's own memberships span workspaces, so there is no one
+ * workspace to hold a proof for. The service calling it decides whose ids may
+ * be asked about; `repository.test.ts` pins the export list, so a third is a
+ * decision.
+ *
+ * The workspace's `deleted_at` is a correlated `EXISTS` rather than a join,
+ * for the reason `findManyInSpell` gives.
+ */
+export async function findMembershipsOfUsers(
+  userIds: readonly string[],
+): Promise<(typeof workspaceMembers.$inferSelect)[]> {
+  if (userIds.length === 0) return [];
+  return selectFrom(
+    workspaceMembers,
+    and(
+      notSoftDeleted(workspaceMembers),
+      inArray(workspaceMembers.userId, [...userIds]),
+      sql`exists (select 1 from ${workspaces} where ${workspaces.id} = ${workspaceMembers.workspaceId} and ${notSoftDeleted(workspaces)})`,
+    ),
+  );
 }
 
 /**
