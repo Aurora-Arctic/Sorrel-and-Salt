@@ -155,7 +155,7 @@ describe('Story 59: asking for a new address', () => {
     const response = await follow(link, cookie);
 
     expect(response.status).toBe(302);
-    expect(landingOf(response)).toBe('/account/email?verified=1');
+    expect(landingOf(response)).toBe('/account/email?verified');
     expect(await userRow(OWNER)).toBeUndefined();
     expect(await userRow(NEW)).toMatchObject({
       id: before.id,

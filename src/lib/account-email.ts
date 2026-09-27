@@ -22,7 +22,16 @@ export const GENERIC_VERIFY_ERROR = "That link didn't work. Send a new one below
 const EMAIL_PAGE = '/account/email';
 
 /** Where a followed verification link lands: the email page in its confirmed view. */
-export const VERIFIED_LANDING = `${EMAIL_PAGE}?verified=1`;
+export const VERIFIED_LANDING = `${EMAIL_PAGE}?verified`;
+
+/**
+ * Whether a request carries the confirmed-view flag. Read by presence: bare it
+ * is `''`, and a URL rebuilt through URLSearchParams writes it back as
+ * `?verified=`.
+ */
+export function hasVerifiedFlag(value: string | string[] | undefined): boolean {
+  return value !== undefined;
+}
 
 /** The email page, carrying where to go once the address is proved. */
 export function emailPagePath(next: string): `/account/email?next=${string}` {

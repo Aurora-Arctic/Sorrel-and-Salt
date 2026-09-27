@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   emailPagePath,
   GENERIC_VERIFY_ERROR,
+  hasVerifiedFlag,
   isEmailPage,
   VERIFIED_LANDING,
   verifyErrorMessage,
@@ -42,7 +43,16 @@ describe('verifyErrorMessage', () => {
 
 describe("the email page's paths", () => {
   it('lands a followed link on the confirmed view', () => {
-    expect(VERIFIED_LANDING).toBe('/account/email?verified=1');
+    expect(VERIFIED_LANDING).toBe('/account/email?verified');
+  });
+
+  // Present is enough: a bare `?verified` reads as '', and a URL rebuilt
+  // through URLSearchParams writes it back as `?verified=`.
+  it('reads the flag by its presence, whatever its value', () => {
+    expect(hasVerifiedFlag('')).toBe(true);
+    expect(hasVerifiedFlag('1')).toBe(true);
+    expect(hasVerifiedFlag(['', ''])).toBe(true);
+    expect(hasVerifiedFlag(undefined)).toBe(false);
   });
 
   it('carries the return path encoded', () => {
@@ -53,7 +63,7 @@ describe("the email page's paths", () => {
 
   it('recognises the page with or without a query, and nothing that only starts like it', () => {
     expect(isEmailPage('/account/email')).toBe(true);
-    expect(isEmailPage('/account/email?verified=1')).toBe(true);
+    expect(isEmailPage('/account/email?verified')).toBe(true);
     expect(isEmailPage('/account/emails')).toBe(false);
     expect(isEmailPage('/account/email/x')).toBe(false);
     expect(isEmailPage(undefined)).toBe(false);
