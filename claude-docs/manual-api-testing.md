@@ -53,6 +53,33 @@ and paste again when the seven-day session lapses. Altair desktop takes it as a
 `headers` entry in an environment; Postman and Insomnia in their cookie
 managers; Bruno in its cookie jar or a collection header.
 
+## Seeing the error shapes
+
+Each service error leaves the route with an `extensions.code`, and anything
+else leaves masked (`graphql.md`, "Errors"). Two of those shapes can be reached
+from the live schema by hand:
+
+- **`FORBIDDEN`**: query `{ me { id } }` with no session cookie, from a private
+  window's Altair or from a terminal:
+
+  ```sh
+  curl -s localhost:8000/api/graphql -H 'content-type: application/json' \
+    -d '{"query":"{ me { id } }"}'
+  ```
+
+  The answer is `data: null` and one error, `"message": "Forbidden"`,
+  `"extensions": { "code": "FORBIDDEN" }`. Before MB.43 the same query
+  answered `Unexpected error.`
+
+- **Masked**: query `{ me { id } }` signed in, with the database stopped
+  (`docker compose -f Docker/docker-compose.yaml stop postgres`, from the host). The answer is `Unexpected error.` with
+  `code: INTERNAL_SERVER_ERROR` and no `originalError`, even under `next dev`.
+  The connection error, with its stack, is in the dev server's terminal.
+
+`VALIDATION` and `NOT_FOUND` have no production field that raises them until
+Wave 8's mutations land. Until then, `tests/graphql/errors.test.ts` is where
+they are exercised.
+
 ## Why the tools' OAuth features do not help
 
 Every one of these clients has an "OAuth 2.0" helper. It runs an

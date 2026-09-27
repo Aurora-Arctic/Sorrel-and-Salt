@@ -479,7 +479,7 @@ Until MB.58 and MB.59 land, a second admin is an `UPDATE` in `psql`.
   (see the "Tables" section above) since it bought nothing but a
   `user.fields` config entry to maintain.
 
-## The service-level session, and the two refusals (M1.26)
+## The service-level session, and the three errors (M1.26, MB.43)
 
 `src/lib/session.ts` defines the `Session` every service takes:
 
@@ -518,14 +518,24 @@ shape ahead of it so authorization tests could be written first, and
   field but M6.3's `Membership` proof, which only `assertMembership` can
   produce.
 
-`src/lib/errors.ts` carries the two ways a service ends a call it cannot
-perform. A service **throws**; it never answers with an empty list, a null, or
-a success that did nothing.
+`src/lib/errors.ts` carries the three ways a service ends a call it cannot
+perform: two refusals and a bad value. A service **throws**; it never answers
+with an empty list, a null, or a success that did nothing.
 
-| Error       | Means                                     |
-| ----------- | ----------------------------------------- |
-| `Forbidden` | The thing exists and you may not have it. |
-| `NotFound`  | There is nothing here under that id.      |
+| Error             | Means                                                                  |
+| ----------------- | ---------------------------------------------------------------------- |
+| `Forbidden`       | The thing exists and you may not have it.                              |
+| `NotFound`        | There is nothing here under that id.                                   |
+| `ValidationError` | The input broke a rule; `issues` says which field and why, one by one. |
+
+A `ValidationError`'s `issues` are `{ path, message }[]`. `path` names the
+input field in the shape of the operation's input, such as `['canonicalName']`
+or `['folkNames', 2]`, and is empty for a rule that belongs to no one field.
+The type carries issues but does not produce them, so `src/lib/` depends on no
+schema library, and a seed or a script can throw one. The adapter that turns a
+failed Zod parse into issues lives beside the schemas (M4.5). A refusal that is
+not about a value, such as the last-owner guard, stays a `Forbidden` with an
+explaining message.
 
 They are types rather than message strings so a test can assert on the type:
 wording gets edited, and a test pinned to a message keeps passing against a
@@ -536,9 +546,13 @@ the browser is shown, and it can only decide if the service said which
 happened**: `/coven/[slug]` answers 404 to a non-member, since the existence of
 a workspace is itself private, while `/admin` answers a styled "not authorized"
 page, since everyone already knows that path exists (CLAUDE.md's domain
-invariants). Neither type carries a status code or a GraphQL error code — the
-transport renders a refusal, and a service called from a script has no use for
-one.
+invariants). None of the three carries a status code or a GraphQL error code:
+the transport renders a refusal, and a service called from a script has no use
+for one. Over GraphQL, the code is attached on the way out by
+`src/graphql/errors.ts`, the route's `maskedErrors` mapping (MB.43). Each type
+leaves as `VALIDATION` (with `fieldErrors`), `FORBIDDEN` or `NOT_FOUND`, with
+the service's message verbatim, and anything else leaves masked
+(`graphql.md`, "Errors").
 
 Both take a message and default to a short one, because DESIGN.md §5's one-way
 widen requires an _explaining_ error where a bare refusal would mislead:

@@ -5,7 +5,7 @@ import type { users } from '../modules/identity/schema/users';
 // which is the browser's proof and lives behind `/api/auth`. Extends
 // `AuditSession` so the acting identity and the stamped one are one field
 // (CLAUDE.md rule 3).
-// See claude-docs/auth.md, "The service-level session, and the two refusals".
+// See claude-docs/auth.md, "The service-level session, and the three errors".
 
 /** `'user' | 'admin'`, read off the column rather than restated (DESIGN.md §5). */
 export type UserRole = (typeof users.$inferSelect)['role'];
