@@ -25,11 +25,11 @@ const isApollo = (name: string) => name.startsWith('@apollo/') || name.startsWit
 
 /** Tracked and untracked files under src/ whose source matches `pattern`. */
 function sourcesMatching(pattern: string): string[] {
-  const grep = spawnSync(
-    'git',
-    ['grep', '-l', '--untracked', '-E', pattern, '--', 'src/*.ts', 'src/*.tsx'],
-    { cwd: REPO_ROOT, encoding: 'utf8' },
-  );
+  const args = ['-c', 'safe.directory=*', 'grep', '-l', '--untracked', '-E', pattern];
+  const grep = spawnSync('git', [...args, '--', 'src/*.ts', 'src/*.tsx'], {
+    cwd: REPO_ROOT,
+    encoding: 'utf8',
+  });
   // git grep exits 1 on no match, and anything above that on a real failure.
   if (grep.status !== 0 && grep.status !== 1) throw new Error(grep.stderr);
   return grep.stdout.split('\n').filter(Boolean).sort();
