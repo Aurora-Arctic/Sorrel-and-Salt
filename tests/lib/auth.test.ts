@@ -435,3 +435,77 @@ describe('email verification', () => {
     expect(await before({ name: 'Renamed Person' } as never, undefined as never)).toBeUndefined();
   });
 });
+
+// Better Auth's limiter (claude-docs/auth.md, "Rate limiting"). Each value is
+// pinned because a dependency bump moving its default would change who is
+// limited, or stop limiting anyone, with no diff here to review.
+describe('rate limiting', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  async function authAt(nodeEnv: 'production' | 'development') {
+    vi.stubEnv('NODE_ENV', nodeEnv);
+    vi.stubEnv('BETTER_AUTH_SECRET', 'production-test-secret-at-least-32-characters-long');
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'placeholder@admin-bootstrap.invalid');
+    vi.resetModules();
+    return (await import('@/lib/auth')).auth;
+  }
+
+  it('is on at NODE_ENV=production, which every deploy is', async () => {
+    expect((await authAt('production')).options.rateLimit?.enabled).toBe(true);
+  });
+
+  it('is off outside production, so next dev and the test suites are never throttled', async () => {
+    expect((await authAt('development')).options.rateLimit?.enabled).toBe(false);
+  });
+
+  it('counts in the database: in memory, each Fluid Compute instance would count alone', async () => {
+    expect((await authAt('production')).options.rateLimit?.storage).toBe('database');
+  });
+
+  it("keys a visitor on Vercel's own client-address header, which no client can set", async () => {
+    const { advanced } = (await authAt('production')).options as BetterAuthOptions;
+
+    expect(advanced?.ipAddress?.ipAddressHeaders).toEqual(['x-vercel-forwarded-for']);
+    expect(advanced?.ipAddress?.trustedProxies).toBeUndefined();
+    expect(advanced?.ipAddress?.disableIpTracking).toBeFalsy();
+  });
+});
+
+// Neither is set in src/lib/auth.ts: DESIGN.md names no session lifetime, so
+// Better Auth's defaults apply, and these fail if a bump moves one.
+describe('session lifetimes', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  async function sessionConfig() {
+    vi.resetModules();
+    const { auth } = await import('@/lib/auth');
+    return (await auth.$context).sessionConfig;
+  }
+
+  it('lasts seven days, extended at most once a day, and counts as fresh for a day', async () => {
+    const DAY = 24 * 60 * 60;
+
+    expect(await sessionConfig()).toMatchObject({
+      expiresIn: 7 * DAY,
+      updateAge: DAY,
+      freshAge: DAY,
+    });
+  });
+});
+
+describe('stored OAuth tokens', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('are encrypted under BETTER_AUTH_SECRET', async () => {
+    vi.resetModules();
+    const { auth } = await import('@/lib/auth');
+
+    expect((auth.options as BetterAuthOptions).account?.encryptOAuthTokens).toBe(true);
+  });
+});
