@@ -24,7 +24,11 @@ describe('the Pothos schema', () => {
       fields: (t) => ({ at: t.field({ type: 'DateTime', resolve: () => at }) }),
     });
 
-    const result = await graphql({ schema: scratch.toSchema(), source: '{ at }' });
+    const result = await graphql({
+      schema: scratch.toSchema(),
+      source: '{ at }',
+      contextValue: context(null),
+    });
 
     expect(result).toEqual({ data: { at: '2026-09-27T12:34:56.789Z' } });
   });
