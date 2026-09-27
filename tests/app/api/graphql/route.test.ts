@@ -108,6 +108,59 @@ describe('/api/graphql', () => {
     await expect(response.text()).resolves.not.toMatch(/altair|graphiql/i);
   });
 
+  // What the IDE runs for its docs pane and autocompletion.
+  const introspection = '{ __schema { queryType { name } } }';
+
+  it('answers introspection in local development', async () => {
+    const { POST } = await loadRoute('development');
+    const response = await POST(post({ query: introspection }));
+
+    await expect(response.json()).resolves.toEqual({
+      data: { __schema: { queryType: { name: 'Query' } } },
+    });
+  });
+
+  it('refuses introspection in production', async () => {
+    const { POST } = await loadRoute('production');
+    const response = await POST(post({ query: introspection }));
+
+    const result = await response.json();
+    expect(result.data).toBeUndefined();
+    // One error for each introspection field the query names.
+    expect(result.errors.length).toBeGreaterThan(0);
+    for (const error of result.errors) {
+      expect(error.message).toMatch(/^GraphQL introspection has been disabled/);
+    }
+  });
+
+  // `__type` names one type rather than the whole schema, and is refused too.
+  it('refuses a single-type introspection in production', async () => {
+    const { POST } = await loadRoute('production');
+    const response = await POST(post({ query: '{ __type(name: "AuditInfo") { name } }' }));
+
+    await expect(response.json()).resolves.not.toHaveProperty('data.__type');
+  });
+
+  // A misspelt field is how a client without introspection probes the schema:
+  // graphql-js answers it with the field it probably meant.
+  it('suggests the field a misspelling meant in local development', async () => {
+    const { POST } = await loadRoute('development');
+    const response = await POST(post({ query: '{ ko }' }));
+
+    const result = await response.json();
+    expect(result.errors[0].message).toContain('Did you mean "ok"?');
+  });
+
+  it('suggests no field in production', async () => {
+    const { POST } = await loadRoute('production');
+    const response = await POST(post({ query: '{ ko }' }));
+
+    const result = await response.json();
+    // Still refused, and still says why: only the suggestion is gone.
+    expect(result.errors[0].message).toMatch(/^Cannot query field "ko" on type "Query"\./);
+    expect(result.errors[0].message).not.toMatch(/"ok"|did you mean/i);
+  });
+
   // Yoga's default reflects any Origin and allows credentials. The client is
   // same-origin, so another origin, a sibling preview subdomain included,
   // gets no CORS grant to read a response made with the visitor's cookie.

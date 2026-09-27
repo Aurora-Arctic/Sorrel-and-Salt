@@ -15,3 +15,22 @@ test('/api/graphql serves no IDE in a production build', async ({ request }) => 
   expect(response.headers()['content-type'] ?? '').not.toMatch(/^text\/html/);
   expect(await response.text()).not.toMatch(/altair|graphiql/i);
 });
+
+// `next start` runs at NODE_ENV=production, so this is what staging answers.
+test('/api/graphql refuses introspection in a production build', async ({ request }) => {
+  const response = await request.post('/api/graphql', {
+    data: { query: '{ __schema { queryType { name } } }' },
+  });
+
+  const result = await response.json();
+  expect(result.data).toBeUndefined();
+  expect(result.errors[0].message).toMatch(/^GraphQL introspection has been disabled/);
+});
+
+test('/api/graphql suggests no field in a production build', async ({ request }) => {
+  const response = await request.post('/api/graphql', { data: { query: '{ ko }' } });
+
+  const result = await response.json();
+  expect(result.errors[0].message).toMatch(/^Cannot query field "ko" on type "Query"\./);
+  expect(result.errors[0].message).not.toMatch(/"ok"|did you mean/i);
+});
