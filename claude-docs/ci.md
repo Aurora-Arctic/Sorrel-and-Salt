@@ -55,7 +55,11 @@ edit at any call site; nothing passes it today.
   log excerpt on failure.
 - **`pr-comment`** — upserts one marked comment per check (`<!-- ci-<slug> -->`),
   in `minimize` (resolve-on-pass) or `comment` (always post) mode, plus a
-  separate fail-only thread for `merge-queue: true` callers.
+  separate fail-only thread for `merge-queue: true` callers. Every caller runs
+  it under `!cancelled()`, not `always()`: the action reads any outcome but
+  `success` as a failure, so a leg cancelled by a newer push's
+  `cancel-in-progress` posted "❌ failed — 0 errors" over a check that never
+  finished. The next run's comment is the one that counts.
 - **`build-image`** — the build-or-reuse sequence `build-image.yml`,
   `build-e2e-image.yml` and `build-db-image.yml` share: compute the
   content-addressed GHCR tag, log in, set up buildx, `docker buildx imagetools inspect`
