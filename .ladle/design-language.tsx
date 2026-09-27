@@ -193,14 +193,16 @@ export default function DesignLanguage(): ReactElement {
 
       <section id="dl-badges">
         <SectionHead eyebrow="M0.7 / M0.8 · --badge-*" title="Badges">
-          Two, and deliberately not equals. <strong>Safety</strong> is a warning (story 53) — the
-          sealing-wax hue, drawn solid. <strong>Low stock</strong> is an inventory state (story 54),
-          so it takes the muted ink tinted into the surface, not a hue of its own. Square-cornered,
-          which is what keeps a badge from reading as a chip.
+          Deliberately not equals. <strong>Safety</strong> is a warning (story 53) — the sealing-wax
+          hue, drawn solid. <strong>Low stock</strong> is an inventory state (story 54), so it takes
+          the muted ink tinted into the surface, not a hue of its own. <strong>Last used</strong>{' '}
+          points the sign-in page at a provider: solid, in the accent, so it spends no new hue.
+          Square-cornered, which is what keeps a badge from reading as a chip.
         </SectionHead>
         <div className="panel badges">
           <span className="badge badge--safety">Toxic</span>
           <span className="badge badge--low-stock">Low stock</span>
+          <span className="badge badge--last-used">Last used</span>
         </div>
       </section>
 

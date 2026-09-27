@@ -122,12 +122,16 @@ A ninth group is one map entry plus a contrast check — and the category seed's
 
 ## Badge palettes
 
-Two badges appear on an IngredientCard, and they are deliberately not equals.
+Three palettes, deliberately not equals. Two appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
 saturation alongside the groups. **Low stock** is an inventory state, not an
 alarm (story 54), so it takes the muted ink and is left unsaturated. That keeps
-exactly one loud badge in the app and spends no hue, which matters because every
-hue not already reserved belongs to one of the eight groups.
+exactly one alarming badge in the app and spends no hue, which matters because every
+hue not already reserved belongs to one of the eight groups. **Last used** marks
+the sign-in button this browser last signed in with (MB.77). It is a pointer,
+not a warning, so it is drawn solid in the accent's own inks (`$sorrel-bright`
+dark, `$sorrel` light), a hue already reserved, and spends none of the groups'.
+Its label on the fill is 7.95:1 dark and 5.03:1 light.
 
 Each palette is one ink per theme plus the **treatment** it is drawn in, and the
 treatment decides which parts it emits:
@@ -165,7 +169,7 @@ clear 3:1 against both surfaces (WCAG 1.4.11).
 ### `$text-on-color`
 
 The label colour for anything drawn as a _solid_ fill — the selected chip, the
-safety badge. It is an alias for the page surface rather than a token of its own
+safety and last-used badges. It is an alias for the page surface rather than a token of its own
 because the answer is the same whatever the fill: on dark the fill is the light
 thing and the label goes dark, on light the reverse.
 

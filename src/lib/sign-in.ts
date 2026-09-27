@@ -41,6 +41,13 @@ export const RETURN_PATH_HEADER = 'x-sorrel-return-path';
 /** Where a verification link opened from no session goes: sign in, then back to the email page. */
 export const SIGN_IN_TO_VERIFY_PATH = '/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify';
 
+/**
+ * The readable cookie Better Auth's `lastLoginMethod` writes on each callback
+ * that sets a session, naming the provider. Passed to the server plugin and
+ * the client one alike, which must agree on it.
+ */
+export const LAST_USED_PROVIDER_COOKIE = 'better-auth.last_used_login_method';
+
 /** `/sign-in`, carrying `returnPath` as `?next=` once it has passed `safeReturnPath`. */
 export function signInPath(returnPath: string | undefined): `/sign-in?next=${string}` {
   return `/sign-in?next=${encodeURIComponent(safeReturnPath(returnPath))}`;

@@ -1,5 +1,7 @@
 import { describe, expect, it, afterEach, vi } from 'vitest';
 import type { BetterAuthOptions } from 'better-auth';
+import { getAuthTables } from '@better-auth/core/db';
+import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 
 // Better Auth's own production check swallows its rejection and answers 200
 // on the default secret, so the repo enforces it synchronously before
@@ -507,5 +509,35 @@ describe('stored OAuth tokens', () => {
     const { auth } = await import('@/lib/auth');
 
     expect((auth.options as BetterAuthOptions).account?.encryptOAuthTokens).toBe(true);
+  });
+});
+
+// The browser remembers its own last provider, and nothing about an address
+// reaches it: with `storeInDatabase` on, the plugin would add a `users` column
+// and write it on every session (claude-docs/auth.md, "Plugins").
+describe('last login method', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  async function lastLoginMethodPlugin() {
+    vi.resetModules();
+    const { auth } = await import('@/lib/auth');
+    const plugin = auth.options.plugins?.find(({ id }) => id === 'last-login-method');
+    if (!plugin) throw new Error('lastLoginMethod is not registered');
+    return { auth, plugin };
+  }
+
+  it('is registered under the shared cookie name, with storeInDatabase unset', async () => {
+    const { plugin } = await lastLoginMethodPlugin();
+
+    expect(plugin.options).toEqual({ cookieName: LAST_USED_PROVIDER_COOKIE });
+  });
+
+  it('adds no column to the schema Better Auth writes', async () => {
+    const { auth, plugin } = await lastLoginMethodPlugin();
+
+    expect(plugin.schema).toBeUndefined();
+    expect(Object.keys(getAuthTables(auth.options).user.fields)).not.toContain('lastLoginMethod');
   });
 });
