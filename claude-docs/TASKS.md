@@ -4714,7 +4714,7 @@ _Acceptance criteria:_
 - Revoking the last live admin is refused with an explaining `Forbidden`, asserted with the primary admin absent from the fixture so the count is what refuses. Two concurrent transactions revoking the only two admins leave exactly one, asserted with real concurrent transactions
 - The primary admin's row carries a "Primary admin" label. Its revoke control stays visible but `aria-disabled`, with the same plain-language reason beside it, and activating it states the reason rather than doing nothing
 - After `ADMIN_BOOTSTRAP_EMAIL` changes, the previous primary admin is still an admin and can now be revoked like any other
-- A revoked admin's next request is refused at `/admin` and at every admin mutation, with no new session issued. A test pins that `session.cookieCache` is off, since enabling it would reopen that window
+- A revoked admin's next request is refused at `/admin` and at every admin mutation, with no new session issued. A test pins that `session.cookieCache` is off, since enabling it would reopen that window; it sits in `tests/lib/auth.test.ts`'s "session lifetimes" block beside MB.76's pins
 - Granting sets `canCreateWorkspace` to `true` and is audited as such; revoking leaves it, workspace memberships, and the `created_by` of everything the admin wrote untouched
 - A non-admin cannot reach the control, the mutation or the ledger read. The test asserts why the call could have succeeded
 - A primary-admin promotion at sign-in or at first-party verification (MB.68) produces a `bootstrap` ledger row through `withAudit`, and so does fixture E in the `standard` seed
@@ -4992,7 +4992,7 @@ _Acceptance criteria:_
 - Two requests from different client IPs are counted separately, asserted by their two rows; the test also shows that without `ipAddressHeaders` set they would have shared the `no-trusted-ip` bucket, so it is the pin that separates them
 - `ipAddressHeaders` is set, and the PR records the header staging's requests actually carry
 - `account.encryptOAuthTokens` is on and pinned; a new sign-in stores encrypted tokens, and an `accounts` row written in plaintext beforehand still reads
-- `session.expiresIn` (seven days), `updateAge` (one day) and `freshAge` (one day) are pinned beside MB.59's `cookieCache` pin
+- `session.expiresIn` (seven days), `updateAge` (one day) and `freshAge` (one day) are pinned in `tests/lib/auth.test.ts`'s "session lifetimes" block, which MB.59's `cookieCache` pin joins
 - `auth.md` gains a "Rate limiting" section
 
 **MB.77 — Mark the last-used provider on the sign-in page** · 2h
