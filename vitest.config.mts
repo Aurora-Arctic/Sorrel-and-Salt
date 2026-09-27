@@ -2,10 +2,11 @@ import { createRequire } from 'node:module';
 import { defineConfig } from 'vitest/config';
 import { dbHarness } from './tests/support/db-project.mts';
 
-// Two projects: `unit` in jsdom with no network, `db` against local Postgres
+// Three projects: `unit` in jsdom with no network, `db` against local Postgres
 // through tests/support/db-project.mts's `dbHarness`, which the acceptance
-// config spreads too. The acceptance suite is deliberately not a third
-// project, and `unit` excludes it so its glob does not sweep those files up:
+// config spreads too, and `rsc` for what can only be observed from inside a
+// server render. The acceptance suite is deliberately not a fourth project,
+// and `unit` excludes it so its glob does not sweep those files up:
 // claude-docs/testing.md, "Acceptance".
 export default defineConfig({
   // Tests reach src/ by tsconfig's `@/*` alias, which Vite ignores unless
@@ -55,7 +56,13 @@ export default defineConfig({
           globals: true,
           include: ['tests/**/*.test.{ts,tsx}'],
           // tests/e2e/ is Playwright's; its specs end `.spec.ts`, but say so.
-          exclude: ['tests/db/**', 'tests/services/**', 'tests/acceptance/**', 'tests/e2e/**'],
+          exclude: [
+            'tests/db/**',
+            'tests/services/**',
+            'tests/rsc/**',
+            'tests/acceptance/**',
+            'tests/e2e/**',
+          ],
           setupFiles: ['@testing-library/jest-dom/vitest', './tests/support/setup.ts'],
         },
       },
@@ -66,6 +73,21 @@ export default defineConfig({
           include: ['tests/db/**/*.test.ts', 'tests/services/**/*.test.ts'],
           passWithNoTests: true,
           ...dbHarness,
+        },
+      },
+      {
+        extends: true,
+        // The `react-server` export condition, which `react` and the Flight
+        // renderer both switch on. Without it React's `cache()` is the default
+        // build's pass-through and a server render cannot be started at all.
+        // `db` cannot carry the condition: under it `react-dom/server` throws
+        // on import, and three of its files reach that through `lib/auth`.
+        ssr: { resolve: { conditions: ['react-server'], externalConditions: ['react-server'] } },
+        test: {
+          name: 'rsc',
+          environment: 'node',
+          globals: true,
+          include: ['tests/rsc/**/*.test.{ts,tsx}'],
         },
       },
     ],
