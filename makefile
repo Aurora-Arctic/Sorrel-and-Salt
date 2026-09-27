@@ -120,7 +120,7 @@ db-studio:
 db-psql:
 	$(COMPOSE) exec postgres psql -U sorrel sorrel
 
-## Run graphql-codegen (not wired up yet — exits non-zero)
+## Regenerate the client GraphQL types in src/gql from the committed SDL
 codegen:
 	npm run codegen
 

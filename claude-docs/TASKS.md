@@ -1256,13 +1256,15 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want generated client types to match the schema so that the client cannot drift from the server.
 
-Configure graphql-codegen for typed documents. Add `codegen.yml` to CI, failing if generated output is stale.
+Configure graphql-codegen's `client-preset` for typed documents, reading the schema from M3.4's committed SDL (`src/graphql/schema.graphql`) rather than from the Pothos module, and commit the output to `src/gql/`. Staleness is a guard in `tests/guards/`, running in CI's existing `vitest` job, not a workflow of its own. No hooks are generated: `client-preset` emits a `TypedDocumentNode` per document, and M3.7's request function runs it through TanStack Query. The task was re-scoped from "typed documents and hooks" and a `codegen.yml` CI check before work began ([`design-decisions/m3.5-plan.md`](design-decisions/m3.5-plan.md)).
 
 _Acceptance criteria:_
 
-- Codegen produces typed documents and hooks
-- CI fails when generated files are stale
+- Codegen produces a typed document, with result and variables types, for each `graphql()` call in `src/`
+- CI fails when generated files are stale, and when a document selects a field the schema lacks
+- A custom scalar with no mapping fails generation rather than typing as `any`
 - Generated files are committed
+- `npm run codegen` replaces the placeholder
 
 **M3.6 — Cursor pagination helper with a hard maximum page size** · 2h
 
