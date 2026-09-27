@@ -42,6 +42,8 @@
   ],
   "dependencies": {
     "@better-auth/core": "^1.7.5",
+    "@escape.tech/graphql-armor": "^3.2.0",
+    "@graphql-yoga/plugin-disable-introspection": "^2.25.1",
     "@pothos/core": "^4.15.1",
     "@pothos/plugin-scope-auth": "^4.2.1",
     "@react-email/components": "^1.0.12",

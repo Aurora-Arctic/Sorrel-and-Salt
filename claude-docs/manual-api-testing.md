@@ -29,8 +29,11 @@ that yet; a `dev:session` script is the natural follow-up if it is needed often.
 
 ## Staging: the Altair browser extension
 
-Staging serves no IDE and answers no introspection (`graphql.md`; M3.3), but it
-answers queries. Use the
+Staging serves no IDE, answers no introspection and suggests no field names
+(`graphql.md`, "Protections"), but it answers queries. The extension's docs
+pane and autocompletion are therefore empty; the schema is the code, or
+introspection under `npm run dev`. A local production build behaves the same
+way. Use the
 [Altair browser extension](https://altairgraphql.dev/docs/): sign in at
 `https://staging.sorrelandsalt.com` on a tab, then point the extension at
 `https://staging.sorrelandsalt.com/api/graphql`. Its manifest holds host

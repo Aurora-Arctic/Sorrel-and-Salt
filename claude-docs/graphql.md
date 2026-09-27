@@ -41,8 +41,70 @@ Every deploy, including staging and each hotfix preview, runs at
 therefore reads "on only where the app is not publicly reachable". Two tests pin
 it: a unit test with `NODE_ENV` stubbed each way, and
 `tests/e2e/graphql.spec.ts` against the production build. Each fails when the
-IDE is forced on. Using it — and querying by hand where it is off — is
+IDE is forced on. Introspection and field suggestions follow the same rule
+("Protections" below). Using it — and querying by hand where it is off — is
 [`manual-api-testing.md`](manual-api-testing.md).
+
+## Protections
+
+`src/graphql/armor.ts`'s `protections({ production })` is the route's Yoga
+`plugins`. It limits what a client can ask for, because a GraphQL client
+composes its own queries. Without limits, one request can cost as much compute as the
+client likes, and an anonymous client can map the whole schema.
+
+**Everywhere, local development included:**
+
+| Limit      | Value | Refusal message                                               |
+| ---------- | ----- | ------------------------------------------------------------- |
+| Depth      | 7     | `Syntax Error: Query depth limit of 7 exceeded, found 8.`     |
+| Cost       | 5000  | `Syntax Error: Query Cost limit of 5000 exceeded, found <n>.` |
+| Aliases    | 15    | graphql-armor's default                                       |
+| Directives | 50    | graphql-armor's default                                       |
+| Tokens     | 1000  | graphql-armor's default                                       |
+
+These come from `@escape.tech/graphql-armor`'s `EnvelopArmorPlugin`. Depth
+counts field levels, so `{ ok }` is 1. Cost is graphql-armor's static estimate,
+not a measurement: 2 for an object field, 1 for a scalar, and each level down
+weighs 1.5× the one above. An object field with a `first` or `last` argument
+multiplies its whole subtree by that number. So two nested pages of 100 cost
+about 79 000 and are refused, and two nested pages of 10 cost about 820. Depth
+and cost are pinned in the file even though 5000 is also the package default,
+so a package upgrade cannot move either one. Introspection queries (`__schema`)
+count towards neither.
+
+**The multiplier reads a literal only.** `children(first: 100)` is costed ×100,
+but `children(first: $n)` is costed ×1, because the check runs at validation,
+before variables are bound. A list field's cost bound therefore comes from its
+server-side maximum, M3.6's hard cap of 100, and not from this check. For
+M3.6, "cost accounts for the requested page size" holds for a literal argument
+and has to be argued separately for a variable.
+
+**Off wherever `NODE_ENV=production`:**
+
+- **Introspection.** `@graphql-yoga/plugin-disable-introspection` refuses
+  `__schema` and `__type` at validation, one error per introspection field.
+  `__typename` still works, because clients rely on it.
+- **Field suggestions.** graphql-js answers a misspelt field with
+  `Did you mean "ok"?`. That is a way to find field names by guessing. armor
+  removes that clause and leaves the rest of the error, so `{ ko }` is still
+  refused as `Cannot query field "ko" on type "Query".`
+
+`NODE_ENV` is the same signal the IDE uses. Every deploy, including staging and
+each hotfix preview, runs at `production`, so staging gets the real
+protections without any configuration of its own. **A local production build
+(`npm run build && npm run start`, and so every e2e run) also has
+introspection and suggestions off.** That is correct, because it is the build
+that ships, but it can be surprising: Altair's docs pane is empty there, and a
+typo gets no hint. Use `npm run dev` for either.
+
+The tests: `tests/app/api/graphql/armor.test.ts` drives the real route over a
+throwaway schema that nests without limit. The real schema is one field deep,
+so no query against it can reach a depth or cost limit. It runs both limits at
+`development` and at `production`, each next to the same query shape just
+inside the limit, to show that the refusal comes from the limit. `route.test.ts`
+checks introspection and suggestions against the real schema in both modes,
+and `tests/e2e/graphql.spec.ts` repeats the production case against
+`next start`.
 
 ## No CORS
 
