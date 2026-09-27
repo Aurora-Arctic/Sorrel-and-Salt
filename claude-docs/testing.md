@@ -108,13 +108,16 @@ test, it is a file nothing runs.
     `mockGraphQLMutation(operationName, resolveData)` for a component test to
     register a one-off response for a single named operation
     (`server.use(graphqlLink.query(...))` / `.mutation(...)` under the hood).
-    No client library is wired up yet (`graphql-request` lands with the
-    client in a later milestone), so a test posts a plain `fetch('/api/graphql',
-{ method: 'POST', body: JSON.stringify({ query }) })` — msw's graphql
-    matcher parses the operation name out of the `query` document itself, no
-    explicit `operationName` field required. A request against
-    `http://localhost/...` rather than the relative `/api/graphql` will not
-    match, since jsdom's default location is `http://localhost:3000`.
+    A component test wraps its tree in a `QueryClientProvider` holding
+    `makeQueryClient()`, a fresh client per test — `Providers` keeps one for the
+    tab, which would carry one test's cache into the next — and
+    `graphql-request` resolves `/api/graphql` against jsdom's location, which
+    the link matches. A test with no client posts a plain `fetch` of
+    `JSON.stringify({ query })` to `/api/graphql`; msw's graphql matcher parses
+    the operation name out of the `query` document itself, no explicit
+    `operationName` field required. A request against `http://localhost/...`
+    rather than the relative `/api/graphql` will not match, since jsdom's
+    default location is `http://localhost:3000`.
     Because no base handler answers an un-overridden operation, it falls
     through to `onUnhandledRequest: 'error'` and fails loudly instead of
     hitting the network; `afterEach(() => server.resetHandlers())` means an
