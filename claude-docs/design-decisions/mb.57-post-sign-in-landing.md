@@ -1,6 +1,8 @@
 # MB.57 — Where the post-sign-in landing lives
 
-**Decided:** `/` is the public entry page, for everyone. The post-sign-in
+**Decided:** `/` is the public entry page, for everyone. (Since MB.80 the
+compendium pages are public as well; `/` stays the entry page and the
+post-sign-in landing stays `/coven`.) The post-sign-in
 landing — into their workspace, the create form, or the invite-only
 explanation (M2.8) — is its own route, **`/coven`**, protected like every
 other page. `/sign-in`'s default `next`, and so `safeReturnPath`'s fallback,
