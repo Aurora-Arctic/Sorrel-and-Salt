@@ -25,7 +25,8 @@ route.ts` does exactly one thing — hand every request straight to Better
   rule 1) means the compendium, ingredients, and grimoire — not the protocol
   handshake that establishes who you are. Every later feature still goes
   through `/api/graphql`; nothing about this exception widens as the app
-  grows.
+  grows. The two transports that do carry application data, and the rules
+  that bind them, are [`graphql.md`](graphql.md)'s "The two transports".
 
 ## Tables (M2.2/M2.3)
 

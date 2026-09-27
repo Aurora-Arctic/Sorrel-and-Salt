@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import { findWorkspaceRole } from '../db/repository';
 import { Forbidden } from '../lib/errors';
 import type { Session } from '../lib/session';
@@ -12,6 +13,14 @@ import { type WorkspacePermission, type WorkspaceRole, rolePermits } from './acc
 // module: no other file can name the property, so no object literal satisfies
 // the type.
 declare const brand: unique symbol;
+
+// One lookup per (user, workspace) per server render, however many layouts and
+// pages ask and whatever permission each asks for: the check below the lookup
+// stays uncached. Keyed by the two ids rather than the session, which
+// `cache()` would compare by identity. Outside a render — the GraphQL route
+// handler included — it is the plain finder (claude-docs/graphql.md, "The two
+// transports").
+const workspaceRole = cache(findWorkspaceRole);
 
 /**
  * Proof that `assertMembership` admitted this user to this workspace at this
@@ -54,7 +63,7 @@ export async function assertMembership(
     throw new Error('assertMembership requires a permission to check');
   }
 
-  const role = await findWorkspaceRole(session.userId, workspaceId);
+  const role = await workspaceRole(session.userId, workspaceId);
 
   // Bare, and deliberately the same refusal a wrong id earns: whether a
   // workspace exists is itself private (claude-docs/auth.md).
