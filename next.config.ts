@@ -14,6 +14,9 @@ const nextConfig: NextConfig = {
   // monocart-coverage-reports needs .js.map files to attribute V8 coverage;
   // `next dev` never reads the flag.
   productionBrowserSourceMaps: true,
+  // altair-static reads its dist/index.html from disk by `__dirname`, which a
+  // bundled copy no longer has; it is loaded only under `next dev`.
+  serverExternalPackages: ['altair-static'],
 };
 
 export default nextConfig;
