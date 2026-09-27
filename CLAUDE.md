@@ -91,7 +91,7 @@ A private spell must never reach a resolver. Same for cross-workspace rows.
 
 **8. Every list paginates through the M3.6 cursor helper.** Default 25, hard server maximum 100, cursors encode sort key + id and never an offset.
 
-**9. DataLoader is not optional.** Compute has a dollar cost on Vercel, so an N+1 is a billing bug as well as a slow one. Loaders are constructed per request, never at module level.
+**9. DataLoader is not optional.** Compute has a dollar cost on Vercel, so an N+1 is a billing bug as well as a slow one. Loaders are constructed per request, never at module level: only `src/graphql/loaders/define-loader.ts` may import `dataloader` at runtime, and it hands out factories the request context calls (enforced by lint as of M3.2).
 
 **10. Migrations are expand/contract and forward-only.** No down migrations exist in this repo. Destructive DDL (DROP, RENAME, type narrowing, NOT NULL additions) needs an explicit acknowledgement **sidecar beside the migration** — `src/db/migrations/<tag>.ack.md`, carrying a `Destructive DDL acknowledged: <reason>` line (MB.48). M1.5's check flags it, as the `checks / destructive-ddl` leg (MB.37), and an acknowledgement covers only the migration it sits beside: it was a line in the PR body until MB.48, which is both gone on merge — so a release PR rescanning every migration since the last release could not read it — and uncorrelated, one line blessing every finding in the diff. "DROP" means any object — column, table, type, constraint, index — and not only the two the check originally knew; `DROP NOT NULL` and `DROP DEFAULT` widen and are exempt. Run it locally with `npm run check:destructive-ddl`, which scans what your branch adds.
 

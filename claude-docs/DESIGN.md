@@ -710,11 +710,21 @@ type Invitation {
   id: ID!
   email: String!
   role: InvitableRole!
-  expiresAt: String! # ISO 8601; the scalar is M3.2's to name
-  acceptedAt: String
-  revokedAt: String
+  expiresAt: DateTime! # ISO 8601 on the wire
+  acceptedAt: DateTime
+  revokedAt: DateTime
   audit: AuditInfo!
   # no url and no token: the link exists only in the mail (MB.61)
+}
+
+scalar DateTime # ISO 8601 on the wire; a Date in a resolver
+# One shape for every audited type, never flat fields on the type itself.
+# The four stamps only: no finder returns a soft-deleted row.
+type AuditInfo {
+  createdAt: DateTime!
+  createdBy: ID!
+  updatedAt: DateTime!
+  updatedBy: ID!
 }
 ```
 

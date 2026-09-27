@@ -1,5 +1,6 @@
 import { createYoga } from 'graphql-yoga';
 import { isBrowserNavigation, renderAltairPage } from '../../../graphql/altair';
+import { createContext } from '../../../graphql/context';
 import { schema } from '../../../graphql/schema';
 
 // Local development only: every deploy, staging included, runs at
@@ -10,6 +11,7 @@ const servesIde = process.env.NODE_ENV !== 'production';
 const yoga = createYoga({
   schema,
   graphqlEndpoint: '/api/graphql',
+  context: ({ request }) => createContext({ request }),
   fetchAPI: { Response },
   // The IDE is Altair, served by `handle` before Yoga sees the request.
   graphiql: false,

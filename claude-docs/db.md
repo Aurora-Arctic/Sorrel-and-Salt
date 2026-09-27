@@ -2088,7 +2088,7 @@ X sharing no member is what makes a cross-workspace denial test say something.
 are seeded `true` because each is in a workspace, and under §5 that is how the
 flag comes to be true — an invitation was accepted. E is seeded `false`: E has
 never been invited, and creates workspaces by being an admin instead. Seeding E
-`true` would erase exactly the distinction M3.2's gate turns on.
+`true` would erase exactly the distinction M6.7's gate turns on.
 
 ### The compendium is awkward on purpose
 
