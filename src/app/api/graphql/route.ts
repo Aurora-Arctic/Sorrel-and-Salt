@@ -1,10 +1,12 @@
 import { createYoga } from 'graphql-yoga';
+import { createContext } from '../../../graphql/context';
 import { schema } from '../../../graphql/schema';
 
 // Every browser-initiated read and write comes through here (CLAUDE.md rule 1).
 const yoga = createYoga({
   schema,
   graphqlEndpoint: '/api/graphql',
+  context: ({ request }) => createContext({ request }),
   fetchAPI: { Response },
   // Local development only: every deploy, staging included, runs at
   // NODE_ENV=production.

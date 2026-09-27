@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module';
 import { defineConfig } from 'vitest/config';
 import { dbHarness } from './tests/support/db-project.mts';
 
@@ -10,7 +11,16 @@ export default defineConfig({
   // Tests reach src/ by tsconfig's `@/*` alias, which Vite ignores unless
   // told. Each project spells out `extends: true` (the default) because it is
   // load-bearing: the projects are what run.
-  resolve: { tsconfigPaths: true },
+  //
+  // `graphql` ships CommonJS and ESM builds, and the two are different realms:
+  // a schema built by one fails the other's `instanceof`. Pothos and Yoga are
+  // externalized, so Node hands them the CommonJS build; a test file is
+  // transformed by Vite, which would pick the ESM one. The alias gives test
+  // code the copy the packages get.
+  resolve: {
+    tsconfigPaths: true,
+    alias: [{ find: /^graphql$/, replacement: createRequire(import.meta.url).resolve('graphql') }],
+  },
   test: {
     // Both under .reports/ with the rest of the generated output; without
     // `outputFile`, the json and html reporters would write to `.vitest/`.
