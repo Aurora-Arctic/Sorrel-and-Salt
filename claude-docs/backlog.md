@@ -5,6 +5,11 @@
   - [ ] Subscription billing — the requirements and the Stripe plugin's fit
         are in DESIGN.md §13 (MB.79); spike against Stripe's test mode before
         scheduling it.
+  - [ ] Swap the email page's address validation for my personal email
+        validation library. v1's rule is `validateEmailAddress` in
+        `src/modules/identity/services/email.ts` (MB.54), one deliberately
+        loose function that nothing else reads, so the swap is one import
+        and its tests in `tests/modules/identity/services/email.test.ts`.
 - [ ] V3
   - [ ] Add label printing.
   - [ ] Add wikipedia.

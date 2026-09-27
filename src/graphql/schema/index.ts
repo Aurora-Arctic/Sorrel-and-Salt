@@ -14,4 +14,8 @@ builder.queryType({
   }),
 });
 
+// Every mutation is a module's `mutationField`; the root itself is declared
+// here, once, beside the query root.
+builder.mutationType({});
+
 export const schema = builder.toSchema();

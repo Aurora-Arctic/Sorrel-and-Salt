@@ -19,6 +19,8 @@ import { SOCIAL_PROVIDERS, type ProviderId } from './social-providers';
 import { clientCredentials } from './social-providers-config';
 import type { UserRole } from './session';
 import { send } from './mail';
+import { emailPagePath, VERIFIED_LANDING } from './account-email';
+import { SIGN_IN_TO_VERIFY_PATH } from './sign-in';
 import { verifyEmailMessage } from '../emails/verify-email';
 import {
   promotePrimaryAdmin,
@@ -28,9 +30,15 @@ import {
 } from '@/modules/identity';
 import {
   VERIFICATION_LIFETIME_SECONDS,
-  extendVerificationWindow,
+  recordVerificationSent,
+  verificationWaitFor,
+  isEmailHeldByAnother,
+  isPlaceholderEmail,
+  placeholderEmail,
   sweepProvisionalAccounts,
 } from '@/modules/identity';
+
+type HookContext = Parameters<Parameters<typeof createAuthMiddleware>[0]>[0];
 
 // Better Auth's own `validateSecret` is swallowed — with the secret unset it
 // logs and still answers 200 on the well-known default. Production-only:
@@ -47,6 +55,15 @@ function authSecret(): string | undefined {
 // neither. A sign-in earns an account and nothing else (CLAUDE.md invariants).
 // The roster itself lives in social-providers.ts, shared with the sign-in
 // page, so a provider added or removed there needs no second edit here.
+// A provider that shared no address — Discord for an account without a
+// verified one, Facebook under narrowed permissions — would end the callback
+// at `email_not_found`. The placeholder lets the row and its session exist, so
+// /account/email can ask for one (claude-docs/auth.md, "The email page").
+function orPlaceholder(providerId: ProviderId, accountId: unknown, email: unknown) {
+  if (email) return {};
+  return { email: placeholderEmail(providerId, String(accountId)), emailVerified: false };
+}
+
 function socialProviders(): BetterAuthOptions['socialProviders'] {
   const providers: NonNullable<BetterAuthOptions['socialProviders']> = {};
 
@@ -54,30 +71,54 @@ function socialProviders(): BetterAuthOptions['socialProviders'] {
     const credentials = clientCredentials(provider.id);
     if (!credentials) continue;
 
-    // Neither vouches for an address (claude-docs/auth.md, "First-party
-    // verification"), so a true users.emailVerified means Google, Discord or
-    // our own mail did. Spread after the provider's own mapping, so it wins.
-    if (provider.id === 'facebook') {
-      providers.facebook = { ...credentials, mapProfileToUser: () => ({ emailVerified: false }) };
-      continue;
+    // Each mapping is spread after the provider's own, so it wins. Facebook
+    // and Microsoft never vouch for an address (claude-docs/auth.md,
+    // "First-party verification"), so a true users.emailVerified means
+    // Google, Discord or our own mail did.
+    switch (provider.id) {
+      case 'google':
+        providers.google = {
+          ...credentials,
+          mapProfileToUser: (profile) => orPlaceholder('google', profile.sub, profile.email),
+        };
+        break;
+      case 'discord':
+        providers.discord = {
+          ...credentials,
+          mapProfileToUser: (profile) => orPlaceholder('discord', profile.id, profile.email),
+        };
+        break;
+      case 'facebook':
+        providers.facebook = {
+          ...credentials,
+          mapProfileToUser: (profile) => ({
+            emailVerified: false,
+            // An id-token profile names the account `sub`; the Graph one, `id`.
+            ...orPlaceholder(
+              'facebook',
+              'sub' in profile ? profile.sub : profile.id,
+              profile.email,
+            ),
+          }),
+        };
+        break;
+      case 'microsoft':
+        // Personal Microsoft accounts must be able to sign in, so the tenant is
+        // stated explicitly rather than left to Better Auth's own "common"
+        // default — a dependency bump silently narrowing that default would
+        // otherwise fail every personal-account sign-in with no code change
+        // here to review. The app registration itself must also allow personal
+        // accounts (claude-docs/secrets.md); the tenant alone can't grant that.
+        providers.microsoft = {
+          ...credentials,
+          tenantId: process.env.MICROSOFT_TENANT_ID || 'common',
+          mapProfileToUser: (profile) => ({
+            emailVerified: false,
+            ...orPlaceholder('microsoft', profile.oid, profile.email),
+          }),
+        };
+        break;
     }
-
-    if (provider.id === 'microsoft') {
-      // Personal Microsoft accounts must be able to sign in, so the tenant is
-      // stated explicitly rather than left to Better Auth's own "common"
-      // default — a dependency bump silently narrowing that default would
-      // otherwise fail every personal-account sign-in with no code change
-      // here to review. The app registration itself must also allow personal
-      // accounts (claude-docs/secrets.md); the tenant alone can't grant that.
-      providers.microsoft = {
-        ...credentials,
-        tenantId: process.env.MICROSOFT_TENANT_ID || 'common',
-        mapProfileToUser: () => ({ emailVerified: false }),
-      };
-      continue;
-    }
-
-    providers[provider.id] = credentials;
   }
 
   return providers;
@@ -136,6 +177,98 @@ const UNQUALIFIED = new Set<PrimaryAdminOutcome>([
 // Checked at load, so a deploy without it fails its build rather than its first sign-in.
 primaryAdminEmail();
 
+/**
+ * A refusal on /verify-email, the way Better Auth's own read: back to the
+ * link's `callbackURL` with `?error=<code>`, or 403 for a link carrying none.
+ */
+function refuseVerification(ctx: HookContext, code: string, message: string): APIError {
+  const callbackURL = ctx.query?.callbackURL;
+  if (typeof callbackURL === 'string') {
+    // The link's landing without its `verified` flag: the page must not read
+    // a refusal as a confirmation.
+    const landing = new URL(callbackURL, 'http://relative.invalid');
+    landing.searchParams.delete('verified');
+    const params = new URLSearchParams({ error: code });
+    return new APIError('FOUND', undefined, {
+      Location: appendQueryParams(landing.pathname + landing.search, params),
+    });
+  }
+  return new APIError('FORBIDDEN', { code, message });
+}
+
+/**
+ * A link opened from no session at all: to the sign-in page, whose sentence
+ * says to open the link again once signed in, and which sends the account on
+ * to the email page. Nothing from the link travels with it.
+ */
+function refuseSignedOut(ctx: HookContext): APIError {
+  if (typeof ctx.query?.callbackURL !== 'string') {
+    return new APIError('FORBIDDEN', {
+      code: 'SIGN_IN_TO_VERIFY',
+      message: 'Open the link from a browser signed in to this account.',
+    });
+  }
+  return new APIError('FOUND', undefined, { Location: SIGN_IN_TO_VERIFY_PATH });
+}
+
+/**
+ * Better Auth mails a verification link to any address posted here, signed
+ * in or not. Only the row's own session may ask: otherwise anyone could mail
+ * someone else, and the stamp the mail sets would restart their window.
+ */
+async function requireOwnResend(ctx: HookContext): Promise<void> {
+  const session = await getSessionFromCtx(ctx as Parameters<typeof getSessionFromCtx>[0]);
+  const email = typeof ctx.body?.email === 'string' ? ctx.body.email.toLowerCase() : '';
+  if (!session || session.user.email.toLowerCase() !== email) {
+    throw new APIError('UNAUTHORIZED', {
+      code: 'SIGN_IN_TO_RESEND',
+      message: 'Sign in to this account to send its confirmation again.',
+    });
+  }
+}
+
+/** The verification token's claims, decoded and not verified: a caller may only refuse on them. */
+function tokenClaims(token: unknown): { email?: string; updateTo?: string } | undefined {
+  const payload = typeof token === 'string' ? token.split('.')[1] : undefined;
+  if (!payload) return undefined;
+  try {
+    return JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+  } catch {
+    return undefined;
+  }
+}
+
+// The change branch of /verify-email — a token carrying `updateTo` — calls no
+// `beforeEmailVerification` and, given no session, mints one for whoever
+// opened the link. So MB.66's rule is applied here, before the endpoint: only
+// a session holding the row may follow it, and the address must still be free,
+// or the unique index would fail the write. The plain branch is gated by
+// `beforeEmailVerification` as before (claude-docs/auth.md, "The email page").
+async function gateEmailChange(ctx: HookContext): Promise<void> {
+  const claims = tokenClaims(ctx.query?.token);
+  if (!claims?.email || !claims.updateTo) return;
+
+  const session = await getSessionFromCtx(ctx as Parameters<typeof getSessionFromCtx>[0]);
+  if (!session) throw refuseSignedOut(ctx);
+  if (session.user.email.toLowerCase() !== claims.email.toLowerCase()) {
+    throw refuseVerification(
+      ctx,
+      'SIGN_IN_TO_VERIFY',
+      'Open the link from a browser signed in to this account.',
+    );
+  }
+  // A lapsed row holding the address goes first, as it would on a callback.
+  try {
+    await sweepProvisionalAccounts();
+  } catch (error) {
+    ctx.context.logger.error('provisional-account sweep failed', error);
+  }
+  if (await isEmailHeldByAnother(claims.updateTo, session.user.id)) {
+    throw refuseVerification(ctx, 'EMAIL_TAKEN', 'That address is held by another account.');
+  }
+  await actingUser.set(session.user.id);
+}
+
 // /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
 export const auth = betterAuth({
   secret: authSecret(),
@@ -159,18 +292,24 @@ export const auth = betterAuth({
     expiresIn: VERIFICATION_LIFETIME_SECONDS,
     autoSignInAfterVerification: false,
     sendVerificationEmail: async ({ user, url }) => {
+      // Nothing is there to receive it; the page asks for an address instead.
+      if (isPlaceholderEmail(user.email)) return;
       const ctx = getCurrentAuthEndpointContext();
-      // A resend restarts the provisional window, but only from the row's own
-      // session. A sign-up needs no touch: the insert has just set the clock.
-      if (ctx.path === '/send-verification-email') {
-        const session = await getSessionFromCtx(ctx as Parameters<typeof getSessionFromCtx>[0]);
-        if (session?.user.id === user.id) await extendVerificationWindow({ userId: user.id });
-      }
+      // One mail a minute per row, whoever asks; the endpoint answers the
+      // same either way, so a stranger learns nothing from the refusal.
+      if ((await verificationWaitFor(user.id)) > 0) return;
+      // Reached only at sign-up or from the row's own session (`requireOwnResend`),
+      // so the stamp, which restarts the provisional window too, is the row's own.
+      await recordVerificationSent({ userId: user.id });
+      // Better Auth lands a sign-up's link where the sign-in asked to go; every
+      // link lands on the email page's confirmed view instead.
+      const link = new URL(url);
+      link.searchParams.set('callbackURL', VERIFIED_LANDING);
       const accounts = await ctx.context.internalAdapter.findAccounts(user.id);
       await send(
         await verifyEmailMessage({
           to: user.email,
-          url,
+          url: link.href,
           providers: accounts.map((account) => account.providerId as ProviderId),
         }),
       );
@@ -181,24 +320,18 @@ export const auth = betterAuth({
     beforeEmailVerification: async (user) => {
       const ctx = getCurrentAuthEndpointContext();
       const session = await getSessionFromCtx(ctx as Parameters<typeof getSessionFromCtx>[0]);
-      if (session?.user.id !== user.id) {
-        const callbackURL = ctx.query?.callbackURL;
-        if (typeof callbackURL === 'string') {
-          // Better Auth's own refusals on this endpoint redirect the same way.
-          const params = new URLSearchParams({ error: 'SIGN_IN_TO_VERIFY' });
-          throw new APIError('FOUND', undefined, {
-            Location: appendQueryParams(callbackURL, params),
-          });
-        }
-        throw new APIError('FORBIDDEN', {
-          code: 'SIGN_IN_TO_VERIFY',
-          message: 'Open the link from a browser signed in to this account.',
-        });
+      if (!session) throw refuseSignedOut(ctx as HookContext);
+      if (session.user.id !== user.id) {
+        throw refuseVerification(
+          ctx as HookContext,
+          'SIGN_IN_TO_VERIFY',
+          'Open the link from a browser signed in to this account.',
+        );
       }
       await actingUser.set(user.id);
     },
-    // Only for the row the check above admitted: Better Auth also calls this
-    // on a change-email link, which skips that check.
+    // Only for the row a gate admitted: this one's, or `gateEmailChange`'s for
+    // a change link, which Better Auth calls it on without the check above.
     afterEmailVerification: async (user) => {
       if (!(await hasRequestState()) || (await actingUser.get()) !== user.id) return;
       // The adapter returns the whole row; the hook's type omits additionalFields.
@@ -230,6 +363,8 @@ export const auth = betterAuth({
       // hook below can set these. No `defaultValue`, so Postgres's own applies.
       role: { type: 'string', input: false },
       canCreateWorkspace: { type: 'boolean', input: false },
+      // Declared so the update hook below can clear it; nothing reads it here.
+      verificationSentAt: { type: 'date', required: false, input: false, returned: false },
       // NOT NULL with no database default, so every insert must supply these.
       createdBy: { type: 'string', input: false, returned: false },
       updatedBy: { type: 'string', input: false, returned: false },
@@ -241,6 +376,8 @@ export const auth = betterAuth({
     // address that is, so it sweeps every lapsed row. A failure is logged and
     // never fails the sign-in: the sweep is housekeeping.
     before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === '/verify-email') return gateEmailChange(ctx);
+      if (ctx.path === '/send-verification-email') return requireOwnResend(ctx);
       if (ctx.path !== '/callback/:id') return;
       try {
         const swept = await sweepProvisionalAccounts();
@@ -267,6 +404,20 @@ export const auth = betterAuth({
       if (UNQUALIFIED.has(outcome)) {
         ctx.context.logger.warn(`primary admin not promoted: user ${user.id} (${outcome})`);
       }
+
+      // An unverified account can do nothing else, so it lands on the email
+      // page, address prefilled, until the address is proven; where the
+      // sign-in was going rides along. The endpoint's own redirect is the
+      // `location` already in the response headers, and its cookies stay.
+      if (!user.emailVerified) {
+        const landing = new URL(
+          ctx.context.responseHeaders?.get('location') ?? '/',
+          ctx.context.baseURL,
+        );
+        throw new APIError('FOUND', undefined, {
+          Location: emailPagePath(`${landing.pathname}${landing.search}`),
+        });
+      }
     }),
   },
   databaseHooks: {
@@ -291,12 +442,16 @@ export const auth = betterAuth({
         // The same self-stamp as the create hook, outside `withAudit` for the
         // same reason: the verify write is the identity completing. Merged into
         // Better Auth's own UPDATE, so the row says who and the trigger says when.
-        before: async (_patch, ctx) => {
+        before: async (patch, ctx) => {
           const actor =
             ((await hasRequestState()) ? await actingUser.get() : undefined) ??
             ctx?.context.session?.user.id;
-          if (!actor) return;
-          return { data: { updatedBy: actor } };
+          const data: { updatedBy?: string; verificationSentAt?: null } = {};
+          if (actor) data.updatedBy = actor;
+          // The mail was answered: the clock that spaces mails to the row starts over.
+          if (patch.emailVerified === true) data.verificationSentAt = null;
+          if (Object.keys(data).length === 0) return;
+          return { data };
         },
       },
     },

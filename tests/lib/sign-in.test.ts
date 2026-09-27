@@ -5,6 +5,7 @@ import {
   safeReturnPath,
   signInErrorMessage,
   signInPath,
+  SIGN_IN_TO_VERIFY_PATH,
 } from '@/lib/sign-in';
 
 // The fallback is the post-sign-in landing, not `/`: `/` is the public front
@@ -71,8 +72,15 @@ describe('signInErrorMessage', () => {
     expect(signInErrorMessage('access_denied')).toMatch(/[a-z]/i);
   });
 
-  it('gives email_not_found its own sentence mentioning email', () => {
-    expect(signInErrorMessage('email_not_found')).toMatch(/email/i);
+  // A provider that shares no address gets a placeholder and the email page
+  // asks (MB.54), so the code no longer occurs; a regression gets the generic sentence.
+  it('no longer gives email_not_found a sentence of its own', () => {
+    expect(signInErrorMessage('email_not_found')).toBe(GENERIC_SIGN_IN_ERROR);
+  });
+
+  it('tells sign_in_to_verify to sign in and open the link again, and SIGN_IN_TO_VERIFY_PATH carries the code and the email page', () => {
+    expect(signInErrorMessage('sign_in_to_verify')).toMatch(/sign in.*open the link.*again/i);
+    expect(SIGN_IN_TO_VERIFY_PATH).toBe('/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify');
   });
 
   it('points email_not_verified at the mailed link and the email page, not the provider', () => {

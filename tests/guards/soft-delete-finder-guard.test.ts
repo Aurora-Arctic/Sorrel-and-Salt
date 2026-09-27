@@ -37,6 +37,7 @@ const EXPORTED_FUNCTIONS = [
   'findOneSpell',
   'findPage',
   'findPageInWorkspace',
+  'findUserByEmail',
   'findWorkspaceRole',
   'withAudit',
 ];

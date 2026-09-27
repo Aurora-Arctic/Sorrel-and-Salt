@@ -135,17 +135,21 @@ describe('Story 58: following the link', () => {
     const response = await follow(link, cookie);
 
     expect(response.status).toBe(302);
-    expect(response.headers.get('location')).toBe('/coven');
+    // The email page's confirmed view, not where the sign-in was going.
+    expect(response.headers.get('location')).toBe('/account/email?verified=1');
     expect(await userRow(OWNER)).toMatchObject({ email_verified: true, updated_by: before.id });
   });
 
-  it('refuses from no session and leaves the row unchanged', async () => {
+  it('refuses from no session, sending the browser to sign in, and leaves the row unchanged', async () => {
     const { link, before } = await signUpUnverified();
 
     const response = await follow(link);
 
     expect(response.status).toBe(302);
-    expect(response.headers.get('location')).toBe('/coven?error=SIGN_IN_TO_VERIFY');
+    // Nothing from the link travels: the sign-in page says to open it again.
+    expect(response.headers.get('location')).toBe(
+      '/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify',
+    );
     expect(await userRow(OWNER)).toEqual(before);
   });
 
@@ -156,7 +160,7 @@ describe('Story 58: following the link', () => {
 
     const response = await follow(link, cookieHeader(other));
 
-    expect(response.headers.get('location')).toBe('/coven?error=SIGN_IN_TO_VERIFY');
+    expect(response.headers.get('location')).toBe('/account/email?error=SIGN_IN_TO_VERIFY');
     expect(await userRow(OWNER)).toEqual(before);
     // The same link from the owner's session succeeds, so the token was good
     // and the session is what refused it.
@@ -184,7 +188,7 @@ describe('Story 58: following the link', () => {
 
     const response = await follow(link, cookie);
 
-    expect(response.headers.get('location')).toBe('/coven');
+    expect(response.headers.get('location')).toBe('/account/email?verified=1');
     expect(await userRow(OWNER)).toEqual(verified);
   });
 });
@@ -274,7 +278,7 @@ describe('the primary admin is promoted at first-party verification', () => {
 
     const response = await follow(link, cookie);
 
-    expect(response.headers.get('location')).toBe('/coven');
+    expect(response.headers.get('location')).toBe('/account/email?verified=1');
     expect(await roleOf(OWNER)).toBe('admin');
     expect((await userRow(OWNER))?.updated_by).toBe(before.id);
   });
@@ -284,9 +288,12 @@ describe('the primary admin is promoted at first-party verification', () => {
     const other = await signIn('google', { sub: 'g-6', email: STRANGER, verified: true });
     expectSignedIn(other);
 
-    for (const refused of [await follow(link, cookieHeader(other)), await follow(link)]) {
-      expect(refused.headers.get('location')).toBe('/coven?error=SIGN_IN_TO_VERIFY');
-    }
+    expect((await follow(link, cookieHeader(other))).headers.get('location')).toBe(
+      '/account/email?error=SIGN_IN_TO_VERIFY',
+    );
+    expect((await follow(link)).headers.get('location')).toBe(
+      '/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify',
+    );
     expect(await roleOf(OWNER)).toBe('user');
     expect(await roleOf(STRANGER)).toBe('user');
 
@@ -296,23 +303,40 @@ describe('the primary admin is promoted at first-party verification', () => {
     expect(await roleOf(OWNER)).toBe('admin');
   });
 
-  // changeEmail is off, so Better Auth mints no such link; one minted by hand
-  // shows a stray one would verify without the session check, and not promote.
-  it('promotes nobody at a change-email link, which skips the session check', async () => {
-    const { link, before } = await signUpUnverified();
+  // The email page's change link (MB.54): Better Auth's own change branch
+  // skips the session check, so src/lib/auth.ts gates it before the endpoint.
+  // Followed from the row's session it swaps the address, and the address
+  // being the bootstrap one, promotes — only the owner's inbox and the owner's
+  // session together can do that.
+  it('promotes at a change-email link to the bootstrap address from the row’s own session, and refuses one from none', async () => {
+    const response = await signIn('microsoft', { sub: 'ms-7', email: STRANGER, verified: true });
+    expectSignedIn(response);
+    const cookie = cookieHeader(response);
+    const before = (await userRow(STRANGER))!;
     const { secret } = await auth.$context;
-    const token = await createEmailVerificationToken(secret, OWNER, OWNER, 3600, {
+    const token = await createEmailVerificationToken(secret, STRANGER, OWNER, 3600, {
       requestType: 'change-email-verification',
     });
-    const changeLink = new URL(link);
+    const changeLink = new URL(mailedLink());
     changeLink.searchParams.set('token', token);
 
-    const response = await follow(changeLink.href);
+    const refused = await follow(changeLink.href);
 
-    // Honoured with no session at all: the hook ran with nothing checked.
-    expect(response.headers.get('location')).toBe('/coven');
-    expect(await userRow(OWNER)).toMatchObject({ id: before.id, email_verified: true });
-    expect(await roleOf(OWNER)).toBe('user');
+    expect(refused.headers.get('location')).toBe(
+      '/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify',
+    );
+    expect(await userRow(STRANGER)).toEqual(before);
+    expect(await roleOf(STRANGER)).toBe('user');
+
+    const honoured = await follow(changeLink.href, cookie);
+
+    expect(honoured.headers.get('location')).toBe('/account/email?verified=1');
+    expect(await userRow(OWNER)).toMatchObject({
+      id: before.id,
+      email_verified: true,
+      updated_by: before.id,
+    });
+    expect(await roleOf(OWNER)).toBe('admin');
   });
 
   it('verifies an address the variable does not name without promoting it', async () => {

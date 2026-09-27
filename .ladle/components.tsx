@@ -1,5 +1,6 @@
 import { useLayoutEffect } from 'react';
 import { type GlobalProvider, ThemeState } from '@ladle/react';
+import Providers from '../src/app/providers';
 import { STORAGE_KEY, applyTheme } from '../src/components/ThemeToggle';
 import './theme.scss';
 import './story-frame.scss';
@@ -77,9 +78,13 @@ export const Provider: GlobalProvider = ({ children, globalState, storyMeta }) =
     : 'ladle-story-frame';
 
   // `key` remounts the story on every theme change (see the header).
+  // A component that uses TanStack Query needs the app's client, mounted once
+  // here as the root layout mounts it.
   return (
-    <div className={frameClassName} key={theme}>
-      {children}
-    </div>
+    <Providers>
+      <div className={frameClassName} key={theme}>
+        {children}
+      </div>
+    </Providers>
   );
 };

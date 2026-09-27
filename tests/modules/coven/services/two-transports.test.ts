@@ -4,6 +4,7 @@ import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { createBuilder } from '@/graphql/builder';
 import type { Context } from '@/graphql/context';
 import { createLoaders } from '@/graphql/loaders';
+import { noSender } from '../../../support/email-verification';
 import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { type WorkspacePermission, assertMembership } from '@/modules/coven';
@@ -41,7 +42,11 @@ async function direct(session: Session, workspaceId: string) {
 
 /** Path two: what the browser's query does once Yoga has parsed the request. */
 function overGraphQL(session: Session, workspaceId: string) {
-  const contextValue: Context = { session, loaders: createLoaders(session) };
+  const contextValue: Context = {
+    session,
+    loaders: createLoaders(session),
+    emailVerification: noSender,
+  };
   return graphql({
     schema,
     source: 'query ($id: ID!) { workspaceRole(workspaceId: $id) }',

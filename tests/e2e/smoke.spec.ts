@@ -52,7 +52,7 @@ test("the entry page's backdrop images are served, hashed, under /_next/static",
 
 test('the entry page leads to /sign-in', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('link', { name: 'Sign in' }).click();
+  await page.getByRole('link', { name: 'Sign In' }).click();
 
   await expect(page).toHaveURL(/\/sign-in$/);
   await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
@@ -61,4 +61,15 @@ test('the entry page leads to /sign-in', async ({ page }) => {
 test('the entry page has no accessibility violations', async ({ page }) => {
   await page.goto('/');
   await assertNoAccessibilityViolations(page);
+});
+
+// Facebook appends `#_=_` to the redirect URI, and a fragment survives every
+// redirect whose Location carries none, so it reaches whatever page a sign-in
+// lands on; the root layout strips exactly that one before first paint.
+test("strips Facebook's #_=_ fragment and no other", async ({ page }) => {
+  await page.goto('/#_=_');
+  expect(new URL(page.url()).hash).toBe('');
+
+  await page.goto('/#top');
+  expect(new URL(page.url()).hash).toBe('#top');
 });

@@ -10,8 +10,12 @@ The decision record behind delivery and verification is
 site mails (MB.65). `MAIL_TRANSPORT` picks Resend in production, the Mailtrap
 Sandbox in previews and Mailpit in compose and CI; unset, the message is
 logged and not sent, which is what Vitest sees. A refused or failed send is
-logged and never thrown. The variables and the per-environment guard are in
-[`secrets.md`](secrets.md); the Mailpit container is in [`docker.md`](docker.md).
+logged and never thrown. A recipient under `.invalid` is refused before any
+transport is chosen: RFC 2606 reserves the domain, and it is where the
+placeholder for a provider that shared no address lives (MB.54;
+[`auth.md`](auth.md), "The email page"). The variables and the
+per-environment guard are in [`secrets.md`](secrets.md); the Mailpit
+container is in [`docker.md`](docker.md).
 
 ## Templates: React Email (MB.66)
 
@@ -137,10 +141,11 @@ render shows the previous fix's failure, not this one's result.
 
 ## What is sent
 
-| Template                      | Sent by                                                          | Carries                                                                                                                           |
-| ----------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `src/emails/verify-email.tsx` | Better Auth's `sendVerificationEmail`, at sign-up and on request | The one-hour `/verify-email` link, the providers linked to the account, and that it must be opened from a browser signed in to it |
+| Template                                           | Sent by                                                                             | Carries                                                                                                                                                       |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/emails/verify-email.tsx`                      | Better Auth's `sendVerificationEmail`, at sign-up and on request                    | The one-hour `/verify-email` link, the providers linked to the account, and that it must be opened from a browser signed in to it                             |
+| `src/emails/verify-email.tsx`, `purpose: 'change'` | `src/lib/email-verification.ts`'s `requestChange`, from the email page's `setEmail` | The same link with a change token, to the _new_ address: its first sentence says an existing account asked for this address, since the reader did not sign up |
 
 The verification flow itself is [`auth.md`](auth.md), "First-party
-verification". M7.3's invitation and MB.70's admin invitation add their
-templates here.
+verification" and "The email page". M7.3's invitation and MB.70's admin
+invitation add their templates here.

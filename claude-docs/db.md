@@ -1265,7 +1265,8 @@ two empty sets are equal and something has to say they aren't.
 | `select.ts`            | `selectFrom`, the one place a read query is built, and the keyset bounds a page is cut by               |
 | `finders.ts`           | The generic finders, scoped and unscoped, and the escape hatch                                          |
 | `spells.ts`            | The three spell finders and the `readableSpells` predicate they share                                   |
-| `memberships.ts`       | The two reads that take no proof                                                                        |
+| `memberships.ts`       | Two of the three reads that take no proof                                                               |
+| `users.ts`             | The third: the live row holding an address                                                              |
 | `provisional-users.ts` | The provisional-account delete                                                                          |
 
 **The rest of the folder is internal, and that is enforced rather than
@@ -1487,7 +1488,7 @@ They sit on the unscoped side only; a workspace-scoped by-id read is
 `findOneInWorkspace` under a proof. `findManyByIds` answers an empty list
 without a query.
 
-### The two reads that take no proof
+### The three reads that take no proof
 
 `findWorkspaceRole(userId, workspaceId)` is what mints a proof, so it cannot
 demand one. It is narrow on purpose — it answers with a role, not with rows —
@@ -1502,8 +1503,16 @@ builder. Who may ask about which ids is the calling service's decision:
 `membershipsOf` in `coven` answers the caller's own id and refuses every
 other, an admin's included.
 
+`findUserByEmail(email)` is the third (MB.54), for the same kind of reason
+again: an address is claimed site-wide, so there is no workspace to hold a
+proof for. It answers the live row holding the address, compared lower-cased
+as `users_email_lower_case` holds every row to, and what a hit means is the
+calling service's decision — `setEmail` refuses an address a verified row
+holds and lets a provisional one be claimed over, and the `/verify-email` gate
+refuses one any other live row holds (`auth.md`, "The email page").
+
 `tests/db/repository/index.test.ts` and `soft-delete-finder-guard.test.ts`
-both pin the repository's export list, so a third exception is a decision
+both pin the repository's export list, so a fourth exception is a decision
 rather than an addition.
 
 ### Where the proof is weaker than a policy
