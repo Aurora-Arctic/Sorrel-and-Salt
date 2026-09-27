@@ -162,6 +162,8 @@ describe('repository public API', () => {
         'findOne',
         'findOneInWorkspace',
         'findOneSpell',
+        'findPage',
+        'findPageInWorkspace',
         'findWorkspaceRole',
         'withAudit',
       ].sort(),

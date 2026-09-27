@@ -1583,8 +1583,8 @@ divided between two of them, by what each can make impossible.
 repository. It reads `repository.ts` as text and asserts: `repository.ts`
 builds exactly one `.select(`/`db.query.` call, and it is inside
 `selectFrom`; `selectFrom` is not exported, so no caller can reach an
-unfiltered read; the repository's exported surface is pinned to
-`findMany`/`findOne`/`findManyIncludingSoftDeleted`/`withAudit`, so a fifth
+unfiltered read; the repository's exported surface is pinned to the test's
+`EXPORTED_FUNCTIONS` list, so a further
 export — a new escape hatch, or a finder that reaches the database some other
 way — turns the test red rather than merely going unreviewed; and every
 exported finder other than the escape hatch either calls `notSoftDeleted(...)`
@@ -1627,6 +1627,59 @@ two live rows could differ by case alone, and both would match
 `ADMIN_BOOTSTRAP_EMAIL`, which is compared case-insensitively. Better Auth
 lowercases every address it writes; the constraint catches a row written by
 hand. `tests/db/users-schema.test.ts` inserts one.
+
+## Keyset pages (M3.6)
+
+A list that can grow is read one page at a time (CLAUDE.md rule 8). The finder
+is `findPage(table, sort, page, where?)`, or
+`findPageInWorkspace(membership, table, sort, page, where?)` for a
+workspace-scoped table. Each ANDs the same soft-delete and workspace predicates
+as `findMany` and `findManyInWorkspace`, and adds a keyset bound:
+
+```sql
+where … and (sort, id) > (cast($key as <sort type>), cast($id as uuid))
+order by sort, id
+limit $limit  -- the page plus one
+```
+
+- **`page` is a `PageRequest` from `src/lib/pagination.ts`**, already decoded
+  and clamped by `resolvePage` (claude-docs/graphql.md, "Pagination"). `after`
+  bounds from below and `before` from above. `inverted`, when walking backwards
+  with `last`, reverses the `ORDER BY` only, and `resolvePage` puts the rows
+  back in order.
+- **Each row comes back with its cursor.** The key is selected as
+  `sort::text`, and compared by casting it back to the column's own type
+  (`getSQLType()`), so Postgres compares a `timestamptz` to the microsecond. A
+  key read through a JS `Date` would lose the microseconds and replay rows.
+- **The id breaks ties**, so rows sharing a sort key still sit in one total
+  order, and a page boundary between two of them loses neither. Every table
+  these finders take has an `id` (`Identified`), which rules out the three
+  join tables.
+- **The sort column must be `NOT NULL`**, by type. A NULL makes the row
+  comparison NULL, and that row would fall out of every page.
+- **A cursor that will not cast** (SQLSTATE class 22) throws `InvalidCursor`.
+  The cursor is the only client text in a page query, so a data exception
+  there can only come from it.
+- The query goes through the private `selectFrom`, which has an overload that
+  adds the key column, the order and the limit. The one-builder invariant of
+  `soft-delete-finder-guard.test.ts` therefore holds. `findPageInWorkspace` is
+  one of that guard's `SCOPED_FINDERS`.
+
+A spell's page, the counterpart of `findManySpells` under the visibility rule,
+is added by the grimoire task that first needs it, as its own finder, like
+the other spell finders.
+
+`tests/db/pagination.test.ts` walks probe tables through `resolvePage` and the
+real finders:
+
+- every row once and in order, at page size 25 and at 7, with 7 placing page
+  boundaries between tied keys;
+- stability when rows are inserted before and after the cursor and
+  soft-deleted mid-walk, including the row the cursor names;
+- a backward walk;
+- nine timestamps a microsecond apart;
+- workspace scoping, with the other workspace's rows present;
+- both cursor refusals.
 
 ## Hard delete on the three join tables (MB.34)
 

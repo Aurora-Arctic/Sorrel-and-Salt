@@ -554,7 +554,7 @@ No database access in a resolver, ever. Same lint rule as `db`.
 
 **Authorization surface.** Handled by the service-layer choke point in §3. Pothos auth scopes provide a second check on sensitive fields (`User.email`) and on admin mutation fields, but the service layer is the real gate.
 
-**Client-composable expense.** `graphql-armor` applies a depth limit of 7, a cost limit, and disables introspection and field suggestions in production. Aliasing and directive-overload protections come with it.
+**Client-composable expense.** `graphql-armor` applies a depth limit of 7, and disables introspection and field suggestions in production. Aliasing and directive-overload protections come with it. Cost is limited by `@pothos/plugin-complexity` rather than by armor, because armor's check runs before variables are bound and so prices `first: $n` at one row. The complexity plugin prices a connection at the page it will actually fetch.
 
 ### Errors — one shape, so a message can land beside its field
 
@@ -628,11 +628,24 @@ Persistent across requests and shared across instances. Should remove most compe
 type Query {
   me: User!
   workspace(slug: String!): Workspace
-  compendium(search: String, categoryIds: [ID!], form: String): [Ingredient!]!
+  # Every list is a Relay connection (first/after/last/before), paged by one helper
+  compendium(
+    search: String
+    categoryIds: [ID!]
+    form: String
+    first: Int
+    after: String
+  ): QueryCompendiumConnection!
   ingredient(id: ID!): Ingredient
-  ingredientFormValues: [IngredientFormValue!]! # the admin-curated form vocabulary
-  workspaceIngredients(workspaceId: ID!, search: String, categoryIds: [ID!]): [InventoryItem!]!
-  grimoire(workspaceId: ID!): [Spell!]! # workspace-visible + own private spells
+  ingredientFormValues(first: Int, after: String): QueryIngredientFormValuesConnection! # the admin-curated form vocabulary
+  workspaceIngredients(
+    workspaceId: ID!
+    search: String
+    categoryIds: [ID!]
+    first: Int
+    after: String
+  ): QueryWorkspaceIngredientsConnection!
+  grimoire(workspaceId: ID!, first: Int, after: String): QueryGrimoireConnection! # workspace-visible + own private spells
   spell(id: ID!): Spell
 }
 
@@ -736,7 +749,7 @@ Adding `canonicalName`, `nomenclature` and `folkNames` moves M3.4's SDL snapshot
 
 `SpellIngredient.ingredient` is nullable from the first line of the SDL, not widened later: a custom, one-off row (§5, MB.40) has no ingredient, and a consumer that has always had to branch on that never meets it as a breaking change. `name` and `form` resolve from the linked ingredient when there is one, so a recipe view reads one shape whichever kind of row it is rendering.
 
-Cursor pagination on every list that can grow — the grimoire and compendium especially — through one shared helper: default page size 25, hard server-side maximum 100, cursors encoding a stable sort key plus id, never an offset.
+Cursor pagination on every list query — the grimoire and compendium especially, and the vocabularies too — through one shared helper (`t.pagedConnection`): Relay connections, default page size 25, hard server-side maximum 100 returned silently rather than refused, cursors encoding a stable sort key plus id, never an offset. The cost limit prices each connection at that effective page size, whether `first` is a literal or a variable. A list nested on an object (`Ingredient.categories`, `Spell.ingredients`) stays a bare list, bounded by its parent. The sketch above shows the connection arguments, not every generated type.
 
 ---
 
@@ -1274,7 +1287,7 @@ v1 adds compendium ingredients to a workspace one row at a time — story 14, th
 type Mutation {
   bulkAddToIngredients(
     workspaceId: ID!
-    ingredientIds: [ID!]! # capped at 100, matching graphql-armor's cost limit
+    ingredientIds: [ID!]! # capped at 100, matching the page maximum (§7)
     defaults: StockInput
   ): BulkAddResult!
 }
@@ -1291,7 +1304,7 @@ type SkippedIngredient {
 }
 ```
 
-**Cost.** The write is one insert plus one update regardless of selection size, so it doesn't reopen §4's N+1 concern. The 100-id cap keeps a single mutation's cost bounded and aligned with the depth and cost limits `graphql-armor` already enforces; a larger paste becomes two actions instead of one.
+**Cost.** The write is one insert plus one update regardless of selection size, so it doesn't reopen §4's N+1 concern. The 100-id cap keeps a single mutation's cost bounded and aligned with the depth and complexity limits already enforced (§7); a larger paste becomes two actions instead of one.
 
 **Tests.** Reuses the §11 data-layer harness: D's bulk call into W is rejected; a batch mixing new, already-present, and soft-deleted ids returns each in the right bucket and stamps `created_by` on only the new rows; a non-compendium id anywhere in the list fails the whole call; the 101st id is rejected.
 

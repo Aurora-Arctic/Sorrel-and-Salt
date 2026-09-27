@@ -89,7 +89,7 @@ The compendium and categories are cacheable (`unstable_cache`, tag `compendium`,
 **7. Filter in SQL, not after fetching.**
 A private spell must never reach a resolver. Same for cross-workspace rows.
 
-**8. Every list paginates through the M3.6 cursor helper.** Default 25, hard server maximum 100, cursors encode sort key + id and never an offset.
+**8. Every list paginates through the M3.6 cursor helper.** Declare it with `t.pagedConnection` and read it through `findPage`/`findPageInWorkspace`. Default 25, hard server maximum 100, returned silently when a client asks for more, cursors encode sort key + id and never an offset, and the complexity limit prices a connection at that effective page size. `tests/guards/pagination.test.ts` fails a bare list on `Query` (claude-docs/graphql.md, "Pagination").
 
 **9. DataLoader is not optional.** Compute has a dollar cost on Vercel, so an N+1 is a billing bug as well as a slow one. Loaders are constructed per request, never at module level: only `src/graphql/loaders/define-loader.ts` may import `dataloader` at runtime, and it hands out factories the request context calls (enforced by lint as of M3.2).
 
