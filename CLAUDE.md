@@ -161,63 +161,67 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 
 ---
 
-## Asana task tracking
+## GitHub task tracking
 
-The Asana board **Sorrel & Salt** is the source of truth for what to work on. `TASKS.md` is the reasoning behind the breakdown, and the two are expected to agree — when a task is added to the board, add it to `TASKS.md` in the same pass, or the docs silently fall behind.
+The issues of `Aurora-Arctic/Sorrel-and-Salt`, with the org Project **Sorrel & Salt** over them, are the source of truth for what to work on. `TASKS.md` is the reasoning behind the breakdown, and the two are expected to agree — when a task is minted as an issue, add it to `TASKS.md` in the same pass, or the docs silently fall behind. The board moved here from Asana in MB.89 ([`claude-docs/design-decisions/mb.89-plan.md`](claude-docs/design-decisions/mb.89-plan.md)); the Asana workspace stays alive and archived so the `Asana task:` permalinks in older PR bodies still resolve, and nothing is written there again. The repo is public, so every issue and comment is public too — the argument for accepting that is in the plan, and the rule it costs is under **Comments** below.
 
-**The workspace is on Asana's free Personal plan, and the board is shaped around what that plan allows.** Custom fields, advanced search, rules and dependencies are all premium, so a task's identifier and its status live in the one place the free plan lets an API client both read and write: the task **name**. Do not reach for a custom field to carry either — and **do not add one to this project**, because nothing on this plan can remove it again.
+**Everything goes through `gh`.** Issues, milestones, sub-issues, issue types, dependencies and Projects are on GitHub's free plan, and `gh` 2.97 in the devcontainer carries `--parent`, `--type`, `--add-blocked-by` and the `project` commands, so there is no premium wall to design around and no MCP server to authorise. `scripts/task-board.mjs` wraps the calls the skills make — `find`, `status`, `estimate`, `comment`, `list` — so the lookup rule and the Project's field ids live in one file rather than four skills. A skill runs it; it does not compose `gh issue` by hand. Detail: [`claude-docs/task-tracking.md`](claude-docs/task-tracking.md).
 
-The board was rebuilt to get here. A downgraded project keeps the custom fields it already had and **cannot shed them on a free plan**: `removeCustomFieldSetting` answers `402 custom_fields_premium_only` and the web UI routes to an upgrade page, so the project carrying `Status`, `Task ID` and `Type` was replaced rather than repaired. This project is a fresh one with no fields at all. The original is archived as `Sorrel & Salt (archived — pre-free-plan, custom fields frozen)` (`1218257926462425`), which keeps every pre-rebuild task permalink resolving — the Asana link in an older PR body still points somewhere real. Tags stay free but the MCP server exposes no tag tool, so they cannot carry status either.
-
-**A migrated comment opens with the time it was originally written**, as `[YYYY-MM-DD HH:MM UTC]`. Asana stamps a story with the moment it is posted and offers no way to override it, so on everything older than the rebuild the bracket is the true date and the story's own metadata is not.
-
-| Object  | GID                |
-| ------- | ------------------ |
-| Project | `1218814916390986` |
+| Object         | Value                                                                                                         |
+| -------------- | ------------------------------------------------------------------------------------------------------------- |
+| Repo           | `Aurora-Arctic/Sorrel-and-Salt`                                                                               |
+| Project        | Org project **Sorrel & Salt**, number `1` (`scripts/task-board.mjs` carries it as `PROJECT`)                  |
+| Project fields | `Status` — single select: `Not Started` · `In Progress` · `In Review` · `Done`; `Estimate` — number, in hours |
 
 ### Board layout
 
-Three sections, and none of them is a milestone:
+- **One issue per task, titled `<Task ID> — <title>`**, exactly as `TASKS.md` heads it. The id is the first thing in the title and nothing precedes it — no marker, no emoji; status is a field now, not a prefix, so a status change never rewrites a title.
+- **One milestone per wave** (`Wave 7 — GraphQL`) and one per closed-out pre-wave card (`M0 · Repo bootstrap`). The milestone description carries what the Asana wave card's notes carried: the task ids it contains in execution order, then the deferral reasoning. A task added to a wave is added to its milestone's description in the same pass — that opening list is what makes the wave readable without opening every issue.
+- **Issue type `Bug` for `MB.*`, `Task` for everything else**, and the `hotfix` label on a task that is one. The label, not the id, decides the branch skill: `MB.*` covers ordinary bugfixes and hotfixes alike, and `start-task` still asks when nothing marks it either way.
+- **Every tracked issue carries the `tracked` label**, which is the Project's auto-add filter. A public repo lets anyone open an issue, so an issue without the label is a visitor's until someone triages it onto the board.
+- **Sub-issues only for genuine parent/child** (`M7.A.*` under `M7.A`, or a task split mid-flight). Waves are milestones, not parent issues.
+- **A retired task is closed as `not planned`**, its title reading `<ID> — [RETIRED] <title>`; a done task is closed as `completed`.
 
-| Section             | Holds                                                                              |
-| ------------------- | ---------------------------------------------------------------------------------- |
-| `Waves`             | One card per wave (`Wave 6 — Auth surface`); scheduled tasks are its **subtasks**. |
-| `Bugfixes`          | `MB.*` tasks, top-level.                                                           |
-| `Pre-Wave Complete` | Closed-out pre-wave milestone cards. Historical.                                   |
+### Status is a Project field, and `Done` is the merge's
 
-A wave card's notes open with the task IDs it contains, separated by a space-padded middot (`M2.1 · M2.4 · M2.5 · M2.6 · …`), then the execution order and any deferral reasoning. That opening list is what makes a task findable without search, so a task added to a wave is added to its parent's notes in the same pass.
+| Status        | Set it when                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Not Started` | The default. Every task starts here and stays there until work actually begins.                                                                                                                                                                                                                                                                                                                         |
+| `In Progress` | The feature branch for the task exists and work has started — not when the task is merely read or planned.                                                                                                                                                                                                                                                                                              |
+| `In Review`   | The PR is open. Set it in the same turn the PR is created, alongside the comment carrying the PR link.                                                                                                                                                                                                                                                                                                  |
+| `Done`        | The PR is **merged** — and by mechanism, never by hand. `.github/workflows/close-task-on-merge.yml` closes the issue a PR body names in `Closes #N` when that PR merges into `staging`; GitHub itself does it for a PR into `main`; the Project's built-in workflow then sets `Done` on the closed item. GitHub's own closing keywords fire only on the default branch, which is why the Action exists. |
 
-### The name carries the ID and the status
+`node scripts/task-board.mjs status <ID> "<Status>"` sets it. Status moves forward only: the script refuses a backward step, and nothing closes an issue by hand — a green CI run is not a merge. A closed issue outranks its field: an issue closed as `completed` is done whatever the field says, which is what makes a field left behind by a mistake harmless rather than misleading.
 
-A task is named `<marker><Task ID> — <title>`, and the status moves in one direction only:
+### Finding a task by its id
 
-| Status        | Marker | Set it when                                                                                                                 |
-| ------------- | ------ | --------------------------------------------------------------------------------------------------------------------------- |
-| `Not Started` | none   | The default. Every task starts here and stays there until work actually begins.                                             |
-| `In Progress` | `▶ `   | The feature branch for the task exists and work has started — not when the task is merely read or planned.                  |
-| `In Review`   | `◔ `   | The PR is open. Set it in the same turn the PR is created, alongside the comment carrying the PR link.                      |
-| `Completed`   | none   | The PR is **merged** — carried by the task's completed checkbox, not a marker. Never before: a green CI run is not a merge. |
+`node scripts/task-board.mjs find M2.6` — one `gh issue list --state all` over the repo, filtered on `title.startsWith('M2.6 — ')`. The space-padded dash after the id (`<ID> — `) is the exact-match rule: thirty of the board's ids are a strict prefix of another (`M2.1` and `M2.10`, `M4.1` and `M4.1a`, `M0.1` and `M0.30`), and GitHub's search tokenises on punctuation, so a `--search` query cannot be trusted to tell them apart. Zero matches, or more than one: stop and say so, never guess.
 
-`M2.6 — Build the sign-in page` has not started; `▶ M2.6 — Build the sign-in page` is in progress; `◔ M2.6 — …` is in review; a ticked checkbox is done, and the marker comes off when it is ticked. Set it with `asana_update_task`'s `name`, **rewriting only the marker** — never the ID or title in the same call, or a status change is indistinguishable from a re-scope in the activity log.
+### PR bodies
 
-**Wave cards take the same markers**, with no id to prefix: `▶ Wave 6 — Auth surface` is the wave being worked, and it moves to the next card when that wave closes. **The completed checkbox outranks the name** — a ticked task is `Completed` whatever marker it carries, which is what makes a marker left behind by a mistake harmless rather than misleading.
+Open with a single `Closes #N` line, then a blank line — or `Refs #N` for a PR that does not finish the task. That line is what the Action reads on merge, and it is the link from the PR to the task; on a PR into `staging` GitHub renders no other, since its own linking is default-branch only.
 
-### Finding a task by its ID
+### Comments
 
-There is no search. Two calls, deterministic:
+`node scripts/task-board.mjs comment <ID> "<text>"`. **Names, never values**: a comment may name an env var, a file or a provider, and never carries a value, a token, a connection string, an address or a dashboard URL — the repo is public and a comment is indexed before anyone reads it. Comment as work proceeds; the status field is the at-a-glance summary of those comments, not a replacement. A comment carried over from Asana opens with `[YYYY-MM-DD HH:MM UTC]`, which is its true date: GitHub stamps a comment with the moment it is posted and offers no override, so on anything older than the migration the bracket is the date and the comment's own metadata is not.
 
-1. `asana_get_tasks` with `project` = `1218814916390986` and `opt_fields=name,notes,gid,completed` — returns the wave cards and the top-level `MB.*` tasks. An `MB.*` id usually matches here outright.
-2. Otherwise pick the wave card whose `notes` name the id, then `asana_get_task` on it with `opt_fields=subtasks.name,subtasks.gid,subtasks.completed` and match the subtask whose id segment equals the target.
+### Minting a task
 
-Match the id segment **exactly** — strip any leading marker, then take the text up to the `—` that follows it. Thirty of the board's ids are a strict prefix of another (`M2.1` and `M2.10`, `M4.1` and `M4.1a`, `M0.1` and `M0.30`), so a `startsWith` test silently picks the wrong task. `asana_get_tasks` on a project returns **top-level tasks only** — a wave's subtasks never appear in it, which is the whole reason step 2 exists.
+Re-check the next free id right before minting — another session may have taken it — then:
+
+```sh
+gh issue create --title "MB.90 — <title>" --type Bug --label tracked --milestone "Wave 7 — GraphQL" --body-file <notes>
+node scripts/task-board.mjs estimate MB.90 3
+```
+
+The notes are the `TASKS.md` entry's text; the entry, the wave's row in the execution-order table, the summary table and the milestone's description are edited in the same pass.
 
 Rules that follow from all this:
 
-- **Set the status through the Asana MCP tools, in the same turn as the event.** A status left stale is worse than no status: it says work is happening that is not.
-- `Completed` and the task's completed checkbox move together, on merge, never earlier — and ticking it strips the `◔ `.
-- Do not skip states. A task that goes `Not Started` → `Completed` hides the review step that the one-task-per-PR rule exists to make visible.
-- Status is not a substitute for the progress comment. Comment on the task as work proceeds; the marker is the at-a-glance summary of those comments, not a replacement.
-- If a PR is closed without merging, the task returns to `▶ ` — not `Completed`, not `Not Started`.
+- **Set the status through `task-board.mjs`, in the same turn as the event.** A status left stale is worse than no status: it says work is happening that is not.
+- **`Done` is the Action's.** Never `gh issue close` a task by hand; if a PR is closed without merging, set the task back to `In Progress` — not `Done`, not `Not Started`.
+- Do not skip states. A task that goes `Not Started` → `Done` hides the review step that the one-task-per-PR rule exists to make visible.
+- Status is not a substitute for the progress comment.
 
 ---
 
@@ -235,16 +239,16 @@ The one v1 concession to v2: the ingredient detail page (M8.19) is built so a no
 
 Skills live in `.claude/skills/<name>/SKILL.md` and are invoked as `/<name>`. The table below is the trigger reference; [`claude-docs/agent-skills.md`](claude-docs/agent-skills.md) carries the shape and the hedges inside the skill files that are still stale.
 
-| Skill              | Trigger                                                                                                                                                                                                                                                           |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `start-task`       | "start M0.31", "start a task", `/start-task` — asks for an Asana Task ID, finds it by the lookup above, then runs `create-hotfix` for a task whose title or notes call it a hotfix and `create-feature` otherwise, passing the task through.                      |
-| `create-feature`   | "start a feature branch", "new feature", `/create-feature` — asks for a name and the Asana task ID, branches `feature/<slug>` off latest `origin/staging`, moves the task to `In Progress`.                                                                       |
-| `create-hotfix`    | "start a hotfix", "hotfix branch", `/create-hotfix` — asks for a name and the Asana task ID, branches `hotfix/<slug>` off latest `origin/main`, moves the task to `In Progress`.                                                                                  |
-| `create-pr`        | "open a PR", "create a pull request", "get this reviewed" — commits (after asking), pushes, opens a PR against the Gitflow-appropriate target, moves the Asana task to `In Review` and comments the PR link. `hotfix/*` opens PRs into both `main` and `staging`. |
-| `create-release`   | "cut a release", "create a release branch", `/create-release` — bumps semver, branches `release/<version>` off `staging`, tags `v<version>`, opens a PR into `main`.                                                                                              |
-| `create-main-sync` | "sync main into staging", "bring the hotfix back to staging", `/create-main-sync` — branches `main-sync/<timestamp>` off `main`, opens a PR into `staging`.                                                                                                       |
-| `prune-branches`   | "clean up my branches", "prune stale branches", "delete branches gone on remote" — deletes merged/gone local branches, asks about never-pushed ones. Never touches `main`/`staging`.                                                                              |
-| `project-progress` | "project progress", "task progress", "how many hours are left", `/project-progress` — tasks and hours completed, remaining and total, from TASKS.md and git merge history; no Asana calls unless asked to verify against the board.                               |
+| Skill              | Trigger                                                                                                                                                                                                                                                                                         |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start-task`       | "start M0.31", "start a task", `/start-task` — asks for a Task ID, finds its issue by the lookup above, then runs `create-hotfix` for a task whose title or notes call it a hotfix and `create-feature` otherwise, passing the task through.                                                    |
+| `create-feature`   | "start a feature branch", "new feature", `/create-feature` — asks for a name and the task ID, branches `feature/<slug>` off latest `origin/staging`, moves the task to `In Progress`.                                                                                                           |
+| `create-hotfix`    | "start a hotfix", "hotfix branch", `/create-hotfix` — asks for a name and the task ID, branches `hotfix/<slug>` off latest `origin/main`, moves the task to `In Progress`.                                                                                                                      |
+| `create-pr`        | "open a PR", "create a pull request", "get this reviewed" — commits (after asking), pushes, opens a PR against the Gitflow-appropriate target, opens the PR body with `Closes #N`, moves the task to `In Review` and comments the PR link. `hotfix/*` opens PRs into both `main` and `staging`. |
+| `create-release`   | "cut a release", "create a release branch", `/create-release` — bumps semver, branches `release/<version>` off `staging`, tags `v<version>`, opens a PR into `main`.                                                                                                                            |
+| `create-main-sync` | "sync main into staging", "bring the hotfix back to staging", `/create-main-sync` — branches `main-sync/<timestamp>` off `main`, opens a PR into `staging`.                                                                                                                                     |
+| `prune-branches`   | "clean up my branches", "prune stale branches", "delete branches gone on remote" — deletes merged/gone local branches, asks about never-pushed ones. Never touches `main`/`staging`.                                                                                                            |
+| `project-progress` | "project progress", "task progress", "how many hours are left", `/project-progress` — tasks and hours completed, remaining and total, from TASKS.md and git merge history; no `gh` calls unless asked to verify against the board.                                                              |
 
 <!-- BEGIN:nextjs-agent-rules -->
 
