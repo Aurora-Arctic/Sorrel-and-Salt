@@ -1414,12 +1414,12 @@ request's DataLoaders ([`graphql.md`](graphql.md), "The two transports").
 The repository splits on the table's own shape, the way it already splits
 `softDelete` from `delete`:
 
-| The table                                | Reads                                                     | Writes                                                                                                  |
-| ---------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| carries `workspace_id`                   | `findManyInWorkspace` / `findOneInWorkspace`, proof first | `insertInWorkspace`, `updateInWorkspace`, `updateByIdInWorkspace`, `softDeleteInWorkspace`, proof first |
-| carries `visibility` (`spells` alone)    | `findManySpells` / `findOneSpell`, proof first            | the workspace-scoped writes above                                                                       |
-| carries `spell_id` (the two join tables) | `findManyInSpell`, proof first                            | `insert`, `update`, `delete`                                                                            |
-| none of those                            | `findMany` / `findOne` / `findManyIncludingSoftDeleted`   | `insert`, `update`, `updateById`, `softDelete`, `delete`                                                |
+| The table                                | Reads                                                                                     | Writes                                                                                                  |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| carries `workspace_id`                   | `findManyInWorkspace` / `findOneInWorkspace`, proof first                                 | `insertInWorkspace`, `updateInWorkspace`, `updateByIdInWorkspace`, `softDeleteInWorkspace`, proof first |
+| carries `visibility` (`spells` alone)    | `findManySpells` / `findOneSpell`, proof first                                            | the workspace-scoped writes above                                                                       |
+| carries `spell_id` (the two join tables) | `findManyInSpell`, proof first                                                            | `insert`, `update`, `delete`                                                                            |
+| none of those                            | `findMany` / `findOne` / `findOneById` / `findManyByIds` / `findManyIncludingSoftDeleted` | `insert`, `update`, `updateById`, `softDelete`, `delete`                                                |
 
 `{ workspaceId: AnyPgColumn }` and `{ workspaceId?: never }` are the two
 constraints, so each finder admits exactly one of the two sets and a table
@@ -1448,12 +1448,30 @@ is a third, named finder over `workspace_id = $1 OR workspace_id IS NULL`. The
 point of the narrowing is that a read of that table has to say which tier it
 means instead of getting whichever the default was.
 
-### The one read that takes no proof
+`findOneById` and `findManyByIds` are the read-side twins of `updateById`: a
+service cannot build `eq(table.id, id)` or `inArray(...)` (MB.33), and a
+by-id read, one or batched for a loader, is what nearly every service needs.
+They sit on the unscoped side only; a workspace-scoped by-id read is
+`findOneInWorkspace` under a proof. `findManyByIds` answers an empty list
+without a query.
+
+### The two reads that take no proof
 
 `findWorkspaceRole(userId, workspaceId)` is what mints a proof, so it cannot
 demand one. It is narrow on purpose — it answers with a role, not with rows —
-so it cannot stand in for a finder, and `repository.test.ts` pins the
-repository's export list so a second exception is a decision rather than an
+so it cannot stand in for a finder.
+
+`findMembershipsOfUsers(userIds)` is the second, for the same kind of reason:
+a user's own memberships span workspaces, so there is no one workspace to
+hold a proof for. It answers the live `workspace_members` rows of those users
+whose workspace is live too — the workspace's `deleted_at` is a correlated
+`EXISTS`, as in `findManyInSpell`, because the repository keeps one select
+builder. Who may ask about which ids is the calling service's decision:
+`membershipsOf` in `coven` answers the caller's own id and refuses every
+other, an admin's included.
+
+`repository.test.ts` and `soft-delete-finder-guard.test.ts` both pin the
+repository's export list, so a third exception is a decision rather than an
 addition.
 
 ### Where the proof is weaker than a policy

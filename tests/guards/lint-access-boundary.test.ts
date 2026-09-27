@@ -5,8 +5,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
 // Resolvers and server components reach services and nothing below them
-// (CLAUDE.md rule 1): `.oxlintrc.json`'s override for `src/graphql`, `src/app`
-// and `src/components` bans a runtime import of anything under `src/db`, so a
+// (CLAUDE.md rule 1): `.oxlintrc.json`'s override for `src/graphql`, `src/app`,
+// `src/components` and a module's `graphql/` and `loaders/` bans a runtime import of anything under `src/db`, so a
 // service is the only route from either transport to the database
 // (claude-docs/graphql.md, "The access boundary"). `import type` stays legal —
 // it is erased at compile time and can reach nothing, and it is how a resolver
@@ -31,8 +31,18 @@ const BOUNDARY_MESSAGE = 'reach the database only through a service';
 /** The same for the module deep-import group. */
 const DEEP_IMPORT_MESSAGE = 'a deep import is a boundary violation';
 
-/** The layers above services: resolvers, pages and layouts, components. */
-const ABOVE = ['src/graphql', 'src/app', 'src/components'];
+/**
+ * The layers above services: resolvers, pages and layouts, components — and a
+ * module's own resolvers and loaders, which sit beside its services rather
+ * than below them.
+ */
+const ABOVE = [
+  'src/graphql',
+  'src/app',
+  'src/components',
+  'src/modules/coven/graphql',
+  'src/modules/coven/loaders',
+];
 
 /** Where importing the database layer is the job. */
 const BELOW = ['src/modules/coven/services', 'src/lib'];

@@ -89,7 +89,7 @@ jobs:
 
       # .github/actions/pr-comment has the modes.
       - name: Comment on PR
-        if: always() && inputs.pr-number && inputs.should-run
+        if: ${{ !cancelled() && inputs.pr-number && inputs.should-run }}
         uses: ./.github/actions/pr-comment
         with:
           check-name: Gitflow Rules

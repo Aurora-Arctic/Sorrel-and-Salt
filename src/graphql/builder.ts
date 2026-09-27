@@ -29,9 +29,11 @@ export interface SchemaTypes {
   DefaultEdgesNullability: { list: false; items: false };
   DefaultNodeNullability: false;
   // The schema's second check, behind the service layer's (DESIGN.md §7).
+  // `self` takes a user id and holds when it is the session's own.
   AuthScopes: {
     signedIn: boolean;
     admin: boolean;
+    self: string;
   };
   Scalars: {
     // `DateTimeISO` rather than graphql-scalars' `DateTime`, which hands the
@@ -77,6 +79,7 @@ export function createBuilder() {
       authScopes: ({ session }) => ({
         signedIn: session !== null,
         admin: session?.role === 'admin',
+        self: (userId) => session?.userId === userId,
       }),
       // A service's own refusal type, so the transport maps one shape
       // whichever check said no.
