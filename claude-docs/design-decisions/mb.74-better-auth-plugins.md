@@ -268,6 +268,9 @@ No task is minted: v1 has no deletion story.
   through `auth.api.getSession` and maps it itself (`src/lib/request-session.ts`).
 - **`admin`** beyond MB.53's two endpoints, and **`organization`:** decided
   already, unchanged.
+- **`@better-auth/stripe`:** weighed on its own, against the subscriptions the
+  owner means to charge, by MB.79. v2 and not yet adopted; DESIGN.md §13's
+  "Subscription billing" carries its fit.
 
 ## Decision
 
@@ -281,7 +284,9 @@ No task is minted: v1 has no deletion story.
 | MB.78 | `oAuthProxy` at `VERCEL_ENV=preview` only, so hotfix previews complete a sign-in                           |
 
 **v2, in this order:** passkeys, then magic link or email OTP. Two-factor,
-`captcha` and `haveIBeenPwned` only if email and password ever lands.
+`captcha` and `haveIBeenPwned` only if email and password ever lands. The
+Stripe plugin is v2 as well, decided separately by MB.79 and left to a
+test-mode spike.
 
 **Never here:** `jwt`, `bearer`, `oneTimeToken`, `deviceAuthorization`,
 `oauthPopup`, `multiSession`, `oneTap`, `username`, `anonymous`,
