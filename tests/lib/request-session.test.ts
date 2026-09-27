@@ -23,10 +23,10 @@ const { getSession, requireSession, sessionFromHeaders } = await import('@/lib/r
 
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
-function betterAuthSession(role: unknown) {
+function betterAuthSession(role: unknown, emailVerified = true) {
   return {
     session: { id: 's', token: 't', userId: USER_ID, expiresAt: new Date() },
-    user: { id: USER_ID, email: 'fixture@example.test', name: 'Fixture', role },
+    user: { id: USER_ID, email: 'fixture@example.test', name: 'Fixture', role, emailVerified },
   };
 }
 
@@ -104,5 +104,43 @@ describe('requireSession', () => {
     getSessionMock.mockResolvedValue(null);
     requestHeaders.set(RETURN_PATH_HEADER, '//evil.example');
     await expect(requireSession()).rejects.toThrow('redirect:/sign-in?next=%2Fcoven');
+  });
+
+  // An unverified account is provisional and can do nothing else (MB.54), so
+  // every page but the email page sends it there, with its own path to come
+  // back to once the address is proved.
+  describe('an unverified account', () => {
+    beforeEach(() => {
+      getSessionMock.mockResolvedValue(betterAuthSession('user', false));
+    });
+
+    it('is sent to the email page with the return path the proxy forwarded', async () => {
+      requestHeaders.set(RETURN_PATH_HEADER, '/coven/hearth?tab=mine');
+
+      await expect(requireSession()).rejects.toThrow(
+        `redirect:/account/email?next=${encodeURIComponent('/coven/hearth?tab=mine')}`,
+      );
+    });
+
+    it('is sent there with the landing when no return path was forwarded, or one that leaves the site', async () => {
+      await expect(requireSession()).rejects.toThrow('redirect:/account/email?next=%2Fcoven');
+
+      requestHeaders.set(RETURN_PATH_HEADER, '//evil.example');
+      await expect(requireSession()).rejects.toThrow('redirect:/account/email?next=%2Fcoven');
+    });
+
+    it('reaches the email page itself, whatever its query', async () => {
+      requestHeaders.set(RETURN_PATH_HEADER, '/account/email?next=%2Fcoven&error=TOKEN_EXPIRED');
+
+      await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
+    });
+
+    it('is not let past by a path that merely starts like the email page', async () => {
+      requestHeaders.set(RETURN_PATH_HEADER, '/account/emails');
+
+      await expect(requireSession()).rejects.toThrow(
+        'redirect:/account/email?next=%2Faccount%2Femails',
+      );
+    });
   });
 });

@@ -66,9 +66,53 @@ describe('social providers', () => {
 
     const { auth } = await import('@/lib/auth');
 
-    expect(auth.options.socialProviders).toEqual({
-      google: { clientId: 'test-google-id', clientSecret: 'test-google-secret' },
+    expect(Object.keys(auth.options.socialProviders ?? {})).toEqual(['google']);
+    expect(auth.options.socialProviders?.google).toMatchObject({
+      clientId: 'test-google-id',
+      clientSecret: 'test-google-secret',
     });
+  });
+
+  // A provider that shares no address would end the callback at
+  // `email_not_found`; the placeholder lets the row and session exist so the
+  // email page can ask (MB.54). Every provider, since each can withhold one.
+  it('maps a profile with no email to the placeholder, and leaves one with an email alone', async () => {
+    vi.stubEnv('GOOGLE_CLIENT_ID', 'g-id');
+    vi.stubEnv('GOOGLE_CLIENT_SECRET', 'g-secret');
+    vi.stubEnv('DISCORD_CLIENT_ID', 'd-id');
+    vi.stubEnv('DISCORD_CLIENT_SECRET', 'd-secret');
+    vi.stubEnv('FACEBOOK_CLIENT_ID', 'f-id');
+    vi.stubEnv('FACEBOOK_CLIENT_SECRET', 'f-secret');
+    vi.stubEnv('MICROSOFT_CLIENT_ID', 'm-id');
+    vi.stubEnv('MICROSOFT_CLIENT_SECRET', 'm-secret');
+    vi.resetModules();
+
+    const { auth } = await import('@/lib/auth');
+    const providers = auth.options.socialProviders ?? {};
+    // Each provider names its account under its own key; the mapping is typed
+    // to the provider's profile, so the probe is cast to reach all four alike.
+    const map = (id: keyof typeof providers, profile: Record<string, unknown>) =>
+      (providers[id] as { mapProfileToUser: (p: unknown) => unknown }).mapProfileToUser(profile);
+
+    expect(map('google', { sub: '1', email: 'a@b.test' })).toEqual({});
+    expect(map('google', { sub: '1' })).toEqual({
+      email: 'google-1@pending.invalid',
+      emailVerified: false,
+    });
+    expect(map('discord', { id: '2', email: null })).toEqual({
+      email: 'discord-2@pending.invalid',
+      emailVerified: false,
+    });
+    expect(map('facebook', { id: '3' })).toEqual({
+      email: 'facebook-3@pending.invalid',
+      emailVerified: false,
+    });
+    expect(map('facebook', { sub: '3', email: 'a@b.test' })).toEqual({ emailVerified: false });
+    expect(map('microsoft', { oid: 'ABC' })).toEqual({
+      email: 'microsoft-abc@pending.invalid',
+      emailVerified: false,
+    });
+    expect(map('microsoft', { oid: 'ABC', email: 'a@b.test' })).toEqual({ emailVerified: false });
   });
 
   it('registers Microsoft with tenantId "common" so personal accounts can sign in', async () => {
@@ -346,13 +390,15 @@ describe('email verification', () => {
     const providers = (await configuredAuth()).options.socialProviders ?? {};
     const mapper = (id: keyof typeof providers) =>
       (providers[id] as { mapProfileToUser?: (profile: unknown) => unknown }).mapProfileToUser;
+    // With an address: the placeholder mapping (MB.54) has nothing to add.
+    const profile = { email: 'someone@auth.test', email_verified: true };
 
-    expect(await mapper('facebook')?.({ email_verified: true })).toEqual({ emailVerified: false });
-    expect(await mapper('microsoft')?.({ email_verified: true })).toEqual({
+    expect(await mapper('facebook')?.({ id: '1', ...profile })).toEqual({ emailVerified: false });
+    expect(await mapper('microsoft')?.({ oid: '1', ...profile })).toEqual({
       emailVerified: false,
     });
-    expect(mapper('google')).toBeUndefined();
-    expect(mapper('discord')).toBeUndefined();
+    expect(await mapper('google')?.({ sub: '1', ...profile })).toEqual({});
+    expect(await mapper('discord')?.({ id: '1', ...profile })).toEqual({});
   });
 
   it('stamps nothing on a write with no known actor', async () => {

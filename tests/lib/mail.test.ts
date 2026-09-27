@@ -81,6 +81,22 @@ afterEach(() => {
 });
 
 describe('send, per transport', () => {
+  // The placeholder a provider that shared no address is stored under
+  // (MB.54) lives under `.invalid`, which RFC 2606 reserves: nothing can
+  // receive it, so no transport is ever asked to try.
+  it('refuses a recipient under .invalid before choosing a transport', async () => {
+    configure('resend');
+
+    await send({ ...MESSAGE, to: 'discord-1@pending.invalid' });
+
+    expect(requests).toHaveLength(0);
+    expect(error).toHaveBeenCalledWith(
+      expect.stringMatching(/refused a recipient under \.invalid/),
+    );
+    // Sends nothing about the address itself either.
+    expect(error).not.toHaveBeenCalledWith(expect.stringContaining('discord-1'));
+  });
+
   it('posts to Resend with the bearer key and the configured from-address', async () => {
     configure('resend');
 

@@ -64,6 +64,13 @@ function outgoing(transport: string, message: Message): Outgoing | string {
 
 /** Sends through MAIL_TRANSPORT. Never throws; with MAIL_TRANSPORT unset outside a deployment, logs the message instead. */
 export async function send(message: Message): Promise<void> {
+  // RFC 2606 reserves `.invalid`: no mailbox exists under it, so the address
+  // is the placeholder a provider that shared none is stored under
+  // (src/modules/identity/services/email.ts), and nothing can receive this.
+  if (/\.invalid$/i.test(message.to)) {
+    console.error(`mail: refused a recipient under .invalid; "${message.subject}" not sent`);
+    return;
+  }
   // '' is unset, as Vercel and compose both write an empty variable.
   const transport = process.env.MAIL_TRANSPORT || undefined;
   const vercelEnv = process.env.VERCEL_ENV || undefined;
