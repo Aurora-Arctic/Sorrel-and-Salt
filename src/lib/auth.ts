@@ -302,10 +302,23 @@ export const auth = betterAuth({
     usePlural: true,
     schema: { users, sessions, accounts, verifications, rateLimits },
   }),
-  // Matches users.id's uuid type so every FK lines up without a cast.
+  // Better Auth's own default, stated so a bump cannot move it: on in every
+  // deploy, off under `next dev` and the test suites. In the database because
+  // each Fluid Compute instance would otherwise count alone
+  // (claude-docs/auth.md, "Rate limiting").
+  rateLimit: {
+    enabled: process.env.NODE_ENV === 'production',
+    storage: 'database',
+  },
   advanced: {
+    // Matches users.id's uuid type so every FK lines up without a cast.
     database: {
       generateId: 'uuid',
+    },
+    // Vercel sets this one itself, and no client or proxy in front can.
+    // Absent, as off Vercel, every request at production shares the `no-trusted-ip` bucket.
+    ipAddress: {
+      ipAddressHeaders: ['x-vercel-forwarded-for'],
     },
   },
   // Offered at sign-up, never required for a session: what needs a verified
@@ -366,6 +379,9 @@ export const auth = betterAuth({
     },
   },
   account: {
+    // Under BETTER_AUTH_SECRET. A row written before this reads as it is:
+    // Better Auth decrypts only a value that looks encrypted.
+    encryptOAuthTokens: true,
     accountLinking: {
       // A second provider's address is usually another mailbox. Read only by
       // the explicit link, never at sign-in; the row keeps its own address.
