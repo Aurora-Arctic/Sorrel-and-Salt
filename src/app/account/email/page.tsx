@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { getMe, isPlaceholderEmail, verificationWaitSeconds } from '@/modules/identity';
 import EmailForm from '../../../components/EmailForm';
 import { hasVerifiedFlag, verifyErrorMessage } from '../../../lib/account-email';
@@ -40,6 +41,12 @@ export default async function EmailPage({ searchParams }: EmailPageProps) {
         error={verifyErrorMessage(params.error)}
         waitSeconds={verificationWaitSeconds(me.verificationSentAt)}
       />
+      {/* An unverified account reaches no other page, so it is offered none. */}
+      {me.emailVerified && (
+        <p className="email-page__nav">
+          <Link href="/account">Sign-in methods</Link>
+        </p>
+      )}
     </main>
   );
 }
