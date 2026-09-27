@@ -28,6 +28,14 @@ describe('users schema', () => {
     expect(byName.can_create_workspace.default).toBe(false);
   });
 
+  // Set whenever a verification mail goes out, so a second within the minute
+  // can be refused; null until the first (claude-docs/auth.md, "The email page").
+  it("has a nullable verification_sent_at, the last verification mail's clock (MB.54)", () => {
+    expect(byName.verification_sent_at).toBeDefined();
+    expect(byName.verification_sent_at.notNull).toBe(false);
+    expect(byName.verification_sent_at.default).toBeUndefined();
+  });
+
   it('makes the email index partial on deleted_at IS NULL, not a plain unique constraint (CLAUDE.md rule 4)', () => {
     const emailIndex = indexes.find((i) =>
       i.config.columns.some((c) => 'name' in c && c.name === 'email'),

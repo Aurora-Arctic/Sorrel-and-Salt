@@ -107,7 +107,8 @@ async function backdate(userId: string, by: string): Promise<void> {
     await tx`alter table users disable trigger set_updated_at`;
     await tx`
       update users
-      set created_at = now() - ${by}::interval, updated_at = now() - ${by}::interval
+      set created_at = now() - ${by}::interval, updated_at = now() - ${by}::interval,
+        verification_sent_at = now() - ${by}::interval
       where id = ${userId}
     `;
     await tx`alter table users enable trigger set_updated_at`;
@@ -310,14 +311,13 @@ describe('Story 58: a resend restarts the window', () => {
     });
   });
 
-  it('extends nothing when the resend comes from no session, so a stranger cannot keep a squat alive', async () => {
+  it('refuses a resend from no session, so a stranger can neither mail the address nor keep a squat alive', async () => {
     const { id, before } = await expiredSignUp();
 
     const response = await resend(undefined, OWNER);
 
-    expect(response.status).toBe(200);
-    // Better Auth still mails the address; only the window is withheld.
-    expect(send).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(401);
+    expect(send).not.toHaveBeenCalled();
     expect(await userRow(OWNER)).toEqual(before);
     expectSignedIn(await signIn('google', { sub: 'g-by', email: BYSTANDER, verified: true }));
     expect((await linkedRows(id)).users).toBe(0);

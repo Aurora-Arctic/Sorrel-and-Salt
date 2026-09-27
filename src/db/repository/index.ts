@@ -26,4 +26,5 @@ export {
 } from './finders';
 export { findManyInSpell, findManySpells, findOneSpell } from './spells';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';
+export { findUserByEmail } from './users';
 export { deleteProvisionalUsers } from './provisional-users';

@@ -455,19 +455,28 @@ records, and a Mailtrap account with one sandbox. Both go into `secrets.md`'s
 
 ## MB.54: the email page
 
+**Corrected by MB.54's build** ([`mb.54-plan.md`](mb.54-plan.md)): a change
+never writes `users.email` and never unverifies a row, because an established
+account marked unverified would be older than the cap below and swept. The
+new address is mailed Better Auth's own change link (`updateTo`), and
+`/verify-email` swaps the address and verifies it in one write from a session
+holding the row, gated by a `hooks.before` since that branch skips
+`beforeEmailVerification`. The shape is [`auth.md`](../auth.md), "The email
+page"; the rest of this section stands.
+
 `/account/email`, protected, shows the current address and whether it is
-verified. Changing it is a `setEmail` mutation to a service under
-`withAudit`, refused when a live verified row already holds the address, and
-followed by a resend through Better Auth's server API. The provider's address
-is what the page starts with.
+verified. Changing it is a `setEmail` mutation to a service, refused when a
+live verified row already holds the address. The provider's address is what
+the page starts with, and every unverified sign-in lands there.
 
 **A provider that returns no address gets a placeholder.** `mapProfileToUser`
-yields `<providerAccountId>@pending.invalid`: `.invalid` is reserved and can
-never be mailed or matched, the row and session exist, and the page asks for
-an address instead of the callback dying on `email_not_found`. The placeholder
-is provisional like any unverified row and is swept with them. The
-"bootstrap address is refused outright" criterion goes: typing it is harmless,
-since verifying it is the promotion (MB.68) and only its owner's inbox can.
+yields `<providerId>-<providerAccountId>@pending.invalid`: `.invalid` is
+reserved and can never be mailed or matched, the row and session exist, and
+the page asks for an address instead of the callback dying on
+`email_not_found`. The placeholder is provisional like any unverified row and
+is swept with them. The "bootstrap address is refused outright" criterion
+goes: typing it is harmless, since verifying it is the promotion (MB.68) and
+only its owner's inbox can.
 
 Reached later from the account, the same page is how an email changes (story
 59), which is why `changeEmail` stays off.
