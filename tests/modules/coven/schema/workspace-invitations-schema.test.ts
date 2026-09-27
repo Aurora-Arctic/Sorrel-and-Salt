@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { failureOf, useTestDatabase } from './support/database';
-import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
-import { users } from '@/db/schema/users';
+import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
+import { users } from '@/modules/identity/schema/users';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
-import { workspaceInvitations } from '@/db/schema/workspace-invitations';
-import { workspaces } from '@/db/schema/workspaces';
+import { workspaceInvitations } from '@/modules/coven/schema/workspace-invitations';
+import { workspaces } from '@/modules/coven/schema/workspaces';
 
 // DESIGN.md §5's column list, transcribed.
 const OWN_COLUMNS = [

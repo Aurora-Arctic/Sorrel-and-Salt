@@ -9,9 +9,9 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { auditStampColumns } from '../audit';
-import { ingredients } from './ingredients';
-import { inventoryUnit } from './inventory-items';
+import { auditStampColumns } from '../../identity/schema/users';
+import { ingredients } from '../../ingredients/schema/ingredients';
+import { inventoryUnit } from '../../ingredients/schema/inventory-items';
 import { spells } from './spells';
 
 // What is in the jar and in what order (stories 50, 57): a layer is either an

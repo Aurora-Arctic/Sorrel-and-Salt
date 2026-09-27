@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { getTableConfig } from 'drizzle-orm/pg-core';
-import { useTestDatabase } from './support/database';
+import { useTestDatabase } from '../support/db/database';
 import {
   AUDITED_TABLES,
   AUDIT_COLUMNS,
@@ -10,22 +10,25 @@ import {
   STAMP_COLUMNS,
   UNAUDITED_TABLES,
   tableFacts,
-} from './support/table-metadata';
+} from '../support/db/table-metadata';
 // First, before any table that spreads the audit columns: `audit.ts` and
 // `schema/users.ts` import each other, and entering the cycle from the audit
 // side builds `users` with no audit columns (claude-docs/db.md, "The seed module").
-import { users } from '@/db/schema/users';
-import { categories, categoryGroups } from '@/db/schema/categories';
-import { ingredientCategories } from '@/db/schema/ingredient-categories';
-import { ingredientFolkNames } from '@/db/schema/ingredient-folk-names';
-import { ingredientFormGroups, ingredientForms } from '@/db/schema/ingredient-forms';
-import { ingredients } from '@/db/schema/ingredients';
-import { inventoryItems } from '@/db/schema/inventory-items';
-import { spellCategories } from '@/db/schema/spell-categories';
-import { spellIngredients } from '@/db/schema/spell-ingredients';
-import { spells } from '@/db/schema/spells';
-import { workspaceInvitations } from '@/db/schema/workspace-invitations';
-import { workspaceMembers, workspaces } from '@/db/schema/workspaces';
+import { users } from '@/modules/identity/schema/users';
+import { categories, categoryGroups } from '@/modules/vocabulary/schema/categories';
+import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
+import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
+import {
+  ingredientFormGroups,
+  ingredientForms,
+} from '@/modules/vocabulary/schema/ingredient-forms';
+import { ingredients } from '@/modules/ingredients/schema/ingredients';
+import { inventoryItems } from '@/modules/ingredients/schema/inventory-items';
+import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
+import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
+import { spells } from '@/modules/grimoire/schema/spells';
+import { workspaceInvitations } from '@/modules/coven/schema/workspace-invitations';
+import { workspaceMembers, workspaces } from '@/modules/coven/schema/workspaces';
 
 // One sweep rather than a copy in every schema test: a table added without
 // `...auditColumns` fails here, where a per-file copy would simply not exist.

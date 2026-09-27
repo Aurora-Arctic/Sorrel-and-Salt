@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
-import { AUDITED_TABLES, UNAUDITED_TABLES } from './support/table-metadata';
+import { AUDITED_TABLES, UNAUDITED_TABLES } from '../support/db/table-metadata';
 import { eq } from 'drizzle-orm';
 import { makeWorkspace, workspaceColumns } from '../support/fixtures';
 import { truncateAllTables } from '../support/seeded-database';
-import { users } from '@/db/schema/users';
+import { users } from '@/modules/identity/schema/users';
 import { findOne, withAudit } from '@/db/repository';
 
 // One function attached to every audited table —

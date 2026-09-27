@@ -8,7 +8,7 @@ import { REPO_ROOT } from '../support/paths';
 // request to find one (claude-docs/auth.md, "Route protection"). A service
 // that could would stop being callable from a test, a script or the GraphQL
 // context, and `asUser(A)` would stop meaning anything. `.oxlintrc.json`'s
-// `src/services/**` override makes that an import error. The override
+// `src/modules/*/services/**` override makes that an import error. The override
 // replaces the top-level rule rather than merging with it (see
 // lint-db-client-boundary.test.ts), so this also asserts the top-level bans
 // survived the restatement.
@@ -18,7 +18,7 @@ const oxlint = join(REPO_ROOT, 'node_modules/.bin/oxlint');
 const config = join(REPO_ROOT, '.oxlintrc.json');
 
 /** Untracked, gitignored, and removed in `afterAll`. */
-const PROBE_DIR = 'src/services/__lint-probe-session__';
+const PROBE_DIR = 'src/modules/coven/services/__lint-probe-session__';
 
 interface Diagnostic {
   code: string;
@@ -36,9 +36,9 @@ function probe(name: string, source: string, directory = PROBE_DIR): string {
 const SESSION_SOURCES = [
   'next/headers',
   '@/lib/request-session',
-  '../../lib/request-session',
+  '../../../../lib/request-session',
   '@/lib/auth',
-  '../../lib/auth',
+  '../../../../lib/auth',
   'better-auth/cookies',
 ];
 const sessionProbes = SESSION_SOURCES.map((specifier) =>

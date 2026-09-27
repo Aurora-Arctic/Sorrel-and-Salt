@@ -2,9 +2,13 @@ import { beforeAll, afterAll, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
-import type { WorkspacePermission, WorkspaceRole } from '@/services/access-control';
-import { type Membership, assertMembership } from '@/services/membership';
-import { A, B, C, D, E, asUser } from '../support/as-user';
+import {
+  type Membership,
+  type WorkspacePermission,
+  type WorkspaceRole,
+  assertMembership,
+} from '@/modules/coven';
+import { A, B, C, D, E, asUser } from '../../../support/as-user';
 
 // The cast against the `standard` seed every db worker's clone carries: A owns
 // W, B works in it, C reads it, D is a member of X alone, and E is a site

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Forbidden } from '@/lib/errors';
-import { assertWorkshopAccess } from '@/services/workshop-access';
+import { assertWorkshopAccess } from '@/modules/identity';
 
 // The staging workshop is admin-only (claude-docs/workshop.md, "On staging").
 // A viewer role that is not admin is v2; until then the rule is the site role.

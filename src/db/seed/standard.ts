@@ -1,11 +1,11 @@
 import { inArray, isNull } from 'drizzle-orm';
 // `./bootstrap-admin` first, and load-bearing — see minimal.ts.
 import { BOOTSTRAP_SESSION } from './bootstrap-admin';
-import { users } from '../schema/users';
-import { workspaceMembers, workspaces } from '../schema/workspaces';
-import { ingredients } from '../schema/ingredients';
-import { ingredientFolkNames } from '../schema/ingredient-folk-names';
-import { ingredientCategories } from '../schema/ingredient-categories';
+import { users } from '../../modules/identity/schema/users';
+import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
+import { ingredients } from '../../modules/ingredients/schema/ingredients';
+import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
+import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
 import { applyAudit } from '../audit';
 import { slugify } from '../../lib/slugify';
 import { categoryIdByName, seedCategoryVocabulary } from './categories';

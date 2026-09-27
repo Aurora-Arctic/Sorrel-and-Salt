@@ -1,13 +1,13 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { findOneSpell, withAudit } from '@/db/repository';
-import { spells } from '@/db/schema/spells';
+import { spells } from '@/modules/grimoire/schema/spells';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound } from '@/lib/errors';
-import { assertMembership } from '@/services/membership';
-import { setSpellVisibility } from '@/services/spell-visibility';
-import { A, B, C, D, asUser } from '../support/as-user';
-import { makeSpell } from '../support/fixtures';
+import { assertMembership } from '@/modules/coven';
+import { setSpellVisibility } from '@/modules/grimoire';
+import { A, B, C, D, asUser } from '../../../support/as-user';
+import { makeSpell } from '../../../support/fixtures';
 
 // DESIGN.md §5's one-way rule: `private` may be widened to `workspace`, and
 // `workspace` may never be narrowed back. Once the coven has read a spell and

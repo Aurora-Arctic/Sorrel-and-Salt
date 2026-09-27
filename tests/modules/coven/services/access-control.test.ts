@@ -4,7 +4,7 @@ import {
   type WorkspacePermission,
   type WorkspaceRole,
   rolePermits,
-} from '@/services/access-control';
+} from '@/modules/coven';
 
 // The policy, restated here in the test's own words rather than read out of
 // the module under test: a matrix compared against itself would pass whatever

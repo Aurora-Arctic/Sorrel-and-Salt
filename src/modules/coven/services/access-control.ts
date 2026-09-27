@@ -1,7 +1,7 @@
 import 'server-only';
 import { createAccessControl } from 'better-auth/plugins/access';
 import type { RoleAuthorizeRequest } from 'better-auth/plugins/access';
-import type { workspaceMembers } from '../db/schema/workspaces';
+import type { workspaceMembers } from '../schema/workspaces';
 
 // What each **workspace** role may do. The site role on the session
 // (`user` | `admin`) is a different axis and is not read here: an admin

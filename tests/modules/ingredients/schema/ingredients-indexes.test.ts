@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { failureOf, useTestDatabase } from './support/database';
-import { tableFacts } from './support/table-metadata';
+import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { tableFacts } from '../../../support/db/table-metadata';
 import {
   type IngredientFixture,
   type Overrides,
   ingredientColumns,
   makeIngredient,
-} from '../support/fixtures';
-import { ingredients } from '@/db/schema/ingredients';
+} from '../../../support/fixtures';
+import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 
 // §5's three partial unique indexes. Identity is `canonical_key`, so the

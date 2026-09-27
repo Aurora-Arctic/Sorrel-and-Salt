@@ -12,7 +12,7 @@ import {
   stubProviderCredentials,
   type Profile,
   type ProviderId,
-} from '../support/oauth';
+} from '../../../support/oauth';
 
 // Story 58, through Better Auth's real endpoints: an unverified account lapses
 // one verification lifetime after its last mail, and the next OAuth callback

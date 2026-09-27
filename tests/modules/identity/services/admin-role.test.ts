@@ -6,15 +6,15 @@ import {
   promotePrimaryAdmin,
   promotePrimaryAdminAtVerification,
   type SignInProfile,
-} from '@/services/admin-role';
-import { asUser } from '../support/as-user';
+} from '@/modules/identity';
+import { asUser } from '../../../support/as-user';
 import {
   expectSignedIn,
   signIn as signInThrough,
   stubProviderCredentials,
   type Profile,
   type ProviderId,
-} from '../support/oauth';
+} from '../../../support/oauth';
 
 // The primary admin is promoted at a sign-in whose fresh provider profile is
 // Google or Discord and verified —

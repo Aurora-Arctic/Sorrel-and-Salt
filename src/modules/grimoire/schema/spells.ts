@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
-import { auditColumns } from '../audit';
-import { workspaces } from './workspaces';
+import { auditColumns } from '../../identity/schema/users';
+import { workspaces } from '../../coven/schema/workspaces';
 
 // An enum rather than a text CHECK: v2's approval workflow adds values, and
 // `ALTER TYPE … ADD VALUE` expands where widening a CHECK re-validates every row.

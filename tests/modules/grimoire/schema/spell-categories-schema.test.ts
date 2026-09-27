@@ -1,16 +1,16 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { failureOf, useTestDatabase } from './support/database';
-import { STAMP_COLUMNS, tableFacts } from './support/table-metadata';
+import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { STAMP_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { and, eq } from 'drizzle-orm';
-import { makeSpell, spellColumns } from '../support/fixtures';
-import { categories } from '@/db/schema/categories';
-import { spellCategories } from '@/db/schema/spell-categories';
-import { spells } from '@/db/schema/spells';
+import { makeSpell, spellColumns } from '../../../support/fixtures';
+import { categories } from '@/modules/vocabulary/schema/categories';
+import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
+import { spells } from '@/modules/grimoire/schema/spells';
 import { findManyInSpell, withAudit } from '@/db/repository';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
-import { assertMembership } from '@/services/membership';
-import { A, asUser } from '../support/as-user';
+import { assertMembership } from '@/modules/coven';
+import { A, asUser } from '../../../support/as-user';
 
 // DESIGN.md §5's column list, transcribed.
 const OWN_COLUMNS = ['spell_id', 'category_id'];

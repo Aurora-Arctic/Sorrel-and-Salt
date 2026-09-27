@@ -69,7 +69,7 @@ export default defineConfig({
           // tests/e2e/ is Playwright's; its specs end `.spec.ts`, but say so.
           exclude: [
             'tests/db/**',
-            'tests/services/**',
+            'tests/modules/**',
             'tests/rsc/**',
             'tests/acceptance/**',
             'tests/e2e/**',
@@ -81,7 +81,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'db',
-          include: ['tests/db/**/*.test.ts', 'tests/services/**/*.test.ts'],
+          include: ['tests/db/**/*.test.ts', 'tests/modules/**/*.test.ts'],
           passWithNoTests: true,
           ...dbHarness,
         },

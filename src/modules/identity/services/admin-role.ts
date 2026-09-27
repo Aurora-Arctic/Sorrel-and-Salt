@@ -1,7 +1,7 @@
 import 'server-only';
-import { withAudit } from '../db/repository';
-import { users } from '../db/schema/users';
-import type { Session } from '../lib/session';
+import { withAudit } from '../../../db/repository';
+import { users } from '../schema/users';
+import type { Session } from '../../../lib/session';
 
 // The primary admin is promoted at sign-in, by a provider that vouches for the
 // address, or at first-party verification, by our own mail:

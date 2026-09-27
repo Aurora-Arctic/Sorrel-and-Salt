@@ -1,5 +1,5 @@
 import type { AuditSession } from '../db/audit';
-import type { users } from '../db/schema/users';
+import type { users } from '../modules/identity/schema/users';
 
 // The service-level session: who is acting. Not Better Auth's `sessions` row,
 // which is the browser's proof and lives behind `/api/auth`. Extends

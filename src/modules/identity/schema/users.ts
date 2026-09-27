@@ -9,7 +9,21 @@ import {
   index,
   check,
 } from 'drizzle-orm/pg-core';
-import { auditColumns } from '../audit';
+import {
+  auditStampColumnsReferencing,
+  deletionColumnsReferencing,
+  type UsersIdReference,
+} from '../../../db/audit';
+
+// The audit column instances every table spreads, built here because each
+// references `users.id` — `users` included, so the thunk resolves the table
+// below after it exists. Import them from this file, never from db/audit.ts,
+// which exports only the factories (claude-docs/db.md, "Audit columns and applyAudit").
+const usersId: UsersIdReference = () => users.id;
+export const auditStampColumns = auditStampColumnsReferencing(usersId);
+// The four stamps plus two, spread from the same instance, so the six-column
+// set has one definition and the two cannot drift (CLAUDE.md rule 3).
+export const auditColumns = { ...auditStampColumns, ...deletionColumnsReferencing(usersId) };
 
 // Admins curate the global vocabularies and nothing else, so a column is enough.
 export const userRole = pgEnum('user_role', ['user', 'admin']);

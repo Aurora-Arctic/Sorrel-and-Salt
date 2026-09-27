@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
-import { failureOf, useTestDatabase } from './support/database';
-import { tableFacts } from './support/table-metadata';
+import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { tableFacts } from '../../../support/db/table-metadata';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
-import { users } from '@/db/schema/users';
+import { users } from '@/modules/identity/schema/users';
 
 // Schema shape via Drizzle's introspection; the seeded rows are asserted in
 // seeded-template.test.ts.

@@ -187,7 +187,7 @@ environment. Production and hotfix previews never carry it.
   `/workshop` and everything beneath it (`/workshopping` is not beneath it),
   and only there, the proxy asks Better Auth for the live session through
   `sessionFromHeaders()` and hands it to `assertWorkshopAccess()`
-  (`src/services/workshop-access.ts` — the rule is a service's, per rule 1).
+  (`src/modules/identity/services/workshop-access.ts` — the rule is a service's, per rule 1).
 
   | Request                      | Answer                                                       |
   | ---------------------------- | ------------------------------------------------------------ |

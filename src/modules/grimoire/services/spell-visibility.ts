@@ -1,9 +1,9 @@
 import 'server-only';
-import { findOneSpell, withAudit } from '../db/repository';
-import { spells } from '../db/schema/spells';
-import { Forbidden, NotFound } from '../lib/errors';
-import type { Session } from '../lib/session';
-import { assertMembership } from './membership';
+import { findOneSpell, withAudit } from '../../../db/repository';
+import { spells } from '../schema/spells';
+import { Forbidden, NotFound } from '../../../lib/errors';
+import type { Session } from '../../../lib/session';
+import { assertMembership } from '@/modules/coven';
 
 /** `'private' | 'workspace'`, read off the column rather than restated. */
 export type SpellVisibility = (typeof spells.$inferSelect)['visibility'];

@@ -8,11 +8,11 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { auditColumns } from '../audit';
-import { users } from './users';
+import { users } from '../../identity/schema/users';
+import { auditColumns } from '../../identity/schema/users';
 
 // Declared viewer, member, owner. Nothing compares two roles: each carries its
-// own permission statements (src/services/access-control.ts), so the order here
+// own permission statements (../services/access-control.ts), so the order here
 // is documentation. `owner` is not invitable — workspace_invitations carries
 // the CHECK.
 export const workspaceRole = pgEnum('workspace_role', ['viewer', 'member', 'owner']);

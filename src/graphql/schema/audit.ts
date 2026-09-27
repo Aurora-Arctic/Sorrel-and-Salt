@@ -1,4 +1,4 @@
-import type { auditStampColumns } from '../../db/audit';
+import type { auditStampColumns } from '@/modules/identity/schema/users';
 import { builder } from '../builder';
 
 // Every audited row surfaces its stamps as `audit: AuditInfo!`, never as flat

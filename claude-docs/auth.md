@@ -19,7 +19,7 @@ it is narrower than it looks:
   data is readable or writable through it. `src/app/api/auth/[...all]/
 route.ts` does exactly one thing — hand every request straight to Better
   Auth's own handler (`toNextJsHandler(auth)`, `src/lib/auth.ts`) — and
-  imports nothing from `src/services/` or `src/graphql/`. There is no code
+  imports nothing from `src/modules/*/services/` or `src/graphql/`. There is no code
   path by which an auth endpoint could reach application data.
 - **The rule this doesn't relax.** "Application data access" (CLAUDE.md
   rule 1) means the compendium, ingredients, and grimoire — not the protocol
@@ -34,7 +34,7 @@ Better Auth's own adapter tables, generated from its schema (pluralized —
 `usePlural: true` — to match this repo's `workspaces`/`ingredients`
 convention) and split across two schema files:
 
-- **`src/db/schema/users.ts`** — `users`: `id`, `name`, `email`,
+- **`src/modules/identity/schema/users.ts`** — `users`: `id`, `name`, `email`,
   `emailVerified`, `image`, `role` (`user` | `admin`, default `user`),
   `canCreateWorkspace` (default `false`), plus `...auditColumns`. M2.2
   shipped Better Auth's own core shape (`name`/`image`, no
@@ -46,7 +46,7 @@ convention) and split across two schema files:
   its own file (rather than folded into `auth.ts`) because MB.5 imports
   `users` from here to wire the `auditColumns` self-reference once every
   column exists.
-- **`src/db/schema/auth.ts`** — `sessions`, `accounts`, `verifications`,
+- **`src/modules/identity/schema/auth.ts`** — `sessions`, `accounts`, `verifications`,
   each `.references(() => users.id, { onDelete: 'cascade' })`. `accounts`
   carries a `password` column that stays `null` in v1 (OAuth only) —
   DESIGN.md §2 notes the tables already accommodate email+password without
@@ -224,7 +224,7 @@ created, and only when that sign-in's provider vouches for the address:
   the id, never the address, because a sign-in screen should not reveal that
   an address is special.
 
-**How it is wired** (`src/lib/auth.ts`, `src/services/admin-role.ts`):
+**How it is wired** (`src/lib/auth.ts`, `src/modules/identity/services/admin-role.ts`):
 
 - The after-callback hook (`hooks.after`, matching `/callback/:id`) has
   `ctx.context.newSession.user` loaded, so it costs no query. But that is
@@ -368,7 +368,7 @@ than a verification link lives. The argument is
   following it finds no user, and signing in again starts a fresh account.
 - **What restarts the window.** A sign-up sets it. A resend through
   `/send-verification-email` from a session holding the row calls
-  `extendVerificationWindow` in `src/services/provisional-accounts.ts`, an
+  `extendVerificationWindow` in `src/modules/identity/services/provisional-accounts.ts`, an
   empty `withAudit` update stamped as that user, before the mail goes out.
   A resend from no session still mails, as Better Auth always does, but
   extends nothing: otherwise anyone could keep a row alive by posting its
@@ -641,7 +641,7 @@ answer.
 `Session` as its first argument. The page calls `requireSession()` (or the
 GraphQL context calls `getSession()`) and passes the result in. That is what
 keeps a service callable from a test with `asUser(A)`, from a script, and from
-both transports alike. `.oxlintrc.json`'s `src/services/**` override makes it
+both transports alike. `.oxlintrc.json`'s `src/modules/*/services/**` override makes it
 an import error: a service may not import `next/headers`, `better-auth/cookies`,
 `lib/auth` or `lib/request-session`. It may still `import type { Session }`
 and better-auth's `createAccessControl`. The override restates the three
@@ -748,7 +748,7 @@ pulled-environment assertion names it first).
   `ADMIN_BOOTSTRAP_EMAIL` at `NODE_ENV=production` and does not outside it;
   and pins the three options above off, with all four providers registered so
   the per-provider check cannot pass on an empty list.
-- **`tests/services/admin-role.test.ts` (MB.60)** — `promotePrimaryAdmin`'s
+- **`tests/modules/identity/services/admin-role.test.ts` (MB.60)** — `promotePrimaryAdmin`'s
   outcomes against the database, then the whole round trip through
   `auth.handler`: `POST /sign-in/social`, then `GET /callback/:id` with
   MSW standing in for each provider's token and profile endpoints (Google's
@@ -774,7 +774,7 @@ pulled-environment assertion names it first).
   and from none leave the role alone and the owner's session then promotes,
   so it was the session binding that refused; and a change-email link minted
   by hand verifies with no session and promotes nobody, a case that fails
-  with the acting-user check removed. `tests/services/admin-role.test.ts`
+  with the acting-user check removed. `tests/modules/identity/services/admin-role.test.ts`
   covers `promotePrimaryAdminAtVerification`'s outcomes directly.
 - **`tests/lib/errors.test.ts` (M1.26)** — asserts `Forbidden` and
   `NotFound` are distinguishable by type in a `catch` and in an
@@ -782,12 +782,12 @@ pulled-environment assertion names it first).
   success value satisfies an assertion written for a refusal. The last three
   cases assert that an _inner_ expectation rejects, which is what proves the
   assertion style can fail at all — see `claude-docs/testing.md`.
-- **`tests/db/users-schema.test.ts`** — asserts `users`' shape via Drizzle's
+- **`tests/modules/identity/schema/users-schema.test.ts`** — asserts `users`' shape via Drizzle's
   own `getTableConfig()` introspection: `name`/`image` columns,
   `role`'s `user`/`admin` enum and `'user'` default, `canCreateWorkspace`'s
   `false` default, every `...auditColumns` field present, and the email
   index being a partial unique index (`WHERE deleted_at IS NULL`) rather
-  than a plain unique constraint. It was kept out of `src/db/schema/` from
+  than a plain unique constraint. It was kept out of the schema directory from
   the start — a `*.test.ts` file there gets swept into `drizzle.config.ts`'s
   `schema` glob, and `drizzle-kit generate` fails trying to `require()` a
   file that imports Vitest; MB.41 moved the whole suite to `tests/`, which

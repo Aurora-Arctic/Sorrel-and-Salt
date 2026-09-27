@@ -1,8 +1,8 @@
 import 'server-only';
 import { cache } from 'react';
-import { findWorkspaceRole } from '../db/repository';
-import { Forbidden } from '../lib/errors';
-import type { Session } from '../lib/session';
+import { findWorkspaceRole } from '../../../db/repository';
+import { Forbidden } from '../../../lib/errors';
+import type { Session } from '../../../lib/session';
 import { type WorkspacePermission, type WorkspaceRole, rolePermits } from './access-control';
 
 // CLAUDE.md rule 5's two layers live here: `assertMembership` is the check,

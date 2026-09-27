@@ -1,7 +1,7 @@
 import 'server-only';
-import { deleteProvisionalUsers, withAudit } from '../db/repository';
-import { users } from '../db/schema/users';
-import type { AuditSession } from '../db/audit';
+import { deleteProvisionalUsers, withAudit } from '../../../db/repository';
+import { users } from '../schema/users';
+import type { AuditSession } from '../../../db/audit';
 
 // An unverified account is provisional: it lapses one verification lifetime
 // after its last mail, and three hours after sign-up whatever it resends, so

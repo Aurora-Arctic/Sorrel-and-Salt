@@ -3,7 +3,7 @@ import { pgTable, text, timestamp, uuid, index } from 'drizzle-orm/pg-core';
 import { users } from './users';
 
 // Better Auth's own adapter tables, generated with `usePlural: true` and
-// `generateId: 'uuid'` (src/lib/auth.ts); `users` lives in schema/users.ts.
+// `generateId: 'uuid'` (src/lib/auth.ts); `users` lives in ./users.ts.
 // No `*_by` columns and nothing writes them through `withAudit`, so the
 // `updated_at` trigger skips them.
 

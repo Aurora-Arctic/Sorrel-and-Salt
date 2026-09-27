@@ -1,30 +1,34 @@
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from './schema/users';
 
-// Every audit id references users.id, `users`' own rows included, so this
-// module and schema/users.ts import each other: the thunk defers the runtime
-// cycle and the explicit `AnyPgColumn` stops TypeScript reporting "audit.ts
-// circularly references itself". The cycle also constrains import order in
-// seed modules (claude-docs/db.md, "The seed module").
-export const auditStampColumns = {
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  createdBy: uuid('created_by')
-    .notNull()
-    .references((): AnyPgColumn => users.id),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-  updatedBy: uuid('updated_by')
-    .notNull()
-    .references((): AnyPgColumn => users.id),
-};
+/** A thunk to `users.id`, resolved when the foreign key is read rather than when the columns are built. */
+export type UsersIdReference = () => AnyPgColumn;
 
-// Defined as the four stamps plus two, so the six-column set cannot drift.
-// Which tables take which: claude-docs/db.md, "Hard delete on the three join tables".
-export const auditColumns = {
-  ...auditStampColumns,
-  deletedAt: timestamp('deleted_at'),
-  deletedBy: uuid('deleted_by').references((): AnyPgColumn => users.id),
-};
+// Factories rather than column instances: every audit id references
+// `users.id`, `users`' own rows included, and importing `users` from here
+// would make this module and the identity module's `users.ts` import each
+// other — a cycle that, entered from the wrong end, built `users` before
+// `auditColumns` existed and silently dropped its stamps (MB.60). The
+// instances live beside `users`, in src/modules/identity/schema/users.ts,
+// so this module depends on nothing in a module and any schema file can be
+// the first one loaded (claude-docs/db.md, "Audit columns and applyAudit").
+export function auditStampColumnsReferencing(usersId: UsersIdReference) {
+  return {
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    createdBy: uuid('created_by').notNull().references(usersId),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    updatedBy: uuid('updated_by').notNull().references(usersId),
+  };
+}
+
+// The two the soft-deleted tables add to the stamps. Which tables take which:
+// claude-docs/db.md, "Hard delete on the three join tables".
+export function deletionColumnsReferencing(usersId: UsersIdReference) {
+  return {
+    deletedAt: timestamp('deleted_at'),
+    deletedBy: uuid('deleted_by').references(usersId),
+  };
+}
 
 export type AuditOperation = 'insert' | 'update' | 'delete';
 

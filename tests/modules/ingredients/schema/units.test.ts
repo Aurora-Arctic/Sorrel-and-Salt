@@ -6,7 +6,7 @@ import {
   dimensionOf,
   isUnit,
   type Unit,
-} from '@/lib/units';
+} from '@/modules/ingredients/schema/units';
 
 // DESIGN.md §5 transcribed rather than imported, so the module is compared
 // against the spec, not itself. `fl oz` is spelled `fl_oz` — see the module.

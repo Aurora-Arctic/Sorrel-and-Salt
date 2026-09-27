@@ -3,9 +3,8 @@ import { renderToReadableStream } from 'react-server-dom-webpack/server.edge';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
-import type { WorkspacePermission } from '@/services/access-control';
-import { assertMembership } from '@/services/membership';
-import { A, asUser } from '../../support/as-user';
+import { type WorkspacePermission, assertMembership } from '@/modules/coven';
+import { A, asUser } from '../../../support/as-user';
 
 // The server read path, observed from where it happens: React's `cache()`
 // memoises only while the Flight renderer is running, so the dedupe cannot be

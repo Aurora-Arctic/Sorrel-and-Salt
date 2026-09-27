@@ -1,5 +1,5 @@
-import type { spellIngredients } from '@/db/schema/spell-ingredients';
-import type { spells } from '@/db/schema/spells';
+import type { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
+import type { spells } from '@/modules/grimoire/schema/spells';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { toColumns } from './columns';
 import { type Overrides, mergeFixture, stated } from './merge';

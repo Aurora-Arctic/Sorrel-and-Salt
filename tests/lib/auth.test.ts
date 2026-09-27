@@ -189,7 +189,7 @@ describe('user field mapping', () => {
 // The one write to `users` outside withAudit: there is no session yet, so the
 // new user is its own creator (`createdBy` is NOT NULL with no default). It
 // never sets `role`: the primary admin is promoted at sign-in, through
-// withAudit (tests/services/admin-role.test.ts).
+// withAudit (tests/modules/identity/services/admin-role.test.ts).
 describe('sign-up hook', () => {
   afterEach(() => {
     vi.unstubAllEnvs();

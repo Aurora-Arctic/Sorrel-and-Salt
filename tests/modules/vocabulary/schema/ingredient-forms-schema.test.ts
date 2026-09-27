@@ -2,11 +2,14 @@ import { join } from 'node:path';
 import { readFileSync, readdirSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { failureOf, useTestDatabase } from './support/database';
-import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
-import { MIGRATIONS_DIR } from '../support/paths';
-import { ingredientFormGroups, ingredientForms } from '@/db/schema/ingredient-forms';
-import { ingredients } from '@/db/schema/ingredients';
+import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
+import { MIGRATIONS_DIR } from '../../../support/paths';
+import {
+  ingredientFormGroups,
+  ingredientForms,
+} from '@/modules/vocabulary/schema/ingredient-forms';
+import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
 const GROUPS_SLUG_UNIQUE = 'ingredient_form_groups_slug_unique';

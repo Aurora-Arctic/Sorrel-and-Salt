@@ -1,6 +1,6 @@
 import 'server-only';
-import { Forbidden } from '../lib/errors';
-import type { Session } from '../lib/session';
+import { Forbidden } from '../../../lib/errors';
+import type { Session } from '../../../lib/session';
 
 // Who may open the staging component workshop: claude-docs/workshop.md,
 // "On staging". Admin only — a role that can view it without admin's other

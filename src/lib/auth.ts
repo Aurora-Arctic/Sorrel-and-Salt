@@ -11,8 +11,8 @@ import { appendQueryParams } from '@better-auth/core/utils/url';
 // this cannot go through withAudit — claude-docs/db.md, "Who may import the client".
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../db/connection';
-import { users } from '../db/schema/users';
-import { sessions, accounts, verifications } from '../db/schema/auth';
+import { users } from '../modules/identity/schema/users';
+import { sessions, accounts, verifications } from '../modules/identity/schema/auth';
 import { SOCIAL_PROVIDERS, type ProviderId } from './social-providers';
 // Server-only — see social-providers-config.ts's own header.
 // oxlint-disable-next-line no-restricted-imports
@@ -25,12 +25,12 @@ import {
   promotePrimaryAdminAtVerification,
   type PrimaryAdminOutcome,
   type SignInProfile,
-} from '../services/admin-role';
+} from '@/modules/identity';
 import {
   VERIFICATION_LIFETIME_SECONDS,
   extendVerificationWindow,
   sweepProvisionalAccounts,
-} from '../services/provisional-accounts';
+} from '@/modules/identity';
 
 // Better Auth's own `validateSecret` is swallowed — with the secret unset it
 // logs and still answers 200 on the well-known default. Production-only:
