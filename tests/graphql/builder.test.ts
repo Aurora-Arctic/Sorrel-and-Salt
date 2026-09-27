@@ -4,13 +4,14 @@ import type { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { builder, createBuilder } from '@/graphql/builder';
 import type { Context } from '@/graphql/context';
 import { createLoaders } from '@/graphql/loaders';
+import { noSender } from '../support/email-verification';
 import { schema } from '@/graphql/schema';
 import { Forbidden } from '@/lib/errors';
 
 const AUDIT_FIELDS = ['createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'deletedAt', 'deletedBy'];
 
 function context(session: Context['session']): Context {
-  return { session, loaders: createLoaders(session) };
+  return { session, loaders: createLoaders(session), emailVerification: noSender };
 }
 
 describe('the Pothos schema', () => {

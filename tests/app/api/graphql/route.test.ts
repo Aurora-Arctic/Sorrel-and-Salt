@@ -161,6 +161,20 @@ describe('/api/graphql', () => {
     expect(result.errors[0].message).not.toMatch(/"ok"|did you mean/i);
   });
 
+  // The schema's first mutation is refused signed out by its scope, before its
+  // service — and so before the context's sender could send anything.
+  it('refuses setEmail signed out with FORBIDDEN and no data', async () => {
+    const { POST } = await loadRoute('production');
+    const response = await POST(
+      post({ query: 'mutation { setEmail(email: "someone@route.test") { id } }' }),
+    );
+
+    const result = await response.json();
+    expect(result.data).toBeNull();
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].extensions).toEqual({ code: 'FORBIDDEN' });
+  });
+
   // The mapping is claude-docs/graphql.md's "Errors"; tests/graphql/errors.test.ts
   // covers each type. This is the route carrying it: `me` signed out is refused
   // by its scope, which throws the same `Forbidden` a service does.
