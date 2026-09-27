@@ -217,10 +217,9 @@ created, and only when that sign-in's provider vouches for the address:
   verified in Better Auth's mapping. Microsoft is excluded on purpose: with
   `tenantId: 'common'`, an attacker's own Entra tenant can issue an id token
   carrying any `email` and `email_verified` claim (the 2023 "nOAuth"
-  surface). First-party verification lets them in another way: MB.68
-  promotes the address when its owner verifies it by mail, from a session
-  holding that row
-  ([`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md)).
+  surface). First-party verification lets them in another way: the address
+  is also promoted when its owner verifies it by mail, from a session holding
+  that row ("Promotion at first-party verification" below).
 - **The decision uses the provider's fresh profile at that callback**, never
   the stored `users.emailVerified`. A row our own mail has marked verified
   still promotes nobody at a later Microsoft sign-in. So nothing that later sets the column can widen who
@@ -261,9 +260,44 @@ emailVerified }` into a Better Auth request state
   stay two; the create-time promotion that was one of them is gone. The role
   write is the one MB.59's grant and revoke will share, adding the ledger row.
 - **Changing the variable** promotes the new address at its next qualifying
-  sign-in, even if that account already exists. The previous primary admin
+  sign-in or verification, even if that account already exists. The previous primary admin
   keeps `role: 'admin'` and simply stops being protected (MB.59). This is
   also the recovery path if the primary admin loses their OAuth account.
+
+### Promotion at first-party verification (MB.68)
+
+The second way to become the primary admin: **follow the verification link
+our own mail sent to the bootstrap address, from a browser signed in to that
+account.** Our mail vouches for the address the way Google or Discord would,
+so a Microsoft- or Facebook-only owner is promoted too
+([`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md)).
+
+- **It is safe only because verification is session-bound.**
+  `beforeEmailVerification` refuses a link followed from no session or from
+  another user's ("First-party verification" below), so the promotion runs
+  only for someone signed in to the row, who received the mail at the
+  address. Without that binding, a stranger's sign-up carrying the bootstrap
+  address would become admin the moment its owner clicked a mail they never
+  asked for.
+- **`afterEmailVerification` promotes only the row the check admitted.**
+  Better Auth also calls it on a change-email link, which skips
+  `beforeEmailVerification` and needs no session. `changeEmail` is off, so
+  no such link is minted, but the hook still requires the per-request
+  acting-user id that only `beforeEmailVerification` sets on this endpoint,
+  so a stray one verifies and promotes nobody.
+- **It calls `promotePrimaryAdminAtVerification`**, which checks only the
+  address and the current role, then makes the same `withAudit` write as the
+  sign-in promotion, stamped as the user. There is no profile to check: the
+  verification is the vouch. It runs once, on the write that flips
+  `emailVerified`; a second use of the link finds the row verified and calls
+  no hook. An already-verified row is promoted at a Google or Discord sign-in,
+  or not at all.
+- **The sign-in rule is untouched.** The callback still decides on the fresh
+  Google or Discord profile, never the stored column, so a Microsoft sign-in
+  over a row our mail has verified still promotes nobody. Verification is an
+  event, not a state the sign-in reads.
+- **No ledger row yet.** MB.59 adds a `bootstrap` row to the shared role
+  write once MB.58's table exists, and so to both promotions at once.
 
 **Three Better Auth options stay off, pinned by `tests/lib/auth.test.ts`.**
 Each would let the address on an account change under the primary admin and
@@ -413,7 +447,7 @@ carries the argument.
   ([`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md)):
   MB.65 builds the mail transport, MB.66 turns Better Auth's verification on,
   MB.67 makes unverified accounts provisional, MB.68 promotes the primary
-  admin at verification, and MB.54, re-scoped to follow them, is the email
+  admin at verification (above), and MB.54, re-scoped to follow them, is the email
   page where a user sets or changes their address.
 
 Until MB.58 and MB.59 land, a second admin is an `UPDATE` in `psql`.
@@ -722,7 +756,14 @@ pulled-environment assertion names it first).
   row unchanged, from none or another user's, and the same link then
   succeeds from the owner's session, so the refusal was the session's. Each
   stamp assertion first hands `updated_by` to the bootstrap user, because
-  the create hook already stamps a new row as itself.
+  the create hook already stamps a new row as itself. MB.68 adds the
+  promotion: a Microsoft-only owner is promoted by following the link from
+  their own session and by nothing else; the refusals from another browser
+  and from none leave the role alone and the owner's session then promotes,
+  so it was the session binding that refused; and a change-email link minted
+  by hand verifies with no session and promotes nobody, a case that fails
+  with the acting-user check removed. `tests/services/admin-role.test.ts`
+  covers `promotePrimaryAdminAtVerification`'s outcomes directly.
 - **`tests/lib/errors.test.ts` (M1.26)** — asserts `Forbidden` and
   `NotFound` are distinguishable by type in a `catch` and in an
   `expect().rejects.toThrow(Class)`, and that neither an empty list nor a

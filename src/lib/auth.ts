@@ -22,6 +22,7 @@ import { send } from './mail';
 import { verifyEmailMessage } from '../emails/verify-email';
 import {
   promotePrimaryAdmin,
+  promotePrimaryAdminAtVerification,
   type PrimaryAdminOutcome,
   type SignInProfile,
 } from '../services/admin-role';
@@ -195,6 +196,17 @@ export const auth = betterAuth({
         });
       }
       await actingUser.set(user.id);
+    },
+    // Only for the row the check above admitted: Better Auth also calls this
+    // on a change-email link, which skips that check.
+    afterEmailVerification: async (user) => {
+      if (!(await hasRequestState()) || (await actingUser.get()) !== user.id) return;
+      // The adapter returns the whole row; the hook's type omits additionalFields.
+      const { role } = user as typeof user & { role: UserRole };
+      await promotePrimaryAdminAtVerification(
+        { userId: user.id, role },
+        { accountEmail: user.email, primaryAdminEmail: primaryAdminEmail() },
+      );
     },
   },
   user: {
