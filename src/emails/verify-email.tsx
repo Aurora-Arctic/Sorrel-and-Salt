@@ -4,8 +4,12 @@ import { Action, EmailLayout, Paragraph, renderParts, type Part } from './parts/
 
 const SUBJECT = 'Confirm Your Email for Sorrel & Salt.';
 
+/** A sign-up proving the address it arrived with, or an existing account asking for this one. */
+export type VerifyEmailPurpose = 'sign-up' | 'change';
+
 interface VerifyEmailProps {
   url: string;
+  purpose?: VerifyEmailPurpose;
   /** The providers linked to the account, so the reader can tell whether they signed up at all. */
   providers: readonly ProviderId[];
   /** Where the images and fonts are served from: the link's own origin unless a preview says otherwise. */
@@ -24,6 +28,7 @@ function providerList(providers: readonly ProviderId[]): string {
 
 export function VerifyEmail({
   url,
+  purpose = 'sign-up',
   providers,
   origin = new URL(url).origin,
   part,
@@ -32,8 +37,10 @@ export function VerifyEmail({
   return (
     <EmailLayout preview={SUBJECT} heading="Confirm Your Email" origin={origin}>
       <Paragraph>
-        Someone made a Sorrel &amp; Salt account with this email address
-        {signedUpWith && <>, using {signedUpWith}</>}.
+        {purpose === 'change'
+          ? 'Someone asked to use this email address for their Sorrel & Salt account'
+          : 'Someone made a Sorrel & Salt account with this email address'}
+        {signedUpWith && purpose === 'sign-up' && <>, using {signedUpWith}</>}.
       </Paragraph>
       <Paragraph>
         {part === 'html'

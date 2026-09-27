@@ -66,6 +66,26 @@ describe('verifyEmailMessage', () => {
     expect(text).not.toMatch(/ using /i);
     expect(text).toContain(URL_WITH_QUERY);
   });
+
+  // An existing account asking for this address (MB.54): the reader did not
+  // sign up, so the mail says what was asked instead, and names no provider —
+  // the address is new to the account, so which provider it signs in with
+  // tells the reader nothing about whether the request was theirs.
+  it('says an account asked for this address when the purpose is a change', async () => {
+    const { text, subject } = await verifyEmailMessage({
+      to: 'someone@verify-email.test',
+      url: URL_WITH_QUERY,
+      purpose: 'change',
+      providers: ['discord'],
+    });
+
+    expect(subject).toBe('Confirm Your Email for Sorrel & Salt.');
+    expect(text).toContain('asked to use this email address for their Sorrel & Salt account');
+    expect(text).toContain('for their Sorrel & Salt account.');
+    expect(text).not.toContain('Discord');
+    expect(text).not.toContain('made a Sorrel & Salt account');
+    expect(text).toMatch(/wasn.t you.*ignore this email/is);
+  });
 });
 
 /** `value` as a literal inside a RegExp. */

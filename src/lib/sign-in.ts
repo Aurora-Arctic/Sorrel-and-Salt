@@ -37,6 +37,9 @@ export function safeReturnPath(raw: string | string[] | undefined): string {
  */
 export const RETURN_PATH_HEADER = 'x-sorrel-return-path';
 
+/** Where a verification link opened from no session goes: sign in, then back to the email page. */
+export const SIGN_IN_TO_VERIFY_PATH = '/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify';
+
 /** `/sign-in`, carrying `returnPath` as `?next=` once it has passed `safeReturnPath`. */
 export function signInPath(returnPath: string | undefined): `/sign-in?next=${string}` {
   return `/sign-in?next=${encodeURIComponent(safeReturnPath(returnPath))}`;
@@ -65,9 +68,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   unable_to_link_account: 'That account is already linked to a different sign-in method.',
   email_does_not_match: "The email address didn't match your existing account.",
   account_already_linked_to_different_user: 'That account is already linked to a different user.',
-  // Discord and Facebook can both return a profile with no usable email;
-  // MB.54 replaces this dead end with a way to supply one.
-  email_not_found: "That provider didn't share an email address.",
+  // No `email_not_found`: a provider that shares no address gets a placeholder
+  // and the email page asks (src/lib/auth.ts, `orPlaceholder`).
   // Reached only if a provider ever requires verification; none does today.
   email_not_verified:
     'Please confirm your email address first: open the link we sent you, or change the address on your email page.',
@@ -76,6 +78,10 @@ const ERROR_MESSAGES: Record<string, string> = {
   state_mismatch: 'That sign-in expired or was started in another tab. Please start again here.',
   state_not_found: 'That sign-in expired or was started in another tab. Please start again here.',
   state_invalid: 'That sign-in expired or was started in another tab. Please start again here.',
+  // A verification link opened from a signed-out browser (src/lib/auth.ts):
+  // the link still works, so the sentence says to open it again.
+  sign_in_to_verify:
+    'Sign in to the account that asked for this email address, then open the link in the email again.',
 };
 
 // Also what SignInPanel shows for a pre-redirect failure (a bad request, a

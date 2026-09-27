@@ -13,11 +13,15 @@ export type ProviderId = 'google' | 'discord' | 'facebook' | 'microsoft';
 export interface Profile {
   /** The provider's own stable account id. */
   sub: string;
-  email: string;
+  /** Absent or `null`: the provider shared no address, as Discord and Facebook can. */
+  email?: string | null;
   verified: boolean;
 }
 
 export const ORIGIN = 'http://localhost:8000';
+
+/** Where an unverified sign-in lands (MB.54), carrying the sign-in's own destination. */
+export const EMAIL_PAGE = '/account/email?next=%2Fcoven';
 
 /** Registers all four providers with test credentials; call before importing `@/lib/auth`. */
 export function stubProviderCredentials(stubEnv: (name: string, value: string) => void): void {
@@ -51,7 +55,8 @@ export function providerHandlers(provider: ProviderId, profile: Profile) {
               iss: 'https://accounts.google.com',
               aud: 'test-google-id',
               sub: profile.sub,
-              email: profile.email,
+              // `undefined` is dropped from the claims, as a missing claim is.
+              email: profile.email ?? undefined,
               email_verified: profile.verified,
               name: 'Fixture Person',
             }),
@@ -69,7 +74,8 @@ export function providerHandlers(provider: ProviderId, profile: Profile) {
             global_name: 'Fixture Person',
             discriminator: '0',
             avatar: null,
-            email: profile.email,
+            // Discord answers `null` for an account with no verified address.
+            email: profile.email ?? null,
             verified: profile.verified,
           }),
         ),
@@ -91,7 +97,8 @@ export function providerHandlers(provider: ProviderId, profile: Profile) {
           HttpResponse.json({
             id: profile.sub,
             name: 'Fixture Person',
-            email: profile.email,
+            // Left out of the body altogether, as the Graph does under narrowed permissions.
+            email: profile.email ?? undefined,
             // Facebook's graph never sends this, and Better Auth's own mapping
             // honours it when present; `mapProfileToUser` is what overrides it.
             email_verified: profile.verified,
@@ -110,7 +117,7 @@ export function providerHandlers(provider: ProviderId, profile: Profile) {
               tid: TENANT,
               oid: profile.sub,
               sub: profile.sub,
-              email: profile.email,
+              email: profile.email ?? undefined,
               email_verified: profile.verified,
               name: 'Fixture Person',
             }),
@@ -159,8 +166,18 @@ export async function signIn(
   );
 }
 
-/** The callback redirected to where the sign-in asked to go, not to an error page. */
+/** Where a redirect sent the browser, as a same-site path whether its Location was absolute or not. */
+export function landingOf(response: Response): string {
+  const location = new URL(response.headers.get('location') ?? '', ORIGIN);
+  return `${location.pathname}${location.search}`;
+}
+
+/**
+ * The callback signed the browser in: it went where the sign-in asked, or to
+ * the email page an unverified account lands on, and not to an error page.
+ * A test about which of the two asserts `landingOf` itself.
+ */
 export function expectSignedIn(response: Response): void {
   expect(response.status).toBe(302);
-  expect(response.headers.get('location')).toMatch(/\/coven$/);
+  expect(['/coven', EMAIL_PAGE]).toContain(landingOf(response));
 }

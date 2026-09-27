@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation';
 import { cache } from 'react';
 import { auth } from './auth';
 import type { Session, UserRole } from './session';
-import { RETURN_PATH_HEADER, signInPath } from './sign-in';
+import { emailPagePath, isEmailPage } from './account-email';
+import { RETURN_PATH_HEADER, safeReturnPath, signInPath } from './sign-in';
 
 // Where the request becomes a service-level `Session`: server components and
 // the GraphQL context call this, then hand the result to a service. A service
@@ -19,6 +20,22 @@ function toUserRole(role: unknown): UserRole {
   throw new Error(`Unrecognised user role: ${String(role)}`);
 }
 
+// `emailVerified` stays off the service-level session: only `requireSession`
+// reads it, to keep an unverified account on the email page.
+interface SessionState {
+  session: Session | null;
+  emailVerified: boolean;
+}
+
+async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> {
+  const result = await auth.api.getSession({ headers: requestHeaders });
+  if (!result) return { session: null, emailVerified: false };
+  return {
+    session: { userId: result.user.id, role: toUserRole(result.user.role) },
+    emailVerified: result.user.emailVerified === true,
+  };
+}
+
 /**
  * The signed-in user for these request headers, or `null`. Asks the database
  * through Better Auth, so an expired, revoked or forged cookie is `null` here
@@ -26,27 +43,31 @@ function toUserRole(role: unknown): UserRole {
  * has the request but no `headers()`; a page calls `getSession()`.
  */
 export async function sessionFromHeaders(requestHeaders: Headers): Promise<Session | null> {
-  const result = await auth.api.getSession({ headers: requestHeaders });
-  if (!result) return null;
-  return { userId: result.user.id, role: toUserRole(result.user.role) };
+  return (await stateFromHeaders(requestHeaders)).session;
+}
+
+// Cached per request: a layout and a page asking both cost one query.
+const getSessionState = cache(async (): Promise<SessionState> => stateFromHeaders(await headers()));
+
+/** The signed-in user, or `null`. */
+export async function getSession(): Promise<Session | null> {
+  return (await getSessionState()).session;
 }
 
 /**
- * The signed-in user, or `null`. Cached per request: a layout and a page
- * asking both cost one query.
- */
-export const getSession = cache(async (): Promise<Session | null> =>
-  sessionFromHeaders(await headers()),
-);
-
-/**
- * The signed-in user, or a redirect to `/sign-in` carrying the page's own path
- * back as `?next=`. The call every protected page makes before it reads anything.
+ * The signed-in user, or a redirect: to `/sign-in` carrying the page's own
+ * path back as `?next=` when there is none, and to the email page, carrying
+ * the same, while the account's address is unverified — a provisional account
+ * can do nothing else, so no other page shows it anything
+ * (claude-docs/auth.md, "The email page"). The call every protected page
+ * makes before it reads anything; the email page is the one it lets through.
  */
 export async function requireSession(): Promise<Session> {
-  const session = await getSession();
-  if (session) return session;
-
+  const { session, emailVerified } = await getSessionState();
   const returnPath = (await headers()).get(RETURN_PATH_HEADER) ?? undefined;
-  redirect(signInPath(returnPath));
+  if (!session) redirect(signInPath(returnPath));
+  if (!emailVerified && !isEmailPage(returnPath)) {
+    redirect(emailPagePath(safeReturnPath(returnPath)));
+  }
+  return session;
 }
