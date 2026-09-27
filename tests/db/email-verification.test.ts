@@ -1,6 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
+import { createEmailVerificationToken } from 'better-auth/api';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import type { Message } from '@/lib/mail';
 import {
@@ -92,6 +93,17 @@ function follow(link: string, cookie?: string): Promise<Response> {
   return auth.handler(new Request(link, { headers: cookie ? { cookie } : {} }));
 }
 
+/** A Microsoft sign-up, unverified and restamped, with its session and its mailed link. */
+async function signUpUnverified() {
+  const response = await signIn('microsoft', { sub: 'ms-2', email: OWNER, verified: true });
+  expectSignedIn(response);
+  await restamp(OWNER);
+  const before = await userRow(OWNER);
+  // The preconditions a refusal below could otherwise be explained by.
+  expect(before).toMatchObject({ email_verified: false, updated_by: BOOTSTRAP_USER_ID });
+  return { cookie: cookieHeader(response), link: mailedLink(), before: before! };
+}
+
 describe('Story 58: sign-up mails a verification link and still signs in', () => {
   it('creates the row unverified, sends one mail through the transport, and issues a session', async () => {
     const response = await signIn('microsoft', { sub: 'ms-1', email: OWNER, verified: true });
@@ -117,16 +129,6 @@ describe('Story 58: sign-up mails a verification link and still signs in', () =>
 });
 
 describe('Story 58: following the link', () => {
-  async function signUpUnverified() {
-    const response = await signIn('microsoft', { sub: 'ms-2', email: OWNER, verified: true });
-    expectSignedIn(response);
-    await restamp(OWNER);
-    const before = await userRow(OWNER);
-    // The preconditions a refusal below could otherwise be explained by.
-    expect(before).toMatchObject({ email_verified: false, updated_by: BOOTSTRAP_USER_ID });
-    return { cookie: cookieHeader(response), link: mailedLink(), before: before! };
-  }
-
   it('verifies the row and stamps it with its own id, from a session holding that row', async () => {
     const { cookie, link, before } = await signUpUnverified();
 
@@ -243,5 +245,83 @@ describe('the update hook stamps other Better Auth writes', () => {
 
     expect(update.status, await update.clone().text()).toBe(200);
     expect((await userRow(OWNER))?.updated_by).toBe(id);
+  });
+});
+
+// Promotion at verification (MB.68): our own mail vouches for the address the
+// way Google or Discord would, and only because the link is honoured from a
+// session holding the row.
+describe('the primary admin is promoted at first-party verification', () => {
+  async function roleOf(email: string): Promise<string | undefined> {
+    const [row] = await sql`select role::text as role from users where email = ${email}`;
+    return row?.role as string | undefined;
+  }
+
+  beforeEach(() => {
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'Owner@Email-Verification.test');
+    // The Microsoft sign-up logs why it did not promote.
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('promotes a Microsoft-only owner following the link from their own session', async () => {
+    const { cookie, link, before } = await signUpUnverified();
+    // The sign-in did not promote: Microsoft never vouches.
+    expect(await roleOf(OWNER)).toBe('user');
+
+    const response = await follow(link, cookie);
+
+    expect(response.headers.get('location')).toBe('/coven');
+    expect(await roleOf(OWNER)).toBe('admin');
+    expect((await userRow(OWNER))?.updated_by).toBe(before.id);
+  });
+
+  it('promotes nobody when the link is followed from another browser', async () => {
+    const { cookie, link } = await signUpUnverified();
+    const other = await signIn('google', { sub: 'g-6', email: STRANGER, verified: true });
+    expectSignedIn(other);
+
+    for (const refused of [await follow(link, cookieHeader(other)), await follow(link)]) {
+      expect(refused.headers.get('location')).toBe('/coven?error=SIGN_IN_TO_VERIFY');
+    }
+    expect(await roleOf(OWNER)).toBe('user');
+    expect(await roleOf(STRANGER)).toBe('user');
+
+    // The same link from the owner's session promotes, so the token was good,
+    // the variable named the address, and the session is what refused it.
+    await follow(link, cookie);
+    expect(await roleOf(OWNER)).toBe('admin');
+  });
+
+  // changeEmail is off, so Better Auth mints no such link; one minted by hand
+  // shows a stray one would verify without the session check, and not promote.
+  it('promotes nobody at a change-email link, which skips the session check', async () => {
+    const { link, before } = await signUpUnverified();
+    const { secret } = await auth.$context;
+    const token = await createEmailVerificationToken(secret, OWNER, OWNER, 3600, {
+      requestType: 'change-email-verification',
+    });
+    const changeLink = new URL(link);
+    changeLink.searchParams.set('token', token);
+
+    const response = await follow(changeLink.href);
+
+    // Honoured with no session at all: the hook ran with nothing checked.
+    expect(response.headers.get('location')).toBe('/coven');
+    expect(await userRow(OWNER)).toMatchObject({ id: before.id, email_verified: true });
+    expect(await roleOf(OWNER)).toBe('user');
+  });
+
+  it('verifies an address the variable does not name without promoting it', async () => {
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', STRANGER);
+    const { cookie, link } = await signUpUnverified();
+
+    await follow(link, cookie);
+
+    expect((await userRow(OWNER))?.email_verified).toBe(true);
+    expect(await roleOf(OWNER)).toBe('user');
   });
 });

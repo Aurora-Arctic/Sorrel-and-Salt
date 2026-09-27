@@ -2,9 +2,10 @@ import { withAudit } from '../db/repository';
 import { users } from '../db/schema/users';
 import type { Session } from '../lib/session';
 
-// The primary admin is promoted at sign-in, and only by a provider that
-// vouches for the address: claude-docs/design-decisions/m2.9-granting-admin.md,
-// "The primary admin", and claude-docs/auth.md, "Admin bootstrap".
+// The primary admin is promoted at sign-in, by a provider that vouches for the
+// address, or at first-party verification, by our own mail:
+// claude-docs/design-decisions/m2.9-granting-admin.md, "The primary admin",
+// and claude-docs/auth.md, "Admin bootstrap".
 
 /**
  * Google marks an address verified only for a domain its owner has proved to
@@ -59,6 +60,26 @@ export async function promotePrimaryAdmin(
   if (!profile.emailVerified) return 'unverified';
   // A linked provider whose own address has since moved vouches for that one, not this.
   if (!sameAddress(profile.email, accountEmail)) return 'profile-email-differs';
+
+  await grantAdmin(session);
+  return 'promoted';
+}
+
+/**
+ * Promotes the user who has just verified their address by our own mail, when
+ * it is the address `primaryAdminEmail` names. The mail vouches only because
+ * the link is honoured from a session holding the row, so the caller must have
+ * checked that before this runs. `session` is the user's own.
+ */
+export async function promotePrimaryAdminAtVerification(
+  session: Session,
+  {
+    accountEmail,
+    primaryAdminEmail,
+  }: { accountEmail: string; primaryAdminEmail: string | undefined },
+): Promise<Extract<PrimaryAdminOutcome, 'promoted' | 'already-admin' | 'not-primary'>> {
+  if (!primaryAdminEmail || !sameAddress(accountEmail, primaryAdminEmail)) return 'not-primary';
+  if (session.role === 'admin') return 'already-admin';
 
   await grantAdmin(session);
   return 'promoted';
