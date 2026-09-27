@@ -1,11 +1,11 @@
 # Testing — summary
 
-Vitest 5, configured as two projects in `vitest.config.mts` (`.mts`, not
+Vitest 5, configured as three projects in `vitest.config.mts` (`.mts`, not
 `.ts` — the root `package.json` deliberately carries no `"type"` field per
 `MODULE_TYPELESS_PACKAGE_JSON`, so an explicit `.mts` extension is what tells
 Vite's native config loader this file is ESM instead of warning about it), plus
 the acceptance suite on a config of its own, `vitest.stories.config.mts` (M1.28,
-below). The two share the Postgres harness through
+below). `db` and the acceptance config share the Postgres harness through
 `tests/support/db-project.mts` — `.mts` and imported with its extension for the
 same reason, since a config's imports run at config-load time.
 
@@ -18,6 +18,7 @@ pins both. Nothing under `src/` is a test.
 ```
 tests/
   app/ components/ lib/ db/   # mirror the src/ path of the code under test
+  rsc/                        # what can only be seen from inside a server render, mirroring src/ below it
   acceptance/                 # one describe per user story — make test-stories
   guards/                     # the mechanical guards
   support/                    # the harness: as-user, db-setup, seeded-database, msw, paths
@@ -37,8 +38,10 @@ Three consequences worth knowing before writing a test:
   — `REPO_ROOT`, `fromRoot('…')`, `MIGRATIONS_DIR` — rather than counting
   `../` from its own location. The chain is counted once, there.
 - **The project split is a path glob**, so where a file sits decides how it
-  runs. A test that touches Postgres and is not under `tests/db/` lands in
-  `unit`, under jsdom, against the plain `sorrel` database.
+  runs. A test that touches Postgres and is not under `tests/db/` or
+  `tests/services/` lands in `unit`, under jsdom, against the plain `sorrel`
+  database. A test that has to watch a server render is under `tests/rsc/`,
+  or React's `cache()` is a pass-through and there is nothing to watch.
 
 `tests/guards/test-location.test.ts` holds the rule. It is a test rather than
 a lint rule because Oxlint has no custom-rule API and cannot express a
@@ -220,6 +223,26 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
   - Rejected alternative — wrapping each test in a rolled-back transaction —
     and the reason, is recorded in
     [`design-decisions/m1.9-test-db-isolation.md`](design-decisions/m1.9-test-db-isolation.md).
+- **`rsc`** (M3.8) — `environment: 'node'`, `include`s
+  `tests/rsc/**/*.test.{ts,tsx}`, and resolves under the `react-server` export
+  condition (`ssr.resolve.conditions` and `externalConditions`, the second for
+  packages Node loads itself). That condition is what React's `cache()` and the
+  Flight renderer both switch on: without it `cache()` is the default build's
+  pass-through, and `react-server-dom-webpack` refuses to load at all. A test
+  renders a tree with `renderToReadableStream` from
+  `react-server-dom-webpack/server.edge` (a devDependency pinned to React's own
+  version, and typed by hand in `tests/vitest-env.d.ts` because it ships no
+  types) and reads the stream to a string; one render is one request.
+  - **It is not `db` with a flag.** Under `react-server`, `react-dom/server`
+    resolves to a file that throws on import, and three `db` files reach it
+    through `lib/auth` and react-email. So the render tests take no database:
+    they mock `@/db/repository` whole and count its calls, which is an honest
+    count of Postgres round trips because nothing else holds the client
+    (CLAUDE.md rule 2).
+  - **What belongs here:** anything whose behaviour exists only inside a render
+    — today `assertMembership`'s one lookup per render
+    (`tests/rsc/services/membership.test.ts`). A service's authorization is
+    still tested in `db`, against the real rows.
 
 **Coverage** (`test.coverage`, provider `v8`): thresholds are 80% on lines,
 branches, functions, and statements, `include: ['src/**/*.{ts,tsx}']`,
