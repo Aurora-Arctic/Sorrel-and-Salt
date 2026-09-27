@@ -5,7 +5,8 @@
 // See claude-docs/auth.md, "The service-level session, and the two refusals".
 
 /**
- * The actor is known and the answer is no. Thrown by services only (rule 1).
+ * The actor is known and the answer is no. Thrown by services (rule 1), and
+ * by the schema's auth scopes so the transport maps one refusal shape.
  */
 export class Forbidden extends Error {
   constructor(message = 'Forbidden') {

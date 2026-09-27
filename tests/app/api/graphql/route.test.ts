@@ -2,6 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const ENDPOINT = 'http://localhost/api/graphql';
 
+// Signed out throughout: the context's session is context.test.ts's subject,
+// and the real reader loads Better Auth, which refuses to start at
+// NODE_ENV=production without its secrets.
+vi.mock('@/lib/request-session', () => ({ sessionFromHeaders: async () => null }));
+
 // The route builds its Yoga instance at import, reading NODE_ENV once, so each
 // environment gets a fresh module.
 async function loadRoute(nodeEnv: string) {
