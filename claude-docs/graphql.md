@@ -68,9 +68,10 @@ resolve: async (_query, { workspaceId }, { session }) =>
   have checked. `tests/services/two-transports.test.ts` proves one refusal
   arrives the same way by both paths: a direct call and a resolver over a
   throwaway schema, for a member of another workspace and for a site admin.
-- **M3.9 makes the boundary mechanical**: lint stops `src/graphql/**` and
-  `src/app/**` importing the repository or the client, so a page or a
-  resolver reaches services and nothing below them.
+- **The boundary is mechanical.** Lint stops a resolver, page or component
+  importing anything under `src/db` at runtime, and `server-only` fails the
+  build of a client bundle that reaches a service ("The access boundary"
+  below).
 
 ## The IDE: Altair, local development only
 
@@ -488,12 +489,51 @@ merely absent:
   `categoriesByIngredient`, M6.11 `membersByWorkspace`, MB.9 `ingredientsById`,
   MB.10 `usersById`.
 - **Only `define-loader.ts` may import `dataloader` at runtime.**
-  `.oxlintrc.json` bans the import everywhere else, and its `src/services/**` and
-  `src/db/**` overrides restate the ban because an override replaces the
-  top-level rule rather than merging with it. `import type` stays legal.
+  `.oxlintrc.json` bans the import everywhere else. Its `src/services/**`,
+  `src/db/**` and access-boundary overrides restate the ban, because an
+  override replaces the top-level rule rather than merging with it. `import type` stays legal.
   `define-loader.ts` is exempt by a named `oxlint-disable-next-line`, and
   `tests/guards/lint-loader-boundary.test.ts` pins that exemption set to that
   one file, untracked files included.
+
+## The access boundary
+
+Resolvers, pages and components reach a service and nothing below it
+(CLAUDE.md rule 1). Two mechanisms enforce that, one for each direction a
+shortcut could take:
+
+- **Nothing above services imports the database layer.** `.oxlintrc.json`'s
+  override for `src/graphql/**`, `src/app/**` and `src/components/**` bans a
+  runtime import of anything under `src/db`: the repository and the client,
+  and also `audit.ts`, the schema, the seed and `bootstrap.ts`. A resolver
+  that needs an enum's values gets them from a service. `import type` stays
+  legal, since that is how a resolver names a row type (DESIGN.md §7), and it
+  can reach nothing. The client stays banned even as a type, under rule 2's
+  own group. `src/lib` is outside the override because `lib/auth.ts` hands
+  Better Auth the schema tables. The override restates the four top-level bans,
+  because an override replaces the rule rather than merging with it
+  ([`db.md`](db.md), "Where queries may be built").
+- **No client component imports a service.** Every module under
+  `src/services` opens with `import 'server-only'`. Next resolves that marker
+  to a build error in any client bundle that reaches it, whether directly or
+  through a `lib` module in between, and wherever the `'use client'` file
+  lives. Lint cannot do this, because it scopes a rule by path and a client
+  component is marked by a directive, not by its folder. The package is not
+  installed: Next ships and resolves it itself. `vitest.config.mts` and
+  `vitest.stories.config.mts` alias it to Next's empty stub, since a test is
+  not a client bundle.
+
+`tests/guards/lint-access-boundary.test.ts` lints probes in each of the three
+directories. It asserts that every module under `src/db` draws the boundary's
+diagnostic, and that a type import and a service import draw none. It also
+checks that the restated bans still fire. A runtime import of the client draws
+two diagnostics, rule 2's and the boundary's. oxlint reports each matching
+group, and excluding the client from the boundary group with
+`!**/db/connection` silences the client group as well. So the test counts the
+boundary's message, not every diagnostic.
+`tests/guards/server-only-services.test.ts` walks `src/services`, including
+uncommitted files, and fails any module without the marker. A new service
+adopts the marker in its own PR.
 
 ## Tests and the two copies of `graphql`
 

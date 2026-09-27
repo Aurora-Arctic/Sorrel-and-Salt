@@ -1,3 +1,4 @@
+import 'server-only';
 import { Forbidden } from '../lib/errors';
 import type { Session } from '../lib/session';
 

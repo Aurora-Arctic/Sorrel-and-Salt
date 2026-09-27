@@ -1,3 +1,4 @@
+import 'server-only';
 import { deleteProvisionalUsers, withAudit } from '../db/repository';
 import { users } from '../db/schema/users';
 import type { AuditSession } from '../db/audit';

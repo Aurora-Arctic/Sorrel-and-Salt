@@ -1,5 +1,10 @@
+import { createRequire } from 'node:module';
 import { defineConfig } from 'vitest/config';
 import { dbHarness } from './tests/support/db-project.mts';
+
+const serverOnlyStub = createRequire(import.meta.url).resolve(
+  'next/dist/compiled/server-only/empty.js',
+);
 
 // `npm run test:stories`: the acceptance suite alone, printed as a checklist
 // of the v1 stories. A config of its own rather than a third project, so a red
@@ -11,8 +16,12 @@ import { dbHarness } from './tests/support/db-project.mts';
 // stays first so a failing story still prints its assertion.
 // `passWithNoTests` because 50 stories with no test is a true report.
 export default defineConfig({
-  // As vitest.config.mts: tests reach src/ by the `@/*` alias.
-  resolve: { tsconfigPaths: true },
+  // As vitest.config.mts: tests reach src/ by the `@/*` alias, and a service's
+  // `server-only` marker resolves to Next's empty stub.
+  resolve: {
+    tsconfigPaths: true,
+    alias: [{ find: /^server-only$/, replacement: serverOnlyStub }],
+  },
   test: {
     name: 'acceptance',
     include: ['tests/acceptance/**/*.test.{ts,tsx}'],

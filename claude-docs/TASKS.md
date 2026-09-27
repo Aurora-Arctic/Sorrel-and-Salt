@@ -89,7 +89,7 @@ The tell is whether the thing can be made _impossible_ or only _absent_. DDL can
 
 - M1.18's trigger → end of Wave 3, guarded by a `pg_trigger` coverage test
 - M6.3's `Membership` proof → Wave 5, the _code_ half of the rule: the mechanism plus a `@ts-expect-error` compile assertion, adopted by each later workspace-scoped finder in its own PR. MB.29 retired the database-object sweep that used to sit here (M6.4's RLS, guarded by a `pg_class`/`pg_policy` catalogue test); when policies land at the public launch they bring that guard back with them
-- M1.20 soft-delete, M1.17/M3.9 lint, M3.6 pagination → land the mechanism early, guard via lint fixture and the M3.4 SDL snapshot
+- M1.20 soft-delete, M1.17/M3.9 access boundary, M3.6 pagination → land the mechanism early, guard via lint fixture, the `server-only` guard and the M3.4 SDL snapshot
 - M6.17 is the one exception: it is a _census_, not an enforcer — M6.3 does the enforcing, adopted per-PR — and a census of an incomplete set is worthless, so it closes at Wave 14
 
 ### A table task, then a behaviour task
@@ -1320,7 +1320,7 @@ _Acceptance criteria:_
 
 _Landed at about 2h. No workspace read existed to wrap, so the representative service is `assertMembership` itself: its role lookup is `cache()`-wrapped, keyed by `(userId, workspaceId)` because `cache()` compares objects by identity, and every later caller inherits the dedupe without adopting anything. `cache()` is inert in a Next route handler, which has no React cache scope, so the GraphQL path's dedupe stays DataLoader. The dedupe is observable only inside a render, which needs the `react-server` condition `db` cannot carry, hence a third Vitest project, `rsc`. The GraphQL half of the denial test runs over a throwaway `createBuilder()` schema, since no production field reads a workspace yet. A guard fails any `'use server'` under `src/` ([`graphql.md`](graphql.md), "The two transports"; [`design-decisions/m3.8-plan.md`](design-decisions/m3.8-plan.md))._
 
-**M3.9 — Lint rules enforcing the access boundary** · 1h
+**M3.9 — Enforce the access boundary: lint above services, server-only below** · 1h
 
 _Story:_ As a reviewer, I want the two access paths enforced mechanically so that the boundary does not erode one convenient import at a time.
 
@@ -1333,6 +1333,8 @@ _Acceptance criteria:_
 - Services remain importable from both
 - Client components cannot import services at all
 - Rules run in pr-gate
+
+_Landed wider than written, in two mechanisms. The override bans everything under `src/db` at runtime, not just the client and repository, and covers `src/components` beside `src/graphql` and `src/app`. `import type` stays legal. The fourth criterion is `next build`'s rather than lint's: lint scopes by path, a client component is marked by a directive, so every service opens with `import 'server-only'` and `tests/guards/server-only-services.test.ts` fails one that does not ([`graphql.md`](graphql.md), "The access boundary")._
 
 **M3.10 — me query, User type and field-level auth scope** · 2h
 
