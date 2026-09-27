@@ -1,9 +1,12 @@
-// The two refusals a service may end a call with; it throws rather than
-// answering with an empty list, a null, or a success that did nothing. Two
-// types because the route decides which the browser sees; types rather than
-// messages so a test survives a rewording. Neither carries a status code.
-// See claude-docs/auth.md, "The service-level session, and the two refusals".
-// `InvalidCursor`, below them, is bad input rather than a refusal.
+// The three ways a service ends a call it cannot perform — two refusals and a
+// bad value — thrown rather than answered with an empty list, a null, or a
+// success that did nothing. Separate types because the route decides what the
+// browser sees; types rather than messages so a test survives a rewording.
+// Neither type carries a status code or a GraphQL error code: a seed or a
+// script has no use for one. The code is attached on the way out, by
+// src/graphql/errors.ts in the /api/graphql route. See claude-docs/auth.md,
+// "The service-level session, and the three errors". `InvalidCursor`, below
+// them, is bad input the pagination helper reports on its own.
 
 /**
  * The actor is known and the answer is no. Thrown by services (rule 1), and
@@ -24,6 +27,28 @@ export class NotFound extends Error {
   constructor(message = 'Not found') {
     super(message);
     this.name = 'NotFound';
+  }
+}
+
+/** One rule a value broke, pathed to the input field it is about. */
+export interface ValidationIssue {
+  /** In the shape of the operation's input — `['folkNames', 2]`; empty for no one field. */
+  path: (string | number)[];
+  message: string;
+}
+
+/**
+ * The input broke a rule, and each issue says which field and why. It carries
+ * issues rather than producing them, so this file depends on no schema
+ * library; the Zod adapter lives beside the schemas (M4.5).
+ */
+export class ValidationError extends Error {
+  readonly issues: readonly ValidationIssue[];
+
+  constructor(issues: readonly ValidationIssue[], message = 'Invalid input') {
+    super(message);
+    this.name = 'ValidationError';
+    this.issues = issues;
   }
 }
 

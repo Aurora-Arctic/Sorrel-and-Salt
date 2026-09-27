@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { Forbidden, InvalidCursor, NotFound } from '@/lib/errors';
+import { Forbidden, InvalidCursor, NotFound, ValidationError } from '@/lib/errors';
+import { fromRoot } from '../support/paths';
 
 // A refusal asserted by message is a test of today's wording, and passes
 // against a service that stopped checking. Assert the type.
@@ -43,7 +45,7 @@ describe('NotFound', () => {
 describe('telling the two apart', () => {
   // Separate types because a route decides differently: /coven/[slug]
   // answers 404 to a non-member, /admin a styled refusal.
-  // claude-docs/auth.md, "The service-level session, and the two refusals".
+  // claude-docs/auth.md, "The service-level session, and the three errors".
   it('a Forbidden is not a NotFound, and a NotFound is not a Forbidden', () => {
     expect(new Forbidden()).not.toBeInstanceOf(NotFound);
     expect(new NotFound()).not.toBeInstanceOf(Forbidden);
@@ -103,5 +105,51 @@ describe('InvalidCursor', () => {
     expect(error).toBeInstanceOf(Error);
     expect(error.name).toBe('InvalidCursor');
     expect(error.message).toBe('Invalid cursor');
+  });
+});
+
+describe('ValidationError', () => {
+  const issues = [
+    { path: ['canonicalName'], message: 'A botanical name is required' },
+    { path: ['folkNames', 2], message: 'A folk name cannot be blank' },
+  ];
+
+  it('is an Error that names itself', () => {
+    const error = new ValidationError(issues);
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error.name).toBe('ValidationError');
+    expect(error.stack).toBeTruthy();
+  });
+
+  it('carries its issues, paths and messages as given', () => {
+    expect(new ValidationError(issues).issues).toEqual(issues);
+  });
+
+  it('carries a default message, and takes a specific one', () => {
+    expect(new ValidationError(issues).message).toBe('Invalid input');
+    expect(new ValidationError(issues, 'That ingredient already exists').message).toBe(
+      'That ingredient already exists',
+    );
+  });
+
+  it('is neither refusal, and neither refusal is one', () => {
+    const error = new ValidationError(issues);
+
+    expect(error).not.toBeInstanceOf(Forbidden);
+    expect(error).not.toBeInstanceOf(NotFound);
+    expect(new Forbidden()).not.toBeInstanceOf(ValidationError);
+    expect(new NotFound()).not.toBeInstanceOf(ValidationError);
+  });
+
+  // It carries issues rather than producing them, so a seed or a script can
+  // throw one without src/lib/ depending on the schema library.
+  it('imports nothing from Zod', () => {
+    const source = readFileSync(fromRoot('src/lib/errors.ts'), 'utf8');
+
+    // Why this could pass vacuously: the file is the one that declares the type.
+    expect(source).toContain('class ValidationError');
+    expect(source).not.toMatch(/from\s+['"]zod/);
+    expect(source).not.toMatch(/import\s*\(\s*['"]zod/);
   });
 });
