@@ -11,3 +11,7 @@ package-lock.json
 
 # Generated reports and builds
 .reports
+
+# The SDL snapshot: printSchema owns its layout, and a reformat would fail
+# tests/graphql/schema-snapshot.test.ts
+src/graphql/schema.graphql
