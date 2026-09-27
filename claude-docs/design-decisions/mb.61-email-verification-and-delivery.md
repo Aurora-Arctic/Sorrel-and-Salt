@@ -560,7 +560,9 @@ M7.3, M7.4 and M7.5 rewritten in place; MB.54 re-scoped; story 62 added to
   send with; verification before the sweep, since the sweep keys on the
   column and the resend clock; promotion last, since it is one hook on top.
   MB.54 follows them because its page is built on the session and the resend
-  they provide.
+  they provide. It then moved to the end of Wave 7, after MB.43: its
+  `setEmail` mutation needs M3.1's `/api/graphql` and M3.10's `User` type,
+  and rule 1 allows it no other transport.
 - **MB.69 and MB.70** follow MB.63 in Wave 8: the admin invitation is a grant
   through MB.59's service under MB.63's pause, and its table lands alone
   first. Two tasks because CLAUDE.md puts a table and the service that
