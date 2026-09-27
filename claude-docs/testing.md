@@ -320,7 +320,7 @@ run as a test.
   const catalogue = useTestDatabase((client) => (sql = client));
   ```
 
-  `repository.test.ts`, `updated-at-trigger.test.ts`,
+  `repository/*.test.ts` (through `tests/support/db/probe-tables.ts`), `updated-at-trigger.test.ts`,
   `test-database-isolation.test.ts`, `seeded-template.test.ts` and
   `tests/db/seed/*` still open their own client — the isolation test's subject
   _is_ the connection, and the others truncate everything first.

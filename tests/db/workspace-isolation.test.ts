@@ -23,7 +23,7 @@ import { makeIngredient, makeSpell } from '../support/fixtures';
 // grimoire have no GraphQL surface yet for that harness to drive (Waves 8 and
 // 13); this suite reaches the same services and finders directly instead.
 //
-// M6.3 and repository.test.ts's "the Membership proof" section already prove
+// M6.3 and tests/db/repository/'s "the Membership proof" sections already prove
 // the *mechanism* — a proof for one workspace cannot reach another's row by
 // id — against a scratch table. TASKS.md asks this task to prove it "per
 // entity rather than a sample", so this file repeats that proof against the

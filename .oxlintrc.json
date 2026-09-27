@@ -13,13 +13,24 @@
       {
         "patterns": [
           {
-            "group": ["**/db/connection", "**/db/connection.ts", "./connection", "./connection.ts"],
-            "message": "Import the database client only in src/db/repository.ts (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
+            "group": [
+              "**/db/connection",
+              "**/db/connection.ts",
+              "./connection",
+              "./connection.ts",
+              "../connection",
+              "../connection.ts"
+            ],
+            "message": "Import the database client only in src/db/repository/ (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
+          },
+          {
+            "group": ["@/db/repository/*", "**/db/repository/*"],
+            "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). tests/guards/module-boundaries.test.ts catches the spellings this glob cannot."
           },
           {
             "group": ["drizzle-orm", "drizzle-orm/*"],
             "allowTypeImports": true,
-            "message": "Build queries only in src/db/repository.ts (CLAUDE.md rule 4) — a Drizzle query cannot be built without importing drizzle-orm at runtime, so this is that rule rather than a style. Reach the database through a service; `import type` is allowed everywhere, which is how the GraphQL layer names Drizzle types (DESIGN.md §7)."
+            "message": "Build queries only in src/db/repository/ (CLAUDE.md rule 4) — a Drizzle query cannot be built without importing drizzle-orm at runtime, so this is that rule rather than a style. Reach the database through a service; `import type` is allowed everywhere, which is how the GraphQL layer names Drizzle types (DESIGN.md §7)."
           },
           {
             "group": [
@@ -122,14 +133,20 @@
                   "**/db/connection",
                   "**/db/connection.ts",
                   "./connection",
-                  "./connection.ts"
+                  "./connection.ts",
+                  "../connection",
+                  "../connection.ts"
                 ],
-                "message": "Import the database client only in src/db/repository.ts (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
+                "message": "Import the database client only in src/db/repository/ (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
+              },
+              {
+                "group": ["@/db/repository/*", "**/db/repository/*"],
+                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). tests/guards/module-boundaries.test.ts catches the spellings this glob cannot."
               },
               {
                 "group": ["drizzle-orm", "drizzle-orm/*"],
                 "allowTypeImports": true,
-                "message": "Build queries only in src/db/repository.ts (CLAUDE.md rule 4) — a Drizzle query cannot be built without importing drizzle-orm at runtime, so this is that rule rather than a style. Reach the database through a service; `import type` is allowed everywhere, which is how the GraphQL layer names Drizzle types (DESIGN.md §7)."
+                "message": "Build queries only in src/db/repository/ (CLAUDE.md rule 4) — a Drizzle query cannot be built without importing drizzle-orm at runtime, so this is that rule rather than a style. Reach the database through a service; `import type` is allowed everywhere, which is how the GraphQL layer names Drizzle types (DESIGN.md §7)."
               },
               {
                 "group": [
@@ -179,14 +196,16 @@
                   "**/db/connection",
                   "**/db/connection.ts",
                   "./connection",
-                  "./connection.ts"
+                  "./connection.ts",
+                  "../connection",
+                  "../connection.ts"
                 ],
-                "message": "Import the database client only in src/db/repository.ts (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
+                "message": "Import the database client only in src/db/repository/ (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
               },
               {
                 "group": ["drizzle-orm", "drizzle-orm/*"],
                 "allowTypeImports": true,
-                "message": "Build queries only in src/db/repository.ts (CLAUDE.md rule 4) — a Drizzle query cannot be built without importing drizzle-orm at runtime, so this is that rule rather than a style. Reach the database through a service; `import type` is allowed everywhere, which is how the GraphQL layer names Drizzle types (DESIGN.md §7)."
+                "message": "Build queries only in src/db/repository/ (CLAUDE.md rule 4) — a Drizzle query cannot be built without importing drizzle-orm at runtime, so this is that rule rather than a style. Reach the database through a service; `import type` is allowed everywhere, which is how the GraphQL layer names Drizzle types (DESIGN.md §7)."
               },
               {
                 "group": [
@@ -243,9 +262,15 @@
                   "**/db/connection",
                   "**/db/connection.ts",
                   "./connection",
-                  "./connection.ts"
+                  "./connection.ts",
+                  "../connection",
+                  "../connection.ts"
                 ],
-                "message": "Import the database client only in src/db/repository.ts (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
+                "message": "Import the database client only in src/db/repository/ (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
+              },
+              {
+                "group": ["@/db/repository/*", "**/db/repository/*"],
+                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). tests/guards/module-boundaries.test.ts catches the spellings this glob cannot."
               },
               {
                 "group": ["dataloader"],

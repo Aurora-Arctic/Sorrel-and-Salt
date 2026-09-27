@@ -35,7 +35,7 @@ refused the read" for the wrong reason and passed.
 
 **2. Fixing only that would have broken every read.**
 `set_config('app.current_user_id', …, true)` is published inside `withAudit`
-(M1.19), which `src/db/repository.ts` documents as "the only write path". Reads
+(M1.19), which `src/db/repository/write.ts` documents as "the only write path". Reads
 go through `findMany`/`findOne` → `selectFrom`, which uses the bare client with
 no transaction (M1.20). A GUC set with `is_local => true` exists only inside a
 transaction, so a policy reading it on a read would find it unset on a fresh

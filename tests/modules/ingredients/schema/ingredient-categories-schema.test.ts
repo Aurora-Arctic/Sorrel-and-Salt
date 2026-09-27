@@ -241,7 +241,7 @@ describe('ingredient_categories table', () => {
   });
 });
 
-// `write.delete` against the real table rather than repository.test.ts's scratch pair.
+// `write.delete` against the real table rather than the repository tests' scratch pair.
 describe('a pair removed through write.delete', () => {
   const session = { userId: AUTHOR };
 
