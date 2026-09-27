@@ -1234,6 +1234,9 @@ disambiguate.
 `sessions` and `verifications` carry an `updated_at` and no `*_by` columns at
 all: nothing writes them through `withAudit`, they are not part of the audit
 trail, and Better Auth's own `$onUpdate` stamps them (`src/modules/identity/schema/auth.ts`).
+Its fourth, `rate_limits` (MB.75), carries no `updated_at` at all — Better
+Auth's model declares none — so it is not a counter-example the sweep could
+mistake, and `UNAUDITED_TABLES` leaves it out.
 
 ### A table added later does not get the trigger for free
 
