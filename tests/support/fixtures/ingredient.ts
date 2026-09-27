@@ -1,4 +1,4 @@
-import type { ingredients } from '@/db/schema/ingredients';
+import type { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { toColumns } from './columns';
 import { type Overrides, mergeFixture, stated } from './merge';
 

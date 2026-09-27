@@ -1,5 +1,4 @@
-// `schema/users` before `audit`, and load-bearing — see minimal.ts.
-import { users } from '../schema/users';
+import { users } from '../../modules/identity/schema/users';
 import { applyAudit, type AuditSession } from '../audit';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import type { SeedTransaction } from './index';

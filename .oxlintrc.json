@@ -34,6 +34,17 @@
             "group": ["dataloader"],
             "allowTypeImports": true,
             "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
+          },
+          {
+            "group": [
+              "@/modules/*/services",
+              "@/modules/*/services/**",
+              "@/modules/*/graphql",
+              "@/modules/*/graphql/**",
+              "@/modules/*/loaders",
+              "@/modules/*/loaders/**"
+            ],
+            "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations and loaders are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. tests/guards/module-boundaries.test.ts catches the relative spellings this glob cannot."
           }
         ]
       }
@@ -81,7 +92,7 @@
       }
     },
     {
-      "files": ["src/services/**/*.ts"],
+      "files": ["src/modules/*/services/**/*.ts"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -133,6 +144,17 @@
                 "group": ["dataloader"],
                 "allowTypeImports": true,
                 "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
+              },
+              {
+                "group": [
+                  "@/modules/*/services",
+                  "@/modules/*/services/**",
+                  "@/modules/*/graphql",
+                  "@/modules/*/graphql/**",
+                  "@/modules/*/loaders",
+                  "@/modules/*/loaders/**"
+                ],
+                "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations and loaders are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. tests/guards/module-boundaries.test.ts catches the relative spellings this glob cannot."
               }
             ]
           }
@@ -181,7 +203,18 @@
               {
                 "group": ["**/db", "**/db/*", "**/db/**"],
                 "allowTypeImports": true,
-                "message": "Resolvers, pages and components reach the database only through a service (CLAUDE.md rule 1) — import from src/services, where the authorization check lives, and nothing below it. `import type` is allowed, which is how a resolver names a row type (claude-docs/graphql.md, \"The access boundary\")."
+                "message": "Resolvers, pages and components reach the database only through a service (CLAUDE.md rule 1) — import from a module's `@/modules/<name>` index, where the authorization check lives, and nothing below it. `import type` is allowed, which is how a resolver names a row type (claude-docs/graphql.md, \"The access boundary\")."
+              },
+              {
+                "group": [
+                  "@/modules/*/services",
+                  "@/modules/*/services/**",
+                  "@/modules/*/graphql",
+                  "@/modules/*/graphql/**",
+                  "@/modules/*/loaders",
+                  "@/modules/*/loaders/**"
+                ],
+                "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations and loaders are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. tests/guards/module-boundaries.test.ts catches the relative spellings this glob cannot."
               }
             ]
           }
@@ -189,7 +222,15 @@
       }
     },
     {
-      "files": ["src/db/**/*.ts", "tests/db/**/*.ts", "scripts/**/*.ts", "drizzle.config.ts"],
+      "files": [
+        "src/db/**/*.ts",
+        "src/modules/*/schema/**/*.ts",
+        "tests/db/**/*.ts",
+        "tests/modules/**/*.ts",
+        "tests/support/db/**/*.ts",
+        "scripts/**/*.ts",
+        "drizzle.config.ts"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -208,6 +249,17 @@
                 "group": ["dataloader"],
                 "allowTypeImports": true,
                 "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
+              },
+              {
+                "group": [
+                  "@/modules/*/services",
+                  "@/modules/*/services/**",
+                  "@/modules/*/graphql",
+                  "@/modules/*/graphql/**",
+                  "@/modules/*/loaders",
+                  "@/modules/*/loaders/**"
+                ],
+                "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations and loaders are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. tests/guards/module-boundaries.test.ts catches the relative spellings this glob cannot."
               }
             ]
           }

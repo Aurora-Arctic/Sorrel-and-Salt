@@ -1,4 +1,4 @@
-import type { workspaceMembers, workspaces } from '@/db/schema/workspaces';
+import type { workspaceMembers, workspaces } from '@/modules/coven/schema/workspaces';
 import { slugify } from '@/lib/slugify';
 import { A } from '../as-user';
 import { type Overrides, mergeFixture, stated } from './merge';

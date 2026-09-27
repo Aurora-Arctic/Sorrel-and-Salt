@@ -65,7 +65,7 @@ resolve: async (_query, { workspaceId }, { session }) =>
 - **Admin is not an exception to either.** `/admin`'s pages read through
   services, and its writes go through this endpoint.
 - **The service enforces its own authorization,** never trusting a caller to
-  have checked. `tests/services/two-transports.test.ts` proves one refusal
+  have checked. `tests/modules/coven/services/two-transports.test.ts` proves one refusal
   arrives the same way by both paths: a direct call and a resolver over a
   throwaway schema, for a member of another workspace and for a site admin.
 - **The boundary is mechanical.** Lint stops a resolver, page or component
@@ -186,9 +186,11 @@ another's responses.
 ## The schema
 
 The schema is code-first, built with Pothos in `src/graphql/builder.ts` and
-assembled in `src/graphql/schema/index.ts`. A type lives in its own file under
-`src/graphql/schema/`, which the index imports for its side effect of
-registering on the builder.
+assembled in `src/graphql/schema/index.ts`. A type lives in its own file in the
+`graphql/` directory of the module that owns its rows, and the index loads each
+module — through its `@/modules/<name>` index, never the deep path — for the
+side effect of registering on the builder; only the cross-cutting `AuditInfo`
+stays under `src/graphql/schema/` ([`modules.md`](modules.md)).
 
 - **No ORM plugin.** `@pothos/plugin-drizzle` is deliberately absent (MB.20,
   DESIGN.md §7). An object type is declared by hand as an `objectRef` over the
@@ -487,9 +489,11 @@ merely absent:
   and is called only by `createContext`. The registry is empty until the first
   loader lands. Each loader arrives with the schema it loads: M4.8
   `categoriesByIngredient`, M6.11 `membersByWorkspace`, MB.9 `ingredientsById`,
-  MB.10 `usersById`.
+  MB.10 `usersById`. A factory is written in its module's `loaders/`, exported
+  through the module's index, and spread into `LOADERS` here
+  ([`modules.md`](modules.md)).
 - **Only `define-loader.ts` may import `dataloader` at runtime.**
-  `.oxlintrc.json` bans the import everywhere else. Its `src/services/**`,
+  `.oxlintrc.json` bans the import everywhere else. Its `src/modules/*/services/**`,
   `src/db/**` and access-boundary overrides restate the ban, because an
   override replaces the top-level rule rather than merging with it. `import type` stays legal.
   `define-loader.ts` is exempt by a named `oxlint-disable-next-line`, and
@@ -513,8 +517,8 @@ shortcut could take:
   Better Auth the schema tables. The override restates the four top-level bans,
   because an override replaces the rule rather than merging with it
   ([`db.md`](db.md), "Where queries may be built").
-- **No client component imports a service.** Every module under
-  `src/services` opens with `import 'server-only'`. Next resolves that marker
+- **No client component imports a service.** Every file under
+  `src/modules/*/services` opens with `import 'server-only'`. Next resolves that marker
   to a build error in any client bundle that reaches it, whether directly or
   through a `lib` module in between, and wherever the `'use client'` file
   lives. Lint cannot do this, because it scopes a rule by path and a client
@@ -531,7 +535,7 @@ two diagnostics, rule 2's and the boundary's. oxlint reports each matching
 group, and excluding the client from the boundary group with
 `!**/db/connection` silences the client group as well. So the test counts the
 boundary's message, not every diagnostic.
-`tests/guards/server-only-services.test.ts` walks `src/services`, including
+`tests/guards/server-only-services.test.ts` walks `src/modules/*/services`, including
 uncommitted files, and fails any module without the marker. A new service
 adopts the marker in its own PR.
 

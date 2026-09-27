@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import postgres from 'postgres';
 import { and, eq, getTableColumns, sql as dsql } from 'drizzle-orm';
 import { pgTable, primaryKey, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { auditColumns, auditStampColumns } from '@/db/audit';
+import { auditColumns, auditStampColumns } from '@/modules/identity/schema/users';
 import * as repository from '@/db/repository';
 import {
   type AuditWriter,
@@ -14,11 +14,11 @@ import {
   findWorkspaceRole,
   withAudit,
 } from '@/db/repository';
-import { spellCategories } from '@/db/schema/spell-categories';
-import { spellIngredients } from '@/db/schema/spell-ingredients';
-import { spells } from '@/db/schema/spells';
+import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
+import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
+import { spells } from '@/modules/grimoire/schema/spells';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import { type Membership, assertMembership } from '@/services/membership';
+import { type Membership, assertMembership } from '@/modules/coven';
 import { A, B, C, D, asUser } from '../support/as-user';
 
 // A scratch table spreading the real `auditColumns` minus their FKs to
@@ -700,7 +700,7 @@ describe('entering the database layer through the repository', () => {
   it('builds users with its audit columns', async () => {
     vi.resetModules();
     await import('@/db/repository');
-    const { users: freshUsers } = await import('@/db/schema/users');
+    const { users: freshUsers } = await import('@/modules/identity/schema/users');
 
     expect(Object.keys(getTableColumns(freshUsers))).toEqual(
       expect.arrayContaining(['createdBy', 'updatedBy', 'deletedAt']),

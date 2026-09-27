@@ -30,7 +30,7 @@ tests/
 Three consequences worth knowing before writing a test:
 
 - **A test imports the code under test by the `@/` alias**, not by a relative
-  path — `import { users } from '@/db/schema/users'`. `vitest.config.mts` sets
+  path — `import { users } from '@/modules/identity/schema/users'`. `vitest.config.mts` sets
   `resolve: { tsconfigPaths: true }` so Vite reads the `@/*` → `./src/*`
   mapping tsconfig already declared; each project spells out `extends: true`
   to inherit it. Imports _within_ `tests/` stay relative.
@@ -39,7 +39,7 @@ Three consequences worth knowing before writing a test:
   `../` from its own location. The chain is counted once, there.
 - **The project split is a path glob**, so where a file sits decides how it
   runs. A test that touches Postgres and is not under `tests/db/` or
-  `tests/services/` lands in `unit`, under jsdom, against the plain `sorrel`
+  `tests/modules/` lands in `unit`, under jsdom, against the plain `sorrel`
   database. A test that has to watch a server render is under `tests/rsc/`,
   or React's `cache()` is a pass-through and there is nothing to watch.
 
@@ -60,7 +60,7 @@ test, it is a file nothing runs.
   `@testing-library/react`'s automatic post-test `cleanup()`, which hooks
   itself onto the global `afterEach` at import time). `include`s
   `tests/**/*.test.{ts,tsx}`, excluding `tests/db/**` and
-  `tests/services/**`. That glob does reach a test inside a directory
+  `tests/modules/**`. That glob does reach a test inside a directory
   literally named `[...all]` (`tests/app/api/auth/[...all]/route.test.ts`) —
   `[...]` is glob metacharacter syntax, so it was worth confirming rather
   than assuming.
@@ -127,12 +127,12 @@ test, it is a file nothing runs.
     override from one test never leaks into the next.
     Covered by `tests/support/msw/graphql.test.ts`.
 - **`db`** — `environment: 'node'`. `include`s `tests/db/**/*.test.ts` and
-  `tests/services/**/*.test.ts`. The `tests/db/**` half is real as of Wave 1
+  `tests/modules/**/*.test.ts`. The `tests/db/**` half is real as of Wave 1
   (`audit`, `bootstrap`, `users-schema`, `test-database-isolation`); since
   M1.27 every file in it runs against a clone that already carries the full
   migrated schema and the `standard` scenario, so a schema test asserts
   against the real table (`tests/db/seeded-template.test.ts` states that
-  baseline) and no file builds tables of its own. The `tests/services/**` half
+  baseline) and no file builds tables of its own. The `tests/modules/**` half
   is real as of M6.3 (`membership`, `access-control`) — a service test lands
   here rather than in `unit` because a service reads Postgres, and the split is
   a path glob. Nothing in this
@@ -241,7 +241,7 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
     (CLAUDE.md rule 2).
   - **What belongs here:** anything whose behaviour exists only inside a render
     — today `assertMembership`'s one lookup per render
-    (`tests/rsc/services/membership.test.ts`). A service's authorization is
+    (`tests/rsc/modules/coven/membership.test.ts`). A service's authorization is
     still tested in `db`, against the real rows.
 
 **Coverage** (`test.coverage`, provider `v8`): thresholds are 80% on lines,
@@ -281,20 +281,22 @@ run. `vitest.config.mts`'s coverage `reporter` also gained `json-summary`
 alongside its existing `text`/`lcov`/`html`, so the PR comment can show a
 coverage table (`.github/scripts/summarize-vitest.mjs`).
 
-## The db test harness — `tests/db/support/` (MB.51)
+## The db test harness — `tests/support/db/` (MB.51)
 
-Two modules the `tests/db/` files share, and a sweep built on them. They sit
-under `tests/db/` rather than in `tests/support/` because `tests/support/`
-may not import `drizzle-orm` at runtime — `.oxlintrc.json`'s
-`no-restricted-imports` bans it everywhere but the database layer and its
-tests (CLAUDE.md rule 4), and `tests/guards/lint-db-client-boundary.test.ts`
-probes that ban by writing a runtime import into `tests/support/` and
-asserting the lint fires. `getTableConfig` from `drizzle-orm/pg-core` is what
-`table-metadata.ts` is made of, so it lives where the exemption already
-applies; `lint-db-client-boundary.test.ts` lists `tests/db/support` among its
-`EXEMPT` probes, which proves the `tests/db/**/*.ts` override actually reaches
-the harness. `vitest.config.mts` collects only `tests/db/**/*.test.ts`, so a
-module there is never run as a test.
+Two modules the `tests/db/` and `tests/modules/` files share, and a sweep
+built on them. They sit in their own directory under `tests/support/` because
+the rest of `tests/support/` may not import `drizzle-orm` at runtime —
+`.oxlintrc.json`'s `no-restricted-imports` bans it everywhere but the database
+layer and its tests (CLAUDE.md rule 4), and
+`tests/guards/lint-db-client-boundary.test.ts` probes that ban by writing a
+runtime import into `tests/support/` and asserting the lint fires.
+`getTableConfig` from `drizzle-orm/pg-core` is what `table-metadata.ts` is
+made of, so the database-layer override names `tests/support/db/**/*.ts`
+beside `tests/db/**/*.ts` and `tests/modules/**/*.ts`;
+`lint-db-client-boundary.test.ts` lists `tests/support/db` among its `EXEMPT`
+probes, which proves the override actually reaches the harness.
+`vitest.config.mts` collects only `*.test.ts` files, so a module there is never
+run as a test.
 
 - **`database.ts` — `useTestDatabase(bind)` and `failureOf(work)`.**
   `useTestDatabase` registers a `beforeAll` that opens one `postgres` client
@@ -354,10 +356,7 @@ module there is never run as a test.
   `references users.id from every audit id` tests are gone; a schema test now
   asserts the table's _own_ columns, constraints and behaviour. A fifteenth
   audited table added without `...auditColumns` fails this file, where
-  before it would simply have had no test. One trap the file carries a
-  comment for: `@/db/schema/users` must be imported before any other schema
-  module, or the `audit.ts` ↔ `users.ts` cycle builds `users` with no audit
-  columns (`db.md`, "The seed module").
+  before it would simply have had no test.
 
 ## Acceptance — `make test-stories` (M1.28)
 
@@ -504,7 +503,7 @@ makeWorkspace({ name: 'Fixture Coven Two' });
 what lets the `unit` project test them with no Postgres in sight and leaves
 every caller to write its row the way it already does. Each fixture is typed
 against its table's own `$inferInsert` — the same idiom `src/db/seed`'s types
-use — so a column renamed in `src/db/schema/` is a compile error in every
+use — so a column renamed in a module's `schema/` is a compile error in every
 fixture that names it. The schema import is `import type`: a runtime import of
 the schema is a runtime import of drizzle-orm, and `tests/support/` is not
 among the paths allowed to make one (CLAUDE.md rule 4 / MB.33).
@@ -600,10 +599,10 @@ make one.
 
 ### Who uses them
 
-`tests/db/ingredients-schema.test.ts` and `tests/db/ingredients-indexes.test.ts`
+`tests/modules/ingredients/schema/ingredients-schema.test.ts` and `…/ingredients-indexes.test.ts`
 were carrying byte-identical copies of the same untyped `row()` helper, which
 is where a partial identity would have gone on quietly disagreeing between the
-two; both now build through `makeIngredient`. `tests/db/spells-schema.test.ts`
+two; both now build through `makeIngredient`. `tests/modules/grimoire/schema/spells-schema.test.ts`
 records through `makeSpell` — dropping `status` from the insert, so the
 column's own default is still what "defaults a new spell to draft" observes —
 and `tests/db/updated-at-trigger.test.ts` writes its workspace through

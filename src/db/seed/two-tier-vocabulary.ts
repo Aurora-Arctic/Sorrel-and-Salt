@@ -1,8 +1,11 @@
 // `./idempotent` (and through it `./bootstrap-admin`) first, and load-bearing — see minimal.ts.
 import { insertMissing, requireFrom } from './idempotent';
 import { slugify } from '../../lib/slugify';
-import type { categories, categoryGroups } from '../schema/categories';
-import type { ingredientFormGroups, ingredientForms } from '../schema/ingredient-forms';
+import type { categories, categoryGroups } from '../../modules/vocabulary/schema/categories';
+import type {
+  ingredientFormGroups,
+  ingredientForms,
+} from '../../modules/vocabulary/schema/ingredient-forms';
 import type { SeedTransaction } from './index';
 
 // The shape §5's forms and §6's categories share: a group table and an item

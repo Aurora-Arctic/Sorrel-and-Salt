@@ -2,7 +2,7 @@ import { getSessionCookie } from 'better-auth/cookies';
 import { type NextRequest, NextResponse } from 'next/server';
 import { Forbidden } from './lib/errors';
 import { RETURN_PATH_HEADER, signInPath } from './lib/sign-in';
-import { assertWorkshopAccess } from './services/workshop-access';
+import { assertWorkshopAccess } from '@/modules/identity';
 
 // Route protection's first layer: deny by default, so a route nobody thought
 // about is protected rather than open. The check is optimistic — is a session

@@ -33,7 +33,7 @@ const PROBE = '__lint-probe__';
  * probe in each proves the exemption has not widened to the whole suite.
  */
 const RESTRICTED = [
-  'src/services',
+  'src/modules/coven/services',
   'src/graphql',
   'src/app',
   'src/components',
@@ -44,14 +44,17 @@ const RESTRICTED = [
   'tests/guards',
 ];
 
-/** The database layer, which builds queries for a living — and its tests. */
+/**
+ * The database layer, which builds queries for a living, a module's schema
+ * files, which build tables with the same package — and the tests of both.
+ */
 const EXEMPT = [
   'src/db',
-  'src/db/schema',
+  'src/modules/identity/schema',
   'scripts',
   'tests/db',
   'tests/db/seed',
-  'tests/db/support',
+  'tests/support/db',
 ];
 
 /** Files whose import of the client is exempted by a disable comment. */
@@ -82,27 +85,27 @@ function probe(directory: string, name: string, source: string): string {
 // is not the relative shape any of the other four describe.
 const CLIENT_SPECIFIERS = [
   './connection',
-  '../db/connection',
   '../../db/connection',
+  '../../../../db/connection',
   '../src/db/connection.ts',
   '@/db/connection',
 ];
 const clientProbes = CLIENT_SPECIFIERS.map((specifier) =>
   probe(
-    'src/services',
+    'src/modules/coven/services',
     `client-${specifier.replace(/\W/g, '')}`,
     `import { db } from '${specifier}';\nexport const smuggled = db;\n`,
   ),
 );
 const clientTypeProbe = probe(
-  'src/services',
+  'src/modules/coven/services',
   'client-type',
   "import type { db } from '../db/connection';\nexport type D = typeof db;\n",
 );
 const siblingModuleProbe = probe(
-  'src/services',
+  'src/modules/coven/services',
   'sibling-module',
-  "import { withAudit } from '../db/repository';\nexport const w = withAudit;\n",
+  "import { withAudit } from '../../../../db/repository';\nexport const w = withAudit;\n",
 );
 
 // Rule 2 — a runtime import of the query builder from each restricted

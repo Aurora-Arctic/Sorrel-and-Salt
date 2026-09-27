@@ -1,21 +1,17 @@
 import { and, asc, desc, eq, getTableColumns, or, sql, type SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
-// Above `./audit`, which imports it back: entered through `audit.ts`, `users`
-// is built before `auditColumns` exists and loses its stamps (claude-docs/db.md,
-// "The seed module"). A service's first database import is this file.
-import { users } from './schema/users';
-import { applyAudit, auditColumns, type AuditSession } from './audit';
-import { accounts } from './schema/auth';
-import { spells } from './schema/spells';
-import { workspaceMembers } from './schema/workspaces';
+import { auditColumns, users } from '../modules/identity/schema/users';
+import { applyAudit, type AuditSession } from './audit';
+import { accounts } from '../modules/identity/schema/auth';
+import { spells } from '../modules/grimoire/schema/spells';
+import { workspaceMembers } from '../modules/coven/schema/workspaces';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from './connection';
 // Type-only, so it is erased and no runtime cycle forms with the service that
 // imports `findWorkspaceRole` below. The brand has to live beside the check
 // that mints it (CLAUDE.md rule 1), which is why the direction is this way up.
-import type { WorkspaceRole } from '../services/access-control';
-import type { Membership } from '../services/membership';
+import type { WorkspaceRole, Membership } from '@/modules/coven';
 import { InvalidCursor } from '../lib/errors';
 import type { Cursor, PageEntry, PageRequest } from '../lib/pagination';
 

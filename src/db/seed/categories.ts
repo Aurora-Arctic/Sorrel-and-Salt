@@ -1,7 +1,7 @@
 import { isNull } from 'drizzle-orm';
 // `./idempotent` (and through it `./bootstrap-admin`) first, and load-bearing — see minimal.ts.
 import { beginSeedTransaction } from './idempotent';
-import { categories, categoryGroups } from '../schema/categories';
+import { categories, categoryGroups } from '../../modules/vocabulary/schema/categories';
 import { seedTwoTierVocabulary } from './two-tier-vocabulary';
 import type { SeedDatabase, SeedTransaction } from './index';
 

@@ -1,11 +1,11 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { findManyInSpell, findManySpells, findOneSpell, withAudit } from '@/db/repository';
-import { spellCategories } from '@/db/schema/spell-categories';
-import { spellIngredients } from '@/db/schema/spell-ingredients';
-import { spells } from '@/db/schema/spells';
+import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
+import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
+import { spells } from '@/modules/grimoire/schema/spells';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import { assertMembership } from '@/services/membership';
+import { assertMembership } from '@/modules/coven';
 import { A, B, C, D, asUser } from '../support/as-user';
 import { makeSpell } from '../support/fixtures';
 

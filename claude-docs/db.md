@@ -16,7 +16,7 @@ no silent fallback.
   `?sslmode=require` turns on TLS automatically and a local URL with no
   `sslmode` stays plaintext — `connection.ts` never branches on environment.
 - **`drizzle.config.ts`** (repo root) drives `drizzle-kit`: `dialect:
-'postgresql'`, schema at `src/db/schema`, migrations output to
+'postgresql'`, schema at the glob `./src/modules/*/schema/*.ts` — every module's tables, no barrel and no registration step — and migrations output to
   `src/db/migrations`. It reads the same `DATABASE_URL` and throws under the
   same condition.
 
@@ -73,12 +73,12 @@ output or CI behaviour changes when it's unset. Full setup:
 
 ## Migrations and scripts (M1.3)
 
-- **`npm run db:generate`** is `drizzle-kit generate` — diffs `src/db/schema`
+- **`npm run db:generate`** is `drizzle-kit generate` — diffs `src/modules/*/schema`
   against `src/db/migrations` and writes a new migration for any change. The
   first migration (`0000_enable-extensions.sql`) was written by hand with
   `drizzle-kit generate --custom`, since enabling an extension isn't
   something schema-diffing can express; `0001_lucky_centennial.sql` (M2.2) is
-  the first one it actually generated, from `src/db/schema/{users,auth}.ts`
+  the first one it actually generated, from `users.ts` and `auth.ts` (now `src/modules/identity/schema/`)
   — see `claude-docs/auth.md`.
 - **`npm run db:migrate`** is `drizzle-kit migrate` — applies every migration
   under `src/db/migrations` not yet recorded in the `drizzle` schema's
@@ -209,7 +209,7 @@ docker-studio` starts it as a profiled compose service (`studio`), the
 
 ## Workspaces and membership (M6.2)
 
-`src/db/schema/workspaces.ts` holds DESIGN.md §5's two workspace tables and
+`src/modules/coven/schema/workspaces.ts` holds DESIGN.md §5's two workspace tables and
 the `workspace_role` enum (`viewer`, `member`, `owner`). The declaration
 order reads as a hierarchy and is not one: M6.3 gives each role its own
 permission statements, so nothing compares two roles (see "The Membership
@@ -247,7 +247,7 @@ proof" below).
 
 ## Invitations (M7.1)
 
-`src/db/schema/workspace-invitations.ts` holds DESIGN.md §5's third workspace
+`src/modules/coven/schema/workspace-invitations.ts` holds DESIGN.md §5's third workspace
 table, reusing the `workspace_role` enum declared beside `workspaces`.
 `0012_cultured_ben_grimm.sql` is the migration.
 
@@ -302,12 +302,12 @@ table, reusing the `workspace_role` enum declared beside `workspaces`.
 
 DESIGN.md §5 specifies three tables that land in Wave 3: M4.1 creates
 `ingredients` (the enums, columns, generated key, and CHECKs) — **merged**,
-`src/db/schema/ingredients.ts`, migration `0005_uneven_bloodstorm.sql`; M4.1a
+`src/modules/ingredients/schema/ingredients.ts`, migration `0005_uneven_bloodstorm.sql`; M4.1a
 adds its three partial unique indexes — **merged**, same schema file, migration
 `0006_wandering_mockingbird.sql`; M4.2a creates `ingredient_forms` —
-**merged**, `src/db/schema/ingredient-forms.ts`, migration
+**merged**, `src/modules/vocabulary/schema/ingredient-forms.ts`, migration
 `0008_unknown_lyja.sql`; and M4.4a creates `ingredient_folk_names` —
-**merged**, `src/db/schema/ingredient-folk-names.ts`, migration
+**merged**, `src/modules/ingredients/schema/ingredient-folk-names.ts`, migration
 `0010_broken_shiver_man.sql`. MB.28
 recorded the model here first, ahead of that DDL, so M4.1 was transcription
 rather than design — the same reasoning as CLAUDE.md's table-then-behaviour
@@ -395,7 +395,7 @@ against this database on 18.6); the limitation is Drizzle's.
 **How the table is tested.** The worker's `sorrel_test_<n>` clone arrives
 with every migration applied and the `standard` scenario seeded, re-cloned
 that way before each test file (M1.27, `testing.md`), so
-`tests/db/ingredients-schema.test.ts` asserts against the real table as
+`tests/modules/ingredients/schema/ingredients-schema.test.ts` asserts against the real table as
 production's migrations built it: no DDL is applied or hand-copied in the
 test, and nothing is dropped afterwards. Its `beforeEach` is `truncate
 ingredients cascade` — the seeded compendium has category and folk-name
@@ -441,7 +441,7 @@ one over `(workspace_id, canonical_key)` for the same reason: without
 distinct from every other's and the single index would reserve nothing there.
 
 **The predicates are asserted from the catalogue, not just the behaviour**
-(`tests/db/ingredients-indexes.test.ts`, which applies `0005` and `0006` into
+(`tests/modules/ingredients/schema/ingredients-indexes.test.ts`, which applies `0005` and `0006` into
 the worker clone the same way described above). Each index's
 `pg_get_expr(indpred, indrelid)` is pinned to its rendered predicate and its
 `pg_get_indexdef` to its key columns, and one test asserts the table carries
@@ -647,9 +647,10 @@ gap in M4.2.
 
 ## Stock, and the one module that owns the units (M9.2)
 
-`src/db/schema/inventory-items.ts` holds DESIGN.md §5's stock table;
-`0013_illegal_red_hulk.sql` is the migration. The unit vocabulary it is built
-from lives outside the database layer entirely, in `src/lib/units.ts`.
+`src/modules/ingredients/schema/inventory-items.ts` holds DESIGN.md §5's stock
+table; `0013_illegal_red_hulk.sql` is the migration. The unit vocabulary it is
+built from sits beside it, in `src/modules/ingredients/schema/units.ts`, and
+imports nothing.
 
 - **`inventory_items`** — `id`, `workspaceId`, `ingredientId`,
   `quantityOnHand`, `unit`, `unitDimension`, `lowStockThreshold`, `source`,
@@ -673,16 +674,19 @@ from lives outside the database layer entirely, in `src/lib/units.ts`.
 
 ### One module owns the units
 
-`src/lib/units.ts` is the single source of the vocabulary — three dimensions,
+`src/modules/ingredients/schema/units.ts` is the single source of the vocabulary — three dimensions,
 metric and imperial in each: weight (mg, g, kg, oz, lb), volume (ml, l, tsp,
 tbsp, fl_oz, cup), count (piece, drop, pinch). Both pgEnums (`inventory_unit`,
 `unit_dimension`), the CHECK constraint below, M9.5's `unitConvert()`, M9.8's
 badges and every later Zod enum are built from it. **Adding a unit is one
 edit** — that map, plus a regenerated migration.
 
-It imports nothing, and that is what makes it importable from all three sides:
-the schema imports it, and so do the conversion library and the Zod schemas,
-which must not reach the database layer at all (rule 2, MB.33).
+It imports nothing, and that is what makes it importable from all three sides
+despite sitting in `schema/`: the tables import it relatively, and so do the
+conversion library and the Zod schemas, which must not reach the database
+layer at all (rule 2, MB.33) — a file that imports no `drizzle-orm` carries
+none in. It sits in `schema/` rather than in `src/lib/` because the tables are
+built from it, which puts it in the graph drizzle-kit loads.
 
 `fl oz` is stored as **`fl_oz`**. §5 names the unit in prose, where a space is
 how a human writes it; the stored label has to survive a Postgres enum, a
@@ -771,7 +775,7 @@ rule and the reason the DDL can be constrained now, while the table is empty.
 
 ## The grimoire (M10.2)
 
-`src/db/schema/spells.ts` and `src/db/schema/spell-ingredients.ts` hold
+`src/modules/grimoire/schema/spells.ts` and `src/modules/grimoire/schema/spell-ingredients.ts` hold
 DESIGN.md §5's two grimoire tables; `0014_cooing_bug.sql` is the migration.
 What a workspace _makes_, as against what exists (the compendium) and what it
 holds (`inventory_items`).
@@ -912,7 +916,7 @@ skip in derived categories, no suppression, no held/not-held, no safety source
   loses no precision on the comparison. Both are nullable: a layer may name no
   measurement at all.
 - **No `unitDimension` and no dimension CHECK on `spell_ingredients`.** §5 names
-  neither on this table, the dimension is derivable through `src/lib/units.ts`,
+  neither on this table, the dimension is derivable through `src/modules/ingredients/schema/units.ts`,
   and the query that groups stock by dimension has no counterpart here.
 - **No index and no CHECK on `spells`**, beyond the primary key's. §5 names
   none, the grimoire's own lookups are M10.9's, and a spell title is not unique
@@ -972,7 +976,7 @@ mid-rollout. Never do it in one step. Instead:
   UPDATE spells SET title = name WHERE title IS NULL;
   ```
 
-  In `src/db/schema` (Drizzle), both columns exist on the table for this
+  In the schema file (Drizzle), both columns exist on the table for this
   release:
 
   ```ts
@@ -984,7 +988,7 @@ mid-rollout. Never do it in one step. Instead:
   });
   ```
 
-  And the write path (inside `withAudit`, in `src/services/`) writes both;
+  And the write path (inside `withAudit`, in the module's `services/`) writes both;
   the read path prefers `title`, falling back to `name` for any row a
   same-release backfill or an in-flight write hasn't caught yet:
 
@@ -1123,10 +1127,22 @@ which was correct and argued at the time.
 
 ## Audit columns and `applyAudit` (M1.15, FKs restored MB.5, split MB.34)
 
-`src/db/audit.ts` exports two column sets, one defined in terms of the other:
+`src/db/audit.ts` exports two column-set _factories_, and
+`src/modules/identity/schema/users.ts` exports the two _instances_ every
+table spreads, built by calling them with `() => users.id`:
 
-- **`auditStampColumns`** — `createdAt`, `createdBy`, `updatedAt`, `updatedBy`.
-- **`auditColumns`** — `...auditStampColumns` plus `deletedAt` and `deletedBy`.
+- **`auditStampColumnsReferencing(usersId)`** → `auditStampColumns` —
+  `createdAt`, `createdBy`, `updatedAt`, `updatedBy`.
+- **`deletionColumnsReferencing(usersId)`** → `deletedAt` and `deletedBy`,
+  which `users.ts` spreads after the stamp _instance_ to make
+  `auditColumns`. The six-column set is the four-column one plus two, from
+  the same builders, and `tests/db/audit.test.ts` asserts that identity.
+
+The factories take the referenced column rather than importing `users`, so
+`audit.ts` depends on nothing in a module; the instances live beside `users`
+because every stamp references it, and a table imports them from there —
+`import { auditColumns } from '../../identity/schema/users'`, relative, since
+the schema graph is what drizzle-kit loads.
 
 Every table spreads `...auditColumns` **except the three join tables**:
 `ingredient_categories`, `spell_categories` and `spell_ingredients` spread
@@ -1138,13 +1154,12 @@ drifting, and `repository.test.ts` asserts each stamp column is literally the
 same builder object in both.
 
 `createdBy`/`updatedBy`/`deletedBy` carry
-`.references((): AnyPgColumn => users.id)` per DESIGN.md §5. `audit.ts` and
-`schema/users.ts` import each other — `users.ts` spreads `auditColumns`, and
-`auditColumns` points back at `users.id`, including for `users`' own rows
-(`users.created_by -> users.id`, a genuine self-reference). Drizzle's thunk
-defers evaluation past module load, so the runtime cycle is fine; the
-explicit `AnyPgColumn` return annotation is what stops TypeScript reporting
-"audit.ts circularly references itself" trying to infer it. `src/db/bootstrap.ts`
+`.references((): AnyPgColumn => users.id)` per DESIGN.md §5, including for
+`users`' own rows (`users.created_by -> users.id`, a genuine self-reference,
+since `users.ts` spreads the instance it builds from its own id). Drizzle's
+thunk defers evaluation past module load, so the self-reference is fine; the
+explicit `AnyPgColumn` return annotation is what stops TypeScript reporting a
+circular reference trying to infer it. `src/db/bootstrap.ts`
 exports `BOOTSTRAP_USER_ID`, a fixed UUID shared between M1.21's seed and
 anything that needs to identify that row — the bootstrap user has no
 pre-existing creator, so it inserts itself as its own `created_by`/
@@ -1218,7 +1233,7 @@ disambiguate.
 **Better Auth's three adapter tables are deliberately excluded.** `accounts`,
 `sessions` and `verifications` carry an `updated_at` and no `*_by` columns at
 all: nothing writes them through `withAudit`, they are not part of the audit
-trail, and Better Auth's own `$onUpdate` stamps them (`src/db/schema/auth.ts`).
+trail, and Better Auth's own `$onUpdate` stamps them (`src/modules/identity/schema/auth.ts`).
 
 ### A table added later does not get the trigger for free
 
@@ -1356,7 +1371,7 @@ await withAudit(session, (write) => write.insertInWorkspace(membership, spells, 
 ```
 
 `Membership` is `{ workspaceId, userId, role }` carrying a `unique symbol`
-brand that `src/services/membership.ts` does not export. No other module can
+brand that `src/modules/coven/services/membership.ts` does not export. No other file can
 name the property, so no object literal satisfies the type and the one cast to
 it in the codebase sits past both of `assertMembership`'s refusals. The brand
 is erased at compile time: the layer costs nothing at runtime — no second
@@ -1367,7 +1382,7 @@ which is the trade MB.29 made when it deferred RLS.
 
 The third argument is a **permission**, not a minimum role: `{ spell:
 ['create'] }`, checked against per-role statements built with better-auth's
-`createAccessControl` (`src/services/access-control.ts`). Naming a resource or
+`createAccessControl` (`src/modules/coven/services/access-control.ts`). Naming a resource or
 an action the statements do not declare is a compile error. Several resources
 in one request are ANDed. An empty request throws an `Error` rather than a
 `Forbidden` — it would authorize vacuously, so it is a caller's bug and reads
@@ -1463,7 +1478,7 @@ which is the same coverage that would have caught a policy written wrong:
 A cast is the third gap, and it is review's job rather than the type's: a value
 that already has the proof's public shape is _comparable_ to it, so
 `{ workspaceId, userId, role } as Membership` compiles where `session as
-Membership` does not. `tests/services/membership.test.ts` pins the two the type
+Membership` does not. `tests/modules/coven/services/membership.test.ts` pins the two the type
 does catch — the object literal and the forgery from a session — as
 `@ts-expect-error` lines, which fail `npm run typecheck` the moment the brand
 stops being required. A runtime assertion could not see that at all: it would
@@ -1528,7 +1543,7 @@ to prove no unfiltered read exists.
 
 ### Writing: the one-way rule
 
-`src/services/spell-visibility.ts`'s `setSpellVisibility(session, workspaceId,
+`src/modules/grimoire/services/spell-visibility.ts`'s `setSpellVisibility(session, workspaceId,
 spellId, visibility)`. `private` may be widened to `workspace`; `workspace` may
 never be narrowed back. Once the coven has read a spell and built on it, hiding
 it retracts something they were relying on — widening is a gift, narrowing is a
@@ -1619,7 +1634,7 @@ carry `WHERE deleted_at IS NULL`. Without it, a plain `UNIQUE` constraint
 still matches a soft-deleted row's value, so deleting a record permanently
 reserves its name/slug/whatever the index covers — the exact opposite of
 "deleted records stay recoverable but invisible." `users_email_unique`
-(`src/db/schema/users.ts`) is the worked example:
+(`src/modules/identity/schema/users.ts`) is the worked example:
 
 ```ts
 uniqueIndex('users_email_unique')
@@ -1638,7 +1653,7 @@ migration 0019, MB.60). The unique index is on the raw column, so without it
 two live rows could differ by case alone, and both would match
 `ADMIN_BOOTSTRAP_EMAIL`, which is compared case-insensitively. Better Auth
 lowercases every address it writes; the constraint catches a row written by
-hand. `tests/db/users-schema.test.ts` inserts one.
+hand. `tests/modules/identity/schema/users-schema.test.ts` inserts one.
 
 ## Keyset pages (M3.6)
 
@@ -1797,7 +1812,7 @@ derived categories are the union of what this table holds for its ingredients.
 ## `spell_categories` (M10.4)
 
 Story 48's table: `spellId`, `categoryId`, + the four audit stamps, keyed on the
-pair. `src/db/schema/spell-categories.ts`, migration `0015_wooden_zaran.sql`,
+pair. `src/modules/grimoire/schema/spell-categories.ts`, migration `0015_wooden_zaran.sql`,
 and the last of MB.34's three join tables.
 
 **It holds the _assigned_ categories, and only those.** §9 and §12 make the
@@ -1893,26 +1908,13 @@ among the four files allowed to import `connection.ts` — which is what makes
 the handle honest. The reasoning, and the alternatives it rules out, are in
 [`design-decisions/m1.21-seed-writes-through-its-handle.md`](design-decisions/m1.21-seed-writes-through-its-handle.md).
 
-**Import order inside a seed module is load-bearing, and silently so.**
-`audit.ts` and `schema/users.ts` import each other (above), so whichever is
-entered first sees the other half-initialised. A seed module that reaches
-`audit.ts` first — by importing a schema module that spreads `auditColumns`
-before importing anything that pulls in `users` — makes `users.ts` build its
-table while `auditColumns` is still `undefined`, so the spread contributes
-nothing and every insert goes out without a `created_by`, failing `NOT NULL`.
-Every module under `src/db/seed/` therefore imports `users` (directly, via
-`./bootstrap-admin`, or via `./idempotent`, whose own first import is
-`./bootstrap-admin`) **above** the schema modules that reach `audit.ts`, and
-`src/db/seed/minimal.ts` carries the note. Nothing enforces it: reordering the
-imports is a clean-looking edit that reddens the seed tests.
-
-**The repository enters through `users` for the same reason** (MB.60). A
-service's first database import is `repository.ts`, whose own first was
-`./audit`, so any process that reached the database through a service first
-built `users` with no audit columns. Every `withAudit` write to `users` then
-went out unstamped, silently rather than failing. It imports `./schema/users`
-above `./audit`, and `tests/db/repository.test.ts` asserts the stamps are there
-in a fresh module graph entered through the repository.
+**Import order is not load-bearing anywhere.** There is no cycle between
+`audit.ts` and `users.ts` any more (MB.86): `audit.ts` exports factories that
+take the referenced column and depends on nothing in a module, and the
+`auditColumns` instance lives with `users` because every stamp references it.
+So a seed module, the repository and drizzle-kit — which globs
+`src/modules/*/schema/*.ts` and may enter the module graph at any schema file
+— all see a fully built `users` whichever import comes first.
 
 **Two helper modules carry what every seed repeats** (MB.51).
 `src/db/seed/idempotent.ts` exports three functions. `beginSeedTransaction(db,
@@ -2022,12 +2024,8 @@ hand has to arrive with the deploy that needs it. M4.3a's form vocabulary
 shares that step, that gate and that summary — see below, and
 `claude-docs/ci.md`.
 
-Two rules a later scenario inherits. Import a schema module **before**
-`audit` in a seed file: `audit.ts` and `schema/users.ts` import each other,
-and entered via `audit.ts` the `users` table is built while `auditColumns` is
-still undefined, so the insert carries no `created_by` (every db test under
-`tests/db/` already orders them this way). And write through the handle,
-stamping via `applyAudit`, in `minimal.ts`'s shape.
+One rule a later scenario inherits: write through the handle, stamping via
+`applyAudit`, in `minimal.ts`'s shape.
 
 `tests/db/seed/index.test.ts` is the `db`-project test: it applies the full
 migration set into the worker's clone (the M1.18 pattern — the seed writes
@@ -2350,7 +2348,7 @@ CLAUDE.md rule 4's other half — a SELECT built anywhere but the repository —
 is enforced by a second `no-restricted-imports` group in the same config
 entry, banning `drizzle-orm` and `drizzle-orm/*`. A Drizzle query cannot be
 built without importing the query builder at runtime, so banning the import
-bans the capability: `src/services`, `src/graphql`, `src/app`,
+bans the capability: `src/modules/*/services`, `src/graphql`, `src/app`,
 `src/components`, `src/lib` and every part of `tests/` outside `tests/db` —
 Playwright's `tests/e2e/` included — fail `npm run lint` on a runtime import, whatever the resulting
 finder is named or declared as.
@@ -2362,8 +2360,10 @@ build nothing, and it is how DESIGN.md §7's "the GraphQL layer imports
 in prose.
 
 The database layer is exempted by an `overrides` block matching
-`src/db/**/*.ts`, `tests/db/**/*.ts` (its own tests, since MB.41 moved them
-out of `src/`), `scripts/**/*.ts` and `drizzle.config.ts`. Two oxlint 1.82
+`src/db/**/*.ts`, `src/modules/*/schema/**/*.ts` (a table is built there),
+`tests/db/**/*.ts`, `tests/modules/**/*.ts` and `tests/support/db/**/*.ts`
+(its own tests and harness, since MB.41 moved them out of `src/`),
+`scripts/**/*.ts` and `drizzle.config.ts`. Two oxlint 1.82
 behaviours shape it, and both are load-bearing:
 
 - A rule set to `"off"` or `"allow"` inside `overrides` is **ignored**, so the

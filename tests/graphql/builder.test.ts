@@ -1,6 +1,6 @@
 import { graphql, isObjectType, printType, type GraphQLSchema } from 'graphql';
 import { describe, expect, it } from 'vitest';
-import type { ingredients } from '@/db/schema/ingredients';
+import type { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { builder, createBuilder } from '@/graphql/builder';
 import type { Context } from '@/graphql/context';
 import { schema } from '@/graphql/schema';
