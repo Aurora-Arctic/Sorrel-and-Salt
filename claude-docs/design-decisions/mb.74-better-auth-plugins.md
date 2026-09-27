@@ -258,8 +258,13 @@ No task is minted: v1 has no deletion story.
 
 ### Everything else
 
-- **`username`, `anonymous`, `phoneNumber`, `siwe`:** other sign-in schemes,
-  each with its own columns. None fits OAuth-only.
+- **`username`, `phoneNumber`, `siwe`:** other sign-in schemes, each with its
+  own columns. None fits OAuth-only.
+- **`anonymous`:** a `users` row and a session for a visitor, so work done
+  before signing up can be kept. Not a sign-in scheme this site wants, and
+  not what a public read needs: MB.80 weighed it against the public
+  compendium and declined it for v1. It is v2's try-before-sign-up
+  (DESIGN.md §13) if that is ever wanted.
 - **`genericOAuth`:** the mechanism for a provider outside Better Auth's
   built-in roster. Worth knowing; no such provider is wanted.
 - **`openAPI`:** a reference page for `/api/auth/*`. The API a developer
@@ -286,10 +291,11 @@ No task is minted: v1 has no deletion story.
 **v2, in this order:** passkeys, then magic link or email OTP. Two-factor,
 `captcha` and `haveIBeenPwned` only if email and password ever lands. The
 Stripe plugin is v2 as well, decided separately by MB.79 and left to a
-test-mode spike.
+test-mode spike. `anonymous` is v2 too, only if try-before-sign-up is wanted
+(MB.80, DESIGN.md §13).
 
 **Never here:** `jwt`, `bearer`, `oneTimeToken`, `deviceAuthorization`,
-`oauthPopup`, `multiSession`, `oneTap`, `username`, `anonymous`,
+`oauthPopup`, `multiSession`, `oneTap`, `username`,
 `phoneNumber`, `siwe`, `genericOAuth`, `openAPI`, `customSession`, Better
 Auth's `user.deleteUser`, and the `admin` and `organization` plugins beyond
 what MB.53 and MB.30 already decided.

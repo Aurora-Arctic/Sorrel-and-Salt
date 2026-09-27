@@ -560,7 +560,9 @@ answer.
   the pages a signed-out visitor may reach — `/`, the general entry page
   (MB.57); `/sign-in`; `/invite/*`; and `/email/*`, the one prefix under
   `public/`, whose images and fonts a mail client fetches with no cookie
-  (MB.66, [`email.md`](email.md)). Everything else redirects, so a
+  (MB.66, [`email.md`](email.md)). MB.83 adds `/compendium`, `/compendium/*`,
+  `/robots.txt` and `/sitemap.xml`: the public compendium's two pages and the
+  two files a crawler reads (MB.80). Everything else redirects, so a
   route added without anyone thinking about auth is protected, not open. An
   entry is an exact path, or a path ending `/*` for everything beneath it:
   `/` admits only `/`, `/sign-in` does not admit `/sign-in-help`, and
@@ -571,7 +573,7 @@ answer.
   there is a protected page to the matcher, redirected to `/sign-in` — HTML
   where the browser asked for an image — until the PR that adds it also adds
   its entry, and `tests/proxy.test.ts` pins that for `/favicon.ico` and
-  `/robots.txt`. MB.57 found this with the backdrop's images and answered it
+  `/robots.txt` — the latter until MB.83 lists it. MB.57 found this with the backdrop's images and answered it
   by importing them from their stylesheet instead, so they ship under
   `/_next/static/media` with a content hash. Any future exemption is a named
   prefix, never a file-extension pattern, for the same reason `PUBLIC_ROUTES`
