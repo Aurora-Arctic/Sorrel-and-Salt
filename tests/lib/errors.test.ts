@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Forbidden, NotFound } from '@/lib/errors';
+import { Forbidden, InvalidCursor, NotFound } from '@/lib/errors';
 
 // A refusal asserted by message is a test of today's wording, and passes
 // against a service that stopped checking. Assert the type.
@@ -93,5 +93,15 @@ describe('a denied call rejects rather than returning empty', () => {
     const silentSuccess = async (): Promise<{ ok: boolean }> => ({ ok: true });
 
     await expect(expect(silentSuccess()).rejects.toThrow(Forbidden)).rejects.toThrow();
+  });
+});
+
+describe('InvalidCursor', () => {
+  it('is an Error that names itself', () => {
+    const error = new InvalidCursor();
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error.name).toBe('InvalidCursor');
+    expect(error.message).toBe('Invalid cursor');
   });
 });

@@ -54,30 +54,42 @@ client likes, and an anonymous client can map the whole schema.
 
 **Everywhere, local development included:**
 
-| Limit      | Value | Refusal message                                               |
-| ---------- | ----- | ------------------------------------------------------------- |
-| Depth      | 7     | `Syntax Error: Query depth limit of 7 exceeded, found 8.`     |
-| Cost       | 5000  | `Syntax Error: Query Cost limit of 5000 exceeded, found <n>.` |
-| Aliases    | 15    | graphql-armor's default                                       |
-| Directives | 50    | graphql-armor's default                                       |
-| Tokens     | 1000  | graphql-armor's default                                       |
+| Limit      | Value | Enforced by                 | Refusal message                                                 |
+| ---------- | ----- | --------------------------- | --------------------------------------------------------------- |
+| Depth      | 7     | graphql-armor               | `Syntax Error: Query depth limit of 7 exceeded, found 8.`       |
+| Cost       | 5000  | `@pothos/plugin-complexity` | `Query exceeds maximum complexity (complexity: <n>, max: 5000)` |
+| Aliases    | 15    | graphql-armor               | graphql-armor's default                                         |
+| Directives | 50    | graphql-armor               | graphql-armor's default                                         |
+| Tokens     | 1000  | graphql-armor               | graphql-armor's default                                         |
 
-These come from `@escape.tech/graphql-armor`'s `EnvelopArmorPlugin`. Depth
-counts field levels, so `{ ok }` is 1. Cost is graphql-armor's static estimate,
-not a measurement: 2 for an object field, 1 for a scalar, and each level down
-weighs 1.5× the one above. An object field with a `first` or `last` argument
-multiplies its whole subtree by that number. So two nested pages of 100 cost
-about 79 000 and are refused, and two nested pages of 10 cost about 820. Depth
-and cost are pinned in the file even though 5000 is also the package default,
-so a package upgrade cannot move either one. Introspection queries (`__schema`)
-count towards neither.
+Depth, aliases, directives and tokens come from `@escape.tech/graphql-armor`'s
+`EnvelopArmorPlugin`, and are checked at validation, so a refusal is a
+validation error and `data` is absent. Depth counts field levels, so `{ ok }`
+is 1, and is pinned in the file although 7 is not the package default.
+Introspection queries (`__schema`) do not count towards it.
 
-**The multiplier reads a literal only.** `children(first: 100)` is costed ×100,
-but `children(first: $n)` is costed ×1, because the check runs at validation,
-before variables are bound. A list field's cost bound therefore comes from its
-server-side maximum, M3.6's hard cap of 100, and not from this check. For
-M3.6, "cost accounts for the requested page size" holds for a literal argument
-and has to be argued separately for a variable.
+**Cost belongs to the complexity plugin, not to armor.** armor's own cost
+check is off (`costLimit: { enabled: false }`). It runs at validation, before
+variables are bound, so it multiplied a subtree by a _literal_ `first` only:
+`children(first: $n)` was priced at one row whatever `$n` held, and an unsized
+connection at one row rather than the 25 it returns. It also refused a literal
+`first: 1000`, which the server clamps to 100 and should answer. The
+complexity plugin prices a query just before its first root resolver runs,
+with variables bound, and `MAX_COST` in `src/graphql/builder.ts` is its limit:
+
+- Every field costs 1. A field with a selection adds that selection's cost
+  times a multiplier, which is 1 for an object and 10 for a bare list.
+- **A connection's multiplier is the page it will fetch**, `pageSize(args)`
+  from `src/lib/pagination.ts`: 25 unsized, and never more than 100, whether
+  `first` is a literal, a variable, or past the maximum. It is set once, on
+  every connection, through the Relay plugin's
+  `defaultConnectionFieldOptions`. `edges` is given a multiplier of 1, so a
+  page is not priced twice.
+- So two nested pages of 10 cost 331 and are answered, two nested default
+  pages (25) cost 1951 and are answered, and two nested pages of 100 cost
+  30 301 and are refused, however `first` was written.
+- A refusal is thrown from the root field before it resolves, so it is an
+  execution error: the response carries `data: null` and no resolver ran.
 
 **Off wherever `NODE_ENV=production`:**
 
@@ -98,10 +110,12 @@ that ships, but it can be surprising: Altair's docs pane is empty there, and a
 typo gets no hint. Use `npm run dev` for either.
 
 The tests: `tests/app/api/graphql/armor.test.ts` drives the real route over a
-throwaway schema that nests without limit. The real schema is one field deep,
-so no query against it can reach a depth or cost limit. It runs both limits at
-`development` and at `production`, each next to the same query shape just
-inside the limit, to show that the refusal comes from the limit. `route.test.ts`
+throwaway schema that nests without limit and pages without running out of
+rows. The real schema is one field deep, so no query against it can reach a
+depth or cost limit. It runs depth and cost at `development` and at
+`production`, each next to the same query shape just inside the limit, to show
+that the refusal comes from the limit, and prices a variable `first` the same
+as a literal one. `tests/graphql/pagination.test.ts` pins the pricing itself. `route.test.ts`
 checks introspection and suggestions against the real schema in both modes,
 and `tests/e2e/graphql.spec.ts` repeats the production case against
 `next start`.
@@ -131,8 +145,9 @@ registering on the builder.
   resolver returning the wrong shape. `tests/graphql/builder.test.ts` pins
   both with `@ts-expect-error` inside a function that is never called. `tsc`
   checks it, and nothing registers on the real builder.
-- **Every Pothos package is a stable major:** `@pothos/core` and
-  `@pothos/plugin-scope-auth`, both at 4. A `0.x` plugin entering the tree is a
+- **Every Pothos package is a stable major:** `@pothos/core`,
+  `@pothos/plugin-scope-auth`, `@pothos/plugin-relay` and
+  `@pothos/plugin-complexity`, all at 4. A `0.x` plugin entering the tree is a
   decision to argue for in the diff.
 - **Fields are non-null by default** (`defaultFieldNullability: false`), as the
   §7 sketch reads. A field that can be null says so with `nullable: true`,
@@ -241,6 +256,83 @@ const OkQuery = graphql(`
   opens with `/* eslint-disable */`, which oxlint honours. `tsc` still checks it.
 - `@graphql-typed-document-node/core` is a direct dependency, because the
   generated files import its types.
+
+## Pagination
+
+Every list query paginates through one helper (CLAUDE.md rule 8): cursor-based,
+25 rows by default, and never more than 100. A client asking for more gets 100,
+with no error, whether it wrote `first: 1000` or `first: $n`. Each later task
+that adds a list query adopts it in its own PR, and the guard below makes
+forgetting fail in that PR.
+
+```ts
+builder.queryFields((t) => ({
+  compendium: t.pagedConnection({
+    type: Ingredient,
+    args: { search: t.arg.string({ required: false }) },
+    resolve: (_parent, { search }, page, { session }) => compendium.list(session, search, page),
+  }),
+}));
+```
+
+The field is a Relay connection. `@pothos/plugin-relay` builds the
+`<Parent><Field>Connection` and `…Edge` types and a shared `PageInfo`, and adds
+`first`, `after`, `last` and `before`. Edges and nodes are non-null. The plugin's
+`Node` interface, global ids and `node`/`nodes` queries are switched off, so
+an id is still the row's own uuid. Its offset-based helpers
+(`resolveOffsetConnection`, `resolveArrayConnection`) are not used.
+
+It runs in three layers, so the transport, the service and the repository
+each keep to their own rules:
+
+- **`src/lib/pagination.ts`** is pure. It holds the two numbers, the `Cursor`,
+  the `PageRequest` a finder is asked for, and `resolvePage`. `resolvePage`
+  decodes the cursors and clamps the size with `@pothos/core`'s
+  `parseCursorConnectionArgs`. It then asks for one row more than the page,
+  because the extra row says whether another page follows, and builds `edges`
+  and `pageInfo` from the answer. A service names these types without
+  importing any runtime code.
+- **`t.pagedConnection`** in `src/graphql/pagination.ts` is added to every
+  field builder, the same way the Relay plugin adds `t.connection`.
+  `builder.ts` imports it for that side effect. Its `resolve` receives a
+  decoded, clamped `PageRequest`, never the client's `first` or `after`, so
+  no resolver can skip the maximum or read a cursor as an offset.
+- **`findPage` and `findPageInWorkspace`** in the repository run the keyset
+  query (claude-docs/db.md, "Keyset pages").
+
+**A cursor is the sort key and the id, never an offset**: base64url of
+`{"k": <key>, "i": <id>}`. An offset moves when a row is inserted or deleted
+ahead of the reader, and a key does not. The key is the text Postgres prints
+for the value. A `timestamptz` read into a JS `Date` keeps milliseconds and
+loses microseconds, and a cursor built from it would replay every row in that
+millisecond. A malformed cursor, or one whose key will not cast to the sort
+column's type, is `InvalidCursor` from `src/lib/errors.ts`. `t.pagedConnection`
+turns that into an `Invalid cursor` GraphQL error. It is never treated as "from
+the start", which would return a page the client did not ask for.
+
+**Depth.** A connection costs two levels, `edges` and `node`, on top of its
+field. A root connection holding one nested connection therefore uses all
+seven levels: `{ a { edges { node { b { edges { node { name } } } } } } }`. A
+list nested on an object stays a bare list, as DESIGN.md §7 sketches, and is
+bounded by its parent.
+
+**Cost** is priced at the page each connection will fetch ("Protections"
+above).
+
+**The guard.** `tests/guards/pagination.test.ts` fails:
+
+- a `Query` field that returns a bare list;
+- a `*Connection` field without `first` and `after`;
+- a `.connection(` call anywhere in `src/` except `src/graphql/pagination.ts`,
+  untracked files included.
+
+It also proves that the first two checks can fail, by running them against a
+throwaway schema.
+
+The tests: `tests/lib/pagination.test.ts` covers the numbers, the clamp and the
+cursor codec. `tests/graphql/pagination.test.ts` covers the field over the
+transport and its pricing. `tests/db/pagination.test.ts` covers the keyset
+walk.
 
 ## The request context
 
