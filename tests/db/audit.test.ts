@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { applyAudit, auditColumns, auditStampColumns } from '@/db/audit';
+import { applyAudit } from '@/db/audit';
+import { auditColumns, auditStampColumns } from '@/modules/identity/schema/users';
 
 const session = { userId: '11111111-1111-1111-1111-111111111111' };
 const impostor = { userId: '99999999-9999-9999-9999-999999999999' };

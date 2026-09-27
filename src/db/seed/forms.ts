@@ -1,6 +1,9 @@
 // `./idempotent` (and through it `./bootstrap-admin`) first, and load-bearing — see minimal.ts.
 import { beginSeedTransaction } from './idempotent';
-import { ingredientFormGroups, ingredientForms } from '../schema/ingredient-forms';
+import {
+  ingredientFormGroups,
+  ingredientForms,
+} from '../../modules/vocabulary/schema/ingredient-forms';
 import { seedTwoTierVocabulary } from './two-tier-vocabulary';
 import type { SeedDatabase, SeedTransaction } from './index';
 

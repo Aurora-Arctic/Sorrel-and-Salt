@@ -2,12 +2,12 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { eq } from 'drizzle-orm';
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { auditColumns } from '@/db/audit';
+import { auditColumns } from '@/modules/identity/schema/users';
 import { findPage, findPageInWorkspace, withAudit } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { InvalidCursor } from '@/lib/errors';
 import { type ConnectionArgs, type Page, encodeCursor, resolvePage } from '@/lib/pagination';
-import { type Membership, assertMembership } from '@/services/membership';
+import { type Membership, assertMembership } from '@/modules/coven';
 import { A, D, asUser } from '../support/as-user';
 
 // CLAUDE.md rule 8, end to end below the transport: `resolvePage` drives the
