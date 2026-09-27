@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import Backdrop from '../components/Backdrop';
 import ThemeToggle from '../components/ThemeToggle';
 import { body, display } from './fonts';
+import Providers from './providers';
 import './globals.scss';
 
 export const metadata: Metadata = {
@@ -28,7 +29,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* Every page gets it, signed in or not — M2.6 moved it here from the
             home page, which was the only page that existed yet. */}
         <ThemeToggle />
-        {children}
+        {/* Around the page alone: the toggle and backdrop query nothing. */}
+        <Providers>{children}</Providers>
         {/* Last, so it never precedes the page in reading order even for a
             tool that ignores aria-hidden. */}
         <Backdrop />

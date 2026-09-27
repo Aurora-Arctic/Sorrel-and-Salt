@@ -1301,6 +1301,8 @@ _Acceptance criteria:_
 - Errors surface to the nearest error boundary
 - No Apollo dependency present
 
+_Landed with no document under `src/`: `Query` holds only `ok`, so the tests type one by hand the way `client-preset` does, and the first real document arrives with the first client component that reads one. A query's error reaches the boundary only while it has nothing to show; a failed background refetch keeps the last answer on screen ([`graphql.md`](graphql.md), "The client")._
+
 **M3.8 — React cache() wrapper and the server read path** · 1h
 
 _Story:_ As a developer, I want server components to read through services directly so that a server-rendered page does not pay to serialize a GraphQL round trip to itself.
