@@ -17,6 +17,18 @@ test('a signed-out visit to a protected route lands on /sign-in, keeping its pat
   await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
 });
 
+// The email page is protected like any other; the proxy answers before the
+// page's own requireSession() could.
+test('the email page redirects a signed-out visitor to /sign-in, keeping its path', async ({
+  page,
+}) => {
+  await page.goto('/account/email');
+
+  const url = new URL(page.url());
+  expect(url.pathname).toBe('/sign-in');
+  expect(url.searchParams.get('next')).toBe('/account/email');
+});
+
 test('invite acceptance stays reachable signed out', async ({ page }) => {
   const response = await page.goto('/invite/some-token');
 
