@@ -45,6 +45,7 @@
     "@pothos/core": "^4.15.1",
     "@pothos/plugin-scope-auth": "^4.2.1",
     "@react-email/components": "^1.0.12",
+    "altair-static": "^8.5.9",
     "better-auth": "^1.7.5",
     "dataloader": "^2.2.3",
     "drizzle-orm": "^0.45.2",
