@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures';
+import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 import { assertNoAccessibilityViolations } from './axe';
 
 // Runs only in the `chromium-configured-providers` project, against a server
@@ -59,6 +60,26 @@ for (const name of PROVIDER_NAMES) {
     // Proves axe sees the hover colour rather than the resting one.
     await expect.poll(background).not.toBe(resting);
 
+    await assertNoAccessibilityViolations(page);
+  });
+}
+
+// The greyed page's scan cannot measure the last-used badge: axe exempts a
+// disabled control's text from contrast. Here the button is live, so the
+// badge's label on its accent fill is measured, once per theme.
+for (const colorScheme of ['dark', 'light'] as const) {
+  test(`the last-used badge has no accessibility violations in the ${colorScheme} theme`, async ({
+    page,
+    context,
+    baseURL,
+  }) => {
+    await page.emulateMedia({ colorScheme });
+    await context.addCookies([{ name: LAST_USED_PROVIDER_COOKIE, value: 'google', url: baseURL }]);
+    await page.goto('/sign-in');
+
+    const button = page.getByRole('button', { name: 'Continue with Google, last used' });
+    await expect(button).toBeVisible();
+    await expect(button).not.toHaveAttribute('aria-disabled');
     await assertNoAccessibilityViolations(page);
   });
 }

@@ -88,6 +88,33 @@ unavailable button still needs to be _found_, even though clicking it does
 nothing. The click handler checks `configured.includes(providerId)` itself
 rather than relying on the DOM attribute to stop it.
 
+## Last used
+
+The button for the provider this browser last signed in with carries a "Last
+used" badge hanging off its top-left corner. Its accessible name is an
+`aria-label`, "Continue with Discord, last used": the name built from the
+button's text would run the label into the badge ("Discord Last used"), and the
+comma gives a screen reader a pause without displaying anything. Only the marked
+button carries one. The provider comes from the
+`better-auth.last_used_login_method` cookie, which Better Auth's `lastLoginMethod` plugin sets on a callback that
+signs the browser in (`auth.md`, "The last-used provider"). It exists so that
+MB.71's `account_not_linked` sentence, "sign in that way", has an answer the
+server could not give without revealing that the address has an account. No
+cookie, or a value naming no roster provider, marks nothing. An unavailable
+provider is still marked, because that is still what the browser used last.
+
+The read is Better Auth's documented one, `authClient.getLastUsedLoginMethod()`
+(`lastLoginMethodClient`, `src/lib/auth-client.ts`), wrapped in
+`useSyncExternalStore` with a `null` server snapshot. **The wrapper is not
+decoration.** This client component is still rendered on the server, which has
+no `document`. Called inline, as the plugin's documentation shows, the read
+returns `null` there and the provider id in the browser, so a returning
+visitor's hydration would disagree with the server's HTML. With the server
+snapshot, the server and the first hydrating render both render no mark, and
+React re-renders with the cookie's value straight after. The mark arrives
+just after hydration, not in the first HTML. The subscription is a no-op:
+only a callback writes the cookie, and a callback is a navigation away.
+
 ## Error state
 
 One `message` field covers both sources: the server-rendered callback error
@@ -105,30 +132,48 @@ announces role="alert" content only on it actually appearing.
 
 ## Styling
 
-Tokens and mixins beyond the per-brand button fills: `theme-transition()`,
-`focus-ring()`, `reduced-motion`, `$text-muted` (the unavailable state),
-`$secondary` and `$surface-card` (the error banner).
+The last-used badge is `.badge--last-used`, the solid accent palette
+(`styling.md`, "Badge palettes"), so it looks like the ingredient card's Toxic
+and Low stock badges. `.sign-in-panel__last-used` only places it: taken out of
+the flow, its top 1.125rem above the button's top edge and 1.25rem out past
+its left edge, so the marked button stays the size of the rest. The button is
+`position: relative` to hold it. It casts `$shadow-floating`, the shadow
+`.btn` itself casts, which lifts it off the brand fill it overlaps. The badge
+sets its own colours, so the brand fills and their hover states never reach its
+label. The provider column's gap is 2rem, with 1rem above it, leaving room for a
+badge that sits mostly above its button, the first one's included. Tokens and mixins beyond the per-brand button fills:
+`theme-transition()`, `focus-ring()`, `reduced-motion`, `$shadow-floating`
+(the badge), `$text-muted` (the unavailable state), `$secondary` and
+`$surface-card` (the error banner).
 
 ## Stories
 
 [`index.stories.tsx`](../../src/components/SignInPanel/index.stories.tsx) —
-`Default` (every provider configured), `WithError`, and `SomeUnavailable`
-(the shape most local dev actually sees: one pair in `.env.local`, the rest
-greyed out). Render-only, no test ids, no snapshots.
+`Default` (every provider configured), `LastUsed` (Discord marked),
+`WithError`, and `SomeUnavailable` (the shape most local dev actually sees:
+one pair in `.env.local`, the rest greyed out). The mark is read from the
+workshop's own cookie, which outlives the story that wrote it, so every story
+sets or clears it before rendering. Render-only, no test ids, no snapshots.
 
 ## Testing
 
-`tests/components/SignInPanel/index.test.tsx` mocks `src/lib/auth-client.ts`
-wholesale — Better Auth's client performs the OAuth hop by assigning
-`window.location.href`, which jsdom cannot follow, so this is the one place
-that module is faked rather than exercised for real (`tests/lib/auth-client.test.ts`
-stubs `fetch` instead and calls the real client). Covers: every roster
+`tests/components/SignInPanel/index.test.tsx` mocks `signIn` from
+`src/lib/auth-client.ts` — Better Auth's client performs the OAuth hop by
+assigning `window.location.href`, which jsdom cannot follow
+(`tests/lib/auth-client.test.ts` stubs `fetch` instead and calls the real
+client). The rest of the module is the real one, so the last-used read is the
+client plugin's own, against jsdom's `document.cookie`. Covers: every roster
 provider renders as a native `<button>` by accessible name; a click calls
 `signIn.social` with the right `provider`/`callbackURL`/`errorCallbackURL`;
 no alert exists without an error and one appears with a passed-in error or a
 failing `signIn.social` result; an unavailable provider is `aria-disabled`,
 described by its note, still lacks `disabled`, and its click never reaches
-`signIn.social`. Role and label queries only.
+`signIn.social`; the cookie's provider, and only that one, is marked in its
+accessible name, and no cookie or an unknown provider marks none; and
+`renderToString` carries no mark while `hydrateRoot` adds it without a
+recoverable error. That last test fails with the client read as the server
+snapshot, since jsdom has a `document` even under `renderToString`. Role and
+label queries only.
 
 Runs in the `unit` (jsdom) Vitest project — `npm run test:coverage`. Real
 keyboard reachability and the axe scans are asserted in Playwright, per
@@ -136,10 +181,10 @@ CLAUDE.md's "Accessibility is asserted in Playwright", once per provider
 state — each state has a surface the other lacks, so neither scan stands in
 for the other:
 
-| Spec                                             | Server state                                | Covers                                                                                                                                                             |
-| ------------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `tests/e2e/sign-in.spec.ts`                      | No provider configured (8001)               | Every button `aria-disabled` and still reached by Tab; axe over the greyed page (the `.sign-in-panel__note` text, Facebook's transparent chip) and the error state |
-| `tests/e2e/sign-in-configured-providers.spec.ts` | All four configured, placeholder ids (8002) | Every button available with no note; axe over the brand colours at rest, then once per button while hovered — after asserting its background actually changed      |
+| Spec                                             | Server state                                | Covers                                                                                                                                                                                                                                |
+| ------------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/e2e/sign-in.spec.ts`                      | No provider configured (8001)               | Every button `aria-disabled` and still reached by Tab; axe over the greyed page (the `.sign-in-panel__note` text, Facebook's transparent chip), the error state, and the last-used badge, waited for since it arrives after hydration |
+| `tests/e2e/sign-in-configured-providers.spec.ts` | All four configured, placeholder ids (8002) | Every button available with no note; axe over the brand colours at rest, then once per button while hovered — after asserting its background actually changed; and the last-used badge on a live button, once per theme               |
 
 **The configured scan exists because the greyed one could not see the
 brand colours**: an unavailable button drops its brand class, so a CI with

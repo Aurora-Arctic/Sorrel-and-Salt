@@ -144,9 +144,10 @@ $category-groups: (
 // Badge palettes
 // ---------------------------------------------------------------------------
 // Safety is a warning and low stock an inventory state, so one is a solid
-// sealing-wax fill and the other a muted tint. A palette emits only its own
-// treatment's parts: safety's ink fails AA as a tint, so asking for its `bg`
-// is a compile error. claude-docs/styling.md, "Badge palettes".
+// sealing-wax fill and the other a muted tint. Last used is a pointer, not a
+// warning, so it is solid in the accent, which spends no new hue. A palette
+// emits only its own treatment's parts: safety's ink fails AA as a tint, so
+// asking for its `bg` is a compile error. claude-docs/styling.md, "Badge palettes".
 $badge-treatments: (
   solid: ('fill'),
   tinted: (
@@ -168,7 +169,13 @@ $badge-palettes: (
     treatment: tinted,
     dark: $chalk-muted,
     light: $ink-muted,
-  )
+  ),
+  // The accent's own inks: $text-on-color on them is 7.95:1 dark, 5.03:1 light.
+  'last-used': (
+      treatment: solid,
+      dark: $sorrel-bright,
+      light: $sorrel,
+    )
 );
 
 // Named once, so the mixin's loop and the accessor's validation agree.

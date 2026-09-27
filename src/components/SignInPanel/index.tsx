@@ -1,7 +1,7 @@
 'use client';
 
-import { type ReactElement, useState } from 'react';
-import { signIn } from '../../lib/auth-client';
+import { type ReactElement, useState, useSyncExternalStore } from 'react';
+import { getLastUsedLoginMethod, signIn } from '../../lib/auth-client';
 import { GENERIC_SIGN_IN_ERROR, signInPath } from '../../lib/sign-in';
 import { SOCIAL_PROVIDERS, type ProviderId } from '../../lib/social-providers';
 import { DiscordIcon, FacebookIcon, GoogleIcon, MicrosoftIcon } from './icons';
@@ -17,6 +17,10 @@ const PROVIDER_ICONS: Record<ProviderId, () => ReactElement> = {
   microsoft: MicrosoftIcon,
 };
 
+// A cookie announces no change, and only a callback, a full navigation away,
+// writes this one: there is nothing to subscribe to.
+const noSubscription = () => () => {};
+
 export interface SignInPanelProps {
   /** Where a successful sign-in returns to; already run through safeReturnPath. */
   next: string;
@@ -31,6 +35,10 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
   // pre-redirect failure (signIn.social's own `{ error }` result) — the two
   // never show at once, so one field covers both.
   const [message, setMessage] = useState(error);
+  // Better Auth's documented read, taken after hydration: the server has no
+  // `document`, so rendering the mark there and here would disagree
+  // (claude-docs/components/sign-in-panel.md, "Last used").
+  const lastUsed = useSyncExternalStore(noSubscription, getLastUsedLoginMethod, () => null);
 
   const handleClick = async (providerId: ProviderId): Promise<void> => {
     if (!configured.includes(providerId)) return;
@@ -60,6 +68,7 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
           const isAvailable = configured.includes(provider.id);
           const noteId = `sign-in-panel__note-${provider.id}`;
           const Icon = PROVIDER_ICONS[provider.id];
+          const isLastUsed = provider.id === lastUsed;
           return (
             <div key={provider.id} className="sign-in-panel__provider">
               <button
@@ -81,10 +90,16 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
                 // and every provider must stay keyboard-reachable.
                 aria-disabled={isAvailable ? undefined : true}
                 aria-describedby={isAvailable ? undefined : noteId}
+                // Read as one phrase with a pause, where the text alone would
+                // run the label into the badge: "Discord Last used".
+                aria-label={isLastUsed ? `Continue with ${provider.label}, last used` : undefined}
                 onClick={() => handleClick(provider.id)}
               >
                 <Icon />
                 Continue with {provider.label}
+                {isLastUsed && (
+                  <span className="badge badge--last-used sign-in-panel__last-used">Last used</span>
+                )}
               </button>
               {!isAvailable && (
                 <p id={noteId} className="sign-in-panel__note">

@@ -74,7 +74,9 @@
   display: grid;
   grid-template-columns: max-content;
   justify-content: center;
-  gap: 1.25rem;
+  // Room for the last-used badge, which hangs over its button's top edge.
+  gap: 2rem;
+  margin-top: 1rem;
 }
 
 .sign-in-panel__provider {
@@ -94,6 +96,8 @@
 // every provider's own colour and mark replaces `.btn`'s
 // (claude-docs/components/sign-in-panel.md, "Provider branding").
 .sign-in-panel__button.btn {
+  // The containing block for the last-used badge.
+  position: relative;
   justify-content: flex-start;
   width: 100%;
   border-color: transparent;
@@ -197,4 +201,14 @@
   margin: 0;
   font-size: 0.8rem;
   color: $text-muted;
+}
+
+// Hangs off the button's top-left corner, out of the flow, so the marked
+// button is the same size as the rest. Colour is `.badge--last-used`'s; the
+// shadow is the one `.btn` casts, lifting it off the brand fill it overlaps.
+.sign-in-panel__last-used {
+  position: absolute;
+  top: -1.125rem;
+  left: -1.25rem;
+  box-shadow: $shadow-floating;
 }
