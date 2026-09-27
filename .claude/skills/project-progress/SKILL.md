@@ -1,11 +1,11 @@
 ---
 name: project-progress
-description: Use when the user asks how far along the project is (e.g. "project progress", "task progress", "how many hours are left", "how much is done", "/project-progress"). Prints tasks and hours completed, remaining and total, from local data — TASKS.md estimates and git merge history — with no Asana calls unless the user asks to verify against the board.
+description: Use when the user asks how far along the project is (e.g. "project progress", "task progress", "how many hours are left", "how much is done", "/project-progress"). Prints tasks and hours completed, remaining and total, from local data — TASKS.md estimates and git merge history — with no board calls unless the user asks to verify against the GitHub issues.
 ---
 
 # project-progress
 
-Show a summary of completed, remaining and total **tasks** and **hours**, sized for a quick read. It runs on local data. The Asana board is the source of truth for status, but reading it costs one call per wave card (about 25), so the default mode leaves the board alone.
+Show a summary of completed, remaining and total **tasks** and **hours**, sized for a quick read. It runs on local data. The GitHub issues are the source of truth for status, but the default mode leaves them alone so the figures need no board call; verify mode reads them in one.
 
 | Figure | Local source                                                                                                                                                                                                                              |
 | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -25,15 +25,15 @@ Both sources are read at the same ref (`git show origin/staging:claude-docs/TASK
 
 ## Verify mode
 
-Run this only when the user asks to check against the board ("verify", "check with Asana"). It is the one path that calls the API.
+Run this only when the user asks to check against the board ("verify", "check the issues"). It is the one path that reads the tracker.
 
-- Fetch every leaf task: `asana_get_tasks` on project `1218814916390986` (`opt_fields=name,completed,num_subtasks`), then `asana_get_task` with `opt_fields=subtasks.name,subtasks.completed` on each card whose `num_subtasks` is above 0. Match ids exactly as [`CLAUDE.md`](../../../CLAUDE.md)'s "Asana task tracking" section describes. Older names use `-` where newer ones use `—`, and cards named `[RETIRED]` are retired.
+- `node scripts/task-board.mjs list` — one call, printing a JSON array of every tracked issue (`number`, `title`, `state`, `stateReason`, `milestone`, `url`). The id is what precedes the space-padded dash in the title (`<ID> — `), matched exactly as [`CLAUDE.md`](../../../CLAUDE.md)'s "GitHub task tracking" section describes. Completed is `state == "CLOSED"` with `stateReason == "COMPLETED"`; retired is `stateReason == "NOT_PLANNED"` or a `[RETIRED]` title.
 - Compare the board's completed set with the local one and report each disagreement.
-- **Ticked on the board, silent in git:** the work happened outside the repo (a dashboard or console change). Offer to add the id to the done-outside-git list in `tally.mjs`.
-- **Merged in git, open on the board:** the board is stale. Say so, but do not tick it here. Status changes belong to `create-pr` and the merge.
+- **Closed on the board, silent in git:** the work happened outside the repo (a dashboard or console change). Offer to add the id to the done-outside-git list in `tally.mjs`.
+- **Merged in git, open on the board:** the board is stale. Say so, but do not close it here. Status changes belong to `create-pr` and the merge.
 
 ## Notes
 
-- Everything is read-only: the skill changes no files, branches or Asana tasks. The one exception is an edit to `tally.mjs` that the user approves in verify mode.
+- Everything is read-only: the skill changes no files, branches or issues. The one exception is an edit to `tally.mjs` that the user approves in verify mode.
 - The open-branch count is any `feature/*`/`hotfix/*` branch, local or pushed, whose id has not merged — even one with no commits yet. It measures work under way, not open PRs.
 - A task done in a PR whose branch and subject both omit its id will read as remaining. Verify mode catches it, and the fix is the done-outside-git list, not a looser regex. An id mentioned mid-sentence is a reference, not a completion.

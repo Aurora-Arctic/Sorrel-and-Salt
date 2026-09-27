@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Task and hour progress from local data only: hours from TASKS.md, and
 // "completed" from what has merged into the ref — both read at the same ref,
-// so the plan and the history agree on when they were taken. The Asana board
-// stays the source of truth for status: this trades exactness for zero API
+// so the plan and the history agree on when they were taken. The GitHub issue
+// tracker stays the source of truth for status: this trades exactness for zero API
 // calls; the skill's verify mode is where the two are compared.
 //
 // usage: node tally.mjs [--ref origin/staging]

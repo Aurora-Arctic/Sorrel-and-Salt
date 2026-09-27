@@ -319,8 +319,8 @@ sorrel` against the running compose Postgres: a raw SQL prompt for poking
 
 ## Next.js DevTools MCP
 
-`.mcp.json` gained a `next-devtools` server (`npx -y next-devtools-mcp@latest`),
-alongside the pre-existing `asana` one. It gives an agent (Claude Code
+`.mcp.json` gained a `next-devtools` server (`npx -y next-devtools-mcp@latest`).
+It gives an agent (Claude Code
 itself, or any other MCP client) tools to inspect a running Next.js dev
 server directly — routes, build errors, runtime state — rather than
 inferring them from terminal output.

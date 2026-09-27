@@ -371,6 +371,7 @@ matrix's generated job name, not the leg's.
   cache under its content-addressed tag, which every later run with the same
   hash then reuses — a corruption that does not self-heal on retry. The check
   jobs share no mutable state and are cheap to rerun, so they stay cancellable.
+- **`close-task-on-merge.yml`** (MB.89) — closes the issue a merged PR's body names with `Closes #N` when the PR merges into `staging`, because GitHub's own closing keywords fire only on the default branch.
 - **`merge-queue.yml` was deleted by MB.32, and is restored from git history
   when M7.A.1 fires.** It was the `merge_group` counterpart, re-expressing this
   entire job graph — the same checks with `merge-queue: true`, plus

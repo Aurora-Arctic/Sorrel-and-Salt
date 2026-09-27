@@ -225,6 +225,8 @@ NAME=<spec>` (MB.23) — starts `playwright-server` if needed, then `exec`s
     `/home/node/.claude` so Claude's context survives `make docker-rebuild`;
     `initializeCommand` `mkdir`s it host-side first. The Claude CLI itself comes
     from the `anthropics/devcontainer-features/claude-code` feature.
-    - **`~/.claude.json` is NOT under that bind mount**, and it is where the
-      Asana MCP OAuth grant lives — so expect to re-authorize Asana after a
-      `make docker-rebuild`.
+    - **`~/.claude.json` is NOT under that bind mount**, so anything an MCP
+      server stores there — an OAuth grant, for one — is lost on
+      `make docker-rebuild`. Nothing in `.mcp.json` needs one today; the Asana
+      server that did was retired in MB.89. `/home/node/worktrees` is not
+      preserved either, so commit worktree work before a rebuild.
