@@ -2,6 +2,7 @@ import { createYoga } from 'graphql-yoga';
 import { isBrowserNavigation, renderAltairPage } from '../../../graphql/altair';
 import { protections } from '../../../graphql/armor';
 import { createContext } from '../../../graphql/context';
+import { maskedErrors } from '../../../graphql/errors';
 import { schema } from '../../../graphql/schema';
 
 // Every deploy, staging included, runs at NODE_ENV=production; local
@@ -15,6 +16,8 @@ const yoga = createYoga({
   context: ({ request }) => createContext({ request }),
   fetchAPI: { Response },
   plugins: protections({ production }),
+  // Each service error leaves with its code; anything else leaves masked.
+  maskedErrors,
   // The IDE is Altair, served by `handle` before Yoga sees the request.
   graphiql: false,
   // Yoga's default reflects any Origin and allows credentials. The client is
