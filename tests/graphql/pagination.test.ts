@@ -3,6 +3,7 @@ import { complexityFromQuery } from '@pothos/plugin-complexity';
 import { describe, expect, it } from 'vitest';
 import { MAX_COST, createBuilder } from '@/graphql/builder';
 import type { Context } from '@/graphql/context';
+import { createLoaders } from '@/graphql/loaders';
 import type { PageEntry, PageRequest } from '@/lib/pagination';
 
 // The transport half of CLAUDE.md rule 8, over a throwaway schema: a list of
@@ -66,7 +67,7 @@ function leafSchema(requests: PageRequest[] = []): GraphQLSchema {
   return scratch.toSchema();
 }
 
-const context: Context = { session: null, loaders: {} };
+const context: Context = { session: null, loaders: createLoaders(null) };
 
 async function run(
   schema: GraphQLSchema,

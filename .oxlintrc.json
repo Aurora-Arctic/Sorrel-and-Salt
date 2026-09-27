@@ -165,7 +165,9 @@
       "files": [
         "src/graphql/**/*.{ts,tsx}",
         "src/app/**/*.{ts,tsx}",
-        "src/components/**/*.{ts,tsx}"
+        "src/components/**/*.{ts,tsx}",
+        "src/modules/*/graphql/**/*.ts",
+        "src/modules/*/loaders/**/*.ts"
       ],
       "rules": {
         "no-restricted-imports": [

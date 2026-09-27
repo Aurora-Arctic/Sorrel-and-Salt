@@ -8,8 +8,11 @@ import {
   type AuditWriter,
   findMany,
   findManyIncludingSoftDeleted,
+  findManyByIds,
   findManyInWorkspace,
+  findMembershipsOfUsers,
   findOne,
+  findOneById,
   findOneInWorkspace,
   findWorkspaceRole,
   withAudit,
@@ -17,9 +20,11 @@ import {
 import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
 import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
 import { spells } from '@/modules/grimoire/schema/spells';
+import { workspaces } from '@/modules/coven/schema/workspaces';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
-import { A, B, C, D, asUser } from '../support/as-user';
+import { A, B, C, D, E, asUser } from '../support/as-user';
+import { makeWorkspace } from '../support/fixtures';
 
 // A scratch table spreading the real `auditColumns` minus their FKs to
 // `users`: the contract is about the six columns, not any one table.
@@ -150,16 +155,19 @@ beforeEach(async () => {
 
 describe('repository public API', () => {
   // The provisional-account delete is the one `users` delete (claude-docs/db.md).
-  it('exports exactly withAudit, the finders, the one read that mints a proof, and the provisional-account delete', () => {
+  it('exports exactly withAudit, the finders, the two reads that take no proof, and the provisional-account delete', () => {
     expect(Object.keys(repository).sort()).toEqual(
       [
         'deleteProvisionalUsers',
         'findMany',
+        'findManyByIds',
         'findManyIncludingSoftDeleted',
         'findManyInSpell',
         'findManyInWorkspace',
         'findManySpells',
+        'findMembershipsOfUsers',
         'findOne',
+        'findOneById',
         'findOneInWorkspace',
         'findOneSpell',
         'findPage',
@@ -360,6 +368,40 @@ describe('soft-delete filtering (M1.20)', () => {
     expect(restorable).toMatchObject({ id: row.id, deletedAt: expect.any(Date) });
   });
 
+  describe('by id', () => {
+    it('findOneById returns the live row with that id', async () => {
+      await withAudit(session, (write) => write.insert(herbs, { name: 'Yarrow' }));
+      const [row] = await withAudit(session, (write) => write.insert(herbs, { name: 'Tansy' }));
+
+      await expect(findOneById(herbs, row.id)).resolves.toMatchObject({ name: 'Tansy' });
+    });
+
+    it('findOneById returns undefined for a soft-deleted row', async () => {
+      const [row] = await withAudit(session, (write) => write.insert(herbs, { name: 'Rue' }));
+      await withAudit(session, (write) => write.softDelete(herbs, eq(herbs.id, row.id)));
+
+      await expect(findOneById(herbs, row.id)).resolves.toBeUndefined();
+    });
+
+    it('findManyByIds returns the live rows named and no others', async () => {
+      const [first] = await withAudit(session, (write) => write.insert(herbs, { name: 'Sage' }));
+      const [second] = await withAudit(session, (write) => write.insert(herbs, { name: 'Thyme' }));
+      const [gone] = await withAudit(session, (write) => write.insert(herbs, { name: 'Henbane' }));
+      await withAudit(session, (write) => write.insert(herbs, { name: 'Basil' }));
+      await withAudit(session, (write) => write.softDelete(herbs, eq(herbs.id, gone.id)));
+
+      const rows = await findManyByIds(herbs, [first.id, second.id, gone.id]);
+
+      expect(rows.map((row) => row.name).sort()).toEqual(['Sage', 'Thyme']);
+    });
+
+    it('findManyByIds answers an empty list of ids with no rows', async () => {
+      await withAudit(session, (write) => write.insert(herbs, { name: 'Lovage' }));
+
+      await expect(findManyByIds(herbs, [])).resolves.toEqual([]);
+    });
+  });
+
   // claude-docs/db.md, "Soft-delete filtering and the partial-index convention".
   describe('the partial unique index convention', () => {
     it('still blocks a live duplicate', async () => {
@@ -526,7 +568,7 @@ describe('the Membership proof (M6.3)', () => {
   const insertJar = (membership: Membership, label: string) =>
     withAudit(session, (write) => write.insertInWorkspace(membership, jars, { label }));
 
-  describe('findWorkspaceRole, the one read that takes no proof', () => {
+  describe('findWorkspaceRole, the read that mints a proof', () => {
     it('answers with the role the seeded membership names', async () => {
       await expect(findWorkspaceRole(A.id, WORKSPACE_W_ID)).resolves.toBe('owner');
       await expect(findWorkspaceRole(B.id, WORKSPACE_W_ID)).resolves.toBe('member');
@@ -537,6 +579,74 @@ describe('the Membership proof (M6.3)', () => {
       // Why this could have answered a role: A holds one, in the workspace
       // above, so the finder is reached and the table is not empty.
       await expect(findWorkspaceRole(A.id, WORKSPACE_X_ID)).resolves.toBeUndefined();
+    });
+  });
+
+  describe('findMembershipsOfUsers, the second read that takes no proof', () => {
+    const summary = (rows: { userId: string; workspaceId: string; role: string }[]) =>
+      rows.map(({ userId, workspaceId, role }) => ({ userId, workspaceId, role }));
+
+    /** A fresh coven with A as its owner, written as the seed would: no proof exists yet. */
+    async function covenOwnedByA(name: string) {
+      const { slug } = makeWorkspace({ name });
+      const [workspace] = await withAudit(asUser(A), (write) =>
+        write.insert(workspaces, { name, slug }),
+      );
+      await sql`
+        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+        values (${workspace.id}, ${A.id}, 'owner', ${A.id}, ${A.id})
+      `;
+      return workspace;
+    }
+
+    it('answers every live membership of each user named, across workspaces', async () => {
+      const rows = await findMembershipsOfUsers([A.id, D.id]);
+
+      expect(summary(rows)).toEqual(
+        expect.arrayContaining([
+          { userId: A.id, workspaceId: WORKSPACE_W_ID, role: 'owner' },
+          { userId: D.id, workspaceId: WORKSPACE_X_ID, role: 'member' },
+        ]),
+      );
+      expect(rows).toHaveLength(2);
+    });
+
+    it('answers nothing for a user in no workspace, and no query for no users', async () => {
+      // E is the site admin and a member of nothing (the fixture cast).
+      await expect(findMembershipsOfUsers([E.id])).resolves.toEqual([]);
+      await expect(findMembershipsOfUsers([])).resolves.toEqual([]);
+    });
+
+    it('leaves out a soft-deleted membership', async () => {
+      const workspace = await covenOwnedByA('Fixture Coven Lapsed');
+      // Why its absence below means the filter: before the delete it is found.
+      expect(summary(await findMembershipsOfUsers([A.id]))).toContainEqual({
+        userId: A.id,
+        workspaceId: workspace.id,
+        role: 'owner',
+      });
+
+      await sql`
+        update workspace_members set deleted_at = now(), deleted_by = ${A.id}
+        where workspace_id = ${workspace.id}
+      `;
+
+      const ids = (await findMembershipsOfUsers([A.id])).map((row) => row.workspaceId);
+      expect(ids).toEqual([WORKSPACE_W_ID]);
+    });
+
+    it('leaves out a live membership of a soft-deleted workspace', async () => {
+      const workspace = await covenOwnedByA('Fixture Coven Razed');
+      expect((await findMembershipsOfUsers([A.id])).map((row) => row.workspaceId)).toContain(
+        workspace.id,
+      );
+
+      await withAudit(asUser(A), (write) =>
+        write.softDelete(workspaces, eq(workspaces.id, workspace.id)),
+      );
+
+      const ids = (await findMembershipsOfUsers([A.id])).map((row) => row.workspaceId);
+      expect(ids).toEqual([WORKSPACE_W_ID]);
     });
   });
 
