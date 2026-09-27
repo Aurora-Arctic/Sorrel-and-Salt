@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { pgTable, text, timestamp, uuid, index } from 'drizzle-orm/pg-core';
+import { bigint, index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from './users';
 
 // Better Auth's own adapter tables, generated with `usePlural: true` and
@@ -73,3 +73,15 @@ export const verifications = pgTable(
   },
   (table) => [index('verifications_identifier_idx').on(table.identifier)],
 );
+
+// Written and pruned by Better Auth's limiter alone, so it carries no
+// `updated_at` either. `last_request` is epoch milliseconds, which outgrows an
+// integer; `mode: 'number'` hands Better Auth the number it compares.
+export const rateLimits = pgTable('rate_limits', {
+  id: uuid('id')
+    .default(sql`pg_catalog.gen_random_uuid()`)
+    .primaryKey(),
+  key: text('key').notNull().unique(),
+  count: integer('count').notNull(),
+  lastRequest: bigint('last_request', { mode: 'number' }).notNull(),
+});
