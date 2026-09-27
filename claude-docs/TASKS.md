@@ -1240,6 +1240,8 @@ _Acceptance criteria:_
 - Verified against the deployed staging URL, not only in a test
 - Noted that a local production build also disables them, which is correct and occasionally surprising
 
+_Cost moved to `@pothos/plugin-complexity` in M3.6: armor's check prices a literal `first` only, so it could neither price a variable page nor answer a literal one past the maximum ([`design-decisions/m3.6-plan.md`](design-decisions/m3.6-plan.md)). The depth, alias, directive and token limits stay with armor._
+
 **M3.4 — Schema snapshot test** · 1h
 
 _Story:_ As a reviewer, I want schema changes to be visible in the diff so that a contract change is never silent.
@@ -1281,6 +1283,8 @@ _Acceptance criteria:_
 - Pagination is stable when rows are inserted or soft-deleted mid-traversal
 - Cost limit accounts for the requested page size
 - A test walks a full multi-page traversal and asserts no row is skipped or repeated
+
+_Landed as the mechanism and its guard, since no list query existed yet: `t.pagedConnection` over the repository's keyset finders, and `tests/guards/pagination.test.ts`, which fails a bare list on `Query` and a `t.connection` outside the helper. Each later list query adopts it in its own PR. "Cost limit accounts for the requested page size" could not hold under graphql-armor's check, so cost moved to `@pothos/plugin-complexity`, priced at the effective page ([`design-decisions/m3.6-plan.md`](design-decisions/m3.6-plan.md))._
 
 ### GraphQL client
 

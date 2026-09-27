@@ -28,12 +28,14 @@ const EXPORTED_FUNCTIONS = [
   'findOne',
   'findOneInWorkspace',
   'findOneSpell',
+  'findPage',
+  'findPageInWorkspace',
   'findWorkspaceRole',
   'withAudit',
 ];
 
 /** Rule 5's half: a finder over a table carrying `workspace_id` scopes by the proof. */
-const SCOPED_FINDERS = ['findManyInWorkspace', 'findOneInWorkspace'];
+const SCOPED_FINDERS = ['findManyInWorkspace', 'findOneInWorkspace', 'findPageInWorkspace'];
 
 /**
  * M10.3's half: a finder reaching a spell, or what a spell is made of, narrows

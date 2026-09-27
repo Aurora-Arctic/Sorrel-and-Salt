@@ -1,4 +1,4 @@
-import { and, eq, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, or, sql, type SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 // Above `./audit`, which imports it back: entered through `audit.ts`, `users`
 // is built before `auditColumns` exists and loses its stamps (claude-docs/db.md,
@@ -16,6 +16,8 @@ import { db } from './connection';
 // that mints it (CLAUDE.md rule 1), which is why the direction is this way up.
 import type { WorkspaceRole } from '../services/access-control';
 import type { Membership } from '../services/membership';
+import { InvalidCursor } from '../lib/errors';
+import type { Cursor, PageEntry, PageRequest } from '../lib/pagination';
 
 // CLAUDE.md rule 2: the only application module that imports the client
 // (claude-docs/db.md, "Who may import the client"). `db` is not re-exported and
@@ -217,18 +219,79 @@ function notSoftDeleted<TTable extends PgTable>(table: TTable): SQL | undefined 
   return deletedAt ? sql`${deletedAt} is null` : undefined;
 }
 
+/**
+ * A sort column a page can be keyed on. NOT NULL, because a NULL key makes
+ * the row comparison below NULL and the row falls out of every page.
+ */
+type SortColumn = AnyPgColumn<{ notNull: true }>;
+
+/** How `selectFrom` orders, bounds and keys a page; the cursor bounds are in its `where`. */
+interface Keyset {
+  sort: SortColumn;
+  id: AnyPgColumn;
+  request: PageRequest;
+}
+
 // The one place a read query is built; not exported, so no public handle
 // skips the filter.
 function selectFrom<TTable extends PgTable>(
   table: TTable,
   where: SQL | undefined,
-): Promise<TTable['$inferSelect'][]> {
+): Promise<TTable['$inferSelect'][]>;
+function selectFrom<TTable extends PgTable>(
+  table: TTable,
+  where: SQL | undefined,
+  keyset: Keyset,
+): Promise<PageEntry<TTable['$inferSelect']>[]>;
+async function selectFrom(table: PgTable, where: SQL | undefined, keyset?: Keyset) {
+  // The key is read as Postgres prints it: a `timestamptz` read into a Date
+  // loses its microseconds, and a cursor built from it would replay rows.
+  const selection = keyset && {
+    row: getTableColumns(table),
+    key: sql<string>`${keyset.sort}::text`,
+  };
   // Same cast as `writerFor`: `.from()` is typed against the table's own
   // generic parameter.
-  return db
-    .select()
+  const query = db
+    .select(selection as never)
     .from(table as never)
-    .where(where) as never;
+    .where(where)
+    .$dynamic();
+  if (!keyset) return query;
+
+  const direction = keyset.request.inverted ? desc : asc;
+  let rows: { row: Record<string, unknown>; key: string }[];
+  try {
+    rows = await query
+      .orderBy(direction(keyset.sort), direction(keyset.id))
+      .limit(keyset.request.limit);
+  } catch (error) {
+    // The only client text in a page query is the cursor's, so a data
+    // exception here is a cursor that names no position in this list.
+    if (isDataException(error)) throw new InvalidCursor();
+    throw error;
+  }
+  return rows.map(({ row, key }) => ({ cursor: { key, id: String(row.id) }, node: row }));
+}
+
+/** SQLSTATE class 22 — a value that would not cast to its column's type. Drizzle wraps the driver's error as `cause`. */
+function isDataException(error: unknown): boolean {
+  const code = (error as { cause?: { code?: unknown } } | null)?.cause?.code;
+  return typeof code === 'string' && code.startsWith('22');
+}
+
+/**
+ * The cursor bounds: rows strictly after `after` and before `before` in
+ * `(sort, id)` order, whichever way the page walks. The cursor's text is cast
+ * back to each column's own type, so it compares as the column does.
+ */
+function pageBounds({ sort, id, request }: Keyset): SQL | undefined {
+  const at = ({ key, id: cursorId }: Cursor) =>
+    sql`(cast(${key} as ${sql.raw(sort.getSQLType())}), cast(${cursorId} as ${sql.raw(id.getSQLType())}))`;
+  return and(
+    request.after && sql`(${sort}, ${id}) > ${at(request.after)}`,
+    request.before && sql`(${sort}, ${id}) < ${at(request.before)}`,
+  );
 }
 
 /** All matching, non-soft-deleted rows. The default and normal-use finder. */
@@ -265,6 +328,39 @@ export async function findOneInWorkspace<
 >(membership: Membership, table: TTable, where?: SQL): Promise<TTable['$inferSelect'] | undefined> {
   const [row] = await findManyInWorkspace(membership, table, where);
   return row;
+}
+
+/**
+ * One page of non-soft-deleted rows in `(sort, id)` order, each with the
+ * cursor it was found at: CLAUDE.md rule 8's keyset half. `page` comes from
+ * `resolvePage` in `src/lib/pagination.ts`, already clamped to the maximum.
+ */
+export function findPage<TTable extends PgTable & Unscoped & NotSpellScoped & Identified>(
+  table: TTable,
+  sort: SortColumn,
+  page: PageRequest,
+  where?: SQL,
+): Promise<PageEntry<TTable['$inferSelect']>[]> {
+  const keyset = { sort, id: table.id, request: page };
+  return selectFrom(table, and(notSoftDeleted(table), where, pageBounds(keyset)), keyset);
+}
+
+/** The same, inside the workspace the proof names. */
+export function findPageInWorkspace<
+  TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
+>(
+  membership: Membership,
+  table: TTable,
+  sort: SortColumn,
+  page: PageRequest,
+  where?: SQL,
+): Promise<PageEntry<TTable['$inferSelect']>[]> {
+  const keyset = { sort, id: table.id, request: page };
+  return selectFrom(
+    table,
+    and(scopedTo(membership, table), notSoftDeleted(table), where, pageBounds(keyset)),
+    keyset,
+  );
 }
 
 /**

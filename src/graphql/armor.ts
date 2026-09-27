@@ -6,15 +6,9 @@ import type { Plugin } from 'graphql-yoga';
 export const MAX_DEPTH = 7;
 
 /**
- * graphql-armor's cost units: 2 an object field, 1 a scalar, ×1.5 each level
- * down, × a literal `first`/`last`. Pinned rather than left to the package's
- * default, which is the same number today, so an upgrade cannot move it.
- */
-export const MAX_COST = 5000;
-
-/**
- * The limits on what a client may ask. Depth, cost, aliases, directives and
- * tokens hold everywhere. Introspection and field suggestions are off
+ * The limits on what a client may ask. Depth, aliases, directives and tokens
+ * hold everywhere; cost is the complexity plugin's, priced after variables are
+ * bound, which armor's check is not. Introspection and field suggestions are off
  * wherever `production` holds, which is every deploy, staging included, and
  * a local production build too (claude-docs/graphql.md, "Protections").
  */
@@ -26,7 +20,7 @@ export function protections({
   return [
     EnvelopArmorPlugin({
       maxDepth: { n: MAX_DEPTH },
-      costLimit: { maxCost: MAX_COST },
+      costLimit: { enabled: false },
       blockFieldSuggestion: { enabled: production },
     }),
     ...(production ? [useDisableIntrospection()] : []),
