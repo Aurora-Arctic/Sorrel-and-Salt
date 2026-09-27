@@ -8,6 +8,7 @@ import {
   uniqueIndex,
   index,
   check,
+  timestamp,
 } from 'drizzle-orm/pg-core';
 import {
   auditStampColumnsReferencing,
@@ -44,6 +45,9 @@ export const users = pgTable(
     image: text('image'),
     role: userRole('role').notNull().default('user'),
     canCreateWorkspace: boolean('can_create_workspace').notNull().default(false),
+    // When the last verification mail went out, so the next is a minute away
+    // at least; null until the first (claude-docs/auth.md, "The email page").
+    verificationSentAt: timestamp('verification_sent_at'),
     ...auditColumns,
   },
   (table) => [
