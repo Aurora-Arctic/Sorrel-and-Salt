@@ -1,6 +1,7 @@
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import { APIError, createAuthMiddleware, getOAuthState, getSessionFromCtx } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { lastLoginMethod } from 'better-auth/plugins';
 import {
   defineRequestState,
   getCurrentAuthEndpointContext,
@@ -20,7 +21,7 @@ import { clientCredentials } from './social-providers-config';
 import type { UserRole } from './session';
 import { send } from './mail';
 import { emailPagePath, VERIFIED_LANDING } from './account-email';
-import { SIGN_IN_TO_VERIFY_PATH } from './sign-in';
+import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH } from './sign-in';
 import { verifyEmailMessage } from '../emails/verify-email';
 import {
   promotePrimaryAdmin,
@@ -310,6 +311,10 @@ export const auth = betterAuth({
     enabled: process.env.NODE_ENV === 'production',
     storage: 'database',
   },
+  // Cookie only: `storeInDatabase` would add a users column nothing reads.
+  // The sign-in page marks the provider this browser last used, and the
+  // server says nothing about an address (claude-docs/auth.md, "Plugins").
+  plugins: [lastLoginMethod({ cookieName: LAST_USED_PROVIDER_COOKIE })],
   advanced: {
     // Matches users.id's uuid type so every FK lines up without a cast.
     database: {

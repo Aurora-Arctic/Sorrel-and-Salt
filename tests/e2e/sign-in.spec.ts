@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures';
+import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 import { assertNoAccessibilityViolations } from './axe';
 
 // /sign-in touches no database — unlike smoke.spec.ts, no
@@ -56,5 +57,17 @@ test('a failed-callback error state has no accessibility violations', async ({ p
   // route announcer into <body> on every page, so a bare getByRole('alert')
   // matches two elements and fails strict mode.
   await expect(page.getByRole('main').getByRole('alert')).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+});
+
+// The mark is added after hydration (claude-docs/components/sign-in-panel.md,
+// "Last used"), so the scan waits for it: scanning the server's HTML would
+// pass a page without it.
+test('the last-used mark has no accessibility violations', async ({ page, context, baseURL }) => {
+  await context.addCookies([{ name: LAST_USED_PROVIDER_COOKIE, value: 'google', url: baseURL }]);
+  await page.goto('/sign-in');
+
+  await expect(page.getByRole('button', { name: 'Continue with Google, last used' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /last used/i })).toHaveCount(1);
   await assertNoAccessibilityViolations(page);
 });
