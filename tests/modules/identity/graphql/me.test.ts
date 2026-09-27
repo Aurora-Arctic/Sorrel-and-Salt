@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Context } from '@/graphql/context';
 import { createLoaders } from '@/graphql/loaders';
+import { noSender } from '../../../support/email-verification';
 import { schema } from '@/graphql/schema';
 import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
@@ -34,7 +35,11 @@ function run(session: Session | null, contextValue?: Context) {
   return graphql({
     schema,
     source: ME,
-    contextValue: contextValue ?? { session, loaders: createLoaders(session) },
+    contextValue: contextValue ?? {
+      session,
+      loaders: createLoaders(session),
+      emailVerification: noSender,
+    },
   });
 }
 
@@ -57,7 +62,7 @@ describe('the me query', () => {
     const loaders = createLoaders(session);
     const load = vi.spyOn(loaders.membershipsByUser, 'load');
 
-    const result = await run(session, { session, loaders });
+    const result = await run(session, { session, loaders, emailVerification: noSender });
 
     expect(load).toHaveBeenCalledWith(A.id);
     expect(result.data?.me).toMatchObject({

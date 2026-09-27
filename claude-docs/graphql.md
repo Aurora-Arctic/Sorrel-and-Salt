@@ -253,6 +253,16 @@ reaches no workspace. A `WorkspaceMember` carries `role`, `joinedAt`,
 the minimum a switcher needs, and M6 adds to it. `memberships` is a bare list,
 bounded by its parent, like every nested list (DESIGN.md §7).
 
+`setEmail(email: String!): User!` is the schema's first mutation (MB.54),
+registered by `identity` on the `Mutation` root that `src/graphql/schema/index.ts`
+declares beside `Query`. Signed-in only, by scope; the resolver hands the
+session, the address and the context's `emailVerification` sender to
+`setEmail` in the identity module. It answers the row as it is — the address
+changes only once the mailed link is followed
+([`auth.md`](auth.md), "The email page") — and a refusal, an address held by
+another verified account or a second mail inside the minute included, is a
+`VALIDATION` error on the `email` field.
+
 ### Auth scopes: the second check
 
 `@pothos/plugin-scope-auth` gives the schema three scopes, all read off the
@@ -550,7 +560,7 @@ mapping, using `me` signed out. `tests/support/msw/graphql.ts`'s
 ## The request context
 
 `src/graphql/context.ts`'s `createContext` runs once per request, as Yoga's
-`context` option. It gives every resolver two things:
+`context` option. It gives every resolver three things:
 
 - **`session`**, the service-level `Session` from `sessionFromHeaders` over the
   request's own headers, or `null` when signed out. It does not use
@@ -558,6 +568,10 @@ mapping, using `me` signed out. `tests/support/msw/graphql.ts`'s
   request is not refused here: the endpoint answers, and whichever scope or
   service the query reaches refuses it.
 - **`loaders`**, a fresh set of DataLoader instances for this request.
+- **`emailVerification`**, `src/lib/email-verification.ts`'s sender bound to
+  this request's host and cookie, which the `setEmail` resolver passes to
+  its service: a service may not import `auth`, so the Better Auth side of
+  the email page reaches it this way ([`auth.md`](auth.md), "The email page").
 
 ## Loaders: one set per request, never at module level
 
