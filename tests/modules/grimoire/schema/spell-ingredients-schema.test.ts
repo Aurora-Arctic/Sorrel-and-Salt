@@ -1,12 +1,12 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { failureOf, useTestDatabase } from './support/database';
-import { STAMP_COLUMNS, tableFacts } from './support/table-metadata';
-import { UNITS, dimensionOf } from '@/lib/units';
-import { ingredients } from '@/db/schema/ingredients';
-import { inventoryUnit } from '@/db/schema/inventory-items';
-import { spellIngredients } from '@/db/schema/spell-ingredients';
-import { spells } from '@/db/schema/spells';
+import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { STAMP_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
+import { UNITS, dimensionOf } from '@/modules/ingredients/schema/units';
+import { ingredients } from '@/modules/ingredients/schema/ingredients';
+import { inventoryUnit } from '@/modules/ingredients/schema/inventory-items';
+import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
+import { spells } from '@/modules/grimoire/schema/spells';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 
 // §5's columns; `name` and `form` are a custom one-off layer's, in place of an
@@ -127,7 +127,7 @@ describe('spell_ingredients schema', () => {
   });
 
   // One vocabulary, one Postgres type: a second enum is the drift
-  // `src/lib/units.ts` exists to prevent.
+  // `src/modules/ingredients/schema/units.ts` exists to prevent.
   it('measures in M9.2’s unit enum rather than a second copy of it', () => {
     expect(byName.unit.enumValues).toEqual([...UNITS]);
     expect(byName.unit.getSQLType()).toBe(inventoryUnit.enumName);

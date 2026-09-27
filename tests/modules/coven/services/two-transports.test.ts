@@ -6,9 +6,8 @@ import type { Context } from '@/graphql/context';
 import { createLoaders } from '@/graphql/loaders';
 import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
-import type { WorkspacePermission } from '@/services/access-control';
-import { assertMembership } from '@/services/membership';
-import { D, E, asUser } from '../support/as-user';
+import { type WorkspacePermission, assertMembership } from '@/modules/coven';
+import { D, E, asUser } from '../../../support/as-user';
 
 // CLAUDE.md rule 1, asserted rather than stated: a server component calling
 // the service and a resolver reaching it over the schema get one answer,

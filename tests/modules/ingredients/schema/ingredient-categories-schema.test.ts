@@ -1,11 +1,11 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { failureOf, useTestDatabase } from './support/database';
-import { STAMP_COLUMNS, tableFacts } from './support/table-metadata';
+import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { STAMP_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { and, eq } from 'drizzle-orm';
-import { categories } from '@/db/schema/categories';
-import { ingredientCategories } from '@/db/schema/ingredient-categories';
-import { ingredients } from '@/db/schema/ingredients';
+import { categories } from '@/modules/vocabulary/schema/categories';
+import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
+import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { findMany, withAudit } from '@/db/repository';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 

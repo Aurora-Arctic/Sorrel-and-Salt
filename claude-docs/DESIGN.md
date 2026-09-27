@@ -84,7 +84,7 @@ Browser
   └── Client Components ──► /api/graphql ──► resolvers ──► services/ ──►┘
 ```
 
-**One rule holds the whole thing together: authorization lives in `src/services/`, never in resolvers or pages.**
+**One rule holds the whole thing together: authorization lives in `src/modules/*/services/`, never in resolvers or pages.**
 
 Server components call services directly. No HTTP loopback to your own GraphQL endpoint — that would double latency and burn function invocations for nothing. Client components go through GraphQL. Both paths converge on the same service functions, so there is exactly one place where "can this user see this row" is decided.
 
@@ -95,15 +95,19 @@ src/
   app/                      # routes, layouts, server components
     api/graphql/route.ts    # Yoga handler
   components/<Name>/        # index.tsx + index.scss
-  services/                 # authz + business logic — THE choke point
+  modules/<name>/           # one per domain: identity, coven, vocabulary, ingredients, grimoire
+    index.ts                # the public surface — services, types, GraphQL refs, loader factories
+    schema/                 # the Drizzle tables the module owns; public too, for the seed and foreign keys
+    services/               # authz + business logic — THE choke point
+    graphql/                # Pothos type + field definitions, registered on the shared builder
+    loaders/                # DataLoader factories
   db/
-    schema/                 # Drizzle tables
     audit.ts                # shared audit columns
     repository.ts           # only module allowed to import `db`
     seed/                   # shared by docker, vitest, playwright
   graphql/
-    schema/                 # Pothos type + field definitions
-    loaders/                # DataLoader instances
+    schema/index.ts         # composes the modules' registrations into one schema
+    loaders/index.ts        # composes the modules' loader factories, one fresh set per request
   lib/                      # pure functions — heaviest unit coverage
   scss/                     # shared partials
 ```
@@ -1351,7 +1355,7 @@ The nullable `spellId` on `notes` already accommodates it.
 
 ### A workshop-viewer role
 
-The staging component workshop is admin-only in v1 (M2.10): reviewers who should see real component states — a developer, a product reviewer — would otherwise need admin's powers over the compendium and the admin roll to get them. A site role, or a grant beside `role`, that opens the workshop and nothing else. `assertWorkshopAccess()` (`src/services/workshop-access.ts`) is the one rule that changes; how the role is granted and revoked follows whatever MB.59 settles for admin.
+The staging component workshop is admin-only in v1 (M2.10): reviewers who should see real component states — a developer, a product reviewer — would otherwise need admin's powers over the compendium and the admin roll to get them. A site role, or a grant beside `role`, that opens the workshop and nothing else. `assertWorkshopAccess()` (`src/modules/identity/services/workshop-access.ts`) is the one rule that changes; how the role is granted and revoked follows whatever MB.59 settles for admin.
 
 ### Try before sign-up
 
@@ -1365,7 +1369,7 @@ The owner means to charge for the site eventually. What is wanted, written down 
 
 | Wanted                                 | What the plugin does                                                                                                                                                                  | What would be ours                                                                                                                                                                                                                                                               |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The owner pays for the workspace       | Every subscription carries a `referenceId`, and `authorizeReference({ user, session, referenceId, action })` decides who may act for it; without the callback a foreign id is refused | `referenceId` is the workspace id and the callback is `assertMembership` with the owner's statement, so the check stays in `src/services/`. The plugin's own organization mode needs the organization plugin, which MB.30 rejected                                               |
+| The owner pays for the workspace       | Every subscription carries a `referenceId`, and `authorizeReference({ user, session, referenceId, action })` decides who may act for it; without the callback a foreign id is refused | `referenceId` is the workspace id and the callback is `assertMembership` with the owner's statement, so the check stays in `src/modules/*/services/`. The plugin's own organization mode needs the organization plugin, which MB.30 rejected                                     |
 | Priced by member count                 | `seats` on upgrade becomes the line item's `quantity` and is stored on the row                                                                                                        | Set at checkout only. Its automatic resync is driven by the organization plugin's member hooks and refused without it, so the membership service would update the quantity on every add, removal and accepted invitation                                                         |
 | Free months                            | A per-plan `freeTrial.days`, sent as Stripe's `trial_period_days`                                                                                                                     | One trial per Stripe customer, ever, across every plan. "The first month is free" fits; "a free month for this coven, granted later" is a coupon                                                                                                                                 |
 | Free until an admin clears it          | Nothing                                                                                                                                                                               | A flag on `workspaces`, written through `withAudit` by an admin mutation and read by the entitlement check before any subscription row. A 100% coupon would also work, but its truth would live in Stripe, unaudited                                                             |

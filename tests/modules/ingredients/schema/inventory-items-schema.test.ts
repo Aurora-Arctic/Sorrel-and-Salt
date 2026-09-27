@@ -1,14 +1,23 @@
 import { readFileSync } from 'node:fs';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { failureOf, useTestDatabase } from './support/database';
-import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
-import { fromRoot } from '../support/paths';
-import { UNITS, UNITS_BY_DIMENSION, UNIT_DIMENSIONS, dimensionOf } from '@/lib/units';
-import { ingredients } from '@/db/schema/ingredients';
-import { inventoryItems, inventoryUnit, unitDimension } from '@/db/schema/inventory-items';
+import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
+import { fromRoot } from '../../../support/paths';
+import {
+  UNITS,
+  UNITS_BY_DIMENSION,
+  UNIT_DIMENSIONS,
+  dimensionOf,
+} from '@/modules/ingredients/schema/units';
+import { ingredients } from '@/modules/ingredients/schema/ingredients';
+import {
+  inventoryItems,
+  inventoryUnit,
+  unitDimension,
+} from '@/modules/ingredients/schema/inventory-items';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import { workspaces } from '@/db/schema/workspaces';
+import { workspaces } from '@/modules/coven/schema/workspaces';
 
 // DESIGN.md §5's column list, transcribed.
 const OWN_COLUMNS = [
@@ -28,7 +37,7 @@ const DIMENSION_CHECK = 'inventory_items_unit_matches_dimension';
 const WORKSPACE_FK = 'inventory_items_workspace_id_workspaces_id_fk';
 const INGREDIENT_FK = 'inventory_items_ingredient_id_ingredients_id_fk';
 
-const SCHEMA_SOURCE = fromRoot('src/db/schema/inventory-items.ts');
+const SCHEMA_SOURCE = fromRoot('src/modules/ingredients/schema/inventory-items.ts');
 
 // Every single-quoted literal, comments stripped first so the guard reads code, not prose.
 function quotedLiteralsIn(path: string): string[] {

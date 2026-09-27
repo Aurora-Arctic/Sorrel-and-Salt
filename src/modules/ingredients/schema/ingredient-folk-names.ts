@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { auditColumns } from '../audit';
+import { auditColumns } from '../../identity/schema/users';
 import { ingredients } from './ingredients';
 
 // The regional and common names an ingredient also answers to (story 21).

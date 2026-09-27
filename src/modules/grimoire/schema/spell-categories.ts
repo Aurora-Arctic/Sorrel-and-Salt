@@ -1,6 +1,6 @@
 import { index, pgTable, primaryKey, uuid } from 'drizzle-orm/pg-core';
-import { auditStampColumns } from '../audit';
-import { categories } from './categories';
+import { auditStampColumns } from '../../identity/schema/users';
+import { categories } from '../../vocabulary/schema/categories';
 import { spells } from './spells';
 
 // What a spell is *meant to do* (story 48) — the assigned categories, never the

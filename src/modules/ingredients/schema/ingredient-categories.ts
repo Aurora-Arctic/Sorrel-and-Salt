@@ -1,6 +1,6 @@
 import { index, pgTable, primaryKey, uuid } from 'drizzle-orm/pg-core';
-import { auditStampColumns } from '../audit';
-import { categories } from './categories';
+import { auditStampColumns } from '../../identity/schema/users';
+import { categories } from '../../vocabulary/schema/categories';
 import { ingredients } from './ingredients';
 
 // An ingredient is protective *and* cleansing (story 22). Hard-deleted

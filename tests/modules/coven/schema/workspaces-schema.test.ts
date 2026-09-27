@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
-import { users } from '@/db/schema/users';
-import { workspaces, workspaceMembers } from '@/db/schema/workspaces';
+import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
+import { users } from '@/modules/identity/schema/users';
+import { workspaces, workspaceMembers } from '@/modules/coven/schema/workspaces';
 
 // Schema shape via Drizzle's introspection; "migration applies cleanly" is the
 // harness's, which migrates the template every clone is made from.

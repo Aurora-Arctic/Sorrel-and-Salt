@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { readFileSync, readdirSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { useTestDatabase } from './support/database';
-import { tableFacts } from './support/table-metadata';
-import { MIGRATIONS_DIR } from '../support/paths';
-import { ingredientFolkNames } from '@/db/schema/ingredient-folk-names';
-import { ingredients } from '@/db/schema/ingredients';
+import { useTestDatabase } from '../../../support/db/database';
+import { tableFacts } from '../../../support/db/table-metadata';
+import { MIGRATIONS_DIR } from '../../../support/paths';
+import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
+import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
 // §9's one multicolumn gin index serves a predicate on either column alone,

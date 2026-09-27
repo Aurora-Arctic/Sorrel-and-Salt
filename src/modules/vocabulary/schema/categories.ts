@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { auditColumns } from '../audit';
+import { auditColumns } from '../../identity/schema/users';
 
 // Category groups: global, admin-curated. A table rather than an enum so an
 // admin can add a ninth without DDL (MB.35). Two colours because one hex cannot

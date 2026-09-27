@@ -1,9 +1,9 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { failureOf, useTestDatabase } from './support/database';
-import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
-import { ingredientFolkNames } from '@/db/schema/ingredient-folk-names';
-import { ingredients } from '@/db/schema/ingredients';
+import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
+import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
+import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
 // DESIGN.md §5's two indexes, transcribed by name.

@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { check, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { auditColumns } from '../audit';
+import { auditColumns } from '../../identity/schema/users';
 
 // Form groups: global, admin-curated, `category_groups` minus the colour pair —
 // a table rather than an enum so an admin can add one without DDL (MB.35). No

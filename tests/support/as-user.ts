@@ -1,5 +1,5 @@
 import type { Session } from '@/lib/session';
-import type { users } from '@/db/schema/users';
+import type { users } from '@/modules/identity/schema/users';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
 // The letters are bindings re-exported from the seed, not redeclared: a second

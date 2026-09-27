@@ -2,12 +2,12 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { failureOf, useTestDatabase } from './support/database';
-import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
-import { MIGRATIONS_DIR } from '../support/paths';
-import { type SpellOverrides, makeSpell, spellColumns } from '../support/fixtures';
-import { spellStatus, spellVisibility, spells } from '@/db/schema/spells';
-import { workspaces } from '@/db/schema/workspaces';
+import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
+import { MIGRATIONS_DIR } from '../../../support/paths';
+import { type SpellOverrides, makeSpell, spellColumns } from '../../../support/fixtures';
+import { spellStatus, spellVisibility, spells } from '@/modules/grimoire/schema/spells';
+import { workspaces } from '@/modules/coven/schema/workspaces';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 
 // §5's columns, `visibility` included as of M10.3 — claude-docs/db.md,

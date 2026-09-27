@@ -1,10 +1,10 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
 // A client component never imports a service (CLAUDE.md rule 1): it reads and
-// writes through /api/graphql. Every module under src/services carries
+// writes through /api/graphql. Every file under a module's services/ carries
 // `import 'server-only'`, which Next resolves to a build error in any client
 // bundle that reaches it — directly or through a module in between — so the
 // boundary is `next build`'s rather than a path glob's, and holds for a
@@ -15,7 +15,7 @@ import { REPO_ROOT } from '../support/paths';
 // A directory walk rather than `git ls-files`: a service written but not yet
 // committed is the one this guard most needs to see.
 
-const SERVICES = join(REPO_ROOT, 'src/services');
+const MODULES = join(REPO_ROOT, 'src/modules');
 const MARKER = /^import 'server-only';$/m;
 
 /** The lint guards write throwaway `__lint-probe*__` directories in here. */
@@ -30,10 +30,13 @@ function modules(directory: string): string[] {
 }
 
 describe('M3.9: client components cannot import services', () => {
-  const files = modules(SERVICES);
+  // Every module's services directory; a module with none contributes nothing.
+  const files = readdirSync(MODULES, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && existsSync(join(MODULES, entry.name, 'services')))
+    .flatMap((entry) => modules(join(MODULES, entry.name, 'services')));
 
   it('finds the services it guards', () => {
-    expect(files).toContain('src/services/membership.ts');
+    expect(files).toContain('src/modules/coven/services/membership.ts');
   });
 
   it.each(files)('%s is marked server-only', (file) => {

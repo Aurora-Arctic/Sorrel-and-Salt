@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { failureOf, useTestDatabase } from './support/database';
-import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
-import { categories, categoryGroups } from '@/db/schema/categories';
+import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
+import { categories, categoryGroups } from '@/modules/vocabulary/schema/categories';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
 const GROUPS_SLUG_UNIQUE = 'category_groups_slug_unique';

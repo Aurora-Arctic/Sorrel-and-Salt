@@ -23,7 +23,7 @@ const PROBE_DIRS = [
   'src/graphql/__lint-probe-loader__',
   'src/graphql/loaders/__lint-probe-loader__',
   'src/app/__lint-probe-loader__',
-  'src/services/__lint-probe-loader__',
+  'src/modules/coven/services/__lint-probe-loader__',
   'src/db/__lint-probe-loader__',
 ];
 

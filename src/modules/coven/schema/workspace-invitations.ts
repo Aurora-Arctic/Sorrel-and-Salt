@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { check, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { auditColumns } from '../audit';
-import { users } from './users';
+import { users } from '../../identity/schema/users';
+import { auditColumns } from '../../identity/schema/users';
 import { workspaceRole, workspaces } from './workspaces';
 
 // A default, not a policy — a caller may pass its own `expiresAt`; the column

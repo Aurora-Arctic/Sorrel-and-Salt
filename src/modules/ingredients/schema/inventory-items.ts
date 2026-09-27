@@ -9,12 +9,12 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { UNITS, UNITS_BY_DIMENSION, UNIT_DIMENSIONS } from '../../lib/units';
-import { auditColumns } from '../audit';
+import { UNITS, UNITS_BY_DIMENSION, UNIT_DIMENSIONS } from './units';
+import { auditColumns } from '../../identity/schema/users';
 import { ingredients } from './ingredients';
-import { workspaces } from './workspaces';
+import { workspaces } from '../../coven/schema/workspaces';
 
-// Both enums are stocked from `src/lib/units.ts`, so a unit added there reaches
+// Both enums are stocked from `./units.ts`, so a unit added there reaches
 // the database, the converter and the form in one edit; nothing in this file
 // may spell a unit out (inventory-items-schema.test.ts checks the source text).
 export const inventoryUnit = pgEnum('inventory_unit', UNITS);

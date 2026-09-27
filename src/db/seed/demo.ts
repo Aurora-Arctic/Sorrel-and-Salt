@@ -1,10 +1,10 @@
 import { eq, inArray, isNull } from 'drizzle-orm';
 // `./idempotent` (and through it `./bootstrap-admin`) first, and load-bearing — see minimal.ts.
 import { beginSeedTransaction, insertMissing, requireFrom } from './idempotent';
-import { ingredients } from '../schema/ingredients';
-import { spells } from '../schema/spells';
-import { spellCategories } from '../schema/spell-categories';
-import { spellIngredients } from '../schema/spell-ingredients';
+import { ingredients } from '../../modules/ingredients/schema/ingredients';
+import { spells } from '../../modules/grimoire/schema/spells';
+import { spellCategories } from '../../modules/grimoire/schema/spell-categories';
+import { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
 import { categoryIdByName } from './categories';
 import {
   COMPENDIUM_INGREDIENTS,

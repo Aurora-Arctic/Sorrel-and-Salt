@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { check, index, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { auditColumns } from '../audit';
-import { workspaces } from './workspaces';
+import { auditColumns } from '../../identity/schema/users';
+import { workspaces } from '../../coven/schema/workspaces';
 
 // DESIGN.md §5's seven values. `nomenclature` names the naming system, not a
 // rank within it; `fungal` is split from botanical because curators shelve

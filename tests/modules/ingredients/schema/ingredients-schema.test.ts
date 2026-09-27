@@ -1,16 +1,20 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { failureOf, useTestDatabase } from './support/database';
-import { AUDIT_COLUMNS, tableFacts } from './support/table-metadata';
+import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import {
   type IngredientFixture,
   type Overrides,
   ingredientColumns,
   makeIngredient,
-} from '../support/fixtures';
-import { ingredientElement, ingredients, nomenclatureKind } from '@/db/schema/ingredients';
+} from '../../../support/fixtures';
+import {
+  ingredientElement,
+  ingredients,
+  nomenclatureKind,
+} from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
-import { workspaces } from '@/db/schema/workspaces';
+import { workspaces } from '@/modules/coven/schema/workspaces';
 
 // DESIGN.md §5's seven values, in the order the design doc's table lists them.
 const NOMENCLATURE_VALUES = [

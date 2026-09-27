@@ -1,9 +1,5 @@
 import type { SeedDatabase } from './index';
-// `schema/users` before `audit`, and load-bearing: the two import each other,
-// and entered via audit.ts `users` builds its table while `auditColumns` is
-// still undefined, so every insert silently drops `created_by`. Every seed
-// module orders its imports this way (claude-docs/db.md, "The seed module").
-import { users } from '../schema/users';
+import { users } from '../../modules/identity/schema/users';
 import { applyAudit } from '../audit';
 import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { beginSeedTransaction } from './idempotent';
