@@ -9,4 +9,4 @@ import { createAuthClient } from 'better-auth/react';
 // mock this module rather than letting jsdom attempt that navigation.
 export const authClient = createAuthClient();
 
-export const { signIn } = authClient;
+export const { signIn, linkSocial, unlinkAccount } = authClient;

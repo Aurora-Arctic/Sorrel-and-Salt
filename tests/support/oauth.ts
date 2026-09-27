@@ -131,10 +131,15 @@ export function providerHandlers(provider: ProviderId, profile: Profile) {
   }
 }
 
-/** A response's `Set-Cookie` headers as one `Cookie` request header. */
+/**
+ * A response's `Set-Cookie` headers as one `Cookie` request header, leaving
+ * out the ones it expires, as a browser would: a callback expires its `state`
+ * cookie, and carried on as `state=` it would shadow the next flow's.
+ */
 export function cookieHeader(response: Response): string {
   return response.headers
     .getSetCookie()
+    .filter((header) => !/;\s*max-age=0\b/i.test(header))
     .map((header) => header.split(';')[0])
     .join('; ');
 }
@@ -162,6 +167,48 @@ export async function signIn(
   return auth.handler(
     new Request(`${ORIGIN}/api/auth/callback/${provider}?code=test-code&state=${state}`, {
       headers: { cookie: cookieHeader(start) },
+    }),
+  );
+}
+
+/** Where a link flow lands, and where its errors land with `?error=`: the account page's own. */
+export const LINK_LANDING = '/account';
+
+/**
+ * One full link round trip from a signed-in browser: `/link-social` under
+ * `cookie`, then the callback. `callbackCookie` stands in for whichever
+ * session the browser carries when it lands, which is the starter's own
+ * unless a test says otherwise. Returns the callback's redirect.
+ */
+export async function link(
+  auth: typeof Auth,
+  server: SetupServer,
+  cookie: string,
+  provider: ProviderId,
+  profile: Profile,
+  options: { additionalData?: Record<string, unknown>; callbackCookie?: string } = {},
+): Promise<Response> {
+  server.use(...providerHandlers(provider, profile));
+
+  const start = await auth.handler(
+    new Request(`${ORIGIN}/api/auth/link-social`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: ORIGIN, cookie },
+      body: JSON.stringify({
+        provider,
+        callbackURL: LINK_LANDING,
+        errorCallbackURL: LINK_LANDING,
+        additionalData: options.additionalData,
+      }),
+    }),
+  );
+  expect(start.status, await start.clone().text()).toBe(200);
+  const { url } = (await start.json()) as { url: string };
+  const state = new URL(url).searchParams.get('state');
+
+  return auth.handler(
+    new Request(`${ORIGIN}/api/auth/callback/${provider}?code=test-code&state=${state}`, {
+      headers: { cookie: `${options.callbackCookie ?? cookie}; ${cookieHeader(start)}` },
     }),
   );
 }

@@ -1,5 +1,5 @@
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
-import { APIError, createAuthMiddleware, getSessionFromCtx } from 'better-auth/api';
+import { APIError, createAuthMiddleware, getOAuthState, getSessionFromCtx } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import {
   defineRequestState,
@@ -64,6 +64,21 @@ function orPlaceholder(providerId: ProviderId, accountId: unknown, email: unknow
   return { email: placeholderEmail(providerId, String(accountId)), emailVerified: false };
 }
 
+// A callback finishing a flow /link-social began under a session. `link` is
+// written into the state from that session, never from the request, and is
+// absent on every sign-in.
+async function isExplicitLink(): Promise<boolean> {
+  return (await hasRequestState()) && (await getOAuthState())?.link !== undefined;
+}
+
+// Inside an explicit link every provider vouches: there the value feeds only
+// Better Auth's link gate, and the account signs in by its id from then on.
+// On a sign-in each provider keeps its own answer (claude-docs/auth.md,
+// "Linking a second provider").
+async function vouchWhenLinking(): Promise<{ emailVerified?: true }> {
+  return (await isExplicitLink()) ? { emailVerified: true } : {};
+}
+
 function socialProviders(): BetterAuthOptions['socialProviders'] {
   const providers: NonNullable<BetterAuthOptions['socialProviders']> = {};
 
@@ -72,26 +87,32 @@ function socialProviders(): BetterAuthOptions['socialProviders'] {
     if (!credentials) continue;
 
     // Each mapping is spread after the provider's own, so it wins. Facebook
-    // and Microsoft never vouch for an address (claude-docs/auth.md,
+    // and Microsoft never vouch for an address at sign-in (claude-docs/auth.md,
     // "First-party verification"), so a true users.emailVerified means
-    // Google, Discord or our own mail did.
+    // Google, Discord or our own mail did. A link writes nothing to the row.
     switch (provider.id) {
       case 'google':
         providers.google = {
           ...credentials,
-          mapProfileToUser: (profile) => orPlaceholder('google', profile.sub, profile.email),
+          mapProfileToUser: async (profile) => ({
+            ...orPlaceholder('google', profile.sub, profile.email),
+            ...(await vouchWhenLinking()),
+          }),
         };
         break;
       case 'discord':
         providers.discord = {
           ...credentials,
-          mapProfileToUser: (profile) => orPlaceholder('discord', profile.id, profile.email),
+          mapProfileToUser: async (profile) => ({
+            ...orPlaceholder('discord', profile.id, profile.email),
+            ...(await vouchWhenLinking()),
+          }),
         };
         break;
       case 'facebook':
         providers.facebook = {
           ...credentials,
-          mapProfileToUser: (profile) => ({
+          mapProfileToUser: async (profile) => ({
             emailVerified: false,
             // An id-token profile names the account `sub`; the Graph one, `id`.
             ...orPlaceholder(
@@ -99,6 +120,7 @@ function socialProviders(): BetterAuthOptions['socialProviders'] {
               'sub' in profile ? profile.sub : profile.id,
               profile.email,
             ),
+            ...(await vouchWhenLinking()),
           }),
         };
         break;
@@ -112,9 +134,10 @@ function socialProviders(): BetterAuthOptions['socialProviders'] {
         providers.microsoft = {
           ...credentials,
           tenantId: process.env.MICROSOFT_TENANT_ID || 'common',
-          mapProfileToUser: (profile) => ({
+          mapProfileToUser: async (profile) => ({
             emailVerified: false,
             ...orPlaceholder('microsoft', profile.oid, profile.email),
+            ...(await vouchWhenLinking()),
           }),
         };
         break;
@@ -342,13 +365,24 @@ export const auth = betterAuth({
       );
     },
   },
+  account: {
+    accountLinking: {
+      // A second provider's address is usually another mailbox. Read only by
+      // the explicit link, never at sign-in; the row keeps its own address.
+      allowDifferentEmails: true,
+    },
+  },
   user: {
     // Off, pinned by test: on, a user could move the primary admin's address
     // to another account. An email changes through MB.54's verified flow.
     changeEmail: { enabled: false },
     // Never refuses: it only records what the provider said, for the hook below.
+    // Not on an explicit link, whose vouch `vouchWhenLinking` lent and which
+    // must not reach promotion. Better Auth names an implicit link at sign-in
+    // `link-account` too, so the state, not `source.action`, tells them apart.
     validateUserInfo: async ({ user, source }) => {
       if (source.method !== 'oauth' || !source.oauth) return;
+      if (await isExplicitLink()) return;
       // Absent on a create, which the create hook stamps; present on a sign-in
       // or link, which may mark the row verified.
       if (user.id) await actingUser.set(String(user.id));

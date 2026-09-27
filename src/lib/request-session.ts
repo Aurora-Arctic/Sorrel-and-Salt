@@ -5,6 +5,7 @@ import { auth } from './auth';
 import type { Session, UserRole } from './session';
 import { emailPagePath, isEmailPage } from './account-email';
 import { RETURN_PATH_HEADER, safeReturnPath, signInPath } from './sign-in';
+import { SOCIAL_PROVIDERS, type LinkedAccount, type ProviderId } from './social-providers';
 
 // Where the request becomes a service-level `Session`: server components and
 // the GraphQL context call this, then hand the result to a service. A service
@@ -71,3 +72,19 @@ export async function requireSession(): Promise<Session> {
   }
   return session;
 }
+
+function isRosterProvider(providerId: string): providerId is ProviderId {
+  return SOCIAL_PROVIDERS.some((provider) => provider.id === providerId);
+}
+
+/**
+ * The signed-in user's provider accounts, asked of Better Auth, whose table
+ * they are. For the account page, after `requireSession()`; Better Auth
+ * refuses a request with no session.
+ */
+export const linkedAccounts = cache(async (): Promise<LinkedAccount[]> => {
+  const accounts = await auth.api.listUserAccounts({ headers: await headers() });
+  return accounts.flatMap(({ id, providerId }) =>
+    isRosterProvider(providerId) ? [{ id, providerId }] : [],
+  );
+});

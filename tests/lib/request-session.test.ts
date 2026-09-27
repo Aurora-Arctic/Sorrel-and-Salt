@@ -7,9 +7,12 @@ import { RETURN_PATH_HEADER } from '@/lib/sign-in';
 // against the built server.
 
 const getSessionMock = vi.fn();
+const listUserAccountsMock = vi.fn();
 let requestHeaders = new Headers();
 
-vi.mock('@/lib/auth', () => ({ auth: { api: { getSession: getSessionMock } } }));
+vi.mock('@/lib/auth', () => ({
+  auth: { api: { getSession: getSessionMock, listUserAccounts: listUserAccountsMock } },
+}));
 vi.mock('next/headers', () => ({ headers: async () => requestHeaders }));
 // Next's own redirect throws a framework error the router catches; this one
 // throws something a test can read the destination off.
@@ -19,7 +22,8 @@ vi.mock('next/navigation', () => ({
   },
 }));
 
-const { getSession, requireSession, sessionFromHeaders } = await import('@/lib/request-session');
+const { getSession, linkedAccounts, requireSession, sessionFromHeaders } =
+  await import('@/lib/request-session');
 
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
@@ -32,6 +36,7 @@ function betterAuthSession(role: unknown, emailVerified = true) {
 
 beforeEach(() => {
   getSessionMock.mockReset();
+  listUserAccountsMock.mockReset();
   requestHeaders = new Headers({ cookie: 'better-auth.session_token=t.s' });
 });
 
@@ -142,5 +147,36 @@ describe('requireSession', () => {
         'redirect:/account/email?next=%2Faccount%2Femails',
       );
     });
+  });
+});
+
+// What the account page lists: Better Auth's own account rows, by the row id
+// /unlink-account takes and the provider they sign in through.
+describe('linkedAccounts', () => {
+  const row = (id: string, providerId: string) => ({
+    id,
+    providerId,
+    accountId: `${providerId}-account`,
+    userId: USER_ID,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    scopes: [],
+  });
+
+  it('asks Better Auth with the request headers and keeps the row id and provider', async () => {
+    listUserAccountsMock.mockResolvedValue([row('a-1', 'discord'), row('a-2', 'microsoft')]);
+
+    await expect(linkedAccounts()).resolves.toEqual([
+      { id: 'a-1', providerId: 'discord' },
+      { id: 'a-2', providerId: 'microsoft' },
+    ]);
+    expect(listUserAccountsMock).toHaveBeenCalledWith({ headers: requestHeaders });
+  });
+
+  // Nothing registers one today; a row the roster cannot name has no line on the page.
+  it('leaves out a provider outside the roster', async () => {
+    listUserAccountsMock.mockResolvedValue([row('a-1', 'google'), row('a-2', 'credential')]);
+
+    await expect(linkedAccounts()).resolves.toEqual([{ id: 'a-1', providerId: 'google' }]);
   });
 });

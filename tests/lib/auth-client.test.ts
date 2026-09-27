@@ -44,6 +44,53 @@ describe('auth-client', () => {
     });
   });
 
+  // The account page's two calls (claude-docs/auth.md, "Linking a second provider").
+  it('posts a link to /api/auth/link-social with the provider and the account page as both landings', async () => {
+    const fetchMock = vi.fn(
+      async (_url: string, _init?: RequestInit) =>
+        new Response(JSON.stringify({ url: 'https://login.microsoftonline.com/' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    vi.resetModules();
+    const { linkSocial } = await import('@/lib/auth-client');
+
+    await linkSocial({
+      provider: 'microsoft',
+      callbackURL: '/account',
+      errorCallbackURL: '/account',
+    });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toContain('/api/auth/link-social');
+    expect(JSON.parse((init as RequestInit).body as string)).toMatchObject({
+      provider: 'microsoft',
+      callbackURL: '/account',
+      errorCallbackURL: '/account',
+    });
+  });
+
+  it('posts a removal to /api/auth/unlink-account by the account row id', async () => {
+    const fetchMock = vi.fn(
+      async (_url: string, _init?: RequestInit) =>
+        new Response(JSON.stringify({ status: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    vi.resetModules();
+    const { unlinkAccount } = await import('@/lib/auth-client');
+
+    await unlinkAccount({ accountId: 'a-2' });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toContain('/api/auth/unlink-account');
+    expect(JSON.parse((init as RequestInit).body as string)).toEqual({ accountId: 'a-2' });
+  });
+
   it('exposes signIn.social as a callable off both the named export and the client instance', async () => {
     vi.stubGlobal(
       'fetch',
