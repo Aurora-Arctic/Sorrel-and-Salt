@@ -645,6 +645,68 @@ no counterpart: §5 asks for non-empty only on the form vocabulary, so M4.2
 shipped NOT NULL alone and this is a difference in the specification, not a
 gap in M4.2.
 
+## The correspondence vocabularies (MB.91; tables MB.92)
+
+`planets` and `zodiac_signs` are the vocabularies behind
+`ingredients.planet` and `ingredients.zodiac`. MB.91 records the model here
+ahead of the DDL, as MB.28 and MB.35 did, so MB.92 is transcription. Until
+MB.93 seeds the tables, the suggestion lists are constants in
+`src/modules/ingredients/validation/correspondences.ts`, which MB.93 deletes:
+a list an admin cannot extend without a deploy is the shape `form` had before
+MB.35, and wrong for the same reason.
+
+- **`planets`** and **`zodiac_signs`** — each `id`, `name`, `slug`,
+  `description` (NOT NULL, with a non-blank CHECK), + audit. Global,
+  admin-curated, in the `vocabulary` module, both in one schema file as the
+  form pair is. No group, no colour, no order column, no `workspace_id`.
+
+**They are `form`'s pattern, and the two columns stay `text`.** A member
+writes `planet` and `zodiac`, so by MB.35's rule each is text over a
+vocabulary rather than a foreign key: a value off the list stays writable,
+soft-deleting a row rewrites no ingredient, and the value moves into the
+uncurated bucket instead. `nomenclature` and `element` stay enums — closed
+sets, and `nomenclature` is coupled to `canonicalName` by a CHECK that names
+`none` and `unknown` and could not read a table (DESIGN.md §14).
+
+**Two tables, not one with a `kind` column**, for the reason the group tables
+are two: a suggestion query that forgot the `kind` predicate would offer a
+sign for `planet`, and two tables leave no predicate to forget.
+
+**Uniqueness is on `slug`, partial on `deleted_at IS NULL`**, as on the four
+tables above, and the display name carries no constraint. The description CHECK
+is the form tables': a curated value explains itself, and here the description
+is also search surface.
+
+**One multicolumn `gin_trgm_ops` index per table over `(name, description)`**,
+spelled as `ingredients_trgm` is, since the suggestion query matches both and
+the set is admin-extensible. At nineteen and thirteen rows the planner will
+never use it, so MB.94 asserts the `%`-plus-`SET LOCAL` query shape and not an
+index scan, where M4.7 and M4.7a assert both.
+
+**Where they differ from the form precedent, and why:**
+
+- **One tier.** Nothing groups a body or a sign, so the seed needs a flat
+  helper over `insertMissing` rather than `seedTwoTierVocabulary`, which
+  assumes a group table.
+- **The DESIGN.md table sits outside `forms.test.ts`'s slice.** That test
+  reads every table line between ``**`ingredient_forms`**`` and
+  ``**`ingredient_form_groups`**`` as a form, so §5's planet and zodiac
+  table is placed after the `ingredients.form` paragraph and before
+  `categories`, and MB.93's test slices its own anchors.
+- **`standard` seeds no uncurated planet.** Its compendium's planet values are
+  all curated names in title case, which match case-insensitively. MB.94
+  decides whether `standard` gains one, in `rhizome`'s shape.
+- **Curating an uncurated value is not one click.** `description` is required,
+  so the admin page's add control opens the create form prefilled with the
+  value and asks for one (MB.95, and M5.6a for forms).
+
+**The two readers are scoped differently.** A member's autofill (MB.94) offers
+curated rows first, then uncurated values in use in the compendium and the
+current workspace only. The admin's to-do list (MB.95) reads the compendium
+tier only, since an admin reaches no workspace's ingredients (M6.6); its finder
+joins `TIER_SEAM` in `tests/guards/module-boundaries.test.ts`. A value is
+uncurated when `lower(btrim(value))` matches no live row's `lower(name)`.
+
 ## Stock, and the one module that owns the units (M9.2)
 
 `src/modules/ingredients/schema/inventory-items.ts` holds DESIGN.md §5's stock
@@ -2185,6 +2247,38 @@ present but that it is filed where §5 files it. The parse is itself checked
 parse that matched nothing cannot make the comparisons vacuous. That is the
 same tactic `categories.test.ts` uses on §6's table, for the same reason: a
 transcribed copy is exactly what rots.
+
+## The correspondence vocabulary seed (MB.93)
+
+`src/db/seed/correspondences.ts` will seed DESIGN.md §5's planet and zodiac
+table: nineteen `planets` and thirteen `zodiac_signs`, in §5's order. It
+takes the form seed's shape — reference data rather than a scenario,
+`npm run db:seed:correspondences` as a third `scripts/db-seed.ts` target,
+run by `migrate.yml` in the same step as the other two, idempotent by slug and
+ignoring `deleted_at`, updating nothing already present — with a flat helper
+in place of the two-tier one. §5's table is lower-case; the seed writes each
+name in title case (`North Node`), and the test compares case-insensitively.
+
+**Sources.** Researched when M4.5 settled the lists. The traditional seven and
+their sign rulerships:
+
+- [Lucky Mojo, "Planetary Rulerships of Herbs, Flowers, and Roots"](https://www.luckymojo.com/planetaryrulers.html)
+- [Ancient Astrology, "The Planetary Rulerships of Plants"](https://www.ancientastrology.com/articles-/the-planetary-rulership-of-plants)
+
+Herbs assigned to the outer planets in modern practice:
+
+- [Alchemy Works, "Planetary Correspondences of Pluto"](https://www.alchemy-works.com/planets_pluto.html)
+- [Anima Mundi Herbals, "The Astrology of Herbs"](https://animamundiherbals.com/blogs/blog/the-astrology-of-herbs)
+- [Mystical Magical Herbs, "Herbs of the Solar System"](https://mysticalmagicalherbs.com/2013/10/26/herbs-of-the-solar-system/)
+
+The asteroid goddesses (Ceres, Pallas, Juno, Vesta) and their rulerships:
+
+- [Demetra George and Douglas Bloch, _Asteroid Goddesses_](https://www.goodreads.com/notes/20698760-asteroid-goddesses/7429292-erik?page=1)
+- ["Reading astrological charts: Ceres, Pallas Athene, Vesta, Juno and Lilith"](https://www.booksie.com/509359-reading-astrological-charts-chapter-36)
+
+Earth, Chiron, the lunar nodes and Ophiuchus are on the lists because practices
+use them, not because a source above gives them herb correspondences: few
+online sources do, and "few sources" is not a reason to refuse a practice.
 
 ## The standard scenario (M1.22)
 

@@ -13,12 +13,11 @@ In each module's `validation/` directory, a third public surface beside
 `index.ts` and `schema/*.ts` ([`modules.md`](modules.md), "The public
 surface"):
 
-| File                                                    | Exports                                                                  |
-| ------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `src/modules/ingredients/validation/ingredient.ts`      | `LocalIngredientInput`, `CompendiumIngredientInput`                      |
-| `src/modules/ingredients/validation/stock.ts`           | `StockInput`                                                             |
-| `src/modules/ingredients/validation/correspondences.ts` | `PLANET_SUGGESTIONS`, `ZODIAC_SUGGESTIONS` — autofill lists, not schemas |
-| `src/modules/vocabulary/validation/category.ts`         | `CategoryInput`                                                          |
+| File                                               | Exports                                             |
+| -------------------------------------------------- | --------------------------------------------------- |
+| `src/modules/ingredients/validation/ingredient.ts` | `LocalIngredientInput`, `CompendiumIngredientInput` |
+| `src/modules/ingredients/validation/stock.ts`      | `StockInput`                                        |
+| `src/modules/vocabulary/validation/category.ts`    | `CategoryInput`                                     |
 
 Each export is both a schema and, under the same name, the type of its parsed
 output. The form types its fields with `z.input<typeof …>`.
@@ -89,14 +88,13 @@ Rules both variants enforce:
 - **Closed sets.** `nomenclature` and `element` come from the pgEnums' lists,
   in `schema/ingredient-enums.ts`.
 - **`planet` and `zodiac` are free text, suggested rather than enforced**,
-  like `form`: trimmed, blank-but-present refused, anything else written. The
-  project serves a wide range of practices, and any closed list refuses some of
-  them: modern practice reads Uranus, Neptune and Pluto where the traditional
-  herbals stop at seven, others read Earth, Chiron, the asteroid goddesses,
-  Black Moon Lilith or the lunar nodes, and sidereal practice uses a thirteenth
-  sign, Ophiuchus. `validation/correspondences.ts` holds the lists the form
-  offers as autofill — nineteen bodies and thirteen signs — and a value off
-  them is as valid as one on them. A blank one becomes `null`.
+  like `form`: trimmed, a blank one becomes `null`, and anything else is
+  written. The project serves a wide range of practices, and any closed list
+  refuses some of them. The suggestions are the admin-curated `planets` and
+  `zodiac_signs` vocabularies ([`db.md`](db.md), "The correspondence
+  vocabularies"), and a value off them is as valid as one on them. Until MB.93
+  seeds those tables, `validation/correspondences.ts` holds the same lists as
+  constants; MB.93 deletes it.
 
 The schemas describe a whole ingredient, as the form submits it on create and
 on edit. A partial update would need its own schema: the local variant's
@@ -119,28 +117,6 @@ a second list. `unitDimension` is not input: the service derives it with
 
 `CategoryInput` takes a trimmed, non-blank `name` and `description`, and a
 `groupId` uuid. It takes no slug, which is derived from the name and dropped if
-sent. The group and form vocabularies (M5.6a, M5.6b) add their own schemas
+sent. The group and form vocabularies (M5.6a, M5.6b) and the planet and zodiac
+vocabularies (MB.95) add their own schemas
 beside it when those tasks land. So does the spell (MB.8).
-
-## Sources for the planet and zodiac suggestions
-
-Researched when M4.5 settled the lists. The traditional seven and their sign
-rulerships:
-
-- [Lucky Mojo, "Planetary Rulerships of Herbs, Flowers, and Roots"](https://www.luckymojo.com/planetaryrulers.html)
-- [Ancient Astrology, "The Planetary Rulerships of Plants"](https://www.ancientastrology.com/articles-/the-planetary-rulership-of-plants)
-
-Herbs assigned to the outer planets in modern practice:
-
-- [Alchemy Works, "Planetary Correspondences of Pluto"](https://www.alchemy-works.com/planets_pluto.html)
-- [Anima Mundi Herbals, "The Astrology of Herbs"](https://animamundiherbals.com/blogs/blog/the-astrology-of-herbs)
-- [Mystical Magical Herbs, "Herbs of the Solar System"](https://mysticalmagicalherbs.com/2013/10/26/herbs-of-the-solar-system/)
-
-The asteroid goddesses (Ceres, Pallas, Juno, Vesta) and their rulerships:
-
-- [Demetra George and Douglas Bloch, _Asteroid Goddesses_](https://www.goodreads.com/notes/20698760-asteroid-goddesses/7429292-erik?page=1)
-- ["Reading astrological charts: Ceres, Pallas Athene, Vesta, Juno and Lilith"](https://www.booksie.com/509359-reading-astrological-charts-chapter-36)
-
-Earth, Chiron, the lunar nodes and Ophiuchus are on the lists because practices
-use them, not because a source above gives them herb correspondences: few
-online sources do, and "few sources" is not a reason to refuse a practice.
