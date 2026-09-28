@@ -133,4 +133,4 @@ back once it passes, and one started from `waitSeconds`; an empty field sent
 to the server with no native check in the way; a passed-in `error` as an
 alert on mount; and "Continue"
 only when verified, pointing at `next`. Role and label queries only. Runs in
-the `unit` (jsdom) Vitest project — `npm run test:coverage`.
+the `dom` (jsdom) Vitest project — `npm run test:coverage`.

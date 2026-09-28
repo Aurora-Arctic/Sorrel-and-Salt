@@ -146,4 +146,4 @@ of the branch — the facet still waiting on `transitionend` when motion is not
 reduced. They stub `window.matchMedia` via `vi.stubGlobal`, since jsdom's own
 implementation always answers `false` for `(prefers-reduced-motion: reduce)`.
 
-Runs in the `unit` (jsdom) Vitest project — `npm run test:coverage`.
+Runs in the `dom` (jsdom) Vitest project — `npm run test:coverage`.

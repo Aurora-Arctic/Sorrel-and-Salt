@@ -1172,7 +1172,7 @@ The highest-risk tests in the project.
 - `SpellBuilder` — add/remove/reorder, intent vs derived category comparison, visibility control defaulting to `workspace` and read-only once shared
 - `IngredientCard` — safety and low-stock badges
 
-MSW mocks `/api/graphql`. `tests/support/setup.ts` carries over the RTL `afterEach(cleanup)` and the `localStorage` polyfill — Node's native global still shadows jsdom's — plus MSW server lifecycle.
+MSW mocks `/api/graphql`. `tests/support/setup.ts` — since MB.97 `setup-msw.ts` for the MSW lifecycle, which the node `unit` project runs too, and `setup-dom.ts` for the rest — carries over the RTL `afterEach(cleanup)` and the `localStorage` polyfill — Node's native global still shadows jsdom's — plus MSW server lifecycle.
 
 ### E2E — Playwright
 

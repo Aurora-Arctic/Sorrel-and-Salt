@@ -1,6 +1,6 @@
 # Testing — summary
 
-Vitest 5, configured as three projects in `vitest.config.mts` (`.mts`, not
+Vitest 5, configured as four projects in `vitest.config.mts` (`.mts`, not
 `.ts` — the root `package.json` deliberately carries no `"type"` field per
 `MODULE_TYPELESS_PACKAGE_JSON`, so an explicit `.mts` extension is what tells
 Vite's native config loader this file is ESM instead of warning about it), plus
@@ -37,11 +37,13 @@ Three consequences worth knowing before writing a test:
 - **A test that reads a file from disk goes through `tests/support/paths.ts`**
   — `REPO_ROOT`, `fromRoot('…')`, `MIGRATIONS_DIR` — rather than counting
   `../` from its own location. The chain is counted once, there.
-- **The project split is a path glob**, so where a file sits decides how it
-  runs. A test that touches Postgres and is not under `tests/db/` or
-  `tests/modules/` lands in `unit`, under jsdom, against the plain `sorrel`
-  database. A test that has to watch a server render is under `tests/rsc/`,
-  or React's `cache()` is a pass-through and there is nothing to watch.
+- **The project split is a path glob**, so where a file sits — and what it is
+  called — decides how it runs. A test that touches Postgres and is not under
+  `tests/db/` or `tests/modules/` lands in `unit` or `dom`, against the
+  plain `sorrel` database; of those two, a `.tsx` file gets jsdom and a
+  `.ts` file gets plain node unless the config's `DOM_TS` names it (MB.97).
+  A test that has to watch a server render is under `tests/rsc/`, or React's
+  `cache()` is a pass-through and there is nothing to watch.
 
 `tests/guards/test-location.test.ts` holds the rule. It is a test rather than
 a lint rule because Oxlint has no custom-rule API and cannot express a
@@ -56,25 +58,44 @@ reports all of them. The failure it prevents is
 silent: `include` is scoped to `tests/`, so a misplaced test is not a red
 test, it is a file nothing runs.
 
-- **`unit`** — `environment: 'jsdom'`, `globals: true` (enables
-  `@testing-library/react`'s automatic post-test `cleanup()`, which hooks
-  itself onto the global `afterEach` at import time). `include`s
-  `tests/**/*.test.{ts,tsx}`, excluding `tests/db/**` and
-  `tests/modules/**`. That glob does reach a test inside a directory
+- **`unit`** — `environment: 'node'`, `globals: true`. `include`s
+  `tests/**/*.test.ts`, excluding `tests/db/**`, `tests/modules/**`,
+  `tests/rsc/**`, `tests/acceptance/**`, `tests/e2e/**` and the two `DOM_TS`
+  files `dom` claims (below). That glob does reach a test inside a directory
   literally named `[...all]` (`tests/app/api/auth/[...all]/route.test.ts`) —
   `[...]` is glob metacharacter syntax, so it was worth confirming rather
-  than assuming.
-  - **A `unit` test that opens a connection gets the plain `sorrel` database,
-    not a clone.** The per-worker `sorrel_test_<n>` rewrite is `db`-only — it
-    lives in that project's `setupFiles` (below) and nothing rewrites
-    `DATABASE_URL` for `unit`. So a `unit` test that reaches Postgres needs
-    schema that is actually in `sorrel`, and M1.27's seeded template will not
-    help it: the template is never in its path. This is a real trap — it is
-    what made a `POST /api/auth/sign-in/social` test pass locally (a
-    hand-run `drizzle-kit migrate` had left `sorrel` migrated) and fail in
-    CI, where `sorrel` was empty. Keep database-touching tests in the `db`
-    project.
-    `setupFiles: ['@testing-library/jest-dom/vitest']` registers the jest-dom
+  than assuming. Its one setup file is `tests/support/setup-msw.ts`, the MSW
+  lifecycle — `beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))`,
+  `afterEach(() => server.resetHandlers())`, `afterAll(() => server.close())`
+  — against the `server` exported from `tests/support/msw/server.ts`
+  (`setupServer()`, no base handlers — every operation is registered per
+  test, see `dom` below). `dom` runs the same file, so a guard that reaches
+  for the network fails as loudly as a component test does.
+  - **A `unit` or `dom` test that opens a connection gets the plain `sorrel`
+    database, not a clone.** The per-worker `sorrel_test_<n>` rewrite is
+    `db`-only — it lives in that project's `setupFiles` (below) and nothing
+    rewrites `DATABASE_URL` for the other two. So such a test needs schema
+    that is actually in `sorrel`, and M1.27's seeded template will not help
+    it: the template is never in its path. This is a real trap — it is what
+    made a `POST /api/auth/sign-in/social` test pass locally (a hand-run
+    `drizzle-kit migrate` had left `sorrel` migrated) and fail in CI, where
+    `sorrel` was empty. Keep database-touching tests in the `db` project.
+- **`dom`** — `environment: 'jsdom'`, `globals: true` (enables
+  `@testing-library/react`'s automatic post-test `cleanup()`, which hooks
+  itself onto the global `afterEach` at import time). `include`s
+  `tests/**/*.test.tsx` plus `DOM_TS`, the `.ts` tests that need jsdom's
+  `location` all the same — `tests/lib/auth-client.test.ts`, because Better
+  Auth's client reads `window.location.origin` and `document.cookie`, and
+  `tests/support/msw/graphql.test.ts`, which fetches the relative
+  `/api/graphql` the helpers match — with `unit`'s excludes. The extension
+  is the rule (MB.97): a `.tsx` test renders and a `.ts` test does not, and
+  jsdom, jest-dom and React Testing Library together cost a `.ts` guard more
+  than its own assertions do — `environment` was a third of CI's worker time
+  while every unit file paid it. `tests/guards/test-location.test.ts` holds
+  every test file to exactly one project, evaluated against the config's own
+  globs, since a file in none is a file nothing runs and a file in two runs
+  twice unnoticed.
+  - `setupFiles: ['@testing-library/jest-dom/vitest']` registers the jest-dom
     matchers (`toBeInTheDocument`, `toHaveClass`, …); `src/vitest-env.d.ts`
     (`/// <reference types="@testing-library/jest-dom/vitest" />`) gives `tsc`
     the same augmentation, since a `setupFiles` entry only affects the Vitest
@@ -82,29 +103,26 @@ test, it is a file nothing runs.
   - **Vitest's jsdom environment resolves `import.meta.url` against the
     mocked browser `location`, not a real `file://` URL** — matching real
     browser semantics (a bundled ES module's `import.meta.url` is an `http(s)`
-    URL there too), not a bug. So a `unit` test cannot reach its own path that
+    URL there too), not a bug. So a `dom` test cannot reach its own path that
     way. `tests/support/paths.ts` is built on `import.meta.dirname`, which is
-    a real path in both projects, which is why one helper serves both; the
+    a real path in every project, which is why one helper serves them all; the
     one place still reading a file by convention is `ThemeToggle`'s test,
     which uses `path.join(process.cwd(), …)` to reach the component's
     `index.scss` now that the two no longer sit in the same directory.
-  - **`setupFiles` also runs `./tests/support/setup.ts`** (M1.8, ported from
-    `resume-2026`), which adds three global hooks on top of the RTL
-    `cleanup()` that `globals: true` already registers on its own:
+  - **`setupFiles` also runs `setup-msw.ts` (above) and
+    `./tests/support/setup-dom.ts`** (M1.8, ported from `resume-2026`; one
+    file until MB.97 split the MSW half out for `unit`), which adds two global
+    hooks on top of the RTL `cleanup()` that `globals: true` already registers
+    on its own:
     - a second, explicit `afterEach(cleanup())` — redundant with the
       `globals: true` side effect above, but that's what the source repo
       does and it's harmless to call twice;
     - a `localStorage` polyfill (`Object.defineProperty(window,
 'localStorage', …)` with a minimal in-memory `Storage` class),
       because Node's own native `localStorage` global shadows jsdom's once
-      Vitest merges jsdom's `window` into the global scope;
-    - MSW lifecycle — `beforeAll(() => server.listen({ onUnhandledRequest:
-'error' }))`, `afterEach(() => server.resetHandlers())`,
-      `afterAll(() => server.close())` — against the `server` exported from
-      `tests/support/msw/server.ts` (`setupServer()`, no base handlers — every
-      operation is registered per test, see below).
-    - Covered by `tests/support/vitest-setup.test.tsx`, which asserts each hook's
-      effect directly rather than testing `tests/support/setup.ts` itself.
+      Vitest merges jsdom's `window` into the global scope.
+    - Covered by `tests/support/vitest-setup.test.tsx`, which asserts each
+      hook's effect directly rather than testing the setup files themselves.
   - **`tests/support/msw/graphql.ts`** (M1.10) scopes MSW's `graphql` helper to
     `/api/graphql` with `graphql.link('/api/graphql')`, and exports
     `mockGraphQLQuery(operationName, resolveData)` /
@@ -164,7 +182,7 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
     possible worker instead. That number is `undefined` there unless the
     config pins it, so `tests/support/db-project.mts` pins `maxWorkers` to
     Vitest's own default (`os.availableParallelism() - 1`, floored at 1) —
-    and it must keep mirroring that default: both projects share one pool
+    and it must keep mirroring that default: the projects share one pool
     group, and Vitest throws when two projects in a group disagree on
     `maxWorkers`, which is what makes "every slot has a clone" a guarantee
     rather than a hope. It `provide`s that list as `workerDatabases`,
@@ -221,7 +239,7 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
       Vitest sets both, and only the first is bounded by `maxWorkers`
       ("Value is between 1-`maxWorkers`", per its own typedef);
       `VITEST_WORKER_ID` is a counter incremented once per test file across
-      the whole run, both projects, so it passes `maxWorkers` as soon as
+      the whole run, every project, so it passes `maxWorkers` as soon as
       there are more test files than workers. Keying the name off it worked
       until the repo had eleven test files and CI had three workers, at which
       point the isolation spec asked for a `sorrel_test_4` nobody had cloned.
@@ -242,7 +260,7 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
   version, and typed by hand in `tests/vitest-env.d.ts` because it ships no
   types) and reads the stream to a string; one render is one request.
   - **It is not `db` with a flag.** Under `react-server`, `react-dom/server`
-    resolves to a file that throws on import, and three `db` files reach it
+    resolves to a file that throws on import, and nine `db` files reach it
     through `lib/auth` and react-email. So the render tests take no database:
     they mock `@/db/repository` whole and count its calls, which is an honest
     count of Postgres round trips because nothing else holds the client
@@ -268,8 +286,8 @@ that pulls a metric back under 80% — which is the threshold doing its job,
 not a defect.
 
 `npm run test` (`vitest run`, no coverage) and `npm run test:coverage`
-(`vitest run --coverage`) both run both projects — and neither runs
-`tests/acceptance/`, which the `unit` project's `exclude` names and only
+(`vitest run --coverage`) both run all four projects — and neither runs
+`tests/acceptance/`, which `unit` and `dom` exclude and only
 `npm run test:stories` includes (below). Neither is wired into
 `pre-commit` — CLAUDE.md's pre-commit list is unchanged by this task.
 
@@ -387,8 +405,8 @@ means here — a count of stories, never a percentage of lines. Four decisions
 make it hold:
 
 - **A config of its own, not a third project.** `npm run test` and
-  `npm run test:coverage` never see `tests/acceptance/` — the `unit` project's
-  `exclude` names it, and `vitest.stories.config.mts` is the only include —
+  `npm run test:coverage` never see `tests/acceptance/` — `unit` and `dom`
+  exclude it, and `vitest.stories.config.mts` is the only include —
   so a scaffold that lands deliberately red (M2.1 is the first) cannot fail
   the unit run, and a story that passes cannot lift the 80% threshold. The
   stories run carries no `--coverage` at all.
