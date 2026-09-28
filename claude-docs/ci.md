@@ -506,6 +506,14 @@ Deleting them moved one thing that was not duplicated: their path filters listed
 — and deliberately not in the `*shared` anchor, which also feeds
 `destructive_ddl`.
 
+The database image had the same gap until M4.7: `vitest` and `playwright`
+listed `build-db-image.yml` but not the image's own inputs, so a Dependabot
+PR bumping `Docker/Dockerfile.postgres` built the new image and ran neither
+suite against it. The first run on the new Postgres was then whichever
+unrelated PR touched `src/**` next. Both filters now list
+`Docker/Dockerfile.postgres` and `Docker/postgres-init/**`, the same two
+paths the image's hash tag is computed from.
+
 `build-db-image.yml` had the same defect from the other direction: its own
 `pull_request` trigger _plus_ an unconditional `build-db-image` job in both
 `pr-gate.yml` and `merge-queue.yml`, so any PR touching `src/db/**` ran it
