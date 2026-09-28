@@ -9,11 +9,19 @@ name: PR Gate
 # satisfies the required check, permanently blocking the PR. Every job runs
 # unconditionally and passes its filter result down as a workflow_call input.
 #
-# `edited` is in the trigger types so retargeting a PR's base re-runs gitflow.
+# `edited` is in the trigger types so retargeting a PR's base re-runs the gate
+# against the new one. Every other edit — a description, a title, the footer
+# Blacksmith's [code]smith appends to each new PR seconds after it opens —
+# changes nothing the gate checks, so its run must not cancel the run in
+# flight: the group's cancel excludes `edited`, the run waits its turn, and
+# `changes` cancels it unless the payload carries `changes.base`.
 # `closed` is there so closing a PR cancels its runs: the close starts a run
 # in the PR's group below, which cancels the rest, and then cancels itself in
 # `changes`. GitHub fires `edited` on a closed PR too, and that run cancels
 # itself the same way.
+# Every job `needs: changes`, so a run that cancels itself starts nothing
+# else: a job that had started would leave a cancelled check run under its own
+# name, newer than the real run's, and a required check reads the newest.
 # `build-db-image` is built once here rather than nested in vitest.yml and
 # playwright.yml, which would pay twice for an identical image.
 on:
@@ -26,7 +34,9 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  # An edit joins the group without cancelling; GitHub holds one pending run
+  # per group, a later edit replacing an earlier one.
+  cancel-in-progress: ${{ github.event.action != 'edited' }}
 
 permissions:
   contents: read
@@ -54,11 +64,11 @@ jobs:
       vitest: ${{ steps.filter.outputs.vitest }}
       playwright: ${{ steps.filter.outputs.playwright }}
     steps:
-      # A step-level `if:`, so the header's rule holds. Every check job needs
-      # this one, so none of them starts; the builds and gitflow, which do not,
-      # are cancelled with the run.
-      - name: Cancel this run if the PR is closed
-        if: github.event.pull_request.state == 'closed'
+      # A step-level `if:`, so the header's rule holds. Every other job needs
+      # this one, so nothing else starts. `changes.base` is in the payload only
+      # when the edit retargeted the PR; that run goes on to gate.
+      - name: Cancel this run if the PR is closed, or was edited without a retarget
+        if: github.event.pull_request.state == 'closed' || (github.event.action == 'edited' && github.event.changes.base == null)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -172,6 +182,7 @@ jobs:
   # cache index behind, so the next run rebuilds rather than reusing half an
   # image. claude-docs/ci.md, "Aggregating workflows".
   build-image:
+    needs: [changes]
     uses: ./.github/workflows/build-image.yml
 
   checks:
@@ -193,6 +204,7 @@ jobs:
 
   # Built once for vitest and playwright.
   build-db-image:
+    needs: [changes]
     uses: ./.github/workflows/build-db-image.yml
 
   vitest:
@@ -210,6 +222,7 @@ jobs:
 
   # The `testing` image is Alpine and carries no browser.
   build-e2e-image:
+    needs: [changes]
     uses: ./.github/workflows/build-e2e-image.yml
 
   playwright:
@@ -227,6 +240,7 @@ jobs:
 
   # Every check job `needs: gitflow`, so a wrong source branch burns no CI time.
   gitflow:
+    needs: [changes]
     concurrency:
       group: pr-gate-gitflow-${{ github.event.pull_request.number }}
       cancel-in-progress: true
