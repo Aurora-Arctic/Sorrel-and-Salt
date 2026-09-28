@@ -1,54 +1,30 @@
-import { inArray, isNull, sql } from 'drizzle-orm';
-// `./bootstrap-admin` first, and load-bearing for the reason minimal.ts records
-// at length: audit.ts and schema/users.ts import each other, and whichever is
-// entered first sees the other half-initialised. bootstrap-admin imports
-// schema/users, so putting it above the schema modules that reach audit.ts
-// directly is what makes `users` build its table with `auditColumns` already
-// defined. Reverse them and every insert below silently drops its created_by
-// and fails NOT NULL.
-import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
-import { users } from '../schema/users';
-import { workspaceMembers, workspaces } from '../schema/workspaces';
-import { ingredients } from '../schema/ingredients';
-import { ingredientFolkNames } from '../schema/ingredient-folk-names';
-import { ingredientCategories } from '../schema/ingredient-categories';
+import { inArray, isNull } from 'drizzle-orm';
+// `./bootstrap-admin` first, and load-bearing — see minimal.ts.
+import { BOOTSTRAP_SESSION } from './bootstrap-admin';
+import { users } from '../../modules/identity/schema/users';
+import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
+import { ingredients } from '../../modules/ingredients/schema/ingredients';
+import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
+import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
 import { applyAudit } from '../audit';
-import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import { slugify } from '../../lib/slugify';
 import { categoryIdByName, seedCategoryVocabulary } from './categories';
 import { seedFormVocabulary } from './forms';
+import { beginSeedTransaction, insertMissing, requireFrom } from './idempotent';
 import type { SeedDatabase, SeedTransaction } from './index';
 
-// M1.22 — the `standard` scenario (DESIGN.md §"Seed data"): five fixture users,
-// workspaces W and X, and a populated compendium. The fixture every
-// authorization test reads against, which is why the cast is fixed rather than
-// generated: `asUser(A)` (M1.26) means the same person in every suite.
-//
-// The compendium here is deliberately awkward. A clean list of herbs would
-// exercise nothing the identity model exists for, so it carries §5's own hard
-// cases: four unrelated plants and a literal cat's claw all labelled "Cat's
-// Claw", a mineral *variety*, a `none` and an `unknown`, and one in-use `form`
-// nobody has curated. M4.7/M4.7a (fuzzy duplicates, scoped suggestions) and
-// M8.3/M8.3a (local-beats-compendium resolution, folk-name promotion) resolve
-// against these rows, and none of those tasks can be tested against tidy data.
-//
-// The writes go through the handle `seed()` was given rather than through
-// `withAudit`, for the reason recorded in claude-docs/design-decisions/
-// m1.21-seed-writes-through-its-handle.md — and what `withAudit` guarantees is
-// kept rather than re-argued: one transaction, the acting user published as
-// `app.current_user_id` in the same parameterised form, and every stamp
-// produced by the shared `applyAudit`.
+// The `standard` scenario: five fixture users, workspaces W and X, and a
+// populated compendium. The cast is fixed, not generated, so `asUser(A)` is the
+// same person in every suite. The compendium is deliberately awkward — five
+// "Cat's Claw" rows, mineral varieties, `none` and `unknown`, an uncurated
+// form — because tidy data exercises nothing the identity model exists for
+// (claude-docs/db.md, "The compendium is awkward on purpose"). Writes go through
+// the handle `seed()` was given, not `withAudit` — see minimal.ts.
 
 /**
- * The columns a fixture user names, typed against the table's own insert model
- * so a column renamed in users.ts fails here rather than at the first seed.
- *
- * `id` is restated as required rather than picked: the table defaults it, so
- * the insert model makes it optional — and an optional id is exactly what this
- * scenario must not have. The ids are fixed for the same reason
- * `BOOTSTRAP_USER_ID` is: a test asserting against A names one id, not
- * whichever UUID this run generated. `…0003`–`…0007` continue the series
- * `…0001` (bootstrap) and `…0002` (`minimal`'s plain user) opened.
+ * `id` is required rather than picked: the table defaults it, and a test
+ * asserting against A has to name one id. `…0003`–`…0007` continue the
+ * bootstrap's series.
  */
 type SeedUser = Pick<
   typeof users.$inferInsert,
@@ -56,15 +32,10 @@ type SeedUser = Pick<
 > & { id: string };
 
 /**
- * DESIGN.md §"Seed data"'s fixture table, and CLAUDE.md's Testing section:
- * A owns W, B is a member of W, C a viewer in W, D a member of unrelated X,
- * E a site admin in no workspace.
- *
- * `canCreateWorkspace` follows the invite gate rather than convenience. A–D are
- * in a workspace, which under §5 is how the flag comes to be true — an
- * invitation was accepted. E is in none and has never been invited, so E's
- * false flag is correct and E creates workspaces by being an admin instead.
- * Seeding E `true` would hide exactly the distinction M3.2's gate turns on.
+ * A owns W, B is a member of W, C a viewer in W, D a member of unrelated X, E a
+ * site admin in no workspace. `canCreateWorkspace` follows the invite gate: A–D
+ * earned it by membership, E was never invited and creates workspaces as an
+ * admin instead.
  */
 export const FIXTURE_USERS = {
   A: {
@@ -111,12 +82,8 @@ export const WORKSPACE_X_ID = '00000000-0000-0000-0001-000000000002';
 
 type SeedWorkspace = Pick<typeof workspaces.$inferInsert, 'name'> & { id: string };
 
-// No slug is written down, per CLAUDE.md's slug rule: it is `slugify(name)`,
-// through the one shared implementation, so a seeded workspace resolves at
-// /coven/<slug> under the same rule M3.3's mutation will slug a real one with.
-//
-// Exported beside `FIXTURE_USERS` for the same reason: the M1.25 factories
-// have to know what W and X are called, so their own default can be neither.
+// No slug is written down (CLAUDE.md's slug rule). Exported so the fixture
+// factories can avoid these names.
 export const FIXTURE_WORKSPACES: SeedWorkspace[] = [
   { id: WORKSPACE_W_ID, name: 'Whitethorn Coven' },
   { id: WORKSPACE_X_ID, name: 'Ninebark Coven' },
@@ -129,17 +96,11 @@ const MEMBERSHIPS: SeedMembership[] = [
   { workspaceId: WORKSPACE_W_ID, userId: FIXTURE_USERS.B.id, role: 'member' },
   { workspaceId: WORKSPACE_W_ID, userId: FIXTURE_USERS.C.id, role: 'viewer' },
   { workspaceId: WORKSPACE_X_ID, userId: FIXTURE_USERS.D.id, role: 'member' },
-  // E is deliberately absent. "A site admin has no access to any workspace's
-  // ingredients or grimoire" (CLAUDE.md) is only assertable against an admin
-  // who is in no workspace.
+  // E is deliberately absent: "an admin has no access to any workspace" is
+  // only assertable against one in no workspace.
 ];
 
-/**
- * One compendium entry, typed against the table's own insert model so a column
- * renamed in ingredients.ts fails here rather than at the first `db:seed`, plus
- * the two things that live in other tables: its folk names (M4.4a's child
- * table) and the categories it is filed under (§6's vocabulary, by name).
- */
+/** One compendium entry plus its folk names and categories, named rather than keyed. */
 type SeedIngredient = Pick<
   typeof ingredients.$inferInsert,
   | 'name'
@@ -156,22 +117,10 @@ type SeedIngredient = Pick<
 };
 
 /**
- * The compendium `standard` populates. Every entry declares a `nomenclature`,
- * and the awkward ones are the point:
- *
- *   - five rows labelled **Cat's Claw** — _Uncaria tomentosa_, _U. guianensis_,
- *     _Senegalia greggii_, _Dolichandra unguis-cati_ and a claw from _Felis
- *     catus_ — told apart only by the generated `canonicalKey` (§5)
- *   - two **mineral varieties**, `Quartz var. amethyst` and `Gypsum var.
- *     selenite`, which is the rule that stops the crystal drawer collapsing
- *     onto two species
- *   - three **`none`** entries and one **`unknown`**: no system names graveyard
- *     dirt, and one does name Devil's Shoestring but nobody has looked it up
- *   - one **uncurated form**, `rhizome` — §5's own example of a value a member
- *     writes before an admin curates it, and the second half of M4.7a's list
- *   - **comfrey beside foxglove**, both `leaf`: §5's argument for demanding a
- *     formal name in the curated tier is that those two are confused in the
- *     real world and one of them carries a safety note that matters
+ * Every entry declares a `nomenclature`. The awkward ones are the point: five
+ * "Cat's Claw" rows told apart only by `canonicalKey`, two mineral varieties,
+ * three `none` and one `unknown`, one uncurated form (`rhizome`), and comfrey
+ * beside foxglove, one carrying a safety note that matters.
  */
 export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
   {
@@ -231,9 +180,8 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     folkNames: ['English Lavender', 'Elf Leaf'],
   },
   {
-    // The cultivar case: same species as the row above, and a different entry,
-    // because `canonicalName` is the most specific accepted name at the
-    // granularity the entry exists at (§5).
+    // A cultivar: same species as the row above and a different entry, since
+    // `canonicalName` is the most specific accepted name.
     name: 'Hidcote Lavender',
     canonicalName: "Lavandula angustifolia 'Hidcote'",
     nomenclature: 'botanical',
@@ -308,8 +256,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     categories: ['Binding'],
   },
   {
-    // Not a plant at all — §5's own example of why the display label cannot
-    // carry identity.
+    // Not a plant at all — why the display label cannot carry identity.
     name: "Cat's Claw",
     canonicalName: 'Felis catus',
     nomenclature: 'zoological',
@@ -369,7 +316,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     folkNames: ['Satin Spar'],
   },
   {
-    // A rock rather than a species, which the mineral system covers too (§5).
+    // A rock rather than a species; the mineral system covers it too.
     name: 'Lapis Lazuli',
     canonicalName: 'Lapis lazuli',
     nomenclature: 'mineral',
@@ -424,9 +371,8 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     categories: ['Banishing', 'Warding'],
   },
   {
-    // `unknown`, not `none`: there *is* a plant behind the name — story 21's
-    // own example says honeysuckle root — and nobody has looked it up. This is
-    // the row `where nomenclature = 'unknown'` returns as a curation to-do.
+    // `unknown`, not `none`: there is a plant behind the name and nobody has
+    // looked it up — the curation to-do row.
     name: "Devil's Shoestring",
     nomenclature: 'unknown',
     form: 'root',
@@ -436,9 +382,8 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     folkNames: ['Devil Shoestrings'],
   },
   {
-    // The uncurated form. `rhizome` is nowhere in M4.3a's 78, and that is the
-    // point: `ingredients.form` is free text precisely so this row can exist
-    // before an admin decides whether to curate the word.
+    // The uncurated form: `rhizome` is nowhere in the curated 78, and `form` is
+    // free text so this row can exist before it is.
     name: 'Ginger',
     canonicalName: 'Zingiber officinale',
     nomenclature: 'botanical',
@@ -451,34 +396,18 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
 ];
 
 export async function seedStandard(db: SeedDatabase): Promise<void> {
-  await db.transaction(async (tx) => {
-    // Published exactly as withAudit publishes it (M1.19): `set_config` with a
-    // bind parameter, transaction-local.
-    await tx.execute(sql`select set_config('app.current_user_id', ${BOOTSTRAP_USER_ID}, true)`);
-    await insertBootstrapAdmin(tx);
-    await seedStandardContent(tx);
-  });
+  await beginSeedTransaction(db, seedStandardContent);
 }
 
 /**
- * The same scenario, inside a transaction the caller already opened — which is
- * the only reason it is separate, and the shape `seedCategoryVocabulary` and
- * `seedFormVocabulary` already take. M1.23's `demo` is "standard plus spells",
- * so it writes its grimoire alongside these rows rather than after them: a
- * half-applied scenario (a compendium seeded, the spells that reference it
- * not) is worse than one that never ran, and two transactions is two chances
- * at one.
- *
- * It assumes what `seedStandard` does for itself: the GUC is published and the
- * bootstrap admin exists, since every row here is stamped as that user's.
+ * The same scenario inside a transaction the caller already opened: `demo`
+ * writes its grimoire alongside these rows, so a half-applied scenario cannot
+ * be a grimoire referencing rows that are not there. Assumes the GUC is
+ * published and the bootstrap admin exists.
  */
 export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
-  // The admin-curated reference data first — §6's categories and §5's forms.
-  // `standard` is "a populated compendium", which is all of it: an ingredient
-  // is filed under a category by foreign key, so M4.3's rows have to exist
-  // before this scenario's assignments can point at them. Inside this
-  // transaction rather than by calling `seedCategories(db)`, so a scenario is
-  // never half-applied.
+  // Reference data first: an ingredient is filed under a category by foreign
+  // key. Inside this transaction so a scenario is never half-applied.
   await seedFormVocabulary(tx);
   await seedCategoryVocabulary(tx);
 
@@ -491,93 +420,67 @@ export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
   await insertMissingCategoryAssignments(tx, ingredientIds, await categoryIdByName(tx));
 }
 
-// Everything below is idempotent the way seedCategories is: it inserts what is
-// missing, keyed on identity, and **ignores `deleted_at`**. The partial unique
-// indexes stop only a second *live* row, so an entry an admin soft-deleted
-// would otherwise be re-inserted on the next run and the deletion quietly
-// undone. Nothing already present is updated either, so a renamed workspace or
-// a retitled ingredient survives a reseed.
+// Idempotent the way seedCategories is: inserts what is missing by identity,
+// ignoring `deleted_at` so a soft-deleted entry is not quietly restored, and
+// updates nothing already present.
 
 async function insertMissingUsers(tx: SeedTransaction): Promise<void> {
-  const present = new Set(
-    (
-      await tx
-        .select({ id: users.id })
-        .from(users)
-        .where(
-          inArray(
-            users.id,
-            Object.values(FIXTURE_USERS).map((user) => user.id),
-          ),
-        )
-    ).map((row) => row.id),
-  );
-  const missing = Object.values(FIXTURE_USERS).filter((user) => !present.has(user.id));
+  const wanted = Object.values(FIXTURE_USERS);
 
-  if (missing.length === 0) return;
-
-  await tx
-    .insert(users)
-    .values(missing.map((user) => applyAudit('insert', user, BOOTSTRAP_SESSION)));
+  await insertMissing(tx, users, wanted, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({ id: users.id })
+          .from(users)
+          .where(
+            inArray(
+              users.id,
+              wanted.map((user) => user.id),
+            ),
+          )
+      ).map((row) => row.id),
+    keyOf: (user) => user.id,
+    toRow: (user) => user,
+  });
 }
 
 async function insertMissingWorkspaces(tx: SeedTransaction): Promise<void> {
-  const present = new Set(
-    (
-      await tx
-        .select({ id: workspaces.id })
-        .from(workspaces)
-        .where(
-          inArray(
-            workspaces.id,
-            FIXTURE_WORKSPACES.map((workspace) => workspace.id),
-          ),
-        )
-    ).map((row) => row.id),
-  );
-  const missing = FIXTURE_WORKSPACES.filter((workspace) => !present.has(workspace.id));
-
-  if (missing.length === 0) return;
-
-  await tx
-    .insert(workspaces)
-    .values(
-      missing.map((workspace) =>
-        applyAudit('insert', { ...workspace, slug: slugify(workspace.name) }, BOOTSTRAP_SESSION),
-      ),
-    );
+  await insertMissing(tx, workspaces, FIXTURE_WORKSPACES, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({ id: workspaces.id })
+          .from(workspaces)
+          .where(
+            inArray(
+              workspaces.id,
+              FIXTURE_WORKSPACES.map((workspace) => workspace.id),
+            ),
+          )
+      ).map((row) => row.id),
+    keyOf: (workspace) => workspace.id,
+    toRow: (workspace) => ({ ...workspace, slug: slugify(workspace.name) }),
+  });
 }
 
 async function insertMissingMemberships(tx: SeedTransaction): Promise<void> {
-  const present = new Set(
-    (
-      await tx
-        .select({ workspaceId: workspaceMembers.workspaceId, userId: workspaceMembers.userId })
-        .from(workspaceMembers)
-    ).map((row) => `${row.workspaceId}|${row.userId}`),
-  );
-  const missing = MEMBERSHIPS.filter(
-    (membership) => !present.has(`${membership.workspaceId}|${membership.userId}`),
-  );
-
-  if (missing.length === 0) return;
-
-  await tx
-    .insert(workspaceMembers)
-    .values(missing.map((membership) => applyAudit('insert', membership, BOOTSTRAP_SESSION)));
+  await insertMissing(tx, workspaceMembers, MEMBERSHIPS, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({ workspaceId: workspaceMembers.workspaceId, userId: workspaceMembers.userId })
+          .from(workspaceMembers)
+      ).map((row) => `${row.workspaceId}|${row.userId}`),
+    keyOf: (membership) => `${membership.workspaceId}|${membership.userId}`,
+    toRow: (membership) => membership,
+  });
 }
 
 /**
- * A compendium entry's identity is its formal name plus its form, which the
- * database computes into `canonical_key` for itself. This keys on the three
- * columns that expression reads instead of recomputing it in TypeScript: a
- * second implementation of §5's normalisation is a second thing to keep in
- * step, and the one that lies is the one nobody runs.
- *
- * Exported because M1.23's `demo` keys W's own ingredients the same way. The
- * tier is the caller's business — `workspace_id` is what tells a local entry
- * from a compendium one, and this key says nothing about it — so a caller
- * builds its map from one tier's rows, never from both at once.
+ * Keys on the three columns `canonical_key` reads rather than recomputing the
+ * expression in TypeScript. It says nothing about the tier, so a caller builds
+ * its map from one tier's rows.
  */
 export function identityOf(entry: {
   name: string;
@@ -587,7 +490,11 @@ export function identityOf(entry: {
   return `${entry.name}|${entry.canonicalName ?? ''}|${entry.form ?? ''}`;
 }
 
-/** Inserts what is missing and returns every seeded entry's id, by identity. */
+/**
+ * Inserts what is missing and returns every seeded entry's id, by identity.
+ * Not `insertMissing`: the one caller that needs the inserted rows back, and
+ * `.returning()` for one caller is not worth a second helper.
+ */
 async function insertMissingIngredients(tx: SeedTransaction): Promise<Map<string, string>> {
   const existing = await tx
     .select({
@@ -623,20 +530,12 @@ async function insertMissingIngredients(tx: SeedTransaction): Promise<Map<string
   return ids;
 }
 
-/**
- * The id a seeded entry landed under. Unreachable while every entry above went
- * through `insertMissingIngredients`, which either found or inserted each one —
- * but a lookup that silently returned `undefined` would insert a null
- * `ingredient_id` and fail NOT NULL several rows later, naming the wrong row.
- */
 function ingredientIdFor(entry: SeedIngredient, ingredientIds: Map<string, string>): string {
-  const id = ingredientIds.get(identityOf(entry));
-
-  if (id === undefined) {
-    throw new Error(`Compendium entry ${entry.name} was neither found nor inserted.`);
-  }
-
-  return id;
+  return requireFrom(
+    ingredientIds,
+    identityOf(entry),
+    () => `Compendium entry ${entry.name} was neither found nor inserted.`,
+  );
 }
 
 async function insertMissingFolkNames(
@@ -650,24 +549,20 @@ async function insertMissingFolkNames(
     })),
   );
 
-  const present = new Set(
-    (
-      await tx
-        .select({ ingredientId: ingredientFolkNames.ingredientId, name: ingredientFolkNames.name })
-        .from(ingredientFolkNames)
-    ).map((row) => `${row.ingredientId}|${row.name.toLowerCase()}`),
-  );
-  // Folded case-insensitively because the unique index is on `lower(name)`: a
-  // second spelling of one name is a mistake within one ingredient's own list.
-  const missing = wanted.filter(
-    (folkName) => !present.has(`${folkName.ingredientId}|${folkName.name.toLowerCase()}`),
-  );
-
-  if (missing.length === 0) return;
-
-  await tx
-    .insert(ingredientFolkNames)
-    .values(missing.map((folkName) => applyAudit('insert', folkName, BOOTSTRAP_SESSION)));
+  // Case-folded because the unique index is on `lower(name)`.
+  await insertMissing(tx, ingredientFolkNames, wanted, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({
+            ingredientId: ingredientFolkNames.ingredientId,
+            name: ingredientFolkNames.name,
+          })
+          .from(ingredientFolkNames)
+      ).map((row) => `${row.ingredientId}|${row.name.toLowerCase()}`),
+    keyOf: (folkName) => `${folkName.ingredientId}|${folkName.name.toLowerCase()}`,
+    toRow: (folkName) => folkName,
+  });
 }
 
 async function insertMissingCategoryAssignments(
@@ -676,41 +571,29 @@ async function insertMissingCategoryAssignments(
   categoryIds: Map<string, string>,
 ): Promise<void> {
   const wanted = COMPENDIUM_INGREDIENTS.flatMap((entry) =>
-    entry.categories.map((name) => {
-      const categoryId = categoryIds.get(name);
-
-      // Unreachable while these entries and §6's vocabulary agree, which the
-      // tests pin — but an entry naming a category an admin has since renamed
-      // or deleted would otherwise be inserted with `undefined` and fail on
-      // NOT NULL several rows later, naming the wrong row.
-      if (categoryId === undefined) {
-        throw new Error(`"${entry.name}" names category "${name}", which is not in the database.`);
-      }
-
-      return { ingredientId: ingredientIdFor(entry, ingredientIds), categoryId };
-    }),
+    entry.categories.map((name) => ({
+      ingredientId: ingredientIdFor(entry, ingredientIds),
+      categoryId: requireFrom(
+        categoryIds,
+        name,
+        () => `"${entry.name}" names category "${name}", which is not in the database.`,
+      ),
+    })),
   );
 
-  const present = new Set(
-    (
-      await tx
-        .select({
-          ingredientId: ingredientCategories.ingredientId,
-          categoryId: ingredientCategories.categoryId,
-        })
-        .from(ingredientCategories)
-    ).map((row) => `${row.ingredientId}|${row.categoryId}`),
-  );
-  const missing = wanted.filter(
-    (assignment) => !present.has(`${assignment.ingredientId}|${assignment.categoryId}`),
-  );
-
-  if (missing.length === 0) return;
-
-  // `ingredient_categories` is one of MB.34's three hard-deleted join tables,
-  // so the stamps here are the four-column `auditStampColumns` set — there is
-  // no tombstone to dodge and `applyAudit` simply stamps fewer columns.
-  await tx
-    .insert(ingredientCategories)
-    .values(missing.map((assignment) => applyAudit('insert', assignment, BOOTSTRAP_SESSION)));
+  // Hard-deleted (MB.34): the four-column stamp set, so `applyAudit` stamps
+  // fewer columns.
+  await insertMissing(tx, ingredientCategories, wanted, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({
+            ingredientId: ingredientCategories.ingredientId,
+            categoryId: ingredientCategories.categoryId,
+          })
+          .from(ingredientCategories)
+      ).map((row) => `${row.ingredientId}|${row.categoryId}`),
+    keyOf: (assignment) => `${assignment.ingredientId}|${assignment.categoryId}`,
+    toRow: (assignment) => assignment,
+  });
 }

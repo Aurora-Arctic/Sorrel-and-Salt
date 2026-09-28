@@ -1,97 +1,42 @@
 # syntax=docker/dockerfile:1
 
-# Sorrel & Salt — dedicated Playwright e2e image (M1.14).
+# Playwright e2e image, built by build-e2e-image.yml for CI and by the `e2e`
+# compose service locally. Playwright's Chromium has no musl support, so it
+# cannot ride in the Alpine Dockerfile.node. The workflow is in
+# claude-docs/ci.md, "Reusable checks"; the compose side in claude-docs/docker.md.
 #
-# Docker/Dockerfile.node's `testing` stage deliberately excludes Playwright's
-# system libraries and browser download (see that file's header comment) —
-# it's built on Alpine/musl, and Playwright's Chromium build has no official
-# Alpine/musl support at all, so bolting it on there isn't an option. The
-# `playwright` CI job (.github/workflows/playwright.yml) gets its own image
-# instead, mirroring the pattern `build-image.yml` (shared `testing` image)
-# and `build-db-image.yml` (preseeded Postgres image) already establish:
-# built and published by `build-e2e-image.yml` under a content-addressed
-# GHCR tag.
+# PLAYWRIGHT_VERSION must move in lockstep with `@playwright/test` in
+# package-lock.json; a mismatch is Playwright's usual "browser not found".
 #
-# Based on Microsoft's own Playwright image rather than hand-rolling
-# `apt-get`/`playwright install --with-deps` on a plain Debian base — it
-# already bundles a matching Node.js runtime, every OS library Chromium
-# needs, and the Chromium build itself, all pinned together for one exact
-# Playwright release. That pin must move in lockstep with `@playwright/test`
-# in package.json/package-lock.json (currently 1.63.0) — a mismatched
-# browser/library version is Playwright's single most common "browser not
-# found" / "host system is missing dependencies" failure, and this Dockerfile
-# is the one place that version is duplicated outside package-lock.json.
-#
-# `Docker/docker-compose.yaml`'s opt-in `e2e` service (profile: e2e) builds
-# this same file for local use, so a devcontainer session can run the full
-# e2e suite without switching its own Alpine base image — see that file's
-# comment for why sharing the image beats duplicating the install steps
-# across two different base distros.
-#
-# Two stages (MB.23). `e2e` — the original, unnamed-until-now stage — is
-# what CI and `make docker-e2e` build: headless, no display, nothing extra.
-# `headed` adds a virtual display (Xvfb), a window manager, and a
-# browser-reachable VNC/noVNC layer on top of it, for `playwright-server`
-# (Docker/docker-compose.yaml) to `exec` `playwright codegen` and
-# `page.pause()` into. Naming matters here: `docker build` with no `--target`
-# picks whichever stage is *last* in the file, so `e2e` must stay named and
-# `build-e2e-image.yml` / the `e2e` compose service must pin `target: e2e`
-# explicitly — see those files. Both stages must move in lockstep with
-# PLAYWRIGHT_VERSION below and `@playwright/test` in package.json — see the
-# version-drift warning further down; `headed` is a separate stage rather
-# than folded into `e2e` because CI pulls this image on every `playwright`
-# job and has no use for a display it never opens.
+# Two stages: `e2e` (headless; CI and `make docker-e2e`) and `headed` (a
+# display for `playwright-server`). `docker build` with no `--target` picks
+# the LAST stage, so every `e2e` consumer pins `target: e2e`.
 ARG PLAYWRIGHT_VERSION=1.63.0
 FROM mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble AS e2e
 
 WORKDIR /app
 
-# Dependency layer, same as Dockerfile.node — and, as there, no source layer
-# beneath it (MB.42): the `e2e` compose service bind-mounts `..:/app` and
-# CI's `checkout-to-app` copies the PR checkout in, so a baked-in tree would
-# only ever be read by CI, where a file the repo had deleted survived the
-# overlay. `tests/guards/image-source-layer.test.ts` pins what may be COPY'd.
+# No source layer, as in Dockerfile.node: checkout-to-app's `cp -a` overlays
+# without deleting. tests/guards/image-source-layer.test.ts pins what may be
+# COPY'd.
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Fast no-op in the normal case — the base image already ships this exact
-# version's Chromium build. Real insurance against the version-drift failure
-# mode described above: if PLAYWRIGHT_VERSION above and package-lock.json's
-# resolved @playwright/test version ever disagree, this is what surfaces it
-# as a build-time failure instead of a confusing CI test failure later.
+# A no-op when the versions agree; a disagreement fails the build here rather
+# than the test run.
 RUN npx playwright install --with-deps chromium
 
 ENV NODE_ENV=test
 
-# `headed` (MB.23) — same image, plus a virtual display so headed/interactive
-# Playwright (codegen, page.pause()'s Inspector, UI mode's live locator
-# picker) has somewhere to draw. Only `playwright-server`
-# (Docker/docker-compose.yaml) builds this stage; CI and `make docker-e2e`
-# pin `target: e2e` and never see it.
+# A virtual display for codegen, page.pause() and UI mode's locator picker;
+# only `playwright-server` builds it.
 FROM e2e AS headed
 
 USER root
 
-# Two of these five are deliberately redundant, and both stay.
-#
-# `xvfb` already ships in the base image: Playwright's own Dockerfile.noble
-# runs `playwright-core install-deps`, whose `tools` target begins with
-# `xvfb` (verified against the v1.63.0 tag, not assumed). Listing it here
-# installs nothing — but dropping the line wouldn't shrink the image either,
-# and it's free insurance against that transitive guarantee moving in a
-# future base image. `websockify` is the same case: the `novnc` package
-# Depends on it, so it arrives regardless; naming it says out loud what the
-# entrypoint actually invokes.
-#
-# The three that carry weight: `x11vnc` + `novnc` make the display reachable
-# from an ordinary browser tab at :7900 (Docker/docker-compose.yaml publishes
-# it), and `openbox` is not optional — without a window manager the Chromium
-# and Inspector windows are unmovable and overlap, which is the single most
-# likely thing to go wrong when testing this stage. `openbox` (297 kB) was
-# weighed against jwm/twm (smaller, but need placement config), matchbox
-# (one fullscreen window at a time) and i3 (tiling, no mouse drag-move);
-# swapping Xvfb + x11vnc for tigervnc-standalone-server was also considered
-# and rejected, since it loses `xvfb-run` and pulls more than it replaces.
+# `xvfb` and `websockify` already arrive with the base image and `novnc`;
+# named anyway. `openbox` is not optional: without a window manager the
+# Chromium and Inspector windows overlap unmovably.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     xvfb \
     x11vnc \
@@ -100,23 +45,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     openbox \
     && rm -rf /var/lib/apt/lists/*
 
-# The `novnc` apt package's landing page is `vnc.html`, not `index.html` —
-# `websockify --web=/usr/share/novnc` (playwright-entrypoint.sh) serves this
-# directory as a plain static file server, so without this symlink,
-# opening the bare :7900 root serves a directory listing instead of the
-# client. `?autoconnect=true&resize=remote` isn't baked into the symlink
-# target on purpose: this stays a plain redirect to the same file `vnc.html`
-# already is, not a second copy to keep in sync.
+# novnc's landing page is `vnc.html`; without the symlink :7900's root is a
+# directory listing.
 RUN ln -s vnc.html /usr/share/novnc/index.html
 
-# The one file this image bakes beyond the manifests: the entrypoint, copied
-# on its own so a bare `docker run` of this stage (no bind mount) still has
-# something to exec. At runtime `playwright-server`'s bind mount
-# (Docker/docker-compose.yaml, `..:/app`) shadows it with the host's own
-# working tree, so the chmod matters only to that bare case. It is a single
-# file rather than `COPY . .` because the `e2e` stage carries no source
-# (see above); `tests/guards/image-source-layer.test.ts` allows exactly this
-# path for this file.
+# The one file baked beyond the manifests, so a bare `docker run` has
+# something to exec; the compose bind mount shadows it.
+# image-source-layer.test.ts allows exactly this path.
 COPY Docker/playwright-entrypoint.sh Docker/playwright-entrypoint.sh
 RUN chmod +x Docker/playwright-entrypoint.sh
 

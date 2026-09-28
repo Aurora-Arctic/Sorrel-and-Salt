@@ -19,13 +19,14 @@ it is narrower than it looks:
   data is readable or writable through it. `src/app/api/auth/[...all]/
 route.ts` does exactly one thing — hand every request straight to Better
   Auth's own handler (`toNextJsHandler(auth)`, `src/lib/auth.ts`) — and
-  imports nothing from `src/services/` or `src/graphql/`. There is no code
+  imports nothing from `src/modules/*/services/` or `src/graphql/`. There is no code
   path by which an auth endpoint could reach application data.
 - **The rule this doesn't relax.** "Application data access" (CLAUDE.md
   rule 1) means the compendium, ingredients, and grimoire — not the protocol
   handshake that establishes who you are. Every later feature still goes
   through `/api/graphql`; nothing about this exception widens as the app
-  grows.
+  grows. The two transports that do carry application data, and the rules
+  that bind them, are [`graphql.md`](graphql.md)'s "The two transports".
 
 ## Tables (M2.2/M2.3)
 
@@ -33,7 +34,7 @@ Better Auth's own adapter tables, generated from its schema (pluralized —
 `usePlural: true` — to match this repo's `workspaces`/`ingredients`
 convention) and split across two schema files:
 
-- **`src/db/schema/users.ts`** — `users`: `id`, `name`, `email`,
+- **`src/modules/identity/schema/users.ts`** — `users`: `id`, `name`, `email`,
   `emailVerified`, `image`, `role` (`user` | `admin`, default `user`),
   `canCreateWorkspace` (default `false`), plus `...auditColumns`. M2.2
   shipped Better Auth's own core shape (`name`/`image`, no
@@ -45,11 +46,21 @@ convention) and split across two schema files:
   its own file (rather than folded into `auth.ts`) because MB.5 imports
   `users` from here to wire the `auditColumns` self-reference once every
   column exists.
-- **`src/db/schema/auth.ts`** — `sessions`, `accounts`, `verifications`,
+- **`src/modules/identity/schema/auth.ts`** — `sessions`, `accounts`, `verifications`,
   each `.references(() => users.id, { onDelete: 'cascade' })`. `accounts`
   carries a `password` column that stays `null` in v1 (OAuth only) —
   DESIGN.md §2 notes the tables already accommodate email+password without
   a migration, so this column is that accommodation, not dead schema.
+- **`rate_limits`**, in the same file (MB.75) — the model Better Auth's
+  limiter asks for under `rateLimit.storage: 'database'`: `id`, `key` text
+  unique (the client IP and the path), `count` integer, and `last_request` a
+  `bigint` of epoch milliseconds, which outgrows an integer and is read back
+  as a number (`mode: 'number'`). It references nothing and carries no
+  `created_at` or `updated_at`, because Better Auth's model declares none;
+  the limiter alone writes and prunes it. It reaches the adapter as
+  `rateLimits` in `drizzleAdapter`'s `schema`, the key `usePlural` looks it
+  up by. Better Auth asks for the model only because the storage is
+  `'database'` (MB.76; "Rate limiting" below).
 - **`generateId: 'uuid'`** (`src/lib/auth.ts`'s `advanced.database` option)
   makes every primary key a Postgres `uuid` via `gen_random_uuid()`, not
   Better Auth's own default text id — matching `auditColumns`' `uuid`
@@ -63,7 +74,7 @@ convention) and split across two schema files:
   alters schema at request time.
 - **Don't regenerate this schema with `@better-auth/cli`.** The documented
   path (`npx @better-auth/cli generate`) is the wrong one here: that package
-  is still on 1.4.x/1.5.0-beta, behind the installed 1.7.4 core, so it emits
+  is still on 1.4.x/1.5.0-beta, behind the installed 1.7.5 core, so it emits
   a schema for a different major. M2.2 instead used the generator the
   installed `@better-auth/drizzle-adapter` bundles internally
   (`generateDrizzleSchema`, in its `generate-drizzle-schema-*.mjs` — not in
@@ -74,8 +85,8 @@ convention) and split across two schema files:
   Auth's adapter reads plain schema tables, not the relational query API.
   The two schema files are hand-maintained from here; only the SQL is
   generated.
-- **`users` spreads `...auditColumns` (M2.3); the other three tables still
-  don't.** `sessions`/`accounts`/`verifications` are Better Auth's own
+- **`users` spreads `...auditColumns` (M2.3); the other four tables still
+  don't.** `sessions`/`accounts`/`verifications`/`rate_limits` are Better Auth's own
   adapter tables, not application data CLAUDE.md rule 3 governs, so they
   stay without `deleted_at`/`created_by`/etc. and `users_email_unique`
   moved from a plain unique constraint to a partial index (`WHERE
@@ -118,6 +129,13 @@ build`), `.github/workflows/playwright.yml` and `Docker/docker-compose.yaml`'s
   convention as the `sorrel`/`sorrel` Postgres credentials already there).
   Production and staging get a real value via M0.27's secrets matrix
   (`claude-docs/secrets.md`).
+- **`ADMIN_BOOTSTRAP_EMAIL` is required on the same terms** (MB.60): unset at
+  `NODE_ENV=production`, importing `src/lib/auth.ts` throws
+  `ADMIN_BOOTSTRAP_EMAIL is not set`, so a deploy fails its build rather than
+  running with no primary admin. The three places above that build set the
+  fixed placeholder `placeholder@admin-bootstrap.invalid` — `.invalid` is
+  reserved (RFC 2606), so no sign-in can ever match it. `next dev` and Vitest
+  are exempt, and unset there promotes nobody.
 - **`baseURL()` resolves the right origin per request, in code, with no
   `BETTER_AUTH_URL` env var at all.** Production actually spans three real
   origins — `sorrelandsalt.com`, the fixed `staging.sorrelandsalt.com`
@@ -157,58 +175,569 @@ evil.example.com` — the first two resolve correctly, the third falls
   redirect URI, and a hotfix slug doesn't exist to register ahead of
   time. Real sign-in only completes on `staging` and Production;
   `claude-docs/secrets.md` covers this in more depth.
+- **Stored OAuth tokens are encrypted** (`account.encryptOAuthTokens`,
+  MB.76). Better Auth encrypts each provider's access and refresh token under
+  `BETTER_AUTH_SECRET` as it writes the `accounts` row; the id token is stored
+  as issued, since Better Auth does not encrypt it, and nothing in the app reads
+  any of the three. No migration came with it: Better Auth decrypts only a value
+  that looks like its own ciphertext (a `$ba$` prefix, or an even-length hex
+  string) and returns anything else as it is, so a row written before the switch
+  keeps reading. A plaintext token that happened to be even-length hex would
+  be misread; none of the four providers' token formats is. Rotating the
+  secret makes every stored token unreadable; the next sign-in with each
+  provider writes a fresh one.
+- **Session lifetimes are Better Auth's defaults, pinned by test** (MB.76).
+  DESIGN.md sets none, so `src/lib/auth.ts` sets none: a session lasts seven
+  days, is extended at most once a day while in use, and counts as fresh for a
+  day. `tests/lib/auth.test.ts` reads the resolved values off `auth.$context`,
+  so a dependency bump that moves a default fails there rather than changing
+  how long someone stays signed in.
 
-## Social providers (M2.4/M2.5)
+## Rate limiting (MB.76)
 
-`socialProviders()` in `src/lib/auth.ts` registers `google`/`github` only
-when **both** halves of a pair (`GOOGLE_CLIENT_ID`+`GOOGLE_CLIENT_SECRET`,
-`GITHUB_CLIENT_ID`+`GITHUB_CLIENT_SECRET`) are set as non-empty strings —
-never with an empty string, which Better Auth would treat as a configured
-but broken provider rather than an absent one. Both pairs now hold real
-registered credentials locally (`.env.local`) and in Vercel; what is still
-unset is `ADMIN_BOOTSTRAP_EMAIL` and three CI secrets, which MB.12 owns
-(`claude-docs/secrets.md`).
+Better Auth's limiter covers `/api/auth/*` and nothing else; GraphQL's
+protections are graphql-armor's (M3.3). MB.74 chose it over leaving the
+shipped defaults ([`design-decisions/mb.74-better-auth-plugins.md`](design-decisions/mb.74-better-auth-plugins.md)).
 
-Verified with fake credentials (`GOOGLE_CLIENT_ID=test-google-id`, etc.,
-never real ones) against a running `next dev`: `POST
-/api/auth/sign-in/social {"provider":"google",...}` returns a real Google
-authorization URL (`https://accounts.google.com/o/oauth2/v2/auth?...
-client_id=test-google-id...&redirect_uri=.../api/auth/callback/google`),
-and the same for GitHub, whose default scope already includes
-`user:email` — satisfying M2.5's "matched by email, not duplicated"
-criterion via Better Auth's own `accountLinking` default (implicit linking
-on a verified email, enabled out of the box) rather than anything this
-repo added. `tests/app/api/auth/[...all]/route.test.ts` automates the Google
-half of that same check.
+- **On wherever `NODE_ENV` is `production`**, which is every deploy (staging and
+  hotfix previews included) and every `next start`, Playwright's server
+  among them. Off under `next dev`, which compose's `app` runs, and Vitest.
+  That is Better Auth's own default, written out in `rateLimit.enabled` so a
+  bump cannot move it.
+- **The limits are Better Auth's built-in rules**, keyed on client address
+  and path: `/sign-in/*` 3 requests per 10 seconds, `/send-verification-email`
+  3 per 60 seconds, and every other path 100 per 10 seconds. Past one, the
+  endpoint answers `429` with `X-Retry-After` in seconds and runs nothing.
+- **Counted in `rate_limits`** (`storage: 'database'`, the table in "Tables"
+  above). One row per `<address>|<path>` key, incremented atomically through the
+  adapter, with expired rows pruned in the background. In memory, Better
+  Auth's default, each Fluid Compute instance would keep its own count and a
+  cold one would forget. The cost is a read and a write per `/api/auth/*`
+  request.
+- **The client address is `x-vercel-forwarded-for`**
+  (`advanced.ipAddress.ipAddressHeaders`). Vercel sets it to the address the
+  connection came from, overwriting whatever a client sent, and it is the one
+  of Vercel's three copies (`x-forwarded-for`, `x-real-ip`) that a proxy placed
+  in front of Vercel could not overwrite. No other header is read, so a
+  client varying its own `x-forwarded-for` stays in its bucket.
+- **An unresolved address shares one bucket.** Better Auth trusts a header
+  only when it holds exactly one address. Otherwise, at production, the
+  request is keyed `no-trusted-ip|<path>` and one warning is logged per
+  instance; on `/sign-in/social` that bucket is three sign-ins per ten seconds
+  for everyone in it. Under `next dev` and Vitest it falls back to `127.0.0.1`
+  instead. Off Vercel the header is absent, so a local `next start` counts
+  every request in the shared bucket, which with one client is the same thing.
+- **What staging carries.** Vercel documents all three headers as the
+  client's single public address (its "Request headers" reference).
+  <!-- MB.76: replace with what staging's requests were observed to carry. -->
 
-**Not yet demonstrated, and not claimed as done:** M2.4/M2.5's actual
-acceptance criteria ("sign-in completes on local and staging") need a live
-callback round-trip through a real browser and consent screen. Real
-credentials are now registered and the live authorization endpoints accept
-them, but nobody has completed an interactive sign-in — and nobody can until
-M2.6 builds the sign-in page. MB.12 carries that verification, which is why
-it sits in Wave 6 behind M2.6 rather than with the rest of Wave 1.
+## Social providers (M2.4/M2.5, M2.6)
+
+The roster is `SOCIAL_PROVIDERS` in `src/lib/social-providers.ts`: Discord,
+Google, Facebook and Microsoft, re-scoped at M2.6 (GitHub was the original
+second provider and was dropped). `socialProviders()` in `src/lib/auth.ts`
+registers a provider only when **both** halves of its pair are set as
+non-empty strings (`clientCredentials`, `src/lib/social-providers-config.ts`),
+never with an empty string, which Better Auth would treat as a configured but
+broken provider rather than an absent one. The sign-in page greys out a
+provider that is not configured. Facebook and Microsoft are pinned unverified
+on arrival (see "First-party verification" below), and Microsoft's tenant is
+stated as `common` so personal accounts can sign in. Every provider's
+`mapProfileToUser` also stands in a placeholder for a profile with no address
+(see "The email page" below). MB.12 completed a real browser sign-in with all
+four on staging; the credentials and the manual steps behind them are
+`claude-docs/secrets.md`.
+
+Facebook appends `#_=_` to the redirect URI it sends the browser back to, and
+a fragment survives every redirect whose `Location` carries none, so it would
+reach whatever page the sign-in lands on. The server never sees a fragment,
+so `src/app/layout.tsx` strips exactly that one before first paint, in an
+inline script beside the theme one; an in-page anchor keeps its own.
 
 `/api/auth/ok` (Better Auth's built-in health endpoint, no database access)
 is what `route.test.ts`'s other case uses to confirm the route is mounted
 and responding independent of any provider being configured at all.
 
-## Admin bootstrap and the self-created user (M2.3)
+## Admin bootstrap and the self-created user (M2.3, MB.60)
 
-DESIGN.md §5: the user matching `ADMIN_BOOTSTRAP_EMAIL` (`claude-docs/
-secrets.md`) is promoted to `role: 'admin'` on first sign-in; everyone else
-gets the column defaults (`role: 'user'`, `canCreateWorkspace: false`).
-Nothing else grants admin in v1 — no UI, no other API path.
+DESIGN.md §5: the account matching `ADMIN_BOOTSTRAP_EMAIL`
+(`claude-docs/secrets.md`) is the **primary admin**. Everyone else gets the
+column defaults (`role: 'user'`, `canCreateWorkspace: false`) on sign-up.
 
-- **Why this can't go through `withAudit(session, fn)`.** CLAUDE.md rule 3
-  says every write does; OAuth sign-up is the one write that can't, because
-  there's no session yet — the write _is_ how one comes to exist. This is
-  the same "no third access path" exception `/api/auth/*` already is (see
-  the top of this doc), one level deeper: not just a different transport,
-  but a write Better Auth's own create-user flow performs directly against
-  the adapter, with no service function in between to call `withAudit`.
-- **`databaseHooks.user.create.before`** (`src/lib/auth.ts`) is where both
-  the promotion and the audit stamping happen, in one hook:
+### Promotion at sign-in, from Google or Discord only (MB.60)
+
+The primary admin is promoted at a **sign-in**, not when the account is
+created, and only when that sign-in's provider vouches for the address:
+
+- **Google and Discord qualify; Microsoft and Facebook never do.** Google
+  marks an address verified only for a domain its owner has proved to Google,
+  and Discord only for one it has mailed a code to. Facebook never reports
+  verified in Better Auth's mapping. Microsoft is excluded on purpose: with
+  `tenantId: 'common'`, an attacker's own Entra tenant can issue an id token
+  carrying any `email` and `email_verified` claim (the 2023 "nOAuth"
+  surface). First-party verification lets them in another way: the address
+  is also promoted when its owner verifies it by mail, from a session holding
+  that row ("Promotion at first-party verification" below).
+- **The decision uses the provider's fresh profile at that callback**, never
+  the stored `users.emailVerified`. A row our own mail has marked verified
+  still promotes nobody at a later Microsoft sign-in. So nothing that later sets the column can widen who
+  qualifies. The profile must also carry the account's own address: a linked
+  Google account whose address has since moved vouches for the new one, not
+  this one.
+- **Match is case-insensitive**, and at most one live row can match:
+  `users_email_lower_case` (migration 0019) holds every address to lower
+  case, so the raw-column unique index cannot admit two rows differing by
+  case alone. Better Auth lowercases on every write; the constraint is for a
+  row written by hand.
+- **An already-admin user is not rewritten**, and an address the variable
+  does not name is never promoted. With the variable unset (`next dev`,
+  Vitest), nobody is.
+- **A refused match signs in as an ordinary user.** The reason goes to the
+  server log as `primary admin not promoted: user <id> (<reason>)`. It uses
+  the id, never the address, because a sign-in screen should not reveal that
+  an address is special.
+
+**How it is wired** (`src/lib/auth.ts`, `src/modules/identity/services/admin-role.ts`):
+
+- The after-callback hook (`hooks.after`, matching `/callback/:id`) has
+  `ctx.context.newSession.user` loaded, so it costs no query. But that is
+  the **stored** row. The fresh profile is seen only by
+  `user.validateUserInfo`, which Better Auth calls with it on sign-up, link
+  and sign-in alike.
+- `validateUserInfo` never refuses. It records `{ providerId, email,
+emailVerified }` into a Better Auth request state
+  (`defineRequestState` from `@better-auth/core/context`). That is an
+  `AsyncLocalStorage` store scoped to one request, so nothing carries
+  between sign-ins. The after hook reads it back. `@better-auth/core` is a
+  declared dependency, at `better-auth`'s own version, so npm dedupes the two
+  to one copy.
+- The hook builds an ordinary `Session` from the row it holds and calls
+  `promotePrimaryAdmin`. That writes `role: 'admin'` through
+  `withAudit`, stamped as the user themselves, with
+  `write.updateById(users, …)`. So CLAUDE.md rule 3's identity bootstraps
+  stay two; the create-time promotion that was one of them is gone. The role
+  write is the one MB.59's grant and revoke will share, adding the ledger row.
+- **Changing the variable** promotes the new address at its next qualifying
+  sign-in or verification, even if that account already exists. The previous primary admin
+  keeps `role: 'admin'` and simply stops being protected (MB.59). This is
+  also the recovery path if the primary admin loses their OAuth account.
+
+### Promotion at first-party verification (MB.68)
+
+The second way to become the primary admin: **follow the verification link
+our own mail sent to the bootstrap address, from a browser signed in to that
+account.** Our mail vouches for the address the way Google or Discord would,
+so a Microsoft- or Facebook-only owner is promoted too
+([`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md)).
+
+- **It is safe only because verification is session-bound.**
+  `beforeEmailVerification` refuses a link followed from no session or from
+  another user's ("First-party verification" below), so the promotion runs
+  only for someone signed in to the row, who received the mail at the
+  address. Without that binding, a stranger's sign-up carrying the bootstrap
+  address would become admin the moment its owner clicked a mail they never
+  asked for.
+- **`afterEmailVerification` promotes only the row the check admitted.**
+  Better Auth also calls it on a change-email link, which skips
+  `beforeEmailVerification` and needs no session. `changeEmail` is off, so
+  no such link is minted, but the hook still requires the per-request
+  acting-user id that only `beforeEmailVerification` sets on this endpoint,
+  so a stray one verifies and promotes nobody.
+- **It calls `promotePrimaryAdminAtVerification`**, which checks only the
+  address and the current role, then makes the same `withAudit` write as the
+  sign-in promotion, stamped as the user. There is no profile to check: the
+  verification is the vouch. It runs once, on the write that flips
+  `emailVerified`; a second use of the link finds the row verified and calls
+  no hook. An already-verified row is promoted at a Google or Discord sign-in,
+  or not at all.
+- **The sign-in rule is untouched.** The callback still decides on the fresh
+  Google or Discord profile, never the stored column, so a Microsoft sign-in
+  over a row our mail has verified still promotes nobody. Verification is an
+  event, not a state the sign-in reads.
+- **No ledger row yet.** MB.59 adds a `bootstrap` row to the shared role
+  write once MB.58's table exists, and so to both promotions at once.
+
+**Three Better Auth options stay off, pinned by `tests/lib/auth.test.ts`.**
+Each would let the address on an account change under the primary admin and
+move the protection to whoever holds it now:
+
+- `user.changeEmail.enabled` — set `false` explicitly. An email changes
+  through MB.54's verified flow.
+- `overrideUserInfoOnSignIn` on every provider — on, a sign-in rewrites
+  the stored email from the provider's profile.
+- `account.accountLinking.trustedProviders` — a trusted provider skips the
+  verified-email check when linking.
+
+Two linking options are pinned beside them (MB.71):
+`accountLinking.allowDifferentEmails` on and `allowUnlinkingAll` off. Neither
+is read at sign-in; "Linking a second provider" below has why.
+
+**A squat lasts three hours at most (MB.67).** An unverified
+sign-up carrying the address, made before the owner's first sign-in or after a
+database reset, makes Better Auth refuse to link the owner's verified sign-in
+to it (`requireLocalEmailVerified`), and the owner sees the generic
+`account_not_linked` sentence. The row is provisional: one verification
+window after its last mail, and three hours after its sign-up whatever it
+resends, the next OAuth callback deletes it and the owner's sign-in lands in a
+fresh account. "Provisional accounts" below has the shape.
+
+### First-party verification (MB.66)
+
+The site vouches for an address itself by mailing a link, so
+`users.emailVerified` means one thing: **Google, Discord or our own mail
+said so.** The argument is
+[`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md);
+this is the shape.
+
+- **Facebook and Microsoft arrive unverified**, whatever they report: their
+  `mapProfileToUser` answers `emailVerified: false`, spread after the
+  provider's own mapping. Google and Discord keep theirs. The one exception is
+  the callback of an explicit link, where every provider vouches ("Linking a
+  second provider" below); it writes nothing to the row.
+- **Offered, never required for a session.** `emailVerification.sendOnSignUp`
+  is on, so an OAuth sign-up whose address is unverified is created, mailed
+  and signed in. No provider sets `requireEmailVerification`; what needs a
+  verified address checks the column. `requireLocalEmailVerified` stays at
+  its default, so a provider cannot link into an unverified row: the owner of
+  a squatted address is refused with `account_not_linked` until the squatting
+  row lapses (below).
+- **The token is Better Auth's**: an HS256 JWT signed with
+  `BETTER_AUTH_SECRET`, `expiresIn: 3600`, never stored and not single-use.
+  A second use finds the row verified and writes nothing.
+  `autoSignInAfterVerification` is off, so the link never issues a session.
+- **Only from a session holding that row.** `beforeEmailVerification`
+  reads the request's session and refuses unless it is the row's own. With
+  the link's `callbackURL` present it redirects there with
+  `?error=SIGN_IN_TO_VERIFY`, the same way Better Auth's own refusals on the
+  endpoint do; without it, `403`. Without the check, a stranger's sign-up
+  carrying your address would be verified by your click on a mail you never
+  asked for, and your own verified sign-in would then link into their row.
+- **The write is stamped.** `/verify-email` updates `emailVerified` through
+  Better Auth's adapter, outside `withAudit`. `beforeEmailVerification`
+  records the user's id in a per-request store, and
+  `databaseHooks.user.update.before` merges `updatedBy` from it into the
+  same `UPDATE`; the trigger sets `updated_at`. `validateUserInfo` records
+  the id the same way on a sign-in or link, which is when Better Auth flips
+  the column for a provider that vouches later, and the hook falls back to the
+  endpoint's session (`/update-user`). A write with neither is left
+  unstamped rather than refused. No GUC is published, as for the create hook.
+- **The mail** is sent through `src/lib/mail.ts` from
+  `sendVerificationEmail`, and names the providers linked to the account so
+  a reader can tell whether they signed up at all. The template is
+  `src/emails/verify-email.tsx` ([`email.md`](email.md)).
+
+### Linking a second provider (MB.71)
+
+A signed-in user adds another provider from `/account`, and from then on
+either one signs in to the same account. Story 1; the scoping is
+[`design-decisions/mb.71-plan.md`](design-decisions/mb.71-plan.md).
+
+**Signing in cannot do it, and never will.** Better Auth's implicit link at
+sign-in attaches an unknown provider account to the row holding its email
+only when the _provider_ vouches for the address and the row is verified.
+Microsoft never vouches: with `tenantId: 'common'`, any Entra tenant can mint
+an id token carrying any `email` (nOAuth), so trusting it would let such a
+token sign in as any verified row, the primary admin's included. Verifying
+the row fixes the wrong half. A Microsoft or Facebook sign-in over an existing
+row is refused with `account_not_linked`, and stays refused.
+
+**An explicit link from a session does.** Better Auth's `/link-social`:
+
+- **It starts under a session.** `/link-social` answers 401 without one,
+  and writes `link: { userId, email }` into the OAuth state from that
+  session. The request body cannot name the user: `link` is spread after
+  any client `additionalData`, and whichever session carries the callback
+  does not matter either. Both are asserted.
+- **The callback's link branch creates the `accounts` row** and redirects to
+  `/account`, or to `/account?error=<code>`. It issues no session, so the
+  after-hook, the promotion and the email-page redirect never run, and with
+  `updateUserInfoOnLink` off it writes nothing to `users`: the row keeps the
+  address it verified, which invitations and the email page key on.
+- **Afterwards the provider signs in by its account id.** Better Auth
+  resolves `(providerId, accountId)` before any email lookup, so the linked
+  account's address claim is never consulted again and nOAuth cannot reach
+  it. The primary admin who signed up through Discord and linked Microsoft
+  signs in through either, still admin.
+
+**Inside a link every provider vouches.** The link branch refuses a
+provider that does not vouch (`unable_to_link_account`), and the pin above
+would refuse Microsoft and Facebook every time. `vouchWhenLinking` in
+`src/lib/auth.ts` answers `emailVerified: true` from all four mappers when
+Better Auth's `getOAuthState()` carries `link`, which only a flow
+`/link-social` began can. On every sign-in it is absent and each provider
+keeps its own answer, so the takeover surface is unchanged. Inside the link the
+value feeds Better Auth's gate alone; the guards that matter are the session
+that started the flow and the account-id binding after it. Google and Discord
+are included so that a Discord account with no verified address can be added
+too. `validateUserInfo` records no promotion profile on an explicit link,
+since the vouch was lent. It tells an explicit link from an implicit one by
+the state, not by `source.action`: Better Auth names both `link-account`, and
+the implicit one at sign-in must still reach promotion.
+
+**Different addresses are allowed.** `allowDifferentEmails` is on, because
+the Discord address and the Microsoft address are usually different
+mailboxes. Better Auth reads it only in the two link branches, never at
+sign-in. The row's own address is untouched. After an unlink, a sign-in
+through that provider carrying the row's address is refused again. One
+carrying some other address creates a new account, as any first sign-in does.
+
+**Removing one.** Better Auth's `/unlink-account` takes the `accounts`
+row's own id, and refuses another user's row (`ACCOUNT_NOT_FOUND`).
+`allowUnlinkingAll` stays off, so it refuses the last one
+(`FAILED_TO_UNLINK_LAST_ACCOUNT`) and a user is never left with no way in.
+The endpoint also wants a session younger than Better Auth's `freshAge`, a
+day (`SESSION_NOT_FRESH`); the page says to sign in again. Removal
+hard-deletes the `accounts` row, which is Better Auth's table and outside
+rule 4, and leaves `users` alone.
+
+**The page.** `src/app/account/page.tsx` calls `requireSession()`, so an
+unverified account never reaches it and stays on the email page. Better Auth
+itself would link to an unverified row. The page reads `linkedAccounts()`
+(`src/lib/request-session.ts`, Better Auth's `listUserAccounts` with the
+request headers) and renders `SignInMethods`
+([`components/sign-in-methods.md`](components/sign-in-methods.md)). A link's
+`?error=` goes through `linkErrorMessage` in `src/lib/sign-in.ts`, and an
+unlink refusal through `unlinkErrorMessage`. The page and the email page link
+to each other; the email page offers the way only to a verified account.
+
+**The sign-in page's side.** `account_not_linked` has one sentence: sign in
+the way you did before, then add this provider under Account ("Provisional
+accounts" below). At a sign-in, `unable_to_link_account` means only that
+writing the account row failed, and gets the plain retry sentence. The
+link-only codes (`email_does_not_match`,
+`account_already_linked_to_different_user`) land on `/account` and are
+`linkErrorMessage`'s.
+
+### Provisional accounts (MB.67)
+
+An unverified account cannot hold an address against its owner for longer
+than a verification link lives. The argument is
+[`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md),
+"Provisional accounts and the sweep"; this is the shape.
+
+- **What is provisional.** A `users` row with `emailVerified` false that
+  holds at least one provider `accounts` row. It has lapsed once its
+  `updated_at` is older than `VERIFICATION_LIFETIME_SECONDS` (3600, the same
+  constant as the link's `expiresIn`), or its `created_at` is older than
+  `PROVISIONAL_CAP_SECONDS` (three hours). Both are measured by the
+  database's `now()`, since the database writes both columns.
+- **Why a cap.** Each resend from the squatter's own session restarts the
+  hour and mails the owner. Without the cap, a squatter resending hourly
+  would hold the address for as long as they kept it up. With it, a real
+  user has three hours from sign-up to follow a link, and resending does not
+  extend that. A link sent in the cap's last hour can outlive the account;
+  following it finds no user, and signing in again starts a fresh account.
+- **What restarts the window.** A sign-up sets it. Every verification mail
+  sent for the row's own account — the sign-up mail, a resend through
+  `/send-verification-email` from a session holding the row, or the email
+  page's change request — calls `recordVerificationSent` in
+  `src/modules/identity/services/email.ts`, a `withAudit` update stamped as
+  that user that sets `verification_sent_at` and so, through the trigger,
+  `updated_at`, before the mail goes out. A resend from no session still
+  refused outright — `requireOwnResend`, a `hooks.before` on
+  `/send-verification-email`, answers 401 unless the session holds the
+  address posted — so nobody can mail someone else, or keep a row alive by
+  posting its address. Any other write to the row touches `updated_at` too.
+  None of these move `created_at`, so none of them move the cap.
+- **The sweep.** `hooks.before` on `/callback/:id` deletes every lapsed row
+  in one statement, before the code exchange, so a lapsed row holding the
+  arriving address is gone before Better Auth looks it up. Its `accounts`
+  and `sessions` rows go with it by `ON DELETE CASCADE`, so the squatter's
+  cookie signs nobody in and its provider account resolves to nothing. Two
+  partial indexes, `users_provisional_updated_at_idx` and
+  `users_provisional_created_at_idx`, hold only unverified rows, one for each
+  half of the predicate, which keeps the usual empty sweep cheap. The swept ids go to the
+  server log at `info`.
+- **A failed sweep never fails a sign-in.** It is logged at `error` and the
+  callback carries on. One lapsed row that another row references makes the
+  whole statement fail, because every audit foreign key is `NO ACTION`.
+  Nothing in v1 lets an unverified account write beyond its own row, so this
+  needs a bug or a hand edit.
+- **Hard delete, outside `withAudit`.** Better Auth finds a user by address
+  without our `deleted_at` filter, so a tombstone would go on blocking the
+  owner. The row never verified, so it holds nothing worth keeping, and no
+  row survives to carry a stamp. The delete is the repository's one named
+  `deleteProvisionalUsers`, since `write.delete` rejects a table carrying
+  `deleted_at` by design.
+- **Seeded rows are never swept.** They hold no `accounts` row, so nobody
+  can sign in to them. The bootstrap admin stays unverified on purpose. A
+  verified row would take an implicit link from any provider vouching for
+  its address, and that row is an admin.
+- **The refusal.** `account_not_linked` is one sentence in
+  `src/lib/sign-in.ts`, the same whatever the cause: sign in the way you did
+  before, then add this provider under Account. A squatted address and a
+  provider that never vouches over an existing row share the code, and naming
+  either would confirm the address is taken (MB.71).
+- **A change never unverifies a row.** An established account asking for a
+  new address keeps its verified row until the new one is proven ("The email
+  page" below); marking it unverified would make it older than the cap and
+  swept on the next callback.
+
+### The email page (MB.54)
+
+`/account/email`, protected, is where an account's address is set and
+changed: prefilled from the provider, editable, and counting only once
+proved. Stories 58 and 59; the plan is
+[`design-decisions/mb.54-plan.md`](design-decisions/mb.54-plan.md), and the
+component is [`components/email-form.md`](components/email-form.md).
+
+- **One rule: an address becomes the account's at verification, never
+  before.** `setEmail(session, email, sender)` in
+  `src/modules/identity/services/email.ts` writes nothing to `users.email`.
+  It normalises and validates the address (`ValidationError` on `email`),
+  refuses one a live _verified_ account holds — a provisional holder lapses
+  first — stamps the row as mailed (`recordVerificationSent`, which is also
+  what restarts a provisional caller's window), and asks the sender to mail
+  the new address a change link. The row's own, still-unverified address is
+  mailed again instead; verified, there is nothing to do. The criterion this
+  replaced, "marks the row unverified", would have put an account older than
+  the cap under the sweep.
+- **One verification mail a minute per account.** `users.verification_sent_at`
+  is set by every mail sent for the row's own account, and `setEmail` refuses
+  the next within `RESEND_COOLDOWN_SECONDS` with a `VALIDATION` error on
+  `email` naming the seconds left, so the mutation cannot fill an inbox.
+  Better Auth's `sendVerificationEmail` hook reads the same clock through
+  `verificationWaitFor` and sends nothing inside it, which covers the resend
+  path; a direct post to `/send-verification-email` reaches the hook only
+  from the row's own session (`requireOwnResend`, above). The update hook
+  clears the clock in the write that sets `emailVerified`: the mail was
+  answered, so the next one — a change from a verified account — is not held
+  back by it. The page hands the form the seconds left, so a sign-up that
+  lands on it sees the countdown from the start rather than a refusal on its
+  first submit ([`components/email-form.md`](components/email-form.md)).
+- **The change link is Better Auth's own.** `src/lib/email-verification.ts`
+  mints `/verify-email`'s change token — `createEmailVerificationToken` with
+  `updateTo` and `requestType: 'change-email-verification'` — under the same
+  secret and the request's own base URL (`resolveBaseURL`, so a preview host
+  links to itself), and sends `verify-email.tsx` with `purpose: 'change'`.
+  Following it, `/verify-email` swaps `email` and sets `emailVerified` in one
+  adapter write, stamped by the update hook. `user.changeEmail` stays off:
+  this replaces it, and nothing on `/api/auth` is added.
+- **Every link lands on the confirmed view.** Better Auth would land a
+  sign-up's link where the sign-in asked to go; the `sendVerificationEmail`
+  hook rewrites the link's `callbackURL` to `VERIFIED_LANDING`
+  (`/account/email?verified`, `src/lib/account-email.ts`), and the resend
+  and change links carry it from the start. A refusal drops the flag before
+  appending `?error=`, so the page never reads a refusal as a confirmation.
+- **Gated before the endpoint.** Better Auth's change branch calls no
+  `beforeEmailVerification` and, given no session, mints one for whoever
+  opened the link. `gateEmailChange`, a `hooks.before` on `/verify-email` in
+  `src/lib/auth.ts`, decodes the token's claims (not verified: it only ever
+  refuses, and the endpoint verifies the signature after), refuses unless the
+  session holds the row named by `email` (`?error=SIGN_IN_TO_VERIFY`, or
+  403 with no `callbackURL`), runs the provisional sweep, refuses while
+  another live row holds `updateTo` (`?error=EMAIL_TAKEN`, which the unique
+  index would otherwise 500 on), and records the acting user so the write is
+  stamped and `afterEmailVerification` runs — so a change to the bootstrap
+  address, verified from the owner's session, promotes (MB.68).
+- **A link opened signed out goes to the sign-in page.** Both gates send a
+  browser with no session at all to `SIGN_IN_TO_VERIFY_PATH`
+  (`/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify`), whose sentence
+  says to sign in and open the link again — the token is still good, since
+  the gate refused before the endpoint saw it. Nothing from the link travels:
+  not the token, not the address, and `next` is the fixed email page, so
+  signing in with the right account lands there with no error to explain
+  away. Only a browser signed in as someone else is sent to the email page
+  with `?error=SIGN_IN_TO_VERIFY`: it is signed in, so the page can tell it
+  which account to use. Signed out, the email page itself is unreachable —
+  `requireSession()` would have bounced it to sign-in with the error in the
+  return path, which is the confusion this avoids.
+- **The sender comes through the GraphQL context.** A service may not import
+  `auth`, and `auth.ts` imports the identity module, so the Better Auth side
+  is `src/lib/email-verification.ts`'s `emailVerificationSender(request)`,
+  built per request in `src/graphql/context.ts` and passed to the service by
+  the `setEmail` resolver — the way loaders are. `resend` calls
+  `auth.api.sendVerificationEmail` with the request's own headers, so the
+  existing hook restarts the window and mails; `requestChange` mints and
+  sends as above. `auth` is imported at call time there, since the route is
+  built at `NODE_ENV=production` in its tests.
+- **A provider that shared no address gets a placeholder.** `orPlaceholder`
+  in `socialProviders()` maps a profile with no email to
+  `<providerId>-<providerAccountId>@pending.invalid`, `emailVerified: false`:
+  `.invalid` is reserved (RFC 2606), so nothing can receive it and no
+  invitation can match it. The sign-up mail is skipped for it and `mail.send`
+  refuses any `.invalid` recipient as the backstop. It is provisional like
+  any unverified row. `email_not_found` no longer occurs, and its sentence
+  in `src/lib/sign-in.ts` is gone.
+- **An unverified sign-in lands on the email page.** The `hooks.after` on
+  the callback replaces the endpoint's redirect with
+  `/account/email?next=<where it was going>` whenever the session's row is
+  unverified — a Facebook or Microsoft address, a Google or Discord one the
+  provider did not vouch for, or the placeholder — on every sign-in, not
+  only sign-up, since a provisional account can do nothing else. The
+  endpoint's cookies stay: Better Auth merges a hook's `Location` over its
+  own and appends cookies. A verified sign-in lands where it asked.
+- **The page.** `src/app/account/email/page.tsx` calls `requireSession()`
+  and `getMe`, passes `''` for a placeholder, `next` through
+  `safeReturnPath`, `?error=` through `src/lib/account-email.ts`'s
+  `verifyErrorMessage` — one sentence per code Better Auth or the gate
+  appends, never the code — and the seconds left on the mail clock. `EmailForm`
+  has two views: `?verified` on a verified row is the confirmed one, the
+  address and Continue with nothing to edit; otherwise the field, prefilled
+  and always editable, which is how any account changes its address later.
+  Its success message names the typed address, since the row's is unchanged
+  until the link is followed. Below the form, a verified account gets a link to
+  `/account` ("Linking a second provider" above).
+- **No other page shows an unverified account anything.** `requireSession()`
+  sends a session whose row is unverified to `/account/email?next=<its own
+path>` from every page but that one (`isEmailPage`, exact on the pathname),
+  so the after-hook's landing is not the only way there: a bookmark, a
+  back button or a typed URL all end on the email page until the address is
+  proved. `/api/graphql` is not gated the same way — the context reads the
+  session and the services refuse what a provisional account may not do,
+  which is everything but `me` and `setEmail`.
+- **Tests.** `tests/modules/identity/services/email.test.ts` (the service,
+  with a fake sender), `tests/db/email-change.test.ts` (the whole round trip
+  through Better Auth's endpoints, including that an aged verified account
+  survives the sweep before and after a change), `tests/lib/auth.test.ts`
+  (the placeholder mapping), and `tests/acceptance/08-email-and-admin.test.ts`
+  (stories 58 and 59).
+
+### Granting a second admin — decided, not built (M2.9)
+
+[`design-decisions/m2.9-granting-admin.md`](design-decisions/m2.9-granting-admin.md)
+carries the argument.
+
+- **The primary admin** cannot be revoked or deleted by anyone, itself
+  included (MB.59). The UI calls it "Primary admin", and its refusal is in
+  plain language that names no variable.
+- **Every other admin** is granted and revoked by an admin from
+  `/admin/users`, verified or not (MB.59). A grant also sets
+  `canCreateWorkspace`. A revoke that would leave zero admins is refused, as a
+  fallback for the gap after the variable changes, and the primary admin can
+  pause granting and revoking for every other admin through a `site_settings`
+  row (MB.62, MB.63).
+- **Inviting an admin by email** is MB.69 and MB.70 (story 62): the
+  invitation names an address, the link is mailed to it, and only a signed-in
+  account whose verified email matches can accept. Accepting is a grant, so it
+  writes the ledger row, sets `canCreateWorkspace`, and is refused while
+  changes are paused.
+- **The ledger.** Each change is appended to `admin_role_changes` (MB.58),
+  because the next update to the row overwrites `users.updated_by`.
+- **MB.53.** Better Auth's `admin` plugin mounts `set-role`, `update-user`
+  and `remove-user` alongside impersonation. MB.53 therefore allows only the
+  two impersonation endpoints.
+- **MB.61** decided first-party verification
+  ([`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md)):
+  MB.65 builds the mail transport, MB.66 turns Better Auth's verification on,
+  MB.67 makes unverified accounts provisional, MB.68 promotes the primary
+  admin at verification (above), and MB.54, re-scoped to follow them, is the email
+  page where a user sets or changes their address.
+
+Until MB.58 and MB.59 land, a second admin is an `UPDATE` in `psql`.
+
+### The self-created user
+
+- **Why sign-up can't go through `withAudit(session, fn)`.** CLAUDE.md
+  rule 3 says every write does; OAuth sign-up is the one write that can't,
+  because there's no session yet — the write _is_ how one comes to exist.
+  This is the same "no third access path" exception `/api/auth/*` already is
+  (see the top of this doc), one level deeper: a write Better Auth's own
+  create-user flow performs directly against the adapter, with no service
+  function in between to call `withAudit`. The promotion above is not such a
+  write: by the callback's after hook the user is authenticated.
+- **`databaseHooks.user.create.before`** (`src/lib/auth.ts`) does the audit
+  stamping, and nothing else:
   - Generates a `uuid` itself (`crypto.randomUUID()`) rather than letting
     Postgres's column default assign one, so `createdBy`/`updatedBy` (NOT
     NULL, no database default) can reference it before the row exists —
@@ -217,11 +746,10 @@ Nothing else grants admin in v1 — no UI, no other API path.
     bootstrap row, applied generally: a self-created account is its own
     creator. `forceAllowId` (Better Auth's own `createWithHooks`) is what
     lets a hook-supplied id override the adapter's default id generation.
-  - Sets `role: 'admin'` only when the incoming email matches
-    `ADMIN_BOOTSTRAP_EMAIL` (compared case-insensitively); otherwise leaves
-    `role` and `canCreateWorkspace` absent from the returned data entirely,
+  - Leaves `role` and `canCreateWorkspace` absent from the returned data,
     so Postgres's own column defaults apply — not duplicated as a second
-    `'user'`/`false` literal in application code.
+    `'user'`/`false` literal in application code. It never sets `role`,
+    whatever the address.
 - **`user.additionalFields`** registers `role`, `canCreateWorkspace`,
   `createdBy`, `updatedBy` with the core Better Auth user model — without
   this, the adapter silently drops any key in the hook's returned data
@@ -240,7 +768,7 @@ Nothing else grants admin in v1 — no UI, no other API path.
   (see the "Tables" section above) since it bought nothing but a
   `user.fields` config entry to maintain.
 
-## The service-level session, and the two refusals (M1.26)
+## The service-level session, and the three errors (M1.26, MB.43)
 
 `src/lib/session.ts` defines the `Session` every service takes:
 
@@ -255,10 +783,11 @@ of identity and lives behind `/api/auth`; a `Session` is what the server has
 already resolved out of it. Keeping the two apart is part of why MB.30 turned
 the organization plugin down — calling its server API from a service would have
 made every fixture user a `sessions` row and a signed cookie, and `asUser(A)`
-would have stopped being a service-level value at all. M2.7 adds the helper
-that produces one from a request; M1.26 defined the shape ahead of it so
-authorization tests could be written first, and `tests/support/as-user.ts` produces
-one from a fixture user (`claude-docs/testing.md`).
+would have stopped being a service-level value at all. `src/lib/request-session.ts`
+produces one from a request (M2.7, "Route protection" below); M1.26 defined the
+shape ahead of it so authorization tests could be written first, and
+`tests/support/as-user.ts` produces one from a fixture user
+(`claude-docs/testing.md`).
 
 - **It extends `AuditSession` rather than restating `userId`.** The identity a
   call acts under and the identity it is stamped with are one field, so
@@ -278,28 +807,200 @@ one from a fixture user (`claude-docs/testing.md`).
   field but M6.3's `Membership` proof, which only `assertMembership` can
   produce.
 
-`src/lib/errors.ts` carries the two ways a service ends a call it cannot
-perform. A service **throws**; it never answers with an empty list, a null, or
-a success that did nothing.
+`src/lib/errors.ts` carries the three ways a service ends a call it cannot
+perform: two refusals and a bad value. A service **throws**; it never answers
+with an empty list, a null, or a success that did nothing.
 
-| Error       | Means                                     |
-| ----------- | ----------------------------------------- |
-| `Forbidden` | The thing exists and you may not have it. |
-| `NotFound`  | There is nothing here under that id.      |
+| Error             | Means                                                                  |
+| ----------------- | ---------------------------------------------------------------------- |
+| `Forbidden`       | The thing exists and you may not have it.                              |
+| `NotFound`        | There is nothing here under that id.                                   |
+| `ValidationError` | The input broke a rule; `issues` says which field and why, one by one. |
+
+A `ValidationError`'s `issues` are `{ path, message }[]`. `path` names the
+input field in the shape of the operation's input, such as `['canonicalName']`
+or `['folkNames', 2]`, and is empty for a rule that belongs to no one field.
+The type carries issues but does not produce them, so `src/lib/` depends on no
+schema library, and a seed or a script can throw one. The adapter that turns a
+failed Zod parse into issues lives beside the schemas (M4.5). A refusal that is
+not about a value, such as the last-owner guard, stays a `Forbidden` with an
+explaining message.
+
+They are types rather than message strings so a test can assert on the type:
+wording gets edited, and a test pinned to a message keeps passing against a
+service that has stopped checking anything.
 
 They are two types rather than one because **the route decides which of them
 the browser is shown, and it can only decide if the service said which
 happened**: `/coven/[slug]` answers 404 to a non-member, since the existence of
 a workspace is itself private, while `/admin` answers a styled "not authorized"
 page, since everyone already knows that path exists (CLAUDE.md's domain
-invariants). Neither type carries a status code or a GraphQL error code — the
-transport renders a refusal, and a service called from a script has no use for
-one.
+invariants). None of the three carries a status code or a GraphQL error code:
+the transport renders a refusal, and a service called from a script has no use
+for one. Over GraphQL, the code is attached on the way out by
+`src/graphql/errors.ts`, the route's `maskedErrors` mapping (MB.43). Each type
+leaves as `VALIDATION` (with `fieldErrors`), `FORBIDDEN` or `NOT_FOUND`, with
+the service's message verbatim, and anything else leaves masked
+(`graphql.md`, "Errors").
 
 Both take a message and default to a short one, because DESIGN.md §5's one-way
 widen requires an _explaining_ error where a bare refusal would mislead:
 narrowing a spell's visibility is refused with the reason, not with a one-word
 `Forbidden`.
+
+## Route protection (M2.7)
+
+Every page is protected unless it is named public, and two layers do the
+protecting: a cheap one that owns the redirect, and a secure one that owns the
+answer.
+
+| Layer                       | Where                        | Checks                                           | On failure                              |
+| --------------------------- | ---------------------------- | ------------------------------------------------ | --------------------------------------- |
+| Proxy (optimistic)          | `src/proxy.ts`               | A Better Auth session cookie is present          | 307 to `/sign-in?next=<path and query>` |
+| `requireSession()` (secure) | `src/lib/request-session.ts` | Better Auth finds a live session in the database | The same redirect, from the page        |
+| Proxy, `/workshop/*` only   | `src/proxy.ts`               | The secure check, then `assertWorkshopAccess()`  | The redirect, or 403 for a non-admin    |
+
+- **Deny by default.** `PUBLIC_ROUTES` in `src/proxy.ts` is a plain list of
+  the pages a signed-out visitor may reach — `/`, the general entry page
+  (MB.57); `/sign-in`; `/invite/*`; and `/email/*`, the one prefix under
+  `public/`, whose images and fonts a mail client fetches with no cookie
+  (MB.66, [`email.md`](email.md)). MB.83 adds `/compendium`, `/compendium/*`,
+  `/robots.txt` and `/sitemap.xml`: the public compendium's two pages and the
+  two files a crawler reads (MB.80). Everything else redirects, so a
+  route added without anyone thinking about auth is protected, not open. An
+  entry is an exact path, or a path ending `/*` for everything beneath it:
+  `/` admits only `/`, `/sign-in` does not admit `/sign-in-help`, and
+  `/invite/*` does not admit `/invites`. Adding a public page is adding a
+  line there.
+- **The matcher only keeps the proxy off what is never a page:** Next's own
+  `/_next/*` assets and `/api/*`. Nothing in `public/` is exempt: a file placed
+  there is a protected page to the matcher, redirected to `/sign-in` — HTML
+  where the browser asked for an image — until the PR that adds it also adds
+  its entry, and `tests/proxy.test.ts` pins that for `/favicon.ico` and
+  `/robots.txt` — the latter until MB.83 lists it. MB.57 found this with the backdrop's images and answered it
+  by importing them from their stylesheet instead, so they ship under
+  `/_next/static/media` with a content hash. Any future exemption is a named
+  prefix, never a file-extension pattern, for the same reason `PUBLIC_ROUTES`
+  is a list: what is public is listed, never inferred. It must be a literal Next can read at
+  build time, which is why the public list is not expressed in it — as a
+  regex negative lookahead it was unreadable, and would have got worse with
+  every route. The cost of the split is that the proxy also runs on the
+  public pages, which is a cookie-free no-op there beyond forwarding the
+  return path. `tests/proxy.test.ts` pins the matcher with Next's
+  `unstable_doesMiddlewareMatch` (the installed 16.3 name for the docs'
+  `unstable_doesProxyMatch`), and the public list through the proxy itself.
+- **`/api/*` is public to the proxy, not to the data.** Better Auth's handshake
+  has to be reachable signed out, and `/api/graphql` must refuse in its own
+  error shape rather than answer a `fetch` with a redirect to an HTML page. The
+  GraphQL context calls `getSession()` and the services refuse.
+- **Why a proxy at all, when the page checks anyway.** A server component
+  cannot read its own URL, so only the proxy knows the path to send the visitor
+  back to. It also covers what a page check would not: a layout does not re-run
+  on client-side navigation (Next's authentication guide, "Layouts and auth
+  checks"), and a route that forgets to call `requireSession()` still
+  redirects. It never touches the database — Next runs it on every page
+  request, prefetches included — so its cost is a cookie read per navigation.
+  **The one exception is `/workshop`** (M2.10): the staging component workshop
+  is static files under `public/`, with no page to run the secure check, so
+  the proxy runs it there itself — `sessionFromHeaders()`, imported only on
+  that branch — and applies the admin-only service rule.
+  [`workshop.md`](workshop.md), "On staging", has the whole gate.
+- **Why the page checks anyway.** A present cookie is not a valid one: expired,
+  revoked, or forged all pass the proxy. `requireSession()` asks Better Auth,
+  which verifies the cookie's HMAC and looks the session up. It redirects on
+  failure with the path the proxy forwarded in the `x-sorrel-return-path`
+  request header (`RETURN_PATH_HEADER`). The proxy sets that header on every
+  request it passes, overwriting any value the client sent, and the read still
+  goes through `safeReturnPath`. The proxy forwards it on public pages too, so
+  `/invite/[token]` can send a signed-out visitor to `/sign-in` and back when
+  M7 makes acceptance require a sign-in. `/` is public but personalised
+  (MB.57): it reads the session with `getSession()` to offer a signed-in
+  visitor the landing rather than sign-in, and `requireSession()` would
+  redirect the signed-out visitors it exists for.
+  `requireSession()` has a second redirect (MB.54): a session whose address
+  is unverified goes to `/account/email?next=<its own path>` from every page
+  but that one, since a provisional account can do nothing else ("The email
+  page"). `/account/email` is the first page to call it; every later
+  protected route adopts it in its own PR.
+- **The return path round trip.** The proxy builds `next` from the request's
+  pathname and query, through `signInPath()` (`src/lib/sign-in.ts`), which
+  runs `safeReturnPath` first — a request can really carry a pathname of
+  `//evil.example`. `/sign-in` reads `next` back through the same guard and
+  hands it to `SignInPanel` as Better Auth's `callbackURL`, and its
+  `errorCallbackURL` is `signInPath(next)`, so a failed attempt keeps the
+  destination too. One guard on the way out and on the way back is what makes
+  the round trip lossless for a safe path and closed for an unsafe one. The
+  guard's fallback is `POST_SIGN_IN_LANDING` — `/coven`, the post-sign-in
+  landing M2.8 builds — not `/`: someone who has just signed in has been
+  through the front door already
+  ([`design-decisions/mb.57-post-sign-in-landing.md`](design-decisions/mb.57-post-sign-in-landing.md)).
+- **`getSession()` is `cache()`-wrapped**, so a layout and a page asking in the
+  same render cost one lookup. It is `sessionFromHeaders(await headers())`;
+  the proxy, which has the request but no `headers()`, calls
+  `sessionFromHeaders(request.headers)` directly. It returns exactly `{ userId, role }`, the
+  service-level `Session` above. It throws on a `role` outside the column's
+  enum rather than reading it as `'user'`, because Better Auth types the
+  additional field as a plain string and a wrong value there is a bug to
+  surface, not a default to apply.
+
+**Services receive the session; they never read it.** Every service takes a
+`Session` as its first argument. The page calls `requireSession()` (or the
+GraphQL context calls `getSession()`) and passes the result in. That is what
+keeps a service callable from a test with `asUser(A)`, from a script, and from
+both transports alike. `.oxlintrc.json`'s `src/modules/*/services/**` override makes it
+an import error: a service may not import `next/headers`, `better-auth/cookies`,
+`lib/auth` or `lib/request-session`. It may still `import type { Session }`
+and better-auth's `createAccessControl`. The override restates the three
+top-level bans because an override replaces the rule rather than merging
+(`claude-docs/db.md`). `tests/guards/lint-service-session-boundary.test.ts`
+asserts all of it with probe files, in a probe directory of its own so it
+cannot race `lint-db-client-boundary.test.ts`'s.
+
+## Plugins (MB.74)
+
+One Better Auth plugin is registered, `lastLoginMethod` (below). Every plugin
+can mount routes under `/api/auth/*`, the one path outside `/api/graphql`,
+and write through the adapter, outside `withAudit`, so each has to earn its
+place. MB.74 weighed the whole roster against an OAuth-only, invite-gated site
+([`design-decisions/mb.74-better-auth-plugins.md`](design-decisions/mb.74-better-auth-plugins.md)).
+
+| Plugin or option                                                                                                                                                                    | Status                       | Why                                                                                                                                     |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Rate limiter, `storage: 'database'`                                                                                                                                                 | In use (MB.75, MB.76)        | One count across every instance, keyed on Vercel's own client-address header ("Rate limiting")                                          |
+| `account.encryptOAuthTokens`                                                                                                                                                        | In use (MB.76)               | Access and refresh tokens unreadable without the secret; older plaintext rows keep reading ("Config")                                   |
+| `lastLoginMethod`, cookie only                                                                                                                                                      | In use (MB.77)               | The browser remembers its own last provider, so the sign-in page can point at it without the server revealing anything about an address |
+| `oAuthProxy`, previews only                                                                                                                                                         | Scheduled (MB.78)            | Lets a hotfix preview finish a sign-in through staging's registered callback                                                            |
+| `admin`, impersonation endpoints only                                                                                                                                               | Scheduled (MB.53)            | Every other endpoint would grant admin or delete users outside `withAudit` (M2.9)                                                       |
+| `createAccessControl`                                                                                                                                                               | In use (M6.3)                | A helper, not a plugin: workspace permission statements                                                                                 |
+| Passkeys                                                                                                                                                                            | v2                           | The first-party credential DESIGN.md §13 names, in place of email and password                                                          |
+| Magic link, email OTP                                                                                                                                                               | v2, after passkeys           | Sign-in for someone with none of the four providers                                                                                     |
+| `@better-auth/stripe`                                                                                                                                                               | v2 (MB.79)                   | Subscription billing; DESIGN.md §13 sets it against what the owner wants to charge, and a test-mode spike decides                       |
+| Two-factor, `captcha`, `haveIBeenPwned`                                                                                                                                             | Only with email and password | Each guards a password sign-in; two-factor never challenges an OAuth one                                                                |
+| `organization`                                                                                                                                                                      | Never (MB.30)                | Unaudited writes, hard deletes, a plaintext invitation token, a session-held active workspace                                           |
+| `jwt`                                                                                                                                                                               | Never                        | Issues a token beside the cookie for a service this app does not have; its cookie mode needs the cookie cache MB.59 keeps off           |
+| `user.deleteUser`                                                                                                                                                                   | Never                        | A hard delete, which every audit foreign key to `users` refuses                                                                         |
+| `bearer`, `oneTimeToken`, `deviceAuthorization`, `oauthPopup`, `multiSession`, `oneTap`, `username`, `anonymous`, `phoneNumber`, `siwe`, `genericOAuth`, `openAPI`, `customSession` | Never                        | Other clients, other sign-in schemes, or nothing this app reads                                                                         |
+
+### The last-used provider (MB.77)
+
+`lastLoginMethod` adds an after-hook and nothing else: no route, no write,
+and no `users` column, since `storeInDatabase` is unset (pinned in
+`tests/lib/auth.test.ts`). On any response that sets the session cookie it
+also sets `better-auth.last_used_login_method` to the provider id, readable
+by the page (not `HttpOnly`), for thirty days, with the session cookie's other
+attributes. So a sign-in callback marks its provider, including an unverified
+one that our after-hook redirects to the email page: Better Auth runs a
+plugin's after-hooks after ours, even when ours throws the redirect, and the
+session cookie is already set by then. `/sign-in/social`, a callback refused
+with `account_not_linked`, and a link callback set no session, so they mark
+nothing. A link keeps the mark on the provider the browser signed in with.
+
+The cookie name is `LAST_USED_PROVIDER_COOKIE` (`src/lib/sign-in.ts`), passed
+to the server plugin and to `lastLoginMethodClient` in `src/lib/auth-client.ts`,
+because the two must agree. `SignInPanel` reads it through the client plugin
+(`components/sign-in-panel.md`, "Last used"). The server never reads it, and
+never names a provider for an address: that would tell a visitor the address
+has an account. The page can name one because the browser already knows it.
 
 ## The organization plugin is not used (MB.30)
 
@@ -342,10 +1043,9 @@ token)>`); the recipe is in the record.
 Every variable this subsystem needs, and the manual steps to set each one,
 is `claude-docs/secrets.md` (M0.27) — not duplicated here. Short version:
 `src/lib/auth.ts` is wired and the OAuth credentials are set (see "Social
-providers" above). Still unset, all owned by MB.12: `ADMIN_BOOTSTRAP_EMAIL`,
-so no account can become admin yet; and `VERCEL_SCOPE`/`NEON_API_KEY`/
-`NEON_PROJECT_ID`, so `migrate.yml` still skips rather than applying
-migrations.
+providers" above). `ADMIN_BOOTSTRAP_EMAIL` is set in Preview and Production.
+Since MB.60 a deploy **fails its build** without it (`deploy.yml`'s
+pulled-environment assertion names it first).
 
 ## Tests
 
@@ -366,26 +1066,92 @@ migrations.
   reusing one `import('@/lib/auth')` across cases in the same test file would
   otherwise replay the first result instead of re-evaluating against new
   env vars.
-- **`tests/lib/auth.test.ts` (M2.3 additions)** — asserts `role` and
-  `canCreateWorkspace` are registered with `input: false`; and calls
+- **`tests/lib/auth.test.ts` (M2.3, MB.60 additions)** — asserts `role` and
+  `canCreateWorkspace` are registered with `input: false`; calls
   `databaseHooks.user.create.before` directly (no real Better Auth request,
   no database) to assert a new user is stamped as its own `createdBy`/
-  `updatedBy`, that `role` is promoted to `'admin'` only for an email
-  matching `ADMIN_BOOTSTRAP_EMAIL` (case-insensitively), and left
-  `undefined` — not `'user'` — for everyone else, so the column default is
-  what actually applies rather than a second copy of it in this code.
+  `updatedBy` and that `role` stays `undefined` even for the address
+  `ADMIN_BOOTSTRAP_EMAIL` names; asserts the import throws on an unset
+  `ADMIN_BOOTSTRAP_EMAIL` at `NODE_ENV=production` and does not outside it;
+  and pins the three options above off, with all four providers registered so
+  the per-provider check cannot pass on an empty list.
+- **`tests/modules/identity/services/admin-role.test.ts` (MB.60)** — `promotePrimaryAdmin`'s
+  outcomes against the database, then the whole round trip through
+  `auth.handler`: `POST /sign-in/social`, then `GET /callback/:id` with
+  MSW standing in for each provider's token and profile endpoints (Google's
+  and Microsoft's id tokens are unsigned, which is safe to fake because both
+  decode the token they got from their own token endpoint without
+  re-verifying it). Each refusal differs from a promoting case in one field,
+  so it is the provider rule refusing and not a mismatched address. Every
+  user it makes is on `@primary-admin.test`, deleted before each test, since
+  the harness re-clones per file, not per test.
+- **`tests/lib/auth.test.ts` (MB.66 additions)** — pins every
+  `emailVerification` value, `requireLocalEmailVerified` at its default, no
+  provider requiring verification, and the Facebook and Microsoft mappers.
+- **`tests/db/email-verification.test.ts` (MB.66)** — the same
+  `auth.handler` round trip, through `tests/support/oauth.ts` (shared with
+  the admin-role test), with `@/lib/mail` mocked. A sign-up mails once and
+  signs in; the mailed link verifies from the owner's session and is refused,
+  row unchanged, from none or another user's, and the same link then
+  succeeds from the owner's session, so the refusal was the session's. Each
+  stamp assertion first hands `updated_by` to the bootstrap user, because
+  the create hook already stamps a new row as itself. MB.68 adds the
+  promotion: a Microsoft-only owner is promoted by following the link from
+  their own session and by nothing else; the refusals from another browser
+  and from none leave the role alone and the owner's session then promotes,
+  so it was the session binding that refused; and a change-email link minted
+  by hand verifies with no session and promotes nobody, a case that fails
+  with the acting-user check removed. `tests/modules/identity/services/admin-role.test.ts`
+  covers `promotePrimaryAdminAtVerification`'s outcomes directly.
+- **`tests/db/account-linking.test.ts` (MB.71)**: `/link-social` and
+  `/unlink-account` through `auth.handler`, on `tests/support/oauth.ts`'s
+  `link` helper. A Microsoft profile reporting `email_verified: false` links
+  to the signed-in Discord user, and a later Microsoft sign-in lands there. The
+  guard is the same profile at a plain sign-in over that verified row, refused
+  with `account_not_linked`. It fails with the vouch made unconditional, so it
+  is the pin that refuses. The file also covers a link naming another user
+  in its body and landing under another user's session, which still attaches
+  to its starter; `/link-social` with no session; and unlinking. A removed
+  provider is refused again, the last one survives, and a stranger holding
+  two providers cannot remove the owner's. `tests/lib/auth.test.ts` pins
+  `allowDifferentEmails` and `allowUnlinkingAll`, and
+  `tests/e2e/account.spec.ts` scans `/account` signed in (`tests/e2e/session.ts`).
+- **`tests/db/rate-limiting.test.ts` (MB.76)**: `/sign-in/social` through
+  `auth.handler` at the staging origin, at `NODE_ENV=production` with Vitest's
+  `TEST` cleared. Better Auth reads `NODE_ENV` once, as it loads, so the stub
+  precedes the first import; with either left as Vitest sets it, an unresolved
+  address is taken for `127.0.0.1`. The fourth
+  start inside ten seconds answers `429` with `X-Retry-After`, and the table
+  holds that key at count 3, so the database counted. Two visitors whose
+  `x-forwarded-for` Better Auth would refuse get a row each. The same options
+  with only the header pin removed put both in one `no-trusted-ip` row, so
+  the pin is what separates them. A client varying its own
+  `x-forwarded-for` is still refused on the fourth start.
+- **`tests/db/oauth-token-encryption.test.ts` (MB.76)**: a Google sign-in
+  stores an access token that is not the one issued, and `getAccessToken`
+  hands back the one issued; a token overwritten in plaintext still reads.
+  `tests/lib/auth.test.ts` pins the limiter's `enabled`, `storage` and
+  header, `encryptOAuthTokens`, and the three session lifetimes.
+- **`tests/db/last-login-method.test.ts` (MB.77)**: through `auth.handler`
+  on `tests/support/oauth.ts`. A verified callback sets the last-used cookie to
+  its provider, without `HttpOnly`, and so does an unverified one landing on
+  the email page. `/sign-in/social` alone, a callback refused with
+  `account_not_linked`, and a link callback set none. Each case first asserts
+  whether the session cookie was set, since that is what the plugin keys on.
+  `tests/lib/auth.test.ts` pins the plugin's options to the shared cookie name
+  alone and asserts Better Auth's `user` table gains no `lastLoginMethod`.
 - **`tests/lib/errors.test.ts` (M1.26)** — asserts `Forbidden` and
   `NotFound` are distinguishable by type in a `catch` and in an
   `expect().rejects.toThrow(Class)`, and that neither an empty list nor a
   success value satisfies an assertion written for a refusal. The last three
   cases assert that an _inner_ expectation rejects, which is what proves the
   assertion style can fail at all — see `claude-docs/testing.md`.
-- **`tests/db/users-schema.test.ts`** — asserts `users`' shape via Drizzle's
+- **`tests/modules/identity/schema/users-schema.test.ts`** — asserts `users`' shape via Drizzle's
   own `getTableConfig()` introspection: `name`/`image` columns,
   `role`'s `user`/`admin` enum and `'user'` default, `canCreateWorkspace`'s
   `false` default, every `...auditColumns` field present, and the email
   index being a partial unique index (`WHERE deleted_at IS NULL`) rather
-  than a plain unique constraint. It was kept out of `src/db/schema/` from
+  than a plain unique constraint. It was kept out of the schema directory from
   the start — a `*.test.ts` file there gets swept into `drizzle.config.ts`'s
   `schema` glob, and `drizzle-kit generate` fails trying to `require()` a
   file that imports Vitest; MB.41 moved the whole suite to `tests/`, which
@@ -412,3 +1178,30 @@ migrations.
   `tests/db/updated-at-trigger.test.ts` reads `accounts`, `sessions` and
   `verifications` from the catalogue as its named counter-example — the
   three tables that carry `updated_at` and no trigger.
+- **`tests/acceptance/01-accounts.test.ts` (M2.1)** — stories 1 and 2,
+  deliberately red. Both are blocked on UI Wave 6 hasn't built yet, not on
+  the wiring above: story 1 checks for `/sign-in` (DESIGN.md §9) at
+  `src/app/sign-in/page.tsx`, which M2.6 adds; story 2 reads `src/app/
+page.tsx`'s own source for the invite-only explanation M2.8 adds, since
+  today's `/` is the same static splash for every visitor. Each reads its
+  route's source from disk rather than importing or rendering it — the
+  files don't exist yet (story 1) or don't yet say what the story needs
+  (story 2), and a static import of a page that isn't there would fail
+  typecheck rather than the test. `claude-docs/testing.md`, "Acceptance"
+  covers how CI tolerates this suite failing until M2 closes.
+- **Route protection (M2.7)** — `tests/proxy.test.ts` pins the matcher and
+  the public list, lookalikes included, and asserts the proxy's
+  redirect, its return path, and the header it forwards, overwriting a
+  client-supplied one. `tests/lib/request-session.test.ts` mocks Better Auth and
+  asserts the mapping to `{ userId, role }`, the refusal of an unknown role, and
+  `requireSession()`'s redirect. `tests/lib/sign-in.test.ts` round-trips a set
+  of return paths through `signInPath()` and `safeReturnPath()`.
+  `tests/e2e/route-protection.spec.ts` runs the whole thing against the built
+  server: a signed-out visit to a protected route lands on `/sign-in` with
+  its `next`, and `/invite/*` is not redirected; `tests/e2e/smoke.spec.ts` renders `/`
+  signed out. `requireSession()` has no end-to-end test until the first page
+  calls it: a forged cookie passes the proxy by design, and only a real page
+  can show the database-backed check refusing it. That page's PR adds the test,
+  signing in with a `sessions` row plus a signed cookie (the MB.30 recipe) —
+  in a spec that does not also reset `sorrel_e2e`, or one that shares
+  smoke.spec.ts's, since two files resetting it from different workers race.

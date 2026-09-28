@@ -9,8 +9,8 @@ archived and are not required reading.
 
 ## Composite actions
 
-`.github/actions/` — three actions. `timer-start` and `timer-elapsed` were a
-fourth and fifth until MB.32 deleted them: 46 lines across twelve workflows to
+`.github/actions/` — five actions. `timer-start` and `timer-elapsed` were two
+more until MB.32 deleted them: 46 lines across twelve workflows to
 print an elapsed time into a job summary. `duration` stays an **optional**
 input on `job-summary` and `pr-comment`, so restoring a timer would need no
 edit at any call site; nothing passes it today.
@@ -55,7 +55,78 @@ edit at any call site; nothing passes it today.
   log excerpt on failure.
 - **`pr-comment`** — upserts one marked comment per check (`<!-- ci-<slug> -->`),
   in `minimize` (resolve-on-pass) or `comment` (always post) mode, plus a
-  separate fail-only thread for `merge-queue: true` callers.
+  separate fail-only thread for `merge-queue: true` callers. Every caller runs
+  it under `!cancelled()`, not `always()`: the action reads any outcome but
+  `success` as a failure, so a leg cancelled by a newer push's
+  `cancel-in-progress` posted "❌ failed — 0 errors" over a check that never
+  finished. The next run's comment is the one that counts.
+- **`build-image`** — the build-or-reuse sequence `build-image.yml`,
+  `build-e2e-image.yml` and `build-db-image.yml` share: compute the
+  content-addressed GHCR tag, log in, set up buildx, `docker buildx imagetools inspect`
+  the tag, and `docker/build-push-action` only on a miss; the `image`
+  output is the ref. Three things stay in the caller because the action cannot
+  take them: `actions/checkout` (a local action resolves from the checked-out
+  tree), the `hashFiles(...)` call (it takes literal globs, so the hashed list
+  is written where it can be read; the action fails on an empty hash rather
+  than pushing an untagged ref), and `secrets.GITHUB_TOKEN` (`secrets` is out
+  of scope inside a composite, so the registry password is an input — the same
+  route `vercel-secrets-guard` takes). `cache-scope` is optional: set, it emits
+  `type=gha,scope=<name>`; empty, it emits the unscoped `type=gha` that
+  `build-image.yml` has always used, so no image's layer-cache key moved when
+  the three workflows were folded onto it.
+- **`vercel-secrets-guard`** — the warn-and-skip check on
+  `VERCEL_DEPLOY_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID`, at `id: guard`
+  in `migrate.yml`'s `migrate` job and `deploy.yml`'s `deploy` and `teardown`
+  jobs; `skipping` is the word the warning names. Every later step in those
+  jobs is gated on `steps.guard.outputs.enabled == 'true'`, which is why the id
+  is fixed. The three secrets arrive as inputs, and a reference to a secret
+  that does not exist is `''`, so a misspelt name still reads as unset. The
+  Neon guards — `migrate.yml`'s `neon-guard` and `neon-snapshot-prune.yml`'s
+  `guard` — stay inline: a different, two-secret shape, and the prune workflow
+  has no checkout to resolve a local action from.
+
+**What cannot become a composite action**, so it is not re-proposed: the
+`container:` / `defaults:` preamble `checks.yml`, `vitest.yml` and
+`playwright.yml` share, and the `services: postgres:` block `vitest.yml` and
+`playwright.yml` share. Those are job-level keys, evaluated before the first
+step runs; a composite contributes steps and nothing above them, and the only
+job-level `uses:` is a reusable workflow, which is a whole job rather than a
+piece spliced into one. That repetition is the price of the shape and stays
+where Container jobs describes it.
+
+## Container jobs
+
+`checks.yml`, `vitest.yml` and `playwright.yml` all run their work inside a
+`container:` built from a GHCR image, with `defaults.run.working-directory:
+/app`. Four things about that shape are load-bearing and none of them is
+visible from the step that depends on them.
+
+- **`defaults.run.shell: bash` is not cosmetic.** A `container:` job defaults
+  to `sh`, unlike a plain `runs-on` job
+  ([docs](https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/run-jobs-in-a-container)),
+  and dash has no `set -o pipefail` — which every `… | tee output.log` step
+  relies on to report the tool's exit status rather than `tee`'s.
+- **`options: --user root` on the `testing` image jobs.** That image's default
+  user is `node`, which cannot write the runner's bind-mounted
+  `_temp/_runner_file_commands` directory — `actions/checkout`, and any JS
+  action using `core.saveState`/`setOutput`, fails `EACCES` without it.
+- **Guards that shell out to git pass `-c safe.directory=*`.** Those root jobs
+  run over a checkout owned by uid 1000, and git refuses a repository owned by
+  another user ("dubious ownership") unless told the directory is safe.
+- **`playwright.yml` passes `options: --ipc=host` instead.** Chromium crashes
+  on the container default 64 MB `/dev/shm`. Microsoft's Playwright base image
+  already runs as root, so `--user root` would add nothing there; Chromium
+  under root expects `--no-sandbox`, which `playwright.config.ts` owns if it
+  ever launches non-headless — the headless default here does not need it.
+- **Every path a step hands to another step is the absolute `/app` one.**
+  `checkout-to-app` populates both `$GITHUB_WORKSPACE` (what `hashFiles()`
+  reads) and `/app` (where the job's commands actually run), so a
+  workspace-relative log file, cache path or `--outputFile` resolves against
+  the wrong one.
+
+**`checks.yml`'s `name: ${{ matrix.name }}` is load-bearing too.** Without it
+every leg reports as `checks / check (lint)` rather than `checks / lint` — the
+matrix's generated job name, not the leg's.
 
 ## Reusable checks (`workflow_call`, never triggered directly)
 
@@ -100,7 +171,7 @@ edit at any call site; nothing passes it today.
     - **The cache never hit before MB.37.** `actions/cache` runs inside the
       `testing` container, and the Alpine image's busybox `tar` rejects
       `--posix`, so every save failed with a warning and every restore missed
-      — from the step's first commit (`57d81bd`) until MB.37 added GNU `tar`
+      — from the step's first commit (`3d9735e`) until MB.37 added GNU `tar`
       and `zstd` to the image's `testing` stage. The `testing` image hash
       moved with that Dockerfile change, as it does for any.
     - **`package.json`'s `build` script forces `NODE_ENV=production`.** The
@@ -132,21 +203,41 @@ edit at any call site; nothing passes it today.
 
 - **`checks / destructive-ddl`** (M1.5, a `checks.yml` leg since MB.37) —
   flags destructive DDL in migration files new or changed in the PR, via
-  `scripts/check-destructive-ddl.ts`, and fails unless the PR body carries a
-  `Destructive DDL acknowledged: <reason>` line. The forms: any `DROP` except
+  `scripts/check-destructive-ddl.ts`, and fails unless each flagged migration
+  carries an acknowledgement sidecar beside it — `src/db/migrations/<tag>.ack.md`
+  holding a `Destructive DDL acknowledged: <reason>` line (MB.48). The forms:
+  any `DROP` except
   `DROP NOT NULL` and `DROP DEFAULT` (which widen), `RENAME`,
   `ALTER COLUMN ... TYPE`, `SET NOT NULL`, and `ADD COLUMN ... NOT NULL` with
   no `DEFAULT` — see `claude-docs/db.md`'s Migrations section for the policy.
   Blocking, like `lint`/`typecheck`.
-  - **It needs two things a `workflow_call` file cannot read off its own
-    trigger**, which is why it has inputs where the other legs have none: the
-    changed-migration-file list and the PR body. Only the caller sees
-    `github.event.pull_request`. The list comes from `changes`'s
+  - **It needs one thing a `workflow_call` file cannot read off its own
+    trigger**, which is why it has an input where the other legs have none: the
+    changed-migration-file list, since only the caller sees
+    `github.event.pull_request`. It comes from `changes`'s
     `dorny/paths-filter` step (`list-files: json`, reused rather than adding a
-    second changed-files action) as `destructive-ddl-files`, the body straight
-    from `github.event.pull_request.body` as `pr-body`, and `checks.yml` puts
-    both into the job `env` as `DESTRUCTIVE_DDL_FILES` /
-    `DESTRUCTIVE_DDL_PR_BODY`, inert in the other five legs.
+    second changed-files action) as `destructive-ddl-files`, and `checks.yml`
+    puts it into the job `env` as `DESTRUCTIVE_DDL_FILES`, inert in the other
+    five legs. The list comes from a separate, narrower
+    `destructive_ddl_migrations` filter (`src/db/migrations/*.sql` only)
+    rather than from `destructive_ddl`'s own `_files` output: paths-filter
+    lists every changed file matching _any_ of a filter's patterns, so the
+    wider filter's list would hand a changed `pr-gate.yml` or `checks.yml` to
+    the script as if it were SQL, and `*.sql` keeps Drizzle's `meta/*.json`
+    out as well.
+  - **It took the PR body as a second input until MB.48**, as `pr-body` →
+    `DESTRUCTIVE_DDL_PR_BODY`. Both are gone. A PR body is visible from one
+    branch base and gone on merge, so a release PR — which the script sends at
+    `origin/main`, rescanning every migration since the last release — saw none
+    of the acknowledgements that let those migrations land; release 0.2.0's PR
+    failed this leg for exactly that reason and was merged past it. And one
+    line in a body blessed every finding in the diff whatever file it was in.
+    The PR-body path is retired rather than OR-ed with the sidecar, since an
+    `OR` would keep the uncorrelated hole open. **The leg now reads nothing
+    from GitHub but the file list**, so `make act-check CHECK=destructive-ddl`
+    proves the scan rather than the wiring, and
+    `npm run check:destructive-ddl -- --all` is a usable audit instead of
+    permanently red.
   - **`DESTRUCTIVE_DDL_FILES` is always set, even to an empty string.** The
     script reads set-but-empty as "no migrations changed, scan nothing" and
     _unset_ as "work out what this branch changed from git" — the second is a
@@ -158,17 +249,21 @@ edit at any call site; nothing passes it today.
     which is why nothing looked wrong. MB.37 also widened `DROP` past
     `COLUMN`/`TABLE` — `0002`'s `DROP CONSTRAINT users_email_unique` had passed
     — and stopped `migrations/meta/*.json` being handed to the script as SQL.
+    That same window is why `0002` has no acknowledgement in its own PR (#73)
+    and its sidecar had to be written retroactively.
   - Its `run-destructive-ddl: false` path exists for a merge-queue caller (same
-    reason as `gitflow`'s `should-run` — `merge_group` has no real PR body or
-    diffable source ref, so it can only trust that `pr-gate.yml` already gated
-    the PR before it reached the queue). `merge-queue.yml` was that caller
-    until MB.32 deleted it.
+    reason as `gitflow`'s `should-run` — `merge_group` has no diffable source
+    ref, so it can only trust that `pr-gate.yml` already gated the PR before it
+    reached the queue). `merge-queue.yml` was that caller until MB.32 deleted
+    it.
 
 - **`build-image.yml`** — builds the shared `testing` image once and exposes its
-  ref as an `image` output. Tag is content-addressed:
-  `ghcr.io/${github.repository,,}/testing:${{ hashFiles('Docker/Dockerfile.node', 'package-lock.json') }}`,
-  and a `docker buildx imagetools inspect` check skips the build entirely when
-  that hash already has a pushed image. **This image excludes Playwright
+  ref as an `image` output. A checkout, then the `build-image` action with
+  `hashFiles('Docker/Dockerfile.node', 'package-lock.json')` as the hash, so
+  the tag is content-addressed — `ghcr.io/${github.repository,,}/testing:<hash>`
+  — and the build is skipped entirely when that tag already has a pushed
+  image. No `cache-scope`: its layer cache has always been the unscoped
+  `type=gha` key. **This image excludes Playwright
   entirely** — it's Alpine/musl-based and Playwright's Chromium build has no
   official musl support — so every `checks.yml` leg and `vitest` consume it,
   but `playwright` does not; see `build-e2e-image.yml` below.
@@ -198,7 +293,7 @@ edit at any call site; nothing passes it today.
   step with `always()` and no `--coverage` of its own, so a story never
   counts toward the 80% threshold (`claude-docs/testing.md`). Its reporter
   writes the checklist as JSON (`--outputFile=/app/stories.json`) and
-  `.github/scripts/summarize-stories.mjs` renders it — "3 of 45 stories
+  `.github/scripts/summarize-stories.mjs` renders it — "3 of 50 stories
   passing" and a markdown checklist — into a second job-summary section and a
   second PR comment thread (`marker-slug: stories`). A failing story fails
   the job; M2.1 decides how a deliberately red scaffold is tolerated.
@@ -210,17 +305,26 @@ edit at any call site; nothing passes it today.
   `build-image.yml`'s — same `inputs.db-image`/`services: postgres:` shape
   as `vitest.yml`, fed by the same caller-built `build-db-image` job (one
   build, shared by both — see `vitest.yml`'s entry above). Uploads
-  `playwright-report/`/`test-results/` on failure and
-  `coverage-e2e/` always (parallel to `vitest.yml`'s `coverage/` upload).
-  `should-run` path-filters the same way. `next.config.ts`'s
-  `productionBrowserSourceMaps: true` and `e2e/coverage.config.ts`'s
+  `.reports/playwright-report/`/`.reports/test-results/` on failure and
+  `.reports/coverage-e2e/` always (parallel to `vitest.yml`'s
+  `.reports/coverage/` upload). Its reporters (`list`, `json`, `html`) come
+  from `playwright.config.ts` under `CI`, not from the command line: a CLI
+  `--reporter` replaces the config's list and with it the html report's
+  `outputFolder`. `should-run` path-filters the same way. `next.config.ts`'s
+  `productionBrowserSourceMaps: true` and `tests/e2e/coverage.config.ts`'s
   `sourceFilter` (JS-only coverage, `src/**` only) apply here since it's the
   same production build both `npm run e2e` locally and this job exercise —
   see `testing.md`'s Coverage section for why, and for the
   `fullyParallel`/`test.describe.configure({ mode: 'serial' })` fix the CI
-  Postgres service surfaced (a real race, not CI-only flakiness).
-- **`build-e2e-image.yml`** (M1.14) — same content-addressed-tag /
-  skip-if-exists shape as `build-image.yml`, but for `Docker/Dockerfile.e2e`:
+  Postgres service surfaced (a real race, not CI-only flakiness). A second
+  service, `mailpit` on the same `axllent/mailpit` tag compose pins, is the
+  inbox: the job sets `MAIL_TRANSPORT=mailpit` and
+  `MAILPIT_URL=http://mailpit:8025`, which the runner and the served site
+  both read, and `tests/e2e/mail-transport.spec.ts` sends through it and
+  reads the message back (MB.65). No mail variable is set on `checks.yml`'s
+  `build` leg: `src/lib/mail.ts` reads them at send time, never at build.
+- **`build-e2e-image.yml`** (M1.14) — the same `build-image` action as
+  `build-image.yml`, under `cache-scope: e2e-image`, but for `Docker/Dockerfile.e2e`:
   `FROM mcr.microsoft.com/playwright:v1.63.0-noble` (Microsoft's own image,
   which bundles a matching Node runtime, every OS dep Chromium needs, and
   the browser itself, all pinned together) — pinned to
@@ -261,7 +365,12 @@ edit at any call site; nothing passes it today.
   used so no required-status-check rename was ever needed. Its `build-image` job keeps a
   `pr-gate-build-image-<pr number>` / `cancel-in-progress: false` concurrency
   group on the caller; `build-e2e-image` (feeding `playwright`, not
-  `build-image`) does the same under its own group.
+  `build-image`) and `build-db-image` do the same under their own groups.
+  The three image jobs are the only uncancellable ones because cancelling a
+  push mid-build can freeze a half-written layer into the shared GHA layer
+  cache under its content-addressed tag, which every later run with the same
+  hash then reuses — a corruption that does not self-heal on retry. The check
+  jobs share no mutable state and are cheap to rerun, so they stay cancellable.
 - **`merge-queue.yml` was deleted by MB.32, and is restored from git history
   when M7.A.1 fires.** It was the `merge_group` counterpart, re-expressing this
   entire job graph — the same checks with `merge-queue: true`, plus
@@ -284,7 +393,10 @@ edit at any call site; nothing passes it today.
 - **Branch rulesets** — `Main`, `Staging` and `Release Branches`
   (`refs/heads/release/**`) exist and carry delete/force-push protection.
   `.github/dependabot.yml` targets `staging` on all three ecosystems (`npm`,
-  `github-actions`, `docker`).
+  `github-actions`, `docker`). Two npm groups bump together: `react` and
+  `better-auth` (with `@better-auth/*`), the second because `better-auth` pins
+  its `@better-auth/core` to its own exact version and `src/lib/auth.ts`
+  imports core directly (MB.60), so a split bump would install two copies.
 - ⚠️ **No ruleset currently requires any status check** — verified against the
   live API 2026-09-10, and still deliberately true: enabling branch protection
   is not part of MB.32. Adding `gitflow / gitflow` to `Main` and `Staging` needs
@@ -309,12 +421,12 @@ edit at any call site; nothing passes it today.
   through inputs instead — `run-lint`/`run-typecheck`/`run-build` on
   `checks.yml`, `should-run` elsewhere — and every calling job itself runs
   unconditionally.
-  - **Provenance.** It arrived at M0.16 (`258b825`) as a byte-for-byte copy of
+  - **Provenance.** It arrived at M0.16 (`1db422a`) as a byte-for-byte copy of
     `resume-2026`'s own `should-run` comments; that task's decision record
     verified YAML parsing and a `diff` against the upstream originals, and
-    nothing about check-run naming. M0.20 (`32e0926`) re-cited it as
-    "upstream's own `should-run` comments". The doc consolidation (`b3b0dbb`)
-    lifted it into this file as a general rule, and MB.32 (`d406cff`) extended
+    nothing about check-run naming. M0.20 (`860d10f`) re-cited it as
+    "upstream's own `should-run` comments". The doc consolidation (`ecce1f1`)
+    lifted it into this file as a general rule, and MB.32 (`2e7dcfe`) extended
     it to matrix jobs. **No commit, decision record or transcript in this repo
     describes the symptom being observed** — and none could, since no ruleset
     here has ever required a status check.
@@ -420,7 +532,8 @@ itself gone now (MB.32) until M7.A.1 restores it.
   at test-run setup (`tests/support/seeded-database.ts`;
   [`design-decisions/m1.27-template-at-setup-not-in-image.md`](design-decisions/m1.27-template-at-setup-not-in-image.md)),
   so the image's contents depend on nothing under `src/`.
-- **`build-db-image.yml`** — builds and publishes it to GHCR, tagged with a
+- **`build-db-image.yml`** — builds and publishes it to GHCR through the
+  `build-image` action (Composite actions, above), tagged with a
   `hashFiles()` hash of `Docker/Dockerfile.postgres` /
   `Docker/postgres-init/**`. No `latest` tag (MB.17) — nothing in the repo
   ever read it: `docker-compose.yaml` builds the Dockerfile locally rather
@@ -430,7 +543,8 @@ itself gone now (MB.32) until M7.A.1 restores it.
   trigger itself, not a no-op job.
 
   The `push` trigger's real job is seeding the GHA layer cache
-  (`cache-to: type=gha,mode=max,scope=db-image`) for branches that haven't
+  (`cache-scope: db-image`, which the action emits as
+  `cache-to: type=gha,mode=max,scope=db-image`) for branches that haven't
   built this image yet. That cache is branch-isolated — a `pull_request` run
   writes only to its own merge-ref scope, and reads fall back to the PR's
   base branch and the repo's default branch — so only a push to `staging`
@@ -450,10 +564,10 @@ itself gone now (MB.32) until M7.A.1 restores it.
   `push` path filter above is a workflow-level skip — it only gates this
   workflow's own direct triggers, so it protects `push` but not
   `workflow_call`, which bypasses it entirely and is the path every PR takes
-  (see below). For that path, `build-db-image.yml` carries the same
-  `Check if image already exists` / `docker buildx imagetools inspect`
-  step `build-image.yml` and `build-e2e-image.yml` use, skipping
-  `Build and push db image` whenever the hash tag is already published.
+  (see below). For that path, the `build-image` action's
+  `Check if image already exists` step (`docker buildx imagetools inspect`,
+  the one `build-image.yml` and `build-e2e-image.yml` run too) skips
+  `Build and push image` whenever the hash tag is already published.
   Between the path filter and the skip-if-exists check, buildx only actually
   runs when the tag is a genuine miss — on either trigger.
 
@@ -493,12 +607,24 @@ nothing and this workflow is the only path.
   removed by a `teardown` job on close). The `hotfix/** → staging` PR that
   `create-pr` also opens is skipped (`branches: [main]`).
 - `pull_request`, not `pull_request_target` — hotfix branches are never forks.
+- **A staging deploy also builds the component workshop** into
+  `public/workshop` ahead of `vercel build` (M2.10); no other target does.
+  [`workshop.md`](workshop.md), "On staging", covers the step and its admin
+  gate.
 - The per-hotfix domains need a wildcard `*.sorrelandsalt.com` (Vercel
   nameservers, Hobby-OK).
+  The alias slug is `hotfix/<slug>` lowercased, non-`[a-z0-9-]` collapsed to
+  `-`, and **truncated to 56 characters** — the DNS label limit is 63 and
+  `hotfix-` spends 7 of them. `deploy.yml` builds it twice: in
+  `resolve-target`, and again in `teardown`, which recomputes it from
+  `github.head_ref` because a closed PR runs no `resolve-target` to read it
+  from. Dropping the alias on close is what keeps stale per-hotfix domains
+  off the Hobby 50-domain cap.
 - Bare `ubuntu-26.04` runner (needs the Vercel CLI, writes `.vercel/output`),
-  with `actions/setup-node@v4` **pinned to Node 26.6.0** to match
+  with `actions/setup-node@v7` **pinned to Node 26.6.0** to match
   `Docker/Dockerfile.node` — under Node 22, `npm ci` fails because npm 10 cannot
-  read the npm-11 lockfile for `typescript@7`'s per-platform deps.
+  read the npm-11 lockfile for `typescript@7`'s per-platform deps. The Vercel
+  CLI is pinned with it: `npm install --global vercel@59`, in both jobs.
 - **`VERCEL_DEPLOY_TOKEN` must be minted against the `aurora-arctic` team
   scope**, not a personal scope. A personal-scope token is accepted as valid and
   then fails at `vercel pull` with `Could not retrieve Project Settings…`.
@@ -522,7 +648,10 @@ nothing and this workflow is the only path.
   by a YAML `if:` on the resolved environment — not one command with an
   optional flag. A command that merely _might_ carry `--git-branch` cannot
   satisfy the preview half, and a `if:` is data the guard can read where a
-  shell `if` would be a string it had to parse. `resolve-target` emits a
+  shell `if` would be a string it had to parse. Each arm tests `== 'preview'`
+  or `== 'production'` rather than `!= 'production'`, so a third environment
+  name skips both arms and fails by name at the assertion step rather than
+  pulling the wrong one. `resolve-target` emits a
   `git_branch` output alongside `environment` — `github.head_ref` for a hotfix
   PR (`ref_name` there is the `refs/pull/N/merge` ref, which nothing is scoped
   to), `github.ref_name` for a push — and hands it to both the deploy job's
@@ -551,12 +680,18 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   `"*"` stops at `/` and would miss `feature/*`; and any single `true` rule wins
   the tiebreak. Re-enabling a branch means adding a key, never loosening the
   catch-all.
-- A guard step skips every real step unless `VERCEL_DEPLOY_TOKEN` /
-  `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` are set. All three are set as repo
+- The `vercel-secrets-guard` action (`id: guard`) skips every later step unless
+  `VERCEL_DEPLOY_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` are set. One
+  step precedes it ungated: `actions/checkout`, which a local action needs in
+  order to resolve at all, so a run with the secrets absent still pays for a
+  checkout — full in `migrate` and `deploy`, where it was already the next
+  step, and `sparse-checkout: .github/actions` in `teardown`, which had no
+  checkout before and reads nothing else from the repo. All three are set as repo
   secrets, so **the guard passes and deploys run for real** — as of v0.2.0 both
   `staging` and `main` reach `vercel pull`. `VERCEL_SCOPE` is **not** part of
-  the guard and never was; it is still unset, and MB.12 owns it alongside
-  `NEON_API_KEY`/`NEON_PROJECT_ID` for `migrate.yml`'s production snapshot.
+  the guard and never was. It is set, and only the alias step reads it.
+  `NEON_API_KEY`/`NEON_PROJECT_ID` are set too, for `migrate.yml`'s
+  production snapshot.
   `claude-docs/secrets.md` is the matrix and the source of truth for which rows
   are set.
 - **`migrate.yml` (M1.4)** — reusable (`workflow_call`-only) workflow, applying
@@ -566,8 +701,11 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   output), `migrate` (`needs: resolve-target`, calls this workflow with
   `secrets: inherit`, and carries its own `group: migrate` /
   `cancel-in-progress: false` concurrency lock so two merges never migrate at
-  once), and `deploy`. Same guard-skip stub as `deploy.yml` when the `VERCEL_*` secrets
-  are absent. `vercel pull --environment=preview --git-branch=<branch>`, or
+  once), and `deploy`, whose `if: success()` is load-bearing: a custom `if:`
+  on a job with `needs:` replaces the implicit needs-all-succeeded check, so
+  any other condition there would let a failed `migrate` through to the
+  deploy. Same `vercel-secrets-guard` skip as `deploy.yml` when the `VERCEL_*`
+  secrets are absent. `vercel pull --environment=preview --git-branch=<branch>`, or
   `vercel pull --environment=production` with no branch (MB.45), resolves the
   right `DATABASE_URL` for each target the same way `deploy.yml`'s own two
   pulls do — the branch-scoped override for
@@ -586,7 +724,9 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   string `[SENSITIVE]` instead, which is non-empty and so passes any check that
   only asks whether something is set. A diagnostic run pulled staging both with
   and without `--git-branch` and got the placeholder either way, so no
-  arrangement of flags fixes it.
+  arrangement of flags fixes it. A `${{ secrets.X }}` reference to a secret
+  that does not exist resolves to the empty string rather than failing, so a
+  misspelt name reads as an unset value; the guard pins the names in use.
 
   `migrate.yml` picks `DATABASE_URL_PRODUCTION` or `DATABASE_URL_STAGING` — the
   first by the Vercel environment, the second by the branch — and falls back to
@@ -602,7 +742,7 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   would need a new `workflow_call` input, a new `resolve-target` output and an
   `environment:` key on two jobs, to say what the secret's name already says.
   `claude-docs/secrets.md` carries the rotation rule this creates, and the
-  Neon-API route that would retire it once MB.12 sets `NEON_API_KEY`.
+  Neon-API route that could retire it, and why it has not.
 
 - **Both jobs assert the pulled environment before using it** (MB.46), via
   `scripts/assert-pulled-env.ts`. It does two things. It **asserts** the keys
@@ -726,6 +866,25 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   false positive costs one extra `npm run` where a false negative is an empty
   vocabulary in production.
 
+## Neon snapshots
+
+- **`migrate.yml` snapshots production before it migrates it** (M1.6), by
+  branching Neon's `main` branch as `snapshot-<short sha>` through the Neon
+  API. That branch is the known-good point
+  [`db.md`](db.md)'s restore runbook promotes back to if a migration corrupts
+  data. Preview never snapshots — a staging or hotfix database is already
+  disposable. The step is guarded on `NEON_API_KEY`/`NEON_PROJECT_ID` and
+  warns rather than fails while they are unset (`claude-docs/secrets.md`).
+- **`neon-snapshot-prune.yml` is the only scheduled workflow in the repo** —
+  Sundays at 06:00 UTC, outside any deploy window, plus `workflow_dispatch`.
+  Nothing calls it. **Neon's free tier caps a project at 10 branches in
+  total**, and `production`, `staging`, every retained snapshot and every open
+  hotfix preview's ephemeral branch draw on that one quota, so `snapshot-*`
+  branches cannot be left to accumulate: the workflow keeps the newest
+  `KEEP_SNAPSHOTS` (3) and deletes the rest. It carries the same inline
+  warn-and-skip guard on those two secrets — not the `vercel-secrets-guard`
+  action, which checks three others (Composite actions, above).
+
 ## Running CI locally
 
 **`.actrc` + `make act-*`** — run the reusable checks through
@@ -738,7 +897,11 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   `make act-check CHECK=typecheck` runs typecheck, and so on through `format`,
   `build`, `audit` and `destructive-ddl` (MB.37). `--matrix name:<leg>` is what
   keeps `act` from running all six, and `make act-test` chains lint, format,
-  typecheck and destructive-ddl.
+  typecheck and destructive-ddl. `act-image` builds the `testing` target
+  locally under the exact tag the job's required `image` input names, so
+  `docker run` never reaches GHCR and the container `credentials:` block is a
+  no-op — which is why `act-check` passes a dummy `GITHUB_TOKEN` rather than
+  a real one.
 - `make act-cache-checkout` pre-clones this repo's `main` so the remote
   `checkout-to-app@main` ref resolves offline.
 - **act does not apply `workflow_call` input defaults**, so a flag arrives
@@ -749,18 +912,22 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   is in `act-test`. The build leg wants `actions/cache@v6` pre-cached the way
   `act-cache-checkout` pre-caches `checkout-to-app`; the audit leg wants a real
   PR to comment on.
-- **`CHECK=destructive-ddl` scans nothing locally, and that is the honest
-  outcome rather than a gap** — its `destructive-ddl-files`/`pr-body` inputs
-  come from `pr-gate.yml`'s `changes` job and the real
-  `github.event.pull_request.body`, neither of which exists under a bare
-  `act -W ... --matrix name:destructive-ddl` invocation. Both arrive empty,
-  `checks.yml` sets `DESTRUCTIVE_DDL_FILES` from the input regardless, and the
-  script reads set-but-empty as "no migrations changed". So the leg proves the
-  wiring, not the scan. What proves the scan is
-  `tests/guards/destructive-ddl-check.test.ts` (the rules, the file-list
-  resolution and the branch diff, each asserted to fail with its guard
-  removed) and `npm run check:destructive-ddl -- --self-test` (the ack-line
-  gating, against the fixtures under `scripts/__fixtures__/destructive-ddl/`).
+- **`CHECK=destructive-ddl` still scans nothing locally, and that is the honest
+  outcome rather than a gap** — but for one reason now rather than two. Its
+  `destructive-ddl-files` input comes from `pr-gate.yml`'s `changes` job, which
+  does not exist under a bare `act -W ... --matrix name:destructive-ddl`, so it
+  arrives empty; `checks.yml` sets `DESTRUCTIVE_DDL_FILES` from the input
+  regardless, and the script reads set-but-empty as "no migrations changed".
+  The `pr-body` input is gone entirely (MB.48), so the leg no longer depends on
+  a real `github.event.pull_request.body` — which is what makes the scan
+  provable locally at all: `npm run check:destructive-ddl -- --all` now reads
+  every acknowledgement from the repository itself and is green, where it was
+  permanently red while they lived in PR bodies. What proves the leg's own
+  gating is `tests/guards/destructive-ddl-check.test.ts` (the rules, the
+  file-list resolution, the branch diff and the per-file sidecar correlation,
+  each asserted to fail with its guard removed) and
+  `npm run check:destructive-ddl -- --self-test` (the sidecar gating, against
+  the fixtures under `scripts/__fixtures__/destructive-ddl/`).
   Before MB.37 this target claimed to fall back to scanning every committed
   migration; it never did — the workflow always exported the variable.
 - **`act-vitest` / `act-playwright` still do not exist**, even though

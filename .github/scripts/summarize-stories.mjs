@@ -1,11 +1,5 @@
-// M1.28 — turns the checklist tests/support/story-reporter.ts wrote as JSON
-// (vitest.yml's "Run acceptance stories" step, `--outputFile=/app/stories.json`)
-// into the short `summary` stat line and the collapsible `details` checklist
-// consumed by the job-summary and pr-comment composite actions — the same
-// two outputs summarize-vitest.mjs produces for the unit run. The JSON's
-// shape is story-checklist.ts's `Checklist`: `stories` in §10 order, each
-// with `status` (passed / failed / skipped / untested), `unknown` for a
-// suite naming a number §10 does not list, `counts` and `total`.
+// The story checklist tests/support/story-reporter.ts writes as JSON, into
+// the same two outputs summarize-vitest.mjs produces.
 import fs from 'node:fs';
 
 const RESULTS_PATH = '/app/stories.json';
@@ -15,8 +9,7 @@ function setOutput(name, value) {
   fs.appendFileSync(process.env.GITHUB_OUTPUT, `${name}<<${delim}\n${value}\n${delim}\n`);
 }
 
-// The run step may not have got as far as writing the file (a config error,
-// a database that never came up); the log excerpt job-summary tails says why.
+// The run may have died before writing the file; job-summary's log tail says why.
 if (!fs.existsSync(RESULTS_PATH)) {
   setOutput('summary', 'no checklist was written');
   setOutput('details', '');

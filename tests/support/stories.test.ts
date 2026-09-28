@@ -1,31 +1,28 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { fromRoot } from './paths';
-import { V1_STORIES, V1_STORY_IDS, parseStories, parseStoryHeading } from './stories';
+import {
+  V1_STORIES,
+  V1_STORY_IDS,
+  describeRanges,
+  parseStories,
+  parseStoryHeading,
+} from './stories';
 
-// M1.28 — the story list is read out of DESIGN.md §10, not copied here.
-//
-// A second list of 45 titles in the harness would drift from the design doc
-// without a single test failing, the way a second copy of the fixture ids
-// would (as-user.test.ts). Reading the spec makes DESIGN.md the one place a
-// story is written down; these tests pin what the parse must find so that a
-// rewording of §10 that breaks it fails here rather than silently emptying
-// the checklist.
+// The list is read out of DESIGN.md §10; these pin what the parse must find,
+// so a §10 rewording that empties it fails here.
 
 const range = (from: number, to: number) =>
   Array.from({ length: to - from + 1 }, (_, i) => from + i);
 
 describe('V1_STORIES', () => {
-  it('reads the v1 stories out of DESIGN.md §10 — 1–34 and 47–57 today, never 35–46', () => {
-    // The list is pinned by its rules rather than frozen: a story added to
-    // §10 later (57 arrived with MB.40) joins the checklist without a
-    // harness edit, while a reworded §10 that the parse no longer reads
-    // still fails here. CLAUDE.md: the notes numbers moved to v2 and are
-    // not reused.
+  it('reads the v1 stories out of DESIGN.md §10 — 1–34 and 47–63 today, never 35–46', () => {
+    // Pinned by rule rather than frozen: a story added to §10 joins without a
+    // harness edit, and 35–46 are not reused.
     expect(V1_STORY_IDS).toEqual([...V1_STORY_IDS].sort((a, b) => a - b));
     expect(new Set(V1_STORY_IDS).size).toBe(V1_STORY_IDS.length);
     expect(V1_STORY_IDS.filter((id) => id >= 35 && id <= 46)).toEqual([]);
-    expect(V1_STORY_IDS).toEqual(expect.arrayContaining([...range(1, 34), ...range(47, 57)]));
+    expect(V1_STORY_IDS).toEqual(expect.arrayContaining([...range(1, 34), ...range(47, 63)]));
   });
 
   it('agrees with the count §10 states for itself', () => {
@@ -40,7 +37,7 @@ describe('V1_STORIES', () => {
   it('carries each story under its own number with its §10 wording', () => {
     expect(V1_STORIES[0]).toEqual({
       id: 1,
-      title: "Sign in with Google or GitHub, so I don't manage another password.",
+      title: "Sign in with an account I already have, so I don't manage another password.",
     });
     expect(V1_STORIES.find((story) => story.id === 57)?.title).toMatch(
       /^Add a one-off ingredient by name and form/,
@@ -72,6 +69,13 @@ describe('parseStories', () => {
 
   it('refuses a document with no §10 rather than returning an empty checklist', () => {
     expect(() => parseStories('# Nothing here')).toThrow(/§10|User stories/);
+  });
+});
+
+describe('describeRanges', () => {
+  it('writes consecutive ids as a run and a lone id bare', () => {
+    expect(describeRanges([1, 2, 3, 5, 7, 8])).toBe('1–3, 5, 7–8');
+    expect(describeRanges([])).toBe('');
   });
 });
 

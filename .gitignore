@@ -10,19 +10,15 @@ next-env.d.ts
 
 # Build output
 dist
-build
-*.tsbuildinfo
-tsconfig.tsbuildinfo
+public/workshop
 
-# Tests and coverage
-coverage
-coverage-e2e
-playwright-report
+# Generated reports and builds, all under one directory: Vitest coverage and
+# json, Playwright's report, traces and e2e coverage, the Ladle workshop build.
+# `tsc`'s incremental state is under node_modules/.cache (tsconfig.json).
+.reports
 blob-report
-test-results
 playwright/.cache
 playwright/.auth
-.vitest
 
 # Logs
 *.log
@@ -80,5 +76,5 @@ tmp
 .cache
 .env*
 
-# Deliberate lint violations written by tests/guards/lint-db-client-boundary.test.ts
-__lint-probe__/
+# Deliberate lint violations written by the tests/guards/lint-*-boundary.test.ts guards
+__lint-probe*__/

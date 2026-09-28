@@ -9,8 +9,13 @@ next-env.d.ts
 # Machine-generated lockfile
 package-lock.json
 
-# Test output
-coverage
-coverage-e2e
-playwright-report
-test-results
+# Generated reports and builds
+.reports
+
+# The SDL snapshot: printSchema owns its layout, and a reformat would fail
+# tests/graphql/schema-snapshot.test.ts
+src/graphql/schema.graphql
+
+# Client types: the generator owns their layout, and a reformat would fail
+# tests/guards/codegen-staleness.test.ts
+src/gql

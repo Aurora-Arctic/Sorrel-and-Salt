@@ -14,39 +14,17 @@ import {
 } from '@/db/seed/categories';
 import { slugify } from '@/lib/slugify';
 
-// M4.3 — the eight groups and every category DESIGN.md §6 lists.
-//
-// Against the real tables, not stubs: `categories.group_id` is a real foreign
-// key and every row carries audit ids that point at `users`, so "the groups
-// land before the categories" is only a claim if both tables are the real
-// ones. This worker's clone arrives with every migration applied and the
-// `standard` scenario seeded (M1.27, tests/support/db-setup.ts), re-cloned
-// that way before this file runs — so nothing is built here and nothing put
-// back afterwards. What the file *is* about is seeding, so beforeEach empties
-// every table first: the counts below are this seed's rows and no one else's.
-// Until M1.27 the template was empty and this file applied the migration set
-// itself.
-//
-// Three things are asserted against their *sources* rather than against a copy
-// of them, because a copy is exactly what would rot:
-//
-//   - the vocabulary, parsed out of DESIGN.md §6's own table below
-//   - the colours, resolved by compiling M0.7's `category-group-color()`
-//   - the contrast floor, recomputed here from the seeded hex
-//
-// The middle one is the point of the task: MB.35 moved the chip colour out of
-// Sass and into data, and the resolution happens once, here. A test that
-// hardcoded the sixteen hexes would pass just as happily after someone retuned
-// the map and forgot the seed.
+// §6's eight groups and every category, asserted against their sources rather
+// than copies: the vocabulary parsed from DESIGN.md §6's table, the colours
+// resolved by compiling `category-group-color()`, the contrast floor recomputed
+// from the seeded hex. Against the real tables, emptied first —
+// claude-docs/db.md, "The category seed".
 
 const DESIGN_DOC = fromRoot('claude-docs/DESIGN.md');
 const SCSS_DIR = fromRoot('src/scss');
 const VARIABLES_SCSS = `${SCSS_DIR}/_variables.scss`;
-
-// The two page grounds from M0.6, which §6's colours are tuned against — the
-// `vs page` column _variables.scss publishes. Not imported from anywhere
-// because there is nowhere to import Sass values from; they are asserted
-// against the stylesheet below instead, so a repalette fails here.
+// The two page grounds §6's colours are tuned against, asserted against the
+// stylesheet below since there is nowhere to import a Sass value from.
 const GROUNDS = { dark: '#14120e', light: '#efe9da' } as const;
 
 // --- DESIGN.md §6, parsed ---------------------------------------------------
@@ -81,11 +59,8 @@ function designSection6(): DesignGroup[] {
 const DESIGN_GROUPS = designSection6();
 const DESIGN_CATEGORY_COUNT = DESIGN_GROUPS.reduce((n, g) => n + g.categories.length, 0);
 
-// The seed derives every slug from its own name with src/lib/slugify.ts. What
-// this file checks is the other half: that the name it derived from is §6's,
-// and that §6's own Slug column says the same thing. So the expected slug here
-// comes from §6's *table text*, through the shared rule — the module is never
-// asked what it thinks the slug is.
+// The expected slug comes from §6's table text through the shared rule; the
+// module is never asked what it thinks the slug is.
 function designSlug(designName: string): string {
   return slugify(designName);
 }
@@ -125,8 +100,7 @@ function toHex(percentages: number[]): string {
     .join('')}`;
 }
 
-// WCAG 2.1 relative luminance and contrast ratio, recomputed from the stored
-// hex rather than trusted from M0.7's published table.
+// WCAG 2.1 contrast, recomputed from the stored hex.
 function relativeLuminance(hex: string): number {
   const channels = [1, 3, 5]
     .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
@@ -187,10 +161,6 @@ beforeAll(() => {
   db = drizzle(sql);
 });
 
-// One `truncate … cascade` over every table, not a `delete from` list: the
-// seeded scenario's ingredients point at these categories and every child
-// foreign key is NO ACTION, so a delete would be refused. Truncating takes the
-// links with it and leaves the empty tables every count below assumes.
 beforeEach(async () => {
   await truncateAllTables(sql);
 });
@@ -201,18 +171,14 @@ afterAll(async () => {
 
 describe('the seed data matches DESIGN.md §6', () => {
   it('covers §6’s eight groups, in §6’s order', () => {
-    // Case-insensitively, because the seeded name is what a chip section
-    // header renders and those are Title Case, where §6 writes its table in
-    // prose. Everything else about the name has to match §6 exactly — the
-    // wording, the ampersand, the order.
+    // Case-insensitively: a seeded name is a rendered Title Case label, and §6 writes prose.
     expect(CATEGORY_GROUPS.map((g) => g.name.toLowerCase())).toEqual(
       DESIGN_GROUPS.map((g) => g.name.toLowerCase()),
     );
   });
 
-  // Two claims, deliberately separate. The first is that the slug follows the
-  // project's rule; the second is that §6's Slug column agrees. Asserting only
-  // the second would pass on a doc someone edited to match a wrong slug.
+  // Two claims: the slug follows the rule, and §6's Slug column agrees. The
+  // second alone would pass on a doc edited to match a wrong slug.
   it('slugs every group by the shared rule, and §6’s Slug column says so too', () => {
     expect(CATEGORY_GROUPS.map((g) => slugify(g.name))).toEqual(
       DESIGN_GROUPS.map((g) => designSlug(g.name)),
@@ -239,9 +205,7 @@ describe('the seed data matches DESIGN.md §6', () => {
     expect(CATEGORIES.map((c) => c.name.toLowerCase())).toEqual(designNames);
   });
 
-  // The count is a claim §6's prose makes in words and its table makes in
-  // rows; pinning it here means a category added to the table without being
-  // seeded fails rather than passes quietly.
+  // A category added to §6's table and not seeded fails rather than passes quietly.
   it('seeds as many categories as §6 enumerates', () => {
     expect(CATEGORIES).toHaveLength(DESIGN_CATEGORY_COUNT);
     expect(CATEGORY_GROUPS).toHaveLength(8);
@@ -276,9 +240,8 @@ describe('the colours carry M0.7’s tuning across into data', () => {
     expect(contrastRatio(group.colorLight, GROUNDS.light)).toBeGreaterThanOrEqual(4.5);
   });
 
-  // The grounds above are the one pair of literals in this file that nothing
-  // else pins. If M0.6 repalettes, every ratio above is measured against the
-  // wrong thing and still passes — so measure the literals too.
+  // The grounds are the one pair of literals nothing else pins; after a
+  // repalette every ratio above would measure against the wrong thing.
   it('measures against the grounds _variables.scss actually defines', () => {
     const scss = readFileSync(VARIABLES_SCSS, 'utf8');
 
@@ -305,8 +268,7 @@ describe('every row carries a description', () => {
 });
 
 describe('seedCategories(db)', () => {
-  // The precondition behind every count below: a fresh clone really starts at
-  // zero, so the rows that follow are this seed's and not a leftover.
+  // Precondition: the truncated clone really starts at zero.
   it('starts from two empty tables', async () => {
     expect(await countOf('category_groups')).toBe(0);
     expect(await countOf('categories')).toBe(0);
@@ -354,9 +316,7 @@ describe('seedCategories(db)', () => {
     expect(await allCategories()).toEqual(categories);
   });
 
-  // MB.35's whole point is that a group's colour is an admin's to change. A
-  // seed that re-asserted its own pair on every run would silently undo them
-  // on the next deploy.
+  // A group's colour is the admin's to change (MB.35); a re-asserting seed would undo it.
   it('does not overwrite a colour pair an admin has since changed', async () => {
     await seedCategories(db);
     await sql`

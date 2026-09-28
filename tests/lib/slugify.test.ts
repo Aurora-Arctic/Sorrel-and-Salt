@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { slugify } from '@/lib/slugify';
 
-// These pin the *options* rather than the package's own behaviour — the
-// package has its own tests. What would break silently is someone changing
-// `strict` or the charmap extension in slugify.ts, so each case below is one
-// of those two decisions showing its work.
+// These pin the options, not the package: what breaks silently is a change to
+// `strict` or the charmap extension.
 describe('slugify', () => {
   it('lowercases and hyphenates the ordinary case', () => {
     expect(slugify('Nightmare Protection')).toBe('nightmare-protection');
@@ -15,8 +13,7 @@ describe('slugify', () => {
     expect(slugify('Self-Love')).toBe('self-love');
   });
 
-  // Seven of DESIGN.md §6's eight group names carry an ampersand, so this is
-  // the case that decides what a group slug looks like. The package expands it.
+  // Seven of §6's eight group names carry an ampersand; the package expands it.
   it('expands an ampersand to "and" rather than dropping it', () => {
     expect(slugify('Protection & Defense')).toBe('protection-and-defense');
     expect(slugify('Craft & Change')).toBe('craft-and-change');

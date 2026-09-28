@@ -5,29 +5,12 @@ import { parse } from 'yaml';
 import { describeConnectionError, probeHints, scrub } from '../../scripts/probe-database';
 import { fromRoot } from '../support/paths';
 
-// MB.49 — drizzle-kit fails silently, so a bad DATABASE_URL has no cause.
-//
-// Staging's migration produced exactly this, and nothing else:
-//
-//   Using 'postgres' driver for database querying
-//   [⣟] applying migrations...
-//   ##[error]Process completed with exit code 1.
-//
-// No error, no code, no message. drizzle-kit catches whatever postgres.js threw
-// and exits 1. Reproduced locally, ALL of these produce byte-identical output —
-// an unreachable host, a wrong password, `sslmode=require` against a server with
-// no TLS, and `channel_binding=require`. Four different fixes, one indi-
-// stinguishable failure, which is why MB.45–47 ended on a guess.
-//
-// So the probe is not a health check. It is the step that makes the difference
-// between those four visible, by opening the connection itself and printing the
-// driver's own error before drizzle-kit gets a chance to swallow it.
-//
-// What this file pins is the part that has to be right when it fires: that the
-// output NAMES the cause, and that it never carries the credentials. Both are
-// asserted against a realistic connection string rather than intended — the
-// value is masked in CI, so a message that leaked it would print `***` and be
-// exactly as useless as the silence it replaced.
+// drizzle-kit swallows the driver's error and exits 1, so an unreachable host,
+// a wrong password, an `sslmode` mismatch and a `channel_binding` parameter
+// fail identically; the probe opens the connection itself and prints the
+// driver's own error first (claude-docs/ci.md, "Deploy"). What this file pins
+// is that the output NAMES the cause and never carries the credentials — the
+// value is masked in CI, so a message that leaked it would print `***`.
 
 const NEON =
   'postgresql://sorrel:np_x9Kq2@ep-cool-bird-a1b2c3-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require';
@@ -39,8 +22,7 @@ function driverError(fields: Record<string, unknown>): Error {
 }
 
 describe('describeConnectionError', () => {
-  // Each of these is a different fix — a firewall, a password, a database name,
-  // a URL parameter. Today they are the same spinner frame.
+  // Each is a different fix — a firewall, a password, a database name, a URL parameter.
   it.each([
     ['ECONNREFUSED', driverError({ code: 'ECONNREFUSED', message: 'connect ECONNREFUSED' })],
     ['ENOTFOUND', driverError({ code: 'ENOTFOUND', message: 'getaddrinfo ENOTFOUND' })],
@@ -62,8 +44,7 @@ describe('describeConnectionError', () => {
     expect(described).toContain('password authentication failed for user');
   });
 
-  // The failures that are worth a sentence get one. A code alone still means
-  // reading a Postgres error table mid-incident.
+  // A code alone still means reading a Postgres error table mid-incident.
   it.each([
     ['42704', /channel_binding|startup parameter|does not consume/i],
     ['28P01', /password|DATABASE_URL_/i],
@@ -87,11 +68,9 @@ describe('describeConnectionError', () => {
   });
 });
 
-// The whole point of printing the driver's error is that it is the driver's —
-// which means it can contain whatever the driver chose to put in it, including
-// the connection string it was given. Scrubbing is therefore not belt-and-braces
-// around our own formatting; it is the only thing standing between a verbose
-// driver and a password in a public log.
+// The driver's message can contain whatever the driver chose to put in it,
+// including the connection string it was given; scrubbing is the only thing
+// between a verbose driver and a password in a public log.
 describe('scrub', () => {
   it('removes the whole connection string when an error quotes it', () => {
     const scrubbed = scrub(`failed to connect to ${NEON}`, NEON);
@@ -109,9 +88,8 @@ describe('scrub', () => {
     expect(scrubbed).not.toContain(PASSWORD);
   });
 
-  // Kept deliberately. `ENOTFOUND` without the name it failed to resolve is the
-  // same silence this task exists to end, and a hostname is not a credential —
-  // `claude-docs/secrets.md` names the Neon endpoints in prose already.
+  // Kept deliberately: `ENOTFOUND` without the name it failed to resolve says
+  // nothing, and a hostname is not a credential.
   it('keeps the hostname, without which ENOTFOUND says nothing', () => {
     const scrubbed = scrub(
       'getaddrinfo ENOTFOUND ep-cool-bird-a1b2c3-pooler.us-east-2.aws.neon.tech',
@@ -135,8 +113,8 @@ describe('scrub', () => {
   });
 });
 
-// The no-leak property, asserted end to end rather than per-helper: whatever
-// the driver threw, what comes out carries no credential.
+// The no-leak property end to end: whatever the driver threw, nothing that
+// comes out carries a credential.
 describe('describeConnectionError never leaks the credentials', () => {
   it.each([
     ['an error quoting the whole URL', `could not connect using ${NEON}`],
@@ -149,12 +127,8 @@ describe('describeConnectionError never leaks the credentials', () => {
   });
 });
 
-// The sweep. MB.46's assertion covered the file `vercel pull` wrote; MB.47 then
-// took DATABASE_URL from a GitHub secret instead and handed it straight to
-// drizzle-kit, reopening the gap one task after it was closed. So the guard is
-// not "the probe exists" but "every job that runs a migration or a build probes
-// first" — which is the form that catches the next workflow in the diff that
-// adds it rather than in the outage that follows it.
+// The sweep: every job that migrates or builds probes first, so the next
+// workflow fails in the diff that adds it rather than in the outage after it.
 describe('every workflow that consumes DATABASE_URL', () => {
   const WORKFLOWS = fromRoot('.github/workflows');
 
@@ -210,30 +184,24 @@ describe('every workflow that consumes DATABASE_URL', () => {
     }
   });
 
-  // MB.49 acceptance criterion 2. The value drizzle-kit receives is the one
-  // `Resolve DATABASE_URL` picked, which may be a GitHub secret rather than
-  // anything the pull returned — so the validator has to see THAT value, not
-  // only the pulled file. The probe reads a file it is pointed at, so what this
-  // asserts is that the file it is pointed at in the migrating job is the
-  // resolved one.
+  // drizzle-kit receives the value `Resolve DATABASE_URL` picked — possibly a
+  // GitHub secret, not anything the pull returned — so the probe in the
+  // migrating job must be pointed at the resolved file, not `.vercel/.env.*`.
   it('validates the resolved DATABASE_URL, not only the pulled file', () => {
     const [migrating] = jobsRunning(MIGRATE);
     const resolve = migrating.steps.find((step) => /Resolve DATABASE_URL/.test(step.name ?? ''));
     expect(resolve, 'migrate.yml no longer resolves DATABASE_URL').toBeDefined();
 
-    // It writes the resolved value somewhere the probe can read it...
     expect(resolve?.run).toMatch(/RESOLVED_ENV_FILE|resolved\.env/);
 
-    // ...and the probe is pointed at that, rather than at `.vercel/.env.*`.
     const probe = migrating.steps.find((step) => PROBE.test(step.run ?? ''));
     expect(probe?.run).toMatch(/RESOLVED_ENV_FILE|resolved\.env/);
     expect(probe?.run).not.toMatch(/\.vercel\/\.env/);
   });
 
-  // A probe that warns and carries on would leave the migration exactly as
-  // silent as it is today. In the build job it is advisory by design — a build
-  // issues no query, and failing a deploy on a transient network blip trades one
-  // outage for another — so the two are asserted apart rather than together.
+  // A probe that warned would leave the migration as silent as before; in the
+  // build job it is advisory — a build issues no query, and failing a deploy on
+  // a transient blip trades one outage for another.
   it('is fatal in the migrating job and advisory in the building one', () => {
     const [migrating] = jobsRunning(MIGRATE);
     const [building] = jobsRunning(BUILD);
@@ -245,9 +213,8 @@ describe('every workflow that consumes DATABASE_URL', () => {
     expect(buildProbe?.run).toMatch(/--on-failure[= ]warn/);
   });
 
-  // Same discipline as MB.46: the URL reaches the script as a FILE PATH. argv is
-  // visible to `ps` and is echoed by `set -x`, and a step-level `env:` carrying
-  // the value would be printed in the step's own env block.
+  // The URL reaches the script as a FILE PATH: argv is visible to `ps` and
+  // echoed by `set -x`, and a step-level `env:` is printed in the step's own env block.
   it('never passes the connection string on the command line', () => {
     for (const { steps } of [...jobsRunning(MIGRATE), ...jobsRunning(BUILD)]) {
       const probe = steps.find((step) => PROBE.test(step.run ?? ''));

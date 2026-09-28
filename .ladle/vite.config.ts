@@ -1,18 +1,19 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
-// Vite overrides Ladle merges into its own config. The only thing that matters
-// here is Sass: a component's `@use '../../scss/variables' as *;` must resolve
-// in the workshop exactly the way it resolves under `next dev`, or the workshop
-// and the app disagree about what a token is.
+// Sass must resolve `@use` here the way `next dev` does; both land on the modern
+// compiler with empty load paths, so `api` is pinned only against a future Vite
+// default flip. The seam if Next ever gains a `sassOptions`.
 //
-// Next 16 runs dart-sass through sass-loader with no `sassOptions`, which lands
-// on the modern API with load paths left empty — resolution is purely relative
-// to the importing file (see node_modules/next/dist/compiled/sass-loader). Vite
-// 6's Sass default is the same modern compiler with the same empty load paths,
-// so parity needs no option set. This block is the single place to keep the two
-// aligned if Next ever gains a `sassOptions`; `api` is pinned explicitly so a
-// future Vite default flip cannot move the workshop off that shared pipeline.
+// `next/link` is aliased to a plain anchor, as Ladle's Next.js guide prescribes:
+// Next's client modules expect the router and `process.env` that `next dev`
+// provides and Vite does not, and a story only needs the link to render.
 export default defineConfig({
+  resolve: {
+    alias: {
+      'next/link': fileURLToPath(new URL('./UnoptimizedLink.tsx', import.meta.url)),
+    },
+  },
   css: {
     preprocessorOptions: {
       scss: {

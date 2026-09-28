@@ -1,18 +1,10 @@
-import { eq, inArray, isNull, sql } from 'drizzle-orm';
-// `./bootstrap-admin` first, and load-bearing for the reason minimal.ts records
-// at length: audit.ts and schema/users.ts import each other, so whichever is
-// entered first sees the other half-initialised. bootstrap-admin imports
-// schema/users, so putting it above the schema modules that reach audit.ts
-// directly is what makes `users` build its table with `auditColumns` already
-// defined. Reverse them and every insert below silently drops its created_by
-// and fails NOT NULL.
-import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
-import { ingredients } from '../schema/ingredients';
-import { spells } from '../schema/spells';
-import { spellCategories } from '../schema/spell-categories';
-import { spellIngredients } from '../schema/spell-ingredients';
-import { applyAudit } from '../audit';
-import { BOOTSTRAP_USER_ID } from '../bootstrap';
+import { eq, inArray, isNull } from 'drizzle-orm';
+// `./idempotent` (and through it `./bootstrap-admin`) first, and load-bearing — see minimal.ts.
+import { beginSeedTransaction, insertMissing, requireFrom } from './idempotent';
+import { ingredients } from '../../modules/ingredients/schema/ingredients';
+import { spells } from '../../modules/grimoire/schema/spells';
+import { spellCategories } from '../../modules/grimoire/schema/spell-categories';
+import { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
 import { categoryIdByName } from './categories';
 import {
   COMPENDIUM_INGREDIENTS,
@@ -22,47 +14,22 @@ import {
 } from './standard';
 import type { SeedDatabase, SeedTransaction } from './index';
 
-// M1.23 — the `demo` scenario (DESIGN.md §"Seed data"): "standard plus spells
-// with ingredients and layer order". The scenario a screenshot is taken
-// against, which is why the jars below are written out as a member would write
-// them — an intent in a sentence, instructions that read like instructions,
-// and a stack that names what went in and in what order — rather than
-// generated as "Spell 1" through "Spell 3".
-//
-// It adds two things `standard` does not have:
-//
-//   - **W's own ingredients.** A grimoire that only ever reached the
-//     compendium would exercise one half of §5's two tiers, and the jars here
-//     mix the two the way a real one does: sea salt out of the compendium,
-//     hearth ash the coven wrote down itself.
-//   - **A custom, one-off layer** (MB.40, story 57) — a name written for one
-//     jar, with no `ingredient_id`, which never becomes an ingredient
-//     anywhere. Wave 13 renders, reorders and prints both kinds of row, and
-//     this is the row of the second kind it has to work against.
-//
-// The writes go through the handle `seed()` was given rather than through
-// `withAudit`, for the reason recorded in claude-docs/design-decisions/
-// m1.21-seed-writes-through-its-handle.md — one transaction, the acting user
-// published as `app.current_user_id` in the same parameterised form, every
-// stamp produced by the shared `applyAudit`.
+// The `demo` scenario: `standard` plus spells with ingredients and layer order,
+// written as a member would write them since screenshots are taken against it.
+// It adds W's own ingredients, so the jars mix both tiers, and one custom
+// one-off layer with no `ingredient_id` (claude-docs/db.md, "The demo
+// scenario"). Writes go through the handle `seed()` was given — see minimal.ts.
 
-/**
- * W's own ingredients — the workspace tier of §5's one table, `workspace_id`
- * set rather than null. Typed against the table's insert model so a column
- * renamed in ingredients.ts fails here rather than at the first `db:seed`.
- */
+/** W's own ingredients — the workspace tier, `workspace_id` set rather than null. */
 type SeedWorkspaceIngredient = Pick<
   typeof ingredients.$inferInsert,
   'name' | 'canonicalName' | 'nomenclature' | 'form' | 'description' | 'element'
 >;
 
 /**
- * Rosemary the coven grows, beside the compendium's own entry for the same
- * species. **The duplication is the fixture**: this is exactly the pair M8.3's
- * local-beats-compendium resolution has to collapse, and it can only be
- * resolved where both rows exist. The two share an identity — same formal
- * name, same form — which the two partial unique indexes permit precisely
- * because they are in different tiers.
+ * Rosemary the coven grows, beside the compendium's entry for the same species
+ * — the pair local-beats-compendium has to collapse. Two tiers, so both partial
+ * indexes permit it.
  */
 const GARDEN_ROSEMARY: SeedWorkspaceIngredient = {
   name: 'Garden Rosemary',
@@ -73,11 +40,7 @@ const GARDEN_ROSEMARY: SeedWorkspaceIngredient = {
   element: 'fire',
 };
 
-/**
- * Story 29's one-field stub, near enough: a thing this household keeps that no
- * naming system names, so `nomenclature` is `none` and there is no formal name
- * to give it. The local tier is where a row like this is allowed to live.
- */
+/** Story 29's one-field stub: a thing no naming system names, so `none`. */
 const HEARTH_ASH: SeedWorkspaceIngredient = {
   name: 'Hearth Ash',
   nomenclature: 'none',
@@ -102,11 +65,7 @@ export const WORKSPACE_W_INGREDIENTS: SeedWorkspaceIngredient[] = [
   HOUSE_CHAMOMILE,
 ];
 
-/**
- * What a layer points at: an ingredient in one of the two tiers, or nothing at
- * all — the custom row, which carries its own name and form instead
- * (`num_nonnulls(ingredient_id, name) = 1`, MB.40).
- */
+/** What a layer points at: an ingredient in either tier, or a custom row carrying its own name and form. */
 type SeedLayerIngredient =
   | {
       tier: 'compendium' | 'workspace';
@@ -114,12 +73,7 @@ type SeedLayerIngredient =
     }
   | { tier: 'custom'; name: string; form: string };
 
-/**
- * One layer of a jar, typed against `spell_ingredients`' own insert model.
- * `layerOrder` is not among the picked columns: it is the position in the
- * array below, so the two can never disagree and a layer cannot be given the
- * same depth as its neighbour.
- */
+/** One layer. `layerOrder` is the position in the array below, so two layers cannot share a depth. */
 type SeedLayer = Pick<typeof spellIngredients.$inferInsert, 'quantity' | 'unit' | 'note'> & {
   ingredient: SeedLayerIngredient;
 };
@@ -142,11 +96,8 @@ type SeedSpell = Pick<
 };
 
 /**
- * A compendium entry, named by what `standard` actually seeds rather than by a
- * second copy of its columns. The lookup runs at module load, so a demo layer
- * naming an entry the compendium does not carry fails on import — loudly, and
- * before a seed has written anything — rather than at a foreign key several
- * inserts later.
+ * A compendium entry `standard` seeds, looked up at module load so a layer
+ * naming a missing entry fails on import rather than at a foreign key later.
  */
 function fromCompendium(name: string, canonicalName?: string): SeedLayerIngredient {
   const entry = COMPENDIUM_INGREDIENTS.find(
@@ -167,7 +118,7 @@ function fromWorkspace(entry: SeedWorkspaceIngredient): SeedLayerIngredient {
   return { tier: 'workspace', entry };
 }
 
-/** The jars. Fixed ids in a block of their own, `…0002-…`, after the users (`…0000-…`) and the workspaces (`…0001-…`). */
+/** The jars, fixed ids in a block of their own (`…0002-…`). */
 export const DEMO_SPELLS: SeedSpell[] = [
   {
     id: '00000000-0000-0000-0002-000000000001',
@@ -201,9 +152,8 @@ export const DEMO_SPELLS: SeedSpell[] = [
         note: 'From our own grate, which is the whole point of the jar.',
       },
       {
-        // The custom, one-off layer (MB.40). Never an `ingredients` row, never
-        // on W's ingredients page, and `form` is free text — `dust` is nowhere
-        // in M4.3a's curated 78, exactly as a member would write it.
+        // The custom, one-off layer: never an `ingredients` row, and `dust` is
+        // uncurated — as a member would write it.
         ingredient: { tier: 'custom', name: 'Dust from the front step', form: 'dust' },
         quantity: '1.000',
         unit: 'pinch',
@@ -259,16 +209,8 @@ export const DEMO_SPELLS: SeedSpell[] = [
 ];
 
 export async function seedDemo(db: SeedDatabase): Promise<void> {
-  await db.transaction(async (tx) => {
-    // Published exactly as withAudit publishes it (M1.19): `set_config` with a
-    // bind parameter, transaction-local.
-    await tx.execute(sql`select set_config('app.current_user_id', ${BOOTSTRAP_USER_ID}, true)`);
-    await insertBootstrapAdmin(tx);
-
-    // `demo` is "standard plus", and the plus is inside the same transaction:
-    // every spell below points at a workspace, a category and — mostly — a
-    // compendium entry that `standard` writes, so a half-applied scenario
-    // would be a grimoire referencing rows that are not there.
+  await beginSeedTransaction(db, async (tx) => {
+    // Inside the same transaction: every spell points at rows `standard` writes.
     await seedStandardContent(tx);
 
     await insertMissingWorkspaceIngredients(tx);
@@ -280,72 +222,54 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
   });
 }
 
-// Everything below is idempotent the way `standard` is: it inserts what is
-// missing, keyed on identity, and **ignores `deleted_at`**. The partial unique
-// indexes stop only a second *live* row, so a spell someone soft-deleted would
-// otherwise be re-inserted on the next run and the deletion quietly undone.
-// Nothing already present is updated either, so a retitled spell, a reordered
-// stack or a rewritten note survives a reseed.
+// Idempotent the way `standard` is: inserts what is missing by identity,
+// ignoring `deleted_at` so a soft-deleted spell is not restored, updating
+// nothing already present.
 
 async function insertMissingWorkspaceIngredients(tx: SeedTransaction): Promise<void> {
-  const present = new Set(
-    (
-      await tx
-        .select({
-          name: ingredients.name,
-          canonicalName: ingredients.canonicalName,
-          form: ingredients.form,
-        })
-        .from(ingredients)
-        .where(eq(ingredients.workspaceId, WORKSPACE_W_ID))
-    ).map(identityOf),
-  );
-  const missing = WORKSPACE_W_INGREDIENTS.filter((entry) => !present.has(identityOf(entry)));
-
-  if (missing.length === 0) return;
-
-  await tx
-    .insert(ingredients)
-    .values(
-      missing.map((entry) =>
-        applyAudit('insert', { ...entry, workspaceId: WORKSPACE_W_ID }, BOOTSTRAP_SESSION),
-      ),
-    );
+  await insertMissing(tx, ingredients, WORKSPACE_W_INGREDIENTS, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({
+            name: ingredients.name,
+            canonicalName: ingredients.canonicalName,
+            form: ingredients.form,
+          })
+          .from(ingredients)
+          .where(eq(ingredients.workspaceId, WORKSPACE_W_ID))
+      ).map(identityOf),
+    keyOf: identityOf,
+    toRow: (entry) => ({ ...entry, workspaceId: WORKSPACE_W_ID }),
+  });
 }
 
 async function insertMissingSpells(tx: SeedTransaction): Promise<void> {
-  const present = new Set(
-    (
-      await tx
-        .select({ id: spells.id })
-        .from(spells)
-        .where(
-          inArray(
-            spells.id,
-            DEMO_SPELLS.map((spell) => spell.id),
-          ),
-        )
-    ).map((row) => row.id),
-  );
-  const missing = DEMO_SPELLS.filter((spell) => !present.has(spell.id));
-
-  if (missing.length === 0) return;
-
-  await tx
-    .insert(spells)
-    .values(
-      missing.map(({ categories: _categories, layers: _layers, ...spell }) =>
-        applyAudit('insert', { ...spell, workspaceId: WORKSPACE_W_ID }, BOOTSTRAP_SESSION),
-      ),
-    );
+  await insertMissing(tx, spells, DEMO_SPELLS, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({ id: spells.id })
+          .from(spells)
+          .where(
+            inArray(
+              spells.id,
+              DEMO_SPELLS.map((spell) => spell.id),
+            ),
+          )
+      ).map((row) => row.id),
+    keyOf: (spell) => spell.id,
+    toRow: ({ categories: _categories, layers: _layers, ...spell }) => ({
+      ...spell,
+      workspaceId: WORKSPACE_W_ID,
+    }),
+  });
 }
 
 /**
- * Every id a layer below could name, keyed by `identityOf`. Both tiers in one
- * map, which is safe here and only here: W's own three entries and the
- * compendium's share no identity except Garden Rosemary's, whose local row
- * wins — and a layer of W's jar naming rosemary means W's rosemary, which is
- * M8.3's rule arrived at from the other end.
+ * Every id a layer could name, keyed by `identityOf`. Both tiers in one map is
+ * safe only here: the tiers share no identity but Garden Rosemary's, whose
+ * local row wins.
  */
 async function ingredientIdByIdentity(tx: SeedTransaction): Promise<Map<string, string>> {
   const rows = await tx
@@ -360,8 +284,7 @@ async function ingredientIdByIdentity(tx: SeedTransaction): Promise<Map<string, 
     .where(isNull(ingredients.deletedAt));
 
   const ids = new Map<string, string>();
-  // Compendium first, workspace second, so a local entry overwrites rather
-  // than loses to the global one it shadows.
+  // Compendium first, so a local entry overwrites the global one it shadows.
   for (const row of rows.filter((row) => row.workspaceId === null))
     ids.set(identityOf(row), row.id);
   for (const row of rows.filter((row) => row.workspaceId === WORKSPACE_W_ID))
@@ -371,32 +294,22 @@ async function ingredientIdByIdentity(tx: SeedTransaction): Promise<Map<string, 
 }
 
 /**
- * The id a layer's ingredient landed under. Unreachable while every entry it
- * can name was either seeded by `standard` or inserted above — but a lookup
- * that silently returned `undefined` would write a null `ingredient_id`, and a
- * null one is a *custom* row under MB.40's CHECK, so the failure would be a
+ * Unreachable today, but a silent `undefined` would make a null
+ * `ingredient_id` — a *custom* row under the CHECK — so the failure would be a
  * blank-named layer rather than an error.
  */
 function ingredientIdFor(
   ingredient: SeedLayerIngredient & { tier: 'compendium' | 'workspace' },
   ingredientIds: Map<string, string>,
 ): string {
-  const id = ingredientIds.get(identityOf(ingredient.entry));
-
-  if (id === undefined) {
-    throw new Error(`A demo layer names "${ingredient.entry.name}", which is not in the database.`);
-  }
-
-  return id;
+  return requireFrom(
+    ingredientIds,
+    identityOf(ingredient.entry),
+    () => `A demo layer names "${ingredient.entry.name}", which is not in the database.`,
+  );
 }
 
-/**
- * The columns that say *which* ingredient a layer is, whichever kind it is.
- * Exactly one of `ingredientId` and `name` is set — MB.40's
- * `num_nonnulls(ingredient_id, name) = 1` — and `form` rides with `name`,
- * since beside an ingredient id it would shadow half that ingredient's own
- * identity.
- */
+/** Exactly one of `ingredientId` and `name` is set, and `form` rides with `name`. */
 function layerIdentity(
   ingredient: SeedLayerIngredient,
   ingredientIds: Map<string, string>,
@@ -409,63 +322,37 @@ function layerIdentity(
 }
 
 /**
- * **A jar's stack is seeded whole or not at all**, which is where this table's
- * idempotency departs from every other seed here: the unit keyed on is the
- * spell, not the layer.
- *
- * Every other seeded row stands on its own, so "insert what is missing" is
- * well defined per row. A layer does not: its identity is a depth in a
- * sequence, and the sequence is shared. Patch one row back into a stack a
- * member has since edited and the arithmetic is against you both ways — a
- * layer pulled out of the middle leaves the ones below it renumbered, so the
- * depth the seed wants is occupied by a different ingredient (primary key), and
- * the ingredient it wants is already at another depth (`spell_ingredients_
- * spell_id_ingredient_id_unique`). Either collision fails the whole seed, not
- * the row.
- *
- * So a jar that already has layers is left exactly as it is. What that gives
- * up is a demo jar healing itself after someone empties it by hand, which
- * `make db-reset` (M1.24) does properly anyway; what it buys is that a reseed
- * over an edited grimoire is a no-op rather than an error.
+ * A jar's stack is seeded whole or not at all: a layer's identity is a depth in
+ * a shared sequence, so patching one into an edited stack collides on either
+ * index. A jar that already has layers is left as it is
+ * (claude-docs/db.md, "A jar's stack is seeded whole or not at all").
  */
 async function insertMissingLayers(
   tx: SeedTransaction,
   ingredientIds: Map<string, string>,
 ): Promise<void> {
-  const stocked = new Set(
-    (await tx.select({ spellId: spellIngredients.spellId }).from(spellIngredients)).map(
-      (row) => row.spellId,
-    ),
+  const wanted = DEMO_SPELLS.flatMap((spell) =>
+    spell.layers.map((layer, index) => ({ spellId: spell.id, layer, index })),
   );
-  const missing = DEMO_SPELLS.filter((spell) => !stocked.has(spell.id));
 
-  if (missing.length === 0) return;
-
-  // `spell_ingredients` is one of MB.34's three hard-deleted join tables, so
-  // these carry the four-column `auditStampColumns` set — there is no
-  // tombstone to dodge and `applyAudit` simply stamps fewer columns.
-  await tx.insert(spellIngredients).values(
-    missing.flatMap((spell) =>
-      spell.layers.map((layer, index) =>
-        applyAudit(
-          'insert',
-          {
-            spellId: spell.id,
-            ...layerIdentity(layer.ingredient, ingredientIds),
-            quantity: layer.quantity,
-            unit: layer.unit,
-            // The position in the array, so the stack is written down once —
-            // one per jar from 1, which is what M10.16's reorder rewrites and
-            // M10.9's read orders by, and what a second list beside the layers
-            // could disagree with.
-            layerOrder: index + 1,
-            note: layer.note,
-          },
-          BOOTSTRAP_SESSION,
-        ),
+  // Keyed by the jar, not the layer, so a stocked jar keeps every layer out.
+  // Hard-deleted (MB.34): the four-column stamp set.
+  await insertMissing(tx, spellIngredients, wanted, {
+    existing: async (tx) =>
+      (await tx.select({ spellId: spellIngredients.spellId }).from(spellIngredients)).map(
+        (row) => row.spellId,
       ),
-    ),
-  );
+    keyOf: ({ spellId }) => spellId,
+    toRow: ({ spellId, layer, index }) => ({
+      spellId,
+      ...layerIdentity(layer.ingredient, ingredientIds),
+      quantity: layer.quantity,
+      unit: layer.unit,
+      // The position in the array, one per jar from 1.
+      layerOrder: index + 1,
+      note: layer.note,
+    }),
+  });
 }
 
 async function insertMissingSpellCategories(
@@ -473,35 +360,24 @@ async function insertMissingSpellCategories(
   categoryIds: Map<string, string>,
 ): Promise<void> {
   const wanted = DEMO_SPELLS.flatMap((spell) =>
-    spell.categories.map((name) => {
-      const categoryId = categoryIds.get(name);
-
-      // Unreachable while these spells and §6's vocabulary agree, which the
-      // tests pin — but a spell naming a category an admin has since renamed
-      // or deleted would otherwise be inserted with `undefined` and fail on
-      // NOT NULL several rows later, naming the wrong row.
-      if (categoryId === undefined) {
-        throw new Error(`"${spell.title}" names category "${name}", which is not in the database.`);
-      }
-
-      return { spellId: spell.id, categoryId };
-    }),
+    spell.categories.map((name) => ({
+      spellId: spell.id,
+      categoryId: requireFrom(
+        categoryIds,
+        name,
+        () => `"${spell.title}" names category "${name}", which is not in the database.`,
+      ),
+    })),
   );
 
-  const present = new Set(
-    (
-      await tx
-        .select({ spellId: spellCategories.spellId, categoryId: spellCategories.categoryId })
-        .from(spellCategories)
-    ).map((row) => `${row.spellId}|${row.categoryId}`),
-  );
-  const missing = wanted.filter(
-    (assignment) => !present.has(`${assignment.spellId}|${assignment.categoryId}`),
-  );
-
-  if (missing.length === 0) return;
-
-  await tx
-    .insert(spellCategories)
-    .values(missing.map((assignment) => applyAudit('insert', assignment, BOOTSTRAP_SESSION)));
+  await insertMissing(tx, spellCategories, wanted, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({ spellId: spellCategories.spellId, categoryId: spellCategories.categoryId })
+          .from(spellCategories)
+      ).map((row) => `${row.spellId}|${row.categoryId}`),
+    keyOf: (assignment) => `${assignment.spellId}|${assignment.categoryId}`,
+    toRow: (assignment) => assignment,
+  });
 }

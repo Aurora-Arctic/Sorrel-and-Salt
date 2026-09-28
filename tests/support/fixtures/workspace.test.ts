@@ -4,18 +4,11 @@ import { slugify } from '@/lib/slugify';
 import { A, B, C } from '../as-user';
 import { makeWorkspace, workspaceColumns } from './workspace';
 
-// Derived here the way the seed derives them, rather than written down — a
-// workspace name copied into this file would be the second spelling the slug
-// rule forbids.
+// Derived, not written down: the slug rule.
 const SEEDED_SLUGS = new Set(FIXTURE_WORKSPACES.map((workspace) => slugify(workspace.name)));
 
-// M1.25 — a coven, with the membership that makes it worth having one.
-//
-// The slug is the part worth testing. CLAUDE.md's slug rule says a slug is
-// derived from the name and never written down beside it, and a fixture is
-// exactly where a second spelling would get written down: a test that names a
-// workspace and hand-writes its slug is one typo away from asserting against
-// a /coven/<slug> that does not resolve.
+// The slug is the part worth testing: a hand-written slug beside a name is one
+// typo away from asserting against a /coven/<slug> that does not resolve.
 
 describe('makeWorkspace', () => {
   it('builds a whole workspace with no arguments', () => {
@@ -25,10 +18,8 @@ describe('makeWorkspace', () => {
     expect(workspace.slug).toBe('fixture-coven');
   });
 
-  // M1.27 bakes the `standard` scenario — W and X — into the template every db
-  // worker clones, and `workspaces_slug_unique` reserves their slugs. A default
-  // that was one of them would be a fixture no test could insert; W is where a
-  // fixture *spell* lands, by reference, which is a different thing.
+  // `workspaces_slug_unique` reserves W's and X's slugs. W is where a fixture
+  // *spell* lands, by reference, which is a different thing.
   it('is not a workspace the standard seed already carries', () => {
     expect(SEEDED_SLUGS.size).toBe(2);
     expect(SEEDED_SLUGS.has(makeWorkspace().slug)).toBe(false);
@@ -45,16 +36,13 @@ describe('makeWorkspace', () => {
     expect(workspace.slug).toBe(slugify('Fixture Coven Two'));
   });
 
-  // Through the one shared implementation, so a fixture and M3.3's mutation
-  // cannot disagree about what a name slugs to. `&` is the case that tells
-  // the two apart: the package expands it to "and" (CLAUDE.md's slug rule),
-  // and any second implementation would almost certainly drop it instead.
+  // `&` is the case that tells the shared implementation from a second one:
+  // the package expands it to "and".
   it('slugs through src/lib/slugify, ampersand and all', () => {
     expect(makeWorkspace({ name: 'Sorrel & Salt' }).slug).toBe('sorrel-and-salt');
   });
 
-  // `whitethorn-coven` is W's slug: the collision a test would actually want
-  // to write, once M1.27 has W in every clone.
+  // `whitethorn-coven` is W's slug: the collision a test would actually write.
   it('leaves a slug the override names, so a test can write a colliding one', () => {
     expect(makeWorkspace({ name: 'Fixture Coven Two', slug: 'whitethorn-coven' }).slug).toBe(
       'whitethorn-coven',

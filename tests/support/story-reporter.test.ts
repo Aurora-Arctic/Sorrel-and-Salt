@@ -5,12 +5,9 @@ import type { Vitest } from 'vitest/node';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import StoryReporter from './story-reporter';
 import type { ReportedModule } from './story-checklist';
+import { V1_STORIES } from './stories';
 
-// M1.28 — the reporter is a thin adapter: it hands the run's modules to
-// buildChecklist, prints the result through Vitest's logger, and writes the
-// same checklist as JSON when an output file is configured, which is how
-// CI's summarize-stories.mjs gets it. Everything about *what* the checklist
-// says is story-checklist.test.ts's; this covers only the plumbing.
+// Only the plumbing; what the checklist says is story-checklist.test.ts's.
 
 const modules: ReportedModule[] = [
   {
@@ -48,7 +45,7 @@ describe('StoryReporter', () => {
     expect(log).toHaveBeenCalledTimes(1);
     const printed = String(log.mock.calls[0][0]);
     expect(printed).toContain('[x] Story 1:');
-    expect(printed).toContain('1 of 45 stories passing');
+    expect(printed).toContain(`1 of ${V1_STORIES.length} stories passing`);
   });
 
   it('writes nothing to disk unless an output file is configured', async () => {
@@ -72,7 +69,7 @@ describe('StoryReporter', () => {
     await reporter.onTestRunEnd(modules as never, [], 'passed');
 
     const written = JSON.parse(readFileSync(join(root, 'stories.json'), 'utf8'));
-    expect(written.total).toBe(45);
+    expect(written.total).toBe(V1_STORIES.length);
     expect(written.counts.passed).toBe(1);
     expect(written.stories[0]).toMatchObject({ id: 1, status: 'passed' });
   });
@@ -87,7 +84,9 @@ describe('StoryReporter', () => {
 
     await reporter.onTestRunEnd([], [], 'passed');
 
-    expect(JSON.parse(readFileSync(join(root, 'out/stories.json'), 'utf8')).total).toBe(45);
+    expect(JSON.parse(readFileSync(join(root, 'out/stories.json'), 'utf8')).total).toBe(
+      V1_STORIES.length,
+    );
     expect(() => readFileSync(join(root, 'other.json'))).toThrow();
   });
 
@@ -99,7 +98,9 @@ describe('StoryReporter', () => {
 
     await reporter.onTestRunEnd([], [], 'passed');
 
-    expect(JSON.parse(readFileSync(join(root, 'chosen.json'), 'utf8')).total).toBe(45);
+    expect(JSON.parse(readFileSync(join(root, 'chosen.json'), 'utf8')).total).toBe(
+      V1_STORIES.length,
+    );
     expect(() => readFileSync(join(root, 'ignored.json'))).toThrow();
   });
 });

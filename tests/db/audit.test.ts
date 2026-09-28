@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { applyAudit, auditColumns, auditStampColumns } from '@/db/audit';
+import { applyAudit } from '@/db/audit';
+import { auditColumns, auditStampColumns } from '@/modules/identity/schema/users';
 
 const session = { userId: '11111111-1111-1111-1111-111111111111' };
 const impostor = { userId: '99999999-9999-9999-9999-999999999999' };
@@ -62,9 +63,7 @@ describe('applyAudit', () => {
   });
 });
 
-// MB.34: the three join tables carry the four stamps and no delete columns, so
-// the six-column set is defined as the four-column one plus the two rather than
-// listed twice — a second listing is a second thing to forget.
+// The six-column set is the four-column one plus two, so the two cannot drift (MB.34).
 describe('the two audit column sets', () => {
   it('defines auditColumns as the stamp columns plus the two delete columns', () => {
     expect(Object.keys(auditStampColumns)).toEqual([

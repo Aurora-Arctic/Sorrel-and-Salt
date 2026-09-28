@@ -1,0 +1,174 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The page-level frame, like `.sign-in-page`: no AppShell exists yet to
+// center a page, and 32rem keeps one field and a sentence or two inside a
+// comfortable reading measure. A column, so the form and the way to the
+// account page stack.
+.email-page {
+  // Or the viewport-high frame plus its own padding overflows by the padding
+  // and the page scrolls by 4rem with nothing to scroll to.
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  min-height: 100dvh;
+  padding: 2rem 1rem;
+  max-width: 32rem;
+  margin-inline: auto;
+}
+
+.email-page__nav {
+  margin: 0;
+  width: 100%;
+  max-width: 28rem;
+}
+
+// Centred by `.email-page`, in the app and in the workshop alike: the
+// stories render inside the same frame the page does.
+.email-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  width: 100%;
+  max-width: 28rem;
+}
+
+.email-form__heading {
+  margin: 0;
+}
+
+.email-form__status {
+  margin: 0;
+  color: $text-muted;
+}
+
+// The same banner as `.sign-in-panel__error`, full width rather than capped:
+// the form's own measure already bounds the line.
+.email-form__error,
+.email-form__sent {
+  // `output` is inline by default.
+  display: block;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.25rem;
+  border: 1px solid $secondary;
+  color: $secondary;
+  font-size: 0.8rem;
+  @include theme-transition(background-color, border-color, color);
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+.email-form__sent {
+  border-color: $accent;
+  color: $accent;
+}
+
+.email-form__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.email-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.email-form__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+// There is no input primitive yet (CLAUDE.md, "The design will change"), so
+// this is the least an input needs: an edge, room, the body face, and the
+// shared focus ring. `color-scheme` on the theme mixins already keeps the
+// native control's own chrome in step.
+.email-form__input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid $text-muted;
+  border-radius: 0.25rem;
+  background-color: $surface-card;
+  color: $text-primary;
+  font-family: $font-body;
+  font-size: 1rem;
+  @include theme-transition(background-color, border-color, color);
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &[aria-invalid='true'] {
+    border-color: $secondary;
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+.email-form__field-error {
+  margin: 0;
+  color: $secondary;
+  font-size: 0.8rem;
+}
+
+.email-form__actions {
+  display: flex;
+  gap: 0.75rem;
+  // More than the form's own gap: the field and its error are one group,
+  // the button is what acts on them.
+  margin-top: 0.75rem;
+}
+
+// A real `disabled` attribute rather than `aria-disabled`: a submit that has
+// nothing to send is fine to skip in the tab order, unlike SignInPanel's
+// roster. `_primitives.scss` styles only the `aria-disabled` state, so the
+// same greying is restated here off the attribute.
+.email-form__submit.btn:disabled {
+  border-color: $text-muted;
+  color: $text-muted;
+  opacity: 0.7;
+  cursor: not-allowed;
+  box-shadow: none;
+
+  &:hover,
+  &:focus-visible {
+    background-color: transparent;
+    border-color: $text-muted;
+    color: $text-muted;
+  }
+}
+
+.email-form__address {
+  margin: 0;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.email-form__continue {
+  margin: 0;
+}
+
+// `.btn` on an anchor, as in Welcome: `_typography.scss`'s `a:visited`
+// outranks `.btn` alone and an anchor underlines by default.
+.email-form__continue .btn {
+  text-decoration: none;
+
+  &:visited {
+    color: $accent;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $text-on-color;
+  }
+}

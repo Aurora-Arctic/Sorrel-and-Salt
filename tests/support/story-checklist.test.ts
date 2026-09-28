@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { buildChecklist, formatChecklist } from './story-checklist';
 import type { ReportedModule, SuiteState } from './story-checklist';
+import { V1_STORIES } from './stories';
 
-// M1.28 — a checklist is built from what the run reported, one line per v1
-// story, and a story nobody has written a test for is still on it. The
-// inputs here are the narrow structural shape the builder reads off
-// Vitest's TestModule (name, state, module id), so the cases can be plain
-// objects rather than a real run.
+// The inputs are the narrow shape the builder reads off Vitest's TestModule,
+// so the cases are plain objects rather than a run. Counts follow §10 rather
+// than a literal, so a story added there needs no edit here.
+const V1 = V1_STORIES.length;
 
 function module(relativeModuleId: string, suites: Array<[string, SuiteState]>): ReportedModule {
   return {
@@ -21,10 +21,10 @@ describe('buildChecklist', () => {
   it('lists every v1 story as untested when nothing has run', () => {
     const checklist = buildChecklist([]);
 
-    expect(checklist.total).toBe(45);
-    expect(checklist.stories).toHaveLength(45);
+    expect(checklist.total).toBe(V1);
+    expect(checklist.stories).toHaveLength(V1);
     expect(checklist.stories.every((story) => story.status === 'untested')).toBe(true);
-    expect(checklist.counts).toEqual({ passed: 0, failed: 0, skipped: 0, untested: 45 });
+    expect(checklist.counts).toEqual({ passed: 0, failed: 0, skipped: 0, untested: V1 });
     expect(checklist.unknown).toEqual([]);
   });
 
@@ -43,7 +43,7 @@ describe('buildChecklist', () => {
       { id: 3, status: 'failed' },
       { id: 4, status: 'untested' },
     ]);
-    expect(checklist.counts).toEqual({ passed: 1, failed: 1, skipped: 1, untested: 42 });
+    expect(checklist.counts).toEqual({ passed: 1, failed: 1, skipped: 1, untested: V1 - 3 });
   });
 
   it('keeps the §10 title on each line, not the describe wording', () => {
@@ -52,7 +52,7 @@ describe('buildChecklist', () => {
     ]);
 
     expect(checklist.stories[0].title).toBe(
-      "Sign in with Google or GitHub, so I don't manage another password.",
+      "Sign in with an account I already have, so I don't manage another password.",
     );
     expect(checklist.stories[0].suites).toEqual(['tests/acceptance/01-accounts.test.ts']);
   });
@@ -70,9 +70,7 @@ describe('buildChecklist', () => {
   });
 
   it('passes a story only when every suite naming it passed', () => {
-    // A failure anywhere is a failure; a skip anywhere means the story is not
-    // fully verified; 'pending' is what an interrupted run leaves behind and
-    // must never read as green.
+    // 'pending' is what an interrupted run leaves behind and must never read as green.
     const status = (states: SuiteState[]) =>
       buildChecklist([
         module(
@@ -117,17 +115,17 @@ describe('formatChecklist', () => {
 
   it('prints one line per story with its id, title and status', () => {
     expect(lines).toContain(
-      "[x] Story 1: Sign in with Google or GitHub, so I don't manage another password.",
+      "[x] Story 1: Sign in with an account I already have, so I don't manage another password.",
     );
     expect(lines.find((line) => line.startsWith('[ ] Story 2:'))).toMatch(/— FAILING$/);
     expect(lines.find((line) => line.startsWith('[ ] Story 3:'))).toMatch(/— skipped$/);
     expect(lines.find((line) => line.startsWith('[ ] Story 4:'))).toMatch(/— no test yet$/);
-    expect(lines.filter((line) => /^\[[x ]\] Story \d+:/.test(line))).toHaveLength(45);
+    expect(lines.filter((line) => /^\[[x ]\] Story \d+:/.test(line))).toHaveLength(V1);
   });
 
   it('ends with the tally', () => {
     expect(lines[lines.length - 1]).toBe(
-      '1 of 45 stories passing · 1 failing · 1 skipped · 42 without a test',
+      `1 of ${V1} stories passing · 1 failing · 1 skipped · ${V1 - 3} without a test`,
     );
   });
 
@@ -139,7 +137,7 @@ describe('formatChecklist', () => {
 
   it('omits the tally parts that are zero, except the passing count', () => {
     expect(formatChecklist(buildChecklist([])).split('\n').pop()).toBe(
-      '0 of 45 stories passing · 45 without a test',
+      `0 of ${V1} stories passing · ${V1} without a test`,
     );
   });
 });

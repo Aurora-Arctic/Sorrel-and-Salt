@@ -14,27 +14,11 @@ import {
 } from '@/db/seed/standard';
 import { seed } from '@/db/seed/index';
 
-// M1.22 — the `standard` scenario: DESIGN.md §"Seed data"'s five fixture users,
-// workspaces W and X, and a populated compendium.
-//
-// Like index.test.ts (M1.21) and categories.test.ts (M4.3), this runs against
-// the real schema rather than a stubbed table or two. It has to:
-// `workspace_members` is keyed on two real foreign keys, the compendium's
-// identity lives in a *generated* column over three others, and "W and X
-// share no members" is a claim about rows in the real tables, not about the
-// shape of an object this module returns. The worker's sorrel_test_<n> clone
-// arrives with every migration applied and — since this very scenario is what
-// the template carries (M1.27, tests/support/db-setup.ts) — already seeded
-// with it, re-cloned that way before this file runs. A test *about* the seed
-// needs the tables empty, so `beforeEach` truncates every one of them; nothing
-// is built here and nothing put back afterwards. Until M1.27 the template was
-// empty and this file applied the migration set itself.
-//
-// The scenario exists to be awkward on purpose (TASKS.md M1.22): four plants
-// and a cat all labelled "Cat's Claw", a mineral variety, a `none`, an
-// `unknown`, and a form nobody has curated. Every assertion below that looks
-// like trivia is one of those cases, and M4.7/M4.7a and M8.3/M8.3a are what
-// consume them.
+// The `standard` scenario against the real schema, every table emptied first:
+// membership is two real foreign keys and the compendium's identity a
+// generated column. It is awkward on purpose — five "Cat's Claw"s, a mineral
+// variety, a `none`, an `unknown`, an uncurated form —
+// claude-docs/db.md, "The standard scenario".
 
 const PROBE = 'standard_probe_acting_user';
 
@@ -99,11 +83,8 @@ beforeAll(async () => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
 
-  // The same observation trick index.test.ts uses: `app.current_user_id` is
-  // transaction-local, so it is gone by the time a test could read it. This
-  // records what it held *inside* the transaction that inserted each
-  // ingredient, which makes "the seed publishes the acting user" a row rather
-  // than an assumption.
+  // Records what `app.current_user_id` held inside the inserting transaction;
+  // it is transaction-local and gone by the time a test could read it.
   await sql`create table ${sql(PROBE)} (ingredient_id uuid not null, acting_user text)`;
   await sql.unsafe(`
     create function ${PROBE}() returns trigger language plpgsql as $$
@@ -119,18 +100,11 @@ beforeAll(async () => {
   );
 });
 
-// Every table in `public` emptied, the probe included — one `truncate …
-// cascade` rather than the ordered `delete from` list this used to be: the
-// clone arrives already holding this scenario, every child foreign key is
-// NO ACTION, and a table-by-table delete would be refused. The empty tables
-// are the starting state every test below assumes: the one the old empty
-// template gave, reached the other way round.
 beforeEach(async () => {
   await truncateAllTables(sql);
 });
 
-// Only this file's own objects come down; the schema is the clone's and the
-// next file gets a fresh one.
+// Only this file's own objects come down.
 afterAll(async () => {
   await sql.unsafe(`drop function if exists ${PROBE}() cascade`);
   await sql`drop table if exists ${sql(PROBE)}`;
@@ -139,9 +113,7 @@ afterAll(async () => {
 
 describe('the cast: five fixture users, A–E', () => {
   it('creates all five, under the ids the fixtures name, plus the bootstrap admin', async () => {
-    // The precondition for every count below: the truncated clone really
-    // starts empty, so these rows are this seed's rather than the template's
-    // copy of the same scenario or a previous test's.
+    // Precondition: the truncated clone really starts empty, so these rows are this seed's.
     expect(await countOf('users')).toBe(0);
 
     await seedStandard(db);
@@ -161,16 +133,12 @@ describe('the cast: five fixture users, A–E', () => {
     expect(byId.get(FIXTURE_USERS.B.id)?.role).toBe('user');
     expect(byId.get(FIXTURE_USERS.C.id)?.role).toBe('user');
     expect(byId.get(FIXTURE_USERS.D.id)?.role).toBe('user');
-    // E is the site admin — the only one, since the bootstrap admin is the
-    // seed's own identity rather than a member of the cast.
+    // E is the only site admin: the bootstrap admin is the seed's identity, not cast.
     expect(byId.get(FIXTURE_USERS.E.id)?.role).toBe('admin');
   });
 
-  // CLAUDE.md's invite-gate: the flag turns true by accepting an invitation or
-  // an admin grant, and nothing else. A–D are in workspaces, which is how they
-  // got it; E is in none and has never been invited, so E's rights come from
-  // being an admin rather than from the flag — which is exactly the case
-  // M3.2's gate has to get right.
+  // Invite-gate: A–D earned the flag by joining a workspace; E is in none and
+  // never invited, so E's rights come from being an admin, not from the flag.
   it('grants canCreateWorkspace to the four who joined a workspace, and to no one else', async () => {
     await seedStandard(db);
 
@@ -223,9 +191,7 @@ describe('the workspaces: W, X, and nothing shared', () => {
     expect(inX.map((m) => [m.user_id, m.role])).toEqual([[FIXTURE_USERS.D.id, 'member']]);
   });
 
-  // The isolation fixture. Asserted as an intersection rather than as "D is
-  // absent from W", and with its preconditions stated: an empty intersection
-  // between two empty sets would pass just as happily.
+  // An intersection with its preconditions stated: two empty sets also intersect empty.
   it('shares no member between W and X', async () => {
     await seedStandard(db);
 
@@ -246,8 +212,8 @@ describe('the workspaces: W, X, and nothing shared', () => {
     await seedStandard(db);
 
     const members = await allMembers();
-    // The precondition: E exists, and membership rows exist for other people,
-    // so "no row for E" is the seed's doing rather than an empty table.
+    // Precondition: E exists and other memberships exist, so "no row for E"
+    // is the seed's doing rather than an empty table.
     expect((await allUsers()).some((u) => u.id === FIXTURE_USERS.E.id)).toBe(true);
     expect(members.length).toBe(4);
     expect(members.filter((m) => m.user_id === FIXTURE_USERS.E.id)).toEqual([]);
@@ -258,10 +224,8 @@ describe('the compendium', () => {
   it('seeds the admin-curated reference data the scenario stands on', async () => {
     await seedStandard(db);
 
-    // `standard` is a whole populated compendium, not just ingredients: M4.3's
-    // categories and M4.3a's forms are what an ingredient is filed under and
-    // what its `form` is autofilled from, and both land a task ahead of this
-    // one precisely so this scenario can consume them.
+    // A whole compendium: categories and forms are what an entry is filed
+    // under and what its `form` is autofilled from.
     expect(await countOf('categories')).toBe(CATEGORIES.length);
     expect(await countOf('ingredient_forms')).toBe(FORMS.length);
   });
@@ -272,7 +236,6 @@ describe('the compendium', () => {
     const entries = await compendium();
     expect(entries.length).toBe(COMPENDIUM_INGREDIENTS.length);
     expect(entries.length).toBeGreaterThanOrEqual(20);
-    // Every entry is global: a compendium row carries no workspace.
     expect(entries.every((e) => e.workspace_id === null)).toBe(true);
   });
 
@@ -281,9 +244,8 @@ describe('the compendium', () => {
 
     const entries = await compendium();
     expect(entries.filter((e) => e.nomenclature === null)).toEqual([]);
-    // The column is NOT NULL, so the assertion above cannot fail on its own.
-    // What it could hide is a seed that answered `unknown` everywhere rather
-    // than curating: the systems actually used are the real claim.
+    // The column is NOT NULL, so the line above cannot fail alone; the claim is
+    // that the seed curated rather than answering `unknown` everywhere.
     expect(new Set(entries.map((e) => e.nomenclature)).size).toBeGreaterThanOrEqual(5);
   });
 
@@ -299,8 +261,7 @@ describe('the compendium', () => {
     expect(unknown.length).toBeGreaterThanOrEqual(1);
     expect(variety.length).toBeGreaterThanOrEqual(1);
 
-    // §5's biconditional, seeded the way it is meant to read rather than the
-    // way that merely satisfies the CHECK: both absences are positive answers.
+    // Both absences are positive answers, not merely the shape that satisfies the CHECK.
     expect(none.every((e) => e.canonical_name === null)).toBe(true);
     expect(unknown.every((e) => e.canonical_name === null)).toBe(true);
     expect(variety.some((e) => e.nomenclature === 'mineral')).toBe(true);
@@ -324,8 +285,7 @@ describe('the compendium', () => {
     expect(cat?.nomenclature).toBe('zoological');
     expect(cat?.form).toBe('claw');
 
-    // What makes five rows under one label legal at all: identity is the
-    // generated key, and each of the five has its own.
+    // Five rows under one label is legal because each has its own generated key.
     expect(new Set(catsClaws.map((e) => e.canonical_key)).size).toBe(5);
   });
 
@@ -333,16 +293,14 @@ describe('the compendium', () => {
     await seedStandard(db);
 
     const curated = await curatedFormNames();
-    // The precondition: the vocabulary is there to be outside of. Without it
-    // every form would count as uncurated and the test would pass on nothing.
+    // Precondition: the vocabulary is there to be outside of.
     expect(curated.size).toBe(FORMS.length);
 
     const inUse = [...new Set((await compendium()).map((e) => e.form).filter(Boolean))] as string[];
     const outside = inUse.filter((form) => !curated.has(form.toLowerCase()));
 
     expect(outside.length).toBeGreaterThanOrEqual(1);
-    // …and the rest are curated, so M4.7a has both halves of its list: the
-    // vocabulary, and the admin's curation to-do.
+    // …and the rest are curated, so the autofill has both halves of its list.
     expect(inUse.length - outside.length).toBeGreaterThanOrEqual(10);
   });
 
@@ -352,8 +310,7 @@ describe('the compendium', () => {
     expect(await countOf('ingredient_categories')).toBeGreaterThan(0);
     expect(await countOf('ingredient_folk_names')).toBeGreaterThan(0);
 
-    // Every assignment points at a real seeded category and a real seeded
-    // compendium entry — a dangling id on either side renders nothing.
+    // A dangling id on either side renders nothing.
     const [{ count: dangling }] = await sql<{ count: string }[]>`
       select count(*) from ingredient_categories ic
       where not exists (select 1 from categories c where c.id = ic.category_id)
@@ -400,10 +357,7 @@ describe('re-running the scenario', () => {
     }).toEqual(before);
   });
 
-  // Idempotency keys on identity and ignores `deleted_at`, exactly as
-  // seedCategories does: the partial unique indexes stop only a second *live*
-  // row, so an entry an admin soft-deleted would otherwise come back on the
-  // next run and quietly undo the deletion.
+  // Keyed on identity, ignoring `deleted_at`: the partial indexes stop only a second live row.
   it('does not resurrect a compendium entry an admin has soft-deleted', async () => {
     await seedStandard(db);
     const [victim] = await compendium();

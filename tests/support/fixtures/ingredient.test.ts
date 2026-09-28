@@ -4,9 +4,8 @@ import { NOMENCLATURE_KINDS, ingredientColumns, makeIngredient } from './ingredi
 
 /**
  * The identity `canonical_key` is generated from (§5): the formal name where
- * one is declared, the label where none is, plus the form — case and space
- * folded, as the column folds them. Typed loosely enough to take a seed entry
- * (which leaves the two optional) and a fixture (which does not).
+ * declared, else the label, plus the form, case and space folded. Loose enough
+ * to take a seed entry (two optionals) and a fixture.
  */
 function identityOf(entry: {
   name: string;
@@ -18,14 +17,8 @@ function identityOf(entry: {
 
 const SEEDED_IDENTITIES = new Set(COMPENDIUM_INGREDIENTS.map(identityOf));
 
-// M1.25 — `makeIngredient()` is what a test writes when the ingredient is not
-// the point, and `makeIngredient({ … })` when one field of it is.
-//
-// The fixture's real work is the `nomenclature`/`canonicalName` pair. The
-// column has no database default (DESIGN.md §5) and the two are bound by a
-// biconditional CHECK, so a factory that let a partial override through would
-// hand back a row Postgres refuses — and the test that used it would fail for
-// a reason having nothing to do with what it was testing.
+// The factory's real work is the `nomenclature`/`canonicalName` pair, bound by
+// a biconditional CHECK with no column default.
 
 describe('makeIngredient', () => {
   it('builds a whole ingredient with no arguments', () => {
@@ -56,10 +49,8 @@ describe('makeIngredient', () => {
     expect(makeIngredient({ categories: ['Protection'] }).categories).toEqual(['Protection']);
   });
 
-  // The acceptance criterion, and the reason this factory derives rather than
-  // merges: `{ nomenclature: 'none' }` on its own would otherwise keep the
-  // default's formal name and produce a row
-  // `ingredients_nomenclature_declares_canonical_name` rejects.
+  // The acceptance criterion: `{ nomenclature: 'none' }` alone must not keep
+  // the default's formal name.
   describe('a nomenclature named on its own', () => {
     it('drops the formal name for the two kinds that must not carry one', () => {
       for (const nomenclature of ['none', 'unknown'] as const) {
@@ -82,8 +73,7 @@ describe('makeIngredient', () => {
       }
     });
 
-    // Vacuous otherwise: the two loops above prove the rule over whichever
-    // kinds they happen to list, and this is what says they list all of them.
+    // Asserted so the two loops above cannot pass over a short list.
     it('answers for every kind DESIGN.md §5 names', () => {
       expect(NOMENCLATURE_KINDS).toEqual([
         'botanical',
@@ -100,8 +90,7 @@ describe('makeIngredient', () => {
     });
   });
 
-  // Derivation stops the moment the caller says something, because a test
-  // asserting the CHECK works has to be able to write the row it rejects.
+  // A test asserting the CHECK has to be able to write the row it rejects.
   it('leaves a formal name the override names, however it pairs', () => {
     expect(makeIngredient({ canonicalName: 'Uncaria tomentosa' }).canonicalName).toBe(
       'Uncaria tomentosa',
@@ -114,13 +103,9 @@ describe('makeIngredient', () => {
     ).toBeNull();
   });
 
-  // M1.27 bakes the `standard` scenario into the template every db worker
-  // clones, and `ingredients_compendium_identity_unique` reserves each seeded
-  // identity — so a default that matched one would be a fixture no test could
-  // insert. The defaults are invented names, which is what makes a collision
-  // impossible; this is the backstop, checked for every identity the factory
-  // can supply on its own rather than just the zero-argument one, since
-  // `{ nomenclature }` swaps in a formal name of the factory's choosing.
+  // The partial unique indexes reserve every seeded identity, so a default
+  // matching one could never be inserted. Invented names are the mechanism;
+  // this is the backstop, over every identity the factory supplies on its own.
   describe('an identity the standard seed does not carry', () => {
     it('by default', () => {
       expect(SEEDED_IDENTITIES.size).toBeGreaterThan(0);
@@ -153,10 +138,8 @@ describe('ingredientColumns', () => {
     expect(columns.workspace_id).toBeNull();
   });
 
-  // The two child tables and the generated column are not columns of
-  // `ingredients`: folk names are rows in `ingredient_folk_names` (M4.4a),
-  // categories rows in `ingredient_categories`, and `canonical_key` is
-  // GENERATED ALWAYS, so naming any of them in an insert is an error.
+  // Folk names and categories are other tables' rows; `canonical_key` is
+  // GENERATED ALWAYS.
   it('leaves out what does not belong in an insert into ingredients', () => {
     const columns = ingredientColumns(makeIngredient({ categories: ['Protection'] }));
 
@@ -166,8 +149,7 @@ describe('ingredientColumns', () => {
     expect(columns).not.toHaveProperty('canonical_key');
   });
 
-  // The audit stamps come from the session, never from a fixture (CLAUDE.md
-  // rule 3) — a raw-SQL test spreads its own author beside these.
+  // Audit stamps come from the session (rule 3).
   it('carries no audit columns', () => {
     for (const column of ['created_by', 'created_at', 'updated_by', 'updated_at']) {
       expect(ingredientColumns(makeIngredient())).not.toHaveProperty(column);

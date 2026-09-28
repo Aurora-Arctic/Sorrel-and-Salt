@@ -24,13 +24,20 @@ without a page routed to it.
 ## `.ladle/`
 
 - **`config.mjs`** — `stories` glob, `port` 61000, `previewPort` 61001
-  (`ladle preview`), `outDir` `build`, pinned `hmrPort` 61002. `storyOrder`
+  (`ladle preview`), `outDir` `.reports/workshop`, pinned `hmrPort` 61002. `storyOrder`
   forces each component's `Default` story first and leaves the rest in Ladle's
   own order; it is a global-config hook only (no per-story-file equivalent) and
   must stay a self-contained function, since Ladle serializes it with
-  `.toString()`. `addons.theme.defaultState: 'dark'` matches the app's
-  dark-first default in `globals.scss`; `tests/guards/workshop-guards.test.ts`
-  asserts it stays that way.
+  `.toString()`. `hmrPort` is pinned only so the HMR socket lands on a known
+  port rather than a random free one — it stays reachable when the workshop is
+  opened over the LAN instead of at `localhost`, and it does not move between
+  restarts.
+  - **`addons.theme.defaultState: 'dark'`** matches the app's dark-first default
+    in `globals.scss` (`:root { @include theme-dark }`), so the workshop opens
+    the same way a viewer who has never touched the toggle sees the app.
+    M0.31 briefly set it to `'auto'` (the control's unset position, letting
+    `prefers-color-scheme` decide) and M0.32 moved it back; `'dark'` is the
+    confirmed intent, and `tests/guards/workshop-guards.test.ts` pins it.
 - **`config.d.mts`** — a hand-written declaration of the slice of `config.mjs`
   that guard reads, for `tsc` alone: `allowJs` is off, so the
   `@type {import('@ladle/react').UserConfig}` JSDoc in `config.mjs` reaches
@@ -57,7 +64,11 @@ without a page routed to it.
   remount on theme change so a component that reads `data-theme` only on mount
   follows the switch. A story pins its own theme with
   `MyStory.meta = { theme: 'light' | 'dark' }`, which the `Provider` reads over
-  the toolbar.
+  the toolbar. It also wraps the frame in the app's `Providers`
+  (`src/app/providers.tsx`), so a component that uses TanStack Query
+  (`EmailForm`'s `useMutation`) finds the one client the root layout mounts —
+  a story never mounts a `QueryClientProvider` of its own, which
+  `tests/guards/graphql-client.test.ts` would refuse.
   - **`reducedMotion` pin (MB.1).** `prefers-reduced-motion: reduce` is a real
     OS/browser setting Ladle can't expose a toolbar control for — there's
     nothing to dispatch the way the theme control dispatches `data-theme`. A
@@ -85,6 +96,13 @@ without a page routed to it.
   its `src/scss/` `*-base` mixin into `.ladle-story-frame`, so a story gets the
   identical prose, document structure and class layer a page does while Ladle's
   own `<ul>` / `<li>` / `<a>` chrome, outside the frame, stays untouched.
+- **`UnoptimizedLink.tsx`** — what `next/link` resolves to here, via the alias in
+  `vite.config.ts`: a plain anchor, the substitution Ladle's Next.js guide
+  prescribes. Vite has no Next router and no `process.env`, and the first
+  story to import `next/link` (Welcome) rendered blank without it. That was
+  also when `vite.config.ts` turned out never to have been loaded: Ladle passes
+  `viteConfig` to Vite's loader as given and Vite otherwise looks in the
+  project root, so `config.mjs` now names the file explicitly.
 - **`head.html`** — injected into `<head>`; loads Cormorant Unicase + Lexend by
   name from Google Fonts so the workshop's type matches the app's (the app
   self-hosts them via `next/font`, which the workshop has no equivalent of).
@@ -97,23 +115,42 @@ without a page routed to it.
   holds only reference-page chrome, and **must stay nested under `.dl`** —
   `.ladle-story-frame p` (0,1,1) outranks `.eyebrow` (0,1,0) otherwise.
 
+## Mail templates (MB.66)
+
+- **`src/emails/*.stories.tsx`** is the second story glob in `config.mjs`: one
+  story file beside each mail template, titled `Emails / …`. The shared frame
+  in `src/emails/parts/` has none; every template previews it.
+- **`EmailPreview.tsx`** renders a template's `Message` and shows the HTML part
+  in an iframe, so the workshop's styles and document never reach the mail,
+  with the plain-text part in a `<details>` beneath. Images and fonts load
+  from the workshop's own origin: Vite serves `public/` in `ladle serve` and
+  copies it into the build, and on staging `/email/*` is the app's own public
+  prefix.
+- **The toolbar's theme reaches the mail by rewriting it.** A framed
+  document's `prefers-color-scheme` follows the browser, not the frame's
+  `color-scheme` — checked in the Playwright Chromium, where a light page left
+  the mail dark. So the preview reads the page's computed `color-scheme` and
+  turns the mail's one `LIGHT_MEDIA` block into `@media all` or `@media not
+all`: the same rules a client in that scheme applies, nothing re-styled. A
+  story's `meta.theme` pin wins, as for components.
+
 ## Commands and gates
 
 - `npm run workshop` / `make workshop` — dev server on **61000**, with Vite HMR
   and React Fast Refresh. Only edits to the `.ladle/` files themselves need the
   dev server restarted.
 - `npm run workshop:build` / `make workshop-build` — static build to the
-  gitignored `./build`, via `scripts/build-workshop.ts`. The wrapper exists
-  because `@ladle/react` 5.1.1's own CLI always exits 0 even when the underlying
-  Vite build fails; it turns Vite's `✗ Build failed` marker into a real
-  non-zero exit.
-- `tests/guards/workshop-guards.test.ts` (MB.38) — the two mechanical guards, as
+  gitignored `.reports/workshop/`, via `scripts/build-workshop.ts`. See **The build gate**
+  below for why the wrapper exists.
+- `tests/guards/workshop-guards.test.ts` (MB.38, MB.66) — the mechanical guards, as
   ordinary Vitest tests in the `unit` project. One fails if a directory under
   `src/components/` has an `index.tsx` but no sibling `index.stories.tsx` —
   not an Oxlint rule, because Oxlint has no custom-rule API and this is a
   cross-file filesystem assertion; scoped to `src/components/`, with
   `.ladle/*.stories.tsx` deliberately out of scope; and proven on a throwaway
-  tree before it is trusted on the real one. The other fails if
+  tree before it is trusted on the real one. Its twin (MB.66) fails if a
+  top-level `src/emails/<name>.tsx` has no sibling `<name>.stories.tsx`, or
+  if `config.mjs` stops globbing them. The last fails if
   `config.mjs`'s `addons.theme.defaultState` is not `'dark'`. Both were
   standalone scripts under `scripts/` until MB.38, written that way only
   because Vitest had not landed yet.
@@ -129,6 +166,81 @@ without a page routed to it.
   `workshop:build` on `checks.yml`'s `build` leg. Pre-commit is lint,
   `format:check` and typecheck, test-free by decision (MB.38): a hook that
   runs tests is a hook people start skipping, and a PR cannot skip CI.
+
+## On staging (M2.10)
+
+Staging serves the workshop at `https://staging.sorrelandsalt.com/workshop`,
+to admins only. Local `npm run workshop` / `make workshop` on 61000 is
+untouched and unauthenticated — local development is the one relaxed
+environment. Production and hotfix previews never carry it.
+
+- **How it ships.** `deploy.yml` runs, on a staging deploy alone (the step's
+  `if:` reads `git_branch == 'staging'`), `npm run workshop:build -- --base
+/workshop/ --outDir public/workshop` before `vercel build`. The build
+  wrapper forwards its arguments to `ladle build`. Next then serves the files
+  from `public/` as it would any static asset; `public/workshop` is
+  gitignored. `--base` is what makes Ladle's asset URLs absolute under
+  `/workshop/`; drift it from the proxy's prefix and the page ships with every
+  asset 404ing. `tests/guards/workshop-deploy.test.ts` reads the step as data
+  and pins the flags, the staging-only `if:`, and its place before
+  `vercel build`.
+- **How it is gated: in `src/proxy.ts`, and nowhere else can do it.** Next
+  runs the proxy before it serves `public/`, and a static file has no page to
+  call `requireSession()`, so the proxy's usual cookie-only check would admit
+  any signed-in account — and signing in with any provider earns one. For
+  `/workshop` and everything beneath it (`/workshopping` is not beneath it),
+  and only there, the proxy asks Better Auth for the live session through
+  `sessionFromHeaders()` and hands it to `assertWorkshopAccess()`
+  (`src/modules/identity/services/workshop-access.ts` — the rule is a service's, per rule 1).
+
+  | Request                      | Answer                                                       |
+  | ---------------------------- | ------------------------------------------------------------ |
+  | No session cookie            | 307 to `/sign-in?next=<path>`, as any protected route        |
+  | A cookie Better Auth rejects | The same redirect                                            |
+  | A live session, role `user`  | 403, plain text                                              |
+  | A live session, role `admin` | The file, with `Content-Security-Policy: connect-src 'none'` |
+
+  The 403 is plain rather than the styled page `/admin` will have: it answers
+  asset requests as well as the page, and nothing styled exists to rewrite to
+  yet. The lookup module is imported dynamically inside the workshop branch,
+  so no other request loads the database client in the proxy.
+
+- **Bare `/workshop` is rewritten to `/workshop/index.html`, query kept.**
+  Ladle is a single page routed by `?story=`, and Next serves no directory
+  index.
+- **No application data is reachable through it.** The build is static — no
+  story calls GraphQL, and `meta.json` is the story index. The workshop's own
+  scripts nonetheless run on the app's origin carrying an admin's cookie, so
+  every workshop response carries `connect-src 'none'`: `fetch`, XHR and
+  WebSockets from the page are refused by the browser, `/api/graphql`
+  included. Ladle's static build makes no request of its own that this breaks;
+  the one `fetch` in its bundle is Vite's modulepreload polyfill, which a
+  browser with native `modulepreload` never runs.
+- **Admin only for now.** A role that can open the workshop without admin's
+  other powers is v2 (DESIGN.md §13, "A workshop-viewer role"); when it
+  lands, `assertWorkshopAccess()` is the one line that changes.
+
+## The build gate
+
+`scripts/build-workshop.ts` runs `ladle build`, mirrors its output verbatim, and
+exits non-zero if Vite's own `Build failed` marker appears in it. That is a
+workaround for an upstream gap, not a reimplementation of the build.
+
+**`@ladle/react` 5.1.1's CLI always exits 0.** Its `lib/cli/vite-prod.js` wraps
+Vite's `build()` in a try/catch, logs the error and returns `false`; its
+`lib/cli/build.js` awaits that call and discards the return value, so nothing
+ever becomes a non-zero exit code. Verified directly: a story importing a module
+that does not exist prints Vite's `✗ Build failed` / `Could not resolve …` and
+`ladle build` still exits 0.
+
+**Neither of the two tidier fixes is available.** There is no CLI flag for it,
+and the CLI's build function cannot be imported directly — `lib/cli/build.js` is
+not in the package's `exports` map, so a deep import throws
+`ERR_PACKAGE_PATH_NOT_EXPORTED`.
+
+The marker never appears on a clean run, so the wrapper passes through unchanged
+if a future `@ladle/react` fixes the exit code, and can be deleted whenever this
+repo bumps past the fixed version.
 
 ## Stopgaps to unwind
 

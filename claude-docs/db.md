@@ -7,7 +7,7 @@ from the environment at module load and throws if it is unset — no default,
 no silent fallback.
 
 - **One driver call site.** Nothing outside `connection.ts` calls `postgres(...)`.
-  `src/db/repository.ts` (M1.16) is the only _application_ module that imports
+  `src/db/repository/` (M1.16) is the only _application_ code that imports
   `db` from here — everything else reaches the database through the
   repository. Three pieces of infrastructure are exempt; see "Who may import
   the client" below.
@@ -16,7 +16,7 @@ no silent fallback.
   `?sslmode=require` turns on TLS automatically and a local URL with no
   `sslmode` stays plaintext — `connection.ts` never branches on environment.
 - **`drizzle.config.ts`** (repo root) drives `drizzle-kit`: `dialect:
-'postgresql'`, schema at `src/db/schema`, migrations output to
+'postgresql'`, schema at the glob `./src/modules/*/schema/*.ts` — every module's tables, no barrel and no registration step — and migrations output to
   `src/db/migrations`. It reads the same `DATABASE_URL` and throws under the
   same condition.
 
@@ -73,12 +73,12 @@ output or CI behaviour changes when it's unset. Full setup:
 
 ## Migrations and scripts (M1.3)
 
-- **`npm run db:generate`** is `drizzle-kit generate` — diffs `src/db/schema`
+- **`npm run db:generate`** is `drizzle-kit generate` — diffs `src/modules/*/schema`
   against `src/db/migrations` and writes a new migration for any change. The
   first migration (`0000_enable-extensions.sql`) was written by hand with
   `drizzle-kit generate --custom`, since enabling an extension isn't
   something schema-diffing can express; `0001_lucky_centennial.sql` (M2.2) is
-  the first one it actually generated, from `src/db/schema/{users,auth}.ts`
+  the first one it actually generated, from `users.ts` and `auth.ts` (now `src/modules/identity/schema/`)
   — see `claude-docs/auth.md`.
 - **`npm run db:migrate`** is `drizzle-kit migrate` — applies every migration
   under `src/db/migrations` not yet recorded in the `drizzle` schema's
@@ -209,9 +209,11 @@ docker-studio` starts it as a profiled compose service (`studio`), the
 
 ## Workspaces and membership (M6.2)
 
-`src/db/schema/workspaces.ts` holds DESIGN.md §5's two workspace tables and
-the `workspace_role` enum (`viewer`, `member`, `owner` — declared in that
-order, which is the hierarchy M6.3's `assertMembership` implements).
+`src/modules/coven/schema/workspaces.ts` holds DESIGN.md §5's two workspace tables and
+the `workspace_role` enum (`viewer`, `member`, `owner`). The declaration
+order reads as a hierarchy and is not one: M6.3 gives each role its own
+permission statements, so nothing compares two roles (see "The Membership
+proof" below).
 `0004_black_slyde.sql` is the migration.
 
 - **`workspaces`** — `id`, `name`, `slug`, + audit, and **nothing else**.
@@ -245,7 +247,7 @@ order, which is the hierarchy M6.3's `assertMembership` implements).
 
 ## Invitations (M7.1)
 
-`src/db/schema/workspace-invitations.ts` holds DESIGN.md §5's third workspace
+`src/modules/coven/schema/workspace-invitations.ts` holds DESIGN.md §5's third workspace
 table, reusing the `workspace_role` enum declared beside `workspaces`.
 `0012_cultured_ben_grimm.sql` is the migration.
 
@@ -300,12 +302,12 @@ table, reusing the `workspace_role` enum declared beside `workspaces`.
 
 DESIGN.md §5 specifies three tables that land in Wave 3: M4.1 creates
 `ingredients` (the enums, columns, generated key, and CHECKs) — **merged**,
-`src/db/schema/ingredients.ts`, migration `0005_uneven_bloodstorm.sql`; M4.1a
+`src/modules/ingredients/schema/ingredients.ts`, migration `0005_uneven_bloodstorm.sql`; M4.1a
 adds its three partial unique indexes — **merged**, same schema file, migration
 `0006_wandering_mockingbird.sql`; M4.2a creates `ingredient_forms` —
-**merged**, `src/db/schema/ingredient-forms.ts`, migration
+**merged**, `src/modules/vocabulary/schema/ingredient-forms.ts`, migration
 `0008_unknown_lyja.sql`; and M4.4a creates `ingredient_folk_names` —
-**merged**, `src/db/schema/ingredient-folk-names.ts`, migration
+**merged**, `src/modules/ingredients/schema/ingredient-folk-names.ts`, migration
 `0010_broken_shiver_man.sql`. MB.28
 recorded the model here first, ahead of that DDL, so M4.1 was transcription
 rather than design — the same reasoning as CLAUDE.md's table-then-behaviour
@@ -393,7 +395,7 @@ against this database on 18.6); the limitation is Drizzle's.
 **How the table is tested.** The worker's `sorrel_test_<n>` clone arrives
 with every migration applied and the `standard` scenario seeded, re-cloned
 that way before each test file (M1.27, `testing.md`), so
-`tests/db/ingredients-schema.test.ts` asserts against the real table as
+`tests/modules/ingredients/schema/ingredients-schema.test.ts` asserts against the real table as
 production's migrations built it: no DDL is applied or hand-copied in the
 test, and nothing is dropped afterwards. Its `beforeEach` is `truncate
 ingredients cascade` — the seeded compendium has category and folk-name
@@ -439,7 +441,7 @@ one over `(workspace_id, canonical_key)` for the same reason: without
 distinct from every other's and the single index would reserve nothing there.
 
 **The predicates are asserted from the catalogue, not just the behaviour**
-(`tests/db/ingredients-indexes.test.ts`, which applies `0005` and `0006` into
+(`tests/modules/ingredients/schema/ingredients-indexes.test.ts`, which applies `0005` and `0006` into
 the worker clone the same way described above). Each index's
 `pg_get_expr(indpred, indrelid)` is pinned to its rendered predicate and its
 `pg_get_indexdef` to its key columns, and one test asserts the table carries
@@ -645,9 +647,10 @@ gap in M4.2.
 
 ## Stock, and the one module that owns the units (M9.2)
 
-`src/db/schema/inventory-items.ts` holds DESIGN.md §5's stock table;
-`0013_illegal_red_hulk.sql` is the migration. The unit vocabulary it is built
-from lives outside the database layer entirely, in `src/lib/units.ts`.
+`src/modules/ingredients/schema/inventory-items.ts` holds DESIGN.md §5's stock
+table; `0013_illegal_red_hulk.sql` is the migration. The unit vocabulary it is
+built from sits beside it, in `src/modules/ingredients/schema/units.ts`, and
+imports nothing.
 
 - **`inventory_items`** — `id`, `workspaceId`, `ingredientId`,
   `quantityOnHand`, `unit`, `unitDimension`, `lowStockThreshold`, `source`,
@@ -671,16 +674,19 @@ from lives outside the database layer entirely, in `src/lib/units.ts`.
 
 ### One module owns the units
 
-`src/lib/units.ts` is the single source of the vocabulary — three dimensions,
+`src/modules/ingredients/schema/units.ts` is the single source of the vocabulary — three dimensions,
 metric and imperial in each: weight (mg, g, kg, oz, lb), volume (ml, l, tsp,
 tbsp, fl_oz, cup), count (piece, drop, pinch). Both pgEnums (`inventory_unit`,
 `unit_dimension`), the CHECK constraint below, M9.5's `unitConvert()`, M9.8's
 badges and every later Zod enum are built from it. **Adding a unit is one
 edit** — that map, plus a regenerated migration.
 
-It imports nothing, and that is what makes it importable from all three sides:
-the schema imports it, and so do the conversion library and the Zod schemas,
-which must not reach the database layer at all (rule 2, MB.33).
+It imports nothing, and that is what makes it importable from all three sides
+despite sitting in `schema/`: the tables import it relatively, and so do the
+conversion library and the Zod schemas, which must not reach the database
+layer at all (rule 2, MB.33) — a file that imports no `drizzle-orm` carries
+none in. It sits in `schema/` rather than in `src/lib/` because the tables are
+built from it, which puts it in the graph drizzle-kit loads.
 
 `fl oz` is stored as **`fl_oz`**. §5 names the unit in prose, where a space is
 how a human writes it; the stored label has to survive a Postgres enum, a
@@ -769,14 +775,14 @@ rule and the reason the DDL can be constrained now, while the table is empty.
 
 ## The grimoire (M10.2)
 
-`src/db/schema/spells.ts` and `src/db/schema/spell-ingredients.ts` hold
+`src/modules/grimoire/schema/spells.ts` and `src/modules/grimoire/schema/spell-ingredients.ts` hold
 DESIGN.md §5's two grimoire tables; `0014_cooing_bug.sql` is the migration.
 What a workspace _makes_, as against what exists (the compendium) and what it
 holds (`inventory_items`).
 
 - **`spells`** — `id`, `workspaceId`, `title`, `intent`, `jarSize`,
-  `sealWaxColor`, `moonPhase`, `dayOfWeek`, `instructions`, `status`, + the full
-  six-column audit spread. Stories 47 and 50's table.
+  `sealWaxColor`, `moonPhase`, `dayOfWeek`, `instructions`, `status`,
+  `visibility`, + the full six-column audit spread. Stories 47 and 50's table.
 - **`spell_ingredients`** — `spellId`, `ingredientId` (nullable), `name`,
   `form`, `quantity`, `unit`, `layerOrder`, `note`, + the four audit stamps,
   keyed on `(spell_id, layer_order)` and hard-deleted (MB.34). Stories 50 and
@@ -785,14 +791,12 @@ holds (`inventory_items`).
   `(spell_id, ingredient_id)`; MB.40 moved the key (`0017`) once a row could
   exist without the pair.
 
-**`visibility` is not on `spells` yet, and its absence is scheduled rather than
-forgotten.** §5 lists the column and M10.3 adds it in Wave 5, after M1.23 has
-seeded spells against this table — which is what makes M10.3's criterion,
-"existing seeded spells migrate to workspace visibility", something that can
-actually be tested (TASKS.md, "Breaking the M1.23 ↔ M10.3 cycle"). Adding it
-early would quietly delete that criterion, so `spells-schema.test.ts` asserts
-the column list exactly and names the column as the one that must still be
-absent.
+**`visibility` arrived a wave later than the rest of the table** (M10.3,
+`0018_spell-visibility.sql`), after M1.23 had seeded spells against it — which
+is what made "existing seeded spells migrate to workspace visibility" a
+criterion that could be tested rather than one an empty table satisfied for
+free (TASKS.md, "Breaking the M1.23 ↔ M10.3 cycle"). The rule it carries is
+["Spell visibility"](#spell-visibility-m103) below.
 
 ### The join names the ingredient, never the stock row
 
@@ -912,7 +916,7 @@ skip in derived categories, no suppression, no held/not-held, no safety source
   loses no precision on the comparison. Both are nullable: a layer may name no
   measurement at all.
 - **No `unitDimension` and no dimension CHECK on `spell_ingredients`.** §5 names
-  neither on this table, the dimension is derivable through `src/lib/units.ts`,
+  neither on this table, the dimension is derivable through `src/modules/ingredients/schema/units.ts`,
   and the query that groups stock by dimension has no counterpart here.
 - **No index and no CHECK on `spells`**, beyond the primary key's. §5 names
   none, the grimoire's own lookups are M10.9's, and a spell title is not unique
@@ -972,7 +976,7 @@ mid-rollout. Never do it in one step. Instead:
   UPDATE spells SET title = name WHERE title IS NULL;
   ```
 
-  In `src/db/schema` (Drizzle), both columns exist on the table for this
+  In the schema file (Drizzle), both columns exist on the table for this
   release:
 
   ```ts
@@ -984,7 +988,7 @@ mid-rollout. Never do it in one step. Instead:
   });
   ```
 
-  And the write path (inside `withAudit`, in `src/services/`) writes both;
+  And the write path (inside `withAudit`, in the module's `services/`) writes both;
   the read path prefers `title`, falling back to `name` for any row a
   same-release backfill or an in-flight write hasn't caught yet:
 
@@ -1012,8 +1016,9 @@ mid-rollout. Never do it in one step. Instead:
   ```
 
   and the schema/service code drops the fallback and the dual-write, reading
-  and writing `title` only. **This migration is destructive** — it needs the
-  acknowledgement line below in its PR body, precisely because a same-release
+  and writing `title` only. **This migration is destructive** — it needs an
+  acknowledgement sidecar beside it — `src/db/migrations/00MM_drop-spells-name.ack.md`,
+  in the form described below — precisely because a same-release
   rollback of Release N+1 back to Release N would otherwise break (Release
   N's dual-write still tries to write `name`, which no longer exists). That
   tradeoff — Release N+1 can no longer safely roll back to Release N, only
@@ -1042,13 +1047,24 @@ a PR for five forms:
   no `DEFAULT`.
 
 Comments and string literals are stripped before any rule runs, so a column
-comment reading `'never drop this'` is prose rather than DDL. Only `*.sql` is
+comment reading `'never drop this'` is prose rather than DDL. Statements are
+split on `;` with no awareness of dollar-quoted bodies, so a PL/pgSQL function
+is judged as several fragments rather than one statement — harmless while no
+rule spans a `BEGIN … END`, and the first thing to fix if one ever must. Only `*.sql` is
 ever scanned: the `meta/*.json` files Drizzle writes beside each migration are
 excluded by the paths filter in `pr-gate.yml` **and** by the script, which
 ignores anything else it is handed.
 
-It passes automatically when none of those forms appear. When one does, the PR
-body must contain a line of the exact form:
+It passes automatically when none of those forms appear. When one does, that
+migration must carry an **acknowledgement sidecar** beside it (MB.48), named
+for the migration it covers:
+
+```
+src/db/migrations/0002_solid_marauders.sql
+  → src/db/migrations/0002_solid_marauders.ack.md
+```
+
+containing, anywhere in the file, a line of the exact form:
 
 ```
 Destructive DDL acknowledged: <reason>
@@ -1059,22 +1075,74 @@ comment for the regex and the reasoning. There's no such line format
 elsewhere in the repo to stay consistent with; this is the one place it's
 defined, so `claude-docs/ci.md` and the script both point back here.
 
+**It used to live in the PR body, and that was wrong twice over.** A PR body is
+visible from one branch base and gone on merge, so a release PR — which
+`resolveDefaultBase` sends at `origin/main`, rescanning every migration since
+the last release — sees none of the acknowledgements that let those migrations
+land; release 0.2.0's PR failed this check for exactly that reason and was
+merged past it. And one line in a body blessed **every** finding in the diff,
+whatever file it was in, so a release carrying an acknowledged `0017` and an
+unacknowledged `0002` would have passed on `0017`'s line alone. The sidecar
+fixes both: it travels with the file, and it covers only the file beside it.
+The PR-body path is retired rather than OR-ed with the sidecar — an `OR` would
+keep the uncorrelated hole open — so the check now reads nothing from GitHub
+at all, which is what lets `make act-check CHECK=destructive-ddl` prove the
+scan rather than the wiring.
+
+A `.md` sidecar rather than a comment inside the `.sql`: the regex anchors at
+the start of a line, so Markdown matches it unchanged where
+`-- Destructive DDL acknowledged: …` would not. And every file list here is
+scoped to `*.sql`, so a sidecar is never itself scanned.
+
 **Locally, `npm run check:destructive-ddl` scans what this branch adds** —
 every migration new or changed against its Gitflow base (`origin/staging`, or
 `origin/main` for a `hotfix/*` or `release/*` branch), including one
 `db:generate` has just written and not yet committed. `--base <ref>` picks
 another base. `--all` scans every committed migration instead, which is an
-audit rather than a gate: it stays red on `0002_solid_marauders.sql`, whose
-`DROP CONSTRAINT` and two `NOT NULL` columns were acknowledged when they
-landed. Before MB.37 the bare command _was_ that full scan, so it was
-permanently red and told you nothing about your own branch.
+audit rather than a gate — and since MB.48 it is a **usable** one: both
+migrations carrying destructive DDL ship their sidecars, so `--all` is green
+and goes red on a real omission. It was permanently red before, first because
+the bare command _was_ that full scan (fixed in MB.37) and then because the
+acknowledgements it needed only ever existed in PR bodies.
+
+Two migrations carry findings today, and each has its sidecar:
+
+| Migration                           | Findings                                                                                           |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `0002_solid_marauders.sql`          | `DROP CONSTRAINT users_email_unique`, and `created_by` / `updated_by` added `NOT NULL`             |
+| `0017_custom-spell-ingredients.sql` | the `(spell_id, ingredient_id)` primary key and the `(spell_id, layer_order)` unique index dropped |
+
+**`0002`'s sidecar was written retroactively, and says so.** This document
+previously claimed its `DROP CONSTRAINT` and two `NOT NULL` columns "were
+acknowledged when they landed". That was false: [PR #73][pr73] carries no
+acknowledgement line and never did, because it merged during the window MB.32
+opened and MB.37 closed, when `destructive-ddl` had been dropped from
+`pr-gate.yml` and ran on nothing. The migration was never asked for a line, so
+the reasoning in its sidecar is reconstructed from the migration and the schema
+rather than recovered. `0017`'s ports [PR #126][pr126]'s wording verbatim,
+which was correct and argued at the time.
+
+[pr73]: https://github.com/Aurora-Arctic/Sorrel-and-Salt/pull/73
+[pr126]: https://github.com/Aurora-Arctic/Sorrel-and-Salt/pull/126
 
 ## Audit columns and `applyAudit` (M1.15, FKs restored MB.5, split MB.34)
 
-`src/db/audit.ts` exports two column sets, one defined in terms of the other:
+`src/db/audit.ts` exports two column-set _factories_, and
+`src/modules/identity/schema/users.ts` exports the two _instances_ every
+table spreads, built by calling them with `() => users.id`:
 
-- **`auditStampColumns`** — `createdAt`, `createdBy`, `updatedAt`, `updatedBy`.
-- **`auditColumns`** — `...auditStampColumns` plus `deletedAt` and `deletedBy`.
+- **`auditStampColumnsReferencing(usersId)`** → `auditStampColumns` —
+  `createdAt`, `createdBy`, `updatedAt`, `updatedBy`.
+- **`deletionColumnsReferencing(usersId)`** → `deletedAt` and `deletedBy`,
+  which `users.ts` spreads after the stamp _instance_ to make
+  `auditColumns`. The six-column set is the four-column one plus two, from
+  the same builders, and `tests/db/audit.test.ts` asserts that identity.
+
+The factories take the referenced column rather than importing `users`, so
+`audit.ts` depends on nothing in a module; the instances live beside `users`
+because every stamp references it, and a table imports them from there —
+`import { auditColumns } from '../../identity/schema/users'`, relative, since
+the schema graph is what drizzle-kit loads.
 
 Every table spreads `...auditColumns` **except the three join tables**:
 `ingredient_categories`, `spell_categories` and `spell_ingredients` spread
@@ -1082,17 +1150,16 @@ Every table spreads `...auditColumns` **except the three join tables**:
 three join tables" below for why, and note that `workspace_members` and
 `ingredient_folk_names` are _not_ in that set. Writing the six columns as the
 four plus two rather than listing them twice is what stops the two sets
-drifting, and `repository.test.ts` asserts each stamp column is literally the
-same builder object in both.
+drifting, and `tests/db/audit.test.ts` asserts each stamp column is literally
+the same builder object in both.
 
 `createdBy`/`updatedBy`/`deletedBy` carry
-`.references((): AnyPgColumn => users.id)` per DESIGN.md §5. `audit.ts` and
-`schema/users.ts` import each other — `users.ts` spreads `auditColumns`, and
-`auditColumns` points back at `users.id`, including for `users`' own rows
-(`users.created_by -> users.id`, a genuine self-reference). Drizzle's thunk
-defers evaluation past module load, so the runtime cycle is fine; the
-explicit `AnyPgColumn` return annotation is what stops TypeScript reporting
-"audit.ts circularly references itself" trying to infer it. `src/db/bootstrap.ts`
+`.references((): AnyPgColumn => users.id)` per DESIGN.md §5, including for
+`users`' own rows (`users.created_by -> users.id`, a genuine self-reference,
+since `users.ts` spreads the instance it builds from its own id). Drizzle's
+thunk defers evaluation past module load, so the self-reference is fine; the
+explicit `AnyPgColumn` return annotation is what stops TypeScript reporting a
+circular reference trying to infer it. `src/db/bootstrap.ts`
 exports `BOOTSTRAP_USER_ID`, a fixed UUID shared between M1.21's seed and
 anything that needs to identify that row — the bootstrap user has no
 pre-existing creator, so it inserts itself as its own `created_by`/
@@ -1166,7 +1233,10 @@ disambiguate.
 **Better Auth's three adapter tables are deliberately excluded.** `accounts`,
 `sessions` and `verifications` carry an `updated_at` and no `*_by` columns at
 all: nothing writes them through `withAudit`, they are not part of the audit
-trail, and Better Auth's own `$onUpdate` stamps them (`src/db/schema/auth.ts`).
+trail, and Better Auth's own `$onUpdate` stamps them (`src/modules/identity/schema/auth.ts`).
+Its fourth, `rate_limits` (MB.75), carries no `updated_at` at all — Better
+Auth's model declares none — so it is not a counter-example the sweep could
+mistake, and `UNAUDITED_TABLES` leaves it out.
 
 ### A table added later does not get the trigger for free
 
@@ -1185,9 +1255,40 @@ queries: the tables carrying all four audit stamps, and the tables carrying a
 file being edited. The list of fifteen is transcribed there as well, because
 two empty sets are equal and something has to say they aren't.
 
-## The write path — `repository.ts` and `withAudit` (M1.16)
+## The repository's files (MB.87)
 
-`src/db/repository.ts` is the only module that imports `db` from
+`src/db/repository/` is one file per concern, and callers import only its
+`index.ts` — `@/db/repository` resolves to it:
+
+| File                   | Holds                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------- |
+| `index.ts`             | Named re-exports only — the pinned surface below — and nothing declared                                 |
+| `shapes.ts`            | The table-shape types every signature is built from, and the `scopedTo` and `notSoftDeleted` predicates |
+| `write.ts`             | `withAudit` and the `AuditWriter` it hands out                                                          |
+| `select.ts`            | `selectFrom`, the one place a read query is built, and the keyset bounds a page is cut by               |
+| `finders.ts`           | The generic finders, scoped and unscoped, and the escape hatch                                          |
+| `spells.ts`            | The three spell finders and the `readableSpells` predicate they share                                   |
+| `memberships.ts`       | Two of the three reads that take no proof                                                               |
+| `users.ts`             | The third: the live row holding an address                                                              |
+| `provisional-users.ts` | The provisional-account delete                                                                          |
+
+**The rest of the folder is internal, and that is enforced rather than
+conventional.** `selectFrom` is exported from `select.ts` because the finders
+beside it build on it, so the language no longer keeps it private as it did
+when the repository was one file. What keeps it inside the folder is a
+`no-restricted-imports` group banning `@/db/repository/*` and
+`**/db/repository/*` everywhere (restated in each override, which replaces
+rather than merges), and `tests/guards/module-boundaries.test.ts`, which
+resolves every import in `src/` and fails any edge into the folder that is
+not its index — the spellings a glob cannot see included. The index itself
+declares nothing and has no `export *`, so what it names _is_ the surface;
+`soft-delete-finder-guard.test.ts` asserts both. Its first import is
+`schema/users.ts`, for the load-order reason under "The seed module" —
+`tests/db/repository/index.test.ts` pins it.
+
+## The write path — `withAudit` (M1.16)
+
+`src/db/repository/` is the only code that imports `db` from
 `connection.ts` (CLAUDE.md rule 2, DESIGN.md §5), and it exports exactly one
 write path: `withAudit(session, fn)`. `db` is not re-exported, and `fn` is not
 handed the Drizzle transaction — it gets a narrow `AuditWriter` whose three
@@ -1248,9 +1349,8 @@ today.
 branded `Membership` — the value `assertMembership` returns, which every
 workspace-scoped finder and `AuditWriter` method demands as its first argument
 so the omission is a compile error rather than a missing runtime check. M6.3
-builds it. Until then `assertMembership` does not exist either, so treat the
-service check as the only layer, and a workspace-scoped query as unguarded
-until it takes a proof. The specification for the eventual policies —
+built it; "The Membership proof" below is how it works. The specification for
+the eventual policies —
 the role split they need, `FORCE`, the `security definer` helper, and why a
 policy test connected as the table owner proves nothing — is
 [`mb.24-rls-role-split.md`](design-decisions/mb.24-rls-role-split.md),
@@ -1264,7 +1364,7 @@ parameter.
 
 Transaction scoping is the whole point of `LOCAL`: the value is discarded
 at `COMMIT` or `ROLLBACK`, so it cannot ride a pooled connection into the
-next request that reuses it. `repository.test.ts` asserts this directly —
+next request that reuses it. `tests/db/repository/write.test.ts` asserts this directly —
 24 concurrent `withAudit` calls with distinct user ids each see their own,
 and a connection outside any `withAudit` transaction sees the setting
 unset. Since the GUC is only ever set _inside_ the transaction, and a session
@@ -1277,11 +1377,13 @@ wrapper rather than to its own statement scope, and one test user's identity
 would survive into the next assertion — see
 [`m1.9-test-db-isolation.md`](design-decisions/m1.9-test-db-isolation.md).
 
-**Testing against a scratch table.** `tests/db/repository.test.ts` runs in the
-`db` project against this worker's `sorrel_test_<n>` clone. The clone has
-carried the full schema since M1.27, and the test still creates its own
-`repository_probe_herbs` table spreading the real `auditColumns` (minus the
-FKs to `users`) and drops it afterwards: the repository's contract is the
+**Testing against a scratch table.** `tests/db/repository/` mirrors the
+folder — `index.test.ts`, `write.test.ts`, `finders.test.ts` and
+`memberships.test.ts` — and runs in the `db` project against this worker's
+`sorrel_test_<n>` clone. The clone has carried the full schema since M1.27,
+and each file still creates its own `repository_probe_herbs` table spreading
+the real `auditColumns` (minus the FKs to `users`) and drops it afterwards,
+through `useProbeTables()` in `tests/support/db/probe-tables.ts`: the repository's contract is the
 six audit columns, not any one table's other constraints. The
 six columns exercised are the ones every real table will carry.
 
@@ -1293,12 +1395,257 @@ gives them no other way to read — without widening the write API for the
 benefit of a test. The `missing_ok` second argument is what makes it null,
 rather than an error, when the setting was never set.
 
+## The Membership proof (M6.3)
+
+CLAUDE.md rule 5 asks for two authorization layers: the check, and a proof the
+check ran. `assertMembership` is the first and its return value is the second.
+
+```ts
+const membership = await assertMembership(session, workspaceId, { spell: ['create'] });
+const drafts = await findManyInWorkspace(membership, spells, eq(spells.status, 'draft'));
+await withAudit(session, (write) => write.insertInWorkspace(membership, spells, { title }));
+```
+
+`Membership` is `{ workspaceId, userId, role }` carrying a `unique symbol`
+brand that `src/modules/coven/services/membership.ts` does not export. No other file can
+name the property, so no object literal satisfies the type and the one cast to
+it in the codebase sits past both of `assertMembership`'s refusals. The brand
+is erased at compile time: the layer costs nothing at runtime — no second
+connection, no transaction on the read path, no per-environment credentials,
+which is the trade MB.29 made when it deferred RLS.
+
+### What the check asks
+
+The third argument is a **permission**, not a minimum role: `{ spell:
+['create'] }`, checked against per-role statements built with better-auth's
+`createAccessControl` (`src/modules/coven/services/access-control.ts`). Naming a resource or
+an action the statements do not declare is a compile error. Several resources
+in one request are ANDed. An empty request throws an `Error` rather than a
+`Forbidden` — it would authorize vacuously, so it is a caller's bug and reads
+as one.
+
+Why statements rather than the rank the design doc originally specified, and
+what that costs while most of the services are still unwritten:
+[`m6.3-permission-statements.md`](design-decisions/m6.3-permission-statements.md).
+
+The **site role** is not consulted. `session.role` is `'user' | 'admin'` and a
+site admin curates the compendium and reaches no workspace at all, so
+`assertMembership` never reads it — which is what makes that invariant true by
+construction rather than by a branch someone could add later.
+
+### One lookup per render
+
+`assertMembership` reads the role through `cache(findWorkspaceRole)`, so a
+layout and a page asking about the same workspace in one server render cost one
+query, whatever permission each asks for; the permission check under it runs
+every time and costs nothing. The cache is keyed by `(userId, workspaceId)`
+rather than the session, because `cache()` compares object arguments by
+identity and two callers holding equal sessions would each miss. It lives as
+long as the render and no longer, and outside a render it is the plain finder:
+the GraphQL route handler has no React cache scope, so its dedupe is the
+request's DataLoaders ([`graphql.md`](graphql.md), "The two transports").
+
+### The finder convention
+
+The repository splits on the table's own shape, the way it already splits
+`softDelete` from `delete`:
+
+| The table                                | Reads                                                                                     | Writes                                                                                                  |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| carries `workspace_id`                   | `findManyInWorkspace` / `findOneInWorkspace`, proof first                                 | `insertInWorkspace`, `updateInWorkspace`, `updateByIdInWorkspace`, `softDeleteInWorkspace`, proof first |
+| carries `visibility` (`spells` alone)    | `findManySpells` / `findOneSpell`, proof first                                            | the workspace-scoped writes above                                                                       |
+| carries `spell_id` (the two join tables) | `findManyInSpell`, proof first                                                            | `insert`, `update`, `delete`                                                                            |
+| none of those                            | `findMany` / `findOne` / `findOneById` / `findManyByIds` / `findManyIncludingSoftDeleted` | `insert`, `update`, `updateById`, `softDelete`, `delete`                                                |
+
+`{ workspaceId: AnyPgColumn }` and `{ workspaceId?: never }` are the two
+constraints, so each finder admits exactly one of the two sets and a table
+cannot go through the wrong one. The two middle rows are M10.3's, added by
+excluding `visibility` and `spell_id` from the finders above and below them:
+["Spell visibility"](#spell-visibility-m103). A scoped finder ANDs `workspace_id =
+membership.workspaceId` onto the query **itself** rather than trusting a
+`workspaceId` beside the proof — a second source is a second thing to
+disagree — and `insertInWorkspace` fills the column from the proof for the same
+reason, which is why its `values` type has `workspaceId` removed the way it has
+the audit columns removed. `updateInWorkspace` cannot reassign it either, so a
+row cannot be moved between workspaces by an update.
+
+`findManyIncludingSoftDeleted` takes the unscoped side: v1 has no restore UI
+and the trash view is v2, so the task that adds one adds its proof-scoped
+counterpart then rather than leaving a widened hatch waiting.
+
+**`ingredients` is on the scoped side, and its compendium tier therefore has no
+finder yet.** The column is nullable — `workspace_id IS NULL` is the
+compendium, everything else is a workspace's own — so the table matches
+`{ workspaceId: AnyPgColumn }` and `findMany(ingredients)` does not compile.
+Nothing reads the compendium today. Whichever of M5.2 or M8 gets there first
+adds a finder that ANDs `workspace_id IS NULL` as explicitly as the scoped one
+ANDs its proof; the local-beats-compendium resolution (§5) wants both tiers and
+is a third, named finder over `workspace_id = $1 OR workspace_id IS NULL`. The
+point of the narrowing is that a read of that table has to say which tier it
+means instead of getting whichever the default was.
+
+`findOneById` and `findManyByIds` are the read-side twins of `updateById`: a
+service cannot build `eq(table.id, id)` or `inArray(...)` (MB.33), and a
+by-id read, one or batched for a loader, is what nearly every service needs.
+They sit on the unscoped side only; a workspace-scoped by-id read is
+`findOneInWorkspace` under a proof. `findManyByIds` answers an empty list
+without a query.
+
+### The three reads that take no proof
+
+`findWorkspaceRole(userId, workspaceId)` is what mints a proof, so it cannot
+demand one. It is narrow on purpose — it answers with a role, not with rows —
+so it cannot stand in for a finder.
+
+`findMembershipsOfUsers(userIds)` is the second, for the same kind of reason:
+a user's own memberships span workspaces, so there is no one workspace to
+hold a proof for. It answers the live `workspace_members` rows of those users
+whose workspace is live too — the workspace's `deleted_at` is a correlated
+`EXISTS`, as in `findManyInSpell`, because the repository keeps one select
+builder. Who may ask about which ids is the calling service's decision:
+`membershipsOf` in `coven` answers the caller's own id and refuses every
+other, an admin's included.
+
+`findUserByEmail(email)` is the third (MB.54), for the same kind of reason
+again: an address is claimed site-wide, so there is no workspace to hold a
+proof for. It answers the live row holding the address, compared lower-cased
+as `users_email_lower_case` holds every row to, and what a hit means is the
+calling service's decision — `setEmail` refuses an address a verified row
+holds and lets a provisional one be claimed over, and the `/verify-email` gate
+refuses one any other live row holds (`auth.md`, "The email page").
+
+`tests/db/repository/index.test.ts` and `soft-delete-finder-guard.test.ts`
+both pin the repository's export list, so a fourth exception is a decision
+rather than an addition.
+
+### Where the proof is weaker than a policy
+
+Stated rather than glossed, because the type looks like it closes more than it
+does. **Both gaps are covered by M6.6's per-entity direct-id denial tests**,
+which is the same coverage that would have caught a policy written wrong:
+
+- A service holding a **valid proof for W** that hand-writes a `where` naming
+  X's ids satisfies the type and still reads across workspaces. The proof
+  constrains which workspace the query is scoped to, not which ids the caller
+  chose to ask about.
+- **`spell_ingredients` and `spell_categories` carry no `workspace_id`**, so
+  the column name a guard would infer the scoped set from says "unscoped" about
+  the two tables holding what a spell is made of — which is why DESIGN.md §8
+  says "workspace-scoped" is not the same as "has a `workspace_id` column".
+  M10.3 closed this one by making it a third shape rather than a subset of the
+  unscoped side: both tables carry a `spell_id`, the unscoped finders now
+  refuse them on it, and `findManyInSpell` reaches them through the parent
+  spell. That leaves the first gap above as the live one.
+
+A cast is the third gap, and it is review's job rather than the type's: a value
+that already has the proof's public shape is _comparable_ to it, so
+`{ workspaceId, userId, role } as Membership` compiles where `session as
+Membership` does not. `tests/modules/coven/services/membership.test.ts` pins the two the type
+does catch — the object literal and the forgery from a session — as
+`@ts-expect-error` lines, which fail `npm run typecheck` the moment the brand
+stops being required. A runtime assertion could not see that at all: it would
+pass just as happily against a signature that had quietly gone optional.
+
+## Spell visibility (M10.3)
+
+DESIGN.md §5: a `workspace` spell is readable by every member of its coven,
+viewers included; a `private` spell is readable by its **author alone**, owners
+not excepted. `spells.visibility` is a `spell_visibility` enum —
+`'private' | 'workspace'` — `NOT NULL DEFAULT 'workspace'`.
+
+**The author is `created_by`.** §5 gives spells no separate author column, and
+nothing in v1 transfers authorship, so the audit stamp is the answer rather
+than a second column that could disagree with it.
+
+An enum rather than a `CHECK`, for the reason `status` is one: §13's notes
+model carries a third tier, `public`, and adding a value to an enum is an
+`ALTER TYPE … ADD VALUE` where widening a `CHECK` re-validates every row.
+
+**The default is on the column, not in a service.** A spell written by any
+path — a seed, a fixture, a service that never mentions visibility — joins the
+shared grimoire. The failure mode of the other default is silent: a spell
+nobody but its author can see, in a coven that cannot tell it is missing.
+
+### Reading: three finders, and why the generic ones refuse
+
+`readableSpells(membership)` is the predicate, and the only one: the coven from
+the proof, `deleted_at IS NULL`, and `visibility = 'workspace' OR created_by =
+membership.userId`. Both halves come out of the proof, so there is no id a
+caller could pass that disagrees with the check that minted it — the argument
+`scopedTo` already makes one layer down.
+
+| Finder                                        | Reads                                                       |
+| --------------------------------------------- | ----------------------------------------------------------- |
+| `findManySpells(membership)`                  | every spell of the coven this member may read               |
+| `findOneSpell(membership, spellId)`           | one by id, `undefined` when it is another's private spell   |
+| `findManyInSpell(membership, table, spellId)` | a spell's rows in `spell_ingredients` or `spell_categories` |
+
+The generic finders refuse all three tables, and that refusal is the point.
+`spells` carries `visibility`, so `findManyInWorkspace` will not compile
+against it; the two join tables carry a `spell_id`, so `findMany`, `findOne`
+and `findManyIncludingSoftDeleted` will not compile against them. Two
+`{ column?: never }` constraints do it, in the shape `{ workspaceId?: never }`
+already had: `spells` and the join tables each go through one finder because
+every other finder's signature excludes them. A private spell that a service
+merely forgot to exclude is
+_absent_; one the type will not let that service query is _impossible_, and
+only the second survives the next service written in a hurry.
+
+**Why the join tables need a finder of their own.** Neither carries a
+`workspace_id`, so neither can scope itself, and a spell's visibility rule
+would hold for the spell while its contents stayed readable to anyone who knew
+the id — the rule holding for the jar and leaking what is in it. Both reach
+their coven and their visibility through the parent spell, which
+`findManyInSpell` expresses as a correlated `EXISTS` over `readableSpells` —
+in SQL, per CLAUDE.md rule 7, so a row a caller may not see is never fetched to
+be filtered out afterwards. It is written as a `sql` fragment rather than a
+Drizzle subquery because a subquery needs a second select builder, and the
+repository holding exactly one is what `soft-delete-finder-guard.test.ts` reads
+to prove no unfiltered read exists.
+
+### Writing: the one-way rule
+
+`src/modules/grimoire/services/spell-visibility.ts`'s `setSpellVisibility(session, workspaceId,
+spellId, visibility)`. `private` may be widened to `workspace`; `workspace` may
+never be narrowed back. Once the coven has read a spell and built on it, hiding
+it retracts something they were relying on — widening is a gift, narrowing is a
+retraction, so only one direction is allowed. The narrowing is refused with a
+`Forbidden` **carrying a message that says so**, not the bare one: the caller
+holds the permission, and a two-word refusal would send them looking for a
+role they already have. The rule governs visibility and not existence — a
+shared spell can still be deleted.
+
+**There is no author clause in that service, and none is missing.**
+`findOneSpell` has already answered `undefined` to everyone but the author, so
+a member who cannot see a private spell cannot widen it either, and what they
+get is `NotFound` rather than a refusal that confirms the spell exists.
+Restating the visibility a spell already has is permitted: it is not a
+narrowing, and refusing it would make an idempotent call an error.
+
+M10.6 adds the pure `resolveSpellVisibility()` and the exhaustive transition
+matrix; this is the half that runs against the database.
+
+### `updateByIdInWorkspace`, and why it exists
+
+MB.33 bars everything outside the database layer from importing `drizzle-orm`
+at runtime, so a service cannot build the `where` that `updateInWorkspace`
+takes. The eighth `AuditWriter` method builds the one predicate every entity
+update needs — `id = $1`, ANDed onto the proof's own clause — below that
+boundary. `tests/db/repository/write.test.ts` pins the method count, so each new one is a
+decision argued for in its own PR rather than a convenience.
+
+**`updateById` is the ninth** (MB.60), for the same reason on a table no proof
+scopes: the primary admin's promotion writes `users.role` by the signed-in
+user's own id, and the service cannot build `id = $1` either. It is the
+unscoped twin, typed to refuse a table carrying `workspace_id`, so a scoped
+update cannot take this route around the proof.
+
 ## Soft-delete filtering and the partial-index convention (M1.20)
 
 CLAUDE.md rule 4 / DESIGN.md §5: **no exported query can return a soft-deleted
-row, and no call site does its own filtering.** `src/db/repository.ts` adds a
-private `selectFrom` beside `withAudit` — the one place a read query is
-built — and exports exactly three functions on top of it:
+row, and no call site does its own filtering.** `src/db/repository/select.ts`
+holds `selectFrom` — the one place a read query is built — and the
+repository exports three functions on top of it:
 
 - **`findMany(table, where?)`** — every matching row with `deleted_at IS
 NULL` ANDed onto whatever `where` the caller supplied — or the caller's
@@ -1313,20 +1660,22 @@ NULL` ANDed onto whatever `where` the caller supplied — or the caller's
   filter, so a second bypass is a decision argued for in the diff, not a
   convenience appearing quietly beside an import.
 
-`selectFrom` itself is not exported, so there is no public handle a finder
-could reach the database through while skipping the filter — the same shape
-as `AuditWriter` gives writes no path around `applyAudit`.
+`selectFrom` itself is not in the repository's surface — its siblings import
+it, and nothing outside the folder may ("The repository's files" above) — so
+there is no public handle a finder could reach the database through while
+skipping the filter — the same shape as `AuditWriter` gives writes no path
+around `applyAudit`.
 
 **The mechanical guard.** This is a code sweep (CLAUDE.md's sweep-task rule),
 so it landed as the mechanism above plus a guard — and since MB.33 the sweep is
 divided between two of them, by what each can make impossible.
 
 `tests/guards/soft-delete-finder-guard.test.ts` covers the inside of the
-repository. It reads `repository.ts` as text and asserts: `repository.ts`
-builds exactly one `.select(`/`db.query.` call, and it is inside
-`selectFrom`; `selectFrom` is not exported, so no caller can reach an
-unfiltered read; the repository's exported surface is pinned to
-`findMany`/`findOne`/`findManyIncludingSoftDeleted`/`withAudit`, so a fifth
+repository. It reads every file in `src/db/repository/` as text and asserts:
+the folder builds exactly one `.select(`/`db.query.` call, and it is inside
+`selectFrom` in `select.ts`; the index does not re-export `selectFrom` or the
+predicates, so no caller can reach an unfiltered read; the index's re-exports
+are pinned to the test's `EXPORTED_FUNCTIONS` list, so a further
 export — a new escape hatch, or a finder that reaches the database some other
 way — turns the test red rather than merely going unreviewed; and every
 exported finder other than the escape hatch either calls `notSoftDeleted(...)`
@@ -1340,7 +1689,7 @@ was caught and `const findX = () =>` was not, the global regex carried its
 `lastIndex` between files, the brace matcher broke on a brace inside a string,
 and it spawned `git` with a `safe.directory` workaround because CI runs the
 container as root over a uid-1000 checkout. At Wave 2 there is exactly one table
-(the scratch table in `repository.test.ts`), which is the point: the guard
+(the scratch table in the repository's tests), which is the point: the guard
 exists before there is anything to forget, and each later table's finder
 adopts the mechanism in that finder's own PR rather than a retrofit pass.
 
@@ -1349,7 +1698,7 @@ carry `WHERE deleted_at IS NULL`. Without it, a plain `UNIQUE` constraint
 still matches a soft-deleted row's value, so deleting a record permanently
 reserves its name/slug/whatever the index covers — the exact opposite of
 "deleted records stay recoverable but invisible." `users_email_unique`
-(`src/db/schema/users.ts`) is the worked example:
+(`src/modules/identity/schema/users.ts`) is the worked example:
 
 ```ts
 uniqueIndex('users_email_unique')
@@ -1357,11 +1706,71 @@ uniqueIndex('users_email_unique')
   .where(sql`${table.deletedAt} is null`);
 ```
 
-`repository.test.ts` proves the convention rather than merely stating it: a
+`tests/db/repository/finders.test.ts` proves the convention rather than merely stating it: a
 second scratch table (`repository_probe_charms`) carries a unique index built
 exactly this way, and the tests assert a live duplicate name is still
 rejected, while soft-deleting the original row and reinserting the same name
 succeeds — the row that comes back is a new id, and `findMany` sees only it.
+
+**`users.email` is also held to lower case** (`users_email_lower_case`,
+migration 0019, MB.60). The unique index is on the raw column, so without it
+two live rows could differ by case alone, and both would match
+`ADMIN_BOOTSTRAP_EMAIL`, which is compared case-insensitively. Better Auth
+lowercases every address it writes; the constraint catches a row written by
+hand. `tests/modules/identity/schema/users-schema.test.ts` inserts one.
+
+## Keyset pages (M3.6)
+
+A list that can grow is read one page at a time (CLAUDE.md rule 8). The finder
+is `findPage(table, sort, page, where?)`, or
+`findPageInWorkspace(membership, table, sort, page, where?)` for a
+workspace-scoped table. Each ANDs the same soft-delete and workspace predicates
+as `findMany` and `findManyInWorkspace`, and adds a keyset bound:
+
+```sql
+where … and (sort, id) > (cast($key as <sort type>), cast($id as uuid))
+order by sort, id
+limit $limit  -- the page plus one
+```
+
+- **`page` is a `PageRequest` from `src/lib/pagination.ts`**, already decoded
+  and clamped by `resolvePage` (claude-docs/graphql.md, "Pagination"). `after`
+  bounds from below and `before` from above. `inverted`, when walking backwards
+  with `last`, reverses the `ORDER BY` only, and `resolvePage` puts the rows
+  back in order.
+- **Each row comes back with its cursor.** The key is selected as
+  `sort::text`, and compared by casting it back to the column's own type
+  (`getSQLType()`), so Postgres compares a `timestamptz` to the microsecond. A
+  key read through a JS `Date` would lose the microseconds and replay rows.
+- **The id breaks ties**, so rows sharing a sort key still sit in one total
+  order, and a page boundary between two of them loses neither. Every table
+  these finders take has an `id` (`Identified`), which rules out the three
+  join tables.
+- **The sort column must be `NOT NULL`**, by type. A NULL makes the row
+  comparison NULL, and that row would fall out of every page.
+- **A cursor that will not cast** (SQLSTATE class 22) throws `InvalidCursor`.
+  The cursor is the only client text in a page query, so a data exception
+  there can only come from it.
+- The query goes through the private `selectFrom`, which has an overload that
+  adds the key column, the order and the limit. The one-builder invariant of
+  `soft-delete-finder-guard.test.ts` therefore holds. `findPageInWorkspace` is
+  one of that guard's `SCOPED_FINDERS`.
+
+A spell's page, the counterpart of `findManySpells` under the visibility rule,
+is added by the grimoire task that first needs it, as its own finder, like
+the other spell finders.
+
+`tests/db/pagination.test.ts` walks probe tables through `resolvePage` and the
+real finders:
+
+- every row once and in order, at page size 25 and at 7, with 7 placing page
+  boundaries between tied keys;
+- stability when rows are inserted before and after the cursor and
+  soft-deleted mid-walk, including the row the cursor names;
+- a backward walk;
+- nine timestamps a microsecond apart;
+- workspace scoping, with the other workspace's rows present;
+- both cursor refusals.
 
 ## Hard delete on the three join tables (MB.34)
 
@@ -1386,8 +1795,17 @@ added this ingredient to this spell" (story 13). `workspace_members` keeps the
 full six — who removed whom, and when, is worth keeping — and so does
 `ingredient_folk_names`, which holds content rather than a link.
 
+**No `deleted_at` also means no partial unique index**, on any of the three.
+Rule 4's convention exists so a tombstone cannot reserve a name forever, and a
+composite primary key has no tombstone to dodge: the pair is either there or it
+is not, re-adding one that was removed is an ordinary insert, and
+`WHERE deleted_at IS NULL` would not compile against these columns. The
+exception is a predicate that is about something else — `spell_ingredients`
+carries two partial unique indexes keyed on whether `ingredient_id` is null,
+which is MB.40's custom-row split rather than soft-delete filtering.
+
 **What makes it impossible to get wrong.** Two type constraints, both proved by
-`@ts-expect-error` lines in `repository.test.ts` (which fail `npm run typecheck`,
+`@ts-expect-error` lines in `tests/db/repository/write.test.ts` (which fail `npm run typecheck`,
 not `vitest`, if either constraint is ever loosened):
 
 - `write.delete` takes `PgTable & { deletedAt?: never }` — a table carrying the
@@ -1401,7 +1819,7 @@ returns the predicate when the table has a `deleted_at` and `undefined` when it
 does not, and `and()` drops an undefined condition. The decision is made from
 the table's own columns, never from an argument a caller supplies, so there is
 nothing to pass that would skip the filter where it applies. The third scratch
-table in `repository.test.ts` (`repository_probe_pairs`) exercises it: a delete
+table in `tests/db/repository/write.test.ts` (`repository_probe_pairs`) exercises it: a delete
 leaves no row, the same pair can be re-added afterwards with no partial index
 to make it possible, and a delete rolls back with the rest of its transaction.
 
@@ -1458,7 +1876,7 @@ derived categories are the union of what this table holds for its ingredients.
 ## `spell_categories` (M10.4)
 
 Story 48's table: `spellId`, `categoryId`, + the four audit stamps, keyed on the
-pair. `src/db/schema/spell-categories.ts`, migration `0015_wooden_zaran.sql`,
+pair. `src/modules/grimoire/schema/spell-categories.ts`, migration `0015_wooden_zaran.sql`,
 and the last of MB.34's three join tables.
 
 **It holds the _assigned_ categories, and only those.** §9 and §12 make the
@@ -1554,6 +1972,40 @@ among the four files allowed to import `connection.ts` — which is what makes
 the handle honest. The reasoning, and the alternatives it rules out, are in
 [`design-decisions/m1.21-seed-writes-through-its-handle.md`](design-decisions/m1.21-seed-writes-through-its-handle.md).
 
+**Import order is not load-bearing anywhere.** There is no cycle between
+`audit.ts` and `users.ts` any more (MB.86): `audit.ts` exports factories that
+take the referenced column and depends on nothing in a module, and the
+`auditColumns` instance lives with `users` because every stamp references it.
+So a seed module, the repository and drizzle-kit — which globs
+`src/modules/*/schema/*.ts` and may enter the module graph at any schema file
+— all see a fully built `users` whichever import comes first.
+
+**Two helper modules carry what every seed repeats** (MB.51).
+`src/db/seed/idempotent.ts` exports three functions. `beginSeedTransaction(db,
+body)` opens the one transaction, publishes the GUC in `withAudit`'s
+parameterised `set_config` form, inserts the bootstrap admin and then runs
+`body(tx)`; every entry point — `seedMinimal`, `seedStandard`, `seedDemo`,
+`seedCategories`, `seedForms` — is that call. `insertMissing(tx, table, wanted,
+{ existing, keyOf, toRow })` inserts each `wanted` whose key `existing` did not
+return, stamped by the bootstrap admin through `applyAudit`, and updates
+nothing. `requireFrom(map, key, describe)` is a `Map` lookup that throws
+`describe()`'s message rather than handing `undefined` to a NOT NULL column.
+`existing` is the caller's own query on purpose: each site scopes it — fixture
+ids by `inArray`, W's ingredients by `workspace_id`, the compendium by
+`workspace_id IS NULL`, folk names case-folded — and each ignores `deleted_at`
+where that choice can be read, rather than the helper deciding it once for
+every table. The one insert that needs its rows back, `standard`'s compendium
+entries, stays hand-written around `.returning()`.
+`src/db/seed/two-tier-vocabulary.ts` exports `seedTwoTierVocabulary(tx, {
+groupTable, itemTable, groups, items, itemNoun })` — groups, then the items
+filed under them, each by slug — which `seedCategoryVocabulary` and
+`seedFormVocabulary` call with their own tables and literals. The literals
+(`CATEGORY_GROUPS`, `CATEGORIES`, `FORM_GROUPS`, `FORMS`) stay in
+`categories.ts` and `forms.ts`, where the tests comparing them against
+DESIGN.md import them from. The two table pairs are typed as a union rather
+than a generic: their columns are identical, so the row type survives without
+a cast.
+
 **`minimal`** (`src/db/seed/minimal.ts`): one admin, one user, empty
 compendium. The admin is the bootstrap user under the fixed
 `BOOTSTRAP_USER_ID` (`…0001`, MB.5), inserted as its own
@@ -1636,12 +2088,8 @@ hand has to arrive with the deploy that needs it. M4.3a's form vocabulary
 shares that step, that gate and that summary — see below, and
 `claude-docs/ci.md`.
 
-Two rules a later scenario inherits. Import a schema module **before**
-`audit` in a seed file: `audit.ts` and `schema/users.ts` import each other,
-and entered via `audit.ts` the `users` table is built while `auditColumns` is
-still undefined, so the insert carries no `created_by` (every db test under
-`tests/db/` already orders them this way). And write through the handle,
-stamping via `applyAudit`, in `minimal.ts`'s shape.
+One rule a later scenario inherits: write through the handle, stamping via
+`applyAudit`, in `minimal.ts`'s shape.
 
 `tests/db/seed/index.test.ts` is the `db`-project test: it applies the full
 migration set into the worker's clone (the M1.18 pattern — the seed writes
@@ -1650,7 +2098,7 @@ compendium is empty" needs tables to count), hands `seed()` a handle of its
 own, and asserts the two rows, the fixed ids, the creator chain, idempotency,
 and — through an `AFTER INSERT` trigger recording `current_setting('app.
 current_user_id', true)` — that the GUC was published, the same
-observation trick `repository.test.ts` uses.
+observation trick `tests/db/repository/write.test.ts` uses.
 
 ## The form vocabulary seed (M4.3a)
 
@@ -1665,12 +2113,13 @@ values, and those should come from a vocabulary that already exists.
 the second target on the same script, because the client import there is one
 of the four pinned exemptions below.
 
-Everything structural is the category seed's, deliberately: groups first
-(`ingredient_forms.group_id` is a NOT NULL foreign key), idempotency keyed on
-the slug and **ignoring `deleted_at`**, no update to anything already present,
-every slug derived by `slugify(name)` rather than written down, and the whole
-run inside one transaction that publishes `app.current_user_id` and stamps
-through `applyAudit`. What it does not share is a colour: form groups section
+Everything structural is the category seed's, and since MB.51 literally so —
+both call `seedTwoTierVocabulary` (above) with their own tables and literals:
+groups first (`ingredient_forms.group_id` is a NOT NULL foreign key),
+idempotency keyed on the slug and **ignoring `deleted_at`**, no update to
+anything already present, every slug derived by `slugify(name)` rather than
+written down, and the whole run inside one transaction that publishes
+`app.current_user_id` and stamps through `applyAudit`. What it does not share is a colour: form groups section
 an autofill dropdown rather than tinting a chip, so there is no Sass map to
 resolve and no contrast floor to clear (§5, MB.35).
 
@@ -1766,7 +2215,7 @@ X sharing no member is what makes a cross-workspace denial test say something.
 are seeded `true` because each is in a workspace, and under §5 that is how the
 flag comes to be true — an invitation was accepted. E is seeded `false`: E has
 never been invited, and creates workspaces by being an admin instead. Seeding E
-`true` would erase exactly the distinction M3.2's gate turns on.
+`true` would erase exactly the distinction M6.7's gate turns on.
 
 ### The compendium is awkward on purpose
 
@@ -1817,8 +2266,9 @@ admin present. A half-applied scenario (categories seeded, users not) is worse
 than one that never ran, and three transactions is three chances at one.
 
 `standard` itself takes that same shape since M1.23: `seedStandard(db)` opens
-the transaction, publishes the GUC and inserts the bootstrap admin, then hands
-over to **`seedStandardContent(tx)`** — which is what `demo` calls, one level
+the transaction, publishes the GUC and inserts the bootstrap admin (the three
+moves `beginSeedTransaction` makes), then hands over to
+**`seedStandardContent(tx)`** — which is what `demo` calls, one level
 up and for the same reason. Two of its internals are shared rather than copied
 for the same argument: `categoryIdByName(tx)` moved into `categories.ts`, since
 both scenarios file rows under §6's vocabulary by name, and `identityOf` is
@@ -1907,29 +2357,50 @@ edited grimoire is a no-op rather than an error. Both halves are asserted in
 `demo.test.ts` — the edited jar and the reordered one — and the assertions were
 checked to fail without the rule.
 
+## The provisional-account delete (MB.67)
+
+`deleteProvisionalUsers(lifetimeSeconds, capSeconds)` is the one hard delete of a table
+carrying `deleted_at`, and it is a named export rather than a loosening of
+`write.delete`'s type. It removes every `users` row that is unverified,
+holds at least one `accounts` row, and has an `updated_at` older than
+`now()` minus the lifetime or a `created_at` older than `now()` minus the
+cap. `accounts` and `sessions` follow by their
+`ON DELETE CASCADE`. Both cutoffs are the database's clock, as the columns are. The `EXISTS` is raw `sql` rather than a `.select(`, so
+`soft-delete-finder-guard.test.ts` still finds every read inside
+`selectFrom`; that guard's pinned export list names this function.
+
+It is hard for a reason outside this layer: Better Auth reads `users` by
+address with no `deleted_at` filter, so a tombstone would keep refusing the
+owner's sign-in. It runs outside `withAudit` because there is no session and
+no surviving row to stamp. Two partial indexes serve it, one per half of the `OR`:
+`users_provisional_updated_at_idx` and `users_provisional_created_at_idx`,
+each `WHERE email_verified = false`. The rest is [`auth.md`](auth.md), "Provisional accounts".
+
 ## Who may import the client (M1.17)
 
-CLAUDE.md rule 2 — only `src/db/repository.ts` may import `db` — is enforced
+CLAUDE.md rule 2 — only `src/db/repository/` may import `db` — is enforced
 by a `no-restricted-imports` entry in `.oxlintrc.json`. It bans every
 relative shape `connection.ts` can be reached by (`./connection`,
-`**/db/connection`, with or without the `.ts`), type-only imports included,
+`../connection`, `**/db/connection`, with or without the `.ts`), type-only imports included,
 so a new importer fails `npm run lint` and the pr-gate lint job.
 
 Exemptions are `// oxlint-disable-next-line no-restricted-imports` comments on
 the import itself, not config: oxlint 1.82 **ignores** a rule set to `"off"`
 or `"allow"` inside an `overrides` block, so a per-file exemption there would
-look like it worked and silently do nothing. Four files carry one:
+look like it worked and silently do nothing. Six files carry one:
 
 | File                                       | Why it needs a client, not a writer                                                                                                                                                                                                                             |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/db/repository.ts`                     | The choke point itself — the rule exists to protect it.                                                                                                                                                                                                         |
+| `src/db/repository/write.ts`               | The choke point itself — the rule exists to protect it. `withAudit` opens the transaction every write runs in.                                                                                                                                                  |
+| `src/db/repository/select.ts`              | The choke point again: `selectFrom`, the one read query builder.                                                                                                                                                                                                |
+| `src/db/repository/provisional-users.ts`   | The choke point again: the one `users` hard delete, which runs outside `withAudit` (see "The provisional-account delete").                                                                                                                                      |
 | `src/lib/auth.ts`                          | Better Auth's `drizzleAdapter(db, …)` takes the Drizzle client. It runs its own inserts through its adapter and database hooks (`claude-docs/auth.md`), so there is no session to hand `withAudit`; the user-create hook stamps `createdBy`/`updatedBy` itself. |
 | `scripts/db-seed.ts`                       | The seed CLI constructs the handle it passes to `seed(db, …)`, which writes as the bootstrap user rather than through a session.                                                                                                                                |
 | `tests/db/test-database-isolation.test.ts` | The connection _is_ the subject: it asserts `db` points at this worker's `sorrel_test_<n>` clone (M1.9).                                                                                                                                                        |
 
 That list is pinned by `tests/guards/lint-db-client-boundary.test.ts`, which
 lints deliberate violations written to a temp directory and asserts the exemption
-set is exactly those four. Adding a fifth turns that test red, so it has to be
+set is exactly those six. Adding a seventh turns that test red, so it has to be
 argued for in the diff rather than appearing quietly beside an import. The
 violations are written at test time rather than committed as fixtures because
 oxlint skips anything matching the config's `ignorePatterns` even when the
@@ -1943,9 +2414,9 @@ CLAUDE.md rule 4's other half — a SELECT built anywhere but the repository —
 is enforced by a second `no-restricted-imports` group in the same config
 entry, banning `drizzle-orm` and `drizzle-orm/*`. A Drizzle query cannot be
 built without importing the query builder at runtime, so banning the import
-bans the capability: `src/services`, `src/graphql`, `src/app`,
-`src/components`, `src/lib`, `e2e` and every part of `tests/` outside
-`tests/db` fail `npm run lint` on a runtime import, whatever the resulting
+bans the capability: `src/modules/*/services`, `src/graphql`, `src/app`,
+`src/components`, `src/lib` and every part of `tests/` outside `tests/db` —
+Playwright's `tests/e2e/` included — fail `npm run lint` on a runtime import, whatever the resulting
 finder is named or declared as.
 
 `allowTypeImports` keeps `import type` legal everywhere, which is the point
@@ -1955,8 +2426,10 @@ build nothing, and it is how DESIGN.md §7's "the GraphQL layer imports
 in prose.
 
 The database layer is exempted by an `overrides` block matching
-`src/db/**/*.ts`, `tests/db/**/*.ts` (its own tests, since MB.41 moved them
-out of `src/`), `scripts/**/*.ts` and `drizzle.config.ts`. Two oxlint 1.82
+`src/db/**/*.ts`, `src/modules/*/schema/**/*.ts` (a table is built there),
+`tests/db/**/*.ts`, `tests/modules/**/*.ts` and `tests/support/db/**/*.ts`
+(its own tests and harness, since MB.41 moved them out of `src/`),
+`scripts/**/*.ts` and `drizzle.config.ts`. Two oxlint 1.82
 behaviours shape it, and both are load-bearing:
 
 - A rule set to `"off"` or `"allow"` inside `overrides` is **ignored**, so the
@@ -1981,13 +2454,14 @@ the default tier.
 
 | Rule                            | Impossible                                                                                                       |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Client ban (M1.17)              | Reaching `db` — and so a transaction, or an unaudited write — outside `repository.ts` and the four exempt files. |
+| Client ban (M1.17)              | Reaching `db` — and so a transaction, or an unaudited write — outside the repository and the three exempt files. |
 | Query-builder ban (MB.33)       | Building any query at all outside the database layer, including one that would skip `deleted_at IS NULL`.        |
 | `selectFrom` unexported (M1.20) | Reaching an unfiltered read from inside the repository.                                                          |
+| Access boundary (M3.9)          | A resolver, page or component reaching the repository, or anything under `src/db`, without passing a service.    |
 
-M3.9 adds the next one: a rule stopping `src/graphql/**` and
-`src/app/**` from importing the _repository_, so those layers reach a service
-and nothing below.
+The access boundary is described in [`graphql.md`](graphql.md), "The access
+boundary". Its second half, `server-only` on every service, stops a client
+component from importing a service at all.
 
 ## Snapshot before production migrations, and the restore runbook (M1.6)
 

@@ -1,3 +1,7 @@
+// @vitest-environment node
+// Node, not the unit project's jsdom: .ladle/config.mjs resolves its Vite config
+// from import.meta.url, which jsdom reports as an http: URL.
+
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
@@ -6,41 +10,20 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 import ladleConfig from '../../.ladle/config.mjs';
 
-// MB.38 — the two workshop guards, as tests. Both were standalone scripts
-// under scripts/ because Vitest had not landed when they were written (M0.33,
-// M0.35); it has since M1.7, and a mechanical guard in this repo is a Vitest
-// file — in tests/guards/ since MB.41, in src/test/ when MB.38 moved them.
-// Moving them into Vitest is what puts the theme-default guard in CI at all —
-// as a script it ran from pre-commit only, which a `--no-verify` skips.
-//
-//   1. Every standalone component ships a story: a directory under
-//      src/components/ holding an `index.tsx` has a sibling
-//      `index.stories.tsx`. The Ladle workshop discovers components by that
-//      file, so without this "every component is in the workshop" is
-//      remembered rather than enforced. Not an Oxlint rule — Oxlint has no
-//      custom-rule API, and "this directory implies that sibling" is a
-//      cross-file filesystem assertion no single-file linter can express.
-//      Scoped to src/components/: `.ladle/*.stories.tsx` is the one
-//      workshop-only location, deliberately outside it.
-//
-//   2. `.ladle/config.mjs` opens the workshop dark. `addons.theme.defaultState`
-//      was flipped once already — M0.31 to 'auto', M0.32 back to 'dark', with
-//      the comment above it left describing the wrong value in between.
-//      'dark' matches the app's dark-first default in globals.scss.
-//
-// The walk is asserted against a throwaway tree first, so a green run against
-// the real one means the guard found nothing rather than that it looked at
-// nothing. `workshop:build` (scripts/build-workshop.ts) is not here: a story
-// that fails to bundle is a build-time finding, and it stays on the build leg.
+// The two workshop guards (claude-docs/workshop.md, "Commands and gates"):
+// every directory under src/components/ holding an `index.tsx` has a sibling
+// `index.stories.tsx` — the Ladle workshop discovers components by that file,
+// and `.ladle/*.stories.tsx` is deliberately out of scope — and
+// `.ladle/config.mjs` opens dark, matching globals.scss. A test rather than an
+// Oxlint rule: Oxlint has no custom-rule API, and "this directory implies that
+// sibling" is a cross-file assertion. The walk is proven on a throwaway tree
+// first, so a green run means it found nothing rather than looked at nothing.
 
 const COMPONENTS_DIR = join(REPO_ROOT, 'src', 'components');
 const COMPONENT_ENTRY = 'index.tsx';
 const STORY_FILE = 'index.stories.tsx';
 
-/**
- * Every directory at or below `dir` that holds an `index.tsx`. Recurses, so a
- * nested component (src/components/Forms/Input/) is covered too.
- */
+/** Every directory at or below `dir` holding an `index.tsx`; nested components count. */
 function componentDirs(dir: string): string[] {
   const entries = readdirSync(dir, { withFileTypes: true });
   const found: string[] = [];
@@ -63,9 +46,8 @@ function missingStories(root: string): string[] {
 }
 
 describe('every standalone component ships a story', () => {
-  // A fixture tree, so the walk is proven to bite before it is trusted on the
-  // real one: two components missing a story (one nested), one that has its
-  // story, and a directory that is not a component at all.
+  // Two components missing a story (one nested), one covered, and a directory
+  // that is not a component at all.
   let fixture: string;
 
   beforeAll(() => {
@@ -96,15 +78,66 @@ describe('every standalone component ships a story', () => {
     expect(missing).not.toContain('Forms');
   });
 
-  // The precondition, so the assertion after it cannot pass vacuously: a
-  // src/components/ that had gone missing, or a walk that stopped short, would
-  // report nothing missing too.
+  // Precondition: a missing src/components/, or a walk that stopped short,
+  // would report nothing missing too.
   it('finds the components that exist in src/components/', () => {
     expect(componentDirs(COMPONENTS_DIR)).toContain(join(COMPONENTS_DIR, 'ThemeToggle'));
   });
 
   it('finds no component under src/components/ without one', () => {
     expect(missingStories(COMPONENTS_DIR)).toEqual([]);
+  });
+});
+
+// A mail template is a top-level `src/emails/<name>.tsx` and its story the
+// sibling `<name>.stories.tsx`; the shared frame lives in `src/emails/parts/`,
+// which is not a template and is previewed through every one that uses it.
+const EMAILS_DIR = join(REPO_ROOT, 'src', 'emails');
+
+/** Templates directly in `dir` with no sibling story, by file name. */
+function templatesMissingStories(dir: string): string[] {
+  const files = readdirSync(dir);
+  return files
+    .filter((file) => file.endsWith('.tsx') && !file.endsWith('.stories.tsx'))
+    .filter((file) => !files.includes(file.replace(/\.tsx$/, '.stories.tsx')));
+}
+
+describe('every email template ships a story', () => {
+  let fixture: string;
+
+  beforeAll(() => {
+    fixture = mkdtempSync(join(tmpdir(), 'workshop-email-guards-'));
+    mkdirSync(join(fixture, 'parts'));
+    for (const file of [
+      'bare.tsx',
+      'covered.tsx',
+      'covered.stories.tsx',
+      'theme.ts',
+      'parts/layout.tsx',
+    ]) {
+      writeFileSync(join(fixture, file), '');
+    }
+  });
+
+  afterAll(() => {
+    rmSync(fixture, { recursive: true, force: true });
+  });
+
+  it('reports a template with no story, and nothing else', () => {
+    expect(templatesMissingStories(fixture)).toEqual(['bare.tsx']);
+  });
+
+  // Precondition, as for components: a walk that found nothing reports nothing missing.
+  it('finds the templates that exist in src/emails/', () => {
+    expect(readdirSync(EMAILS_DIR)).toContain('verify-email.tsx');
+  });
+
+  it('finds no template under src/emails/ without one', () => {
+    expect(templatesMissingStories(EMAILS_DIR)).toEqual([]);
+  });
+
+  it('is discovered by the workshop', () => {
+    expect(ladleConfig.stories).toContain('src/emails/*.stories.tsx');
   });
 });
 

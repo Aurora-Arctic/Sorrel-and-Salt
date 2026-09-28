@@ -1,46 +1,56 @@
+import { createRequire } from 'node:module';
 import { defineConfig } from 'vitest/config';
 import { dbHarness } from './tests/support/db-project.mts';
 
-// Two projects per CLAUDE.md's Testing section: `unit` runs pure logic and
-// components in jsdom with no network; `db` runs against a real local
-// Postgres (never Neon — see docker-compose.yaml's `postgres` service).
-// `db` includes `tests/services/**`, which has no files yet (services land
-// from Wave 5), so `passWithNoTests` keeps that half from failing the run.
-// The Postgres wiring itself — the per-slot clone of the seeded template,
-// and the pinned `maxWorkers` that wiring depends on — is
-// tests/support/db-project.mts's `dbHarness`, spread into `db` below and
-// into the acceptance suite's own config.
-//
-// The acceptance suite (tests/acceptance/, DESIGN.md §11) is deliberately
-// not a third project here: it runs from vitest.stories.config.mts (M1.28),
-// so a red story never fails this run and a green one never counts toward
-// the coverage threshold below. That is why `unit` excludes it — its glob
-// would otherwise sweep those files up under jsdom.
+const require = createRequire(import.meta.url);
+const serverOnlyStub = require.resolve('next/dist/compiled/server-only/empty.js');
+
+// Three projects: `unit` in jsdom with no network, `db` against local Postgres
+// through tests/support/db-project.mts's `dbHarness`, which the acceptance
+// config spreads too, and `rsc` for what can only be observed from inside a
+// server render. The acceptance suite is deliberately not a fourth project,
+// and `unit` excludes it so its glob does not sweep those files up:
+// claude-docs/testing.md, "Acceptance".
 export default defineConfig({
-  // MB.41 — tests live in tests/ and reach the code under test by the `@/*`
-  // alias tsconfig already declares, so moving a test never re-levels a
-  // `../../` chain. Vite does not read tsconfig `paths` unless asked, so
-  // without this every such import fails to resolve at runtime. This is
-  // Vite's own resolver rather than the `vite-tsconfig-paths` plugin, which
-  // it now supersedes — the plugin warns as much on load.
+  // Tests reach src/ by tsconfig's `@/*` alias, which Vite ignores unless
+  // told. Each project spells out `extends: true` (the default) because it is
+  // load-bearing: the projects are what run.
   //
-  // Each project spells out `extends: true` to inherit this. That is already
-  // the default, and it is written anyway because it is load-bearing here:
-  // the projects are what actually run, and a future `extends: false` would
-  // leave them resolving `@/` nowhere.
-  resolve: { tsconfigPaths: true },
+  // `graphql` ships CommonJS and ESM builds, and the two are different realms:
+  // a schema built by one fails the other's `instanceof`. Pothos and Yoga are
+  // externalized, so Node hands them the CommonJS build; a test file is
+  // transformed by Vite, which would pick the ESM one. The alias gives test
+  // code the copy the packages get.
+  //
+  // `server-only` is the marker every service carries so that a client bundle
+  // reaching one fails `next build`. Next resolves it itself and the package is
+  // not installed, so a test gets Next's own empty stub: a test is not a client
+  // bundle.
+  resolve: {
+    tsconfigPaths: true,
+    alias: [
+      { find: /^graphql$/, replacement: require.resolve('graphql') },
+      { find: /^server-only$/, replacement: serverOnlyStub },
+    ],
+  },
   test: {
+    // Both under .reports/ with the rest of the generated output; without
+    // `outputFile`, the json and html reporters would write to `.vitest/`.
+    // CI's `--outputFile` on the command line still wins.
+    outputFile: {
+      json: '.reports/vitest/results.json',
+      html: '.reports/vitest/html/index.html',
+    },
     coverage: {
       provider: 'v8',
-      // 'json-summary' (M1.14) is read by .github/scripts/summarize-vitest.mjs
-      // to build the PR comment's coverage stat/table — the other three are
-      // for local/human consumption and untouched by CI.
+      reportsDirectory: '.reports/coverage',
+      // 'json-summary' feeds .github/scripts/summarize-vitest.mjs.
       reporter: ['text', 'lcov', 'html', 'json-summary'],
       include: ['src/**/*.{ts,tsx}'],
-      // src/db/seed is fixture code that runs test infrastructure rather
-      // than product logic — a bug there fails the tests that consume it, so
-      // it doesn't need its own coverage.
-      exclude: ['src/**/*.stories.tsx', 'src/db/migrations/**', 'src/db/seed/**'],
+      // src/db/seed is test infrastructure; a bug there fails the tests that
+      // consume it. src/gql is generated, and its guard compares it rather than
+      // running it.
+      exclude: ['src/**/*.stories.tsx', 'src/db/migrations/**', 'src/db/seed/**', 'src/gql/**'],
       thresholds: {
         lines: 80,
         branches: 80,
@@ -56,17 +66,39 @@ export default defineConfig({
           environment: 'jsdom',
           globals: true,
           include: ['tests/**/*.test.{ts,tsx}'],
-          exclude: ['tests/db/**', 'tests/services/**', 'tests/acceptance/**'],
-          setupFiles: ['@testing-library/jest-dom/vitest', './vitest.setup.ts'],
+          // tests/e2e/ is Playwright's; its specs end `.spec.ts`, but say so.
+          exclude: [
+            'tests/db/**',
+            'tests/modules/**',
+            'tests/rsc/**',
+            'tests/acceptance/**',
+            'tests/e2e/**',
+          ],
+          setupFiles: ['@testing-library/jest-dom/vitest', './tests/support/setup.ts'],
         },
       },
       {
         extends: true,
         test: {
           name: 'db',
-          include: ['tests/db/**/*.test.ts', 'tests/services/**/*.test.ts'],
+          include: ['tests/db/**/*.test.ts', 'tests/modules/**/*.test.ts'],
           passWithNoTests: true,
           ...dbHarness,
+        },
+      },
+      {
+        extends: true,
+        // The `react-server` export condition, which `react` and the Flight
+        // renderer both switch on. Without it React's `cache()` is the default
+        // build's pass-through and a server render cannot be started at all.
+        // `db` cannot carry the condition: under it `react-dom/server` throws
+        // on import, and three of its files reach that through `lib/auth`.
+        ssr: { resolve: { conditions: ['react-server'], externalConditions: ['react-server'] } },
+        test: {
+          name: 'rsc',
+          environment: 'node',
+          globals: true,
+          include: ['tests/rsc/**/*.test.{ts,tsx}'],
         },
       },
     ],

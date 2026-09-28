@@ -9,15 +9,16 @@ enough to start a task without opening anything else. They are meant to be
 self-sufficient: if you need a transcript or an archived record to understand
 how the system works today, that is a defect in the summary, not a research step.
 
-| Path                                | What it holds                                                                                                                                               |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DESIGN.md`                         | The specification. The source of truth for behaviour.                                                                                                       |
-| `TASKS.md`                          | The work breakdown and the reasoning behind it, corrected in place. The live list of what to do is the Asana board (see [`CLAUDE.md`](../CLAUDE.md)).       |
-| `<subsystem>.md`                    | **A summary per subsystem** — the current shape of one area, kept short. States decisions, not how they were reached.                                       |
-| `components/<name>.md`              | **One doc per standalone component.** Required by several tasks; a component that ships without its doc is an incomplete task.                              |
-| `transcripts/<subsystem>.md`        | **Frozen as of MB.31** — how a subsystem reached its shape. No longer appended to; a PR body is the record now.                                             |
-| `design-decisions/<mN.n>-<slug>.md` | A decision record — what was decided, why, and what it rules out. Live; superseded in place, never archived mid-project.                                    |
-| `archive/m0/`, `archive/wave-<n>/`  | **Frozen.** M0's and waves 1–2's transcripts and decision records, plus text cut from a live doc. Nothing new goes in. See [`archive/`](archive/README.md). |
+| Path                                | What it holds                                                                                                                                                                                                                                                   |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DESIGN.md`                         | The specification. The source of truth for behaviour.                                                                                                                                                                                                           |
+| `TASKS.md`                          | The work breakdown and the reasoning behind it, corrected in place. The live list of what to do is the Asana board (see [`CLAUDE.md`](../CLAUDE.md)).                                                                                                           |
+| `backlog.md`                        | The owner's running list of what comes after v1 — fonts, design, v2's billing, V3, and the public launch's WAF and RLS. Not a task list: a task is minted when it is scheduled.                                                                                 |
+| `<subsystem>.md`                    | **A summary per subsystem** — the current shape of one area, kept short. States decisions, not how they were reached. [`modules.md`](modules.md) is the one that says where code lives: the five domain modules, what each owns, and the boundary between them. |
+| `components/<name>.md`              | **One doc per standalone component.** Required by several tasks; a component that ships without its doc is an incomplete task.                                                                                                                                  |
+| `transcripts/<subsystem>.md`        | **Frozen as of MB.31** — how a subsystem reached its shape. No longer appended to; a PR body is the record now.                                                                                                                                                 |
+| `design-decisions/<mN.n>-<slug>.md` | A decision record — what was decided, why, and what it rules out. Live; superseded in place, never archived mid-project.                                                                                                                                        |
+| `archive/m0/`, `archive/wave-<n>/`  | **Frozen.** M0's and waves 1–2's transcripts and decision records, plus text cut from a live doc. Nothing new goes in. See [`archive/`](archive/README.md).                                                                                                     |
 
 ## What lives where, and what to read
 
@@ -25,6 +26,14 @@ how the system works today, that is a defect in the summary, not a research step
   carries the decision and the constraint, not the story of how they were
   reached. Where a constraint would look arbitrary without a reason, give the
   reason in a clause — not a link out.
+- A **code comment** is the other half of that rule, pointing the other way. The
+  comment says what the code is and why it is not the obvious alternative; the
+  argument for the choice lives here, in the summary. So a doc that defers
+  outward is a defect, and a comment that re-argues a decision at length is
+  duplication — the doc is the copy that can be corrected in one place, where the
+  comment is the copy that gets pasted into sixteen files and drifts. See
+  [`CLAUDE.md`](../CLAUDE.md), Conventions. Prose that leaves a comment lands in
+  the summary for its subsystem, never in `archive/`.
 - A **transcript** was written as work landed, one entry per task or session.
   MB.31 stopped that: the five that exist are frozen, and a PR body now carries
   what one would have said.

@@ -1,32 +1,36 @@
 # Testing — summary
 
-Vitest 5, configured as two projects in `vitest.config.mts` (`.mts`, not
+Vitest 5, configured as three projects in `vitest.config.mts` (`.mts`, not
 `.ts` — the root `package.json` deliberately carries no `"type"` field per
 `MODULE_TYPELESS_PACKAGE_JSON`, so an explicit `.mts` extension is what tells
 Vite's native config loader this file is ESM instead of warning about it), plus
 the acceptance suite on a config of its own, `vitest.stories.config.mts` (M1.28,
-below). The two share the Postgres harness through
+below). `db` and the acceptance config share the Postgres harness through
 `tests/support/db-project.mts` — `.mts` and imported with its extension for the
 same reason, since a config's imports run at config-load time.
 
 ## Where tests live
 
-Every Vitest file is under `tests/`, mirroring `src/` (MB.41). Nothing under
-`src/` is a test.
+Every Vitest file is under `tests/`, mirroring `src/` (MB.41), and Playwright's
+specs live in `tests/e2e/` beside their harness; `tests/guards/test-location.test.ts`
+pins both. Nothing under `src/` is a test.
 
 ```
 tests/
   app/ components/ lib/ db/   # mirror the src/ path of the code under test
+  rsc/                        # what can only be seen from inside a server render, mirroring src/ below it
   acceptance/                 # one describe per user story — make test-stories
   guards/                     # the mechanical guards
   support/                    # the harness: as-user, db-setup, seeded-database, msw, paths
+  e2e/                        # Playwright specs and their harness (database, fixtures, axe, coverage)
   support/fixtures/           # makeIngredient / makeSpell / makeWorkspace
+  db/support/                 # the db-only half: useTestDatabase, tableFacts, the audit lists
 ```
 
 Three consequences worth knowing before writing a test:
 
 - **A test imports the code under test by the `@/` alias**, not by a relative
-  path — `import { users } from '@/db/schema/users'`. `vitest.config.mts` sets
+  path — `import { users } from '@/modules/identity/schema/users'`. `vitest.config.mts` sets
   `resolve: { tsconfigPaths: true }` so Vite reads the `@/*` → `./src/*`
   mapping tsconfig already declared; each project spells out `extends: true`
   to inherit it. Imports _within_ `tests/` stay relative.
@@ -34,8 +38,10 @@ Three consequences worth knowing before writing a test:
   — `REPO_ROOT`, `fromRoot('…')`, `MIGRATIONS_DIR` — rather than counting
   `../` from its own location. The chain is counted once, there.
 - **The project split is a path glob**, so where a file sits decides how it
-  runs. A test that touches Postgres and is not under `tests/db/` lands in
-  `unit`, under jsdom, against the plain `sorrel` database.
+  runs. A test that touches Postgres and is not under `tests/db/` or
+  `tests/modules/` lands in `unit`, under jsdom, against the plain `sorrel`
+  database. A test that has to watch a server render is under `tests/rsc/`,
+  or React's `cache()` is a pass-through and there is nothing to watch.
 
 `tests/guards/test-location.test.ts` holds the rule. It is a test rather than
 a lint rule because Oxlint has no custom-rule API and cannot express a
@@ -54,7 +60,7 @@ test, it is a file nothing runs.
   `@testing-library/react`'s automatic post-test `cleanup()`, which hooks
   itself onto the global `afterEach` at import time). `include`s
   `tests/**/*.test.{ts,tsx}`, excluding `tests/db/**` and
-  `tests/services/**`. That glob does reach a test inside a directory
+  `tests/modules/**`. That glob does reach a test inside a directory
   literally named `[...all]` (`tests/app/api/auth/[...all]/route.test.ts`) —
   `[...]` is glob metacharacter syntax, so it was worth confirming rather
   than assuming.
@@ -82,7 +88,7 @@ test, it is a file nothing runs.
     one place still reading a file by convention is `ThemeToggle`'s test,
     which uses `path.join(process.cwd(), …)` to reach the component's
     `index.scss` now that the two no longer sit in the same directory.
-  - **`setupFiles` also runs `./vitest.setup.ts`** (M1.8, ported from
+  - **`setupFiles` also runs `./tests/support/setup.ts`** (M1.8, ported from
     `resume-2026`), which adds three global hooks on top of the RTL
     `cleanup()` that `globals: true` already registers on its own:
     - a second, explicit `afterEach(cleanup())` — redundant with the
@@ -98,33 +104,46 @@ test, it is a file nothing runs.
       `tests/support/msw/server.ts` (`setupServer()`, no base handlers — every
       operation is registered per test, see below).
     - Covered by `tests/support/vitest-setup.test.tsx`, which asserts each hook's
-      effect directly rather than testing `vitest.setup.ts` itself.
+      effect directly rather than testing `tests/support/setup.ts` itself.
   - **`tests/support/msw/graphql.ts`** (M1.10) scopes MSW's `graphql` helper to
     `/api/graphql` with `graphql.link('/api/graphql')`, and exports
     `mockGraphQLQuery(operationName, resolveData)` /
     `mockGraphQLMutation(operationName, resolveData)` for a component test to
     register a one-off response for a single named operation
     (`server.use(graphqlLink.query(...))` / `.mutation(...)` under the hood).
-    No client library is wired up yet (`graphql-request` lands with the
-    client in a later milestone), so a test posts a plain `fetch('/api/graphql',
-{ method: 'POST', body: JSON.stringify({ query }) })` — msw's graphql
-    matcher parses the operation name out of the `query` document itself, no
-    explicit `operationName` field required. A request against
-    `http://localhost/...` rather than the relative `/api/graphql` will not
-    match, since jsdom's default location is `http://localhost:3000`.
+    `mockGraphQLError(operationName, { code, fieldErrors?, message? })` (MB.43)
+    answers the named query or mutation the way the route answers a service
+    that threw — `data: null` and one error carrying `extensions.code`, plus
+    `fieldErrors` for `VALIDATION`. It builds the body by throwing the matching
+    type through the route's own `maskError`, so it cannot drift from what the
+    route sends; its test holds it against a real Yoga instance's answer. It
+    carries no `path` or `locations`, since it answers for the operation rather
+    than for one field, and nothing a form reads is in either.
+    A component test wraps its tree in a `QueryClientProvider` holding
+    `makeQueryClient()`, a fresh client per test — `Providers` keeps one for the
+    tab, which would carry one test's cache into the next — and
+    `graphql-request` resolves `/api/graphql` against jsdom's location, which
+    the link matches. A test with no client posts a plain `fetch` of
+    `JSON.stringify({ query })` to `/api/graphql`; msw's graphql matcher parses
+    the operation name out of the `query` document itself, no explicit
+    `operationName` field required. A request against `http://localhost/...`
+    rather than the relative `/api/graphql` will not match, since jsdom's
+    default location is `http://localhost:3000`.
     Because no base handler answers an un-overridden operation, it falls
     through to `onUnhandledRequest: 'error'` and fails loudly instead of
     hitting the network; `afterEach(() => server.resetHandlers())` means an
     override from one test never leaks into the next.
     Covered by `tests/support/msw/graphql.test.ts`.
 - **`db`** — `environment: 'node'`. `include`s `tests/db/**/*.test.ts` and
-  `tests/services/**/*.test.ts`. The `tests/db/**` half is real as of Wave 1
+  `tests/modules/**/*.test.ts`. The `tests/db/**` half is real as of Wave 1
   (`audit`, `bootstrap`, `users-schema`, `test-database-isolation`); since
   M1.27 every file in it runs against a clone that already carries the full
   migrated schema and the `standard` scenario, so a schema test asserts
   against the real table (`tests/db/seeded-template.test.ts` states that
-  baseline) and no file builds tables of its own. `src/services/` doesn't
-  exist yet, so `passWithNoTests: true` stays. Nothing in this
+  baseline) and no file builds tables of its own. The `tests/modules/**` half
+  is real as of M6.3 (`membership`, `access-control`) — a service test lands
+  here rather than in `unit` because a service reads Postgres, and the split is
+  a path glob. Nothing in this
   project's config ever points at
   Neon (`Docker/docker-compose.yaml`'s `postgres` service publishes **5432**
   for exactly this — "the host-side Vitest `db` project").
@@ -142,7 +161,13 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
     instead of erroring on a stale database. `maxWorkers` comes off the
     `TestProject` Vitest hands the setup function — no per-worker variable is
     set inside the single setup process, so it pre-clones one database per
-    possible worker instead. It `provide`s that list as `workerDatabases`,
+    possible worker instead. That number is `undefined` there unless the
+    config pins it, so `tests/support/db-project.mts` pins `maxWorkers` to
+    Vitest's own default (`os.availableParallelism() - 1`, floored at 1) —
+    and it must keep mirroring that default: both projects share one pool
+    group, and Vitest throws when two projects in a group disagree on
+    `maxWorkers`, which is what makes "every slot has a clone" a guarantee
+    rather than a hope. It `provide`s that list as `workerDatabases`,
     which `test-database-isolation.test.ts` asserts its own database is a
     member of (MB.14) — the point being that a worker's name is checked
     against what was actually created, not against a bound the test
@@ -177,6 +202,21 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
     files that are _about_ seeding (`tests/db/seed/*`,
     `updated-at-trigger.test.ts`) call `truncateAllTables(sql)` from
     `seeded-database.ts` first.
+    - **What a `tests/db/` file may therefore assume**, and what its own
+      header need not re-argue: every migration applied, the `standard`
+      scenario present, and a database nothing else will touch. No file builds
+      a table, stubs a parent table down to a bare `id`, or puts anything back
+      in an `afterAll`.
+    - **A db test names the seed's ids rather than inventing them.** The real
+      `users`, `workspaces`, `ingredients` and `categories` all carry NOT NULL
+      names, slugs and audit stamps, so a row that already exists is cheaper to
+      point at than one to construct — `FIXTURE_USERS.A.id`, `WORKSPACE_W_ID`
+      and friends out of `src/db/seed/standard`. Where the seed generates an id
+      rather than fixing it (§6's categories, the compendium's entries, a
+      seeded form), the file reads it back by name in `beforeAll`. That is the
+      opposite of the fixture-factory rule below: a fixture invents because it
+      is writing a new row, a db test binds because it is pointing at a seeded
+      one.
     - **The slot is `VITEST_POOL_ID`, not `VITEST_WORKER_ID`** (MB.14).
       Vitest sets both, and only the first is bounded by `maxWorkers`
       ("Value is between 1-`maxWorkers`", per its own typedef);
@@ -191,6 +231,26 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
   - Rejected alternative — wrapping each test in a rolled-back transaction —
     and the reason, is recorded in
     [`design-decisions/m1.9-test-db-isolation.md`](design-decisions/m1.9-test-db-isolation.md).
+- **`rsc`** (M3.8) — `environment: 'node'`, `include`s
+  `tests/rsc/**/*.test.{ts,tsx}`, and resolves under the `react-server` export
+  condition (`ssr.resolve.conditions` and `externalConditions`, the second for
+  packages Node loads itself). That condition is what React's `cache()` and the
+  Flight renderer both switch on: without it `cache()` is the default build's
+  pass-through, and `react-server-dom-webpack` refuses to load at all. A test
+  renders a tree with `renderToReadableStream` from
+  `react-server-dom-webpack/server.edge` (a devDependency pinned to React's own
+  version, and typed by hand in `tests/vitest-env.d.ts` because it ships no
+  types) and reads the stream to a string; one render is one request.
+  - **It is not `db` with a flag.** Under `react-server`, `react-dom/server`
+    resolves to a file that throws on import, and three `db` files reach it
+    through `lib/auth` and react-email. So the render tests take no database:
+    they mock `@/db/repository` whole and count its calls, which is an honest
+    count of Postgres round trips because nothing else holds the client
+    (CLAUDE.md rule 2).
+  - **What belongs here:** anything whose behaviour exists only inside a render
+    — today `assertMembership`'s one lookup per render
+    (`tests/rsc/modules/coven/membership.test.ts`). A service's authorization is
+    still tested in `db`, against the real rows.
 
 **Coverage** (`test.coverage`, provider `v8`): thresholds are 80% on lines,
 branches, functions, and statements, `include: ['src/**/*.{ts,tsx}']`,
@@ -215,17 +275,96 @@ not a defect.
 
 **Wired into CI (M1.14).** `pr-gate.yml`'s `vitest` job
 calls the real `.github/workflows/vitest.yml`, path-filtered off `src/**`,
-`tests/**`, `vitest.config.mts`, `vitest.setup.ts`, and
-`package{,-lock}.json`. `tests/**` is load-bearing: without it a test-only
+`tests/**` less `tests/e2e/**` (Playwright's, and nothing Vitest runs imports
+it — the `!` exclusion is why the `changes` step sets `predicate-quantifier:
+some-with-excludes`), `vitest.config.mts`, and `package{,-lock}.json`.
+`tests/**` is load-bearing: without it a test-only
 PR — the one kind whose whole content is what this job runs — would skip the
 job and report green. It runs
 in `build-image.yml`'s shared `testing` container plus its own `services:
 postgres:` (a `build-db-image` job feeding
 `postgres://sorrel:sorrel@postgres:5432/sorrel`, reachable by service name —
-see `claude-docs/ci.md`), and uploads `coverage/` as an artifact on every
+see `claude-docs/ci.md`), and uploads `.reports/coverage/` as an artifact on every
 run. `vitest.config.mts`'s coverage `reporter` also gained `json-summary`
 alongside its existing `text`/`lcov`/`html`, so the PR comment can show a
 coverage table (`.github/scripts/summarize-vitest.mjs`).
+
+## The db test harness — `tests/support/db/` (MB.51)
+
+Two modules the `tests/db/` and `tests/modules/` files share, and a sweep
+built on them. They sit in their own directory under `tests/support/` because
+the rest of `tests/support/` may not import `drizzle-orm` at runtime —
+`.oxlintrc.json`'s `no-restricted-imports` bans it everywhere but the database
+layer and its tests (CLAUDE.md rule 4), and
+`tests/guards/lint-db-client-boundary.test.ts` probes that ban by writing a
+runtime import into `tests/support/` and asserting the lint fires.
+`getTableConfig` from `drizzle-orm/pg-core` is what `table-metadata.ts` is
+made of, so the database-layer override names `tests/support/db/**/*.ts`
+beside `tests/db/**/*.ts` and `tests/modules/**/*.ts`;
+`lint-db-client-boundary.test.ts` lists `tests/support/db` among its `EXEMPT`
+probes, which proves the override actually reaches the harness.
+`vitest.config.mts` collects only `*.test.ts` files, so a module there is never
+run as a test.
+
+- **`database.ts` — `useTestDatabase(bind)` and `failureOf(work)`.**
+  `useTestDatabase` registers a `beforeAll` that opens one `postgres` client
+  (reading `DATABASE_URL` inside the hook, after `db-setup.ts` has pointed it
+  at the worker's clone) and an `afterAll` that ends it, and returns the
+  catalogue reads — `columnNames(table)`, `indexRow(table, name)`,
+  `uniqueIndexNames(table)` — closing over that client. **It is per file, not
+  per worker, and that is not a style choice:** `db-setup.ts` re-clones the
+  worker's database `WITH (FORCE)` before every test file, which terminates
+  any session still open on it, so a connection shared across files would be
+  killed by the next file's clone. Vitest's default `sequence.hooks` is
+  `stack`, so a call at the top of a file opens before the file's own
+  `beforeAll` (the ones that read seeded ids by name) and closes after its
+  `afterAll` — no reordering needed. It hands the client to a `bind` callback
+  rather than returning it so a file's existing `let sql` and every
+  `` sql`…` ``, `sql(row)`, `sql(table)`, `sql.begin` and `sql.unsafe` call on
+  it stay exactly as written:
+
+  ```ts
+  let sql: ReturnType<typeof postgres>;
+  const catalogue = useTestDatabase((client) => (sql = client));
+  ```
+
+  `repository/*.test.ts` (through `tests/support/db/probe-tables.ts`), `updated-at-trigger.test.ts`,
+  `test-database-isolation.test.ts`, `seeded-template.test.ts` and
+  `tests/db/seed/*` still open their own client — the isolation test's subject
+  _is_ the connection, and the others truncate everything first.
+
+- **`table-metadata.ts` — the Drizzle half.** `tableFacts(table)` is
+  `getTableConfig` plus the lookups every schema test used to build by hand:
+  `byName`, `byIndexName`, `foreignKeyByColumn` (each entry
+  `{ column, name, foreignColumnName, foreignTable }`) and
+  `nonAuditForeignKeys`, the table's own references with the audit ids
+  filtered out. `AUDIT_COLUMNS`, `STAMP_COLUMNS` and `DELETE_COLUMNS` are
+  **literal string lists, deliberately not derived from `src/db/audit.ts`**:
+  a test comparing a table against `Object.keys(auditColumns)` passes for any
+  value of `auditColumns`, an empty one included. `AUDITED_TABLES` (fifteen
+  names, the three hard-deleted join tables among them) and
+  `UNAUDITED_TABLES` (Better Auth's `accounts`, `sessions`, `verifications`)
+  moved here from `updated-at-trigger.test.ts` so the trigger sweep and the
+  audit-columns sweep read one list.
+
+- **`tests/db/audit-columns.test.ts` — one sweep instead of a copy per
+  file.** It holds two transcribed lists of Drizzle table _objects_ — the
+  twelve six-column tables and the three four-column join tables — asserts
+  both non-empty and their names equal to `AUDITED_TABLES`, and loops the same
+  expectations over each, on **both sides**: the schema (the columns are
+  defined, the stamps `NOT NULL`, `deleted_at` nullable or absent, every
+  `*_by` a foreign key to `users.id`, `deleted_by` absent on a join table) and
+  the catalogue (`information_schema.columns` carries the names,
+  `referential_constraints` shows each `*_by` referencing `users(id)`). Both
+  sides because they can disagree: a spread deleted from a schema file leaves
+  the migrated database's columns standing, and a catalogue-only sweep would
+  stay green. The `UNAUDITED_TABLES` are asserted to exist and carry no `*_by`
+  column, which is what stops the catalogue half being satisfied by a table
+  with nothing to check. The per-file `spreads the shared audit columns` /
+  `references users.id from every audit id` tests are gone; a schema test now
+  asserts the table's _own_ columns, constraints and behaviour. A fifteenth
+  audited table added without `...auditColumns` fails this file, where
+  before it would simply have had no test.
 
 ## Acceptance — `make test-stories` (M1.28)
 
@@ -234,12 +373,12 @@ coverage table (`.github/scripts/summarize-vitest.mjs`).
 the v1 user stories, one line each:
 
 ```
-[x] Story 1: Sign in with Google or GitHub, so I don't manage another password.
+[x] Story 1: Sign in with an account I already have, so I don't manage another password.
 [ ] Story 2: As a newly signed-in user, be told plainly what I can do next, … — FAILING
 [ ] Story 3: Create a workspace once I hold creation rights, … — skipped
 [ ] Story 4: Generate an invitation link with a chosen role … — no test yet
 
-1 of 45 stories passing · 1 failing · 1 skipped · 42 without a test
+1 of 50 stories passing · 1 failing · 1 skipped · 47 without a test
 ```
 
 That is DESIGN.md §11's "live progress report against §10 rather than a
@@ -255,7 +394,7 @@ make it hold:
   stories run carries no `--coverage` at all.
 - **The story list is read out of DESIGN.md §10, not copied.**
   `tests/support/stories.ts` parses the numbered list between
-  "## 10. User stories" and the next section — 45 today, 1–34 and 47–57 — so
+  "## 10. User stories" and the next section — 50 today, 1–34 and 47–62 — so
   the spec is the one place a story is written down and a story added to §10
   joins the checklist without a harness edit. `stories.test.ts` pins the
   rules rather than the list: ids unique and ascending, none in 35–46, and the
@@ -280,7 +419,7 @@ The suite runs on the same harness as `tests/db/` — node, one seeded
 an acceptance test calls a service against the seeded world. A file that
 needs a DOM (`04-modals.test.tsx`, M9.1) declares
 `// @vitest-environment jsdom` in its own docblock. `passWithNoTests` is on:
-the directory holds only its README until M2.1, and 45 stories with no test
+the directory holds only its README until M2.1, and 50 stories with no test
 is a true report rather than an error.
 
 `tests/support/story-reporter.ts` is the Vitest reporter behind it, listed
@@ -296,9 +435,11 @@ the checklist is written even when that run is red;
 `.github/scripts/summarize-stories.mjs` turns the JSON into a "3 of 45
 stories passing" stat and a collapsible markdown checklist for its own job
 summary section and its own PR comment thread (marker `stories`). The step
-fails the job when a story fails. M2.1, which lands the first acceptance
-file deliberately red, decides how that is tolerated until its milestone
-closes (TASKS.md, M2 sequencing) — nothing here pre-empts it.
+fails the job when a story fails — except across M2 (M2.1): that step carries
+`continue-on-error: true` so a story still red while the rest of Wave 6 lands
+cannot block a PR, while `steps.stories.outcome` (read by the summarize and
+comment steps below it) still carries the real pass/fail, unaffected by
+`continue-on-error`. Revert once every M2 story is green.
 
 ## Acting as a fixture user, and asserting a refusal (M1.26)
 
@@ -370,7 +511,7 @@ makeWorkspace({ name: 'Fixture Coven Two' });
 what lets the `unit` project test them with no Postgres in sight and leaves
 every caller to write its row the way it already does. Each fixture is typed
 against its table's own `$inferInsert` — the same idiom `src/db/seed`'s types
-use — so a column renamed in `src/db/schema/` is a compile error in every
+use — so a column renamed in a module's `schema/` is a compile error in every
 fixture that names it. The schema import is `import type`: a runtime import of
 the schema is a runtime import of drizzle-orm, and `tests/support/` is not
 among the paths allowed to make one (CLAUDE.md rule 4 / MB.33).
@@ -466,10 +607,10 @@ make one.
 
 ### Who uses them
 
-`tests/db/ingredients-schema.test.ts` and `tests/db/ingredients-indexes.test.ts`
+`tests/modules/ingredients/schema/ingredients-schema.test.ts` and `…/ingredients-indexes.test.ts`
 were carrying byte-identical copies of the same untyped `row()` helper, which
 is where a partial identity would have gone on quietly disagreeing between the
-two; both now build through `makeIngredient`. `tests/db/spells-schema.test.ts`
+two; both now build through `makeIngredient`. `tests/modules/grimoire/schema/spells-schema.test.ts`
 records through `makeSpell` — dropping `status` from the insert, so the
 column's own default is still what "defaults a new spell to draft" observes —
 and `tests/db/updated-at-trigger.test.ts` writes its workspace through
@@ -478,14 +619,33 @@ that file.
 
 ## E2E — Playwright (M1.11)
 
-`playwright.config.ts` (repo root) runs specs under `e2e/` against a
+`playwright.config.ts` (repo root) runs specs under `tests/e2e/` against a
 **production build**, not `next dev` — `webServer.command` is `npm run build
 && npm run start`, on **8001** (`PORT` env override; `start` defaults to
 8000). Distinct from Vitest's `db` project, which clones one database per
-worker — Playwright needs only one, `sorrel_e2e`, since `webServer` is a
-single shared server.
+worker — Playwright needs only one, `sorrel_e2e`, since every server reads
+the same database. `reuseExistingServer` is off whenever `CI` is set, so a
+CI run always builds and starts its own server rather than attaching to one
+left over on the port.
 
-- **`e2e/database.ts`** — the same two-tier shape as the Vitest harness,
+**There are two servers over one build**, because the sign-in page reads OAuth
+credentials per request and its two provider states cannot share a process.
+`webServer` is an array: the first entry builds and serves on 8001 with every
+provider variable set to `''` — blank rather than absent, because Next never
+lets `.env.local` override a variable already set, so a developer's real
+credentials cannot leak into it; the second runs only `npm run start` on
+**8002** with placeholder credentials for all four. Playwright starts the
+entries in order, which is what lets the second serve the first's build. Two
+projects split the specs between them: `chromium` (everything except
+`tests/e2e/sign-in-configured-providers.spec.ts`, against 8001) and
+`chromium-configured-providers` (that spec alone, against 8002, with
+`reducedMotion: 'reduce'` so a hover scan never samples a colour
+mid-transition). Only `chromium` collects JS coverage (`tests/e2e/fixtures.ts`) —
+the second project runs the same bundle. Placeholder ids are useless to a real
+authorization endpoint, so nothing may click a provider button against 8002;
+the spec aborts and fails on any request to `/api/auth/sign-in/`.
+
+- **`tests/e2e/database.ts`** — the same two-tier shape as the Vitest harness,
   through the same `tests/support/seeded-database.ts` (M1.27).
   `e2eDatabaseUrl()` swaps `DATABASE_URL`'s pathname to `/sorrel_e2e` (handed
   to `webServer.env.DATABASE_URL` so the built app reads from it instead of
@@ -493,13 +653,13 @@ single shared server.
   `sorrel_template` cloned, migrated and `standard`-seeded, ~1 s;
   `recreateE2eDatabase()` clones `sorrel_e2e` from it, tens of milliseconds;
   `dropE2eTemplate()` removes the template again.
-- **`globalSetup: './e2e/global-setup.ts'`** calls `seedE2eTemplate()` and
+- **`globalSetup: './tests/e2e/global-setup.ts'`** calls `seedE2eTemplate()` and
   then `recreateE2eDatabase()` once, before `webServer` starts — `sorrel_e2e`
   has to exist before the built app can connect to it. `global-teardown.ts`
   drops the template after the last spec; `sorrel_e2e` itself is left for
   inspection.
 - **Reseeding between spec files** is each spec file's own `test.beforeAll`,
-  not a Playwright hook that runs implicitly — see `e2e/smoke.spec.ts`. It
+  not a Playwright hook that runs implicitly — see `tests/e2e/smoke.spec.ts`. It
   calls `recreateE2eDatabase()`, never `src/db/seed` directly: a clone of the
   seeded template _is_ the reseed, and it costs a clone rather than a seed.
   Until M1.27 the template it cloned was the empty `sorrel_template`, so the
@@ -515,6 +675,32 @@ single shared server.
   concurrently and threw `duplicate key value violates unique constraint
 "pg_database_datname_index"` before this was added. `serial` pins the
   whole file to one worker, so the reset genuinely happens once.
+- **Mail is read back from Mailpit** (MB.65). `tests/e2e/mailpit.ts`'s
+  `latestMessageTo(address)` searches Mailpit's REST API at `MAILPIT_URL` for
+  the newest message to that address and returns its sender, recipients,
+  subject, text and HTML, polling up to ten seconds because the app sends in
+  the background of the request that caused it. The address goes in quoted:
+  unquoted, Mailpit's query language splits it at a `+`. A spec that follows
+  a mailed link gives its recipient a fresh address, so a retry or a parallel
+  worker cannot read another's message; `tests/e2e/mail-transport.spec.ts`
+  is the example, and sends from the runner because nothing in the app mails
+  yet. Compose and `playwright.yml` both run Mailpit; outside them the helper
+  throws on the unset URL rather than reporting that no mail arrived.
+- **A signed-in browser without a provider** (MB.71). No spec can finish a
+  real OAuth round trip, so `tests/e2e/session.ts`'s `signInAs(page, email,
+providers)` writes what a Discord sign-in would leave into `sorrel_e2e`: a
+  verified user stamped as its own creator, one `accounts` row per provider
+  named, and a session. It then hands the browser the session cookie Better
+  Auth would have set. The value is the token, a dot, and its base64
+  HMAC-SHA256 under `BETTER_AUTH_SECRET`, percent-encoded as better-call's
+  `signCookieValue` does it. The runner and the served build share that
+  secret: `playwright.yml` and compose set it at job level, and a local run
+  sets it on the command line, or the helper throws. The name is
+  `__Secure-better-auth.session_token` because a production build's base URL
+  forces https. It rides as an extra request header, not in the cookie jar,
+  since a browser never sends a `Secure` cookie to the plain-http
+  `devcontainer:8001` a remote browser uses. Give each call a fresh address:
+  the email index is unique.
 - **`next.config.ts`'s `distDir`** reads `NEXT_DIST_DIR`, defaulting to
   `.next`. `webServer.env` sets it to `.next-e2e` so a concurrent `next dev`
   on 8000 (CLAUDE.md's Commands table promises both can run at once) never
@@ -522,6 +708,15 @@ single shared server.
 - **No Neon connection anywhere** — `e2eDatabaseUrl()`/`adminUrl()` only ever
   rewrite the pathname of the ambient `DATABASE_URL`, which points at the
   local `postgres` Docker service exactly as Vitest's does.
+- **The browser may be remote** (MB.22). `playwright.config.ts` reads
+  `PLAYWRIGHT_WS_ENDPOINT`, set by the `devcontainer` compose service alone,
+  and when it is present passes it as `connectOptions.wsEndpoint` and switches
+  `baseURL` to `http://devcontainer:8001` — a remote browser cannot resolve the
+  runner's `localhost`. `webServer.url`'s readiness poll deliberately stays on
+  `localhost`, because that poll runs in the runner's own process wherever the
+  browser lives; making both sides match breaks one of them. Why the browser
+  moves at all (Alpine/musl has no Chromium), why the variable must not be set
+  any more broadly, and the full setup: `claude-docs/debugging.md`.
 
 `npm run e2e` (`playwright test`) runs the suite. Browser binaries
 (`npx playwright install chromium`) are a one-time local step. CI (M1.14)
@@ -539,31 +734,32 @@ Alpine-based image.
 
 ## Accessibility — axe-core (M1.12)
 
-**`e2e/axe.ts`** exports `assertNoAccessibilityViolations(page)`, the one
+**`tests/e2e/axe.ts`** exports `assertNoAccessibilityViolations(page)`, the one
 scan helper every spec imports — matching the `resume-2026` pattern of
 asserting accessibility in Playwright, not via `vitest-axe`. It runs
 `@axe-core/playwright`'s `AxeBuilder` against the current page and fails the
 test with a per-rule summary (rule id, help text, node count) if any
 violations are returned; a page with zero violations resolves silently.
 
-- **`e2e/smoke.spec.ts`** calls it after `page.goto('/')`, so the home page
+- **`tests/e2e/smoke.spec.ts`** calls it after `page.goto('/')`, so the entry page
   is scanned as part of the existing smoke spec.
-- **`e2e/axe.spec.ts`** seeds a violation directly (`page.setContent` with an
+- **`tests/e2e/axe.spec.ts`** seeds a violation directly (`page.setContent` with an
   `<img>` missing `alt`) and asserts the helper's promise rejects — proof the
   scan actually fails a run instead of passing vacuously.
 
 **Wired into CI (M1.14).** `pr-gate.yml`'s `playwright`
 job calls the real `.github/workflows/playwright.yml`, path-filtered off
-`src/**`, `e2e/**`, `playwright.config.ts`, `next.config.ts`, and
-`package{,-lock}.json` — matching the M1.11/M1.12 precedent of configuring
+`src/**`, `tests/e2e/**`, `tests/support/**` (which `tests/e2e/database.ts`
+imports), `playwright.config.ts`, `next.config.ts`, and `package{,-lock}.json`
+— matching the M1.11/M1.12 precedent of configuring
 the local run first and wiring CI later.
 
 ## Coverage — monocart-coverage-reports (M1.13)
 
-**`e2e/coverage.config.ts`** exports the shared `CoverageReportOptions`:
-`outputDir: './coverage-e2e'` (separate from Vitest's `coverage/`, so the two
-suites' contributions stay visible independently — both already carved out
-in `.gitignore`), reports `['v8', 'console-details', 'json-summary']` (the
+**`tests/e2e/coverage.config.ts`** exports the shared `CoverageReportOptions`:
+`outputDir: './.reports/coverage-e2e'` (separate from Vitest's `.reports/coverage/`,
+so the two suites' contributions stay visible independently — both under the
+`.reports/` that `.gitignore` carves out), reports `['v8', 'console-details', 'json-summary']` (the
 last added in M1.14, so `.github/scripts/summarize-playwright.mjs` has an
 istanbul-style `coverage-summary.json` to build the PR comment's coverage
 table from — same shape Vitest's own `json-summary` reporter emits).
@@ -576,7 +772,7 @@ for the final bundled output, only internal sourcemaps `sass-loader`/
 `resolve-url-loader` use mid-build to resolve `url()` paths. Even if it did,
 CSS coverage has no statements/branches/functions concept, so it can't feed
 the same 80% threshold model the rest of this project's coverage uses. Decided
-not worth chasing for v1 — `e2e/fixtures.ts`'s auto fixture starts/stops only
+not worth chasing for v1 — `tests/e2e/fixtures.ts`'s auto fixture starts/stops only
 `page.coverage.startJSCoverage`/`stopJSCoverage`.
 
 **Source maps.** `next.config.ts` sets `productionBrowserSourceMaps: true` so
@@ -600,28 +796,31 @@ packages ship their own `src/` directory in their own sourcemaps, so a bare
 `'**/src/**'` matches those too and pulls dependency internals into the
 report unless `node_modules` is excluded first.
 
-- **`e2e/fixtures.ts`** re-exports `test`/`expect`; every spec imports from
+- **`tests/e2e/fixtures.ts`** re-exports `test`/`expect`; every spec imports from
   here instead of `@playwright/test` directly. It adds an auto fixture
   (`scope: 'test'`, `auto: true`) that starts `page.coverage.startJSCoverage`
   on every page the test's `context` opens (Chromium only — the coverage API
   doesn't exist on Firefox/WebKit, checked via `test.info().project.name`),
   stops it at the end of the test, and calls `MCR(coverageOptions).add(...)`
-  with the result. A test that never navigates (`e2e/axe.spec.ts`'s
+  with the result. A test that never navigates (`tests/e2e/axe.spec.ts`'s
   `page.setContent` case) collects an empty array, which is skipped rather
   than handed to `add()` — an empty array logs a spurious `MCR` warning
   otherwise.
-- **`e2e/global-setup.ts`** additionally calls `MCR(coverageOptions).cleanCache()`
+- **`tests/e2e/global-setup.ts`** additionally calls `MCR(coverageOptions).cleanCache()`
   after `recreateE2eDatabase()`, so a crashed previous run's cached coverage
   data never leaks into this run's report.
-- **`e2e/global-teardown.ts`** (new; wired via `playwright.config.ts`'s
+- **`tests/e2e/global-teardown.ts`** (new; wired via `playwright.config.ts`'s
   `globalTeardown`) calls `MCR(coverageOptions).generate()` once after every
-  spec's fixture has added its entries, producing `coverage-e2e/index.html`
+  spec's fixture has added its entries, producing `.reports/coverage-e2e/index.html`
   (the native V8 report) plus a `console-details` table printed at the end
   of the run.
 
 **Wired into CI (M1.14).** `playwright.yml`'s "Upload coverage artifact" step
-uploads `coverage-e2e/` on every run (pass or fail), parallel to
-`vitest.yml`'s `coverage/` upload.
+uploads `.reports/coverage-e2e/` on every run (pass or fail), parallel to
+`vitest.yml`'s `.reports/coverage/` upload. The run's reporters (`list`, `json`,
+`html`) come from `playwright.config.ts` under `CI`, not from the command line —
+a CLI `--reporter` replaces the config's list and with it the html report's
+`outputFolder`.
 
 ## Debugging tests (MB.22)
 

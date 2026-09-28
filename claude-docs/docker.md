@@ -27,8 +27,12 @@ no Neon connection and no host Node-version juggling.
   - **No `tini`.** PID-1 signal handling is delegated to compose's `init: true`,
     so any new service (or a bare `docker run`) needs that flag or it inherits
     zombie-reaping and signal problems.
-- **`Docker/docker-compose.yaml`** — `name: sorrel-and-salt`, pinned so it does
-  not collide with another project's compose stack on the same machine.
+- **`Docker/docker-compose.yaml`** — `name: sorrel-and-salt`. Pinned rather
+  than derived from the file's parent directory, which would make the project
+  `docker` — the name `resume-2026`, also under a `Docker/` directory, already
+  claims on the same machine; the two would then share `node_modules` volumes
+  and clobber each other. Build context is the repo root (`..`), read through
+  the root `.dockerignore`.
 
   - **`db-init`** (M1.24) — the Docker seed hook: a **one-shot** container on
     the same `development` stage, running
@@ -75,6 +79,18 @@ no Neon connection and no host Node-version juggling.
       non-browser reference (`DATABASE_URL`-style service-to-service
       traffic) keeps using bare `app`; `sorrel-app` exists solely for URLs a
       real browser will load.
+  - **`mailpit`** (MB.65) — the local and e2e inbox, from the pinned
+    `axllent/mailpit` image, with no profile. It accepts mail over HTTP
+    (`POST /api/v1/send`) and delivers none of it; its UI and the REST API
+    `tests/e2e/mailpit.ts` reads a mailed link through share **8025**, and
+    `/mailpit readyz` is its health check. `app`, `e2e` and the
+    `devcontainer` overlay wait on it healthy and set
+    `MAIL_TRANSPORT=mailpit` and `MAILPIT_URL=http://mailpit:8025`, so every
+    message the app sends locally lands at `http://localhost:8025`. Over HTTP
+    rather than SMTP because every deployed target is HTTP too, and
+    `src/lib/mail.ts` keeps one shape of transport
+    ([`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md),
+    "Delivery").
   - **`workshop`** — behind the **`workshop` compose profile**, so a bare
     `make docker-up` does not start it. Same build stage; runs
     `npm run workshop -- --host 0.0.0.0` (`ladle serve` binds `localhost`
@@ -110,6 +126,13 @@ no Neon connection and no host Node-version juggling.
     - **Switching `image:`/`build:` never resets an existing named volume** — a
       stale `postgres_data` keeps serving whatever the previous image's init
       created. `make docker-rebuild` (`down -v`) is what gets a fresh one.
+      The tell that you have one, from before this file moved off the stock
+      `postgres` image, is a `FATAL: role "postgres" does not exist` line on
+      every health-check tick: that volume has only the `sorrel` role the old
+      image's first-boot init created from the `POSTGRES_*` vars, and Postgres
+      logs any rejected connection. It is **not** a failing check —
+      `pg_isready` asks only whether the server answers, not whether the role
+      it names is valid.
   - **Volumes** — one `node_modules` volume per service
     (`node_modules_app`, `node_modules_workshop`, `node_modules_studio`,
     `node_modules_e2e`, `node_modules_playwright_server`,
@@ -158,10 +181,10 @@ no Neon connection and no host Node-version juggling.
   standalone, not a prerequisite of `docker-up`), and `docker-codegen
 NAME=<spec>` (MB.23) — starts `playwright-server` if needed, then `exec`s
   `playwright codegen` into it as the caller's uid, writing
-  `e2e/<spec>.spec.ts`; see `claude-docs/debugging.md` for the recording
+  `tests/e2e/<spec>.spec.ts`; see `claude-docs/debugging.md` for the recording
   workflow itself.
 - **`.dockerignore`** (repo root) — excludes `node_modules`, `.next`, `.git`,
-  `build`, coverage and local env/state from the build context.
+  the generated `.reports/` and local env/state from the build context.
 - **`.devcontainer/`** — `devcontainer.json` plus a `docker-compose.yml` overlay
   merged on top of `Docker/docker-compose.yaml`. The overlay adds one service,
   `devcontainer`, mirroring `app` (same `development` stage, `..:/app` bind

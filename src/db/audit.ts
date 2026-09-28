@@ -1,38 +1,34 @@
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from './schema/users';
 
-// DESIGN.md §5: every audit id references users.id. audit.ts and
-// schema/users.ts import each other — users.ts spreads auditColumns, and
-// auditColumns points back at users.id, including for users' own rows
-// (users.created_by -> users.id). Drizzle's `() => users.id` thunk defers
-// evaluation until the FK is actually built (migration generation, not
-// module load), so the runtime cycle resolves fine; TypeScript still needs
-// the explicit `AnyPgColumn` return annotation below or it reports "audit.ts
-// circularly references itself", because it can't otherwise infer the
-// thunk's return type without first fully resolving users.ts, which is
-// still resolving audit.ts.
-export const auditStampColumns = {
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  createdBy: uuid('created_by')
-    .notNull()
-    .references((): AnyPgColumn => users.id),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-  updatedBy: uuid('updated_by')
-    .notNull()
-    .references((): AnyPgColumn => users.id),
-};
+/** A thunk to `users.id`, resolved when the foreign key is read rather than when the columns are built. */
+export type UsersIdReference = () => AnyPgColumn;
 
-// MB.34: the six-column set is the four stamps plus the two delete columns,
-// defined here once rather than listed twice — see DESIGN.md §5 for which
-// tables take which, and CLAUDE.md rules 3 and 4 for why the three join tables
-// are the exception. `created_by` on a join row still answers "who added this
-// ingredient to this spell"; only the tombstone goes.
-export const auditColumns = {
-  ...auditStampColumns,
-  deletedAt: timestamp('deleted_at'),
-  deletedBy: uuid('deleted_by').references((): AnyPgColumn => users.id),
-};
+// Factories rather than column instances: every audit id references
+// `users.id`, `users`' own rows included, and importing `users` from here
+// would make this module and the identity module's `users.ts` import each
+// other — a cycle that, entered from the wrong end, built `users` before
+// `auditColumns` existed and silently dropped its stamps (MB.60). The
+// instances live beside `users`, in src/modules/identity/schema/users.ts,
+// so this module depends on nothing in a module and any schema file can be
+// the first one loaded (claude-docs/db.md, "Audit columns and applyAudit").
+export function auditStampColumnsReferencing(usersId: UsersIdReference) {
+  return {
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    createdBy: uuid('created_by').notNull().references(usersId),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    updatedBy: uuid('updated_by').notNull().references(usersId),
+  };
+}
+
+// The two the soft-deleted tables add to the stamps. Which tables take which:
+// claude-docs/db.md, "Hard delete on the three join tables".
+export function deletionColumnsReferencing(usersId: UsersIdReference) {
+  return {
+    deletedAt: timestamp('deleted_at'),
+    deletedBy: uuid('deleted_by').references(usersId),
+  };
+}
 
 export type AuditOperation = 'insert' | 'update' | 'delete';
 
@@ -69,9 +65,8 @@ function stripAuditFields<T extends object>(payload: T): WithoutAuditFields<T> {
 }
 
 /**
- * Stamps audit columns for one write, ignoring any `*_by`/`*_at` audit
- * fields the caller's payload might carry — those always come from the
- * session, never the request body (CLAUDE.md rule 3).
+ * Stamps audit columns for one write. Any audit fields in the payload are
+ * dropped: they come from the session, never the request body (CLAUDE.md rule 3).
  */
 export function applyAudit<T extends object>(
   operation: 'insert',
