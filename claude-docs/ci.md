@@ -851,13 +851,16 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   Sharing the job makes that ordering structural. The two still report
   separately — one `job-summary` call each — so a failed seed does not read as
   a failed migration, and a failed seed blocks `deploy` for free, because it
-  fails the job `deploy` already depends on.
+  fails the job `deploy` already depends on. MB.93 adds a third target to the
+  same step, `npm run db:seed:correspondences`, for §5's planet and zodiac
+  vocabularies — same gate, same reasoning.
 - **`deploy.yml` gains one job, `seed-changed`**, which diffs
   `github.event.before`..`github.sha` over the seeds' own files
   (`src/db/seed/categories.ts`, `src/db/seed/forms.ts`,
   `src/db/seed/bootstrap-admin.ts`, `src/lib/slugify.ts`, `scripts/db-seed.ts`)
   and hands `migrate` the answer — one gate for both vocabularies, so a change
-  to either runs both.
+  to either runs both. MB.93 adds `src/db/seed/correspondences.ts` and its flat
+  seed helper to that list, and the gate then covers all three.
   Two things about it are load-bearing. It carries **no job-level `if:`**: a
   skipped dependency skips its dependents, so gating the job on
   `github.event_name == 'push'` would take every hotfix preview deploy down
