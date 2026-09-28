@@ -3,7 +3,7 @@ import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { foreignKeyStatements, shippedMigrationStatements } from '../../../support/db/migrations';
-import { planets, zodiacSigns } from '@/modules/vocabulary/schema/correspondences';
+import { planets, zodiacSigns } from '@/modules/vocabulary/schema/astrology';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
@@ -47,7 +47,7 @@ describe.each(VOCABULARIES)('$name schema', ({ table, name }) => {
     }
   });
 
-  // One tier, uncoloured, unordered and global (claude-docs/db.md, "The correspondence vocabularies").
+  // One tier, uncoloured, unordered and global (claude-docs/db.md, "The astrology vocabularies").
   it('carries no group, colour, ordering column or workspace scoping', () => {
     expect(byName.group_id).toBeUndefined();
     expect(byName.workspace_id).toBeUndefined();

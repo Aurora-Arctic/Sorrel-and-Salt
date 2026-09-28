@@ -24,7 +24,7 @@ import {
 } from '@/modules/vocabulary/schema/ingredient-forms';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { inventoryItems } from '@/modules/ingredients/schema/inventory-items';
-import { planets, zodiacSigns } from '@/modules/vocabulary/schema/correspondences';
+import { planets, zodiacSigns } from '@/modules/vocabulary/schema/astrology';
 import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
 import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
 import { spells } from '@/modules/grimoire/schema/spells';
