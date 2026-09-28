@@ -1,6 +1,7 @@
 import 'server-only';
 import {
-  type SuggestingVocabulary,
+  type Claimant,
+  type FormSuggestion,
   type VocabularySuggestion,
   findVocabularySuggestions,
 } from '../../../db/repository';
@@ -8,15 +9,16 @@ import type { PageEntry, PageRequest } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import { assertMembership } from '@/modules/coven';
 import { planets, zodiacSigns } from '../schema/astrology';
+import { ingredientForms } from '../schema/ingredient-forms';
 
-export type { VocabularySuggestion };
+export type { Claimant, FormSuggestion, VocabularySuggestion };
 
 /**
  * Asks only `ingredient: ['read']`: the curated rows are global, and every
  * in-use value is one a reader of this workspace could already list.
  */
 async function suggest(
-  vocabulary: SuggestingVocabulary,
+  vocabulary: typeof planets | typeof zodiacSigns,
   session: Session,
   workspaceId: string,
   term: string,
@@ -54,4 +56,22 @@ export function suggestZodiacSigns(
   page: PageRequest,
 ): Promise<PageEntry<VocabularySuggestion>[]> {
   return suggest(zodiacSigns, session, workspaceId, term, page);
+}
+
+/**
+ * What the `form` field offers as `term` is typed: the curated forms first,
+ * each with its group, a name match before a description match, then values
+ * already written in the compendium or this workspace that no live form
+ * curates. Each names the in-scope ingredients already claiming it.
+ *
+ * @throws {Forbidden} the caller may not read this workspace's ingredients.
+ */
+export async function suggestForms(
+  session: Session,
+  workspaceId: string,
+  term: string,
+  page: PageRequest,
+): Promise<PageEntry<FormSuggestion>[]> {
+  const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
+  return findVocabularySuggestions(membership, ingredientForms, term.trim(), page);
 }

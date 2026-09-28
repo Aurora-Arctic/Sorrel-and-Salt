@@ -1,16 +1,16 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { suggestPlanets } from '@/modules/vocabulary';
+import { suggestForms, suggestPlanets } from '@/modules/vocabulary';
 import { B, asUser } from '../../../support/as-user';
 
 // The statements suggestPlanets actually sends, as duplicates-plan.test.ts
 // reads findPossibleDuplicates': the thresholds and the operators are only
 // visible in the SQL, since a `similarity() > n` written by mistake returns
-// the same rows. Unlike that test there is no EXPLAIN here: nineteen planets
-// and thirteen signs fit two pages, and the planner will never reach for
-// `planets_trgm` over a table that small, so an index-scan assertion could
-// only fail (claude-docs/db.md, "The astrology vocabularies").
+// the same rows. Unlike that test there is no EXPLAIN here: nineteen planets,
+// thirteen signs and seventy-eight forms fit a few pages, and the planner will
+// never reach for a trigram index over a table that small, so an index-scan
+// assertion could only fail (claude-docs/db.md, "The astrology vocabularies").
 
 interface Logged {
   query: string;
@@ -118,5 +118,47 @@ describe('the suggestion query', () => {
     expect(statements.some(({ query }) => query.includes('pg_trgm.similarity_threshold'))).toBe(
       true,
     );
+  });
+});
+
+describe('the form suggestion query', () => {
+  async function formStatement(term: string): Promise<Logged> {
+    await suggestForms(asUser(B), WORKSPACE_W_ID, term, { limit: 26, inverted: false });
+    const reads = logged.filter(({ query }) => /from "ingredient_forms"/.test(query));
+    expect(reads).toHaveLength(1);
+    return reads[0];
+  }
+
+  it('sets both thresholds before matching', async () => {
+    const statement = await formStatement('salve');
+    const setting = logged.findIndex(({ query }) =>
+      query.includes(`set_config('pg_trgm.similarity_threshold'`),
+    );
+
+    expect(setting).toBeGreaterThanOrEqual(0);
+    expect(logged[setting].params).toEqual(['0.4', '0.6']);
+    expect(logged.indexOf(statement)).toBeGreaterThan(setting);
+  });
+
+  it('matches a name with % and <%, a description with <% alone, never a similarity() comparison', async () => {
+    const { query } = await formStatement('salve');
+
+    expect(query).toMatch(/"ingredient_forms"\."name" % \$\d+/);
+    expect(query).toMatch(/\$\d+ <% "ingredient_forms"\."name"/);
+    expect(query).toMatch(/\$\d+ <% "ingredient_forms"\."description"/);
+    expect(query).not.toMatch(/"ingredient_forms"\."description" %/);
+    expect(query).toMatch(/"ingredients"\."form" % \$\d+/);
+    expect(query).not.toMatch(/similarity\([^)]*\)\s*[<>]=?/);
+  });
+
+  // The claimants are a second read of `ingredients`, and scoped as the first.
+  it('scopes both reads of ingredients, and reads a form as curated only while its group is live', async () => {
+    const { query } = await formStatement('salve');
+    const scope = /"ingredients"\."workspace_id" is null or "ingredients"\."workspace_id" = \$\d+/g;
+
+    expect(query.match(scope)).toHaveLength(2);
+    expect(query.match(/"ingredients"\."deleted_at" is null/g)).toHaveLength(2);
+    expect(query).toMatch(/"ingredient_forms"\."deleted_at" is null/);
+    expect(query).toMatch(/"ingredient_form_groups"\."deleted_at" is null/);
   });
 });

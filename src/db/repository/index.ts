@@ -28,9 +28,12 @@ export { findManyInSpell, findManySpells, findOneSpell } from './spells';
 export { findSimilarIngredients } from './ingredients';
 export {
   findVocabularySuggestions,
+  type FormSuggestion,
   type SuggestingVocabulary,
   type VocabularySuggestion,
 } from './vocabularies';
+export { findCommonNameSuggestions, type CommonNameSuggestion } from './common-names';
+export type { Claimant } from './suggestion-page';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';
 export { findUserByEmail } from './users';
 export { deleteProvisionalUsers } from './provisional-users';

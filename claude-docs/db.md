@@ -766,15 +766,16 @@ live row's `lower(name)`.
 ### The member's autofill (MB.94)
 
 `findVocabularySuggestions(membership, vocabulary, term, page)` in
-`src/db/repository/vocabularies.ts` is the read behind `planetSuggestions`
-and `zodiacSuggestions` ([`graphql.md`](graphql.md)). Its services are
-`suggestPlanets` and `suggestZodiacSigns` in `vocabulary`, which ask
+`src/db/repository/vocabularies.ts` is the read behind `planetSuggestions`,
+`zodiacSuggestions` and `formSuggestions` ([`graphql.md`](graphql.md)). Its
+services are `suggestPlanets`, `suggestZodiacSigns` and `suggestForms` in
+`vocabulary`, which ask
 `ingredient: ['read']`: the curated rows are global, and every in-use value is
 one a reader of the workspace could already list. A caller names a table and
 nothing else. The ingredient column each table suggests for is paired in the
 repository, keyed by table name, so a caller cannot hand `planets` the
-`zodiac` column, and a third vocabulary does not compile until it names its
-column. That is the parameterisation M4.7a extends to `ingredient_forms`.
+`zodiac` column, and a fourth vocabulary does not compile until it names its
+column. `ingredient_forms` is the third, paired with `form` (M4.7a).
 
 One page is one statement: a `UNION ALL` of three tiers, sorted, bounded and
 cut by cursor as a whole.
@@ -822,14 +823,83 @@ cut by cursor as a whole.
   `(tier, fold, tiebreak)`. A key that does not parse throws
   `InvalidCursor`, as a cursor that will not cast does in `findPage`.
 
-**No planner assertion.** At nineteen and thirteen rows `planets_trgm` and
-`zodiac_signs_trgm` are never chosen over a sequential scan, so
+**A form suggestion carries two things more** (M4.7a), and only a form's
+does — the finder is overloaded on the table, so a planet or sign suggestion
+has neither:
+
+- **Its group.** `ingredient_forms` is unique on the slug alone, so two live
+  rows may share a display name ("Wax", animal and substance), and
+  `ingredients.form` stores the string. The group is the only thing that tells
+  them apart, so tiers 0 and 1 join `ingredient_form_groups` and return its
+  name, and the tie-break is `lower(group name) || ' ' || id`, so a
+  same-named pair reads in group order. **A form is curated only while its
+  group is live too**: the join filters both `deleted_at`s, in tiers 0 and 1
+  and in tier 2's "folds to no live curated name", so a form under a
+  soft-deleted group is offered as an in-use value with no group, and a dead
+  group's name is never returned. M5.6b decides what happens to the forms
+  when a group is deleted; this is only what the autofill reads meanwhile.
+- **Its claimants** — every live ingredient in the compendium or the proof's
+  workspace whose `lower(btrim(form))` equals the suggestion's fold, as
+  `{ name, canonicalName }`, formal names first (`nulls last`), then label,
+  then id. A second, scoped read of `ingredients`, aggregated once by fold
+  and left-joined onto the page — every claim rather than only those
+  matching the term, since a form found by its description is claimed under
+  its name. `json_agg`, not `jsonb_agg`, so the order it is built in is the
+  order read. Both same-named forms carry the same claimants, since the
+  string is all an ingredient holds.
+
+**The common-name autofill** (M4.7a) is `findCommonNameSuggestions(membership,
+term, page)` in `src/db/repository/common-names.ts`, the read behind
+`commonNameSuggestions`, whose service is `suggestCommonNames` in
+`ingredients`. There is no curated vocabulary of common names, so it is
+tier 2 alone, keyed and cut exactly as above by the shared
+`readSuggestionPage` (`suggestion-page.ts`):
+
+- **An in-use common name is a live in-scope ingredient's display name or a
+  live folk name of one**, a `UNION ALL` of two arms folded to
+  `lower(btrim(name))` and offered once, in the spelling most of them use.
+  The display name is read because it is one — "Cat's Claw" is the label of
+  five seeded rows and of §5's own example — and picking a suggestion writes
+  a folk-name row either way. **A formal name is not read**: it is identity,
+  not something this field writes.
+- **Each arm matches its own column** by `%` or `<%`, so each can reach
+  its own trigram index, and the fold follows. Trigrams ignore case and
+  punctuation, so every spelling of a fold matches alike and a claimant is
+  never lost to the term.
+- **The claimants are the group's own rows**, each ingredient once: one whose
+  label and a folk name fold alike appears in both arms, so a
+  `row_number()` over `(fold, ingredient)` filters the aggregate.
+
+**Its plan is asserted, unlike the vocabularies'.** Both tables grow with
+use, so `common-names-plan.test.ts` plans the statement the service sends,
+as `duplicates-plan.test.ts` does, and asserts `ingredients_trgm` and
+`ingredient_folk_names_trgm` are both probed. Two things were measured on
+the way:
+
+- **The display-name arm is matched beside the scope, and that is the
+  planner's call to make.** Below some tens of thousands of entries it walks
+  `ingredients_compendium_identity_unique` — the scope's
+  `workspace_id IS NULL` is that index's partial predicate — and filters by
+  name; the probe wins above it. Measured on a 10,000-entry compendium the
+  walk took 31 ms where the probe takes 1, tolerable behind a debounced
+  field. The test seeds 50,000 entries, which it needs: at 30,000 the full
+  statement still walks.
+- **`findSimilarIngredients`' `id IN (…)` shape does not transfer.** Over a
+  single table it is a self-join on the primary key, which Postgres 18's
+  self-join elimination removes, leaving the same plan. It survives there
+  only because its `IN` is a union over two tables.
+
+**No planner assertion for the vocabularies.** At nineteen, thirteen and
+seventy-eight rows `planets_trgm`, `zodiac_signs_trgm` and
+`ingredient_forms_trgm` are never chosen over a sequential scan, so
 `suggestions-query.test.ts` asserts what the service sends instead: both
 thresholds set in the transaction before the match, `%` and `<%` where a
 `similarity()` comparison could have been, the scope and soft-delete
 predicates, and the fold. It captures the statements as
-`duplicates-plan.test.ts` does. `suggestions.test.ts` holds the behaviour,
-each refusal and scope case with the precondition that made it possible.
+`duplicates-plan.test.ts` does. `suggestions.test.ts`,
+`form-suggestions.test.ts` and `common-name-suggestions.test.ts` hold the
+behaviour, each refusal and scope case with the precondition that made it
+possible.
 
 ## Stock, and the one module that owns the units (M9.2)
 
@@ -1670,8 +1740,9 @@ counterpart then rather than leaving a widened hatch waiting.
 finder.** The column is nullable — `workspace_id IS NULL` is the
 compendium, everything else is a workspace's own — so the table matches
 `{ workspaceId: AnyPgColumn }` and `findMany(ingredients)` does not compile.
-The reads of it so far are `findSimilarIngredients` (see "Fuzzy matching")
-and `findVocabularySuggestions` (see "The member's autofill"), each naming
+The reads of it so far are `findSimilarIngredients` (see "Fuzzy matching"),
+`findVocabularySuggestions` and `findCommonNameSuggestions` (see "The
+member's autofill"), each naming
 both tiers as explicitly as this paragraph asks, and each listed on
 [the tier seam](modules.md#the-tier-seam). Whichever of M5.2 or M8 first needs
 a plain compendium read adds a finder that ANDs `workspace_id IS NULL` as explicitly as the scoped one
@@ -1957,8 +2028,8 @@ is added by the grimoire task that first needs it, as its own finder, like
 the other spell finders.
 
 A page over rows no one table holds writes its own bounds under the same
-rules: `findVocabularySuggestions` keys a union by tier, fold and tie-break
-("The member's autofill").
+rules: `findVocabularySuggestions` and `findCommonNameSuggestions` key a
+statement by tier, fold and tie-break ("The member's autofill").
 
 `tests/db/pagination.test.ts` walks probe tables through `resolvePage` and the
 real finders:
@@ -2370,7 +2441,7 @@ types `salve`, the dropdown offers _Ointment_, and the vocabulary stays short
 without going missing at the word people reach for. A name match outranks a
 description match, so `wax` still offers _Wax_ first. It is also why a
 description is worth writing carefully beyond review: it is now search surface,
-and `ingredient_forms.description` needs its own trigram index when M4.7a lands.
+and `ingredient_forms_trgm` indexes the description beside the name (M4.7a).
 
 **A description defines its own form and stops there.** An earlier draft ended
 several of them with a redirect — "Set firm, it is a balm", "Distilled off a

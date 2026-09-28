@@ -293,7 +293,7 @@ type CorrespondenceSuggestion {
 
 - **One type for both fields.** A planet and a sign suggestion carry the same
   three things, and neither carries a group. `form`'s suggestion, which does,
-  is M4.7a's own type.
+  is its own type, below.
 - **Each is a `pagedConnection`**, one list over both buckets: curated values
   first, name matches before description matches, then values in use in the
   compendium and the named workspace that no live row curates. `curated` tells
@@ -307,6 +307,64 @@ type CorrespondenceSuggestion {
   `Forbidden`, a site admin included. The field carries no scope, because
   `pagedConnection` takes none and the resolver's null check is the same
   early refusal.
+
+### `formSuggestions` and `commonNameSuggestions`
+
+The autofill behind the form and common-name fields (M4.7a). `formSuggestions`
+is registered by `vocabulary`, over the same finder as the two above;
+`commonNameSuggestions` by `ingredients`, since folk names are its table:
+
+```graphql
+type Query {
+  formSuggestions(
+    workspaceId: ID!
+    term: String
+    first: Int
+    after: String
+  ): QueryFormSuggestionsConnection!
+  commonNameSuggestions(
+    workspaceId: ID!
+    term: String
+    first: Int
+    after: String
+  ): QueryCommonNameSuggestionsConnection!
+}
+
+type FormSuggestion {
+  value: String!
+  description: String # the curated row's; null for a value only in use
+  group: String # the curated row's group; null for a value only in use
+  curated: Boolean!
+  claimants: [SuggestionClaimant!]!
+}
+
+type CommonNameSuggestion {
+  value: String!
+  claimants: [SuggestionClaimant!]!
+}
+
+type SuggestionClaimant {
+  name: String! # the claiming ingredient's display name
+  canonicalName: String # its formal name; null for a `none` or `unknown` entry
+}
+```
+
+- **`group` is how two same-named forms are told apart.** `ingredient_forms`
+  is unique on the slug alone, so "Wax" may be both an _animal_ part and a
+  _substance_, and `ingredients.form` stores the string. The pair comes back as
+  two suggestions, in group order, and a client renders "Wax (Substance)".
+- **`claimants` names who already holds the value**, in the compendium and the
+  named workspace only: formal name first, and a claimant with none by its
+  label, so a `none` entry is not hidden. A nested list rather than a
+  connection — the guard in "Pagination" allows one, bounded by its parent —
+  and never longer than the in-scope ingredients.
+- **A common-name suggestion has one bucket.** There is no curated vocabulary
+  of common names, so no `curated` and no `description`. The in-use names are
+  every in-scope entry's display name and live folk names: "Cat's Claw" is the
+  display name of five seeded rows, and the story's own example.
+- The refusals are `planetSuggestions`': `Forbidden` from the resolver when
+  signed out, from `assertMembership` when signed in elsewhere, a site admin
+  included.
 
 ### Auth scopes: the second check
 

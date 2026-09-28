@@ -5,6 +5,11 @@ type AuditInfo {
   updatedBy: ID!
 }
 
+type CommonNameSuggestion {
+  claimants: [SuggestionClaimant!]!
+  value: String!
+}
+
 type CorrespondenceSuggestion {
   curated: Boolean!
   description: String
@@ -15,6 +20,14 @@ type CorrespondenceSuggestion {
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.This scalar is serialized to a string in ISO 8601 format and parsed from a string in ISO 8601 format.
 """
 scalar DateTime
+
+type FormSuggestion {
+  claimants: [SuggestionClaimant!]!
+  curated: Boolean!
+  description: String
+  group: String
+  value: String!
+}
 
 type Mutation {
   setEmail(email: String!): User!
@@ -28,10 +41,32 @@ type PageInfo {
 }
 
 type Query {
+  commonNameSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryCommonNameSuggestionsConnection!
+  formSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryFormSuggestionsConnection!
   me: User!
   ok: Boolean!
   planetSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryPlanetSuggestionsConnection!
   zodiacSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryZodiacSuggestionsConnection!
+}
+
+type QueryCommonNameSuggestionsConnection {
+  edges: [QueryCommonNameSuggestionsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryCommonNameSuggestionsConnectionEdge {
+  cursor: String!
+  node: CommonNameSuggestion!
+}
+
+type QueryFormSuggestionsConnection {
+  edges: [QueryFormSuggestionsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryFormSuggestionsConnectionEdge {
+  cursor: String!
+  node: FormSuggestion!
 }
 
 type QueryPlanetSuggestionsConnection {
@@ -52,6 +87,11 @@ type QueryZodiacSuggestionsConnection {
 type QueryZodiacSuggestionsConnectionEdge {
   cursor: String!
   node: CorrespondenceSuggestion!
+}
+
+type SuggestionClaimant {
+  canonicalName: String
+  name: String!
 }
 
 type User {
