@@ -570,12 +570,13 @@ seconds were the wait for Postgres's first health check, 5s after start under
 ten (`--health-start-interval=1s`, Docker 25 or later), so a service is marked
 healthy within a second of being ready:
 
-| Run                            | Initialize containers | Run vitest | Job   |
-| ------------------------------ | --------------------- | ---------- | ----- |
-| GitHub, before MB.97 (#517)    | 38s                   | 110s       | 2m47s |
-| GitHub, after MB.97 (#527)     | 39s                   | 79s        | 2m14s |
-| Blacksmith 8 vCPU, cold (#528) | 23s                   | 16s        | 56s   |
-| Blacksmith 8 vCPU, warm (#528) | 17s                   | 17s        | 51s   |
+| Run                                | Initialize containers | Run vitest | Job   |
+| ---------------------------------- | --------------------- | ---------- | ----- |
+| GitHub, before MB.97 (#517)        | 38s                   | 110s       | 2m47s |
+| GitHub, after MB.97 (#527)         | 39s                   | 79s        | 2m14s |
+| Blacksmith 8 vCPU, cold (#528)     | 23s                   | 16s        | 56s   |
+| Blacksmith 8 vCPU, warm (#528)     | 17s                   | 17s        | 51s   |
+| Blacksmith, warm, 1s health probes | 8s                    | 17s        | 43s   |
 
 ## Smoke checks
 
