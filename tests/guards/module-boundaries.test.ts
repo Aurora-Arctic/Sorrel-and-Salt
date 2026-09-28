@@ -53,6 +53,8 @@ const TIER_SEAM: string[] = [
   'findSimilarIngredients',
   // A planet, sign or form autofill's in-use bucket, and a form's claimants: the compendium and this workspace.
   'findVocabularySuggestions',
+  // The common-name field's suggestions and their claimants: the compendium and this workspace.
+  'findCommonNameSuggestions',
 ];
 
 /**

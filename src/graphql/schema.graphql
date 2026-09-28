@@ -5,6 +5,11 @@ type AuditInfo {
   updatedBy: ID!
 }
 
+type CommonNameSuggestion {
+  claimants: [SuggestionClaimant!]!
+  value: String!
+}
+
 type CorrespondenceSuggestion {
   curated: Boolean!
   description: String
@@ -36,11 +41,22 @@ type PageInfo {
 }
 
 type Query {
+  commonNameSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryCommonNameSuggestionsConnection!
   formSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryFormSuggestionsConnection!
   me: User!
   ok: Boolean!
   planetSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryPlanetSuggestionsConnection!
   zodiacSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryZodiacSuggestionsConnection!
+}
+
+type QueryCommonNameSuggestionsConnection {
+  edges: [QueryCommonNameSuggestionsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryCommonNameSuggestionsConnectionEdge {
+  cursor: String!
+  node: CommonNameSuggestion!
 }
 
 type QueryFormSuggestionsConnection {

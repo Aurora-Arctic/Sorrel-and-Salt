@@ -24,6 +24,7 @@ const SELECT_CALL = /\.select(?:Distinct)?(?:Fields)?\s*\(|\bdb\.query\./g;
 /** The repository's exported surface, pinned. A finder is added here too. */
 const EXPORTED_FUNCTIONS = [
   'deleteProvisionalUsers',
+  'findCommonNameSuggestions',
   'findMany',
   'findManyByIds',
   'findManyIncludingSoftDeleted',
@@ -57,6 +58,7 @@ const INTERNAL = [
 
 /** Rule 5's half: a finder over a table carrying `workspace_id` scopes by the proof. */
 const SCOPED_FINDERS = [
+  'findCommonNameSuggestions',
   'findManyInWorkspace',
   'findOneInWorkspace',
   'findPageInWorkspace',

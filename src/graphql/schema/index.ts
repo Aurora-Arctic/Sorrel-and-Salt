@@ -6,6 +6,7 @@ import './audit';
 import '@/modules/identity';
 import '@/modules/coven';
 import '@/modules/vocabulary';
+import '@/modules/ingredients';
 
 // `ok` mirrors Better Auth's `/api/auth/ok`: a probe that answers without a
 // session or the database, which the route's tests and e2e spec query.

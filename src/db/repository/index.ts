@@ -32,6 +32,7 @@ export {
   type SuggestingVocabulary,
   type VocabularySuggestion,
 } from './vocabularies';
+export { findCommonNameSuggestions, type CommonNameSuggestion } from './common-names';
 export type { Claimant } from './suggestion-page';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';
 export { findUserByEmail } from './users';
