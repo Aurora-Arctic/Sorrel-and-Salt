@@ -23,11 +23,14 @@ src/modules/<name>/
 
 A module's index re-exports its `graphql/` files, so loading the index is what
 registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
-`@/modules/coven` and `@/modules/vocabulary` for that side effect, never the
+`@/modules/coven`, `@/modules/vocabulary` and `@/modules/ingredients` for that side effect, never the
 `graphql/` path, which is internal. `identity` has `User` and `me`; `coven` has
 `Workspace`, `WorkspaceMember`, the `membershipsByUser` loader and the
-`User.memberships` field; `vocabulary` has `CorrespondenceSuggestion` and the
-`planetSuggestions` and `zodiacSuggestions` connections. A field on another module's type is added from the module allowed to
+`User.memberships` field; `vocabulary` has `CorrespondenceSuggestion`,
+`FormSuggestion`, `SuggestionClaimant` and the `planetSuggestions`,
+`zodiacSuggestions` and `formSuggestions` connections; `ingredients` has
+`CommonNameSuggestion` and `commonNameSuggestions`, whose claimants reuse
+`vocabulary`'s `SuggestionClaimant` — the edge runs that way round. A field on another module's type is added from the module allowed to
 import it — `memberships` lives in `coven` because `identity` imports
 nothing.
 
@@ -173,10 +176,11 @@ containing `workspace_id is null` or `isNull(workspaceId)`, and anything that
 reads both tiers in one statement. The guard fails an unlisted finder, and it
 fails a listed one that no longer exists.
 
-It holds two finders today: `findSimilarIngredients` (M4.7), the fuzzy
-duplicate match, and `findVocabularySuggestions` (MB.94), the planet and
-zodiac autofill. Each reads the compendium and one workspace in a single
-statement. A later task that adds such a finder — M5.1's admin reads, the
+It holds three finders today: `findSimilarIngredients` (M4.7), the fuzzy
+duplicate match; `findVocabularySuggestions` (MB.94, forms M4.7a), the
+planet, zodiac and form autofill; and `findCommonNameSuggestions` (M4.7a),
+the common-name autofill. Each reads the compendium and one workspace in a
+single statement. A later task that adds such a finder — M5.1's admin reads, the
 merged two-tier list, local-beats-compendium resolution — adds the finder's
 name to `TIER_SEAM` in its own PR, with a one-line reason beside it.
 The list is then the scope of the extraction task, read from one file.
