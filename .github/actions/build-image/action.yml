@@ -28,13 +28,6 @@ inputs:
     description: Build context
     required: false
     default: .
-  cache-scope:
-    description: >-
-      GHA layer-cache scope. Empty keeps the unscoped `type=gha` key rather
-      than emitting `scope=`, so an image that never had a scope keeps its
-      warm cache.
-    required: false
-    default: ''
   registry-username:
     description: GHCR login user, normally github.actor
     required: true
@@ -66,6 +59,9 @@ runs:
         fi
         repo_lower=$(echo "$REPOSITORY" | tr '[:upper:]' '[:lower:]')
         echo "image=ghcr.io/${repo_lower}/${IMAGE_PATH}:${CONTENT_HASH}" >> "$GITHUB_OUTPUT"
+        # The layer cache, one tag per image path that every PR and branch
+        # reads and overwrites. A hash tag is hex, so it can never be this one.
+        echo "cache=ghcr.io/${repo_lower}/${IMAGE_PATH}:buildcache" >> "$GITHUB_OUTPUT"
 
     - name: Log in to GHCR
       uses: docker/login-action@v4
@@ -101,5 +97,8 @@ runs:
         target: ${{ inputs.target }}
         push: true
         tags: ${{ steps.tag.outputs.image }}
-        cache-from: ${{ inputs.cache-scope && format('type=gha,scope={0}', inputs.cache-scope) || 'type=gha' }}
-        cache-to: ${{ inputs.cache-scope && format('type=gha,mode=max,scope={0}', inputs.cache-scope) || 'type=gha,mode=max' }}
+        # In the registry, not `type=gha`: the Actions cache keeps a PR's
+        # entries to that PR. `mode=max` caches the stages before the target
+        # too. claude-docs/ci.md, "Composite actions".
+        cache-from: type=registry,ref=${{ steps.tag.outputs.cache }}
+        cache-to: type=registry,ref=${{ steps.tag.outputs.cache }},mode=max

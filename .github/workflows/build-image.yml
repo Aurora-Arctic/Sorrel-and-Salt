@@ -25,7 +25,6 @@ jobs:
         uses: actions/checkout@v7
 
       # No `playwright install`: this image is Alpine and carries no browser.
-      # No cache-scope: this image has always used the unscoped `type=gha` key.
       - name: Build or reuse the testing image
         id: image
         uses: ./.github/actions/build-image

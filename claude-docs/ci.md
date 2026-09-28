@@ -70,10 +70,28 @@ edit at any call site; nothing passes it today.
   is written where it can be read; the action fails on an empty hash rather
   than pushing an untagged ref), and `secrets.GITHUB_TOKEN` (`secrets` is out
   of scope inside a composite, so the registry password is an input — the same
-  route `vercel-secrets-guard` takes). `cache-scope` is optional: set, it emits
-  `type=gha,scope=<name>`; empty, it emits the unscoped `type=gha` that
-  `build-image.yml` has always used, so no image's layer-cache key moved when
-  the three workflows were folded onto it.
+  route `vercel-secrets-guard` takes).
+  - **The layer cache is in the registry** (MB.99). buildx reads and writes
+    `ghcr.io/<repo>/<path>:buildcache` with `mode=max`, one tag per image
+    beside its hash tags, so a build on one PR warms the next PR's and every
+    branch reads the same copy. `mode=max` caches the stages before the
+    target too, which is how `testing` and `e2e` reuse `development`'s
+    `npm ci` layer. A hash tag is hex, so it can never collide with
+    `buildcache`.
+  - **Why not the Actions cache.** A `type=gha` entry written by a
+    `pull_request` run can be restored only by re-runs of that PR, so each
+    PR stored its own copy of the same blobs. At MB.99 the Actions cache held
+    94 entries and 10,219 MB against its 10 GB cap, 67 of them buildkit blobs
+    under PR merge refs, and GitHub was evicting by last access — which
+    meant the Next.js build cache and the npm cache, the entries that do
+    pay. The export was slow too: PR 510's build pushed its image in 43s and
+    then spent 32s writing the same layers into the Actions cache. A
+    registry export finds the blobs the push has just uploaded and writes a
+    manifest.
+  - **Cost.** GHCR storage is free for a public repo. Each build moves
+    `:buildcache` and leaves the previous cache manifest untagged, the same
+    way the hash tags already accumulate; pruning the packages' old versions
+    is a later task.
 - **`vercel-secrets-guard`** — the warn-and-skip check on
   `VERCEL_DEPLOY_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID`, at `id: guard`
   in `migrate.yml`'s `migrate` job and `deploy.yml`'s `deploy` and `teardown`
@@ -262,8 +280,7 @@ matrix's generated job name, not the leg's.
   `hashFiles('Docker/Dockerfile.node', 'package-lock.json')` as the hash, so
   the tag is content-addressed — `ghcr.io/${github.repository,,}/testing:<hash>`
   — and the build is skipped entirely when that tag already has a pushed
-  image. No `cache-scope`: its layer cache has always been the unscoped
-  `type=gha` key. **This image excludes Playwright
+  image. **This image excludes Playwright
   entirely** — it's Alpine/musl-based and Playwright's Chromium build has no
   official musl support — so every `checks.yml` leg and `vitest` consume it,
   but `playwright` does not; see `build-e2e-image.yml` below.
@@ -324,7 +341,7 @@ matrix's generated job name, not the leg's.
   reads the message back (MB.65). No mail variable is set on `checks.yml`'s
   `build` leg: `src/lib/mail.ts` reads them at send time, never at build.
 - **`build-e2e-image.yml`** (M1.14) — the same `build-image` action as
-  `build-image.yml`, under `cache-scope: e2e-image`, but for `Docker/Dockerfile.e2e`:
+  `build-image.yml`, but for `Docker/Dockerfile.e2e`:
   `FROM mcr.microsoft.com/playwright:v1.63.0-noble` (Microsoft's own image,
   which bundles a matching Node runtime, every OS dep Chromium needs, and
   the browser itself, all pinned together) — pinned to
@@ -581,45 +598,31 @@ itself gone now (MB.32) until M7.A.1 restores it.
   `hashFiles()` hash of `Docker/Dockerfile.postgres` /
   `Docker/postgres-init/**`. No `latest` tag (MB.17) — nothing in the repo
   ever read it: `docker-compose.yaml` builds the Dockerfile locally rather
-  than pulling any tag, and every CI caller pins the hash tag. Its only
-  direct triggers are `push` on `staging`/`main` and `workflow_dispatch`. The
-  same path list gates the `push` trigger, so "rebuild is skipped" is the
-  trigger itself, not a no-op job.
+  than pulling any tag, and every CI caller pins the hash tag. Its triggers
+  are `workflow_call`, from `pr-gate.yml` (below), and `workflow_dispatch`.
+  The action's `Check if image already exists` step skips the build whenever
+  the hash tag is already published (MB.18), so buildx runs only on a genuine
+  miss. `src/db/**` sat in the hash from M0.18 to M1.27, against the day
+  the schema would be baked in — and since it was never in the build
+  context (`Dockerfile.postgres` only `COPY`s `Docker/postgres-init`'s SQL),
+  every migration republished byte-identical layers under a new tag. M1.27
+  removed it: the template is populated at test-run setup, so a migration
+  no longer touches this workflow at all, and the image rebuilds only when
+  the Dockerfile or its init script changes.
 
-  The `push` trigger's real job is seeding the GHA layer cache
-  (`cache-scope: db-image`, which the action emits as
-  `cache-to: type=gha,mode=max,scope=db-image`) for branches that haven't
-  built this image yet. That cache is branch-isolated — a `pull_request` run
-  writes only to its own merge-ref scope, and reads fall back to the PR's
-  base branch and the repo's default branch — so only a push to `staging`
-  (every `feature/*` branch's base) or `main` (the default branch) writes an
-  entry another branch can restore. Measured: a fully cold build step is
-  ~25s, a warm one (including a brand-new feature branch's very first run)
-  ~6–8s. `src/db/**` sat in the hash and the path filter from M0.18 to
-  M1.27, against the day the schema would be baked in — and since it was
-  never in the build context (`Dockerfile.postgres` only `COPY`s
-  `Docker/postgres-init`'s SQL), every migration republished byte-identical
-  layers under a new tag. M1.27 removed it from both: the template is
-  populated at test-run setup, so a migration no longer touches this
-  workflow at all, and the image rebuilds only when the Dockerfile or its
-  init script changes.
+  **No `push` trigger** (MB.99). One on `staging`/`main`, path-filtered to
+  the image's inputs, existed to seed the layer cache: under `type=gha` a
+  `pull_request` run wrote only to its own merge-ref scope, so only a push
+  to `staging` or `main` wrote an entry another branch could restore (a
+  cold build step was ~25s, a warm one ~6–8s). The cache is in the registry
+  now, one copy every build writes and every branch reads (Composite
+  actions, above). The push had stopped building anyway: a PR that changes
+  the image builds it through `pr-gate.yml` first, so the push found the
+  tag already published and skipped.
 
-  Two separate mechanisms skip redundant work, one per trigger (MB.18). The
-  `push` path filter above is a workflow-level skip — it only gates this
-  workflow's own direct triggers, so it protects `push` but not
-  `workflow_call`, which bypasses it entirely and is the path every PR takes
-  (see below). For that path, the `build-image` action's
-  `Check if image already exists` step (`docker buildx imagetools inspect`,
-  the one `build-image.yml` and `build-e2e-image.yml` run too) skips
-  `Build and push image` whenever the hash tag is already published.
-  Between the path filter and the skip-if-exists check, buildx only actually
-  runs when the tag is a genuine miss — on either trigger.
-
-- **`build-db-image.yml` also carries a `workflow_call` trigger** (M1.14,
-  alongside its `push`/`workflow_dispatch` triggers — a `workflow_call`
-  invocation bypasses `push`'s path filter entirely, so it always runs when
-  called, regardless of whether the calling PR touched `src/db/**`), exposing
-  an `image` output. The caller is
+- **`build-db-image.yml`'s `workflow_call` trigger** (M1.14) runs whenever
+  it is called, whatever the calling PR touched, and exposes an `image`
+  output. The caller is
   `pr-gate.yml`'s own top-level `build-db-image` job —
   built once there and passed down as a `db-image` input to both
   `vitest.yml` and `playwright.yml`, each keying their own
