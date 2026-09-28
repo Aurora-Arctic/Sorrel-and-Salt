@@ -2,7 +2,7 @@
 
 One file per story group, one `describe` per story, named `Story <id>: …`
 (DESIGN.md §11 — "Acceptance tests — story traceability"). `make test-stories`
-runs only this directory and prints a checklist of the 50 v1 stories with
+runs only this directory and prints a checklist of the 51 v1 stories with
 each one's status; a story with no `describe` naming it reads "no test yet".
 
 Files arrive with each wave's scaffold task, deliberately red:

@@ -14,7 +14,7 @@ const serverOnlyStub = createRequire(import.meta.url).resolve(
 // The reporter is named by path, not imported: Vitest loads a path through
 // its module runner, where an import here runs at config-load time. `default`
 // stays first so a failing story still prints its assertion.
-// `passWithNoTests` because 50 stories with no test is a true report.
+// `passWithNoTests` because 51 stories with no test is a true report.
 export default defineConfig({
   // As vitest.config.mts: tests reach src/ by the `@/*` alias, and a service's
   // `server-only` marker resolves to Next's empty stub.

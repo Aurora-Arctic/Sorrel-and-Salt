@@ -3267,7 +3267,7 @@ _Acceptance criteria:_
 
 _Story:_ As a product owner, I want every one of the 51 stories passing so that done is measured against the specification.
 
-Run `make test-stories` and confirm all 50 pass. Any deferral is recorded explicitly rather than left silently failing.
+Run `make test-stories` and confirm all 51 pass. Any deferral is recorded explicitly rather than left silently failing.
 
 _Acceptance criteria:_
 
