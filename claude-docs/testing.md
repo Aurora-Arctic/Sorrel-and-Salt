@@ -404,7 +404,7 @@ the v1 user stories, one line each:
 [ ] Story 3: Create a workspace once I hold creation rights, … — skipped
 [ ] Story 4: Generate an invitation link with a chosen role … — no test yet
 
-1 of 50 stories passing · 1 failing · 1 skipped · 47 without a test
+1 of 51 stories passing · 1 failing · 1 skipped · 48 without a test
 ```
 
 That is DESIGN.md §11's "live progress report against §10 rather than a
@@ -420,7 +420,7 @@ make it hold:
   stories run carries no `--coverage` at all.
 - **The story list is read out of DESIGN.md §10, not copied.**
   `tests/support/stories.ts` parses the numbered list between
-  "## 10. User stories" and the next section — 50 today, 1–34 and 47–62 — so
+  "## 10. User stories" and the next section — 51 today, 1–34 and 47–63 — so
   the spec is the one place a story is written down and a story added to §10
   joins the checklist without a harness edit. `stories.test.ts` pins the
   rules rather than the list: ids unique and ascending, none in 35–46, and the
@@ -440,12 +440,25 @@ make it hold:
   non-v1 number, or a top-level `it`. A story with a test that names it
   wrongly would otherwise show as "no test yet" while that test failed.
 
+**A scaffold names only what typechecks.** A scaffold lands before the thing
+it tests exists, and `npm run typecheck` runs over `tests/` too, so an import
+of a page or a service that is not there yet would fail `tsc` rather than the
+story. `01-accounts.test.ts` (M2.1) therefore reads an unbuilt page's source
+with `existsSync` and `readFileSync` instead of rendering it, and
+`07-admin.test.ts` (M5.1) looks each unbuilt service up on its module's
+surface at runtime — `await import('@/modules/ingredients')` cast to an
+interface stating the signature the story expects, each name checked with
+`toBeTypeOf('function')` so the failure names the task it waits on. The task
+that builds the page or the service replaces the workaround with the import
+and drops the stated signature; the story's `describe` and its assertions
+stay.
+
 The suite runs on the same harness as `tests/db/` — node, one seeded
 `sorrel_test_<slot>` clone per worker, re-cloned before every file — because
 an acceptance test calls a service against the seeded world. A file that
 needs a DOM (`04-modals.test.tsx`, M9.1) declares
 `// @vitest-environment jsdom` in its own docblock. `passWithNoTests` is on:
-the directory holds only its README until M2.1, and 50 stories with no test
+the directory holds only its README until M2.1, and 51 stories with no test
 is a true report rather than an error.
 
 `tests/support/story-reporter.ts` is the Vitest reporter behind it, listed
