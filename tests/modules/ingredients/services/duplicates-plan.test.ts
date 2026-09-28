@@ -62,7 +62,8 @@ describe('the fuzzy duplicate query', () => {
 
       expect(setting).toBeGreaterThanOrEqual(0);
       expect(statements[setting].query).toMatch(/, true\)/);
-      expect(statements[setting].params).toEqual(['0.4']);
+      // The word-similarity threshold rides the same statement; this query has no `<%`.
+      expect(statements[setting].params).toEqual(['0.4', '0.6']);
       expect(statements.indexOf(match(statements))).toBeGreaterThan(setting);
     });
 
