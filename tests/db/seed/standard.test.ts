@@ -3,6 +3,7 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
+import { ingredientSlug } from '@/lib/slugify';
 import { CATEGORIES } from '@/db/seed/categories';
 import { PLANETS, ZODIAC_SIGNS } from '@/db/seed/astrology';
 import { FORMS } from '@/db/seed/forms';
@@ -50,6 +51,7 @@ interface IngredientRow {
   form: string | null;
   planet: string | null;
   canonical_key: string;
+  slug: string;
   created_by: string;
 }
 
@@ -310,6 +312,28 @@ describe('the compendium', () => {
 
     // Five rows under one label is legal because each has its own generated key.
     expect(new Set(catsClaws.map((e) => e.canonical_key)).size).toBe(5);
+  });
+
+  // MB.80's public address, derived and never written down (CLAUDE.md's slug
+  // rule): the label, the form and the formal name, and no two alike among the
+  // live entries.
+  it('gives every entry the slug of its label, form and formal name, no two alike', async () => {
+    await seedStandard(db);
+
+    const entries = await compendium();
+    expect(entries.length).toBe(COMPENDIUM_INGREDIENTS.length);
+    for (const entry of entries) {
+      expect(entry.slug).toBe(ingredientSlug(entry.name, entry.form, entry.canonical_name));
+    }
+    expect(new Set(entries.map((e) => e.slug)).size).toBe(entries.length);
+
+    // The pair that put the formal name in the slug: one label, one form, two plants.
+    const barks = entries.filter((e) => e.name === "Cat's Claw" && e.form === 'bark');
+    expect(barks.map((e) => e.canonical_name).sort()).toEqual([
+      'Uncaria guianensis',
+      'Uncaria tomentosa',
+    ]);
+    expect(new Set(barks.map((e) => e.slug)).size).toBe(2);
   });
 
   it('puts an in-use form outside the curated vocabulary, and most inside it', async () => {

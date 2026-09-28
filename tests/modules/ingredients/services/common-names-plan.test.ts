@@ -96,8 +96,8 @@ describe('the common-name suggestion query', () => {
     // to the probe at thirty thousand entries and not at fifty.
     beforeEach(async () => {
       await sql`
-        insert into ingredients (name, canonical_name, nomenclature, created_by, updated_by)
-        select md5('name' || g), md5('formal' || g), 'botanical', ${A.id}, ${A.id}
+        insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
+        select md5('name' || g), md5('name' || g), md5('formal' || g), 'botanical', ${A.id}, ${A.id}
         from generate_series(1, 50000) g
       `;
       await sql`

@@ -6,6 +6,7 @@ import { spells } from '../../modules/grimoire/schema/spells';
 import { spellCategories } from '../../modules/grimoire/schema/spell-categories';
 import { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
 import { categoryIdByName } from './categories';
+import { ingredientSlug } from '../../lib/slugify';
 import {
   COMPENDIUM_INGREDIENTS,
   WORKSPACE_W_ID,
@@ -240,7 +241,11 @@ async function insertMissingWorkspaceIngredients(tx: SeedTransaction): Promise<v
           .where(eq(ingredients.workspaceId, WORKSPACE_W_ID))
       ).map(identityOf),
     keyOf: identityOf,
-    toRow: (entry) => ({ ...entry, workspaceId: WORKSPACE_W_ID }),
+    toRow: (entry) => ({
+      ...entry,
+      workspaceId: WORKSPACE_W_ID,
+      slug: ingredientSlug(entry.name, entry.form, entry.canonicalName),
+    }),
   });
 }
 

@@ -1,4 +1,5 @@
 import type { ingredients } from '@/modules/ingredients/schema/ingredients';
+import { ingredientSlug } from '@/lib/slugify';
 import { toColumns } from './columns';
 import { type Overrides, mergeFixture, stated } from './merge';
 
@@ -111,11 +112,15 @@ export function makeIngredient(overrides: Overrides<IngredientFixture> = {}): In
 /**
  * The fixture as an insert into `ingredients`, by column name. The child
  * collections are destructured off by name rather than filtered by shape:
- * `deities` and `substitutes` are `text[]` columns too. No audit stamps
- * (rule 3).
+ * `deities` and `substitutes` are `text[]` columns too. The slug is derived
+ * from the label, the form and the formal name, as the seed derives it, never
+ * stated. No audit stamps (rule 3).
  */
 export function ingredientColumns(fixture: IngredientFixture): Record<string, unknown> {
   const { folkNames: _folkNames, categories: _categories, ...row } = fixture;
 
-  return toColumns(row);
+  return {
+    ...toColumns(row),
+    slug: ingredientSlug(fixture.name, fixture.form, fixture.canonicalName),
+  };
 }

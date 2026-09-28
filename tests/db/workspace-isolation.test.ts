@@ -13,6 +13,7 @@ import { assertMembership } from '@/modules/coven';
 import { setSpellVisibility } from '@/modules/grimoire';
 import { A, D, E, asUser } from '../support/as-user';
 import { makeIngredient, makeSpell } from '../support/fixtures';
+import { ingredientSlug } from '@/lib/slugify';
 
 // Story 19 — an outsider and a site admin both refused a coven's ingredients
 // and grimoire, by direct id and on every write, with a refusal that hands
@@ -65,7 +66,10 @@ async function castIngredient(): Promise<string> {
   } = makeIngredient({ workspaceId: WORKSPACE_W_ID });
 
   return withAudit(session, async (write) => {
-    const [ingredient] = await write.insertInWorkspace(membership, ingredients, row);
+    const [ingredient] = await write.insertInWorkspace(membership, ingredients, {
+      ...row,
+      slug: ingredientSlug(row.name, row.form, row.canonicalName),
+    });
     return ingredient.id;
   });
 }

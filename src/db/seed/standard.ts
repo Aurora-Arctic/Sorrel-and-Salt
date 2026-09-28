@@ -7,7 +7,7 @@ import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
 import { applyAudit } from '../audit';
-import { slugify } from '../../lib/slugify';
+import { ingredientSlug, slugify } from '../../lib/slugify';
 import { categoryIdByName, seedCategoryVocabulary } from './categories';
 import { seedAstrologyVocabularies } from './astrology';
 import { seedFormVocabulary } from './forms';
@@ -516,7 +516,11 @@ async function insertMissingIngredients(tx: SeedTransaction): Promise<Map<string
       .insert(ingredients)
       .values(
         missing.map(({ folkNames: _folkNames, categories: _categories, ...entry }) =>
-          applyAudit('insert', entry, BOOTSTRAP_SESSION),
+          applyAudit(
+            'insert',
+            { ...entry, slug: ingredientSlug(entry.name, entry.form, entry.canonicalName) },
+            BOOTSTRAP_SESSION,
+          ),
         ),
       )
       .returning({

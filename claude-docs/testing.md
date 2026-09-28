@@ -360,7 +360,7 @@ run as a test.
   filtered out. `AUDIT_COLUMNS`, `STAMP_COLUMNS` and `DELETE_COLUMNS` are
   **literal string lists, deliberately not derived from `src/db/audit.ts`**:
   a test comparing a table against `Object.keys(auditColumns)` passes for any
-  value of `auditColumns`, an empty one included. `AUDITED_TABLES` (seventeen
+  value of `auditColumns`, an empty one included. `AUDITED_TABLES` (eighteen
   names, the three hard-deleted join tables among them) and
   `UNAUDITED_TABLES` (Better Auth's `accounts`, `sessions`, `verifications`)
   moved here from `updated-at-trigger.test.ts` so the trigger sweep and the
@@ -654,7 +654,10 @@ The db tests talk to Postgres through `postgres` directly, so they insert by
 column name rather than by field. `ingredientColumns`, `spellColumns`,
 `spellLayerColumns` and `workspaceColumns` translate, dropping what belongs to
 another table — an ingredient's folk names and categories, a spell's
-categories and layers, a workspace's members.
+categories and layers, a workspace's members. `ingredientColumns` also adds
+the ingredient's `slug`, derived from its label, form and formal name through
+`ingredientSlug` exactly as the seed derives it, so a raw insert satisfies the
+column's `NOT NULL` without a test writing a slug down beside a name.
 
 They carry **no audit columns**: the stamps come from the session and never
 from a fixture (CLAUDE.md rule 3), so a raw-SQL test spreads its own author

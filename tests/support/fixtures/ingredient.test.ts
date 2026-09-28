@@ -149,6 +149,20 @@ describe('ingredientColumns', () => {
     expect(columns).not.toHaveProperty('canonical_key');
   });
 
+  // MB.80's address is derived here as the seed derives it, so no fixture can
+  // carry a slug that disagrees with its label, form and formal name.
+  it('derives the slug from the label, the form and the formal name', () => {
+    expect(ingredientColumns(makeIngredient({ name: "Cat's Claw", form: 'bark' })).slug).toBe(
+      'cats-claw-bark-fixtura-testalis',
+    );
+    expect(ingredientColumns(makeIngredient({ form: null })).slug).toBe(
+      'testwort-fixtura-testalis',
+    );
+    expect(ingredientColumns(makeIngredient({ nomenclature: 'none', form: 'earth' })).slug).toBe(
+      'testwort-earth',
+    );
+  });
+
   // Audit stamps come from the session (rule 3).
   it('carries no audit columns', () => {
     for (const column of ['created_by', 'created_at', 'updated_by', 'updated_at']) {

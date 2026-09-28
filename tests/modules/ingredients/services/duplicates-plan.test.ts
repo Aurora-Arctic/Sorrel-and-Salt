@@ -88,8 +88,8 @@ describe('the fuzzy duplicate query', () => {
     // walk rather than a foregone one.
     beforeEach(async () => {
       await sql`
-        insert into ingredients (name, canonical_name, nomenclature, created_by, updated_by)
-        select md5('name' || g), md5('formal' || g), 'botanical', ${A.id}, ${A.id}
+        insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
+        select md5('name' || g), md5('name' || g), md5('formal' || g), 'botanical', ${A.id}, ${A.id}
         from generate_series(1, 10000) g
       `;
       await sql`

@@ -50,6 +50,9 @@ describe('ingredients schema', () => {
         'color',
         'safety_notes',
         'substitutes',
+        'slug',
+        'pending_slug',
+        'pending_slug_effective_at',
         ...AUDIT_COLUMNS,
       ].sort(),
     );
@@ -96,6 +99,19 @@ describe('ingredients schema', () => {
   it('stores deities and substitutes as array columns', () => {
     expect(byName.deities.getSQLType()).toBe('text[]');
     expect(byName.substitutes.getSQLType()).toBe('text[]');
+  });
+
+  // MB.80: the public address, and the claim a relabel leaves behind while its
+  // slug is still reserved. The columns are MB.81's, the rule MB.82's.
+  it('requires slug, and leaves the pending claim and its date optional', () => {
+    expect(byName.slug.getSQLType()).toBe('text');
+    expect(byName.slug.notNull).toBe(true);
+    expect(byName.slug.hasDefault).toBe(false);
+    expect(byName.pending_slug.getSQLType()).toBe('text');
+    expect(byName.pending_slug.notNull).toBe(false);
+    // `timestamp`, not `timestamptz`, like every timestamp here; it holds UTC.
+    expect(byName.pending_slug_effective_at.getSQLType()).toBe('timestamp');
+    expect(byName.pending_slug_effective_at.notNull).toBe(false);
   });
 
   // Drizzle omits a generated column from $inferInsert, so TypeScript refuses
@@ -157,13 +173,25 @@ beforeEach(async () => {
 describe('ingredients table', () => {
   it('rejects an insert that omits nomenclature, since the column has no default', async () => {
     const error = await failureOf(sql`
-      insert into ingredients (name, canonical_name, created_by, updated_by)
-      values ('Mugwort', 'Artemisia vulgaris', ${AUTHOR}, ${AUTHOR})
+      insert into ingredients (name, canonical_name, slug, created_by, updated_by)
+      values ('Mugwort', 'Artemisia vulgaris', 'mugwort', ${AUTHOR}, ${AUTHOR})
     `);
 
     // 23502 is not_null_violation: the column was reached and found no default.
     expect(error.code).toBe('23502');
     expect(error.column_name).toBe('nomenclature');
+  });
+
+  // Derived by whoever writes the row, never defaulted by the table: a default
+  // would be a second slug rule, in SQL.
+  it('rejects an insert that omits slug, since the column has no default', async () => {
+    const error = await failureOf(sql`
+      insert into ingredients (name, nomenclature, canonical_name, created_by, updated_by)
+      values ('Mugwort', 'botanical', 'Artemisia vulgaris', ${AUTHOR}, ${AUTHOR})
+    `);
+
+    expect(error.code).toBe('23502');
+    expect(error.column_name).toBe('slug');
   });
 
   it('accepts a row in each tier: compendium (workspace_id null) and workspace-local', async () => {
@@ -248,8 +276,8 @@ describe('ingredients table', () => {
   describe('canonical_key', () => {
     it('is refused by Postgres on insert, not merely absent from the type', async () => {
       const error = await failureOf(sql`
-        insert into ingredients (name, nomenclature, canonical_name, canonical_key, created_by, updated_by)
-        values ('Mugwort', 'botanical', 'Artemisia vulgaris', 'forged', ${AUTHOR}, ${AUTHOR})
+        insert into ingredients (name, nomenclature, canonical_name, slug, canonical_key, created_by, updated_by)
+        values ('Mugwort', 'botanical', 'Artemisia vulgaris', 'mugwort', 'forged', ${AUTHOR}, ${AUTHOR})
       `);
 
       // 428C9 is ERRCODE_GENERATED_ALWAYS — the column refusing the write itself.

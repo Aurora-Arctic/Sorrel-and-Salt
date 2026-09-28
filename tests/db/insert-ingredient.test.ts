@@ -122,8 +122,8 @@ describe('insertIngredient', () => {
     // Why the trigger could have recorded the author anyway: a value left at
     // session level. A plain insert on the same client records none.
     const [plain] = await sql`
-      insert into ingredients (name, nomenclature, created_by, updated_by)
-      values ('Plainwort', 'none', ${A.id}, ${A.id}) returning id`;
+      insert into ingredients (name, slug, nomenclature, created_by, updated_by)
+      values ('Plainwort', 'plainwort', 'none', ${A.id}, ${A.id}) returning id`;
     const [unpublished] = await sql`
       select acting_user from insert_ingredient_probe where ingredient_id = ${plain.id}`;
     expect(unpublished.acting_user ?? '').toBe('');
