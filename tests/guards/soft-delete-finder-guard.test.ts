@@ -37,6 +37,7 @@ const EXPORTED_FUNCTIONS = [
   'findOneSpell',
   'findPage',
   'findPageInWorkspace',
+  'findSimilarIngredients',
   'findUserByEmail',
   'findWorkspaceRole',
   'withAudit',
@@ -46,7 +47,12 @@ const EXPORTED_FUNCTIONS = [
 const INTERNAL = ['selectFrom', 'writerFor', 'scopedTo', 'notSoftDeleted', 'readableSpells'];
 
 /** Rule 5's half: a finder over a table carrying `workspace_id` scopes by the proof. */
-const SCOPED_FINDERS = ['findManyInWorkspace', 'findOneInWorkspace', 'findPageInWorkspace'];
+const SCOPED_FINDERS = [
+  'findManyInWorkspace',
+  'findOneInWorkspace',
+  'findPageInWorkspace',
+  'findSimilarIngredients',
+];
 
 /**
  * M10.3's half: a finder reaching a spell, or what a spell is made of, narrows

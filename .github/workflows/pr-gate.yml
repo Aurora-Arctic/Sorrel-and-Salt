@@ -105,10 +105,13 @@ jobs:
             # `tests/**`, `.ladle/config.mjs` and the configs are not under
             # `src/**`, and a test-only PR is exactly what this job runs.
             # tests/e2e/ is Playwright's and nothing Vitest runs imports it.
+            # The db image's inputs too, so a Postgres bump is tested on its own PR.
             vitest:
               - *shared
               - '.github/workflows/vitest.yml'
               - '.github/workflows/build-db-image.yml'
+              - 'Docker/Dockerfile.postgres'
+              - 'Docker/postgres-init/**'
               - '.github/scripts/summarize-vitest.mjs'
               - '.github/scripts/summarize-stories.mjs'
               - '.github/scripts/lib/**'
@@ -128,6 +131,8 @@ jobs:
               - '.github/workflows/playwright.yml'
               - '.github/workflows/build-e2e-image.yml'
               - '.github/workflows/build-db-image.yml'
+              - 'Docker/Dockerfile.postgres'
+              - 'Docker/postgres-init/**'
               - '.github/scripts/summarize-playwright.mjs'
               - '.github/scripts/lib/**'
               - 'Docker/Dockerfile.e2e'
