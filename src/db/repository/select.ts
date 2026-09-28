@@ -19,6 +19,26 @@ export interface Keyset {
   request: PageRequest;
 }
 
+/**
+ * DESIGN.md §5's fuzzy-match threshold. pg_trgm's `%` reads it from
+ * `pg_trgm.similarity_threshold`, whose default is 0.3, so a similarity read
+ * sets it rather than inheriting the default.
+ */
+const SIMILARITY_THRESHOLD = 0.4;
+
+/**
+ * How `selectFrom` runs a trigram match: `%` in its `where` means
+ * `SIMILARITY_THRESHOLD`, and the best `limit` rows come back in `orderBy`'s
+ * order. Never a `similarity(a, b) > n` comparison in the `where`: no trigram
+ * index can answer a function call (claude-docs/db.md, "Fuzzy matching").
+ */
+export interface Similarity {
+  orderBy: SQL[];
+  limit: number;
+}
+
+type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 // The one place a read query is built. Exported for the finders beside it
 // and nowhere else: the index leaves it out and a deep import is banned, so no
 // public handle skips the filter.
@@ -31,7 +51,17 @@ export function selectFrom<TTable extends PgTable>(
   where: SQL | undefined,
   keyset: Keyset,
 ): Promise<PageEntry<TTable['$inferSelect']>[]>;
-export async function selectFrom(table: PgTable, where: SQL | undefined, keyset?: Keyset) {
+export function selectFrom<TTable extends PgTable>(
+  table: TTable,
+  where: SQL | undefined,
+  similarity: Similarity,
+): Promise<TTable['$inferSelect'][]>;
+export async function selectFrom(
+  table: PgTable,
+  where: SQL | undefined,
+  order?: Keyset | Similarity,
+) {
+  const keyset = order && 'sort' in order ? order : undefined;
   // The key is read as Postgres prints it: a `timestamptz` read into a Date
   // loses its microseconds, and a cursor built from it would replay rows.
   const selection = keyset && {
@@ -40,11 +70,27 @@ export async function selectFrom(table: PgTable, where: SQL | undefined, keyset?
   };
   // Same cast as `write.ts`'s `writerFor`: `.from()` is typed against the table's own
   // generic parameter.
-  const query = db
-    .select(selection as never)
-    .from(table as never)
-    .where(where)
-    .$dynamic();
+  const build = (executor: Executor) =>
+    executor
+      .select(selection as never)
+      .from(table as never)
+      .where(where)
+      .$dynamic();
+
+  if (order && 'orderBy' in order) {
+    // `set_config(…, true)` is `SET LOCAL` with a bind parameter: it ends
+    // with the transaction, so it cannot ride a pooled connection onward.
+    return db.transaction(async (tx) => {
+      await tx.execute(
+        sql`select set_config('pg_trgm.similarity_threshold', ${String(SIMILARITY_THRESHOLD)}, true)`,
+      );
+      return build(tx)
+        .orderBy(...order.orderBy)
+        .limit(order.limit);
+    });
+  }
+
+  const query = build(db);
   if (!keyset) return query;
 
   const direction = keyset.request.inverted ? desc : asc;
