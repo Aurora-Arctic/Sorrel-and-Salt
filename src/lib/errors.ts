@@ -40,7 +40,7 @@ export interface ValidationIssue {
 /**
  * The input broke a rule, and each issue says which field and why. It carries
  * issues rather than producing them, so this file depends on no schema
- * library; the Zod adapter lives beside the schemas (M4.5).
+ * library; the Zod adapter is src/lib/validation.ts.
  */
 export class ValidationError extends Error {
   readonly issues: readonly ValidationIssue[];

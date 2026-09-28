@@ -820,11 +820,11 @@ with an empty list, a null, or a success that did nothing.
 A `ValidationError`'s `issues` are `{ path, message }[]`. `path` names the
 input field in the shape of the operation's input, such as `['canonicalName']`
 or `['folkNames', 2]`, and is empty for a rule that belongs to no one field.
-The type carries issues but does not produce them, so `src/lib/` depends on no
-schema library, and a seed or a script can throw one. The adapter that turns a
-failed Zod parse into issues lives beside the schemas (M4.5). A refusal that is
-not about a value, such as the last-owner guard, stays a `Forbidden` with an
-explaining message.
+The type carries issues but does not produce them, so `errors.ts` depends on
+no schema library, and a seed or a script can throw one. The adapter that turns
+a failed Zod parse into issues is `src/lib/validation.ts` (M4.5). A refusal
+that is not about a value, such as the last-owner guard, stays a `Forbidden`
+with an explaining message.
 
 They are types rather than message strings so a test can assert on the type:
 wording gets edited, and a test pinned to a message keeps passing against a

@@ -745,8 +745,11 @@ test: `0.000` and `NULL` are asserted to be distinguishable on the row.
   0.1 kg has to come back as 0.1, and M9.5's round-trip criterion is unmeetable
   on a type that cannot represent the input. Three decimal places is a
   milligram expressed in grams — the finest distinction any unit pair in the
-  vocabulary can make — and §5 names no figure, so the reasoning sits at the
-  column.
+  vocabulary can make — and §5 names no figure, so the reasoning sits here.
+  Both columns take precision and scale from `schema/quantities.ts`, which
+  also gives `StockInput` its ceiling of 999,999,999.999, so an amount the
+  column cannot hold is a field error rather than a raw overflow
+  ([`validation.md`](validation.md)).
 - `lowStockThreshold` carries **no database default**. M9.8 writes a
   dimension-appropriate value onto the row at creation (3 for count, 10 g for
   weight, 15 ml for volume, converted into the row's unit) rather than applying

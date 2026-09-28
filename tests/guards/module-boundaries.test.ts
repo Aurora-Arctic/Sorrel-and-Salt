@@ -5,12 +5,12 @@ import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
 // The module boundary, whole: a module under `src/modules/` is reached only
-// through its `index.ts` or its `schema/` files, a module imports only the
-// modules its line in `ALLOWED` names, and no module reaches up into the app
-// (claude-docs/modules.md, "The boundary"). `.oxlintrc.json` bans the
-// `@/modules/<name>/services` spelling, and that is all a path glob can see: a
-// relative `../../coven/services/membership` leaves a module by a path no
-// glob names, and whether the edge it makes is one the graph allows is not a
+// through its `index.ts`, its `schema/` or its `validation/` files, a module
+// imports only the modules its line in `ALLOWED` names, and no module reaches
+// up into the app (claude-docs/modules.md, "The boundary"). `.oxlintrc.json`
+// bans the `@/modules/<name>/services` spelling, and that is all a path glob
+// can see: a relative `../../coven/services/membership` leaves a module by a
+// path no glob names, and whether the edge it makes is one the graph allows is not a
 // question about the specifier at all. So this guard resolves every import in
 // `src/` to a file and checks the edge — the same scan as slug-rule.test.ts,
 // over the index plus untracked files, so a violation fails in the diff that
@@ -114,7 +114,8 @@ function resolve(file: string, specifier: string): string | null {
 }
 
 const moduleOf = (path: string) => /^src\/modules\/([^/]+)(?:\/|$)/.exec(path)?.[1] ?? null;
-const isPublic = (path: string) => /^src\/modules\/[^/]+\/(?:index|schema\/[^/]+)$/.test(path);
+const isPublic = (path: string) =>
+  /^src\/modules\/[^/]+\/(?:index|(?:schema|validation)\/[^/]+)$/.test(path);
 
 interface Edge {
   from: string;
@@ -180,7 +181,7 @@ describe('the module boundary (claude-docs/modules.md)', () => {
   // R1, from outside: infrastructure and the app reach a module through its
   // surface — `src/db/audit.ts` and the repository import a table, a page or
   // a resolver imports a service off the index.
-  it('reaches a module only through its index or its schema files, from outside', () => {
+  it('reaches a module only through its index, schema or validation files, from outside', () => {
     const violations = EDGES.filter(
       ({ from, to }) => moduleOf(from) === null && moduleOf(to) !== null && !isPublic(to),
     );

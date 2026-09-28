@@ -63,7 +63,8 @@
     "postgres": "^3.4.9",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "slugify": "^1.6.9"
+    "slugify": "^1.6.9",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
