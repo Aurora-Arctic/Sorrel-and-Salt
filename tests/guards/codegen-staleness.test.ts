@@ -1,6 +1,3 @@
-// @vitest-environment node
-// Node, not the unit project's jsdom: codegen's loaders read the filesystem.
-
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -78,11 +75,10 @@ describe('the staleness comparison', () => {
       `${OUTPUT_DIR}/leftover.ts`,
     ]);
   });
-});
 
-describe('the committed client types', () => {
-  it('match a fresh run of `npm run codegen`', async () => {
-    const outputs = await run();
+  // The same run the fixture was copied from, so the suite generates once for
+  // both: a `generate()` over src/ is the slowest thing in this file.
+  it('finds the committed client types match a fresh run of `npm run codegen`', () => {
     expect(staleFiles(outputs, fromRoot(), OUTPUT_DIR)).toEqual([]);
   });
 });

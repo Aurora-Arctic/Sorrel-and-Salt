@@ -55,7 +55,7 @@ underline. Tokens used: `$accent`, `$text-on-color`.
 what the site is; the invite-only sentence and how to get in; the signed-out
 link to `/sign-in` with no "Continue"; the signed-in link to `/coven` with no
 sign-in offered anywhere on the page; and that the introduction is the same
-signed in. Role and label queries only. Runs in the `unit` (jsdom) Vitest
+signed in. Role and label queries only. Runs in the `dom` (jsdom) Vitest
 project — `npm run test:coverage`.
 
 `tests/e2e/smoke.spec.ts` renders `/` against the built server signed out: no

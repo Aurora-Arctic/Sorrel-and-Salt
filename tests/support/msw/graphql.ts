@@ -10,7 +10,7 @@ import { Forbidden, NotFound, ValidationError, type ValidationIssue } from '@/li
 import { server } from './server';
 
 // Scoped to /api/graphql. No base handlers: an operation nothing has mocked
-// falls through to vitest.setup.ts's `onUnhandledRequest: 'error'`.
+// falls through to setup-msw.ts's `onUnhandledRequest: 'error'`.
 export const graphqlLink = graphql.link('/api/graphql');
 
 export function mockGraphQLQuery<

@@ -1,7 +1,3 @@
-// @vitest-environment node
-// Node, not the unit project's jsdom: .ladle/config.mjs resolves its Vite config
-// from import.meta.url, which jsdom reports as an http: URL.
-
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';

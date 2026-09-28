@@ -175,7 +175,7 @@ recoverable error. That last test fails with the client read as the server
 snapshot, since jsdom has a `document` even under `renderToString`. Role and
 label queries only.
 
-Runs in the `unit` (jsdom) Vitest project — `npm run test:coverage`. Real
+Runs in the `dom` (jsdom) Vitest project — `npm run test:coverage`. Real
 keyboard reachability and the axe scans are asserted in Playwright, per
 CLAUDE.md's "Accessibility is asserted in Playwright", once per provider
 state — each state has a surface the other lacks, so neither scan stands in

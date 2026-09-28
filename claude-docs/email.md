@@ -50,7 +50,8 @@ await send(await verifyEmailMessage({ to, url, providers }));
   a sibling `<name>.stories.tsx`, which `tests/guards/workshop-guards.test.ts`
   requires. The frame every mail shares is `src/emails/parts/layout.tsx`
   (`EmailLayout`, `Paragraph`, `Action`). Not in `src/components/`: a mail is
-  not a page component. Tests mirror the path, in the `unit` project.
+  not a page component. Tests mirror the path: `theme.test.ts` in the `unit`
+  project, `verify-email.test.tsx` in `dom`, since it is a `.tsx` (MB.97).
 - **Plain words.** A mail is read by anyone who signed in, often on a phone:
   short sentences, everyday vocabulary, and one thing to do.
 
