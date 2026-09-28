@@ -359,7 +359,7 @@ configuration parameter "channel_binding"`, which `drizzle-kit migrate`
    session's doesn't).
 8. **M0.26's Vercel dashboard settings** — already done (deploy previews
    off, `staging` aliased to `staging.sorrelandsalt.com`; M0.26 is
-   Completed in Asana). Recorded here for completeness: Project → Settings
+   closed on the board). Recorded here for completeness: Project → Settings
    → Git (deploy previews) and → Domains (the staging alias). Nothing in
    this repo drives that — `vercel.json`'s `deploymentEnabled: false`
    already stops the Git integration from deploying anything itself
