@@ -7,11 +7,13 @@
 // file sets the two statuses between them and never adds an item
 // (claude-docs/task-tracking.md, "Status").
 //
-// usage: node scripts/task-board.mjs <find|status|estimate|comment|list> …
+// usage: node scripts/task-board.mjs <find|status|estimate|comment|list|reorder> …
 
 import { execFileSync } from 'node:child_process';
 import { realpathSync } from 'node:fs';
+import { setTimeout as sleep } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
+import { ID, expandIds, loadTasksMd } from './tasks-md.mjs';
 
 export const REPO = 'Aurora-Arctic/Sorrel-and-Salt';
 export const OWNER = 'Aurora-Arctic';
@@ -222,6 +224,282 @@ export function setEstimate(issue, hours, { item } = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// Order — the Project's manual item order is execution order: TASKS.md's wave
+// table, wave by wave. `reorder` reads the order with the leanest requests
+// there are, plans the fewest moves that restore it, and makes them one paced
+// mutation at a time (claude-docs/task-tracking.md, "Order").
+
+/** `M2.6` off `M2.6 — Title`, or null for a title that does not open with an id. */
+export const idOf = (title) => new RegExp(String.raw`^(${ID}) — `).exec(title)?.[1] ?? null;
+
+/** A REST milestone: the open count is what decides that a wave is done. */
+export const shapeMilestone = (milestone) => ({
+  number: milestone.number,
+  title: milestone.title,
+  state: milestone.state,
+  openIssues: milestone.open_issues,
+  closedIssues: milestone.closed_issues,
+  description: milestone.description ?? '',
+});
+
+/** Every milestone, open or closed. One REST page. */
+export function listMilestones() {
+  const endpoint = `repos/${REPO}/milestones?state=all&per_page=100`;
+  return ghJson(['api', '--paginate', '--slurp', endpoint]).flat().map(shapeMilestone);
+}
+
+// Position is observable only as listing order, so this is the one listing
+// the script makes. It asks each item for its id and its issue number and
+// nests no connection, which the cost formula prices at a page's minimum;
+// the listing that tripped the secondary limit (`gh project item-list`)
+// asked every item for every field value.
+const ITEMS_QUERY = `
+  query ($owner: String!, $number: Int!, $endCursor: String) {
+    organization(login: $owner) {
+      projectV2(number: $number) {
+        id
+        items(first: 100, after: $endCursor) {
+          pageInfo { hasNextPage endCursor }
+          nodes {
+            id
+            content { ... on Issue { number } }
+          }
+        }
+      }
+    }
+  }`;
+
+/** The pages of `ITEMS_QUERY` flattened in position order; a draft or a pull request has no number. */
+export function shapeItems(pages) {
+  const projects = pages.map((page) => page.data.organization.projectV2);
+  return {
+    projectId: projects[0]?.id ?? null,
+    items: projects.flatMap((project) =>
+      project.items.nodes.map((node) => ({ id: node.id, number: node.content?.number ?? null })),
+    ),
+  };
+}
+
+export function listItems(number = PROJECT) {
+  const args = ['-f', `query=${ITEMS_QUERY}`, '-f', `owner=${OWNER}`, '-F', `number=${number}`];
+  return shapeItems(ghJson(['api', 'graphql', '--paginate', '--slurp', ...args]));
+}
+
+/** Indices of one longest strictly increasing subsequence (patience sorting). */
+function longestIncreasing(values) {
+  const tails = [];
+  const tailIndex = [];
+  const previous = Array.from({ length: values.length }, () => -1);
+  for (let i = 0; i < values.length; i++) {
+    let low = 0;
+    let high = tails.length;
+    while (low < high) {
+      const mid = (low + high) >> 1;
+      if (tails[mid] < values[i]) low = mid + 1;
+      else high = mid;
+    }
+    tails[low] = values[i];
+    tailIndex[low] = i;
+    previous[i] = low > 0 ? tailIndex[low - 1] : -1;
+  }
+  const kept = [];
+  for (let i = tailIndex[tails.length - 1] ?? -1; i >= 0; i = previous[i]) kept.push(i);
+  return kept.reverse();
+}
+
+/**
+ * The fewest moves that put `target` (in target order, each with its current
+ * position) into that order. The first entry is the anchor and never moves;
+ * behind it the longest run already in order stays, and each other entry is
+ * moved after its predecessor. Processing in target order makes a predecessor
+ * final before its follower is placed, and no move is ever "to the top", so
+ * nothing climbs above the items the plan leaves alone.
+ */
+export function planMoves(target) {
+  if (target.length < 2) return [];
+  const anchor = target[0].position;
+  const behind = target.map((_, i) => i).filter((i) => i > 0 && target[i].position > anchor);
+  const run = longestIncreasing(behind.map((i) => target[i].position)).map((k) => behind[k]);
+  const kept = new Set([0, ...run]);
+  const moves = [];
+  for (let i = 1; i < target.length; i++) {
+    if (kept.has(i)) continue;
+    const [entry, before] = [target[i], target[i - 1]];
+    moves.push({ id: entry.id, itemId: entry.itemId, after: before.id, afterId: before.itemId });
+  }
+  return moves;
+}
+
+/** `Wave 08`: how a row's number opens its milestone's title. */
+const waveTitle = (number) => `Wave ${String(number).padStart(2, '0')}`;
+
+/**
+ * The plan: the waves left where they sit, every way the rows and the board
+ * disagree, the target order of the waves still open, and the moves. A wave
+ * whose milestone has no open issue is done whatever the milestone's state;
+ * an issue on a wave's milestone that its row does not name is appended to
+ * the wave, in heading order, and reported.
+ */
+export function planReorder({ issues, milestones, listing, tasks }) {
+  const byId = new Map();
+  for (const issue of issues) {
+    const id = idOf(issue.title);
+    if (id) byId.set(id, issue);
+  }
+  const onBoard = new Map(
+    listing.items.map((item, position) => [item.number, { itemId: item.id, position }]),
+  );
+  const headingIndex = new Map(tasks.order.map((id, i) => [id, i]));
+  const plan = {
+    projectId: listing.projectId,
+    skipped: [],
+    missing: [],
+    unlisted: [],
+    misplaced: [],
+    descriptions: [],
+    target: [],
+    considered: 0,
+    moves: [],
+  };
+  const entries = [];
+  const placed = new Set();
+  const place = (id, issue) => {
+    entries.push({ id, ...onBoard.get(issue.number) });
+    placed.add(id);
+  };
+  for (const wave of tasks.waves) {
+    const prefix = waveTitle(wave.number);
+    const milestone = milestones.find((candidate) => candidate.title.startsWith(`${prefix} `));
+    if (!milestone) {
+      plan.skipped.push(`row ${wave.number}: no milestone titled "${prefix} — …"`);
+      continue;
+    }
+    if (milestone.openIssues === 0) {
+      plan.skipped.push(`${milestone.title}: no open task, left where it sits`);
+      continue;
+    }
+    for (const id of wave.ids) {
+      const issue = byId.get(id);
+      if (!issue) {
+        plan.missing.push(`row ${wave.number}: ${id} has no tracked issue`);
+      } else if (!onBoard.has(issue.number)) {
+        plan.missing.push(`row ${wave.number}: ${id} (#${issue.number}) is not on the Project`);
+      } else if (placed.has(id)) {
+        plan.misplaced.push(`row ${wave.number}: ${id} was already placed by an earlier row`);
+      } else {
+        if (issue.milestone !== milestone.title) {
+          plan.misplaced.push(
+            `row ${wave.number}: ${id} sits on "${issue.milestone ?? 'no milestone'}"`,
+          );
+        }
+        place(id, issue);
+      }
+    }
+    const members = issues
+      .map((issue) => ({ id: idOf(issue.title), issue }))
+      .filter(
+        ({ id, issue }) =>
+          id && issue.milestone === milestone.title && !placed.has(id) && onBoard.has(issue.number),
+      )
+      .sort((a, b) => (headingIndex.get(a.id) ?? Infinity) - (headingIndex.get(b.id) ?? Infinity));
+    for (const { id, issue } of members) {
+      plan.unlisted.push(`${milestone.title}: ${id} is not in row ${wave.number}, appended`);
+      place(id, issue);
+    }
+    const listed = expandIds(milestone.description.split('\n')[0], tasks.order).ids;
+    if (listed.join(' ') !== wave.ids.join(' ')) {
+      plan.descriptions.push(
+        `${milestone.title}: the description's first line differs from row ${wave.number}`,
+      );
+    }
+  }
+  plan.target = entries.map((entry) => entry.id);
+  plan.considered = entries.length;
+  plan.moves = planMoves(entries);
+  return plan;
+}
+
+/** The plan for the live board: the REST issue list, one milestones page, the items listing. */
+export function readReorderPlan() {
+  return planReorder({
+    issues: listTracked(),
+    milestones: listMilestones(),
+    listing: listItems(),
+    tasks: loadTasksMd(),
+  });
+}
+
+// One move a request. The ids travel as variables, and only the mutation id
+// is selected: asking for `items` back would be the listing again.
+const POSITION_MUTATION = `
+  mutation ($projectId: ID!, $itemId: ID!, $afterId: ID!) {
+    updateProjectV2ItemPosition(input: { projectId: $projectId, itemId: $itemId, afterId: $afterId }) {
+      clientMutationId
+    }
+  }`;
+
+export const reorderMutationArgs = (projectId, move) => [
+  'api',
+  'graphql',
+  '-f',
+  `query=${POSITION_MUTATION}`,
+  '-f',
+  `projectId=${projectId}`,
+  '-f',
+  `itemId=${move.itemId}`,
+  '-f',
+  `afterId=${move.afterId}`,
+];
+
+// Content creation on GitHub: ~80/min, 500/hour (secondary limit).
+const WRITE_INTERVAL_MS = 1500;
+const RATE_LIMITED = /HTTP 403|HTTP 429|rate limit|submitted too quickly/i;
+
+/** A GitHub write, spaced out, retried once after a rate-limit refusal. */
+export async function pacedWrite(fn) {
+  await sleep(WRITE_INTERVAL_MS);
+  try {
+    return fn();
+  } catch (error) {
+    if (!(error instanceof BoardError) || !RATE_LIMITED.test(error.message)) throw error;
+    const retryAfter = /retry-after:?\s*(\d+)/i.exec(error.message)?.[1];
+    // The hourly content-creation cap answers "submitted too quickly" with no
+    // retry-after, and a minute never clears it; five is a guess that usually does.
+    const wait = retryAfter ? Number(retryAfter) : 300;
+    console.error(`rate limited; waiting ${wait}s`);
+    await sleep(wait * 1000);
+    return fn();
+  }
+}
+
+/** Makes the plan's moves in order, at most `limit` of them; answers how many were made. */
+export async function applyReorder(plan, { limit = Infinity, onMove = () => {} } = {}) {
+  let made = 0;
+  for (const move of plan.moves.slice(0, limit)) {
+    await pacedWrite(() => gh(reorderMutationArgs(plan.projectId, move)));
+    made += 1;
+    onMove(move);
+  }
+  return made;
+}
+
+function printReorderPlan(plan) {
+  const section = (title, lines) => {
+    if (lines.length) console.log(`${title}\n${lines.map((line) => `  ${line}`).join('\n')}`);
+  };
+  section('Left where they sit:', plan.skipped);
+  section('Rows naming an issue the board lacks:', plan.missing);
+  section('Issues in a wave its row does not name:', plan.unlisted);
+  section('Row ids sitting on another milestone, ordered by the row:', plan.misplaced);
+  section('Milestone descriptions that differ from the row:', plan.descriptions);
+  const count = plan.moves.length;
+  console.log(
+    `${plan.considered} items considered, ${count} move${count === 1 ? '' : 's'} needed${count ? ':' : '.'}`,
+  );
+  for (const move of plan.moves) console.log(`  ${move.id} → after ${move.after}`);
+}
+
+// ---------------------------------------------------------------------------
 // Comments
 
 // A comment is public and indexed before anyone reads it, so a comment is
@@ -298,7 +576,9 @@ const USAGE = `usage: node scripts/task-board.mjs <command> …
   status <ID> "<Status>"     move the Project Status forward (${STATUSES.join(' → ')})
   estimate <ID> <hours>      set the Project Estimate
   comment <ID> "<text>"      comment on the issue; refused if the text looks like a value
-  list                       every tracked issue, as a JSON array`;
+  list                       every tracked issue, as a JSON array
+  reorder [--apply] [--limit N]
+                             the moves that put the open waves in execution order; --apply makes them`;
 
 const COMMANDS = {
   find([id]) {
@@ -327,13 +607,39 @@ const COMMANDS = {
   list() {
     console.log(JSON.stringify(listTracked(), null, 2));
   },
+  async reorder(args) {
+    const at = args.indexOf('--limit');
+    const limit = at === -1 ? Infinity : Number(args[at + 1]);
+    if (limit !== Infinity && !(Number.isInteger(limit) && limit > 0)) throw new BoardError(USAGE);
+    const plan = readReorderPlan();
+    printReorderPlan(plan);
+    if (!args.includes('--apply') || plan.moves.length === 0) return;
+    console.log(`\nApplying${limit === Infinity ? '' : ` the first ${limit}`}…`);
+    let made = 0;
+    try {
+      await applyReorder(plan, {
+        limit,
+        onMove: (move) => {
+          made += 1;
+          console.log(`  ${move.id} → after ${move.after}`);
+        },
+      });
+    } catch (error) {
+      console.error(
+        `Stopped after ${made} move(s). Re-run \`reorder --apply\`: the plan is recomputed from the live order.`,
+      );
+      throw error;
+    }
+    console.log(`${made} move(s) made. Reading the order again…\n`);
+    printReorderPlan(readReorderPlan());
+  },
 };
 
-export function main(argv = process.argv.slice(2)) {
+export async function main(argv = process.argv.slice(2)) {
   const [command, ...rest] = argv;
   const run = COMMANDS[command];
   if (!run) throw new BoardError(USAGE);
-  run(rest);
+  await run(rest);
 }
 
 // Runs the CLI only when invoked directly; the migration imports the helpers.
@@ -346,13 +652,11 @@ const invokedDirectly = (() => {
 })();
 
 if (invokedDirectly) {
-  try {
-    main();
-  } catch (error) {
+  main().catch((error) => {
     if (error instanceof BoardError) {
       console.error(error.message);
       process.exit(1);
     }
     throw error;
-  }
+  });
 }

@@ -167,7 +167,7 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 
 The issues of `Aurora-Arctic/Sorrel-and-Salt`, with the org Project **Sorrel & Salt** over them, are the source of truth for what to work on. `TASKS.md` is the reasoning behind the breakdown, and the two are expected to agree — when a task is minted as an issue, add it to `TASKS.md` in the same pass, or the docs silently fall behind. The board moved here from Asana in MB.89 ([`claude-docs/design-decisions/mb.89-plan.md`](claude-docs/design-decisions/mb.89-plan.md)); the Asana workspace stays alive and archived so the `Asana task:` permalinks in older PR bodies still resolve, and nothing is written there again. The repo is public, so every issue and comment is public too — the argument for accepting that is in the plan, and the rule it costs is under **Comments** below.
 
-**Everything goes through `gh`.** Issues, milestones, sub-issues, issue types, dependencies and Projects are on GitHub's free plan, and `gh` 2.97 in the devcontainer carries `--parent`, `--type`, `--add-blocked-by` and the `project` commands, so there is no premium wall to design around and no MCP server to authorise. `scripts/task-board.mjs` wraps the calls the skills make — `find`, `status`, `estimate`, `comment`, `list` — so the lookup rule and the Project's field ids live in one file rather than four skills. A skill runs it; it does not compose `gh issue` by hand. Detail: [`claude-docs/task-tracking.md`](claude-docs/task-tracking.md).
+**Everything goes through `gh`.** Issues, milestones, sub-issues, issue types, dependencies and Projects are on GitHub's free plan, and `gh` 2.97 in the devcontainer carries `--parent`, `--type`, `--add-blocked-by` and the `project` commands, so there is no premium wall to design around and no MCP server to authorise. `scripts/task-board.mjs` wraps the calls the skills make — `find`, `status`, `estimate`, `comment`, `list`, `reorder` — so the lookup rule and the Project's field ids live in one file rather than four skills. A skill runs it; it does not compose `gh issue` by hand. Detail: [`claude-docs/task-tracking.md`](claude-docs/task-tracking.md).
 
 | Object         | Value                                                                                                         |
 | -------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -181,6 +181,7 @@ The issues of `Aurora-Arctic/Sorrel-and-Salt`, with the org Project **Sorrel & S
 - **One milestone per wave** (`Wave 07 — GraphQL`) and one per pre-wave feature grouping (`M0 · Repo bootstrap`), plus one closed `Retired — not done` milestone holding the tasks MB.31 retired, so that no issue is without a milestone. The wave number is two digits because GitHub sorts milestones alphabetically and offers no other order — `Wave 10` would otherwise sit between `Wave 1` and `Wave 2`. The milestone description carries what the Asana wave card's notes carried: the task ids it contains in execution order, then the deferral reasoning. A task added to a wave is added to its milestone's description in the same pass — that opening list is what makes the wave readable without opening every issue.
 - **Issue type `Bug` for `MB.*`, `Task` for everything else**, and the `hotfix` label on a task that is one. The label, not the id, decides the branch skill: `MB.*` covers ordinary bugfixes and hotfixes alike, and `start-task` still asks when nothing marks it either way.
 - **Every tracked issue carries the `tracked` label**, which is the Project's auto-add filter. A public repo lets anyone open an issue, so an issue without the label is a visitor's until someone triages it onto the board.
+- **The Project's manual item order is execution order** — the wave table's rows, wave by wave. `node scripts/task-board.mjs reorder` prints the moves that restore it and `--apply` makes them: only waves with an open task, only the items out of place, one paced mutation each, and it reads the order through the one lean listing there is rather than `gh project item-list` (`claude-docs/task-tracking.md`, "Order").
 - **Sub-issues only for genuine parent/child** (`M7.A.*` under `M7.A`, or a task split mid-flight). Waves are milestones, not parent issues.
 - **A retired task is closed as `not planned`**, its title reading `<ID> — [RETIRED] <title>`; a done task is closed as `completed`.
 
@@ -214,9 +215,10 @@ Re-check the next free id right before minting — another session may have take
 ```sh
 gh issue create --title "MB.90 — <title>" --type Bug --label tracked --milestone "Wave 07 — GraphQL" --body-file <notes>
 node scripts/task-board.mjs estimate MB.90 3
+node scripts/task-board.mjs reorder --apply
 ```
 
-The notes are the `TASKS.md` entry's text; the entry, the wave's row in the execution-order table, the summary table and the milestone's description are edited in the same pass.
+The notes are the `TASKS.md` entry's text; the entry, the wave's row in the execution-order table, the summary table and the milestone's description are edited in the same pass. The auto-add appends the new item at the bottom of the Project, and `reorder --apply` moves it to the row's place — so the row is edited before it runs.
 
 Rules that follow from all this:
 
