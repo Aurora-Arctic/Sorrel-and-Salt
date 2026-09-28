@@ -24,6 +24,7 @@ import {
 } from '@/modules/vocabulary/schema/ingredient-forms';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { inventoryItems } from '@/modules/ingredients/schema/inventory-items';
+import { planets, zodiacSigns } from '@/modules/vocabulary/schema/correspondences';
 import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
 import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
 import { spells } from '@/modules/grimoire/schema/spells';
@@ -45,11 +46,13 @@ const AUDITED: PgTable[] = [
   ingredientForms,
   ingredients,
   inventoryItems,
+  planets,
   spells,
   users,
   workspaceInvitations,
   workspaceMembers,
   workspaces,
+  zodiacSigns,
 ];
 
 /** Hard-deleted, so four stamps and no tombstone (MB.34). */
@@ -94,8 +97,8 @@ async function byReferencesOf(table: string): Promise<Record<string, Reference>>
 const USERS_ID = { foreign_table: 'users', foreign_column: 'id' };
 
 describe('the audited tables', () => {
-  it('are the fifteen the updated_at sweep names: twelve audited, three stamped', () => {
-    expect(AUDITED).toHaveLength(12);
+  it('are the seventeen the updated_at sweep names: fourteen audited, three stamped', () => {
+    expect(AUDITED).toHaveLength(14);
     expect(STAMPED).toHaveLength(3);
     expect([...named(AUDITED), ...named(STAMPED)].map(([name]) => name).sort()).toEqual(
       AUDITED_TABLES,

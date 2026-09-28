@@ -34,6 +34,7 @@ export const AUDITED_TABLES = [
   'ingredient_forms',
   'ingredients',
   'inventory_items',
+  'planets',
   'spell_categories',
   'spell_ingredients',
   'spells',
@@ -41,6 +42,7 @@ export const AUDITED_TABLES = [
   'workspace_invitations',
   'workspace_members',
   'workspaces',
+  'zodiac_signs',
 ].sort();
 
 // Better Auth's adapter tables that carry an `updated_at` and no `*_by`
