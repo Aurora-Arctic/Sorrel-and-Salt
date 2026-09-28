@@ -27,6 +27,14 @@ export type NotVisibilityScoped = { visibility?: never };
 export type SpellScoped = { spellId: AnyPgColumn };
 export type NotSpellScoped = { spellId?: never };
 
+// And for an ingredient's children (M4.8): `ingredient_folk_names` and
+// `ingredient_categories` carry an `ingredient_id` and no workspace of their
+// own, so they would pass as `Unscoped` while holding a coven's rows.
+// `NotIngredientScoped` takes them off the unscoped finders, and
+// `findManyOfIngredients` reads them under the parent's tier.
+export type IngredientScoped = { ingredientId: AnyPgColumn };
+export type NotIngredientScoped = { ingredientId?: never };
+
 /** A table with a surrogate key, which is every one but the three join tables. */
 export type Identified = { id: AnyPgColumn };
 
