@@ -45,7 +45,13 @@ permissions:
 
 jobs:
   vitest:
-    runs-on: ubuntu-26.04
+    # Blacksmith, not GitHub: eight vCPUs give the suite seven workers, and it
+    # caches the job and service images. Everything else stays on GitHub's
+    # runners, which are free and unlimited on a public repo, where
+    # Blacksmith's free tier is capped. The work runs in `container:`, so the
+    # host's 24.04 (Blacksmith has no 26.04) is only Docker and the runner
+    # agent. claude-docs/ci.md, "Runner budget".
+    runs-on: blacksmith-8vcpu-ubuntu-2404
     container:
       image: ${{ inputs.image }}
       credentials:
@@ -87,6 +93,8 @@ jobs:
         if: inputs.should-run
         run: |
           set -o pipefail
+          # The db project runs cores - 1 workers; this puts the count in the log.
+          echo "nproc: $(nproc)"
           npm run test:coverage -- --reporter=default --reporter=json --outputFile=/app/vitest-results.json 2>&1 | tee /app/output.log
 
       - name: Summarize output

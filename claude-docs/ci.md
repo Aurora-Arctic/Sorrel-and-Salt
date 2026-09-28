@@ -497,10 +497,12 @@ matrix's generated job name, not the leg's.
     None is a _required_ check, so none disproves the rule — but none exhibited
     the symptom either.
   - **The rule stays in force until MB.39 settles it.** It costs a container
-    pull per filtered-off leg (~20s on a `checks` leg, 37s on `vitest`, 46s on
-    `playwright` — the flag is resolved in the first step, which runs _after_
-    `Initialize containers`), and that is the cheaper side of the bet while the
-    naming behaviour is unknown.
+    pull per filtered-off leg (~20s on a `checks` leg, 46s on `playwright`, and
+    37s on `vitest` while it ran on GitHub's runners — the flag is resolved in
+    the first step, which runs _after_ `Initialize containers`), and that is
+    the cheaper side of the bet while the naming behaviour is unknown. On
+    Blacksmith the pull is cached, but the filtered-off `vitest` job still
+    starts a metered runner (Runner budget, below).
 - **Live GitHub settings are confirmed with the user before being changed**, and
   a permissions-blocked write is reported rather than routed around.
 - **Runners are pinned to `ubuntu-26.04`** (MB.37), not `ubuntu-latest`.
@@ -508,7 +510,67 @@ matrix's generated job name, not the leg's.
   (actions/runner-images#14748) and annotated every job with a notice until
   then; pinning did the move on a PR that was watched and silenced the notice.
   Bumping it is one `sed` across `.github/workflows/`, and `.actrc`'s `-P`
-  platform mapping must move with it.
+  platform mapping must move with it. **The one exception is `vitest.yml`**,
+  on `blacksmith-8vcpu-ubuntu-2404` since MB.96 — Runner budget, below, has
+  why that job and no other. Blacksmith has no 26.04 label, and it does not
+  matter: the job runs inside `container:`, so the host's Ubuntu is only
+  Docker and the runner agent.
+
+## Runner budget
+
+Every job runs on GitHub's `ubuntu-26.04` except `vitest.yml`'s, which runs
+on Blacksmith's `blacksmith-8vcpu-ubuntu-2404` (MB.96). The sizing is
+[`design-decisions/mb.96-plan.md`](design-decisions/mb.96-plan.md); what
+follows is enough to redo the sum.
+
+- **Why the split falls there.** GitHub's hosted minutes are free and
+  unlimited on a public repo. Blacksmith's free tier is 3,000 x64 2-vCPU
+  minutes a month **per organisation** — shared with any other Aurora-Arctic
+  repo that adopts it — and an 8-vCPU runner draws it at 4×; overage is
+  $0.004 per 2-vCPU minute. `vitest` is the job the cores change: the suite
+  is mostly per-file overhead spread over `dbMaxWorkers` = cores − 1, three
+  workers on GitHub's 4-vCPU public-repo runner and seven here, and Blacksmith
+  caches the `container:` and `services:` images the job pulls. The
+  `checks` legs are 30–60s single-process tools and the image builds are
+  bound by the push, so moving them spends the tier on minutes that are free
+  where they are.
+- **The job starts on every gate run**, filtered off or not: `should-run`
+  skips its steps, not the job (the header rule above), and a cancelled run
+  bills the minutes it used. The count is gate runs, ~245 a month once MB.98
+  stopped closed PRs from starting any, in bursts of 4–44 a day.
+- **Of Blacksmith's caches, only the container cache applies, and it needs
+  nothing.** It keeps pulled images on a per-organisation disk — free,
+  on by default, private GHCR images included, evicted after 8 days unused —
+  so "Initialize containers" costs only the layers a new content-addressed
+  tag changed. The rest are not used, deliberately. Its Actions cache
+  transparently serves `actions/cache`, which this job never calls: the
+  image carries `node_modules`, and Vitest's transform is ~2% of the run.
+  `useblacksmith/checkout` caches the clone on a disk billed per GB, and the
+  checkout takes a second. Its Docker layer cache serves builds, which stay
+  on GitHub's runners with their cache in the registry (Composite actions,
+  above).
+- **The Blacksmith GitHub App must stay installed on the organisation.** A
+  `runs-on` label with no app behind it queues forever rather than failing.
+
+| Option                        | Allowance per run                     | Month at ~245 runs   | Verdict                                                  |
+| ----------------------------- | ------------------------------------- | -------------------- | -------------------------------------------------------- |
+| vitest on 8 vCPU (today)      | ~5 min (8 if billed per whole minute) | ~1,200 (worst 2,000) | Fits; watch it                                           |
+| vitest on 4 vCPU              | ~3 min                                | ~750                 | Fits comfortably; three workers, so only the image cache |
+| vitest + playwright on 8 vCPU | ~9 min                                | ~2,200 (73%)         | Fits only while MB.98 holds; the second step             |
+| Every job on Blacksmith       | ~15+ min                              | ~3,700               | Over, on legs that are free today                        |
+
+**Review Blacksmith's usage page two weeks after MB.96 merged.** Under 50% of
+the tier: move `playwright.yml` too, with its own `.actrc` line. Over 80%:
+drop `vitest.yml` to `blacksmith-4vcpu-ubuntu-2404`. Otherwise leave it.
+
+The `vitest / vitest` job. The Blacksmith row is a second run, since the first
+pays the cold image cache:
+
+| Run                            | Initialize containers | Run vitest | Job     |
+| ------------------------------ | --------------------- | ---------- | ------- |
+| GitHub, before MB.97 (#517)    | 38s                   | 110s       | 2m47s   |
+| GitHub, after MB.97 (#527)     | 39s                   | 79s        | 2m14s   |
+| Blacksmith 8 vCPU (MB.96's PR) | PENDING               | PENDING    | PENDING |
 
 ## Smoke checks
 
@@ -939,7 +1001,9 @@ db:seed:categories`, `npm run db:seed:forms` and `npm run db:seed:astrology`
 **`.actrc` + `make act-*`** — run the reusable checks through
 [`act`](https://github.com/nektos/act) against a locally-built
 `Docker/Dockerfile.node` `testing` image (`act-image`). `.actrc` carries
-`-P ubuntu-26.04=catthehacker/ubuntu:act-latest` and `--pull=false`.
+one `-P …=catthehacker/ubuntu:act-latest` line per `runs-on` label the
+workflows pin — `ubuntu-26.04` and `blacksmith-8vcpu-ubuntu-2404` — and
+`--pull=false`.
 
 - **One target covers every `checks.yml` leg** (MB.32), where there was one per
   check workflow before the collapse: `make act-check` runs lint,
