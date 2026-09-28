@@ -16,7 +16,7 @@ The rule that costs is under **Comments**.
 | Object      | Value                                                                                                                                                                                                                                                                                                                                                                |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Repo        | `Aurora-Arctic/Sorrel-and-Salt`                                                                                                                                                                                                                                                                                                                                      |
-| Project     | Org project **Sorrel & Salt**, number `1`, linked to the repo. `task-board.mjs` carries the number as `PROJECT` and resolves the node id and field ids at runtime from `gh project`.                                                                                                                                                                                 |
+| Project     | Org project **Sorrel & Salt**, number `1`, linked to the repo. `task-board.mjs` carries the number as `PROJECT` and reads the node id and field ids at runtime, off the issue's own Project item.                                                                                                                                                                    |
 | `Status`    | Single-select field: `Not Started` · `In Progress` · `In Review` · `Done`.                                                                                                                                                                                                                                                                                           |
 | `Estimate`  | Number field, in hours — the `· Nh` on the task's `TASKS.md` heading.                                                                                                                                                                                                                                                                                                |
 | Milestones  | One per wave (`Wave 07 — GraphQL`, two digits because GitHub sorts milestones alphabetically) and one per pre-wave feature grouping (`M0 · Repo bootstrap`), plus a closed `Retired — not done` milestone for the tasks MB.31 retired — every issue has a milestone. The description opens with the wave's task ids in execution order, then the deferral reasoning. |
@@ -32,7 +32,8 @@ change never rewrites a title. A retired task reads `<ID> — [RETIRED] <title>`
 and is closed as `not planned`; a done task is closed as `completed`.
 
 `node scripts/task-board.mjs find M2.6` lists every tracked issue, open and
-closed, and keeps the ones whose title starts with `M2.6 — `. The trailing
+closed, through the REST issues endpoint, and keeps the ones whose title
+starts with `M2.6 — `. The trailing
 `—` is what makes the match exact: thirty of the board's ids are a strict
 prefix of another (`M2.1` and `M2.10`, `M4.1` and `M4.1a`, `M0.1` and
 `M0.30`), and GitHub's issue search tokenises on punctuation, so a `--search`
@@ -41,17 +42,32 @@ a guess.
 
 ## Status
 
-| Status        | Set it when                                                                                      |
-| ------------- | ------------------------------------------------------------------------------------------------ |
-| `Not Started` | The default; every task stays there until work actually begins.                                  |
-| `In Progress` | The feature branch exists and work has started — not when the task is merely read or planned.    |
-| `In Review`   | The PR is open. Set in the same turn the PR is created, beside the comment carrying the PR link. |
-| `Done`        | The PR is **merged** — by mechanism, never by hand. A green CI run is not a merge.               |
+| Status        | Set it when                                                                                                                                                                                                                                |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Not Started` | The Project's **Item added to project** workflow sets it the moment the auto-add places the issue — seconds after `gh issue create --label tracked`. Never set by hand: `find` printing `status: null` means the auto-add has not run yet. |
+| `In Progress` | The feature branch exists and work has started — not when the task is merely read or planned. The script's.                                                                                                                                |
+| `In Review`   | The PR is open. Set in the same turn the PR is created, beside the comment carrying the PR link. The script's.                                                                                                                             |
+| `Done`        | The PR is **merged** — by mechanism, never by hand. A green CI run is not a merge.                                                                                                                                                         |
 
 `node scripts/task-board.mjs status <ID> "<Status>"` moves the field forward;
 it refuses a backward step and refuses `Done` outright. `Done` is set through
 the issue closing: a PR body opens with `Closes #N`, and on merge the issue is
 closed, at which point the Project's built-in workflow moves the item to `Done`.
+
+**The Project's workflows own the ends and the script owns the middle.** Eight
+built-in workflows are on. _Auto-add to project_ (filtered on the `tracked`
+label) and _Auto-add sub-issues to project_ place every task, so the script
+never adds an item: `status` and `estimate` on an issue the auto-add has not
+placed yet refuse and say to retry, and an item the script added would be one
+the triage filter never saw. _Item added to project_ sets `Not Started`.
+_Item closed_ sets `Done`, and _Auto-close issue_ closes an issue whose Status
+is set to `Done` by hand — the one direction the script refuses anyway.
+_Item reopened_ acts on a closed issue that is reopened, which no skill does.
+_Pull request linked to issue_ and _Pull request merged_ are on but cannot act
+on a task: GitHub links a `Closes #N` only on a pull request into the default
+branch, so a feature PR into `staging` links nothing — #294 and #295, both
+merged there, carry no linked PR — and pull requests are not on the Project.
+`In Progress` and `In Review` are therefore the script's, and stay so (MB.102).
 
 The closing is what
 [`.github/workflows/close-task-on-merge.yml`](../.github/workflows/close-task-on-merge.yml)
@@ -97,16 +113,30 @@ A `gh` failure prints gh's own stderr on one line, never a stack.
 | Command                  | Does                                                                                                                                                           |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `find <ID>`              | The one tracked issue titled `<ID> — …`, as JSON: number, title, state, state reason, URL, milestone, labels, and the Project `Status` when the item is on it. |
-| `status <ID> "<Status>"` | Adds the issue to the Project if absent and moves `Status` forward; a no-op when already there, a refusal for a step back or for `Done`.                       |
-| `estimate <ID> <hours>`  | Sets `Estimate`, adding the item if absent.                                                                                                                    |
+| `status <ID> "<Status>"` | Moves `Status` forward; a no-op when already there, a refusal for a step back, for `Done`, or for an issue the auto-add has not placed on the Project yet.     |
+| `estimate <ID> <hours>`  | Sets `Estimate`; the same refusal for an issue not yet on the Project.                                                                                         |
 | `comment <ID> "<text>"`  | Posts the comment, after the secret scan.                                                                                                                      |
 | `list`                   | Every tracked issue, open and closed, as a JSON array.                                                                                                         |
 
-The Project's node id, its field ids and its option ids are read from
-`gh project view` and `gh project field-list` on each run rather than
-hardcoded: an option recreated in the Project's settings gets a new id, and a
-stale constant would set nothing while reporting success. The migration script
+The Project's node id, its field ids and its option ids are read on each run
+rather than hardcoded — an option recreated in the Project's settings gets a
+new id, and a stale constant would set nothing while reporting success — and
+they are read off the issue's own item, through one `issue.projectItems`
+query, never by listing every item on the Project. The migration script
 imports the same helpers, which is why they are exported.
+
+**Every command is cheap by design (MB.102).** The issue list is REST —
+`gh api --paginate --slurp`, one request per hundred issues against the core
+budget, pull requests filtered out since the endpoint lists them among issues
+— and the Project read costs one GraphQL point. `find` and `comment` make
+one small query at most; `status` and `estimate` make that query and one
+mutation. The previous shape — `gh issue list`, a GraphQL query carrying every
+issue's labels, then `gh project item-list` over every item to find one —
+was a burst that tripped GitHub's _secondary_ rate limit twice in one sitting
+with the hourly budget almost untouched. The refusal reads
+`GraphQL: API rate limit exceeded`; when it shows up, the cause is a burst,
+not the budget, and the fix is fewer calls per command rather than waiting an
+hour.
 
 ## Minting a task
 
@@ -182,12 +212,12 @@ written there again.
 
 ### What the free Asana plan cost, restored
 
-| On Asana's free plan                                                                | On GitHub                                                                                                   |
-| ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Status lived in the task name as a marker (`▶ `, `◔ `), custom fields being premium | `Status` is a Project single-select; a title is never rewritten for a status change.                        |
-| The estimate lived only in `TASKS.md`                                               | `Estimate` is a Project number field, summable in a view.                                                   |
-| Type lived nowhere after the rebuild                                                | Issue type `Bug` or `Task`.                                                                                 |
-| Dependencies were premium                                                           | `gh issue edit --add-blocked-by` is free.                                                                   |
-| Rules were premium; every status change was a hand edit                             | The Action closes the issue on merge and the Project's built-in workflows add by label and set `Done`.      |
-| Lookup was two API calls per id, over wave cards and their subtasks, with no search | One `gh issue list` and a title-prefix match; the exact-segment rule stays, since search still tokenises.   |
-| Writes went through an MCP server that had to be authorised and exposed no tag tool | `gh`, already authenticated in the devcontainer, covers issues, milestones, types, sub-issues and Projects. |
+| On Asana's free plan                                                                | On GitHub                                                                                                                    |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Status lived in the task name as a marker (`▶ `, `◔ `), custom fields being premium | `Status` is a Project single-select; a title is never rewritten for a status change.                                         |
+| The estimate lived only in `TASKS.md`                                               | `Estimate` is a Project number field, summable in a view.                                                                    |
+| Type lived nowhere after the rebuild                                                | Issue type `Bug` or `Task`.                                                                                                  |
+| Dependencies were premium                                                           | `gh issue edit --add-blocked-by` is free.                                                                                    |
+| Rules were premium; every status change was a hand edit                             | The Action closes the issue on merge and the Project's built-in workflows add by label and set `Done`.                       |
+| Lookup was two API calls per id, over wave cards and their subtasks, with no search | One REST listing of the tracked issues and a title-prefix match; the exact-segment rule stays, since search still tokenises. |
+| Writes went through an MCP server that had to be authorised and exposed no tag tool | `gh`, already authenticated in the devcontainer, covers issues, milestones, types, sub-issues and Projects.                  |
