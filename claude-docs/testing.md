@@ -21,6 +21,7 @@ tests/
   rsc/                        # what can only be seen from inside a server render, mirroring src/ below it
   acceptance/                 # one describe per user story — make test-stories
   guards/                     # the mechanical guards
+  scripts/                    # mirror scripts/ — the pure half of a script, imported by its .d.mts
   support/                    # the harness: as-user, db-setup, seeded-database, msw, paths
   e2e/                        # Playwright specs and their harness (database, fixtures, axe, coverage)
   support/fixtures/           # makeIngredient / makeSpell / makeWorkspace
