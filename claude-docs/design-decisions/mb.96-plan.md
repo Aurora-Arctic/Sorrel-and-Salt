@@ -133,6 +133,7 @@ Files: `.github/actions/build-image/action.yml`, `.github/workflows/build-{image
    - **Runner-neutral.** Works identically if the builds ever move to Blacksmith (whose own layer cache wants a different action; no need for it).
 3. Cost, stated in `ci.md`: GHCR storage is free for a public repo; each build overwrites `:buildcache` and leaves the previous cache manifest untagged, exactly as the content-addressed image tags already accumulate — a package-version cleanup is a later task, not this one.
 4. Verification is in the section below; the tell is a `CACHED` on the `npm ci` step in a build from a _different_ PR.
+5. **Added during MB.99, confirmed with the user:** `build-db-image.yml`'s `push` trigger is removed. It existed to seed the branch-scoped Actions cache from `staging` and `main`, which a registry cache makes pointless, and it had already stopped building, because a PR that changes the image builds it first and the push found the tag published. The ref is computed as a `cache` output of the tag step and the build reads `steps.tag.outputs.cache`. No guard test: the cache lines would only restate the YAML, and the proof is the live check below.
 
 ## Part 4 — MB.96: run the vitest job on Blacksmith
 

@@ -32,6 +32,5 @@ jobs:
           dockerfile: Docker/Dockerfile.e2e
           # Must stay explicit: an unqualified build picks the LAST stage, `headed`.
           target: e2e
-          cache-scope: e2e-image
           registry-username: ${{ github.actor }}
           registry-password: ${{ secrets.GITHUB_TOKEN }}

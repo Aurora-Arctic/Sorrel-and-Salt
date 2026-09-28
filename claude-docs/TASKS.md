@@ -3672,7 +3672,7 @@ _Story:_ As a developer, I want the reason a workflow runs on `staging` to be th
 
 Measured on the real runs: a fully cold build step is 25s, a warm one 6–8s. Fresh feature branches that had never built the image got 6–8s, which is only possible via the cross-branch restore those push runs seed. Worth ~17s on each new branch's first CI run, on a job that gates `vitest` and `playwright`, at no dollar cost — the repo is public and the push run is post-merge, off the PR critical path.
 
-So the trigger stays and the tag goes. MB.15's own entry above, which records "moving `latest` is its real job", is corrected in the same pass.
+So the trigger stays and the tag goes. (MB.99 later removed the trigger as well: M1.27 took `src/db/**` out of the hash, so a push found the PR's tag already published and skipped, and the layer cache moved to the registry, where every branch reads one copy.) MB.15's own entry above, which records "moving `latest` is its real job", is corrected in the same pass.
 
 `src/db/**` is in the tag hash and the path filter but **not** in the build context — `Dockerfile.postgres` only `COPY`s `Docker/postgres-init/enable-extensions.sql` — so a `src/db`-only change republishes byte-identical layers under a new tag. M1.27 changes that by baking the schema in. Recorded here because it is what makes MB.18's cache argument work.
 
@@ -3689,7 +3689,7 @@ _Story:_ As a developer, I want a PR that changes nothing about the database ima
 
 `build-image.yml` and `build-e2e-image.yml` both gate their build on `docker buildx imagetools inspect` finding the content-addressed tag already published. `build-db-image.yml` is the only one that does not, and `ci.md` says that is deliberate: "its trigger paths are exactly its hash inputs, so the trigger already does it". That holds for the `push` trigger and fails for `workflow_call`, which bypasses the path filter entirely and is the path every PR takes. On that path nothing does the skipping and buildx runs every time.
 
-The two mechanisms are alternatives, and the siblings picked the better one: skip-if-exists reuses work via GHCR tag existence, which is global, where the GHA layer cache is branch-scoped. Adding the check does **not** make MB.17's push trigger redundant — `src/db/**` is in the hash but not the build context, so through Wave 1 the tag misses constantly while the content does not change, which is exactly when a warm layer cache still pays. Both mechanisms stay.
+The two mechanisms are alternatives, and the siblings picked the better one: skip-if-exists reuses work via GHCR tag existence, which is global, where the GHA layer cache is branch-scoped. Adding the check does **not** make MB.17's push trigger redundant — `src/db/**` is in the hash but not the build context, so through Wave 1 the tag misses constantly while the content does not change, which is exactly when a warm layer cache still pays. Both mechanisms stayed until MB.99, which moved the layer cache to the registry and removed the push trigger.
 
 Three things differ from the siblings and are easy to get wrong: the tag step here is `id: tags` with output `hash-tag`, not `id: tag` with output `image`, so a copied expression would gate on an empty string and silently never skip; the `image` job output must keep coming from `hash-tag`, which is computed before the check and unconditionally, because `vitest.yml` and `playwright.yml` key their `services: postgres:` block off it; and after MB.17 `tags` and `hash-tag` are the same value.
 
@@ -5379,9 +5379,12 @@ The Actions cache is at its 10 GB cap — 94 entries, 10,219 MB — so GitHub is
 
 **`type=registry`, one `:buildcache` tag per image.** `.github/actions/build-image/action.yml` reads from and writes to `ghcr.io/<repo>/<path>:buildcache` with `mode=max` (the `testing` and `e2e` targets need the `development` stage's layers too), derived beside the image tag; the `cache-scope` input and its two call sites go, since the ref already separates the three images. Shared by every PR and branch, outside the 10 GB, and cheap to export because the image push has already put every blob in GHCR. Each build overwrites the tag and leaves the previous cache manifest untagged, exactly as the content-addressed image tags already accumulate — a package-version cleanup is a later task.
 
+**`build-db-image.yml`'s `push` trigger goes too**, confirmed with the user. It existed to seed the branch-scoped Actions cache from `staging` and `main`; with one registry cache there is nothing to seed, and it had stopped building anyway, since every PR that changes the image builds it through `pr-gate.yml` first and the push found the tag published.
+
 _Acceptance criteria:_
 
 - `build-image`, `build-e2e-image` and `build-db-image` all read from and write to `ghcr.io/aurora-arctic/sorrel-and-salt/<path>:buildcache`; the `cache-scope` input is gone
+- `build-db-image.yml` has no `push` trigger, and no live doc says it seeds a cache
 - A build on one PR leaves `[development 6/6] RUN npm ci` CACHED for a later PR that changed only the testing stage
 - The cache export step takes seconds rather than tens; `ci.md` "Composite actions" and "Database image" describe the cache, its cost and the 10 GB reason
 

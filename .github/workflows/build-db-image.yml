@@ -4,19 +4,12 @@ name: Build DB Image
 # docker-compose.yaml builds the same file locally. claude-docs/ci.md,
 # "Database image" is the walkthrough.
 #
-# Content-addressed tag, no `latest`. Two skips, one per trigger: the `push`
-# path filter gates only direct triggers, and `workflow_call` — every PR's
-# path — bypasses it, so the build-image action's already-published check
-# covers that one. `push` exists to seed the branch-isolated GHA layer cache
-# from `staging` and `main`. No `pull_request` trigger: pr-gate.yml already
-# calls this, and a second run would report a duplicate check.
+# Content-addressed tag, no `latest`; the build-image action skips a tag
+# that is already published. No `push` trigger: every PR that changes the
+# image builds it through pr-gate.yml first, so a push found the tag and did
+# nothing. No `pull_request` trigger either: pr-gate.yml already calls this,
+# and a second run would report a duplicate check.
 on:
-  push:
-    branches: [staging, main]
-    paths:
-      - 'Docker/Dockerfile.postgres'
-      - 'Docker/postgres-init/**'
-      - '.github/workflows/build-db-image.yml'
   workflow_dispatch:
   # pr-gate.yml's `build-db-image` job, feeding vitest.yml and playwright.yml.
   workflow_call:
@@ -45,6 +38,5 @@ jobs:
           path: db
           content-hash: ${{ hashFiles('Docker/Dockerfile.postgres', 'Docker/postgres-init/**') }}
           dockerfile: Docker/Dockerfile.postgres
-          cache-scope: db-image
           registry-username: ${{ github.actor }}
           registry-password: ${{ secrets.GITHUB_TOKEN }}
