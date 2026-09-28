@@ -1,2 +1,3 @@
-// The ingredients module has no behaviour yet: its surface is `schema/*` alone.
-export {};
+// The ingredients module's behaviour surface. Schema tables are reached at
+// `@/modules/ingredients/schema/*`; `services/*` is internal to the module.
+export * from './services/duplicates';

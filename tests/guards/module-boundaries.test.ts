@@ -48,7 +48,10 @@ const NEVER_FROM_A_MODULE = ['src/app', 'src/components', 'src/emails', 'src/pro
 const REPOSITORY = 'src/db/repository';
 
 /** Exported repository functions that read the compendium tier, or both tiers at once. */
-const TIER_SEAM: string[] = [];
+const TIER_SEAM: string[] = [
+  // Story 16's warning: a near-miss in the compendium or this workspace, in one ranked list.
+  'findSimilarIngredients',
+];
 
 /**
  * A compendium-tier read, in either of Drizzle's spellings. `deleted_at IS

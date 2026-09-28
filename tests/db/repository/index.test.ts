@@ -21,6 +21,7 @@ describe('repository public API', () => {
         'findOneSpell',
         'findPage',
         'findPageInWorkspace',
+        'findSimilarIngredients',
         'findUserByEmail',
         'findWorkspaceRole',
         'withAudit',
