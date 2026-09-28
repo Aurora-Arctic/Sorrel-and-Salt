@@ -7,7 +7,7 @@
 import DataLoader from 'dataloader';
 import type { Session } from '../../lib/session';
 
-export type LoaderFactory<K, V> = (session: Session | null) => DataLoader<K, V>;
+export type LoaderFactory<K, V, C = K> = (session: Session | null) => DataLoader<K, V, C>;
 
 /**
  * A loader, as the factory that builds it for one request. `batch` receives
@@ -15,14 +15,18 @@ export type LoaderFactory<K, V> = (session: Session | null) => DataLoader<K, V>;
  * loader batches a service call and never bypasses one.
  *
  * ```ts
- * export const categoriesByIngredient = defineLoader((session, ids: readonly string[]) =>
- *   categoryService.forIngredients(session, ids),
+ * export const membershipsByUser = defineLoader<string, MembershipWithWorkspace[]>(
+ *   async (session, userIds) =>
+ *     session ? membershipsOf(session, userIds) : userIds.map(() => new Forbidden()),
  * );
  * ```
+ *
+ * `C` is the cache key, for a loader keyed by an object: `cacheKeyFn` maps
+ * each key to it, and two keys with the same one load once.
  */
-export function defineLoader<K, V>(
+export function defineLoader<K, V, C = K>(
   batch: (session: Session | null, keys: readonly K[]) => PromiseLike<ArrayLike<V | Error>>,
-  options?: DataLoader.Options<K, V>,
-): LoaderFactory<K, V> {
-  return (session) => new DataLoader<K, V>((keys) => batch(session, keys), options);
+  options?: DataLoader.Options<K, V, C>,
+): LoaderFactory<K, V, C> {
+  return (session) => new DataLoader<K, V, C>((keys) => batch(session, keys), options);
 }
