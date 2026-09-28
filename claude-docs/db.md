@@ -1713,18 +1713,21 @@ request's DataLoaders ([`graphql.md`](graphql.md), "The two transports").
 The repository splits on the table's own shape, the way it already splits
 `softDelete` from `delete`:
 
-| The table                                | Reads                                                                                     | Writes                                                                                                  |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| carries `workspace_id`                   | `findManyInWorkspace` / `findOneInWorkspace`, proof first                                 | `insertInWorkspace`, `updateInWorkspace`, `updateByIdInWorkspace`, `softDeleteInWorkspace`, proof first |
-| carries `visibility` (`spells` alone)    | `findManySpells` / `findOneSpell`, proof first                                            | the workspace-scoped writes above                                                                       |
-| carries `spell_id` (the two join tables) | `findManyInSpell`, proof first                                                            | `insert`, `update`, `delete`                                                                            |
-| none of those                            | `findMany` / `findOne` / `findOneById` / `findManyByIds` / `findManyIncludingSoftDeleted` | `insert`, `update`, `updateById`, `softDelete`, `delete`                                                |
+| The table                                                              | Reads                                                                                     | Writes                                                                                                  |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| carries `workspace_id`                                                 | `findManyInWorkspace` / `findOneInWorkspace`, proof first                                 | `insertInWorkspace`, `updateInWorkspace`, `updateByIdInWorkspace`, `softDeleteInWorkspace`, proof first |
+| carries `visibility` (`spells` alone)                                  | `findManySpells` / `findOneSpell`, proof first                                            | the workspace-scoped writes above                                                                       |
+| carries `spell_id` (the two join tables)                               | `findManyInSpell`, proof first                                                            | `insert`, `update`, `delete`                                                                            |
+| carries `ingredient_id` and no `workspace_id` (folk names, categories) | `findManyOfIngredients`, proofs first                                                     | `insert`, `update`, `softDelete` / `delete`                                                             |
+| none of those                                                          | `findMany` / `findOne` / `findOneById` / `findManyByIds` / `findManyIncludingSoftDeleted` | `insert`, `update`, `updateById`, `softDelete`, `delete`                                                |
 
 `{ workspaceId: AnyPgColumn }` and `{ workspaceId?: never }` are the two
 constraints, so each finder admits exactly one of the two sets and a table
-cannot go through the wrong one. The two middle rows are M10.3's, added by
+cannot go through the wrong one. The spell rows are M10.3's, added by
 excluding `visibility` and `spell_id` from the finders above and below them:
-["Spell visibility"](#spell-visibility-m103). A scoped finder ANDs `workspace_id =
+["Spell visibility"](#spell-visibility-m103). The ingredient-children row is
+M4.8's, added the same way by excluding `ingredient_id` from the unscoped
+finders: ["Ingredient children"](#ingredient-children-m48). A scoped finder ANDs `workspace_id =
 membership.workspaceId` onto the query **itself** rather than trusting a
 `workspaceId` beside the proof — a second source is a second thing to
 disagree — and `insertInWorkspace` fills the column from the proof for the same
@@ -1742,7 +1745,8 @@ compendium, everything else is a workspace's own — so the table matches
 `{ workspaceId: AnyPgColumn }` and `findMany(ingredients)` does not compile.
 The reads of it so far are `findSimilarIngredients` (see "Fuzzy matching"),
 `findVocabularySuggestions` and `findCommonNameSuggestions` (see "The
-member's autofill"), each naming
+member's autofill"), and `findManyOfIngredients` through the parent of a folk
+name or a category link (see "Ingredient children"), each naming
 both tiers as explicitly as this paragraph asks, and each listed on
 [the tier seam](modules.md#the-tier-seam). Whichever of M5.2 or M8 first needs
 a plain compendium read adds a finder that ANDs `workspace_id IS NULL` as explicitly as the scoped one
@@ -1802,7 +1806,11 @@ which is the same coverage that would have caught a policy written wrong:
   M10.3 closed this one by making it a third shape rather than a subset of the
   unscoped side: both tables carry a `spell_id`, the unscoped finders now
   refuse them on it, and `findManyInSpell` reaches them through the parent
-  spell. That leaves the first gap above as the live one.
+  spell. M4.8 closed the same gap for `ingredient_folk_names` and
+  `ingredient_categories`, which carry an `ingredient_id` and no
+  `workspace_id`: the unscoped finders refuse them on it, and
+  `findManyOfIngredients` reaches them through the parent ingredient. That
+  leaves the first gap above as the live one.
 
 A cast is the third gap, and it is review's job rather than the type's: a value
 that already has the proof's public shape is _comparable_ to it, so
@@ -1906,6 +1914,47 @@ scopes: the primary admin's promotion writes `users.role` by the signed-in
 user's own id, and the service cannot build `id = $1` either. It is the
 unscoped twin, typed to refuse a table carrying `workspace_id`, so a scoped
 update cannot take this route around the proof.
+
+## Ingredient children (M4.8)
+
+`ingredient_folk_names` and `ingredient_categories` hang off an ingredient and
+carry no `workspace_id` of their own, so by column name they look unscoped
+while holding a coven's rows. They take the tier of their parent: a compendium
+entry's children are public (MB.80), and a workspace entry's are its coven's.
+The shape is the one M10.3 gave the spell join tables. `{ ingredientId:
+AnyPgColumn }` is `IngredientScoped`, and the unscoped finders demand `{
+ingredientId?: never }`, so `findMany(ingredientFolkNames)` does not compile
+(`tests/db/repository/finders.test.ts` pins it with `@ts-expect-error`).
+`inventory_items` carries an `ingredient_id` too, but also its own
+`workspace_id`, so it never reached the unscoped finders to begin with.
+
+**One finder, `findManyOfIngredients(memberships, table, ingredientIds)`.** It
+returns the live child rows of those ingredients whose parent is live and is in
+the compendium or in a coven one of the proofs names, a correlated `EXISTS` for
+the reason `findManyInSpell` gives. It takes a _list_ of proofs because one
+page can hold both tiers and, in principle, several covens. An empty list reads
+the compendium alone, which is how a signed-out request reads it. It reads both
+tiers in one statement, so it is on [the tier seam](modules.md#the-tier-seam).
+
+**Two services and two loaders over it**, in `ingredients`: `categoriesOf` and
+`folkNamesOf` in `services/ingredient-children.ts`, batched as
+`categoriesByIngredient` and `folkNamesByIngredient`
+([`graphql.md`](graphql.md), "Loaders"). A key is the parent row's `{ id,
+workspaceId }`. The `workspaceId` decides which proof to ask for, one
+`assertMembership(…, { ingredient: ['read'] })` per coven the batch names, and
+a coven the caller may not read answers `Forbidden` in its own keys' slots
+while the rest of the batch stands. It is never the scope. A key that lies about
+its tier gets zero rows, because the `EXISTS` reads the parent's real one. So a
+workspace entry's children are refused by three layers, each sufficient alone:
+the check, the SQL, and the type above. `tests/modules/ingredients/loaders/`
+asserts the first two by direct id, each with its precondition, and each fails
+with its layer removed.
+
+Folk names come back as strings, flattened as §7's `folkNames: [String!]!`
+exposes them; categories come back as rows, with a soft-deleted category
+dropped by `findManyByIds`. Each list is sorted by name. The cost is one read
+for folk names and two for categories, plus one role lookup per coven in the
+batch, whatever the number of ingredients.
 
 ## Soft-delete filtering and the partial-index convention (M1.20)
 
@@ -2138,9 +2187,8 @@ answerable.
   not, and `WHERE deleted_at IS NULL` would not even compile against its
   columns.
 
-The table is inert at Wave 3 — nothing queries it until Wave 8, where M4.8's
-`categoriesByIngredient` loader is its first reader — which is CLAUDE.md's
-table-task-then-behaviour-task rule working as intended. §12's
+Its reader is M4.8's `categoriesByIngredient` loader, through
+`findManyOfIngredients` and never a generic finder (see "Ingredient children"). §12's
 assigned-versus-derived distinction reads it from the derived side: a spell's
 derived categories are the union of what this table holds for its ingredients.
 

@@ -690,13 +690,25 @@ merely absent:
 - **`src/graphql/loaders/index.ts`** registers each factory in `LOADERS`, under
   the name a resolver reads it by. `createLoaders(session)` calls every factory
   and is called only by `createContext`. Each loader arrives with the schema it
-  loads: `membershipsByUser` (`coven`, for `User.memberships`) is the first;
-  M4.8 `categoriesByIngredient`, M6.11 `membersByWorkspace`, MB.9
-  `ingredientsById` and MB.10 `usersById` follow. A test that builds a context
+  loads: `membershipsByUser` (`coven`, for `User.memberships`), and
+  `categoriesByIngredient` and `folkNamesByIngredient` (`ingredients`, for
+  M8.5's `Ingredient.categories` and `Ingredient.folkNames`); M6.11
+  `membersByWorkspace`, MB.9 `ingredientsById` and MB.10 `usersById` follow. A test that builds a context
   by hand calls `createLoaders(session)` rather than passing `{}`, which the
   `Loaders` type no longer admits. A factory is written in its module's `loaders/`, exported
   through the module's index, and spread into `LOADERS` here
   ([`modules.md`](modules.md)).
+- **A loader keyed by an object** passes `cacheKeyFn`, and `defineLoader`'s
+  third type parameter names what it returns. The two ingredient loaders are
+  keyed by the parent row's `{ id, workspaceId }` and cached by `id`. The
+  service needs the `workspaceId` to know which coven to check without a read
+  of its own, and it never trusts it as the scope ([`db.md`](db.md),
+  "Ingredient children").
+- **A null session is not always a refusal.** `membershipsByUser` refuses
+  every key signed out. The ingredient loaders answer a compendium entry for
+  anyone, since the compendium is the public surface (MB.80), and refuse a
+  workspace entry's key with `Forbidden` in its own slot. A refusal is per
+  key, never per batch.
 - **Only `define-loader.ts` may import `dataloader` at runtime.**
   `.oxlintrc.json` bans the import everywhere else. Its `src/modules/*/services/**`,
   `src/db/**` and access-boundary overrides restate the ban, because an
