@@ -10,6 +10,7 @@ import {
 import {
   herbs,
   impostor,
+  jars,
   pairs,
   session,
   sql,
@@ -66,6 +67,29 @@ describe('withAudit', () => {
 
     const rows = await sql`select id from repository_probe_herbs`;
     expect(rows).toHaveLength(1);
+  });
+
+  it('soft-deletes by id the rows named, stamping deleted_* and leaving the rest', async () => {
+    const [kept] = await withAudit(session, (write) => write.insert(herbs, { name: 'Vervain' }));
+    const [first] = await withAudit(session, (write) => write.insert(herbs, { name: 'Rue' }));
+    const [second] = await withAudit(session, (write) => write.insert(herbs, { name: 'Tansy' }));
+
+    const deleted = await withAudit(impostor, (write) =>
+      write.softDeleteByIds(herbs, [first.id, second.id]),
+    );
+
+    expect(deleted.map((row) => row.id).sort()).toEqual([first.id, second.id].sort());
+    expect(deleted.every((row) => row.deletedBy === impostor.userId)).toBe(true);
+    await expect(findMany(herbs)).resolves.toEqual([expect.objectContaining({ id: kept.id })]);
+  });
+
+  it('soft-deletes nothing, without a statement, for an empty id list', async () => {
+    await withAudit(session, (write) => write.insert(herbs, { name: 'Vervain' }));
+
+    const deleted = await withAudit(session, (write) => write.softDeleteByIds(herbs, []));
+
+    expect(deleted).toEqual([]);
+    await expect(findMany(herbs)).resolves.toHaveLength(1);
   });
 
   it('rolls the whole transaction back when the callback throws', async () => {
@@ -178,8 +202,10 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
   // build the `where` `updateInWorkspace` wants and the by-id predicate has to
   // be built below the boundary. Nine since MB.60, whose promotion of the
   // primary admin is the first by-id write to an unscoped table (`users`),
-  // for the same reason. A tenth is the next such decision.
-  it('offers exactly nine writer methods — a tenth is a decision, not a convenience', async () => {
+  // for the same reason. Ten since M8.2, whose folk-name edit tombstones the
+  // names a save dropped — a batch of ids, the soft-delete twin of
+  // `findManyByIds`. An eleventh is the next such decision.
+  it('offers exactly ten writer methods — an eleventh is a decision, not a convenience', async () => {
     const methods = await withAudit(session, async (write) => Object.keys(write).sort());
 
     expect(methods).toEqual(
@@ -188,6 +214,7 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
         'insert',
         'insertInWorkspace',
         'softDelete',
+        'softDeleteByIds',
         'softDeleteInWorkspace',
         'update',
         'updateById',
@@ -279,7 +306,18 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
       // refuses it rather than writing an UPDATE that sets nothing.
       write.softDelete(pairs, isPair(herbId, charmId));
 
+    const softDeleteAJoinTableById = (write: AuditWriter) =>
+      // @ts-expect-error — the same by id; `pairs` has neither a deleted_at nor an id.
+      write.softDeleteByIds(pairs, [herbId]);
+
+    const softDeleteAScopedTableById = (write: AuditWriter) =>
+      // @ts-expect-error — `jars` carries workspace_id, so an id list alone
+      // cannot reach it: its soft-delete is softDeleteInWorkspace, under a proof.
+      write.softDeleteByIds(jars, [herbId]);
+
     expect(hardDeleteASoftDeletableTable).toBeInstanceOf(Function);
     expect(softDeleteATableWithNothingToStamp).toBeInstanceOf(Function);
+    expect(softDeleteAJoinTableById).toBeInstanceOf(Function);
+    expect(softDeleteAScopedTableById).toBeInstanceOf(Function);
   });
 });

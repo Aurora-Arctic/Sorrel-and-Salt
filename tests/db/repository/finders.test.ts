@@ -8,6 +8,7 @@ import {
   findManyInWorkspace,
   findOne,
   findOneById,
+  findOneByIdInWorkspace,
   findOneInWorkspace,
   withAudit,
 } from '@/db/repository';
@@ -175,6 +176,36 @@ describe('the Membership proof (M6.3)', () => {
       );
 
       await expect(findManyInWorkspace(inW, jars)).resolves.toEqual([]);
+    });
+  });
+
+  describe('findOneByIdInWorkspace', () => {
+    it('returns the live row with that id in the proof’s workspace', async () => {
+      const [row] = await insertJar(inW, 'Rosehip');
+
+      await expect(findOneByIdInWorkspace(inW, jars, row.id)).resolves.toMatchObject({
+        label: 'Rosehip',
+      });
+    });
+
+    it('returns undefined for a soft-deleted row', async () => {
+      const [row] = await insertJar(inW, 'Rosehip');
+      await withAudit(session, (write) =>
+        write.softDeleteInWorkspace(inW, jars, eq(jars.id, row.id)),
+      );
+
+      await expect(findOneByIdInWorkspace(inW, jars, row.id)).resolves.toBeUndefined();
+    });
+
+    it('returns undefined for another workspace’s id, which its own proof reads', async () => {
+      const [row] = await insertJar(inX, 'Nettle');
+
+      // Why the read could have succeeded: the id is live and X's proof finds it.
+      await expect(findOneByIdInWorkspace(inX, jars, row.id)).resolves.toMatchObject({
+        label: 'Nettle',
+      });
+
+      await expect(findOneByIdInWorkspace(inW, jars, row.id)).resolves.toBeUndefined();
     });
   });
 

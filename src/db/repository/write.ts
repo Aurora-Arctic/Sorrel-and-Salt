@@ -1,4 +1,4 @@
-import { and, eq, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { applyAudit, type AuditSession } from '../audit';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
@@ -77,6 +77,15 @@ export interface AuditWriter {
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
   /**
+   * `softDelete`, naming the rows by their own ids — the soft-delete twin of
+   * `findManyByIds`, for the reason `updateById` gives. An empty list deletes
+   * nothing without a statement.
+   */
+  softDeleteByIds<TTable extends PgTable & SoftDeletable & Unscoped & Identified>(
+    table: TTable,
+    ids: readonly string[],
+  ): Promise<TTable['$inferSelect'][]>;
+  /**
    * Hard-delete, for the join tables that carry no `deleted_at` (MB.34). A
    * table carrying one is rejected by the type, as is one carrying
    * `workspace_id`: no table is both today, and the one that is first adds its
@@ -125,6 +134,8 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     updateByIdInWorkspace: (membership, table, id, values) =>
       update(table, values, and(scopedTo(membership, table), eq(table.id, id))),
     softDelete,
+    softDeleteByIds: (table, ids) =>
+      ids.length === 0 ? Promise.resolve([]) : softDelete(table, inArray(table.id, [...ids])),
     softDeleteInWorkspace: (membership, table, where) =>
       softDelete(table, and(scopedTo(membership, table), where)),
     delete: (table, where) => tx.delete(table).where(where).returning() as never,

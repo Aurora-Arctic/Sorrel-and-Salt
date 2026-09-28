@@ -1794,11 +1794,11 @@ The repository splits on the table's own shape, the way it already splits
 
 | The table                                                              | Reads                                                                                     | Writes                                                                                                  |
 | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| carries `workspace_id`                                                 | `findManyInWorkspace` / `findOneInWorkspace`, proof first                                 | `insertInWorkspace`, `updateInWorkspace`, `updateByIdInWorkspace`, `softDeleteInWorkspace`, proof first |
+| carries `workspace_id`                                                 | `findManyInWorkspace` / `findOneInWorkspace` / `findOneByIdInWorkspace`, proof first      | `insertInWorkspace`, `updateInWorkspace`, `updateByIdInWorkspace`, `softDeleteInWorkspace`, proof first |
 | carries `visibility` (`spells` alone)                                  | `findManySpells` / `findOneSpell`, proof first                                            | the workspace-scoped writes above                                                                       |
 | carries `spell_id` (the two join tables)                               | `findManyInSpell`, proof first                                                            | `insert`, `update`, `delete`                                                                            |
-| carries `ingredient_id` and no `workspace_id` (folk names, categories) | `findManyOfIngredients`, proofs first                                                     | `insert`, `update`, `softDelete` / `delete`                                                             |
-| none of those                                                          | `findMany` / `findOne` / `findOneById` / `findManyByIds` / `findManyIncludingSoftDeleted` | `insert`, `update`, `updateById`, `softDelete`, `delete`                                                |
+| carries `ingredient_id` and no `workspace_id` (folk names, categories) | `findManyOfIngredients`, proofs first                                                     | `insert`, `update`, `softDelete` / `softDeleteByIds` / `delete`                                         |
+| none of those                                                          | `findMany` / `findOne` / `findOneById` / `findManyByIds` / `findManyIncludingSoftDeleted` | `insert`, `update`, `updateById`, `softDelete`, `softDeleteByIds`, `delete`                             |
 
 `{ workspaceId: AnyPgColumn }` and `{ workspaceId?: never }` are the two
 constraints, so each finder admits exactly one of the two sets and a table
@@ -1837,8 +1837,9 @@ means instead of getting whichever the default was.
 `findOneById` and `findManyByIds` are the read-side twins of `updateById`: a
 service cannot build `eq(table.id, id)` or `inArray(...)` (MB.33), and a
 by-id read, one or batched for a loader, is what nearly every service needs.
-They sit on the unscoped side only; a workspace-scoped by-id read is
-`findOneInWorkspace` under a proof. `findManyByIds` answers an empty list
+They sit on the unscoped side only; the workspace-scoped by-id read is
+`findOneByIdInWorkspace` (M8.2), the read-side twin of
+`updateByIdInWorkspace`, which ANDs the id onto the proof’s own clause. `findManyByIds` answers an empty list
 without a query.
 
 ### The three reads that take no proof
@@ -1995,6 +1996,15 @@ user's own id, and the service cannot build `id = $1` either. It is the
 unscoped twin, typed to refuse a table carrying `workspace_id`, so a scoped
 update cannot take this route around the proof.
 
+**`softDeleteByIds` is the tenth** (M8.2), for the same reason on the delete
+side: saving an ingredient tombstones the folk names the save dropped, a batch
+of ids the service holds and cannot turn into `id IN (…)`. It is the
+soft-delete twin of `findManyByIds` — unscoped, typed to demand a
+`deletedAt` and refuse a `workspace_id`, and an empty list writes nothing.
+The proof still governs it: the ids come from `findManyOfIngredients` under
+the parent’s tier, inside the transaction that has just written the parent
+through the proof (see "Workspace ingredients").
+
 ## Ingredient children (M4.8)
 
 `ingredient_folk_names` and `ingredient_categories` hang off an ingredient and
@@ -2037,6 +2047,62 @@ exposes them; categories come back as rows, with a soft-deleted category
 dropped by `findManyByIds`. Each list is sorted by name. The cost is one read
 for folk names and two for categories, plus one role lookup per coven in the
 batch, whatever the number of ingredients.
+
+## Workspace ingredients (M8.2)
+
+A coven's own ingredients are written and read by three services in
+`ingredients`' `services/workspace-ingredients.ts`:
+`createWorkspaceIngredient` and `updateWorkspaceIngredient` ask
+`{ ingredient: ['create'] }` and `['update']`, which owners and members hold, and
+`getWorkspaceIngredient` asks `['read']`, which viewers hold too. A site admin
+holds none of them, as everywhere in a coven.
+
+**The tier is the proof's, so nothing here promotes a row to the compendium.**
+`insertInWorkspace` fills `workspace_id` from the proof, `updateByIdInWorkspace`
+cannot reassign it, and `LocalIngredientInput` strips a `workspaceId` a caller
+smuggles in. The update and the read reach a row only through
+`workspace_id = membership.workspaceId`, so a compendium entry's id or another
+coven's answers `NotFound`, the same as an id that names nothing, and naming a
+coven the caller is not in answers `Forbidden` before any row is read.
+
+**The input is the whole ingredient**, as `IngredientForm` submits it, parsed
+again by the service with `parseInput` because the browser is not the only
+caller. An update therefore replaces the row: every optional column is
+written, `null` where the input has nothing. A merge would break the
+nomenclature biconditional, because a missing `nomenclature` parses to
+`none`, and `none` beside a kept `canonical_name` is the row the CHECK refuses.
+Categories are not written here, since `LocalIngredientInput` carries none.
+
+**Folk names are written in the ingredient's own `withAudit` transaction**,
+never in a second round trip. A create inserts each one. An update diffs the
+list against the live rows, read through `findManyOfIngredients` under the
+proof, comparing names as written. A name still listed keeps its row and its
+`created_by`. A dropped one is soft-deleted through `softDeleteByIds`. A new
+one is inserted. The tombstones go first, so a name re-added in another case
+clears the case-folded unique index before the insert meets it. The service
+test asserts the one transaction by comparing `xmin`: every row a
+transaction writes carries its id.
+
+**The slug is set on create and left alone on update.** `slug` is `NOT NULL`,
+so a create writes `ingredientSlug` of the label, the form and the formal name.
+Moving it after a relabel, and retiring the old one, is MB.82's rule (see
+"Ingredient slugs"), which extends this service. Until that lands, a relabelled
+local ingredient keeps its first slug.
+
+**A collision is a `ValidationError` on the field that caused it**, never the
+raw index error. The service catches the write's failure and reads the index
+name off it with `violatedUniqueIndex` (`src/lib/unique-violation.ts`), which
+walks the error's `cause` chain for SQLSTATE 23505 without importing the
+database layer, since a service may not (MB.33). The label index lands on `name`, and so does the
+identity index for an entry with no formal name, whose label is its identity.
+With a formal name, the identity index lands on `canonicalName`. The slug index lands on `name`, naming
+the address, and can fire only on create until MB.82 makes an update move the
+slug. Catching the failure rather than checking first is deliberate: a
+check-then-write leaves a window for a concurrent save, and the index is the
+one arbiter either way. The message names what the input asked for, not the
+row already holding it. Naming the holder of an identity would take a lookup by
+`canonical_key`, which the service has no value to compare with, because the
+database computes it.
 
 ## Soft-delete filtering and the partial-index convention (M1.20)
 
