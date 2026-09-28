@@ -11,6 +11,8 @@ import {
   findOneInWorkspace,
   withAudit,
 } from '@/db/repository';
+import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
+import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
 import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
 import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
 import { spells } from '@/modules/grimoire/schema/spells';
@@ -291,5 +293,30 @@ describe('the Membership proof (M6.3)', () => {
     expect(readAssignmentsUnscoped).toBeInstanceOf(Function);
     expect(readLayersThroughTheHatch).toBeInstanceOf(Function);
     expect(scopeAJoinTableByWorkspace).toBeInstanceOf(Function);
+  });
+
+  it("refuses the generic finders an ingredient's children at compile time", () => {
+    const readAssignmentsUnscoped = () =>
+      // @ts-expect-error — `ingredient_categories` carries no workspace_id and so
+      // would pass as unscoped; the `ingredient_id` is what refuses it, because
+      // its tier is the parent ingredient's (findManyOfIngredients).
+      findMany(ingredientCategories);
+
+    const readFolkNamesUnscoped = () =>
+      // @ts-expect-error — the same for `ingredient_folk_names`, one row at a time.
+      findOne(ingredientFolkNames);
+
+    const readFolkNamesById = () =>
+      // @ts-expect-error — and by id, which a folk name has and a join row does not.
+      findManyByIds(ingredientFolkNames, [WORKSPACE_W_ID]);
+
+    const readFolkNamesThroughTheHatch = () =>
+      // @ts-expect-error — the escape hatch takes the unscoped side too.
+      findManyIncludingSoftDeleted(ingredientFolkNames);
+
+    expect(readAssignmentsUnscoped).toBeInstanceOf(Function);
+    expect(readFolkNamesUnscoped).toBeInstanceOf(Function);
+    expect(readFolkNamesById).toBeInstanceOf(Function);
+    expect(readFolkNamesThroughTheHatch).toBeInstanceOf(Function);
   });
 });

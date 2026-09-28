@@ -55,6 +55,8 @@ const TIER_SEAM: string[] = [
   'findVocabularySuggestions',
   // The common-name field's suggestions and their claimants: the compendium and this workspace.
   'findCommonNameSuggestions',
+  // An ingredient's folk names and categories, read for the compendium and the proofs' covens at once.
+  'findManyOfIngredients',
 ];
 
 /**

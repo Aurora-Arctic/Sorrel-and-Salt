@@ -29,6 +29,7 @@ const EXPORTED_FUNCTIONS = [
   'findManyByIds',
   'findManyIncludingSoftDeleted',
   'findManyInSpell',
+  'findManyOfIngredients',
   'findManyInWorkspace',
   'findManySpells',
   'findMembershipsOfUsers',

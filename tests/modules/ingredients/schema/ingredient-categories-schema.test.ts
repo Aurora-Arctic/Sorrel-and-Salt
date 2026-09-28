@@ -6,7 +6,7 @@ import { and, eq } from 'drizzle-orm';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
-import { findMany, withAudit } from '@/db/repository';
+import { withAudit } from '@/db/repository';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
 const PRIMARY_KEY = 'ingredient_categories_ingredient_id_category_id_pk';
@@ -268,9 +268,6 @@ describe('a pair removed through write.delete', () => {
 
     expect(removed).toHaveLength(1);
     expect(await pairs()).toEqual([]);
-    // `findMany` writes no `deleted_at IS NULL` for this table, so an empty
-    // read is an empty table.
-    expect(await findMany(ingredientCategories)).toEqual([]);
   });
 
   it('can be re-added afterwards, with no partial index to make it possible', async () => {

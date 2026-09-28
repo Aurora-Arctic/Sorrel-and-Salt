@@ -1,10 +1,44 @@
-import { and, asc, desc, or, sql } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/pg-core';
+import { and, asc, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm';
+import { type PgTable, alias } from 'drizzle-orm/pg-core';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { Membership } from '@/modules/coven';
 import { selectFrom } from './select';
-import { notSoftDeleted, scopedTo } from './shapes';
+import { type IngredientScoped, type Unscoped, notSoftDeleted, scopedTo } from './shapes';
+
+/**
+ * The rows of `ingredient_folk_names` or `ingredient_categories` belonging to
+ * these ingredients — readable exactly when the parent is: live, and in the
+ * compendium or in a coven one of `memberships` proves. No proofs reads the
+ * compendium alone. Neither table carries a `workspace_id`, so the correlated
+ * `EXISTS` is where the tier comes from, and a caller naming another coven's
+ * ingredient gets no rows rather than a filter applied after the fetch
+ * (rule 7). `sql` rather than a subquery builder, for the reason
+ * `findManyInSpell` gives.
+ */
+export function findManyOfIngredients<TTable extends PgTable & IngredientScoped & Unscoped>(
+  memberships: readonly Membership[],
+  table: TTable,
+  ingredientIds: readonly string[],
+): Promise<TTable['$inferSelect'][]> {
+  if (ingredientIds.length === 0) return Promise.resolve([]);
+  const readableParent = and(
+    eq(ingredients.id, table.ingredientId),
+    notSoftDeleted(ingredients),
+    or(
+      isNull(ingredients.workspaceId),
+      ...memberships.map((membership) => scopedTo(membership, ingredients)),
+    ),
+  );
+  return selectFrom(
+    table,
+    and(
+      notSoftDeleted(table),
+      inArray(table.ingredientId, [...ingredientIds]),
+      sql`exists (select 1 from ${ingredients} where ${readableParent})`,
+    ),
+  );
+}
 
 /**
  * The live ingredients, in the compendium or the proof's workspace, whose

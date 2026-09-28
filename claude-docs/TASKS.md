@@ -1576,7 +1576,7 @@ _Acceptance criteria:_
 
 _Story:_ As an operator, I want related data batched so that a 50-ingredient page does not fire 101 queries and spend compute on nothing.
 
-Implement the loader factory, `categoriesByIngredient`, and `folkNamesByIngredient` — same base, same shape, landing together as one task. Test by asserting query count, not just correctness.
+Implement the loader factory, `categoriesByIngredient`, and `folkNamesByIngredient` — same base, same shape, landing together as one task. Test by asserting query count, not just correctness. **Corrected while building:** the factory had already landed with M3.2 (`defineLoader`, per-request by construction), so this task adds the two loaders on it. A batch mixes tiers — the compendium answers a signed-out request (MB.80) — so the keys are the parent rows and the bound is one or two reads plus one role lookup per coven in the batch, not per ingredient. The children tables take their parent's tier through `findManyOfIngredients`, and the unscoped finders refuse them, as M10.3 did for the spell join tables ([`design-decisions/m4.8-plan.md`](design-decisions/m4.8-plan.md)).
 
 _Acceptance criteria:_
 

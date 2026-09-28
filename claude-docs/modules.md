@@ -30,7 +30,8 @@ registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
 `FormSuggestion`, `SuggestionClaimant` and the `planetSuggestions`,
 `zodiacSuggestions` and `formSuggestions` connections; `ingredients` has
 `CommonNameSuggestion` and `commonNameSuggestions`, whose claimants reuse
-`vocabulary`'s `SuggestionClaimant` — the edge runs that way round. A field on another module's type is added from the module allowed to
+`vocabulary`'s `SuggestionClaimant` — the edge runs that way round — plus the
+`categoriesByIngredient` and `folkNamesByIngredient` loaders. A field on another module's type is added from the module allowed to
 import it — `memberships` lives in `coven` because `identity` imports
 nothing.
 
@@ -56,13 +57,13 @@ What stays outside a module, and why:
 Every table has exactly one owner. The services column is what exists today;
 a service lands in the module that owns the table it writes.
 
-| Module        | Tables                                                                                                                            | Services today                                                                 |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `identity`    | `users`, `sessions`, `accounts`, `verifications`, `rate_limits`; later `admin_invitations`                                        | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts` |
-| `coven`       | `workspaces`, `workspace_members`, `workspace_invitations`                                                                        | `membership.ts`, `memberships.ts`, `access-control.ts`                         |
-| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`                          | `suggestions.ts`                                                               |
-| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_categories`, `inventory_items`; later `retired_ingredient_slugs` | `duplicates.ts`; `schema/units.ts` is the unit vocabulary                      |
-| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                 | `spell-visibility.ts`                                                          |
+| Module        | Tables                                                                                                                            | Services today                                                                                         |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `identity`    | `users`, `sessions`, `accounts`, `verifications`, `rate_limits`; later `admin_invitations`                                        | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                         |
+| `coven`       | `workspaces`, `workspace_members`, `workspace_invitations`                                                                        | `membership.ts`, `memberships.ts`, `access-control.ts`                                                 |
+| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`                          | `suggestions.ts`                                                                                       |
+| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_categories`, `inventory_items`; later `retired_ingredient_slugs` | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`; `schema/units.ts` is the unit vocabulary |
+| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                 | `spell-visibility.ts`                                                                                  |
 
 **The compendium is a tier inside `ingredients`, not a module.** Both tiers
 share one table, one identity model, one search component and one detail
@@ -176,11 +177,12 @@ containing `workspace_id is null` or `isNull(workspaceId)`, and anything that
 reads both tiers in one statement. The guard fails an unlisted finder, and it
 fails a listed one that no longer exists.
 
-It holds three finders today: `findSimilarIngredients` (M4.7), the fuzzy
+It holds four finders today: `findSimilarIngredients` (M4.7), the fuzzy
 duplicate match; `findVocabularySuggestions` (MB.94, forms M4.7a), the
-planet, zodiac and form autofill; and `findCommonNameSuggestions` (M4.7a),
-the common-name autofill. Each reads the compendium and one workspace in a
-single statement. A later task that adds such a finder — M5.1's admin reads, the
+planet, zodiac and form autofill; `findCommonNameSuggestions` (M4.7a), the
+common-name autofill; and `findManyOfIngredients` (M4.8), an ingredient's folk
+names and category links. Each reads the compendium and the proofs'
+workspaces in a single statement. A later task that adds such a finder — M5.1's admin reads, the
 merged two-tier list, local-beats-compendium resolution — adds the finder's
 name to `TIER_SEAM` in its own PR, with a one-line reason beside it.
 The list is then the scope of the extraction task, read from one file.
@@ -215,7 +217,7 @@ trigger, isolation and pagination tests — and the shared db harness is
   spreads each module's map into `LOADERS`, so `createLoaders(session)` still
   builds one fresh set per request.
 
-Three modules register types today and one registers a loader. What is fixed
+Three modules register types today and two register loaders. What is fixed
 is that the host reaches each through the module's index.
 
 ## Adding a module

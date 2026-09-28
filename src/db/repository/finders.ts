@@ -7,6 +7,7 @@ import {
   notSoftDeleted,
   scopedTo,
   type Identified,
+  type NotIngredientScoped,
   type NotSpellScoped,
   type NotVisibilityScoped,
   type Unscoped,
@@ -14,7 +15,7 @@ import {
 } from './shapes';
 
 /** All matching, non-soft-deleted rows. The default and normal-use finder. */
-export function findMany<TTable extends PgTable & Unscoped & NotSpellScoped>(
+export function findMany<TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped>(
   table: TTable,
   where?: SQL,
 ): Promise<TTable['$inferSelect'][]> {
@@ -24,10 +25,9 @@ export function findMany<TTable extends PgTable & Unscoped & NotSpellScoped>(
 }
 
 /** The first matching, non-soft-deleted row, or `undefined`. */
-export async function findOne<TTable extends PgTable & Unscoped & NotSpellScoped>(
-  table: TTable,
-  where?: SQL,
-): Promise<TTable['$inferSelect'] | undefined> {
+export async function findOne<
+  TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped,
+>(table: TTable, where?: SQL): Promise<TTable['$inferSelect'] | undefined> {
   const [row] = await findMany(table, where);
   return row;
 }
@@ -36,17 +36,16 @@ export async function findOne<TTable extends PgTable & Unscoped & NotSpellScoped
  * The live row with this id, or `undefined`. The read-side twin of
  * `write.updateById`: a service cannot build `eq(table.id, id)` itself (MB.33).
  */
-export async function findOneById<TTable extends PgTable & Unscoped & NotSpellScoped & Identified>(
-  table: TTable,
-  id: string,
-): Promise<TTable['$inferSelect'] | undefined> {
+export async function findOneById<
+  TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
+>(table: TTable, id: string): Promise<TTable['$inferSelect'] | undefined> {
   const [row] = await findMany(table, eq(table.id, id));
   return row;
 }
 
 /** The live rows among these ids, in no particular order — a loader's batch read. */
 export async function findManyByIds<
-  TTable extends PgTable & Unscoped & NotSpellScoped & Identified,
+  TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
 >(table: TTable, ids: readonly string[]): Promise<TTable['$inferSelect'][]> {
   if (ids.length === 0) return [];
   return findMany(table, inArray(table.id, [...ids]));
@@ -74,7 +73,9 @@ export async function findOneInWorkspace<
  * cursor it was found at: CLAUDE.md rule 8's keyset half. `page` comes from
  * `resolvePage` in `src/lib/pagination.ts`, already clamped to the maximum.
  */
-export function findPage<TTable extends PgTable & Unscoped & NotSpellScoped & Identified>(
+export function findPage<
+  TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
+>(
   table: TTable,
   sort: SortColumn,
   page: PageRequest,
@@ -108,9 +109,8 @@ export function findPageInWorkspace<
  * the diff. Workspace-scoped tables are not reachable through it — v1 has no
  * restore UI, and the task that adds one adds its proof-scoped counterpart.
  */
-export function findManyIncludingSoftDeleted<TTable extends PgTable & Unscoped & NotSpellScoped>(
-  table: TTable,
-  where?: SQL,
-): Promise<TTable['$inferSelect'][]> {
+export function findManyIncludingSoftDeleted<
+  TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped,
+>(table: TTable, where?: SQL): Promise<TTable['$inferSelect'][]> {
   return selectFrom(table, where);
 }

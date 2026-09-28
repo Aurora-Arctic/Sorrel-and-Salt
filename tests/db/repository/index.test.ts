@@ -12,6 +12,7 @@ describe('repository public API', () => {
         'findManyByIds',
         'findManyIncludingSoftDeleted',
         'findManyInSpell',
+        'findManyOfIngredients',
         'findManyInWorkspace',
         'findManySpells',
         'findMembershipsOfUsers',
