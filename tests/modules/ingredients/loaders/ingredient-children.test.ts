@@ -10,6 +10,8 @@ import {
   folkNamesByIngredient,
 } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { makeIngredient } from '../../../support/fixtures';
 
 // The query count, observed at the repository: every read the path reaches is
 // wrapped so the test counts calls without changing what they answer. A role
@@ -41,7 +43,8 @@ interface Written {
   categories: string[];
 }
 
-// Three of §6's seeded categories, picked by name so the expectation reads.
+// Three of §6's seeded categories, picked by name so the expectation reads;
+// the ids are what the loader answers with.
 const CATEGORY_NAMES = ['Banishing', 'Protection', 'Cleansing'];
 let categoryIds: Map<string, string>;
 
@@ -64,25 +67,13 @@ async function addIngredient(
   folkNames: string[],
   categories: string[],
 ): Promise<Written> {
-  const [row] = await sql`
-    insert into ingredients (workspace_id, name, nomenclature, created_by, updated_by)
-    values (${workspaceId}, ${name}, 'none', ${A.id}, ${A.id})
-    returning id
-  `;
-  for (const folkName of folkNames) {
-    await sql`
-      insert into ingredient_folk_names (ingredient_id, name, created_by, updated_by)
-      values (${row.id}, ${folkName}, ${A.id}, ${A.id})
-    `;
-  }
-  for (const category of categories) {
-    await sql`
-      insert into ingredient_categories (ingredient_id, category_id, created_by, updated_by)
-      values (${row.id}, ${categoryIds.get(category) as string}, ${A.id}, ${A.id})
-    `;
-  }
+  const id = await insertIngredient(
+    sql,
+    makeIngredient({ name, workspaceId, nomenclature: 'none', folkNames, categories }),
+    A.id,
+  );
   return {
-    ref: { id: row.id as string, workspaceId },
+    ref: { id, workspaceId },
     // What each loader answers: sorted by name, whatever order they were written in.
     folkNames: [...folkNames].sort(),
     categories: [...categories].sort(),

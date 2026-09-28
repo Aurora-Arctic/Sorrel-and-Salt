@@ -310,8 +310,8 @@ coverage table (`.github/scripts/summarize-vitest.mjs`).
 
 ## The db test harness — `tests/support/db/` (MB.51)
 
-Two modules the `tests/db/` and `tests/modules/` files share, and a sweep
-built on them. They sit in their own directory under `tests/support/` because
+Two modules the `tests/db/` and `tests/modules/` files share, a sweep built
+on them, and the setup inserter. They sit in their own directory under `tests/support/` because
 the rest of `tests/support/` may not import `drizzle-orm` at runtime —
 `.oxlintrc.json`'s `no-restricted-imports` bans it everywhere but the database
 layer and its tests (CLAUDE.md rule 4), and
@@ -365,6 +365,13 @@ run as a test.
   `UNAUDITED_TABLES` (Better Auth's `accounts`, `sessions`, `verifications`)
   moved here from `updated-at-trigger.test.ts` so the trigger sweep and the
   audit-columns sweep read one list.
+
+- **`insert-ingredient.ts` — `insertIngredient(sql, fixture, author)`** (MB.101).
+  The setup inserter for an ingredient and its children, on the raw client and
+  in one transaction. Why setup goes this way rather than through `withAudit`
+  is under "Fixture factories" below, where the convention is stated; its test
+  is `tests/db/insert-ingredient.test.ts`, under `tests/db/` because that is
+  the project with a database.
 
 - **`tests/db/audit-columns.test.ts` — one sweep instead of a copy per
   file.** It holds two transcribed lists of Drizzle table _objects_ — the
@@ -528,12 +535,37 @@ makeWorkspace({ name: 'Fixture Coven Two' });
 
 **They are objects, not inserts.** Nothing here opens a connection, which is
 what lets the `unit` project test them with no Postgres in sight and leaves
-every caller to write its row the way it already does. Each fixture is typed
+the inserting to the caller — or, for an ingredient, to the shared inserter
+below. Each fixture is typed
 against its table's own `$inferInsert` — the same idiom `src/db/seed`'s types
 use — so a column renamed in a module's `schema/` is a compile error in every
 fixture that names it. The schema import is `import type`: a runtime import of
 the schema is a runtime import of drizzle-orm, and `tests/support/` is not
 among the paths allowed to make one (CLAUDE.md rule 4 / MB.33).
+
+**Setup rows go through the raw `postgres` client and the shared inserters;
+a test whose subject is the write path is the one that uses `withAudit`**
+(MB.101). Setup must not depend on the code under test, and the writer refuses
+states setup regularly needs — an already-deleted row, an un-delete, a
+backdated stamp, a Better Auth row — while a compendium ingredient cannot be
+written through `withAudit` at all: `write.insert` rejects `ingredients` as
+`WorkspaceScoped`, and `insertInWorkspace` fills the column from the proof.
+The seed is the one sanctioned writer outside `withAudit` (CLAUDE.md rule 3),
+and a test inserter is the same kind of thing, so it does what the seed does.
+[`tests/support/db/insert-ingredient.ts`](../tests/support/db/insert-ingredient.ts)'s
+`insertIngredient(sql, fixture, author)` writes an `IngredientFixture`'s row,
+its folk names and its category links in one transaction, stamps every row's
+`created_by`/`updated_by` from `author`, and publishes `app.current_user_id`
+inside the transaction, so a v2 history trigger would record the author
+rather than nothing; category names are resolved through the seeded
+`categories`, and a name with no live row is a thrown error naming it, never a
+silent skip. Every ingredient-family service, loader and GraphQL test seeds
+through it, keeping at most a one-line adapter from what the file states to a
+fixture. Two kinds of raw insert stay, on purpose: a schema test's, which is
+its subject, and the volume loads in
+`tests/modules/ingredients/services/*-plan.test.ts` — tens of thousands of
+`generate_series` rows that are the planner's ballast rather than fixtures,
+and no business of a row-at-a-time inserter.
 
 **Default names are invented, never real.** M1.27 seeds the `standard`
 scenario into the template every `db` worker clones, and the
@@ -618,6 +650,10 @@ beside them:
 ```ts
 insert into ingredients ${sql({ ...ingredientColumns(makeIngredient(overrides)), created_by: AUTHOR, updated_by: AUTHOR })}
 ```
+
+That spread is what a schema test writes by hand. For an ingredient a test is
+not testing the writing of, it is `insertIngredient`'s (above), which spreads
+the author over the row and its children alike.
 
 The camelCase→snake_case mapping is a string transform rather than a read of
 Drizzle's column metadata, which would be the obvious source of truth:

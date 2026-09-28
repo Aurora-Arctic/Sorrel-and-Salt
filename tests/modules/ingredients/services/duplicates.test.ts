@@ -4,6 +4,8 @@ import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
 import { findPossibleDuplicates } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
 // DESIGN.md §5, "Fuzzy duplicate warning": near-misses on the display name,
 // the formal name or any folk name, from the compendium and the caller's own
@@ -20,34 +22,10 @@ beforeEach(async () => {
   await sql`truncate ingredients cascade`;
 });
 
-interface Entry {
-  name: string;
-  canonicalName?: string | null;
-  workspaceId?: string | null;
-  folkNames?: string[];
-}
-
-async function addIngredient({
-  name,
-  canonicalName = null,
-  workspaceId = null,
-  folkNames = [],
-}: Entry): Promise<string> {
-  const [row] = await sql`
-    insert into ingredients (workspace_id, name, canonical_name, nomenclature, created_by, updated_by)
-    values (
-      ${workspaceId}, ${name}, ${canonicalName},
-      ${canonicalName === null ? 'none' : 'botanical'}, ${A.id}, ${A.id}
-    )
-    returning id
-  `;
-  for (const folkName of folkNames) {
-    await sql`
-      insert into ingredient_folk_names (ingredient_id, name, created_by, updated_by)
-      values (${row.id}, ${folkName}, ${A.id}, ${A.id})
-    `;
-  }
-  return row.id as string;
+/** A row of this file's: no formal name, and so `none`, unless one is stated. */
+function addIngredient(entry: Overrides<IngredientFixture>): Promise<string> {
+  const nomenclature = entry.canonicalName ? 'botanical' : 'none';
+  return insertIngredient(sql, makeIngredient({ nomenclature, ...entry }), A.id);
 }
 
 async function similarity(a: string, b: string): Promise<number> {

@@ -6,6 +6,8 @@ import { type ConnectionArgs, type Page, encodeCursor, resolvePage } from '@/lib
 import type { Session } from '@/lib/session';
 import { type FormSuggestion, suggestForms } from '@/modules/vocabulary';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
 // DESIGN.md §5 and §9: the `form` field's autofill offers the curated
 // vocabulary first, each row with its group, then the uncurated values in use
@@ -29,26 +31,15 @@ beforeEach(async () => {
   await sql`update ingredient_form_groups set deleted_at = null, deleted_by = null where deleted_at is not null`;
 });
 
-interface Entry {
-  name: string;
-  canonicalName?: string | null;
-  workspaceId?: string | null;
-  form: string | null;
-}
-
-async function addIngredient({
-  name,
-  canonicalName = null,
-  workspaceId = null,
-  form,
-}: Entry): Promise<string> {
-  const nomenclature = canonicalName ? 'botanical' : 'none';
-  const [row] = await sql`
-    insert into ingredients (workspace_id, name, canonical_name, nomenclature, form, created_by, updated_by)
-    values (${workspaceId}, ${name}, ${canonicalName}, ${nomenclature}, ${form}, ${A.id}, ${A.id})
-    returning id
-  `;
-  return row.id as string;
+/**
+ * A row of this file's: the form stated, since that is what the file is
+ * about, and no formal name, and so `none`, unless one is stated.
+ */
+function addIngredient(
+  entry: Overrides<IngredientFixture> & Pick<IngredientFixture, 'form'>,
+): Promise<string> {
+  const nomenclature = entry.canonicalName ? 'botanical' : 'none';
+  return insertIngredient(sql, makeIngredient({ nomenclature, ...entry }), A.id);
 }
 
 /** A second live form sharing a seeded one's display name, in another group. */

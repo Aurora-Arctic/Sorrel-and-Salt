@@ -7,6 +7,8 @@ import { schema } from '@/graphql/schema';
 import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
+import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { makeIngredient } from '../../../support/fixtures';
 
 // The transport half of M4.7a's common-name lookup: one bucket, each name
 // with its claimants, refused signed out before the service is reached and by
@@ -20,15 +22,8 @@ beforeAll(() => {
 
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
-  const [row] = await sql`
-    insert into ingredients (workspace_id, name, canonical_name, nomenclature, created_by, updated_by)
-    values (null, 'Testwort', 'Fixtura testalis', 'botanical', ${A.id}, ${A.id})
-    returning id
-  `;
-  await sql`
-    insert into ingredient_folk_names (ingredient_id, name, created_by, updated_by)
-    values (${row.id}, 'Fixture Bane', ${A.id}, ${A.id})
-  `;
+  // Testwort, Fixtura testalis: the compendium entry the factory defaults to.
+  await insertIngredient(sql, makeIngredient({ folkNames: ['Fixture Bane'] }), A.id);
 });
 
 interface Connection {

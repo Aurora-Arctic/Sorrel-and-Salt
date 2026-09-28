@@ -6,6 +6,8 @@ import { type ConnectionArgs, type Page, encodeCursor, resolvePage } from '@/lib
 import type { Session } from '@/lib/session';
 import { type CommonNameSuggestion, suggestCommonNames } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
 // DESIGN.md §9, "Entry-time lookups are permission-scoped": typing a common
 // name suggests the names already in use in the compendium and the caller's
@@ -24,36 +26,10 @@ beforeEach(async () => {
   await sql`truncate ingredients cascade`;
 });
 
-interface Entry {
-  name: string;
-  canonicalName?: string | null;
-  workspaceId?: string | null;
-  form?: string | null;
-  folkNames?: string[];
-}
-
-async function addIngredient({
-  name,
-  canonicalName = null,
-  workspaceId = null,
-  form = null,
-  folkNames = [],
-}: Entry): Promise<string> {
-  const [row] = await sql`
-    insert into ingredients (workspace_id, name, canonical_name, nomenclature, form, created_by, updated_by)
-    values (
-      ${workspaceId}, ${name}, ${canonicalName},
-      ${canonicalName === null ? 'none' : 'botanical'}, ${form}, ${A.id}, ${A.id}
-    )
-    returning id
-  `;
-  for (const folkName of folkNames) {
-    await sql`
-      insert into ingredient_folk_names (ingredient_id, name, created_by, updated_by)
-      values (${row.id}, ${folkName}, ${A.id}, ${A.id})
-    `;
-  }
-  return row.id as string;
+/** A row of this file's: no formal name, and so `none`, unless one is stated. */
+function addIngredient(entry: Overrides<IngredientFixture>): Promise<string> {
+  const nomenclature = entry.canonicalName ? 'botanical' : 'none';
+  return insertIngredient(sql, makeIngredient({ nomenclature, ...entry }), A.id);
 }
 
 function pageOf(

@@ -11,6 +11,8 @@ import {
   suggestZodiacSigns,
 } from '@/modules/vocabulary';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
 // DESIGN.md §5, "The two readers are scoped differently": a member's autofill
 // for `planet` or `zodiac` offers the curated vocabulary first, then the
@@ -32,25 +34,9 @@ beforeEach(async () => {
   await sql`update zodiac_signs set deleted_at = null, deleted_by = null where deleted_at is not null`;
 });
 
-interface Entry {
-  name: string;
-  workspaceId?: string | null;
-  planet?: string | null;
-  zodiac?: string | null;
-}
-
-async function addIngredient({
-  name,
-  workspaceId = null,
-  planet = null,
-  zodiac = null,
-}: Entry): Promise<string> {
-  const [row] = await sql`
-    insert into ingredients (workspace_id, name, nomenclature, planet, zodiac, created_by, updated_by)
-    values (${workspaceId}, ${name}, 'none', ${planet}, ${zodiac}, ${A.id}, ${A.id})
-    returning id
-  `;
-  return row.id as string;
+/** A row of this file's: no formal name, so `none`; what matters is its planet or sign. */
+function addIngredient(entry: Overrides<IngredientFixture>): Promise<string> {
+  return insertIngredient(sql, makeIngredient({ nomenclature: 'none', ...entry }), A.id);
 }
 
 async function similarity(a: string, b: string): Promise<number> {
