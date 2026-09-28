@@ -563,14 +563,19 @@ follows is enough to redo the sum.
 the tier: move `playwright.yml` too, with its own `.actrc` line. Over 80%:
 drop `vitest.yml` to `blacksmith-4vcpu-ubuntu-2404`. Otherwise leave it.
 
-The `vitest / vitest` job. The Blacksmith row is a second run, since the first
-pays the cold image cache:
+The `vitest / vitest` job. A cold run is the first on a new image tag; a warm
+one finds both images in Blacksmith's cache. Six of the warm run's seventeen
+seconds were the wait for Postgres's first health check, 5s after start under
+`--health-interval=5s`; every service since probes each second for its first
+ten (`--health-start-interval=1s`, Docker 25 or later), so a service is marked
+healthy within a second of being ready:
 
-| Run                            | Initialize containers | Run vitest | Job     |
-| ------------------------------ | --------------------- | ---------- | ------- |
-| GitHub, before MB.97 (#517)    | 38s                   | 110s       | 2m47s   |
-| GitHub, after MB.97 (#527)     | 39s                   | 79s        | 2m14s   |
-| Blacksmith 8 vCPU (MB.96's PR) | PENDING               | PENDING    | PENDING |
+| Run                            | Initialize containers | Run vitest | Job   |
+| ------------------------------ | --------------------- | ---------- | ----- |
+| GitHub, before MB.97 (#517)    | 38s                   | 110s       | 2m47s |
+| GitHub, after MB.97 (#527)     | 39s                   | 79s        | 2m14s |
+| Blacksmith 8 vCPU, cold (#528) | 23s                   | 16s        | 56s   |
+| Blacksmith 8 vCPU, warm (#528) | 17s                   | 17s        | 51s   |
 
 ## Smoke checks
 

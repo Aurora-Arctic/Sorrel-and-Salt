@@ -146,7 +146,7 @@ Files: `.github/workflows/vitest.yml`, `.actrc`, `claude-docs/ci.md`, `claude-do
 3. `.actrc`: add `-P blacksmith-8vcpu-ubuntu-2404=catthehacker/ubuntu:act-latest` — its own comment says every label a workflow pins needs a mapping or `act` finds no platform. Reword "the label … every workflow pins" to name both labels.
 4. `claude-docs/ci.md`: the "Runners are pinned to `ubuntu-26.04`" bullet gains the exception and the reason; the "~20s on a `checks` leg, 37s on `vitest`" container-pull line gets the cached figure once measured; add a short **Runner budget** paragraph carrying the table above and the two-week review rule, so the next person can redo the sum.
 5. Record before/after job times in `ci.md` from the second Blacksmith run (the first pays the cold image cache).
-6. As built: the "before" row is MB.97's own measured result, not #517 — `Run vitest` 79s and the job 2m14s on #527, against the 110s and 2m47s this plan started from, so the split took 31s off the step where Part 1 estimated 20–28s. `ci.md`'s new "Runner budget" section carries the table, the review rule and both timings.
+6. As built: the "before" row is MB.97's own measured result, not #517 — `Run vitest` 79s and the job 2m14s on #527, against the 110s and 2m47s this plan started from, so the split took 31s off the step where Part 1 estimated 20–28s. On Blacksmith (#528) the job took 56s cold and 51s warm, with `Run vitest` at 16–17s: the step estimate was ~35–40s and the job ~1m00s. `ci.md`'s new "Runner budget" section carries the table, the review rule and every timing.
 
 ## Considered and not in scope, so they are not re-investigated
 

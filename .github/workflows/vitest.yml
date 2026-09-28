@@ -69,9 +69,13 @@ jobs:
           POSTGRES_USER: sorrel
           POSTGRES_PASSWORD: sorrel
           POSTGRES_DB: sorrel
+        # Probed every second for the first ten while it starts, not after the
+        # first 5s interval, so the job waits on the service rather than the clock.
         options: >-
           --health-cmd="pg_isready -U postgres -d sorrel_template"
           --health-interval=5s
+          --health-start-period=10s
+          --health-start-interval=1s
           --health-timeout=5s
           --health-retries=10
     defaults:
