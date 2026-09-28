@@ -23,6 +23,7 @@ describe('repository public API', () => {
         'findPageInWorkspace',
         'findSimilarIngredients',
         'findUserByEmail',
+        'findVocabularySuggestions',
         'findWorkspaceRole',
         'withAudit',
       ].sort(),

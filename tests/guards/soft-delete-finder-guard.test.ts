@@ -39,6 +39,7 @@ const EXPORTED_FUNCTIONS = [
   'findPageInWorkspace',
   'findSimilarIngredients',
   'findUserByEmail',
+  'findVocabularySuggestions',
   'findWorkspaceRole',
   'withAudit',
 ];
@@ -52,6 +53,7 @@ const SCOPED_FINDERS = [
   'findOneInWorkspace',
   'findPageInWorkspace',
   'findSimilarIngredients',
+  'findVocabularySuggestions',
 ];
 
 /**

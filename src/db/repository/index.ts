@@ -26,6 +26,11 @@ export {
 } from './finders';
 export { findManyInSpell, findManySpells, findOneSpell } from './spells';
 export { findSimilarIngredients } from './ingredients';
+export {
+  findVocabularySuggestions,
+  type SuggestingVocabulary,
+  type VocabularySuggestion,
+} from './vocabularies';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';
 export { findUserByEmail } from './users';
 export { deleteProvisionalUsers } from './provisional-users';

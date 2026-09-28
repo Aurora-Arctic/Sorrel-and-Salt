@@ -5,6 +5,7 @@ import './audit';
 // deep import of it fails lint and tests/guards/module-boundaries.test.ts.
 import '@/modules/identity';
 import '@/modules/coven';
+import '@/modules/vocabulary';
 
 // `ok` mirrors Better Auth's `/api/auth/ok`: a probe that answers without a
 // session or the database, which the route's tests and e2e spec query.
