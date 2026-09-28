@@ -4,6 +4,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { CATEGORIES } from '@/db/seed/categories';
+import { PLANETS, ZODIAC_SIGNS } from '@/db/seed/astrology';
 import { FORMS } from '@/db/seed/forms';
 import {
   COMPENDIUM_INGREDIENTS,
@@ -47,6 +48,7 @@ interface IngredientRow {
   canonical_name: string | null;
   nomenclature: string;
   form: string | null;
+  planet: string | null;
   canonical_key: string;
   created_by: string;
 }
@@ -224,10 +226,31 @@ describe('the compendium', () => {
   it('seeds the admin-curated reference data the scenario stands on', async () => {
     await seedStandard(db);
 
-    // A whole compendium: categories and forms are what an entry is filed
-    // under and what its `form` is autofilled from.
+    // A whole compendium: categories are what an entry is filed under, and
+    // the forms, planets and signs what its `form`, `planet` and `zodiac`
+    // are autofilled from.
     expect(await countOf('categories')).toBe(CATEGORIES.length);
     expect(await countOf('ingredient_forms')).toBe(FORMS.length);
+    expect(await countOf('planets')).toBe(PLANETS.length);
+    expect(await countOf('zodiac_signs')).toBe(ZODIAC_SIGNS.length);
+  });
+
+  // Unlike `form`, no uncurated planet is seeded: the admin's to-do list is
+  // exercised by the tests that write one.
+  it('sets only curated planets, compared case-insensitively', async () => {
+    await seedStandard(db);
+
+    const curated = await sql<{ name: string }[]>`select name from planets`;
+    const curatedNames = new Set(curated.map((row) => row.name.toLowerCase()));
+    const inUse = [
+      ...new Set((await compendium()).flatMap((e) => (e.planet === null ? [] : [e.planet]))),
+    ];
+
+    // Precondition: there are planets on both sides to compare.
+    expect(curatedNames.size).toBe(PLANETS.length);
+    expect(inUse.length).toBeGreaterThanOrEqual(5);
+
+    expect(inUse.filter((planet) => !curatedNames.has(planet.toLowerCase()))).toEqual([]);
   });
 
   it('holds enough entries to exercise search', async () => {
@@ -341,6 +364,8 @@ describe('re-running the scenario', () => {
       assignments: await countOf('ingredient_categories'),
       categories: await countOf('categories'),
       forms: await countOf('ingredient_forms'),
+      planets: await countOf('planets'),
+      zodiacSigns: await countOf('zodiac_signs'),
     };
 
     await expect(seedStandard(db)).resolves.toBeUndefined();
@@ -354,6 +379,8 @@ describe('re-running the scenario', () => {
       assignments: await countOf('ingredient_categories'),
       categories: await countOf('categories'),
       forms: await countOf('ingredient_forms'),
+      planets: await countOf('planets'),
+      zodiacSigns: await countOf('zodiac_signs'),
     }).toEqual(before);
   });
 

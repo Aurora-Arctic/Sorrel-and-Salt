@@ -9,6 +9,7 @@ import { ingredientCategories } from '../../modules/ingredients/schema/ingredien
 import { applyAudit } from '../audit';
 import { slugify } from '../../lib/slugify';
 import { categoryIdByName, seedCategoryVocabulary } from './categories';
+import { seedAstrologyVocabularies } from './astrology';
 import { seedFormVocabulary } from './forms';
 import { beginSeedTransaction, insertMissing, requireFrom } from './idempotent';
 import type { SeedDatabase, SeedTransaction } from './index';
@@ -410,6 +411,7 @@ export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
   // key. Inside this transaction so a scenario is never half-applied.
   await seedFormVocabulary(tx);
   await seedCategoryVocabulary(tx);
+  await seedAstrologyVocabularies(tx);
 
   await insertMissingUsers(tx);
   await insertMissingWorkspaces(tx);
