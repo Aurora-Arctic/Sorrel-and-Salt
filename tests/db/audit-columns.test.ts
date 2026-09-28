@@ -24,6 +24,7 @@ import {
 } from '@/modules/vocabulary/schema/ingredient-forms';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { inventoryItems } from '@/modules/ingredients/schema/inventory-items';
+import { retiredIngredientSlugs } from '@/modules/ingredients/schema/retired-ingredient-slugs';
 import { planets, zodiacSigns } from '@/modules/vocabulary/schema/astrology';
 import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
 import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
@@ -47,6 +48,7 @@ const AUDITED: PgTable[] = [
   ingredients,
   inventoryItems,
   planets,
+  retiredIngredientSlugs,
   spells,
   users,
   workspaceInvitations,
@@ -97,8 +99,8 @@ async function byReferencesOf(table: string): Promise<Record<string, Reference>>
 const USERS_ID = { foreign_table: 'users', foreign_column: 'id' };
 
 describe('the audited tables', () => {
-  it('are the seventeen the updated_at sweep names: fourteen audited, three stamped', () => {
-    expect(AUDITED).toHaveLength(14);
+  it('are the eighteen the updated_at sweep names: fifteen audited, three stamped', () => {
+    expect(AUDITED).toHaveLength(15);
     expect(STAMPED).toHaveLength(3);
     expect([...named(AUDITED), ...named(STAMPED)].map(([name]) => name).sort()).toEqual(
       AUDITED_TABLES,

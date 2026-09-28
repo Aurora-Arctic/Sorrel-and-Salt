@@ -315,7 +315,9 @@ rule, one step earlier: cheapest to get right before anything depends on it.
 What follows describes all three as built.
 
 - **`ingredients`** — `id`, `workspaceId` (nullable: `NULL` is the compendium
-  tier, non-null is a workspace's own ingredient), `name`, `canonicalName`,
+  tier, non-null is a workspace's own ingredient), `name`, `slug`,
+  `pendingSlug`, `pendingSlugEffectiveAt` (MB.81; "Ingredient slugs" below),
+  `canonicalName`,
   `nomenclature`, `form`, the generated `canonicalKey`, the correspondence
   columns (`description`, `element`, `planet`, `zodiac`, `deities[]`, `color`,
   `safetyNotes`, `substitutes[]`), + audit. `name` is the display label —
@@ -326,7 +328,8 @@ What follows describes all three as built.
   the exact opposite of `form`, and the reason the two are easy to confuse
   but never interchangeable. `deities` and `substitutes` are native
   `text[]` columns, one of the things SQLite could not have run (DESIGN.md
-  §14). Four indexes: M4.1a's three partial unique ones (below) plus
+  §14). Eight indexes: M4.1a's three partial unique ones (below), MB.81's four
+  on the slug and the pending claim ("Ingredient slugs" below), and
   `ingredients_trgm` (M4.6), one multicolumn `gin_trgm_ops` index over `name`
   and `canonical_name` — see "Fuzzy matching" below.
 - **`ingredient_folk_names`** — `id`, `ingredientId` (FK to `ingredients`),
@@ -431,7 +434,8 @@ above — deleting a row must not permanently reserve its identity or its
 label (CLAUDE.md rule 4). The label index is workspace-tier only: inside one
 workspace an ambiguous label is a mistake, but the compendium deliberately
 allows several rows to display the same label (four unrelated "Cat's Claw"
-entries) as long as they're different identities. They're indexes rather
+entries) as long as they're different identities; the formal name that keeps
+them apart is in the slug too ("Ingredient slugs" below). They're indexes rather
 than unique constraints because Drizzle's `nullsNotDistinct()` exists only
 on constraints, and a constraint can't carry a `WHERE` predicate at all —
 since every unique index in this schema must be partial, the constraint form
@@ -557,6 +561,80 @@ limit, not a gap left for later.
 Full column list, the CHECK constraints' exact text, and the
 local-beats-compendium resolution query that reads these indexes: DESIGN.md
 §5.
+
+### Ingredient slugs (MB.80; table MB.81, rule MB.82)
+
+Every ingredient carries a URL slug, and a compendium entry's is its public
+address, `/compendium/ingredients/[slug]`. MB.81 lands the columns, the
+indexes and the retirements table; nothing reads any of them until MB.82
+writes the rule on top. The argument for each choice is
+[`mb.80-public-compendium.md`](design-decisions/mb.80-public-compendium.md);
+what follows is what exists.
+
+- **`slug` is the label, the form and the formal name, always.**
+  `ingredientSlug(name, form, canonicalName)` in `src/lib/slugify.ts` is
+  `slugify` of the three joined by spaces, an undeclared part left out:
+  `Cat's Claw` / `bark` / _Uncaria tomentosa_ is
+  `cats-claw-bark-uncaria-tomentosa`; graveyard dirt, which declares no formal
+  name, is `graveyard-dirt-earth`. Every declared part goes in for every entry
+  rather than only on a clash, so an address never depends on which entry was
+  added first. The column is
+  `NOT NULL` with **no default** — a default would be a second slug rule,
+  written in SQL — so whoever writes a row derives it, the seed and the test
+  fixtures included (`ingredientColumns` derives it the same way).
+- **`pending_slug` and `pending_slug_effective_at`**, both nullable, hold the
+  claim a relabel makes when its new slug is still reserved by a retirement:
+  the slug it will take and the instant it takes it. Both `timestamp`, like
+  every timestamp here, holding UTC.
+- **Four partial unique indexes.** The address is unique per tier among live
+  rows — `ingredients_compendium_slug_unique` on `(slug)` where
+  `workspace_id IS NULL AND deleted_at IS NULL`, and
+  `ingredients_workspace_slug_unique` on `(workspace_id, slug)` where
+  `deleted_at IS NULL` — and a pending claim is unique per tier the same way,
+  with `AND pending_slug IS NOT NULL` added to each
+  (`ingredients_compendium_pending_slug_unique`,
+  `ingredients_workspace_pending_slug_unique`). The two workspace indexes carry
+  no tier predicate, as DESIGN.md §5 writes them: a null `workspace_id`
+  collides with nothing in a btree, so compendium rows pass through them
+  unconstrained. Soft-deleting an entry releases its slug and its claim, as
+  every partial index here releases what it reserved.
+- **Two entries may share a label and a form; the formal name tells them
+  apart, in the slug as in the identity key.** The `standard` seed's two
+  _Cat's Claw_ barks, _Uncaria tomentosa_ and _U. guianensis_, are
+  `cats-claw-bark-uncaria-tomentosa` and `cats-claw-bark-uncaria-guianensis`.
+  What the slug index still refuses is the pair `slugify` folds together and
+  `canonical_key` does not — two formal names differing only in punctuation or
+  accents (`Lavandula angustifolia 'Hidcote'` beside
+  `Lavandula angustifolia Hidcote`), or words shifting between the label and
+  the formal name — and the answer there is to distinguish the formal name.
+  Because the formal name is in the address, changing it recomputes the slug
+  exactly as a relabel does (MB.82).
+- **`retired_ingredient_slugs`** — `id`, `ingredientId` (FK), `workspaceId`
+  (nullable FK, the ingredient's own scope mirrored so a reservation is per
+  tier as the slug is), `slug`, `retiredAt` (`DEFAULT now()`), the generated
+  `expiresAt`, + audit, with its `set_updated_at` trigger. One plain btree
+  index on `slug`, **not unique**: a slug may be retired more than once over the
+  years, and the reservation is a predicate on `expires_at`, not a row's
+  uniqueness.
+- **`expires_at` is `date_trunc('day', retired_at) + interval '180 days'`**,
+  generated and stored: midnight of the retirement's UTC calendar date, plus
+  180 calendar days, so the window closes at the same instant for every slug
+  retired that day whatever the hour of the rename, and nothing has to run at
+  that instant — the redirect and the reservation end by a date comparison.
+  It is legal as a stored generated column only because the column is
+  `timestamp`: `date_trunc(text, timestamp)` and `timestamp + interval` are
+  IMMUTABLE, where both are STABLE on `timestamptz`.
+
+**The migration adds `slug` nullable and then sets it `NOT NULL` with no
+backfill between** (`0025_ingredient-slugs.sql`, and its sidecar for the one
+destructive statement). A backfill in SQL would be a second slug rule, and one
+in TypeScript cannot run between two statements of one `drizzle-kit migrate`.
+The task settles it: while no deployed code writes an ingredient, the table is
+empty wherever the migration meets real data, and the seed is the backfill. A
+local database the `standard` or `demo` scenario has already filled refuses
+the step — `column "slug" of relation "ingredients" contains null values` —
+and `npm run db:reset` (`make db-reset` from the host) rebuilds it. The test
+and e2e databases are built from an empty schema every run and never meet it.
 
 ## Categories, and the two group vocabularies (MB.35; tables M4.2, M4.2a)
 
@@ -1364,12 +1442,13 @@ and goes red on a real omission. It was permanently red before, first because
 the bare command _was_ that full scan (fixed in MB.37) and then because the
 acknowledgements it needed only ever existed in PR bodies.
 
-Two migrations carry findings today, and each has its sidecar:
+Three migrations carry findings today, and each has its sidecar:
 
-| Migration                           | Findings                                                                                           |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `0002_solid_marauders.sql`          | `DROP CONSTRAINT users_email_unique`, and `created_by` / `updated_by` added `NOT NULL`             |
-| `0017_custom-spell-ingredients.sql` | the `(spell_id, ingredient_id)` primary key and the `(spell_id, layer_order)` unique index dropped |
+| Migration                           | Findings                                                                                                            |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `0002_solid_marauders.sql`          | `DROP CONSTRAINT users_email_unique`, and `created_by` / `updated_by` added `NOT NULL`                              |
+| `0017_custom-spell-ingredients.sql` | the `(spell_id, ingredient_id)` primary key and the `(spell_id, layer_order)` unique index dropped                  |
+| `0025_ingredient-slugs.sql`         | `ingredients.slug` set `NOT NULL` with no backfill between, the seed standing in for one ("Ingredient slugs" above) |
 
 **`0002`'s sidecar was written retroactively, and says so.** This document
 previously claimed its `DROP CONSTRAINT` and two `NOT NULL` columns "were
@@ -1513,7 +1592,7 @@ clone — which tables the sweep reached is the thing under test, so unlike the
 per-table schema tests it stubs nothing — and then compares two catalogue
 queries: the tables carrying all four audit stamps, and the tables carrying a
 `set_updated_at` trigger. A new audited table reddens it without that
-file being edited. The list of seventeen is transcribed there as well, because
+file being edited. The list of eighteen is transcribed there as well, because
 two empty sets are equal and something has to say they aren't.
 
 ## The repository's files (MB.87)

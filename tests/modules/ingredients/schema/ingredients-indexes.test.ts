@@ -17,21 +17,34 @@ import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standar
 const COMPENDIUM_IDENTITY = 'ingredients_compendium_identity_unique';
 const WORKSPACE_IDENTITY = 'ingredients_workspace_identity_unique';
 const WORKSPACE_LABEL = 'ingredients_workspace_label_unique';
+// MB.80's four: the public address unique per tier, and one pending claim per
+// slug per tier (columns MB.81, rule MB.82) — claude-docs/db.md, "Ingredient slugs".
+const COMPENDIUM_SLUG = 'ingredients_compendium_slug_unique';
+const WORKSPACE_SLUG = 'ingredients_workspace_slug_unique';
+const COMPENDIUM_PENDING_SLUG = 'ingredients_compendium_pending_slug_unique';
+const WORKSPACE_PENDING_SLUG = 'ingredients_workspace_pending_slug_unique';
+const UNIQUE = [
+  COMPENDIUM_IDENTITY,
+  WORKSPACE_IDENTITY,
+  WORKSPACE_LABEL,
+  COMPENDIUM_SLUG,
+  WORKSPACE_SLUG,
+  COMPENDIUM_PENDING_SLUG,
+  WORKSPACE_PENDING_SLUG,
+];
 // §9's, neither unique nor partial; ingredients-trigram.test.ts owns it.
 const TRIGRAM = 'ingredients_trgm';
 
 describe('ingredients index declarations', () => {
   const { byIndexName: byName } = tableFacts(ingredients);
 
-  // "Exactly", not "at least": a fourth unique index is what this list exists to catch.
-  it('declares exactly §5’s three unique indexes and §9’s trigram one', () => {
-    expect(Object.keys(byName).sort()).toEqual(
-      [COMPENDIUM_IDENTITY, WORKSPACE_IDENTITY, WORKSPACE_LABEL, TRIGRAM].sort(),
-    );
+  // "Exactly", not "at least": an eighth unique index is what this list exists to catch.
+  it('declares exactly §5’s seven unique indexes and §9’s trigram one', () => {
+    expect(Object.keys(byName).sort()).toEqual([...UNIQUE, TRIGRAM].sort());
   });
 
-  it('makes all three unique and all three partial', () => {
-    for (const name of [COMPENDIUM_IDENTITY, WORKSPACE_IDENTITY, WORKSPACE_LABEL]) {
+  it('makes all seven unique and all seven partial', () => {
+    for (const name of UNIQUE) {
       expect(byName[name].config.unique).toBe(true);
       expect(byName[name].config.where).toBeDefined();
     }
@@ -110,11 +123,50 @@ describe('ingredients unique indexes', () => {
       expect(index?.definition).toContain('USING btree (workspace_id, lower(name))');
     });
 
-    // A fourth unique index — most likely a label index over the compendium —
+    // The address, unique per tier among live rows: `(slug)` over the
+    // compendium, `(workspace_id, slug)` over the locals — the latter with no
+    // tier predicate, as DESIGN.md §5 writes it, since a null workspace_id
+    // collides with nothing in a btree.
+    it('makes the compendium unique on slug, among live compendium rows only', async () => {
+      const index = await catalogue.indexRow('ingredients', COMPENDIUM_SLUG);
+
+      expect(index?.unique).toBe(true);
+      expect(index?.predicate).toBe('((workspace_id IS NULL) AND (deleted_at IS NULL))');
+      expect(index?.definition).toContain('USING btree (slug)');
+    });
+
+    it('makes each workspace unique on slug, among live rows only', async () => {
+      const index = await catalogue.indexRow('ingredients', WORKSPACE_SLUG);
+
+      expect(index?.unique).toBe(true);
+      expect(index?.predicate).toBe('(deleted_at IS NULL)');
+      expect(index?.definition).toContain('USING btree (workspace_id, slug)');
+    });
+
+    // One claim per slug per tier, among rows that hold a claim at all.
+    it('makes the compendium unique on a pending claim, among live claimants only', async () => {
+      const index = await catalogue.indexRow('ingredients', COMPENDIUM_PENDING_SLUG);
+
+      expect(index?.unique).toBe(true);
+      expect(index?.predicate).toBe(
+        '((workspace_id IS NULL) AND (deleted_at IS NULL) AND (pending_slug IS NOT NULL))',
+      );
+      expect(index?.definition).toContain('USING btree (pending_slug)');
+    });
+
+    it('makes each workspace unique on a pending claim, among live claimants only', async () => {
+      const index = await catalogue.indexRow('ingredients', WORKSPACE_PENDING_SLUG);
+
+      expect(index?.unique).toBe(true);
+      expect(index?.predicate).toBe('((deleted_at IS NULL) AND (pending_slug IS NOT NULL))');
+      expect(index?.definition).toContain('USING btree (workspace_id, pending_slug)');
+    });
+
+    // An eighth unique index — most likely a label index over the compendium —
     // is exactly the constraint §5 dropped.
-    it('carries no unique index beyond those three and the primary key', async () => {
+    it('carries no unique index beyond those seven and the primary key', async () => {
       expect(await catalogue.uniqueIndexNames('ingredients')).toEqual(
-        [COMPENDIUM_IDENTITY, WORKSPACE_IDENTITY, WORKSPACE_LABEL, 'ingredients_pkey'].sort(),
+        [...UNIQUE, 'ingredients_pkey'].sort(),
       );
     });
   });
@@ -255,6 +307,162 @@ describe('ingredients unique indexes', () => {
 
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(WORKSPACE_LABEL);
+    });
+  });
+
+  // MB.80/MB.81: the slug is the label, the form and the formal name, so it
+  // collides only where `slugify` folds two different identities together —
+  // punctuation or accents in a formal name, or a label differing only in
+  // punctuation. Those pairs are refused here, not by identity or the label.
+  describe('the slug indexes', () => {
+    it('holds two compendium entries that share a label and a form, under distinct slugs', async () => {
+      const first = await insert({
+        name: "Cat's Claw",
+        canonicalName: 'Uncaria tomentosa',
+        form: 'bark',
+      });
+      const second = await insert({
+        name: "Cat's Claw",
+        canonicalName: 'Uncaria guianensis',
+        form: 'bark',
+      });
+
+      // Precondition: nothing but the formal name separates them.
+      expect(first.canonicalKey).not.toBe(second.canonicalKey);
+      const rows = await sql`select name, form, slug from ingredients order by slug`;
+      expect(rows.map((r) => [r.name, r.form])).toEqual([
+        ["Cat's Claw", 'bark'],
+        ["Cat's Claw", 'bark'],
+      ]);
+      expect(rows.map((r) => r.slug)).toEqual([
+        'cats-claw-bark-uncaria-guianensis',
+        'cats-claw-bark-uncaria-tomentosa',
+      ]);
+      expect(await liveCount()).toBe(2);
+    });
+
+    it('refuses two compendium entries whose formal names the slug rule folds together', async () => {
+      const first = await insert({ canonicalName: 'Fixtura testalis' });
+
+      // Why identity could not refuse it: `canonical_key` keeps the hyphen that
+      // `slugify` turns into the same separator a space becomes, so the keys differ.
+      const elsewhere = await insert({
+        workspaceId: WORKSPACE_A,
+        canonicalName: 'Fixtura-testalis',
+      });
+      expect(first.canonicalKey).toBe('fixtura testalis :: herb');
+      expect(elsewhere.canonicalKey).toBe('fixtura-testalis :: herb');
+
+      const error = await failureOf(insert({ canonicalName: 'Fixtura-testalis' }));
+
+      expect(error.code).toBe('23505');
+      expect(error.constraint_name).toBe(COMPENDIUM_SLUG);
+    });
+
+    it('refuses two locals of one workspace whose labels the slug rule folds together, though neither the label nor the identity index sees them as one', async () => {
+      const first = await insert({
+        workspaceId: WORKSPACE_A,
+        name: "Cat's Claw",
+        nomenclature: 'none',
+        form: 'bark',
+      });
+
+      // With no formal name the key is the label, apostrophe kept, so the
+      // identity index cannot refuse; `lower()` keeps it too, so nor can the
+      // label index.
+      const elsewhere = await insert({
+        workspaceId: WORKSPACE_B,
+        name: 'Cats Claw',
+        nomenclature: 'none',
+        form: 'bark',
+      });
+      expect(first.canonicalKey).toBe("cat's claw :: bark");
+      expect(elsewhere.canonicalKey).toBe('cats claw :: bark');
+      const [{ same_label }] = await sql`
+        select lower('Cats Claw') = lower(${"Cat's Claw"}) as same_label
+      `;
+      expect(same_label).toBe(false);
+
+      const error = await failureOf(
+        insert({ workspaceId: WORKSPACE_A, name: 'Cats Claw', nomenclature: 'none', form: 'bark' }),
+      );
+
+      expect(error.code).toBe('23505');
+      expect(error.constraint_name).toBe(WORKSPACE_SLUG);
+    });
+
+    it('lets one slug recur across the tiers and across workspaces', async () => {
+      await insert();
+      await insert({ workspaceId: WORKSPACE_A });
+      await insert({ workspaceId: WORKSPACE_B });
+
+      expect(await sql`select distinct slug from ingredients`).toHaveLength(1);
+      expect(await liveCount()).toBe(3);
+    });
+
+    it('frees a compendium slug on soft delete', async () => {
+      const { id } = await insert({ canonicalName: 'Fixtura testalis' });
+      const blocked = await failureOf(insert({ canonicalName: 'Fixtura-testalis' }));
+      expect(blocked.constraint_name).toBe(COMPENDIUM_SLUG);
+
+      await softDelete(id);
+      await insert({ canonicalName: 'Fixtura-testalis' });
+
+      expect(await liveCount()).toBe(1);
+    });
+
+    describe('one pending claim per slug', () => {
+      async function claim(id: string): Promise<void> {
+        await sql`update ingredients set pending_slug = 'claimed' where id = ${id}`;
+      }
+
+      it('refuses a second compendium claim on one slug', async () => {
+        const { id: first } = await insert({ name: 'Alpha', canonicalName: 'Fixtura alpha' });
+        const { id: second } = await insert({ name: 'Beta', canonicalName: 'Fixtura beta' });
+        await claim(first);
+
+        const error = await failureOf(claim(second));
+
+        expect(error.code).toBe('23505');
+        expect(error.constraint_name).toBe(COMPENDIUM_PENDING_SLUG);
+      });
+
+      it('refuses a second claim on one slug inside a workspace, and allows one from another', async () => {
+        const { id: first } = await insert({
+          workspaceId: WORKSPACE_A,
+          name: 'Alpha',
+          canonicalName: 'Fixtura alpha',
+        });
+        const { id: second } = await insert({
+          workspaceId: WORKSPACE_A,
+          name: 'Beta',
+          canonicalName: 'Fixtura beta',
+        });
+        const { id: theirs } = await insert({
+          workspaceId: WORKSPACE_B,
+          name: 'Alpha',
+          canonicalName: 'Fixtura alpha',
+        });
+        await claim(first);
+        await claim(theirs);
+
+        const error = await failureOf(claim(second));
+
+        expect(error.code).toBe('23505');
+        expect(error.constraint_name).toBe(WORKSPACE_PENDING_SLUG);
+      });
+
+      // A claim goes with its holder: the reservation ends when the claimant does.
+      it('frees a claim when the claimant is soft-deleted', async () => {
+        const { id: first } = await insert({ name: 'Alpha', canonicalName: 'Fixtura alpha' });
+        const { id: second } = await insert({ name: 'Beta', canonicalName: 'Fixtura beta' });
+        await claim(first);
+        await softDelete(first);
+
+        await claim(second);
+
+        expect(await liveCount()).toBe(1);
+      });
     });
   });
 

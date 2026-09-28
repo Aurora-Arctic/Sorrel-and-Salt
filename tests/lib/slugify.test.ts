@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { slugify } from '@/lib/slugify';
+import { ingredientSlug, slugify } from '@/lib/slugify';
 
 // These pin the options, not the package: what breaks silently is a change to
 // `strict` or the charmap extension.
@@ -43,5 +43,53 @@ describe('slugify', () => {
   it('returns an empty string when nothing in the name survives', () => {
     expect(slugify('...')).toBe('');
     expect(slugify('   ')).toBe('');
+  });
+});
+
+// MB.80/MB.81: an ingredient's address is its label, its form and its formal
+// name, always, so two entries sharing a label and a form are told apart by
+// the name that is their identity rather than by insertion order —
+// claude-docs/db.md, "Ingredient slugs".
+describe('ingredientSlug', () => {
+  it('joins the label, the form and the formal name under the one slug rule', () => {
+    expect(ingredientSlug("Cat's Claw", 'bark', 'Uncaria tomentosa')).toBe(
+      'cats-claw-bark-uncaria-tomentosa',
+    );
+    expect(ingredientSlug("Cat's Claw", 'bark', 'Uncaria guianensis')).toBe(
+      'cats-claw-bark-uncaria-guianensis',
+    );
+    expect(ingredientSlug('Mugwort', 'herb', 'Artemisia vulgaris')).toBe(
+      'mugwort-herb-artemisia-vulgaris',
+    );
+  });
+
+  it('leaves out what the entry does not declare', () => {
+    expect(ingredientSlug('Graveyard Dirt', 'earth', null)).toBe('graveyard-dirt-earth');
+    expect(ingredientSlug('Moon Water', null, null)).toBe('moon-water');
+    expect(ingredientSlug('Moon Water', undefined, undefined)).toBe('moon-water');
+    expect(ingredientSlug('Testwort', null, 'Fixtura testalis')).toBe('testwort-fixtura-testalis');
+  });
+
+  it('is exactly slugify of the three, so the form and the formal name change it as the label does', () => {
+    expect(ingredientSlug('Valerian', 'root', 'Valeriana officinalis')).toBe(
+      slugify('Valerian root Valeriana officinalis'),
+    );
+    expect(ingredientSlug('Valerian', 'leaf', 'Valeriana officinalis')).not.toBe(
+      ingredientSlug('Valerian', 'root', 'Valeriana officinalis'),
+    );
+    expect(ingredientSlug("Cat's Claw", 'bark', 'Uncaria guianensis')).not.toBe(
+      ingredientSlug("Cat's Claw", 'bark', 'Uncaria tomentosa'),
+    );
+  });
+
+  // What the slug indexes still refuse (ingredients-indexes.test.ts): two
+  // identities `canonical_key` keeps apart and this rule folds together.
+  it('folds punctuation and accents in a formal name, as it does in a label', () => {
+    expect(ingredientSlug('Testwort', 'herb', 'Fixtura-testalis')).toBe(
+      ingredientSlug('Testwort', 'herb', 'Fixtura testalis'),
+    );
+    expect(ingredientSlug('Hidcote Lavender', 'flower', "Lavandula angustifolia 'Hidcote'")).toBe(
+      ingredientSlug('Hidcote Lavender', 'flower', 'Lavandula angustifolia Hidcote'),
+    );
   });
 });

@@ -3,6 +3,7 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
+import { ingredientSlug } from '@/lib/slugify';
 import {
   COMPENDIUM_INGREDIENTS,
   FIXTURE_USERS,
@@ -48,6 +49,7 @@ interface IngredientRow {
   name: string;
   canonical_name: string | null;
   form: string | null;
+  slug: string;
 }
 
 let sql: ReturnType<typeof postgres>;
@@ -152,6 +154,10 @@ describe('demo is standard plus spells', () => {
       WORKSPACE_W_INGREDIENTS.map((i) => i.name).sort(),
     );
     expect(await ingredientsIn(WORKSPACE_X_ID)).toEqual([]);
+    // Slugged as the compendium is: label, form and formal name, by the one rule.
+    for (const row of local) {
+      expect(row.slug).toBe(ingredientSlug(row.name, row.form, row.canonical_name));
+    }
   });
 });
 

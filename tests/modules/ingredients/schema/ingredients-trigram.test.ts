@@ -8,6 +8,7 @@ import { MIGRATIONS_DIR } from '../../../support/paths';
 import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS } from '@/db/seed/standard';
+import { ingredientSlug } from '@/lib/slugify';
 
 // §9's one multicolumn gin index serves a predicate on either column alone,
 // which the planner assertions below prove —
@@ -20,12 +21,16 @@ const UNIQUE_INDEXES = [
   'ingredients_compendium_identity_unique',
   'ingredients_workspace_identity_unique',
   'ingredients_workspace_label_unique',
+  'ingredients_compendium_slug_unique',
+  'ingredients_workspace_slug_unique',
+  'ingredients_compendium_pending_slug_unique',
+  'ingredients_workspace_pending_slug_unique',
 ];
 
 describe('ingredients trigram index declaration', () => {
   const { byIndexName: byName } = tableFacts(ingredients);
 
-  it('declares the trigram index beside M4.1a’s three unique ones', () => {
+  it('declares the trigram index beside the seven unique ones', () => {
     expect(Object.keys(byName).sort()).toEqual([...UNIQUE_INDEXES, TRIGRAM_INDEX].sort());
   });
 
@@ -68,9 +73,10 @@ const catalogue = useTestDatabase((client) => (sql = client));
 
 async function addIngredient(name: string, canonicalName: string | null): Promise<string> {
   const [inserted] = await sql`
-    insert into ingredients (name, canonical_name, nomenclature, created_by, updated_by)
+    insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
     values (
       ${name},
+      ${ingredientSlug(name, null, canonicalName)},
       ${canonicalName},
       ${canonicalName === null ? 'none' : 'botanical'},
       ${AUTHOR},
@@ -85,8 +91,8 @@ async function addIngredient(name: string, canonicalName: string | null): Promis
 // assertions disable sequential scans regardless.
 async function fillWithDecoys(): Promise<void> {
   await sql`
-    insert into ingredients (name, canonical_name, nomenclature, created_by, updated_by)
-    select 'Decoy ' || g, 'Decoyus ' || g, 'botanical', ${AUTHOR}, ${AUTHOR}
+    insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
+    select 'Decoy ' || g, 'decoy-' || g, 'Decoyus ' || g, 'botanical', ${AUTHOR}, ${AUTHOR}
     from generate_series(1, 2000) g
   `;
   await sql`analyze ingredients`;
