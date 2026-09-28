@@ -1494,11 +1494,13 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want one validation definition shared by client and server so that the two cannot disagree about what is valid.
 
-Write Zod schemas covering both models, exported for form validation and service-level parsing. Two variants for `ingredient`: a workspace-local schema where only `name` is required and `nomenclature` defaults to `none` when no formal name is given, and a compendium schema that makes the admin answer `nomenclature` explicitly. Both couple `nomenclature` to `canonicalName` in Zod — `none`/`unknown` forbid it, every other kind requires it — so the database CHECK is never what a user sees. `canonicalName` and `form` trim and reject a blank-but-present value with **no format regex**; `form` validates against nothing but trim/non-empty, never against the curated vocabulary, since that vocabulary is an autofill, not a constraint. `name` must not also appear among the ingredient's own folk names.
+Write Zod schemas covering both models, exported for form validation and service-level parsing. Two variants for `ingredient`: a workspace-local schema where only `name` is required and `nomenclature` defaults to `none` when no formal name is given, and a compendium schema that makes the admin answer `nomenclature` explicitly. Both couple `nomenclature` to `canonicalName` in Zod — `none`/`unknown` forbid it, every other kind requires it — so the database CHECK is never what a user sees. `canonicalName` and `form` trim, treat a blank as absent, and carry **no format regex**; `form` validates against nothing but trim, never against the curated vocabulary, since that vocabulary is an autofill, not a constraint. `name` must not also appear among the ingredient's own folk names.
 
 **Stock comes with them**, as the `StockInput` schema M9.4 and M9.9 both write through: `quantityOnHand` and `lowStockThreshold` reject a negative value, and `unit` validates against M9.2's shared unit-to-dimension module rather than a second list. `db.md` pushes the non-negative rule here deliberately — it is not a CHECK constraint because the refusal has something to say, and until now no task owned it.
 
 **The Zod-to-issues adapter lives here too**, not in `src/lib/errors.ts`: a failed `safeParse` becomes MB.43's `ValidationError` with one issue per Zod issue and the path preserved, so the error type stays Zod-free and every service raises the same shape without each one writing the conversion.
+
+**Where they live, settled while doing it.** Each module's `validation/` directory, a third public surface beside `index.ts` and `schema/*.ts`: the form is a client component and cannot import through an index that re-exports `server-only` services. A validation file imports only `zod` and dependency-free files, pinned by `tests/guards/client-safe-validation.test.ts`; the adapter is `src/lib/validation.ts`. `planet` and `zodiac`, `text` columns with no documented set until now, stay free text with suggested values, like `form`: any closed list would refuse some practice. The suggestions, nineteen bodies and thirteen signs, and their sources are in [`validation.md`](validation.md); DESIGN.md §5 and §14 say so. Stock amounts also refuse anything above the 999,999,999.999 a `numeric(12, 3)` column holds, so an overflow is a field error rather than a raw one.
 
 _Acceptance criteria:_
 
@@ -1506,9 +1508,11 @@ _Acceptance criteria:_
 - Only name is required on the local variant; a stub ingredient validates, with `nomenclature: 'none'` supplied automatically
 - The compendium variant requires `nomenclature` explicitly
 - The kind↔name coupling is enforced in both directions, matching the database CHECK
-- `canonicalName` and `form` reject a blank-but-present value; neither is checked against a format regex or the curated vocabulary
+- `canonicalName` and `form` trim, and a blank one is stored as null rather than refused — an empty field is an absence, not an error (amended while doing it; the criterion had read "reject a blank-but-present value"); neither is checked against a format regex or the curated vocabulary
 - `name` is rejected if it duplicates one of the ingredient's own folk names
 - Enum fields reject values outside the documented sets
+- A failed parse throws MB.43's ValidationError with one issue per Zod issue, path preserved
+- `quantityOnHand` and `lowStockThreshold` reject a negative value with a message; `unit` is validated from M9.2's module and not a second list
 - Unit tests cover valid and invalid cases
 
 ### Duplicate detection
@@ -4345,7 +4349,7 @@ _Story:_ As a workspace member, I want a rule the form could not check to come b
 
 Three pieces, specified by §7's Errors subsection:
 
-- **`ValidationError` in `src/lib/errors.ts`**, beside `Forbidden` and `NotFound`, carrying `issues: { path: (string | number)[]; message: string }[]`. **Zod-free** — it carries issues, it does not produce them, so `src/lib/` gains no dependency and a seed or a script can throw one. The Zod adapter that builds the issues list from a `ZodError` belongs beside the schemas, in M4.5.
+- **`ValidationError` in `src/lib/errors.ts`**, beside `Forbidden` and `NotFound`, carrying `issues: { path: (string | number)[]; message: string }[]`. **Zod-free** — it carries issues, it does not produce them, so `src/lib/` gains no dependency and a seed or a script can throw one. The Zod adapter that builds the issues list from a `ZodError` is M4.5's, in `src/lib/validation.ts` — not in any one module, since every module's schemas raise the same shape, and importing Zod for types only.
 - **The mapping**, in M3.1's route, through Yoga's `maskedErrors.maskError`. Masking stays **on**: the three types leave with `extensions.code` — `VALIDATION` (plus `extensions.fieldErrors`), `FORBIDDEN`, `NOT_FOUND` — and anything else leaves masked, message and stack discarded. The service's message text is passed through verbatim; rewriting it at the transport is what turns M5.6b's ratio back into "Invalid input".
 - **`mockGraphQLError(operationName, { code, fieldErrors?, message? })`** in `tests/support/msw/graphql.ts`, beside the two existing helpers, which can only answer `{ data }` today. Without it no component test can arrange a server-returned field error, which is the half of M5.9 and M10.12 that nothing currently tests.
 

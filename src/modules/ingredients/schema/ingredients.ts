@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { check, index, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS } from './ingredient-enums';
 import { auditColumns } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
 
@@ -8,24 +9,10 @@ import { workspaces } from '../../coven/schema/workspaces';
 // mushrooms apart from herbs; `unknown` and `none` are both answers — `none`
 // claims no system names this, `unknown` that nobody has looked it up
 // (claude-docs/db.md, "The ingredient identity model").
-export const nomenclatureKind = pgEnum('nomenclature_kind', [
-  'botanical',
-  'fungal',
-  'zoological',
-  'mineral',
-  'chemical',
-  'unknown',
-  'none',
-]);
+export const nomenclatureKind = pgEnum('nomenclature_kind', NOMENCLATURE_KINDS);
 
 // A correspondence, not identity: five values, closed — the opposite of `form`.
-export const ingredientElement = pgEnum('ingredient_element', [
-  'earth',
-  'air',
-  'fire',
-  'water',
-  'spirit',
-]);
+export const ingredientElement = pgEnum('ingredient_element', INGREDIENT_ELEMENTS);
 
 // DESIGN.md §5's expression verbatim. Literal SQL because it names columns of
 // the table still being built; every function in it is IMMUTABLE and no enum

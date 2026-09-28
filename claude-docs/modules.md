@@ -15,6 +15,7 @@ replace, is
 src/modules/<name>/
   index.ts        # the public surface: services, types, GraphQL refs, loader factories
   schema/*.ts     # the Drizzle tables the module owns — public too, see below
+  validation/*.ts # Zod input schemas the form and the service share — public, see below
   services/*.ts   # authorization + business logic; every file opens with `import 'server-only'`
   graphql/*.ts    # Pothos types and fields registered on the shared builder
   loaders/*.ts    # defineLoader factories
@@ -67,7 +68,7 @@ The compendium is the `workspace_id IS NULL` tier, reached through
 
 ## The public surface
 
-A module offers two things to the rest of the tree, and nothing else:
+A module offers three things to the rest of the tree, and nothing else:
 
 - **`index.ts`** — the behaviour surface. It re-exports the services the
   module means to offer, their types, its GraphQL refs and its loader
@@ -79,6 +80,13 @@ A module offers two things to the rest of the tree, and nothing else:
   cannot resolve. A table object is inert without the database client or a
   runtime `drizzle-orm`, both already banned above the database layer, so
   letting a page import one leaks nothing.
+- **`validation/*.ts`** — the input surface. A Zod schema is run by the
+  form before a request is sent and by the service again after, so a client
+  component must be able to import it — which the index cannot offer once it
+  re-exports a `server-only` service. A validation file imports `zod` and
+  dependency-free files such as `schema/units.ts`, nothing else, and
+  `tests/guards/client-safe-validation.test.ts` fails one that reaches further
+  ([`validation.md`](validation.md)).
 
 `services/`, `graphql/` and `loaders/` are internal. A deep import of any of
 them from outside the module is a boundary violation, whatever the importer.
@@ -131,10 +139,11 @@ feedback and the guard gives precision:
 - **Guard.** `tests/guards/module-boundaries.test.ts` scans every file under
   `src/` — the git index plus untracked files, as `slug-rule.test.ts` does —
   and resolves both alias and relative specifiers to a path. It asserts: an
-  import resolving into another module lands on its `index.ts` or a
-  `schema/*.ts` file; the module-to-module edges are a subset of `ALLOWED`;
-  no module imports presentation; the set of directories under `src/modules/`
-  is exactly the roster; and the `TIER_SEAM` pin over the repository (below).
+  import resolving into another module lands on its `index.ts`, a
+  `schema/*.ts` file or a `validation/*.ts` file; the module-to-module edges
+  are a subset of `ALLOWED`; no module imports presentation; the set of
+  directories under `src/modules/` is exactly the roster; and the `TIER_SEAM`
+  pin over the repository (below).
   It is what catches the relative spelling the lint cannot.
   A type-only import counts exactly like a runtime one: `import type` is
   erased at compile time but couples to the file all the same, and the index
@@ -163,11 +172,10 @@ containing `workspace_id is null` or `isNull(workspaceId)`, and anything that
 reads both tiers in one statement. The guard fails an unlisted finder, and it
 fails a listed one that no longer exists.
 
-It is empty today. A later task that adds such a finder — M4.5's compendium
-list, M5.1's admin reads, the merged two-tier list, local-beats-compendium
-resolution — adds the finder's name to `TIER_SEAM` in its own PR, with a
-one-line reason beside it. The list is then the scope of the extraction task,
-read from one file.
+It is empty today. A later task that adds such a finder — M5.1's admin
+reads, the merged two-tier list, local-beats-compendium resolution — adds the
+finder's name to `TIER_SEAM` in its own PR, with a one-line reason beside it.
+The list is then the scope of the extraction task, read from one file.
 
 ## Tests
 
