@@ -13,6 +13,7 @@ import { FIXTURE_USERS } from '@/db/seed/standard';
 const GROUPS_SLUG_UNIQUE = 'ingredient_form_groups_slug_unique';
 const FORMS_SLUG_UNIQUE = 'ingredient_forms_slug_unique';
 const FORMS_GROUP_FK = 'ingredient_forms_group_id_ingredient_form_groups_id_fk';
+const FORMS_TRGM = 'ingredient_forms_trgm';
 
 // As in categories-schema.test.ts: a hand-ordering column under any usual name; §5 lists none.
 const ORDERING_COLUMNS = ['order', 'position', 'sort', 'sort_order', 'rank', 'display_order'];
@@ -96,6 +97,21 @@ describe('ingredient_forms schema', () => {
     expect(slugIndex).toBeDefined();
     expect(slugIndex?.config.unique).toBe(true);
     expect(slugIndex?.config.where).toBeDefined();
+  });
+
+  // The autofill matches a description as well as a name, by `%` and `<%`,
+  // and only a trigram index answers either (claude-docs/db.md, "The member's autofill").
+  it('declares one gin trigram index over name and description, neither unique nor partial', () => {
+    const trigram = indexes.find((index) => index.config.name === FORMS_TRGM);
+
+    expect(trigram?.config.method).toBe('gin');
+    expect(trigram?.config.columns).toHaveLength(2);
+    expect(trigram?.config.unique).toBe(false);
+    expect(trigram?.config.where).toBeUndefined();
+    expect(indexes.map((index) => index.config.name).sort()).toEqual([
+      FORMS_SLUG_UNIQUE,
+      FORMS_TRGM,
+    ]);
   });
 
   it('carries no workspace scoping', () => {
@@ -361,6 +377,14 @@ describe('ingredient_forms table', () => {
     `;
     expect(rows.map((r) => r.name)).toEqual(['Root', 'Root']);
     expect(rows.map((r) => r.group_name)).toEqual(['Botanical', 'Substance']);
+  });
+
+  it('indexes name and description for trigram matching in one gin index', async () => {
+    const index = await catalogue.indexRow('ingredient_forms', FORMS_TRGM);
+
+    expect(index?.unique).toBe(false);
+    expect(index?.predicate).toBeNull();
+    expect(index?.definition).toContain('USING gin (name gin_trgm_ops, description gin_trgm_ops)');
   });
 
   it('requires the name, slug and description', async () => {
