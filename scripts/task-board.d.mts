@@ -1,6 +1,8 @@
 // Hand-written beside the script: `allowJs` is off, so a test importing the
 // `.mjs` reads its shape from here (the same arrangement as .ladle/config.d.mts).
 
+import type { TasksMd } from './tasks-md.mjs';
+
 export const REPO: string;
 export const OWNER: string;
 export const PROJECT: string;
@@ -68,6 +70,64 @@ export function setEstimate(
   options?: { item?: ProjectItem | null },
 ): Change<number>;
 
+export function idOf(title: string): string | null;
+
+export interface Milestone {
+  number: number;
+  title: string;
+  state: string;
+  openIssues: number;
+  closedIssues: number;
+  description: string;
+}
+export function shapeMilestone(milestone: Record<string, unknown>): Milestone;
+export function listMilestones(): Milestone[];
+
+export interface ItemListing {
+  projectId: string | null;
+  items: { id: string; number: number | null }[];
+}
+export function shapeItems(pages: Record<string, unknown>[]): ItemListing;
+export function listItems(number?: string): ItemListing;
+
+export interface TargetEntry {
+  id: string;
+  itemId: string;
+  position: number;
+}
+export interface Move {
+  id: string;
+  itemId: string;
+  after: string;
+  afterId: string;
+}
+export function planMoves(target: TargetEntry[]): Move[];
+
+export interface ReorderPlan {
+  projectId: string | null;
+  skipped: string[];
+  missing: string[];
+  unlisted: string[];
+  misplaced: string[];
+  descriptions: string[];
+  target: string[];
+  considered: number;
+  moves: Move[];
+}
+export function planReorder(input: {
+  issues: TrackedIssue[];
+  milestones: Milestone[];
+  listing: ItemListing;
+  tasks: TasksMd;
+}): ReorderPlan;
+export function readReorderPlan(): ReorderPlan;
+export function reorderMutationArgs(projectId: string, move: Move): string[];
+export function pacedWrite<T>(fn: () => T): Promise<T>;
+export function applyReorder(
+  plan: ReorderPlan,
+  options?: { limit?: number; onMove?: (move: Move) => void },
+): Promise<number>;
+
 export const SECRET_PATTERNS: {
   name: string;
   pattern: RegExp;
@@ -77,4 +137,4 @@ export const SECRET_PATTERNS: {
 export function findSecret(text: string): { name: string; match: string } | null;
 export function postComment(issue: Pick<TrackedIssue, 'number'>, text: string): void;
 
-export function main(argv?: string[]): void;
+export function main(argv?: string[]): Promise<void>;
