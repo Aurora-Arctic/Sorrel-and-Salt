@@ -362,15 +362,50 @@ matrix's generated job name, not the leg's.
   change to `checks.yml` now flips the lint, typecheck, build and
   destructive-ddl filters together, which is what sharing one workflow costs. `vitest`/`playwright`
   (M1.14) are real `workflow_call` jobs now, same job names the M0-era stubs
-  used so no required-status-check rename was ever needed. Its `build-image` job keeps a
-  `pr-gate-build-image-<pr number>` / `cancel-in-progress: false` concurrency
-  group on the caller; `build-e2e-image` (feeding `playwright`, not
-  `build-image`) and `build-db-image` do the same under their own groups.
-  The three image jobs are the only uncancellable ones because cancelling a
-  push mid-build can freeze a half-written layer into the shared GHA layer
-  cache under its content-addressed tag, which every later run with the same
-  hash then reuses — a corruption that does not self-heal on retry. The check
-  jobs share no mutable state and are cheap to rerun, so they stay cancellable.
+  used so no required-status-check rename was ever needed.
+- **One concurrency group per PR, and every job in it cancellable.**
+  `pr-gate.yml`'s workflow-level group is `PR Gate-<pr number>` with
+  `cancel-in-progress: true`, so a push, an edit or a close cancels the PR's
+  run in flight, whole. The check jobs and `gitflow` also carry job-level
+  groups that cancel in progress; the workflow's group already covers them, and
+  they are left alone. **The three image builds are cancellable too** (MB.98).
+  Until then each carried a job-level group with `cancel-in-progress: false`,
+  meant to stop a cancelled push freezing a half-written layer under its
+  content-addressed tag. That protected nothing: a job's own group cannot
+  outlast the workflow cancelling the whole run, and three of the ten most
+  recent cancelled runs had all three builds cancelled. Nothing needed
+  protecting either. A push writes the tag with the manifest, after every blob
+  it names, so a cancelled one leaves no tag for `build-image`'s
+  `imagetools inspect` to find, and the layer cache commits each blob whole
+  and writes its index last. The next run just rebuilds.
+- **A closed PR's gate runs are cancelled** (MB.98). `closed` is in the gate's
+  trigger types, and the first step of `changes` cancels its own run when
+  `github.event.pull_request.state == 'closed'`. Closing or merging a PR
+  therefore starts a run in the PR's group, which cancels every queued or
+  in-progress gate run for that PR and then cancels itself. An `edited` event
+  on a closed PR, which GitHub fires as readily as on an open one, cancels
+  itself the same way. The step is step-level, so the job-level `if:` rule
+  below holds. The cancel is asynchronous, so the step then `sleep`s — killed
+  by the cancel, usually within seconds, with 30s as the bound — and `changes`
+  never completes and hands `checks`, `vitest` or `playwright` an output to
+  start on. The builds and `gitflow` do not need it, so they start and are
+  cancelled within seconds. On a fork PR the token is read-only and the cancel
+  fails, but a failed `changes` holds the checks back just the same.
+  - **Why.** On 2026-09-27 a bulk edit of old PR bodies started 130 gate runs
+    in five minutes, for PRs merged days or weeks before. Separately, four of
+    the twenty most recent merges had a gate run still in flight that ran to
+    the end. Both are free on GitHub's runners and billed on a metered one.
+  - **Why the group, not a workflow that lists the branch's runs.** A hotfix
+    branch is open as two PRs, into `main` and `staging`, with one head
+    branch and one SHA. Cancelling by branch when one merges would cancel the
+    other's gate, while the group is keyed by PR number.
+  - `deploy.yml`'s own `closed` handler, which tears a hotfix preview down,
+    is separate and unaffected.
+- **The other two concurrency groups are right as they are** (audited in
+  MB.98, so not to be redone). `deploy.yml`'s workflow-level group never
+  cancels, because a half-run alias can leave a domain pointing at a dead
+  deployment. `deploy.yml`'s `migrate` job holds a repo-wide `migrate`
+  lock, so two merges never migrate at once.
 - **`close-task-on-merge.yml`** (MB.89) — closes the issue a merged PR's body names with `Closes #N` when the PR merges into `staging`, because GitHub's own closing keywords fire only on the default branch.
 - **`merge-queue.yml` was deleted by MB.32, and is restored from git history
   when M7.A.1 fires.** It was the `merge_group` counterpart, re-expressing this

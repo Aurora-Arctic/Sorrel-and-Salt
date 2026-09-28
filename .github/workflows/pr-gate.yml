@@ -10,11 +10,15 @@ name: PR Gate
 # unconditionally and passes its filter result down as a workflow_call input.
 #
 # `edited` is in the trigger types so retargeting a PR's base re-runs gitflow.
+# `closed` is there so closing a PR cancels its runs: the close starts a run
+# in the PR's group below, which cancels the rest, and then cancels itself in
+# `changes`. GitHub fires `edited` on a closed PR too, and that run cancels
+# itself the same way.
 # `build-db-image` is built once here rather than nested in vitest.yml and
 # playwright.yml, which would pay twice for an identical image.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened, edited, closed]
     branches:
       - main
       - staging
@@ -35,6 +39,12 @@ jobs:
   # editing what runs a check reruns it.
   changes:
     runs-on: ubuntu-26.04
+    # Replaces the workflow's set for this job: paths-filter lists the PR's
+    # files through the API, and the first step cancels the run.
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: read
     outputs:
       lint: ${{ steps.filter.outputs.lint }}
       typecheck: ${{ steps.filter.outputs.typecheck }}
@@ -44,6 +54,20 @@ jobs:
       vitest: ${{ steps.filter.outputs.vitest }}
       playwright: ${{ steps.filter.outputs.playwright }}
     steps:
+      # A step-level `if:`, so the header's rule holds. Every check job needs
+      # this one, so none of them starts; the builds and gitflow, which do not,
+      # are cancelled with the run.
+      - name: Cancel this run if the PR is closed
+        if: github.event.pull_request.state == 'closed'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run cancel "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY"
+          # The cancel is asynchronous; the sleep is killed when it lands,
+          # usually in seconds, so this job never finishes and hands the check
+          # jobs an output to start on. 30s is only the bound.
+          sleep 30
+
       - name: Determine changed-file categories
         uses: dorny/paths-filter@v4
         id: filter
@@ -144,13 +168,10 @@ jobs:
               - 'package.json'
               - 'package-lock.json'
 
-  # `cancel-in-progress: false`: a cancelled push can freeze a half-written
-  # layer into the GHA cache under a content-addressed tag, which never
-  # self-heals. The check jobs share no mutable state and stay cancellable.
+  # Cancellable like every job here: a cancelled build leaves no tag and no
+  # cache index behind, so the next run rebuilds rather than reusing half an
+  # image. claude-docs/ci.md, "Aggregating workflows".
   build-image:
-    concurrency:
-      group: pr-gate-build-image-${{ github.event.pull_request.number }}
-      cancel-in-progress: false
     uses: ./.github/workflows/build-image.yml
 
   checks:
@@ -170,11 +191,8 @@ jobs:
       # A called workflow sees no `pull_request`; only the caller can list these.
       destructive-ddl-files: ${{ needs.changes.outputs.destructive_ddl_migrations_files }}
 
-  # Built once for vitest and playwright; uncancellable like build-image.
+  # Built once for vitest and playwright.
   build-db-image:
-    concurrency:
-      group: pr-gate-build-db-image-${{ github.event.pull_request.number }}
-      cancel-in-progress: false
     uses: ./.github/workflows/build-db-image.yml
 
   vitest:
@@ -192,9 +210,6 @@ jobs:
 
   # The `testing` image is Alpine and carries no browser.
   build-e2e-image:
-    concurrency:
-      group: pr-gate-build-e2e-image-${{ github.event.pull_request.number }}
-      cancel-in-progress: false
     uses: ./.github/workflows/build-e2e-image.yml
 
   playwright:

@@ -22,7 +22,7 @@ Summed test-file time is 73s (db 48s, unit 26s); the other ~250s of worker time 
 Investigating the runner budget turned up two more things the user asked to fold in: gate runs that keep going (or start) after their PR is merged, and a Docker layer cache that is full and mostly unshareable. Four tasks, four PRs:
 
 1. **MB.97 — suite**: stop paying jsdom + jest-dom + React Testing Library boot for the 59 unit files that never touch a DOM. Measured below.
-2. **MB.98 — concurrency**: cancel gate runs for closed PRs, and cancel in-flight runs when a PR closes. This lands _before_ the runner move, because on a metered runner the burst it prevents would be billed.
+2. **MB.98 — concurrency**: cancel gate runs for closed PRs, and cancel in-flight runs when a PR closes (re-scoped in Part 2). This lands _before_ the runner move, because on a metered runner the burst it prevents would be billed.
 3. **MB.99 — Docker cache**: move the buildx layer cache from the Actions cache to the registry.
 4. **MB.96 — runner**: Blacksmith, for the `vitest` job only (feasibility below).
 
@@ -102,7 +102,7 @@ Files: `vitest.config.mts`, `tests/support/setup.ts` → `setup-msw.ts` + `setup
 
 ## Part 2 — MB.98: gate runs stop when their PR is closed
 
-Files: `.github/workflows/pr-gate.yml`, new `.github/workflows/cancel-gate-on-close.yml`, `claude-docs/ci.md`.
+Files: `.github/workflows/pr-gate.yml`, `.github/actions/build-image/action.yml` (comment), new `tests/guards/pr-gate.test.ts`, `claude-docs/ci.md`.
 
 1. **A closed PR's run cancels itself.** First step of the existing `changes` job (the job `checks`, `vitest` and `playwright` already `need`), before the path filter:
    ```yaml
@@ -111,15 +111,9 @@ Files: `.github/workflows/pr-gate.yml`, new `.github/workflows/cancel-gate-on-cl
      env: { GH_TOKEN: ${{ github.token }} }
      run: gh run cancel "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY"
    ```
-   with `actions: write` added to the workflow's `permissions`. A step-level `if:`, not a job-level one — the header's rule is about jobs, whose skipped state renames a required check; a cancelled run on a closed PR gates nothing. `build-*` and `gitflow` start in parallel and are cancelled within ~10s instead of running to the end. `edited` stays in the trigger list: an open PR retargeted to another base must re-run gitflow, which is why it is there.
-2. **Closing a PR cancels its in-flight runs.** `cancel-gate-on-close.yml`, `on: pull_request: types: [closed]` for every base (not folded into `close-task-on-merge.yml`, which is `staging`-only, merged-only, and needs `issues: write` where this needs `actions: write`):
-   ```sh
-   for status in in_progress queued; do
-     gh run list --workflow pr-gate.yml --branch "$HEAD_REF" --status "$status" --json databaseId -q '.[].databaseId'
-   done | xargs -r -n1 gh run cancel --repo "$GITHUB_REPOSITORY"
-   ```
-   Head ref and repo from `env:`, never interpolated. `deploy.yml` is left alone: its `closed` handler tears the preview down and its group is non-cancelling on purpose.
-3. **The build jobs' `cancel-in-progress: false`.** Verified dead (facts above). Proposal: delete the three job-level `concurrency:` blocks and replace the comment with the true statement — a build survives cancellation because the tag is pushed manifest-last and the cache is written blob-by-blob, so a cancelled build leaves nothing an `imagetools inspect` would mistake for an image. **This is a doc/code disagreement; confirm before removing** (CLAUDE.md, "establish which one is wrong"). If kept, the comment still has to change.
+   with `actions: write` on the `changes` job's own `permissions` (as built: a job-level set replacing the workflow's for that job, and a `sleep 30` after the cancel so `changes` never completes and starts a check job before the cancel lands). A step-level `if:`, not a job-level one — the header's rule is about jobs, whose skipped state renames a required check; a cancelled run on a closed PR gates nothing. `build-*` and `gitflow` start in parallel and are cancelled within ~10s instead of running to the end. `edited` stays in the trigger list: an open PR retargeted to another base must re-run gitflow, which is why it is there.
+2. **Closing a PR cancels its in-flight runs — superseded during MB.98.** The plan was a separate `cancel-gate-on-close.yml` on `pull_request: closed` that ran `gh run list --workflow pr-gate.yml --branch "$HEAD_REF"` and cancelled the matches. It selects by branch, and a hotfix branch is open as two PRs, into `main` and `staging`, with one head branch and one SHA: merging one would cancel the other's gate. **As built:** `closed` joins `pr-gate.yml`'s trigger types. A close starts a run in the PR's workflow-level group (`PR Gate-<pr number>`, `cancel-in-progress: true`), which cancels exactly that PR's queued and in-progress runs, and the step above then cancels the close run itself. No new workflow file. `deploy.yml` is left alone: its `closed` handler tears the preview down and its group is non-cancelling on purpose.
+3. **The build jobs' `cancel-in-progress: false`.** Verified dead (facts above). Proposal: delete the three job-level `concurrency:` blocks and replace the comment with the true statement — a build survives cancellation because the tag is pushed manifest-last and the cache is written blob-by-blob, so a cancelled build leaves nothing an `imagetools inspect` would mistake for an image. **This is a doc/code disagreement; confirm before removing** (CLAUDE.md, "establish which one is wrong"). Confirmed during MB.98, and removed.
 4. `claude-docs/ci.md`, "Aggregating workflows": the two cancellation paths, the burst as the reason (130 runs from one bulk edit), and the corrected build-job comment. The concurrency audit's verdict on `deploy` and `migrate` (right as they are) goes in one sentence so it is not redone.
 
 ## Part 3 — MB.99: Docker layer cache to the registry
@@ -212,6 +206,6 @@ Order: **MB.97 → MB.98 → MB.99 → MB.96.** The first three have no external
 ## Verification
 
 1. **MB.97 locally**: `npm run test:coverage` — 132 files / 2023 tests pass, coverage ≥ 80% on all four measures; the unit project's wall time is at or under the 3.6s measured above and its `Duration` line shows no `environment` share. `npx vitest run --project unit` lists only `.ts` files; `npx vitest run --project dom` runs the twelve DOM files. `npm run lint`, `npm run typecheck`, `npm run format:check` green. Deliberately drop a `.test.ts` under `tests/` into `dom`'s include without excluding it from `unit` and confirm the new guard fails. In CI: the vitest job's `Duration` and `environment` share against today's 108.69s / 31%; record it in `ci.md`.
-2. **MB.98**: on the PR itself, edit the PR body after it is merged (or close a scratch PR mid-run) and watch the gate run appear and cancel within seconds; `gh run list --workflow pr-gate.yml --branch <head>` shows nothing `in_progress` after a close. `act` cannot exercise either path (no `pull_request` payload with `state: closed`), so this one is verified live.
+2. **MB.98**: on the PR itself, edit the PR body after it is merged (or close a scratch PR mid-run) and watch the gate run appear and cancel within seconds; after a close or merge, the PR's gate runs show `cancelled`, and a hotfix's twin PR keeps its run. `act` cannot exercise either path (no `pull_request` payload with `state: closed`), so this one is verified live.
 3. **MB.99**: the first build after the merge exports to `ghcr.io/aurora-arctic/sorrel-and-salt/testing:buildcache` (visible under the package's versions) and its `exporting cache to registry` step is seconds, not 32s; a _different_ PR that changes only `Docker/Dockerfile.node`'s testing stage shows `[development 6/6] RUN npm ci` as `CACHED`; `gh api repos/Aurora-Arctic/Sorrel-and-Salt/actions/caches` totals fall below 10 GB within the 7-day eviction window and stop holding `buildkit-blob-*` entries.
 4. **MB.96**: the job log shows `nproc` = 8, "Initialize containers" in seconds on the second run, and `Duration` a fraction of 108s. Check Blacksmith's usage page after the first week against the budget table.
