@@ -67,6 +67,8 @@ Tests: `tests/db/seed/correspondences.test.ts` in `forms.test.ts`'s shape — pa
 
 ### MB.94 — suggestion fields (adopts M4.7a)
 
+> **Swapped and corrected (MB.94).** MB.94 landed ahead of M4.7a, which had not started, so it built the mechanism and M4.7a adopts it: Wave 8 reads `… M4.7 · MB.94 · M4.7a · M4.8 …`. A description matches by `<%` word similarity rather than `%`, which scores a term against a whole description too low for `serpent` to find Ophiuchus. The service needs `assertMembership`, so `vocabulary` gains an edge to `coven`. The shipped shape is in `claude-docs/db.md`, "The member's autofill".
+
 `vocabulary/services/` service parameterised by table and column; GraphQL `planetSuggestions` / `zodiacSuggestions`, one `CorrespondenceSuggestion` type, each a `pagedConnection`. Curated rows first (name match outranks description match, `%` under `SET LOCAL pg_trgm.similarity_threshold`), then in-use uncurated values from the compendium and the current workspace only — `lower(btrim(value))` not among live rows' `lower(name)`. Compendium-tier finder added to `TIER_SEAM`. Authorization tests assert a value held only by unrelated workspace X never appears, with the precondition that X holds it. No planner assertion (difference 2). If `standard` gains an uncurated planet, one entry, asserted in `standard.test.ts`.
 
 ### MB.95 — admin CRUD (reuses M5.6a's page)

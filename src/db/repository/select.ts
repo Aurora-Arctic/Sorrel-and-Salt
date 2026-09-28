@@ -1,5 +1,5 @@
-import { and, asc, desc, getTableColumns, sql, type SQL } from 'drizzle-orm';
-import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
+import { and, asc, desc, getTableColumns, is, sql, type SQL } from 'drizzle-orm';
+import { type AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
@@ -27,14 +27,33 @@ export interface Keyset {
 const SIMILARITY_THRESHOLD = 0.4;
 
 /**
- * How `selectFrom` runs a trigram match: `%` in its `where` means
- * `SIMILARITY_THRESHOLD`, and the best `limit` rows come back in `orderBy`'s
- * order. Never a `similarity(a, b) > n` comparison in the `where`: no trigram
- * index can answer a function call (claude-docs/db.md, "Fuzzy matching").
+ * The threshold `<%` reads: the term against the best-matching run of words
+ * in a longer text, which whole-string `%` scores too low to find — `serpent`
+ * is 0.12 similar to Ophiuchus's description and 1.0 word-similar. pg_trgm's
+ * own default, set anyway so the server's configuration cannot move it.
+ */
+const WORD_SIMILARITY_THRESHOLD = 0.6;
+
+/**
+ * How `selectFrom` runs a trigram match: `%` and `<%` in its `where` mean
+ * the two thresholds above, and the first `limit` rows come back in
+ * `orderBy`'s order. Never a `similarity(a, b) > n` comparison in the `where`:
+ * no trigram index can answer a function call (claude-docs/db.md, "Fuzzy
+ * matching").
  */
 export interface Similarity {
   orderBy: SQL[];
   limit: number;
+}
+
+/**
+ * A statement's rows read as a table: `source` is the parenthesised statement
+ * and its alias, `fields` the columns read off it. For a read no one table
+ * holds — a union across two — still built here, under the threshold.
+ */
+export interface Derived<TRow extends Record<string, unknown>> {
+  source: SQL;
+  fields: { [K in keyof TRow]: SQL<TRow[K]> };
 }
 
 type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -56,24 +75,32 @@ export function selectFrom<TTable extends PgTable>(
   where: SQL | undefined,
   similarity: Similarity,
 ): Promise<TTable['$inferSelect'][]>;
+export function selectFrom<TRow extends Record<string, unknown>>(
+  derived: Derived<TRow>,
+  where: SQL | undefined,
+  similarity: Similarity,
+): Promise<TRow[]>;
 export async function selectFrom(
-  table: PgTable,
+  relation: PgTable | Derived<Record<string, unknown>>,
   where: SQL | undefined,
   order?: Keyset | Similarity,
 ) {
   const keyset = order && 'sort' in order ? order : undefined;
-  // The key is read as Postgres prints it: a `timestamptz` read into a Date
-  // loses its microseconds, and a cursor built from it would replay rows.
-  const selection = keyset && {
-    row: getTableColumns(table),
-    key: sql<string>`${keyset.sort}::text`,
-  };
+  // A table is read whole, and a page adds its key — read as Postgres prints
+  // it: a `timestamptz` read into a Date loses its microseconds, and a cursor
+  // built from it would replay rows. A derived relation names its own columns.
+  const [source, selection] = is(relation, PgTable)
+    ? [
+        relation,
+        keyset && { row: getTableColumns(relation), key: sql<string>`${keyset.sort}::text` },
+      ]
+    : [relation.source, relation.fields];
   // Same cast as `write.ts`'s `writerFor`: `.from()` is typed against the table's own
   // generic parameter.
   const build = (executor: Executor) =>
     executor
       .select(selection as never)
-      .from(table as never)
+      .from(source as never)
       .where(where)
       .$dynamic();
 
@@ -82,7 +109,8 @@ export async function selectFrom(
     // with the transaction, so it cannot ride a pooled connection onward.
     return db.transaction(async (tx) => {
       await tx.execute(
-        sql`select set_config('pg_trgm.similarity_threshold', ${String(SIMILARITY_THRESHOLD)}, true)`,
+        sql`select set_config('pg_trgm.similarity_threshold', ${String(SIMILARITY_THRESHOLD)}, true),
+          set_config('pg_trgm.word_similarity_threshold', ${String(WORD_SIMILARITY_THRESHOLD)}, true)`,
       );
       return build(tx)
         .orderBy(...order.orderBy)

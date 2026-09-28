@@ -37,7 +37,7 @@ const MODULES = ['identity', 'coven', 'vocabulary', 'ingredients', 'grimoire'];
 const ALLOWED: Record<string, string[]> = {
   identity: [],
   coven: ['identity'],
-  vocabulary: ['identity'],
+  vocabulary: ['identity', 'coven'],
   ingredients: ['identity', 'coven', 'vocabulary'],
   grimoire: ['identity', 'coven', 'vocabulary', 'ingredients'],
 };
@@ -51,6 +51,8 @@ const REPOSITORY = 'src/db/repository';
 const TIER_SEAM: string[] = [
   // Story 16's warning: a near-miss in the compendium or this workspace, in one ranked list.
   'findSimilarIngredients',
+  // A planet or sign autofill's in-use bucket: uncurated values in the compendium and this workspace.
+  'findVocabularySuggestions',
 ];
 
 /**

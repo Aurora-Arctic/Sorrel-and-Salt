@@ -22,11 +22,12 @@ src/modules/<name>/
 ```
 
 A module's index re-exports its `graphql/` files, so loading the index is what
-registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`
-and `@/modules/coven` for that side effect, never the `graphql/` path, which
-is internal. `identity` has `User` and `me`; `coven` has `Workspace`,
-`WorkspaceMember`, the `membershipsByUser` loader and the `User.memberships`
-field. A field on another module's type is added from the module allowed to
+registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
+`@/modules/coven` and `@/modules/vocabulary` for that side effect, never the
+`graphql/` path, which is internal. `identity` has `User` and `me`; `coven` has
+`Workspace`, `WorkspaceMember`, the `membershipsByUser` loader and the
+`User.memberships` field; `vocabulary` has `CorrespondenceSuggestion` and the
+`planetSuggestions` and `zodiacSuggestions` connections. A field on another module's type is added from the module allowed to
 import it — `memberships` lives in `coven` because `identity` imports
 nothing.
 
@@ -56,7 +57,7 @@ a service lands in the module that owns the table it writes.
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | `identity`    | `users`, `sessions`, `accounts`, `verifications`, `rate_limits`; later `admin_invitations`                                        | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts` |
 | `coven`       | `workspaces`, `workspace_members`, `workspace_invitations`                                                                        | `membership.ts`, `memberships.ts`, `access-control.ts`                         |
-| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`                          | none yet                                                                       |
+| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`                          | `suggestions.ts`                                                               |
 | `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_categories`, `inventory_items`; later `retired_ingredient_slugs` | `duplicates.ts`; `schema/units.ts` is the unit vocabulary                      |
 | `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                 | `spell-visibility.ts`                                                          |
 
@@ -111,7 +112,7 @@ The dependency graph is fixed and acyclic:
 | ------------- | ------------------------------------------------ |
 | `identity`    | nothing                                          |
 | `coven`       | `identity`                                       |
-| `vocabulary`  | `identity`                                       |
+| `vocabulary`  | `identity`, `coven`                              |
 | `ingredients` | `identity`, `coven`, `vocabulary`                |
 | `grimoire`    | `identity`, `coven`, `vocabulary`, `ingredients` |
 
@@ -172,8 +173,9 @@ containing `workspace_id is null` or `isNull(workspaceId)`, and anything that
 reads both tiers in one statement. The guard fails an unlisted finder, and it
 fails a listed one that no longer exists.
 
-It holds one finder today: `findSimilarIngredients` (M4.7), the fuzzy duplicate
-match, which reads the compendium and one workspace in a single ranked
+It holds two finders today: `findSimilarIngredients` (M4.7), the fuzzy
+duplicate match, and `findVocabularySuggestions` (MB.94), the planet and
+zodiac autofill. Each reads the compendium and one workspace in a single
 statement. A later task that adds such a finder — M5.1's admin reads, the
 merged two-tier list, local-beats-compendium resolution — adds the finder's
 name to `TIER_SEAM` in its own PR, with a one-line reason beside it.
@@ -209,9 +211,8 @@ trigger, isolation and pagination tests — and the shared db harness is
   spreads each module's map into `LOADERS`, so `createLoaders(session)` still
   builds one fresh set per request.
 
-Both composition points are empty today. The first module to register a type
-or a loader settles the exact export name; what is fixed is that the host
-reaches it through the index.
+Three modules register types today and one registers a loader. What is fixed
+is that the host reaches each through the module's index.
 
 ## Adding a module
 
