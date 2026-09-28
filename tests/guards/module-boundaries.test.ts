@@ -51,7 +51,7 @@ const REPOSITORY = 'src/db/repository';
 const TIER_SEAM: string[] = [
   // Story 16's warning: a near-miss in the compendium or this workspace, in one ranked list.
   'findSimilarIngredients',
-  // A planet or sign autofill's in-use bucket: uncurated values in the compendium and this workspace.
+  // A planet, sign or form autofill's in-use bucket, and a form's claimants: the compendium and this workspace.
   'findVocabularySuggestions',
 ];
 

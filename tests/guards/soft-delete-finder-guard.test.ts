@@ -45,7 +45,15 @@ const EXPORTED_FUNCTIONS = [
 ];
 
 /** Folder-internal: exported for the siblings, never re-exported by the index. */
-const INTERNAL = ['selectFrom', 'writerFor', 'scopedTo', 'notSoftDeleted', 'readableSpells'];
+const INTERNAL = [
+  'selectFrom',
+  'writerFor',
+  'scopedTo',
+  'notSoftDeleted',
+  'readableSpells',
+  'readSuggestionPage',
+  'claimantList',
+];
 
 /** Rule 5's half: a finder over a table carrying `workspace_id` scopes by the proof. */
 const SCOPED_FINDERS = [

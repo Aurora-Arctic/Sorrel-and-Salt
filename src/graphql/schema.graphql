@@ -16,6 +16,14 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTime
 
+type FormSuggestion {
+  claimants: [SuggestionClaimant!]!
+  curated: Boolean!
+  description: String
+  group: String
+  value: String!
+}
+
 type Mutation {
   setEmail(email: String!): User!
 }
@@ -28,10 +36,21 @@ type PageInfo {
 }
 
 type Query {
+  formSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryFormSuggestionsConnection!
   me: User!
   ok: Boolean!
   planetSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryPlanetSuggestionsConnection!
   zodiacSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryZodiacSuggestionsConnection!
+}
+
+type QueryFormSuggestionsConnection {
+  edges: [QueryFormSuggestionsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryFormSuggestionsConnectionEdge {
+  cursor: String!
+  node: FormSuggestion!
 }
 
 type QueryPlanetSuggestionsConnection {
@@ -52,6 +71,11 @@ type QueryZodiacSuggestionsConnection {
 type QueryZodiacSuggestionsConnectionEdge {
   cursor: String!
   node: CorrespondenceSuggestion!
+}
+
+type SuggestionClaimant {
+  canonicalName: String
+  name: String!
 }
 
 type User {
