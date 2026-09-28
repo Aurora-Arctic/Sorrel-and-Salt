@@ -27,9 +27,9 @@ export const planets = pgTable(
     // Required *and non-empty*: NOT NULL alone accepts '', and the description
     // is search surface (Lilith's carries "Black Moon").
     check('planets_description_not_blank', sql`btrim(description) <> ''`),
-    // The suggestion query matches name and description alike. Match with `%`
-    // under a per-transaction `pg_trgm.similarity_threshold`, as on
-    // `ingredients_trgm` (claude-docs/db.md, "Fuzzy matching").
+    // The suggestion query matches name and description alike, by `%` and
+    // `<%` under per-transaction thresholds — never a `similarity()`
+    // comparison (claude-docs/db.md, "The member's autofill").
     index('planets_trgm').using(
       'gin',
       sql`${table.name} gin_trgm_ops`,

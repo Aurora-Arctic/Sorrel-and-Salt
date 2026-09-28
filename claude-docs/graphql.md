@@ -263,6 +263,51 @@ changes only once the mailed link is followed
 another verified account or a second mail inside the minute included, is a
 `VALIDATION` error on the `email` field.
 
+### `planetSuggestions` and `zodiacSuggestions`
+
+The autofill behind the planet and zodiac fields (MB.94), registered by
+`vocabulary`:
+
+```graphql
+type Query {
+  planetSuggestions(
+    workspaceId: ID!
+    term: String
+    first: Int
+    after: String
+  ): QueryPlanetSuggestionsConnection!
+  zodiacSuggestions(
+    workspaceId: ID!
+    term: String
+    first: Int
+    after: String
+  ): QueryZodiacSuggestionsConnection!
+}
+
+type CorrespondenceSuggestion {
+  value: String!
+  description: String # the curated row's; null for a value only in use
+  curated: Boolean!
+}
+```
+
+- **One type for both fields.** A planet and a sign suggestion carry the same
+  three things, and neither carries a group. `form`'s suggestion, which does,
+  is M4.7a's own type.
+- **Each is a `pagedConnection`**, one list over both buckets: curated values
+  first, name matches before description matches, then values in use in the
+  compendium and the named workspace that no live row curates. `curated` tells
+  a client which bucket a row came from, and the order is the finder's
+  ([`db.md`](db.md), "The member's autofill").
+- **`term` is optional.** Blank or absent, the field lists the whole
+  vocabulary and every in-use value, still a page at a time.
+- **Two refusals, one type.** Signed out, the resolver refuses with
+  `Forbidden` before the service is reached. Signed in, `assertMembership`
+  refuses a workspace the caller does not belong to with the same
+  `Forbidden`, a site admin included. The field carries no scope, because
+  `pagedConnection` takes none and the resolver's null check is the same
+  early refusal.
+
 ### Auth scopes: the second check
 
 `@pothos/plugin-scope-auth` gives the schema three scopes, all read off the

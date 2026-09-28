@@ -508,9 +508,13 @@ until the table is big.
 for a similarity read by handing `selectFrom` a `Similarity` — an `orderBy`
 and a `limit` — in place of a `Keyset`, and `selectFrom` then opens a
 transaction, runs `select set_config('pg_trgm.similarity_threshold', '0.4',
-true)` in it, and runs the read in the same transaction. `set_config(…, true)`
-is `SET LOCAL` taking a bind parameter, as `withAudit`'s GUC is. So a finder
-cannot forget the threshold, and 0.4 is written in one place. This is the one
+true), set_config('pg_trgm.word_similarity_threshold', '0.6', true)` in it,
+and runs the read in the same transaction. `set_config(…, true)` is
+`SET LOCAL` taking a bind parameter, as `withAudit`'s GUC is. So a finder
+cannot forget either threshold, and each is written in one place. The second
+is `<%`'s, word similarity, which is how a description is searched ("The
+member's autofill" below); 0.6 is pg_trgm's own default, set anyway so the
+server's configuration cannot move it. This is the one
 read that opens a transaction: it carries a planner setting, not an identity,
 so it is not the read-side `withAudit` that MB.29 declined to build.
 
@@ -691,7 +695,8 @@ gap in M4.2.
 `ingredients.planet` and `ingredients.zodiac`, in
 `src/modules/vocabulary/schema/astrology.ts`, migration
 `0023_correspondence-vocabularies.sql`, seeded by
-`src/db/seed/astrology.ts` (below). Nothing reads them yet. They
+`src/db/seed/astrology.ts` (below), and read by a member's autofill ("The
+member's autofill" below). They
 replace a TypeScript constant of the same lists, deleted with the seed: a list
 an admin cannot extend without a deploy is the shape `form` had before MB.35,
 and wrong for the same reason. Files, scripts and functions say _astrology_
@@ -727,8 +732,9 @@ is also search surface.
 **One multicolumn `gin_trgm_ops` index per table over `(name, description)`**,
 spelled as `ingredients_trgm` is, since the suggestion query matches both and
 the set is admin-extensible. At nineteen and thirteen rows the planner will
-never use it, so MB.94 asserts the `%`-plus-`SET LOCAL` query shape and not an
-index scan, where M4.7 and M4.7a assert both.
+never use it, so MB.94 asserts the query shape — `%` and `<%` under thresholds
+set in the transaction — and not an index scan, where M4.7 and M4.7a assert
+both. `gin_trgm_ops` answers `<%` as it answers `%`.
 
 **Where they differ from the form precedent, and why:**
 
@@ -742,7 +748,9 @@ index scan, where M4.7 and M4.7a assert both.
   `categories`, and MB.93's test slices its own anchors.
 - **`standard` seeds no uncurated planet.** Its compendium's planet values are
   all curated names in title case, which match case-insensitively. MB.94
-  decides whether `standard` gains one, in `rhizome`'s shape.
+  decided against one: its tests write their own against an emptied
+  `ingredients`, and one in the shared template would reach every
+  workspace's suggestions and MB.95's to-do list.
 - **Curating an uncurated value is not one click.** `description` is required,
   so the admin page's add control opens the create form prefilled with the
   value and asks for one (MB.95, and M5.6a for forms).
@@ -751,8 +759,77 @@ index scan, where M4.7 and M4.7a assert both.
 curated rows first, then uncurated values in use in the compendium and the
 current workspace only. The admin's to-do list (MB.95) reads the compendium
 tier only, since an admin reaches no workspace's ingredients (M6.6); its finder
-joins `TIER_SEAM` in `tests/guards/module-boundaries.test.ts`. A value is
-uncurated when `lower(btrim(value))` matches no live row's `lower(name)`.
+joins `TIER_SEAM` in `tests/guards/module-boundaries.test.ts`, as the
+autofill's does. A value is uncurated when `lower(btrim(value))` matches no
+live row's `lower(name)`.
+
+### The member's autofill (MB.94)
+
+`findVocabularySuggestions(membership, vocabulary, term, page)` in
+`src/db/repository/vocabularies.ts` is the read behind `planetSuggestions`
+and `zodiacSuggestions` ([`graphql.md`](graphql.md)). Its services are
+`suggestPlanets` and `suggestZodiacSigns` in `vocabulary`, which ask
+`ingredient: ['read']`: the curated rows are global, and every in-use value is
+one a reader of the workspace could already list. A caller names a table and
+nothing else. The ingredient column each table suggests for is paired in the
+repository, keyed by table name, so a caller cannot hand `planets` the
+`zodiac` column, and a third vocabulary does not compile until it names its
+column. That is the parameterisation M4.7a extends to `ingredient_forms`.
+
+One page is one statement: a `UNION ALL` of three tiers, sorted, bounded and
+cut by cursor as a whole.
+
+| Tier | Rows                                                                                                                  | Matched by                        |
+| ---- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| 0    | live curated rows whose name matches                                                                                  | `name % term` or `term <% name`   |
+| 1    | live curated rows whose description alone matches                                                                     | `term <% description`             |
+| 2    | values on live ingredients in the compendium or the proof's workspace, folding to no live curated row's `lower(name)` | `value % term` or `term <% value` |
+
+- **A description matches by `<%`, never `%`.** `%` compares whole
+  strings, and a term is a word or two against a sentence: `serpent` is 0.12
+  similar to Ophiuchus's description and `black moon` 0.22 to Lilith's, far
+  under 0.4. `<%` is word similarity, the term against the best-matching run
+  of words in the text, and scores both 1.0. It is a trigram operator too, so
+  "Fuzzy matching"'s rule still holds, and its threshold is the second one
+  `selectFrom` sets.
+- **A name or an in-use value matches by either.** `<%` completes a typed
+  prefix: `mer` is 0.33 similar to Mercury and 0.75 word-similar. A name
+  should never be harder to find than its own description.
+- **Each tier is alphabetical, case-folded**, not ranked by score. The tiers
+  carry the ranking the story asks for — a name match before a description
+  match, curated before in use — and a name is an exact cursor key where a
+  float score is not.
+- **An in-use value is folded to `lower(btrim(value))`**, so `Moon`, `moon`
+  and `Moon` are one value, offered in the spelling most of those entries
+  use (`mode()`, a tie broken by sort order). A blank value is no value. A
+  fold equal to a live curated name is never in tier 2, whether or not that
+  row matched the term, so a value is offered once, as the curated row, or
+  not at all. Soft-deleting a curated row moves its in-use spellings into
+  tier 2.
+- **Tier 2 reads both tiers of `ingredients`**, the compendium and the proof's
+  workspace and never another, so the finder is on
+  [the tier seam](modules.md#the-tier-seam). The scope is in the statement,
+  so a value that only unrelated workspace X holds never reaches the service.
+- **A blank term matches everything**, so an opened field can list the whole
+  vocabulary before anything is typed. The statement still runs under the
+  thresholds, with no trigram predicate in it.
+- **The union is read through `selectFrom`.** `selectFrom` takes a
+  `Derived` — a parenthesised statement and the columns read off it — in
+  place of a table, in its `Similarity` mode, so the one-builder rule and
+  the thresholds hold for a read no one table holds. The finder writes its
+  own keyset bounds: a cursor's key is `tier:fold` and its id the tie-break,
+  which is the curated row's id or the fold, compared as the row
+  `(tier, fold, tiebreak)`. A key that does not parse throws
+  `InvalidCursor`, as a cursor that will not cast does in `findPage`.
+
+**No planner assertion.** At nineteen and thirteen rows `planets_trgm` and
+`zodiac_signs_trgm` are never chosen over a sequential scan, so
+`suggestions-query.test.ts` asserts what the service sends instead: both
+thresholds set in the transaction before the match, `%` and `<%` where a
+`similarity()` comparison could have been, the scope and soft-delete
+predicates, and the fold. It captures the statements as
+`duplicates-plan.test.ts` does. `suggestions.test.ts` holds the behaviour,
+each refusal and scope case with the precondition that made it possible.
 
 ## Stock, and the one module that owns the units (M9.2)
 
@@ -1374,18 +1451,19 @@ two empty sets are equal and something has to say they aren't.
 `src/db/repository/` is one file per concern, and callers import only its
 `index.ts` — `@/db/repository` resolves to it:
 
-| File                   | Holds                                                                                                           |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `index.ts`             | Named re-exports only — the pinned surface below — and nothing declared                                         |
-| `shapes.ts`            | The table-shape types every signature is built from, and the `scopedTo` and `notSoftDeleted` predicates         |
-| `write.ts`             | `withAudit` and the `AuditWriter` it hands out                                                                  |
-| `select.ts`            | `selectFrom`, the one place a read query is built; the keyset bounds a page is cut by; the similarity threshold |
-| `ingredients.ts`       | `findSimilarIngredients`, the fuzzy-duplicate finder                                                            |
-| `finders.ts`           | The generic finders, scoped and unscoped, and the escape hatch                                                  |
-| `spells.ts`            | The three spell finders and the `readableSpells` predicate they share                                           |
-| `memberships.ts`       | Two of the three reads that take no proof                                                                       |
-| `users.ts`             | The third: the live row holding an address                                                                      |
-| `provisional-users.ts` | The provisional-account delete                                                                                  |
+| File                   | Holds                                                                                                                |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `index.ts`             | Named re-exports only — the pinned surface below — and nothing declared                                              |
+| `shapes.ts`            | The table-shape types every signature is built from, and the `scopedTo` and `notSoftDeleted` predicates              |
+| `write.ts`             | `withAudit` and the `AuditWriter` it hands out                                                                       |
+| `select.ts`            | `selectFrom`, the one place a read query is built; the keyset bounds a page is cut by; the two similarity thresholds |
+| `ingredients.ts`       | `findSimilarIngredients`, the fuzzy-duplicate finder                                                                 |
+| `vocabularies.ts`      | `findVocabularySuggestions`, the planet and zodiac autofill                                                          |
+| `finders.ts`           | The generic finders, scoped and unscoped, and the escape hatch                                                       |
+| `spells.ts`            | The three spell finders and the `readableSpells` predicate they share                                                |
+| `memberships.ts`       | Two of the three reads that take no proof                                                                            |
+| `users.ts`             | The third: the live row holding an address                                                                           |
+| `provisional-users.ts` | The provisional-account delete                                                                                       |
 
 **The rest of the folder is internal, and that is enforced rather than
 conventional.** `selectFrom` is exported from `select.ts` because the finders
@@ -1592,8 +1670,9 @@ counterpart then rather than leaving a widened hatch waiting.
 finder.** The column is nullable — `workspace_id IS NULL` is the
 compendium, everything else is a workspace's own — so the table matches
 `{ workspaceId: AnyPgColumn }` and `findMany(ingredients)` does not compile.
-The one read of it so far is `findSimilarIngredients` (see "Fuzzy matching"),
-which names both tiers as explicitly as this paragraph asks and is listed on
+The reads of it so far are `findSimilarIngredients` (see "Fuzzy matching")
+and `findVocabularySuggestions` (see "The member's autofill"), each naming
+both tiers as explicitly as this paragraph asks, and each listed on
 [the tier seam](modules.md#the-tier-seam). Whichever of M5.2 or M8 first needs
 a plain compendium read adds a finder that ANDs `workspace_id IS NULL` as explicitly as the scoped one
 ANDs its proof; the local-beats-compendium resolution (§5) wants both tiers and
@@ -1876,6 +1955,10 @@ limit $limit  -- the page plus one
 A spell's page, the counterpart of `findManySpells` under the visibility rule,
 is added by the grimoire task that first needs it, as its own finder, like
 the other spell finders.
+
+A page over rows no one table holds writes its own bounds under the same
+rules: `findVocabularySuggestions` keys a union by tier, fold and tie-break
+("The member's autofill").
 
 `tests/db/pagination.test.ts` walks probe tables through `resolvePage` and the
 real finders:

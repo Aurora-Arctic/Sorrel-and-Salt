@@ -661,6 +661,19 @@ type Query {
   ): QueryCompendiumConnection!
   ingredient(id: ID!): Ingredient
   ingredientFormValues(first: Int, after: String): QueryIngredientFormValuesConnection! # the admin-curated form vocabulary
+  # Curated bodies or signs first, then values in use in the compendium and this workspace (§5)
+  planetSuggestions(
+    workspaceId: ID!
+    term: String
+    first: Int
+    after: String
+  ): QueryPlanetSuggestionsConnection!
+  zodiacSuggestions(
+    workspaceId: ID!
+    term: String
+    first: Int
+    after: String
+  ): QueryZodiacSuggestionsConnection!
   workspaceIngredients(
     workspaceId: ID!
     search: String
