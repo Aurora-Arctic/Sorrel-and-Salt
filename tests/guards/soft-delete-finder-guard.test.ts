@@ -39,6 +39,7 @@ const EXPORTED_FUNCTIONS = [
   'findMembershipsOfUsers',
   'findOne',
   'findOneById',
+  'findOneByIdInWorkspace',
   'findOneInWorkspace',
   'findOneSpell',
   'findPage',
@@ -67,6 +68,7 @@ const INTERNAL = [
 const SCOPED_FINDERS = [
   'findCommonNameSuggestions',
   'findManyInWorkspace',
+  'findOneByIdInWorkspace',
   'findOneInWorkspace',
   'findPageInWorkspace',
   'findSimilarIngredients',

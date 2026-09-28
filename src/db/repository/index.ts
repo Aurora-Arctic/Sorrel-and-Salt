@@ -20,6 +20,7 @@ export {
   findManyInWorkspace,
   findOne,
   findOneById,
+  findOneByIdInWorkspace,
   findOneInWorkspace,
   findPage,
   findPageInWorkspace,

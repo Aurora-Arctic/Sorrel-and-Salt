@@ -69,6 +69,19 @@ export async function findOneInWorkspace<
 }
 
 /**
+ * The live row with this id in the proof's workspace, or `undefined` —
+ * including when the id is another workspace's. The scoped twin of
+ * `findOneById`, for the same reason: a service cannot build the `where`
+ * `findOneInWorkspace` wants (MB.33).
+ */
+export async function findOneByIdInWorkspace<
+  TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
+>(membership: Membership, table: TTable, id: string): Promise<TTable['$inferSelect'] | undefined> {
+  const [row] = await findManyInWorkspace(membership, table, eq(table.id, id));
+  return row;
+}
+
+/**
  * One page of non-soft-deleted rows in `(sort, id)` order, each with the
  * cursor it was found at: CLAUDE.md rule 8's keyset half. `page` comes from
  * `resolvePage` in `src/lib/pagination.ts`, already clamped to the maximum.

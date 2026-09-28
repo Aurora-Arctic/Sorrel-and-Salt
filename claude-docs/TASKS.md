@@ -2275,11 +2275,11 @@ _20 tasks · 37 hours_
 
 _Stories 14–16 — As a developer, I want the compendium browsing stories expressed as failing tests before implementation, so that done is measured against the specification._
 
-Create `tests/acceptance/02-compendium.test.ts` with failing tests naming stories 14 through 16. Stories 17 and 18 are covered by the admin scaffold in M5.1; story 19 by the workspace isolation tests in M6.6.
+Add failing tests naming stories 14 and 16 to `tests/acceptance/02-compendium.test.ts`. Stories 17 and 18 are covered by the admin scaffold in M5.1; story 19 by the workspace isolation tests in M6.6. **Corrected while building M8.2:** this scaffold runs in Wave 11 and M8.2 in Wave 8, so M8.2 created the file with story 15's test, passing against its own service, and this task adds the other two beside it.
 
 _Acceptance criteria:_
 
-- Three failing tests, one per story
+- Two failing tests, one each for stories 14 and 16, beside M8.2's passing story 15
 - Each names its story number and text
 - No overlap with the admin or workspace scaffolds
 - make test-stories reports them
@@ -2397,12 +2397,15 @@ _Stories 15 and 34 — As a workspace member, I want my edits saved and reflecte
 
 Both mutations delegating to services, with Zod validation and audit stamping. Return the updated entity for cache reconciliation. Folk-name child rows are written in the same `withAudit` transaction as the ingredient itself, not a separate round trip.
 
+**Decided while building M8.2:** `updateWorkspaceIngredient` replaces the whole row. Its input is the whole ingredient as IngredientForm submits it, so a field left out is cleared (claude-docs/db.md, "Workspace ingredients"). The update mutation's input therefore declares every field required but nullable: a caller clears a field by sending `null`, and leaving one out is a schema error rather than a silent clear.
+
 _Acceptance criteria:_
 
 - A Zod failure leaves as MB.43's `VALIDATION` error carrying `fieldErrors`, one entry per issue with its path preserved — the shape M5.9's form reads back into its own error elements
 - Audit columns stamped from the session
 - Returned entity lets the client update without a refetch
 - Folk-name writes are transactional with the ingredient write, not a separate round trip
+- Every field of the update mutation's input is required and nullable: omitting one is refused by the schema, and `null` clears it
 - Viewers are rejected
 
 ### Search UI
@@ -5111,7 +5114,7 @@ _Acceptance criteria:_
 
 _Story:_ As an admin, I want an entry's public address to follow its name and its old address to keep working long enough for search engines to move over, so that a relabel never loses a reader or an index entry.
 
-Lands after M5.2, whose service it extends, and before M5.3 and M5.5, so the admin form and the public route consume a finished rule. The slug is `slugify` of name, form and formal name, set by the service on create and recomputed whenever the label, the form or the formal name changes; the retired slug is recorded in `retired_ingredient_slugs` and reserved until its `expires_at`. Redirect and reservation end by predicate at that instant; nothing runs on a schedule. A rename whose slug is currently reserved changes the name at once and stores the slug as `pending_slug` with `pending_slug_effective_at` equal to the reservation's expiry, and the mutation's response names that date. One pending claim per slug, refused with who holds it and when it lands; a pending slug must not equal a current one; an ingredient may reclaim its own retired slug at once. The current slug is one repository expression — the pending one when due, else `slug` — read through one finder so no call site forgets the pending half. Housekeeping rides on the next slug write in that scope: lapsed retirements are hard-deleted and a due pending slug materialised, stamped as the admin making that write. A finder resolves a retired slug to its ingredient while unexpired, joining through the ingredient so a soft-deleted one answers nothing. Argued in [`design-decisions/mb.80-public-compendium.md`](design-decisions/mb.80-public-compendium.md).
+Lands after M5.2, whose service it extends — and M8.2's, which sets a workspace ingredient's slug on create and leaves it untouched on update — and before M5.3 and M5.5, so the admin form and the public route consume a finished rule. The slug is `slugify` of name, form and formal name, set by the service on create and recomputed whenever the label, the form or the formal name changes; the retired slug is recorded in `retired_ingredient_slugs` and reserved until its `expires_at`. Redirect and reservation end by predicate at that instant; nothing runs on a schedule. A rename whose slug is currently reserved changes the name at once and stores the slug as `pending_slug` with `pending_slug_effective_at` equal to the reservation's expiry, and the mutation's response names that date. One pending claim per slug, refused with who holds it and when it lands; a pending slug must not equal a current one; an ingredient may reclaim its own retired slug at once. The current slug is one repository expression — the pending one when due, else `slug` — read through one finder so no call site forgets the pending half. Housekeeping rides on the next slug write in that scope: lapsed retirements are hard-deleted and a due pending slug materialised, stamped as the admin making that write. A finder resolves a retired slug to its ingredient while unexpired, joining through the ingredient so a soft-deleted one answers nothing. Argued in [`design-decisions/mb.80-public-compendium.md`](design-decisions/mb.80-public-compendium.md).
 
 _Acceptance criteria:_
 

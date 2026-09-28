@@ -10,7 +10,7 @@ Files arrive with each wave's scaffold task, deliberately red:
 | File                         | Stories | Scaffold      |
 | ---------------------------- | ------- | ------------- |
 | `01-accounts.test.ts`        | 1–13    | M2.1          |
-| `02-compendium.test.ts`      | 14–16   | M8.1          |
+| `02-compendium.test.ts`      | 14–16   | M8.2 / M8.1   |
 | `03-ingredients.test.ts`     | 20–27   | M8.A.1        |
 | `04-modals.test.tsx`         | 28–34   | M9.1          |
 | `06-grimoire.test.ts`        | 47–57   | M10.1         |

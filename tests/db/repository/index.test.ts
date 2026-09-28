@@ -18,6 +18,7 @@ describe('repository public API', () => {
         'findMembershipsOfUsers',
         'findOne',
         'findOneById',
+        'findOneByIdInWorkspace',
         'findOneInWorkspace',
         'findOneSpell',
         'findPage',
