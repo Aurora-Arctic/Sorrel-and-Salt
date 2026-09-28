@@ -1,10 +1,8 @@
-import { join } from 'node:path';
-import { readFileSync, readdirSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
-import { MIGRATIONS_DIR } from '../../../support/paths';
+import { foreignKeyStatements, shippedMigrationStatements } from '../../../support/db/migrations';
 import {
   ingredientFormGroups,
   ingredientForms,
@@ -106,14 +104,6 @@ describe('ingredient_forms schema', () => {
   });
 });
 
-// Read from disk for the one assertion a hand-edited migration would hide from the schema.
-function migrationFiles(): string[] {
-  return readdirSync(MIGRATIONS_DIR)
-    .filter((name) => name.endsWith('.sql'))
-    .sort()
-    .map((name) => readFileSync(join(MIGRATIONS_DIR, name), 'utf8'));
-}
-
 // §5: `ingredients.form` is text, not a foreign key to this table — an FK would
 // key identity on a surrogate id and make an uncurated value unwritable.
 // Asserted from both the Drizzle schema and the shipped SQL —
@@ -134,12 +124,12 @@ describe('ingredients.form is text over this vocabulary, not a foreign key to it
     expect(referenced).not.toContain(ingredientFormGroups);
   });
 
+  // Read from disk: a hand-edited migration could add a key the schema lacks.
   it('ships no migration adding such a foreign key', () => {
-    const offending = migrationFiles().filter((contents) =>
-      /alter table\s+"?ingredients"?[\s\S]*?references\s+"?ingredient_forms"?/i.test(contents),
-    );
+    const statements = shippedMigrationStatements();
 
-    expect(offending).toEqual([]);
+    expect(foreignKeyStatements(statements, 'ingredients', 'ingredient_forms')).toEqual([]);
+    expect(foreignKeyStatements(statements, 'ingredients', 'ingredient_form_groups')).toEqual([]);
   });
 });
 

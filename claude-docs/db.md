@@ -648,8 +648,9 @@ gap in M4.2.
 ## The correspondence vocabularies (MB.91; tables MB.92)
 
 `planets` and `zodiac_signs` are the vocabularies behind
-`ingredients.planet` and `ingredients.zodiac`. MB.91 records the model here
-ahead of the DDL, as MB.28 and MB.35 did, so MB.92 is transcription. Until
+`ingredients.planet` and `ingredients.zodiac`, in
+`src/modules/vocabulary/schema/correspondences.ts`, migration
+`0023_correspondence-vocabularies.sql`. Nothing reads them yet. Until
 MB.93 seeds the tables, the suggestion lists are constants in
 `src/modules/ingredients/validation/correspondences.ts`, which MB.93 deletes:
 a list an admin cannot extend without a deploy is the shape `form` had before
@@ -659,6 +660,9 @@ MB.35, and wrong for the same reason.
   `description` (NOT NULL, with a non-blank CHECK), + audit. Global,
   admin-curated, in the `vocabulary` module, both in one schema file as the
   form pair is. No group, no colour, no order column, no `workspace_id`.
+  The only foreign keys are the audit stamps, and `ingredients.planet` and
+  `.zodiac` point none at either table — `correspondences-schema.test.ts`
+  asserts both from the schema and by scanning the shipped SQL per statement.
 
 **They are `form`'s pattern, and the two columns stay `text`.** A member
 writes `planet` and `zodiac`, so by MB.35's rule each is text over a
@@ -1268,7 +1272,7 @@ $;
 ```
 
 — and attaches it `BEFORE UPDATE ... FOR EACH ROW` to each of the fifteen
-tables carrying the four audit stamps. The trigger takes the same name,
+tables then carrying the four audit stamps. The trigger takes the same name,
 `set_updated_at`, on every one: a trigger name is scoped to its table rather
 than shared with indexes, so there is nothing for a table prefix to
 disambiguate.
@@ -1309,6 +1313,8 @@ An event trigger would attach one automatically on `CREATE TABLE`, but
 `CREATE EVENT TRIGGER` requires superuser and `sorrel` deliberately is not one
 ("Migrations and scripts" above). So **a new audited table adds its own
 `CREATE OR REPLACE TRIGGER` line in its own migration** — one line, copied.
+`0023_correspondence-vocabularies.sql` (MB.92) is the first to do it, for
+`planets` and `zodiac_signs`.
 
 What makes forgetting that a failing test rather than a review note is
 `tests/db/updated-at-trigger.test.ts`, the catalogue-introspection guard the
@@ -1316,8 +1322,8 @@ sweep-task rule requires. It applies the whole migration set into the worker's
 clone — which tables the sweep reached is the thing under test, so unlike the
 per-table schema tests it stubs nothing — and then compares two catalogue
 queries: the tables carrying all four audit stamps, and the tables carrying a
-`set_updated_at` trigger. A sixteenth audited table reddens it without that
-file being edited. The list of fifteen is transcribed there as well, because
+`set_updated_at` trigger. A new audited table reddens it without that
+file being edited. The list of seventeen is transcribed there as well, because
 two empty sets are equal and something has to say they aren't.
 
 ## The repository's files (MB.87)
