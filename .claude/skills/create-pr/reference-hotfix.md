@@ -15,3 +15,5 @@ A `hotfix/*` source branch always needs to land in both `main` (production) and 
 **Step 9 — creating/updating.** Do this independently per target — an existing PR into one doesn't affect the others, and skipping one target (per step 7, if its diff against `HEAD` is empty) doesn't block creating/updating the rest. Report every PR URL back to the user.
 
 **Step 10 — the board.** Run once, not per target. After every PR has been created/updated, post a single `node scripts/task-board.mjs comment <ID> "<text>"` that lists all of them (`main`, `staging`, and the optional `release/*`), then `node scripts/task-board.mjs status <ID> "In Review"` once. If every target only updated an already-open PR, add the comment and leave the status alone. `SKILL.md`'s step 7 covers task identification and the not-found handling unchanged.
+
+**Step 11 — progress comment.** Run the tally once and post it on every PR step 9 created; an updated PR gets none.
