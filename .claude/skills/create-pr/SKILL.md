@@ -49,7 +49,7 @@ Turn the current branch's work into a pull request against a Gitflow-appropriate
 
 4. **Offer to commit uncommitted work.**
    - If `git status` shows uncommitted or unstaged changes, summarize what changed and use AskUserQuestion to ask whether to commit them before opening the PR (yes / no — describe what would be committed). Do not commit without asking, even though the PR is the user's explicit goal.
-   - If they say yes, stage the relevant files (never blind `git add -A`) and commit following this repo's normal commit conventions (see the Git Safety Protocol / commit instructions already in context) — draft a concise message focused on why, use a HEREDOC, include the `Co-Authored-By` trailer.
+   - If they say yes, stage the relevant files (never blind `git add -A`) and commit following this repo's normal commit conventions (see the Git Safety Protocol / commit instructions already in context) — draft a concise message focused on why, use a HEREDOC. No `Co-Authored-By` trailer and no "Generated with Claude Code" line, in the commit or the PR body.
 
 5. **Pull the target branch into the source branch before pushing.**
    - This keeps the source branch up to date with its target and avoids the PR's diff carrying stale/conflicting history. It's a merge into the local branch — not a rebase — so no history rewriting occurs.

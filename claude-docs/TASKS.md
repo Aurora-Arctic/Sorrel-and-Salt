@@ -3629,7 +3629,7 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want the docs to name the Postgres version the image actually builds from, so that nobody reasons about the wrong major.
 
-Dependabot commit `44d2175` ("Bump postgres from 17 to 18 in /Docker") changed exactly one line of `Docker/Dockerfile.postgres` and nothing else. No prose followed it, so the Dockerfile says `postgres:18` while CLAUDE.md, DESIGN.md §11, this file, `TASKS.csv`, `ci.md`, `docker-compose.yaml` and three workflow header comments all still say 17. Confirmed with the user that the code is right before touching anything, per CLAUDE.md's rule on reconciling a doc against the code — a version bump argued nowhere and reversed nowhere is a bump, not a mistake.
+Dependabot commit `43ff203` ("Bump postgres from 17 to 18 in /Docker") changed exactly one line of `Docker/Dockerfile.postgres` and nothing else. No prose followed it, so the Dockerfile says `postgres:18` while CLAUDE.md, DESIGN.md §11, this file, `TASKS.csv`, `ci.md`, `docker-compose.yaml` and three workflow header comments all still say 17. Confirmed with the user that the code is right before touching anything, per CLAUDE.md's rule on reconciling a doc against the code — a version bump argued nowhere and reversed nowhere is a bump, not a mistake.
 
 Purely textual; `Docker/Dockerfile.postgres` is not touched.
 
@@ -4240,7 +4240,7 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want to know whether the rule the whole CI filtering design is built on is true, so that every path-filtered-off check stops paying for a container it never uses.
 
-**The claim has never been verified in this repo.** "A job-level `if:` makes GitHub report a differently-named, bare check run" arrived at M0.16 (`258b825`) as a byte-for-byte copy of `resume-2026`'s `should-run` comments — that task's decision record verified YAML parsing and a `diff` against the originals, and nothing about check-run naming. M0.20 re-cited it as upstream's comments, `b3b0dbb` lifted it into `ci.md` as a general rule, and MB.32 extended it to matrix jobs. No commit, decision record or transcript describes the symptom being seen, and none could: no ruleset here has ever required a status check.
+**The claim has never been verified in this repo.** "A job-level `if:` makes GitHub report a differently-named, bare check run" arrived at M0.16 (`1db422a`) as a byte-for-byte copy of `resume-2026`'s `should-run` comments — that task's decision record verified YAML parsing and a `diff` against the originals, and nothing about check-run naming. M0.20 re-cited it as upstream's comments, `ecce1f1` lifted it into `ci.md` as a general rule, and MB.32 extended it to matrix jobs. No commit, decision record or transcript describes the symptom being seen, and none could: no ruleset here has ever required a status check.
 
 **What it costs.** The flag is resolved in the leg's first step, which runs _after_ `Initialize containers` — so a filtered-off leg pulls its image and then does nothing. Measured on run `35301237284`: 20s on `checks / typecheck`, 24s on `checks / lint`, 37s on `vitest`, 46s on `playwright`. A docs-only PR wastes all six.
 

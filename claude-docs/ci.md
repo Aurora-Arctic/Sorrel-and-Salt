@@ -171,7 +171,7 @@ matrix's generated job name, not the leg's.
     - **The cache never hit before MB.37.** `actions/cache` runs inside the
       `testing` container, and the Alpine image's busybox `tar` rejects
       `--posix`, so every save failed with a warning and every restore missed
-      — from the step's first commit (`57d81bd`) until MB.37 added GNU `tar`
+      — from the step's first commit (`3d9735e`) until MB.37 added GNU `tar`
       and `zstd` to the image's `testing` stage. The `testing` image hash
       moved with that Dockerfile change, as it does for any.
     - **`package.json`'s `build` script forces `NODE_ENV=production`.** The
@@ -422,12 +422,12 @@ matrix's generated job name, not the leg's.
   through inputs instead — `run-lint`/`run-typecheck`/`run-build` on
   `checks.yml`, `should-run` elsewhere — and every calling job itself runs
   unconditionally.
-  - **Provenance.** It arrived at M0.16 (`258b825`) as a byte-for-byte copy of
+  - **Provenance.** It arrived at M0.16 (`1db422a`) as a byte-for-byte copy of
     `resume-2026`'s own `should-run` comments; that task's decision record
     verified YAML parsing and a `diff` against the upstream originals, and
-    nothing about check-run naming. M0.20 (`32e0926`) re-cited it as
-    "upstream's own `should-run` comments". The doc consolidation (`b3b0dbb`)
-    lifted it into this file as a general rule, and MB.32 (`d406cff`) extended
+    nothing about check-run naming. M0.20 (`860d10f`) re-cited it as
+    "upstream's own `should-run` comments". The doc consolidation (`ecce1f1`)
+    lifted it into this file as a general rule, and MB.32 (`2e7dcfe`) extended
     it to matrix jobs. **No commit, decision record or transcript in this repo
     describes the symptom being observed** — and none could, since no ruleset
     here has ever required a status check.
