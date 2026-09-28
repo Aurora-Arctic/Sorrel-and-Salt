@@ -1,10 +1,10 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 // Type-only, so it is erased and no runtime cycle forms with the service that
 // imports `findWorkspaceRole` below. The brand has to live beside the check
 // that mints it (CLAUDE.md rule 1), which is why the direction is this way up.
 import type { WorkspaceRole } from '@/modules/coven';
-import { selectFrom } from './select';
+import { existsIn, selectFrom } from './select';
 import { notSoftDeleted } from './shapes';
 
 /**
@@ -37,8 +37,9 @@ export async function findWorkspaceRole(
  * be asked about; the index's export list is pinned, so a third is a
  * decision.
  *
- * The workspace's `deleted_at` is a correlated `EXISTS` rather than a join,
- * for the reason `findManyInSpell` gives.
+ * The workspace's own `deleted_at` is `existsIn`'s to check: a correlated
+ * `EXISTS` rather than a join, so the rows come back in the membership's own
+ * shape.
  */
 export async function findMembershipsOfUsers(
   userIds: readonly string[],
@@ -49,7 +50,7 @@ export async function findMembershipsOfUsers(
     and(
       notSoftDeleted(workspaceMembers),
       inArray(workspaceMembers.userId, [...userIds]),
-      sql`exists (select 1 from ${workspaces} where ${workspaces.id} = ${workspaceMembers.workspaceId} and ${notSoftDeleted(workspaces)})`,
+      existsIn(workspaces, eq(workspaces.id, workspaceMembers.workspaceId)),
     ),
   );
 }

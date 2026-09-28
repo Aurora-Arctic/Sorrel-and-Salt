@@ -1,9 +1,10 @@
-import { and, eq, or, sql } from 'drizzle-orm';
+import { and, eq, lt, or, sql } from 'drizzle-orm';
 import { accounts } from '../../modules/identity/schema/auth';
 import { users } from '../../modules/identity/schema/users';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
+import { existsIn } from './select';
 
 /**
  * Hard-deletes every provisional account: unverified, holding a provider
@@ -27,10 +28,10 @@ export async function deleteProvisionalUsers(
       and(
         eq(users.emailVerified, false),
         or(
-          sql`${users.updatedAt} < now() - make_interval(secs => ${lifetimeSeconds})`,
-          sql`${users.createdAt} < now() - make_interval(secs => ${capSeconds})`,
+          lt(users.updatedAt, sql`now() - make_interval(secs => ${lifetimeSeconds})`),
+          lt(users.createdAt, sql`now() - make_interval(secs => ${capSeconds})`),
         ),
-        sql`exists (select 1 from ${accounts} where ${accounts.userId} = ${users.id})`,
+        existsIn(accounts, eq(accounts.userId, users.id)),
       ),
     )
     .returning({ id: users.id });

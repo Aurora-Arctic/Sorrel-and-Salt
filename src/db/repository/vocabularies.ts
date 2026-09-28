@@ -1,4 +1,4 @@
-import { and, getTableName, or, sql } from 'drizzle-orm';
+import { and, getTableName, ne, notInArray, or, sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
@@ -8,7 +8,7 @@ import {
 } from '../../modules/vocabulary/schema/ingredient-forms';
 import type { Membership } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../lib/pagination';
-import { notSoftDeleted, scopedTo } from './shapes';
+import { inCompendium, notSoftDeleted, scopedTo } from './shapes';
 import { type Claimant, claimantList, readSuggestionPage } from './suggestion-page';
 
 /** A vocabulary a member's autofill suggests from. */
@@ -78,15 +78,15 @@ export async function findVocabularySuggestions(
   const byName = matches(vocabulary.name);
   const fold = sql`lower(btrim(${inUse}))`;
   const inScope = and(
-    or(sql`${ingredients.workspaceId} is null`, scopedTo(membership, ingredients)),
+    or(inCompendium(ingredients), scopedTo(membership, ingredients)),
     notSoftDeleted(ingredients),
-    sql`btrim(${inUse}) <> ''`,
+    ne(sql`btrim(${inUse})`, ''),
   );
 
   const grouped = 'groupId' in vocabulary ? vocabulary : undefined;
   const curatedRows = grouped
     ? sql`${grouped} inner join ${ingredientFormGroups} on ${ingredientFormGroups.id} = ${grouped.groupId}`
-    : sql`${vocabulary}`;
+    : vocabulary;
   const live = and(notSoftDeleted(vocabulary), grouped && notSoftDeleted(ingredientFormGroups));
   // Two same-named forms tie on the fold, so the group orders the pair.
   const tiebreak = grouped
@@ -112,7 +112,7 @@ export async function findVocabularySuggestions(
     where ${and(
       inScope,
       term ? matches(inUse) : undefined,
-      sql`${fold} not in (select lower(${vocabulary.name}) from ${curatedRows} where ${live})`,
+      notInArray(fold, sql`(select lower(${vocabulary.name}) from ${curatedRows} where ${live})`),
     )}
     group by ${fold}`;
 

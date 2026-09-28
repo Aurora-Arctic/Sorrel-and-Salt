@@ -4,7 +4,7 @@ import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { Membership } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../lib/pagination';
-import { notSoftDeleted, scopedTo } from './shapes';
+import { inCompendium, notSoftDeleted, scopedTo } from './shapes';
 import { type Claimant, claimantList, readSuggestionPage } from './suggestion-page';
 
 /** A common name already in use, and who answers to it. */
@@ -32,7 +32,7 @@ export async function findCommonNameSuggestions(
   const matches = (text: AnyPgColumn) =>
     term ? sql`(${text} % ${term} or ${term} <% ${text})` : undefined;
   const inScope = and(
-    or(sql`${ingredients.workspaceId} is null`, scopedTo(membership, ingredients)),
+    or(inCompendium(ingredients), scopedTo(membership, ingredients)),
     notSoftDeleted(ingredients),
   );
   const claim = (spelling: AnyPgColumn) => sql`

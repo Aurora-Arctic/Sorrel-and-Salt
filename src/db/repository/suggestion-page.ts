@@ -1,4 +1,4 @@
-import { and, asc, desc, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
+import { and, asc, desc, gt, lt, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
 import { InvalidCursor } from '../../lib/errors';
 import type { Cursor, PageEntry, PageRequest } from '../../lib/pagination';
 import { selectFrom } from './select';
@@ -72,8 +72,8 @@ export async function readSuggestionPage(
       },
     },
     and(
-      page.after && sql`${bound} > ${position(page.after)}`,
-      page.before && sql`${bound} < ${position(page.before)}`,
+      page.after && gt(bound, position(page.after)),
+      page.before && lt(bound, position(page.before)),
     ),
     { orderBy: ORDER.map((key) => direction(key)), limit: page.limit },
   );

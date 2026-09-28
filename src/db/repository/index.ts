@@ -8,7 +8,7 @@ import '../../modules/identity/schema/users';
 // (claude-docs/db.md, "Who may import the client"). `db` is not re-exported and
 // callers never see the transaction — `withAudit`'s `AuditWriter` is the sole
 // write mechanism, so no write can skip audit stamping. Rule 4: every exported
-// finder applies `deleted_at IS NULL`, and the one select builder is not
+// finder applies `deleted_at IS NULL`, and the two read builders are not
 // re-exported here — guarded by tests/guards/soft-delete-finder-guard.test.ts.
 // Import this file, never a sibling: the rest of the folder is internal.
 

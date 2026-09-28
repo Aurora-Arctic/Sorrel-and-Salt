@@ -816,8 +816,8 @@ cut by cursor as a whole.
   thresholds, with no trigram predicate in it.
 - **The union is read through `selectFrom`.** `selectFrom` takes a
   `Derived` — a parenthesised statement and the columns read off it — in
-  place of a table, in its `Similarity` mode, so the one-builder rule and
-  the thresholds hold for a read no one table holds. The finder writes its
+  place of a table, in its `Similarity` mode, so the rule that every read is
+  built in `select.ts` and the thresholds hold for a read no one table holds. The finder writes its
   own keyset bounds: a cursor's key is `tier:fold` and its id the tie-break,
   which is the curated row's id or the fold, compared as the row
   `(tier, fold, tiebreak)`. A key that does not parse throws
@@ -1521,24 +1521,24 @@ two empty sets are equal and something has to say they aren't.
 `src/db/repository/` is one file per concern, and callers import only its
 `index.ts` — `@/db/repository` resolves to it:
 
-| File                   | Holds                                                                                                                |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `index.ts`             | Named re-exports only — the pinned surface below — and nothing declared                                              |
-| `shapes.ts`            | The table-shape types every signature is built from, and the `scopedTo` and `notSoftDeleted` predicates              |
-| `write.ts`             | `withAudit` and the `AuditWriter` it hands out                                                                       |
-| `select.ts`            | `selectFrom`, the one place a read query is built; the keyset bounds a page is cut by; the two similarity thresholds |
-| `ingredients.ts`       | `findSimilarIngredients`, the fuzzy-duplicate finder                                                                 |
-| `vocabularies.ts`      | `findVocabularySuggestions`, the planet and zodiac autofill                                                          |
-| `finders.ts`           | The generic finders, scoped and unscoped, and the escape hatch                                                       |
-| `spells.ts`            | The three spell finders and the `readableSpells` predicate they share                                                |
-| `memberships.ts`       | Two of the three reads that take no proof                                                                            |
-| `users.ts`             | The third: the live row holding an address                                                                           |
-| `provisional-users.ts` | The provisional-account delete                                                                                       |
+| File                   | Holds                                                                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `index.ts`             | Named re-exports only — the pinned surface below — and nothing declared                                                              |
+| `shapes.ts`            | The table-shape types every signature is built from, and the `scopedTo`, `inCompendium` and `notSoftDeleted` predicates              |
+| `write.ts`             | `withAudit` and the `AuditWriter` it hands out                                                                                       |
+| `select.ts`            | `selectFrom` and `existsIn`, the two places a read query is built; the keyset bounds a page is cut by; the two similarity thresholds |
+| `ingredients.ts`       | `findSimilarIngredients`, the fuzzy-duplicate finder                                                                                 |
+| `vocabularies.ts`      | `findVocabularySuggestions`, the planet and zodiac autofill                                                                          |
+| `finders.ts`           | The generic finders, scoped and unscoped, and the escape hatch                                                                       |
+| `spells.ts`            | The three spell finders and the `readableSpells` predicate they share                                                                |
+| `memberships.ts`       | Two of the three reads that take no proof                                                                                            |
+| `users.ts`             | The third: the live row holding an address                                                                                           |
+| `provisional-users.ts` | The provisional-account delete                                                                                                       |
 
 **The rest of the folder is internal, and that is enforced rather than
-conventional.** `selectFrom` is exported from `select.ts` because the finders
-beside it build on it, so the language no longer keeps it private as it did
-when the repository was one file. What keeps it inside the folder is a
+conventional.** `selectFrom` and `existsIn` are exported from `select.ts`
+because the finders beside them build on them, so the language no longer keeps
+them private as it did when the repository was one file. What keeps them inside the folder is a
 `no-restricted-imports` group banning `@/db/repository/*` and
 `**/db/repository/*` everywhere (restated in each override, which replaces
 rather than merges), and `tests/guards/module-boundaries.test.ts`, which
@@ -1873,10 +1873,11 @@ the id — the rule holding for the jar and leaking what is in it. Both reach
 their coven and their visibility through the parent spell, which
 `findManyInSpell` expresses as a correlated `EXISTS` over `readableSpells` —
 in SQL, per CLAUDE.md rule 7, so a row a caller may not see is never fetched to
-be filtered out afterwards. It is written as a `sql` fragment rather than a
-Drizzle subquery because a subquery needs a second select builder, and the
-repository holding exactly one is what `soft-delete-finder-guard.test.ts` reads
-to prove no unfiltered read exists.
+be filtered out afterwards. The subquery is `existsIn`'s, the repository's
+second read builder ("Soft-delete filtering" below), which ANDs the spell's
+`deleted_at IS NULL` onto it by construction; `readableSpells` carries the same
+filter for the two finders that read `spells` directly, so in this one finder
+the parent is filtered twice, and neither copy is the other's to forget.
 
 ### Writing: the one-way rule
 
@@ -1930,8 +1931,10 @@ ingredientId?: never }`, so `findMany(ingredientFolkNames)` does not compile
 
 **One finder, `findManyOfIngredients(memberships, table, ingredientIds)`.** It
 returns the live child rows of those ingredients whose parent is live and is in
-the compendium or in a coven one of the proofs names, a correlated `EXISTS` for
-the reason `findManyInSpell` gives. It takes a _list_ of proofs because one
+the compendium or in a coven one of the proofs names, a correlated `EXISTS`
+built by `existsIn` for the reason `findManyInSpell` gives: the tier is decided
+in SQL, and the parent's `deleted_at IS NULL` is the builder's rather than the
+finder's. It takes a _list_ of proofs because one
 page can hold both tiers and, in principle, several covens. An empty list reads
 the compendium alone, which is how a signed-out request reads it. It reads both
 tiers in one statement, so it is on [the tier seam](modules.md#the-tier-seam).
@@ -1960,8 +1963,9 @@ batch, whatever the number of ingredients.
 
 CLAUDE.md rule 4 / DESIGN.md §5: **no exported query can return a soft-deleted
 row, and no call site does its own filtering.** `src/db/repository/select.ts`
-holds `selectFrom` — the one place a read query is built — and the
-repository exports three functions on top of it:
+holds the two places a read query is built — `selectFrom`, and `existsIn` for
+a correlated subquery — and the repository exports three functions on top of
+the first:
 
 - **`findMany(table, where?)`** — every matching row with `deleted_at IS
 NULL` ANDed onto whatever `where` the caller supplied — or the caller's
@@ -1976,11 +1980,28 @@ NULL` ANDed onto whatever `where` the caller supplied — or the caller's
   filter, so a second bypass is a decision argued for in the diff, not a
   convenience appearing quietly beside an import.
 
-`selectFrom` itself is not in the repository's surface — its siblings import
-it, and nothing outside the folder may ("The repository's files" above) — so
+Neither builder is in the repository's surface — their siblings import them,
+and nothing outside the folder may ("The repository's files" above) — so
 there is no public handle a finder could reach the database through while
 skipping the filter — the same shape as `AuditWriter` gives writes no path
 around `applyAudit`.
+
+**`existsIn(table, where)` is the second builder** (MB.100). A finder whose
+scope lives on a parent row — `findManyInSpell`, `findManyOfIngredients`,
+`findMembershipsOfUsers`, and the provisional-account delete's check for an
+`accounts` row — narrows by a correlated `EXISTS` over that parent, and the
+parent's own `deleted_at IS NULL` has to be inside the subquery. The four were
+`sql` strings while the guard allowed the folder exactly one `.select(`, and a
+string is what a guard cannot read: each subquery's filter was its caller's to
+remember, which made them the least-checked reads in the repository and the
+rule meant to prevent an unfiltered read the thing producing one. `existsIn`
+builds the subquery on the same `db`, ANDs `notSoftDeleted(table)` itself —
+`undefined`, and so dropped by `and()`, for a table without the column,
+`accounts` among them — and returns `SQL` rather than the builder, so a caller
+can neither append to it nor await it. The outer row is named through its own
+table's columns, which Drizzle qualifies, so the subquery correlates without
+an alias. What stays a `sql` string is what no builder can say — "Where
+queries may be built" lists it.
 
 **The mechanical guard.** This is a code sweep (CLAUDE.md's sweep-task rule),
 so it landed as the mechanism above plus a guard — and since MB.33 the sweep is
@@ -1988,9 +2009,11 @@ divided between two of them, by what each can make impossible.
 
 `tests/guards/soft-delete-finder-guard.test.ts` covers the inside of the
 repository. It reads every file in `src/db/repository/` as text and asserts:
-the folder builds exactly one `.select(`/`db.query.` call, and it is inside
-`selectFrom` in `select.ts`; the index does not re-export `selectFrom` or the
-predicates, so no caller can reach an unfiltered read; the index's re-exports
+the folder builds exactly two `.select(`/`db.query.` calls, both in
+`select.ts`, one inside `selectFrom` and one inside `existsIn`, and
+`existsIn`'s body calls `notSoftDeleted(`, so the subquery's filter is checked
+the way `selectFrom`'s callers are; the index does not re-export either
+builder or the predicates, so no caller can reach an unfiltered read; the index's re-exports
 are pinned to the test's `EXPORTED_FUNCTIONS` list, so a further
 export — a new escape hatch, or a finder that reaches the database some other
 way — turns the test red rather than merely going unreviewed; and every
@@ -2740,9 +2763,9 @@ carrying `deleted_at`, and it is a named export rather than a loosening of
 holds at least one `accounts` row, and has an `updated_at` older than
 `now()` minus the lifetime or a `created_at` older than `now()` minus the
 cap. `accounts` and `sessions` follow by their
-`ON DELETE CASCADE`. Both cutoffs are the database's clock, as the columns are. The `EXISTS` is raw `sql` rather than a `.select(`, so
-`soft-delete-finder-guard.test.ts` still finds every read inside
-`selectFrom`; that guard's pinned export list names this function.
+`ON DELETE CASCADE`. Both cutoffs are the database's clock, as the columns are. The `EXISTS` over `accounts` is `existsIn`'s, so the delete builds no read
+of its own; `soft-delete-finder-guard.test.ts`'s pinned export list names this
+function.
 
 It is hard for a reason outside this layer: Better Auth reads `users` by
 address with no `deleted_at` filter, so a tombstone would keep refusing the
@@ -2837,6 +2860,36 @@ the default tier.
 The access boundary is described in [`graphql.md`](graphql.md), "The access
 boundary". Its second half, `server-only` on every service, stops a client
 component from importing a service at all.
+
+### What a `sql` fragment is for (MB.100)
+
+Inside the repository a Drizzle builder is used wherever one exists — `eq`,
+`isNull`, `gt`, `lt`, `ne`, `inArray`, `exists` — and a `sql` fragment means
+either that no builder says it or that a rule keeps it raw. Drizzle 0.45.2
+ships builders for every comparison, for set operators (`unionAll`, `.as()`),
+for joins and for the plain aggregates (`count`, `max`, …), and none for a
+function call, an expression, a cast or a row value. A reviewer reading a
+fragment should be able to place it in this list, and one that is not obviously
+one of these carries a one-clause comment saying which it is:
+
+| Fragment                                                                                                                                                                                                                                                                      | Why it is raw                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| pg_trgm's `%`, `<%` and `similarity()`                                                                                                                                                                                                                                        | No builder; the operators are what the trigram index answers ("Fuzzy matching")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| A function or expression: `lower(btrim(…))`, `greatest(…)`, `mode() within group (…)`, `json_agg(…) filter (…)`, `row_number() over (…)`, `now() - make_interval(…)`, `a \|\| ' ' \|\| b`, a `case`, a bare literal in a select list (`select 1`, the union's `0` and `null`) | No builder. The comparison _around_ one is still the builder's — ``ne(sql`btrim(…)`, '')``, ``lt(users.updatedAt, sql`now() - …`)`` — so a fragment holds the expression and nothing else                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| A row value and its casts: `(sort, id)` against `(cast(… as <the column's type>), …)`, `(…)::int`                                                                                                                                                                             | No builder for a row value, and the cast must be the column's own type ("Keyset pages"); the `>` and `<` are `gt`'s and `lt`'s                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `set_config(…, true)`                                                                                                                                                                                                                                                         | `SET LOCAL` with a bind parameter, which no builder issues (rule 3; "Fuzzy matching")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| A whole statement: the `union all` arms of a suggestion list or of `findSimilarIngredients`'s match, a `Derived` source, the scalar subquery ranking a folk name, and the `not in (select …)` and `left join (select …)` inside them                                          | **Raw by rule, not for want of a builder.** Drizzle has `unionAll`, `.as()`, `.leftJoin()` and `notInArray(…, subquery)`, but each arm is a `.select(`, and the guard confines those to `select.ts`'s two builders. The arms' fields are the expressions above anyway, so building the frame would leave most of the tags where they are. The cost is the one `existsIn` closed for the four `EXISTS`: an arm's `notSoftDeleted` is by convention, inside a string the guard cannot read. Closing it means a third builder in `select.ts` that hands a union arm out filtered, argued for in its own task |
+
+What is _not_ on the list, and was raw until MB.100: `… is null` where
+`isNull()` serves, the compendium-tier predicate, now `inCompendium` in
+`shapes.ts`, a correlated `exists (select 1 …)`, now `existsIn` ("Soft-delete
+filtering"), and a comparison written into the string — `a > b`, `x <> ''`,
+`id in (…)` — where `gt`, `ne` and `inArray` take a fragment on either side.
+Those were raw by habit, or by the guard's old one-builder mechanism, not by
+need. The schema files under `src/modules/*/schema/` are the other place the
+`sql` tag appears — index predicates, `CHECK` expressions and column defaults —
+and they are DDL, `drizzle-kit`'s input rather than a query, so this list does
+not govern them.
 
 ## Snapshot before production migrations, and the restore runbook (M1.6)
 
