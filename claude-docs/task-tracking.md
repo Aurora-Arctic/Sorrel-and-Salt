@@ -13,16 +13,16 @@ The rule that costs is under **Comments**.
 
 ## The board
 
-| Object      | Value                                                                                                                                                                                           |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repo        | `Aurora-Arctic/Sorrel-and-Salt`                                                                                                                                                                 |
-| Project     | Org project **Sorrel & Salt**, number `1`, linked to the repo. `task-board.mjs` carries the number as `PROJECT` and resolves the node id and field ids at runtime from `gh project`.            |
-| `Status`    | Single-select field: `Not Started` · `In Progress` · `In Review` · `Done`.                                                                                                                      |
-| `Estimate`  | Number field, in hours — the `· Nh` on the task's `TASKS.md` heading.                                                                                                                           |
-| Milestones  | One per wave (`Wave 7 — GraphQL`) and one per closed-out pre-wave card (`M0 · Repo bootstrap`). The description opens with the wave's task ids in execution order, then the deferral reasoning. |
-| Issue types | `Bug` for `MB.*`, `Task` for everything else. The org has to have both types enabled; `gh issue create --type` fails otherwise.                                                                 |
-| Labels      | `tracked` on every task — it is the Project's auto-add filter, and an issue without it is a visitor's until someone triages it. `hotfix` on a task that branches off `main`.                    |
-| Sub-issues  | Only for a genuine parent/child (`M7.A.*` under `M7.A`, or a task split mid-flight). A wave is a milestone, never a parent issue.                                                               |
+| Object      | Value                                                                                                                                                                                                                                                                                                                                                                |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repo        | `Aurora-Arctic/Sorrel-and-Salt`                                                                                                                                                                                                                                                                                                                                      |
+| Project     | Org project **Sorrel & Salt**, number `1`, linked to the repo. `task-board.mjs` carries the number as `PROJECT` and resolves the node id and field ids at runtime from `gh project`.                                                                                                                                                                                 |
+| `Status`    | Single-select field: `Not Started` · `In Progress` · `In Review` · `Done`.                                                                                                                                                                                                                                                                                           |
+| `Estimate`  | Number field, in hours — the `· Nh` on the task's `TASKS.md` heading.                                                                                                                                                                                                                                                                                                |
+| Milestones  | One per wave (`Wave 07 — GraphQL`, two digits because GitHub sorts milestones alphabetically) and one per pre-wave feature grouping (`M0 · Repo bootstrap`), plus a closed `Retired — not done` milestone for the tasks MB.31 retired — every issue has a milestone. The description opens with the wave's task ids in execution order, then the deferral reasoning. |
+| Issue types | `Bug` for `MB.*`, `Task` for everything else. The org has to have both types enabled; `gh issue create --type` fails otherwise.                                                                                                                                                                                                                                      |
+| Labels      | `tracked` on every task — it is the Project's auto-add filter, and an issue without it is a visitor's until someone triages it. `hotfix` on a task that branches off `main`.                                                                                                                                                                                         |
+| Sub-issues  | Only for a genuine parent/child (`M7.A.*` under `M7.A`, or a task split mid-flight). A wave is a milestone, never a parent issue.                                                                                                                                                                                                                                    |
 
 ## The title rule
 
@@ -114,7 +114,7 @@ Re-check the next free id right before minting — another session may have
 taken it — then:
 
 ```sh
-gh issue create --title "MB.90 — <title>" --type Bug --label tracked --milestone "Wave 7 — GraphQL" --body-file <notes>
+gh issue create --title "MB.90 — <title>" --type Bug --label tracked --milestone "Wave 07 — GraphQL" --body-file <notes>
 node scripts/task-board.mjs estimate MB.90 3
 ```
 

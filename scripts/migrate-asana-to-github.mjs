@@ -188,12 +188,15 @@ export function buildPlan(rawBoard, tasksMd) {
   };
   const plan = readTasksMd(tasksMd);
   const byGid = new Map(board.tasks.map((task) => [task.gid, task]));
+  // GitHub lists milestones alphabetically and nothing else, so the wave number
+  // is padded to two digits or Wave 10 sorts between Wave 1 and Wave 2.
+  const padWave = (name) => name.replace(/^Wave (\d)(?=\D)/, 'Wave 0$1');
   const classify = (task) => {
     const name = stripMarker(task.name);
     const m = ISSUE_NAME.exec(name);
     return m
       ? { kind: 'issue', id: m[1], title: `${m[1]} — ${m[2]}` }
-      : { kind: 'milestone', name };
+      : { kind: 'milestone', name: padWave(name) };
   };
   const kinds = new Map(board.tasks.map((task) => [task.gid, classify(task)]));
 
@@ -211,8 +214,9 @@ export function buildPlan(rawBoard, tasksMd) {
   // A wave in TASKS.md's table names the card the board already has when one
   // does; the table only decides for an issue with no parent card.
   const waveName = (wave) =>
-    [...milestones.keys()].find((name) => name.startsWith(`Wave ${wave.number} `)) ??
-    `Wave ${wave.number} — ${wave.name}`;
+    [...milestones.keys()].find((name) =>
+      name.startsWith(`Wave ${String(wave.number).padStart(2, '0')} `),
+    ) ?? `Wave ${String(wave.number).padStart(2, '0')} — ${wave.name}`;
   const waveOf = new Map();
   for (const wave of plan.waves) for (const id of wave.ids) waveOf.set(id, waveName(wave));
 
@@ -333,7 +337,7 @@ function scan(plan) {
 // ---------------------------------------------------------------------------
 // apply
 
-const RATE_LIMITED = /HTTP 403|HTTP 429|rate limit/i;
+const RATE_LIMITED = /HTTP 403|HTTP 429|rate limit|submitted too quickly/i;
 
 /** A GitHub write, spaced out, retried once after a rate-limit refusal. */
 async function write(fn) {
@@ -343,7 +347,9 @@ async function write(fn) {
   } catch (error) {
     if (!(error instanceof BoardError) || !RATE_LIMITED.test(error.message)) throw error;
     const retryAfter = /retry-after:?\s*(\d+)/i.exec(error.message)?.[1];
-    const wait = retryAfter ? Number(retryAfter) : 60;
+    // The hourly content-creation cap answers "submitted too quickly" with no
+    // retry-after, and a minute never clears it; five is a guess that usually does.
+    const wait = retryAfter ? Number(retryAfter) : 300;
     console.error(`rate limited; waiting ${wait}s`);
     await sleep(wait * 1000);
     return fn();

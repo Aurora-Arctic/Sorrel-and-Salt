@@ -176,7 +176,7 @@ The issues of `Aurora-Arctic/Sorrel-and-Salt`, with the org Project **Sorrel & S
 ### Board layout
 
 - **One issue per task, titled `<Task ID> — <title>`**, exactly as `TASKS.md` heads it. The id is the first thing in the title and nothing precedes it — no marker, no emoji; status is a field now, not a prefix, so a status change never rewrites a title.
-- **One milestone per wave** (`Wave 7 — GraphQL`) and one per closed-out pre-wave card (`M0 · Repo bootstrap`). The milestone description carries what the Asana wave card's notes carried: the task ids it contains in execution order, then the deferral reasoning. A task added to a wave is added to its milestone's description in the same pass — that opening list is what makes the wave readable without opening every issue.
+- **One milestone per wave** (`Wave 07 — GraphQL`) and one per pre-wave feature grouping (`M0 · Repo bootstrap`), plus one closed `Retired — not done` milestone holding the tasks MB.31 retired, so that no issue is without a milestone. The wave number is two digits because GitHub sorts milestones alphabetically and offers no other order — `Wave 10` would otherwise sit between `Wave 1` and `Wave 2`. The milestone description carries what the Asana wave card's notes carried: the task ids it contains in execution order, then the deferral reasoning. A task added to a wave is added to its milestone's description in the same pass — that opening list is what makes the wave readable without opening every issue.
 - **Issue type `Bug` for `MB.*`, `Task` for everything else**, and the `hotfix` label on a task that is one. The label, not the id, decides the branch skill: `MB.*` covers ordinary bugfixes and hotfixes alike, and `start-task` still asks when nothing marks it either way.
 - **Every tracked issue carries the `tracked` label**, which is the Project's auto-add filter. A public repo lets anyone open an issue, so an issue without the label is a visitor's until someone triages it onto the board.
 - **Sub-issues only for genuine parent/child** (`M7.A.*` under `M7.A`, or a task split mid-flight). Waves are milestones, not parent issues.
@@ -210,7 +210,7 @@ Open with a single `Closes #N` line, then a blank line — or `Refs #N` for a PR
 Re-check the next free id right before minting — another session may have taken it — then:
 
 ```sh
-gh issue create --title "MB.90 — <title>" --type Bug --label tracked --milestone "Wave 7 — GraphQL" --body-file <notes>
+gh issue create --title "MB.90 — <title>" --type Bug --label tracked --milestone "Wave 07 — GraphQL" --body-file <notes>
 node scripts/task-board.mjs estimate MB.90 3
 ```
 
