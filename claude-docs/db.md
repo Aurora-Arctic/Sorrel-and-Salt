@@ -502,8 +502,48 @@ directions:
   `SET LOCAL` inside the matching transaction, and does not leak past it.
 
 One is a correctness bug in the results, the other a performance bug invisible
-until the table is big. M4.7's fuzzy duplicate service is the first caller
-bound by both.
+until the table is big.
+
+**The threshold is set by `selectFrom`, not by its callers.** A finder asks
+for a similarity read by handing `selectFrom` a `Similarity` — an `orderBy`
+and a `limit` — in place of a `Keyset`, and `selectFrom` then opens a
+transaction, runs `select set_config('pg_trgm.similarity_threshold', '0.4',
+true)` in it, and runs the read in the same transaction. `set_config(…, true)`
+is `SET LOCAL` taking a bind parameter, as `withAudit`'s GUC is. So a finder
+cannot forget the threshold, and 0.4 is written in one place. This is the one
+read that opens a transaction: it carries a planner setting, not an identity,
+so it is not the read-side `withAudit` that MB.29 declined to build.
+
+**`findSimilarIngredients` (M4.7) is the first finder bound by both halves.**
+It answers story 16's "did you mean": live ingredients in the compendium or
+the proof's workspace whose display name, formal name or a live folk name is
+`%`-similar to the term, best first by the greatest of the three
+similarities. Each row carries `canonical_name`, which is what tells five
+Cat's Claws apart. The three matches are a `UNION ALL` under `id IN (…)`,
+and each detail is load-bearing:
+
+- **Not an `OR` beside the scope.** Postgres cannot turn a subquery inside an
+  `OR` into a join, so `name % $1 OR … OR id IN (folk-name subquery)` tests
+  the subquery per row and walks `ingredients` whole.
+- **`UNION ALL`, not `UNION`.** `IN` removes duplicates already, and
+  `UNION`'s own de-duplication wants sorted input, which the planner gets
+  cheapest by walking `ingredients_pkey` in full — an index scan that reads
+  every row.
+
+`findPossibleDuplicates` in `ingredients` is the service over it, and asks
+`ingredient: ['read']`: every row it can return is one a reader of that
+workspace could already list.
+
+**Its `EXPLAIN` test needs more rows than M4.6's.** `duplicates-plan.test.ts`
+captures the SQL the service actually sends, by rebuilding the connection with
+a logger, and plans it with `enable_seqscan = off`. That is not enough on its
+own. The folk-name arm filters `deleted_at IS NULL`, which is exactly
+`ingredient_folk_names_unique`'s partial predicate, so that index offers a
+whole-table walk the planner prefers to a GIN probe below about 20,000 folk
+names. The test seeds 30,000 folk names with distinct (md5) trigrams, so the
+plan shows a real choice between the probe and the walk. With 2,000 names
+sharing one prefix, the plan shows the walk even for a query that can reach
+the trigram index.
 
 **Accent insensitivity is client-side only.** `unaccent` is not installed in
 this database (only `pg_trgm` is, per the migrations section above), so
@@ -1334,17 +1374,18 @@ two empty sets are equal and something has to say they aren't.
 `src/db/repository/` is one file per concern, and callers import only its
 `index.ts` — `@/db/repository` resolves to it:
 
-| File                   | Holds                                                                                                   |
-| ---------------------- | ------------------------------------------------------------------------------------------------------- |
-| `index.ts`             | Named re-exports only — the pinned surface below — and nothing declared                                 |
-| `shapes.ts`            | The table-shape types every signature is built from, and the `scopedTo` and `notSoftDeleted` predicates |
-| `write.ts`             | `withAudit` and the `AuditWriter` it hands out                                                          |
-| `select.ts`            | `selectFrom`, the one place a read query is built, and the keyset bounds a page is cut by               |
-| `finders.ts`           | The generic finders, scoped and unscoped, and the escape hatch                                          |
-| `spells.ts`            | The three spell finders and the `readableSpells` predicate they share                                   |
-| `memberships.ts`       | Two of the three reads that take no proof                                                               |
-| `users.ts`             | The third: the live row holding an address                                                              |
-| `provisional-users.ts` | The provisional-account delete                                                                          |
+| File                   | Holds                                                                                                           |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `index.ts`             | Named re-exports only — the pinned surface below — and nothing declared                                         |
+| `shapes.ts`            | The table-shape types every signature is built from, and the `scopedTo` and `notSoftDeleted` predicates         |
+| `write.ts`             | `withAudit` and the `AuditWriter` it hands out                                                                  |
+| `select.ts`            | `selectFrom`, the one place a read query is built; the keyset bounds a page is cut by; the similarity threshold |
+| `ingredients.ts`       | `findSimilarIngredients`, the fuzzy-duplicate finder                                                            |
+| `finders.ts`           | The generic finders, scoped and unscoped, and the escape hatch                                                  |
+| `spells.ts`            | The three spell finders and the `readableSpells` predicate they share                                           |
+| `memberships.ts`       | Two of the three reads that take no proof                                                                       |
+| `users.ts`             | The third: the live row holding an address                                                                      |
+| `provisional-users.ts` | The provisional-account delete                                                                                  |
 
 **The rest of the folder is internal, and that is enforced rather than
 conventional.** `selectFrom` is exported from `select.ts` because the finders
@@ -1547,12 +1588,14 @@ row cannot be moved between workspaces by an update.
 and the trash view is v2, so the task that adds one adds its proof-scoped
 counterpart then rather than leaving a widened hatch waiting.
 
-**`ingredients` is on the scoped side, and its compendium tier therefore has no
-finder yet.** The column is nullable — `workspace_id IS NULL` is the
+**`ingredients` is on the scoped side, so its compendium tier has no generic
+finder.** The column is nullable — `workspace_id IS NULL` is the
 compendium, everything else is a workspace's own — so the table matches
 `{ workspaceId: AnyPgColumn }` and `findMany(ingredients)` does not compile.
-Nothing reads the compendium today. Whichever of M5.2 or M8 gets there first
-adds a finder that ANDs `workspace_id IS NULL` as explicitly as the scoped one
+The one read of it so far is `findSimilarIngredients` (see "Fuzzy matching"),
+which names both tiers as explicitly as this paragraph asks and is listed on
+[the tier seam](modules.md#the-tier-seam). Whichever of M5.2 or M8 first needs
+a plain compendium read adds a finder that ANDs `workspace_id IS NULL` as explicitly as the scoped one
 ANDs its proof; the local-beats-compendium resolution (§5) wants both tiers and
 is a third, named finder over `workspace_id = $1 OR workspace_id IS NULL`. The
 point of the narrowing is that a read of that table has to say which tier it

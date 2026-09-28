@@ -57,7 +57,7 @@ a service lands in the module that owns the table it writes.
 | `identity`    | `users`, `sessions`, `accounts`, `verifications`, `rate_limits`; later `admin_invitations`                                        | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts` |
 | `coven`       | `workspaces`, `workspace_members`, `workspace_invitations`                                                                        | `membership.ts`, `memberships.ts`, `access-control.ts`                         |
 | `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`                          | none yet                                                                       |
-| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_categories`, `inventory_items`; later `retired_ingredient_slugs` | none yet; `schema/units.ts` is the unit vocabulary                             |
+| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_categories`, `inventory_items`; later `retired_ingredient_slugs` | `duplicates.ts`; `schema/units.ts` is the unit vocabulary                      |
 | `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                 | `spell-visibility.ts`                                                          |
 
 **The compendium is a tier inside `ingredients`, not a module.** Both tiers
@@ -172,9 +172,11 @@ containing `workspace_id is null` or `isNull(workspaceId)`, and anything that
 reads both tiers in one statement. The guard fails an unlisted finder, and it
 fails a listed one that no longer exists.
 
-It is empty today. A later task that adds such a finder — M5.1's admin
-reads, the merged two-tier list, local-beats-compendium resolution — adds the
-finder's name to `TIER_SEAM` in its own PR, with a one-line reason beside it.
+It holds one finder today: `findSimilarIngredients` (M4.7), the fuzzy duplicate
+match, which reads the compendium and one workspace in a single ranked
+statement. A later task that adds such a finder — M5.1's admin reads, the
+merged two-tier list, local-beats-compendium resolution — adds the finder's
+name to `TIER_SEAM` in its own PR, with a one-line reason beside it.
 The list is then the scope of the extraction task, read from one file.
 
 ## Tests
