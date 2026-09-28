@@ -77,8 +77,9 @@ runs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v4
 
-    # Skip rather than re-push identical content. The real build below is
-    # what the caller's concurrency group protects from cancellation.
+    # Skip rather than re-push identical content. A tag is written after every
+    # layer it names, so one found here is a finished image even if an
+    # earlier build was cancelled mid-push.
     - name: Check if image already exists
       id: check
       shell: bash
