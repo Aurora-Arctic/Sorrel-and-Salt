@@ -1729,7 +1729,7 @@ _Acceptance criteria:_
 - Pothos auth scope rejects them at the schema layer independently
 - Rejection is Forbidden, not a silent no-op
 - Tests cover each mutation individually, including every `ingredient_forms`, `planets` and `zodiac_signs` mutation
-- No admin capability outside compendium, categories, the form vocabulary, the two group vocabularies and the two correspondence vocabularies
+- No admin capability outside compendium, categories, the form vocabulary, the two group vocabularies and the planet and zodiac vocabularies
 
 **M5.8 — Approve a user for workspace creation** · 1h
 
@@ -5266,7 +5266,7 @@ _Acceptance criteria:_
 
 - DESIGN.md §5: the planet/zodiac paragraph re-points at the two tables; `planets` and `zodiac_signs` paragraphs and one `Vocabulary | Values` table (nineteen bodies, thirteen signs, lower-case, in seed order) inserted after the "`ingredients.form` is `text`" paragraph and before `categories`, so `tests/db/seed/forms.test.ts`'s slice is unchanged — asserted by running that test on the branch
 - DESIGN.md §5's admin sentence, §7 (the `compendium` tag covers five reads), §9's route table (`/admin/planets`, `/admin/zodiac-signs`) and §14 rows; CLAUDE.md's curation invariant, rule 6 and commands table
-- db.md gains "The correspondence vocabularies" and a seed section carrying M4.5's sources; validation.md's `correspondences.ts` row and Sources section move there; modules.md's ownership row and ci.md's seed paragraph updated
+- db.md gains "The astrology vocabularies" and a seed section carrying M4.5's sources; validation.md's `correspondences.ts` row and Sources section move there; modules.md's ownership row and ci.md's seed paragraph updated
 - TASKS.md: MB.91–MB.95 entered, indexed and placed in the Wave 8 row; M4.7a, M5.4, M5.6a, M5.7 and M5.10a amended; M4.5's entry gains a forward pointer
 - The plan is stored as `claude-docs/design-decisions/mb.91-plan.md`; the Wave 08 milestone description lists the new ids in execution order
 - The diff touches only Markdown; `npm run pre-commit` and the vitest job stay green
@@ -5275,7 +5275,7 @@ _Acceptance criteria:_
 
 _Story:_ As an admin, I want the planet and zodiac vocabularies to be rows, so that the autofill has something an admin can edit.
 
-Table task. Two flat tables in `src/modules/vocabulary/schema/correspondences.ts`: `id`, `name`, `slug`, `description` NOT NULL with a non-blank CHECK, and the six-column audit spread; a partial unique index on `slug` where not deleted; one multicolumn `gin_trgm_ops` index over `(name, description)` per table, since the suggestion query matches both. No group, colour, order column or workspace scoping. The migration appends two `CREATE OR REPLACE TRIGGER set_updated_at` lines by hand — the first tables since 0016 to carry their own, per CLAUDE.md rule 3.
+Table task. Two flat tables in `src/modules/vocabulary/schema/astrology.ts`: `id`, `name`, `slug`, `description` NOT NULL with a non-blank CHECK, and the six-column audit spread; a partial unique index on `slug` where not deleted; one multicolumn `gin_trgm_ops` index over `(name, description)` per table, since the suggestion query matches both. No group, colour, order column or workspace scoping. The migration appends two `CREATE OR REPLACE TRIGGER set_updated_at` lines by hand — the first tables since 0016 to carry their own, per CLAUDE.md rule 3.
 
 _Acceptance criteria:_
 
@@ -5291,7 +5291,7 @@ _Acceptance criteria:_
 
 _Story:_ As an admin, I want the nineteen bodies and thirteen signs already curated, so that the autofill offers something before the first uncurated value is typed.
 
-`src/db/seed/correspondences.ts` holds `PLANETS` and `ZODIAC_SIGNS` as `{ name, description }` lists in §5's order, Title Case, every slug derived by `slugify`. A flat helper over `insertMissing` replaces the two-tier engine, which assumes a group. `standard` seeds both inside its own transaction. `scripts/db-seed.ts` gains a `correspondences` target (`npm run db:seed:correspondences`), `migrate.yml`'s reference-seed step a third line, and `deploy.yml`'s seed-changed path list the new files. Deletes `src/modules/ingredients/validation/correspondences.ts`; its tests read the seed literals instead.
+`src/db/seed/astrology.ts` holds `PLANETS` and `ZODIAC_SIGNS` as `{ name, description }` lists in §5's order, Title Case, every slug derived by `slugify`. A flat helper over `insertMissing` replaces the two-tier engine, which assumes a group. `standard` seeds both inside its own transaction. `scripts/db-seed.ts` gains an `astrology` target (`npm run db:seed:astrology`), `migrate.yml`'s reference-seed step a third line, and `deploy.yml`'s seed-changed path list the new files. Deletes `src/modules/ingredients/validation/correspondences.ts`; its tests read the seed literals instead.
 
 _Acceptance criteria:_
 
