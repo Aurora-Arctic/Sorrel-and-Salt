@@ -1,10 +1,11 @@
-import { and, asc, desc, getTableColumns, is, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, exists, getTableColumns, gt, is, lt, sql, type SQL } from 'drizzle-orm';
 import { type AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
 import { InvalidCursor } from '../../lib/errors';
 import type { Cursor, PageEntry, PageRequest } from '../../lib/pagination';
+import { notSoftDeleted } from './shapes';
 
 /**
  * A sort column a page can be keyed on. NOT NULL, because a NULL key makes
@@ -58,9 +59,10 @@ export interface Derived<TRow extends Record<string, unknown>> {
 
 type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-// The one place a read query is built. Exported for the finders beside it
-// and nowhere else: the index leaves it out and a deep import is banned, so no
-// public handle skips the filter.
+// Where a read query is built — this, and `existsIn` below for a correlated
+// subquery. Exported for the finders beside it and nowhere else: the index
+// leaves both out and a deep import is banned, so no public handle skips the
+// filter.
 export function selectFrom<TTable extends PgTable>(
   table: TTable,
   where: SQL | undefined,
@@ -136,6 +138,27 @@ export async function selectFrom(
   return rows.map(({ row, key }) => ({ cursor: { key, id: String(row.id) }, node: row }));
 }
 
+/**
+ * A correlated `EXISTS` over `table` under `where`, for a finder whose scope
+ * lives on a parent row — a spell's rows, an ingredient's children, a
+ * membership's coven. The parent's `deleted_at IS NULL` is ANDed here, on the
+ * table the subquery reads, so a deleted parent hides what hangs off it by
+ * construction rather than by each caller remembering to say so. Returns
+ * `SQL` rather than the builder: nothing can be appended to it or awaited, and
+ * `where` names the outer row by its own table's columns, which Drizzle
+ * qualifies, so the subquery correlates without an alias.
+ */
+export function existsIn<TTable extends PgTable>(table: TTable, where: SQL | undefined): SQL {
+  // Same cast as `selectFrom`'s: `.from()` is typed against the table's own
+  // generic parameter.
+  return exists(
+    db
+      .select({ one: sql`1` })
+      .from(table as never)
+      .where(and(notSoftDeleted(table), where)),
+  );
+}
+
 /** SQLSTATE class 22 — a value that would not cast to its column's type. Drizzle wraps the driver's error as `cause`. */
 function isDataException(error: unknown): boolean {
   const code = (error as { cause?: { code?: unknown } } | null)?.cause?.code;
@@ -148,10 +171,11 @@ function isDataException(error: unknown): boolean {
  * back to each column's own type, so it compares as the column does.
  */
 export function pageBounds({ sort, id, request }: Keyset): SQL | undefined {
+  const row = sql`(${sort}, ${id})`;
   const at = ({ key, id: cursorId }: Cursor) =>
     sql`(cast(${key} as ${sql.raw(sort.getSQLType())}), cast(${cursorId} as ${sql.raw(id.getSQLType())}))`;
   return and(
-    request.after && sql`(${sort}, ${id}) > ${at(request.after)}`,
-    request.before && sql`(${sort}, ${id}) < ${at(request.before)}`,
+    request.after && gt(row, at(request.after)),
+    request.before && lt(row, at(request.before)),
   );
 }

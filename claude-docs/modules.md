@@ -172,12 +172,14 @@ The compendium's future extraction unit is the compendium tier of
 an uncounted set of reads that cross from a workspace's rows into the
 compendium's. So the set is counted: **`TIER_SEAM` in
 `tests/guards/module-boundaries.test.ts` must name every exported function in
-`src/db/repository/` whose SQL reads the compendium tier** — anything
-containing `workspace_id is null` or `isNull(workspaceId)`, and anything that
+`src/db/repository/` whose SQL reads the compendium tier** — anything calling
+`inCompendium(…)`, the predicate's one spelling since MB.100, or writing
+`workspace_id is null` or `isNull(workspaceId)` out by hand, and anything that
 reads both tiers in one statement. The guard fails an unlisted finder, and it
 fails a listed one that no longer exists.
 
-It holds four finders today: `findSimilarIngredients` (M4.7), the fuzzy
+It holds the predicate and four finders today: `inCompendium` in `shapes.ts`,
+which is `workspace_id IS NULL` itself; `findSimilarIngredients` (M4.7), the fuzzy
 duplicate match; `findVocabularySuggestions` (MB.94, forms M4.7a), the
 planet, zodiac and form autofill; `findCommonNameSuggestions` (M4.7a), the
 common-name autofill; and `findManyOfIngredients` (M4.8), an ingredient's folk

@@ -49,6 +49,8 @@ const REPOSITORY = 'src/db/repository';
 
 /** Exported repository functions that read the compendium tier, or both tiers at once. */
 const TIER_SEAM: string[] = [
+  // The tier's one predicate, `workspace_id IS NULL`; a finder crosses the seam by calling it.
+  'inCompendium',
   // Story 16's warning: a near-miss in the compendium or this workspace, in one ranked list.
   'findSimilarIngredients',
   // A planet, sign or form autofill's in-use bucket, and a form's claimants: the compendium and this workspace.
@@ -60,11 +62,13 @@ const TIER_SEAM: string[] = [
 ];
 
 /**
- * A compendium-tier read, in either of Drizzle's spellings. `deleted_at IS
- * NULL` is every finder's business and must not match; the column name is
- * what keeps it out.
+ * A compendium-tier read: the repository's `inCompendium` predicate, or the
+ * `workspace_id IS NULL` it stands for in either of Drizzle's spellings, so a
+ * finder that writes the column out by hand is caught as surely as one that
+ * calls the helper. `deleted_at IS NULL` is every finder's business and must
+ * not match; the column name is what keeps it out.
  */
-const TIER_READ = /workspace_?[iI]d[^\n]*\bis null\b|isNull\([^)]*workspaceId/;
+const TIER_READ = /\binCompendium\(|workspace_?[iI]d[^\n]*\bis null\b|isNull\([^)]*workspaceId/;
 
 /** The lint guards' throwaway probe directories, which land under `src/`. */
 const isProbe = (path: string) => /(^|\/)__lint-probe[^/]*__(\/|$)/.test(path);
@@ -262,10 +266,14 @@ describe('the tier seam in the repository (claude-docs/modules.md)', () => {
   // The regex is the guard; pin what it does and does not match before
   // trusting it over a file that today contains neither form.
   it('recognises a compendium-tier read and not the soft-delete filter', () => {
+    expect(TIER_READ.test('or(inCompendium(ingredients), scopedTo(membership, ingredients))')).toBe(
+      true,
+    );
     expect(TIER_READ.test('where ${sql`workspace_id is null`}')).toBe(true);
     expect(TIER_READ.test('or(isNull(ingredients.workspaceId), eq(...))')).toBe(true);
     expect(TIER_READ.test('and(scopedTo(m, t), sql`deleted_at is null`)')).toBe(false);
     expect(TIER_READ.test('isNull(table.deletedAt)')).toBe(false);
+    expect(TIER_READ.test('and(notSoftDeleted(table), where)')).toBe(false);
   });
 
   it('is scanning the repository', () => {

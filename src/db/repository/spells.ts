@@ -1,8 +1,8 @@
-import { and, eq, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, or, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { spells } from '../../modules/grimoire/schema/spells';
 import type { Membership } from '@/modules/coven';
-import { selectFrom } from './select';
+import { existsIn, selectFrom } from './select';
 import { notSoftDeleted, scopedTo, type SpellScoped, type Unscoped } from './shapes';
 
 /**
@@ -40,13 +40,9 @@ export async function findOneSpell(
 /**
  * A spell's rows in `spell_ingredients` or `spell_categories` — readable
  * exactly when the spell is. Neither table carries a `workspace_id` to scope
- * itself by, so the correlated `EXISTS` below is where both the coven and the
- * visibility come from; filtering after the fetch would hand a caller the
- * contents of a jar it may not open (rule 7).
- *
- * Written as `sql` rather than a Drizzle subquery on purpose: a subquery needs
- * a second select builder, and the repository holding exactly one is what
- * `soft-delete-finder-guard.test.ts` reads to prove no unfiltered read exists.
+ * itself by, so the correlated `EXISTS` over the parent is where both the
+ * coven and the visibility come from; filtering after the fetch would hand a
+ * caller the contents of a jar it may not open (rule 7).
  */
 export function findManyInSpell<TTable extends PgTable & SpellScoped & Unscoped>(
   membership: Membership,
@@ -58,7 +54,7 @@ export function findManyInSpell<TTable extends PgTable & SpellScoped & Unscoped>
     and(
       notSoftDeleted(table),
       eq(table.spellId, spellId),
-      sql`exists (select 1 from ${spells} where ${spells.id} = ${table.spellId} and ${readableSpells(membership)})`,
+      existsIn(spells, and(eq(spells.id, table.spellId), readableSpells(membership))),
     ),
   );
 }

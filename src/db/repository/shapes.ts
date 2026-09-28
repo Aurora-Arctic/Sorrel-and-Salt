@@ -1,4 +1,4 @@
-import { eq, sql, type SQL } from 'drizzle-orm';
+import { eq, isNull, type SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { auditColumns } from '../../modules/identity/schema/users';
 import type { Membership } from '@/modules/coven';
@@ -57,10 +57,20 @@ export function scopedTo<TTable extends PgTable & WorkspaceScoped>(
 }
 
 /**
+ * The compendium tier, `workspace_id IS NULL`: what any proof, and no proof,
+ * may read. A finder reading both tiers ORs it with `scopedTo`, so each half
+ * of "the compendium or this coven" has one spelling (claude-docs/modules.md,
+ * "The tier seam").
+ */
+export function inCompendium<TTable extends PgTable & WorkspaceScoped>(table: TTable): SQL {
+  return isNull(table.workspaceId);
+}
+
+/**
  * `deleted_at IS NULL`, or `undefined` for a table without the column. Decided
  * by the table's shape, so there is no flag a caller could pass to skip it.
  */
 export function notSoftDeleted<TTable extends PgTable>(table: TTable): SQL | undefined {
   const deletedAt = (table as Partial<SoftDeletable>).deletedAt;
-  return deletedAt ? sql`${deletedAt} is null` : undefined;
+  return deletedAt ? isNull(deletedAt) : undefined;
 }

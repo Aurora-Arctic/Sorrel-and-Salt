@@ -382,8 +382,9 @@ matrix's generated job name, not the leg's.
   used so no required-status-check rename was ever needed.
 - **One concurrency group per PR, and every job in it cancellable.**
   `pr-gate.yml`'s workflow-level group is `PR Gate-<pr number>` with
-  `cancel-in-progress: true`, so a push, an edit or a close cancels the PR's
-  run in flight, whole. The check jobs and `gitflow` also carry job-level
+  `cancel-in-progress: ${{ github.event.action != 'edited' }}`, so a push, a
+  reopen or a close cancels the PR's run in flight, whole, and an edit waits
+  (below). The check jobs and `gitflow` also carry job-level
   groups that cancel in progress; the workflow's group already covers them, and
   they are left alone. **The three image builds are cancellable too** (MB.98).
   Until then each carried a job-level group with `cancel-in-progress: false`,
@@ -405,8 +406,8 @@ matrix's generated job name, not the leg's.
   below holds. The cancel is asynchronous, so the step then `sleep`s — killed
   by the cancel, usually within seconds, with 30s as the bound — and `changes`
   never completes and hands `checks`, `vitest` or `playwright` an output to
-  start on. The builds and `gitflow` do not need it, so they start and are
-  cancelled within seconds. On a fork PR the token is read-only and the cancel
+  start on. Since MB.100 the builds and `gitflow` need it too, so nothing else
+  starts. On a fork PR the token is read-only and the cancel
   fails, but a failed `changes` holds the checks back just the same.
   - **Why.** On 2026-09-27 a bulk edit of old PR bodies started 130 gate runs
     in five minutes, for PRs merged days or weeks before. Separately, four of
@@ -418,6 +419,33 @@ matrix's generated job name, not the leg's.
     other's gate, while the group is keyed by PR number.
   - `deploy.yml`'s own `closed` handler, which tears a hotfix preview down,
     is separate and unaffected.
+- **An edited PR's gate run waits, then cancels itself unless the edit
+  retargeted the base** (MB.100). `edited` is in the trigger types so a
+  retarget re-runs the gate against the new base, but an edit to a title or a
+  description changes nothing the gate checks, and until MB.100 its run
+  cancelled the one in flight like a push. Blacksmith's [code]smith appends a
+  footer to every new PR's body four to nine seconds after it opens, so every
+  PR since the app was installed had its `opened` run cancelled and re-run;
+  on #535 the cancellation wedged, `build-image` neither running nor
+  cancelled, and the group stayed held so the second run never started. A
+  person editing a description mid-run did the same. Now the group's
+  `cancel-in-progress` is `github.event.action != 'edited'`: an edit's run
+  joins the group and waits — GitHub holds one pending run per group, a later
+  edit replacing an earlier — and when the run in flight finishes, the first
+  step of `changes` cancels it unless the payload carries `changes.base`, the
+  one edit the gate cares about, which then gates as any push would. A retarget
+  is therefore delayed by one gate rather than cancelling it.
+  - **Why every job now `needs: changes`.** A job that had started in a run
+    about to cancel itself leaves a cancelled check run under its own name,
+    newer than the real run's on the same commit, and a required check reads
+    the newest — so once protection names `gitflow / gitflow` or a build, a
+    stray `edited` run would block the PR it had already passed. Holding the
+    builds and `gitflow` behind `changes` costs their start about eight
+    seconds on a gate that takes ten minutes, and leaves a self-cancelled run
+    owning exactly one check run, `changes`, which nothing requires.
+  - Nothing here needs protection to be enabled to be worth doing: the
+    wasted gate per PR was real on the metered runner, and the wedge was a PR
+    with no CI at all.
 - **The other two concurrency groups are right as they are** (audited in
   MB.98, so not to be redone). `deploy.yml`'s workflow-level group never
   cancels, because a half-run alias can leave a domain pointing at a dead
