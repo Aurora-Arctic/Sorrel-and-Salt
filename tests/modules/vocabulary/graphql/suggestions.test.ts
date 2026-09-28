@@ -7,6 +7,8 @@ import { schema } from '@/graphql/schema';
 import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
+import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { makeIngredient } from '../../../support/fixtures';
 
 // The transport half of MB.94: two connection fields over one type, a page
 // each, refused by the schema before the service is reached when signed
@@ -20,10 +22,18 @@ beforeAll(() => {
 
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
-  await sql`
-    insert into ingredients (workspace_id, name, nomenclature, planet, zodiac, created_by, updated_by)
-    values (${WORKSPACE_W_ID}, 'Sedna Water', 'none', 'Sedna', 'Cetus', ${A.id}, ${A.id})
-  `;
+  // One workspace entry with an uncurated value in each column.
+  await insertIngredient(
+    sql,
+    makeIngredient({
+      workspaceId: WORKSPACE_W_ID,
+      name: 'Sedna Water',
+      nomenclature: 'none',
+      planet: 'Sedna',
+      zodiac: 'Cetus',
+    }),
+    A.id,
+  );
 });
 
 interface Suggestion {

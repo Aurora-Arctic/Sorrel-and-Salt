@@ -7,6 +7,8 @@ import { schema } from '@/graphql/schema';
 import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
+import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { makeIngredient } from '../../../support/fixtures';
 
 // The transport half of M4.7a's form lookup: a page of both buckets, each
 // curated row carrying its group and every suggestion its claimants, refused
@@ -20,12 +22,19 @@ beforeAll(() => {
 
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
-  await sql`
-    insert into ingredients (workspace_id, name, canonical_name, nomenclature, form, created_by, updated_by)
-    values
-      (null, 'Testwort', 'Fixtura testalis', 'botanical', 'root', ${A.id}, ${A.id}),
-      (${WORKSPACE_W_ID}, 'Testbane', null, 'none', 'root bark', ${A.id}, ${A.id})
-  `;
+  // A compendium entry claiming a curated form, and a workspace entry with an
+  // uncurated one.
+  await insertIngredient(sql, makeIngredient({ form: 'root' }), A.id);
+  await insertIngredient(
+    sql,
+    makeIngredient({
+      workspaceId: WORKSPACE_W_ID,
+      name: 'Testbane',
+      nomenclature: 'none',
+      form: 'root bark',
+    }),
+    A.id,
+  );
 });
 
 interface Connection {
