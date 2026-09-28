@@ -30,29 +30,19 @@ import {
   ghJson,
   listTracked,
   matchesId,
+  pacedWrite,
   readItem,
   setEstimate,
   setStatus,
 } from './task-board.mjs';
+import { ID, TASKS_MD, readTasksMd } from './tasks-md.mjs';
 
 const ASANA_API = 'https://app.asana.com/api/1.0';
 const ASANA_PROJECT = '1218814916390986';
 // The free plan allows 150 requests a minute; 450 ms apart stays under it.
 const ASANA_INTERVAL_MS = 450;
-// Content creation on GitHub: ~80/min, 500/hour (secondary limit).
-const GITHUB_WRITE_INTERVAL_MS = 1500;
 const HOTFIX_LABEL = 'hotfix';
-const TASKS_MD = 'claude-docs/TASKS.md';
 
-// The heading and id regexes are tally.mjs's, so the two scripts read the
-// same TASKS.md the same way.
-const ID = String.raw`[A-Z]+[0-9]*(?:\.[A-Z0-9]+)*[a-z]?`;
-// `**M2.6 — Title** · 2h …` or `**M6.4 — ~~Title~~** · **RETIRED …**`
-const HEADING = new RegExp(String.raw`^\*\*(${ID}) — .*?\*\* · (?:([0-9.]+)h|\*\*RETIRED)`);
-// `| **7 — GraphQL** | M3.1 → M3.2 · MB.73 · … |` in the execution-order table.
-const WAVE_ROW = /^\| \*\*(\d+) — ([^|*]+?)\*\*\s*\|([^|]*)\|/;
-const ID_ONLY = new RegExp(String.raw`^(${ID})$`);
-const ID_RANGE = new RegExp(String.raw`^(${ID})\s*→\s*(${ID})$`);
 // `▶ M2.6 — Title`, `◔ M2.6 - Title`: the marker was Asana's status column.
 const MARKER = /^[▶◔✓]\s+/;
 const ISSUE_NAME = new RegExp(String.raw`^(${ID})\s+[—-]\s+(.*)$`);
@@ -134,40 +124,6 @@ async function exportBoard(file) {
 
 // ---------------------------------------------------------------------------
 // plan
-
-function readTasksMd(text) {
-  const order = [];
-  const hours = new Map();
-  const retired = new Set();
-  const waves = [];
-  for (const line of text.split('\n')) {
-    const heading = HEADING.exec(line);
-    if (heading) {
-      order.push(heading[1]);
-      if (heading[2] === undefined) retired.add(heading[1]);
-      else hours.set(heading[1], Number(heading[2]));
-      continue;
-    }
-    const row = WAVE_ROW.exec(line);
-    if (row) waves.push({ number: Number(row[1]), name: row[2].trim(), cell: row[3] });
-  }
-  const index = new Map(order.map((id, i) => [id, i]));
-  const unresolved = [];
-  for (const wave of waves) {
-    wave.ids = [];
-    for (const token of wave.cell.split(/\s*[·,]\s*/).map((t) => t.trim())) {
-      const range = ID_RANGE.exec(token);
-      if (range) {
-        const [from, to] = [index.get(range[1]), index.get(range[2])];
-        if (from === undefined || to === undefined || to < from) unresolved.push(token);
-        else wave.ids.push(...order.slice(from, to + 1));
-      } else if (ID_ONLY.test(token)) {
-        wave.ids.push(token);
-      }
-    }
-  }
-  return { order, hours, retired, waves, unresolved };
-}
 
 const stripMarker = (name) => name.replace(MARKER, '');
 
@@ -335,25 +291,6 @@ function scan(plan) {
 // ---------------------------------------------------------------------------
 // apply
 
-const RATE_LIMITED = /HTTP 403|HTTP 429|rate limit|submitted too quickly/i;
-
-/** A GitHub write, spaced out, retried once after a rate-limit refusal. */
-async function write(fn) {
-  await sleep(GITHUB_WRITE_INTERVAL_MS);
-  try {
-    return fn();
-  } catch (error) {
-    if (!(error instanceof BoardError) || !RATE_LIMITED.test(error.message)) throw error;
-    const retryAfter = /retry-after:?\s*(\d+)/i.exec(error.message)?.[1];
-    // The hourly content-creation cap answers "submitted too quickly" with no
-    // retry-after, and a minute never clears it; five is a guess that usually does.
-    const wait = retryAfter ? Number(retryAfter) : 300;
-    console.error(`rate limited; waiting ${wait}s`);
-    await sleep(wait * 1000);
-    return fn();
-  }
-}
-
 const apiPages = (path) =>
   ghJson([
     'api',
@@ -396,7 +333,7 @@ async function apply(plan, projectNumber, { skipScan }) {
   ];
   for (const [name, color, description] of wanted) {
     if (labels.has(name)) continue;
-    await write(() =>
+    await pacedWrite(() =>
       gh(['label', 'create', name, '--repo', REPO, '--color', color, '--description', description]),
     );
     counts.labels++;
@@ -411,7 +348,7 @@ async function apply(plan, projectNumber, { skipScan }) {
   for (const m of plan.milestones) {
     const existing = existingMilestones.get(m.name);
     if (!existing) {
-      const created = await write(() =>
+      const created = await pacedWrite(() =>
         ghJson(['api', '-X', 'POST', `repos/${REPO}/milestones`, '--input', '-'], {
           input: JSON.stringify({ title: m.name, description: m.description }),
         }),
@@ -428,7 +365,7 @@ async function apply(plan, projectNumber, { skipScan }) {
       console.log(`milestone "${m.name}" — exists`);
       continue;
     }
-    await write(() =>
+    await pacedWrite(() =>
       gh(['api', '-X', 'PATCH', `repos/${REPO}/milestones/${existing.number}`, '--input', '-'], {
         input: JSON.stringify(patch),
       }),
@@ -469,7 +406,7 @@ async function apply(plan, projectNumber, { skipScan }) {
     ];
     for (const label of issue.labels) args.push('--label', label);
     if (issue.milestone) args.push('--milestone', issue.milestone);
-    const url = await write(() => gh(args, { input: issue.body }));
+    const url = await pacedWrite(() => gh(args, { input: issue.body }));
     const created = {
       number: numberFromUrl(url),
       url: url.trim(),
@@ -485,7 +422,7 @@ async function apply(plan, projectNumber, { skipScan }) {
   for (const issue of plan.issues) {
     const target = numbers.get(issue.id);
     if (!issue.closed || target.state !== 'OPEN') continue;
-    await write(() =>
+    await pacedWrite(() =>
       gh(['issue', 'close', String(target.number), '--repo', REPO, '--reason', issue.closeReason]),
     );
     target.state = 'CLOSED';
@@ -503,7 +440,7 @@ async function apply(plan, projectNumber, { skipScan }) {
     let added = 0;
     for (const comment of issue.comments) {
       if (posted.has(comment.body.trim())) continue;
-      await write(() =>
+      await pacedWrite(() =>
         gh(['issue', 'comment', String(number), '--repo', REPO, '--body-file', '-'], {
           input: comment.body,
         }),
@@ -527,16 +464,16 @@ async function apply(plan, projectNumber, { skipScan }) {
     let item = readItem(target, String(projectNumber));
     if (!item) {
       const scope = [String(projectNumber), '--owner', OWNER, '--url', target.url];
-      await write(() => gh(['project', 'item-add', ...scope]));
+      await pacedWrite(() => gh(['project', 'item-add', ...scope]));
       item = readItem(target, String(projectNumber));
       changes.push('added');
     }
     if (item.status !== issue.status) {
-      await write(() => setStatus(target, issue.status, { force: true, item }));
+      await pacedWrite(() => setStatus(target, issue.status, { force: true, item }));
       changes.push(`status ${issue.status}`);
     }
     if (issue.estimate !== null && item.estimate !== issue.estimate) {
-      await write(() => setEstimate(target, issue.estimate, { item }));
+      await pacedWrite(() => setEstimate(target, issue.estimate, { item }));
       changes.push(`estimate ${issue.estimate}h`);
     }
     if (changes.length) counts.items++;
@@ -567,7 +504,7 @@ async function apply(plan, projectNumber, { skipScan }) {
       console.log(`issue #${child.number} ${issue.id} — already under #${parent.number}`);
       continue;
     }
-    await write(() =>
+    await pacedWrite(() =>
       gh([
         'issue',
         'edit',
@@ -588,7 +525,7 @@ async function apply(plan, projectNumber, { skipScan }) {
   for (const m of plan.milestones) {
     const existing = existingMilestones.get(m.name);
     if (!m.closed || existing.state === 'closed') continue;
-    await write(() =>
+    await pacedWrite(() =>
       gh(['api', '-X', 'PATCH', `repos/${REPO}/milestones/${existing.number}`, '--input', '-'], {
         input: JSON.stringify({ state: 'closed' }),
       }),

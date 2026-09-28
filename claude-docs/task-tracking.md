@@ -84,6 +84,51 @@ whatever `Status` says, which is what makes a field left behind by a mistake
 harmless. If a PR is closed without merging, the task goes back to
 `In Progress` by hand — not `Done`, not `Not Started`.
 
+## Order
+
+The Project's manual item order is execution order: the wave table in
+[`TASKS.md`](TASKS.md)'s Execution order section, wave by wave, each wave's
+row in its order. `node scripts/task-board.mjs reorder` is what keeps it so.
+Without an argument it is a dry run: it prints every way the rows and the
+board disagree, then the moves, and writes nothing. `--apply` makes the
+moves one at a time and ends by reading the order again and printing the
+recomputed plan — `0 moves needed` is the success line. `--limit N` caps a
+run at its first N moves, which is how a run on a board is probed before the
+rest of it.
+
+**A wave with no open task is left where it sits**, whatever its milestone's
+state: the M0 and M1 groupings, Waves 01 to 07 and the retired ids are done,
+and a board nobody reads that way is not worth the writes. The count is read
+live, so an issue minted open into a done wave makes that wave an open one
+until it is closed — mint such an issue, close it, and only then run
+`reorder`. Of the waves still open, the first item in target order is the
+anchor and never moves; behind it the longest run already in order stays, and
+each other item is moved after its predecessor in target order. Processing in
+that order makes a predecessor final before its follower is placed, and no
+move is ever "to the top", so nothing climbs above the done waves. An issue
+on a wave's milestone that the row does not name is appended to the wave in
+heading order and reported; a row id with no issue, or whose issue sits on
+another milestone, is reported; a milestone description whose first line
+differs from the row is reported. Every report line is a doc fix or a board
+fix, under the rule minting already follows: the row, the milestone
+description and the board agree.
+
+**Every run is cheap by design — the MB.102 rule, applied to the one listing
+there is.** The reads are the REST issue list `find` already makes, one
+milestones page, and one GraphQL listing of the Project's items that asks each
+for its id and its issue number and nests no connection, which the cost
+formula prices at a page's minimum — four pages for this board. There is no
+per-item position read, so a listing is the only way to observe order; the one
+that tripped the secondary limit, `gh project item-list`, asked every item for
+every field value. The writes are `updateProjectV2ItemPosition`, one a
+request with the ids as variables and only the mutation id selected, 1.5 s
+apart, retried once after a rate-limit refusal and then stopped: a run that
+stops is simply re-run, since the plan is recomputed from the live order.
+Batching the mutations under aliases would cut the requests further and was
+not needed at the board's size, and an `Order` field sorted by the view would
+have been a write per item rather than per move, and the end of dragging an
+item where it belongs.
+
 ## Comments
 
 `node scripts/task-board.mjs comment <ID> "<text>"` posts to the issue. The
@@ -110,27 +155,31 @@ Node built-ins only, every call an `execFileSync('gh', [...])` with an
 argument list — a title or a comment is text a shell string would interpret.
 A `gh` failure prints gh's own stderr on one line, never a stack.
 
-| Command                  | Does                                                                                                                                                           |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `find <ID>`              | The one tracked issue titled `<ID> — …`, as JSON: number, title, state, state reason, URL, milestone, labels, and the Project `Status` when the item is on it. |
-| `status <ID> "<Status>"` | Moves `Status` forward; a no-op when already there, a refusal for a step back, for `Done`, or for an issue the auto-add has not placed on the Project yet.     |
-| `estimate <ID> <hours>`  | Sets `Estimate`; the same refusal for an issue not yet on the Project.                                                                                         |
-| `comment <ID> "<text>"`  | Posts the comment, after the secret scan.                                                                                                                      |
-| `list`                   | Every tracked issue, open and closed, as a JSON array.                                                                                                         |
+| Command                         | Does                                                                                                                                                              |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `find <ID>`                     | The one tracked issue titled `<ID> — …`, as JSON: number, title, state, state reason, URL, milestone, labels, and the Project `Status` when the item is on it.    |
+| `status <ID> "<Status>"`        | Moves `Status` forward; a no-op when already there, a refusal for a step back, for `Done`, or for an issue the auto-add has not placed on the Project yet.        |
+| `estimate <ID> <hours>`         | Sets `Estimate`; the same refusal for an issue not yet on the Project.                                                                                            |
+| `comment <ID> "<text>"`         | Posts the comment, after the secret scan.                                                                                                                         |
+| `list`                          | Every tracked issue, open and closed, as a JSON array.                                                                                                            |
+| `reorder [--apply] [--limit N]` | The moves that put the open waves' items in execution order, as a dry run; `--apply` makes them and prints the recomputed plan; `--limit` caps a run (**Order**). |
 
 The Project's node id, its field ids and its option ids are read on each run
 rather than hardcoded — an option recreated in the Project's settings gets a
 new id, and a stale constant would set nothing while reporting success — and
 they are read off the issue's own item, through one `issue.projectItems`
 query, never by listing every item on the Project. The migration script
-imports the same helpers, which is why they are exported.
+imports the same helpers, which is why they are exported, and both read
+`TASKS.md` through `scripts/tasks-md.mjs`, the one parser of its headings and
+its wave table.
 
 **Every command is cheap by design (MB.102).** The issue list is REST —
 `gh api --paginate --slurp`, one request per hundred issues against the core
 budget, pull requests filtered out since the endpoint lists them among issues
 — and the Project read costs one GraphQL point. `find` and `comment` make
 one small query at most; `status` and `estimate` make that query and one
-mutation. The previous shape — `gh issue list`, a GraphQL query carrying every
+mutation; `reorder` makes the three reads under **Order** and one mutation
+per move. The previous shape — `gh issue list`, a GraphQL query carrying every
 issue's labels, then `gh project item-list` over every item to find one —
 was a burst that tripped GitHub's _secondary_ rate limit twice in one sitting
 with the hourly budget almost untouched. The refusal reads
@@ -146,12 +195,18 @@ taken it — then:
 ```sh
 gh issue create --title "MB.90 — <title>" --type Bug --label tracked --milestone "Wave 07 — GraphQL" --body-file <notes>
 node scripts/task-board.mjs estimate MB.90 3
+node scripts/task-board.mjs reorder --apply
 ```
 
 The notes are the `TASKS.md` entry's text. The entry, the wave's row in the
 execution-order table, the summary table and the milestone's description are
 edited in the same pass; a task on the board and not in `TASKS.md` is a task
-whose reasoning is nowhere.
+whose reasoning is nowhere. The auto-add appends the new item at the bottom
+of the Project, and `reorder --apply` moves it to the row's place (**Order**),
+so the row is edited before it runs. `--milestone <name>` on create does not
+resolve a closed milestone; an issue minted into one for the record takes it
+afterwards, by number, through `gh api -X PATCH repos/…/issues/<n> -F milestone=<m>`,
+and is closed before `reorder` runs.
 
 ## Migration
 
@@ -195,7 +250,8 @@ create --label` fails on a missing one), milestones (created open, and
 spaces requests about 450 ms apart and honours a `429`'s `Retry-After`.
 GitHub's secondary limit for content creation is about 80 writes a minute and
 500 an hour, so `apply` spaces writes 1.5 s apart, retries once after a
-`403`/`429` (waiting `retry-after` or 60 s), and a full run of several hundred
+`403`/`429` (waiting `retry-after` or, since the hourly cap sends none and a minute never
+clears it, 300 s — `task-board.mjs`'s `pacedWrite`, which `reorder` shares), and a full run of several hundred
 issues plus their comments spans several invocations — which is why every step
 is idempotent rather than merely careful.
 
