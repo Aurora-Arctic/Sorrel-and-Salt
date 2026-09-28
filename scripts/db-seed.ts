@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // The repo's one database CLI: reaching the database means importing the
 // client, and that exemption set is four files pinned by test (claude-docs/db.md,
-// "Who may import the client"). `categories` and `forms` are reference data,
-// not scenarios — what migrate.yml seeds after migrating. Runs through `tsx`:
+// "Who may import the client"). `categories`, `forms` and `astrology` are
+// reference data, not scenarios — what migrate.yml seeds after migrating. Runs through `tsx`:
 // Node's own type stripping resolves no extensionless relative import.
 //
 // Usage: npm run db:seed              # SEED_SCENARIO, default minimal
-//        npm run db:seed:categories | db:seed:forms
+//        npm run db:seed:categories | db:seed:forms | db:seed:astrology
 //        npm run db:drop              # drop the schema, nothing else
 //        npm run db:reset             # drop, migrate, seed
 
@@ -16,6 +16,7 @@
 import { db } from '../src/db/connection.ts';
 import { resolveScenario, seed } from '../src/db/seed/index.ts';
 import { seedCategories } from '../src/db/seed/categories.ts';
+import { seedAstrology } from '../src/db/seed/astrology.ts';
 import { seedForms } from '../src/db/seed/forms.ts';
 import { dropSchema } from '../src/db/seed/reset.ts';
 
@@ -28,6 +29,9 @@ try {
   } else if (target === 'forms') {
     await seedForms(db);
     console.log('Seeded DESIGN.md §5 ingredient form groups and forms.');
+  } else if (target === 'astrology') {
+    await seedAstrology(db);
+    console.log('Seeded DESIGN.md §5 planet and zodiac vocabularies.');
   } else if (target === 'drop') {
     // The one guard on the one destructive verb: nothing in CI calls it, so a
     // production URL in a local shell is refused rather than confirmed.
@@ -42,7 +46,7 @@ try {
     console.log(`Seeded the ${scenario} scenario.`);
   } else {
     throw new Error(
-      `Unknown seed target "${target}". Pass "categories", "forms" or "drop", or nothing to seed a scenario.`,
+      `Unknown seed target "${target}". Pass "categories", "forms", "astrology" or "drop", or nothing to seed a scenario.`,
     );
   }
 } finally {

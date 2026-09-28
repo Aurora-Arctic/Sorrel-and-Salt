@@ -91,10 +91,8 @@ Rules both variants enforce:
   like `form`: trimmed, a blank one becomes `null`, and anything else is
   written. The project serves a wide range of practices, and any closed list
   refuses some of them. The suggestions are the admin-curated `planets` and
-  `zodiac_signs` vocabularies ([`db.md`](db.md), "The correspondence
-  vocabularies"), and a value off them is as valid as one on them. Until MB.93
-  seeds those tables, `validation/correspondences.ts` holds the same lists as
-  constants; MB.93 deletes it.
+  `zodiac_signs` vocabularies ([`db.md`](db.md), "The astrology
+  vocabularies"), and a value off them is as valid as one on them.
 
 The schemas describe a whole ingredient, as the form submits it on create and
 on edit. A partial update would need its own schema: the local variant's

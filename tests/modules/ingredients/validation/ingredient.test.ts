@@ -4,10 +4,7 @@ import {
   CompendiumIngredientInput,
   LocalIngredientInput,
 } from '@/modules/ingredients/validation/ingredient';
-import {
-  PLANET_SUGGESTIONS,
-  ZODIAC_SUGGESTIONS,
-} from '@/modules/ingredients/validation/correspondences';
+import { PLANETS, ZODIAC_SIGNS } from '@/db/seed/astrology';
 
 // DESIGN.md §5 transcribed rather than imported, so the schemas are compared
 // against the spec, not against the constants they are built from.
@@ -255,8 +252,8 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
   // Suggested, not enforced: practices differ on both, so a value off the
   // autofill list is written as readily as one on it.
   describe.each([
-    ['planet', PLANET_SUGGESTIONS, ['sedna', 'Eris', 'Black Moon Lilith']],
-    ['zodiac', ZODIAC_SUGGESTIONS, ['Serpentarius', 'the Pleiades']],
+    ['planet', PLANETS.map((row) => row.name), ['sedna', 'Eris', 'Black Moon Lilith']],
+    ['zodiac', ZODIAC_SIGNS.map((row) => row.name), ['Serpentarius', 'the Pleiades']],
   ])('%s', (field, suggestions, unlisted) => {
     it('takes every suggestion, and values off the list', () => {
       for (const value of [...suggestions, ...unlisted]) {

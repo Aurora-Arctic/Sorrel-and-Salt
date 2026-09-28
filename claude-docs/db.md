@@ -645,23 +645,26 @@ no counterpart: §5 asks for non-empty only on the form vocabulary, so M4.2
 shipped NOT NULL alone and this is a difference in the specification, not a
 gap in M4.2.
 
-## The correspondence vocabularies (MB.91; tables MB.92)
+## The astrology vocabularies (MB.91; tables MB.92)
 
 `planets` and `zodiac_signs` are the vocabularies behind
 `ingredients.planet` and `ingredients.zodiac`, in
-`src/modules/vocabulary/schema/correspondences.ts`, migration
-`0023_correspondence-vocabularies.sql`. Nothing reads them yet. Until
-MB.93 seeds the tables, the suggestion lists are constants in
-`src/modules/ingredients/validation/correspondences.ts`, which MB.93 deletes:
-a list an admin cannot extend without a deploy is the shape `form` had before
-MB.35, and wrong for the same reason.
+`src/modules/vocabulary/schema/astrology.ts`, migration
+`0023_correspondence-vocabularies.sql`, seeded by
+`src/db/seed/astrology.ts` (below). Nothing reads them yet. They
+replace a TypeScript constant of the same lists, deleted with the seed: a list
+an admin cannot extend without a deploy is the shape `form` had before MB.35,
+and wrong for the same reason. Files, scripts and functions say _astrology_
+rather than _correspondence_, which in §5 names every property an ingredient
+carries — element and deities too — not these two; the migration keeps the
+name it shipped under, since its tag is in the journal.
 
 - **`planets`** and **`zodiac_signs`** — each `id`, `name`, `slug`,
   `description` (NOT NULL, with a non-blank CHECK), + audit. Global,
   admin-curated, in the `vocabulary` module, both in one schema file as the
   form pair is. No group, no colour, no order column, no `workspace_id`.
   The only foreign keys are the audit stamps, and `ingredients.planet` and
-  `.zodiac` point none at either table — `correspondences-schema.test.ts`
+  `.zodiac` point none at either table — `astrology-schema.test.ts`
   asserts both from the schema and by scanning the shipped SQL per statement.
 
 **They are `form`'s pattern, and the two columns stay `text`.** A member
@@ -2076,6 +2079,10 @@ filed under them, each by slug — which `seedCategoryVocabulary` and
 DESIGN.md import them from. The two table pairs are typed as a union rather
 than a generic: their columns are identical, so the row type survives without
 a cast.
+`src/db/seed/flat-vocabulary.ts` exports `seedFlatVocabulary(tx, table,
+items)`, the one-tier counterpart for a vocabulary with no group — each item
+by slug, the same rules — which `seedAstrologyVocabularies` calls once
+for `planets` and once for `zodiac_signs`.
 
 **`minimal`** (`src/db/seed/minimal.ts`): one admin, one user, empty
 compendium. The admin is the bootstrap user under the fixed
@@ -2156,7 +2163,8 @@ as a step after its own migrations, gated on a diff so it only fires when a
 push actually changed a reference seed's files. Deploys are CI-only
 and there is no shell on either database, so a vocabulary nobody can run by
 hand has to arrive with the deploy that needs it. M4.3a's form vocabulary
-shares that step, that gate and that summary — see below, and
+and MB.93's planet and zodiac vocabularies share that step, that gate and
+that summary — see below, and
 `claude-docs/ci.md`.
 
 One rule a later scenario inherits: write through the handle, stamping via
@@ -2254,16 +2262,35 @@ parse that matched nothing cannot make the comparisons vacuous. That is the
 same tactic `categories.test.ts` uses on §6's table, for the same reason: a
 transcribed copy is exactly what rots.
 
-## The correspondence vocabulary seed (MB.93)
+## The astrology vocabulary seed (MB.93)
 
-`src/db/seed/correspondences.ts` will seed DESIGN.md §5's planet and zodiac
-table: nineteen `planets` and thirteen `zodiac_signs`, in §5's order. It
-takes the form seed's shape — reference data rather than a scenario,
-`npm run db:seed:correspondences` as a third `scripts/db-seed.ts` target,
-run by `migrate.yml` in the same step as the other two, idempotent by slug and
-ignoring `deleted_at`, updating nothing already present — with a flat helper
-in place of the two-tier one. §5's table is lower-case; the seed writes each
-name in title case (`North Node`), and the test compares case-insensitively.
+`src/db/seed/astrology.ts` seeds DESIGN.md §5's planet and zodiac
+table: nineteen `planets` and thirteen `zodiac_signs`, in §5's order, as the
+`PLANETS` and `ZODIAC_SIGNS` literals. It takes the form seed's shape —
+reference data rather than a scenario, `npm run db:seed:astrology` as a
+third `scripts/db-seed.ts` target, run by `migrate.yml` in the same step as the
+other two, idempotent by slug and ignoring `deleted_at`, updating nothing
+already present, stamped by the bootstrap admin with the GUC published — with
+`seedFlatVocabulary` in place of the two-tier helper, since there is no group
+to insert first. `standard` seeds both inside its own transaction, and every
+`planet` its compendium sets is a curated one; unlike `form`, no uncurated
+planet is seeded, so the admin's to-do list is exercised by tests that write
+one. §5's table is lower-case; the seed writes each name in title case
+(`North Node`), and `astrology.test.ts` compares case-insensitively and
+then checks every word's capital separately.
+
+**A description is a gloss, not a correspondence list.** Each names the
+body's or sign's other names, what it is and what it is read for — the Ram,
+cardinal fire, courage and beginnings; the Moon's ascending node, what is
+sought — because the suggestion query matches descriptions
+(§5), so the words a reader reaches for have to be there: Lilith's carries
+_Black Moon_, the nodes' _Rahu_ and _Ketu_, Ophiuchus's _Serpentarius_, and
+the test asserts those four by name. Ophiuchus has no agreed modality or
+element, so its themes carry it alone. A sign's description leaves out its
+ruling planet, so typing `Mars` into `zodiac` does not offer Aries. As with the
+forms, the descriptions are pairwise distinct within each table, and §5's
+table is parsed at test time with the parse itself checked — two vocabularies,
+nineteen and thirteen.
 
 **Sources.** Researched when M4.5 settled the lists. The traditional seven and
 their sign rulerships:

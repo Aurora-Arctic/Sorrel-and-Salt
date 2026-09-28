@@ -3,11 +3,11 @@ import { check, index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-c
 import { auditColumns } from '../../identity/schema/users';
 
 // The vocabularies behind `ingredients.planet` and `ingredients.zodiac`, and
-// deliberately not foreign key targets for them (correspondences-schema.test.ts
+// deliberately not foreign key targets for them (astrology-schema.test.ts
 // asserts so): a member must be able to write `Eris` before anyone curates it.
 // Two tables rather than one with a `kind`, so a suggestion query has no
 // predicate to forget; one tier, no colour, no order column
-// (claude-docs/db.md, "The correspondence vocabularies").
+// (claude-docs/db.md, "The astrology vocabularies").
 export const planets = pgTable(
   'planets',
   {

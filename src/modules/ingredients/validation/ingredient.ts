@@ -55,7 +55,8 @@ const fields = {
   form: optionalText,
   description: optionalText,
   element: z.enum(INGREDIENT_ELEMENTS, { error: 'Choose one of the five elements' }).nullish(),
-  // Free text like `form`: ./correspondences.ts suggests, nothing refuses.
+  // Free text like `form`: the `planets` and `zodiac_signs` vocabularies
+  // suggest, nothing refuses.
   planet: optionalText,
   zodiac: optionalText,
   deities: textList,

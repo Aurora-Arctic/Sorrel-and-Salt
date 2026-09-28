@@ -834,13 +834,14 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   why it is worth a named rule rather than a note; `sslmode=require` on its own
   is fine and is what actually requests TLS.
 
-- **The reference seeds (M4.3, M4.3a) are one step inside `migrate.yml`, not a
-  workflow of their own.** After the migrations, `npm run db:seed:categories`
-  and `npm run db:seed:forms` write DESIGN.md §6's category vocabulary and §5's
-  ingredient form vocabulary into the schema they just created, when the
-  `seed-reference` input says so. One step for both, sharing a gate, a log and
-  a summary: a form vocabulary seeded while the categories failed is not a
-  state worth reporting separately. It is how either vocabulary reaches staging
+- **The reference seeds (M4.3, M4.3a, MB.93) are one step inside `migrate.yml`,
+  not a workflow of their own.** After the migrations, `npm run
+db:seed:categories`, `npm run db:seed:forms` and `npm run db:seed:astrology`
+  write DESIGN.md §6's category vocabulary and §5's ingredient form, planet and
+  zodiac vocabularies into the schema they just created, when the
+  `seed-reference` input says so. One step for all three, sharing a gate, a log
+  and a summary: a form vocabulary seeded while the categories failed is not a
+  state worth reporting separately. It is how any vocabulary reaches staging
   and production at all: deploys are CI-only and there is no shell on either
   database, so reference data has to arrive with the deploy that needs it.
   A separate reusable workflow was written first and then folded in — it
@@ -851,16 +852,14 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   Sharing the job makes that ordering structural. The two still report
   separately — one `job-summary` call each — so a failed seed does not read as
   a failed migration, and a failed seed blocks `deploy` for free, because it
-  fails the job `deploy` already depends on. MB.93 adds a third target to the
-  same step, `npm run db:seed:correspondences`, for §5's planet and zodiac
-  vocabularies — same gate, same reasoning.
+  fails the job `deploy` already depends on.
 - **`deploy.yml` gains one job, `seed-changed`**, which diffs
   `github.event.before`..`github.sha` over the seeds' own files
   (`src/db/seed/categories.ts`, `src/db/seed/forms.ts`,
+  `src/db/seed/astrology.ts`, `src/db/seed/flat-vocabulary.ts`,
   `src/db/seed/bootstrap-admin.ts`, `src/lib/slugify.ts`, `scripts/db-seed.ts`)
-  and hands `migrate` the answer — one gate for both vocabularies, so a change
-  to either runs both. MB.93 adds `src/db/seed/correspondences.ts` and its flat
-  seed helper to that list, and the gate then covers all three.
+  and hands `migrate` the answer — one gate for every vocabulary, so a change
+  to any seed runs all three.
   Two things about it are load-bearing. It carries **no job-level `if:`**: a
   skipped dependency skips its dependents, so gating the job on
   `github.event_name == 'push'` would take every hotfix preview deploy down
