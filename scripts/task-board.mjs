@@ -2,8 +2,10 @@
 // The board's calls in one file, so the lookup rule and the Project's field
 // ids live here rather than in each skill that needs them. Every call is a
 // `gh` invocation with an argument list — never a shell string, since a title
-// or a comment is text the shell would otherwise interpret.
-// claude-docs/task-tracking.md
+// or a comment is text the shell would otherwise interpret. The Project's own
+// workflows place every tracked issue and set `Not Started` and `Done`; this
+// file sets the two statuses between them and never adds an item
+// (claude-docs/task-tracking.md, "Status").
 //
 // usage: node scripts/task-board.mjs <find|status|estimate|comment|list> …
 
@@ -16,8 +18,6 @@ export const OWNER = 'Aurora-Arctic';
 export const PROJECT = '1';
 export const STATUSES = ['Not Started', 'In Progress', 'In Review', 'Done'];
 export const TRACKED_LABEL = 'tracked';
-
-const ISSUE_FIELDS = 'number,title,state,stateReason,url,milestone,labels';
 
 /** A refusal or a `gh` failure: printed as one line, never as a stack. */
 export class BoardError extends Error {}
@@ -40,27 +40,47 @@ export function gh(args, { input } = {}) {
 export const ghJson = (args, options) => JSON.parse(gh(args, options));
 
 // ---------------------------------------------------------------------------
-// Issues
+// Issues — read through REST, one request per hundred against the core
+// budget. The GraphQL listing carried every issue's labels and cost enough
+// that two lookups in a minute tripped GitHub's secondary rate limit.
 
 /** `M2.6 — `: the id plus the separator, so `M2.6` cannot match `M2.60 — …`. */
 export const titlePrefix = (id) => `${id.toUpperCase()} — `;
 
 export const matchesId = (title, id) => title.toUpperCase().startsWith(titlePrefix(id));
 
-const shapeIssue = (issue) => ({
+// REST spells state and reason in lower case; the skills and project-progress
+// read the GraphQL spellings this script has always printed.
+const STATES = { open: 'OPEN', closed: 'CLOSED' };
+const STATE_REASONS = { completed: 'COMPLETED', not_planned: 'NOT_PLANNED', reopened: 'REOPENED' };
+
+/** A REST issue in the shape the skills read. */
+export const shapeIssue = (issue) => ({
   number: issue.number,
   title: issue.title,
-  state: issue.state,
-  stateReason: issue.stateReason ?? null,
-  url: issue.url,
+  state: STATES[issue.state] ?? String(issue.state).toUpperCase(),
+  stateReason: issue.state_reason
+    ? (STATE_REASONS[issue.state_reason] ?? issue.state_reason.toUpperCase())
+    : null,
+  url: issue.html_url,
   milestone: issue.milestone?.title ?? null,
   labels: (issue.labels ?? []).map((label) => label.name),
 });
 
+/**
+ * `--paginate --slurp` answers an array of pages. The issues endpoint lists
+ * pull requests among issues, and a labelled one is not a task.
+ */
+export const shapeTracked = (pages) =>
+  pages
+    .flat()
+    .filter((issue) => !issue.pull_request)
+    .map(shapeIssue);
+
 /** Every issue carrying the `tracked` label, open or closed. */
 export function listTracked() {
-  const args = ['issue', 'list', '--repo', REPO, '--state', 'all', '--limit', '1000'];
-  return ghJson([...args, '--label', TRACKED_LABEL, '--json', ISSUE_FIELDS]).map(shapeIssue);
+  const endpoint = `repos/${REPO}/issues?labels=${TRACKED_LABEL}&state=all&per_page=100`;
+  return shapeTracked(ghJson(['api', '--paginate', '--slurp', endpoint]));
 }
 
 /** The one tracked issue titled `<id> — …`; zero or several is a refusal, never a guess. */
@@ -77,66 +97,98 @@ export function findIssue(id, issues = listTracked()) {
 }
 
 // ---------------------------------------------------------------------------
-// Project
+// Project — one query for the issue's own item, never a listing of every
+// item. It answers the item id, its Status and Estimate, and the Project's
+// field and option ids, read on each run rather than hardcoded: an option
+// recreated in the Project's settings gets a new id, and a stale constant
+// would set nothing while reporting success.
 
-/** The Project's node id, its fields and every item, read once per run. */
-export function loadProject(number = PROJECT) {
-  const scope = [number, '--owner', OWNER, '--format', 'json'];
+const ITEM_QUERY = `
+  query ($owner: String!, $name: String!, $number: Int!) {
+    repository(owner: $owner, name: $name) {
+      issue(number: $number) {
+        projectItems(first: 10) {
+          nodes {
+            id
+            project {
+              id
+              number
+              fields(first: 30) {
+                nodes {
+                  ... on ProjectV2Field { id name }
+                  ... on ProjectV2SingleSelectField { id name options { id name } }
+                }
+              }
+            }
+            status: fieldValueByName(name: "Status") {
+              ... on ProjectV2ItemFieldSingleSelectValue { name }
+            }
+            estimate: fieldValueByName(name: "Estimate") {
+              ... on ProjectV2ItemFieldNumberValue { number }
+            }
+          }
+        }
+      }
+    }
+  }`;
+
+/** This Project's node among an issue's items, reshaped; null when there is none. */
+export function shapeItem(nodes, number = PROJECT) {
+  const node = nodes.find((candidate) => String(candidate.project.number) === String(number));
+  if (!node) return null;
   return {
-    number,
-    id: ghJson(['project', 'view', ...scope]).id,
-    fields: ghJson(['project', 'field-list', ...scope]).fields,
-    items: ghJson(['project', 'item-list', ...scope, '--limit', '1000']).items,
+    id: node.id,
+    projectId: node.project.id,
+    // A field type the query does not spell out answers an empty node.
+    fields: node.project.fields.nodes.filter((field) => field.name),
+    status: node.status?.name ?? null,
+    estimate: node.estimate?.number ?? null,
   };
 }
 
-export function projectField(project, name) {
-  const field = project.fields.find((candidate) => candidate.name === name);
-  if (!field) throw new BoardError(`Project ${project.number} has no "${name}" field.`);
+/** The issue's item on the Project, or null when the auto-add has not placed it. One point. */
+export function readItem(issue, number = PROJECT) {
+  const [owner, name] = REPO.split('/');
+  const query = ['-f', `query=${ITEM_QUERY}`, '-f', `owner=${owner}`, '-f', `name=${name}`];
+  const data = ghJson(['api', 'graphql', ...query, '-F', `number=${issue.number}`]);
+  return shapeItem(data.data.repository.issue.projectItems.nodes, number);
+}
+
+/**
+ * The item, or a refusal. The Project's auto-add workflow places every
+ * tracked issue moments after its creation, and nothing here adds one by
+ * hand: an item the script added would be one the triage filter never saw.
+ */
+export function requireItem(issue, item = readItem(issue)) {
+  if (item) return item;
+  throw new BoardError(
+    `#${issue.number} is not on the Project yet. Its auto-add workflow places a \`${TRACKED_LABEL}\` issue moments after creation; retry then.`,
+  );
+}
+
+export function projectField(item, name) {
+  const field = item.fields.find((candidate) => candidate.name === name);
+  if (!field) throw new BoardError(`Project ${PROJECT} has no "${name}" field.`);
   return field;
 }
 
-/** item-list keys a field's value by the lower-camel form of its name: `status`, `estimate`. */
-const fieldKey = (name) =>
-  name
-    .split(/\s+/)
-    .map((word, i) => (i === 0 ? word.toLowerCase() : word[0].toUpperCase() + word.slice(1)))
-    .join('');
-
-export const itemFor = (project, issue) =>
-  project.items.find((item) => item.content?.url === issue.url) ?? null;
-
-/** A field's value on an item, null when unset or when there is no item. */
-export const itemValue = (item, fieldName) => item?.[fieldKey(fieldName)] ?? null;
-
-/** The issue's Project item, added when absent. */
-export function ensureItem(project, issue) {
-  const existing = itemFor(project, issue);
-  if (existing) return existing;
-  const scope = [project.number, '--owner', OWNER, '--format', 'json'];
-  const added = ghJson(['project', 'item-add', ...scope, '--url', issue.url]);
-  const item = { id: added.id, content: { url: issue.url, number: issue.number } };
-  project.items.push(item);
-  return item;
-}
-
-function editItem(project, item, field, valueArgs) {
-  const args = ['project', 'item-edit', '--id', item.id, '--project-id', project.id];
+function editItem(item, field, valueArgs) {
+  const args = ['project', 'item-edit', '--id', item.id, '--project-id', item.projectId];
   gh([...args, '--field-id', field.id, ...valueArgs]);
 }
 
 /**
- * Moves Status forward. `Done` is the merge's (the Action sets it through the
- * issue closing), so it is refused unless `force` — the migration's flag for
- * tasks that were already done on Asana.
+ * Moves Status forward. `Done` is the merge's — the Action closes the issue
+ * and the Project's Item-closed workflow sets it — so it is refused unless
+ * `force`, the migration's flag for tasks that were already done on Asana.
+ * `item` is read unless given, so a refusal costs no query.
  */
-export function setStatus(project, issue, target, { force = false } = {}) {
+export function setStatus(issue, target, { force = false, item } = {}) {
   if (!STATUSES.includes(target)) {
     throw new BoardError(`Unknown status "${target}"; one of: ${STATUSES.join(', ')}.`);
   }
-  const field = projectField(project, 'Status');
-  const item = ensureItem(project, issue);
-  const from = item[fieldKey(field.name)] ?? null;
+  const current = item ?? requireItem(issue);
+  const from = current.status;
   if (from === target) return { from, to: target, changed: false };
   if (target === 'Done' && !force) {
     throw new BoardError(
@@ -148,24 +200,24 @@ export function setStatus(project, issue, target, { force = false } = {}) {
       `Status moves forward only: "${from}" → "${target}" is a step back. A PR closed without merging goes back to "In Progress" by hand and nothing else.`,
     );
   }
+  const field = projectField(current, 'Status');
   const option = field.options?.find((candidate) => candidate.name === target);
   if (!option) throw new BoardError(`The Status field has no "${target}" option.`);
-  editItem(project, item, field, ['--single-select-option-id', option.id]);
-  item[fieldKey(field.name)] = target;
+  editItem(current, field, ['--single-select-option-id', option.id]);
+  current.status = target;
   return { from, to: target, changed: true };
 }
 
-export function setEstimate(project, issue, hours) {
+export function setEstimate(issue, hours, { item } = {}) {
   const value = Number(hours);
   if (!Number.isFinite(value) || value < 0) {
     throw new BoardError(`An estimate is a number of hours, not "${hours}".`);
   }
-  const field = projectField(project, 'Estimate');
-  const item = ensureItem(project, issue);
-  const from = item[fieldKey(field.name)] ?? null;
+  const current = item ?? requireItem(issue);
+  const from = current.estimate;
   if (from === value) return { from, to: value, changed: false };
-  editItem(project, item, field, ['--number', String(value)]);
-  item[fieldKey(field.name)] = value;
+  editItem(current, projectField(current, 'Estimate'), ['--number', String(value)]);
+  current.estimate = value;
   return { from, to: value, changed: true };
 }
 
@@ -252,20 +304,17 @@ const COMMANDS = {
   find([id]) {
     if (!id) throw new BoardError(USAGE);
     const issue = findIssue(id);
-    const project = loadProject();
-    const item = itemFor(project, issue);
-    const status = item?.[fieldKey(projectField(project, 'Status').name)] ?? null;
-    console.log(JSON.stringify({ ...issue, status }, null, 2));
+    console.log(JSON.stringify({ ...issue, status: readItem(issue)?.status ?? null }, null, 2));
   },
   status([id, target]) {
     if (!id || !target) throw new BoardError(USAGE);
-    const result = setStatus(loadProject(), findIssue(id), target);
+    const result = setStatus(findIssue(id), target);
     const note = result.changed ? '' : ' (already there)';
     console.log(`${id.toUpperCase()}: ${result.from ?? '(unset)'} → ${result.to}${note}`);
   },
   estimate([id, hours]) {
     if (!id || hours === undefined) throw new BoardError(USAGE);
-    const result = setEstimate(loadProject(), findIssue(id), hours);
+    const result = setEstimate(findIssue(id), hours);
     const note = result.changed ? '' : ' (already there)';
     console.log(`${id.toUpperCase()}: ${result.from ?? '(unset)'} → ${result.to}h${note}`);
   },

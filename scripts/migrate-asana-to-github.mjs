@@ -21,18 +21,16 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import {
   BoardError,
+  OWNER,
   PROJECT,
   REPO,
   TRACKED_LABEL,
-  ensureItem,
   findSecret,
   gh,
   ghJson,
-  itemFor,
-  itemValue,
   listTracked,
-  loadProject,
   matchesId,
+  readItem,
   setEstimate,
   setStatus,
 } from './task-board.mjs';
@@ -519,22 +517,26 @@ async function apply(plan, projectNumber, { skipScan }) {
     );
   }
 
-  // Project item, Status and Estimate. `force` because Done is otherwise the merge's.
-  const project = loadProject(String(projectNumber));
+  // Project item, Status and Estimate. `force` because Done is otherwise the
+  // merge's. The Project's auto-add workflow places a tracked issue moments
+  // after creation; a resumed run does not wait on it, so an item still
+  // absent is added here — the one place that adds one by hand.
   for (const issue of plan.issues) {
     const target = numbers.get(issue.id);
     const changes = [];
-    if (!itemFor(project, target)) {
-      await write(() => ensureItem(project, target));
+    let item = readItem(target, String(projectNumber));
+    if (!item) {
+      const scope = [String(projectNumber), '--owner', OWNER, '--url', target.url];
+      await write(() => gh(['project', 'item-add', ...scope]));
+      item = readItem(target, String(projectNumber));
       changes.push('added');
     }
-    const item = itemFor(project, target);
-    if (itemValue(item, 'Status') !== issue.status) {
-      await write(() => setStatus(project, target, issue.status, { force: true }));
+    if (item.status !== issue.status) {
+      await write(() => setStatus(target, issue.status, { force: true, item }));
       changes.push(`status ${issue.status}`);
     }
-    if (issue.estimate !== null && itemValue(item, 'Estimate') !== issue.estimate) {
-      await write(() => setEstimate(project, target, issue.estimate));
+    if (issue.estimate !== null && item.estimate !== issue.estimate) {
+      await write(() => setEstimate(target, issue.estimate, { item }));
       changes.push(`estimate ${issue.estimate}h`);
     }
     if (changes.length) counts.items++;
@@ -637,13 +639,13 @@ function verify(plan, projectNumber) {
     plan.milestones.length,
     plan.milestones.filter((m) => milestones.some((g) => g.title === m.name)).length,
   );
-  const project = loadProject(String(projectNumber));
-  compare(
-    'project items',
-    plan.issues.length,
-    [...byId.values()].filter((r) => project.items.some((item) => item.content?.url === r.html_url))
-      .length,
-  );
+  // One query per issue rather than a listing of every item: the listing is
+  // the burst that trips the secondary rate limit.
+  let placed = 0;
+  for (const row of byId.values()) {
+    if (readItem({ number: row.number }, String(projectNumber))) placed++;
+  }
+  compare('project items', plan.issues.length, placed);
   const missing = plan.issues.filter((i) => !byId.has(i.id)).map((i) => i.id);
   if (missing.length) console.log(`missing: ${missing.join(', ')}`);
   return failures.length;
