@@ -41,7 +41,7 @@
     "typecheck"
   ],
   "dependencies": {
-    "@better-auth/core": "^1.7.5",
+    "@better-auth/core": "^1.7.6",
     "@escape.tech/graphql-armor": "^3.2.0",
     "@graphql-typed-document-node/core": "^3.2.0",
     "@graphql-yoga/plugin-disable-introspection": "^2.25.1",
@@ -52,7 +52,7 @@
     "@react-email/components": "^1.0.12",
     "@tanstack/react-query": "^5.104.0",
     "altair-static": "^8.5.9",
-    "better-auth": "^1.7.5",
+    "better-auth": "^1.7.6",
     "dataloader": "^2.2.3",
     "drizzle-orm": "^0.45.2",
     "graphql": "^16.14.2",
