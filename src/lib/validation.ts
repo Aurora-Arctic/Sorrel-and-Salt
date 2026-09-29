@@ -1,9 +1,17 @@
-import type { ZodType, z } from 'zod';
+import { type ZodType, z } from 'zod';
 import { ValidationError, type ValidationIssue } from './errors';
 
-// The Zod half of MB.43's ValidationError. Kept out of errors.ts so that file
-// stays schema-library-free, and out of any one module because every module's
-// schemas raise the same shape (claude-docs/validation.md).
+// The Zod half of MB.43's ValidationError, and the id shape every module
+// checks. Kept out of errors.ts so that file stays schema-library-free, and out
+// of any one module because every module's schemas raise the same shape
+// (claude-docs/validation.md).
+
+/**
+ * An id as Postgres's `uuid` type takes it, any version and variant: the
+ * seed's fixture ids are written by hand, and `z.uuid()` would refuse them.
+ * Compared against a `uuid` column, anything else is a driver error.
+ */
+export const RowId = z.guid();
 
 /** One issue per Zod issue, path and message kept as Zod reported them. */
 export function toValidationIssues(error: z.ZodError): ValidationIssue[] {

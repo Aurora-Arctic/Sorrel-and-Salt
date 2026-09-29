@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { RowId } from '../../../lib/validation';
 
 // The compendium list's filter as the `compendium` query receives it, parsed
 // by the service because the browser is not the only caller. Zod only, like
@@ -11,12 +12,6 @@ const optionalText = z
   .trim()
   .nullish()
   .transform((value) => (value ? value : undefined));
-
-/**
- * An id as Postgres's `uuid` type takes it, any version and variant: the
- * seed's fixture ids are written by hand, and `z.uuid()` would refuse them.
- */
-export const RowId = z.guid();
 
 /**
  * The shortest term that searches. One character is a trigram or two that
