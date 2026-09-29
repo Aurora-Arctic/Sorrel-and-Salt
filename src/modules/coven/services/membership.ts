@@ -3,6 +3,7 @@ import { cache } from 'react';
 import { findWorkspaceRole } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import { RowId } from '../../../lib/validation';
 import { type WorkspacePermission, type WorkspaceRole, rolePermits } from './access-control';
 
 // CLAUDE.md rule 5's two layers live here: `assertMembership` is the check,
@@ -48,8 +49,9 @@ export type Membership = {
  * A site admin gets no bypass: admins curate the compendium and reach no
  * workspace (CLAUDE.md's domain invariants), so `session.role` is not read.
  *
- * @throws {Forbidden} the user holds no live membership of `workspaceId`, or
- * holds one whose role does not carry `permission`.
+ * @throws {Forbidden} the user holds no live membership of `workspaceId` —
+ * an id that is not a uuid included — or holds one whose role does not carry
+ * `permission`.
  */
 export async function assertMembership(
   session: Session,
@@ -62,6 +64,11 @@ export async function assertMembership(
   if (Object.keys(permission).length === 0) {
     throw new Error('assertMembership requires a permission to check');
   }
+
+  // An id is whatever string the client sent. One that cannot name a
+  // workspace is refused as one the user is not in, rather than asked of the
+  // database, where it would be a driver error.
+  if (!RowId.safeParse(workspaceId).success) throw new Forbidden();
 
   const role = await workspaceRole(session.userId, workspaceId);
 

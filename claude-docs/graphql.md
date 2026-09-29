@@ -501,6 +501,57 @@ type IngredientFormGroup {
   `MAX_COST`, since a bare list multiplies its selection by 10, and is refused;
   the chip-decorated list pages at 25 or 50 ("Protections").
 
+### The workspace ingredient mutations
+
+Stories 15 and 34's writes (M8.8), registered by `ingredients` over the
+services in `services/workspace-ingredients.ts` ([`db.md`](db.md), "Workspace
+ingredients"):
+
+```graphql
+type Mutation {
+  createWorkspaceIngredient(workspaceId: ID!, input: IngredientInput!): Ingredient!
+  updateIngredient(workspaceId: ID!, id: ID!, input: IngredientUpdateInput!): Ingredient!
+}
+```
+
+- **The coven is an argument, and neither input can name a tier or a
+  stamp.** Neither input type declares `workspaceId` or an audit column, and
+  GraphQL refuses a field its type does not declare before any resolver runs. The
+  service asks the proof for the argument's coven, `{ ingredient: ['create'] }`
+  or `['update']`, which owners and members hold and viewers, site admins and
+  non-members do not. Both mutations carry the `signedIn` scope. A coven id
+  that is not a uuid answers `FORBIDDEN`, as it does at every field taking a
+  `workspaceId` ([`db.md`](db.md), "What the check asks"), and an ingredient
+  id that is not one answers `NOT_FOUND`: the same answers a real id the
+  caller cannot reach gets, never a masked driver error.
+- **`IngredientInput` is the create's.** Only `name` is required, so story
+  29's one-field stub is `{ name }`. With no formal name, a `nomenclature`
+  left out or sent as `null` becomes `none`.
+- **`IngredientUpdateInput` is the whole ingredient, and replaces the row.**
+  Every field is non-null, so leaving one out is a schema error rather than a
+  silent clear. GraphQL has no field that is required and also nullable, so a
+  caller clears a text field with `""` and a list with `[]`. The shared Zod
+  schema takes both as absent, as it takes a blank form field. `element` is the
+  one nullable field, because an enum has no empty value to send: `null`
+  clears it, and so does leaving it out. The type's SDL description states the
+  rule.
+- **The answer is the entity as a fresh read gives it.** It carries every
+  field, and its `audit` is stamped from the session. `folkNames` and
+  `categories` come through the loaders, after the write has committed. A
+  client reconciles its cache from the answer without a refetch.
+  `updateIngredient` first clears the entry from `folkNamesByIngredient`. Root
+  mutation fields run in turn within one request, so an earlier field may
+  already have loaded the folk names this write replaced.
+- **A refusal is an error, never a payload** ("Errors" below). A Zod failure
+  is `VALIDATION`, with one `fieldErrors` entry per issue whose path is in the
+  input's own shape, such as `['folkNames', 1]`. A collision is `VALIDATION` on
+  the field that caused it. Either way `data` is null, and the transaction
+  wrote nothing, folk names included.
+
+`tests/modules/ingredients/graphql/workspace-ingredients.test.ts` runs both
+mutations through Yoga with the route's `maskedErrors`, so each refusal is
+asserted as the browser receives it.
+
 ### Auth scopes: the second check
 
 `@pothos/plugin-scope-auth` gives the schema three scopes, all read off the

@@ -1,4 +1,5 @@
 import 'server-only';
+import type { z } from 'zod';
 import {
   type AuditWriter,
   findManyOfIngredients,
@@ -9,7 +10,7 @@ import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { ingredientSlug } from '../../../lib/slugify';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { parseInput } from '../../../lib/validation';
+import { RowId, parseInput } from '../../../lib/validation';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
 import { ingredients } from '../schema/ingredients';
 import { LocalIngredientInput } from '../validation/ingredient';
@@ -21,6 +22,9 @@ import { type Membership, assertMembership } from '@/modules/coven';
 // (claude-docs/db.md, "Workspace ingredients").
 
 type IngredientRow = typeof ingredients.$inferSelect;
+
+/** What the service parses: the form's values, or the mutation's input. */
+type IngredientValues = z.input<typeof LocalIngredientInput>;
 
 /**
  * Creates an ingredient in this coven, with its folk names, in one
@@ -34,7 +38,7 @@ type IngredientRow = typeof ingredients.$inferSelect;
 export async function createWorkspaceIngredient(
   session: Session,
   workspaceId: string,
-  input: LocalIngredientInput,
+  input: IngredientValues,
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['create'] });
   const { folkNames, ...fields } = parseInput(LocalIngredientInput, input);
@@ -61,16 +65,18 @@ export async function createWorkspaceIngredient(
  * @throws {ValidationError} the input breaks `LocalIngredientInput`, or
  * collides with another of the coven's ingredients.
  * @throws {NotFound} no such ingredient in this coven — the compendium's and
- * other covens' included.
+ * other covens' included, and an id that is not one.
  */
 export async function updateWorkspaceIngredient(
   session: Session,
   workspaceId: string,
   id: string,
-  input: LocalIngredientInput,
+  input: IngredientValues,
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['update'] });
   const { folkNames, ...fields } = parseInput(LocalIngredientInput, input);
+  // An id that is not a uuid names nothing, and would be a driver error at the comparison.
+  if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
 
   return withAudit(session, async (write) => {
     const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, columnsOf(fields));

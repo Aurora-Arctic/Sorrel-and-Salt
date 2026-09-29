@@ -2417,13 +2417,15 @@ Both mutations delegating to services, with Zod validation and audit stamping. R
 
 **Decided while building M8.2:** `updateWorkspaceIngredient` replaces the whole row. Its input is the whole ingredient as IngredientForm submits it, so a field left out is cleared (claude-docs/db.md, "Workspace ingredients"). The update mutation's input therefore declares every field required but nullable: a caller clears a field by sending `null`, and leaving one out is a schema error rather than a silent clear.
 
+**Amended while building M8.8:** GraphQL has no field that is required and also nullable, since a nullable input field may always be left out. So `IngredientUpdateInput` declares every field non-null, and a caller clears a text field with `""` and a list with `[]`, which the shared Zod schema already takes as absent, as it takes a blank form field. `element` is the one nullable field, since an enum has no empty value, and leaving it out clears it. Both mutations take the coven as a `workspaceId` argument, which §7's sketch had left out (claude-docs/graphql.md, "The workspace ingredient mutations").
+
 _Acceptance criteria:_
 
 - A Zod failure leaves as MB.43's `VALIDATION` error carrying `fieldErrors`, one entry per issue with its path preserved — the shape M5.9's form reads back into its own error elements
 - Audit columns stamped from the session
 - Returned entity lets the client update without a refetch
 - Folk-name writes are transactional with the ingredient write, not a separate round trip
-- Every field of the update mutation's input is required and nullable: omitting one is refused by the schema, and `null` clears it
+- Every field of the update mutation's input but `element` is required: omitting one is refused by the schema, `""` or `[]` clears it, and `null` or omission clears `element`
 - Viewers are rejected
 
 ### Search UI

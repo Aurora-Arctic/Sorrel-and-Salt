@@ -408,6 +408,13 @@ describe('updateWorkspaceIngredient', () => {
     expect((await rowOf(id)).workspace_id).toBe(WORKSPACE_W_ID);
   });
 
+  // Asked of the database, an id that is not a uuid is a driver error, not a miss.
+  it('answers an id that is not a uuid as NotFound', async () => {
+    await expect(
+      updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, 'not-an-ingredient', inputOf(local())),
+    ).rejects.toThrow(NotFound);
+  });
+
   it('refuses invalid input with the form’s own issues, changing nothing', async () => {
     const id = await seed(local());
 

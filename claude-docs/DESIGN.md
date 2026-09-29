@@ -690,8 +690,8 @@ type Query {
 # type pairing an entity with a userErrors list. See Errors above.
 type Mutation {
   createWorkspace(input: WorkspaceInput!): Workspace! # gated on canCreateWorkspace or admin
-  createWorkspaceIngredient(input: IngredientInput!): Ingredient!
-  updateIngredient(id: ID!, input: IngredientInput!): Ingredient!
+  createWorkspaceIngredient(workspaceId: ID!, input: IngredientInput!): Ingredient!
+  updateIngredient(workspaceId: ID!, id: ID!, input: IngredientUpdateInput!): Ingredient! # replaces the row: every field but element non-null, "" or [] clears
   addIngredientToWorkspace(workspaceId: ID!, ingredientId: ID!, input: StockInput!): InventoryItem!
   createSpell(workspaceId: ID!, input: SpellInput!): Spell!
   setSpellVisibility(id: ID!, visibility: SpellVisibility!): Spell! # private -> workspace only

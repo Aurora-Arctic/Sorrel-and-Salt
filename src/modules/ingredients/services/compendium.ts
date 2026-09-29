@@ -8,13 +8,9 @@ import {
 import { Forbidden, NotFound } from '../../../lib/errors';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
-import { parseInput } from '../../../lib/validation';
+import { RowId, parseInput } from '../../../lib/validation';
 import type { ingredients } from '../schema/ingredients';
-import {
-  CompendiumFilter,
-  type CompendiumFilterInput,
-  RowId,
-} from '../validation/compendium-filter';
+import { CompendiumFilter, type CompendiumFilterInput } from '../validation/compendium-filter';
 import { type Membership, assertMembership } from '@/modules/coven';
 
 // The compendium's reads: the public surface (MB.80), so the list takes no
@@ -71,8 +67,7 @@ export async function getIngredient(
 ): Promise<IngredientRow> {
   const memberships: Membership[] = [];
   if (workspaceId != null) {
-    // A coven that cannot exist is one the caller is not in.
-    if (!session || !RowId.safeParse(workspaceId).success) throw new Forbidden();
+    if (!session) throw new Forbidden();
     memberships.push(await assertMembership(session, workspaceId, { ingredient: ['read'] }));
   }
 

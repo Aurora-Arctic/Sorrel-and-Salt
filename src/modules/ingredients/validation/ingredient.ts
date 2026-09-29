@@ -29,12 +29,16 @@ const optionalText = z
 
 /**
  * Blank entries are kept through the cross-field rules — an issue's index
- * must count the rows the form sent — and dropped by `dropBlankEntries` after.
+ * must count the rows the form sent — and dropped by `dropBlankEntries` after,
+ * which takes a list left with none as absent, as a blank text field is.
  */
 const textList = z.array(z.string().trim()).nullish();
 
-const withoutBlanks = (list: string[] | null | undefined) =>
-  list == null ? list : list.filter((entry) => entry !== '');
+function withoutBlanks(list: string[] | null | undefined) {
+  if (list == null) return list;
+  const entries = list.filter((entry) => entry !== '');
+  return entries.length > 0 ? entries : null;
+}
 
 const dropBlankEntries = <T extends Lists>(value: T): T => ({
   ...value,
@@ -137,11 +141,11 @@ export const CompendiumIngredientInput = z
 
 /**
  * The workspace tier: only `name` is required. With no formal name and no
- * kind, `nomenclature` is `none`, so story 29's one-field stub saves; a formal
- * name without a kind is asked about rather than guessed.
+ * kind, absent or null, `nomenclature` is `none`, so story 29's one-field
+ * stub saves; a formal name without a kind is asked about rather than guessed.
  */
 export const LocalIngredientInput = z
-  .object({ ...fields, nomenclature: nomenclature.optional() })
+  .object({ ...fields, nomenclature: nomenclature.nullish() })
   .transform((value, ctx) => {
     if (value.nomenclature) return { ...value, nomenclature: value.nomenclature };
     if (value.canonicalName == null) return { ...value, nomenclature: 'none' as const };
