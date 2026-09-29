@@ -49,6 +49,16 @@ export interface PageRequest {
  */
 export type PageEntry<T, Edge extends object = {}> = { cursor: Cursor; node: T } & Edge;
 
+/**
+ * A list's size under its filter, and how many of its rows come before a
+ * page's first — null on an empty page, which has no first row. Counted from
+ * a key and never used to seek, so it labels a page and never finds one.
+ */
+export interface PageCount {
+  totalCount: number;
+  countBefore: number | null;
+}
+
 export interface Page<T, Edge extends object = {}> {
   edges: ({ cursor: string; node: T } & Edge)[];
   pageInfo: {
