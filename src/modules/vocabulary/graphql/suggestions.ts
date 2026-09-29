@@ -29,11 +29,11 @@ for (const [name, suggest] of Object.entries(FIELDS)) {
       type: CorrespondenceSuggestionRef,
       args: {
         workspaceId: t.arg.id({ required: true }),
-        term: t.arg.string({ required: false }),
+        query: t.arg.string({ required: false }),
       },
-      resolve: (_query, { workspaceId, term }, page, { session }) => {
+      resolve: (_root, { workspaceId, query }, page, { session }) => {
         if (!session) throw new Forbidden();
-        return suggest(session, workspaceId, term ?? '', page);
+        return suggest(session, workspaceId, query ?? '', page);
       },
     }),
   );
@@ -62,11 +62,11 @@ builder.queryField('formSuggestions', (t) =>
     type: FormSuggestionRef,
     args: {
       workspaceId: t.arg.id({ required: true }),
-      term: t.arg.string({ required: false }),
+      query: t.arg.string({ required: false }),
     },
-    resolve: (_query, { workspaceId, term }, page, { session }) => {
+    resolve: (_root, { workspaceId, query }, page, { session }) => {
       if (!session) throw new Forbidden();
-      return suggestForms(session, workspaceId, term ?? '', page);
+      return suggestForms(session, workspaceId, query ?? '', page);
     },
   }),
 );

@@ -63,8 +63,8 @@ async function similarity(a: string, b: string): Promise<number> {
   return Number(row.score);
 }
 
-async function wordSimilarity(term: string, text: string): Promise<number> {
-  const [row] = await sql`select word_similarity(${term}, ${text}) as score`;
+async function wordSimilarity(query: string, text: string): Promise<number> {
+  const [row] = await sql`select word_similarity(${query}, ${text}) as score`;
   return Number(row.score);
 }
 
@@ -75,20 +75,20 @@ async function descriptionOf(form: string): Promise<string> {
 
 function pageOf(
   session: Session,
-  term: string,
+  query: string,
   args: ConnectionArgs = {},
   workspaceId = WORKSPACE_W_ID,
 ): Promise<Page<FormSuggestion>> {
-  return resolvePage(args, (request) => suggestForms(session, workspaceId, term, request));
+  return resolvePage(args, (request) => suggestForms(session, workspaceId, query, request));
 }
 
 /** Every suggestion in one page — the lists here are far shorter than the maximum. */
 async function all(
   session: Session,
-  term: string,
+  query: string,
   workspaceId = WORKSPACE_W_ID,
 ): Promise<FormSuggestion[]> {
-  const page = await pageOf(session, term, { first: 100 }, workspaceId);
+  const page = await pageOf(session, query, { first: 100 }, workspaceId);
   expect(page.pageInfo.hasNextPage).toBe(false);
   return page.edges.map((edge) => edge.node);
 }
@@ -151,8 +151,8 @@ describe('suggestForms', () => {
       expect(await similarity('salve', await descriptionOf('Ointment'))).toBeLessThan(0.4);
       expect(await wordSimilarity('salve', await descriptionOf('Ointment'))).toBe(1);
 
-      for (const term of ['salve', 'balm']) {
-        expect(await all(asUser(B), term)).toEqual([
+      for (const query of ['salve', 'balm']) {
+        expect(await all(asUser(B), query)).toEqual([
           expect.objectContaining({ value: 'Ointment', group: 'Substance', curated: true }),
         ]);
       }
@@ -308,8 +308,8 @@ describe('suggestForms', () => {
     });
   });
 
-  describe('the term', () => {
-    it('treats whitespace as no term, and offers the whole live vocabulary', async () => {
+  describe('the query', () => {
+    it('treats whitespace as no query, and offers the whole live vocabulary', async () => {
       const [{ count }] = await sql`
         select count(*)::int as count from ingredient_forms where deleted_at is null`;
 
@@ -319,7 +319,7 @@ describe('suggestForms', () => {
       expect(suggestions.every((s) => s.curated && s.group)).toBe(true);
     });
 
-    it('offers nothing for a term matching nothing', async () => {
+    it('offers nothing for a query matching nothing', async () => {
       expect(await all(asUser(B), 'xqzv')).toEqual([]);
     });
   });

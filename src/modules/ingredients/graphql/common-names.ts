@@ -17,11 +17,11 @@ builder.queryField('commonNameSuggestions', (t) =>
     type: CommonNameSuggestionRef,
     args: {
       workspaceId: t.arg.id({ required: true }),
-      term: t.arg.string({ required: false }),
+      query: t.arg.string({ required: false }),
     },
-    resolve: (_query, { workspaceId, term }, page, { session }) => {
+    resolve: (_root, { workspaceId, query }, page, { session }) => {
       if (!session) throw new Forbidden();
-      return suggestCommonNames(session, workspaceId, term ?? '', page);
+      return suggestCommonNames(session, workspaceId, query ?? '', page);
     },
   }),
 );

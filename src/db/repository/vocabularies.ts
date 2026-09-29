@@ -66,13 +66,13 @@ export interface FormSuggestion extends VocabularySuggestion {
 
 /**
  * One page of what a member's autofill offers for `vocabulary`'s column:
- * the live curated rows matching `term`, name matches before description
+ * the live curated rows matching `query`, name matches before description
  * matches, then the values written on live ingredients in the compendium or
  * the proof's workspace that match it and fold to no live row's name. Each
- * tier is alphabetical, case-folded. A blank `term` matches everything.
+ * tier is alphabetical, case-folded. A blank `query` matches everything.
  *
  * A name or value matches by `%` or `<%` and a description by `<%` alone, so
- * a term finds a word inside a description and completes a typed prefix
+ * a query finds a word inside a description and completes a typed prefix
  * (claude-docs/db.md, "The member's autofill").
  *
  * A form suggestion also carries its group and the in-scope ingredients whose
@@ -81,23 +81,23 @@ export interface FormSuggestion extends VocabularySuggestion {
 export function findVocabularySuggestions(
   membership: Membership,
   vocabulary: typeof ingredientForms,
-  term: string,
+  query: string,
   page: PageRequest,
 ): Promise<PageEntry<FormSuggestion>[]>;
 export function findVocabularySuggestions(
   membership: Membership,
   vocabulary: typeof planets | typeof zodiacSigns,
-  term: string,
+  query: string,
   page: PageRequest,
 ): Promise<PageEntry<VocabularySuggestion>[]>;
 export async function findVocabularySuggestions(
   membership: Membership,
   vocabulary: SuggestingVocabulary,
-  term: string,
+  query: string,
   page: PageRequest,
 ): Promise<PageEntry<VocabularySuggestion | FormSuggestion>[]> {
   const inUse = IN_USE_COLUMN[getTableName(vocabulary)];
-  const matches = (text: AnyPgColumn) => sql`(${text} % ${term} or ${term} <% ${text})`;
+  const matches = (text: AnyPgColumn) => sql`(${text} % ${query} or ${query} <% ${text})`;
   const byName = matches(vocabulary.name);
   const fold = sql`lower(btrim(${inUse}))`;
   const inScope = and(
@@ -119,12 +119,12 @@ export async function findVocabularySuggestions(
   // Tier literals are written into the text: a bound 0 and 1 would type the
   // `case` as text, and the union would refuse to stack it on the integer 2.
   const curated = sql`
-    select ${term ? sql`case when ${byName} then 0 else 1 end` : sql`0`} as tier,
+    select ${query ? sql`case when ${byName} then 0 else 1 end` : sql`0`} as tier,
       ${vocabulary.name} as value, ${vocabulary.description} as description,
       ${grouped ? ingredientFormGroups.name : sql`null`} as group_name,
       lower(${vocabulary.name}) as fold, ${tiebreak} as tiebreak
     from ${curatedRows}
-    where ${and(live, term ? or(byName, sql`${term} <% ${vocabulary.description}`) : undefined)}`;
+    where ${and(live, query ? or(byName, sql`${query} <% ${vocabulary.description}`) : undefined)}`;
 
   // The spelling most entries use stands for the group; `mode()` breaks a tie
   // by the order it is given, so the choice is stable.
@@ -134,7 +134,7 @@ export async function findVocabularySuggestions(
     from ${ingredients}
     where ${and(
       inScope,
-      term ? matches(inUse) : undefined,
+      query ? matches(inUse) : undefined,
       notInArray(fold, sql`(select lower(${vocabulary.name}) from ${curatedRows} where ${live})`),
     )}
     group by ${fold}`;

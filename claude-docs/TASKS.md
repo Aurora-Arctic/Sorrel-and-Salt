@@ -2368,7 +2368,7 @@ Add both queries with search, categoryIds and `form` arguments, delegating to se
 _Acceptance criteria:_
 
 - Both queries return correct results for each argument combination
-- `search` matches the display name, the formal name and live folk names by word similarity (`<%`) at 0.5, case- and accent-insensitively — a prefix and a transposed pair find their entry — and each predicate reaches a trigram index; a blank search is no filter
+- `query` matches the display name, the formal name and live folk names by word similarity (`<%`) at 0.5, case- and accent-insensitively — a prefix and a transposed pair find their entry — and each predicate reaches a trigram index; a blank search is no filter
 - `categoryIds` is AND — an entry carries every id listed — and an empty list is no filter
 - Resolvers contain no database access
 - `Ingredient` exposes `canonicalName`, `nomenclature` and `folkNames`
@@ -2446,16 +2446,16 @@ _Acceptance criteria:_
 
 _Story 21 — As a workspace member, I want to type a name or folk name and see the list narrow, so that finding something is faster than scrolling._
 
-The search component's text input, debounced, refetching the list query — `compendium` (M8.5), and `workspaceIngredients` once M9.4 lands — with its `search` argument. The matching is the query's, in SQL: name, folk names and the formal name, case- and accent-folded, because the browser never holds more than a page (M8.4, retired). Shared later by compendium, workspace ingredients and spell builder.
+The search component's text input, debounced, refetching the list query — `compendium` (M8.5), and `workspaceIngredients` once M9.4 lands — with its `query` argument. The matching is the field's, in SQL: name, folk names and the formal name, case- and accent-folded, because the browser never holds more than a page (M8.4, retired). Shared later by compendium, workspace ingredients and spell builder.
 
-On the compendium the input is a typeahead. The debounced term fetches `compendium(search:, first: 25)` into a dropdown, best match first (MB.104), and the dropdown follows no cursor: its top 25 is the first page of the ranked search, not a query of its own, so rule 8 stands and the dropdown is always what "See all" opens on. Picking a row opens its entry; Enter, or a "See all results" link shown when `pageInfo.hasNextPage` is true, applies `search` to the paged list, which numbers its pages (MB.105). The workspace ingredients and spell builder consumers keep narrowing their list by `search` until their own task says otherwise.
+On the compendium the input is a typeahead. The debounced query fetches `compendium(query:, first: 25)` into a dropdown, best match first (MB.104), and the dropdown follows no cursor: its top 25 is the first page of the ranked search, not a query of its own, so rule 8 stands and the dropdown is always what "See all" opens on. Picking a row opens its entry; Enter, or a "See all results" link shown when `pageInfo.hasNextPage` is true, applies `query` to the paged list, which numbers its pages (MB.105). The workspace ingredients and spell builder consumers keep narrowing their list by `query` until their own task says otherwise.
 
 _Acceptance criteria:_
 
 - Typing refetches after the debounce, not on every keystroke
-- Folk names and the formal name match, through the query's `search`
+- Folk names and the formal name match, through the field's `query`
 - On the compendium, the dropdown shows at most 25 rows, best first, and never requests a second page
-- "See all results" appears only when `hasNextPage` is true; it and Enter apply `search` to the paged list, and picking a row opens its entry
+- "See all results" appears only when `hasNextPage` is true; it and Enter apply `query` to the paged list, and picking a row opens its entry
 - Debounce tested with fake timers
 - Clear control resets the query
 
@@ -3590,6 +3590,8 @@ _Acceptance criteria:_
 _Story 16 — As a workspace member, I want the duplicate check available from the client, so that the form can warn me as I type._
 
 M4.7 builds the service; M5.10's debounced client lookup needs it exposed through GraphQL. Without this field M5.10 has nothing to call.
+
+**Decided while building:** the field is `possibleDuplicates(workspaceId, name, first, after)`, a connection of `Ingredient`. M4.7's finder returned a fixed first 25 rows, so to page it through the helper it becomes a keyset page keyed `[-score, name]`. A keyset read gains `similarityMatch`, which sets the same 0.4 constant a similarity read does, so there is still one threshold. Each edge carries its `score`, 0.4 to 1, so M5.10 can tell an exact match from a near miss (claude-docs/graphql.md, "`possibleDuplicates`"). Riding along: the text argument of `compendium` and the four autocompletes, `search` on one and `term` on the rest, is renamed `query` on all five and through the code beneath them, while this field keeps `name` (claude-docs/graphql.md, "The schema").
 
 _Acceptance criteria:_
 
@@ -5513,7 +5515,7 @@ _Acceptance criteria:_
 
 _Story 21 — As a workspace member, I want the closest match first when I search, so that a typo or a prefix finds what I meant without scrolling._
 
-M8.5's `compendium(search:)` matches by word similarity at 0.5 but pages the matches alphabetically, because the keyset helper sorts on one stored column and a score is computed per term. This task teaches the helper a list of sort parts and pages a search by `(score DESC, name ASC, id ASC)`, keeping rule 8 whole — never a capped top-N, which would leave matches past the cap unreachable and give a search a different shape from a browse, and never pg_trgm's `<<->` nearest-neighbour order, which needs GiST, orders by one text where the score is the best of three, and cannot resume after a cursor. Each edge of `QueryCompendiumConnection` carries `score: Float`, null on an unranked list. A term shorter than two characters is treated as absent by the service; the finder stays callable with one.
+M8.5's `compendium(query:)` matches by word similarity at 0.5 but pages the matches alphabetically, because the keyset helper sorts on one stored column and a score is computed per query. This task teaches the helper a list of sort parts and pages a search by `(score DESC, name ASC, id ASC)`, keeping rule 8 whole — never a capped top-N, which would leave matches past the cap unreachable and give a search a different shape from a browse, and never pg_trgm's `<<->` nearest-neighbour order, which needs GiST, orders by one text where the score is the best of three, and cannot resume after a cursor. Each edge of `QueryCompendiumConnection` carries `score: Float`, null on an unranked list. A query shorter than two characters is treated as absent by the service; the finder stays callable with one.
 
 It is sized past one sitting because the mechanism and its one adopter land together. The cursor's key becomes an array, `{k: [...], i}`, which reaches every list — `readSuggestionPage`'s hand-rolled `tier:fold` key becomes a two-part key and drops its regex. `pagedConnection` gains edge fields, and `resolvePage` copies what an entry carries beside `cursor` and `node` onto its edge. The score is negated so one ascending row comparison serves, as `real`, whose shortest-exact text round-trips through the cursor unchanged (`1 - score` would promote to `double precision`). It is computed inside the search's `UNION ALL` arms, where the GIN recheck already runs `word_similarity`, and joined back as `max(score) … group by id` — a plain column that the order and the page bound both read, rather than a `greatest(…)` with a correlated folk-name subquery, which a page bound would evaluate against every compendium row. An `EXPLAIN ANALYZE` test over ~20,000 rows shows the ranked plan, pages one and two, still starting from the expression indexes. M8.14 declares its `(lower(name), canonical_key, id)` parts on the same mechanism rather than building one.
 
@@ -5521,7 +5523,7 @@ _Acceptance criteria:_
 
 - A search pages best match first, `(score DESC, name ASC, id ASC)` — ties on score by name then id — and a walk across a tie neither loses nor repeats a row, forwards or backwards
 - `edges { score }` is the row's word similarity on a search and `null` without one; the SDL snapshot and `src/gql/` are regenerated
-- A one-character term is no filter and no ranking, asserted at the service (the finder sees `search: undefined`) and through the query
+- A one-character query is no filter and no ranking, asserted at the service (the finder sees `query: undefined`) and through the query
 - The keyset helper takes a list of sort parts, each a column or an expression with its cast type, all ascending; a cursor whose key has the wrong number of parts is `InvalidCursor`; single-column callers are unchanged in behaviour; `tests/db/pagination.test.ts` walks a compound, computed key with a tie
 - The ranked query, on its first page and after a cursor, starts from `ingredients_unaccent_trgm` and `ingredient_folk_names_unaccent_trgm` under `enable_seqscan = off` over ~20,000 rows with no `SubPlan`, and the test prints the ranked and unranked timings
 - `claude-docs/graphql.md` ("Pagination", the compendium section), `claude-docs/db.md` ("Keyset pages", "The compendium read") and DESIGN.md §7 and §14 describe the compound key and the score
@@ -5536,7 +5538,7 @@ M8.18's pager can offer Next and Previous and nothing more: the compendium conne
 
 _Acceptance criteria:_
 
-- `totalCount` equals the rows collected by walking every page — unfiltered, by category, by form, and on a search whose term is word-similar between 0.5 and 0.6 — and excludes soft-deleted and workspace rows
+- `totalCount` equals the rows collected by walking every page — unfiltered, by category, by form, and on a search whose query is word-similar between 0.5 and 0.6 — and excludes soft-deleted and workspace rows
 - `countBefore` is `(n − 1) × size` on page n, walked forwards and backwards across a score tie, and null on an empty page
 - Selecting neither field runs no count; selecting both runs one
 - A signed-out query reads both fields

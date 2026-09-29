@@ -7,10 +7,10 @@ import { assertMembership } from '@/modules/coven';
 export type { CommonNameSuggestion };
 
 /**
- * What the common-name field offers as `term` is typed: display names and
+ * What the common-name field offers as `query` is typed: display names and
  * folk names already in use in the compendium or this workspace, each naming
  * the ingredients that answer to it. Picking one links nothing — the string is
- * written into the ingredient's own folk-name row. A blank term offers all.
+ * written into the ingredient's own folk-name row. A blank query offers all.
  *
  * Asks only `ingredient: ['read']`: every name it can return is one a reader
  * of this workspace could already list.
@@ -20,9 +20,9 @@ export type { CommonNameSuggestion };
 export async function suggestCommonNames(
   session: Session,
   workspaceId: string,
-  term: string,
+  query: string,
   page: PageRequest,
 ): Promise<PageEntry<CommonNameSuggestion>[]> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
-  return findCommonNameSuggestions(membership, term.trim(), page);
+  return findCommonNameSuggestions(membership, query.trim(), page);
 }

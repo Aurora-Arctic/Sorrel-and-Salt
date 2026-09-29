@@ -37,8 +37,8 @@ function run(
 ): Promise<ExecutionResult<{ commonNameSuggestions: Connection }>> {
   return graphql({
     schema,
-    source: `query ($workspaceId: ID!, $term: String, $first: Int, $after: String) {
-      commonNameSuggestions(workspaceId: $workspaceId, term: $term, first: $first, after: $after) {
+    source: `query ($workspaceId: ID!, $query: String, $first: Int, $after: String) {
+      commonNameSuggestions(workspaceId: $workspaceId, query: $query, first: $first, after: $after) {
         edges { cursor node { value claimants { name canonicalName } } }
         pageInfo { hasNextPage endCursor }
       }
@@ -74,7 +74,7 @@ describe('commonNameSuggestions', () => {
   });
 
   it('is refused signed out, before the service is reached', async () => {
-    const result = await run(null, { term: 'testwort' });
+    const result = await run(null, { query: 'testwort' });
 
     expect(result.data).toBeNull();
     expect(result.errors?.[0]?.path).toEqual(['commonNameSuggestions']);
@@ -85,7 +85,7 @@ describe('commonNameSuggestions', () => {
     // Why it could have succeeded: D is signed in and a member elsewhere.
     expect(asUser(D).userId).toBe(D.id);
 
-    const result = await run(asUser(D), { term: 'testwort' });
+    const result = await run(asUser(D), { query: 'testwort' });
 
     expect(result.data).toBeNull();
     expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);

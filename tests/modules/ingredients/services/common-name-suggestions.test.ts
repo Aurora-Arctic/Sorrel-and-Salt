@@ -34,20 +34,20 @@ function addIngredient(entry: Overrides<IngredientFixture>): Promise<string> {
 
 function pageOf(
   session: Session,
-  term: string,
+  query: string,
   args: ConnectionArgs = {},
   workspaceId = WORKSPACE_W_ID,
 ): Promise<Page<CommonNameSuggestion>> {
-  return resolvePage(args, (request) => suggestCommonNames(session, workspaceId, term, request));
+  return resolvePage(args, (request) => suggestCommonNames(session, workspaceId, query, request));
 }
 
 /** Every suggestion in one page — the lists here are far shorter than the maximum. */
 async function all(
   session: Session,
-  term: string,
+  query: string,
   workspaceId = WORKSPACE_W_ID,
 ): Promise<CommonNameSuggestion[]> {
-  const page = await pageOf(session, term, { first: 100 }, workspaceId);
+  const page = await pageOf(session, query, { first: 100 }, workspaceId);
   expect(page.pageInfo.hasNextPage).toBe(false);
   return page.edges.map((edge) => edge.node);
 }

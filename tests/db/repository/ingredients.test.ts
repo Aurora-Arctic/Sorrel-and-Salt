@@ -144,11 +144,11 @@ describe('findCompendiumPage', () => {
     });
 
     it('matches the display name, case-insensitively', async () => {
-      expect(await namesOf({ search: 'MUGW' })).toEqual(['Fixture Mugwort']);
+      expect(await namesOf({ query: 'MUGW' })).toEqual(['Fixture Mugwort']);
     });
 
     it('matches a prefix as it is typed', async () => {
-      expect(await namesOf({ search: 'mu' })).toEqual(['Fixture Mugwort']);
+      expect(await namesOf({ query: 'mu' })).toEqual(['Fixture Mugwort']);
     });
 
     it('forgives a typo the default word threshold would miss', async () => {
@@ -157,61 +157,55 @@ describe('findCompendiumPage', () => {
       const [{ score }] = await sql`select word_similarity('mugwrot', 'Mugwort') as score`;
       expect(score).toBe(0.5);
 
-      expect(await namesOf({ search: 'mugwrot' })).toEqual(['Fixture Mugwort']);
+      expect(await namesOf({ query: 'mugwrot' })).toEqual(['Fixture Mugwort']);
     });
 
     it('matches across punctuation', async () => {
       await add("Fixture Devil's Lace");
 
-      expect(await namesOf({ search: 'devils lace' })).toEqual(["Fixture Devil's Lace"]);
+      expect(await namesOf({ query: 'devils lace' })).toEqual(["Fixture Devil's Lace"]);
     });
 
-    it('leaves out a row sharing no word with the term', async () => {
-      expect(await namesOf({ search: 'stingweed' })).not.toContain('Fixture Mugwort');
+    it('leaves out a row sharing no word with the query', async () => {
+      expect(await namesOf({ query: 'stingweed' })).not.toContain('Fixture Mugwort');
     });
 
     it('matches the formal name', async () => {
-      expect(await namesOf({ search: 'mugwortis' })).toEqual(['Fixture Mugwort']);
+      expect(await namesOf({ query: 'mugwortis' })).toEqual(['Fixture Mugwort']);
     });
 
     it('matches a live folk name and not a soft-deleted one', async () => {
-      expect(await namesOf({ search: 'stingweed' })).toEqual(['Fixture Nettle']);
+      expect(await namesOf({ query: 'stingweed' })).toEqual(['Fixture Nettle']);
 
       await softDeleteFolkName('Fixture Stingweed');
 
-      expect(await namesOf({ search: 'stingweed' })).toEqual([]);
+      expect(await namesOf({ query: 'stingweed' })).toEqual([]);
     });
 
     it('folds accents both ways', async () => {
       await add('Fixture Uña');
       await add('Fixture Una Root');
 
-      expect((await namesOf({ search: 'una' })).sort()).toEqual([
-        'Fixture Una Root',
-        'Fixture Uña',
-      ]);
-      expect((await namesOf({ search: 'uña' })).sort()).toEqual([
-        'Fixture Una Root',
-        'Fixture Uña',
-      ]);
+      expect((await namesOf({ query: 'una' })).sort()).toEqual(['Fixture Una Root', 'Fixture Uña']);
+      expect((await namesOf({ query: 'uña' })).sort()).toEqual(['Fixture Una Root', 'Fixture Uña']);
     });
 
-    // A term with no letters or digits has no trigrams, so it matches nothing
+    // A query with no letters or digits has no trigrams, so it matches nothing
     // rather than everything.
-    it('matches nothing for a term of punctuation alone', async () => {
+    it('matches nothing for a query of punctuation alone', async () => {
       await add('Fixture 100% Pure');
 
-      expect(await namesOf({ search: '%' })).toEqual([]);
+      expect(await namesOf({ query: '%' })).toEqual([]);
     });
 
     it('is no filter when blank', async () => {
-      expect(await namesOf({ search: '   ' })).toHaveLength(2);
+      expect(await namesOf({ query: '   ' })).toHaveLength(2);
     });
 
-    // The service treats a one-character term as absent; the finder itself
+    // The service treats a one-character query as absent; the finder itself
     // does not second-guess what it is handed.
-    it('still matches, and ranks, a one-character term', async () => {
-      const page = await pageOf({ search: 'm' }, { first: 100 });
+    it('still matches, and ranks, a one-character query', async () => {
+      const page = await pageOf({ query: 'm' }, { first: 100 });
 
       expect(page.edges.map((edge) => edge.node.name)).toContain('Fixture Mugwort');
       expect(page.edges.every((edge) => edge.score !== null)).toBe(true);
@@ -219,20 +213,20 @@ describe('findCompendiumPage', () => {
   });
 
   describe('ranking', () => {
-    const TERM = 'mugwort';
+    const QUERY = 'mugwort';
 
     /**
      * The answer key, written independently of the finder: every live
      * compendium row's best word similarity across the label, the formal name
      * and its live folk names, at 0.5 or better, best first, then by name and id.
      */
-    async function rankedOrder(term: string): Promise<{ id: string; score: number }[]> {
+    async function rankedOrder(query: string): Promise<{ id: string; score: number }[]> {
       return sql<{ id: string; score: number }[]>`
         select id, score from (
           select i.id, i.name, greatest(
-            word_similarity(unaccent_immutable(${term}), unaccent_immutable(i.name)),
-            word_similarity(unaccent_immutable(${term}), unaccent_immutable(i.canonical_name)),
-            (select max(word_similarity(unaccent_immutable(${term}), unaccent_immutable(f.name)))
+            word_similarity(unaccent_immutable(${query}), unaccent_immutable(i.name)),
+            word_similarity(unaccent_immutable(${query}), unaccent_immutable(i.canonical_name)),
+            (select max(word_similarity(unaccent_immutable(${query}), unaccent_immutable(f.name)))
              from ingredient_folk_names f where f.ingredient_id = i.id and f.deleted_at is null)
           ) as score
           from ingredients i where i.workspace_id is null and i.deleted_at is null
@@ -254,14 +248,14 @@ describe('findCompendiumPage', () => {
     });
 
     it('pages best match first, ties by name then id', async () => {
-      const expected = await rankedOrder(TERM);
+      const expected = await rankedOrder(QUERY);
       // The preconditions: a tie on score across names, a tie on score and
       // name, and a weaker match below them — else the order proves nothing.
       const scores = expected.map((row) => row.score);
       expect(scores.filter((score) => score === 1).length).toBeGreaterThanOrEqual(5);
       expect(new Set(scores).size).toBeGreaterThan(1);
 
-      const page = await pageOf({ search: TERM }, { first: 100 });
+      const page = await pageOf({ query: QUERY }, { first: 100 });
 
       expect(page.edges.map((edge) => edge.node.id)).toEqual(expected.map((row) => row.id));
       expect(page.edges.map((edge) => edge.score)).toEqual(scores);
@@ -269,19 +263,19 @@ describe('findCompendiumPage', () => {
     });
 
     it('scores a folk-name match by the folk name', async () => {
-      const page = await pageOf({ search: TERM }, { first: 100 });
+      const page = await pageOf({ query: QUERY }, { first: 100 });
 
       const wormwood = page.edges.find((edge) => edge.node.name === 'Fixture Wormwood');
       expect(wormwood?.score).toBe(1);
     });
 
     it('walks across the ties forwards, neither losing nor repeating a row', async () => {
-      const expected = (await rankedOrder(TERM)).map((row) => row.id);
+      const expected = (await rankedOrder(QUERY)).map((row) => row.id);
 
       const ids: string[] = [];
       let after: string | null = null;
       for (;;) {
-        const page: Page<Row, Scored> = await pageOf({ search: TERM }, { first: 2, after });
+        const page: Page<Row, Scored> = await pageOf({ query: QUERY }, { first: 2, after });
         ids.push(...page.edges.map((edge) => edge.node.id));
         if (!page.pageInfo.hasNextPage) break;
         after = page.pageInfo.endCursor;
@@ -291,12 +285,12 @@ describe('findCompendiumPage', () => {
     });
 
     it('walks across the ties backwards, mirroring the forward walk', async () => {
-      const expected = (await rankedOrder(TERM)).map((row) => row.id);
+      const expected = (await rankedOrder(QUERY)).map((row) => row.id);
 
       const ids: string[] = [];
       let before: string | null = null;
       for (;;) {
-        const page: Page<Row, Scored> = await pageOf({ search: TERM }, { last: 2, before });
+        const page: Page<Row, Scored> = await pageOf({ query: QUERY }, { last: 2, before });
         ids.unshift(...page.edges.map((edge) => edge.node.id));
         if (!page.pageInfo.hasPreviousPage) break;
         before = page.pageInfo.startCursor;
@@ -306,7 +300,7 @@ describe('findCompendiumPage', () => {
     });
 
     it('places page n at (n − 1) × size, walked either way across the ties', async () => {
-      const expected = await rankedOrder(TERM);
+      const expected = await rankedOrder(QUERY);
       // The preconditions: the perfect-score tie is wider than a page, so a
       // boundary falls inside it, and the last page is short, so the backward
       // walk's first step is the remainder rather than a whole page.
@@ -316,8 +310,8 @@ describe('findCompendiumPage', () => {
       expect(expected.length % size).not.toBe(0);
       const pages = Math.ceil(expected.length / size);
 
-      const forwards = await walkForwards({ search: TERM }, size);
-      const backwards = await walkBackwards({ search: TERM }, size);
+      const forwards = await walkForwards({ query: QUERY }, size);
+      const backwards = await walkBackwards({ query: QUERY }, size);
 
       for (const walk of [forwards, backwards]) {
         expect(walk.ids).toEqual(expected.map((row) => row.id));
@@ -337,9 +331,9 @@ describe('findCompendiumPage', () => {
     // names a position in the other.
     it("refuses a browse's cursor on a search, and a search's on a browse", async () => {
       const browse = await pageOf({}, { first: 1 });
-      const search = await pageOf({ search: TERM }, { first: 1 });
+      const search = await pageOf({ query: QUERY }, { first: 1 });
 
-      await expect(pageOf({ search: TERM }, { after: browse.pageInfo.endCursor })).rejects.toThrow(
+      await expect(pageOf({ query: QUERY }, { after: browse.pageInfo.endCursor })).rejects.toThrow(
         InvalidCursor,
       );
       await expect(pageOf({}, { after: search.pageInfo.endCursor })).rejects.toThrow(InvalidCursor);
@@ -389,7 +383,7 @@ describe('findCompendiumPage', () => {
     });
 
     it('combines with search', async () => {
-      expect(await namesOf({ search: 'fixture', form: 'root' })).toEqual(['Fixture Root']);
+      expect(await namesOf({ query: 'fixture', form: 'root' })).toEqual(['Fixture Root']);
     });
   });
 
@@ -488,12 +482,12 @@ describe('findCompendiumCount', () => {
   // Read at pg_trgm's own 0.6, the count would find none of these rows while
   // the pages hold all seven.
   it('counts a search at the page’s threshold, 0.5, not the server’s 0.6', async () => {
-    const page = await pageOf({ search: 'mugwrot' }, { first: 100 });
+    const page = await pageOf({ query: 'mugwrot' }, { first: 100 });
     const scores = page.edges.map((edge) => edge.score as number);
     expect(scores).toHaveLength(7);
     expect(scores.every((score) => score >= 0.5 && score < 0.6)).toBe(true);
 
-    await expectCountsToMatchTheWalk({ search: 'mugwrot' }, 7);
+    await expectCountsToMatchTheWalk({ query: 'mugwrot' }, 7);
   });
 
   it('places an empty page nowhere, and still counts the list', async () => {
@@ -502,7 +496,7 @@ describe('findCompendiumCount', () => {
     expect(past.edges).toEqual([]);
 
     expect(await countFor({}, past)).toEqual({ totalCount: 12, countBefore: null });
-    expect(await findCompendiumCount({ search: 'stingweed' }, undefined)).toEqual({
+    expect(await findCompendiumCount({ query: 'stingweed' }, undefined)).toEqual({
       totalCount: 0,
       countBefore: null,
     });

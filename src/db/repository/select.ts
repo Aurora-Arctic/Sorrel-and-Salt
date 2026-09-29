@@ -45,12 +45,21 @@ export interface KeyOrder {
    * under `SEARCH_WORD_SIMILARITY_THRESHOLD` rather than the server's.
    */
   wordMatch?: boolean;
+  /**
+   * The `where` holds a `%` match, so the read runs in a transaction under
+   * `SIMILARITY_THRESHOLD`, the one a `Similarity` read sets, rather than
+   * pg_trgm's 0.3.
+   */
+  similarityMatch?: boolean;
 }
 
 /** How `selectFrom` orders, bounds and keys a page; the cursor bounds are in its `where`. */
 export interface Keyset<Carried extends object = {}> extends KeyOrder {
   request: PageRequest;
-  /** Values selected beside the row and carried onto its entry, and so onto its edge. */
+  /**
+   * Values selected beside the row and carried onto its entry, and so onto its
+   * edge. Each is read as the driver returns it: a `mapWith` on one is dropped.
+   */
   carry?: { [K in keyof Carried]: SQL<Carried[K]> };
 }
 
@@ -74,7 +83,7 @@ export interface KeysetCount {
 const SIMILARITY_THRESHOLD = 0.4;
 
 /**
- * The threshold `<%` reads: the term against the best-matching run of words
+ * The threshold `<%` reads: the query against the best-matching run of words
  * in a longer text, which whole-string `%` scores too low to find — `serpent`
  * is 0.12 similar to Ophiuchus's description and 1.0 word-similar. pg_trgm's
  * own default, set anyway so the server's configuration cannot move it.
@@ -158,7 +167,7 @@ export async function selectFrom(
         tally
           ? countsOf(tally)
           : keyset && {
-              ...keyset.carry,
+              ...carried(keyset.carry),
               row: getTableColumns(relation),
               key: sql<string[]>`array[${sql.join(
                 keyset.sort.map((part) => sql`cast(${expressionOf(part)} as text)`),
@@ -225,6 +234,20 @@ export async function selectFrom(
 }
 
 /**
+ * Each carried value, one `sql` layer deeper. Selecting from one table with
+ * no join, Drizzle renders a column written directly in a selected expression
+ * without its table name, so a correlated subquery there — `… where
+ * folk.ingredient_id = ingredients.id` — would compare the inner table with
+ * itself. It unqualifies only the expression's own top-level columns, so one
+ * wrapper keeps every name.
+ */
+function carried(carry: Keyset<object>['carry']): Record<string, SQL> {
+  return Object.fromEntries(
+    Object.entries(carry ?? {}).map(([name, value]: [string, SQL]) => [name, sql`${value}`]),
+  );
+}
+
+/**
  * A count's selection: every row, and those before the start — the same row
  * comparison a page's `before` bound makes. `filter` has no builder.
  */
@@ -240,20 +263,25 @@ function countsOf({ count: order, start }: KeysetCount) {
 }
 
 /**
- * Runs a keyset read, in a transaction under the search's word threshold when
- * the key says `wordMatch`. A page and its count both come through here, so
- * both read the same rows: at the server's 0.6 a count would miss rows the
- * pages hold.
+ * Runs a keyset read, in a transaction under the thresholds its key says its
+ * `where` reads: the search's word threshold for `wordMatch`, the similarity
+ * threshold for `similarityMatch`. A page and its count both come through
+ * here, so both read the same rows: at the server's 0.6 a count would miss
+ * rows the pages hold.
  */
 function readKeyed<T>(
-  { wordMatch }: KeyOrder,
+  { wordMatch, similarityMatch }: KeyOrder,
   run: (executor: Executor) => Promise<T>,
 ): Promise<T> {
-  if (!wordMatch) return run(db);
+  const settings = [
+    similarityMatch &&
+      sql`set_config('pg_trgm.similarity_threshold', ${String(SIMILARITY_THRESHOLD)}, true)`,
+    wordMatch &&
+      sql`set_config('pg_trgm.word_similarity_threshold', ${String(SEARCH_WORD_SIMILARITY_THRESHOLD)}, true)`,
+  ].filter((setting): setting is SQL => Boolean(setting));
+  if (settings.length === 0) return run(db);
   return db.transaction(async (tx) => {
-    await tx.execute(
-      sql`select set_config('pg_trgm.word_similarity_threshold', ${String(SEARCH_WORD_SIMILARITY_THRESHOLD)}, true)`,
-    );
+    await tx.execute(sql`select ${sql.join(settings, sql`, `)}`);
     return run(tx);
   });
 }

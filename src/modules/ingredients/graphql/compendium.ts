@@ -12,20 +12,20 @@ builder.queryField('compendium', (t) =>
   t.pagedConnection({
     type: IngredientRef,
     args: {
-      search: t.arg.string({ required: false }),
+      query: t.arg.string({ required: false }),
       categoryIds: t.arg.idList({ required: false }),
       form: t.arg.string({ required: false }),
     },
-    resolve: (_query, { search, categoryIds, form }, page) =>
-      listCompendium({ search, categoryIds, form }, page),
+    resolve: (_root, { query, categoryIds, form }, page) =>
+      listCompendium({ query, categoryIds, form }, page),
     // "Page X of Y" (claude-docs/graphql.md, "Pagination").
-    count: (_query, { search, categoryIds, form }, start) =>
-      countCompendium({ search, categoryIds, form }, start),
+    count: (_root, { query, categoryIds, form }, start) =>
+      countCompendium({ query, categoryIds, form }, start),
     edgeFields: (t) => ({
       score: t.float({
         nullable: true,
         description:
-          'The word similarity of the search term to the entry, 0 to 1 — its best across the label, formal name and folk names. Null without a search.',
+          'The word similarity of the query to the entry, 0 to 1 — its best across the label, formal name and folk names. Null without a query.',
         resolve: (edge) => edge.score,
       }),
     }),
@@ -41,6 +41,6 @@ builder.queryField('ingredient', (t) =>
       // the compendium alone.
       workspaceId: t.arg.id({ required: false }),
     },
-    resolve: (_query, { id, workspaceId }, { session }) => getIngredient(session, id, workspaceId),
+    resolve: (_root, { id, workspaceId }, { session }) => getIngredient(session, id, workspaceId),
   }),
 );

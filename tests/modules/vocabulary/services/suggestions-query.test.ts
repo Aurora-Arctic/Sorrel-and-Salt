@@ -41,8 +41,8 @@ beforeEach(async () => {
 });
 
 /** Every statement the service sent, in order, from one call. */
-async function statementsFor(term: string): Promise<Logged[]> {
-  await suggestPlanets(asUser(B), WORKSPACE_W_ID, term, { limit: 26, inverted: false });
+async function statementsFor(query: string): Promise<Logged[]> {
+  await suggestPlanets(asUser(B), WORKSPACE_W_ID, query, { limit: 26, inverted: false });
   return [...logged];
 }
 
@@ -110,7 +110,7 @@ describe('the suggestion query', () => {
     });
   });
 
-  it('matches nothing by similarity when there is no term, and still sets the thresholds', async () => {
+  it('matches nothing by similarity when there is no `query`, and still sets the thresholds', async () => {
     const statements = await statementsFor('  ');
     const { query } = match(statements);
 
@@ -122,8 +122,8 @@ describe('the suggestion query', () => {
 });
 
 describe('the form suggestion query', () => {
-  async function formStatement(term: string): Promise<Logged> {
-    await suggestForms(asUser(B), WORKSPACE_W_ID, term, { limit: 26, inverted: false });
+  async function formStatement(query: string): Promise<Logged> {
+    await suggestForms(asUser(B), WORKSPACE_W_ID, query, { limit: 26, inverted: false });
     const reads = logged.filter(({ query }) => /from "ingredient_forms"/.test(query));
     expect(reads).toHaveLength(1);
     return reads[0];

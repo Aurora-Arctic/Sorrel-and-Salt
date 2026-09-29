@@ -14,16 +14,16 @@ const optionalText = z
   .transform((value) => (value ? value : undefined));
 
 /**
- * The shortest term that searches. One character is a trigram or two that
+ * The shortest query that searches. One character is a trigram or two that
  * half the compendium shares at the search's threshold, so it filters and
  * ranks by noise; shorter is no search at all.
  */
-export const MIN_SEARCH_LENGTH = 2;
+export const MIN_QUERY_LENGTH = 2;
 
 export const CompendiumFilter = z.object({
   // Counted in composed code points, so `ñ` is one character however it was typed.
-  search: optionalText.transform((term) =>
-    term && Array.from(term.normalize('NFC')).length >= MIN_SEARCH_LENGTH ? term : undefined,
+  query: optionalText.transform((query) =>
+    query && Array.from(query.normalize('NFC')).length >= MIN_QUERY_LENGTH ? query : undefined,
   ),
   categoryIds: z
     .array(RowId)

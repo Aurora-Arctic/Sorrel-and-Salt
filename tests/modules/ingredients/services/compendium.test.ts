@@ -54,26 +54,26 @@ describe('listCompendium', () => {
   });
 
   it('hands the finder a trimmed filter and the page as given', async () => {
-    await listCompendium({ search: '  cat  ', categoryIds: [], form: '   ' }, PAGE);
+    await listCompendium({ query: '  cat  ', categoryIds: [], form: '   ' }, PAGE);
 
     expect(repository.findCompendiumPage).toHaveBeenCalledWith(
-      { search: 'cat', categoryIds: undefined, form: undefined },
+      { query: 'cat', categoryIds: undefined, form: undefined },
       PAGE,
     );
   });
 
   // One character is a trigram or two that half the compendium shares: no
   // filter and no ranking, rather than a page ordered by noise.
-  it('treats a term shorter than two characters as absent', async () => {
-    for (const search of ['m', '  m  ', 'ñ', 'n\u0303']) {
-      await listCompendium({ search }, PAGE);
+  it('treats a query shorter than two characters as absent', async () => {
+    for (const query of ['m', '  m  ', 'ñ', 'n\u0303']) {
+      await listCompendium({ query }, PAGE);
     }
-    await listCompendium({ search: 'mu' }, PAGE);
+    await listCompendium({ query: 'mu' }, PAGE);
 
-    const searches = repository.findCompendiumPage.mock.calls.map(
-      ([filter]) => (filter as { search?: string }).search,
+    const queries = repository.findCompendiumPage.mock.calls.map(
+      ([filter]) => (filter as { query?: string }).query,
     );
-    expect(searches).toEqual([undefined, undefined, undefined, undefined, 'mu']);
+    expect(queries).toEqual([undefined, undefined, undefined, undefined, 'mu']);
   });
 
   // A category id reaches a `uuid` comparison inside the keyset query, whose
@@ -102,10 +102,10 @@ describe('countCompendium', () => {
   });
 
   // The count reads the rows the page does, so it is handed the filter the
-  // page is: parsed the same way, one-character term and all.
+  // page is: parsed the same way, one-character query and all.
   it('hands the finder the filter the page gets, and the start as given', async () => {
     const start = { key: ['Fixture Public'], id: '00000000-0000-4000-8000-000000000000' };
-    const filter = { search: '  m  ', categoryIds: [], form: ' HERB ' };
+    const filter = { query: '  m  ', categoryIds: [], form: ' HERB ' };
 
     await listCompendium(filter, PAGE);
     await countCompendium(filter, start);
@@ -115,7 +115,7 @@ describe('countCompendium', () => {
       start,
     );
     expect(repository.findCompendiumPage.mock.calls[0][0]).toEqual({
-      search: undefined,
+      query: undefined,
       categoryIds: undefined,
       form: 'HERB',
     });

@@ -21,27 +21,27 @@ async function suggest(
   vocabulary: typeof planets | typeof zodiacSigns,
   session: Session,
   workspaceId: string,
-  term: string,
+  query: string,
   page: PageRequest,
 ): Promise<PageEntry<VocabularySuggestion>[]> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
-  return findVocabularySuggestions(membership, vocabulary, term.trim(), page);
+  return findVocabularySuggestions(membership, vocabulary, query.trim(), page);
 }
 
 /**
- * What the `planet` field offers as `term` is typed: the curated bodies first,
+ * What the `planet` field offers as `query` is typed: the curated bodies first,
  * a name match before a description match, then values already written in the
- * compendium or this workspace that no body curates. A blank term offers all.
+ * compendium or this workspace that no body curates. A blank query offers all.
  *
  * @throws {Forbidden} the caller may not read this workspace's ingredients.
  */
 export function suggestPlanets(
   session: Session,
   workspaceId: string,
-  term: string,
+  query: string,
   page: PageRequest,
 ): Promise<PageEntry<VocabularySuggestion>[]> {
-  return suggest(planets, session, workspaceId, term, page);
+  return suggest(planets, session, workspaceId, query, page);
 }
 
 /**
@@ -52,14 +52,14 @@ export function suggestPlanets(
 export function suggestZodiacSigns(
   session: Session,
   workspaceId: string,
-  term: string,
+  query: string,
   page: PageRequest,
 ): Promise<PageEntry<VocabularySuggestion>[]> {
-  return suggest(zodiacSigns, session, workspaceId, term, page);
+  return suggest(zodiacSigns, session, workspaceId, query, page);
 }
 
 /**
- * What the `form` field offers as `term` is typed: the curated forms first,
+ * What the `form` field offers as `query` is typed: the curated forms first,
  * each with its group, a name match before a description match, then values
  * already written in the compendium or this workspace that no live form
  * curates. Each names the in-scope ingredients already claiming it.
@@ -69,9 +69,9 @@ export function suggestZodiacSigns(
 export async function suggestForms(
   session: Session,
   workspaceId: string,
-  term: string,
+  query: string,
   page: PageRequest,
 ): Promise<PageEntry<FormSuggestion>[]> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
-  return findVocabularySuggestions(membership, ingredientForms, term.trim(), page);
+  return findVocabularySuggestions(membership, ingredientForms, query.trim(), page);
 }
