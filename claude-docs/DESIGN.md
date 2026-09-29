@@ -493,7 +493,7 @@ The spell builder shows both side by side, flagging intent categories with no in
 
 ### Fuzzy duplicate warning
 
-`pg_trgm`, available on Neon (as is `unaccent`, the design's only other extension: it folds the compendium search's accents, §7's `compendium(search:)`, through an `IMMUTABLE` wrapper and expression indexes — `claude-docs/db.md`, "The compendium read"):
+`pg_trgm`, available on Neon (as is `unaccent`, the design's only other extension: it folds the compendium search's accents, §7's `compendium(query:)`, through an `IMMUTABLE` wrapper and expression indexes — `claude-docs/db.md`, "The compendium read"):
 
 ```sql
 CREATE INDEX ON ingredients USING gin (name gin_trgm_ops, canonical_name gin_trgm_ops);
@@ -563,8 +563,8 @@ None of this rules the plugin out permanently — it is additive, and re-adoptin
 builder.queryField('compendium', (t) =>
   t.pagedConnection({
     type: IngredientRef,
-    args: { search: t.arg.string({ required: false }) },
-    resolve: (_, { search }, page) => listCompendium({ search }, page), // the filter is the service's, in SQL
+    args: { query: t.arg.string({ required: false }) },
+    resolve: (_, { query }, page) => listCompendium({ query }, page), // the filter is the service's, in SQL
   }),
 );
 ```
@@ -653,7 +653,7 @@ type Query {
   workspace(slug: String!): Workspace
   # Every list is a Relay connection (first/after/last/before), paged by one helper
   compendium(
-    search: String
+    query: String
     categoryIds: [ID!]
     form: String
     first: Int
@@ -671,19 +671,19 @@ type Query {
   # Curated bodies or signs first, then values in use in the compendium and this workspace (§5)
   planetSuggestions(
     workspaceId: ID!
-    term: String
+    query: String
     first: Int
     after: String
   ): QueryPlanetSuggestionsConnection!
   zodiacSuggestions(
     workspaceId: ID!
-    term: String
+    query: String
     first: Int
     after: String
   ): QueryZodiacSuggestionsConnection!
   workspaceIngredients(
     workspaceId: ID!
-    search: String
+    query: String
     categoryIds: [ID!]
     first: Int
     after: String
@@ -1561,7 +1561,7 @@ Choices made during design that a future reader might otherwise revisit.
 | Better Auth's `anonymous` plugin for visitors?                    | No — a signed-out reader is `null`; try-before-sign-up is v2 (MB.80)                                                                                                                             | A `users` row and a cookie per visit and per crawl, a third identity bootstrap outside `withAudit`, and static pages made dynamic for nothing a public read needs                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | Client-side ingredient filtering (`filterIngredients()`)?         | No — the `compendium` query filters in SQL (M8.5); M8.4 retired                                                                                                                                  | Rule 8 caps a page at 100, so the browser never holds the whole compendium or a coven's ingredients and cannot be the search; MB.80's static `/compendium` routes every filtered view through GraphQL regardless. One matcher, in the one place that has every row                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | Accent-insensitive search?                                        | Yes — `unaccent`, an `IMMUTABLE` SQL wrapper naming the dictionary, and expression trigram indexes over the fold (M8.5)                                                                          | Folk names carry the accents (`Uña de Gato`) and a visitor types without them, so a case-only search silently misses the one thing a folk-name search is for. `unaccent()` is `STABLE`, hence the wrapper; the raw trigram indexes stay for the fuzzy finders, which are accent-tolerant by nature                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Substring or fuzzy matching for the compendium search?            | Word similarity: the term `<%` the label, formal name or a folk name at 0.5, set per read (M8.5)                                                                                                 | A live search box needs every typed prefix to keep matching, which plain `%` similarity fails (`mug` is 0.33 to Mugwort); `ILIKE` substring handles prefixes but misses a transposed pair and punctuation (`devils shoestring`). `<%` at 0.5 takes all three — `mu` 0.67, `mugwrot` 0.5, `devils shoestring` 0.8 — where pg_trgm's own 0.6 misses the typo. Results are ranked best match first, by word similarity (MB.104): a keyset over `[-score, name]`, the score computed per matched row inside the match itself, rather than a capped top-N that would leave matches past the cap unreachable, or pg_trgm's `<<->`, which needs GiST, orders by one text of three and cannot resume after a cursor                                                                                                                                                                                                                                                                                                                                              |
+| Substring or fuzzy matching for the compendium search?            | Word similarity: the query `<%` the label, formal name or a folk name at 0.5, set per read (M8.5)                                                                                                | A live search box needs every typed prefix to keep matching, which plain `%` similarity fails (`mug` is 0.33 to Mugwort); `ILIKE` substring handles prefixes but misses a transposed pair and punctuation (`devils shoestring`). `<%` at 0.5 takes all three — `mu` 0.67, `mugwrot` 0.5, `devils shoestring` 0.8 — where pg_trgm's own 0.6 misses the typo. Results are ranked best match first, by word similarity (MB.104): a keyset over `[-score, name]`, the score computed per matched row inside the match itself, rather than a capped top-N that would leave matches past the cap unreachable, or pg_trgm's `<<->`, which needs GiST, orders by one text of three and cannot resume after a cursor                                                                                                                                                                                                                                                                                                                                              |
 | Subscription billing in v1?                                       | No — v2; the Stripe plugin is not yet adopted (MB.79)                                                                                                                                            | Nothing in v1 needs payment. The v2 requirements are in §13: the workspace pays, priced by member count, with free months, an admin exemption and a discount for someone in several workspaces. Better Auth's Stripe plugin carries the plumbing and per-seat pricing at checkout, but its seat resync needs the organization plugin MB.30 rejected, and the exemption and the discount are ours either way. It writes its tables outside `withAudit` and mounts browser routes under `/api/auth/subscription/*`, which are MB.30's two objections. The plugin or a thin service over the Stripe SDK is settled by a test-mode spike when the work is scheduled                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ---

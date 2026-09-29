@@ -30,7 +30,7 @@ Two alternatives were weighed and not taken:
 
 - **Considered and rejected: a separate query.** A plain `[Ingredient!]!` field, capped by the API, was weighed. It would have needed a `t.typeahead` helper, an exception to CLAUDE.md rule 8 and to the pagination guard, and a follow-up task moving the four autofill queries over to match.
 - **What that would buy:** an API that cannot be paged.
-- **Why that is not needed:** `compendium(search:, first: 25)` already returns the 25 best matches once MB.104 ranks them. "Top 25, not paginated" is then the dropdown's behaviour: it follows no cursor.
+- **Why that is not needed:** `compendium(query:, first: 25)` already returns the 25 best matches once MB.104 ranks them. "Top 25, not paginated" is then the dropdown's behaviour: it follows no cursor.
 - **Two properties come for free:**
   - `pageInfo.hasNextPage` says when to offer "See all results".
   - The dropdown is always exactly what "See all" opens on, because it is the same statement.

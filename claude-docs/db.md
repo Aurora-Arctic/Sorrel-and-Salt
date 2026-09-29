@@ -546,10 +546,11 @@ so they are not the read-side `withAudit` that MB.29 declined to build.
 **`findSimilarIngredients` (M4.7) is the first finder bound by both halves.**
 It answers story 16's "did you mean": live ingredients in the compendium or
 the proof's workspace whose display name, formal name or a live folk name is
-`%`-similar to the term, best first by the greatest of the three
+`%`-similar to the name, best first by the greatest of the three
 similarities. It reads one keyset page at a time, keyed `[-score, name]` and
-marked `similarityMatch`, because `possibleDuplicates` (MB.11) pages it
-through the helper (claude-docs/graphql.md, "`possibleDuplicates`"). Each row
+marked `similarityMatch`, and carries each row's score, because
+`possibleDuplicates` (MB.11) pages it through the helper
+(claude-docs/graphql.md, "`possibleDuplicates`"). Each row
 carries `canonical_name`, which is what tells five Cat's Claws apart. The
 three matches are a `UNION ALL` under `id IN (…)`, and each detail is
 load-bearing:
@@ -868,7 +869,7 @@ live row's `lower(name)`.
 
 ### The member's autofill (MB.94)
 
-`findVocabularySuggestions(membership, vocabulary, term, page)` in
+`findVocabularySuggestions(membership, vocabulary, query, page)` in
 `src/db/repository/vocabularies.ts` is the read behind `planetSuggestions`,
 `zodiacSuggestions` and `formSuggestions` ([`graphql.md`](graphql.md)). Its
 services are `suggestPlanets`, `suggestZodiacSigns` and `suggestForms` in
@@ -883,16 +884,16 @@ column. `ingredient_forms` is the third, paired with `form` (M4.7a).
 One page is one statement: a `UNION ALL` of three tiers, sorted, bounded and
 cut by cursor as a whole.
 
-| Tier | Rows                                                                                                                  | Matched by                        |
-| ---- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| 0    | live curated rows whose name matches                                                                                  | `name % term` or `term <% name`   |
-| 1    | live curated rows whose description alone matches                                                                     | `term <% description`             |
-| 2    | values on live ingredients in the compendium or the proof's workspace, folding to no live curated row's `lower(name)` | `value % term` or `term <% value` |
+| Tier | Rows                                                                                                                  | Matched by                          |
+| ---- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 0    | live curated rows whose name matches                                                                                  | `name % query` or `query <% name`   |
+| 1    | live curated rows whose description alone matches                                                                     | `query <% description`              |
+| 2    | values on live ingredients in the compendium or the proof's workspace, folding to no live curated row's `lower(name)` | `value % query` or `query <% value` |
 
 - **A description matches by `<%`, never `%`.** `%` compares whole
-  strings, and a term is a word or two against a sentence: `serpent` is 0.12
+  strings, and a query is a word or two against a sentence: `serpent` is 0.12
   similar to Ophiuchus's description and `black moon` 0.22 to Lilith's, far
-  under 0.4. `<%` is word similarity, the term against the best-matching run
+  under 0.4. `<%` is word similarity, the query against the best-matching run
   of words in the text, and scores both 1.0. It is a trigram operator too, so
   "Fuzzy matching"'s rule still holds, and its threshold is the second one
   `selectFrom` sets.
@@ -907,14 +908,14 @@ cut by cursor as a whole.
   and `Moon` are one value, offered in the spelling most of those entries
   use (`mode()`, a tie broken by sort order). A blank value is no value. A
   fold equal to a live curated name is never in tier 2, whether or not that
-  row matched the term, so a value is offered once, as the curated row, or
+  row matched the query, so a value is offered once, as the curated row, or
   not at all. Soft-deleting a curated row moves its in-use spellings into
   tier 2.
 - **Tier 2 reads both tiers of `ingredients`**, the compendium and the proof's
   workspace and never another, so the finder is on
   [the tier seam](modules.md#the-tier-seam). The scope is in the statement,
   so a value that only unrelated workspace X holds never reaches the service.
-- **A blank term matches everything**, so an opened field can list the whole
+- **A blank query matches everything**, so an opened field can list the whole
   vocabulary before anything is typed. The statement still runs under the
   thresholds, with no trigram predicate in it.
 - **The union is read through `selectFrom`.** `selectFrom` takes a
@@ -947,13 +948,13 @@ has neither:
   `{ name, canonicalName }`, formal names first (`nulls last`), then label,
   then id. A second, scoped read of `ingredients`, aggregated once by fold
   and left-joined onto the page — every claim rather than only those
-  matching the term, since a form found by its description is claimed under
+  matching the query, since a form found by its description is claimed under
   its name. `json_agg`, not `jsonb_agg`, so the order it is built in is the
   order read. Both same-named forms carry the same claimants, since the
   string is all an ingredient holds.
 
 **The common-name autofill** (M4.7a) is `findCommonNameSuggestions(membership,
-term, page)` in `src/db/repository/common-names.ts`, the read behind
+query, page)` in `src/db/repository/common-names.ts`, the read behind
 `commonNameSuggestions`, whose service is `suggestCommonNames` in
 `ingredients`. There is no curated vocabulary of common names, so it is
 tier 2 alone, keyed and cut exactly as above by the shared
@@ -969,7 +970,7 @@ tier 2 alone, keyed and cut exactly as above by the shared
 - **Each arm matches its own column** by `%` or `<%`, so each can reach
   its own trigram index, and the fold follows. Trigrams ignore case and
   punctuation, so every spelling of a fold matches alike and a claimant is
-  never lost to the term.
+  never lost to the query.
 - **The claimants are the group's own rows**, each ingredient once: one whose
   label and a folk name fold alike appears in both arms, so a
   `row_number()` over `(fold, ingredient)` filters the aggregate.
@@ -2162,14 +2163,14 @@ under an `IngredientFilter`, every part optional and absent meaning no filter.
 A search pages best match first, `(score DESC, name, id)`, and a list without
 one pages `(name, id)`; each entry carries a `score`, null on the second:
 
-- **`search`** is word similarity, case- and accent-folded, against the display
+- **`query`** is word similarity, case- and accent-folded, against the display
   name, the formal name or a live folk name:
-  `unaccent_immutable($term) <% unaccent_immutable(column)`, true when the term
+  `unaccent_immutable($query) <% unaccent_immutable(column)`, true when the query
   is at least **0.5** word-similar to some run of the text. That forgives a
   transposed pair (`mugwrot` is exactly 0.5 to Mugwort), matches a
   two-letter prefix as it is typed (`mu`, 0.67), and reads across
   punctuation (`devils shoestring`, 0.8), where pg_trgm's own 0.6 misses the
-  typo. A term of punctuation alone has no trigrams and matches nothing.
+  typo. A query of punctuation alone has no trigrams and matches nothing.
   pg_trgm's GIN answers `<%` when the text side is the index's own
   expression, which is what `ingredients_unaccent_trgm` and
   `ingredient_folk_names_unaccent_trgm` (migration 0027) are for, and
@@ -2179,7 +2180,7 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   shape "Fuzzy matching" argues for over an `OR` beside the scope.
 - **The score is the row's best word similarity** across the three, and it is
   the search's order. Each `UNION ALL` arm selects
-  `word_similarity(term, text)` beside the id it matched — the value the GIN
+  `word_similarity(query, text)` beside the id it matched — the value the GIN
   recheck has just computed to test `<%` — and the union is folded to
   `max(score) … group by id` and joined to `ingredients` as `matched`. So the
   score is a plain column, read by the order, the page bound and the edge
@@ -2203,11 +2204,11 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   `double precision`). A browse's cursor has one part and a search's two, so
   neither is a position in the other, and each is `InvalidCursor` there.
 - **The 0.5 is set by `selectFrom`, as every threshold is.** The finder marks
-  its keyset `wordMatch` when there is a term, and `selectFrom` then reads the
+  its keyset `wordMatch` when there is a query, and `selectFrom` then reads the
   page in a transaction that sets `pg_trgm.word_similarity_threshold` with
   `set_config(…, true)` first — the similarity branch's shape, on the keyset
   branch. `compendium-search-query.test.ts` reads the statements sent: the
-  setting before the match, and no transaction for a page with no term.
+  setting before the match, and no transaction for a page with no query.
 - **`categoryIds`** is AND: one correlated `existsIn(ingredient_categories, …)`
   per id, so an entry must carry every one. OR is M8.12's argument to add.
 - **`form`** compares `lower(btrim(…))` on both sides, the fold
@@ -2229,8 +2230,8 @@ counted at the server's 0.6, `mugwrot` (0.5 to Mugwort) would count none of
 the rows its pages list. `compendium-search-query.test.ts` reads the one
 statement sent, after the setting, with no order and no limit.
 
-**The service treats a term shorter than two characters as absent**
-(`MIN_SEARCH_LENGTH` in `validation/compendium-filter.ts`, counted in composed
+**The service treats a query shorter than two characters as absent**
+(`MIN_QUERY_LENGTH` in `validation/compendium-filter.ts`, counted in composed
 code points). One letter shares a trigram with half the compendium at 0.5, so
 it would filter and rank by noise; below the minimum the list is a browse,
 unfiltered and unranked. The finder takes whatever it is handed, one
@@ -2401,7 +2402,19 @@ limit $limit  -- the page plus one
   `Keyset.join` is a parenthesised, aliased statement and its `on`, which a
   sort part or the `where` may read; `Keyset.carry` names values selected
   beside the row, which `resolvePage` puts on the edge. The compendium search
-  joins its scored matches and carries the score this way.
+  joins its scored matches and carries the score this way, and the duplicate
+  lookup carries its correlated score (MB.11).
+- **A carried value is selected one `sql` layer deeper than it is written.**
+  In a select with no join, Drizzle renders a column written directly in a
+  selected expression without its table name (`buildSelection`'s
+  `isSingleTable`). So the duplicate score's folk-name subquery,
+  `… where folk.ingredient_id = ingredients.id`, would render as
+  `where "ingredient_id" = "id"` and compare the folk-name table with itself.
+  Only an expression's own top-level columns are unqualified, so the wrapper
+  keeps every name, but it also drops a `mapWith`. A carried value is
+  therefore read as the driver returns it. `ORDER BY` and `WHERE` are not
+  built that way, which is why the order was right while the selected score
+  was not.
 - **The id breaks ties**, so rows sharing a sort key still sit in one total
   order, and a page boundary between two of them loses neither. Every table
   these finders take has an `id` (`Identified`), which rules out the three

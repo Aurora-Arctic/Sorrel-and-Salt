@@ -208,6 +208,14 @@ stays under `src/graphql/schema/` ([`modules.md`](modules.md)).
   §7 sketch reads. A field that can be null says so with `nullable: true`,
   which makes the null something the field means rather than an accident of
   the default. Pothos's own default is the reverse.
+- **Typed text that narrows a list is `query`.** `compendium` and the four
+  autocompletes all take it as `query: String`, and a blank or absent one is
+  no filter. The same text is `query` all the way down, through the filter
+  types and the services to the SQL. It is not `search` or `term`, because one
+  thing gets one name, and `query` is the usual name for search text in
+  GraphQL APIs. The exception is `possibleDuplicates(name: String!)`: its text
+  is a whole name about to be saved, compared as a whole, not a fragment to
+  filter by, and it stays `name` just as far down.
 - **One date scalar, `DateTime`.** It is graphql-scalars' `DateTimeISO` under
   the plain name. A resolver hands it a `Date`, and the wire carries an ISO 8601
   string. `DateTimeISO` rather than the package's `DateTime` because the latter
@@ -272,13 +280,13 @@ The autofill behind the planet and zodiac fields (MB.94), registered by
 type Query {
   planetSuggestions(
     workspaceId: ID!
-    term: String
+    query: String
     first: Int
     after: String
   ): QueryPlanetSuggestionsConnection!
   zodiacSuggestions(
     workspaceId: ID!
-    term: String
+    query: String
     first: Int
     after: String
   ): QueryZodiacSuggestionsConnection!
@@ -299,7 +307,7 @@ type CorrespondenceSuggestion {
   compendium and the named workspace that no live row curates. `curated` tells
   a client which bucket a row came from, and the order is the finder's
   ([`db.md`](db.md), "The member's autofill").
-- **`term` is optional.** Blank or absent, the field lists the whole
+- **`query` is optional.** Blank or absent, the field lists the whole
   vocabulary and every in-use value, still a page at a time.
 - **Two refusals, one type.** Signed out, the resolver refuses with
   `Forbidden` before the service is reached. Signed in, `assertMembership`
@@ -318,13 +326,13 @@ is registered by `vocabulary`, over the same finder as the two above;
 type Query {
   formSuggestions(
     workspaceId: ID!
-    term: String
+    query: String
     first: Int
     after: String
   ): QueryFormSuggestionsConnection!
   commonNameSuggestions(
     workspaceId: ID!
-    term: String
+    query: String
     first: Int
     after: String
   ): QueryCommonNameSuggestionsConnection!
@@ -381,6 +389,12 @@ type Query {
     after: String
   ): QueryPossibleDuplicatesConnection!
 }
+
+type QueryPossibleDuplicatesConnectionEdge {
+  cursor: String!
+  node: Ingredient!
+  score: Float! # the name's trigram similarity to the entry, 0.4 to 1
+}
 ```
 
 - **A node is an `Ingredient`**, the type `compendium` and `ingredient`
@@ -395,11 +409,14 @@ type Query {
   `SIMILARITY_THRESHOLD`, set per read. It is not the compendium search's 0.5
   word similarity. A search finds an entry from a fragment; this asks whether
   a whole name is nearly one already there.
-- **Best match first, a page at a time.** Pages are keyed
-  `(-score, name, id)`. The score is the best trigram similarity among the
-  label, the formal name and the live folk names, and the edge does not carry
-  it. Page sizes are the usual default and maximum. A blank `name` gets an
-  empty page, not every entry.
+- **Best match first, a page at a time, each edge carrying its score.** Pages
+  are keyed `(-score, name, id)`. The score is the best trigram similarity
+  among the label, the formal name and the live folk names. It is never below
+  the threshold, and 1 means an exact match: that name is already there, as
+  opposed to a near miss. It lives on the edge rather than on `Ingredient`,
+  as `compendium`'s does, because it describes the match, not the entry.
+  Page sizes are the usual default and maximum. A blank `name` gets an empty
+  page, not every entry.
 - **The refusals are `planetSuggestions`'.** The resolver refuses a signed-out
   caller with `Forbidden`. For a signed-in caller the check is the service's
   `assertMembership` for `ingredient: ['read']`, which refuses a coven the
@@ -415,7 +432,7 @@ scope, and the list and the vocabulary resolvers pass no session at all.
 ```graphql
 type Query {
   compendium(
-    search: String
+    query: String
     categoryIds: [ID!]
     form: String
     first: Int
@@ -492,9 +509,9 @@ type IngredientFormGroup {
 }
 ```
 
-- **The `compendium` query is the search.** `search`, `categoryIds` and
+- **The `compendium` query is the search.** `query`, `categoryIds` and
   `form` are the service's, filtered in SQL ([`db.md`](db.md), "The compendium
-  read"): the term at least 0.5 word-similar (`<%`) to the label, the formal
+  read"): the query at least 0.5 word-similar (`<%`) to the label, the formal
   name or a live folk name, case- and accent-folded, so a prefix and a
   transposed pair both find their entry; every listed category (AND; M8.12
   adds a mode); the form under `canonical_key`'s fold. The browser never holds more than a page (rule
@@ -503,9 +520,9 @@ type IngredientFormGroup {
   `nomenclature` (M5.5) are those tasks' arguments to add.
 - **A search is ranked, best match first.** It pages
   `(score DESC, name, id)`, and each edge carries `score`: the row's word
-  similarity to the term, the best of the label, the formal name and its folk
+  similarity to the query, the best of the label, the formal name and its folk
   names. Without a search the list pages `(name, id)` and `score` is null. A
-  term shorter than two characters is no search — one letter would filter and
+  query shorter than two characters is no search — one letter would filter and
   rank by noise — so it lists every entry, unranked. The score lives on the
   edge rather than on `Ingredient` because it describes the match, not the
   entry. How the rank reaches a keyset page is [`db.md`](db.md)'s ("The
@@ -771,8 +788,8 @@ forgetting fail in that PR.
 builder.queryField('compendium', (t) =>
   t.pagedConnection({
     type: IngredientRef,
-    args: { search: t.arg.string({ required: false }) },
-    resolve: (_parent, { search }, page) => listCompendium({ search }, page),
+    args: { query: t.arg.string({ required: false }) },
+    resolve: (_root, { query }, page) => listCompendium({ query }, page),
   }),
 );
 ```
