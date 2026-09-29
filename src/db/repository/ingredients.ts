@@ -46,11 +46,16 @@ export function findManyOfIngredients<TTable extends PgTable & IngredientScoped 
   );
 }
 
+/** What a possible duplicate carries onto its edge: its trigram similarity to the term. */
+export interface SimilarityScore {
+  score: number;
+}
+
 /**
  * One page of the live ingredients, in the compendium or the proof's
  * workspace, whose display name, formal name or a live folk name is
- * trigram-similar to `term` — best match first, keyed `[-score, name]`. Reads
- * both tiers in one statement.
+ * trigram-similar to `term` — best match first, keyed `[-score, name]`, each
+ * carrying its score. Reads both tiers in one statement.
  *
  * The three matches are a `UNION ALL` under `id IN (…)`, not an `OR` beside
  * the scope: Postgres cannot turn a subquery inside an `OR` into a join, so
@@ -62,7 +67,7 @@ export function findSimilarIngredients(
   membership: Membership,
   term: string,
   page: PageRequest,
-): Promise<PageEntry<typeof ingredients.$inferSelect>[]> {
+): Promise<PageEntry<typeof ingredients.$inferSelect, SimilarityScore>[]> {
   const candidate = alias(ingredients, 'candidate');
   const matched = sql`(
     select ${candidate.id} from ${ingredients} as ${candidate}
@@ -73,7 +78,7 @@ export function findSimilarIngredients(
 
   // `greatest` skips nulls, so an entry with no formal name or no folk names
   // ranks on what it has.
-  const score = sql`greatest(
+  const score = sql<number>`greatest(
     similarity(${ingredients.name}, ${term}),
     similarity(${ingredients.canonicalName}, ${term}),
     (select max(similarity(${ingredientFolkNames.name}, ${term})) from ${ingredientFolkNames}
@@ -81,11 +86,12 @@ export function findSimilarIngredients(
        and ${notSoftDeleted(ingredientFolkNames)})
   )`;
 
-  const keyset: Keyset = {
+  const keyset: Keyset<SimilarityScore> = {
     sort: [{ expression: sql`-${score}`, type: 'real' }, ingredients.name],
     id: ingredients.id,
     similarityMatch: true,
     request: page,
+    carry: { score },
   };
   return selectFrom(
     ingredients,

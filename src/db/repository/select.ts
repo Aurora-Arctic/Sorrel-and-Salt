@@ -56,7 +56,10 @@ export interface KeyOrder {
 /** How `selectFrom` orders, bounds and keys a page; the cursor bounds are in its `where`. */
 export interface Keyset<Carried extends object = {}> extends KeyOrder {
   request: PageRequest;
-  /** Values selected beside the row and carried onto its entry, and so onto its edge. */
+  /**
+   * Values selected beside the row and carried onto its entry, and so onto its
+   * edge. Each is read as the driver returns it: a `mapWith` on one is dropped.
+   */
   carry?: { [K in keyof Carried]: SQL<Carried[K]> };
 }
 
@@ -164,7 +167,7 @@ export async function selectFrom(
         tally
           ? countsOf(tally)
           : keyset && {
-              ...keyset.carry,
+              ...carried(keyset.carry),
               row: getTableColumns(relation),
               key: sql<string[]>`array[${sql.join(
                 keyset.sort.map((part) => sql`cast(${expressionOf(part)} as text)`),
@@ -228,6 +231,20 @@ export async function selectFrom(
     cursor: { key, id: String(row.id) },
     node: row,
   }));
+}
+
+/**
+ * Each carried value, one `sql` layer deeper. Selecting from one table with
+ * no join, Drizzle renders a column written directly in a selected expression
+ * without its table name, so a correlated subquery there — `… where
+ * folk.ingredient_id = ingredients.id` — would compare the inner table with
+ * itself. It unqualifies only the expression's own top-level columns, so one
+ * wrapper keeps every name.
+ */
+function carried(carry: Keyset<object>['carry']): Record<string, SQL> {
+  return Object.fromEntries(
+    Object.entries(carry ?? {}).map(([name, value]: [string, SQL]) => [name, sql`${value}`]),
+  );
 }
 
 /**

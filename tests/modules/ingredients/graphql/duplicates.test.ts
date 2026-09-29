@@ -40,7 +40,7 @@ interface Node {
 }
 
 interface Connection {
-  edges: { cursor: string; node: Node }[];
+  edges: { cursor: string; score: number; node: Node }[];
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
 }
 
@@ -54,7 +54,7 @@ function run(
     schema,
     source: `query ($workspaceId: ID!, $name: String!, $first: Int, $after: String) {
       possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first, after: $after) {
-        edges { cursor node { id name canonicalName isGlobal folkNames } }
+        edges { cursor score node { id name canonicalName isGlobal folkNames } }
         pageInfo { hasNextPage endCursor }
       }
     }`,
@@ -92,6 +92,44 @@ describe('possibleDuplicates', () => {
         folkNames: ['Cronewort'],
       }),
     ]);
+  });
+
+  describe('the score on each edge', () => {
+    async function edgesFor(name: string): Promise<{ name: string; score: number }[]> {
+      const result = await run(asUser(B), { name });
+      expect(result.errors).toBeUndefined();
+      return (result.data?.possibleDuplicates.edges ?? []).map((edge) => ({
+        name: edge.node.name,
+        score: edge.score,
+      }));
+    }
+
+    it('is 1 for an exact match and the similarity for a near-miss, best first', async () => {
+      await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
+      await addIngredient({ name: 'Mugwart', workspaceId: WORKSPACE_W_ID });
+      const [row] = await sql`select similarity(${'Mugwort'}, ${'Mugwart'}) as score`;
+
+      const [exact, nearMiss] = await edgesFor('Mugwart');
+
+      expect(exact).toEqual({ name: 'Mugwart', score: 1 });
+      expect(nearMiss.name).toBe('Mugwort');
+      expect(nearMiss.score).toBeCloseTo(Number(row.score), 5);
+      expect(nearMiss.score).toBeGreaterThanOrEqual(0.4);
+      expect(nearMiss.score).toBeLessThan(1);
+    });
+
+    it('is the best of the label, the formal name and the folk names', async () => {
+      await addIngredient({
+        name: 'Mugwort',
+        canonicalName: 'Artemisia vulgaris',
+        folkNames: ['Cronewort'],
+      });
+      // Why the label alone would score it lower: it is not even a match.
+      const [row] = await sql`select similarity(${'Mugwort'}, ${'Cronewort'}) as score`;
+      expect(Number(row.score)).toBeLessThan(0.4);
+
+      expect(await edgesFor('Cronewort')).toEqual([{ name: 'Mugwort', score: 1 }]);
+    });
   });
 
   it('answers a blank name with an empty page', async () => {

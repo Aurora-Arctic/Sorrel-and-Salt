@@ -231,6 +231,11 @@ type QueryPossibleDuplicatesConnection {
 type QueryPossibleDuplicatesConnectionEdge {
   cursor: String!
   node: Ingredient!
+
+  """
+  The name's trigram similarity to the entry, 0.4 to 1 — its best across the label, formal name and folk names. 1 is an exact match.
+  """
+  score: Float!
 }
 
 type QueryZodiacSuggestionsConnection {
