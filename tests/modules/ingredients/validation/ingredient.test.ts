@@ -43,6 +43,12 @@ describe('the workspace-local ingredient', () => {
     });
   });
 
+  it('supplies none for a naming system sent as null, as an absence', () => {
+    expect(LocalIngredientInput.parse({ name: 'Testwort', nomenclature: null }).nomenclature).toBe(
+      'none',
+    );
+  });
+
   it('keeps a kind the member chose rather than overwriting it', () => {
     expect(LocalIngredientInput.parse({ name: 'Testwort', nomenclature: 'unknown' })).toMatchObject(
       { nomenclature: 'unknown' },
@@ -299,6 +305,20 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
       substitutes: ['Mock Root', '  '],
     });
 
-    expect(parsed).toMatchObject({ deities: [], substitutes: ['Mock Root'] });
+    expect(parsed).toMatchObject({ deities: null, substitutes: ['Mock Root'] });
+  });
+
+  // A list left with no entries is no list: cleared to null, as a blank text
+  // field is, so "none" is stored one way rather than as NULL and {}.
+  it('takes an array field left empty as absent', () => {
+    const parsed = Schema.parse({
+      name: 'Testwort',
+      nomenclature: 'none',
+      deities: [],
+      substitutes: ['  '],
+      folkNames: [],
+    });
+
+    expect(parsed).toMatchObject({ deities: null, substitutes: null, folkNames: null });
   });
 });
