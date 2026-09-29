@@ -59,6 +59,13 @@ const PROBES: Record<string, Probe> = {
     outcome: 'answers',
   },
   commonNameSuggestions: suggestion('commonNameSuggestions'),
+  possibleDuplicates: {
+    source: `query ($workspaceId: ID!) {
+      possibleDuplicates(workspaceId: $workspaceId, name: "Testwort", first: 1) { edges { node { id } } }
+    }`,
+    variables: { workspaceId: WORKSPACE_W_ID },
+    outcome: 'refuses',
+  },
   formSuggestions: suggestion('formSuggestions'),
   planetSuggestions: suggestion('planetSuggestions'),
   zodiacSuggestions: suggestion('zodiacSuggestions'),

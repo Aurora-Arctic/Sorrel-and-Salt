@@ -157,6 +157,7 @@ type Query {
   me: User!
   ok: Boolean!
   planetSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryPlanetSuggestionsConnection!
+  possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID!): QueryPossibleDuplicatesConnection!
   zodiacSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryZodiacSuggestionsConnection!
 }
 
@@ -220,6 +221,16 @@ type QueryPlanetSuggestionsConnection {
 type QueryPlanetSuggestionsConnectionEdge {
   cursor: String!
   node: CorrespondenceSuggestion!
+}
+
+type QueryPossibleDuplicatesConnection {
+  edges: [QueryPossibleDuplicatesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryPossibleDuplicatesConnectionEdge {
+  cursor: String!
+  node: Ingredient!
 }
 
 type QueryZodiacSuggestionsConnection {
