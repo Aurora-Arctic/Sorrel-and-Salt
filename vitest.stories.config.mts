@@ -2,9 +2,8 @@ import { createRequire } from 'node:module';
 import { defineConfig } from 'vitest/config';
 import { dbHarness } from './tests/support/db-project.mts';
 
-const serverOnlyStub = createRequire(import.meta.url).resolve(
-  'next/dist/compiled/server-only/empty.js',
-);
+const require = createRequire(import.meta.url);
+const serverOnlyStub = require.resolve('next/dist/compiled/server-only/empty.js');
 
 // `npm run test:stories`: the acceptance suite alone, printed as a checklist
 // of the v1 stories. A config of its own rather than a third project, so a red
@@ -16,11 +15,17 @@ const serverOnlyStub = createRequire(import.meta.url).resolve(
 // stays first so a failing story still prints its assertion.
 // `passWithNoTests` because 51 stories with no test is a true report.
 export default defineConfig({
-  // As vitest.config.mts: tests reach src/ by the `@/*` alias, and a service's
-  // `server-only` marker resolves to Next's empty stub.
+  // As vitest.config.mts: tests reach src/ by the `@/*` alias, a service's
+  // `server-only` marker resolves to Next's empty stub, and a bare `graphql`
+  // import gets the CommonJS copy Pothos and Yoga hold, so a story that runs a
+  // query against the real schema does not meet "another module or realm"
+  // (vitest.config.mts carries the why).
   resolve: {
     tsconfigPaths: true,
-    alias: [{ find: /^server-only$/, replacement: serverOnlyStub }],
+    alias: [
+      { find: /^graphql$/, replacement: require.resolve('graphql') },
+      { find: /^server-only$/, replacement: serverOnlyStub },
+    ],
   },
   test: {
     name: 'acceptance',

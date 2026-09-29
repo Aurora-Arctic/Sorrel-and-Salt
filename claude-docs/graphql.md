@@ -366,6 +366,115 @@ type SuggestionClaimant {
   signed out, from `assertMembership` when signed in elsewhere, a site admin
   included.
 
+### `compendium`, `ingredient` and `ingredientFormValues`
+
+The compendium's reads (M8.5), registered by `ingredients`, with the
+vocabulary types by `vocabulary`. All three are public (MB.80): no `signedIn`
+scope, and the list and the vocabulary resolvers pass no session at all.
+
+```graphql
+type Query {
+  compendium(
+    search: String
+    categoryIds: [ID!]
+    form: String
+    first: Int
+    after: String
+  ): QueryCompendiumConnection!
+  ingredient(id: ID!, workspaceId: ID): Ingredient!
+  ingredientFormValues(first: Int, after: String): QueryIngredientFormValuesConnection!
+}
+
+type Ingredient {
+  id: ID!
+  name: String!
+  slug: String!
+  canonicalName: String # null exactly when nomenclature is none or unknown
+  nomenclature: Nomenclature!
+  form: String # free text over the curated vocabulary
+  description: String
+  element: IngredientElement
+  planet: String
+  zodiac: String
+  deities: [String!]
+  color: String
+  safetyNotes: String
+  substitutes: [String!]
+  isGlobal: Boolean! # the compendium tier
+  folkNames: [String!]! # the folkNamesByIngredient loader
+  categories: [Category!]! # the categoriesByIngredient loader
+  audit: AuditInfo!
+}
+
+type Category {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String!
+  group: CategoryGroup! # the categoryGroupsById loader
+}
+
+type CategoryGroup {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String!
+  colorDark: String! # the pair a chip wears (MB.36)
+  colorLight: String!
+}
+
+type IngredientFormValue {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String!
+  group: IngredientFormGroup! # the ingredientFormGroupsById loader
+}
+
+type IngredientFormGroup {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String!
+}
+```
+
+- **The `compendium` query is the search.** `search`, `categoryIds` and
+  `form` are the service's, filtered in SQL ([`db.md`](db.md), "The compendium
+  read"): the term at least 0.5 word-similar (`<%`) to the label, the formal
+  name or a live folk name, case- and accent-folded, so a prefix and a
+  transposed pair both find their entry, in `(name, id)` order rather than
+  ranked; every listed category (AND; M8.12 adds a mode); the form
+  under `canonical_key`'s fold. The browser never holds more than a page (rule
+  8), so it cannot be the search, which is why M8.4's client-side
+  `filterIngredients()` was retired (DESIGN.md §14). `element` (M8.13) and
+  `nomenclature` (M5.5) are those tasks' arguments to add.
+- **`ingredient` is non-null, and a miss is `NOT_FOUND`**, as `me` answers
+  one: an id that names nothing, a soft-deleted entry, and a coven's own entry
+  asked for without its coven all read the same, since a workspace entry's
+  existence is private. `workspaceId` names the coven whose own entry may be
+  asked for — the service asks `assertMembership(…, { ingredient: ['read'] })`,
+  refusing a non-member, a site admin and a signed-out caller with
+  `Forbidden` — and without it the read is the compendium alone. A malformed
+  id is a miss, not a driver error.
+- **`Ingredient` is declared over the row** (`typeof ingredients.$inferSelect`)
+  and never exposes `canonicalKey`, `workspaceId` or the pending-slug
+  columns. `folkNames` and `categories` go through the two ingredient loaders,
+  keyed by the row itself; `Category.group` and `IngredientFormValue.group`
+  through the two id-keyed group loaders ("Loaders" below).
+- **`IngredientFormValue`, not `IngredientForm`**: one row is one permitted
+  value of `ingredients.form`, and `IngredientForm` is the entry-form component
+  (DESIGN.md §7). Only forms whose group is live are listed, as
+  `formSuggestions` counts curated, and the group is what tells two "Wax"
+  values apart.
+- **The three refuse nothing a scope would, and a sweep holds the line.**
+  `tests/db/graphql-query-scopes.test.ts` names every `Query` field with the
+  outcome a null session gets, fails on a field it does not name, and runs
+  each. A query added later has to say which side it is on.
+- **Cost.** A page of 100 with `categories { group { … } }` prices above
+  `MAX_COST`, since a bare list multiplies its selection by 10, and is refused;
+  the chip-decorated list pages at 25 or 50 ("Protections").
+
 ### Auth scopes: the second check
 
 `@pothos/plugin-scope-auth` gives the schema three scopes, all read off the
@@ -381,7 +490,9 @@ A scope is the second check, never the first. The service's own check is the
 gate (CLAUDE.md rule 1), and a scope on a field is a cheap early refusal in
 front of it: `me` carries `signedIn`; `User.email`, `role` and
 `canCreateWorkspace` carry `{ self: user.id, admin: true }`, which holds if
-either does; M5.7 puts `admin` on every admin mutation. The private fields'
+either does; M5.7 puts `admin` on every admin mutation. `ok` and the
+compendium's three queries carry no scope at all, and the sweep above names
+them so. The private fields'
 test hands `me` another user's row, standing in for a service that chose the
 wrong one, which is the bug the scope is behind. A
 scope refusal throws `Forbidden` from `src/lib/errors.ts`, the same type a
@@ -540,13 +651,13 @@ that adds a list query adopts it in its own PR, and the guard below makes
 forgetting fail in that PR.
 
 ```ts
-builder.queryFields((t) => ({
-  compendium: t.pagedConnection({
-    type: Ingredient,
+builder.queryField('compendium', (t) =>
+  t.pagedConnection({
+    type: IngredientRef,
     args: { search: t.arg.string({ required: false }) },
-    resolve: (_parent, { search }, page, { session }) => compendium.list(session, search, page),
+    resolve: (_parent, { search }, page) => listCompendium({ search }, page),
   }),
-}));
+);
 ```
 
 The field is a Relay connection. `@pothos/plugin-relay` builds the
@@ -690,9 +801,11 @@ merely absent:
 - **`src/graphql/loaders/index.ts`** registers each factory in `LOADERS`, under
   the name a resolver reads it by. `createLoaders(session)` calls every factory
   and is called only by `createContext`. Each loader arrives with the schema it
-  loads: `membershipsByUser` (`coven`, for `User.memberships`), and
+  loads: `membershipsByUser` (`coven`, for `User.memberships`),
   `categoriesByIngredient` and `folkNamesByIngredient` (`ingredients`, for
-  M8.5's `Ingredient.categories` and `Ingredient.folkNames`); M6.11
+  `Ingredient.categories` and `Ingredient.folkNames`), and
+  `categoryGroupsById` and `ingredientFormGroupsById` (`vocabulary`, for
+  `Category.group` and `IngredientFormValue.group`); M6.11
   `membersByWorkspace`, MB.9 `ingredientsById` and MB.10 `usersById` follow. A test that builds a context
   by hand calls `createLoaders(session)` rather than passing `{}`, which the
   `Loaders` type no longer admits. A factory is written in its module's `loaders/`, exported
@@ -703,12 +816,14 @@ merely absent:
   keyed by the parent row's `{ id, workspaceId }` and cached by `id`. The
   service needs the `workspaceId` to know which coven to check without a read
   of its own, and it never trusts it as the scope ([`db.md`](db.md),
-  "Ingredient children").
+  "Ingredient children"). The two group loaders are keyed by id, and a group
+  that is missing or retired is a `NotFound` in its own slot.
 - **A null session is not always a refusal.** `membershipsByUser` refuses
   every key signed out. The ingredient loaders answer a compendium entry for
   anyone, since the compendium is the public surface (MB.80), and refuse a
-  workspace entry's key with `Forbidden` in its own slot. A refusal is per
-  key, never per batch.
+  workspace entry's key with `Forbidden` in its own slot; the group loaders
+  answer anyone, since a vocabulary is public reference data. A refusal is
+  per key, never per batch.
 - **Only `define-loader.ts` may import `dataloader` at runtime.**
   `.oxlintrc.json` bans the import everywhere else. Its `src/modules/*/services/**`,
   `src/db/**` and access-boundary overrides restate the ban, because an

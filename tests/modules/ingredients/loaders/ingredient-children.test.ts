@@ -5,7 +5,7 @@ import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import {
-  type IngredientRef,
+  type IngredientKey,
   categoriesByIngredient,
   folkNamesByIngredient,
 } from '@/modules/ingredients';
@@ -38,7 +38,7 @@ let sql: ReturnType<typeof postgres>;
 
 /** The ingredients this file wrote, each with the children it was given. */
 interface Written {
-  ref: IngredientRef;
+  ref: IngredientKey;
   folkNames: string[];
   categories: string[];
 }
@@ -104,10 +104,10 @@ async function addFifty(): Promise<Written[]> {
 const loadersFor = (session: Session | null) =>
   buildLoaders({ categoriesByIngredient, folkNamesByIngredient }, session);
 
-const categoryNames = async (session: Session | null, ref: IngredientRef) =>
+const categoryNames = async (session: Session | null, ref: IngredientKey) =>
   (await loadersFor(session).categoriesByIngredient.load(ref)).map((category) => category.name);
 
-const folkNames = (session: Session | null, ref: IngredientRef) =>
+const folkNames = (session: Session | null, ref: IngredientKey) =>
   loadersFor(session).folkNamesByIngredient.load(ref);
 
 describe('the categoriesByIngredient loader', () => {
@@ -226,7 +226,7 @@ describe.each([
 
   it('refuses one key without refusing the rest of its batch', async () => {
     const loader = loadersFor(asUser(D))[name];
-    const load = (ref: IngredientRef) => loader.load(ref);
+    const load = (ref: IngredientKey) => loader.load(ref);
 
     const [refused, answered] = await Promise.allSettled([load(local.ref), load(compendium.ref)]);
 

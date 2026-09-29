@@ -680,8 +680,8 @@ itself gone now (MB.32) until M7.A.1 restores it.
   the `RUN` step instead. `POSTGRES_HOST_AUTH_METHOD=trust` was considered as
   the fix and **rejected**: it bakes passwordless auth into the shipped
   `pg_hba.conf`.
-- **`Docker/Dockerfile.postgres`** — `FROM postgres:18` with `pg_trgm` (the only
-  extension §5 names) and an empty `sorrel_template` database baked in at
+- **`Docker/Dockerfile.postgres`** — `FROM postgres:18` with `pg_trgm` and
+  `unaccent` (the two extensions §5 names) and an empty `sorrel_template` database baked in at
   _build_ time, by running the official image's own `docker-entrypoint.sh`
   inside a `RUN` step instead of leaving it to first boot. No schema or seed
   data is baked in, and none will be: M1.27 was specified to extend this

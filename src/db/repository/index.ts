@@ -26,8 +26,15 @@ export {
   findPageInWorkspace,
 } from './finders';
 export { findManyInSpell, findManySpells, findOneSpell } from './spells';
-export { findManyOfIngredients, findSimilarIngredients } from './ingredients';
 export {
+  findCompendiumPage,
+  findManyOfIngredients,
+  findOneIngredient,
+  findSimilarIngredients,
+  type IngredientFilter,
+} from './ingredients';
+export {
+  findIngredientFormValues,
   findVocabularySuggestions,
   type FormSuggestion,
   type SuggestingVocabulary,

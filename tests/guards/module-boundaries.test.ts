@@ -59,6 +59,10 @@ const TIER_SEAM: string[] = [
   'findCommonNameSuggestions',
   // An ingredient's folk names and categories, read for the compendium and the proofs' covens at once.
   'findManyOfIngredients',
+  // The public compendium list: the compendium tier alone, under the client's filters (M8.5).
+  'findCompendiumPage',
+  // One ingredient by id, in the compendium or a proof's coven (M8.5).
+  'findOneIngredient',
 ];
 
 /**

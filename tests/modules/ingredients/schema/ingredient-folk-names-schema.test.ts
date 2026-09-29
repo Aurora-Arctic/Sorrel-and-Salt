@@ -6,9 +6,11 @@ import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-fol
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
-// DESIGN.md §5's two indexes, transcribed by name.
+// DESIGN.md §5's indexes, transcribed by name; the folded trigram twin is
+// ingredients-unaccent.test.ts's.
 const UNIQUE_INDEX = 'ingredient_folk_names_unique';
 const TRIGRAM_INDEX = 'ingredient_folk_names_trgm';
+const UNACCENT_TRIGRAM_INDEX = 'ingredient_folk_names_unaccent_trgm';
 const INGREDIENT_FK = 'ingredient_folk_names_ingredient_id_ingredients_id_fk';
 
 describe('ingredient_folk_names schema', () => {
@@ -39,8 +41,10 @@ describe('ingredient_folk_names schema', () => {
     expect(foreignKeyByColumn.ingredient_id.foreignColumnName).toBe('id');
   });
 
-  it('declares exactly the two indexes DESIGN.md §5 names', () => {
-    expect(Object.keys(indexByName).sort()).toEqual([UNIQUE_INDEX, TRIGRAM_INDEX].sort());
+  it('declares exactly the three indexes DESIGN.md §5 names', () => {
+    expect(Object.keys(indexByName).sort()).toEqual(
+      [UNIQUE_INDEX, TRIGRAM_INDEX, UNACCENT_TRIGRAM_INDEX].sort(),
+    );
   });
 
   // Rule 4: without the predicate a soft-deleted folk name reserves its spelling forever.

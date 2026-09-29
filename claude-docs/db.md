@@ -140,6 +140,23 @@ output or CI behaviour changes when it's unset. Full setup:
   `DROP CONSTRAINT` and the `DROP INDEX`; `DROP NOT NULL` widens and is exempt.
   A contract migration was affordable because the table was empty and
   unqueried — the table-task-then-behaviour-task rule paying out.
+- **`0026_unaccent.sql`** (M8.5) is the fourth hand-written one, via
+  `generate --custom`: `CREATE EXTENSION IF NOT EXISTS unaccent`, for the
+  compendium search's accent folding, and `unaccent_immutable(text)`, a
+  SQL-language wrapper declared `IMMUTABLE` because it names the dictionary —
+  `unaccent()` itself is `STABLE`, since which dictionary it reads depends on
+  `search_path`, and an expression index takes an immutable function only.
+  `IF NOT EXISTS` for 0000's reason: `sorrel_template`/`sorrel` have the
+  extension from the image build (`Docker/postgres-init/`), and the migration
+  is what makes a from-scratch database match. A trusted extension, so
+  `sorrel`, no superuser, and a Neon role may create it; `LANGUAGE sql`
+  because a C-language wrapper would need superuser.
+- **`0027_unaccent-indexes.sql`** (M8.5) adds `ingredients_unaccent_trgm` and
+  `ingredient_folk_names_unaccent_trgm`, `gin_trgm_ops` over
+  `unaccent_immutable(…)` of the searched columns — beside the raw trigram
+  indexes rather than in their place, since the fuzzy finders still match the
+  raw columns. `drizzle-kit generate` wrote the statements; `IF NOT EXISTS`
+  was added by hand, as 0011's was. See "The compendium read".
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
@@ -518,9 +535,11 @@ and runs the read in the same transaction. `set_config(…, true)` is
 cannot forget either threshold, and each is written in one place. The second
 is `<%`'s, word similarity, which is how a description is searched ("The
 member's autofill" below); 0.6 is pg_trgm's own default, set anyway so the
-server's configuration cannot move it. This is the one
-read that opens a transaction: it carries a planner setting, not an identity,
-so it is not the read-side `withAudit` that MB.29 declined to build.
+server's configuration cannot move it. A keyset page can ask the same way:
+a `Keyset` marked `wordMatch` is read in a transaction that sets the word
+threshold to the search's 0.5 first ("The compendium read"). These are the
+reads that open a transaction: they carry a planner setting, not an identity,
+so they are not the read-side `withAudit` that MB.29 declined to build.
 
 **`findSimilarIngredients` (M4.7) is the first finder bound by both halves.**
 It answers story 16's "did you mean": live ingredients in the compendium or
@@ -553,10 +572,11 @@ plan shows a real choice between the probe and the walk. With 2,000 names
 sharing one prefix, the plan shows the walk even for a query that can reach
 the trigram index.
 
-**Accent insensitivity is client-side only.** `unaccent` is not installed in
-this database (only `pg_trgm` is, per the migrations section above), so
-there's no server-side normalization path to lean on — a deliberate scope
-limit, not a gap left for later.
+**Accent insensitivity is the compendium search's, through `unaccent`** (M8.5;
+"The compendium read" below). It is not the fuzzy matches': `%` reads the raw
+columns and the raw trigram indexes, and one diacritic barely moves a trigram
+score, so the duplicate warning is accent-tolerant without folding. Folding it
+too would be a small task of its own, not a gap.
 
 Full column list, the CHECK constraints' exact text, and the
 local-beats-compendium resolution query that reads these indexes: DESIGN.md
@@ -1827,12 +1847,14 @@ The reads of it so far are `findSimilarIngredients` (see "Fuzzy matching"),
 member's autofill"), and `findManyOfIngredients` through the parent of a folk
 name or a category link (see "Ingredient children"), each naming
 both tiers as explicitly as this paragraph asks, and each listed on
-[the tier seam](modules.md#the-tier-seam). Whichever of M5.2 or M8 first needs
-a plain compendium read adds a finder that ANDs `workspace_id IS NULL` as explicitly as the scoped one
-ANDs its proof; the local-beats-compendium resolution (§5) wants both tiers and
-is a third, named finder over `workspace_id = $1 OR workspace_id IS NULL`. The
-point of the narrowing is that a read of that table has to say which tier it
-means instead of getting whichever the default was.
+[the tier seam](modules.md#the-tier-seam). The plain compendium read is
+`findCompendiumPage` (M8.5), which ANDs `inCompendium` as explicitly as the
+scoped finders AND their proof, and `findOneIngredient` reads one row in the
+compendium or a proof's coven ("The compendium read"); the
+local-beats-compendium resolution (§5) wants both tiers under an anti-join and
+is a further named finder, M8.3's. The point of the narrowing is that a read
+of that table has to say which tier it means instead of getting whichever the
+default was.
 
 `findOneById` and `findManyByIds` are the read-side twins of `updateById`: a
 service cannot build `eq(table.id, id)` or `inArray(...)` (MB.33), and a
@@ -2103,6 +2125,79 @@ one arbiter either way. The message names what the input asked for, not the
 row already holding it. Naming the holder of an identity would take a lookup by
 `canonical_key`, which the service has no value to compare with, because the
 database computes it.
+
+## The compendium read (M8.5)
+
+The compendium is the public surface (MB.80), so its reads take no proof and
+no session. Two services in `ingredients`' `services/compendium.ts` and one
+in `vocabulary`'s `services/ingredient-form-values.ts` sit over three
+finders, the two that read the compendium tier named on
+[the tier seam](modules.md#the-tier-seam).
+
+**`findCompendiumPage(filter, page)`** is one keyset page of the compendium in
+`(name, id)` order under an `IngredientFilter`, every part optional and absent
+meaning no filter:
+
+- **`search`** is word similarity, case- and accent-folded, against the display
+  name, the formal name or a live folk name:
+  `unaccent_immutable($term) <% unaccent_immutable(column)`, true when the term
+  is at least **0.5** word-similar to some run of the text. That forgives a
+  transposed pair (`mugwrot` is exactly 0.5 to Mugwort), matches a
+  two-letter prefix as it is typed (`mu`, 0.67), and reads across
+  punctuation (`devils shoestring`, 0.8), where pg_trgm's own 0.6 misses the
+  typo. A term of punctuation alone has no trigrams and matches nothing.
+  pg_trgm's GIN answers `<%` when the text side is the index's own
+  expression, which is what `ingredients_unaccent_trgm` and
+  `ingredient_folk_names_unaccent_trgm` (migration 0027) are for, and
+  `unaccent_immutable` (0026) is the `IMMUTABLE` wrapper an expression index
+  needs; `ingredients-unaccent.test.ts` proves by `EXPLAIN` that each
+  predicate reaches its index. The three matches are a `UNION ALL` under
+  `id IN (…)`, the shape "Fuzzy matching" argues for over an `OR` beside the
+  scope.
+- **The 0.5 is set by `selectFrom`, as every threshold is.** The finder marks
+  its keyset `wordMatch` when there is a term, and `selectFrom` then reads the
+  page in a transaction that sets `pg_trgm.word_similarity_threshold` with
+  `set_config(…, true)` first — the similarity branch's shape, on the keyset
+  branch. `compendium-search-query.test.ts` reads the statements sent: the
+  setting before the match, and no transaction for a page with no term. The
+  results stay in `(name, id)` order, not ranked by score: a keyset page needs
+  a stored sort key, and a score is computed per term.
+- **`categoryIds`** is AND: one correlated `existsIn(ingredient_categories, …)`
+  per id, so an entry must carry every one. OR is M8.12's argument to add.
+- **`form`** compares `lower(btrim(…))` on both sides, the fold
+  `canonical_key` uses.
+
+The order is the keyset helper's, one `NOT NULL` column plus the id, under the
+database's own collation (`en_US.utf8` in the image), and a search pages in
+that order too: ranking it by score needs a compound, computed key the helper
+does not take yet, which is MB.104's to add — and M8.14's
+`(lower(name), canonical_key, id)` declares its parts on the same mechanism.
+Moving a cursor's sort is harmless.
+
+**`findOneIngredient(memberships, id)`** is one live row in the compendium or
+in a coven one of the proofs names, in the shape of `findManyOfIngredients`. No
+proofs reads the compendium alone, which is how a signed-out request reads it,
+and a coven's row asked for without its proof is `undefined`, the same answer
+as an id that names nothing.
+
+**`findIngredientFormValues(page)`** is one keyset page of the curated form
+vocabulary in `(name, id)` order: the live forms whose group is live too, which
+is what curated means to `findVocabularySuggestions` as well, with the group's
+`deleted_at` read by `existsIn`.
+
+**The services parse ids first.** `listCompendium` runs its filter through
+`CompendiumFilter` (Zod, in `validation/compendium-filter.ts`) and
+`getIngredient` checks its id the same way, and the reason is `selectFrom`'s
+keyset branch: it maps every SQLSTATE class-22 error to `InvalidCursor`, on the
+premise that the cursor is the only client text a page query carries. A
+category id compared to a `uuid` column is client text too, so a malformed one
+is refused before the query or it would come back as "Invalid cursor". The
+check is `z.guid()`, not `z.uuid()`: Postgres's `uuid` takes any version and
+variant, and the seed's hand-written ids are not RFC-shaped. `getIngredient`
+takes an optional `workspaceId`; with one it asks
+`assertMembership(…, { ingredient: ['read'] })` — a signed-out caller, a site
+admin and a non-member get `Forbidden` — and reads both tiers, without one it
+reads the compendium alone, and a miss is `NotFound` either way.
 
 ## Soft-delete filtering and the partial-index convention (M1.20)
 
@@ -3017,13 +3112,13 @@ function call, an expression, a cast or a row value. A reviewer reading a
 fragment should be able to place it in this list, and one that is not obviously
 one of these carries a one-clause comment saying which it is:
 
-| Fragment                                                                                                                                                                                                                                                                      | Why it is raw                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| pg_trgm's `%`, `<%` and `similarity()`                                                                                                                                                                                                                                        | No builder; the operators are what the trigram index answers ("Fuzzy matching")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| A function or expression: `lower(btrim(…))`, `greatest(…)`, `mode() within group (…)`, `json_agg(…) filter (…)`, `row_number() over (…)`, `now() - make_interval(…)`, `a \|\| ' ' \|\| b`, a `case`, a bare literal in a select list (`select 1`, the union's `0` and `null`) | No builder. The comparison _around_ one is still the builder's — ``ne(sql`btrim(…)`, '')``, ``lt(users.updatedAt, sql`now() - …`)`` — so a fragment holds the expression and nothing else                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| A row value and its casts: `(sort, id)` against `(cast(… as <the column's type>), …)`, `(…)::int`                                                                                                                                                                             | No builder for a row value, and the cast must be the column's own type ("Keyset pages"); the `>` and `<` are `gt`'s and `lt`'s                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `set_config(…, true)`                                                                                                                                                                                                                                                         | `SET LOCAL` with a bind parameter, which no builder issues (rule 3; "Fuzzy matching")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| A whole statement: the `union all` arms of a suggestion list or of `findSimilarIngredients`'s match, a `Derived` source, the scalar subquery ranking a folk name, and the `not in (select …)` and `left join (select …)` inside them                                          | **Raw by rule, not for want of a builder.** Drizzle has `unionAll`, `.as()`, `.leftJoin()` and `notInArray(…, subquery)`, but each arm is a `.select(`, and the guard confines those to `select.ts`'s two builders. The arms' fields are the expressions above anyway, so building the frame would leave most of the tags where they are. The cost is the one `existsIn` closed for the four `EXISTS`: an arm's `notSoftDeleted` is by convention, inside a string the guard cannot read. Closing it means a third builder in `select.ts` that hands a union arm out filtered, argued for in its own task |
+| Fragment                                                                                                                                                                                                                                                                                               | Why it is raw                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| pg_trgm's `%`, `<%` and `similarity()`                                                                                                                                                                                                                                                                 | No builder; the operators are what the trigram index answers ("Fuzzy matching")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| A function or expression: `lower(btrim(…))`, `unaccent_immutable(…)`, `greatest(…)`, `mode() within group (…)`, `json_agg(…) filter (…)`, `row_number() over (…)`, `now() - make_interval(…)`, `a \|\| ' ' \|\| b`, a `case`, a bare literal in a select list (`select 1`, the union's `0` and `null`) | No builder. The comparison _around_ one is still the builder's — ``ne(sql`btrim(…)`, '')``, ``lt(users.updatedAt, sql`now() - …`)`` — so a fragment holds the expression and nothing else                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| A row value and its casts: `(sort, id)` against `(cast(… as <the column's type>), …)`, `(…)::int`                                                                                                                                                                                                      | No builder for a row value, and the cast must be the column's own type ("Keyset pages"); the `>` and `<` are `gt`'s and `lt`'s                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `set_config(…, true)`                                                                                                                                                                                                                                                                                  | `SET LOCAL` with a bind parameter, which no builder issues (rule 3; "Fuzzy matching")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| A whole statement: the `union all` arms of a suggestion list, of `findSimilarIngredients`'s match or of `findCompendiumPage`'s search, a `Derived` source, the scalar subquery ranking a folk name, and the `not in (select …)` and `left join (select …)` inside them                                 | **Raw by rule, not for want of a builder.** Drizzle has `unionAll`, `.as()`, `.leftJoin()` and `notInArray(…, subquery)`, but each arm is a `.select(`, and the guard confines those to `select.ts`'s two builders. The arms' fields are the expressions above anyway, so building the frame would leave most of the tags where they are. The cost is the one `existsIn` closed for the four `EXISTS`: an arm's `notSoftDeleted` is by convention, inside a string the guard cannot read. Closing it means a third builder in `select.ts` that hands a union arm out filtered, argued for in its own task |
 
 What is _not_ on the list, and was raw until MB.100: `… is null` where
 `isNull()` serves, the compendium-tier predicate, now `inCompendium` in

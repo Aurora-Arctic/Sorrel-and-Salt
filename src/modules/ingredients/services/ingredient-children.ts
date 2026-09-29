@@ -14,7 +14,7 @@ import { type Membership, assertMembership } from '@/modules/coven';
  * the read takes that from the proofs, so a key claiming the wrong tier is
  * answered with nothing.
  */
-export type IngredientRef = Pick<typeof ingredients.$inferSelect, 'id' | 'workspaceId'>;
+export type IngredientKey = Pick<typeof ingredients.$inferSelect, 'id' | 'workspaceId'>;
 
 export type CategoryRow = typeof categories.$inferSelect;
 
@@ -29,7 +29,7 @@ export type CategoryRow = typeof categories.$inferSelect;
  */
 export async function categoriesOf(
   session: Session | null,
-  refs: readonly IngredientRef[],
+  refs: readonly IngredientKey[],
 ): Promise<(CategoryRow[] | Forbidden)[]> {
   const { admitted, answer } = await admit(session, refs);
   const links = await admitted(ingredientCategories);
@@ -53,7 +53,7 @@ export async function categoriesOf(
  */
 export async function folkNamesOf(
   session: Session | null,
-  refs: readonly IngredientRef[],
+  refs: readonly IngredientKey[],
 ): Promise<(string[] | Forbidden)[]> {
   const { admitted, answer } = await admit(session, refs);
   const rows = await admitted(ingredientFolkNames);
@@ -72,13 +72,13 @@ export async function folkNamesOf(
  * reads a child table for the refs that passed; `answer` lays the result out
  * in ref order.
  */
-async function admit(session: Session | null, refs: readonly IngredientRef[]) {
+async function admit(session: Session | null, refs: readonly IngredientKey[]) {
   const covens = [...new Set(refs.flatMap((ref) => ref.workspaceId ?? []))];
   const proofs = await Promise.all(covens.map((workspaceId) => proofFor(session, workspaceId)));
   const refused = new Set(covens.filter((_, i) => !proofs[i]));
   const memberships = proofs.filter((proof): proof is Membership => proof !== undefined);
 
-  const isRefused = (ref: IngredientRef) =>
+  const isRefused = (ref: IngredientKey) =>
     ref.workspaceId !== null && refused.has(ref.workspaceId);
   const ids = [...new Set(refs.filter((ref) => !isRefused(ref)).map((ref) => ref.id))];
 

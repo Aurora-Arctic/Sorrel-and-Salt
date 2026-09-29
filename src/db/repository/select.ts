@@ -18,6 +18,11 @@ export interface Keyset {
   sort: SortColumn;
   id: AnyPgColumn;
   request: PageRequest;
+  /**
+   * The `where` holds a `<%` search, so the page is read in a transaction
+   * under `SEARCH_WORD_SIMILARITY_THRESHOLD` rather than the server's.
+   */
+  wordMatch?: boolean;
 }
 
 /**
@@ -34,6 +39,13 @@ const SIMILARITY_THRESHOLD = 0.4;
  * own default, set anyway so the server's configuration cannot move it.
  */
 const WORD_SIMILARITY_THRESHOLD = 0.6;
+
+/**
+ * The word threshold a paged search reads `<%` at: looser than the autofill's
+ * 0.6, so a live search box forgives a transposed pair — `mugwrot` is 0.5
+ * word-similar to Mugwort — and still finds a two-letter prefix.
+ */
+const SEARCH_WORD_SIMILARITY_THRESHOLD = 0.5;
 
 /**
  * How `selectFrom` runs a trigram match: `%` and `<%` in its `where` mean
@@ -120,15 +132,25 @@ export async function selectFrom(
     });
   }
 
-  const query = build(db);
-  if (!keyset) return query;
+  if (!keyset) return build(db);
 
   const direction = keyset.request.inverted ? desc : asc;
+  const page = (executor: Executor) =>
+    build(executor)
+      .orderBy(direction(keyset.sort), direction(keyset.id))
+      .limit(keyset.request.limit) as unknown as Promise<
+      { row: Record<string, unknown>; key: string }[]
+    >;
   let rows: { row: Record<string, unknown>; key: string }[];
   try {
-    rows = await query
-      .orderBy(direction(keyset.sort), direction(keyset.id))
-      .limit(keyset.request.limit);
+    rows = keyset.wordMatch
+      ? await db.transaction(async (tx) => {
+          await tx.execute(
+            sql`select set_config('pg_trgm.word_similarity_threshold', ${String(SEARCH_WORD_SIMILARITY_THRESHOLD)}, true)`,
+          );
+          return page(tx);
+        })
+      : await page(db);
   } catch (error) {
     // The only client text in a page query is the cursor's, so a data
     // exception here is a cursor that names no position in this list.

@@ -130,5 +130,15 @@ export const ingredients = pgTable(
       sql`${table.name} gin_trgm_ops`,
       sql`${table.canonicalName} gin_trgm_ops`,
     ),
+    // The same pair folded through `unaccent_immutable` (migration 0026), for
+    // the compendium search's accent-insensitive `<%`: only an expression
+    // index lets a fold reach a trigram index (claude-docs/db.md, "The
+    // compendium read"). Beside the raw one, not instead of it — the fuzzy
+    // finders still match the raw columns.
+    index('ingredients_unaccent_trgm').using(
+      'gin',
+      sql`unaccent_immutable(${table.name}) gin_trgm_ops`,
+      sql`unaccent_immutable(${table.canonicalName}) gin_trgm_ops`,
+    ),
   ],
 );

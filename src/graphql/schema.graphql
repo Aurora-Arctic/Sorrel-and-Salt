@@ -5,6 +5,23 @@ type AuditInfo {
   updatedBy: ID!
 }
 
+type Category {
+  description: String!
+  group: CategoryGroup!
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+type CategoryGroup {
+  colorDark: String!
+  colorLight: String!
+  description: String!
+  id: ID!
+  name: String!
+  slug: String!
+}
+
 type CommonNameSuggestion {
   claimants: [SuggestionClaimant!]!
   value: String!
@@ -29,8 +46,62 @@ type FormSuggestion {
   value: String!
 }
 
+type Ingredient {
+  audit: AuditInfo!
+  canonicalName: String
+  categories: [Category!]!
+  color: String
+  deities: [String!]
+  description: String
+  element: IngredientElement
+  folkNames: [String!]!
+  form: String
+  id: ID!
+  isGlobal: Boolean!
+  name: String!
+  nomenclature: Nomenclature!
+  planet: String
+  safetyNotes: String
+  slug: String!
+  substitutes: [String!]
+  zodiac: String
+}
+
+enum IngredientElement {
+  air
+  earth
+  fire
+  spirit
+  water
+}
+
+type IngredientFormGroup {
+  description: String!
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+type IngredientFormValue {
+  description: String!
+  group: IngredientFormGroup!
+  id: ID!
+  name: String!
+  slug: String!
+}
+
 type Mutation {
   setEmail(email: String!): User!
+}
+
+enum Nomenclature {
+  botanical
+  chemical
+  fungal
+  mineral
+  none
+  unknown
+  zoological
 }
 
 type PageInfo {
@@ -42,7 +113,10 @@ type PageInfo {
 
 type Query {
   commonNameSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryCommonNameSuggestionsConnection!
+  compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, search: String): QueryCompendiumConnection!
   formSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryFormSuggestionsConnection!
+  ingredient(id: ID!, workspaceId: ID): Ingredient!
+  ingredientFormValues(after: String, before: String, first: Int, last: Int): QueryIngredientFormValuesConnection!
   me: User!
   ok: Boolean!
   planetSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryPlanetSuggestionsConnection!
@@ -59,6 +133,16 @@ type QueryCommonNameSuggestionsConnectionEdge {
   node: CommonNameSuggestion!
 }
 
+type QueryCompendiumConnection {
+  edges: [QueryCompendiumConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryCompendiumConnectionEdge {
+  cursor: String!
+  node: Ingredient!
+}
+
 type QueryFormSuggestionsConnection {
   edges: [QueryFormSuggestionsConnectionEdge!]!
   pageInfo: PageInfo!
@@ -67,6 +151,16 @@ type QueryFormSuggestionsConnection {
 type QueryFormSuggestionsConnectionEdge {
   cursor: String!
   node: FormSuggestion!
+}
+
+type QueryIngredientFormValuesConnection {
+  edges: [QueryIngredientFormValuesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryIngredientFormValuesConnectionEdge {
+  cursor: String!
+  node: IngredientFormValue!
 }
 
 type QueryPlanetSuggestionsConnection {

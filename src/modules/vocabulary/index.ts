@@ -1,5 +1,10 @@
 // The vocabulary module's behaviour surface. Schema tables are reached at
-// `@/modules/vocabulary/schema/*`; `services/*` and `graphql/*` are internal
-// to the module.
+// `@/modules/vocabulary/schema/*`; `services/*`, `graphql/*` and `loaders/*`
+// are internal to the module.
 export * from './services/suggestions';
+export * from './services/groups';
+export * from './services/ingredient-form-values';
+export * from './loaders/groups-by-id';
 export * from './graphql/suggestions';
+export * from './graphql/categories';
+export * from './graphql/ingredient-form-values';
