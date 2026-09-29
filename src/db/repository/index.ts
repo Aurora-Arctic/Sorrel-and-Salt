@@ -31,6 +31,7 @@ export {
   findManyOfIngredients,
   findOneIngredient,
   findSimilarIngredients,
+  type CompendiumScore,
   type IngredientFilter,
 } from './ingredients';
 export {

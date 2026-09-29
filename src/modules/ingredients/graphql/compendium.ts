@@ -18,6 +18,14 @@ builder.queryField('compendium', (t) =>
     },
     resolve: (_query, { search, categoryIds, form }, page) =>
       listCompendium({ search, categoryIds, form }, page),
+    edgeFields: (t) => ({
+      score: t.float({
+        nullable: true,
+        description:
+          'The word similarity of the search term to the entry, 0 to 1 — its best across the label, formal name and folk names. Null without a search.',
+        resolve: (edge) => edge.score,
+      }),
+    }),
   }),
 );
 

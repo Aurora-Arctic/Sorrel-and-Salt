@@ -5,7 +5,7 @@ import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { Membership } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../lib/pagination';
-import { existsIn, pageBounds, selectFrom } from './select';
+import { type Keyset, existsIn, pageBounds, selectFrom } from './select';
 import {
   type IngredientScoped,
   type Unscoped,
@@ -101,27 +101,43 @@ export interface IngredientFilter {
   form?: string;
 }
 
+/** What a compendium entry carries onto its edge: its word similarity to the term, on a search. */
+export interface CompendiumScore {
+  score: number | null;
+}
+
 /**
- * One page of the compendium in `(name, id)` order, under `filter` — the
- * public list, so no proof (claude-docs/db.md, "The compendium read").
+ * One page of the compendium under `filter` — the public list, so no proof
+ * (claude-docs/db.md, "The compendium read"). A search pages best match first,
+ * `(score DESC, name, id)`, and carries each row's score; a list without one
+ * pages `(name, id)` with a null score.
  */
 export function findCompendiumPage(
   filter: IngredientFilter,
   page: PageRequest,
-): Promise<PageEntry<typeof ingredients.$inferSelect>[]> {
-  const search = searchArm(filter.search);
-  const keyset = {
-    sort: [ingredients.name],
-    id: ingredients.id,
-    request: page,
-    wordMatch: search !== undefined,
-  };
+): Promise<PageEntry<typeof ingredients.$inferSelect, CompendiumScore>[]> {
+  const match = searchMatch(filter.search);
+  const keyset: Keyset<CompendiumScore> = match
+    ? {
+        // Negated, so one ascending row comparison bounds the page.
+        sort: [{ expression: sql`-${match.score}`, type: 'real' }, ingredients.name],
+        id: ingredients.id,
+        request: page,
+        wordMatch: true,
+        join: match.join,
+        carry: { score: match.score },
+      }
+    : {
+        sort: [ingredients.name],
+        id: ingredients.id,
+        request: page,
+        carry: { score: sql<number | null>`null` },
+      };
   return selectFrom(
     ingredients,
     and(
       inCompendium(ingredients),
       notSoftDeleted(ingredients),
-      search,
       ...categoryArms(filter.categoryIds ?? []),
       formArm(filter.form),
       pageBounds(keyset),
@@ -156,28 +172,47 @@ export async function findOneIngredient(
 }
 
 /**
- * `id IN (…)` over the three places a name lives: the term word-similar
- * (`<%`) to the label, the formal name or a live folk name, each side folded
- * through `unaccent_immutable` so the expression indexes of migration 0027
- * answer the match. The threshold is the keyset read's (`wordMatch`). A
- * `UNION ALL` under `IN` rather than an `OR` beside the scope, for
- * `findSimilarIngredients`'s reason. Blank means no filter.
+ * The rows matching a search, as a relation to join and each row's score. A
+ * row matches when the term is word-similar (`<%`) to its label, its formal
+ * name or a live folk name, each side folded through `unaccent_immutable` so
+ * the expression indexes of migration 0027 answer the match; the threshold is
+ * the keyset read's (`wordMatch`). The three matches are a `UNION ALL`, for
+ * `findSimilarIngredients`'s reason, each arm scoring what it matched with
+ * `word_similarity` — which the index's recheck has just computed — and the
+ * score is the best of them, `max … group by id`. A plain column, so the
+ * order and the page bound read it per matched row rather than a correlated
+ * folk-name subquery per compendium row (claude-docs/db.md, "The compendium
+ * read"). Blank means no search.
  */
-function searchArm(search: string | undefined): SQL | undefined {
+function searchMatch(
+  search: string | undefined,
+): { join: { source: SQL; on: SQL }; score: SQL<number> } | undefined {
   const term = search?.trim();
   if (!term) return undefined;
   const folded = sql`unaccent_immutable(${term})`;
   const matches = (text: AnyPgColumn) => sql`${folded} <% unaccent_immutable(${text})`;
+  const similarity = (text: AnyPgColumn) =>
+    sql`word_similarity(${folded}, unaccent_immutable(${text}))`;
   const candidate = alias(ingredients, 'candidate');
-  const byName = or(matches(candidate.name), matches(candidate.canonicalName));
-  const byFolkName = and(matches(ingredientFolkNames.name), notSoftDeleted(ingredientFolkNames));
-  return inArray(
-    ingredients.id,
-    sql`(
-      select ${candidate.id} from ${ingredients} as ${candidate} where ${byName}
+  const arms = sql.identifier('arms');
+  const matched = sql.identifier('matched');
+  // `greatest` skips nulls, so an entry with no formal name scores on its label.
+  const source = sql`(
+    select ${arms}.id, max(${arms}.score) as score from (
+      select ${candidate.id},
+        greatest(${similarity(candidate.name)}, ${similarity(candidate.canonicalName)}) as score
+      from ${ingredients} as ${candidate}
+      where ${or(matches(candidate.name), matches(candidate.canonicalName))}
       union all
-      select ${ingredientFolkNames.ingredientId} from ${ingredientFolkNames} where ${byFolkName})`,
-  );
+      select ${ingredientFolkNames.ingredientId}, ${similarity(ingredientFolkNames.name)}
+      from ${ingredientFolkNames}
+      where ${and(matches(ingredientFolkNames.name), notSoftDeleted(ingredientFolkNames))}
+    ) as ${arms}
+    group by ${arms}.id) as ${matched}`;
+  return {
+    join: { source, on: eq(sql`${matched}.id`, ingredients.id) },
+    score: sql<number>`${matched}.score`,
+  };
 }
 
 /** One correlated `EXISTS` per id, so an entry must carry every one of them. */

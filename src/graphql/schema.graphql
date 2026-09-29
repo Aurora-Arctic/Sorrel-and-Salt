@@ -141,6 +141,11 @@ type QueryCompendiumConnection {
 type QueryCompendiumConnectionEdge {
   cursor: String!
   node: Ingredient!
+
+  """
+  The word similarity of the search term to the entry, 0 to 1 — its best across the label, formal name and folk names. Null without a search.
+  """
+  score: Float
 }
 
 type QueryFormSuggestionsConnection {

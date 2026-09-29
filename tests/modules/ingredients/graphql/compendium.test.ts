@@ -61,7 +61,7 @@ interface Node {
 }
 
 interface Connection {
-  edges: { cursor: string; node: Node }[];
+  edges: { cursor: string; score: number | null; node: Node }[];
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
 }
 
@@ -75,6 +75,7 @@ function run(
       compendium(search: $search, categoryIds: $categoryIds, form: $form, first: $first, after: $after) {
         edges {
           cursor
+          score
           node {
             id name slug canonicalName nomenclature form isGlobal folkNames
             categories { name group { name colorDark } }
@@ -150,6 +151,41 @@ describe('compendium', () => {
       'Uncaria guianensis',
       'Uncaria tomentosa',
     ]);
+  });
+
+  // `sal` is a whole word of four seeded labels and half of two more: two
+  // scores, each tied, so the order shows the score first and the name second.
+  it('ranks a search best match first, with the score on each edge', async () => {
+    const result = await run(null, { search: 'sal', first: 50 });
+    expect(result.errors).toBeUndefined();
+    const edges = (result.data as { compendium: Connection }).compendium.edges;
+
+    expect(edges.map((edge) => [edge.node.name, edge.score])).toEqual([
+      ['Black Salt', 0.75],
+      ['Rosemary', 0.75],
+      ['Saltpetre', 0.75],
+      ['Sea Salt', 0.75],
+      ['Mugwort', 0.5],
+      ['Selenite', 0.5],
+    ]);
+  });
+
+  it('carries a null score on a list with no search', async () => {
+    const result = await run(null);
+
+    expect(result.errors).toBeUndefined();
+    const edges = (result.data as { compendium: Connection }).compendium.edges;
+    expect(edges).toHaveLength(25);
+    expect(edges.every((edge) => edge.score === null)).toBe(true);
+  });
+
+  it('treats a one-character term as no search: every entry, unranked', async () => {
+    const result = await run(null, { search: 'c', first: 50 });
+
+    expect(result.errors).toBeUndefined();
+    const edges = (result.data as { compendium: Connection }).compendium.edges;
+    expect(edges.map((edge) => edge.node.id)).toEqual(await expectedOrder());
+    expect(edges.every((edge) => edge.score === null)).toBe(true);
   });
 
   it('matches a folk name, accents folded', async () => {
