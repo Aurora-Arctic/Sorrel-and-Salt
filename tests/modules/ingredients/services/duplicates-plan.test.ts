@@ -41,7 +41,7 @@ beforeEach(async () => {
 
 /** Every statement the service sent, in order, from one call. */
 async function statementsFor(term: string): Promise<Logged[]> {
-  await findPossibleDuplicates(asUser(B), WORKSPACE_W_ID, term);
+  await findPossibleDuplicates(asUser(B), WORKSPACE_W_ID, term, { limit: 26, inverted: false });
   return [...logged];
 }
 
@@ -62,8 +62,8 @@ describe('the fuzzy duplicate query', () => {
 
       expect(setting).toBeGreaterThanOrEqual(0);
       expect(statements[setting].query).toMatch(/, true\)/);
-      // The word-similarity threshold rides the same statement; this query has no `<%`.
-      expect(statements[setting].params).toEqual(['0.4', '0.6']);
+      // Only the threshold `%` reads: this query has no `<%`.
+      expect(statements[setting].params).toEqual(['0.4']);
       expect(statements.indexOf(match(statements))).toBeGreaterThan(setting);
     });
 

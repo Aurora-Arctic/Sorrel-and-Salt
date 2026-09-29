@@ -45,6 +45,12 @@ export interface KeyOrder {
    * under `SEARCH_WORD_SIMILARITY_THRESHOLD` rather than the server's.
    */
   wordMatch?: boolean;
+  /**
+   * The `where` holds a `%` match, so the read runs in a transaction under
+   * `SIMILARITY_THRESHOLD`, the one a `Similarity` read sets, rather than
+   * pg_trgm's 0.3.
+   */
+  similarityMatch?: boolean;
 }
 
 /** How `selectFrom` orders, bounds and keys a page; the cursor bounds are in its `where`. */
@@ -240,20 +246,25 @@ function countsOf({ count: order, start }: KeysetCount) {
 }
 
 /**
- * Runs a keyset read, in a transaction under the search's word threshold when
- * the key says `wordMatch`. A page and its count both come through here, so
- * both read the same rows: at the server's 0.6 a count would miss rows the
- * pages hold.
+ * Runs a keyset read, in a transaction under the thresholds its key says its
+ * `where` reads: the search's word threshold for `wordMatch`, the similarity
+ * threshold for `similarityMatch`. A page and its count both come through
+ * here, so both read the same rows: at the server's 0.6 a count would miss
+ * rows the pages hold.
  */
 function readKeyed<T>(
-  { wordMatch }: KeyOrder,
+  { wordMatch, similarityMatch }: KeyOrder,
   run: (executor: Executor) => Promise<T>,
 ): Promise<T> {
-  if (!wordMatch) return run(db);
+  const settings = [
+    similarityMatch &&
+      sql`set_config('pg_trgm.similarity_threshold', ${String(SIMILARITY_THRESHOLD)}, true)`,
+    wordMatch &&
+      sql`set_config('pg_trgm.word_similarity_threshold', ${String(SEARCH_WORD_SIMILARITY_THRESHOLD)}, true)`,
+  ].filter((setting): setting is SQL => Boolean(setting));
+  if (settings.length === 0) return run(db);
   return db.transaction(async (tx) => {
-    await tx.execute(
-      sql`select set_config('pg_trgm.word_similarity_threshold', ${String(SEARCH_WORD_SIMILARITY_THRESHOLD)}, true)`,
-    );
+    await tx.execute(sql`select ${sql.join(settings, sql`, `)}`);
     return run(tx);
   });
 }

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable, alias } from 'drizzle-orm/pg-core';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
@@ -47,9 +47,10 @@ export function findManyOfIngredients<TTable extends PgTable & IngredientScoped 
 }
 
 /**
- * The live ingredients, in the compendium or the proof's workspace, whose
- * display name, formal name or a live folk name is trigram-similar to `term`
- * — best match first, at most `limit`. Reads both tiers in one statement.
+ * One page of the live ingredients, in the compendium or the proof's
+ * workspace, whose display name, formal name or a live folk name is
+ * trigram-similar to `term` — best match first, keyed `[-score, name]`. Reads
+ * both tiers in one statement.
  *
  * The three matches are a `UNION ALL` under `id IN (…)`, not an `OR` beside
  * the scope: Postgres cannot turn a subquery inside an `OR` into a join, so
@@ -60,8 +61,8 @@ export function findManyOfIngredients<TTable extends PgTable & IngredientScoped 
 export function findSimilarIngredients(
   membership: Membership,
   term: string,
-  limit: number,
-): Promise<(typeof ingredients.$inferSelect)[]> {
+  page: PageRequest,
+): Promise<PageEntry<typeof ingredients.$inferSelect>[]> {
   const candidate = alias(ingredients, 'candidate');
   const matched = sql`(
     select ${candidate.id} from ${ingredients} as ${candidate}
@@ -80,14 +81,21 @@ export function findSimilarIngredients(
        and ${notSoftDeleted(ingredientFolkNames)})
   )`;
 
+  const keyset: Keyset = {
+    sort: [{ expression: sql`-${score}`, type: 'real' }, ingredients.name],
+    id: ingredients.id,
+    similarityMatch: true,
+    request: page,
+  };
   return selectFrom(
     ingredients,
     and(
       or(inCompendium(ingredients), scopedTo(membership, ingredients)),
       notSoftDeleted(ingredients),
       inArray(ingredients.id, matched),
+      pageBounds(keyset),
     ),
-    { orderBy: [desc(score), asc(ingredients.name), asc(ingredients.id)], limit },
+    keyset,
   );
 }
 

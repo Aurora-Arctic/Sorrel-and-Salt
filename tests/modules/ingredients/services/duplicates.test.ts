@@ -2,6 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
+import type { PageRequest } from '@/lib/pagination';
 import { findPossibleDuplicates } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
@@ -33,8 +34,19 @@ async function similarity(a: string, b: string): Promise<number> {
   return Number(row.score);
 }
 
+/** Room for every row a test here writes, so one page is the whole answer. */
+const PAGE: PageRequest = { limit: 26, inverted: false };
+
+/** The rows of the lookup's first page. */
+const duplicatesOf = async (
+  user: typeof A | typeof E,
+  term: string,
+  workspaceId = WORKSPACE_W_ID,
+) =>
+  (await findPossibleDuplicates(asUser(user), workspaceId, term, PAGE)).map((entry) => entry.node);
+
 const namesFor = async (user: typeof A | typeof E, term: string, workspaceId = WORKSPACE_W_ID) =>
-  (await findPossibleDuplicates(asUser(user), workspaceId, term)).map((row) => row.name);
+  (await duplicatesOf(user, term, workspaceId)).map((row) => row.name);
 
 describe('findPossibleDuplicates', () => {
   describe('the threshold', () => {
@@ -116,7 +128,7 @@ describe('findPossibleDuplicates', () => {
     it('answers a blank name with nothing', async () => {
       await addIngredient({ name: 'Mugwort' });
 
-      await expect(findPossibleDuplicates(asUser(B), WORKSPACE_W_ID, '   ')).resolves.toEqual([]);
+      expect(await duplicatesOf(B, '   ')).toEqual([]);
     });
   });
 
@@ -127,7 +139,7 @@ describe('findPossibleDuplicates', () => {
       await addIngredient({ name: "Cat's Claw", canonicalName: 'Uncaria tomentosa' });
       await addIngredient({ name: "Cat's Claw", canonicalName: 'Senegalia greggii' });
 
-      const results = await findPossibleDuplicates(asUser(B), WORKSPACE_W_ID, "Cat's Claw");
+      const results = await duplicatesOf(B, "Cat's Claw");
 
       expect(results.map((row) => row.canonicalName).sort()).toEqual([
         'Senegalia greggii',
@@ -138,7 +150,7 @@ describe('findPossibleDuplicates', () => {
     it('says so when an entry declares none', async () => {
       await addIngredient({ name: 'Graveyard Dirt', workspaceId: WORKSPACE_W_ID });
 
-      const [result] = await findPossibleDuplicates(asUser(B), WORKSPACE_W_ID, 'Graveyard Dirt');
+      const [result] = await duplicatesOf(B, 'Graveyard Dirt');
 
       expect(result).toMatchObject({ canonicalName: null, nomenclature: 'none' });
     });
@@ -164,23 +176,17 @@ describe('findPossibleDuplicates', () => {
     });
 
     it('spans the compendium and the current workspace', async () => {
-      const ids = (await findPossibleDuplicates(asUser(B), WORKSPACE_W_ID, 'Mugwart')).map(
-        (row) => row.id,
-      );
+      const ids = (await duplicatesOf(B, 'Mugwart')).map((row) => row.id);
 
       expect(ids.sort()).toEqual([compendium, ours].sort());
     });
 
     it('never returns another workspace’s entries, by name or by folk name', async () => {
       // Why they could have come back: they are matches, and X's own member sees them.
-      const fromX = (await findPossibleDuplicates(asUser(D), WORKSPACE_X_ID, 'Mugwart')).map(
-        (row) => row.id,
-      );
+      const fromX = (await duplicatesOf(D, 'Mugwart', WORKSPACE_X_ID)).map((row) => row.id);
       expect(fromX).toEqual(expect.arrayContaining([theirs, theirsByFolkName]));
 
-      const fromW = (await findPossibleDuplicates(asUser(B), WORKSPACE_W_ID, 'Mugwart')).map(
-        (row) => row.id,
-      );
+      const fromW = (await duplicatesOf(B, 'Mugwart')).map((row) => row.id);
       expect(fromW).not.toContain(theirs);
       expect(fromW).not.toContain(theirsByFolkName);
     });
