@@ -30,5 +30,11 @@ export const ingredientFolkNames = pgTable(
     // Not partial: a trigram index reserves nothing. The threshold rule that
     // makes `%` reach it is ingredients.ts's (claude-docs/db.md, "Fuzzy matching").
     index('ingredient_folk_names_trgm').using('gin', sql`${table.name} gin_trgm_ops`),
+    // Folded through `unaccent_immutable` for the compendium search, beside
+    // the raw one as ingredients.ts's is (migration 0026).
+    index('ingredient_folk_names_unaccent_trgm').using(
+      'gin',
+      sql`unaccent_immutable(${table.name}) gin_trgm_ops`,
+    ),
   ],
 );

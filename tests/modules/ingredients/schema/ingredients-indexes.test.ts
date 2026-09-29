@@ -32,15 +32,17 @@ const UNIQUE = [
   COMPENDIUM_PENDING_SLUG,
   WORKSPACE_PENDING_SLUG,
 ];
-// §9's, neither unique nor partial; ingredients-trigram.test.ts owns it.
+// §9's, neither unique nor partial; ingredients-trigram.test.ts owns it, and
+// ingredients-unaccent.test.ts its folded twin.
 const TRIGRAM = 'ingredients_trgm';
+const UNACCENT_TRIGRAM = 'ingredients_unaccent_trgm';
 
 describe('ingredients index declarations', () => {
   const { byIndexName: byName } = tableFacts(ingredients);
 
   // "Exactly", not "at least": an eighth unique index is what this list exists to catch.
-  it('declares exactly §5’s seven unique indexes and §9’s trigram one', () => {
-    expect(Object.keys(byName).sort()).toEqual([...UNIQUE, TRIGRAM].sort());
+  it('declares exactly §5’s seven unique indexes and the two trigram ones', () => {
+    expect(Object.keys(byName).sort()).toEqual([...UNIQUE, TRIGRAM, UNACCENT_TRIGRAM].sort());
   });
 
   it('makes all seven unique and all seven partial', () => {

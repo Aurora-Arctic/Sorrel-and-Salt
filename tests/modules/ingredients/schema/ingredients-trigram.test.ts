@@ -15,6 +15,9 @@ import { ingredientSlug } from '@/lib/slugify';
 // claude-docs/db.md, "Fuzzy matching: one index, and a rule every caller is bound by".
 const TRIGRAM_INDEX = 'ingredients_trgm';
 const FOLK_NAMES_TRIGRAM_INDEX = 'ingredient_folk_names_trgm';
+// The folded twin, owned by ingredients-unaccent.test.ts; named here so the
+// declaration pin stays exact.
+const UNACCENT_INDEX = 'ingredients_unaccent_trgm';
 
 // Named so the declaration test says the trigram index joined them, not replaced one.
 const UNIQUE_INDEXES = [
@@ -30,8 +33,10 @@ const UNIQUE_INDEXES = [
 describe('ingredients trigram index declaration', () => {
   const { byIndexName: byName } = tableFacts(ingredients);
 
-  it('declares the trigram index beside the seven unique ones', () => {
-    expect(Object.keys(byName).sort()).toEqual([...UNIQUE_INDEXES, TRIGRAM_INDEX].sort());
+  it('declares the trigram index beside the seven unique ones and its folded twin', () => {
+    expect(Object.keys(byName).sort()).toEqual(
+      [...UNIQUE_INDEXES, TRIGRAM_INDEX, UNACCENT_INDEX].sort(),
+    );
   });
 
   it('builds it as a gin index over both names', () => {
@@ -256,7 +261,8 @@ describe('ingredients trigram index', () => {
         await sql.unsafe(statement);
       }
 
-      // Still exactly one gin index on the table, not a second alongside it.
+      // Still one raw gin index on the table, not a second alongside it; the
+      // folded one is 0027's and ingredients-unaccent.test.ts's.
       const rows = await sql`
         select c.relname as name
         from pg_index i
@@ -266,7 +272,7 @@ describe('ingredients trigram index', () => {
         order by c.relname
       `;
 
-      expect(rows.map((row) => row.name as string)).toEqual([TRIGRAM_INDEX]);
+      expect(rows.map((row) => row.name as string)).toEqual([TRIGRAM_INDEX, UNACCENT_INDEX]);
     });
   });
 });
