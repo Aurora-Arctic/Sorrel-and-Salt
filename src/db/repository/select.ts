@@ -1,5 +1,5 @@
 import { and, asc, desc, exists, getTableColumns, gt, is, lt, sql, type SQL } from 'drizzle-orm';
-import { type AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
+import { type AnyPgColumn, PgColumn, PgTable } from 'drizzle-orm/pg-core';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
@@ -13,11 +13,24 @@ import { notSoftDeleted } from './shapes';
  */
 export type SortColumn = AnyPgColumn<{ notNull: true }>;
 
+/**
+ * One part of a page's sort, always ascending: a column, or an expression and
+ * the type it is read as, which its cursor text casts back to. An
+ * expression's nullness is not in its type, so one that can be NULL is the
+ * caller's bug, with the column's consequence. A descending part is written
+ * negated.
+ */
+export type SortPart = SortColumn | { expression: SQL; type: string };
+
 /** How `selectFrom` orders, bounds and keys a page; the cursor bounds are in its `where`. */
-export interface Keyset {
-  sort: SortColumn;
+export interface Keyset<Carried extends object = {}> {
+  sort: readonly SortPart[];
   id: AnyPgColumn;
   request: PageRequest;
+  /** A parenthesised, aliased statement joined to the table, which a sort part or the `where` may read. */
+  join?: { source: SQL; on: SQL };
+  /** Values selected beside the row and carried onto its entry, and so onto its edge. */
+  carry?: { [K in keyof Carried]: SQL<Carried[K]> };
   /**
    * The `where` holds a `<%` search, so the page is read in a transaction
    * under `SEARCH_WORD_SIMILARITY_THRESHOLD` rather than the server's.
@@ -79,11 +92,11 @@ export function selectFrom<TTable extends PgTable>(
   table: TTable,
   where: SQL | undefined,
 ): Promise<TTable['$inferSelect'][]>;
-export function selectFrom<TTable extends PgTable>(
+export function selectFrom<TTable extends PgTable, Carried extends object>(
   table: TTable,
   where: SQL | undefined,
-  keyset: Keyset,
-): Promise<PageEntry<TTable['$inferSelect']>[]>;
+  keyset: Keyset<Carried>,
+): Promise<PageEntry<TTable['$inferSelect'], Carried>[]>;
 export function selectFrom<TTable extends PgTable>(
   table: TTable,
   where: SQL | undefined,
@@ -97,26 +110,36 @@ export function selectFrom<TRow extends Record<string, unknown>>(
 export async function selectFrom(
   relation: PgTable | Derived<Record<string, unknown>>,
   where: SQL | undefined,
-  order?: Keyset | Similarity,
+  order?: Keyset<object> | Similarity,
 ) {
   const keyset = order && 'sort' in order ? order : undefined;
-  // A table is read whole, and a page adds its key — read as Postgres prints
-  // it: a `timestamptz` read into a Date loses its microseconds, and a cursor
-  // built from it would replay rows. A derived relation names its own columns.
+  // A table is read whole, and a page adds its key — each part read as
+  // Postgres prints it: a `timestamptz` read into a Date loses its
+  // microseconds, and a cursor built from it would replay rows. A derived
+  // relation names its own columns.
   const [source, selection] = is(relation, PgTable)
     ? [
         relation,
-        keyset && { row: getTableColumns(relation), key: sql<string>`${keyset.sort}::text` },
+        keyset && {
+          ...keyset.carry,
+          row: getTableColumns(relation),
+          key: sql<string[]>`array[${sql.join(
+            keyset.sort.map((part) => sql`cast(${expressionOf(part)} as text)`),
+            sql`, `,
+          )}]`,
+        },
       ]
     : [relation.source, relation.fields];
   // Same cast as `write.ts`'s `writerFor`: `.from()` is typed against the table's own
   // generic parameter.
-  const build = (executor: Executor) =>
-    executor
+  const build = (executor: Executor) => {
+    const query = executor
       .select(selection as never)
       .from(source as never)
-      .where(where)
       .$dynamic();
+    if (keyset?.join) query.innerJoin(keyset.join.source, keyset.join.on);
+    return query.where(where);
+  };
 
   if (order && 'orderBy' in order) {
     // `set_config(…, true)` is `SET LOCAL` with a bind parameter: it ends
@@ -135,13 +158,12 @@ export async function selectFrom(
   if (!keyset) return build(db);
 
   const direction = keyset.request.inverted ? desc : asc;
+  type KeyedRow = { row: Record<string, unknown>; key: string[] };
   const page = (executor: Executor) =>
     build(executor)
-      .orderBy(direction(keyset.sort), direction(keyset.id))
-      .limit(keyset.request.limit) as unknown as Promise<
-      { row: Record<string, unknown>; key: string }[]
-    >;
-  let rows: { row: Record<string, unknown>; key: string }[];
+      .orderBy(...keyset.sort.map((part) => direction(expressionOf(part))), direction(keyset.id))
+      .limit(keyset.request.limit) as unknown as Promise<KeyedRow[]>;
+  let rows: KeyedRow[];
   try {
     rows = keyset.wordMatch
       ? await db.transaction(async (tx) => {
@@ -157,7 +179,11 @@ export async function selectFrom(
     if (isDataException(error)) throw new InvalidCursor();
     throw error;
   }
-  return rows.map(({ row, key }) => ({ cursor: { key, id: String(row.id) }, node: row }));
+  return rows.map(({ row, key, ...carried }) => ({
+    ...carried,
+    cursor: { key, id: String(row.id) },
+    node: row,
+  }));
 }
 
 /**
@@ -188,14 +214,36 @@ function isDataException(error: unknown): boolean {
 }
 
 /**
- * The cursor bounds: rows strictly after `after` and before `before` in
- * `(sort, id)` order, whichever way the page walks. The cursor's text is cast
- * back to each column's own type, so it compares as the column does.
+ * A sort part as the order, the bound and the key all read it. An expression
+ * is cast to its declared type here too, so the value ordered on is the value
+ * its cursor text casts back to: `length(name)::real / 3` is
+ * `double precision`, and compared against a `real` cursor it would replay rows.
  */
-export function pageBounds({ sort, id, request }: Keyset): SQL | undefined {
-  const row = sql`(${sort}, ${id})`;
-  const at = ({ key, id: cursorId }: Cursor) =>
-    sql`(cast(${key} as ${sql.raw(sort.getSQLType())}), cast(${cursorId} as ${sql.raw(id.getSQLType())}))`;
+function expressionOf(part: SortPart): SQL | SortColumn {
+  return is(part, PgColumn) ? part : sql`cast(${part.expression} as ${sql.raw(part.type)})`;
+}
+
+/** The type a sort part's cursor text is cast back to. */
+function typeOf(part: SortPart): string {
+  return is(part, PgColumn) ? part.getSQLType() : part.type;
+}
+
+/**
+ * The cursor bounds: rows strictly after `after` and before `before` in
+ * `(...sort, id)` order, whichever way the page walks. Each part of the
+ * cursor's key is cast back to its part's own type, so it compares as the
+ * part does. A key with the wrong number of parts names no position in this
+ * list, and is refused before any read.
+ *
+ * @throws {InvalidCursor} a cursor's key has more or fewer parts than `sort`.
+ */
+export function pageBounds({ sort, id, request }: Keyset<object>): SQL | undefined {
+  const row = sql`(${sql.join([...sort.map(expressionOf), id], sql`, `)})`;
+  const at = ({ key, id: cursorId }: Cursor) => {
+    if (key.length !== sort.length) throw new InvalidCursor();
+    const parts = sort.map((part, index) => sql`cast(${key[index]} as ${sql.raw(typeOf(part))})`);
+    return sql`(${sql.join([...parts, sql`cast(${cursorId} as ${sql.raw(id.getSQLType())})`], sql`, `)})`;
+  };
   return and(
     request.after && gt(row, at(request.after)),
     request.before && lt(row, at(request.before)),

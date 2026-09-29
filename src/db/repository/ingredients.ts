@@ -111,7 +111,7 @@ export function findCompendiumPage(
 ): Promise<PageEntry<typeof ingredients.$inferSelect>[]> {
   const search = searchArm(filter.search);
   const keyset = {
-    sort: ingredients.name,
+    sort: [ingredients.name],
     id: ingredients.id,
     request: page,
     wordMatch: search !== undefined,

@@ -2,7 +2,7 @@ import { and, eq, inArray, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../lib/pagination';
-import { pageBounds, selectFrom, type SortColumn } from './select';
+import { pageBounds, selectFrom, type SortPart } from './select';
 import {
   notSoftDeleted,
   scopedTo,
@@ -82,15 +82,16 @@ export async function findOneByIdInWorkspace<
 }
 
 /**
- * One page of non-soft-deleted rows in `(sort, id)` order, each with the
- * cursor it was found at: CLAUDE.md rule 8's keyset half. `page` comes from
+ * One page of non-soft-deleted rows in `(...sort, id)` order, each part
+ * ascending, each row with the cursor it was found at: CLAUDE.md rule 8's
+ * keyset half. `page` comes from
  * `resolvePage` in `src/lib/pagination.ts`, already clamped to the maximum.
  */
 export function findPage<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
 >(
   table: TTable,
-  sort: SortColumn,
+  sort: readonly SortPart[],
   page: PageRequest,
   where?: SQL,
 ): Promise<PageEntry<TTable['$inferSelect']>[]> {
@@ -104,7 +105,7 @@ export function findPageInWorkspace<
 >(
   membership: Membership,
   table: TTable,
-  sort: SortColumn,
+  sort: readonly SortPart[],
   page: PageRequest,
   where?: SQL,
 ): Promise<PageEntry<TTable['$inferSelect']>[]> {

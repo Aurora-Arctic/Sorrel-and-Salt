@@ -25,7 +25,8 @@ const LEAVES: Leaf[] = Array.from({ length: 250 }, (_, index) => ({
 function fakeFindPage(page: PageRequest, requests: PageRequest[] = []): PageEntry<Leaf>[] {
   requests.push(page);
   const position = (leaf: Leaf) => `${leaf.name}\u0000${leaf.id}`;
-  const bound = (cursor: { key: string; id: string }) => `${cursor.key}\u0000${cursor.id}`;
+  const bound = (cursor: { key: readonly string[]; id: string }) =>
+    `${cursor.key[0]}\u0000${cursor.id}`;
   const rows = LEAVES.filter(
     (leaf) =>
       (!page.after || position(leaf) > bound(page.after)) &&
@@ -34,7 +35,7 @@ function fakeFindPage(page: PageRequest, requests: PageRequest[] = []): PageEntr
   if (page.inverted) rows.reverse();
   return rows
     .slice(0, page.limit)
-    .map((leaf) => ({ cursor: { key: leaf.name, id: leaf.id }, node: leaf }));
+    .map((leaf) => ({ cursor: { key: [leaf.name], id: leaf.id }, node: leaf }));
 }
 
 function leafSchema(requests: PageRequest[] = []): GraphQLSchema {
@@ -137,7 +138,7 @@ describe('a paged connection', () => {
       'Leaf 005',
     ]);
     expect(requests[1]).toEqual({
-      after: { key: 'Leaf 002', id: LEAVES[2].id },
+      after: { key: ['Leaf 002'], id: LEAVES[2].id },
       limit: 4,
       inverted: false,
     });

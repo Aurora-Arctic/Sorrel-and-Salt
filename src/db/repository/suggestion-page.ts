@@ -35,11 +35,18 @@ export function claimantList(name: SQLWrapper, canonicalName: SQLWrapper, id: SQ
     order by ${canonicalName} nulls last, ${name}, ${id})`;
 }
 
-/** A suggestion's place in the list: `key` is `tier:fold`, `id` the tie-break. */
+/** The tiers a suggestion row can sit in, as a cursor prints them. */
+const TIERS = ['0', '1', '2'];
+
+/**
+ * A suggestion's place in the list: `key` is `[tier, fold]`, `id` the
+ * tie-break. Checked here rather than cast by Postgres, because a similarity
+ * read maps no data exception to `InvalidCursor`.
+ */
 function position({ key, id }: Cursor): SQL {
-  const parsed = /^([0-2]):([\s\S]*)$/.exec(key);
-  if (!parsed) throw new InvalidCursor();
-  return sql`(${Number(parsed[1])}::int, ${parsed[2]}::text, ${id}::text)`;
+  const [tier, fold] = key;
+  if (key.length !== 2 || !TIERS.includes(tier)) throw new InvalidCursor();
+  return sql`(${Number(tier)}::int, ${fold}::text, ${id}::text)`;
 }
 
 /**
@@ -78,7 +85,7 @@ export async function readSuggestionPage(
     { orderBy: ORDER.map((key) => direction(key)), limit: page.limit },
   );
   return rows.map((row) => ({
-    cursor: { key: `${row.tier}:${row.fold}`, id: row.tiebreak },
+    cursor: { key: [String(row.tier), row.fold], id: row.tiebreak },
     node: row,
   }));
 }

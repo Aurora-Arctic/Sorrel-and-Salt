@@ -346,7 +346,7 @@ describe('suggestForms', () => {
     });
 
     it('refuses a cursor that names no position in this list', async () => {
-      const forged = encodeCursor({ key: 'root', id: 'root' });
+      const forged = encodeCursor({ key: ['root'], id: 'root' });
 
       await expect(pageOf(asUser(B), '', { after: forged })).rejects.toThrow(InvalidCursor);
     });
