@@ -1,0 +1,37 @@
+import 'server-only';
+import { findManyByIds } from '../../../db/repository';
+import { NotFound } from '../../../lib/errors';
+import { categoryGroups } from '../schema/categories';
+import { ingredientFormGroups } from '../schema/ingredient-forms';
+
+// The two group lookups behind `Category.group` and `IngredientFormValue.group`.
+// Public reference data — a compendium chip wears its group's colours for a
+// signed-out visitor too (MB.80) — so neither takes a session.
+
+export type CategoryGroupRow = typeof categoryGroups.$inferSelect;
+export type IngredientFormGroupRow = typeof ingredientFormGroups.$inferSelect;
+
+/**
+ * The category groups by id, one answer per id in the order given: the row,
+ * or a `NotFound` where no live group carries the id, so a loader rejects that
+ * key alone. One read whatever the batch size.
+ */
+export function categoryGroupsOf(ids: readonly string[]): Promise<(CategoryGroupRow | NotFound)[]> {
+  return groupsOf(categoryGroups, ids);
+}
+
+/** The ingredient form groups by id, answered as `categoryGroupsOf` answers. */
+export function formGroupsOf(
+  ids: readonly string[],
+): Promise<(IngredientFormGroupRow | NotFound)[]> {
+  return groupsOf(ingredientFormGroups, ids);
+}
+
+async function groupsOf<TTable extends typeof categoryGroups | typeof ingredientFormGroups>(
+  table: TTable,
+  ids: readonly string[],
+): Promise<(TTable['$inferSelect'] | NotFound)[]> {
+  const rows = await findManyByIds(table, [...new Set(ids)]);
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return ids.map((id) => byId.get(id) ?? new NotFound('No such group'));
+}

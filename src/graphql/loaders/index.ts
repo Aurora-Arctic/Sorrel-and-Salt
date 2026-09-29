@@ -1,5 +1,6 @@
 import { membershipsByUser } from '@/modules/coven';
 import { categoriesByIngredient, folkNamesByIngredient } from '@/modules/ingredients';
+import { categoryGroupsById, ingredientFormGroupsById } from '@/modules/vocabulary';
 import type { Session } from '../../lib/session';
 import type { LoaderFactory } from './define-loader';
 
@@ -10,6 +11,8 @@ const LOADERS = {
   membershipsByUser,
   categoriesByIngredient,
   folkNamesByIngredient,
+  categoryGroupsById,
+  ingredientFormGroupsById,
 } satisfies Record<string, LoaderFactory<never, unknown>>;
 
 type Built<F extends Record<string, LoaderFactory<never, unknown>>> = {
