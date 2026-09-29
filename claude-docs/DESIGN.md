@@ -493,7 +493,7 @@ The spell builder shows both side by side, flagging intent categories with no in
 
 ### Fuzzy duplicate warning
 
-`pg_trgm`, available on Neon:
+`pg_trgm`, available on Neon (as is `unaccent`, the design's only other extension: it folds the compendium search's accents, §7's `compendium(search:)`, through an `IMMUTABLE` wrapper and expression indexes — `claude-docs/db.md`, "The compendium read"):
 
 ```sql
 CREATE INDEX ON ingredients USING gin (name gin_trgm_ops, canonical_name gin_trgm_ops);
@@ -559,12 +559,12 @@ None of this rules the plugin out permanently — it is additive, and re-adoptin
 ### Resolvers are thin
 
 ```ts
-// src/graphql/schema/ingredient.ts
+// src/modules/ingredients/graphql/compendium.ts
 builder.queryField('compendium', (t) =>
-  t.field({
-    type: [IngredientType],
+  t.pagedConnection({
+    type: IngredientRef,
     args: { search: t.arg.string({ required: false }) },
-    resolve: (_, args, ctx) => compendiumService.list(ctx.session, args), // authz lives here
+    resolve: (_, { search }, page) => listCompendium({ search }, page), // the filter is the service's, in SQL
   }),
 );
 ```
@@ -659,7 +659,7 @@ type Query {
     first: Int
     after: String
   ): QueryCompendiumConnection!
-  ingredient(id: ID!): Ingredient
+  ingredient(id: ID!, workspaceId: ID): Ingredient! # NOT_FOUND on a miss; workspaceId opens a coven's own entry to its members
   ingredientFormValues(first: Int, after: String): QueryIngredientFormValuesConnection! # the admin-curated form vocabulary
   # Curated bodies or signs first, then values in use in the compendium and this workspace (§5)
   planetSuggestions(
@@ -708,14 +708,64 @@ type Mutation {
 type Ingredient {
   id: ID!
   name: String! # the display label
+  slug: String! # the public address (MB.80)
   canonicalName: String # the formal name; null exactly when nomenclature is none or unknown
   nomenclature: Nomenclature!
   folkNames: [String!]! # flattened from ingredient_folk_names
   form: String # free text, not an enum — the vocabulary is data
+  description: String
+  element: IngredientElement
+  planet: String
+  zodiac: String
+  deities: [String!]
+  color: String
+  safetyNotes: String
+  substitutes: [String!]
   isGlobal: Boolean!
   categories: [Category!]!
   audit: AuditInfo!
   # a v2 notes section slots in here
+}
+
+# The curated vocabularies as a chip or a filter reads them: public, no audit.
+type Category {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String!
+  group: CategoryGroup!
+}
+
+type CategoryGroup {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String!
+  colorDark: String! # the pair a chip wears (MB.36)
+  colorLight: String!
+}
+
+type IngredientFormValue {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String!
+  group: IngredientFormGroup! # what tells two same-named forms apart
+}
+
+type IngredientFormGroup {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String!
+}
+
+enum IngredientElement {
+  earth
+  air
+  fire
+  water
+  spirit
 }
 
 type User {
@@ -1093,7 +1143,7 @@ Acceptance coverage is tracked separately from the 80% line threshold, because t
 
 `src/lib/` carries the heaviest coverage:
 
-- `filterIngredients()` — match on name, folk names and formal name, AND vs OR, case and accent insensitivity, empty query returns all
+- There is no `filterIngredients()`: the search is the `compendium` query's, in SQL (M8.5; §14), because rule 8 means the browser never holds the whole list
 - `unitConvert()` — within a single dimension only: weight↔weight, volume↔volume, to a defined precision. Weight↔volume and anything involving count are refused as an explicit result the caller must handle, never null or a guess. No density table exists anywhere in the codebase
 - `summarizeSpellCategories()` — union and dedupe across ingredients
 - `compareSpellCategories()` — intended-not-present and present-not-intended, both directions
@@ -1502,6 +1552,9 @@ Choices made during design that a future reader might otherwise revisit.
 | A URL slug on ingredients?                                        | Yes — `slugify` of name, form and formal name, stored, following a change to any of them; the old slug answers 308 for 180 days and is reserved for them (MB.80; the formal name added in MB.81) | A permanent address needs a readable path; two entries may share a label and a form and only the formal name tells them apart, so it is in the address too, and the slug index then refuses only what `slugify` folds together; a moved URL is a lost index entry unless the old one redirects, and a permanent redirect must never come to point at a different ingredient, which is what the reservation and the pending claim guarantee                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | A scheduled job for slug expiry?                                  | No — a date comparison at read time (MB.80)                                                                                                                                                      | Exact at midnight UTC with nothing running; a Hobby cron fires within an hour of its time and Queues deliver events rather than dates; the housekeeping rides on the next slug write in that scope                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | Better Auth's `anonymous` plugin for visitors?                    | No — a signed-out reader is `null`; try-before-sign-up is v2 (MB.80)                                                                                                                             | A `users` row and a cookie per visit and per crawl, a third identity bootstrap outside `withAudit`, and static pages made dynamic for nothing a public read needs                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Client-side ingredient filtering (`filterIngredients()`)?         | No — the `compendium` query filters in SQL (M8.5); M8.4 retired                                                                                                                                  | Rule 8 caps a page at 100, so the browser never holds the whole compendium or a coven's ingredients and cannot be the search; MB.80's static `/compendium` routes every filtered view through GraphQL regardless. One matcher, in the one place that has every row                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Accent-insensitive search?                                        | Yes — `unaccent`, an `IMMUTABLE` SQL wrapper naming the dictionary, and expression trigram indexes over the fold (M8.5)                                                                          | Folk names carry the accents (`Uña de Gato`) and a visitor types without them, so a case-only search silently misses the one thing a folk-name search is for. `unaccent()` is `STABLE`, hence the wrapper; the raw trigram indexes stay for the fuzzy finders, which are accent-tolerant by nature                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Substring or fuzzy matching for the compendium search?            | Word similarity: the term `<%` the label, formal name or a folk name at 0.5, set per read (M8.5)                                                                                                 | A live search box needs every typed prefix to keep matching, which plain `%` similarity fails (`mug` is 0.33 to Mugwort); `ILIKE` substring handles prefixes but misses a transposed pair and punctuation (`devils shoestring`). `<%` at 0.5 takes all three — `mu` 0.67, `mugwrot` 0.5, `devils shoestring` 0.8 — where pg_trgm's own 0.6 misses the typo. Results stay alphabetical, not ranked: a keyset page needs a stored sort key                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Subscription billing in v1?                                       | No — v2; the Stripe plugin is not yet adopted (MB.79)                                                                                                                                            | Nothing in v1 needs payment. The v2 requirements are in §13: the workspace pays, priced by member count, with free months, an admin exemption and a discount for someone in several workspaces. Better Auth's Stripe plugin carries the plumbing and per-seat pricing at checkout, but its seat resync needs the organization plugin MB.30 rejected, and the exemption and the discount are ours either way. It writes its tables outside `withAudit` and mounts browser routes under `/api/auth/subscription/*`, which are MB.30's two objections. The plugin or a thin service over the Stripe SDK is settled by a test-mode spike when the work is scheduled                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ---
