@@ -385,6 +385,13 @@ type Query {
   ingredientFormValues(first: Int, after: String): QueryIngredientFormValuesConnection!
 }
 
+type QueryCompendiumConnection {
+  edges: [QueryCompendiumConnectionEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int! # the entries under the filter
+  countBefore: Int # how many of them precede this page; null on an empty page
+}
+
 type QueryCompendiumConnectionEdge {
   cursor: String!
   node: Ingredient!
@@ -463,6 +470,11 @@ type IngredientFormGroup {
   edge rather than on `Ingredient` because it describes the match, not the
   entry. How the rank reaches a keyset page is [`db.md`](db.md)'s ("The
   compendium read").
+- **The list numbers its pages.** `totalCount` and `countBefore` are
+  `countCompendium`'s, over the same parsed filter as the page, so a search
+  counts at the page's 0.5 rather than the server's 0.6 and never counts
+  fewer rows than its pages hold. The formula and the Last request are
+  "Pagination"'s. A signed-out visitor reads both, as the list is public.
 - **`ingredient` is non-null, and a miss is `NOT_FOUND`**, as `me` answers
   one: an id that names nothing, a soft-deleted entry, and a coven's own entry
   asked for without its coven all read the same, since a workspace entry's
@@ -699,7 +711,8 @@ each keep to their own rules:
   `edgeFields` declares fields on the edge beside `cursor` and `node`, each
   resolved from what the finder carried on its entry — `resolvePage` copies
   everything an entry holds but its cursor onto the edge. The compendium's
-  `score` is the one so far.
+  `score` is the one so far. `count` adds `totalCount` and `countBefore` to
+  the connection (below).
 - **`findPage` and `findPageInWorkspace`** in the repository run the keyset
   query (claude-docs/db.md, "Keyset pages").
 
@@ -713,6 +726,48 @@ column's type, or has a different number of parts from the list's sort, is
 `InvalidCursor` from `src/lib/errors.ts`. `t.pagedConnection`
 turns that into an `Invalid cursor` GraphQL error. It is never treated as "from
 the start", which would return a page the client did not ask for.
+
+**Page numbers: `totalCount` and `countBefore`** (MB.105). A connection
+declared with `count` carries two more fields beside `edges` and `pageInfo`:
+
+```graphql
+type QueryCompendiumConnection {
+  edges: [QueryCompendiumConnectionEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int! # the rows the list holds under the field's arguments
+  countBefore: Int # how many of them come before this page's first edge; null on an empty page
+}
+```
+
+- **The client derives "Page X of Y".** For a page of `size` rows, the page
+  is `floor(countBefore / size) + 1` and the number of pages is
+  `max(1, ceil(totalCount / size))`. "Showing 11–20 of 26" is
+  `countBefore + 1` to `countBefore + edges.length` of `totalCount`.
+- **A count, so it has no base to guess.** The first page's `countBefore` is
+  0 because no rows come before it. The name is not `startIndex`: Google's
+  JSON style guide defines `startIndex` as one-based and OpenSearch counts it
+  from 1 by default, and a client reading ours that way would label every
+  range one short.
+- **Last asks for `last: totalCount % size || size`**, not `last: size`.
+  With 287 rows at 25, `last: 25` returns the final 25 rows, which have 262
+  rows before them, so it would read as page 11 of 12. `last: 12` has 275
+  before it and reads as page 12, the same page Next walks to. First is `first: size`, Prev
+  `last: size, before: startCursor` and Next `first: size, after: endCursor`.
+- **A position, never an offset.** `countBefore` is counted from the page's
+  first key and is never used to find a page, so the cursor rule above
+  stands. A row inserted ahead of the reader mid-walk shifts the label by
+  one; the pages it walks are unchanged.
+- **No numbered jump links.** Jumping to page 7 needs the cursor that opens
+  it, which means ranking every match on every request, and it ties the pager
+  to one page size ([`mb.105-plan.md`](design-decisions/mb.105-plan.md)).
+- **One count per connection, and only when asked for.** The `count` option
+  is a resolver of its own, `(parent, args, start, context)`, handed the
+  page's first cursor decoded, or none on an empty page. The connection
+  object carries it memoised, so selecting both fields runs one count and
+  selecting neither runs none. The compendium's typeahead (M8.10) is the first
+  page of the same search and selects neither.
+- **Priced as `pageInfo` is**: each field is one under the connection, at the
+  page size, whatever the count reads.
 
 **Depth.** A connection costs two levels, `edges` and `node`, on top of its
 field. A root connection holding one nested connection therefore uses all
@@ -735,7 +790,7 @@ throwaway schema.
 
 The tests: `tests/lib/pagination.test.ts` covers the numbers, the clamp and the
 cursor codec. `tests/graphql/pagination.test.ts` covers the field over the
-transport and its pricing. `tests/db/pagination.test.ts` covers the keyset
+transport and its pricing, the count fields included. `tests/db/pagination.test.ts` covers the keyset
 walk.
 
 ## Errors
