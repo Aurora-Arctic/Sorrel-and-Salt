@@ -3591,6 +3591,8 @@ _Story 16 — As a workspace member, I want the duplicate check available from t
 
 M4.7 builds the service; M5.10's debounced client lookup needs it exposed through GraphQL. Without this field M5.10 has nothing to call.
 
+**Decided while building:** the field is `possibleDuplicates(workspaceId, name, first, after)`, a connection of `Ingredient`. M4.7's finder returned a fixed first 25 rows, so to page it through the helper it becomes a keyset page keyed `[-score, name]`. A keyset read gains `similarityMatch`, which sets the same 0.4 constant a similarity read does, so there is still one threshold (claude-docs/graphql.md, "`possibleDuplicates`").
+
 _Acceptance criteria:_
 
 - Field returns compendium and current-workspace matches only

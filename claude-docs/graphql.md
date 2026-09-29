@@ -366,6 +366,46 @@ type SuggestionClaimant {
   signed out, from `assertMembership` when signed in elsewhere, a site admin
   included.
 
+### `possibleDuplicates`
+
+Story 16's "did you mean" (MB.11), registered by `ingredients` over M4.7's
+`findPossibleDuplicates` ([`db.md`](db.md), "Fuzzy matching"). M5.10's name
+field calls it as the name is typed:
+
+```graphql
+type Query {
+  possibleDuplicates(
+    workspaceId: ID!
+    name: String!
+    first: Int
+    after: String
+  ): QueryPossibleDuplicatesConnection!
+}
+```
+
+- **A node is an `Ingredient`**, the type `compendium` and `ingredient`
+  return. So a warning links by `slug`, tells the tier by `isGlobal`, and
+  shows `canonicalName` beside the label. Without the formal name, "Did you
+  mean Cat's Claw?" could mean five different plants. `folkNames` and
+  `categories` come through the request's loaders, as they do elsewhere.
+- **Compendium entries and the named coven's own, and nothing else.** A match
+  in another coven never comes back, whether it matched by label or by folk
+  name. The filter is the finder's, in SQL.
+- **The threshold is M4.7's**: 0.4 by `%`, from `select.ts`'s one
+  `SIMILARITY_THRESHOLD`, set per read. It is not the compendium search's 0.5
+  word similarity. A search finds an entry from a fragment; this asks whether
+  a whole name is nearly one already there.
+- **Best match first, a page at a time.** Pages are keyed
+  `(-score, name, id)`. The score is the best trigram similarity among the
+  label, the formal name and the live folk names, and the edge does not carry
+  it. Page sizes are the usual default and maximum. A blank `name` gets an
+  empty page, not every entry.
+- **The refusals are `planetSuggestions`'.** The resolver refuses a signed-out
+  caller with `Forbidden`. For a signed-in caller the check is the service's
+  `assertMembership` for `ingredient: ['read']`, which refuses a coven the
+  caller is not in, a site admin included. A viewer is answered, because every
+  row the field returns is one a reader of the coven could already list.
+
 ### `compendium`, `ingredient` and `ingredientFormValues`
 
 The compendium's reads (M8.5), registered by `ingredients`, with the

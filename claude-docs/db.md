@@ -535,9 +535,11 @@ and runs the read in the same transaction. `set_config(…, true)` is
 cannot forget either threshold, and each is written in one place. The second
 is `<%`'s, word similarity, which is how a description is searched ("The
 member's autofill" below); 0.6 is pg_trgm's own default, set anyway so the
-server's configuration cannot move it. A keyset page can ask the same way:
-a `Keyset` marked `wordMatch` is read in a transaction that sets the word
-threshold to the search's 0.5 first ("The compendium read"). These are the
+server's configuration cannot move it. A keyset page can ask the same way.
+A `Keyset` marked `wordMatch` is read in a transaction that first sets the
+word threshold to the search's 0.5 ("The compendium read"). One marked
+`similarityMatch` first sets the similarity threshold to the same 0.4
+constant, which is how `findSimilarIngredients` pages (below). These are the
 reads that open a transaction: they carry a planner setting, not an identity,
 so they are not the read-side `withAudit` that MB.29 declined to build.
 
@@ -545,9 +547,12 @@ so they are not the read-side `withAudit` that MB.29 declined to build.
 It answers story 16's "did you mean": live ingredients in the compendium or
 the proof's workspace whose display name, formal name or a live folk name is
 `%`-similar to the term, best first by the greatest of the three
-similarities. Each row carries `canonical_name`, which is what tells five
-Cat's Claws apart. The three matches are a `UNION ALL` under `id IN (…)`,
-and each detail is load-bearing:
+similarities. It reads one keyset page at a time, keyed `[-score, name]` and
+marked `similarityMatch`, because `possibleDuplicates` (MB.11) pages it
+through the helper (claude-docs/graphql.md, "`possibleDuplicates`"). Each row
+carries `canonical_name`, which is what tells five Cat's Claws apart. The
+three matches are a `UNION ALL` under `id IN (…)`, and each detail is
+load-bearing:
 
 - **Not an `OR` beside the scope.** Postgres cannot turn a subquery inside an
   `OR` into a join, so `name % $1 OR … OR id IN (folk-name subquery)` tests
@@ -2381,8 +2386,9 @@ limit $limit  -- the page plus one
   alike, so the declared type is the one compared: `length(name)::real / 3` is
   `double precision`, and ordered raw against a `real` cursor it would replay
   rows. A descending part is written negated, so one row comparison serves.
-  The compendium search's `[-score, name]` is the first computed key, and
-  M8.14's `(lower(name), canonical_key)` the next.
+  The compendium search's `[-score, name]` is the first computed key. The
+  duplicate lookup's is the same shape over trigram similarity (MB.11), and
+  M8.14's `(lower(name), canonical_key)` is the next.
 - **Each row comes back with its cursor.** The key is selected as an array of
   each part cast to text, and compared by casting each back to its part's
   type (`getSQLType()` for a column), so Postgres compares a `timestamptz` to
@@ -2423,10 +2429,10 @@ from … [join …] where …   -- no order, no limit
 ```
 
 - **`KeyOrder` is what a page and its count share**: the sort parts, the id,
-  the join and `wordMatch`. `Keyset` is a `KeyOrder` plus the page's
-  `request` and `carry`. A finder builds its `KeyOrder` once, in one
-  function, and hands it to both reads, so the count cannot drift from the
-  pages it numbers.
+  the join and the two threshold flags, `wordMatch` and `similarityMatch`.
+  `Keyset` is a `KeyOrder` plus the page's `request` and `carry`. A finder
+  builds its `KeyOrder` once, in one function, and hands it to both reads, so
+  the count cannot drift from the pages it numbers.
 - **The `where` is the page's without `pageBounds`.** The second count uses
   the same row comparison a `before` bound does, built by the same two helpers
   (`rowKey`, `cursorKey`), so "before the first row" means what the page's

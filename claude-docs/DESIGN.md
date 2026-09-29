@@ -661,6 +661,13 @@ type Query {
   ): QueryCompendiumConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient! # NOT_FOUND on a miss; workspaceId opens a coven's own entry to its members
   ingredientFormValues(first: Int, after: String): QueryIngredientFormValuesConnection! # the admin-curated form vocabulary
+  # §5's fuzzy duplicate warning: compendium and this workspace, best match first
+  possibleDuplicates(
+    workspaceId: ID!
+    name: String!
+    first: Int
+    after: String
+  ): QueryPossibleDuplicatesConnection!
   # Curated bodies or signs first, then values in use in the compendium and this workspace (§5)
   planetSuggestions(
     workspaceId: ID!
