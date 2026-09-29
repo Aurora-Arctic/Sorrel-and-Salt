@@ -1796,6 +1796,16 @@ site admin curates the compendium and reaches no workspace at all, so
 `assertMembership` never reads it — which is what makes that invariant true by
 construction rather than by a branch someone could add later.
 
+**An id that is not a uuid is refused before the lookup.** A `workspaceId` is
+whatever string the client sent, and compared with a `uuid` column anything
+else is a driver error, which the route would mask as
+`INTERNAL_SERVER_ERROR`. `assertMembership` checks it with `RowId` from
+`src/lib/validation.ts` and refuses it with the bare `Forbidden` an unknown
+workspace gets, so every workspace-scoped service answers it the same way
+without a guard of its own. `tests/db/graphql-workspace-ids.test.ts` sends a
+malformed id to every GraphQL field that takes a `workspaceId`, and fails on a
+field it does not name.
+
 ### One lookup per render
 
 `assertMembership` reads the role through `cache(findWorkspaceRole)`, so a
@@ -2086,7 +2096,10 @@ cannot reassign it, and `LocalIngredientInput` strips a `workspaceId` a caller
 smuggles in. The update and the read reach a row only through
 `workspace_id = membership.workspaceId`, so a compendium entry's id or another
 coven's answers `NotFound`, the same as an id that names nothing, and naming a
-coven the caller is not in answers `Forbidden` before any row is read.
+coven the caller is not in answers `Forbidden` before any row is read, a coven
+id that is not a uuid included ("What the check asks"). An ingredient id that
+is not a uuid is `NotFound`, as `getIngredient` answers it, rather than a
+driver error.
 
 **The input is the whole ingredient**, as `IngredientForm` submits it, parsed
 again by the service with `parseInput` because the browser is not the only
@@ -2095,6 +2108,10 @@ written, `null` where the input has nothing. A merge would break the
 nomenclature biconditional, because a missing `nomenclature` parses to
 `none`, and `none` beside a kept `canonical_name` is the row the CHECK refuses.
 Categories are not written here, since `LocalIngredientInput` carries none.
+The service itself clears a field the input leaves out. Its mutation,
+`updateIngredient`, makes leaving one out a schema error and clearing an
+explicit `""` or `[]` ([`graphql.md`](graphql.md), "The workspace ingredient
+mutations").
 
 **Folk names are written in the ingredient's own `withAudit` transaction**,
 never in a second round trip. A create inserts each one. An update diffs the

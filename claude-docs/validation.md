@@ -47,6 +47,12 @@ every module's schemas raise the same shape.
 The messages are the user-facing text: an issue's message is what appears
 beside the field.
 
+The same file exports `RowId`, an id as Postgres's `uuid` type takes it. A
+schema checks an id list with it, and a service checks an id it is about to
+compare with a `uuid` column, since anything else is a driver error there.
+`assertMembership` checks every `workspaceId` with it ([`db.md`](db.md),
+"What the check asks").
+
 ## The two ingredient variants
 
 Both take the same fields. Text is trimmed, and **a blank optional field is
@@ -57,7 +63,7 @@ refused, and that is "required", not "blank". They differ only in
 
 - **`LocalIngredientInput`**, for the workspace tier. Only `name` is required.
   With no formal name and no kind, `nomenclature` becomes `none`, so story 29's
-  one-field stub saves. A formal name with no kind is asked about, pathed to
+  one-field stub saves. A `null` kind counts as no kind. A formal name with no kind is asked about, pathed to
   `nomenclature`, rather than guessed: `none` would contradict the name, and
   guessing `botanical` is the silent guess §5 forbids.
 - **`CompendiumIngredientInput`**, for the compendium tier. The admin must answer
@@ -82,7 +88,9 @@ Rules both variants enforce:
   sees either. A blank folk name is dropped, not refused — but only after the
   repeat check, so an issue's position still counts the rows the form sent,
   blank ones included, and lands beside the right one. `deities` and
-  `substitutes` drop blank entries the same way. Two _different_ ingredients sharing a folk name is untouched: §5
+  `substitutes` drop blank entries the same way. A list left with no entries,
+  `[]` or blanks alone, is absent like a blank text field and becomes `null`,
+  so a cleared `deities` is stored as NULL rather than `{}`. Two _different_ ingredients sharing a folk name is untouched: §5
   wants it, since several plants claiming "Cat's Claw" is what is being
   documented.
 - **Closed sets.** `nomenclature` and `element` come from the pgEnums' lists,
