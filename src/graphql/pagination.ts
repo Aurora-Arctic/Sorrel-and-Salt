@@ -5,6 +5,7 @@ import {
   type FieldRef,
   type InputFieldMap,
   type InputShapeFromFields,
+  type ObjectFieldsShape,
   type ObjectRef,
   type SchemaTypes,
 } from '@pothos/core';
@@ -26,6 +27,7 @@ export interface PagedConnectionOptions<
   ParentShape,
   Node,
   Args extends InputFieldMap,
+  Edge extends object,
 > {
   type: ObjectRef<Types, Node>;
   description?: string;
@@ -41,7 +43,9 @@ export interface PagedConnectionOptions<
     args: InputShapeFromFields<Args>,
     page: PageRequest,
     context: Types['Context'],
-  ) => Promise<PageEntry<Node>[]>;
+  ) => Promise<PageEntry<Node, Edge>[]>;
+  /** Fields of the edge beside `cursor` and `node`, read off what each entry carries. */
+  edgeFields?: ObjectFieldsShape<Types, { cursor: string; node: Node } & Edge>;
 }
 
 declare global {
@@ -56,8 +60,8 @@ declare global {
        * connection whose resolver is handed a page rather than arguments.
        * `tests/guards/pagination.test.ts` fails a `.connection(` anywhere else.
        */
-      pagedConnection: <Node, Args extends InputFieldMap = {}>(
-        options: PagedConnectionOptions<Types, ParentShape, Node, Args>,
+      pagedConnection: <Node, Args extends InputFieldMap = {}, Edge extends object = {}>(
+        options: PagedConnectionOptions<Types, ParentShape, Node, Args, Edge>,
       ) => FieldRef<Types, unknown, Kind>;
     }
   }
@@ -69,17 +73,21 @@ const fieldBuilderProto = RootFieldBuilder.prototype as PothosSchemaTypes.RootFi
   FieldKind
 >;
 
-fieldBuilderProto.pagedConnection = function pagedConnection({ resolve, ...options }) {
-  return this.connection({
-    ...options,
-    resolve: async (parent: unknown, args: ConnectionArgs, context: object) => {
-      try {
-        return await resolvePage(args, (page) => resolve(parent, args as never, page, context));
-      } catch (error) {
-        // Bad input, so the client sees why; any other error stays masked.
-        if (error instanceof InvalidCursor) throw new PothosValidationError(error.message);
-        throw error;
-      }
-    },
-  } as never) as never;
+fieldBuilderProto.pagedConnection = function pagedConnection({ resolve, edgeFields, ...options }) {
+  return this.connection(
+    {
+      ...options,
+      resolve: async (parent: unknown, args: ConnectionArgs, context: object) => {
+        try {
+          return await resolvePage(args, (page) => resolve(parent, args as never, page, context));
+        } catch (error) {
+          // Bad input, so the client sees why; any other error stays masked.
+          if (error instanceof InvalidCursor) throw new PothosValidationError(error.message);
+          throw error;
+        }
+      },
+    } as never,
+    {},
+    (edgeFields ? { fields: edgeFields } : {}) as never,
+  ) as never;
 };

@@ -183,6 +183,41 @@ describe('a paged connection', () => {
     expect(result.errors?.[0].originalError).not.toBeInstanceOf(GraphQLError);
   });
 
+  it('exposes what an entry carries as the edge fields it declares', async () => {
+    const scratch = createBuilder();
+    const LeafRef = scratch.objectRef<Leaf>('Leaf');
+    LeafRef.implement({ fields: (t) => ({ name: t.exposeString('name') }) });
+    scratch.queryType({
+      fields: (t) => ({
+        leaves: t.pagedConnection({
+          type: LeafRef,
+          resolve: (_parent, _args, page) =>
+            Promise.resolve(
+              fakeFindPage(page).map((entry, index) => ({
+                ...entry,
+                rank: index % 2 === 0 ? index : null,
+              })),
+            ),
+          edgeFields: (edge) => ({
+            rank: edge.int({ nullable: true, resolve: (entry) => entry.rank }),
+          }),
+        }),
+      }),
+    });
+
+    const result = await run(
+      scratch.toSchema(),
+      '{ leaves(first: 3) { edges { rank node { name } } } }',
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect((result.data as { leaves: { edges: { rank: number | null }[] } }).leaves.edges).toEqual([
+      { rank: 0, node: { name: 'Leaf 000' } },
+      { rank: null, node: { name: 'Leaf 001' } },
+      { rank: 2, node: { name: 'Leaf 002' } },
+    ]);
+  });
+
   it('refuses a negative size', async () => {
     const result = await run(leafSchema(), `{ leaves(first: -1) { ${PAGE} } }`);
 
