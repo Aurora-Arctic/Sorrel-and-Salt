@@ -10,3 +10,4 @@ export * from './loaders/ingredient-children';
 export * from './graphql/common-names';
 export * from './graphql/ingredient';
 export * from './graphql/compendium';
+export * from './graphql/workspace-ingredients';

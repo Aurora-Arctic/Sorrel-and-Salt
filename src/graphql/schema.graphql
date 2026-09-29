@@ -90,8 +90,45 @@ type IngredientFormValue {
   slug: String!
 }
 
+input IngredientInput {
+  canonicalName: String
+  color: String
+  deities: [String!]
+  description: String
+  element: IngredientElement
+  folkNames: [String!]
+  form: String
+  name: String!
+  nomenclature: Nomenclature
+  planet: String
+  safetyNotes: String
+  substitutes: [String!]
+  zodiac: String
+}
+
+"""
+The whole ingredient, replacing the row. Every field is sent, and "" or [] clears one; `element` alone is nullable, and null or leaving it out clears it.
+"""
+input IngredientUpdateInput {
+  canonicalName: String!
+  color: String!
+  deities: [String!]!
+  description: String!
+  element: IngredientElement
+  folkNames: [String!]!
+  form: String!
+  name: String!
+  nomenclature: Nomenclature!
+  planet: String!
+  safetyNotes: String!
+  substitutes: [String!]!
+  zodiac: String!
+}
+
 type Mutation {
+  createWorkspaceIngredient(input: IngredientInput!, workspaceId: ID!): Ingredient!
   setEmail(email: String!): User!
+  updateIngredient(id: ID!, input: IngredientUpdateInput!, workspaceId: ID!): Ingredient!
 }
 
 enum Nomenclature {

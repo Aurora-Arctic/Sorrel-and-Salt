@@ -10,8 +10,8 @@ import { CategoryRef } from '@/modules/vocabulary';
 // pending-slug columns stay off the wire: the key is the database's own, the
 // tier is a flag, and a claim on an address is the admin's business.
 
-const NomenclatureEnum = builder.enumType('Nomenclature', { values: NOMENCLATURE_KINDS });
-const IngredientElementEnum = builder.enumType('IngredientElement', {
+export const NomenclatureEnum = builder.enumType('Nomenclature', { values: NOMENCLATURE_KINDS });
+export const IngredientElementEnum = builder.enumType('IngredientElement', {
   values: INGREDIENT_ELEMENTS,
 });
 
