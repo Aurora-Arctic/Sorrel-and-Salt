@@ -1,4 +1,4 @@
-import { and, getTableName, ne, notInArray, or, sql } from 'drizzle-orm';
+import { and, eq, getTableName, ne, notInArray, or, sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
@@ -8,8 +8,31 @@ import {
 } from '../../modules/vocabulary/schema/ingredient-forms';
 import type { Membership } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../lib/pagination';
+import { existsIn, pageBounds, selectFrom } from './select';
 import { inCompendium, notSoftDeleted, scopedTo } from './shapes';
 import { type Claimant, claimantList, readSuggestionPage } from './suggestion-page';
+
+/**
+ * One page of the curated form vocabulary in `(name, id)` order, for
+ * `ingredientFormValues`: the live forms whose group is live too, which is
+ * what "curated" means to `findVocabularySuggestions` as well, with the
+ * group's `deleted_at` read by the builder's correlated `EXISTS`. Public
+ * reference data, so no proof (claude-docs/db.md, "The compendium read").
+ */
+export function findIngredientFormValues(
+  page: PageRequest,
+): Promise<PageEntry<typeof ingredientForms.$inferSelect>[]> {
+  const keyset = { sort: ingredientForms.name, id: ingredientForms.id, request: page };
+  return selectFrom(
+    ingredientForms,
+    and(
+      notSoftDeleted(ingredientForms),
+      existsIn(ingredientFormGroups, eq(ingredientFormGroups.id, ingredientForms.groupId)),
+      pageBounds(keyset),
+    ),
+    keyset,
+  );
+}
 
 /** A vocabulary a member's autofill suggests from. */
 export type SuggestingVocabulary = typeof planets | typeof zodiacSigns | typeof ingredientForms;

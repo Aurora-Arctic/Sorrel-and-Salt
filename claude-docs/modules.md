@@ -178,15 +178,18 @@ compendium's. So the set is counted: **`TIER_SEAM` in
 reads both tiers in one statement. The guard fails an unlisted finder, and it
 fails a listed one that no longer exists.
 
-It holds the predicate and four finders today: `inCompendium` in `shapes.ts`,
+It holds the predicate and six finders today: `inCompendium` in `shapes.ts`,
 which is `workspace_id IS NULL` itself; `findSimilarIngredients` (M4.7), the fuzzy
 duplicate match; `findVocabularySuggestions` (MB.94, forms M4.7a), the
 planet, zodiac and form autofill; `findCommonNameSuggestions` (M4.7a), the
-common-name autofill; and `findManyOfIngredients` (M4.8), an ingredient's folk
-names and category links. Each reads the compendium and the proofs'
-workspaces in a single statement. A later task that adds such a finder — M5.1's admin reads, the
-merged two-tier list, local-beats-compendium resolution — adds the finder's
-name to `TIER_SEAM` in its own PR, with a one-line reason beside it.
+common-name autofill; `findManyOfIngredients` (M4.8), an ingredient's folk
+names and category links; `findCompendiumPage` (M8.5), the public list, which
+reads the compendium tier alone; and `findOneIngredient` (M8.5), one row in
+the compendium or a proof's coven. Each but the list reads the compendium and
+the proofs' workspaces in a single statement. A later task that adds such a
+finder — M5.1's admin reads, M8.3's local-beats-compendium resolution — adds
+the finder's name to `TIER_SEAM` in its own PR, with a one-line reason beside
+it.
 The list is then the scope of the extraction task, read from one file.
 
 ## Tests
