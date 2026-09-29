@@ -111,8 +111,8 @@ interface Entry {
   categories: { name: string; group: { name: string } }[];
 }
 
-const LIST = `query ($search: String, $categoryIds: [ID!], $form: String) {
-  compendium(search: $search, categoryIds: $categoryIds, form: $form, first: 50) {
+const LIST = `query ($query: String, $categoryIds: [ID!], $form: String) {
+  compendium(query: $query, categoryIds: $categoryIds, form: $form, first: 50) {
     edges { node { id name canonicalName nomenclature folkNames categories { name group { name } } } }
   }
 }`;
@@ -148,7 +148,7 @@ describe("Story 14: Browse the compendium and add an entry to my workspace's ing
     expect(everything.map((entry) => entry.id)).toEqual(rows.map((row) => row.id));
 
     // Narrowed by a folk name, with the accent left off.
-    const byFolkName = await browse(null, { search: 'una de gato' });
+    const byFolkName = await browse(null, { query: 'una de gato' });
     expect(byFolkName.map((entry) => entry.canonicalName).sort()).toEqual([
       'Uncaria guianensis',
       'Uncaria tomentosa',

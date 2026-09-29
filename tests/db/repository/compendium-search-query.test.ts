@@ -8,7 +8,7 @@ import { useTestDatabase } from '../../support/db/database';
 // The statements a compendium search sends, read off the connection: `<%`
 // means "word-similar by pg_trgm.word_similarity_threshold", whose default is
 // 0.6, so the search's 0.5 has to be set in the read's own transaction — and
-// only when there is a term to match (claude-docs/db.md, "The compendium read").
+// only when there is a `query` to match (claude-docs/db.md, "The compendium read").
 // And the plan the ranked search runs, read off the same log.
 
 interface Logged {
@@ -39,7 +39,7 @@ const isRead = ({ query }: Logged) => /from "ingredients"/.test(query) && query.
 
 describe('the compendium search query', () => {
   it('sets the word threshold to 0.5, transaction-local, before matching', async () => {
-    await findCompendiumPage({ search: 'mugwort' }, PAGE);
+    await findCompendiumPage({ query: 'mugwort' }, PAGE);
 
     const setting = logged.findIndex(isSetting);
     expect(setting).toBeGreaterThanOrEqual(0);
@@ -48,7 +48,7 @@ describe('the compendium search query', () => {
     expect(logged.findIndex(isRead)).toBeGreaterThan(setting);
   });
 
-  it('opens no transaction for a page with no term', async () => {
+  it('opens no transaction for a page with no `query`', async () => {
     await findCompendiumPage({}, PAGE);
 
     expect(logged.some(isSetting)).toBe(false);
@@ -60,7 +60,7 @@ describe('the compendium count query', () => {
   const START = { key: ['-1', 'Fixture Mugwort'], id: '00000000-0000-4000-8000-000000000000' };
 
   it('counts a search in one read, under the page’s 0.5, with no order and no limit', async () => {
-    await findCompendiumCount({ search: 'mugwort' }, START);
+    await findCompendiumCount({ query: 'mugwort' }, START);
 
     const reads = logged.filter(({ query }) => /from "ingredients"/.test(query));
     expect(reads).toHaveLength(1);
@@ -72,7 +72,7 @@ describe('the compendium count query', () => {
     expect(logged.indexOf(read)).toBeGreaterThan(setting);
   });
 
-  it('opens no transaction for a count with no term', async () => {
+  it('opens no transaction for a count with no `query`', async () => {
     await findCompendiumCount({}, undefined);
 
     expect(logged.some(isSetting)).toBe(false);
@@ -125,7 +125,7 @@ describe('the ranked search plan over ~20,000 rows', () => {
 
   beforeAll(async () => {
     // Twenty thousand entries and as many folk names that share no word with
-    // the term, and a thousand that do — by label, by formal name and by folk
+    // `mugwort`, and a thousand that do — by label, by formal name and by folk
     // name — at several scores.
     await sql`
       insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
@@ -147,12 +147,12 @@ describe('the ranked search plan over ~20,000 rows', () => {
     await sql`analyze ingredients`;
     await sql`analyze ingredient_folk_names`;
 
-    pageOne = await statementFor(() => findCompendiumPage({ search: 'mugwort' }, FIRST));
-    const first = await findCompendiumPage({ search: 'mugwort' }, FIRST);
+    pageOne = await statementFor(() => findCompendiumPage({ query: 'mugwort' }, FIRST));
+    const first = await findCompendiumPage({ query: 'mugwort' }, FIRST);
     // The precondition for a second page: the first is full, with more behind it.
     expect(first).toHaveLength(26);
     pageTwo = await statementFor(() =>
-      findCompendiumPage({ search: 'mugwort' }, { ...FIRST, after: first[24].cursor }),
+      findCompendiumPage({ query: 'mugwort' }, { ...FIRST, after: first[24].cursor }),
     );
   }, 120_000);
 

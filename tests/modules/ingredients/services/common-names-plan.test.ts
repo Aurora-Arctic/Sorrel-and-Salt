@@ -39,8 +39,8 @@ beforeEach(async () => {
 });
 
 /** Every statement the service sent, in order, from one call. */
-async function statementsFor(term: string): Promise<Logged[]> {
-  await suggestCommonNames(asUser(B), WORKSPACE_W_ID, term, { limit: 26, inverted: false });
+async function statementsFor(query: string): Promise<Logged[]> {
+  await suggestCommonNames(asUser(B), WORKSPACE_W_ID, query, { limit: 26, inverted: false });
   return [...logged];
 }
 

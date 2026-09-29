@@ -44,8 +44,8 @@ async function similarity(a: string, b: string): Promise<number> {
   return Number(row.score);
 }
 
-async function wordSimilarity(term: string, text: string): Promise<number> {
-  const [row] = await sql`select word_similarity(${term}, ${text}) as score`;
+async function wordSimilarity(query: string, text: string): Promise<number> {
+  const [row] = await sql`select word_similarity(${query}, ${text}) as score`;
   return Number(row.score);
 }
 
@@ -59,21 +59,21 @@ type Suggest = typeof suggestPlanets;
 function pageOf(
   suggest: Suggest,
   session: Session,
-  term: string,
+  query: string,
   args: ConnectionArgs = {},
   workspaceId = WORKSPACE_W_ID,
 ): Promise<Page<VocabularySuggestion>> {
-  return resolvePage(args, (request) => suggest(session, workspaceId, term, request));
+  return resolvePage(args, (request) => suggest(session, workspaceId, query, request));
 }
 
 /** Every suggestion in one page — the lists here are far shorter than the maximum. */
 async function all(
   suggest: Suggest,
   session: Session,
-  term: string,
+  query: string,
   workspaceId = WORKSPACE_W_ID,
 ): Promise<VocabularySuggestion[]> {
-  const page = await pageOf(suggest, session, term, { first: 100 }, workspaceId);
+  const page = await pageOf(suggest, session, query, { first: 100 }, workspaceId);
   expect(page.pageInfo.hasNextPage).toBe(false);
   return page.edges.map((edge) => edge.node);
 }
@@ -245,12 +245,12 @@ describe('suggestPlanets', () => {
     });
   });
 
-  describe('the term', () => {
-    it('treats whitespace as no term, and offers the whole vocabulary', async () => {
+  describe('the query', () => {
+    it('treats whitespace as no query, and offers the whole vocabulary', async () => {
       expect(valuesOf(await all(suggestPlanets, asUser(B), '   '))).toEqual(CURATED_PLANETS);
     });
 
-    it('offers nothing for a term matching nothing', async () => {
+    it('offers nothing for a query matching nothing', async () => {
       expect(await all(suggestPlanets, asUser(B), 'xqzv')).toEqual([]);
     });
   });
@@ -338,7 +338,7 @@ describe('suggestPlanets', () => {
       await expect(all(suggestPlanets, asUser(E), 'sedna')).rejects.toThrow(Forbidden);
     });
 
-    it('refuses before answering a blank term', async () => {
+    it('refuses before answering a blank query', async () => {
       await expect(all(suggestPlanets, asUser(D), '')).rejects.toThrow(Forbidden);
     });
   });

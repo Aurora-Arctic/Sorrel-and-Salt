@@ -101,10 +101,10 @@ async function planFor(query: string): Promise<string> {
 
 // Which rows match, not the order they come in: sorted here by code unit, so
 // the expectation does not depend on the database's collation.
-async function namesMatching(term: string): Promise<string[]> {
+async function namesMatching(query: string): Promise<string[]> {
   const rows = await sql`
     select name from ingredients
-    where unaccent_immutable(${term}) <% unaccent_immutable(name)
+    where unaccent_immutable(${query}) <% unaccent_immutable(name)
   `;
   return rows.map((row) => row.name as string).sort();
 }
@@ -209,11 +209,11 @@ describe('the unaccent trigram indexes', () => {
       await addIngredient('Una de Gato Root', null);
     });
 
-    it('finds an accented name from an unaccented term', async () => {
+    it('finds an accented name from an unaccented query', async () => {
       expect(await namesMatching('una de gato')).toEqual(['Una de Gato Root', 'Uña de Gato']);
     });
 
-    it('finds an unaccented name from an accented term', async () => {
+    it('finds an unaccented name from an accented query', async () => {
       expect(await namesMatching('uña de gato')).toEqual(['Una de Gato Root', 'Uña de Gato']);
     });
   });

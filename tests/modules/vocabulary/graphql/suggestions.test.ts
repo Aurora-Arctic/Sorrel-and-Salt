@@ -59,8 +59,8 @@ function run(
 ): Promise<ExecutionResult<Record<string, Connection>>> {
   return graphql({
     schema,
-    source: `query ($workspaceId: ID!, $term: String, $first: Int, $after: String) {
-      ${field}(workspaceId: $workspaceId, term: $term, first: $first, after: $after) ${PAGE}
+    source: `query ($workspaceId: ID!, $query: String, $first: Int, $after: String) {
+      ${field}(workspaceId: $workspaceId, query: $query, first: $first, after: $after) ${PAGE}
     }`,
     variableValues: { workspaceId: WORKSPACE_W_ID, ...variables },
     contextValue: { session, loaders: createLoaders(session) },
@@ -69,7 +69,7 @@ function run(
 
 describe('planetSuggestions', () => {
   it('answers a member with a page of both buckets', async () => {
-    const result = await run(asUser(B), 'planetSuggestions', { term: 'sedna' });
+    const result = await run(asUser(B), 'planetSuggestions', { query: 'sedna' });
 
     expect(result.errors).toBeUndefined();
     expect(result.data?.planetSuggestions.edges.map((edge) => edge.node)).toEqual([
@@ -77,7 +77,7 @@ describe('planetSuggestions', () => {
     ]);
   });
 
-  it('lists the whole vocabulary, alphabetically, when no term is given', async () => {
+  it('lists the whole vocabulary, alphabetically, when no query is given', async () => {
     const result = await run(asUser(B), 'planetSuggestions', { first: 2 });
 
     expect(result.errors).toBeUndefined();
@@ -88,14 +88,14 @@ describe('planetSuggestions', () => {
   });
 
   it('pages by cursor', async () => {
-    const first = await run(asUser(B), 'planetSuggestions', { term: 'moon', first: 1 });
+    const first = await run(asUser(B), 'planetSuggestions', { query: 'moon', first: 1 });
     expect(first.errors).toBeUndefined();
     const page = first.data?.planetSuggestions as Connection;
     expect(page.edges.map((edge) => edge.node.value)).toEqual(['Moon']);
     expect(page.pageInfo.hasNextPage).toBe(true);
 
     const next = await run(asUser(B), 'planetSuggestions', {
-      term: 'moon',
+      query: 'moon',
       first: 100,
       after: page.pageInfo.endCursor,
     });
@@ -108,7 +108,7 @@ describe('planetSuggestions', () => {
   });
 
   it('is refused signed out, before the service is reached', async () => {
-    const result = await run(null, 'planetSuggestions', { term: 'sedna' });
+    const result = await run(null, 'planetSuggestions', { query: 'sedna' });
 
     expect(result.data).toBeNull();
     expect(result.errors?.[0]?.path).toEqual(['planetSuggestions']);
@@ -119,7 +119,7 @@ describe('planetSuggestions', () => {
     // Why it could have succeeded: D is signed in and a member elsewhere.
     expect(asUser(D).userId).toBe(D.id);
 
-    const result = await run(asUser(D), 'planetSuggestions', { term: 'sedna' });
+    const result = await run(asUser(D), 'planetSuggestions', { query: 'sedna' });
 
     expect(result.data).toBeNull();
     expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);
@@ -128,14 +128,14 @@ describe('planetSuggestions', () => {
 
 describe('zodiacSuggestions', () => {
   it('answers from the zodiac vocabulary and the zodiac column', async () => {
-    const result = await run(asUser(B), 'zodiacSuggestions', { term: 'cetus' });
+    const result = await run(asUser(B), 'zodiacSuggestions', { query: 'cetus' });
 
     expect(result.errors).toBeUndefined();
     expect(result.data?.zodiacSuggestions.edges.map((edge) => edge.node)).toEqual([
       { value: 'Cetus', description: null, curated: false },
     ]);
 
-    const sign = await run(asUser(B), 'zodiacSuggestions', { term: 'serpent' });
+    const sign = await run(asUser(B), 'zodiacSuggestions', { query: 'serpent' });
     expect(sign.data?.zodiacSuggestions.edges.map((edge) => edge.node.value)).toEqual([
       'Ophiuchus',
     ]);

@@ -83,7 +83,7 @@ export interface KeysetCount {
 const SIMILARITY_THRESHOLD = 0.4;
 
 /**
- * The threshold `<%` reads: the term against the best-matching run of words
+ * The threshold `<%` reads: the query against the best-matching run of words
  * in a longer text, which whole-string `%` scores too low to find — `serpent`
  * is 0.12 similar to Ophiuchus's description and 1.0 word-similar. pg_trgm's
  * own default, set anyway so the server's configuration cannot move it.

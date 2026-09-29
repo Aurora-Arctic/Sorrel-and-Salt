@@ -149,16 +149,16 @@ type PageInfo {
 }
 
 type Query {
-  commonNameSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryCommonNameSuggestionsConnection!
-  compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, search: String): QueryCompendiumConnection!
-  formSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryFormSuggestionsConnection!
+  commonNameSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryCommonNameSuggestionsConnection!
+  compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, query: String): QueryCompendiumConnection!
+  formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryFormSuggestionsConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient!
   ingredientFormValues(after: String, before: String, first: Int, last: Int): QueryIngredientFormValuesConnection!
   me: User!
   ok: Boolean!
-  planetSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryPlanetSuggestionsConnection!
+  planetSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryPlanetSuggestionsConnection!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID!): QueryPossibleDuplicatesConnection!
-  zodiacSuggestions(after: String, before: String, first: Int, last: Int, term: String, workspaceId: ID!): QueryZodiacSuggestionsConnection!
+  zodiacSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryZodiacSuggestionsConnection!
 }
 
 type QueryCommonNameSuggestionsConnection {
@@ -188,7 +188,7 @@ type QueryCompendiumConnectionEdge {
   node: Ingredient!
 
   """
-  The word similarity of the search term to the entry, 0 to 1 — its best across the label, formal name and folk names. Null without a search.
+  The word similarity of the query to the entry, 0 to 1 — its best across the label, formal name and folk names. Null without a query.
   """
   score: Float
 }

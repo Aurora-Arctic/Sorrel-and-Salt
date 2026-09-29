@@ -72,8 +72,8 @@ function run(
 ): Promise<ExecutionResult<{ compendium: Connection }>> {
   return graphql({
     schema,
-    source: `query ($search: String, $categoryIds: [ID!], $form: String, $first: Int, $after: String) {
-      compendium(search: $search, categoryIds: $categoryIds, form: $form, first: $first, after: $after) {
+    source: `query ($query: String, $categoryIds: [ID!], $form: String, $first: Int, $after: String) {
+      compendium(query: $query, categoryIds: $categoryIds, form: $form, first: $first, after: $after) {
         edges {
           cursor
           score
@@ -142,7 +142,7 @@ describe('compendium', () => {
   });
 
   it('narrows by search, telling five entries sharing a label apart by their formal name', async () => {
-    const nodes = await nodesOf({ search: 'cat' });
+    const nodes = await nodesOf({ query: 'cat' });
 
     expect(nodes.map((node) => node.name)).toEqual(Array(5).fill("Cat's Claw"));
     expect(nodes.map((node) => node.canonicalName).sort()).toEqual([
@@ -157,7 +157,7 @@ describe('compendium', () => {
   // `sal` is a whole word of four seeded labels and half of two more: two
   // scores, each tied, so the order shows the score first and the name second.
   it('ranks a search best match first, with the score on each edge', async () => {
-    const result = await run(null, { search: 'sal', first: 50 });
+    const result = await run(null, { query: 'sal', first: 50 });
     expect(result.errors).toBeUndefined();
     const edges = (result.data as { compendium: Connection }).compendium.edges;
 
@@ -180,8 +180,8 @@ describe('compendium', () => {
     expect(edges.every((edge) => edge.score === null)).toBe(true);
   });
 
-  it('treats a one-character term as no search: every entry, unranked', async () => {
-    const result = await run(null, { search: 'c', first: 50 });
+  it('treats a one-character query as no query: every entry, unranked', async () => {
+    const result = await run(null, { query: 'c', first: 50 });
 
     expect(result.errors).toBeUndefined();
     const edges = (result.data as { compendium: Connection }).compendium.edges;
@@ -190,7 +190,7 @@ describe('compendium', () => {
   });
 
   it('matches a folk name, accents folded', async () => {
-    const nodes = await nodesOf({ search: 'una de gato' });
+    const nodes = await nodesOf({ query: 'una de gato' });
 
     expect(nodes.map((node) => node.canonicalName).sort()).toEqual([
       'Uncaria guianensis',
@@ -222,7 +222,7 @@ describe('compendium', () => {
 
   it('combines the three', async () => {
     const nodes = await nodesOf({
-      search: 'cat',
+      query: 'cat',
       form: 'bark',
       categoryIds: [category('Healing'), category('Strength')],
     });
@@ -254,8 +254,8 @@ describe('compendium', () => {
     async function counted(variables: Record<string, unknown>): Promise<Counted> {
       const result = await graphql({
         schema,
-        source: `query ($search: String, $first: Int, $after: String, $last: Int) {
-          compendium(search: $search, first: $first, after: $after, last: $last) {
+        source: `query ($query: String, $first: Int, $after: String, $last: Int) {
+          compendium(query: $query, first: $first, after: $after, last: $last) {
             totalCount countBefore edges { node { id } } pageInfo { endCursor }
           }
         }`,
@@ -281,8 +281,8 @@ describe('compendium', () => {
     });
 
     it('counts a search, and places an empty page nowhere', async () => {
-      const page = await counted({ search: 'sal', first: 50 });
-      const empty = await counted({ search: 'zzzzqx' });
+      const page = await counted({ query: 'sal', first: 50 });
+      const empty = await counted({ query: 'zzzzqx' });
 
       expect(page.totalCount).toBe(6);
       expect(page.countBefore).toBe(0);

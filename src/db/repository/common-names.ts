@@ -16,21 +16,21 @@ export interface CommonNameSuggestion {
 /**
  * One page of what a member's common-name field offers: the display names
  * and live folk names of live ingredients in the compendium or the proof's
- * workspace that match `term`, folded to `lower(btrim(name))` and offered
+ * workspace that match `query`, folded to `lower(btrim(name))` and offered
  * once each, alphabetically. Each names the in-scope ingredients answering to
  * it, formal names first. A formal name is not a common name and is not read.
- * A blank `term` matches everything.
+ * A blank `query` matches everything.
  *
  * Each arm matches its own column by `%` or `<%`, so each can reach its own
  * trigram index; the fold happens after (claude-docs/db.md, "The member's autofill").
  */
 export async function findCommonNameSuggestions(
   membership: Membership,
-  term: string,
+  query: string,
   page: PageRequest,
 ): Promise<PageEntry<CommonNameSuggestion>[]> {
   const matches = (text: AnyPgColumn) =>
-    term ? sql`(${text} % ${term} or ${term} <% ${text})` : undefined;
+    query ? sql`(${text} % ${query} or ${query} <% ${text})` : undefined;
   const inScope = and(
     or(inCompendium(ingredients), scopedTo(membership, ingredients)),
     notSoftDeleted(ingredients),

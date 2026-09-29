@@ -116,13 +116,13 @@ async function planFor(query: string, threshold = 0.4): Promise<string> {
   });
 }
 
-async function matchingNames(term: string, threshold?: number): Promise<string[]> {
+async function matchingNames(name: string, threshold?: number): Promise<string[]> {
   const rows = await sql.begin(async (tx) => {
     if (threshold !== undefined) {
       await tx.unsafe(`set local pg_trgm.similarity_threshold = ${threshold}`);
     }
     return await tx`
-      select name from ingredients where name % ${term} order by similarity(name, ${term}) desc
+      select name from ingredients where name % ${name} order by similarity(name, ${name}) desc
     `;
   });
   return rows.map((row) => row.name as string);

@@ -25,8 +25,8 @@ export async function findPossibleDuplicates(
 ): Promise<PageEntry<typeof ingredients.$inferSelect, SimilarityScore>[]> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
 
-  const term = name.trim();
-  if (!term) return [];
+  const trimmed = name.trim();
+  if (!trimmed) return [];
 
-  return findSimilarIngredients(membership, term, page);
+  return findSimilarIngredients(membership, trimmed, page);
 }

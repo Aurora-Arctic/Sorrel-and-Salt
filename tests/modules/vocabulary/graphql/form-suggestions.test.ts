@@ -48,8 +48,8 @@ function run(
 ): Promise<ExecutionResult<{ formSuggestions: Connection }>> {
   return graphql({
     schema,
-    source: `query ($workspaceId: ID!, $term: String, $first: Int, $after: String) {
-      formSuggestions(workspaceId: $workspaceId, term: $term, first: $first, after: $after) {
+    source: `query ($workspaceId: ID!, $query: String, $first: Int, $after: String) {
+      formSuggestions(workspaceId: $workspaceId, query: $query, first: $first, after: $after) {
         edges { cursor node { value description group curated claimants { name canonicalName } } }
         pageInfo { hasNextPage endCursor }
       }
@@ -61,7 +61,7 @@ function run(
 
 describe('formSuggestions', () => {
   it('answers a member with both buckets, the group and the claimants', async () => {
-    const result = await run(asUser(B), { term: 'root' });
+    const result = await run(asUser(B), { query: 'root' });
 
     expect(result.errors).toBeUndefined();
     expect(result.data?.formSuggestions.edges.map((edge) => edge.node)).toEqual([
@@ -83,7 +83,7 @@ describe('formSuggestions', () => {
     ]);
   });
 
-  it('lists the curated vocabulary first when no term is given', async () => {
+  it('lists the curated vocabulary first when no query is given', async () => {
     const result = await run(asUser(B), { first: 3 });
 
     expect(result.errors).toBeUndefined();
@@ -93,11 +93,15 @@ describe('formSuggestions', () => {
   });
 
   it('pages by cursor', async () => {
-    const first = await run(asUser(B), { term: 'root', first: 1 });
+    const first = await run(asUser(B), { query: 'root', first: 1 });
     const page = first.data?.formSuggestions as Connection;
     expect(page.pageInfo.hasNextPage).toBe(true);
 
-    const next = await run(asUser(B), { term: 'root', first: 100, after: page.pageInfo.endCursor });
+    const next = await run(asUser(B), {
+      query: 'root',
+      first: 100,
+      after: page.pageInfo.endCursor,
+    });
 
     expect(next.errors).toBeUndefined();
     expect(next.data?.formSuggestions.edges.map((edge) => edge.node.value)).toEqual([
@@ -107,7 +111,7 @@ describe('formSuggestions', () => {
   });
 
   it('is refused signed out, before the service is reached', async () => {
-    const result = await run(null, { term: 'root' });
+    const result = await run(null, { query: 'root' });
 
     expect(result.data).toBeNull();
     expect(result.errors?.[0]?.path).toEqual(['formSuggestions']);
@@ -118,7 +122,7 @@ describe('formSuggestions', () => {
     // Why it could have succeeded: D is signed in and a member elsewhere.
     expect(asUser(D).userId).toBe(D.id);
 
-    const result = await run(asUser(D), { term: 'root' });
+    const result = await run(asUser(D), { query: 'root' });
 
     expect(result.data).toBeNull();
     expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);

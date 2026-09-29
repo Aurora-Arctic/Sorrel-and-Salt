@@ -40,8 +40,8 @@ beforeEach(async () => {
 });
 
 /** Every statement the service sent, in order, from one call. */
-async function statementsFor(term: string): Promise<Logged[]> {
-  await findPossibleDuplicates(asUser(B), WORKSPACE_W_ID, term, { limit: 26, inverted: false });
+async function statementsFor(name: string): Promise<Logged[]> {
+  await findPossibleDuplicates(asUser(B), WORKSPACE_W_ID, name, { limit: 26, inverted: false });
   return [...logged];
 }
 

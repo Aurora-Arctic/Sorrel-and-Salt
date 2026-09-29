@@ -46,7 +46,7 @@ export function findManyOfIngredients<TTable extends PgTable & IngredientScoped 
   );
 }
 
-/** What a possible duplicate carries onto its edge: its trigram similarity to the term. */
+/** What a possible duplicate carries onto its edge: its trigram similarity to the name. */
 export interface SimilarityScore {
   score: number;
 }
@@ -54,7 +54,7 @@ export interface SimilarityScore {
 /**
  * One page of the live ingredients, in the compendium or the proof's
  * workspace, whose display name, formal name or a live folk name is
- * trigram-similar to `term` — best match first, keyed `[-score, name]`, each
+ * trigram-similar to `name` — best match first, keyed `[-score, name]`, each
  * carrying its score. Reads both tiers in one statement.
  *
  * The three matches are a `UNION ALL` under `id IN (…)`, not an `OR` beside
@@ -65,23 +65,23 @@ export interface SimilarityScore {
  */
 export function findSimilarIngredients(
   membership: Membership,
-  term: string,
+  name: string,
   page: PageRequest,
 ): Promise<PageEntry<typeof ingredients.$inferSelect, SimilarityScore>[]> {
   const candidate = alias(ingredients, 'candidate');
   const matched = sql`(
     select ${candidate.id} from ${ingredients} as ${candidate}
-    where ${candidate.name} % ${term} or ${candidate.canonicalName} % ${term}
+    where ${candidate.name} % ${name} or ${candidate.canonicalName} % ${name}
     union all
     select ${ingredientFolkNames.ingredientId} from ${ingredientFolkNames}
-    where ${ingredientFolkNames.name} % ${term} and ${notSoftDeleted(ingredientFolkNames)})`;
+    where ${ingredientFolkNames.name} % ${name} and ${notSoftDeleted(ingredientFolkNames)})`;
 
   // `greatest` skips nulls, so an entry with no formal name or no folk names
   // ranks on what it has.
   const score = sql<number>`greatest(
-    similarity(${ingredients.name}, ${term}),
-    similarity(${ingredients.canonicalName}, ${term}),
-    (select max(similarity(${ingredientFolkNames.name}, ${term})) from ${ingredientFolkNames}
+    similarity(${ingredients.name}, ${name}),
+    similarity(${ingredients.canonicalName}, ${name}),
+    (select max(similarity(${ingredientFolkNames.name}, ${name})) from ${ingredientFolkNames}
      where ${ingredientFolkNames.ingredientId} = ${ingredients.id}
        and ${notSoftDeleted(ingredientFolkNames)})
   )`;
@@ -108,14 +108,14 @@ export function findSimilarIngredients(
 /** What a list of ingredients is narrowed by. Each part is optional, and absent means no filter. */
 export interface IngredientFilter {
   /** Word-similar (`<%`, at 0.5) to the label, the formal name or a live folk name, case- and accent-folded. */
-  search?: string;
+  query?: string;
   /** Every one of these, not any: an entry must carry each id listed. */
   categoryIds?: readonly string[];
   /** The form, folded as `canonical_key` folds it. */
   form?: string;
 }
 
-/** What a compendium entry carries onto its edge: its word similarity to the term, on a search. */
+/** What a compendium entry carries onto its edge: its word similarity to the query, on a search. */
 export interface CompendiumScore {
   score: number | null;
 }
@@ -189,7 +189,7 @@ function compendiumList(filter: IngredientFilter): {
   arms: SQL | undefined;
   order: Omit<Keyset<CompendiumScore>, 'request'>;
 } {
-  const match = searchMatch(filter.search);
+  const match = searchMatch(filter.query);
   return {
     arms: and(...categoryArms(filter.categoryIds ?? []), formArm(filter.form)),
     order: match
@@ -210,7 +210,7 @@ function compendiumList(filter: IngredientFilter): {
 
 /**
  * The rows matching a search, as a relation to join and each row's score. A
- * row matches when the term is word-similar (`<%`) to its label, its formal
+ * row matches when the query is word-similar (`<%`) to its label, its formal
  * name or a live folk name, each side folded through `unaccent_immutable` so
  * the expression indexes of migration 0027 answer the match; the threshold is
  * the keyset read's (`wordMatch`). The three matches are a `UNION ALL`, for
@@ -222,11 +222,11 @@ function compendiumList(filter: IngredientFilter): {
  * read"). Blank means no search.
  */
 function searchMatch(
-  search: string | undefined,
+  query: string | undefined,
 ): { join: { source: SQL; on: SQL }; score: SQL<number> } | undefined {
-  const term = search?.trim();
-  if (!term) return undefined;
-  const folded = sql`unaccent_immutable(${term})`;
+  const trimmed = query?.trim();
+  if (!trimmed) return undefined;
+  const folded = sql`unaccent_immutable(${trimmed})`;
   const matches = (text: AnyPgColumn) => sql`${folded} <% unaccent_immutable(${text})`;
   const similarity = (text: AnyPgColumn) =>
     sql`word_similarity(${folded}, unaccent_immutable(${text}))`;

@@ -24,8 +24,8 @@ export type IngredientRow = typeof ingredients.$inferSelect;
  * each entry carrying its score. Parsed here because the browser is not the
  * only caller, and because a category id reaches a `uuid` comparison inside
  * the keyset query, whose one client text was the cursor: unchecked, a
- * malformed id would come back as "Invalid cursor". A term shorter than
- * `MIN_SEARCH_LENGTH` is no search.
+ * malformed id would come back as "Invalid cursor". A query shorter than
+ * `MIN_QUERY_LENGTH` is no search.
  *
  * @throws {ValidationError} a category id is not a uuid.
  */

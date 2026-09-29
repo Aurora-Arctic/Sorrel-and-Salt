@@ -40,13 +40,13 @@ const PAGE: PageRequest = { limit: 26, inverted: false };
 /** The rows of the lookup's first page. */
 const duplicatesOf = async (
   user: typeof A | typeof E,
-  term: string,
+  name: string,
   workspaceId = WORKSPACE_W_ID,
 ) =>
-  (await findPossibleDuplicates(asUser(user), workspaceId, term, PAGE)).map((entry) => entry.node);
+  (await findPossibleDuplicates(asUser(user), workspaceId, name, PAGE)).map((entry) => entry.node);
 
-const namesFor = async (user: typeof A | typeof E, term: string, workspaceId = WORKSPACE_W_ID) =>
-  (await duplicatesOf(user, term, workspaceId)).map((row) => row.name);
+const namesFor = async (user: typeof A | typeof E, name: string, workspaceId = WORKSPACE_W_ID) =>
+  (await duplicatesOf(user, name, workspaceId)).map((row) => row.name);
 
 describe('findPossibleDuplicates', () => {
   describe('the threshold', () => {
