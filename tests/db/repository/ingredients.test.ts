@@ -1,6 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { findCompendiumPage, findOneIngredient, type IngredientFilter } from '@/db/repository';
+import { InvalidCursor } from '@/lib/errors';
 import { type ConnectionArgs, type Page, resolvePage } from '@/lib/pagination';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import type { ingredients } from '@/modules/ingredients/schema/ingredients';
@@ -33,7 +34,9 @@ async function add(
   return insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', ...overrides }), A.id);
 }
 
-function pageOf(filter: IngredientFilter, args: ConnectionArgs = {}): Promise<Page<Row>> {
+type Scored = { score: number | null };
+
+function pageOf(filter: IngredientFilter, args: ConnectionArgs = {}): Promise<Page<Row, Scored>> {
   return resolvePage(args, (request) => findCompendiumPage(filter, request));
 }
 
@@ -145,6 +148,122 @@ describe('findCompendiumPage', () => {
     it('is no filter when blank', async () => {
       expect(await namesOf({ search: '   ' })).toHaveLength(2);
     });
+
+    // The service treats a one-character term as absent; the finder itself
+    // does not second-guess what it is handed.
+    it('still matches, and ranks, a one-character term', async () => {
+      const page = await pageOf({ search: 'm' }, { first: 100 });
+
+      expect(page.edges.map((edge) => edge.node.name)).toContain('Fixture Mugwort');
+      expect(page.edges.every((edge) => edge.score !== null)).toBe(true);
+    });
+  });
+
+  describe('ranking', () => {
+    const TERM = 'mugwort';
+
+    /**
+     * The answer key, written independently of the finder: every live
+     * compendium row's best word similarity across the label, the formal name
+     * and its live folk names, at 0.5 or better, best first, then by name and id.
+     */
+    async function rankedOrder(term: string): Promise<{ id: string; score: number }[]> {
+      return sql<{ id: string; score: number }[]>`
+        select id, score from (
+          select i.id, i.name, greatest(
+            word_similarity(unaccent_immutable(${term}), unaccent_immutable(i.name)),
+            word_similarity(unaccent_immutable(${term}), unaccent_immutable(i.canonical_name)),
+            (select max(word_similarity(unaccent_immutable(${term}), unaccent_immutable(f.name)))
+             from ingredient_folk_names f where f.ingredient_id = i.id and f.deleted_at is null)
+          ) as score
+          from ingredients i where i.workspace_id is null and i.deleted_at is null
+        ) scored
+        where score >= 0.5
+        order by score desc, name, id`;
+    }
+
+    beforeEach(async () => {
+      // Three rows sharing a label and a perfect score, so only the id orders them.
+      for (const canonicalName of ['Fixtura una', 'Fixtura duo', 'Fixtura tres']) {
+        await add('Fixture Mugwort', { nomenclature: 'botanical', canonicalName });
+      }
+      await add('Fixture Mugwort Leaf');
+      await add('Fixture Mugwart');
+      await add('Fixture Wormwood', { folkNames: ['Mugwort'] });
+      await add('Fixture Mugroot');
+      await add('Fixture Nettle');
+    });
+
+    it('pages best match first, ties by name then id', async () => {
+      const expected = await rankedOrder(TERM);
+      // The preconditions: a tie on score across names, a tie on score and
+      // name, and a weaker match below them — else the order proves nothing.
+      const scores = expected.map((row) => row.score);
+      expect(scores.filter((score) => score === 1).length).toBeGreaterThanOrEqual(5);
+      expect(new Set(scores).size).toBeGreaterThan(1);
+
+      const page = await pageOf({ search: TERM }, { first: 100 });
+
+      expect(page.edges.map((edge) => edge.node.id)).toEqual(expected.map((row) => row.id));
+      expect(page.edges.map((edge) => edge.score)).toEqual(scores);
+      expect(page.edges[0].node.name).not.toBe('Fixture Mugroot');
+    });
+
+    it('scores a folk-name match by the folk name', async () => {
+      const page = await pageOf({ search: TERM }, { first: 100 });
+
+      const wormwood = page.edges.find((edge) => edge.node.name === 'Fixture Wormwood');
+      expect(wormwood?.score).toBe(1);
+    });
+
+    it('walks across the ties forwards, neither losing nor repeating a row', async () => {
+      const expected = (await rankedOrder(TERM)).map((row) => row.id);
+
+      const ids: string[] = [];
+      let after: string | null = null;
+      for (;;) {
+        const page: Page<Row, Scored> = await pageOf({ search: TERM }, { first: 2, after });
+        ids.push(...page.edges.map((edge) => edge.node.id));
+        if (!page.pageInfo.hasNextPage) break;
+        after = page.pageInfo.endCursor;
+      }
+
+      expect(ids).toEqual(expected);
+    });
+
+    it('walks across the ties backwards, mirroring the forward walk', async () => {
+      const expected = (await rankedOrder(TERM)).map((row) => row.id);
+
+      const ids: string[] = [];
+      let before: string | null = null;
+      for (;;) {
+        const page: Page<Row, Scored> = await pageOf({ search: TERM }, { last: 2, before });
+        ids.unshift(...page.edges.map((edge) => edge.node.id));
+        if (!page.pageInfo.hasPreviousPage) break;
+        before = page.pageInfo.startCursor;
+      }
+
+      expect(ids).toEqual(expected);
+    });
+
+    it('carries no score on an unranked page', async () => {
+      const page = await pageOf({}, { first: 100 });
+
+      expect(page.edges).not.toHaveLength(0);
+      expect(page.edges.every((edge) => edge.score === null)).toBe(true);
+    });
+
+    // A browse is keyed by one part and a search by two, so neither's cursor
+    // names a position in the other.
+    it("refuses a browse's cursor on a search, and a search's on a browse", async () => {
+      const browse = await pageOf({}, { first: 1 });
+      const search = await pageOf({ search: TERM }, { first: 1 });
+
+      await expect(pageOf({ search: TERM }, { after: browse.pageInfo.endCursor })).rejects.toThrow(
+        InvalidCursor,
+      );
+      await expect(pageOf({}, { after: search.pageInfo.endCursor })).rejects.toThrow(InvalidCursor);
+    });
   });
 
   describe('categoryIds', () => {
@@ -208,7 +327,7 @@ describe('findCompendiumPage', () => {
       const sizes: number[] = [];
       let after: string | null = null;
       for (;;) {
-        const page: Page<Row> = await pageOf({}, { first: 7, after });
+        const page: Page<Row, Scored> = await pageOf({}, { first: 7, after });
         ids.push(...page.edges.map((edge) => edge.node.id));
         sizes.push(page.edges.length);
         if (!page.pageInfo.hasNextPage) break;

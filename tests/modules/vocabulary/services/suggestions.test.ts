@@ -302,14 +302,17 @@ describe('suggestPlanets', () => {
       expect(valuesOf(before.edges.map((edge) => edge.node))).toEqual(['Venus', 'Vesta']);
     });
 
-    // A cursor names a tier and a fold; one naming neither is refused, never
-    // read as the start of the list.
+    // A cursor names a tier and a fold; one naming neither, or a tier there is
+    // not, is refused, never read as the start of the list.
     it('refuses a cursor that names no position in this list', async () => {
-      const forged = encodeCursor({ key: 'moon', id: 'moon' });
+      for (const key of [['moon'], ['9', 'moon'], ['', 'moon'], ['moon', 'moon', 'moon']]) {
+        const forged = encodeCursor({ key, id: 'moon' });
 
-      await expect(pageOf(suggestPlanets, asUser(B), '', { after: forged })).rejects.toThrow(
-        InvalidCursor,
-      );
+        await expect(
+          pageOf(suggestPlanets, asUser(B), '', { after: forged }),
+          key.join(','),
+        ).rejects.toThrow(InvalidCursor);
+      }
     });
   });
 

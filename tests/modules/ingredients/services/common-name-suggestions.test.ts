@@ -248,7 +248,7 @@ describe('suggestCommonNames', () => {
     });
 
     it('refuses a cursor that names no position in this list', async () => {
-      const forged = encodeCursor({ key: 'testwort', id: 'testwort' });
+      const forged = encodeCursor({ key: ['testwort'], id: 'testwort' });
 
       await expect(pageOf(asUser(B), '', { after: forged })).rejects.toThrow(InvalidCursor);
     });

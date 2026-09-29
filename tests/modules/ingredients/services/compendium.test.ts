@@ -57,6 +57,20 @@ describe('listCompendium', () => {
     );
   });
 
+  // One character is a trigram or two that half the compendium shares: no
+  // filter and no ranking, rather than a page ordered by noise.
+  it('treats a term shorter than two characters as absent', async () => {
+    for (const search of ['m', '  m  ', 'ñ', 'n\u0303']) {
+      await listCompendium({ search }, PAGE);
+    }
+    await listCompendium({ search: 'mu' }, PAGE);
+
+    const searches = repository.findCompendiumPage.mock.calls.map(
+      ([filter]) => (filter as { search?: string }).search,
+    );
+    expect(searches).toEqual([undefined, undefined, undefined, undefined, 'mu']);
+  });
+
   // A category id reaches a `uuid` comparison inside the keyset query, whose
   // one client text was the cursor: a malformed id must be refused here, or
   // it would come back as "Invalid cursor".

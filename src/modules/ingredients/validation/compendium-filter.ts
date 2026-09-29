@@ -18,8 +18,18 @@ const optionalText = z
  */
 export const RowId = z.guid();
 
+/**
+ * The shortest term that searches. One character is a trigram or two that
+ * half the compendium shares at the search's threshold, so it filters and
+ * ranks by noise; shorter is no search at all.
+ */
+export const MIN_SEARCH_LENGTH = 2;
+
 export const CompendiumFilter = z.object({
-  search: optionalText,
+  // Counted in composed code points, so `ñ` is one character however it was typed.
+  search: optionalText.transform((term) =>
+    term && Array.from(term.normalize('NFC')).length >= MIN_SEARCH_LENGTH ? term : undefined,
+  ),
   categoryIds: z
     .array(RowId)
     .nullish()

@@ -25,7 +25,8 @@ const LEAVES: Leaf[] = Array.from({ length: 250 }, (_, index) => ({
 function fakeFindPage(page: PageRequest, requests: PageRequest[] = []): PageEntry<Leaf>[] {
   requests.push(page);
   const position = (leaf: Leaf) => `${leaf.name}\u0000${leaf.id}`;
-  const bound = (cursor: { key: string; id: string }) => `${cursor.key}\u0000${cursor.id}`;
+  const bound = (cursor: { key: readonly string[]; id: string }) =>
+    `${cursor.key[0]}\u0000${cursor.id}`;
   const rows = LEAVES.filter(
     (leaf) =>
       (!page.after || position(leaf) > bound(page.after)) &&
@@ -34,7 +35,7 @@ function fakeFindPage(page: PageRequest, requests: PageRequest[] = []): PageEntr
   if (page.inverted) rows.reverse();
   return rows
     .slice(0, page.limit)
-    .map((leaf) => ({ cursor: { key: leaf.name, id: leaf.id }, node: leaf }));
+    .map((leaf) => ({ cursor: { key: [leaf.name], id: leaf.id }, node: leaf }));
 }
 
 function leafSchema(requests: PageRequest[] = []): GraphQLSchema {
@@ -137,7 +138,7 @@ describe('a paged connection', () => {
       'Leaf 005',
     ]);
     expect(requests[1]).toEqual({
-      after: { key: 'Leaf 002', id: LEAVES[2].id },
+      after: { key: ['Leaf 002'], id: LEAVES[2].id },
       limit: 4,
       inverted: false,
     });
@@ -180,6 +181,41 @@ describe('a paged connection', () => {
 
     expect(result.errors?.map((error) => error.message)).toEqual(['the finder failed']);
     expect(result.errors?.[0].originalError).not.toBeInstanceOf(GraphQLError);
+  });
+
+  it('exposes what an entry carries as the edge fields it declares', async () => {
+    const scratch = createBuilder();
+    const LeafRef = scratch.objectRef<Leaf>('Leaf');
+    LeafRef.implement({ fields: (t) => ({ name: t.exposeString('name') }) });
+    scratch.queryType({
+      fields: (t) => ({
+        leaves: t.pagedConnection({
+          type: LeafRef,
+          resolve: (_parent, _args, page) =>
+            Promise.resolve(
+              fakeFindPage(page).map((entry, index) => ({
+                ...entry,
+                rank: index % 2 === 0 ? index : null,
+              })),
+            ),
+          edgeFields: (edge) => ({
+            rank: edge.int({ nullable: true, resolve: (entry) => entry.rank }),
+          }),
+        }),
+      }),
+    });
+
+    const result = await run(
+      scratch.toSchema(),
+      '{ leaves(first: 3) { edges { rank node { name } } } }',
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect((result.data as { leaves: { edges: { rank: number | null }[] } }).leaves.edges).toEqual([
+      { rank: 0, node: { name: 'Leaf 000' } },
+      { rank: null, node: { name: 'Leaf 001' } },
+      { rank: 2, node: { name: 'Leaf 002' } },
+    ]);
   });
 
   it('refuses a negative size', async () => {

@@ -22,13 +22,14 @@ export interface ConnectionArgs {
 }
 
 /**
- * A position in a list: the row's sort key, as Postgres prints it, and its id
- * as the tie-break. Never an offset, so a row inserted or deleted ahead of it
- * cannot shift the page under a reader. The key is text because a
- * `timestamptz` read into a JS `Date` loses its microseconds.
+ * A position in a list: each part of the row's sort key, as Postgres prints
+ * it, and its id as the tie-break. Never an offset, so a row inserted or
+ * deleted ahead of it cannot shift the page under a reader. The parts are text
+ * because a `timestamptz` read into a JS `Date` loses its microseconds. How
+ * many parts a list's key has is the list's to check, not the codec's.
  */
 export interface Cursor {
-  key: string;
+  key: readonly string[];
   id: string;
 }
 
@@ -42,14 +43,14 @@ export interface PageRequest {
   inverted: boolean;
 }
 
-/** One row of a page, with the position it was found at. */
-export interface PageEntry<T> {
-  cursor: Cursor;
-  node: T;
-}
+/**
+ * One row of a page, with the position it was found at, and whatever else the
+ * finder carries beside it — `Edge` — which becomes a field of its edge.
+ */
+export type PageEntry<T, Edge extends object = {}> = { cursor: Cursor; node: T } & Edge;
 
-export interface Page<T> {
-  edges: { cursor: string; node: T }[];
+export interface Page<T, Edge extends object = {}> {
+  edges: ({ cursor: string; node: T } & Edge)[];
   pageInfo: {
     startCursor: string | null;
     endCursor: string | null;
@@ -86,13 +87,15 @@ export function decodeCursor(cursor: string): Cursor {
     decoded === null ||
     !('k' in decoded) ||
     !('i' in decoded) ||
-    typeof decoded.k !== 'string' ||
+    !Array.isArray(decoded.k) ||
+    decoded.k.length === 0 ||
+    !decoded.k.every((part) => typeof part === 'string') ||
     typeof decoded.i !== 'string' ||
     decoded.i === ''
   ) {
     throw new InvalidCursor();
   }
-  return { key: decoded.k, id: decoded.i };
+  return { key: decoded.k as string[], id: decoded.i };
 }
 
 /**
@@ -101,10 +104,10 @@ export function decodeCursor(cursor: string): Cursor {
  * from what came back. `fetch` sees a `PageRequest` and never the client's
  * raw arguments, so no finder can skip the clamp.
  */
-export async function resolvePage<T>(
+export async function resolvePage<T, Edge extends object = {}>(
   args: ConnectionArgs,
-  fetch: (request: PageRequest) => PageEntry<T>[] | Promise<PageEntry<T>[]>,
-): Promise<Page<T>> {
+  fetch: (request: PageRequest) => PageEntry<T, Edge>[] | Promise<PageEntry<T, Edge>[]>,
+): Promise<Page<T, Edge>> {
   const after = args.after == null ? undefined : decodeCursor(args.after);
   const before = args.before == null ? undefined : decodeCursor(args.before);
   const { limit, expectedSize, inverted, hasNextPage, hasPreviousPage } = parseCursorConnectionArgs(
@@ -120,7 +123,10 @@ export async function resolvePage<T>(
 
   const page = entries.slice(0, expectedSize);
   if (inverted) page.reverse();
-  const edges = page.map(({ cursor, node }) => ({ cursor: encodeCursor(cursor), node }));
+  const edges = page.map(({ cursor, ...edge }) => ({
+    ...edge,
+    cursor: encodeCursor(cursor),
+  })) as Page<T, Edge>['edges'];
 
   return {
     edges,

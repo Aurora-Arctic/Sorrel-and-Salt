@@ -385,6 +385,12 @@ type Query {
   ingredientFormValues(first: Int, after: String): QueryIngredientFormValuesConnection!
 }
 
+type QueryCompendiumConnectionEdge {
+  cursor: String!
+  node: Ingredient!
+  score: Float # the search's word similarity, 0 to 1; null without a search
+}
+
 type Ingredient {
   id: ID!
   name: String!
@@ -443,12 +449,20 @@ type IngredientFormGroup {
   `form` are the service's, filtered in SQL ([`db.md`](db.md), "The compendium
   read"): the term at least 0.5 word-similar (`<%`) to the label, the formal
   name or a live folk name, case- and accent-folded, so a prefix and a
-  transposed pair both find their entry, in `(name, id)` order rather than
-  ranked; every listed category (AND; M8.12 adds a mode); the form
-  under `canonical_key`'s fold. The browser never holds more than a page (rule
+  transposed pair both find their entry; every listed category (AND; M8.12
+  adds a mode); the form under `canonical_key`'s fold. The browser never holds more than a page (rule
   8), so it cannot be the search, which is why M8.4's client-side
   `filterIngredients()` was retired (DESIGN.md §14). `element` (M8.13) and
   `nomenclature` (M5.5) are those tasks' arguments to add.
+- **A search is ranked, best match first.** It pages
+  `(score DESC, name, id)`, and each edge carries `score`: the row's word
+  similarity to the term, the best of the label, the formal name and its folk
+  names. Without a search the list pages `(name, id)` and `score` is null. A
+  term shorter than two characters is no search — one letter would filter and
+  rank by noise — so it lists every entry, unranked. The score lives on the
+  edge rather than on `Ingredient` because it describes the match, not the
+  entry. How the rank reaches a keyset page is [`db.md`](db.md)'s ("The
+  compendium read").
 - **`ingredient` is non-null, and a miss is `NOT_FOUND`**, as `me` answers
   one: an id that names nothing, a soft-deleted entry, and a coven's own entry
   asked for without its coven all read the same, since a workspace entry's
@@ -682,16 +696,21 @@ each keep to their own rules:
   `builder.ts` imports it for that side effect. Its `resolve` receives a
   decoded, clamped `PageRequest`, never the client's `first` or `after`, so
   no resolver can skip the maximum or read a cursor as an offset.
+  `edgeFields` declares fields on the edge beside `cursor` and `node`, each
+  resolved from what the finder carried on its entry — `resolvePage` copies
+  everything an entry holds but its cursor onto the edge. The compendium's
+  `score` is the one so far.
 - **`findPage` and `findPageInWorkspace`** in the repository run the keyset
   query (claude-docs/db.md, "Keyset pages").
 
 **A cursor is the sort key and the id, never an offset**: base64url of
-`{"k": <key>, "i": <id>}`. An offset moves when a row is inserted or deleted
-ahead of the reader, and a key does not. The key is the text Postgres prints
-for the value. A `timestamptz` read into a JS `Date` keeps milliseconds and
+`{"k": [<part>, …], "i": <id>}`, one part per sort part. An offset moves when
+a row is inserted or deleted ahead of the reader, and a key does not. Each part
+is the text Postgres prints for the value. A `timestamptz` read into a JS `Date` keeps milliseconds and
 loses microseconds, and a cursor built from it would replay every row in that
 millisecond. A malformed cursor, or one whose key will not cast to the sort
-column's type, is `InvalidCursor` from `src/lib/errors.ts`. `t.pagedConnection`
+column's type, or has a different number of parts from the list's sort, is
+`InvalidCursor` from `src/lib/errors.ts`. `t.pagedConnection`
 turns that into an `Invalid cursor` GraphQL error. It is never treated as "from
 the start", which would return a page the client did not ask for.
 

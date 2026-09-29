@@ -1,5 +1,9 @@
 import 'server-only';
-import { findCompendiumPage, findOneIngredient } from '../../../db/repository';
+import {
+  type CompendiumScore,
+  findCompendiumPage,
+  findOneIngredient,
+} from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
 import type { PageEntry, PageRequest } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
@@ -19,17 +23,19 @@ import { type Membership, assertMembership } from '@/modules/coven';
 export type IngredientRow = typeof ingredients.$inferSelect;
 
 /**
- * One page of the compendium under `filter`. Parsed here because the browser
- * is not the only caller, and because a category id reaches a `uuid`
- * comparison inside the keyset query, whose one client text was the cursor:
- * unchecked, a malformed id would come back as "Invalid cursor".
+ * One page of the compendium under `filter`, best match first on a search,
+ * each entry carrying its score. Parsed here because the browser is not the
+ * only caller, and because a category id reaches a `uuid` comparison inside
+ * the keyset query, whose one client text was the cursor: unchecked, a
+ * malformed id would come back as "Invalid cursor". A term shorter than
+ * `MIN_SEARCH_LENGTH` is no search.
  *
  * @throws {ValidationError} a category id is not a uuid.
  */
 export async function listCompendium(
   filter: CompendiumFilterInput,
   page: PageRequest,
-): Promise<PageEntry<IngredientRow>[]> {
+): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
   return findCompendiumPage(parseInput(CompendiumFilter, filter), page);
 }
 

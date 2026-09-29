@@ -13,7 +13,9 @@ vi.mock('@/graphql/schema', async () => {
   const scratch = createBuilder();
   const id = '00000000-0000-4000-8000-000000000000';
   const page = (limit: number) =>
-    Promise.resolve(Array.from({ length: limit }, () => ({ cursor: { key: 'k', id }, node: {} })));
+    Promise.resolve(
+      Array.from({ length: limit }, () => ({ cursor: { key: ['k'], id }, node: {} })),
+    );
   const Leaf = scratch.objectRef<object>('Leaf');
   Leaf.implement({ fields: (t) => ({ name: t.string({ resolve: () => 'leaf' }) }) });
   const Node = scratch.objectRef<object>('Node');

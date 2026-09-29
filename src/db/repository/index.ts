@@ -31,6 +31,7 @@ export {
   findManyOfIngredients,
   findOneIngredient,
   findSimilarIngredients,
+  type CompendiumScore,
   type IngredientFilter,
 } from './ingredients';
 export {
@@ -42,6 +43,7 @@ export {
 } from './vocabularies';
 export { findCommonNameSuggestions, type CommonNameSuggestion } from './common-names';
 export type { Claimant } from './suggestion-page';
+export type { SortPart } from './select';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';
 export { findUserByEmail } from './users';
 export { deleteProvisionalUsers } from './provisional-users';

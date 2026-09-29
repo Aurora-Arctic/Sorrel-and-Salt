@@ -916,10 +916,11 @@ cut by cursor as a whole.
   `Derived` — a parenthesised statement and the columns read off it — in
   place of a table, in its `Similarity` mode, so the rule that every read is
   built in `select.ts` and the thresholds hold for a read no one table holds. The finder writes its
-  own keyset bounds: a cursor's key is `tier:fold` and its id the tie-break,
-  which is the curated row's id or the fold, compared as the row
-  `(tier, fold, tiebreak)`. A key that does not parse throws
-  `InvalidCursor`, as a cursor that will not cast does in `findPage`.
+  own keyset bounds: a cursor's key is the two parts `[tier, fold]` and its
+  id the tie-break, which is the curated row's id or the fold, compared as the
+  row `(tier, fold, tiebreak)`. A key of any other length, or naming a tier
+  there is not, throws `InvalidCursor`, as a cursor that will not cast does in
+  `findPage`.
 
 **A form suggestion carries two things more** (M4.7a), and only a form's
 does — the finder is overloaded on the table, so a planet or sign suggestion
@@ -2134,9 +2135,10 @@ in `vocabulary`'s `services/ingredient-form-values.ts` sit over three
 finders, the two that read the compendium tier named on
 [the tier seam](modules.md#the-tier-seam).
 
-**`findCompendiumPage(filter, page)`** is one keyset page of the compendium in
-`(name, id)` order under an `IngredientFilter`, every part optional and absent
-meaning no filter:
+**`findCompendiumPage(filter, page)`** is one keyset page of the compendium
+under an `IngredientFilter`, every part optional and absent meaning no filter.
+A search pages best match first, `(score DESC, name, id)`, and a list without
+one pages `(name, id)`; each entry carries a `score`, null on the second:
 
 - **`search`** is word similarity, case- and accent-folded, against the display
   name, the formal name or a live folk name:
@@ -2151,28 +2153,55 @@ meaning no filter:
   `ingredient_folk_names_unaccent_trgm` (migration 0027) are for, and
   `unaccent_immutable` (0026) is the `IMMUTABLE` wrapper an expression index
   needs; `ingredients-unaccent.test.ts` proves by `EXPLAIN` that each
-  predicate reaches its index. The three matches are a `UNION ALL` under
-  `id IN (…)`, the shape "Fuzzy matching" argues for over an `OR` beside the
-  scope.
+  predicate reaches its index. The three matches are a `UNION ALL`, the
+  shape "Fuzzy matching" argues for over an `OR` beside the scope.
+- **The score is the row's best word similarity** across the three, and it is
+  the search's order. Each `UNION ALL` arm selects
+  `word_similarity(term, text)` beside the id it matched — the value the GIN
+  recheck has just computed to test `<%` — and the union is folded to
+  `max(score) … group by id` and joined to `ingredients` as `matched`. So the
+  score is a plain column, read by the order, the page bound and the edge
+  alike, once per matched row. The alternative, a `greatest(…)` over the three
+  with a correlated subquery for the folk names, is a `SubPlan` that a page
+  bound evaluates against every compendium row. `compendium-search-query.test.ts`
+  runs `EXPLAIN ANALYZE` on the statement the finder sends, over ~20,000
+  entries and as many folk names under `enable_seqscan = off`: the first page
+  and the page after a cursor both start from `ingredients_unaccent_trgm` and
+  `ingredient_folk_names_unaccent_trgm`, with no `SubPlan` and no sequential
+  scan, and the test prints the ranked and unranked timings — about 7 ms and
+  5 ms when it was written.
+- **A keyset, not a capped top-N or pg_trgm's `<<->`.** A top-N would leave
+  every match past the cap unreachable and give a search a different shape
+  from a browse, against rule 8. `<<->` is a nearest-neighbour order: it needs
+  a GiST index where these are GIN, orders by one text where the score is the
+  best of three, and cannot resume after a cursor. The key is `[-score, name]`
+  plus the id — negated so one ascending row comparison bounds it, and `real`,
+  as `word_similarity` returns it, because a `real` prints shortest-exact and
+  its cursor text casts back to the same value (`1 - score` would promote to
+  `double precision`). A browse's cursor has one part and a search's two, so
+  neither is a position in the other, and each is `InvalidCursor` there.
 - **The 0.5 is set by `selectFrom`, as every threshold is.** The finder marks
   its keyset `wordMatch` when there is a term, and `selectFrom` then reads the
   page in a transaction that sets `pg_trgm.word_similarity_threshold` with
   `set_config(…, true)` first — the similarity branch's shape, on the keyset
   branch. `compendium-search-query.test.ts` reads the statements sent: the
-  setting before the match, and no transaction for a page with no term. The
-  results stay in `(name, id)` order, not ranked by score: a keyset page needs
-  a stored sort key, and a score is computed per term.
+  setting before the match, and no transaction for a page with no term.
 - **`categoryIds`** is AND: one correlated `existsIn(ingredient_categories, …)`
   per id, so an entry must carry every one. OR is M8.12's argument to add.
 - **`form`** compares `lower(btrim(…))` on both sides, the fold
   `canonical_key` uses.
 
-The order is the keyset helper's, one `NOT NULL` column plus the id, under the
-database's own collation (`en_US.utf8` in the image), and a search pages in
-that order too: ranking it by score needs a compound, computed key the helper
-does not take yet, which is MB.104's to add — and M8.14's
-`(lower(name), canonical_key, id)` declares its parts on the same mechanism.
-Moving a cursor's sort is harmless.
+Names order under the database's own collation (`en_US.utf8` in the image).
+M8.14's `(lower(name), canonical_key, id)` declares its parts on the same
+keyset mechanism ("Keyset pages"). Moving a cursor's sort is harmless, since a
+cursor lives only as long as the page it came from.
+
+**The service treats a term shorter than two characters as absent**
+(`MIN_SEARCH_LENGTH` in `validation/compendium-filter.ts`, counted in composed
+code points). One letter shares a trigram with half the compendium at 0.5, so
+it would filter and rank by noise; below the minimum the list is a browse,
+unfiltered and unranked. The finder takes whatever it is handed, one
+character included.
 
 **`findOneIngredient(memberships, id)`** is one live row in the compendium or
 in a coven one of the proofs names, in the shape of `findManyOfIngredients`. No
@@ -2303,12 +2332,13 @@ hand. `tests/modules/identity/schema/users-schema.test.ts` inserts one.
 A list that can grow is read one page at a time (CLAUDE.md rule 8). The finder
 is `findPage(table, sort, page, where?)`, or
 `findPageInWorkspace(membership, table, sort, page, where?)` for a
-workspace-scoped table. Each ANDs the same soft-delete and workspace predicates
-as `findMany` and `findManyInWorkspace`, and adds a keyset bound:
+workspace-scoped table. `sort` is a list of parts, each ascending. Each finder
+ANDs the same soft-delete and workspace predicates as `findMany` and
+`findManyInWorkspace`, and adds a keyset bound:
 
 ```sql
-where … and (sort, id) > (cast($key as <sort type>), cast($id as uuid))
-order by sort, id
+where … and (a, b, id) > (cast($a as <a's type>), cast($b as <b's type>), cast($id as uuid))
+order by a, b, id
 limit $limit  -- the page plus one
 ```
 
@@ -2317,16 +2347,34 @@ limit $limit  -- the page plus one
   bounds from below and `before` from above. `inverted`, when walking backwards
   with `last`, reverses the `ORDER BY` only, and `resolvePage` puts the rows
   back in order.
-- **Each row comes back with its cursor.** The key is selected as
-  `sort::text`, and compared by casting it back to the column's own type
-  (`getSQLType()`), so Postgres compares a `timestamptz` to the microsecond. A
-  key read through a JS `Date` would lose the microseconds and replay rows.
+- **A part is a column, or an expression with the type it is read as**
+  (`SortPart`: `leaves.name`, or `{ expression, type: 'real' }`). An expression
+  is read as `cast(expression as type)` in the order, the bound and the key
+  alike, so the declared type is the one compared: `length(name)::real / 3` is
+  `double precision`, and ordered raw against a `real` cursor it would replay
+  rows. A descending part is written negated, so one row comparison serves.
+  The compendium search's `[-score, name]` is the first computed key, and
+  M8.14's `(lower(name), canonical_key)` the next.
+- **Each row comes back with its cursor.** The key is selected as an array of
+  each part cast to text, and compared by casting each back to its part's
+  type (`getSQLType()` for a column), so Postgres compares a `timestamptz` to
+  the microsecond. A key read through a JS `Date` would lose the microseconds
+  and replay rows.
+- **A cursor whose key has the wrong number of parts is `InvalidCursor`**,
+  thrown by `pageBounds` before any read: it is a position in some other
+  list.
+- **A page may join one relation and carry values onto its entries.**
+  `Keyset.join` is a parenthesised, aliased statement and its `on`, which a
+  sort part or the `where` may read; `Keyset.carry` names values selected
+  beside the row, which `resolvePage` puts on the edge. The compendium search
+  joins its scored matches and carries the score this way.
 - **The id breaks ties**, so rows sharing a sort key still sit in one total
   order, and a page boundary between two of them loses neither. Every table
   these finders take has an `id` (`Identified`), which rules out the three
   join tables.
-- **The sort column must be `NOT NULL`**, by type. A NULL makes the row
-  comparison NULL, and that row would fall out of every page.
+- **A sort column must be `NOT NULL`**, by type. A NULL makes the row
+  comparison NULL, and that row would fall out of every page. An expression's
+  nullness is not in its type, so a nullable one is the caller's bug.
 - **A cursor that will not cast** (SQLSTATE class 22) throws `InvalidCursor`.
   The cursor is the only client text in a page query, so a data exception
   there can only come from it.
@@ -2341,7 +2389,10 @@ the other spell finders.
 
 A page over rows no one table holds writes its own bounds under the same
 rules: `findVocabularySuggestions` and `findCommonNameSuggestions` key a
-statement by tier, fold and tie-break ("The member's autofill").
+statement by `[tier, fold]` and a tie-break ("The member's autofill"). That
+page is read under the similarity thresholds, whose branch maps no data
+exception to `InvalidCursor`, so `readSuggestionPage` checks the key's two
+parts and the tier itself before building the bound.
 
 `tests/db/pagination.test.ts` walks probe tables through `resolvePage` and the
 real finders:
@@ -2352,8 +2403,11 @@ real finders:
   soft-deleted mid-walk, including the row the cursor names;
 - a backward walk;
 - nine timestamps a microsecond apart;
+- a compound, computed key — a negated `real` fraction, then the name — with
+  ties on either part, forwards and backwards, and the key as Postgres prints it;
 - workspace scoping, with the other workspace's rows present;
-- both cursor refusals.
+- the cursor refusals: a key that will not cast, an id that is not one, and a
+  key with the wrong number of parts.
 
 ## Hard delete on the three join tables (MB.34)
 

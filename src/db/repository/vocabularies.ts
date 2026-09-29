@@ -22,7 +22,7 @@ import { type Claimant, claimantList, readSuggestionPage } from './suggestion-pa
 export function findIngredientFormValues(
   page: PageRequest,
 ): Promise<PageEntry<typeof ingredientForms.$inferSelect>[]> {
-  const keyset = { sort: ingredientForms.name, id: ingredientForms.id, request: page };
+  const keyset = { sort: [ingredientForms.name], id: ingredientForms.id, request: page };
   return selectFrom(
     ingredientForms,
     and(
