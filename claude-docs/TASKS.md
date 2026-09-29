@@ -2385,7 +2385,7 @@ _Acceptance criteria:_
 
 _Story:_ As an operator, I want the compendium served from cache so that the most-read data on the site does not hit Postgres on every page.
 
-Wrap the compendium reads — the page, and MB.105's count behind `totalCount` and `startIndex` — and the category reads in `unstable_cache` with the `compendium` tag and an hour's revalidation. Viewer-independent data only — never cache anything workspace-scoped. The `ingredient_forms` vocabulary is viewer-independent too, and caches under this same `compendium` tag rather than a new one.
+Wrap the compendium reads — the page, and MB.105's count behind `totalCount` and `countBefore` — and the category reads in `unstable_cache` with the `compendium` tag and an hour's revalidation. Viewer-independent data only — never cache anything workspace-scoped. The `ingredient_forms` vocabulary is viewer-independent too, and caches under this same `compendium` tag rather than a new one.
 
 _Acceptance criteria:_
 
@@ -2580,7 +2580,7 @@ _Acceptance criteria:_
 
 _Story 14 — As a workspace member, I want a browsable compendium page, so that I can find shared entries and add them to my ingredients._
 
-`/compendium` composing IngredientSearch with an Add to my ingredients action slot. Public and read-only for everyone but admins (MB.80). An ISR page under the `compendium` tag, rendered from the cached data with no request-time API; the signed-in affordances come from MB.83's client island, and the unfiltered list, every card and every card's link to its entry are in the initial HTML. Cards disambiguate two compendium entries sharing a label via M8.14's secondary line. The pager reads "Page X of Y" from MB.105's `totalCount` and `startIndex`, between First, Prev, Next and Last links; Last asks for `last: totalCount % 25 || 25`, so the final page lines up with the pages Next walks to.
+`/compendium` composing IngredientSearch with an Add to my ingredients action slot. Public and read-only for everyone but admins (MB.80). An ISR page under the `compendium` tag, rendered from the cached data with no request-time API; the signed-in affordances come from MB.83's client island, and the unfiltered list, every card and every card's link to its entry are in the initial HTML. Cards disambiguate two compendium entries sharing a label via M8.14's secondary line. The pager reads "Page X of Y" from MB.105's `totalCount` and `countBefore`, between First, Prev, Next and Last links; Last asks for `last: totalCount % 25 || 25`, so the final page lines up with the pages Next walks to.
 
 _Acceptance criteria:_
 
@@ -5528,14 +5528,14 @@ _Acceptance criteria:_
 
 _Story 14 — As a workspace member, I want a browsable compendium page, so that I can find shared entries and add them to my ingredients._
 
-M8.18's pager can offer Next and Previous and nothing more: the compendium connection carries `edges` and `pageInfo`, the whole Relay set, and no count, so neither how many pages there are nor which one this is can be shown. This task adds both, as `totalCount: Int!` and `startIndex: Int` on `QueryCompendiumConnection` — the rows the list holds under its filter, and how many of them come before this page's first edge, null on an empty page — and the client derives "Page X of Y": the page is `floor(startIndex / size) + 1`, the count `max(1, ceil(totalCount / size))`, and Last asks for `last: totalCount % size || size`, since `last: 25` would end on a page that starts mid-page and read one page early. The position is counted from a key and never used to seek, so DESIGN.md §7's "never an offset" stands; a row inserted ahead mid-walk shifts a label, not a page. No numbered jump links: a cursor per page would rank every match on every request and tie the pager to one page size.
+M8.18's pager can offer Next and Previous and nothing more: the compendium connection carries `edges` and `pageInfo`, the whole Relay set, and no count, so neither how many pages there are nor which one this is can be shown. This task adds both, as `totalCount: Int!` and `countBefore: Int` on `QueryCompendiumConnection` — the rows the list holds under its filter, and how many of them come before this page's first edge, 0 on the first page and null on an empty one — and the client derives "Page X of Y": the page is `floor(countBefore / size) + 1`, the count `max(1, ceil(totalCount / size))`, and Last asks for `last: totalCount % size || size`, since `last: 25` would end on a page that starts mid-page and read one page early. The position is counted from a key and never used to seek, so DESIGN.md §7's "never an offset" stands; a row inserted ahead mid-walk shifts a label, not a page. No numbered jump links: a cursor per page would rank every match on every request and tie the pager to one page size. The position is named as the count it is rather than `startIndex`, which Google's JSON style guide and OpenSearch count from 1, so a client has no base to guess.
 
 `pagedConnection` gains an optional `count`, emitted as the two fields through the Relay plugin's connection options, beside MB.104's edge fields. Both fields share one memoised call per connection, so selecting both runs one query and selecting neither runs none — M8.10's typeahead dropdown, the first page of the same search, selects neither. The count is one statement, `count(*)` beside `count(*) filter (where <row> < <first edge's key>)`, built by a count mode on `selectFrom` over the page's own `where` and search join, with no order or limit and no new `.select(`; the keyset is built once for the page and the count, so the two cannot drift. On a search it runs under the page's word-similarity threshold, 0.5 — read at the server's 0.6 it would count fewer rows than the pages hold. It is priced as `pageInfo` is, at the page size.
 
 _Acceptance criteria:_
 
 - `totalCount` equals the rows collected by walking every page — unfiltered, by category, by form, and on a search whose term is word-similar between 0.5 and 0.6 — and excludes soft-deleted and workspace rows
-- `startIndex` is `(n − 1) × size` on page n, walked forwards and backwards across a score tie, and null on an empty page
+- `countBefore` is `(n − 1) × size` on page n, walked forwards and backwards across a score tie, and null on an empty page
 - Selecting neither field runs no count; selecting both runs one
 - A signed-out query reads both fields
 - The SDL snapshot and `src/gql/` are regenerated; `claude-docs/graphql.md` ("Pagination", the compendium section), `claude-docs/db.md` ("Keyset pages", "The compendium read") and DESIGN.md §7 describe the two fields and the client's formula

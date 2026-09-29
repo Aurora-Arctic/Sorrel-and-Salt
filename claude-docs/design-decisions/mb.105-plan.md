@@ -17,12 +17,14 @@ During MB.104 the owner asked two questions: what it would take to show page num
 **"Page X of Y", with First, Prev, Next and Last links.** This is MB.105. The connection gains two fields:
 
 - `totalCount`: the rows the list holds under its filter.
-- `startIndex`: how many of those rows come before this page's first edge. It is counted with the page's own row comparison, so it is derived from a key and never used to seek.
+- `countBefore`: how many of those rows come before this page's first edge, so 0 on the first page. It is counted with the page's own row comparison, so it is derived from a key and never used to seek.
+
+**Named as a count, not `startIndex`.** The plan first called the field `startIndex`, and the owner asked while it was being built whether clients would expect it to start at 1. The name does suggest that. Google's JSON style guide defines `startIndex` as one-based, and OpenSearch counts it from 1 by default. Where a zero-based position does appear, it is usually a request argument called `offset`, `from` or `skip`, which names a count of rows to skip. A client that read `startIndex` as one-based would get the page number right, since `floor(n / size) + 1` holds either way at a page boundary, but would label every "Showing 11–20" range one short. `countBefore` names a count, which has no base to guess. It sits beside `totalCount`. `offset` was not used because the field is never an argument and never seeks.
 
 Two alternatives were weighed and not taken:
 
 - **A count alone** ("287 ingredients · 12 pages") never says which page is showing.
-- **Numbered jump links** ("1 2 3 … 12") need the cursor that opens every page. That means ranking every matching row on every request. It ties the pager to one page size, grows the payload with the list, and adds a second way of navigating the list for DESIGN.md to explain alongside the cursor rule. It also buys less than it seems: MB.84's sitemap lists every entry page directly, so no entry depends on a crawler walking the list. Jump links remain additive later, built on `startIndex`.
+- **Numbered jump links** ("1 2 3 … 12") need the cursor that opens every page. That means ranking every matching row on every request. It ties the pager to one page size, grows the payload with the list, and adds a second way of navigating the list for DESIGN.md to explain alongside the cursor rule. It also buys less than it seems: MB.84's sitemap lists every entry page directly, so no entry depends on a crawler walking the list. Jump links remain additive later, built on `countBefore`.
 
 **The search box's typeahead is the first page of the ranked search.** The owner wanted the typeahead to return the top 25 and not paginate.
 
@@ -38,7 +40,7 @@ Two alternatives were weighed and not taken:
 
 MB.105 sits in Wave 8 as `M8.5 · MB.104 · MB.105 · M8.8`.
 
-- **It follows MB.104.** The count and the `startIndex` bound reuse MB.104's multi-part keyset and its search join, and the `count` option sits beside MB.104's edge fields in `pagedConnection`.
+- **It follows MB.104.** The count and the `countBefore` bound reuse MB.104's multi-part keyset and its search join, and the `count` option sits beside MB.104's edge fields in `pagedConnection`.
 - **It precedes M5.5.** `/admin/compendium` is the first list to read `compendium`.
 - **It precedes M8.6.** The cache then wraps the count along with the page, rather than a later task retrofitting a second cached read.
 - **It lands well before M8.18,** which renders the pager in Wave 12.
@@ -47,7 +49,7 @@ MB.105 sits in Wave 8 as `M8.5 · MB.104 · MB.105 · M8.8`.
 
 **The count option.**
 
-- `pagedConnection` gains an optional `count`. It is emitted as `totalCount: Int!` and `startIndex: Int` through the Relay plugin's connection options.
+- `pagedConnection` gains an optional `count`. It is emitted as `totalCount: Int!` and `countBefore: Int` through the Relay plugin's connection options.
 - Both fields share one memoised call per connection, so selecting both runs one query and selecting neither runs none. The typeahead selects neither.
 
 **The count statement.**
@@ -61,6 +63,6 @@ MB.105 sits in Wave 8 as `M8.5 · MB.104 · MB.105 · M8.8`.
 
 **The client's formula**, recorded in graphql.md when MB.105 lands:
 
-- The page is `floor(startIndex / size) + 1`.
+- The page is `floor(countBefore / size) + 1`.
 - The number of pages is `max(1, ceil(totalCount / size))`.
-- **Last asks for `last: totalCount % size || size`.** With 287 rows, `last: 25` would return rows 263 to 287. That page's `startIndex` is 262, so it would read as page 11 of 12. Asking for the remainder instead ends on the same page Next walks to.
+- **Last asks for `last: totalCount % size || size`.** With 287 rows, `last: 25` would return the final 25 rows. They have 262 rows before them, so the page would read as page 11 of 12. Asking for the remainder instead ends on the same page Next walks to.

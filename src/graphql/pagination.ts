@@ -12,8 +12,11 @@ import {
 import { InvalidCursor } from '../lib/errors';
 import {
   type ConnectionArgs,
+  type Cursor,
+  type PageCount,
   type PageEntry,
   type PageRequest,
+  decodeCursor,
   resolvePage,
 } from '../lib/pagination';
 
@@ -46,6 +49,23 @@ export interface PagedConnectionOptions<
   ) => Promise<PageEntry<Node, Edge>[]>;
   /** Fields of the edge beside `cursor` and `node`, read off what each entry carries. */
   edgeFields?: ObjectFieldsShape<Types, { cursor: string; node: Node } & Edge>;
+  /**
+   * The list's size under the field's arguments, and how many of its rows
+   * come before `start` — the page's first row, none on an empty page.
+   * Emitted as `totalCount` and `countBefore`, and called once per
+   * connection, only when one of the two is selected.
+   */
+  count?: (
+    parent: ParentShape,
+    args: InputShapeFromFields<Args>,
+    start: Cursor | undefined,
+    context: Types['Context'],
+  ) => Promise<PageCount>;
+}
+
+/** What a counted connection's two fields read: one count, asked for on first use. */
+interface Counted {
+  count: () => Promise<PageCount>;
 }
 
 declare global {
@@ -73,13 +93,28 @@ const fieldBuilderProto = RootFieldBuilder.prototype as PothosSchemaTypes.RootFi
   FieldKind
 >;
 
-fieldBuilderProto.pagedConnection = function pagedConnection({ resolve, edgeFields, ...options }) {
+fieldBuilderProto.pagedConnection = function pagedConnection({
+  resolve,
+  edgeFields,
+  count,
+  ...options
+}) {
   return this.connection(
     {
       ...options,
       resolve: async (parent: unknown, args: ConnectionArgs, context: object) => {
         try {
-          return await resolvePage(args, (page) => resolve(parent, args as never, page, context));
+          const page = await resolvePage(args, (request) =>
+            resolve(parent, args as never, request, context),
+          );
+          if (!count) return page;
+          const { startCursor } = page.pageInfo;
+          const start = startCursor === null ? undefined : decodeCursor(startCursor);
+          let counted: Promise<PageCount> | undefined;
+          return {
+            ...page,
+            count: () => (counted ??= count(parent, args as never, start, context)),
+          } satisfies Counted;
         } catch (error) {
           // Bad input, so the client sees why; any other error stays masked.
           if (error instanceof InvalidCursor) throw new PothosValidationError(error.message);
@@ -87,7 +122,26 @@ fieldBuilderProto.pagedConnection = function pagedConnection({ resolve, edgeFiel
         }
       },
     } as never,
-    {},
+    (count ? { fields: countFields } : {}) as never,
     (edgeFields ? { fields: edgeFields } : {}) as never,
   ) as never;
 };
+
+/**
+ * `totalCount` and `countBefore`, priced as `pageInfo` is: a field under the
+ * connection, at the page size, however many rows the count reads.
+ */
+function countFields(t: PothosSchemaTypes.ObjectFieldBuilder<SchemaTypes, Counted>) {
+  return {
+    totalCount: t.int({
+      description: 'How many rows the list holds under its arguments.',
+      resolve: async (connection) => (await connection.count()).totalCount,
+    }),
+    countBefore: t.int({
+      nullable: true,
+      description:
+        "How many of the list's rows come before this page's first edge: 0 on the first page, so the page is floor(countBefore / size) + 1. Null on an empty page.",
+      resolve: async (connection) => (await connection.count()).countBefore,
+    }),
+  };
+}

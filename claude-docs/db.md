@@ -1849,8 +1849,8 @@ member's autofill"), and `findManyOfIngredients` through the parent of a folk
 name or a category link (see "Ingredient children"), each naming
 both tiers as explicitly as this paragraph asks, and each listed on
 [the tier seam](modules.md#the-tier-seam). The plain compendium read is
-`findCompendiumPage` (M8.5), which ANDs `inCompendium` as explicitly as the
-scoped finders AND their proof, and `findOneIngredient` reads one row in the
+`findCompendiumPage` (M8.5), with its count `findCompendiumCount` (MB.105),
+each ANDing `inCompendium` as explicitly as the scoped finders AND their proof, and `findOneIngredient` reads one row in the
 compendium or a proof's coven ("The compendium read"); the
 local-beats-compendium resolution (§5) wants both tiers under an anti-join and
 is a further named finder, M8.3's. The point of the narrowing is that a read
@@ -2130,9 +2130,9 @@ database computes it.
 ## The compendium read (M8.5)
 
 The compendium is the public surface (MB.80), so its reads take no proof and
-no session. Two services in `ingredients`' `services/compendium.ts` and one
-in `vocabulary`'s `services/ingredient-form-values.ts` sit over three
-finders, the two that read the compendium tier named on
+no session. Three services in `ingredients`' `services/compendium.ts` and one
+in `vocabulary`'s `services/ingredient-form-values.ts` sit over four
+finders, the three that read the compendium tier named on
 [the tier seam](modules.md#the-tier-seam).
 
 **`findCompendiumPage(filter, page)`** is one keyset page of the compendium
@@ -2196,6 +2196,17 @@ M8.14's `(lower(name), canonical_key, id)` declares its parts on the same
 keyset mechanism ("Keyset pages"). Moving a cursor's sort is harmless, since a
 cursor lives only as long as the page it came from.
 
+**`findCompendiumCount(filter, start)`** (MB.105) numbers those pages: how
+many entries the filter holds, and how many precede `start`, a page's first
+row — the count mode of "Keyset pages". It and `findCompendiumPage` each
+state the tier and the soft-delete filter, since the tier seam and the
+soft-delete guard read each exported finder, and both take the filter's arms
+and the key from one private `compendiumList(filter)`, so the count reads
+exactly the rows the pages hold. On a search that means the join and the 0.5:
+counted at the server's 0.6, `mugwrot` (0.5 to Mugwort) would count none of
+the rows its pages list. `compendium-search-query.test.ts` reads the one
+statement sent, after the setting, with no order and no limit.
+
 **The service treats a term shorter than two characters as absent**
 (`MIN_SEARCH_LENGTH` in `validation/compendium-filter.ts`, counted in composed
 code points). One letter shares a trigram with half the compendium at 0.5, so
@@ -2214,8 +2225,8 @@ vocabulary in `(name, id)` order: the live forms whose group is live too, which
 is what curated means to `findVocabularySuggestions` as well, with the group's
 `deleted_at` read by `existsIn`.
 
-**The services parse ids first.** `listCompendium` runs its filter through
-`CompendiumFilter` (Zod, in `validation/compendium-filter.ts`) and
+**The services parse ids first.** `listCompendium` and `countCompendium` run
+their filter through `CompendiumFilter` (Zod, in `validation/compendium-filter.ts`) and
 `getIngredient` checks its id the same way, and the reason is `selectFrom`'s
 keyset branch: it maps every SQLSTATE class-22 error to `InvalidCursor`, on the
 premise that the cursor is the only client text a page query carries. A
@@ -2382,6 +2393,31 @@ limit $limit  -- the page plus one
   adds the key column, the order and the limit. The one-builder invariant of
   `soft-delete-finder-guard.test.ts` therefore holds. `findPageInWorkspace` is
   one of that guard's `SCOPED_FINDERS`.
+
+**A keyset list can be counted as well as paged** (MB.105), for a
+connection's `totalCount` and `countBefore` (claude-docs/graphql.md,
+"Pagination"). `selectFrom`'s count mode takes a `KeysetCount` — the list's
+`KeyOrder` and a `start` cursor, the page's first row — and sends one
+statement:
+
+```sql
+select count(*), count(*) filter (where (a, b, id) < (cast($a as …), cast($b as …), cast($id as uuid)))
+from … [join …] where …   -- no order, no limit
+```
+
+- **`KeyOrder` is what a page and its count share**: the sort parts, the id,
+  the join and `wordMatch`. `Keyset` is a `KeyOrder` plus the page's
+  `request` and `carry`. A finder builds its `KeyOrder` once, in one
+  function, and hands it to both reads, so the count cannot drift from the
+  pages it numbers.
+- **The `where` is the page's without `pageBounds`.** The second count uses
+  the same row comparison a `before` bound does, built by the same two helpers
+  (`rowKey`, `cursorKey`), so "before the first row" means what the page's
+  order means. With no `start` — an empty page — the second number is null.
+- **It runs under the key's threshold.** Both reads go through `readKeyed`,
+  so a `wordMatch` count sets 0.5 in its own transaction as the page does.
+- **A position, not an offset.** The count labels a page and never seeks one,
+  so a cursor stays a key.
 
 A spell's page, the counterpart of `findManySpells` under the visibility rule,
 is added by the grimoire task that first needs it, as its own finder, like

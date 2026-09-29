@@ -107,6 +107,42 @@ DevTools against the forwarded port 8000 directly — there is no VS Code
 client-side (Chrome/Edge) launch config, and none is planned, for the same
 reason.
 
+## Server edits reload the server's modules
+
+`next.config.ts` sets `experimental.turbopackServerFastRefresh: false`, so
+after an edit `next dev` drops its server modules and loads them from disk on
+the next request. Next 16.3's default instead patches the running process: it
+re-runs the edited module and every module that imports it, and nothing
+below them. That breaks the GraphQL schema, which each module registers on
+the one `builder` from `src/graphql/builder.ts` as it loads:
+
+- **Edit a module's GraphQL file** (`src/modules/*/graphql/*.ts`) and it
+  re-runs against the builder it already registered on. Every request to
+  `/api/graphql` then fails with `PothosSchemaError: Duplicate field …` until
+  the server restarts.
+- **Edit `src/graphql/pagination.ts`** and the patch applies without an
+  error, but the endpoint goes on serving the schema it started with.
+
+Both were reproduced on a second `next dev` inside the devcontainer, so the
+file watcher is not the cause: Turbopack logged "Compiled" within 3 s of the
+save either way. With the setting off, both edits are served within 3 s. The
+cost is the first request after an edit, which reloads the server's modules:
+about 150–270 ms against 10 ms, for the GraphQL route.
+
+Two alternatives were not taken:
+
+- **Declining hot updates in the schema modules**, through Turbopack's
+  `module.hot`, would keep in-place patching for pages. It is an
+  undocumented server-side API, and it has to be repeated in every file that
+  registers on the builder.
+- **Registering types through a function the route calls** rather than as
+  each module loads would make the schema safe to re-run. That rewrites every
+  module's `graphql/` files for a development-only benefit.
+
+A CLI `--server-fast-refresh` overrides the config, so no `dev` script passes
+it. `tests/guards/dev-server-fast-refresh.test.ts` fails if the setting is
+removed.
+
 ## Test debugging
 
 **Vitest**: `npm run test:debug` runs

@@ -134,8 +134,15 @@ type QueryCommonNameSuggestionsConnectionEdge {
 }
 
 type QueryCompendiumConnection {
+  """
+  How many of the list's rows come before this page's first edge: 0 on the first page, so the page is floor(countBefore / size) + 1. Null on an empty page.
+  """
+  countBefore: Int
   edges: [QueryCompendiumConnectionEdge!]!
   pageInfo: PageInfo!
+
+  """How many rows the list holds under its arguments."""
+  totalCount: Int!
 }
 
 type QueryCompendiumConnectionEdge {

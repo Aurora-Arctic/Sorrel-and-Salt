@@ -3,7 +3,7 @@ import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import type { PageRequest } from '@/lib/pagination';
-import { getIngredient, listCompendium } from '@/modules/ingredients';
+import { countCompendium, getIngredient, listCompendium } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
@@ -14,12 +14,16 @@ import { makeIngredient } from '../../../support/fixtures';
 // coven's member may also point at the coven's own row. The table is emptied
 // per test, so every row a result could come from is one this file wrote.
 
-// The one read the list makes, wrapped so a test sees what it was asked for
-// without changing what it answers.
-const repository = vi.hoisted(() => ({ findCompendiumPage: vi.fn() }));
+// The list's two reads, the page and its count, wrapped so a test sees what
+// each was asked for without changing what it answers.
+const repository = vi.hoisted(() => ({
+  findCompendiumPage: vi.fn(),
+  findCompendiumCount: vi.fn(),
+}));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();
   repository.findCompendiumPage.mockImplementation(actual.findCompendiumPage);
+  repository.findCompendiumCount.mockImplementation(actual.findCompendiumCount);
   return { ...actual, ...repository };
 });
 
@@ -31,6 +35,7 @@ useTestDatabase((client) => {
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
   repository.findCompendiumPage.mockClear();
+  repository.findCompendiumCount.mockClear();
 });
 
 const seed = (name: string, workspaceId: string | null = null) =>
@@ -82,6 +87,45 @@ describe('listCompendium', () => {
       expect(error.issues[0].path).toEqual(['categoryIds', 0]);
     });
     expect(repository.findCompendiumPage).not.toHaveBeenCalled();
+  });
+});
+
+describe('countCompendium', () => {
+  it('counts the compendium without a session', async () => {
+    await seed('Fixture Public');
+    await seed('Fixture Private', WORKSPACE_W_ID);
+
+    await expect(countCompendium({}, undefined)).resolves.toEqual({
+      totalCount: 1,
+      countBefore: null,
+    });
+  });
+
+  // The count reads the rows the page does, so it is handed the filter the
+  // page is: parsed the same way, one-character term and all.
+  it('hands the finder the filter the page gets, and the start as given', async () => {
+    const start = { key: ['Fixture Public'], id: '00000000-0000-4000-8000-000000000000' };
+    const filter = { search: '  m  ', categoryIds: [], form: ' HERB ' };
+
+    await listCompendium(filter, PAGE);
+    await countCompendium(filter, start);
+
+    expect(repository.findCompendiumCount).toHaveBeenCalledWith(
+      repository.findCompendiumPage.mock.calls[0][0],
+      start,
+    );
+    expect(repository.findCompendiumPage.mock.calls[0][0]).toEqual({
+      search: undefined,
+      categoryIds: undefined,
+      form: 'HERB',
+    });
+  });
+
+  it('refuses a category id that is not a uuid, before any read', async () => {
+    await expect(
+      countCompendium({ categoryIds: ['not-a-uuid'] }, undefined),
+    ).rejects.toBeInstanceOf(ValidationError);
+    expect(repository.findCompendiumCount).not.toHaveBeenCalled();
   });
 });
 

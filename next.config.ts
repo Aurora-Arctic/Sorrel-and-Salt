@@ -17,6 +17,14 @@ const nextConfig: NextConfig = {
   // altair-static reads its dist/index.html from disk by `__dirname`, which a
   // bundled copy no longer has; it is loaded only under `next dev`.
   serverExternalPackages: ['altair-static'],
+  experimental: {
+    // Server Fast Refresh re-runs an edited module and its importers but not
+    // the GraphQL builder they register on, so an edited GraphQL module adds
+    // its fields twice and every request fails until a restart. Off, `next dev`
+    // reloads the server's modules from disk after an edit instead
+    // (claude-docs/debugging.md).
+    turbopackServerFastRefresh: false,
+  },
 };
 
 export default nextConfig;

@@ -16,8 +16,9 @@ import { makeIngredient } from '../../../support/fixtures';
 
 // The reads a page makes, counted at the repository so the batching is a
 // number rather than a hope; the role lookup is counted to show a public
-// page never makes one.
+// page never makes one, and the count to show it runs only when asked for.
 const repository = vi.hoisted(() => ({
+  findCompendiumCount: vi.fn(),
   findManyOfIngredients: vi.fn(),
   findManyByIds: vi.fn(),
   findWorkspaceRole: vi.fn(),
@@ -240,6 +241,61 @@ describe('compendium', () => {
     expect(repository.findManyOfIngredients).toHaveBeenCalledTimes(2);
     expect(repository.findManyByIds).toHaveBeenCalledTimes(2);
     expect(repository.findWorkspaceRole).not.toHaveBeenCalled();
+  });
+
+  describe('page numbers', () => {
+    interface Counted {
+      totalCount: number;
+      countBefore: number | null;
+      edges: { node: { id: string } }[];
+      pageInfo: { endCursor: string | null };
+    }
+
+    async function counted(variables: Record<string, unknown>): Promise<Counted> {
+      const result = await graphql({
+        schema,
+        source: `query ($search: String, $first: Int, $after: String, $last: Int) {
+          compendium(search: $search, first: $first, after: $after, last: $last) {
+            totalCount countBefore edges { node { id } } pageInfo { endCursor }
+          }
+        }`,
+        variableValues: variables,
+        contextValue: { session: null, loaders: createLoaders(null), emailVerification: noSender },
+      });
+      expect(result.errors).toBeUndefined();
+      return (result.data as { compendium: Counted }).compendium;
+    }
+
+    // 26 entries at 10 a page: "Page 1 of 3", "Page 2 of 3", and Last asking
+    // for the remainder, 26 % 10, rather than a whole page that would start
+    // mid-page and read as page 2.
+    it('gives a signed-out visitor the size of the list and the page’s place in it', async () => {
+      const first = await counted({ first: 10 });
+      const second = await counted({ first: 10, after: first.pageInfo.endCursor });
+      const last = await counted({ last: first.totalCount % 10 || 10 });
+
+      expect(first.totalCount).toBe(26);
+      expect([first, second, last].map((page) => page.countBefore)).toEqual([0, 10, 20]);
+      expect(last.edges).toHaveLength(6);
+      expect([first, second, last].map((page) => page.totalCount)).toEqual([26, 26, 26]);
+    });
+
+    it('counts a search, and places an empty page nowhere', async () => {
+      const page = await counted({ search: 'sal', first: 50 });
+      const empty = await counted({ search: 'zzzzqx' });
+
+      expect(page.totalCount).toBe(6);
+      expect(page.countBefore).toBe(0);
+      expect(empty).toMatchObject({ totalCount: 0, countBefore: null, edges: [] });
+    });
+
+    it('counts only when a count field is selected, and once for both', async () => {
+      await run(null);
+      expect(repository.findCompendiumCount).not.toHaveBeenCalled();
+
+      await counted({ first: 10 });
+      expect(repository.findCompendiumCount).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('refuses a malformed cursor as bad input', async () => {

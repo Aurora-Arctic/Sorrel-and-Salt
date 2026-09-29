@@ -1,10 +1,22 @@
-import { and, asc, desc, exists, getTableColumns, gt, is, lt, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  exists,
+  getTableColumns,
+  gt,
+  is,
+  lt,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 import { type AnyPgColumn, PgColumn, PgTable } from 'drizzle-orm/pg-core';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
 import { InvalidCursor } from '../../lib/errors';
-import type { Cursor, PageEntry, PageRequest } from '../../lib/pagination';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/pagination';
 import { notSoftDeleted } from './shapes';
 
 /**
@@ -22,20 +34,36 @@ export type SortColumn = AnyPgColumn<{ notNull: true }>;
  */
 export type SortPart = SortColumn | { expression: SQL; type: string };
 
-/** How `selectFrom` orders, bounds and keys a page; the cursor bounds are in its `where`. */
-export interface Keyset<Carried extends object = {}> {
+/** A list's key, and what reading it joins and is read under: what its pages and its count share. */
+export interface KeyOrder {
   sort: readonly SortPart[];
   id: AnyPgColumn;
-  request: PageRequest;
   /** A parenthesised, aliased statement joined to the table, which a sort part or the `where` may read. */
   join?: { source: SQL; on: SQL };
-  /** Values selected beside the row and carried onto its entry, and so onto its edge. */
-  carry?: { [K in keyof Carried]: SQL<Carried[K]> };
   /**
-   * The `where` holds a `<%` search, so the page is read in a transaction
+   * The `where` holds a `<%` search, so the read runs in a transaction
    * under `SEARCH_WORD_SIMILARITY_THRESHOLD` rather than the server's.
    */
   wordMatch?: boolean;
+}
+
+/** How `selectFrom` orders, bounds and keys a page; the cursor bounds are in its `where`. */
+export interface Keyset<Carried extends object = {}> extends KeyOrder {
+  request: PageRequest;
+  /** Values selected beside the row and carried onto its entry, and so onto its edge. */
+  carry?: { [K in keyof Carried]: SQL<Carried[K]> };
+}
+
+/**
+ * How `selectFrom` counts a keyset list rather than paging it: every row the
+ * `where` holds, and how many come before `start` in `count`'s order. The
+ * `where` is a page's without its bounds, and the read takes the key's join
+ * and threshold but no order and no limit.
+ */
+export interface KeysetCount {
+  count: KeyOrder;
+  /** A page's first row. None on an empty page, whose `countBefore` is null. */
+  start: Cursor | undefined;
 }
 
 /**
@@ -107,27 +135,36 @@ export function selectFrom<TRow extends Record<string, unknown>>(
   where: SQL | undefined,
   similarity: Similarity,
 ): Promise<TRow[]>;
+export function selectFrom<TTable extends PgTable>(
+  table: TTable,
+  where: SQL | undefined,
+  count: KeysetCount,
+): Promise<PageCount>;
 export async function selectFrom(
   relation: PgTable | Derived<Record<string, unknown>>,
   where: SQL | undefined,
-  order?: Keyset<object> | Similarity,
+  order?: Keyset<object> | Similarity | KeysetCount,
 ) {
   const keyset = order && 'sort' in order ? order : undefined;
+  const tally = order && 'count' in order ? order : undefined;
+  const keyed = keyset ?? tally?.count;
   // A table is read whole, and a page adds its key — each part read as
   // Postgres prints it: a `timestamptz` read into a Date loses its
-  // microseconds, and a cursor built from it would replay rows. A derived
-  // relation names its own columns.
+  // microseconds, and a cursor built from it would replay rows. A count reads
+  // its two numbers instead. A derived relation names its own columns.
   const [source, selection] = is(relation, PgTable)
     ? [
         relation,
-        keyset && {
-          ...keyset.carry,
-          row: getTableColumns(relation),
-          key: sql<string[]>`array[${sql.join(
-            keyset.sort.map((part) => sql`cast(${expressionOf(part)} as text)`),
-            sql`, `,
-          )}]`,
-        },
+        tally
+          ? countsOf(tally)
+          : keyset && {
+              ...keyset.carry,
+              row: getTableColumns(relation),
+              key: sql<string[]>`array[${sql.join(
+                keyset.sort.map((part) => sql`cast(${expressionOf(part)} as text)`),
+                sql`, `,
+              )}]`,
+            },
       ]
     : [relation.source, relation.fields];
   // Same cast as `write.ts`'s `writerFor`: `.from()` is typed against the table's own
@@ -137,7 +174,7 @@ export async function selectFrom(
       .select(selection as never)
       .from(source as never)
       .$dynamic();
-    if (keyset?.join) query.innerJoin(keyset.join.source, keyset.join.on);
+    if (keyed?.join) query.innerJoin(keyed.join.source, keyed.join.on);
     return query.where(where);
   };
 
@@ -155,6 +192,14 @@ export async function selectFrom(
     });
   }
 
+  if (tally) {
+    const [counted] = await readKeyed(
+      tally.count,
+      (executor) => build(executor) as unknown as Promise<PageCount[]>,
+    );
+    return counted;
+  }
+
   if (!keyset) return build(db);
 
   const direction = keyset.request.inverted ? desc : asc;
@@ -165,14 +210,7 @@ export async function selectFrom(
       .limit(keyset.request.limit) as unknown as Promise<KeyedRow[]>;
   let rows: KeyedRow[];
   try {
-    rows = keyset.wordMatch
-      ? await db.transaction(async (tx) => {
-          await tx.execute(
-            sql`select set_config('pg_trgm.word_similarity_threshold', ${String(SEARCH_WORD_SIMILARITY_THRESHOLD)}, true)`,
-          );
-          return page(tx);
-        })
-      : await page(db);
+    rows = await readKeyed(keyset, page);
   } catch (error) {
     // The only client text in a page query is the cursor's, so a data
     // exception here is a cursor that names no position in this list.
@@ -184,6 +222,40 @@ export async function selectFrom(
     cursor: { key, id: String(row.id) },
     node: row,
   }));
+}
+
+/**
+ * A count's selection: every row, and those before the start — the same row
+ * comparison a page's `before` bound makes. `filter` has no builder.
+ */
+function countsOf({ count: order, start }: KeysetCount) {
+  return {
+    totalCount: count(),
+    countBefore: start
+      ? sql<number>`count(*) filter (where ${lt(rowKey(order), cursorKey(order, start))})`.mapWith(
+          Number,
+        )
+      : sql<null>`null`,
+  };
+}
+
+/**
+ * Runs a keyset read, in a transaction under the search's word threshold when
+ * the key says `wordMatch`. A page and its count both come through here, so
+ * both read the same rows: at the server's 0.6 a count would miss rows the
+ * pages hold.
+ */
+function readKeyed<T>(
+  { wordMatch }: KeyOrder,
+  run: (executor: Executor) => Promise<T>,
+): Promise<T> {
+  if (!wordMatch) return run(db);
+  return db.transaction(async (tx) => {
+    await tx.execute(
+      sql`select set_config('pg_trgm.word_similarity_threshold', ${String(SEARCH_WORD_SIMILARITY_THRESHOLD)}, true)`,
+    );
+    return run(tx);
+  });
 }
 
 /**
@@ -230,22 +302,33 @@ function typeOf(part: SortPart): string {
 
 /**
  * The cursor bounds: rows strictly after `after` and before `before` in
- * `(...sort, id)` order, whichever way the page walks. Each part of the
- * cursor's key is cast back to its part's own type, so it compares as the
- * part does. A key with the wrong number of parts names no position in this
- * list, and is refused before any read.
+ * `(...sort, id)` order, whichever way the page walks.
  *
  * @throws {InvalidCursor} a cursor's key has more or fewer parts than `sort`.
  */
-export function pageBounds({ sort, id, request }: Keyset<object>): SQL | undefined {
-  const row = sql`(${sql.join([...sort.map(expressionOf), id], sql`, `)})`;
-  const at = ({ key, id: cursorId }: Cursor) => {
-    if (key.length !== sort.length) throw new InvalidCursor();
-    const parts = sort.map((part, index) => sql`cast(${key[index]} as ${sql.raw(typeOf(part))})`);
-    return sql`(${sql.join([...parts, sql`cast(${cursorId} as ${sql.raw(id.getSQLType())})`], sql`, `)})`;
-  };
+export function pageBounds(keyset: Keyset<object>): SQL | undefined {
+  const { after, before } = keyset.request;
   return and(
-    request.after && gt(row, at(request.after)),
-    request.before && lt(row, at(request.before)),
+    after && gt(rowKey(keyset), cursorKey(keyset, after)),
+    before && lt(rowKey(keyset), cursorKey(keyset, before)),
   );
+}
+
+/** A row's position in the list, `(...sort, id)`, as one row value. */
+function rowKey({ sort, id }: KeyOrder): SQL {
+  return sql`(${sql.join([...sort.map(expressionOf), id], sql`, `)})`;
+}
+
+/**
+ * A cursor's position as the same row value, each part of its key cast back
+ * to its part's own type, so it compares as the part does. A key with the
+ * wrong number of parts names no position in this list, and is refused before
+ * any read.
+ *
+ * @throws {InvalidCursor} the key has more or fewer parts than `sort`.
+ */
+function cursorKey({ sort, id }: KeyOrder, { key, id: cursorId }: Cursor): SQL {
+  if (key.length !== sort.length) throw new InvalidCursor();
+  const parts = sort.map((part, index) => sql`cast(${key[index]} as ${sql.raw(typeOf(part))})`);
+  return sql`(${sql.join([...parts, sql`cast(${cursorId} as ${sql.raw(id.getSQLType())})`], sql`, `)})`;
 }

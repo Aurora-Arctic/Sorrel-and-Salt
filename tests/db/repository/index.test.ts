@@ -24,6 +24,7 @@ describe('repository public API', () => {
         'findPage',
         'findPageInWorkspace',
         'findCommonNameSuggestions',
+        'findCompendiumCount',
         'findCompendiumPage',
         'findIngredientFormValues',
         'findOneIngredient',

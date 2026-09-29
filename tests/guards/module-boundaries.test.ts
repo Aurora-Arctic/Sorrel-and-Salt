@@ -61,6 +61,8 @@ const TIER_SEAM: string[] = [
   'findManyOfIngredients',
   // The public compendium list: the compendium tier alone, under the client's filters (M8.5).
   'findCompendiumPage',
+  // How many rows that list holds, and how many come before a page (MB.105).
+  'findCompendiumCount',
   // One ingredient by id, in the compendium or a proof's coven (M8.5).
   'findOneIngredient',
 ];
