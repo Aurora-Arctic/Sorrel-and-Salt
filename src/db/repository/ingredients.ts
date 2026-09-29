@@ -4,7 +4,7 @@ import { ingredientCategories } from '../../modules/ingredients/schema/ingredien
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { Membership } from '@/modules/coven';
-import type { PageEntry, PageRequest } from '../../lib/pagination';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/pagination';
 import { type Keyset, existsIn, pageBounds, selectFrom } from './select';
 import {
   type IngredientScoped,
@@ -116,34 +116,28 @@ export function findCompendiumPage(
   filter: IngredientFilter,
   page: PageRequest,
 ): Promise<PageEntry<typeof ingredients.$inferSelect, CompendiumScore>[]> {
-  const match = searchMatch(filter.search);
-  const keyset: Keyset<CompendiumScore> = match
-    ? {
-        // Negated, so one ascending row comparison bounds the page.
-        sort: [{ expression: sql`-${match.score}`, type: 'real' }, ingredients.name],
-        id: ingredients.id,
-        request: page,
-        wordMatch: true,
-        join: match.join,
-        carry: { score: match.score },
-      }
-    : {
-        sort: [ingredients.name],
-        id: ingredients.id,
-        request: page,
-        carry: { score: sql<number | null>`null` },
-      };
+  const list = compendiumList(filter);
+  const keyset = { ...list.order, request: page };
   return selectFrom(
     ingredients,
-    and(
-      inCompendium(ingredients),
-      notSoftDeleted(ingredients),
-      ...categoryArms(filter.categoryIds ?? []),
-      formArm(filter.form),
-      pageBounds(keyset),
-    ),
+    and(inCompendium(ingredients), notSoftDeleted(ingredients), list.arms, pageBounds(keyset)),
     keyset,
   );
+}
+
+/**
+ * How many rows the compendium holds under `filter`, and how many of them come
+ * before `start` in its pages' order — the position of the page whose first
+ * row `start` is, null with none. One statement, over the page's own filter,
+ * key and search join (claude-docs/db.md, "The compendium read").
+ */
+export function findCompendiumCount(
+  filter: IngredientFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  const list = compendiumList(filter);
+  const where = and(inCompendium(ingredients), notSoftDeleted(ingredients), list.arms);
+  return selectFrom(ingredients, where, { count: list.order, start });
 }
 
 /**
@@ -169,6 +163,35 @@ export async function findOneIngredient(
     ),
   );
   return row;
+}
+
+/**
+ * What a compendium page and its count share: the filter's arms, and the key
+ * with the search's join — built in one place, so the count reads the rows
+ * the pages hold in the order they hold them. A search keys `[-score, name]`,
+ * negated so one ascending row comparison bounds it; a browse keys `[name]`.
+ */
+function compendiumList(filter: IngredientFilter): {
+  arms: SQL | undefined;
+  order: Omit<Keyset<CompendiumScore>, 'request'>;
+} {
+  const match = searchMatch(filter.search);
+  return {
+    arms: and(...categoryArms(filter.categoryIds ?? []), formArm(filter.form)),
+    order: match
+      ? {
+          sort: [{ expression: sql`-${match.score}`, type: 'real' }, ingredients.name],
+          id: ingredients.id,
+          wordMatch: true,
+          join: match.join,
+          carry: { score: match.score },
+        }
+      : {
+          sort: [ingredients.name],
+          id: ingredients.id,
+          carry: { score: sql<number | null>`null` },
+        },
+  };
 }
 
 /**

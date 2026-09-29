@@ -1,8 +1,19 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { findCompendiumPage, findOneIngredient, type IngredientFilter } from '@/db/repository';
+import {
+  findCompendiumCount,
+  findCompendiumPage,
+  findOneIngredient,
+  type IngredientFilter,
+} from '@/db/repository';
 import { InvalidCursor } from '@/lib/errors';
-import { type ConnectionArgs, type Page, resolvePage } from '@/lib/pagination';
+import {
+  type ConnectionArgs,
+  type Page,
+  type PageCount,
+  decodeCursor,
+  resolvePage,
+} from '@/lib/pagination';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import type { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { type Membership, assertMembership } from '@/modules/coven';
@@ -51,6 +62,54 @@ async function expectedOrder(): Promise<string[]> {
     select id from ingredients where workspace_id is null and deleted_at is null order by name, id`;
   return rows.map((row) => row.id);
 }
+
+/** The count a connection reads for a page: from its first row, or from none on an empty one. */
+function countFor(filter: IngredientFilter, page: Page<Row, Scored>): Promise<PageCount> {
+  const start = page.pageInfo.startCursor;
+  return findCompendiumCount(filter, start === null ? undefined : decodeCursor(start));
+}
+
+interface Walk {
+  ids: string[];
+  counts: PageCount[];
+}
+
+/** Every page of `filter` at `size`, from the first, each with its count. */
+async function walkForwards(filter: IngredientFilter, size: number): Promise<Walk> {
+  const walk: Walk = { ids: [], counts: [] };
+  let after: string | null = null;
+  for (;;) {
+    const page: Page<Row, Scored> = await pageOf(filter, { first: size, after });
+    walk.ids.push(...page.edges.map((edge) => edge.node.id));
+    walk.counts.push(await countFor(filter, page));
+    if (!page.pageInfo.hasNextPage) break;
+    after = page.pageInfo.endCursor;
+  }
+  return walk;
+}
+
+/**
+ * Every page of `filter` at `size`, from the last, which asks for the
+ * remainder as the pager's Last does, so each page lines up with the one the
+ * forward walk reaches. Counts come back in page order.
+ */
+async function walkBackwards(filter: IngredientFilter, size: number): Promise<Walk> {
+  const { totalCount } = await findCompendiumCount(filter, undefined);
+  const walk: Walk = { ids: [], counts: [] };
+  let args: ConnectionArgs = { last: totalCount % size || size };
+  for (;;) {
+    const page: Page<Row, Scored> = await pageOf(filter, args);
+    walk.ids.unshift(...page.edges.map((edge) => edge.node.id));
+    walk.counts.unshift(await countFor(filter, page));
+    if (!page.pageInfo.hasPreviousPage) break;
+    args = { last: size, before: page.pageInfo.startCursor };
+  }
+  return walk;
+}
+
+/** `(n − 1) × size` for each of `pages` pages. */
+const starts = (pages: number, size: number) =>
+  Array.from({ length: pages }, (_, index) => index * size);
 
 async function softDeleteFolkName(name: string): Promise<void> {
   await sql`
@@ -246,6 +305,27 @@ describe('findCompendiumPage', () => {
       expect(ids).toEqual(expected);
     });
 
+    it('places page n at (n − 1) × size, walked either way across the ties', async () => {
+      const expected = await rankedOrder(TERM);
+      // The preconditions: the perfect-score tie is wider than a page, so a
+      // boundary falls inside it, and the last page is short, so the backward
+      // walk's first step is the remainder rather than a whole page.
+      const size = 4;
+      const tied = expected.filter((row) => row.score === 1).length;
+      expect(tied).toBeGreaterThan(size);
+      expect(expected.length % size).not.toBe(0);
+      const pages = Math.ceil(expected.length / size);
+
+      const forwards = await walkForwards({ search: TERM }, size);
+      const backwards = await walkBackwards({ search: TERM }, size);
+
+      for (const walk of [forwards, backwards]) {
+        expect(walk.ids).toEqual(expected.map((row) => row.id));
+        expect(walk.counts.map((count) => count.countBefore)).toEqual(starts(pages, size));
+        expect(walk.counts.every((count) => count.totalCount === expected.length)).toBe(true);
+      }
+    });
+
     it('carries no score on an unranked page', async () => {
       const page = await pageOf({}, { first: 100 });
 
@@ -337,6 +417,94 @@ describe('findCompendiumPage', () => {
       expect(ids).toEqual(expected);
       expect(sizes).toEqual([7, 7, 7, 7, 2]);
       expect(ids).not.toContain(gone);
+    });
+  });
+});
+
+describe('findCompendiumCount', () => {
+  const SIZE = 3;
+  let protection: string;
+  let excluded: string[];
+
+  beforeAll(async () => {
+    const [row] = await sql`
+      select id from categories where name = 'Protection' and deleted_at is null`;
+    protection = row.id as string;
+  });
+
+  // Seven herbs that `mugwrot` finds at 0.5 — every other one filed under
+  // Protection — and five roots it does not; then a soft-deleted and a
+  // coven's row that every filter below would otherwise count.
+  beforeEach(async () => {
+    for (let n = 1; n <= 7; n += 1) {
+      await add(`Fixture Mugwort ${n}`, { categories: n % 2 === 1 ? ['Protection'] : [] });
+    }
+    for (let n = 1; n <= 5; n += 1) {
+      await add(`Fixture Nettle ${n}`, { form: 'root' });
+    }
+    const gone = await add('Fixture Mugwort 8', { categories: ['Protection'] });
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
+    const coven = await add('Fixture Mugwort 9', {
+      categories: ['Protection'],
+      workspaceId: WORKSPACE_W_ID,
+    });
+    excluded = [gone, coven];
+  });
+
+  /** Walks `filter`'s pages and holds every page's count to what the walk collected. */
+  async function expectCountsToMatchTheWalk(filter: IngredientFilter, rows: number): Promise<void> {
+    const walk = await walkForwards(filter, SIZE);
+
+    // The precondition: more than one page, so a count is checked against
+    // rows it did not read itself.
+    expect(walk.ids).toHaveLength(rows);
+    expect(walk.counts.length).toBeGreaterThan(1);
+    expect(walk.counts.map((count) => count.totalCount)).toEqual(walk.counts.map(() => rows));
+    expect(walk.counts.map((count) => count.countBefore)).toEqual(starts(walk.counts.length, SIZE));
+    for (const id of excluded) expect(walk.ids).not.toContain(id);
+  }
+
+  it('is reading a table holding a soft-deleted and a coven row beside the compendium', async () => {
+    const [{ count }] = await sql`
+      select count(*)::int as count from ingredients
+      where id in ${sql(excluded)}
+        and form = 'herb'
+        and exists (select 1 from ingredient_categories where ingredient_id = ingredients.id)`;
+    expect(count).toBe(2);
+  });
+
+  it('counts the whole compendium, unfiltered', async () => {
+    await expectCountsToMatchTheWalk({}, 12);
+  });
+
+  it('counts by category', async () => {
+    await expectCountsToMatchTheWalk({ categoryIds: [protection] }, 4);
+  });
+
+  it('counts by form', async () => {
+    await expectCountsToMatchTheWalk({ form: 'herb' }, 7);
+  });
+
+  // Read at pg_trgm's own 0.6, the count would find none of these rows while
+  // the pages hold all seven.
+  it('counts a search at the page’s threshold, 0.5, not the server’s 0.6', async () => {
+    const page = await pageOf({ search: 'mugwrot' }, { first: 100 });
+    const scores = page.edges.map((edge) => edge.score as number);
+    expect(scores).toHaveLength(7);
+    expect(scores.every((score) => score >= 0.5 && score < 0.6)).toBe(true);
+
+    await expectCountsToMatchTheWalk({ search: 'mugwrot' }, 7);
+  });
+
+  it('places an empty page nowhere, and still counts the list', async () => {
+    const last = await pageOf({}, { last: 1 });
+    const past = await pageOf({}, { after: last.pageInfo.endCursor });
+    expect(past.edges).toEqual([]);
+
+    expect(await countFor({}, past)).toEqual({ totalCount: 12, countBefore: null });
+    expect(await findCompendiumCount({ search: 'stingweed' }, undefined)).toEqual({
+      totalCount: 0,
+      countBefore: null,
     });
   });
 });

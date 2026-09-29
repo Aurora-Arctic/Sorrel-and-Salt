@@ -27,6 +27,7 @@ export {
 } from './finders';
 export { findManyInSpell, findManySpells, findOneSpell } from './spells';
 export {
+  findCompendiumCount,
   findCompendiumPage,
   findManyOfIngredients,
   findOneIngredient,

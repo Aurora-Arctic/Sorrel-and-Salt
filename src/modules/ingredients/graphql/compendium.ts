@@ -1,5 +1,5 @@
 import { builder } from '../../../graphql/builder';
-import { getIngredient, listCompendium } from '../services/compendium';
+import { countCompendium, getIngredient, listCompendium } from '../services/compendium';
 import { IngredientRef } from './ingredient';
 
 // The compendium's two queries. Public, so neither carries the `signedIn`
@@ -18,6 +18,9 @@ builder.queryField('compendium', (t) =>
     },
     resolve: (_query, { search, categoryIds, form }, page) =>
       listCompendium({ search, categoryIds, form }, page),
+    // "Page X of Y" (claude-docs/graphql.md, "Pagination").
+    count: (_query, { search, categoryIds, form }, start) =>
+      countCompendium({ search, categoryIds, form }, start),
     edgeFields: (t) => ({
       score: t.float({
         nullable: true,

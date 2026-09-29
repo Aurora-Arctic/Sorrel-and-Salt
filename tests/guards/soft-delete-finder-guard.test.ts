@@ -29,6 +29,7 @@ const SELECT_CALL = /\.select(?:Distinct)?(?:Fields)?\s*\(|\bdb\.query\./g;
 const EXPORTED_FUNCTIONS = [
   'deleteProvisionalUsers',
   'findCommonNameSuggestions',
+  'findCompendiumCount',
   'findCompendiumPage',
   'findIngredientFormValues',
   'findMany',

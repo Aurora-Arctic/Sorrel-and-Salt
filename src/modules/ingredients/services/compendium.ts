@@ -1,11 +1,12 @@
 import 'server-only';
 import {
   type CompendiumScore,
+  findCompendiumCount,
   findCompendiumPage,
   findOneIngredient,
 } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
-import type { PageEntry, PageRequest } from '../../../lib/pagination';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import { parseInput } from '../../../lib/validation';
 import type { ingredients } from '../schema/ingredients';
@@ -37,6 +38,20 @@ export async function listCompendium(
   page: PageRequest,
 ): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
   return findCompendiumPage(parseInput(CompendiumFilter, filter), page);
+}
+
+/**
+ * How many entries the compendium holds under `filter`, and how many come
+ * before `start` — a page's first row, none on an empty page. Parsed as
+ * `listCompendium` parses, so it counts the rows that list's pages hold.
+ *
+ * @throws {ValidationError} a category id is not a uuid.
+ */
+export async function countCompendium(
+  filter: CompendiumFilterInput,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findCompendiumCount(parseInput(CompendiumFilter, filter), start);
 }
 
 /**

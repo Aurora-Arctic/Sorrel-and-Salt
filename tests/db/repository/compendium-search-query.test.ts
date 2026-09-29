@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
-import { findCompendiumPage } from '@/db/repository';
+import { findCompendiumCount, findCompendiumPage } from '@/db/repository';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import type { PageRequest } from '@/lib/pagination';
 import { useTestDatabase } from '../../support/db/database';
@@ -50,6 +50,30 @@ describe('the compendium search query', () => {
 
   it('opens no transaction for a page with no term', async () => {
     await findCompendiumPage({}, PAGE);
+
+    expect(logged.some(isSetting)).toBe(false);
+    expect(logged.some(({ query }) => /^begin/i.test(query))).toBe(false);
+  });
+});
+
+describe('the compendium count query', () => {
+  const START = { key: ['-1', 'Fixture Mugwort'], id: '00000000-0000-4000-8000-000000000000' };
+
+  it('counts a search in one read, under the page’s 0.5, with no order and no limit', async () => {
+    await findCompendiumCount({ search: 'mugwort' }, START);
+
+    const reads = logged.filter(({ query }) => /from "ingredients"/.test(query));
+    expect(reads).toHaveLength(1);
+    const [read] = reads;
+    expect(read.query).toMatch(/count\(\*\) filter \(where/);
+    expect(read.query).not.toMatch(/order by|limit/i);
+    const setting = logged.findIndex(isSetting);
+    expect(logged[setting].params).toEqual(['0.5']);
+    expect(logged.indexOf(read)).toBeGreaterThan(setting);
+  });
+
+  it('opens no transaction for a count with no term', async () => {
+    await findCompendiumCount({}, undefined);
 
     expect(logged.some(isSetting)).toBe(false);
     expect(logged.some(({ query }) => /^begin/i.test(query))).toBe(false);
