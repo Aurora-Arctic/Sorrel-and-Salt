@@ -68,6 +68,8 @@ const TIER_SEAM: string[] = [
   'findCompendiumCount',
   // One ingredient by id, in the compendium or a proof's coven (M8.5).
   'findOneIngredient',
+  // `withAudit`'s writer: the compendium tier's by-id writes, under the SiteAdmin proof (M5.2).
+  'writerFor',
 ];
 
 /**
