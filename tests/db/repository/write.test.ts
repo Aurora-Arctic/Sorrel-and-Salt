@@ -192,7 +192,7 @@ describe('app.current_user_id (M1.19)', () => {
   });
 });
 
-// `write.delete` is how the three join tables are written, typed so it cannot
+// `write.delete` is how the two hard-deleted join tables are written, typed so it cannot
 // be pointed at anything else (MB.34).
 describe('hard delete on a table with no delete columns (MB.34)', () => {
   const herbId = '22222222-2222-2222-2222-222222222222';

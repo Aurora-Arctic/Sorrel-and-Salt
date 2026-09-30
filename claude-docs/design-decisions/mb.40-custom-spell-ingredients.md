@@ -1,6 +1,6 @@
 # MB.40 — A custom, one-off spell ingredient is a row in `spell_ingredients`, not a table of its own
 
-**Status:** decided · **Date:** 2026-09-18
+**Status:** decided; superseded in part by MB.110 (2026-09-30), which soft-deletes the table and keys it on a surrogate `id` · **Date:** 2026-09-18
 
 Story 57: a spell may call for something the workspace will never stock — a
 pinch of dust from the garden path — without that thing being added to the
@@ -21,7 +21,8 @@ linked row; both text columns are checked non-blank. The primary key moves to
 exists on every row, and the layer is the one thing every row has. What that
 key used to guarantee, one ingredient per jar, is now a partial unique index
 over the linked rows; its mirror, one custom name per jar on `lower(name)`,
-covers the custom rows. The table stays hard-deleted with the four stamps.
+covers the custom rows. The table stays hard-deleted with the four stamps
+(superseded by MB.110: it is soft-deleted, with the full six).
 
 **One-off, not reusable.** A custom row belongs to one spell, shares its
 visibility, and is never listed at workspace level. A _reusable_ custom
@@ -59,7 +60,10 @@ branch every consumer has always had.
   one: it would let the same ingredient into one jar twice with nothing
   downstream able to tell the rows apart. That argument survives the key move
   — the partial index on `(spell_id, ingredient_id)` is what holds it now —
-  and an `id` would still say nothing about the jar.
+  and an `id` would still say nothing about the jar. **Superseded by MB.110:**
+  once a removed layer is a tombstone, a key on the layer would hold its depth
+  for good, so the key is a surrogate `id` after all. One ingredient per jar
+  is still the partial index's, over live rows.
 - **A flag on a workspace-local `ingredients` row.** No new table, no join
   changes, and the row is still on the workspace's ingredients page unless a
   flag hides it, still in M8.3's suppression unless the anti-join learns the
@@ -99,7 +103,10 @@ branch every consumer has always had.
   table must remember by hand, which is exactly how derived categories (M10.7)
   reach `ingredient_categories`. A custom row carries content, but content
   addressable only through its spell — unlike a folk name, which is addressed
-  on its own and so keeps the six columns.
+  on its own and so keeps the six columns. **Superseded by MB.110:** M5.3 made
+  a spell a record of a working, so a removed layer is a tombstone, and what
+  reads through the table does so by `existsIn`, which ANDs the layer's filter
+  by construction.
 - **The migration is expand-then-contract in one file, reordered by hand.**
   Columns, indexes and checks first; then the old key goes, the new key is
   added, `ingredient_id` is made nullable (the key had to go first — a key

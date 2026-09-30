@@ -270,7 +270,7 @@ describe('the updated_at trigger', () => {
     });
   });
 
-  // The join tables carry no `deleted_at`, so the function has to reach a row
+  // The hard-deleted join tables carry no `deleted_at`, so the function has to reach a row
   // it can never soft-delete.
   describe('a join table carrying only the four stamps', () => {
     it('stamps a spell_categories row the same way', async () => {

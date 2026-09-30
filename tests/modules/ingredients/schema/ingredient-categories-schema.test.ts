@@ -19,7 +19,7 @@ describe('ingredient_categories schema', () => {
   const { byName, indexes, primaryKeys, foreignKeyByColumn } = tableFacts(ingredientCategories);
 
   // Four stamps and no tombstone (MB.34): a removed pair leaves no row —
-  // claude-docs/db.md, "Hard delete on the three join tables".
+  // claude-docs/db.md, "Hard delete on two join tables".
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
       ['ingredient_id', 'category_id', ...STAMP_COLUMNS].sort(),

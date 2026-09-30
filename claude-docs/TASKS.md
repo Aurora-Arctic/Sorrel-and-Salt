@@ -3046,7 +3046,7 @@ Reordering with both pointer and keyboard affordances, persisting layerOrder.
 _Acceptance criteria:_
 
 - Order can be changed by keyboard alone
-- New order persists on save, rewriting the jar's rows under the `(spell_id, layer_order)` primary key (MB.40) — custom and linked rows reorder alike, since the key is the layer and not the ingredient
+- New order persists on save, moving the jar's live rows in place under the `(spell_id, layer_order)` partial unique index (MB.110): through a scratch offset, since the index is checked per row, and never by removing and re-adding a layer, which would leave a tombstone. Custom and linked rows reorder alike, since the index is on the layer and not the ingredient
 - Order is announced to assistive technology
 - Story 51 acceptance test passes
 
