@@ -266,6 +266,12 @@ $ornament-multiply: var(--ornament-multiply);
 // claude-docs/styling.md, "$text-on-color".
 $text-on-color: var(--surface-page);
 
+// A placeholder's ink: the muted ink a step into the field's ground, so it
+// reads as not yet an answer. 85% is as far as it goes and holds 4.5:1 —
+// 4.68:1 on the light field, 6.71:1 on the dark — since WCAG 1.4.3 covers a
+// placeholder as it does any text.
+$text-placeholder: color-mix(in srgb, $text-muted 85%, $surface-card);
+
 // Functions rather than variables: a typo fails at compile time where
 // `var(--group-protectoin)` fails silently in the browser.
 @function category-group($slug) {

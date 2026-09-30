@@ -352,6 +352,15 @@ The class layer every form is built from, in `_primitives.scss`:
 | `.fieldset`, `.fieldset__legend`                 | Rows under one name: checkboxes, or a list of entries                     |
 | `.notice`, `--error`, `--success`                | A sentence about the whole view rather than one field                     |
 
+- **A field's hint is an info tip beside its label** (`InfoTip`,
+  [`components/info-tip.md`](components/info-tip.md)), not a line beneath it:
+  the owner's call in M5.9, once a form of many fields read as a wall of
+  hints. The tip's text stays in the field's `aria-describedby`, so it is read
+  with the field whether open or not, and the tip opens while the field has
+  focus, so a keyboard that skips the ⓘ still shows it. `.field__hint` remains for a line that
+  must stay in view, such as why a field is disabled, since a shut field that
+  does not say why reads as broken. `IngredientForm` is the first form built
+  this way; an older form adopts it at its design review.
 - **The error sits beneath its control**, nearest what was typed, and is
   drawn the same whichever side found it: the resolver before a request, or
   the server's `fieldErrors` after (DESIGN.md §7, "Errors"). The control names
@@ -372,12 +381,22 @@ The class layer every form is built from, in `_primitives.scss`:
   ink, since the platform's arrow varies by OS and ignores the theme. Under
   `forced-colors` the native arrow comes back, because forced colours drop
   background images.
+- **A select's placeholder is a hidden, disabled first option** whose value
+  is `''`: it shows until a choice is made and cannot be chosen back, and
+  reads in `$text-placeholder` as an input's placeholder does: the muted ink
+  mixed 85% into the field's ground, the greyest that holds 4.5:1 (4.68:1 on
+  the light field, 6.71:1 on the dark), since WCAG 1.4.3 covers a placeholder
+  as it does any text. A select whose
+  blank is an answer, such as an element of "None", offers it as an ordinary
+  option instead.
 - **The checkbox is the platform's**, coloured by `accent-color`, which takes
   the token and picks its own check-mark contrast.
 - **Disabled is an attribute, not a class**, and looks the same on a field as
   on a button: a dashed edge and no fill. A disabled field also takes the muted
   ink and dims its `.field__label`, since a faded box alone reads as a live
-  one on a dim screen. A component never restates it.
+  one on a dim screen. The label dims for a disabled control only, not any
+  disabled descendant, since a select's placeholder is a disabled option. A
+  component never restates it.
 
 ## Designing a section
 
@@ -446,7 +465,8 @@ heavier than the reverse; light reverts to the browser default.
     `.btn` and its `--solid` / `--quiet` / `--secondary` variants, `.notice`,
     the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
     `.checkbox`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
-    and the classes over `chip()` / `badge()`.
+    the classes over `chip()` / `badge()`, and `.visually-hidden`, for text a
+    screen reader reads and nothing draws, such as a live region's news.
 - `src/app/fonts.ts` — Cormorant Unicase (weights 500/600/700) and Lexend,
   self-hosted at build time via `next/font/google`. The CSS variables it defines
   on `<html>` are what `$font-heading` / `$font-body` reference.
