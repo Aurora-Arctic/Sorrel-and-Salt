@@ -59,7 +59,9 @@ export async function createWorkspaceIngredient(
  * Replaces an ingredient of this coven with `input` — the whole ingredient as
  * the form submits it, so a field left out is cleared — and its folk names
  * with `input.folkNames`, in one transaction. A folk name still listed keeps
- * its row; one dropped is soft-deleted. The slug is left as it was.
+ * its row; one dropped is soft-deleted. The slug follows the label, the form
+ * and the formal name, and nothing redirects from the old one: no route reads
+ * a coven ingredient's slug.
  *
  * @throws {Forbidden} the caller may not write this coven's ingredients.
  * @throws {ValidationError} the input breaks `LocalIngredientInput`, or
@@ -78,12 +80,17 @@ export async function updateWorkspaceIngredient(
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
 
+  const slug = ingredientSlug(fields.name, fields.form, fields.canonicalName);
+
   return withAudit(session, async (write) => {
-    const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, columnsOf(fields));
+    const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, {
+      ...columnsOf(fields),
+      slug,
+    });
     if (!row) throw new NotFound('No such ingredient in this coven');
     await replaceFolkNames(write, [membership], id, folkNames ?? []);
     return row;
-  }).catch((error: unknown) => refuseCollision(error, fields));
+  }).catch((error: unknown) => refuseCollision(error, fields, slug));
 }
 
 /**
@@ -109,9 +116,9 @@ export async function getWorkspaceIngredient(
  * A write that broke one of the coven's unique indexes, as a `ValidationError`
  * on the field that caused it; any other error unchanged. The label is the
  * identity of an entry with no formal name, so its identity collision is
- * reported on `name`. `slug` is the one this write set — an update sets none.
+ * reported on `name`. `slug` is the one this write set.
  */
-function refuseCollision(error: unknown, fields: IngredientFields, slug?: string): never {
+function refuseCollision(error: unknown, fields: IngredientFields, slug: string): never {
   const refuse = (path: string, message: string) => {
     throw new ValidationError([{ path: [path], message }]);
   };

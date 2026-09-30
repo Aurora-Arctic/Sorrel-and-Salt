@@ -351,6 +351,51 @@ describe('updateWorkspaceIngredient', () => {
     });
   });
 
+  // No route reads a coven ingredient's slug, so it follows the name and
+  // nothing redirects from the old one (claude-docs/db.md, "Ingredient slugs").
+  it('moves the slug with the label, form and formal name, retiring nothing', async () => {
+    const id = await seed(local());
+
+    const updated = await updateWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      id,
+      inputOf(local({ name: 'Testroot', form: 'root', canonicalName: 'Fixtura radix' })),
+    );
+
+    expect(updated.slug).toBe(ingredientSlug('Testroot', 'root', 'Fixtura radix'));
+    const [{ n }] = await sql`select count(*)::int as n from retired_ingredient_slugs`;
+    expect(n).toBe(0);
+  });
+
+  it("refuses a rewrite onto another of the coven's addresses, on `name`, leaving the row", async () => {
+    await seed(local({ name: 'Testwort', form: 'root' }));
+    const id = await seed(local({ name: 'Testleaf', form: 'leaf' }));
+    const before = await rowOf(id);
+    // Why only the slug index is left to catch it: label and identity both differ.
+    expect(ingredientSlug('Testwort Root', null, null)).toBe(
+      ingredientSlug('Testwort', 'root', null),
+    );
+
+    await expect(
+      updateWorkspaceIngredient(
+        asUser(B),
+        WORKSPACE_W_ID,
+        id,
+        inputOf(local({ name: 'Testwort Root', form: null })),
+      ),
+    ).rejects.toMatchObject({
+      issues: [
+        {
+          path: ['name'],
+          message:
+            'Another ingredient in this coven already has the address "testwort-root" — change the name, form or formal name',
+        },
+      ],
+    });
+    expect(await rowOf(id)).toEqual(before);
+  });
+
   // The input is the whole ingredient as the form submits it, so a field left
   // out is cleared rather than kept.
   it('replaces the whole row, clearing a field the input leaves out', async () => {

@@ -6,9 +6,8 @@ import { CategoryRef } from '@/modules/vocabulary';
 
 // `Ingredient` as DESIGN.md §7 sketches it, over the row the services return:
 // every correspondence field, the tier as `isGlobal`, and the two children
-// through the request's loaders. `canonicalKey`, `workspaceId` and the
-// pending-slug columns stay off the wire: the key is the database's own, the
-// tier is a flag, and a claim on an address is the admin's business.
+// through the request's loaders. `canonicalKey` and `workspaceId` stay off
+// the wire: the key is the database's own, and the tier is a flag.
 
 export const NomenclatureEnum = builder.enumType('Nomenclature', { values: NOMENCLATURE_KINDS });
 export const IngredientElementEnum = builder.enumType('IngredientElement', {
