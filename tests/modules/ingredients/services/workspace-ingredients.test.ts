@@ -763,6 +763,26 @@ describe('a deleted coven ingredient', () => {
     ]);
   });
 
+  // A layer is the spell's, and leaves it only when a member takes it out (MB.110).
+  it('leaves every layer holding it as it was', async () => {
+    const id = await seed(local());
+    const spellId = await insertSpell(sql, makeSpell({ layers: [{ ingredientId: id }] }), A.id);
+    const layerOf = async () => {
+      const [layer] = await sql`select * from spell_ingredients where spell_id = ${spellId}`;
+      return layer;
+    };
+    const before = await layerOf();
+
+    await deleteWorkspaceIngredient(member, WORKSPACE_W_ID, id);
+
+    // Why the layer could have been touched: what it holds is a tombstone now.
+    const [ingredient] = await sql`select deleted_at from ingredients where id = ${id}`;
+    expect(ingredient.deleted_at).toBeInstanceOf(Date);
+    const after = await layerOf();
+    expect(after.deleted_at).toBeNull();
+    expect(after).toEqual(before);
+  });
+
   // The coven's three partial indexes, each shown to be what stood in the way
   // while the ingredient was live. Inside a coven the label is unique too, so
   // here a label coming back does prove its index's predicate.

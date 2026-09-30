@@ -28,9 +28,11 @@ async function allSpells(): Promise<SpellRow[]> {
   return sql<SpellRow[]>`select * from spells order by title`;
 }
 
+/** A jar's live layers, in order: what a member pulled out is a tombstone. */
 async function layersOf(spellId: string): Promise<LayerRow[]> {
   return sql<LayerRow[]>`
-    select * from spell_ingredients where spell_id = ${spellId} order by layer_order
+    select * from spell_ingredients
+    where spell_id = ${spellId} and deleted_at is null order by layer_order
   `;
 }
 
@@ -296,15 +298,16 @@ describe('re-running the scenario', () => {
     const before = await layersOf(spell.id);
     const pulled = before[2];
 
-    // A member pulls the third layer out (a hard delete) and the ones below close the gap.
+    // A member pulls the third layer out (a soft delete) and the ones below close the gap.
     await sql`
-      delete from spell_ingredients
+      update spell_ingredients set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
       where spell_id = ${spell.id} and layer_order = ${pulled.layer_order}
     `;
     for (const layer of before.filter((l) => l.layer_order > pulled.layer_order)) {
       await sql`
         update spell_ingredients set layer_order = ${layer.layer_order - 1}
         where spell_id = ${spell.id} and layer_order = ${layer.layer_order}
+          and deleted_at is null
       `;
     }
 
@@ -317,6 +320,24 @@ describe('re-running the scenario', () => {
     expect(
       after.filter((l) => l.ingredient_id === pulled.ingredient_id && l.name === pulled.name),
     ).toEqual([]);
+  });
+
+  // A tombstone is a layer the jar has had, so a jar whose every layer was
+  // pulled out has been edited, not left unstocked.
+  it('does not restock a jar whose every layer was pulled out', async () => {
+    await seedDemo(db);
+
+    const spell = DEMO_SPELLS[0];
+    await sql`
+      update spell_ingredients set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
+      where spell_id = ${spell.id}
+    `;
+    // Why it could have been restocked: the jar reads as empty.
+    expect(await layersOf(spell.id)).toEqual([]);
+
+    await seedDemo(db);
+
+    expect(await layersOf(spell.id)).toEqual([]);
   });
 
   it('does not re-add a layer of a jar someone has reordered', async () => {

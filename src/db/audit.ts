@@ -25,7 +25,7 @@ export function auditStampColumnsReferencing(usersId: UsersIdReference) {
 }
 
 // The two the soft-deleted tables add to the stamps. Which tables take which:
-// claude-docs/db.md, "Hard delete on the three join tables".
+// claude-docs/db.md, "Hard delete on two join tables".
 export function deletionColumnsReferencing(usersId: UsersIdReference) {
   return {
     deletedAt: timestamp('deleted_at'),

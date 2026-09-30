@@ -224,8 +224,7 @@ stays under `src/graphql/schema/` ([`modules.md`](modules.md)).
   audited type exposes its stamps as `audit: AuditInfo!`, resolved from the row
   itself, and never as flat fields of its own. It carries the four stamps:
   `createdAt`, `createdBy`, `updatedAt`, `updatedBy`. `deleted_at` never
-  surfaces, because no finder returns a soft-deleted row and the join tables
-  carry no such column. `createdBy`/`updatedBy` are bare ids for now; MB.10's
+  surfaces, because no ordinary finder returns a soft-deleted row. `createdBy`/`updatedBy` are bare ids for now; MB.10's
   loader resolves them to display names. A test walks every object type in the
   schema and fails on any type other than `AuditInfo` with an audit-named
   field, so a per-table audit shape fails in the PR that adds it.

@@ -157,6 +157,15 @@ output or CI behaviour changes when it's unset. Full setup:
   indexes rather than in their place, since the fuzzy finders still match the
   raw columns. `drizzle-kit generate` wrote the statements; `IF NOT EXISTS`
   was added by hand, as 0011's was. See "The compendium read".
+- **`0029_spell-layers-soft-delete.sql`** (MB.110) makes `spell_ingredients`
+  soft-deleted — see "Layer order is the identity" under the grimoire.
+  `drizzle-kit generate` wrote the statements and the file was reordered by
+  hand, as 0017 was: the delete columns and the partial layer index first,
+  while every row is live, then the `(spell_id, layer_order)` key dropped for
+  a surrogate `id`, then the other two partial indexes re-created under their
+  own names with `deleted_at IS NULL` added. Its sidecar acknowledges the three
+  drops and says why it is one PR rather than rule 10's two: no column is
+  dropped, and nothing in `src/` names the constraints.
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
@@ -256,7 +265,7 @@ proof" below).
   the members page.
 - Both tables carry the full six-column audit spread, and every `*_by` column
   references `users.id` as MB.5 specifies. `workspace_members` keeps all six
-  despite being a join table — MB.34 hard-deletes three others, and this is not
+  despite being a join table — MB.34 hard-deletes two others, and this is not
   one of them: who removed whom, and when, is worth keeping. The tables are inert at Wave 3 —
   nothing queries them until M6.3's service and its `Membership` proof land in
   Wave 5, which is the point of CLAUDE.md's table-task-then-behaviour-task
@@ -1197,13 +1206,15 @@ holds (`inventory_items`).
 - **`spells`** — `id`, `workspaceId`, `title`, `intent`, `jarSize`,
   `sealWaxColor`, `moonPhase`, `dayOfWeek`, `instructions`, `status`,
   `visibility`, + the full six-column audit spread. Stories 47 and 50's table.
-- **`spell_ingredients`** — `spellId`, `ingredientId` (nullable), `name`,
-  `form`, `quantity`, `unit`, `layerOrder`, `note`, + the four audit stamps,
-  keyed on `(spell_id, layer_order)` and hard-deleted (MB.34). Stories 50 and
-  57's table: a layer is an ingredient the workspace knows or a custom name
-  written for this one jar. M10.2 shipped it keyed on
-  `(spell_id, ingredient_id)`; MB.40 moved the key (`0017`) once a row could
-  exist without the pair.
+- **`spell_ingredients`** — `id`, `spellId`, `ingredientId` (nullable),
+  `name`, `form`, `quantity`, `unit`, `layerOrder`, `note`, + the full
+  six-column audit spread: soft-deleted (MB.110), keyed on the surrogate `id`,
+  with `(spell_id, layer_order)` unique among live rows. Stories 50 and 57's
+  table: a layer is an ingredient the workspace knows or a custom name written
+  for this one jar. M10.2 shipped it keyed on `(spell_id, ingredient_id)`;
+  MB.40 moved the key onto the layer (`0017`) once a row could exist without
+  the pair, and MB.110 off it (`0029`) once a removed layer's tombstone would
+  have held its depth.
 
 **`visibility` arrived a wave later than the rest of the table** (M10.3,
 `0018_spell-visibility.sql`), after M1.23 had seeded spells against it — which
@@ -1225,32 +1236,40 @@ key and the pair swaps which one reddens.
 
 ### Layer order is the identity, and what that costs the reorder
 
-`layerOrder` is `integer NOT NULL` and, since MB.40, half of the primary key:
-`spell_ingredients_spell_id_layer_order_pk` on `(spell_id, layer_order)`. M10.2
-had the same pair as a unique index beside a `(spell_id, ingredient_id)` key;
-once a row could exist without an ingredient id the pair could not be the key,
-and the layer was the only thing every row has. Each half is load-bearing:
+`layerOrder` is `integer NOT NULL` and unique within a spell among live rows:
+`spell_ingredients_spell_id_layer_order_unique` on
+`(spell_id, layer_order) WHERE deleted_at IS NULL`. M10.2 had the pair as a
+unique index beside a `(spell_id, ingredient_id)` key; MB.40 made it the
+primary key once a row could exist without an ingredient id; MB.110 moved the
+key onto a surrogate `id` once removing a layer became a soft delete, because
+a tombstone in a key column would hold its depth for good. Each part is
+load-bearing:
 
 - **Stored, not inferred.** Story 51 makes layering part of the recipe, and no
   query may lean on insertion order.
-- **NOT NULL** — by construction now, as a key column — because a nullable
-  column would satisfy neither half of "stored and unique within a spell":
-  distinct NULLs collide with nothing, so an unordered row would sit outside the
-  key meant to constrain it.
-- **Leading on `spell_id`**, which both scopes the key to the one jar and makes
-  its index the one that answers "read this spell's ingredients in order" —
+- **NOT NULL**, because a nullable column would satisfy neither half of "stored
+  and unique within a spell": distinct NULLs collide with nothing, so an
+  unordered row would sit outside the index meant to constrain it.
+- **Leading on `spell_id`**, which both scopes the index to the one jar and
+  makes it the one that answers "read this spell's ingredients in order" —
   every read of the table in M10.9 and MB.6.
-- **No surrogate id.** An `id` column would say nothing about the jar, and the
-  schema test asserts its absence.
+- **Partial on `deleted_at IS NULL`**, so a removed layer frees its depth for
+  the next layer written into the jar — and, by the same predicate on the other
+  two indexes, its ingredient and its custom name.
+- **A surrogate `id`, which says nothing about the jar.** It is the key
+  because the layer can no longer be, and it is how a service names one layer
+  to the writer's by-id methods (`updateById`, `softDeleteByIds`), since it
+  cannot build a `where`.
 
-A key is checked per row rather than at end of statement, so **M10.16's reorder
-cannot be a single `set layer_order = layer_order + 1` sweep** even though the
-final state is conflict-free. It rewrites the jar's rows instead, which a
-hard-deleted table makes an ordinary delete-and-insert — and under this key
-that rewrite replaces primary keys, which is fine for the same reason. The
-schema test pins both directions — the sweep is refused, the rewrite succeeds —
-so the constraint the reorder has to work within is written down before the
-reorder is.
+A unique index is checked per row rather than at end of statement, so
+**M10.16's reorder cannot be a single `set layer_order = layer_order + 1`
+sweep** even though the final state is conflict-free. Nor can it remove and
+re-add the jar's rows, which would leave a tombstone per layer on every
+reorder. It moves the live rows in place, in one transaction: every depth out
+of range by a scratch offset, then each to its new one. The schema test pins
+both — the sweep is refused by the layer index, and the two-step move reorders
+the jar and leaves no tombstone — so the constraint the reorder has to work
+within is written down before the reorder is.
 
 ### Custom ingredients (MB.40)
 
@@ -1279,20 +1298,20 @@ this is what holds it in the database.
   per jar — what the M10.2 key used to give — and
   `spell_ingredients_spell_id_custom_name_unique` on
   `(spell_id, lower(name)) WHERE ingredient_id IS NULL` is one custom name per
-  jar, the shape of `ingredients_workspace_label_unique`. Both are partial and
-  neither predicate is rule 4's: there is still no `deleted_at` here. The
-  predicate is a discriminator, so each index covers exactly the rows that have
-  the column it is unique on.
+  jar, the shape of `ingredients_workspace_label_unique`. Both are partial on
+  the discriminator, so each index covers exactly the rows that have the column
+  it is unique on, and since MB.110 on rule 4's `deleted_at IS NULL` beside it.
 - **Name only, not name plus form, in the custom-name index.** A custom row is
   never matched against anything, so there is no identity key for `form` to be
   part of; a jar that wants valerian root and valerian leaf writes two names.
   This is the one judgment call in the shape, and the decision record says so.
-- **Still hard-deleted, still the four stamps.** A custom row carries content,
-  but content addressable only through its spell — unlike a folk name, which
-  stands on its own — and MB.34's deciding argument was the
-  `deleted_at IS NULL` a service joining _through_ this table would have to
-  remember by hand, which is exactly how derived categories (M10.7) reach
-  `ingredient_categories`.
+- **Soft-deleted with the rest of the table** (MB.110). MB.40 kept the table
+  hard-deleted on MB.34's argument: the `deleted_at IS NULL` a service joining
+  _through_ it would have to remember by hand, which is how derived categories
+  (M10.7) reach `ingredient_categories`. M5.3 settled it the other way. A
+  spell is a record of a working, so a removed layer, custom or linked, is a
+  tombstone, and what joins through the table does so by `existsIn`, which ANDs
+  the layer's filter by construction.
 - **`form` is text, not a foreign key**, for the reason `ingredients.form` is
   not: a member must be able to write `rhizome` before anyone has curated it.
 
@@ -1301,7 +1320,8 @@ this is what holds it in the database.
 succeeded: `form` on a linked row is refused where the same `form` on a custom
 row is accepted; `Threshold Salt` and `threshold salt` collide in one jar and
 not across two; the same ingredient twice is refused by the partial index, a
-layer collision by the key. What Wave 13 inherits — the Zod exclusive-or, the
+layer collision by the layer index. Each reuse after a removal — the depth, the
+ingredient, the custom name — is shown refused while the row was live. What Wave 13 inherits — the Zod exclusive-or, the
 skip in derived categories, no suppression, no held/not-held, no safety source
 — is written into each task's criteria rather than left to be remembered.
 
@@ -1343,8 +1363,9 @@ skip in derived categories, no suppression, no held/not-held, no safety source
 Both tables are inert until Wave 13. Nothing queries them until M10.5's service
 and M10.10's mutations land — the table-task-then-behaviour-task rule, the
 reason the DDL could be constrained at Wave 3 while the tables were empty, and
-the reason MB.40 could reshape `spell_ingredients` in Wave 4 as a contract
-migration against zero rows rather than as a retrofit across every consumer.
+the reason MB.40 could reshape `spell_ingredients` in Wave 4, and MB.110 in
+Wave 8, as a contract migration against zero rows rather than as a retrofit
+across every consumer.
 
 Every guard above was verified load-bearing rather than assumed, by rebuilding
 the shipped migration with each stripped in turn: without the layer index two
@@ -1352,7 +1373,9 @@ ingredients sit at depth 1, without `NOT NULL` an unordered row inserts, with
 the key repointed at `inventory_items` a stock-only id is accepted, without the
 composite key the same ingredient joins a spell twice, without the default a new
 spell's status comes back null, and without `NOT NULL` on `title` a nameless
-spell is recorded.
+spell is recorded. MB.110's were checked the same way: with
+`deleted_at IS NULL` stripped from the layer index or the ingredient index, a
+removed layer's depth or ingredient stays reserved.
 
 ## Expand/contract and the destructive-DDL check (M1.5)
 
@@ -1572,11 +1595,11 @@ because every stamp references it, and a table imports them from there —
 `import { auditColumns } from '../../identity/schema/users'`, relative, since
 the schema graph is what drizzle-kit loads.
 
-Every table spreads `...auditColumns` **except the three join tables**:
-`ingredient_categories`, `spell_categories` and `spell_ingredients` spread
-`...auditStampColumns` and are hard-deleted (MB.34) — see "Hard delete on the
-three join tables" below for why, and note that `workspace_members` and
-`ingredient_folk_names` are _not_ in that set. Writing the six columns as the
+Every table spreads `...auditColumns` **except two join tables**:
+`ingredient_categories` and `spell_categories` spread `...auditStampColumns`
+and are hard-deleted (MB.34) — see "Hard delete on two join tables" below for
+why, and note that `workspace_members`, `ingredient_folk_names` and, since
+MB.110, `spell_ingredients` are _not_ in that set. Writing the six columns as the
 four plus two rather than listing them twice is what stops the two sets
 drifting, and `tests/db/audit.test.ts` asserts each stamp column is literally
 the same builder object in both.
@@ -1745,20 +1768,21 @@ const [spell] = await withAudit(session, (write) =>
   cannot rewrite who created a row.
 - **`write.softDelete(table, where)`** — stamps `deletedAt`/`deletedBy` and
   leaves the row in place (CLAUDE.md rule 4). Typed to demand a `deletedAt`
-  column, so it cannot be pointed at a join table with nothing to stamp.
+  column, so it cannot be pointed at a hard-deleted join table with nothing
+  to stamp.
 
 **No update or soft delete reaches a soft-deleted row.** The writer ANDs
 `deleted_at IS NULL` onto the `where` of every one of them, by the scoped and
 by-id variants too, decided by the table's shape as the finders' filter is —
-`notSoftDeleted(table)`, dropped for a join table, which has no tombstone to
-skip. So a tombstone is never rewritten, a service updating a deleted row by
+`notSoftDeleted(table)`, dropped for a hard-deleted join table, which has no
+tombstone to skip. So a tombstone is never rewritten, a service updating a deleted row by
 id finds nothing and answers `NotFound`, and a second delete cannot
 overwrite who made the first. The way back to a deleted row is v2's restore,
 a named method per tier, with an edit after it rather than in place
 (DESIGN.md §13, "Edit history").
 
-- **`write.delete(table, where)`** — removes the rows outright, for the three
-  join tables only (MB.34). Typed to reject any table carrying `deletedAt`, so
+- **`write.delete(table, where)`** — removes the rows outright, for the two
+  hard-deleted join tables only (MB.34). Typed to reject any table carrying `deletedAt`, so
   it can never become the way a soft-deletable row is quietly destroyed.
 
 `values` is typed as the table's insert model **minus** the audit columns, so a call site can't even name `createdBy` without a cast — and if
@@ -1912,7 +1936,7 @@ The repository splits on the table's own shape, the way it already splits
 | carries `workspace_id`                                                 | `findManyInWorkspace` / `findOneInWorkspace` / `findOneByIdInWorkspace`, proof first                                 | `insertInWorkspace`, `updateInWorkspace`, `updateByIdInWorkspace`, `softDeleteInWorkspace`, `softDeleteByIdInWorkspace`, proof first |
 | carries a nullable `workspace_id` (`ingredients`, its retired slugs)   | the scoped reads above, the named compendium finders, and `findIngredientsInSpellsIncludingSoftDeleted`, proof first | the scoped writes above, and `insertInCompendium`, `updateByIdInCompendium`, `softDeleteByIdInCompendium`, `SiteAdmin` first         |
 | carries `visibility` (`spells` alone)                                  | `findManySpells` / `findOneSpell`, proof first                                                                       | the workspace-scoped writes above                                                                                                    |
-| carries `spell_id` (the two join tables)                               | `findManyInSpell`, proof first                                                                                       | `insert`, `update`, `delete`                                                                                                         |
+| carries `spell_id` (the two spell join tables)                         | `findManyInSpell`, proof first                                                                                       | `insert`, `update`; a layer `updateById`, `softDelete`, `softDeleteByIds`; a category link `delete`                                  |
 | carries `ingredient_id` and no `workspace_id` (folk names, categories) | `findManyOfIngredients`, proofs first; `findManyOfSpellIngredientsIncludingSoftDeleted`, proof first                 | `insert`, `update`, `softDelete` / `softDeleteByIds` / `delete`                                                                      |
 | none of those                                                          | `findMany` / `findOne` / `findOneById` / `findManyByIds` / `findManyIncludingSoftDeleted`                            | `insert`, `update`, `updateById`, `softDelete`, `softDeleteByIds`, `delete`                                                          |
 
@@ -2147,8 +2171,7 @@ the call site says what it is:
 
 **Only the ingredient's tombstone is skipped.** The spell must be readable and
 live (`readableSpells`), and the layer live (`existsIn` over
-`spell_ingredients`, which filters a removed layer once MB.110 gives the table
-a `deleted_at`, with no change here). The ingredient must be in the compendium
+`spell_ingredients`, which filters a removed layer by construction). The ingredient must be in the compendium
 or the proof's coven: a layer's foreign key checks the id alone, so a W spell
 linking X's ingredient is a row the schema accepts and the finder withholds. A
 child's own tombstone still filters, so a folk name removed before the delete
@@ -2703,8 +2726,9 @@ limit $limit  -- the page plus one
   was not.
 - **The id breaks ties**, so rows sharing a sort key still sit in one total
   order, and a page boundary between two of them loses neither. Every table
-  these finders take has an `id` (`Identified`), which rules out the three
-  join tables.
+  these finders take has an `id` (`Identified`), which rules out the two
+  hard-deleted join tables; `spell_ingredients` has one, and its `spell_id`
+  is what refuses it.
 - **A sort column must be `NOT NULL`**, by type. A NULL makes the row
   comparison NULL, and that row would fall out of every page. An expression's
   nullness is not in its type, so a nullable one is the caller's bug.
@@ -2767,14 +2791,15 @@ real finders:
 - the cursor refusals: a key that will not cast, an id that is not one, and a
   key with the wrong number of parts.
 
-## Hard delete on the three join tables (MB.34)
+## Hard delete on two join tables (MB.34)
 
-`ingredient_categories`, `spell_categories` and `spell_ingredients` spread
-`...auditStampColumns` rather than `...auditColumns`: four stamp columns, a
-composite primary key, and no `deleted_at`. A chip toggled off or an ingredient
-pulled out of a spell removes the row.
+`ingredient_categories` and `spell_categories` spread `...auditStampColumns`
+rather than `...auditColumns`: four stamp columns, a composite primary key, and
+no `deleted_at`. A chip toggled off removes the row. `spell_ingredients` was
+the third until MB.110 — see "Why not `spell_ingredients`" at the end of this
+section.
 
-**Why these three.** They are the highest-churn tables in the schema, and
+**Why these two.** They are the highest-churn tables in the schema, and
 nothing in v1 reads a deleted join row — there is no restore UI, and the trash
 view is v2. Soft-deleting them would cost a tombstone per toggle forever, a
 partial unique index on each so the same pair could be re-added, and — the
@@ -2790,14 +2815,11 @@ added this ingredient to this spell" (story 13). `workspace_members` keeps the
 full six — who removed whom, and when, is worth keeping — and so does
 `ingredient_folk_names`, which holds content rather than a link.
 
-**No `deleted_at` also means no partial unique index**, on any of the three.
+**No `deleted_at` also means no partial unique index**, on either.
 Rule 4's convention exists so a tombstone cannot reserve a name forever, and a
 composite primary key has no tombstone to dodge: the pair is either there or it
 is not, re-adding one that was removed is an ordinary insert, and
-`WHERE deleted_at IS NULL` would not compile against these columns. The
-exception is a predicate that is about something else — `spell_ingredients`
-carries two partial unique indexes keyed on whether `ingredient_id` is null,
-which is MB.40's custom-row split rather than soft-delete filtering.
+`WHERE deleted_at IS NULL` would not compile against these columns.
 
 **What makes it impossible to get wrong.** Two type constraints, both proved by
 `@ts-expect-error` lines in `tests/db/repository/write.test.ts` (which fail `npm run typecheck`,
@@ -2807,7 +2829,8 @@ not `vitest`, if either constraint is ever loosened):
   column does not satisfy it, so hard-deleting a soft-deletable table does not
   compile.
 - `write.softDelete` takes `PgTable & { deletedAt: AnyPgColumn }` — so it cannot
-  be pointed at a join table, where it would emit an `UPDATE` that sets nothing.
+  be pointed at a hard-deleted join table, where it would emit an `UPDATE`
+  that sets nothing.
 
 `findMany`/`findOne` read both shapes: the private `notSoftDeleted(table)`
 returns the predicate when the table has a `deleted_at` and `undefined` when it
@@ -2818,17 +2841,25 @@ table in `tests/db/repository/write.test.ts` (`repository_probe_pairs`) exercise
 leaves no row, the same pair can be re-added afterwards with no partial index
 to make it possible, and a delete rolls back with the rest of its transaction.
 
-**All three are written.** `ingredient_categories` (M4.4, migration
-`0009_amusing_ken_ellis.sql`) is the shape the other two take, and
+**Both are written.** `ingredient_categories` (M4.4, migration
+`0009_amusing_ken_ellis.sql`) is the shape the other takes, and
 `ingredient-categories-schema.test.ts` runs the same three assertions against
 the real table rather than the scratch pair: `write.delete` removes the row
 outright, the pair can be re-added afterwards — by a different member, whose
 stamps the new row carries — and an ingredient's other categories are untouched.
-`spell_ingredients` (M10.2, migration `0014_cooing_bug.sql`; reshaped by MB.40's
-`0017`, and hard-deleted still) is the second, and
-`spell_categories` (M10.4, migration `0015_wooden_zaran.sql`) the third; each
-repeats those three assertions against its own table, so the shape is proved
-where it is used rather than once in the abstract.
+`spell_categories` (M10.4, migration `0015_wooden_zaran.sql`) is the second,
+and repeats those three assertions against its own table, so the shape is
+proved where it is used rather than once in the abstract.
+
+**Why not `spell_ingredients`** (MB.110). It was the third, and is
+soft-deleted since `0029`: a spell is a record of a working, so a layer taken
+out of it should be recoverable like every other delete
+([`m5.3-spells-keep-deleted-ingredients.md`](design-decisions/m5.3-spells-keep-deleted-ingredients.md)).
+The deciding argument above does not reach it. What reads through a layer does
+so by `existsIn` (MB.100), which ANDs the layer's `deleted_at IS NULL` by
+construction, so there is no filter left for a service to remember. What it
+cost is the surrogate key and the partial indexes, under "Layer order is the
+identity" in the grimoire.
 
 ## `ingredient_categories` (M4.4)
 
@@ -2871,7 +2902,7 @@ derived categories are the union of what this table holds for its ingredients.
 
 Story 48's table: `spellId`, `categoryId`, + the four audit stamps, keyed on the
 pair. `src/modules/grimoire/schema/spell-categories.ts`, migration `0015_wooden_zaran.sql`,
-and the last of MB.34's three join tables.
+and the second of MB.34's two hard-deleted join tables.
 
 **It holds the _assigned_ categories, and only those.** §9 and §12 make the
 distinction and call conflating the two a bug: this table is what a member
@@ -2883,8 +2914,8 @@ inferable from contents. Nothing in the schema enforces the distinction, because
 nothing can: the two are the same pair of columns pointing at the same
 `categories` rows, and the difference is which table they came from.
 
-- **The composite primary key is the assignment's identity**, as on the other
-  two join tables. No surrogate `id`: one would let the same category be
+- **The composite primary key is the assignment's identity**, as on
+  `ingredient_categories`. No surrogate `id`: one would let the same category be
   assigned to the same spell twice, with nothing downstream able to tell the
   rows apart. A duplicate is a `23505` naming
   `spell_categories_spell_id_category_id_pk`, whoever adds it — the pair is the
@@ -3395,17 +3426,19 @@ defined per row. A layer does not — its identity is a depth in a sequence, and
 the sequence is shared. Patch one row back into a stack a member has since
 edited and the arithmetic is against you both ways: a layer pulled out of the
 middle leaves the ones below it renumbered, so the depth the seed wants is
-occupied by a different ingredient (the primary key) and the ingredient it
+occupied by a different ingredient (the layer index) and the ingredient it
 wants is already at another depth
 (`spell_ingredients_spell_id_ingredient_id_unique`). Either collision fails the
 whole scenario rather than the row.
 
-So a jar that already has layers is left exactly as it is. What that gives up
-is a demo jar healing itself after someone empties it by hand, which `make
-db-reset` (M1.24) does properly anyway; what it buys is that a reseed over an
-edited grimoire is a no-op rather than an error. Both halves are asserted in
-`demo.test.ts` — the edited jar and the reordered one — and the assertions were
-checked to fail without the rule.
+So a jar that already has layers is left exactly as it is — removed ones
+included, since a tombstone is a layer the jar has had, and a jar a member
+emptied has been edited rather than left unstocked. What that gives up is a
+demo jar healing itself after someone empties it, which `make db-reset` (M1.24)
+does properly anyway; what it buys is that a reseed over an edited grimoire is
+a no-op rather than an error. `demo.test.ts` asserts it for the edited jar, the
+emptied one and the reordered one, and the first and last were checked to fail
+without the rule.
 
 ## The provisional-account delete (MB.67)
 

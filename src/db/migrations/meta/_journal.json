@@ -204,6 +204,13 @@
       "when": 1790734316226,
       "tag": "0028_drop-pending-slugs",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1790741293072,
+      "tag": "0029_spell-layers-soft-delete",
+      "breakpoints": true
     }
   ]
 }

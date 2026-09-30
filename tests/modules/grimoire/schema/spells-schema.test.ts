@@ -31,7 +31,7 @@ const WORKSPACE_FK = 'spells_workspace_id_workspaces_id_fk';
 describe('spells schema', () => {
   const { byName, indexes, checks, foreignKeyByColumn } = tableFacts(spells);
 
-  // The full six: story 54's delete is recoverable. Only the three join tables take four (MB.34).
+  // The full six: story 54's delete is recoverable. Only two join tables take four (MB.34).
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });

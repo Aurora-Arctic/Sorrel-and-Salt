@@ -470,6 +470,26 @@ describe('a deleted entry', () => {
     ]);
   });
 
+  // A layer is the spell's, and leaves it only when a member takes it out (MB.110).
+  it('leaves every layer holding it as it was', async () => {
+    const id = await seed();
+    const spellId = await insertSpell(sql, makeSpell({ layers: [{ ingredientId: id }] }), B.id);
+    const layerOf = async () => {
+      const [layer] = await sql`select * from spell_ingredients where spell_id = ${spellId}`;
+      return layer;
+    };
+    const before = await layerOf();
+
+    await deleteCompendiumEntry(admin, id);
+
+    // Why the layer could have been touched: what it holds is a tombstone now.
+    const [ingredient] = await sql`select deleted_at from ingredients where id = ${id}`;
+    expect(ingredient.deleted_at).toBeInstanceOf(Date);
+    const after = await layerOf();
+    expect(after.deleted_at).toBeNull();
+    expect(after).toEqual(before);
+  });
+
   // Two rows now carry the key, and the holder lookup reads by the key alone.
   it('is not the entry a later collision names', async () => {
     const id = await seed();

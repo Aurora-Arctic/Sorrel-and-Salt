@@ -389,8 +389,8 @@ describe('the Membership proof (M6.3)', () => {
       findOne(spellCategories);
 
     const readLayersThroughTheHatch = () =>
-      // @ts-expect-error — the escape hatch takes the unscoped side too, and a
-      // hard-deleted table has no soft-deleted row to include anyway (MB.34).
+      // @ts-expect-error — the escape hatch takes the unscoped side too, where
+      // every coven's layers would come back, removed ones and private spells' included.
       findManyIncludingSoftDeleted(spellIngredients);
 
     const scopeAJoinTableByWorkspace = (membership: Membership) =>

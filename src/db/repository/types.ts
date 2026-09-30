@@ -52,7 +52,7 @@ export type NotSpellScoped = { spellId?: never };
 export type IngredientScoped = { ingredientId: AnyPgColumn };
 export type NotIngredientScoped = { ingredientId?: never };
 
-/** A table with a surrogate key, which is every one but the three join tables. */
+/** A table with a surrogate key, which is every one but the two hard-deleted join tables. */
 export type Identified = { id: AnyPgColumn };
 
 /** A table's own columns, with every audit column removed — they come from the session. */
