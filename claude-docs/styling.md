@@ -332,7 +332,10 @@ thing that holds them. Buttons were 0.5rem and panels 0.25rem until MB.114.
 included. Four variants:
 
 - **The outline (`.btn`)**, the default: the accent on an edge, filling on
-  hover.
+  hover. The edge is 1.6px on every variant, heavier than a field's 1px, since
+  a hairline in the accent barely reads as a colour. A border width rounds down
+  to whole device pixels (CSS Values 4, "snap as a border width"), so it draws
+  1.5px on a 2x screen and stays 1px on a standard-density one.
 - **`.btn--solid`**, a view's one primary action — Save, Send, Continue.
   Filled in the accent, with the label on `$text-on-color`, and its own hover
   step (`--accent-solid-hover`, above).

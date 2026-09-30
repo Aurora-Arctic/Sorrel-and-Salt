@@ -73,7 +73,10 @@
     font-weight: 500;
     padding: space(3) space(5);
     border-radius: radius('control');
-    border: 1px solid $accent;
+    // Heavier than a field's 1px: a hairline in the accent barely reads as a
+    // colour. A border width rounds down to whole device pixels, so this
+    // draws 1.5px on a 2x screen and stays 1px on a standard-density one.
+    border: 1.6px solid $accent;
     background-color: transparent;
     color: $accent;
     cursor: pointer;

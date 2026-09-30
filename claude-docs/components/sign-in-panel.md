@@ -53,7 +53,10 @@ stylesheet are two separate compiled CSS files, and nothing guarantees which
 one a bundler emits first, so a same-specificity single-class rule could lose
 a property `.btn` also sets (its `border` shorthand touches `border-color`,
 which every provider overrides) depending on load order neither file
-controls. The extra class is what makes the color win regardless.
+controls. The extra class is what makes the color win regardless. The same
+compound rule puts the edge back to 1px from `.btn`'s 1.6px: Google's and
+Microsoft's guidelines draw their buttons with a 1px stroke, and the other
+two take it too so the roster stays one height.
 
 The icons are a close hand recreation of each provider's own published mark
 (Google's identity branding guidelines; Discord's and Facebook's own
