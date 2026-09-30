@@ -7,7 +7,8 @@ import type { AuditSession } from '../types';
 import { db } from '../connection';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
-import type { AuditWriter, Identified, TwoTier } from './types';
+import type { Membership } from '@/modules/coven';
+import type { AuditWriter, Identified, TwoTier, WorkspaceScoped } from './types';
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -38,6 +39,12 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       .where(and(notSoftDeleted(table), where))
       .returning() as never;
 
+  const inWorkspaceById = (
+    membership: Membership,
+    table: PgTable & WorkspaceScoped & Identified,
+    id: string,
+  ) => and(scopedTo(membership, table), eq(table.id, id));
+
   const inCompendiumById = (table: PgTable & TwoTier & Identified, id: string) =>
     and(inCompendium(table), eq(table.id, id));
 
@@ -52,12 +59,14 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     updateInWorkspace: (membership, table, values, where) =>
       update(table, values, and(scopedTo(membership, table), where)),
     updateByIdInWorkspace: (membership, table, id, values) =>
-      update(table, values, and(scopedTo(membership, table), eq(table.id, id))),
+      update(table, values, inWorkspaceById(membership, table, id)),
     softDelete,
     softDeleteByIds: (table, ids) =>
       ids.length === 0 ? Promise.resolve([]) : softDelete(table, inArray(table.id, [...ids])),
     softDeleteInWorkspace: (membership, table, where) =>
       softDelete(table, and(scopedTo(membership, table), where)),
+    softDeleteByIdInWorkspace: (membership, table, id) =>
+      softDelete(table, inWorkspaceById(membership, table, id)),
     // The proof is not read: unlike a `Membership` it carries nothing the
     // query needs, and what it buys is that the call cannot be written without
     // it. `workspaceId` last, as above.

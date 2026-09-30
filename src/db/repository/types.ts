@@ -207,6 +207,12 @@ export interface AuditWriter {
     table: TTable,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
+  /** The same, naming the one row by its own id, for `updateByIdInWorkspace`'s reason. */
+  softDeleteByIdInWorkspace<TTable extends PgTable & SoftDeletable & WorkspaceScoped & Identified>(
+    membership: Membership,
+    table: TTable,
+    id: string,
+  ): Promise<TTable['$inferSelect'][]>;
   /**
    * `softDelete`, naming the rows by their own ids — the soft-delete twin of
    * `findManyByIds`, for the reason `updateById` gives. An empty list deletes
