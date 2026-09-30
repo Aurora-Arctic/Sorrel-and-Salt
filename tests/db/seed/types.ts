@@ -88,6 +88,7 @@ export interface LayerRow {
   layer_order: number;
   note: string | null;
   created_by: string;
+  deleted_at: Date | null;
 }
 
 /**

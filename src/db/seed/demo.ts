@@ -309,8 +309,8 @@ async function insertMissingLayers(
     spell.layers.map((layer, index) => ({ spellId: spell.id, layer, index })),
   );
 
-  // Keyed by the jar, not the layer, so a stocked jar keeps every layer out.
-  // Hard-deleted (MB.34): the four-column stamp set.
+  // Keyed by the jar, not the layer, so a stocked jar keeps every layer out —
+  // a removed layer's tombstone included, since the jar has been edited.
   await insertMissing(tx, spellIngredients, wanted, {
     existing: async (tx) =>
       (await tx.select({ spellId: spellIngredients.spellId }).from(spellIngredients)).map(
