@@ -8,7 +8,7 @@ import type { SignInMethodsProps } from './types';
 // or removing here reaches for /api/auth, which the workshop does not serve,
 // so a click fails into the alert region — a state worth seeing in itself.
 export default {
-  title: 'Sign In Methods',
+  title: 'Sign In / Methods',
 };
 
 const ALL_PROVIDERS: readonly ProviderId[] = ['discord', 'google', 'facebook', 'microsoft'];

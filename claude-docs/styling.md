@@ -19,8 +19,8 @@ to.
   `badge-token('safety', 'fill')`, `$text-on-color`. A typo is then a compile
   error rather than a silently wrong colour.
 - **WCAG AA 4.5:1 is the floor for every token, in both themes**, and several
-  pairings sit close to it (`wellbeing` at 4.74 against the light page,
-  `--secondary` at 4.80 against the dark card). Re-measure when changing a
+  pairings sit close to it (the light `--accent` at 4.68 and `wellbeing` at
+  4.74 against the light page, `--secondary` at 4.80 against the dark card). Re-measure when changing a
   colour; do not assume headroom.
 - **Only `_variables.scss` and the theme mixins may name a raw hue.** Needing a
   colour that is not a token means adding a token, not inlining one.
@@ -108,19 +108,26 @@ chalk. A mix lowers the chroma with the strength, as ink thinned on paper does.
 Light keeps `$iron-gall` lightened 20% (`#5e5645`), which reads as the same
 ink.
 
-Two variants exist for one use each:
+Three variants exist for one use each:
 
+- **`$sorrel-vivid`, the light theme's `--accent`**: `$sorrel` at +40%
+  saturation and −5% lightness, `#397511`, 4.68:1 on the page and 5.20:1 on
+  the card. `$sorrel` itself reads olive-black on parchment, and an outline
+  button in it barely registers as green; saturating it alone lifts it under
+  4.5:1, so it darkens as it saturates. The light hovers derive from it rather
+  than from `$sorrel`, or hovering would look like the colour draining out.
+  Dark keeps `$sorrel-bright`.
 - **`$wax-vivid`, the light theme's `--secondary`**: `$wax` at +30% saturation
   and +4% lightness, `#ba2b14`, 5.02:1 on the page. `$wax` itself reads
   brown on parchment, and an error edge in it barely separates from a field's
   own. Dark keeps `$wax-warm`. Destructive buttons share the token.
 - **`$sorrel-spring` / `$sorrel-rich`, the solid button's hover
   (`--accent-solid-hover`)**: `$sorrel` at +38% lightness and +40% saturation
-  on dark (`#a5eb76`), and −8% lightness and +20% saturation on light
-  (`#355b1b`). The link's `--accent-hover` is one step, which a filled
+  on dark (`#a5eb76`), and `$sorrel-vivid` at −8% lightness and +20%
+  saturation on light (`#265a03`). The link's `--accent-hover` is one step, which a filled
   button barely shows under the pointer; these are larger and more saturated,
   rather than only further from the ground. The label on them measures 13.13:1
-  and 6.48:1.
+  and 6.80:1.
   Shadow inks are per-theme: a 0.8-alpha near-black under a card reads as a hole
   punched in parchment, so light mode gets a much softer one.
 
@@ -172,8 +179,8 @@ exactly one alarming badge in the app and spends no hue, which matters because e
 hue not already reserved belongs to one of the eight groups. **Last used** marks
 the sign-in button this browser last signed in with (MB.77). It is a pointer,
 not a warning, so it is drawn solid in the accent's own inks (`$sorrel-bright`
-dark, `$sorrel` light), a hue already reserved, and spends none of the groups'.
-Its label on the fill is 7.95:1 dark and 5.03:1 light.
+dark, `$sorrel-vivid` light), a hue already reserved, and spends none of the groups'.
+Its label on the fill is 7.95:1 dark and 4.68:1 light.
 
 Each palette is one ink per theme plus the **treatment** it is drawn in, and the
 treatment decides which parts it emits:
@@ -218,7 +225,7 @@ thing and the label goes dark, on light the reverse.
 It needs no contrast table of its own. A solid fill's label sits on the fill, and
 the fill's ratio against the page surface is exactly the `vs page` figure already
 measured for every group and every ink — the two questions have the same
-arithmetic. **Worst pairing in the set is 4.74:1.**
+arithmetic. **Worst pairing in the set is 4.68:1**, the light accent.
 
 ### `$ornament-screen` and `$ornament-multiply`
 
@@ -325,7 +332,10 @@ thing that holds them. Buttons were 0.5rem and panels 0.25rem until MB.114.
 included. Four variants:
 
 - **The outline (`.btn`)**, the default: the accent on an edge, filling on
-  hover.
+  hover. The edge is 1.6px on every variant, heavier than a field's 1px, since
+  a hairline in the accent barely reads as a colour. A border width rounds down
+  to whole device pixels (CSS Values 4, "snap as a border width"), so it draws
+  1.5px on a 2x screen and stays 1px on a standard-density one.
 - **`.btn--solid`**, a view's one primary action — Save, Send, Continue.
   Filled in the accent, with the label on `$text-on-color`, and its own hover
   step (`--accent-solid-hover`, above).
@@ -352,6 +362,15 @@ The class layer every form is built from, in `_primitives.scss`:
 | `.fieldset`, `.fieldset__legend`                 | Rows under one name: checkboxes, or a list of entries                     |
 | `.notice`, `--error`, `--success`                | A sentence about the whole view rather than one field                     |
 
+- **A field's hint is an info tip beside its label** (`InfoTip`,
+  [`components/info-tip.md`](components/info-tip.md)), not a line beneath it:
+  the owner's call in M5.9, once a form of many fields read as a wall of
+  hints. The tip's text stays in the field's `aria-describedby`, so it is read
+  with the field whether open or not, and the tip opens while the field has
+  focus, so a keyboard that skips the ⓘ still shows it. `.field__hint` remains for a line that
+  must stay in view, such as why a field is disabled, since a shut field that
+  does not say why reads as broken. `IngredientForm` is the first form built
+  this way; an older form adopts it at its design review.
 - **The error sits beneath its control**, nearest what was typed, and is
   drawn the same whichever side found it: the resolver before a request, or
   the server's `fieldErrors` after (DESIGN.md §7, "Errors"). The control names
@@ -372,12 +391,22 @@ The class layer every form is built from, in `_primitives.scss`:
   ink, since the platform's arrow varies by OS and ignores the theme. Under
   `forced-colors` the native arrow comes back, because forced colours drop
   background images.
+- **A select's placeholder is a hidden, disabled first option** whose value
+  is `''`: it shows until a choice is made and cannot be chosen back, and
+  reads in `$text-placeholder` as an input's placeholder does: the muted ink
+  mixed 85% into the field's ground, the greyest that holds 4.5:1 (4.68:1 on
+  the light field, 6.71:1 on the dark), since WCAG 1.4.3 covers a placeholder
+  as it does any text. A select whose
+  blank is an answer, such as an element of "None", offers it as an ordinary
+  option instead.
 - **The checkbox is the platform's**, coloured by `accent-color`, which takes
   the token and picks its own check-mark contrast.
 - **Disabled is an attribute, not a class**, and looks the same on a field as
   on a button: a dashed edge and no fill. A disabled field also takes the muted
   ink and dims its `.field__label`, since a faded box alone reads as a live
-  one on a dim screen. A component never restates it.
+  one on a dim screen. The label dims for a disabled control only, not any
+  disabled descendant, since a select's placeholder is a disabled option. A
+  component never restates it.
 
 ## Designing a section
 
@@ -446,7 +475,8 @@ heavier than the reverse; light reverts to the browser default.
     `.btn` and its `--solid` / `--quiet` / `--secondary` variants, `.notice`,
     the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
     `.checkbox`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
-    and the classes over `chip()` / `badge()`.
+    the classes over `chip()` / `badge()`, and `.visually-hidden`, for text a
+    screen reader reads and nothing draws, such as a live region's news.
 - `src/app/fonts.ts` — Cormorant Unicase (weights 500/600/700) and Lexend,
   self-hosted at build time via `next/font/google`. The CSS variables it defines
   on `<html>` are what `$font-heading` / `$font-body` reference.

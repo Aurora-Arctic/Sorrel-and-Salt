@@ -1,0 +1,118 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The fields, the notice and the buttons are the form primitives'
+// (_primitives.scss); this is the form's width, a list's entries, and the
+// row its box shares with Add.
+
+// A column narrower than the measure, as the other forms keep: wide enough
+// for a formal name and a line of description, and no wider, wherever the
+// form is put.
+.ingredient-form {
+  width: 100%;
+  max-width: 32rem;
+
+  // A list's legend, its entries and its box, a step further apart than a
+  // single field's label and control: the entries are a group of their own
+  // between the two, and at the field's spacing the three run together.
+  // Nested, to outweigh the primitives' `body .fieldset`.
+  .ingredient-form__list {
+    gap: space(3);
+
+    .fieldset__legend {
+      margin-bottom: space(3);
+    }
+  }
+}
+
+// The entries added to a list, above its box, wrapping as they need, with
+// room above and below on top of the list's own gap, so they read as a row of
+// their own between the legend and the box.
+.ingredient-form__entries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(3);
+  margin: space(2) 0;
+  padding: 0;
+  list-style: none;
+}
+
+// A pill in the chip's geometry, but neutral: a free-text entry has no
+// category group to take a colour from. The x's own target stands in for
+// the right-hand padding.
+.ingredient-form__entry {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+  // The gap spaces them, not typography-base's margin on a list item.
+  margin: 0;
+  padding: 0.125rem 0.125rem 0.125rem 0.6875rem;
+  border: 1px solid $text-muted;
+  border-radius: radius('pill');
+  color: $text-primary;
+  font-size: type-size('small');
+  font-weight: 400;
+  line-height: 1.4;
+
+  // The field's error edge, a shape as well as a colour, on the entry it names.
+  &.is-invalid {
+    border-color: $secondary;
+    box-shadow: inset 0 0 0 1px $secondary;
+  }
+
+  // No typography-base ◆: the entries are pills, not prose.
+  &::before {
+    content: none;
+  }
+}
+
+// 1.5rem: WCAG 2.2's 24px minimum target, inside a pill too short for 44px.
+.ingredient-form__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: radius('pill');
+  background-color: transparent;
+  color: $text-muted;
+  font-size: type-size('body');
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    color: $text-primary;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// A label and its info tip on one line. Positioned, so an open tip spans the
+// field beneath it rather than hanging off the icon.
+.ingredient-form__label-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: space(1);
+}
+
+// The asterisk on the one label that needs it, in the error red: it marks
+// what a save will ask for.
+.ingredient-form__required {
+  color: $secondary;
+}
+
+// A list's box and its Add button, one line and one height.
+.ingredient-form__row {
+  display: flex;
+  gap: space(2);
+
+  .input {
+    flex: 1;
+    min-width: 0;
+  }
+}

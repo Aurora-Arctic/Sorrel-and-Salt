@@ -46,6 +46,7 @@
     "@escape.tech/graphql-armor": "^3.2.0",
     "@graphql-typed-document-node/core": "^3.2.0",
     "@graphql-yoga/plugin-disable-introspection": "^2.25.1",
+    "@hookform/resolvers": "^5.9.1",
     "@pothos/core": "^4.15.1",
     "@pothos/plugin-complexity": "^4.2.3",
     "@pothos/plugin-relay": "^4.8.1",
@@ -64,6 +65,7 @@
     "postgres": "^3.4.9",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "react-hook-form": "^7.89.0",
     "slugify": "^1.6.9",
     "zod": "^4.6.5"
   },

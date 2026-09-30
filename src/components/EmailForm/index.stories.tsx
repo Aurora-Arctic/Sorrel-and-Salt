@@ -10,7 +10,7 @@ import type { EmailFormProps } from './types';
 // workshop's global provider (.ladle/components.tsx), as it does from the
 // app's root layout.
 export default {
-  title: 'Email Form',
+  title: 'Forms / Email',
 };
 
 // Inside the page's own frame, so the workshop shows what the page shows;
