@@ -756,6 +756,17 @@ the spec aborts and fails on any request to `/api/auth/sign-in/`.
   concurrently and threw `duplicate key value violates unique constraint
 "pg_database_datname_index"` before this was added. `serial` pins the
   whole file to one worker, so the reset genuinely happens once.
+- **One worker, until each has its own database** (M5.4). `serial` keeps a
+  file's reset to one worker, but not one file's reset away from another's:
+  every server reads the one `sorrel_e2e`, and `recreateE2eDatabase()` drops
+  it `WITH (FORCE)`, so a reseed on a second worker cuts the first's
+  connections mid-test, and two files starting together race the same
+  `CREATE DATABASE`. CI's two default workers only ever reseeded apart by
+  the order the files happened to fall in; `admin.spec.ts` sorts beside
+  `account.spec.ts` and collided with it. So `playwright.config.ts` sets
+  `workers: 1`, which is what makes "each file starts from the seeded
+  baseline" true here. MB.112 restores parallelism by giving each worker slot
+  its own server and database, as Vitest's pool slots each have a database.
 - **Mail is read back from Mailpit** (MB.65). `tests/e2e/mailpit.ts`'s
   `latestMessageTo(address)` searches Mailpit's REST API at `MAILPIT_URL` for
   the newest message to that address and returns its sender, recipients,

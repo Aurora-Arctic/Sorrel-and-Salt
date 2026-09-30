@@ -61,6 +61,11 @@ export default defineConfig({
   testDir: './tests/e2e',
   outputDir: '.reports/test-results',
   fullyParallel: true,
+  // Every server reads the one `sorrel_e2e`, and a spec file's reseed drops it
+  // WITH (FORCE) — so a second worker's reseed would cut the first's
+  // connections mid-test, or race its CREATE DATABASE. claude-docs/testing.md,
+  // "E2E".
+  workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [['list'], ['json'], ['html', HTML_REPORT]] : [['html', HTML_REPORT]],
