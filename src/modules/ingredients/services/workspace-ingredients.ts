@@ -84,6 +84,31 @@ export async function updateWorkspaceIngredient(
 }
 
 /**
+ * Soft-deletes an ingredient of this coven, stamping who deleted it. Its folk
+ * names, category links and stock stay; a spell holding it still reaches it
+ * (claude-docs/db.md, "Workspace ingredients").
+ *
+ * @throws {Forbidden} the caller may not delete this coven's ingredients.
+ * @throws {NotFound} no live ingredient in this coven has this id — one
+ * already deleted, the compendium's and other covens' included, and an id
+ * that is not one.
+ */
+export async function deleteWorkspaceIngredient(
+  session: Session,
+  workspaceId: string,
+  id: string,
+): Promise<void> {
+  const membership = await assertMembership(session, workspaceId, { ingredient: ['delete'] });
+  // An id that is not a uuid names nothing, and would be a driver error at the comparison.
+  if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
+
+  await withAudit(session, async (write) => {
+    const [row] = await write.softDeleteByIdInWorkspace(membership, ingredients, id);
+    if (!row) throw new NotFound('No such ingredient in this coven');
+  });
+}
+
+/**
  * One of this coven's ingredients, for any member, viewers included.
  *
  * @throws {Forbidden} the caller may not read this coven's ingredients.

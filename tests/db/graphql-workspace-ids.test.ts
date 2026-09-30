@@ -24,12 +24,19 @@ import type { Answer, WorkspaceIdProbe } from './types';
 const MALFORMED = ['not-a-coven', WORKSPACE_W_ID.slice(0, -1)];
 
 let ingredientId: string;
+// Its own row, so the delete probe's admitted call leaves the update probe's standing.
+let deletableId: string;
 
 beforeAll(async () => {
   const sql = postgres(process.env.DATABASE_URL as string);
   ingredientId = await insertIngredient(
     sql,
     makeIngredient({ workspaceId: WORKSPACE_W_ID, nomenclature: 'none' }),
+    A.id,
+  );
+  deletableId = await insertIngredient(
+    sql,
+    makeIngredient({ workspaceId: WORKSPACE_W_ID, name: 'Fixture Deleted', nomenclature: 'none' }),
     A.id,
   );
   await sql.end();
@@ -83,6 +90,11 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
       updateIngredient(workspaceId: $workspaceId, id: $id, input: $input) { id }
     }`,
     variables: () => ({ id: ingredientId, input: WHOLE_INGREDIENT }),
+  },
+  deleteIngredient: {
+    source:
+      'mutation ($workspaceId: ID!, $id: ID!) { deleteIngredient(workspaceId: $workspaceId, id: $id) }',
+    variables: () => ({ id: deletableId }),
   },
 };
 

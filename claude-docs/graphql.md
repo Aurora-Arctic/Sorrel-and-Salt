@@ -560,23 +560,24 @@ type IngredientFormGroup {
 
 ### The workspace ingredient mutations
 
-Stories 15 and 34's writes (M8.8), registered by `ingredients` over the
-services in `services/workspace-ingredients.ts` ([`db.md`](db.md), "Workspace
-ingredients"):
+Stories 15, 25 and 34's writes (M8.8, the delete M5.3), registered by
+`ingredients` over the services in `services/workspace-ingredients.ts`
+([`db.md`](db.md), "Workspace ingredients"):
 
 ```graphql
 type Mutation {
   createWorkspaceIngredient(workspaceId: ID!, input: IngredientInput!): Ingredient!
   updateIngredient(workspaceId: ID!, id: ID!, input: IngredientUpdateInput!): Ingredient!
+  deleteIngredient(workspaceId: ID!, id: ID!): ID!
 }
 ```
 
 - **The coven is an argument, and neither input can name a tier or a
   stamp.** Neither input type declares `workspaceId` or an audit column, and
   GraphQL refuses a field its type does not declare before any resolver runs. The
-  service asks the proof for the argument's coven, `{ ingredient: ['create'] }`
-  or `['update']`, which owners and members hold and viewers, site admins and
-  non-members do not. Both mutations carry the `signedIn` scope. A coven id
+  service asks the proof for the argument's coven, `{ ingredient: ['create'] }`,
+  `['update']` or `['delete']`, which owners and members hold and viewers,
+  site admins and non-members do not. All three carry the `signedIn` scope. A coven id
   that is not a uuid answers `FORBIDDEN`, as it does at every field taking a
   `workspaceId` ([`db.md`](db.md), "What the check asks"), and an ingredient
   id that is not one answers `NOT_FOUND`: the same answers a real id the
@@ -599,13 +600,20 @@ type Mutation {
   `updateIngredient` first clears the entry from `folkNamesByIngredient`. Root
   mutation fields run in turn within one request, so an earlier field may
   already have loaded the folk names this write replaced.
+- **A delete answers the deleted id, not the entity** — the schema's first
+  delete, so this is the convention the next one follows. The row is
+  soft-deleted, and a list evicts a row by its id; the deleted `Ingredient`
+  itself would be a poor answer, since its `folkNames` and `categories`
+  resolve through loaders that read live parents only, and would come back
+  empty. An id the coven does not hold live — the compendium's, another
+  coven's, one already deleted — is `NOT_FOUND`.
 - **A refusal is an error, never a payload** ("Errors" below). A Zod failure
   is `VALIDATION`, with one `fieldErrors` entry per issue whose path is in the
   input's own shape, such as `['folkNames', 1]`. A collision is `VALIDATION` on
   the field that caused it. Either way `data` is null, and the transaction
   wrote nothing, folk names included.
 
-`tests/modules/ingredients/graphql/workspace-ingredients.test.ts` runs both
+`tests/modules/ingredients/graphql/workspace-ingredients.test.ts` runs the three
 mutations through Yoga with the route's `maskedErrors`, so each refusal is
 asserted as the browser receives it.
 

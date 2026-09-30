@@ -2,6 +2,7 @@ import { builder } from '../../../graphql/builder';
 import { Forbidden } from '../../../lib/errors';
 import {
   createWorkspaceIngredient,
+  deleteWorkspaceIngredient,
   updateWorkspaceIngredient,
 } from '../services/workspace-ingredients';
 import { IngredientElementEnum, IngredientRef, NomenclatureEnum } from './ingredient';
@@ -85,6 +86,23 @@ builder.mutationField('updateIngredient', (t) =>
       // may have read this entry's folk names; the answer must be this write's.
       loaders.folkNamesByIngredient.clear(row);
       return row;
+    },
+  }),
+);
+
+// Answers the deleted id, not the entity: a list evicts a row by its id, and a
+// deleted ingredient's folk names and categories would resolve empty.
+builder.mutationField('deleteIngredient', (t) =>
+  t.id({
+    args: {
+      workspaceId: t.arg.id({ required: true }),
+      id: t.arg.id({ required: true }),
+    },
+    authScopes: { signedIn: true },
+    resolve: async (_root, { workspaceId, id }, { session }) => {
+      if (!session) throw new Forbidden();
+      await deleteWorkspaceIngredient(session, workspaceId, id);
+      return id;
     },
   }),
 );

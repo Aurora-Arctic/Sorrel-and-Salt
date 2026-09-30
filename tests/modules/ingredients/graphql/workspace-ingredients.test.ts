@@ -441,3 +441,74 @@ describe('updateIngredient', () => {
     expect(result.data?.second.folkNames).toEqual(['Second Root']);
   });
 });
+
+// Story 25 over the wire. The answer is the deleted id rather than the
+// entity: a list evicts a row by its id, and a deleted ingredient's children
+// would read as empty (claude-docs/graphql.md, "The workspace ingredient mutations").
+describe('deleteIngredient', () => {
+  const DELETE = `mutation ($workspaceId: ID!, $id: ID!) {
+    deleteIngredient(workspaceId: $workspaceId, id: $id)
+  }`;
+
+  const remove = (session: Session | null, id: string, workspaceId = WORKSPACE_W_ID) =>
+    run<{ deleteIngredient: string }>(session, DELETE, { workspaceId, id });
+
+  it('lets a member soft-delete one, answering its id', async () => {
+    const id = await seed(local());
+
+    expect(await remove(asUser(B), id)).toEqual({ data: { deleteIngredient: id } });
+
+    expect(await rowOf(id)).toMatchObject({ deleted_by: B.id });
+    expect((await read(asUser(B), id)).errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
+  });
+
+  it('is FORBIDDEN to a viewer, and the row stays live', async () => {
+    const id = await seed(local());
+    // Why it could have succeeded: the row is live and C reads it by this id.
+    expect((await read(asUser(C), id)).data?.ingredient).toMatchObject({ id });
+
+    const result = await remove(asUser(C), id);
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+    expect((await rowOf(id)).deleted_at).toBeNull();
+  });
+
+  describe('a W ingredient named by direct id from outside W', () => {
+    let id: string;
+
+    beforeEach(async () => {
+      id = await seed(local());
+      // Why the refusals could have passed wrongly: the id is live, and W's own member reads it.
+      expect((await read(asUser(B), id)).data?.ingredient).toMatchObject({ id });
+    });
+
+    it('is NOT_FOUND under another coven’s valid proof', async () => {
+      const result = await remove(asUser(D), id, WORKSPACE_X_ID);
+
+      expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
+      expect((await rowOf(id)).deleted_at).toBeNull();
+    });
+
+    it.each([
+      ['a signed-out caller', null],
+      ['a member of another coven naming W', asUser(D)],
+      ['a site admin', asUser(E)],
+    ])('is FORBIDDEN to %s', async (_who, session) => {
+      const result = await remove(session, id);
+
+      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+      expect((await rowOf(id)).deleted_at).toBeNull();
+    });
+  });
+
+  it('is NOT_FOUND for a compendium entry, which stays live, and for an id that is not an id', async () => {
+    const id = await seed(makeIngredient());
+
+    expect((await remove(asUser(A), id)).errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
+    expect((await rowOf(id)).deleted_at).toBeNull();
+    expect((await remove(asUser(A), 'not-an-ingredient')).errors?.[0]?.extensions?.code).toBe(
+      'NOT_FOUND',
+    );
+  });
+});
