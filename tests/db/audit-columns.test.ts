@@ -50,6 +50,7 @@ const AUDITED: PgTable[] = [
   inventoryItems,
   planets,
   retiredIngredientSlugs,
+  spellIngredients,
   spells,
   users,
   workspaceInvitations,
@@ -59,7 +60,7 @@ const AUDITED: PgTable[] = [
 ];
 
 /** Hard-deleted, so four stamps and no tombstone (MB.34). */
-const STAMPED: PgTable[] = [ingredientCategories, spellCategories, spellIngredients];
+const STAMPED: PgTable[] = [ingredientCategories, spellCategories];
 
 const AUDIT_IDS = ['created_by', 'updated_by', 'deleted_by'];
 const STAMP_IDS = ['created_by', 'updated_by'];
@@ -94,9 +95,9 @@ async function byReferencesOf(table: string): Promise<Record<string, Reference>>
 const USERS_ID = { foreign_table: 'users', foreign_column: 'id' };
 
 describe('the audited tables', () => {
-  it('are the eighteen the updated_at sweep names: fifteen audited, three stamped', () => {
-    expect(AUDITED).toHaveLength(15);
-    expect(STAMPED).toHaveLength(3);
+  it('are the eighteen the updated_at sweep names: sixteen audited, two stamped', () => {
+    expect(AUDITED).toHaveLength(16);
+    expect(STAMPED).toHaveLength(2);
     expect([...named(AUDITED), ...named(STAMPED)].map(([name]) => name).sort()).toEqual(
       AUDITED_TABLES,
     );
