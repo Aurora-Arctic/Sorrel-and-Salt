@@ -2,7 +2,7 @@
 
 Guidance for Claude Code working in this repository.
 
-`claude-docs/DESIGN.md` is the specification and `claude-docs/TASKS.md` is the work breakdown. It is corrected in place when it is wrong — "frozen" means not re-scoped, not never-corrected. Its **Execution order** section, not its milestone numbering, is the schedule: task IDs are immutable identifiers and several milestones deliberately execute split across waves. This file carries the rules that apply to _every_ task; the section references below (§n) point into `DESIGN.md`, and milestone references (M0.1) into `TASKS.md`. When this file and the design doc disagree, the design doc wins — and fix this file.
+`claude-docs/DESIGN.md` is the specification and `claude-docs/TASKS.md` is the work breakdown — its index and execution order, with the milestone sections in `claude-docs/tasks/` and each wave's reasoning in `claude-docs/waves/`. It is corrected in place when it is wrong — "frozen" means not re-scoped, not never-corrected. Its **Execution order** section, not its milestone numbering, is the schedule: task IDs are immutable identifiers and several milestones deliberately execute split across waves. This file carries the rules that apply to _every_ task; the section references below (§n) point into `DESIGN.md`, and milestone references (M0.1) into `TASKS.md`. When this file and the design doc disagree, the design doc wins — and fix this file.
 
 ---
 
@@ -168,7 +168,7 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 
 ## GitHub task tracking
 
-The issues of `Aurora-Arctic/Sorrel-and-Salt`, with the org Project **Sorrel & Salt** over them, are the source of truth for what to work on. `TASKS.md` is the reasoning behind the breakdown, and the two are expected to agree — when a task is minted as an issue, add it to `TASKS.md` in the same pass, or the docs silently fall behind. The board moved here from Asana in MB.89 ([`claude-docs/design-decisions/mb.89-plan.md`](claude-docs/design-decisions/mb.89-plan.md)); the Asana workspace stays alive and archived so the `Asana task:` permalinks in older PR bodies still resolve, and nothing is written there again. The repo is public, so every issue and comment is public too — the argument for accepting that is in the plan, and the rule it costs is under **Comments** below.
+The issues of `Aurora-Arctic/Sorrel-and-Salt`, with the org Project **Sorrel & Salt** over them, are the source of truth for what to work on. `TASKS.md` is the reasoning behind the breakdown, and the two are expected to agree — when a task is minted as an issue, add its entry to `claude-docs/tasks/<milestone>.md` in the same pass, or the docs silently fall behind. The board moved here from Asana in MB.89 ([`claude-docs/design-decisions/mb.89-plan.md`](claude-docs/design-decisions/mb.89-plan.md)); the Asana workspace stays alive and archived so the `Asana task:` permalinks in older PR bodies still resolve, and nothing is written there again. The repo is public, so every issue and comment is public too — the argument for accepting that is in the plan, and the rule it costs is under **Comments** below.
 
 **Everything goes through `gh`.** Issues, milestones, sub-issues, issue types, dependencies and Projects are on GitHub's free plan, and `gh` 2.97 in the devcontainer carries `--parent`, `--type`, `--add-blocked-by` and the `project` commands, so there is no premium wall to design around and no MCP server to authorise. `scripts/task-board.mjs` wraps the calls the skills make — `find`, `status`, `estimate`, `comment`, `list`, `reorder` — so the lookup rule and the Project's field ids live in one file rather than four skills. A skill runs it; it does not compose `gh issue` by hand. Detail: [`claude-docs/task-tracking.md`](claude-docs/task-tracking.md).
 
@@ -180,7 +180,7 @@ The issues of `Aurora-Arctic/Sorrel-and-Salt`, with the org Project **Sorrel & S
 
 ### Board layout
 
-- **One issue per task, titled `<Task ID> — <title>`**, exactly as `TASKS.md` heads it. The id is the first thing in the title and nothing precedes it — no marker, no emoji; status is a field now, not a prefix, so a status change never rewrites a title.
+- **One issue per task, titled `<Task ID> — <title>`**, exactly as its entry in `claude-docs/tasks/` heads it. The id is the first thing in the title and nothing precedes it — no marker, no emoji; status is a field now, not a prefix, so a status change never rewrites a title.
 - **One milestone per wave** (`Wave 07 — GraphQL`) and one per pre-wave feature grouping (`M0 · Repo bootstrap`), plus one closed `Retired — not done` milestone holding the tasks MB.31 retired, so that no issue is without a milestone. The wave number is two digits because GitHub sorts milestones alphabetically and offers no other order — `Wave 10` would otherwise sit between `Wave 1` and `Wave 2`. The milestone description carries what the Asana wave card's notes carried: the task ids it contains in execution order, then the deferral reasoning. A task added to a wave is added to its milestone's description in the same pass — that opening list is what makes the wave readable without opening every issue.
 - **Issue type `Bug` for `MB.*`, `Task` for everything else**, and the `hotfix` label on a task that is one. The label, not the id, decides the branch skill: `MB.*` covers ordinary bugfixes and hotfixes alike, and `start-task` still asks when nothing marks it either way.
 - **Every tracked issue carries the `tracked` label**, which is the Project's auto-add filter. A public repo lets anyone open an issue, so an issue without the label is a visitor's until someone triages it onto the board.
@@ -221,7 +221,7 @@ node scripts/task-board.mjs estimate MB.90 3
 node scripts/task-board.mjs reorder --apply
 ```
 
-The notes are the `TASKS.md` entry's text; the entry, the wave's row in the execution-order table, the summary table and the milestone's description are edited in the same pass. The auto-add appends the new item at the bottom of the Project, and `reorder --apply` moves it to the row's place — so the row is edited before it runs.
+The notes are the entry's text in `claude-docs/tasks/<milestone>.md`; the entry, the wave's row in `TASKS.md`'s execution-order table, its `claude-docs/waves/wave-NN.md` where the reasoning changes, `tasks/mb.md`'s summary table and the milestone's description are edited in the same pass. The auto-add appends the new item at the bottom of the Project, and `reorder --apply` moves it to the row's place — so the row is edited before it runs.
 
 Rules that follow from all this:
 
@@ -256,7 +256,7 @@ Skills live in `.claude/skills/<name>/SKILL.md` and are invoked as `/<name>`. Th
 | `create-release`   | "cut a release", "create a release branch", `/create-release` — bumps semver, branches `release/<version>` off `staging`, tags `v<version>`, opens a PR into `main`.                                                                                                                                                                          |
 | `create-main-sync` | "sync main into staging", "bring the hotfix back to staging", `/create-main-sync` — branches `main-sync/<timestamp>` off `main`, opens a PR into `staging`.                                                                                                                                                                                   |
 | `prune-branches`   | "clean up my branches", "prune stale branches", "delete branches gone on remote" — deletes merged/gone local branches, asks about never-pushed ones. Never touches `main`/`staging`.                                                                                                                                                          |
-| `project-progress` | "project progress", "task progress", "how many hours are left", `/project-progress` — tasks and hours completed, remaining and total, from TASKS.md and git merge history; no `gh` calls unless asked to verify against the board.                                                                                                            |
+| `project-progress` | "project progress", "task progress", "how many hours are left", `/project-progress` — tasks and hours completed, remaining and total, from the `· Nh` headings in `claude-docs/tasks/` and git merge history; no `gh` calls unless asked to verify against the board.                                                                         |
 
 <!-- BEGIN:nextjs-agent-rules -->
 

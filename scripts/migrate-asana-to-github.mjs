@@ -35,7 +35,7 @@ import {
   setEstimate,
   setStatus,
 } from './task-board.mjs';
-import { ID, TASKS_MD, readTasksMd } from './tasks-md.mjs';
+import { ID, loadTasksMdText, readTasksMd } from './tasks-md.mjs';
 
 const ASANA_API = 'https://app.asana.com/api/1.0';
 const ASANA_PROJECT = '1218814916390986';
@@ -594,7 +594,7 @@ function verify(plan, projectNumber) {
 const USAGE = `usage: node scripts/migrate-asana-to-github.mjs <command> [--file <export.json>]
 
   export                     pull the Asana board (needs ASANA_PAT) into the export file
-  plan                       what apply would create, from the export and ${TASKS_MD}
+  plan                       what apply would create, from the export and the breakdown (TASKS_FILES in scripts/tasks-md.mjs)
   scan                       every body and comment through the secret patterns; exit 1 on a hit
   apply  --project <number>  create labels, milestones, issues, comments, items, parents [--skip-scan]
   verify --project <number>  export counts against GitHub; exit 1 on a mismatch
@@ -608,7 +608,7 @@ function option(argv, name) {
 
 function loadPlan(file) {
   const board = JSON.parse(readFileSync(file, 'utf8'));
-  return buildPlan(board, readFileSync(TASKS_MD, 'utf8'));
+  return buildPlan(board, loadTasksMdText());
 }
 
 export async function main(argv = process.argv.slice(2)) {
