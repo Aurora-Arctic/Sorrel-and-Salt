@@ -20,7 +20,12 @@ surface"):
 | `src/modules/vocabulary/validation/category.ts`    | `CategoryInput`                                     |
 
 Each export is both a schema and, under the same name, the type of its parsed
-output. The form types its fields with `z.input<typeof …>`.
+output. A form sends `z.input<typeof …>`: its values as typed, unparsed, so
+the service parses exactly what the resolver checked. The form's own values
+can differ from that shape. `IngredientForm` keeps each list row as an object
+for `useFieldArray`, and reshapes its values before the resolver sees them
+([`components/ingredient-form.md`](components/ingredient-form.md), "What it
+sends").
 
 The schemas can't go behind the index. A client component imports them, and
 once a module's index re-exports a service, it carries `server-only`. They
