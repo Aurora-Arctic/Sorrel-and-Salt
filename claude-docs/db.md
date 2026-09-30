@@ -332,10 +332,8 @@ rule, one step earlier: cheapest to get right before anything depends on it.
 What follows describes all three as built.
 
 - **`ingredients`** — `id`, `workspaceId` (nullable: `NULL` is the compendium
-  tier, non-null is a workspace's own ingredient), `name`, `slug`,
-  `pendingSlug`, `pendingSlugEffectiveAt` (MB.81; "Ingredient slugs" below),
-  `canonicalName`,
-  `nomenclature`, `form`, the generated `canonicalKey`, the correspondence
+  tier, non-null is a workspace's own ingredient), `name`, `slug` (MB.81;
+  "Ingredient slugs" below), `canonicalName`, `nomenclature`, `form`, the generated `canonicalKey`, the correspondence
   columns (`description`, `element`, `planet`, `zodiac`, `deities[]`, `color`,
   `safetyNotes`, `substitutes[]`), + audit. `name` is the display label —
   what it's called here — and stays freely relabellable, because identity
@@ -345,10 +343,12 @@ What follows describes all three as built.
   the exact opposite of `form`, and the reason the two are easy to confuse
   but never interchangeable. `deities` and `substitutes` are native
   `text[]` columns, one of the things SQLite could not have run (DESIGN.md
-  §14). Eight indexes: M4.1a's three partial unique ones (below), MB.81's four
-  on the slug and the pending claim ("Ingredient slugs" below), and
-  `ingredients_trgm` (M4.6), one multicolumn `gin_trgm_ops` index over `name`
-  and `canonical_name` — see "Fuzzy matching" below.
+  §14). Seven declared indexes: M4.1a's three partial unique ones (below),
+  MB.81's two on the slug ("Ingredient slugs" below), `ingredients_trgm`
+  (M4.6), one multicolumn `gin_trgm_ops` index over `name` and
+  `canonical_name` — see "Fuzzy matching" below — and its folded twin
+  `ingredients_unaccent_trgm` ("The compendium read"). The database holds two
+  more until MB.107, MB.81's undeclared pending-claim indexes.
 - **`ingredient_folk_names`** — `id`, `ingredientId` (FK to `ingredients`),
   `name`, + audit. Common names, one row each, scoped to the ingredient that
   claims them. Two indexes: `ingredient_folk_names_unique` over
@@ -591,11 +591,12 @@ local-beats-compendium resolution query that reads these indexes: DESIGN.md
 ### Ingredient slugs (MB.80; table MB.81, rule MB.82)
 
 Every ingredient carries a URL slug, and a compendium entry's is its public
-address, `/compendium/ingredients/[slug]`. MB.81 lands the columns, the
-indexes and the retirements table; nothing reads any of them until MB.82
-writes the rule on top. The argument for each choice is
-[`mb.80-public-compendium.md`](design-decisions/mb.80-public-compendium.md);
-what follows is what exists.
+address, `/compendium/ingredients/[slug]`. MB.81 landed the columns, the
+indexes and the retirements table, and MB.82 the rule on top. The argument is
+[`mb.80-public-compendium.md`](design-decisions/mb.80-public-compendium.md),
+superseded in part by
+[`mb.82-slug-takeover.md`](design-decisions/mb.82-slug-takeover.md); what
+follows is what exists.
 
 - **`slug` is the label, the form and the formal name, always.**
   `ingredientSlug(name, form, canonicalName)` in `src/lib/slugify.ts` is
@@ -608,22 +609,22 @@ what follows is what exists.
   `NOT NULL` with **no default** — a default would be a second slug rule,
   written in SQL — so whoever writes a row derives it, the seed and the test
   fixtures included (`ingredientColumns` derives it the same way).
-- **`pending_slug` and `pending_slug_effective_at`**, both nullable, hold the
-  claim a relabel makes when its new slug is still reserved by a retirement:
-  the slug it will take and the instant it takes it. Both `timestamp`, like
-  every timestamp here, holding UTC.
-- **Four partial unique indexes.** The address is unique per tier among live
+- **Two partial unique indexes.** The address is unique per tier among live
   rows — `ingredients_compendium_slug_unique` on `(slug)` where
   `workspace_id IS NULL AND deleted_at IS NULL`, and
   `ingredients_workspace_slug_unique` on `(workspace_id, slug)` where
-  `deleted_at IS NULL` — and a pending claim is unique per tier the same way,
-  with `AND pending_slug IS NOT NULL` added to each
-  (`ingredients_compendium_pending_slug_unique`,
-  `ingredients_workspace_pending_slug_unique`). The two workspace indexes carry
-  no tier predicate, as DESIGN.md §5 writes them: a null `workspace_id`
-  collides with nothing in a btree, so compendium rows pass through them
-  unconstrained. Soft-deleting an entry releases its slug and its claim, as
-  every partial index here releases what it reserved.
+  `deleted_at IS NULL`. The workspace index carries no tier predicate, as
+  DESIGN.md §5 writes it: a null `workspace_id` collides with nothing in a
+  btree, so compendium rows pass through it unconstrained. Soft-deleting an
+  entry releases its slug, as every partial index here releases what it
+  reserved.
+- **MB.81's pending claims are gone from the schema, not yet from the
+  database.** `pending_slug`, `pending_slug_effective_at` and their two
+  partial unique indexes held the claim a relabel made when its slug was
+  reserved; MB.82 dropped the reservation, and the Drizzle schema declares
+  none of the four. They stay in the database, every row null, until MB.107's
+  migration drops them — a column drop is two PRs ("Expand/contract"), so
+  `db:generate` emits that drop on any branch until then, and it is MB.107's.
 - **Two entries may share a label and a form; the formal name tells them
   apart, in the slug as in the identity key.** The `standard` seed's two
   _Cat's Claw_ barks, _Uncaria tomentosa_ and _U. guianensis_, are
@@ -636,20 +637,70 @@ what follows is what exists.
   Because the formal name is in the address, changing it recomputes the slug
   exactly as a relabel does (MB.82).
 - **`retired_ingredient_slugs`** — `id`, `ingredientId` (FK), `workspaceId`
-  (nullable FK, the ingredient's own scope mirrored so a reservation is per
+  (nullable FK, the ingredient's own scope mirrored, so a retirement is per
   tier as the slug is), `slug`, `retiredAt` (`DEFAULT now()`), the generated
   `expiresAt`, + audit, with its `set_updated_at` trigger. One plain btree
-  index on `slug`, **not unique**: a slug may be retired more than once over the
-  years, and the reservation is a predicate on `expires_at`, not a row's
-  uniqueness.
+  index on `slug`, **not unique**: a slug may be retired more than once over
+  the years, by one entry or several, and the redirect is a predicate on
+  `expires_at`, not a row's uniqueness. Only the compendium writes one.
 - **`expires_at` is `date_trunc('day', retired_at) + interval '180 days'`**,
   generated and stored: midnight of the retirement's UTC calendar date, plus
   180 calendar days, so the window closes at the same instant for every slug
   retired that day whatever the hour of the rename, and nothing has to run at
-  that instant — the redirect and the reservation end by a date comparison.
+  that instant — the redirect ends by a date comparison.
   It is legal as a stored generated column only because the column is
   `timestamp`: `date_trunc(text, timestamp)` and `timestamp + interval` are
   IMMUTABLE, where both are STABLE on `timestamptz`.
+
+**The rule (MB.82).** The slug follows the label, the form and the formal
+name: both services recompute it on every update, not only on create.
+
+- **A compendium entry's old slug is retired as the admin's.**
+  `updateCompendiumEntry` reads the row first, for the slug it holds, and
+  when the new one differs it writes a retirement in the same transaction,
+  `retired_at` the write's own instant. Two admins saving one entry at the
+  same instant can retire the older slug rather than the one the other just
+  wrote; with only admins writing the compendium, that is accepted rather
+  than locked.
+- **A retired slug redirects while its window is open and nobody holds it.**
+  `findCompendiumSlugRedirect(slug, at, excluding?)` answers the live entry
+  that moved off `slug` most recently, at its current slug, while
+  `expires_at` is after `at` and no live compendium entry holds `slug` —
+  an entry at the address is what the address answers. The entry is joined
+  through `existsIn`, so a soft-deleted one answers nothing. `excluding`
+  leaves one entry out on both sides, as the one that moved and as the one
+  holding the slug.
+- **`resolveCompendiumSlug(slug)` is the public route's one read,** taking no
+  session: the live entry at `slug` (`findCompendiumEntryBySlug`), with
+  `movedAway` naming an entry whose redirect from it would still be running
+  but for this one, else `{ kind: 'moved', slug }` for a 308 to the current
+  slug, else `NotFound` — a coven's slug included, since a coven entry's
+  existence is private.
+- **Taking a slug another entry redirects from asks first.** A create or a
+  rename whose slug such a redirect runs from is refused as a
+  `ValidationError` on `endRedirect`, naming the entry and the instant its
+  window closes, unless the input carries `endRedirect: true`. The check is
+  read before the write, as the collision naming is after it; two admins
+  saving at once can both pass it. Confirmed, the write takes the slug, and
+  the retirement stays, so the page at the address can link to the entry
+  that moved. An entry taking back its own old slug is left out of the check
+  and needs no confirmation.
+- **A slug collision names the entry holding the address**, looked up by
+  `findCompendiumEntryBySlug` after the write rolled back: the pair
+  `slugify` folds together is not always visible in either input.
+- **Lapsed retirements are hard-deleted on the next compendium write**, by
+  `write.deleteLapsedSlugRetirements(admin, at)` inside it — the writer's one
+  hard delete of a table carrying `deleted_at`, named for it as the
+  provisional-account delete is, since `delete` is typed to refuse such a
+  table. A redirect that has ended answers nothing, so there is nothing to
+  tombstone.
+- **Every instant is the caller's clock,** `new Date()` in the service, passed
+  down rather than read from `now()`, so a test pins the window exactly and a
+  retirement's `retired_at` is the same instant the check compared against.
+- **A coven ingredient's slug retires nothing.** No route reads it — the
+  in-app page is `/ingredients/[id]` — so `updateWorkspaceIngredient` moves
+  it and writes no retirement, and a collision is refused on `name` as on
+  create.
 
 **The migration adds `slug` nullable and then sets it `NOT NULL` with no
 backfill between** (`0025_ingredient-slugs.sql`, and its sidecar for the one
@@ -2188,11 +2239,11 @@ clears the case-folded unique index before the insert meets it. The service
 test asserts the one transaction by comparing `xmin`: every row a
 transaction writes carries its id.
 
-**The slug is set on create and left alone on update.** `slug` is `NOT NULL`,
-so a create writes `ingredientSlug` of the label, the form and the formal name.
-Moving it after a relabel, and retiring the old one, is MB.82's rule (see
-"Ingredient slugs"), which extends this service. Until that lands, a relabelled
-local ingredient keeps its first slug.
+**The slug follows the label, the form and the formal name.** `slug` is
+`NOT NULL`, so a create writes `ingredientSlug` of the three, and an update
+writes it again from the new values. Nothing redirects from the old one: no
+route reads a coven ingredient's slug, so MB.82's retirements are the
+compendium's alone ("Ingredient slugs").
 
 **A collision is a `ValidationError` on the field that caused it**, never the
 raw index error. The service catches the write's failure and reads the index
@@ -2201,8 +2252,7 @@ walks the error's `cause` chain for SQLSTATE 23505 without importing the
 database layer, since a service may not (MB.33). The label index lands on `name`, and so does the
 identity index for an entry with no formal name, whose label is its identity.
 With a formal name, the identity index lands on `canonicalName`. The slug index lands on `name`, naming
-the address, and can fire only on create until MB.82 makes an update move the
-slug. Catching the failure rather than checking first is deliberate: a
+the address, on a create or on an update that moves the slug. Catching the failure rather than checking first is deliberate: a
 check-then-write leaves a window for a concurrent save, and the index is the
 one arbiter either way. The message names what the input asked for, not the
 row already holding it. The compendium's writes do name the holder, through a
@@ -2336,8 +2386,9 @@ a coven's owner is refused as its viewer is.
 the tier. The input is the whole entry, so an update replaces the row. Folk
 names are written in the same transaction, the update's diff reading the live
 ones through `findManyOfIngredients` with no proofs, which is the compendium
-alone. The slug is set on create and left alone on update until MB.82 moves
-it. The row mapping and the folk-name diff live in one internal file,
+alone. The slug follows the label, the form and the formal name, and the one
+an update leaves is retired and redirects for 180 days ("Ingredient slugs").
+The row mapping and the folk-name diff live in one internal file,
 `services/ingredient-rows.ts`, which both services import. Categories are not
 written here, since `CompendiumIngredientInput` carries none.
 
@@ -2370,8 +2421,9 @@ catches the write's failure and reads the index off it with
   formal-name field would point at a box the admin never filled in. The
   message names the holder by its label, formal name and form:
   `Already in the compendium as "Mugwort" (Artemisia vulgaris, herb)`.
-- `ingredients_compendium_slug_unique` lands on `name`, naming the address,
-  as the coven's does. Naming the entry that holds the address is MB.82's.
+- `ingredients_compendium_slug_unique` lands on `name`, as the coven's does,
+  naming the address and the entry holding it: `"Testwort" (root) already has
+the address "testwort-root" — change the name, form or formal name`.
 
 The holder is read after the write has rolled back, by
 `findCompendiumEntryByIdentity({ name, canonicalName, form })`: the live

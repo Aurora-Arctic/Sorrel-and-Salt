@@ -22,6 +22,8 @@ Ingredients had no slug and are keyed by UUID; two compendium entries may share 
 
 MB.81 lands the columns and the table; MB.82 the behaviour. Table first, behaviour second, per CLAUDE.md's rule.
 
+**Superseded in part by MB.82 (2026-09-30):** a retired slug is no longer reserved, and there are no pending claims. Another entry may take a retired slug once the admin confirms ending its redirect, and the page then at the address links to the entry that moved until the old window closes; a coven ingredient's slug retires nothing. With the formal name in the slug, only an entry spelling the old address exactly can want it, which is most often the correct entry being added — a create the claims could not serve. The argument, and what the change costs, is [`mb.82-slug-takeover.md`](mb.82-slug-takeover.md).
+
 **Superseded in part by MB.81 (2026-09-28):** the slug was `slugify(name + ' ' + form)`, a same-label-and-form pair refused and the admin told to distinguish the label. The `standard` seed's two _Uncaria_ barks are exactly that pair, and relabelling one to make room for its address was the address dictating the data. The formal name is what tells such entries apart everywhere else — the identity key, search, MB.84's page title — so it is in the slug too, and MB.82 recomputes the slug when any of its three inputs changes. The slug index is then reachable only where `slugify` folds two different identities together, which is the case its tests exercise.
 
 ## What it rules out

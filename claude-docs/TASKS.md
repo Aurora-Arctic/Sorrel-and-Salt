@@ -1675,7 +1675,7 @@ _Acceptance criteria:_
 - Soft-deleted entries vanish from the public compendium
 - Fuzzy duplicate warning applies here too
 - A colliding write surfaces a readable duplicate error naming the existing entry
-- A relabel whose slug is reserved saves the name and shows the date the new address takes effect (MB.82)
+- A write that would end another entry's redirect asks the admin to confirm, naming that entry and when its window closes, and sends the write again with `endRedirect` (MB.82)
 - Admin can filter to entries still `nomenclature = 'unknown'` — the curation to-do list
 
 **M5.6 — Admin categories CRUD** · 2h
@@ -2609,7 +2609,7 @@ _Acceptance criteria:_
 - Local entries are badged
 - A `none`/`unknown` entry shows a deliberate empty state for its formal name, not a blank field
 - Empty states read as intentional, not broken
-- A retired slug at the public route answers 308 to the current one inside its window (MB.82)
+- The public route reads `resolveCompendiumSlug`: a retired slug answers 308 to the current one inside its window, and the page at an address another entry moved off links to that entry's current address while the window runs (MB.82)
 
 ## M9 — Workspace ingredients
 
@@ -3454,7 +3454,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.79  | Record subscription billing as a v2 feature and the Stripe plugin's fit                        | Wave 7  | —                  |
 | MB.80  | Re-scope the compendium as public and search-indexable                                         | Wave 7  | —                  |
 | MB.81  | `ingredients.slug`, the pending-slug columns and the `retired_ingredient_slugs` table          | Wave 8  | MB.82              |
-| MB.82  | Ingredient slugs: set on create, follow a rename, retire with a 308, reserve and claim         | Wave 8  | M5.5, M8.19, MB.84 |
+| MB.82  | Ingredient slugs: set on create, follow a rename, retire with a 308, hand over once confirmed  | Wave 8  | M5.5, M8.19, MB.84 |
 | MB.83  | Public compendium chrome, proxy entries and the signed-in island                               | Wave 12 | M8.18, M8.19       |
 | MB.84  | robots, sitemap, page metadata and noindex off production                                      | Wave 12 | —                  |
 | MB.85  | Story 63: a visitor reads the compendium without signing in                                    | Wave 12 | —                  |
@@ -5143,22 +5143,24 @@ _Acceptance criteria:_
 - The `NOT NULL` step carries its ack sidecar; nothing else in the migration is destructive
 - Nothing reads the new columns yet
 
-**MB.82 — Ingredient slugs: set on create, follow a rename, retire with a 308, reserve and claim** · 4h
+**MB.82 — Ingredient slugs: set on create, follow a rename, retire with a 308, hand over once confirmed** · 4h
 
 _Story:_ As an admin, I want an entry's public address to follow its name and its old address to keep working long enough for search engines to move over, so that a relabel never loses a reader or an index entry.
 
-Lands after M5.2, whose service it extends — and M8.2's, which sets a workspace ingredient's slug on create and leaves it untouched on update — and before M5.3 and M5.5, so the admin form and the public route consume a finished rule. The slug is `slugify` of name, form and formal name, set by the service on create and recomputed whenever the label, the form or the formal name changes; the retired slug is recorded in `retired_ingredient_slugs` and reserved until its `expires_at`. Redirect and reservation end by predicate at that instant; nothing runs on a schedule. A rename whose slug is currently reserved changes the name at once and stores the slug as `pending_slug` with `pending_slug_effective_at` equal to the reservation's expiry, and the mutation's response names that date. One pending claim per slug, refused with who holds it and when it lands; a pending slug must not equal a current one; an ingredient may reclaim its own retired slug at once. The current slug is one repository expression — the pending one when due, else `slug` — read through one finder so no call site forgets the pending half. Housekeeping rides on the next slug write in that scope: lapsed retirements are hard-deleted and a due pending slug materialised, stamped as the admin making that write. A finder resolves a retired slug to its ingredient while unexpired, joining through the ingredient so a soft-deleted one answers nothing. Argued in [`design-decisions/mb.80-public-compendium.md`](design-decisions/mb.80-public-compendium.md).
+Lands after M5.2, whose service it extends — and M8.2's, which sets a workspace ingredient's slug on create — and before M5.3 and M5.5, so the admin form and the public route consume a finished rule. The slug is `slugify` of name, form and formal name, set on create and recomputed whenever any of the three changes. A compendium entry's old slug is recorded in `retired_ingredient_slugs`, as the relabelling admin's, and redirects to the entry's current slug until its `expires_at` while no entry holds it; nothing runs on a schedule. Another entry may take a retired slug, which ends the redirect, once the admin confirms it: the write is refused on `endRedirect`, naming the entry and when its window closes, until the input carries `endRedirect: true`. The retirement stays, so the public route's one read, `resolveCompendiumSlug`, can name the entry that moved off an address while its window runs, for the page to link to. Lapsed retirements are hard-deleted on the next compendium write. A coven ingredient's slug follows its name and retires nothing.
+
+**Decided while building:** MB.80's reservation and pending claims are dropped ([`design-decisions/mb.82-slug-takeover.md`](design-decisions/mb.82-slug-takeover.md)). With the formal name in the slug since MB.81, only an entry spelling the old address exactly can want it, and that is most often the correct entry being added — a create the pending claims could not serve, since a create has no current slug to keep while it waits. Building the reservation as written would have doubled the task, for a guarantee the confirmation and the link on the new page mostly recover. The coven tier retires nothing because nothing routes by a coven ingredient's slug. The pending-slug columns and their indexes leave the Drizzle schema here and are dropped by MB.107 once this has deployed, since a column drop is two PRs (CLAUDE.md rule 10). A "new at this address" notice was widened into MB.106's New and Updated markers.
 
 _Acceptance criteria:_
 
-- Create sets the slug; a change to the label, the form or the formal name moves it and records the retirement; an identity collision is refused by the identity index first, and a slug collision the identity index does not catch (two formal names the slug rule folds together) is refused with an explaining error naming the colliding entry
-- A retired slug resolves to its ingredient until `expires_at` and not after, tested at either side of midnight UTC
-- A second ingredient cannot take a reserved slug; the claim is recorded as pending with the effective date in the response; a third claim on the same slug is refused naming the holder and date
-- At the effective date the claimant's slug is the pending one and its previous slug is retired in turn
-- Reclaiming your own retired slug inside the window is accepted at once
-- Lapsed retirements are gone after the next slug write in that scope
+- Create sets the slug; a change to the label, the form or the formal name moves it, and a compendium entry's move records the retirement; an identity collision is refused by the identity index first, and a slug collision the identity index does not catch (two formal names the slug rule folds together) is refused with an explaining error naming the colliding entry
+- A retired slug resolves to its ingredient until `expires_at` and not after, tested at either side of midnight UTC, and only while no entry holds it
+- A write that would take a slug another entry's redirect runs from is refused on `endRedirect`, naming that entry and when its window closes, until the admin confirms; confirmed, it takes the slug, and the address's read names the entry that moved until the window closes
+- Taking back your own retired slug inside the window is accepted at once, without a confirmation
+- Lapsed retirements are gone after the next compendium write
 - Every write goes through `withAudit`; the retirement's `created_by` is the relabelling admin
-- Workspace ingredients get the same rule under the `(workspace_id, slug)` scope, through the `Membership` proof
+- A coven ingredient's slug follows its name under the `(workspace_id, slug)` scope, through the `Membership` proof, and retires nothing
+- The pending-slug columns and their two indexes are declared nowhere in the schema; MB.107 drops them from the database
 
 **MB.83 — Public compendium chrome, proxy entries and the signed-in island** · 2h
 
