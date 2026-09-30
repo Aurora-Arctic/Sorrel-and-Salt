@@ -541,10 +541,10 @@ type IngredientFormGroup {
   `Forbidden` — and without it the read is the compendium alone. A malformed
   id is a miss, not a driver error.
 - **`Ingredient` is declared over the row** (`typeof ingredients.$inferSelect`)
-  and never exposes `canonicalKey`, `workspaceId` or the pending-slug
-  columns. `folkNames` and `categories` go through the two ingredient loaders,
-  keyed by the row itself; `Category.group` and `IngredientFormValue.group`
-  through the two id-keyed group loaders ("Loaders" below).
+  and never exposes `canonicalKey` or `workspaceId`. `folkNames` and
+  `categories` go through the two ingredient loaders, keyed by the row itself;
+  `Category.group` and `IngredientFormValue.group` through the two id-keyed
+  group loaders ("Loaders" below).
 - **`IngredientFormValue`, not `IngredientForm`**: one row is one permitted
   value of `ingredients.form`, and `IngredientForm` is the entry-form component
   (DESIGN.md §7). Only forms whose group is live are listed, as

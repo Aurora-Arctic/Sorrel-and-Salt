@@ -23,11 +23,6 @@ const DECLARED = [
   COMPENDIUM_SLUG,
   WORKSPACE_SLUG,
 ];
-// MB.81's pending claims, which MB.82 dropped from the schema: the database
-// keeps the two indexes, undeclared, until the migration that drops them.
-const COMPENDIUM_PENDING_SLUG = 'ingredients_compendium_pending_slug_unique';
-const WORKSPACE_PENDING_SLUG = 'ingredients_workspace_pending_slug_unique';
-const UNIQUE = [...DECLARED, COMPENDIUM_PENDING_SLUG, WORKSPACE_PENDING_SLUG];
 // §9's, neither unique nor partial; ingredients-trigram.test.ts owns it, and
 // ingredients-unaccent.test.ts its folded twin.
 const TRIGRAM = 'ingredients_trgm';
@@ -137,30 +132,11 @@ describe('ingredients unique indexes', () => {
       expect(index?.definition).toContain('USING btree (workspace_id, slug)');
     });
 
-    // One claim per slug per tier, among rows that hold a claim at all.
-    it('makes the compendium unique on a pending claim, among live claimants only', async () => {
-      const index = await catalogue.indexRow('ingredients', COMPENDIUM_PENDING_SLUG);
-
-      expect(index?.unique).toBe(true);
-      expect(index?.predicate).toBe(
-        '((workspace_id IS NULL) AND (deleted_at IS NULL) AND (pending_slug IS NOT NULL))',
-      );
-      expect(index?.definition).toContain('USING btree (pending_slug)');
-    });
-
-    it('makes each workspace unique on a pending claim, among live claimants only', async () => {
-      const index = await catalogue.indexRow('ingredients', WORKSPACE_PENDING_SLUG);
-
-      expect(index?.unique).toBe(true);
-      expect(index?.predicate).toBe('((deleted_at IS NULL) AND (pending_slug IS NOT NULL))');
-      expect(index?.definition).toContain('USING btree (workspace_id, pending_slug)');
-    });
-
-    // An eighth unique index — most likely a label index over the compendium —
+    // A sixth unique index — most likely a label index over the compendium —
     // is exactly the constraint §5 dropped.
-    it('carries no unique index beyond those seven and the primary key', async () => {
+    it('carries no unique index beyond those five and the primary key', async () => {
       expect(await catalogue.uniqueIndexNames('ingredients')).toEqual(
-        [...UNIQUE, 'ingredients_pkey'].sort(),
+        [...DECLARED, 'ingredients_pkey'].sort(),
       );
     });
   });
@@ -403,60 +379,6 @@ describe('ingredients unique indexes', () => {
       await insert({ canonicalName: 'Fixtura-testalis' });
 
       expect(await liveCount()).toBe(1);
-    });
-
-    describe('one pending claim per slug', () => {
-      async function claim(id: string): Promise<void> {
-        await sql`update ingredients set pending_slug = 'claimed' where id = ${id}`;
-      }
-
-      it('refuses a second compendium claim on one slug', async () => {
-        const { id: first } = await insert({ name: 'Alpha', canonicalName: 'Fixtura alpha' });
-        const { id: second } = await insert({ name: 'Beta', canonicalName: 'Fixtura beta' });
-        await claim(first);
-
-        const error = await failureOf(claim(second));
-
-        expect(error.code).toBe('23505');
-        expect(error.constraint_name).toBe(COMPENDIUM_PENDING_SLUG);
-      });
-
-      it('refuses a second claim on one slug inside a workspace, and allows one from another', async () => {
-        const { id: first } = await insert({
-          workspaceId: WORKSPACE_A,
-          name: 'Alpha',
-          canonicalName: 'Fixtura alpha',
-        });
-        const { id: second } = await insert({
-          workspaceId: WORKSPACE_A,
-          name: 'Beta',
-          canonicalName: 'Fixtura beta',
-        });
-        const { id: theirs } = await insert({
-          workspaceId: WORKSPACE_B,
-          name: 'Alpha',
-          canonicalName: 'Fixtura alpha',
-        });
-        await claim(first);
-        await claim(theirs);
-
-        const error = await failureOf(claim(second));
-
-        expect(error.code).toBe('23505');
-        expect(error.constraint_name).toBe(WORKSPACE_PENDING_SLUG);
-      });
-
-      // A claim goes with its holder: the reservation ends when the claimant does.
-      it('frees a claim when the claimant is soft-deleted', async () => {
-        const { id: first } = await insert({ name: 'Alpha', canonicalName: 'Fixtura alpha' });
-        const { id: second } = await insert({ name: 'Beta', canonicalName: 'Fixtura beta' });
-        await claim(first);
-        await softDelete(first);
-
-        await claim(second);
-
-        expect(await liveCount()).toBe(1);
-      });
     });
   });
 

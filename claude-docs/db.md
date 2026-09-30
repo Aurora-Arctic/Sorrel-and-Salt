@@ -618,13 +618,12 @@ follows is what exists.
   btree, so compendium rows pass through it unconstrained. Soft-deleting an
   entry releases its slug, as every partial index here releases what it
   reserved.
-- **MB.81's pending claims are gone from the schema, not yet from the
-  database.** `pending_slug`, `pending_slug_effective_at` and their two
-  partial unique indexes held the claim a relabel made when its slug was
-  reserved; MB.82 dropped the reservation, and the Drizzle schema declares
-  none of the four. They stay in the database, every row null, until MB.107's
-  migration drops them — a column drop is two PRs ("Expand/contract"), so
-  `db:generate` emits that drop on any branch until then, and it is MB.107's.
+- **MB.81's pending claims are gone.** `pending_slug`,
+  `pending_slug_effective_at` and their two partial unique indexes held the
+  claim a relabel made when its slug was reserved. MB.82 dropped the
+  reservation and the schema's declarations, and MB.107's
+  `0028_drop-pending-slugs.sql` dropped the four from the database once that
+  had deployed: a column drop is two PRs ("Expand/contract").
 - **Two entries may share a label and a form; the formal name tells them
   apart, in the slug as in the identity key.** The `standard` seed's two
   _Cat's Claw_ barks, _Uncaria tomentosa_ and _U. guianensis_, are
@@ -1383,7 +1382,7 @@ for the length of the rollout, and a rollback past the migration for good.
 Between the two, `db:generate` on any branch emits the drop; it belongs to
 the second task, and the destructive-DDL check refuses it unacknowledged.
 MB.82 and MB.107 are the worked case: MB.82 stopped declaring `pending_slug`
-and its date, and MB.107 drops them.
+and its date, and MB.107 dropped them.
 
 Renaming a column is the canonical case that goes wrong if done directly —
 `ALTER TABLE ... RENAME COLUMN` is atomic in Postgres, but it isn't atomic
@@ -1532,13 +1531,14 @@ and goes red on a real omission. It was permanently red before, first because
 the bare command _was_ that full scan (fixed in MB.37) and then because the
 acknowledgements it needed only ever existed in PR bodies.
 
-Three migrations carry findings today, and each has its sidecar:
+Four migrations carry findings today, and each has its sidecar:
 
 | Migration                           | Findings                                                                                                            |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `0002_solid_marauders.sql`          | `DROP CONSTRAINT users_email_unique`, and `created_by` / `updated_by` added `NOT NULL`                              |
 | `0017_custom-spell-ingredients.sql` | the `(spell_id, ingredient_id)` primary key and the `(spell_id, layer_order)` unique index dropped                  |
 | `0025_ingredient-slugs.sql`         | `ingredients.slug` set `NOT NULL` with no backfill between, the seed standing in for one ("Ingredient slugs" above) |
+| `0028_drop-pending-slugs.sql`       | the two pending-slug indexes and columns dropped, the contract half of MB.82's change ("Expand/contract")           |
 
 **`0002`'s sidecar was written retroactively, and says so.** This document
 previously claimed its `DROP CONSTRAINT` and two `NOT NULL` columns "were
