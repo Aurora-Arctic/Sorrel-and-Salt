@@ -629,9 +629,11 @@ component is [`components/email-form.md`](components/email-form.md).
   change links' landings with the same `verifiedLanding`. `next` passes
   `safeReturnPath` when the link is built as well as when the page reads
   it, so a mailed link never names another site — one that would is dropped,
-  and the link lands as it would with none. `/coven`, where Continue goes
-  without a `next`, is left off too, so a link with nowhere else to go lands
-  on `/account/email?verified` as it always did.
+  and the link lands as it would with none. A sign-up that asked for no
+  return path gives none either: the hook reads `NO_RETURN_PATH` off the
+  OAuth state rather than the `callbackURL` standing in for it, so its link
+  lands on `/account/email?verified`, and an explicit `/coven` is carried
+  like any other `next` (MB.113).
 - **A refusal keeps the rest of the landing.** `refuseVerification` drops the
   flag before appending `?error=`, so the page never reads a refusal as a
   confirmation, and keeps `next`, so a link sent again from there still
@@ -681,15 +683,20 @@ component is [`components/email-form.md`](components/email-form.md).
   in `src/lib/sign-in.ts` is gone.
 - **An unverified sign-in lands on the email page.** The `hooks.after` on
   the callback replaces the endpoint's redirect with
-  `/account/email?next=<where it was going>` whenever the session's row is
+  `/account/email?next=<where it was going>` — bare `/account/email` when
+  the sign-in asked for no return path — whenever the session's row is
   unverified — a Facebook or Microsoft address, a Google or Discord one the
   provider did not vouch for, or the placeholder — on every sign-in, not
   only sign-up, since a provisional account can do nothing else. The
   endpoint's cookies stay: Better Auth merges a hook's `Location` over its
-  own and appends cookies. A verified sign-in lands where it asked.
+  own and appends cookies. A verified sign-in lands where it asked, or with
+  no return path on its role's landing ("Route protection").
 - **The page.** `src/app/account/email/page.tsx` calls `requireSession()`
   and `getMe`, passes `''` for a placeholder, `next` through
-  `safeReturnPath`, `?error=` through `src/lib/account-email.ts`'s
+  `safeReturnPath`, the session role's `postSignInLanding` as `landing`,
+  which Continue takes when there is no `next` — `/admin` for an admin,
+  the primary admin a followed link has just promoted included, since the
+  page reads the role after the link's write — `?error=` through `src/lib/account-email.ts`'s
   `verifyErrorMessage` — one sentence per code Better Auth or the gate
   appends, never the code — and the seconds left on the mail clock. `EmailForm`
   has two views: `?verified` on a verified row is the confirmed one, the
@@ -714,7 +721,10 @@ path>` from every page but that one (`isEmailPage`, exact on the pathname),
   the change and resend links' landings), `tests/db/email-verification.test.ts`
   (the sign-up link's landing and its refusals), `tests/lib/account-email.test.ts`
   (`verifiedLanding` and `returnPathOf`), `tests/lib/auth.test.ts` (the
-  placeholder mapping), and `tests/acceptance/08-email-and-admin.test.ts`
+  placeholder mapping), `tests/app/account/email/page.test.tsx` (where
+  Continue goes, by `next` or by role), `tests/db/sign-in-landing.test.ts`
+  (the callback's landing, the email page's and the sign-up link's, by role
+  and by return path), and `tests/acceptance/08-email-and-admin.test.ts`
   (stories 58 and 59).
 
 ### Granting a second admin — decided, not built (M2.9)
@@ -955,10 +965,36 @@ answer.
   `errorCallbackURL` is `signInPath(next)`, so a failed attempt keeps the
   destination too. One guard on the way out and on the way back is what makes
   the round trip lossless for a safe path and closed for an unsafe one. The
-  guard's fallback is `POST_SIGN_IN_LANDING` — `/coven`, the post-sign-in
-  landing M2.8 builds — not `/`: someone who has just signed in has been
-  through the front door already
+  guard has no fallback: a missing or unsafe `next` is no return path at all
+  (`undefined`), because which landing then applies is the role's, and only
+  the callback knows the role once any promotion has run.
+- **With no return path, the landing is the role's** (MB.113). A verified
+  admin lands on `/admin`, `ADMIN_LANDING`; everyone else on `/coven`,
+  `POST_SIGN_IN_LANDING`, the post-sign-in landing M2.8 builds — not `/`:
+  someone who has just signed in has been through the front door already
   ([`design-decisions/mb.57-post-sign-in-landing.md`](design-decisions/mb.57-post-sign-in-landing.md)).
+  `postSignInLanding(role)` (`src/lib/sign-in.ts`) is the one rule. A return
+  path still wins, an explicit `/coven` included, so the sign-in says whether
+  it asked for one rather than the callback guessing from the landing path:
+  `socialSignInTarget(next)` gives `SignInPanel`'s `signIn.social` call, with
+  no `next`, the flag `NO_RETURN_PATH` in Better Auth's `additionalData`, a
+  `callbackURL` of `/coven` only because one is required, and a bare `/sign-in`
+  as `errorCallbackURL`, so a failed attempt still asks for none. The
+  callback's after-hook reads the flag back with `getOAuthState()` and, for a
+  verified row, replaces the endpoint's redirect with the landing for the role
+  held after `promotePrimaryAdmin` — so the primary admin promoted at this very
+  sign-in lands on `/admin`. The flag is client-supplied, as every
+  `additionalData` key is, and trusted accordingly: it chooses between two
+  landings the account may open anyway, and `/admin`'s guard is the role.
+  An unverified account goes to the email page first as ever, bare
+  (`/account/email`) with no return path, and the sign-up mail's link lands
+  bare on the confirmed view: its Continue takes the role's landing too, read
+  when the page renders, after the link has promoted the primary admin ("The
+  email page"). `/`'s Continue offers a signed-in visitor the same landing,
+  so an admin's front door leads to `/admin` too
+  ([`components/welcome.md`](components/welcome.md)). The helpers are shared
+  with the tests' OAuth harness, whose `signIn` with no destination is
+  `SignInPanel`'s sign-in with none.
 - **`getSession()` is `cache()`-wrapped**, so a layout and a page asking in the
   same render cost one lookup. It is `sessionFromHeaders(await headers())`;
   the proxy, which has the request but no `headers()`, calls
@@ -1293,7 +1329,10 @@ page.tsx`'s own source for the invite-only explanation M2.8 adds, since
   client-supplied one. `tests/lib/request-session.test.ts` mocks Better Auth and
   asserts the mapping to `{ userId, role }`, the refusal of an unknown role, and
   `requireSession()`'s redirect. `tests/lib/sign-in.test.ts` round-trips a set
-  of return paths through `signInPath()` and `safeReturnPath()`.
+  of return paths through `signInPath()` and `safeReturnPath()`, and pins
+  `postSignInLanding()` and `socialSignInTarget()`;
+  `tests/db/sign-in-landing.test.ts` drives the callback's landing by role
+  (MB.113).
   `tests/e2e/route-protection.spec.ts` runs the whole thing against the built
   server: a signed-out visit to a protected route lands on `/sign-in` with
   its `next`, and `/invite/*` is not redirected; `tests/e2e/smoke.spec.ts` renders `/`
