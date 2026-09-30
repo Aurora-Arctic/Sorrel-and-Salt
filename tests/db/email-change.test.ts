@@ -396,7 +396,7 @@ describe('Story 59: where a sign-in lands', () => {
     expect(cookieHeader(again)).toMatch(/session_token=/);
   });
 
-  it('sends a verified sign-up where it asked to go', async () => {
+  it('sends a verified sign-up to its landing, not the email page', async () => {
     const response = await signIn('google', { sub: 'g-1', email: OWNER, verified: true });
 
     expect(landingOf(response)).toBe('/coven');

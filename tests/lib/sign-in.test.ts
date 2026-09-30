@@ -4,24 +4,71 @@ import {
   GENERIC_SIGN_IN_ERROR,
   GENERIC_UNLINK_ERROR,
   linkErrorMessage,
+  NO_RETURN_PATH,
   POST_SIGN_IN_LANDING,
+  postSignInLanding,
   safeReturnPath,
   signInErrorMessage,
   signInPath,
   SIGN_IN_TO_VERIFY_PATH,
+  socialSignInTarget,
   unlinkErrorMessage,
 } from '@/lib/sign-in';
 
-// The fallback is the post-sign-in landing, not `/`: `/` is the public front
+// The landing is the post-sign-in one, not `/`: `/` is the public front
 // door, and someone who just signed in has been through it already
 // (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
 describe('POST_SIGN_IN_LANDING', () => {
   it('is the /coven landing', () => {
     expect(POST_SIGN_IN_LANDING).toBe('/coven');
   });
+});
 
-  it('is what signInPath sends a visitor to when there is no return path', () => {
-    expect(signInPath(undefined)).toBe('/sign-in?next=%2Fcoven');
+// Where a sign-in with no return path lands, decided by the role the account
+// holds once the callback has run (MB.113).
+describe('postSignInLanding', () => {
+  it('sends an admin to the admin area', () => {
+    expect(postSignInLanding('admin')).toBe('/admin');
+  });
+
+  it('sends everyone else to the /coven landing', () => {
+    expect(postSignInLanding('user')).toBe(POST_SIGN_IN_LANDING);
+  });
+});
+
+// What SignInPanel hands `signIn.social`, so that the callback can tell a
+// sign-in that asked for nowhere from one that asked for `/coven`.
+describe('socialSignInTarget', () => {
+  it('heads for the return path, with an error callback carrying it, and no flag', () => {
+    expect(socialSignInTarget('/coven/hearth')).toEqual({
+      callbackURL: '/coven/hearth',
+      errorCallbackURL: '/sign-in?next=%2Fcoven%2Fhearth',
+    });
+  });
+
+  it('treats an explicit /coven as a return path like any other', () => {
+    expect(socialSignInTarget('/coven')).toEqual({
+      callbackURL: '/coven',
+      errorCallbackURL: '/sign-in?next=%2Fcoven',
+    });
+  });
+
+  it('flags a sign-in with no return path, and keeps it one on the error callback', () => {
+    expect(socialSignInTarget(undefined)).toEqual({
+      callbackURL: POST_SIGN_IN_LANDING,
+      errorCallbackURL: '/sign-in',
+      additionalData: NO_RETURN_PATH,
+    });
+  });
+});
+
+describe('signInPath', () => {
+  it('carries a return path as ?next=', () => {
+    expect(signInPath('/coven')).toBe('/sign-in?next=%2Fcoven');
+  });
+
+  it('is the bare sign-in page when there is no return path', () => {
+    expect(signInPath(undefined)).toBe('/sign-in');
   });
 });
 
@@ -36,32 +83,34 @@ describe('safeReturnPath', () => {
     expect(safeReturnPath('/coven/hearth?tab=stock')).toBe('/coven/hearth?tab=stock');
   });
 
-  it('falls back to the landing for undefined', () => {
-    expect(safeReturnPath(undefined)).toBe('/coven');
+  // No landing stands in for a refused path: which landing is the role's, and
+  // the callback decides it (MB.113).
+  it('is no return path for undefined', () => {
+    expect(safeReturnPath(undefined)).toBeUndefined();
   });
 
-  it('falls back to the landing for an empty string', () => {
-    expect(safeReturnPath('')).toBe('/coven');
+  it('is no return path for an empty string', () => {
+    expect(safeReturnPath('')).toBeUndefined();
   });
 
-  it('falls back to the landing for a protocol-relative URL', () => {
-    expect(safeReturnPath('//evil.example')).toBe('/coven');
+  it('is no return path for a protocol-relative URL', () => {
+    expect(safeReturnPath('//evil.example')).toBeUndefined();
   });
 
-  it('falls back to the landing for an absolute URL', () => {
-    expect(safeReturnPath('https://evil.example')).toBe('/coven');
+  it('is no return path for an absolute URL', () => {
+    expect(safeReturnPath('https://evil.example')).toBeUndefined();
   });
 
-  it('falls back to the landing for a backslash-prefixed path some browsers treat as a host', () => {
-    expect(safeReturnPath('/\\evil.example')).toBe('/coven');
+  it('is no return path for a backslash-prefixed path some browsers treat as a host', () => {
+    expect(safeReturnPath('/\\evil.example')).toBeUndefined();
   });
 
-  it('falls back to the landing for a path with no leading slash', () => {
-    expect(safeReturnPath('coven/hearth')).toBe('/coven');
+  it('is no return path for a path with no leading slash', () => {
+    expect(safeReturnPath('coven/hearth')).toBeUndefined();
   });
 
-  it('falls back to the landing for an array-valued query param', () => {
-    expect(safeReturnPath(['/coven/hearth', '/coven/other'])).toBe('/coven');
+  it('is no return path for an array-valued query param', () => {
+    expect(safeReturnPath(['/coven/hearth', '/coven/other'])).toBeUndefined();
   });
 });
 
@@ -212,9 +261,9 @@ describe('signInPath', () => {
   // The proxy builds the return path from the request URL, and `//evil.example`
   // is a pathname a request can really carry.
   it.each(['//evil.example', 'https://evil.example', '/\\evil.example'])(
-    'falls back to the landing for an unsafe return path: %s',
+    'drops an unsafe return path, leaving the bare sign-in page: %s',
     (unsafe) => {
-      expect(signInPath(unsafe)).toBe('/sign-in?next=%2Fcoven');
+      expect(signInPath(unsafe)).toBe('/sign-in');
     },
   );
 });

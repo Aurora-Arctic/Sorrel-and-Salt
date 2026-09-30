@@ -63,10 +63,10 @@ describe("the email page's paths", () => {
     },
   );
 
-  // Where Continue goes without one: carrying it would change the link and
-  // nothing else.
-  it('leaves off the landing Continue falls back to', () => {
-    expect(verifiedLanding('/coven')).toBe('/account/email?verified');
+  // Continue's landing without one is the role's, so an explicit /coven is
+  // carried like any other: an admin who asked for it still lands on it (MB.113).
+  it('carries an explicit /coven, which is not the same as none', () => {
+    expect(verifiedLanding('/coven')).toBe('/account/email?verified&next=%2Fcoven');
   });
 
   it("reads a sign-up link's callbackURL as where the sign-in was going", () => {
@@ -101,6 +101,10 @@ describe("the email page's paths", () => {
     expect(emailPagePath('/coven/hearth?tab=mine')).toBe(
       '/account/email?next=%2Fcoven%2Fhearth%3Ftab%3Dmine',
     );
+  });
+
+  it('is the bare page when there is no return path', () => {
+    expect(emailPagePath(undefined)).toBe('/account/email');
   });
 
   it('recognises the page with or without a query, and nothing that only starts like it', () => {
