@@ -1,5 +1,4 @@
 @use '../../scss/variables' as *;
-@use '../../scss/mixins' as *;
 
 // The page-level frame, like `.email-page`: no AppShell exists yet to center
 // a page. A column, so the list and the way to the email page stack.
@@ -41,29 +40,6 @@
   color: $text-muted;
 }
 
-// The same banner as `.email-form__error` and `.email-form__sent`.
-.sign-in-methods__error,
-.sign-in-methods__removed {
-  // `output` is inline by default.
-  display: block;
-  margin: 0;
-  padding: 0.75rem 1rem;
-  border-radius: 0.25rem;
-  border: 1px solid $secondary;
-  color: $secondary;
-  font-size: 0.8rem;
-  @include theme-transition(background-color, border-color, color);
-
-  @include reduced-motion {
-    transition: none;
-  }
-}
-
-.sign-in-methods__removed {
-  border-color: $accent;
-  color: $accent;
-}
-
 .sign-in-methods__list {
   display: flex;
   flex-direction: column;
@@ -89,24 +65,6 @@
 .sign-in-methods__label {
   flex: 1;
   font-weight: 500;
-}
-
-// A removal in flight holds every Remove down, so two cannot race to leave
-// none; `_primitives.scss` styles only `aria-disabled`, so the greying is
-// restated off the attribute, as in `.email-form__submit`.
-.sign-in-methods__button.btn:disabled {
-  border-color: $text-muted;
-  color: $text-muted;
-  opacity: 0.7;
-  cursor: not-allowed;
-  box-shadow: none;
-
-  &:hover,
-  &:focus-visible {
-    background-color: transparent;
-    border-color: $text-muted;
-    color: $text-muted;
-  }
 }
 
 .sign-in-methods__note {

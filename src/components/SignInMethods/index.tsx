@@ -58,13 +58,13 @@ const SignInMethods = ({ linked, configured, error }: SignInMethodsProps): React
       <h1 className="sign-in-methods__heading">Sign-in methods</h1>
       <p className="sign-in-methods__intro">Any of these signs you in to this account.</p>
       {alert && (
-        <p className="sign-in-methods__error" role="alert">
+        <p className="notice notice--error" role="alert">
           {alert}
         </p>
       )}
       {removed && (
         // `output` carries the status role itself, so no `role` attribute.
-        <output className="sign-in-methods__removed">{removed} was removed.</output>
+        <output className="notice notice--success">{removed} was removed.</output>
       )}
       <ul className="sign-in-methods__list">
         {SOCIAL_PROVIDERS.map((provider) => {
@@ -79,7 +79,7 @@ const SignInMethods = ({ linked, configured, error }: SignInMethodsProps): React
                 removable && (
                   <button
                     type="button"
-                    className="btn sign-in-methods__button"
+                    className="btn"
                     disabled={pending !== undefined}
                     onClick={() => handleRemove(account, provider.label)}
                   >
@@ -90,7 +90,7 @@ const SignInMethods = ({ linked, configured, error }: SignInMethodsProps): React
                 <>
                   <button
                     type="button"
-                    className="btn sign-in-methods__button"
+                    className="btn"
                     // Not `disabled`, as on /sign-in: it stays in the tab order.
                     aria-disabled={isAvailable ? undefined : true}
                     aria-describedby={isAvailable ? undefined : noteId}

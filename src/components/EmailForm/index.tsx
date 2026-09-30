@@ -131,7 +131,7 @@ const EmailForm = ({
         <p className="email-form__continue">
           {/* A plain anchor rather than <Link>: typed routes refuse a route
               that is not built yet, and `next` is whatever page sent us here. */}
-          <a className="btn" href={next ?? landing}>
+          <a className="btn btn--solid" href={next ?? landing}>
             Continue
           </a>
         </p>
@@ -146,28 +146,28 @@ const EmailForm = ({
   return (
     <div className="email-form">
       <h1 className="email-form__heading">Your email</h1>
-      <p className="email-form__status">{statusLine(email, verified)}</p>
+      <p className="lede email-form__status">{statusLine(email, verified)}</p>
       {alert && (
-        <p className="email-form__error" role="alert">
+        <p className="notice notice--error" role="alert">
           {alert}
         </p>
       )}
       {sentTo && (
         // `output` carries the status role itself, so no `role` attribute.
-        <output className="email-form__sent">
+        <output className="notice notice--success">
           We&apos;ve sent a link to {sentTo}. Open it in this browser within an hour to confirm it.
         </output>
       )}
       {/* `noValidate`: every refusal is the server's, worded and placed like
           the rest, rather than the browser's own bubble. */}
-      <form className="email-form__form" onSubmit={handleSubmit} noValidate>
-        <div className="email-form__field">
-          <label className="email-form__label" htmlFor={inputId}>
+      <form className="form" onSubmit={handleSubmit} noValidate>
+        <div className="field">
+          <label className="field__label" htmlFor={inputId}>
             Email address
           </label>
           <input
             id={inputId}
-            className="email-form__input"
+            className="input"
             type="email"
             autoComplete="email"
             value={value}
@@ -176,15 +176,15 @@ const EmailForm = ({
             aria-describedby={fieldError ? fieldErrorId : undefined}
           />
           {fieldError && (
-            <p id={fieldErrorId} className="email-form__field-error">
+            <p id={fieldErrorId} className="field__error">
               {fieldError}
             </p>
           )}
         </div>
-        <div className="email-form__actions">
+        <div className="form__actions">
           <button
             type="submit"
-            className="btn email-form__submit"
+            className="btn btn--solid"
             disabled={nothingToDo || mutation.isPending || coolingDown}
           >
             {coolingDown ? `Send Again in ${secondsLeft}s` : 'Send Confirmation'}
