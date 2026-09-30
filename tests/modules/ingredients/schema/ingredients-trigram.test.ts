@@ -26,14 +26,12 @@ const UNIQUE_INDEXES = [
   'ingredients_workspace_label_unique',
   'ingredients_compendium_slug_unique',
   'ingredients_workspace_slug_unique',
-  'ingredients_compendium_pending_slug_unique',
-  'ingredients_workspace_pending_slug_unique',
 ];
 
 describe('ingredients trigram index declaration', () => {
   const { byIndexName: byName } = tableFacts(ingredients);
 
-  it('declares the trigram index beside the seven unique ones and its folded twin', () => {
+  it('declares the trigram index beside the five unique ones and its folded twin', () => {
     expect(Object.keys(byName).sort()).toEqual(
       [...UNIQUE_INDEXES, TRIGRAM_INDEX, UNACCENT_INDEX].sort(),
     );

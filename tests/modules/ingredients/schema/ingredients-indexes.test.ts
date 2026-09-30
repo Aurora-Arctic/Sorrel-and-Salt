@@ -17,21 +17,21 @@ import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standar
 const COMPENDIUM_IDENTITY = 'ingredients_compendium_identity_unique';
 const WORKSPACE_IDENTITY = 'ingredients_workspace_identity_unique';
 const WORKSPACE_LABEL = 'ingredients_workspace_label_unique';
-// MB.80's four: the public address unique per tier, and one pending claim per
-// slug per tier (columns MB.81, rule MB.82) — claude-docs/db.md, "Ingredient slugs".
+// MB.80's two: the public address unique per tier — claude-docs/db.md, "Ingredient slugs".
 const COMPENDIUM_SLUG = 'ingredients_compendium_slug_unique';
 const WORKSPACE_SLUG = 'ingredients_workspace_slug_unique';
-const COMPENDIUM_PENDING_SLUG = 'ingredients_compendium_pending_slug_unique';
-const WORKSPACE_PENDING_SLUG = 'ingredients_workspace_pending_slug_unique';
-const UNIQUE = [
+const DECLARED = [
   COMPENDIUM_IDENTITY,
   WORKSPACE_IDENTITY,
   WORKSPACE_LABEL,
   COMPENDIUM_SLUG,
   WORKSPACE_SLUG,
-  COMPENDIUM_PENDING_SLUG,
-  WORKSPACE_PENDING_SLUG,
 ];
+// MB.81's pending claims, which MB.82 dropped from the schema: the database
+// keeps the two indexes, undeclared, until the migration that drops them.
+const COMPENDIUM_PENDING_SLUG = 'ingredients_compendium_pending_slug_unique';
+const WORKSPACE_PENDING_SLUG = 'ingredients_workspace_pending_slug_unique';
+const UNIQUE = [...DECLARED, COMPENDIUM_PENDING_SLUG, WORKSPACE_PENDING_SLUG];
 // §9's, neither unique nor partial; ingredients-trigram.test.ts owns it, and
 // ingredients-unaccent.test.ts its folded twin.
 const TRIGRAM = 'ingredients_trgm';
@@ -40,13 +40,13 @@ const UNACCENT_TRIGRAM = 'ingredients_unaccent_trgm';
 describe('ingredients index declarations', () => {
   const { byIndexName: byName } = tableFacts(ingredients);
 
-  // "Exactly", not "at least": an eighth unique index is what this list exists to catch.
-  it('declares exactly §5’s seven unique indexes and the two trigram ones', () => {
-    expect(Object.keys(byName).sort()).toEqual([...UNIQUE, TRIGRAM, UNACCENT_TRIGRAM].sort());
+  // "Exactly", not "at least": a sixth unique index is what this list exists to catch.
+  it('declares exactly §5’s five unique indexes and the two trigram ones', () => {
+    expect(Object.keys(byName).sort()).toEqual([...DECLARED, TRIGRAM, UNACCENT_TRIGRAM].sort());
   });
 
-  it('makes all seven unique and all seven partial', () => {
-    for (const name of UNIQUE) {
+  it('makes all five unique and all five partial', () => {
+    for (const name of DECLARED) {
       expect(byName[name].config.unique).toBe(true);
       expect(byName[name].config.where).toBeDefined();
     }
