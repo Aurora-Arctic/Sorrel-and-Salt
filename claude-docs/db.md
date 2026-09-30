@@ -1703,7 +1703,7 @@ two empty sets are equal and something has to say they aren't.
 | `common-names.ts`      | `findCommonNameSuggestions`, the common-name autofill                                                                                                                 |
 | `suggestion-page.ts`   | The keyset page and claimant list the two autofills share                                                                                                             |
 | `finders.ts`           | The generic finders, scoped and unscoped, and the escape hatch                                                                                                        |
-| `spells.ts`            | The three spell finders and the `readableSpells` predicate they share                                                                                                 |
+| `spells.ts`            | The three spell finders, the `readableSpells` predicate they share, and the two hatches that read what a spell holds past a tombstone                                 |
 | `memberships.ts`       | Two of the three reads that take no proof                                                                                                                             |
 | `users.ts`             | The third: the live row holding an address                                                                                                                            |
 | `provisional-users.ts` | The provisional-account delete                                                                                                                                        |
@@ -1907,14 +1907,14 @@ request's DataLoaders ([`graphql.md`](graphql.md), "The two transports").
 The repository splits on the table's own shape, the way it already splits
 `softDelete` from `delete`:
 
-| The table                                                              | Reads                                                                                     | Writes                                                                                                                       |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| carries `workspace_id`                                                 | `findManyInWorkspace` / `findOneInWorkspace` / `findOneByIdInWorkspace`, proof first      | `insertInWorkspace`, `updateInWorkspace`, `updateByIdInWorkspace`, `softDeleteInWorkspace`, proof first                      |
-| carries a nullable `workspace_id` (`ingredients`, its retired slugs)   | the scoped reads above, and the named compendium finders                                  | the scoped writes above, and `insertInCompendium`, `updateByIdInCompendium`, `softDeleteByIdInCompendium`, `SiteAdmin` first |
-| carries `visibility` (`spells` alone)                                  | `findManySpells` / `findOneSpell`, proof first                                            | the workspace-scoped writes above                                                                                            |
-| carries `spell_id` (the two join tables)                               | `findManyInSpell`, proof first                                                            | `insert`, `update`, `delete`                                                                                                 |
-| carries `ingredient_id` and no `workspace_id` (folk names, categories) | `findManyOfIngredients`, proofs first                                                     | `insert`, `update`, `softDelete` / `softDeleteByIds` / `delete`                                                              |
-| none of those                                                          | `findMany` / `findOne` / `findOneById` / `findManyByIds` / `findManyIncludingSoftDeleted` | `insert`, `update`, `updateById`, `softDelete`, `softDeleteByIds`, `delete`                                                  |
+| The table                                                              | Reads                                                                                                                | Writes                                                                                                                               |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| carries `workspace_id`                                                 | `findManyInWorkspace` / `findOneInWorkspace` / `findOneByIdInWorkspace`, proof first                                 | `insertInWorkspace`, `updateInWorkspace`, `updateByIdInWorkspace`, `softDeleteInWorkspace`, `softDeleteByIdInWorkspace`, proof first |
+| carries a nullable `workspace_id` (`ingredients`, its retired slugs)   | the scoped reads above, the named compendium finders, and `findIngredientsInSpellsIncludingSoftDeleted`, proof first | the scoped writes above, and `insertInCompendium`, `updateByIdInCompendium`, `softDeleteByIdInCompendium`, `SiteAdmin` first         |
+| carries `visibility` (`spells` alone)                                  | `findManySpells` / `findOneSpell`, proof first                                                                       | the workspace-scoped writes above                                                                                                    |
+| carries `spell_id` (the two join tables)                               | `findManyInSpell`, proof first                                                                                       | `insert`, `update`, `delete`                                                                                                         |
+| carries `ingredient_id` and no `workspace_id` (folk names, categories) | `findManyOfIngredients`, proofs first; `findManyOfSpellIngredientsIncludingSoftDeleted`, proof first                 | `insert`, `update`, `softDelete` / `softDeleteByIds` / `delete`                                                                      |
+| none of those                                                          | `findMany` / `findOne` / `findOneById` / `findManyByIds` / `findManyIncludingSoftDeleted`                            | `insert`, `update`, `updateById`, `softDelete`, `softDeleteByIds`, `delete`                                                          |
 
 `{ workspaceId: AnyPgColumn }` and `{ workspaceId?: never }` are the two
 constraints, so each finder admits exactly one of the two sets and a table
@@ -1932,7 +1932,9 @@ row cannot be moved between workspaces by an update.
 
 `findManyIncludingSoftDeleted` takes the unscoped side: v1 has no restore UI
 and the trash view is v2, so the task that adds one adds its proof-scoped
-counterpart then rather than leaving a widened hatch waiting.
+counterpart then rather than leaving a widened hatch waiting. It is one of
+three hatches: the other two read what a spell holds past an ingredient's
+tombstone, proof first ("What a spell holds").
 
 **`ingredients` is on the scoped side, so its compendium tier has no generic
 finder.** The column is nullable — `workspace_id IS NULL` is the
@@ -1940,8 +1942,10 @@ compendium, everything else is a workspace's own — so the table matches
 `{ workspaceId: AnyPgColumn }` and `findMany(ingredients)` does not compile.
 The reads of it so far are `findSimilarIngredients` (see "Fuzzy matching"),
 `findVocabularySuggestions` and `findCommonNameSuggestions` (see "The
-member's autofill"), and `findManyOfIngredients` through the parent of a folk
-name or a category link (see "Ingredient children"), each naming
+member's autofill"), `findManyOfIngredients` through the parent of a folk
+name or a category link (see "Ingredient children"), and
+`findIngredientsInSpellsIncludingSoftDeleted` through a spell holding it (see
+"What a spell holds"), each naming
 both tiers as explicitly as this paragraph asks, and each listed on
 [the tier seam](modules.md#the-tier-seam). The plain compendium read is
 `findCompendiumPage` (M8.5), with its count `findCompendiumCount` (MB.105),
@@ -2124,6 +2128,44 @@ second read builder ("Soft-delete filtering" below), which ANDs the spell's
 filter for the two finders that read `spells` directly, so in this one finder
 the parent is filtered twice, and neither copy is the other's to forget.
 
+### What a spell holds (M5.3)
+
+A spell is a record of a working, so an ingredient soft-deleted after it went
+into the jar is still in it: shown as it was, its categories still counted
+toward the spell's derived categories, its safety notes still warning. The
+data already holds that — `spell_ingredients` points at the row, its foreign
+key is `NO ACTION`, and a soft delete touches no layer. What would lose it is
+the read, since every other finder filters a deleted ingredient and `existsIn`
+filters a deleted parent by construction. So two finders in `spells.ts` are
+named exceptions to CLAUDE.md rule 4, each ending `…IncludingSoftDeleted` so
+the call site says what it is:
+
+| Finder                                                                             | Reads                                                                                 |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds)`           | the ingredients among the ids that a spell this member may read holds, deleted or not |
+| `findManyOfSpellIngredientsIncludingSoftDeleted(membership, table, ingredientIds)` | the live folk names or category links of those ingredients                            |
+
+**Only the ingredient's tombstone is skipped.** The spell must be readable and
+live (`readableSpells`), and the layer live (`existsIn` over
+`spell_ingredients`, which filters a removed layer once MB.110 gives the table
+a `deleted_at`, with no change here). The ingredient must be in the compendium
+or the proof's coven: a layer's foreign key checks the id alone, so a W spell
+linking X's ingredient is a row the schema accepts and the finder withholds. A
+child's own tombstone still filters, so a folk name removed before the delete
+stays removed. The children's finder reaches its parents through the first —
+two statements rather than one — because a deleted parent's tier cannot be
+tested through `existsIn`, and a raw subquery is what MB.100 removed.
+
+Both take ingredient ids rather than a spell id. The layers come from
+`findManyInSpell`, and their `ingredientId`s batch into the first, which is
+the loader key M10.9's resolution needs; a custom layer names no ingredient to
+ask about. `findManyOfIngredients` refuses `spell_ingredients` at compile time
+since M5.3: the table carries an `ingredient_id`, and read through a
+compendium entry it would have been every coven's layers of that entry,
+private spells included. The soft-delete guard pins both hatches' shape
+("Soft-delete filtering" below); the argument, and v2's revision-pinned layers,
+are [`m5.3-spells-keep-deleted-ingredients.md`](design-decisions/m5.3-spells-keep-deleted-ingredients.md).
+
 ### Writing: the one-way rule
 
 `src/modules/grimoire/services/spell-visibility.ts`'s `setSpellVisibility(session, workspaceId,
@@ -2170,6 +2212,14 @@ The proof still governs it: the ids come from `findManyOfIngredients` under
 the parent’s tier, inside the transaction that has just written the parent
 through the proof (see "Workspace ingredients").
 
+**`softDeleteByIdInWorkspace` is the fifteenth** (M5.3), the delete-side twin
+of `updateByIdInWorkspace`: a coven member's delete names its ingredient by
+id, which the service cannot turn into `id = $1`. It ANDs the id onto the
+proof's clause, so another coven's row and a compendium row are written
+nothing and returned as nothing. Like `updateByIdInWorkspace` it admits
+`spells`, whose visibility its type cannot see, so a spell's delete reads
+`findOneSpell` first, as `setSpellVisibility` does.
+
 ## Ingredient children (M4.8)
 
 `ingredient_folk_names` and `ingredient_categories` hang off an ingredient and
@@ -2215,10 +2265,11 @@ batch, whatever the number of ingredients.
 
 ## Workspace ingredients (M8.2)
 
-A coven's own ingredients are written and read by three services in
+A coven's own ingredients are written and read by four services in
 `ingredients`' `services/workspace-ingredients.ts`:
-`createWorkspaceIngredient` and `updateWorkspaceIngredient` ask
-`{ ingredient: ['create'] }` and `['update']`, which owners and members hold, and
+`createWorkspaceIngredient`, `updateWorkspaceIngredient` and
+`deleteWorkspaceIngredient` ask `{ ingredient: ['create'] }`, `['update']` and
+`['delete']`, which owners and members hold, and
 `getWorkspaceIngredient` asks `['read']`, which viewers hold too. A site admin
 holds none of them, as everywhere in a coven.
 
@@ -2232,6 +2283,21 @@ coven the caller is not in answers `Forbidden` before any row is read, a coven
 id that is not a uuid included ("What the check asks"). An ingredient id that
 is not a uuid is `NotFound`, as `getIngredient` answers it, rather than a
 driver error.
+
+**A delete is soft, and frees what the ingredient held** (M5.3).
+`deleteWorkspaceIngredient` tombstones the row through
+`softDeleteByIdInWorkspace`, with the update's reach: an id this coven does not
+hold live answers `NotFound`. Its folk names, category links and stock row
+stay. A spell holding the ingredient still reaches it ("What a spell holds"),
+and nothing else reads past a deleted parent — stock included, whose reads go
+through a live ingredient (M9.3). The service test asks each read a member
+reaches the coven's ingredients through whether it shows the ingredient,
+before the delete and after, then brings back its label, its formal name
+under another label and the whole ingredient at its old address, each refused
+while it was live. Inside a coven the label is unique too, so there a label
+coming back does prove its index's predicate. Its mutation is
+`deleteIngredient` ([`graphql.md`](graphql.md), "The workspace ingredient
+mutations").
 
 **The input is the whole ingredient**, as `IngredientForm` submits it, parsed
 again by the service with `parseInput` because the browser is not the only
@@ -2421,9 +2487,24 @@ all `NotFound`. So the site admin reaches no coven's ingredients by id — the
 invariant in `CLAUDE.md` — and the service test asserts it on update and
 delete with the row first shown reachable by its own coven. A delete is soft
 and stamps `deleted_by`; the entry's folk names and category links stay,
-since nothing reads them past a deleted parent and their unique indexes are
-per ingredient. A `workspaceId` in the input is stripped by the Zod object,
+since only a spell holding the entry reads them past it ("What a spell holds")
+and their unique indexes are per ingredient. A `workspaceId` in the input is stripped by the Zod object,
 and `insertInCompendium` would overwrite it if it were not.
+
+**A deleted entry is gone from every read and frees what it held** (M5.3).
+The service test asks each read an entry reaches anyone through — the list
+and its count, the read by id, its address and one it moved off, its folk
+names and categories, and a coven's duplicate warning and its common-name and
+form suggestions — whether it shows the entry, before the delete and after.
+It then adds the entry's formal name and form again under another label, the
+write the identity index refused while the entry was live: the index's
+`deleted_at IS NULL` is all that lets it through. The proof is on the formal
+name, because two live entries may share a label anyway, so a label coming
+back would pass with the predicate gone. The whole entry comes back the same
+way, at its old address, and when a later write collides with the
+re-added entry, the error names that entry rather than the deleted one,
+though both rows carry the key. A spell holding the deleted entry still
+reaches it.
 
 **A collision is a `ValidationError` on the field that caused it, naming the
 entry that already holds the identity.** As in the coven's writes, the service
@@ -2477,6 +2558,12 @@ NULL` ANDed onto whatever `where` the caller supplied — or the caller's
   filter, so a second bypass is a decision argued for in the diff, not a
   convenience appearing quietly beside an import.
 
+There are two such decisions, and both are the same one: what a spell holds.
+`findIngredientsInSpellsIncludingSoftDeleted` and
+`findManyOfSpellIngredientsIncludingSoftDeleted` (M5.3) read an ingredient
+past its tombstone, and nothing else past one, for a member who may read a
+spell holding it ("What a spell holds").
+
 Neither builder is in the repository's surface — their siblings import them,
 and nothing outside the folder may ("The repository's files" above) — so
 there is no public handle a finder could reach the database through while
@@ -2487,7 +2574,9 @@ around `applyAudit`.
 scope lives on a parent row — `findManyInSpell`, `findManyOfIngredients`,
 `findMembershipsOfUsers`, and the provisional-account delete's check for an
 `accounts` row — narrows by a correlated `EXISTS` over that parent, and the
-parent's own `deleted_at IS NULL` has to be inside the subquery. The four were
+parent's own `deleted_at IS NULL` has to be inside the subquery;
+`findIngredientsInSpellsIncludingSoftDeleted` nests two, the spell inside the
+layer. The four were
 `sql` strings while the guard allowed the folder exactly one `.select(`, and a
 string is what a guard cannot read: each subquery's filter was its caller's to
 remember, which made them the least-checked reads in the repository and the
@@ -2514,8 +2603,11 @@ builder or the predicates, so no caller can reach an unfiltered read; the index'
 are pinned to the test's `EXPORTED_FUNCTIONS` list, so a further
 export — a new escape hatch, or a finder that reaches the database some other
 way — turns the test red rather than merely going unreviewed; and every
-exported finder other than the escape hatch either calls `notSoftDeleted(...)`
-directly or delegates to one that does.
+exported finder other than the escape hatches either calls `notSoftDeleted(...)`
+directly or delegates to one that does. The hatches are a pinned list, each
+named `…IncludingSoftDeleted`, and a last test holds the two spell hatches to
+skipping the ingredient's filter alone: the spell's `readableSpells`, the
+layer's `existsIn` and the proof's tier stay in the body.
 
 A query built _outside_ the repository is the linter's job, not this test's —
 see "Where queries may be built" below. It was this test's until MB.33, by
