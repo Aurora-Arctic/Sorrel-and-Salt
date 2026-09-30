@@ -1373,6 +1373,18 @@ that shipped it _and_ the one before it — the expand/contract pattern:
    release later, after the transition period has had a chance to run in
    production), a later migration removes it.
 
+**A drop is the contract step alone, and it is two PRs, each its own task.**
+The first removes every code reference — the Drizzle schema included — and
+ships no migration. The second, once the first has deployed, is the migration
+`drizzle-kit generate` then produces, with its sidecar. `migrate.yml` runs
+before `deploy.yml` promotes, and Drizzle names every declared column in a
+`SELECT`, so dropping a column the live deploy still declares breaks its reads
+for the length of the rollout, and a rollback past the migration for good.
+Between the two, `db:generate` on any branch emits the drop; it belongs to
+the second task, and the destructive-DDL check refuses it unacknowledged.
+MB.82 and MB.107 are the worked case: MB.82 stopped declaring `pending_slug`
+and its date, and MB.107 drops them.
+
 Renaming a column is the canonical case that goes wrong if done directly —
 `ALTER TABLE ... RENAME COLUMN` is atomic in Postgres, but it isn't atomic
 across a _deploy_: for the seconds-to-minutes it takes Vercel to roll traffic
