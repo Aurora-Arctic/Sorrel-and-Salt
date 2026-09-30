@@ -1,20 +1,37 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
+import { findIngredientsInSpellsIncludingSoftDeleted } from '@/db/repository';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import { ingredientSlug } from '@/lib/slugify';
 import {
+  categoriesOf,
+  countCompendium,
   createCompendiumEntry,
   deleteCompendiumEntry,
+  findPossibleDuplicates,
+  folkNamesOf,
+  getIngredient,
   getWorkspaceIngredient,
+  listCompendium,
   resolveCompendiumSlug,
+  suggestCommonNames,
   updateCompendiumEntry,
 } from '@/modules/ingredients';
 import type { CompendiumIngredientInput } from '@/modules/ingredients/validation/ingredient';
+import { assertMembership } from '@/modules/coven';
+import { suggestForms } from '@/modules/vocabulary';
+import type { PageRequest } from '@/lib/types';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
+import { insertSpell } from '../../../support/db/insert-spell';
+import {
+  type IngredientFixture,
+  type Overrides,
+  makeIngredient,
+  makeSpell,
+} from '../../../support/fixtures';
 
 // Story 17's service: the compendium's writes, which the site admin makes and
 // nobody else does, whatever their standing in a coven (claude-docs/db.md,
@@ -296,6 +313,179 @@ describe('deleteCompendiumEntry', () => {
       deleteCompendiumEntry(admin, '99999999-9999-9999-9999-999999999999'),
     ).rejects.toThrow(NotFound);
     await expect(deleteCompendiumEntry(admin, 'not-a-uuid')).rejects.toThrow(NotFound);
+  });
+});
+
+// Story 25's promise, over the compendium: a deleted entry is gone from every
+// read, and what it held is free again, while its row stays for a restore
+// (claude-docs/db.md, "Compendium writes").
+describe('a deleted entry', () => {
+  /** Room for every row a test here writes, so one page is the whole answer. */
+  const PAGE: PageRequest = { limit: 26, inverted: false };
+  const SLUG = 'testwort-herb-fixtura-testalis';
+  const MOVED_OFF = 'testwort-before-a-relabel';
+
+  /** Whether `read` answers, rather than refusing with NotFound. */
+  const answers = <T>(read: Promise<T>, shows: (answer: T) => boolean) =>
+    read.then(shows, (error: unknown) => {
+      if (error instanceof NotFound) return false;
+      throw error;
+    });
+
+  const member = asUser(B);
+
+  // Every read an entry reaches anyone through — signed out, and a coven's
+  // member typing into a form — each asked whether it still shows this one.
+  const READS: [string, (id: string) => Promise<boolean>][] = [
+    [
+      'the compendium list',
+      async (id) => (await listCompendium({}, PAGE)).some(({ node }) => node.id === id),
+    ],
+    ['the compendium count', async () => (await countCompendium({}, undefined)).totalCount > 0],
+    ['a read by id', (id) => answers(getIngredient(null, id), (row) => row.id === id)],
+    [
+      'its address',
+      (id) =>
+        answers(
+          resolveCompendiumSlug(SLUG),
+          (address) => address.kind === 'entry' && address.entry.id === id,
+        ),
+    ],
+    [
+      'the address it moved off',
+      () =>
+        answers(
+          resolveCompendiumSlug(MOVED_OFF),
+          (address) => address.kind === 'moved' && address.slug === SLUG,
+        ),
+    ],
+    [
+      'its folk names',
+      async (id) => {
+        const [names] = await folkNamesOf(null, [{ id, workspaceId: null }]);
+        return Array.isArray(names) && names.length > 0;
+      },
+    ],
+    [
+      'its categories',
+      async (id) => {
+        const [filed] = await categoriesOf(null, [{ id, workspaceId: null }]);
+        return Array.isArray(filed) && filed.length > 0;
+      },
+    ],
+    [
+      "a coven's duplicate warning",
+      async (id) =>
+        (await findPossibleDuplicates(member, WORKSPACE_W_ID, 'Testwort', PAGE)).some(
+          ({ node }) => node.id === id,
+        ),
+    ],
+    [
+      "a coven's common-name suggestions",
+      async () =>
+        (await suggestCommonNames(member, WORKSPACE_W_ID, 'Testwort', PAGE)).some(({ node }) =>
+          node.claimants.some((claimant) => claimant.name === 'Testwort'),
+        ),
+    ],
+    [
+      "a coven's form suggestions",
+      async () =>
+        (await suggestForms(member, WORKSPACE_W_ID, 'herb', PAGE)).some(({ node }) =>
+          node.claimants.some((claimant) => claimant.name === 'Testwort'),
+        ),
+    ],
+  ];
+
+  it.each(READS)('is gone from %s, which showed it until the delete', async (_read, shows) => {
+    const id = await seed({ folkNames: ['Test Root'], categories: ['Protection'] });
+    await sql`
+      insert into retired_ingredient_slugs ${sql({
+        ingredient_id: id,
+        slug: MOVED_OFF,
+        created_by: A.id,
+        updated_by: A.id,
+      })}`;
+    // Why the read could have gone on showing it: it does, until the delete.
+    expect(await shows(id)).toBe(true);
+
+    await deleteCompendiumEntry(admin, id);
+
+    expect(await shows(id)).toBe(false);
+  });
+
+  // M4.1a's partial index, through the service: without its `deleted_at IS
+  // NULL`, deleting an entry would reserve its identity for good. On the
+  // formal name, since two live entries may share a label anyway, so a label
+  // coming back proves nothing about the index.
+  it('frees its formal name and form for a new entry under another label', async () => {
+    const id = await seed();
+    const again = entry({ name: 'Fixture Leaf' });
+    // Why the write could only go through by the delete: while the entry is
+    // live, the identity index refuses it, and on nothing but the formal name.
+    await expect(createCompendiumEntry(admin, again)).rejects.toMatchObject({
+      issues: [{ path: ['canonicalName'] }],
+    });
+
+    await deleteCompendiumEntry(admin, id);
+    const created = await createCompendiumEntry(admin, again);
+
+    expect(created).toMatchObject({
+      name: 'Fixture Leaf',
+      canonicalName: 'Fixtura testalis',
+      form: 'herb',
+    });
+    const keys = await sql`
+      select distinct canonical_key from ingredients where id in ${sql([id, created.id])}`;
+    expect(keys).toHaveLength(1);
+  });
+
+  it('frees its address too, so the whole entry can be added again', async () => {
+    const id = await seed();
+    await expect(createCompendiumEntry(admin, entry())).rejects.toThrow(ValidationError);
+
+    await deleteCompendiumEntry(admin, id);
+    const created = await createCompendiumEntry(admin, entry());
+
+    expect(created.id).not.toBe(id);
+    expect(created.slug).toBe((await rowOf(id)).slug);
+    await expect(resolveCompendiumSlug(SLUG)).resolves.toMatchObject({
+      kind: 'entry',
+      entry: { id: created.id },
+    });
+  });
+
+  // A spell is a record of a working: what went into the jar stays in it
+  // (claude-docs/db.md, "What a spell holds").
+  it('stays in a spell that holds it, for every member who may read the spell', async () => {
+    const id = await seed();
+    await insertSpell(sql, makeSpell({ layers: [{ ingredientId: id }] }), B.id);
+
+    await deleteCompendiumEntry(admin, id);
+
+    // Why only the spell could still answer it: the entry's own read has let it go.
+    await expect(getIngredient(null, id)).rejects.toThrow(NotFound);
+    const viewer = await assertMembership(asUser(C), WORKSPACE_W_ID, { spell: ['read'] });
+    await expect(findIngredientsInSpellsIncludingSoftDeleted(viewer, [id])).resolves.toEqual([
+      expect.objectContaining({ id, deletedBy: E.id }),
+    ]);
+  });
+
+  // Two rows now carry the key, and the holder lookup reads by the key alone.
+  it('is not the entry a later collision names', async () => {
+    const id = await seed();
+    await deleteCompendiumEntry(admin, id);
+    await createCompendiumEntry(admin, entry({ name: 'Fixture Leaf' }));
+
+    await expect(
+      createCompendiumEntry(admin, entry({ name: 'Fixture Root' })),
+    ).rejects.toMatchObject({
+      issues: [
+        {
+          path: ['canonicalName'],
+          message: 'Already in the compendium as "Fixture Leaf" (Fixtura testalis, herb)',
+        },
+      ],
+    });
   });
 });
 

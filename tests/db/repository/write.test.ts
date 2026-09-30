@@ -215,9 +215,10 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
   // names a workspace) can reach. Fourteen since MB.82, whose lapsed slug
   // retirements are hard-deleted though the table carries `deleted_at`: a
   // redirect that has ended answers nothing, and `delete` is typed to refuse
-  // such a table, so the one delete is named for it. A fifteenth is the next
-  // such decision.
-  it('offers exactly fourteen writer methods — a fifteenth is a decision, not a convenience', async () => {
+  // such a table, so the one delete is named for it. Fifteen since M5.3, whose
+  // coven delete names its ingredient by id, for `updateByIdInWorkspace`'s
+  // reason. A sixteenth is the next such decision.
+  it('offers exactly fifteen writer methods — a sixteenth is a decision, not a convenience', async () => {
     const methods = await withAudit(session, async (write) => Object.keys(write).sort());
 
     expect(methods).toEqual(
@@ -229,6 +230,7 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
         'insertInWorkspace',
         'softDelete',
         'softDeleteByIdInCompendium',
+        'softDeleteByIdInWorkspace',
         'softDeleteByIds',
         'softDeleteInWorkspace',
         'update',
@@ -512,6 +514,7 @@ describe('a soft-deleted row, out of reach of every update and soft delete', () 
       'softDeleteInWorkspace',
       (write, id) => write.softDeleteInWorkspace(inW, jars, eq(jars.id, id)),
     ],
+    ['softDeleteByIdInWorkspace', (write, id) => write.softDeleteByIdInWorkspace(inW, jars, id)],
   ];
 
   // Why each could have written the tombstone: the same call, naming its live

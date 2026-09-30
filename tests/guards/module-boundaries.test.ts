@@ -75,6 +75,8 @@ const TIER_SEAM: string[] = [
   'findCompendiumEntryBySlug',
   // The entry a compendium address redirects to while its window runs (MB.82).
   'findCompendiumSlugRedirect',
+  // What a readable spell holds, deleted or not: the compendium and the proof's coven (M5.3).
+  'findIngredientsInSpellsIncludingSoftDeleted',
   // `withAudit`'s writer: the compendium tier's by-id writes, under the SiteAdmin proof (M5.2).
   'writerFor',
 ];

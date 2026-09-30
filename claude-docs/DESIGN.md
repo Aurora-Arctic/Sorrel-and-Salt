@@ -227,7 +227,7 @@ The four stamp columns stay on all three: `created_by` on a join row answers "wh
 
 1. **`*_by` never comes from a request body.** All writes go through `withAudit(session, fn)`, which injects them. A lint rule bans importing `db` outside `src/db/repository/`.
 2. **`updated_at` is a database trigger**, so a manual `psql` fix still stamps it.
-3. **Soft-delete filtering happens in the repository**, never at call sites. There is no exported query that can forget `deleted_at IS NULL`: `findMany`/`findOne` apply it where the column exists and read a join table that has none, deciding on the table's own shape rather than on a flag a caller passes. The writer holds the same line: every update and soft delete skips a deleted row, decided the same way, so a tombstone is never rewritten and a second delete never overwrites who made the first. The way back to a deleted row is v2's restore, and an edit follows it (§13, "Edit history").
+3. **Soft-delete filtering happens in the repository**, never at call sites. There is no exported query that can forget `deleted_at IS NULL`: `findMany`/`findOne` apply it where the column exists and read a join table that has none, deciding on the table's own shape rather than on a flag a caller passes. The writer holds the same line: every update and soft delete skips a deleted row, decided the same way, so a tombstone is never rewritten and a second delete never overwrites who made the first. The way back to a deleted row is v2's restore, and an edit follows it (§13, "Edit history"). **One exception, named rather than flagged: what a spell holds.** A spell keeps reaching an ingredient soft-deleted after it went into the jar, through two finders whose names end `…IncludingSoftDeleted` and which skip the ingredient's filter and no other (M5.3; `spell_ingredients` below).
 4. **The hard delete is a named method, not a flag.** `write.delete(table, where)` removes rows outright and is typed to reject any table carrying `deletedAt` at compile time; `softDelete` demands one. Same shape as `findManyIncludingSoftDeleted` — the escape hatch is narrow and impossible to point at the wrong thing.
 
 Every write transaction publishes the acting user as a transaction-local GUC, `app.current_user_id`. The statement is `select set_config('app.current_user_id', $1, true)` rather than a literal `SET LOCAL` — `is_local => true` _is_ `LOCAL`, and `SET LOCAL` accepts no bind parameters, so writing it literally would mean interpolating a user id into SQL text. Nothing in v1 reads it back: it is there for the v2 history trigger (§13) and for the policies deferred to the public launch (§8). That is the point of publishing it now — either one becomes a single migration rather than a re-audit of every write path.
@@ -360,6 +360,8 @@ Unique on `(workspaceId, ingredientId) WHERE deleted_at IS NULL`. Units cover th
 **`spell_ingredients`** — `spellId`, `ingredientId` (nullable), `name`, `form`, `quantity`, `unit`, `layerOrder`, `note`, + audit stamps. Composite primary key on `(spellId, layerOrder)`, no `deleted_at`, hard-deleted. (`note` here is a short free-text line on one ingredient's role in the jar, unrelated to the deferred notes subsystem.)
 
 References the ingredient, not the inventory item, so a saved spell survives running out of something.
+
+**Nor does a spell lose an ingredient that is deleted** (M5.3). A spell is a record of a working, so a layer keeps reaching the ingredient it links after that ingredient is soft-deleted, by an admin or by its coven: it is shown as it was, its categories still count toward the spell's derived categories, and its safety notes still warn. A layer leaves a spell only when a user removes it from the spell, and MB.110 makes that removal a soft delete too. The spell stays editable — a layer already linking a deleted ingredient survives a save, and a new layer cannot link one — and its history is v2's, where a layer pins the ingredient's exact revision (§13, "Edit history"). [`m5.3-spells-keep-deleted-ingredients.md`](design-decisions/m5.3-spells-keep-deleted-ingredients.md) carries the argument.
 
 **A layer is either an ingredient or a custom name — never both, never neither** (MB.40, story 57). `ingredientId` points at an `ingredients` row; `name`, with an optional free-text `form` (not a foreign key, for the same reason `ingredients.form` is not), is a one-off ingredient written for this jar alone. `CHECK (num_nonnulls(ingredient_id, name) = 1)` holds the exclusive-or — the same idiom §14 blesses for the deferred notes model — `CHECK (ingredient_id IS NULL OR form IS NULL)` keeps `form` off a linked row, where it would shadow half the ingredient's identity, and both text columns are checked non-blank. Two partial unique indexes carry the two identities: `(spellId, ingredientId) WHERE ingredient_id IS NOT NULL` is one ingredient per jar, what the original `(spellId, ingredientId)` key used to give, and `(spellId, lower(name)) WHERE ingredient_id IS NULL` is one custom name per jar, in the shape of the workspace label index. The key moved onto the layer because the pair no longer exists on every row.
 
@@ -692,13 +694,15 @@ type Query {
   spell(id: ID!): Spell
 }
 
-# Mutations return the entity. A refusal travels in `errors[].extensions` —
+# Mutations return the entity; a delete returns the deleted id, since a
+# deleted entity's children would resolve empty. A refusal travels in `errors[].extensions` —
 # a code, and `fieldErrors` for a validation failure — rather than in a payload
 # type pairing an entity with a userErrors list. See Errors above.
 type Mutation {
   createWorkspace(input: WorkspaceInput!): Workspace! # gated on canCreateWorkspace or admin
   createWorkspaceIngredient(workspaceId: ID!, input: IngredientInput!): Ingredient!
   updateIngredient(workspaceId: ID!, id: ID!, input: IngredientUpdateInput!): Ingredient! # replaces the row: every field but element non-null, "" or [] clears
+  deleteIngredient(workspaceId: ID!, id: ID!): ID! # a soft delete of the coven's own ingredient; a spell holding it keeps it
   addIngredientToWorkspace(workspaceId: ID!, ingredientId: ID!, input: StockInput!): InventoryItem!
   createSpell(workspaceId: ID!, input: SpellInput!): Spell!
   setSpellVisibility(id: ID!, visibility: SpellVisibility!): Spell! # private -> workspace only
@@ -1187,6 +1191,7 @@ The highest-risk tests in the project.
 - Update leaves `created_at`/`created_by` untouched
 - Soft delete sets `deleted_at`/`deleted_by`; row vanishes from finders
 - Update and soft delete leave a soft-deleted row as it was, the same call writing its live twin
+- A deleted ingredient leaves every read but a spell holding it, which keeps reaching it — with its categories — for every member who may read the spell, and nobody else
 - Re-adding a **formal** name after soft delete succeeds — the partial-index test. It must be the formal name, not the display label: display labels are no longer unique in the compendium, so a label-based assertion would pass even with the `WHERE deleted_at IS NULL` stripped off the index, and the test would silently stop testing anything. M5.3 exists to exercise that index and carries the same correction
 
 **Compendium and ingredients**
@@ -1209,6 +1214,7 @@ The highest-risk tests in the project.
 - A spell's `derivedCategories` is the deduped union across its ingredients
 - `categoryGaps` reports both directions correctly
 - A spell survives soft-deletion of an inventory item for one of its ingredients
+- A spell keeps an ingredient soft-deleted after it went into the jar, and that ingredient's categories still feed `derivedCategories`
 
 **Invitations**
 
@@ -1374,6 +1380,8 @@ One PL/pgSQL trigger applied to every table. Because it reads `to_jsonb(NEW)` ge
 Store only changed keys in `old_values`/`new_values`, with `changed_keys` as the index; reconstruct by replaying forward. Collapse revisions older than a year into a snapshot.
 
 Visibility flips on notes land in `changed_keys`, giving a queryable record of exactly when something went public and who did it.
+
+**A spell pins what went into it.** In v1 a layer reaches its ingredient's row as the row is now, deleted or not (§5, `spell_ingredients`). In v2 a layer references the exact revision of its ingredient. When the ingredient has been modified since, the spell says so, and the user can pull that precise modification into the spell — as a new revision of the spell, never a silent change to a record of a working.
 
 **Stories:** view an ingredient's history as a timeline · field-level diff between revisions · see who made each change · restore a previous revision (as a new revision, never a rewrite) · undo a soft delete from a trash view.
 

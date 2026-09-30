@@ -119,8 +119,9 @@ export function findPageInWorkspace<
 
 /**
  * The escape hatch, for admin restore paths only. Named rather than a flag a
- * later edit could default the wrong way; a second bypass is argued for in
- * the diff. Workspace-scoped tables are not reachable through it — v1 has no
+ * later edit could default the wrong way; any other bypass is named too, and
+ * argued for in the diff — the two spell hatches in `spells.ts` are the only
+ * others. Workspace-scoped tables are not reachable through it — v1 has no
  * restore UI, and the task that adds one adds its proof-scoped counterpart.
  */
 export function findManyIncludingSoftDeleted<

@@ -6,6 +6,8 @@ import {
   findManyByIds,
   findManyIncludingSoftDeleted,
   findManyInWorkspace,
+  findManyOfIngredients,
+  findManyOfSpellIngredientsIncludingSoftDeleted,
   findOne,
   findOneById,
   findOneByIdInWorkspace,
@@ -20,7 +22,16 @@ import { spells } from '@/modules/grimoire/schema/spells';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { A, D, asUser } from '../../support/as-user';
-import { charms, herbs, jars, session, useProbeTables } from '../../support/db/probe-tables';
+import {
+  charms,
+  herbs,
+  impostor,
+  jars,
+  session,
+  sql,
+  tinctures,
+  useProbeTables,
+} from '../../support/db/probe-tables';
 
 useProbeTables();
 
@@ -156,6 +167,47 @@ describe('the Membership proof (M6.3)', () => {
     });
   });
 
+  describe('write.softDeleteByIdInWorkspace', () => {
+    it('tombstones the row with that id in the proof’s workspace, leaving it in place', async () => {
+      const [row] = await insertJar(inW, 'Rosehip');
+
+      const [deleted] = await withAudit(impostor, (write) =>
+        write.softDeleteByIdInWorkspace(inW, jars, row.id),
+      );
+
+      expect(deleted).toMatchObject({ id: row.id, deletedBy: impostor.userId });
+      expect(deleted.deletedAt).toBeInstanceOf(Date);
+      await expect(findOneByIdInWorkspace(inW, jars, row.id)).resolves.toBeUndefined();
+      expect(await sql`select id from repository_probe_jars where id = ${row.id}`).toHaveLength(1);
+    });
+
+    // A two-tier table satisfies the type, so the proof's own predicate is what
+    // keeps the compendium out: a null workspace_id equals no workspace.
+    it('reaches no compendium row of a two-tier table, only the proof’s workspace’s', async () => {
+      const stamps = { created_by: session.userId, updated_by: session.userId };
+      const [compendiumRow] = await sql`
+        insert into repository_probe_tinctures ${sql({ name: 'Testwort', ...stamps })}
+        returning id`;
+      const [covenRow] = await sql`
+        insert into repository_probe_tinctures
+          ${sql({ name: 'Testwort', workspace_id: WORKSPACE_W_ID, ...stamps })}
+        returning id`;
+
+      const deleted = await withAudit(session, (write) =>
+        write.softDeleteByIdInWorkspace(inW, tinctures, compendiumRow.id),
+      );
+
+      expect(deleted).toEqual([]);
+      const [kept] = await sql`
+        select deleted_at from repository_probe_tinctures where id = ${compendiumRow.id}`;
+      expect(kept.deleted_at).toBeNull();
+      // Why it could have been deleted: the same call takes the coven's row.
+      await expect(
+        withAudit(session, (write) => write.softDeleteByIdInWorkspace(inW, tinctures, covenRow.id)),
+      ).resolves.toHaveLength(1);
+    });
+  });
+
   describe('findManyInWorkspace', () => {
     it('returns this workspace’s rows and not the other’s', async () => {
       await insertJar(inW, 'Rosehip');
@@ -247,6 +299,23 @@ describe('the Membership proof (M6.3)', () => {
         deletedAt: null,
       });
     });
+
+    it('is not soft-deletable by id either, though its own proof deletes it', async () => {
+      const [row] = await insertJar(inX, 'Nettle');
+
+      const deleted = await withAudit(session, (write) =>
+        write.softDeleteByIdInWorkspace(inW, jars, row.id),
+      );
+
+      expect(deleted).toEqual([]);
+      await expect(findOneByIdInWorkspace(inX, jars, row.id)).resolves.toMatchObject({
+        deletedAt: null,
+      });
+      // Why the delete could have gone through: this exact call, under X's proof, makes it.
+      await expect(
+        withAudit(session, (write) => write.softDeleteByIdInWorkspace(inX, jars, row.id)),
+      ).resolves.toHaveLength(1);
+    });
   });
 
   // None of these bodies run: each `@ts-expect-error` fails `npm run typecheck`
@@ -277,11 +346,22 @@ describe('the Membership proof (M6.3)', () => {
       // so the scoped finder refuses it rather than filtering on nothing.
       findManyInWorkspace(membership, herbs);
 
+    const deleteByIdWithoutTheProof = (write: AuditWriter, id: string) =>
+      // @ts-expect-error — the by-id delete takes the proof first, as every scoped write does.
+      write.softDeleteByIdInWorkspace(jars, id);
+
+    const deleteAnUnscopedTableById = (write: AuditWriter, membership: Membership, id: string) =>
+      // @ts-expect-error — `herbs` has no workspace_id for the proof to scope;
+      // its by-id delete is softDeleteByIds.
+      write.softDeleteByIdInWorkspace(membership, herbs, id);
+
     expect(readItUnscoped).toBeInstanceOf(Function);
     expect(readItWithoutTheProof).toBeInstanceOf(Function);
     expect(writeItUnscoped).toBeInstanceOf(Function);
     expect(nameAWorkspaceBesideTheProof).toBeInstanceOf(Function);
     expect(scopeAnUnscopedTable).toBeInstanceOf(Function);
+    expect(deleteByIdWithoutTheProof).toBeInstanceOf(Function);
+    expect(deleteAnUnscopedTableById).toBeInstanceOf(Function);
   });
 
   // The same shape for M10.3's two extra scopes. A private spell excluded by a
@@ -318,12 +398,26 @@ describe('the Membership proof (M6.3)', () => {
       // which is exactly why it goes through its spell instead.
       findManyInWorkspace(membership, spellCategories);
 
+    const readLayersAsAnIngredientsChildren = () =>
+      // @ts-expect-error — `spell_ingredients` carries an ingredient_id too, but
+      // its reach is its spell's: read through a compendium entry, it would be
+      // every coven's layers of that entry, private spells included.
+      findManyOfIngredients([], spellIngredients, [WORKSPACE_W_ID]);
+
+    const readLayersAsAHeldIngredientsChildren = (membership: Membership) =>
+      // @ts-expect-error — nor are layers a held ingredient's children.
+      findManyOfSpellIngredientsIncludingSoftDeleted(membership, spellIngredients, [
+        WORKSPACE_W_ID,
+      ]);
+
     expect(readSpellsWithoutTheVisibilityRule).toBeInstanceOf(Function);
     expect(readOneSpellWithoutTheVisibilityRule).toBeInstanceOf(Function);
     expect(readLayersUnscoped).toBeInstanceOf(Function);
     expect(readAssignmentsUnscoped).toBeInstanceOf(Function);
     expect(readLayersThroughTheHatch).toBeInstanceOf(Function);
     expect(scopeAJoinTableByWorkspace).toBeInstanceOf(Function);
+    expect(readLayersAsAnIngredientsChildren).toBeInstanceOf(Function);
+    expect(readLayersAsAHeldIngredientsChildren).toBeInstanceOf(Function);
   });
 
   it("refuses the generic finders an ingredient's children at compile time", () => {

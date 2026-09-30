@@ -13,6 +13,7 @@ import type {
   IngredientIdentity,
   IngredientScoped,
   Keyset,
+  NotSpellScoped,
   SimilarityScore,
   Unscoped,
 } from './types';
@@ -26,7 +27,9 @@ import type {
  * another coven's ingredient gets no rows rather than a filter applied after
  * the fetch (rule 7).
  */
-export function findManyOfIngredients<TTable extends PgTable & IngredientScoped & Unscoped>(
+export function findManyOfIngredients<
+  TTable extends PgTable & IngredientScoped & Unscoped & NotSpellScoped,
+>(
   memberships: readonly Membership[],
   table: TTable,
   ingredientIds: readonly string[],

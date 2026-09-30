@@ -1,18 +1,34 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
+import { findIngredientsInSpellsIncludingSoftDeleted } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import { ingredientSlug } from '@/lib/slugify';
 import {
+  categoriesOf,
   createWorkspaceIngredient,
+  deleteWorkspaceIngredient,
+  findPossibleDuplicates,
+  folkNamesOf,
+  getIngredient,
   getWorkspaceIngredient,
+  suggestCommonNames,
   updateWorkspaceIngredient,
 } from '@/modules/ingredients';
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
+import { assertMembership } from '@/modules/coven';
+import { suggestForms } from '@/modules/vocabulary';
+import type { PageRequest } from '@/lib/types';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
+import { insertSpell } from '../../../support/db/insert-spell';
+import {
+  type IngredientFixture,
+  type Overrides,
+  makeIngredient,
+  makeSpell,
+} from '../../../support/fixtures';
 
 // Story 15's service: a coven's own ingredients, written by its owners and
 // members and read by its members, never by anyone else. The table is emptied
@@ -565,5 +581,234 @@ describe('updateWorkspaceIngredient', () => {
       expect(await liveNames(id)).toEqual(['Kept Root']);
       expect((await rowOf(id)).name).toBe('Testwort');
     });
+  });
+});
+
+describe('deleteWorkspaceIngredient', () => {
+  it.each([
+    ['an owner', A],
+    ['a member', B],
+  ])('lets %s soft-delete one, stamping deleted_by and keeping the row', async (_role, user) => {
+    const id = await seed(local());
+
+    await deleteWorkspaceIngredient(asUser(user), WORKSPACE_W_ID, id);
+
+    const row = await rowOf(id);
+    expect(row).toMatchObject({
+      workspace_id: WORKSPACE_W_ID,
+      created_by: A.id,
+      deleted_by: user.id,
+    });
+    expect(row.deleted_at).toBeInstanceOf(Date);
+  });
+
+  it('refuses a viewer and leaves the row as it was', async () => {
+    const id = await seed(local());
+    const before = await rowOf(id);
+    // Why it could have succeeded: the row is live and C can read it.
+    await expect(getWorkspaceIngredient(asUser(C), WORKSPACE_W_ID, id)).resolves.toBeDefined();
+
+    await expect(deleteWorkspaceIngredient(asUser(C), WORKSPACE_W_ID, id)).rejects.toThrow(
+      Forbidden,
+    );
+    expect(await rowOf(id)).toEqual(before);
+  });
+
+  it('does not reach another coven’s ingredient by direct id', async () => {
+    const id = await seed(local());
+    const before = await rowOf(id);
+    // Why it could have succeeded: the id is live, and W's own member reaches it.
+    await expect(getWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id)).resolves.toMatchObject({
+      id,
+    });
+
+    await expect(deleteWorkspaceIngredient(asUser(D), WORKSPACE_X_ID, id)).rejects.toThrow(
+      NotFound,
+    );
+    await expect(deleteWorkspaceIngredient(asUser(D), WORKSPACE_W_ID, id)).rejects.toThrow(
+      Forbidden,
+    );
+    expect(await rowOf(id)).toEqual(before);
+  });
+
+  it('refuses the site admin, whose role reaches no coven', async () => {
+    const id = await seed(local());
+    const before = await rowOf(id);
+    expect(asUser(E).role).toBe('admin');
+
+    await expect(deleteWorkspaceIngredient(asUser(E), WORKSPACE_W_ID, id)).rejects.toThrow(
+      Forbidden,
+    );
+    expect(await rowOf(id)).toEqual(before);
+  });
+
+  it('does not reach a compendium entry, and leaves it as it was', async () => {
+    const id = await seed(makeIngredient());
+    const before = await rowOf(id);
+
+    await expect(deleteWorkspaceIngredient(asUser(A), WORKSPACE_W_ID, id)).rejects.toThrow(
+      NotFound,
+    );
+    expect(await rowOf(id)).toEqual(before);
+  });
+
+  it('answers NotFound for an ingredient already deleted, leaving who deleted it', async () => {
+    const id = await seed(local());
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
+    const before = await rowOf(id);
+
+    await expect(deleteWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id)).rejects.toThrow(
+      NotFound,
+    );
+    expect(await rowOf(id)).toEqual(before);
+  });
+
+  it('answers NotFound for an id that names nothing, and for one that is not a uuid', async () => {
+    await expect(
+      deleteWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, '99999999-9999-9999-9999-999999999999'),
+    ).rejects.toThrow(NotFound);
+    await expect(
+      deleteWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, 'not-an-ingredient'),
+    ).rejects.toThrow(NotFound);
+  });
+});
+
+// Story 25 in the coven: a deleted ingredient is gone from every read its
+// members make, and what it held is free again (claude-docs/db.md,
+// "Workspace ingredients").
+describe('a deleted coven ingredient', () => {
+  /** Room for every row a test here writes, so one page is the whole answer. */
+  const PAGE: PageRequest = { limit: 26, inverted: false };
+  const member = asUser(B);
+  const ref = (id: string) => [{ id, workspaceId: WORKSPACE_W_ID }];
+
+  /** Whether `read` answers, rather than refusing with NotFound. */
+  const answers = <T>(read: Promise<T>, shows: (answer: T) => boolean) =>
+    read.then(shows, (error: unknown) => {
+      if (error instanceof NotFound) return false;
+      throw error;
+    });
+
+  // Every read a member reaches the coven's own ingredients through, each asked
+  // whether it still shows this one.
+  const READS: [string, (id: string) => Promise<boolean>][] = [
+    [
+      'a read by id',
+      (id) => answers(getWorkspaceIngredient(member, WORKSPACE_W_ID, id), (row) => row.id === id),
+    ],
+    [
+      'a read by id naming the coven',
+      (id) => answers(getIngredient(member, id, WORKSPACE_W_ID), (row) => row.id === id),
+    ],
+    [
+      'its folk names',
+      async (id) => {
+        const [names] = await folkNamesOf(member, ref(id));
+        return Array.isArray(names) && names.length > 0;
+      },
+    ],
+    [
+      'its categories',
+      async (id) => {
+        const [filed] = await categoriesOf(member, ref(id));
+        return Array.isArray(filed) && filed.length > 0;
+      },
+    ],
+    [
+      'the duplicate warning',
+      async (id) =>
+        (await findPossibleDuplicates(member, WORKSPACE_W_ID, 'Testwort', PAGE)).some(
+          ({ node }) => node.id === id,
+        ),
+    ],
+    [
+      'the common-name suggestions',
+      async () =>
+        (await suggestCommonNames(member, WORKSPACE_W_ID, 'Testwort', PAGE)).some(({ node }) =>
+          node.claimants.some((claimant) => claimant.name === 'Testwort'),
+        ),
+    ],
+    [
+      'the form suggestions',
+      async () =>
+        (await suggestForms(member, WORKSPACE_W_ID, 'herb', PAGE)).some(({ node }) =>
+          node.claimants.some((claimant) => claimant.name === 'Testwort'),
+        ),
+    ],
+  ];
+
+  it.each(READS)('is gone from %s, which showed it until the delete', async (_read, shows) => {
+    const id = await seed(local({ folkNames: ['Test Root'], categories: ['Protection'] }));
+    // Why the read could have gone on showing it: it does, until the delete.
+    expect(await shows(id)).toBe(true);
+
+    await deleteWorkspaceIngredient(member, WORKSPACE_W_ID, id);
+
+    expect(await shows(id)).toBe(false);
+  });
+
+  // A spell is a record of a working: what went into the jar stays in it
+  // (claude-docs/db.md, "What a spell holds").
+  it('stays in a spell that holds it, for every member who may read the spell', async () => {
+    const id = await seed(local());
+    await insertSpell(sql, makeSpell({ layers: [{ ingredientId: id }] }), A.id);
+
+    await deleteWorkspaceIngredient(member, WORKSPACE_W_ID, id);
+
+    // Why only the spell could still answer it: the coven's own read has let it go.
+    await expect(getWorkspaceIngredient(member, WORKSPACE_W_ID, id)).rejects.toThrow(NotFound);
+    const viewer = await assertMembership(asUser(C), WORKSPACE_W_ID, { spell: ['read'] });
+    await expect(findIngredientsInSpellsIncludingSoftDeleted(viewer, [id])).resolves.toEqual([
+      expect.objectContaining({ id, deletedBy: B.id }),
+    ]);
+  });
+
+  // The coven's three partial indexes, each shown to be what stood in the way
+  // while the ingredient was live. Inside a coven the label is unique too, so
+  // here a label coming back does prove its index's predicate.
+  it('frees its label, for an ingredient of another form', async () => {
+    const id = await seed(local());
+    const again = inputOf(local({ form: 'root' }));
+    await expect(createWorkspaceIngredient(member, WORKSPACE_W_ID, again)).rejects.toMatchObject({
+      issues: [
+        { path: ['name'], message: 'This coven already has an ingredient called "Testwort"' },
+      ],
+    });
+
+    await deleteWorkspaceIngredient(member, WORKSPACE_W_ID, id);
+
+    await expect(createWorkspaceIngredient(member, WORKSPACE_W_ID, again)).resolves.toMatchObject({
+      name: 'Testwort',
+      form: 'root',
+    });
+  });
+
+  it('frees its formal name and form, for an ingredient under another label', async () => {
+    const id = await seed(local({ canonicalName: 'Fixtura testalis' }));
+    const again = inputOf(local({ name: 'Fixture Leaf', canonicalName: 'Fixtura testalis' }));
+    await expect(createWorkspaceIngredient(member, WORKSPACE_W_ID, again)).rejects.toMatchObject({
+      issues: [{ path: ['canonicalName'] }],
+    });
+
+    await deleteWorkspaceIngredient(member, WORKSPACE_W_ID, id);
+
+    await expect(createWorkspaceIngredient(member, WORKSPACE_W_ID, again)).resolves.toMatchObject({
+      name: 'Fixture Leaf',
+      canonicalName: 'Fixtura testalis',
+      form: 'herb',
+    });
+  });
+
+  it('frees its address too, so the whole ingredient can be added again', async () => {
+    const id = await seed(local());
+    await expect(
+      createWorkspaceIngredient(member, WORKSPACE_W_ID, inputOf(local())),
+    ).rejects.toThrow(ValidationError);
+
+    await deleteWorkspaceIngredient(member, WORKSPACE_W_ID, id);
+    const created = await createWorkspaceIngredient(member, WORKSPACE_W_ID, inputOf(local()));
+
+    expect(created.id).not.toBe(id);
+    expect(created.slug).toBe((await rowOf(id)).slug);
   });
 });

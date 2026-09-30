@@ -127,6 +127,7 @@ input IngredientUpdateInput {
 
 type Mutation {
   createWorkspaceIngredient(input: IngredientInput!, workspaceId: ID!): Ingredient!
+  deleteIngredient(id: ID!, workspaceId: ID!): ID!
   setEmail(email: String!): User!
   updateIngredient(id: ID!, input: IngredientUpdateInput!, workspaceId: ID!): Ingredient!
 }

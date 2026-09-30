@@ -6,7 +6,7 @@ import { REPO_ROOT } from '../support/paths';
 // The inside of the repository — claude-docs/db.md, "Soft-delete filtering":
 // every SELECT is built in `select.ts`, by `selectFrom` or by `existsIn`, the
 // index re-exports a pinned surface that leaves both out, and every exported
-// finder but the escape hatch filters. `existsIn` is the correlated subquery a
+// finder but the named escape hatches filters. `existsIn` is the correlated subquery a
 // finder scopes by a parent row with, and it ANDs the filter itself: as a raw
 // `sql` string the subquery's filter was the caller's to remember, where no
 // guard can see it. Both builders are exported from `select.ts` so their
@@ -35,11 +35,13 @@ const EXPORTED_FUNCTIONS = [
   'findCompendiumPage',
   'findCompendiumSlugRedirect',
   'findIngredientFormValues',
+  'findIngredientsInSpellsIncludingSoftDeleted',
   'findMany',
   'findManyByIds',
   'findManyIncludingSoftDeleted',
   'findManyInSpell',
   'findManyOfIngredients',
+  'findManyOfSpellIngredientsIncludingSoftDeleted',
   'findManyInWorkspace',
   'findManySpells',
   'findMembershipsOfUsers',
@@ -74,6 +76,7 @@ const INTERNAL = [
 /** Rule 5's half: a finder over a table carrying `workspace_id` scopes by the proof. */
 const SCOPED_FINDERS = [
   'findCommonNameSuggestions',
+  'findIngredientsInSpellsIncludingSoftDeleted',
   'findManyInWorkspace',
   'findOneByIdInWorkspace',
   'findOneIngredient',
@@ -90,10 +93,28 @@ const SCOPED_FINDERS = [
  * table with no `workspace_id` to AND on, so `scopedTo(` alone would pass it
  * for the wrong reason.
  */
-const VISIBILITY_FINDERS = ['findManySpells', 'findOneSpell', 'findManyInSpell'];
+const VISIBILITY_FINDERS = [
+  'findManySpells',
+  'findOneSpell',
+  'findManyInSpell',
+  'findIngredientsInSpellsIncludingSoftDeleted',
+];
 
-/** The one exported finder allowed to skip the filter — the escape hatch. */
+/** The generic escape hatch, for v2's restore paths: it skips the filter outright. */
 const ESCAPE_HATCH = 'findManyIncludingSoftDeleted';
+
+/**
+ * A spell's reach past an ingredient's tombstone (M5.3): what went into a jar
+ * stays in it. Each skips the ingredient's filter and nothing else, which the
+ * last test below pins.
+ */
+const SPELL_HATCHES = [
+  'findIngredientsInSpellsIncludingSoftDeleted',
+  'findManyOfSpellIngredientsIncludingSoftDeleted',
+];
+
+/** Every exported finder allowed to skip a filter, each saying so in its name. */
+const ESCAPE_HATCHES = [ESCAPE_HATCH, ...SPELL_HATCHES];
 
 const source = (file: string) => readFileSync(join(REPO_ROOT, file), 'utf8');
 
@@ -181,9 +202,9 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     expect(reexported().sort()).toEqual([...EXPORTED_FUNCTIONS].sort());
   });
 
-  it('applies the filter in every exported finder but the escape hatch', () => {
+  it('applies the filter in every exported finder but the escape hatches', () => {
     const finders = EXPORTED_FUNCTIONS.filter(
-      (name) => name !== ESCAPE_HATCH && name.startsWith('find'),
+      (name) => !ESCAPE_HATCHES.includes(name) && name.startsWith('find'),
     );
 
     expect(finders.length).toBeGreaterThan(0);
@@ -234,11 +255,29 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     expect(body).toMatch(/membership\.userId/);
   });
 
-  it('names the escape hatch so a reviewer cannot miss it, and keeps it alone', () => {
+  it('names every escape hatch so a reviewer cannot miss it, and admits no other', () => {
     const hatches = EXPORTED_FUNCTIONS.filter((name) => name.endsWith('IncludingSoftDeleted'));
 
-    expect(hatches).toEqual([ESCAPE_HATCH]);
+    expect(hatches.sort()).toEqual([...ESCAPE_HATCHES].sort());
     // It says what it is at the call site, and says why in its own doc comment.
     expect(functionBody(ESCAPE_HATCH)).not.toMatch(/notSoftDeleted\(/);
+  });
+
+  // The spell hatches skip one filter, the ingredient's. The spell's stays
+  // (`readableSpells` carries it, pinned above), the layer's stays by
+  // construction (`existsIn`), and the tier is still the proof's; the
+  // children's finder reaches its parents through the first, and a child's own
+  // tombstone still filters.
+  it('lets the spell hatches past the ingredient’s tombstone and nothing else', () => {
+    const held = functionBody('findIngredientsInSpellsIncludingSoftDeleted');
+    expect(held).toMatch(/readableSpells\(/);
+    expect(held).toMatch(/existsIn\(\s*spellIngredients\b/);
+    expect(held).toMatch(/inCompendium\(ingredients\)/);
+    expect(held).toMatch(/scopedTo\(membership, ingredients\)/);
+    expect(held).not.toMatch(/notSoftDeleted\(/);
+
+    const children = functionBody('findManyOfSpellIngredientsIncludingSoftDeleted');
+    expect(children).toMatch(/findIngredientsInSpellsIncludingSoftDeleted\(/);
+    expect(children).toMatch(/notSoftDeleted\(table\)/);
   });
 });
