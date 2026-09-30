@@ -290,6 +290,25 @@ $font-heading: var(--font-display), 'Cormorant Unicase', Georgia, 'Times New Rom
 // No webfont: incidental inline code, and every platform ships a good monospace.
 $font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
 
+// The sizes below body copy, by role. The headings' scale is typography-base's.
+$type-sizes: (
+  'body': 1rem,
+  // Labels, buttons, notices and field errors: text a person acts on.
+  'small': 0.875rem,
+  // Hints, metadata, chips and badges.
+  'caption': 0.8125rem,
+  // The uppercase, letter-spaced .eyebrow.
+  'overline': 0.75rem,
+);
+
+@function type-size($role) {
+  @if not map.has-key($type-sizes, $role) {
+    @error 'Unknown type size "#{$role}". The sizes are: #{map.keys($type-sizes)}.';
+  }
+
+  @return map.get($type-sizes, $role);
+}
+
 // The reading measure: the longest comfortable line of body copy. `ch` is the
 // width of "0" in the element's own font, so the measure follows the text it
 // caps. typography-base caps every paragraph at it, so a page wider than it — a
@@ -304,3 +323,46 @@ $theme-transition-easing: ease-in-out;
 
 // The only width-based breakpoint; everything else keys off media preferences.
 $breakpoint-desktop: 1024px;
+
+// ---------------------------------------------------------------------------
+// Spacing and radius
+// ---------------------------------------------------------------------------
+// The steps every margin, padding and gap is taken from, on a 0.25rem base.
+// A chip's or badge's inner padding is its own geometry, trimmed by its 1px
+// edge, and stays off the scale. claude-docs/styling.md, "Spacing".
+$space-steps: (
+  1: 0.25rem,
+  2: 0.5rem,
+  3: 0.75rem,
+  4: 1rem,
+  5: 1.5rem,
+  6: 2rem,
+  7: 3rem,
+  8: 4rem,
+);
+
+@function space($step) {
+  @if not map.has-key($space-steps, $step) {
+    @error 'Unknown space step "#{$step}". The steps are: #{map.keys($space-steps)}.';
+  }
+
+  @return map.get($space-steps, $step);
+}
+
+$radii: (
+  // A badge: square enough not to read as a chip.
+  'sharp': 2px,
+  // What a person types into or presses: fields, buttons, notices.
+  'control': 0.333rem,
+  // What holds controls: panels, cards, modals.
+  'surface': 0.5rem,
+  'pill': 999px
+);
+
+@function radius($role) {
+  @if not map.has-key($radii, $role) {
+    @error 'Unknown radius "#{$role}". The radii are: #{map.keys($radii)}.';
+  }
+
+  @return map.get($radii, $role);
+}
