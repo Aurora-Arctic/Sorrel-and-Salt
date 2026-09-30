@@ -4,19 +4,9 @@ import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { ingredientCategories } from '../schema/ingredient-categories';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
-import type { ingredients } from '../schema/ingredients';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import { type Membership, assertMembership } from '@/modules/coven';
-
-/**
- * An ingredient as its children's loaders key it: the row a resolver already
- * holds. `workspaceId` says which proof to ask for; it is never the scope —
- * the read takes that from the proofs, so a key claiming the wrong tier is
- * answered with nothing.
- */
-export type IngredientKey = Pick<typeof ingredients.$inferSelect, 'id' | 'workspaceId'>;
-
-export type CategoryRow = typeof categories.$inferSelect;
+import type { CategoryRow, IngredientKey } from '../types';
 
 /**
  * The categories each ingredient is filed under, one answer per ref in the

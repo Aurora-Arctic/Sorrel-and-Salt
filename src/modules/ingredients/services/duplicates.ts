@@ -1,9 +1,9 @@
 import 'server-only';
 import { type SimilarityScore, findSimilarIngredients } from '../../../db/repository';
 import type { ingredients } from '../schema/ingredients';
-import type { PageEntry, PageRequest } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import { assertMembership } from '@/modules/coven';
+import type { PageEntry, PageRequest } from '../../../lib/types';
 
 /**
  * Story 16's "did you mean": one page of the compendium entries and this

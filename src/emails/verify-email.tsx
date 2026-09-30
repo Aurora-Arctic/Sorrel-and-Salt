@@ -1,21 +1,9 @@
-import type { Message } from '../lib/mail';
-import { SOCIAL_PROVIDERS, type ProviderId } from '../lib/social-providers';
-import { Action, EmailLayout, Paragraph, renderParts, type Part } from './parts/layout';
+import { SOCIAL_PROVIDERS } from '../lib/social-providers';
+import { Action, EmailLayout, Paragraph, renderParts } from './parts/layout';
+import type { Message, ProviderId } from '../lib/types';
+import type { VerifyEmailProps } from './types';
 
 const SUBJECT = 'Confirm Your Email for Sorrel & Salt.';
-
-/** A sign-up proving the address it arrived with, or an existing account asking for this one. */
-export type VerifyEmailPurpose = 'sign-up' | 'change';
-
-interface VerifyEmailProps {
-  url: string;
-  purpose?: VerifyEmailPurpose;
-  /** The providers linked to the account, so the reader can tell whether they signed up at all. */
-  providers: readonly ProviderId[];
-  /** Where the images and fonts are served from: the link's own origin unless a preview says otherwise. */
-  origin?: string;
-  part: Part;
-}
 
 function providerList(providers: readonly ProviderId[]): string {
   const labels = SOCIAL_PROVIDERS.filter((provider) => providers.includes(provider.id)).map(

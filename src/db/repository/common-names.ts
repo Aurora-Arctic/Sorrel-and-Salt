@@ -3,15 +3,10 @@ import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { Membership } from '@/modules/coven';
-import type { PageEntry, PageRequest } from '../../lib/pagination';
-import { inCompendium, notSoftDeleted, scopedTo } from './shapes';
-import { type Claimant, claimantList, readSuggestionPage } from './suggestion-page';
-
-/** A common name already in use, and who answers to it. */
-export interface CommonNameSuggestion {
-  value: string;
-  claimants: Claimant[];
-}
+import type { PageEntry, PageRequest } from '../../lib/types';
+import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
+import { claimantList, readSuggestionPage } from './suggestion-page';
+import type { CommonNameSuggestion } from './types';
 
 /**
  * One page of what a member's common-name field offers: the display names

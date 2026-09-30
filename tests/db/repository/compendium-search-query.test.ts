@@ -2,8 +2,8 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { findCompendiumCount, findCompendiumPage } from '@/db/repository';
 import { FIXTURE_USERS } from '@/db/seed/standard';
-import type { PageRequest } from '@/lib/pagination';
 import { useTestDatabase } from '../../support/db/database';
+import type { PageRequest } from '@/lib/types';
 
 // The statements a compendium search sends, read off the connection: `<%`
 // means "word-similar by pg_trgm.word_similarity_threshold", whose default is

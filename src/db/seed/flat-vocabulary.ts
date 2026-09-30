@@ -1,14 +1,9 @@
-// `./idempotent` (and through it `./bootstrap-admin`) first, and load-bearing — see minimal.ts.
 import { insertMissing } from './idempotent';
 import { slugify } from '../../lib/slugify';
-import type { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
-import type { SeedTransaction } from './index';
+import type { FlatTable, SeedTransaction } from './types';
 
 // The one-tier shape: a vocabulary with no group, keyed by a slug nobody writes
 // down. `seedTwoTierVocabulary` is the grouped counterpart.
-
-/** Typed as a union rather than a generic: the columns are identical, so the row type survives. */
-type FlatTable = typeof planets | typeof zodiacSigns;
 
 /**
  * Inserts each item only where its slug is absent. Idempotent on the slug and

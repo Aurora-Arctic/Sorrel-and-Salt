@@ -2,13 +2,13 @@ import { graphql } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { createBuilder } from '@/graphql/builder';
-import type { Context } from '@/graphql/context';
 import { createLoaders } from '@/graphql/loaders';
 import { noSender } from '../../../support/email-verification';
 import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { type WorkspacePermission, assertMembership } from '@/modules/coven';
 import { D, E, asUser } from '../../../support/as-user';
+import type { Context } from '@/graphql/types';
 
 // CLAUDE.md rule 1, asserted rather than stated: a server component calling
 // the service and a resolver reaching it over the schema get one answer,

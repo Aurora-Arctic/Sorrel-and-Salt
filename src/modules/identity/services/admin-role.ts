@@ -2,6 +2,7 @@ import 'server-only';
 import { withAudit } from '../../../db/repository';
 import { users } from '../schema/users';
 import type { Session } from '../../../lib/session';
+import type { PrimaryAdminOutcome, SignInProfile } from '../types';
 
 // The primary admin is promoted at sign-in, by a provider that vouches for the
 // address, or at first-party verification, by our own mail:
@@ -16,22 +17,6 @@ import type { Session } from '../../../lib/session';
  * purpose rather than by omission.
  */
 const VOUCHING_PROVIDERS: ReadonlySet<string> = new Set(['google', 'discord']);
-
-/** What the provider said at this callback — never the stored row, which a later feature may set. */
-export interface SignInProfile {
-  providerId: string;
-  email: string;
-  emailVerified: boolean;
-}
-
-export type PrimaryAdminOutcome =
-  | 'promoted'
-  | 'already-admin'
-  | 'not-primary'
-  | 'no-profile'
-  | 'provider-does-not-vouch'
-  | 'unverified'
-  | 'profile-email-differs';
 
 function sameAddress(a: string, b: string): boolean {
   return a.toLowerCase() === b.toLowerCase();

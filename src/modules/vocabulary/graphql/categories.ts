@@ -1,6 +1,6 @@
 import { builder } from '../../../graphql/builder';
 import type { categories } from '../schema/categories';
-import type { CategoryGroupRow } from '../services/groups';
+import type { CategoryGroupRow } from '../types';
 
 // The category vocabulary as a chip reads it (M8.11): each category with its
 // group, whose two stored colours are what the chip wears (MB.36). Public

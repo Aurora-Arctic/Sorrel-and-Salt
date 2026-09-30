@@ -1,5 +1,4 @@
 import 'server-only';
-import type { z } from 'zod';
 import { findOneByIdInWorkspace, withAudit } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
@@ -8,23 +7,14 @@ import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
 import { ingredients } from '../schema/ingredients';
 import { LocalIngredientInput } from '../validation/ingredient';
-import {
-  type IngredientFields,
-  addFolkNames,
-  columnsOf,
-  replaceFolkNames,
-} from './ingredient-rows';
+import { addFolkNames, columnsOf, replaceFolkNames } from './ingredient-rows';
 import { assertMembership } from '@/modules/coven';
+import type { IngredientFields, IngredientRow, IngredientValues } from '../types';
 
 // Story 15: a coven's own ingredients. Every read and write is under the
 // proof, so the tier is the proof's — `workspace_id` is never read from the
 // input, and nothing here can write the compendium or move a row into it
 // (claude-docs/db.md, "Workspace ingredients").
-
-type IngredientRow = typeof ingredients.$inferSelect;
-
-/** What the service parses: the form's values, or the mutation's input. */
-type IngredientValues = z.input<typeof LocalIngredientInput>;
 
 /**
  * Creates an ingredient in this coven, with its folk names, in one

@@ -12,7 +12,7 @@ import '../../modules/identity/schema/users';
 // re-exported here — guarded by tests/guards/soft-delete-finder-guard.test.ts.
 // Import this file, never a sibling: the rest of the folder is internal.
 
-export { withAudit, type AuditWriter } from './write';
+export { withAudit } from './write';
 export {
   findMany,
   findManyByIds,
@@ -33,22 +33,25 @@ export {
   findManyOfIngredients,
   findOneIngredient,
   findSimilarIngredients,
-  type CompendiumScore,
-  type IngredientFilter,
-  type IngredientIdentity,
-  type SimilarityScore,
 } from './ingredients';
-export {
-  findIngredientFormValues,
-  findVocabularySuggestions,
-  type FormSuggestion,
-  type SuggestingVocabulary,
-  type VocabularySuggestion,
-} from './vocabularies';
-export { findCommonNameSuggestions, type CommonNameSuggestion } from './common-names';
-export { findCompendiumEntryBySlug, findCompendiumSlugRedirect, type SlugRedirect } from './slugs';
-export type { Claimant } from './suggestion-page';
-export type { SortPart } from './select';
+export { findIngredientFormValues, findVocabularySuggestions } from './vocabularies';
+export { findCommonNameSuggestions } from './common-names';
+export { findCompendiumEntryBySlug, findCompendiumSlugRedirect } from './slugs';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';
 export { findUserByEmail } from './users';
 export { deleteProvisionalUsers } from './provisional-users';
+export type {
+  AuditWriter,
+  Claimant,
+  CommonNameSuggestion,
+  CompendiumScore,
+  FormSuggestion,
+  IngredientFilter,
+  IngredientIdentity,
+  IngredientRow,
+  SimilarityScore,
+  SlugRedirect,
+  SortPart,
+  SuggestingVocabulary,
+  VocabularySuggestion,
+} from './types';

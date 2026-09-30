@@ -1,7 +1,8 @@
 import type { Story } from '@ladle/react';
 import { linkErrorMessage } from '../../lib/sign-in';
-import type { LinkedAccount, ProviderId } from '../../lib/social-providers';
-import SignInMethods, { type SignInMethodsProps } from '.';
+import SignInMethods from '.';
+import type { LinkedAccount, ProviderId } from '../../lib/types';
+import type { SignInMethodsProps } from './types';
 
 // Render-only; behaviour is asserted in tests/components/SignInMethods. Adding
 // or removing here reaches for /api/auth, which the workshop does not serve,

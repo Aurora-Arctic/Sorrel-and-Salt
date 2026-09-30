@@ -2,10 +2,10 @@ import { GraphQLError, graphql, type GraphQLObjectType, type GraphQLSchema } fro
 import { complexityFromQuery } from '@pothos/plugin-complexity';
 import { describe, expect, it } from 'vitest';
 import { MAX_COST, createBuilder } from '@/graphql/builder';
-import type { Context } from '@/graphql/context';
 import { createLoaders } from '@/graphql/loaders';
 import { noSender } from '../support/email-verification';
-import type { Cursor, PageCount, PageEntry, PageRequest } from '@/lib/pagination';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '@/lib/types';
+import type { Context } from '@/graphql/types';
 
 // The transport half of CLAUDE.md rule 8, over a throwaway schema: a list of
 // 250 branches, each with a connection of 250 leaves, so no page size is

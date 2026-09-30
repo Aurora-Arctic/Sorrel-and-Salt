@@ -1,8 +1,8 @@
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS } from '../schema/ingredient-enums';
-import type { IngredientRow } from '../services/compendium';
 import { CategoryRef } from '@/modules/vocabulary';
+import type { IngredientRow } from '../types';
 
 // `Ingredient` as DESIGN.md §7 sketches it, over the row the services return:
 // every correspondence field, the tier as `isGlobal`, and the two children

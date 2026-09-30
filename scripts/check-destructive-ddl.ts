@@ -24,6 +24,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import type { Finding } from './types.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const MIGRATIONS_DIR = join(REPO_ROOT, 'src', 'db', 'migrations');
@@ -33,12 +34,6 @@ const FIXTURES_DIR = join(import.meta.dirname, '__fixtures__', 'destructive-ddl'
 const MIGRATIONS_PATHSPEC = 'src/db/migrations/*.sql';
 
 export const ACK_LINE_RE = /^destructive ddl acknowledged:\s*\S.*$/im;
-
-export interface Finding {
-  file: string;
-  rule: string;
-  statement: string;
-}
 
 // One rule per form in CLAUDE.md rule 10, matched per statement rather than
 // per line so a DEFAULT on its own line still counts.

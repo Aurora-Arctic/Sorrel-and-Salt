@@ -4,8 +4,8 @@ import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspa
 // imports `findWorkspaceRole` below. The brand has to live beside the check
 // that mints it (CLAUDE.md rule 1), which is why the direction is this way up.
 import type { WorkspaceRole } from '@/modules/coven';
+import { notSoftDeleted } from './predicates';
 import { existsIn, selectFrom } from './select';
-import { notSoftDeleted } from './shapes';
 
 /**
  * The one workspace-scoped read that takes no proof, because it is what mints

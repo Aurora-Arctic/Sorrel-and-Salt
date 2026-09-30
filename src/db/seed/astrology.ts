@@ -1,8 +1,7 @@
-// `./idempotent` (and through it `./bootstrap-admin`) first, and load-bearing — see minimal.ts.
 import { beginSeedTransaction } from './idempotent';
 import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import { seedFlatVocabulary } from './flat-vocabulary';
-import type { SeedDatabase, SeedTransaction } from './index';
+import type { SeedAstrologyValue, SeedDatabase, SeedTransaction } from './types';
 
 // DESIGN.md §5's planet and zodiac vocabularies, a starting set an admin may
 // edit. Reference data, not a scenario — migrate.yml seeds it alone, so it
@@ -10,11 +9,6 @@ import type { SeedDatabase, SeedTransaction } from './index';
 // is the proper noun it renders as, and no slug is written down. A description
 // is search surface, so it carries the words a reader reaches for — Black
 // Moon, Rahu, Serpentarius (claude-docs/db.md, "The astrology vocabulary seed").
-
-export interface SeedAstrologyValue {
-  name: string;
-  description: string;
-}
 
 /** The luminaries, the planets outward from the Sun, then the other bodies modern practice reads. */
 export const PLANETS: SeedAstrologyValue[] = [

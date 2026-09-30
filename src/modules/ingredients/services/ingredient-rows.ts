@@ -1,15 +1,12 @@
 import 'server-only';
 import { type AuditWriter, findManyOfIngredients } from '../../../db/repository';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
-import type { LocalIngredientInput } from '../validation/ingredient';
 import type { Membership } from '@/modules/coven';
+import type { IngredientFields } from '../types';
 
 // What an ingredient write does the same way in either tier: the parsed
 // input as columns, and the folk names written beside the row. Internal to
 // the module — the two services import it, and the index does not.
-
-/** The parsed input without its folk names; both tiers' variants parse to this shape. */
-export type IngredientFields = Omit<LocalIngredientInput, 'folkNames'>;
 
 /**
  * The parsed input as columns, every optional one written — `null` where the

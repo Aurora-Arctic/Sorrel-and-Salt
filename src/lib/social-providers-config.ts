@@ -5,7 +5,8 @@
 // import this (.oxlintrc.json's no-restricted-imports enforces it; each
 // legitimate import carries an oxlint-disable-next-line saying why, the same
 // convention as the database client boundary — CLAUDE.md rule 2).
-import { SOCIAL_PROVIDERS, type ProviderId } from './social-providers';
+import { SOCIAL_PROVIDERS } from './social-providers';
+import type { ProviderId } from './types';
 
 const ENV_VARS: Record<ProviderId, readonly [clientId: string, clientSecret: string]> = {
   google: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'],

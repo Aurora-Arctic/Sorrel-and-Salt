@@ -7,7 +7,7 @@ import { Forbidden } from '../lib/errors';
 import { pageSize } from '../lib/pagination';
 // For its side effect: `t.pagedConnection` on every field builder.
 import './pagination';
-import type { Context } from './context';
+import type { SchemaTypes } from './types';
 
 // No ORM plugin, and object types are declared by hand against the row a
 // service returns (DESIGN.md §7, "Four rules follow from dropping the Drizzle
@@ -19,29 +19,6 @@ import type { Context } from './context';
  * of 10 are answered and two of 100 refused, however `first` is written.
  */
 export const MAX_COST = 5000;
-
-export interface SchemaTypes {
-  Context: Context;
-  // Non-null unless a field says otherwise, as DESIGN.md §7's sketch reads:
-  // a nullable field is the one that means something by it.
-  DefaultFieldNullability: false;
-  // A connection's edges and nodes are never null: a page holds rows.
-  DefaultEdgesNullability: { list: false; items: false };
-  DefaultNodeNullability: false;
-  // The schema's second check, behind the service layer's (DESIGN.md §7).
-  // `self` takes a user id and holds when it is the session's own.
-  AuthScopes: {
-    signedIn: boolean;
-    admin: boolean;
-    self: string;
-  };
-  Scalars: {
-    // `DateTimeISO` rather than graphql-scalars' `DateTime`, which hands the
-    // serializer's caller a Date and leaves the string to JSON.stringify.
-    DateTime: { Input: Date; Output: Date };
-    ID: { Input: string; Output: string };
-  };
-}
 
 /**
  * A builder under the schema's configuration. The app has one, `builder`

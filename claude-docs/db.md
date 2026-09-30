@@ -1690,19 +1690,23 @@ two empty sets are equal and something has to say they aren't.
 `src/db/repository/` is one file per concern, and callers import only its
 `index.ts` — `@/db/repository` resolves to it:
 
-| File                   | Holds                                                                                                                                |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `index.ts`             | Named re-exports only — the pinned surface below — and nothing declared                                                              |
-| `shapes.ts`            | The table-shape types every signature is built from, and the `scopedTo`, `inCompendium` and `notSoftDeleted` predicates              |
-| `write.ts`             | `withAudit` and the `AuditWriter` it hands out                                                                                       |
-| `select.ts`            | `selectFrom` and `existsIn`, the two places a read query is built; the keyset bounds a page is cut by; the two similarity thresholds |
-| `ingredients.ts`       | `findSimilarIngredients`, the fuzzy-duplicate finder                                                                                 |
-| `vocabularies.ts`      | `findVocabularySuggestions`, the planet and zodiac autofill                                                                          |
-| `finders.ts`           | The generic finders, scoped and unscoped, and the escape hatch                                                                       |
-| `spells.ts`            | The three spell finders and the `readableSpells` predicate they share                                                                |
-| `memberships.ts`       | Two of the three reads that take no proof                                                                                            |
-| `users.ts`             | The third: the live row holding an address                                                                                           |
-| `provisional-users.ts` | The provisional-account delete                                                                                                       |
+| File                   | Holds                                                                                                                                                                 |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.ts`             | Named re-exports only — the pinned surface below — and nothing declared                                                                                               |
+| `types.ts`             | The table shapes a finder or writer admits, the options `selectFrom` reads, the `AuditWriter`, and what a finder takes and returns; the index re-exports the last two |
+| `predicates.ts`        | The `scopedTo`, `inCompendium` and `notSoftDeleted` predicates, each decided by the table's shape                                                                     |
+| `write.ts`             | `withAudit` and the writer it builds                                                                                                                                  |
+| `select.ts`            | `selectFrom` and `existsIn`, the two places a read query is built; the keyset bounds a page is cut by; the two similarity thresholds                                  |
+| `ingredients.ts`       | The ingredient finders: the fuzzy-duplicate match, the compendium list and its count, one entry, an entry by identity, and an ingredient's children                   |
+| `slugs.ts`             | The compendium entry at a slug, and the redirect from a retired one                                                                                                   |
+| `vocabularies.ts`      | `findVocabularySuggestions`, the planet, zodiac and form autofill, and `findIngredientFormValues`                                                                     |
+| `common-names.ts`      | `findCommonNameSuggestions`, the common-name autofill                                                                                                                 |
+| `suggestion-page.ts`   | The keyset page and claimant list the two autofills share                                                                                                             |
+| `finders.ts`           | The generic finders, scoped and unscoped, and the escape hatch                                                                                                        |
+| `spells.ts`            | The three spell finders and the `readableSpells` predicate they share                                                                                                 |
+| `memberships.ts`       | Two of the three reads that take no proof                                                                                                                             |
+| `users.ts`             | The third: the live row holding an address                                                                                                                            |
+| `provisional-users.ts` | The provisional-account delete                                                                                                                                        |
 
 **The rest of the folder is internal, and that is enforced rather than
 conventional.** `selectFrom` and `existsIn` are exported from `select.ts`
@@ -2046,7 +2050,7 @@ sets. The proof carries nothing the query reads, since the compendium tier has
 no id to scope by; what it buys is that the call cannot be written without the
 check having run. It is erased at runtime, like `Membership`.
 
-The methods take a **two-tier** table only: `TwoTier` in `shapes.ts`,
+The methods take a **two-tier** table only: `TwoTier` in the folder's `types.ts`,
 `{ workspaceId: AnyPgColumn<{ notNull: false }> }`, which `ingredients` and
 `retired_ingredient_slugs` satisfy and a table whose `workspace_id` is
 `NOT NULL`, like `spells`, does not. The vocabulary tables — categories,
@@ -2566,7 +2570,7 @@ order by a, b, id
 limit $limit  -- the page plus one
 ```
 
-- **`page` is a `PageRequest` from `src/lib/pagination.ts`**, already decoded
+- **`page` is a `PageRequest` from `src/lib/types.ts`**, already decoded
   and clamped by `resolvePage` (claude-docs/graphql.md, "Pagination"). `after`
   bounds from below and `before` from above. `inverted`, when walking backwards
   with `last`, reverses the `ORDER BY` only, and `resolvePage` puts the rows
@@ -3438,7 +3442,7 @@ one of these carries a one-clause comment saying which it is:
 
 What is _not_ on the list, and was raw until MB.100: `… is null` where
 `isNull()` serves, the compendium-tier predicate, now `inCompendium` in
-`shapes.ts`, a correlated `exists (select 1 …)`, now `existsIn` ("Soft-delete
+`predicates.ts`, a correlated `exists (select 1 …)`, now `existsIn` ("Soft-delete
 filtering"), and a comparison written into the string — `a > b`, `x <> ''`,
 `id in (…)` — where `gt`, `ne` and `inArray` take a fragment on either side.
 Those were raw by habit, or by the guard's old one-builder mechanism, not by

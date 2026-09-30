@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { PageRequest } from '@/lib/pagination';
 import { listIngredientFormValues } from '@/modules/vocabulary';
+import type { PageRequest } from '@/lib/types';
 
 // `ingredientFormValues`'s service: the curated vocabulary, one page at a
 // time, with no session to check — the read is public (MB.80). The finder

@@ -2,12 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
-import type { PageRequest } from '@/lib/pagination';
 import { countCompendium, getIngredient, listCompendium } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
+import type { PageRequest } from '@/lib/types';
 
 // The compendium's two reads (claude-docs/db.md, "The compendium read"): the
 // public list, which takes no session at all, and one entry by id, which a

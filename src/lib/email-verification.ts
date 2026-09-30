@@ -1,7 +1,7 @@
 import { VERIFIED_LANDING } from './account-email';
 import { VERIFICATION_LIFETIME_SECONDS, type EmailVerificationSender } from '@/modules/identity';
 import { verifyEmailMessage } from '../emails/verify-email';
-import type { ProviderId } from './social-providers';
+import type { ProviderId } from './types';
 
 // Where the email page's decisions meet Better Auth: a resend goes through its
 // endpoint, and a change mints the change token its /verify-email endpoint

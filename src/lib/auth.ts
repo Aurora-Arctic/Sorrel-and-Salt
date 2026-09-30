@@ -14,11 +14,11 @@ import { appendQueryParams } from '@better-auth/core/utils/url';
 import { db } from '../db/connection';
 import { users } from '../modules/identity/schema/users';
 import { sessions, accounts, verifications, rateLimits } from '../modules/identity/schema/auth';
-import { SOCIAL_PROVIDERS, type ProviderId } from './social-providers';
+import { SOCIAL_PROVIDERS } from './social-providers';
 // Server-only — see social-providers-config.ts's own header.
 // oxlint-disable-next-line no-restricted-imports
 import { clientCredentials } from './social-providers-config';
-import type { UserRole } from './session';
+import type { UserRole, HookContext } from './session';
 import { send } from './mail';
 import { emailPagePath, VERIFIED_LANDING } from './account-email';
 import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH } from './sign-in';
@@ -38,8 +38,7 @@ import {
   placeholderEmail,
   sweepProvisionalAccounts,
 } from '@/modules/identity';
-
-type HookContext = Parameters<Parameters<typeof createAuthMiddleware>[0]>[0];
+import type { ProviderId } from './types';
 
 // Better Auth's own `validateSecret` is swallowed — with the secret unset it
 // logs and still answers 200 on the well-known default. Production-only:

@@ -1,9 +1,7 @@
 import 'server-only';
 import { findIngredientFormValues } from '../../../db/repository';
-import type { PageEntry, PageRequest } from '../../../lib/pagination';
-import type { ingredientForms } from '../schema/ingredient-forms';
-
-export type IngredientFormValueRow = typeof ingredientForms.$inferSelect;
+import type { PageEntry, PageRequest } from '../../../lib/types';
+import type { IngredientFormValueRow } from '../types';
 
 /**
  * One page of the curated form vocabulary, for `ingredientFormValues`: a

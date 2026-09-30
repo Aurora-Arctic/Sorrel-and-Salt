@@ -1,9 +1,6 @@
 import { builder } from '../../../graphql/builder';
-import type { IngredientFormGroupRow } from '../services/groups';
-import {
-  type IngredientFormValueRow,
-  listIngredientFormValues,
-} from '../services/ingredient-form-values';
+import { listIngredientFormValues } from '../services/ingredient-form-values';
+import type { IngredientFormGroupRow, IngredientFormValueRow } from '../types';
 
 // `IngredientFormValue`, not `IngredientForm`: one row is one permitted value
 // of `ingredients.form`, and `IngredientForm` is the entry-form component

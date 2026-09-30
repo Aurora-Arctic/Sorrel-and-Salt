@@ -6,8 +6,7 @@
 // oxlint-disable-next-line no-restricted-imports
 import DataLoader from 'dataloader';
 import type { Session } from '../../lib/session';
-
-export type LoaderFactory<K, V, C = K> = (session: Session | null) => DataLoader<K, V, C>;
+import type { LoaderFactory } from './types';
 
 /**
  * A loader, as the factory that builds it for one request. `batch` receives

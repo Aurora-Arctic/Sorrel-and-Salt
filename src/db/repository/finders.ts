@@ -1,18 +1,18 @@
 import { and, eq, inArray, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
-import type { PageEntry, PageRequest } from '../../lib/pagination';
-import { pageBounds, selectFrom, type SortPart } from './select';
-import {
-  notSoftDeleted,
-  scopedTo,
-  type Identified,
-  type NotIngredientScoped,
-  type NotSpellScoped,
-  type NotVisibilityScoped,
-  type Unscoped,
-  type WorkspaceScoped,
-} from './shapes';
+import type { PageEntry, PageRequest } from '../../lib/types';
+import { notSoftDeleted, scopedTo } from './predicates';
+import { pageBounds, selectFrom } from './select';
+import type {
+  Identified,
+  NotIngredientScoped,
+  NotSpellScoped,
+  NotVisibilityScoped,
+  SortPart,
+  Unscoped,
+  WorkspaceScoped,
+} from './types';
 
 /** All matching, non-soft-deleted rows. The default and normal-use finder. */
 export function findMany<TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped>(

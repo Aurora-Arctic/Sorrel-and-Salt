@@ -3,7 +3,6 @@ import { GraphQLInputObjectType, isNonNullType } from 'graphql';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import type { Context } from '@/graphql/context';
 import { maskedErrors } from '@/graphql/errors';
 import { createLoaders } from '@/graphql/loaders';
 import { schema } from '@/graphql/schema';
@@ -15,6 +14,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { noSender } from '../../../support/email-verification';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
+import type { Context } from '@/graphql/types';
 
 // Stories 15 and 34 over the wire: the two mutations a coven's ingredient form
 // saves through. Run through Yoga with the route's own error mapping, so a

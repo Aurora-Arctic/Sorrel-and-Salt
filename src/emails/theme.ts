@@ -1,18 +1,9 @@
+import type { EmailTheme } from './types';
+
 // The site's two themes as plain hexes. A mail client reads neither Sass nor
 // CSS custom properties, so these are copied from the theme mixins in
 // src/scss/_mixins.scss; tests/emails/theme.test.ts compiles those mixins and
 // fails when a value here disagrees.
-
-export interface EmailTheme {
-  page: string;
-  text: string;
-  muted: string;
-  accent: string;
-  /** The label on an accent fill: the page surface, as on the site. */
-  onAccent: string;
-  /** How Backdrop's grey photographs meet this theme's page; baked into the mail's images. */
-  ornament: { blend: 'screen' | 'multiply'; opacity: number };
-}
 
 export const EMAIL_THEMES = {
   dark: {

@@ -3,7 +3,6 @@ import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import { createEmailVerificationToken } from 'better-auth/api';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
-import type { Message } from '@/lib/mail';
 import {
   ORIGIN,
   cookieHeader,
@@ -13,6 +12,7 @@ import {
   type Profile,
   type ProviderId,
 } from '../support/oauth';
+import type { Message } from '@/lib/types';
 
 // Story 58, through Better Auth's real endpoints: an OAuth sign-up mails a
 // link, and following it verifies the address only from a session holding

@@ -4,7 +4,8 @@ import { findWorkspaceRole } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { RowId } from '../../../lib/validation';
-import { type WorkspacePermission, type WorkspaceRole, rolePermits } from './access-control';
+import { type WorkspacePermission, rolePermits } from './access-control';
+import type { WorkspaceRole } from '../types';
 
 // CLAUDE.md rule 5's two layers live here: `assertMembership` is the check,
 // and the `Membership` it returns is the proof the check ran. The brand below

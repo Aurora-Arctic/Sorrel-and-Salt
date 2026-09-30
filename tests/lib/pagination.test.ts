@@ -3,13 +3,12 @@ import { InvalidCursor } from '@/lib/errors';
 import {
   DEFAULT_PAGE_SIZE,
   MAX_PAGE_SIZE,
-  type PageEntry,
-  type PageRequest,
   decodeCursor,
   encodeCursor,
   pageSize,
   resolvePage,
 } from '@/lib/pagination';
+import type { PageEntry, PageRequest } from '@/lib/types';
 
 const ID = '0f9c2b1e-6a51-4c3f-9d7e-2b8a4e1c5d60';
 

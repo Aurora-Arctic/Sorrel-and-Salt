@@ -2,12 +2,13 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, InvalidCursor } from '@/lib/errors';
-import { type ConnectionArgs, type Page, encodeCursor, resolvePage } from '@/lib/pagination';
+import { encodeCursor, resolvePage } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
 import { type CommonNameSuggestion, suggestCommonNames } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
+import type { ConnectionArgs, Page } from '@/lib/types';
 
 // DESIGN.md §9, "Entry-time lookups are permission-scoped": typing a common
 // name suggests the names already in use in the compendium and the caller's

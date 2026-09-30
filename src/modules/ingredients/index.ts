@@ -1,6 +1,6 @@
 // The ingredients module's behaviour surface. Schema tables are reached at
-// `@/modules/ingredients/schema/*`; `services/*`, `graphql/*` and `loaders/*`
-// are internal to the module.
+// `@/modules/ingredients/schema/*`; `services/*`, `graphql/*`, `loaders/*` and
+// `types.ts` are internal to the module.
 export * from './services/duplicates';
 export * from './services/common-names';
 export * from './services/ingredient-children';
@@ -12,3 +12,4 @@ export * from './graphql/duplicates';
 export * from './graphql/ingredient';
 export * from './graphql/compendium';
 export * from './graphql/workspace-ingredients';
+export type { CategoryRow, CompendiumAddress, IngredientKey, IngredientRow } from './types';

@@ -1,17 +1,13 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { POST_SIGN_IN_LANDING } from '../../lib/sign-in';
+import type { WelcomeProps } from './types';
 import './index.scss';
 
 // The public front door at `/`: what the site is, that it is invite-only, and
 // the way in. The session changes exactly one thing — that last link — so a
 // signed-in visitor is never asked to sign in again.
 // See claude-docs/components/welcome.md.
-
-export interface WelcomeProps {
-  /** Whether the visitor holds a live session; the page reads it with `getSession()`. */
-  signedIn: boolean;
-}
 
 const Welcome = ({ signedIn }: WelcomeProps): ReactElement => (
   <div className="welcome">

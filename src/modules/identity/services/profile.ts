@@ -4,8 +4,7 @@ import { findOneById } from '../../../db/repository';
 import { NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
-
-export type UserRow = typeof users.$inferSelect;
+import type { UserRow } from '../types';
 
 // Keyed by the id rather than the session, which `cache()` compares by
 // identity: a layout and a page asking cost one query per render.

@@ -8,19 +8,14 @@ import {
   type IngredientFilter,
 } from '@/db/repository';
 import { InvalidCursor } from '@/lib/errors';
-import {
-  type ConnectionArgs,
-  type Page,
-  type PageCount,
-  decodeCursor,
-  resolvePage,
-} from '@/lib/pagination';
+import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import type { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { A, B, D, asUser } from '../../support/as-user';
 import { insertIngredient } from '../../support/db/insert-ingredient';
 import { makeIngredient } from '../../support/fixtures';
+import type { ConnectionArgs, Page, PageCount } from '@/lib/types';
 
 // The compendium read's two finders (claude-docs/db.md, "The compendium
 // read"): the public list under its filters, and one row by id in the

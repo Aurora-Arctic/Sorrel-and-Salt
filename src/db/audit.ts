@@ -1,8 +1,11 @@
-import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { timestamp, uuid } from 'drizzle-orm/pg-core';
-
-/** A thunk to `users.id`, resolved when the foreign key is read rather than when the columns are built. */
-export type UsersIdReference = () => AnyPgColumn;
+import type {
+  UsersIdReference,
+  AuditOperation,
+  AuditSession,
+  AuditFields,
+  WithoutAuditFields,
+} from './types';
 
 // Factories rather than column instances: every audit id references
 // `users.id`, `users`' own rows included, and importing `users` from here
@@ -30,21 +33,6 @@ export function deletionColumnsReferencing(usersId: UsersIdReference) {
   };
 }
 
-export type AuditOperation = 'insert' | 'update' | 'delete';
-
-export interface AuditSession {
-  userId: string;
-}
-
-type AuditFields = {
-  createdAt: Date;
-  createdBy: string;
-  updatedAt: Date;
-  updatedBy: string;
-  deletedAt: Date;
-  deletedBy: string;
-};
-
 const AUDIT_FIELD_NAMES = [
   'createdAt',
   'createdBy',
@@ -53,8 +41,6 @@ const AUDIT_FIELD_NAMES = [
   'deletedAt',
   'deletedBy',
 ] as const;
-
-type WithoutAuditFields<T> = Omit<T, keyof AuditFields>;
 
 function stripAuditFields<T extends object>(payload: T): WithoutAuditFields<T> {
   const rest = { ...payload };

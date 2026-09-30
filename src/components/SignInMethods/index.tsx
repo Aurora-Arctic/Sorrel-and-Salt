@@ -3,7 +3,9 @@
 import { type ReactElement, useState } from 'react';
 import { linkSocial, unlinkAccount } from '../../lib/auth-client';
 import { ACCOUNT_PATH, GENERIC_LINK_ERROR, unlinkErrorMessage } from '../../lib/sign-in';
-import { SOCIAL_PROVIDERS, type LinkedAccount, type ProviderId } from '../../lib/social-providers';
+import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
+import type { LinkedAccount, ProviderId } from '../../lib/types';
+import type { SignInMethodsProps } from './types';
 import './index.scss';
 
 // The account page's list of the ways into this account: each roster
@@ -11,15 +13,6 @@ import './index.scss';
 // Better Auth's /link-social, which leaves for the provider and lands back on
 // the account page; removing one is /unlink-account, answered in place.
 // See claude-docs/components/sign-in-methods.md.
-
-export interface SignInMethodsProps {
-  /** The signed-in user's provider accounts, from `linkedAccounts()`. */
-  linked: readonly LinkedAccount[];
-  /** Providers this environment has credentials for; the rest cannot be added. */
-  configured: readonly ProviderId[];
-  /** A readable sentence for a failed link, from linkErrorMessage — never a raw code. */
-  error?: string;
-}
 
 const SignInMethods = ({ linked, configured, error }: SignInMethodsProps): ReactElement => {
   // Seeded from the server's list; a removal answers in place rather than

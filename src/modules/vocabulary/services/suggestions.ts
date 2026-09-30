@@ -5,11 +5,11 @@ import {
   type VocabularySuggestion,
   findVocabularySuggestions,
 } from '../../../db/repository';
-import type { PageEntry, PageRequest } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import { assertMembership } from '@/modules/coven';
 import { planets, zodiacSigns } from '../schema/astrology';
 import { ingredientForms } from '../schema/ingredient-forms';
+import type { PageEntry, PageRequest } from '../../../lib/types';
 
 export type { Claimant, FormSuggestion, VocabularySuggestion };
 

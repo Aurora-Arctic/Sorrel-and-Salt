@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import type { SeedDatabase } from './index';
+import type { SeedDatabase } from './types';
 
 // The drop half of `db:reset`: drizzle-kit skips every migration its journal
 // records as applied, so migrate-then-seed resets nothing. Beside the seed so
