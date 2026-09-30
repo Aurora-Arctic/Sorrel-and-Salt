@@ -103,15 +103,16 @@ describe('requireSession', () => {
     );
   });
 
-  it('falls back to the post-sign-in landing when no return path was forwarded', async () => {
+  // With none, the sign-in lands by role, which is the callback's to decide.
+  it('sends the visitor to the bare sign-in page when no return path was forwarded', async () => {
     getSessionMock.mockResolvedValue(null);
-    await expect(requireSession()).rejects.toThrow('redirect:/sign-in?next=%2Fcoven');
+    await expect(requireSession()).rejects.toThrow(/^redirect:\/sign-in$/);
   });
 
   it('does not trust a forwarded return path that leaves the site', async () => {
     getSessionMock.mockResolvedValue(null);
     requestHeaders.set(RETURN_PATH_HEADER, '//evil.example');
-    await expect(requireSession()).rejects.toThrow('redirect:/sign-in?next=%2Fcoven');
+    await expect(requireSession()).rejects.toThrow(/^redirect:\/sign-in$/);
   });
 
   // An unverified account is provisional and can do nothing else (MB.54), so
@@ -130,11 +131,11 @@ describe('requireSession', () => {
       );
     });
 
-    it('is sent there with the landing when no return path was forwarded, or one that leaves the site', async () => {
-      await expect(requireSession()).rejects.toThrow('redirect:/account/email?next=%2Fcoven');
+    it('is sent to the bare email page when no return path was forwarded, or one that leaves the site', async () => {
+      await expect(requireSession()).rejects.toThrow(/^redirect:\/account\/email$/);
 
       requestHeaders.set(RETURN_PATH_HEADER, '//evil.example');
-      await expect(requireSession()).rejects.toThrow('redirect:/account/email?next=%2Fcoven');
+      await expect(requireSession()).rejects.toThrow(/^redirect:\/account\/email$/);
     });
 
     it('reaches the email page itself, whatever its query', async () => {

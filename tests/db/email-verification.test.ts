@@ -59,8 +59,8 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-const signIn = (provider: ProviderId, profile: Profile, callbackURL?: string) =>
-  signInThrough(auth, server, provider, profile, callbackURL);
+const signIn = (provider: ProviderId, profile: Profile, next?: string) =>
+  signInThrough(auth, server, provider, profile, next);
 
 async function userRow(email: string) {
   const [row] = await sql`
@@ -135,8 +135,8 @@ describe('Story 58: following the link', () => {
     const response = await follow(link, cookie);
 
     expect(response.status).toBe(302);
-    // The email page's confirmed view. The sign-in was going to /coven, where
-    // Continue goes without a `next`, so the link carries none.
+    // The email page's confirmed view. The sign-in asked for no return path,
+    // so the link carries none: Continue lands the account by its role.
     expect(response.headers.get('location')).toBe('/account/email?verified');
     expect(await userRow(OWNER)).toMatchObject({ email_verified: true, updated_by: before.id });
   });

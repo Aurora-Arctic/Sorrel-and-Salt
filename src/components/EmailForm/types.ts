@@ -4,8 +4,10 @@ export interface EmailFormProps {
   verified: boolean;
   /** The address was just proved by a followed link: show it and the way on, with nothing to edit. */
   confirmed?: boolean;
-  /** Where "Continue" goes, and where the links it asks for carry on to; already run through safeReturnPath. */
-  next: string;
+  /** Where the account was going, already run through safeReturnPath: Continue goes there, and the links it asks for carry it on. */
+  next?: string;
+  /** Where Continue goes with no `next`: the landing for the account's role (`postSignInLanding`). */
+  landing: string;
   /** A readable sentence for a failed verification link, from verifyErrorMessage — never a raw code. */
   error?: string;
   /** Seconds the server will refuse another mail for as of this render, so the countdown starts where it stands. */

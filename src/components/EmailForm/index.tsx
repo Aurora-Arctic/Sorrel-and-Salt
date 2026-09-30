@@ -64,6 +64,7 @@ const EmailForm = ({
   verified,
   confirmed = false,
   next,
+  landing,
   error,
   waitSeconds = 0,
   resendDelaySeconds = RESEND_DELAY_SECONDS,
@@ -130,7 +131,7 @@ const EmailForm = ({
         <p className="email-form__continue">
           {/* A plain anchor rather than <Link>: typed routes refuse a route
               that is not built yet, and `next` is whatever page sent us here. */}
-          <a className="btn" href={next}>
+          <a className="btn" href={next ?? landing}>
             Continue
           </a>
         </p>

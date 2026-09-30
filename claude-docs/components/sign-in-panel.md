@@ -21,9 +21,18 @@ from this page. The state is single-use and expires after ten minutes, so the
 obvious retry, going back through the provider's tab, replays a state that is
 already dead. That is how MB.12's Facebook check first failed.
 
-`errorCallbackURL` is built here, not passed in, as `` `/sign-in?next=${encodeURIComponent(next)}` ``
-— carrying `next` forward is what keeps a failed attempt from losing the
-destination and landing back at a bare `/sign-in`. Better Auth appends its own
+`next` is absent when the page was given none, or an unsafe one: there is no
+return path, and the callback lands the account by its role, `/admin` for an
+admin and `/coven` for anyone else ([`auth.md`](../auth.md), "Route
+protection"). `socialSignInTarget(next)` (`src/lib/sign-in.ts`) builds what
+the click hands `signIn.social`. With a `next`: it as `callbackURL`, and
+`errorCallbackURL` as `` `/sign-in?next=${encodeURIComponent(next)}` `` —
+carrying `next` forward is what keeps a failed attempt from losing the
+destination and landing back at a bare `/sign-in`. With none: the
+`NO_RETURN_PATH` flag as `additionalData`, which is how the callback tells it
+from an explicit `/coven`, a `callbackURL` of `/coven` only because Better
+Auth requires one, and a bare `/sign-in` as `errorCallbackURL`, so a retry
+still asks for none. Better Auth appends its own `?error=<code>` or
 `&error=<code>` to whatever URL is given it.
 
 ## Provider branding
@@ -164,7 +173,9 @@ assigning `window.location.href`, which jsdom cannot follow
 client). The rest of the module is the real one, so the last-used read is the
 client plugin's own, against jsdom's `document.cookie`. Covers: every roster
 provider renders as a native `<button>` by accessible name; a click calls
-`signIn.social` with the right `provider`/`callbackURL`/`errorCallbackURL`;
+`signIn.social` with the right `provider`/`callbackURL`/`errorCallbackURL`,
+with the `NO_RETURN_PATH` flag when there is no `next` and without it for an
+explicit `/coven`;
 no alert exists without an error and one appears with a passed-in error or a
 failing `signIn.social` result; an unavailable provider is `aria-disabled`,
 described by its note, still lacks `disabled`, and its click never reaches

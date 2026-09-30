@@ -24,24 +24,24 @@ const Page = (props: EmailFormProps) => (
 // The common first visit: the provider shared an address, the sign-up mail
 // has just gone, so the submit is counting the minute down.
 export const Prefilled: Story = () => (
-  <Page email="ada@example.test" verified={false} next="/coven" waitSeconds={45} />
+  <Page email="ada@example.test" verified={false} landing="/coven" waitSeconds={45} />
 );
 
 // The same visit once the minute has passed.
 export const ReadyToResend: Story = () => (
-  <Page email="ada@example.test" verified={false} next="/coven" />
+  <Page email="ada@example.test" verified={false} landing="/coven" />
 );
 
 // A provider that shared no address: the field starts empty.
-export const NoEmail: Story = () => <Page email="" verified={false} next="/coven" />;
+export const NoEmail: Story = () => <Page email="" verified={false} landing="/coven" />;
 
 // A followed link's landing: the proved address and the way on, nothing to edit.
 export const Confirmed: Story = () => (
-  <Page email="ada@example.test" verified confirmed next="/coven" />
+  <Page email="ada@example.test" verified confirmed landing="/coven" />
 );
 
 // A verified account back to change its address: nothing to send until edited.
-export const ChangeLater: Story = () => <Page email="ada@example.test" verified next="/coven" />;
+export const ChangeLater: Story = () => <Page email="ada@example.test" verified landing="/coven" />;
 
 // `error` reads the real mapping rather than a copied string, so this story
 // cannot go stale against src/lib/account-email.ts.
@@ -49,7 +49,7 @@ export const WithError: Story = () => (
   <Page
     email="ada@example.test"
     verified={false}
-    next="/coven"
+    landing="/coven"
     error={verifyErrorMessage('TOKEN_EXPIRED')}
   />
 );

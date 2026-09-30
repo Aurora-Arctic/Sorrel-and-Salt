@@ -1,4 +1,8 @@
 export interface WelcomeProps {
-  /** Whether the visitor holds a live session; the page reads it with `getSession()`. */
-  signedIn: boolean;
+  /**
+   * Where Continue goes for a signed-in visitor: the landing for their role
+   * (`postSignInLanding`), which the page reads from `getSession()`. Absent
+   * while signed out, when the way in is Sign In.
+   */
+  landing?: string;
 }

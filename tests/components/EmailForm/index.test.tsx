@@ -31,21 +31,21 @@ function acceptSetEmail() {
 
 describe('EmailForm', () => {
   it('prefills the field with the account address', () => {
-    renderForm(<EmailForm email="ada@example.test" verified={false} next="/coven" />);
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
     expect(screen.getByRole('heading', { level: 1, name: 'Your email' })).toBeInTheDocument();
     expect(emailField()).toHaveValue('ada@example.test');
   });
 
   it('starts empty when the account has no address', () => {
-    renderForm(<EmailForm email="" verified={false} next="/coven" />);
+    renderForm(<EmailForm email="" verified={false} landing="/coven" />);
 
     expect(emailField()).toHaveValue('');
     expect(screen.getByText(/no email yet/i)).toBeInTheDocument();
   });
 
   it('says an unverified address is waiting on its link', () => {
-    renderForm(<EmailForm email="ada@example.test" verified={false} next="/coven" />);
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
     expect(screen.getByText(/not yet verified/i)).toBeInTheDocument();
   });
@@ -53,19 +53,34 @@ describe('EmailForm', () => {
   // A followed link's landing: the address is proved, so there is nothing to
   // type — only the address, its state, and the way on.
   it('shows only the verified line, the address and Continue once confirmed', () => {
-    renderForm(<EmailForm email="ada@example.test" verified confirmed next="/coven/hearth" />);
+    renderForm(
+      <EmailForm
+        email="ada@example.test"
+        verified
+        confirmed
+        next="/coven/hearth"
+        landing="/admin"
+      />,
+    );
 
     expect(screen.getByText('Verified: we will send emails to this address.')).toBeInTheDocument();
     expect(screen.getByText('ada@example.test')).toBeInTheDocument();
+    // Where the account was going wins over its role's landing.
     expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/coven/hearth');
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
+  it("continues to the account's landing when it was going nowhere else", () => {
+    renderForm(<EmailForm email="ada@example.test" verified confirmed landing="/admin" />);
+
+    expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/admin');
+  });
+
   // Back later to change it: neither the confirmation nor Continue, since
   // nothing was just proved; the field, prefilled, with nothing to send yet.
   it('offers a verified account the field alone when it comes back to change the address', () => {
-    renderForm(<EmailForm email="ada@example.test" verified next="/coven" />);
+    renderForm(<EmailForm email="ada@example.test" verified landing="/coven" />);
 
     expect(screen.queryByText(/^verified/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Continue' })).not.toBeInTheDocument();
@@ -74,7 +89,7 @@ describe('EmailForm', () => {
   });
 
   it('has nothing to send for an unchanged verified address, until it is edited', () => {
-    renderForm(<EmailForm email="ada@example.test" verified next="/coven" />);
+    renderForm(<EmailForm email="ada@example.test" verified landing="/coven" />);
 
     expect(submit()).toBeDisabled();
 
@@ -88,14 +103,14 @@ describe('EmailForm', () => {
   });
 
   it('can resend the link for an unchanged unverified address', () => {
-    renderForm(<EmailForm email="ada@example.test" verified={false} next="/coven" />);
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
     expect(submit()).toBeEnabled();
   });
 
   it('sends the typed address and names it, normalised, in the confirmation', async () => {
     const calls = acceptSetEmail();
-    renderForm(<EmailForm email="ada@example.test" verified={false} next="/coven" />);
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
     fireEvent.change(emailField(), { target: { value: 'New@Example.test' } });
     fireEvent.submit(submit().closest('form') as HTMLFormElement);
@@ -104,8 +119,9 @@ describe('EmailForm', () => {
     expect(status).toHaveTextContent(
       "We've sent a link to new@example.test. Open it in this browser within an hour to confirm it.",
     );
-    // The typed value goes as typed; normalising is the service's job.
-    expect(calls).toEqual([{ email: 'New@Example.test', next: '/coven' }]);
+    // The typed value goes as typed; normalising is the service's job. With
+    // no `next`, none is sent: the link lands by role when it is followed.
+    expect(calls).toEqual([{ email: 'New@Example.test' }]);
     // The row's own address (still the old one) is never what the message names.
     expect(status).not.toHaveTextContent('old@example.test');
   });
@@ -113,7 +129,9 @@ describe('EmailForm', () => {
   // The link it asks for lands back here, and Continue goes on from there.
   it('sends where Continue goes with the address, so the mailed link carries it', async () => {
     const calls = acceptSetEmail();
-    renderForm(<EmailForm email="ada@example.test" verified={false} next="/admin" />);
+    renderForm(
+      <EmailForm email="ada@example.test" verified={false} next="/admin" landing="/coven" />,
+    );
 
     fireEvent.submit(submit().closest('form') as HTMLFormElement);
 
@@ -127,7 +145,12 @@ describe('EmailForm', () => {
   it('waits out a cooldown after a send, refusing a submit meanwhile, then offers to send again', async () => {
     const calls = acceptSetEmail();
     renderForm(
-      <EmailForm email="ada@example.test" verified={false} next="/coven" resendDelaySeconds={1} />,
+      <EmailForm
+        email="ada@example.test"
+        verified={false}
+        landing="/coven"
+        resendDelaySeconds={1}
+      />,
     );
 
     fireEvent.submit(submit().closest('form') as HTMLFormElement);
@@ -150,7 +173,7 @@ describe('EmailForm', () => {
         { path: ['email'], message: 'That address is already in use by another account' },
       ],
     });
-    renderForm(<EmailForm email="ada@example.test" verified={false} next="/coven" />);
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
     fireEvent.change(emailField(), { target: { value: 'taken@example.test' } });
     fireEvent.submit(submit().closest('form') as HTMLFormElement);
@@ -166,7 +189,7 @@ describe('EmailForm', () => {
 
   it('puts a refusal with no field in the alert region', async () => {
     mockGraphQLError('SetEmail', { code: 'FORBIDDEN', message: 'Sign in to change your email' });
-    renderForm(<EmailForm email="ada@example.test" verified={false} next="/coven" />);
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
     fireEvent.submit(submit().closest('form') as HTMLFormElement);
 
@@ -176,7 +199,7 @@ describe('EmailForm', () => {
 
   it('clears the last outcome when a new submit starts', async () => {
     mockGraphQLError('SetEmail', { code: 'FORBIDDEN' });
-    renderForm(<EmailForm email="ada@example.test" verified={false} next="/coven" />);
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
     fireEvent.submit(submit().closest('form') as HTMLFormElement);
     await screen.findByRole('alert');
@@ -193,7 +216,7 @@ describe('EmailForm', () => {
       <EmailForm
         email="ada@example.test"
         verified={false}
-        next="/coven"
+        landing="/coven"
         error="That link has expired. Send a new one below."
       />,
     );
@@ -204,13 +227,15 @@ describe('EmailForm', () => {
   });
 
   it('renders no alert when there is no error', () => {
-    renderForm(<EmailForm email="ada@example.test" verified={false} next="/coven" />);
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('offers no Continue while the address is unverified', () => {
-    renderForm(<EmailForm email="ada@example.test" verified={false} next="/coven/hearth" />);
+    renderForm(
+      <EmailForm email="ada@example.test" verified={false} next="/coven/hearth" landing="/coven" />,
+    );
 
     expect(screen.queryByRole('link', { name: 'Continue' })).not.toBeInTheDocument();
   });
@@ -219,7 +244,7 @@ describe('EmailForm', () => {
   // wait is the countdown's starting point rather than a surprise on submit.
   it('starts counting down from the wait the server reports', async () => {
     renderForm(
-      <EmailForm email="ada@example.test" verified={false} next="/coven" waitSeconds={1} />,
+      <EmailForm email="ada@example.test" verified={false} landing="/coven" waitSeconds={1} />,
     );
 
     expect(screen.getByRole('button', { name: 'Send Again in 1s' })).toBeDisabled();
@@ -236,7 +261,7 @@ describe('EmailForm', () => {
       code: 'VALIDATION',
       fieldErrors: [{ path: ['email'], message: 'Enter an email address' }],
     });
-    renderForm(<EmailForm email="" verified={false} next="/coven" />);
+    renderForm(<EmailForm email="" verified={false} landing="/coven" />);
 
     expect(emailField().closest('form')).toHaveAttribute('novalidate');
     expect(emailField()).not.toBeRequired();

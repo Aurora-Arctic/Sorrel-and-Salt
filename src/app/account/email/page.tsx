@@ -4,7 +4,7 @@ import { getMe, isPlaceholderEmail, verificationWaitSeconds } from '@/modules/id
 import EmailForm from '../../../components/EmailForm';
 import { hasVerifiedFlag, verifyErrorMessage } from '../../../lib/account-email';
 import { requireSession } from '../../../lib/request-session';
-import { safeReturnPath } from '../../../lib/sign-in';
+import { postSignInLanding, safeReturnPath } from '../../../lib/sign-in';
 import type { EmailPageProps } from './types';
 
 export const metadata: Metadata = {
@@ -29,6 +29,7 @@ export default async function EmailPage({ searchParams }: EmailPageProps) {
           me.emailVerified && hasVerifiedFlag(params.verified) && params.error === undefined
         }
         next={safeReturnPath(params.next)}
+        landing={postSignInLanding(session.role)}
         error={verifyErrorMessage(params.error)}
         waitSeconds={verificationWaitSeconds(me.verificationSentAt)}
       />

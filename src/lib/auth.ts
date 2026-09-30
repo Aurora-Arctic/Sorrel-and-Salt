@@ -21,7 +21,7 @@ import { clientCredentials } from './social-providers-config';
 import type { UserRole, HookContext } from './session';
 import { send } from './mail';
 import { emailPagePath, returnPathOf, verifiedLanding } from './account-email';
-import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH } from './sign-in';
+import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH, postSignInLanding } from './sign-in';
 import { verifyEmailMessage } from '../emails/verify-email';
 import {
   promotePrimaryAdmin,
@@ -77,6 +77,13 @@ async function isExplicitLink(): Promise<boolean> {
 // "Linking a second provider").
 async function vouchWhenLinking(): Promise<{ emailVerified?: true }> {
   return (await isExplicitLink()) ? { emailVerified: true } : {};
+}
+
+// A sign-in that asked for no return path (`NO_RETURN_PATH`), whose landing
+// is then its role's. The flag is the client's `additionalData`, so it is
+// trusted only to choose between two landings the account could open anyway.
+async function asksNoReturnPath(): Promise<boolean> {
+  return (await hasRequestState()) && (await getOAuthState())?.noReturnPath === true;
 }
 
 function socialProviders(): BetterAuthOptions['socialProviders'] {
@@ -343,10 +350,13 @@ export const auth = betterAuth({
       await recordVerificationSent({ userId: user.id });
       // Better Auth lands a sign-up's link where the sign-in asked to go; every
       // link lands on the email page's confirmed view instead, carrying that
-      // destination on to Continue. A resend's `callbackURL` is already the
-      // landing, and passes the same guard as a sign-up's.
+      // destination on to Continue — none for a sign-up that asked for none,
+      // whose `callbackURL` only stands in. A resend's `callbackURL` is already
+      // the landing, and passes the same guard as a sign-up's.
       const link = new URL(url);
-      const next = returnPathOf(link.searchParams.get('callbackURL'));
+      const next = (await asksNoReturnPath())
+        ? undefined
+        : returnPathOf(link.searchParams.get('callbackURL'));
       link.searchParams.set('callbackURL', verifiedLanding(next));
       const accounts = await ctx.context.internalAdapter.findAccounts(user.id);
       await send(
@@ -462,6 +472,8 @@ export const auth = betterAuth({
         ctx.context.logger.warn(`primary admin not promoted: user ${user.id} (${outcome})`);
       }
 
+      const noReturnPath = await asksNoReturnPath();
+
       // An unverified account can do nothing else, so it lands on the email
       // page, address prefilled, until the address is proven; where the
       // sign-in was going rides along. The endpoint's own redirect is the
@@ -472,8 +484,18 @@ export const auth = betterAuth({
           ctx.context.baseURL,
         );
         throw new APIError('FOUND', undefined, {
-          Location: emailPagePath(`${landing.pathname}${landing.search}`),
+          Location: emailPagePath(
+            noReturnPath ? undefined : `${landing.pathname}${landing.search}`,
+          ),
         });
+      }
+
+      // With no return path, the landing is the role's as it stands after any
+      // promotion just now; otherwise the endpoint's redirect already goes
+      // where the sign-in asked, `/coven` included.
+      if (noReturnPath) {
+        const role: UserRole = outcome === 'promoted' ? 'admin' : (user.role as UserRole);
+        throw new APIError('FOUND', undefined, { Location: postSignInLanding(role) });
       }
     }),
   },

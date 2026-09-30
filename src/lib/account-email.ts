@@ -1,4 +1,4 @@
-import { POST_SIGN_IN_LANDING, safeReturnPath } from './sign-in';
+import { safeReturnPath } from './sign-in';
 
 // Pure helpers for /account/email?error=, the page a followed verification
 // link lands on. Every sentence is ours: a code is what Better Auth's
@@ -28,12 +28,11 @@ const VERIFIED_LANDING = `${EMAIL_PAGE}?verified`;
 /**
  * Where a followed verification link lands: the email page in its confirmed
  * view, carrying `next` on to Continue once it has passed `safeReturnPath`.
- * The landing Continue falls back to is left off, so a link with nowhere else
- * to go reads as it always has.
+ * With none, the page's Continue lands the account by its role.
  */
 export function verifiedLanding(next: string | undefined): string {
   const path = safeReturnPath(next);
-  if (path === POST_SIGN_IN_LANDING) return VERIFIED_LANDING;
+  if (path === undefined) return VERIFIED_LANDING;
   return `${VERIFIED_LANDING}&next=${encodeURIComponent(path)}`;
 }
 
@@ -58,8 +57,11 @@ export function hasVerifiedFlag(value: string | string[] | undefined): boolean {
   return value !== undefined;
 }
 
-/** The email page, carrying where to go once the address is proved. */
-export function emailPagePath(next: string): `/account/email?next=${string}` {
+/** The email page, carrying where to go once the address is proved, if anywhere. */
+export function emailPagePath(
+  next: string | undefined,
+): '/account/email' | `/account/email?next=${string}` {
+  if (next === undefined) return EMAIL_PAGE;
   return `${EMAIL_PAGE}?next=${encodeURIComponent(next)}`;
 }
 

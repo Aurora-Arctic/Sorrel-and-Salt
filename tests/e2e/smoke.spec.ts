@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
+import { signInAs } from './session';
 
 // `fullyParallel` would split this file across workers, each running
 // `beforeAll` and a share of the tests against its own slot's database.
@@ -14,8 +15,7 @@ test.beforeAll(async () => {
 
 // The front door, signed out (MB.57): reachable without a redirect, says
 // what the site is and that it is invite-only, and offers the sign-in page.
-// The signed-in variant swaps only the way in and is covered by
-// tests/components/Welcome; no e2e spec can sign in without a real provider.
+// Signed in, it swaps only the way in, for the landing of the visitor's role.
 test('the entry page renders signed out, without a redirect', async ({ page }) => {
   await page.goto('/');
 
@@ -57,6 +57,28 @@ test('the entry page leads to /sign-in', async ({ page }) => {
 
   await expect(page).toHaveURL(/\/sign-in$/);
   await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
+});
+
+// Signed in, the way in is the landing a sign-in with no return path gets
+// (MB.113): the admin area for an admin, and /coven for anyone else — whose
+// page M2.8 builds, so that one is asserted by its link alone.
+test('the entry page continues a signed-in admin to the admin area', async ({ page }) => {
+  await signInAs(page, 'an-admin@entry-page.test', ['discord'], 'admin');
+  await page.goto('/');
+
+  await expect(page.getByRole('link', { name: 'Sign In' })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Continue' }).click();
+
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Admin' })).toBeVisible();
+});
+
+test('the entry page continues anyone else to /coven', async ({ page }) => {
+  await signInAs(page, 'a-member@entry-page.test');
+  await page.goto('/');
+
+  await expect(page.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/coven');
+  await expect(page.getByRole('link', { name: 'Sign In' })).toHaveCount(0);
 });
 
 test('the entry page has no accessibility violations', async ({ page }) => {

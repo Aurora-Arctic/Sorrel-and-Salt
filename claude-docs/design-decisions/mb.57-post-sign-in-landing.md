@@ -5,8 +5,9 @@ compendium pages are public as well; `/` stays the entry page and the
 post-sign-in landing stays `/coven`.) The post-sign-in
 landing — into their workspace, the create form, or the invite-only
 explanation (M2.8) — is its own route, **`/coven`**, protected like every
-other page. `/sign-in`'s default `next`, and so `safeReturnPath`'s fallback,
-is `/coven`.
+other page. A sign-in with no `next` lands there — an admin's, since MB.113,
+on `/admin` instead, and `safeReturnPath` now has no fallback, since which
+landing applies is the role's ([`auth.md`](../auth.md), "Route protection").
 
 ## The question
 
@@ -52,8 +53,9 @@ prose still say _workspace_.
 
 It reads `getSession()` — never `requireSession()`, which would protect it
 again — for exactly one decision: whether the way in is "Sign in" (to
-`/sign-in`) or "Continue" (to `/coven`). Everything else on the page is the
-same for both. `/` stays in `PUBLIC_ROUTES`.
+`/sign-in`) or "Continue" (to `/coven`, or since MB.113 `/admin` for an
+admin, the landing a sign-in with no return path gets). Everything else on
+the page is the same for both. `/` stays in `PUBLIC_ROUTES`.
 
 ## What this rules out
 

@@ -51,6 +51,33 @@ describe('SignInPanel', () => {
     });
   });
 
+  // With no return path the callback lands the account by role, so the
+  // sign-in says it asked for none rather than naming the /coven landing.
+  it('flags a sign-in with no return path, and keeps a failed one without one', () => {
+    render(<SignInPanel configured={['google']} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
+
+    expect(socialMock).toHaveBeenCalledWith({
+      provider: 'google',
+      callbackURL: '/coven',
+      errorCallbackURL: '/sign-in',
+      additionalData: { noReturnPath: true },
+    });
+  });
+
+  it('sends an explicit /coven as a return path, with no flag', () => {
+    render(<SignInPanel next="/coven" configured={['google']} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
+
+    expect(socialMock).toHaveBeenCalledWith({
+      provider: 'google',
+      callbackURL: '/coven',
+      errorCallbackURL: '/sign-in?next=%2Fcoven',
+    });
+  });
+
   it('renders no alert when there is no error', () => {
     render(<SignInPanel next="/" configured={['google']} />);
 

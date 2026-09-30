@@ -133,7 +133,8 @@ describe('proxy', () => {
 
   it('does not reflect a protocol-relative pathname into the return path', async () => {
     const response = await proxy(request('//evil.example/x'));
-    expect(getRedirectUrl(response)).toBe(`${ORIGIN}/sign-in?next=%2Fcoven`);
+    // Dropped, not replaced: a sign-in with no return path lands by role.
+    expect(getRedirectUrl(response)).toBe(`${ORIGIN}/sign-in`);
   });
 
   // An unrelated cookie is not a session: the check is for Better Auth's name.
