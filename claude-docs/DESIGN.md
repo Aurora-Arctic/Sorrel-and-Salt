@@ -227,7 +227,7 @@ The four stamp columns stay on all three: `created_by` on a join row answers "wh
 
 1. **`*_by` never comes from a request body.** All writes go through `withAudit(session, fn)`, which injects them. A lint rule bans importing `db` outside `src/db/repository/`.
 2. **`updated_at` is a database trigger**, so a manual `psql` fix still stamps it.
-3. **Soft-delete filtering happens in the repository**, never at call sites. There is no exported query that can forget `deleted_at IS NULL`: `findMany`/`findOne` apply it where the column exists and read a join table that has none, deciding on the table's own shape rather than on a flag a caller passes.
+3. **Soft-delete filtering happens in the repository**, never at call sites. There is no exported query that can forget `deleted_at IS NULL`: `findMany`/`findOne` apply it where the column exists and read a join table that has none, deciding on the table's own shape rather than on a flag a caller passes. The writer holds the same line: every update and soft delete skips a deleted row, decided the same way, so a tombstone is never rewritten and a second delete never overwrites who made the first. The way back to a deleted row is v2's restore, and an edit follows it (§13, "Edit history").
 4. **The hard delete is a named method, not a flag.** `write.delete(table, where)` removes rows outright and is typed to reject any table carrying `deletedAt` at compile time; `softDelete` demands one. Same shape as `findManyIncludingSoftDeleted` — the escape hatch is narrow and impossible to point at the wrong thing.
 
 Every write transaction publishes the acting user as a transaction-local GUC, `app.current_user_id`. The statement is `select set_config('app.current_user_id', $1, true)` rather than a literal `SET LOCAL` — `is_local => true` _is_ `LOCAL`, and `SET LOCAL` accepts no bind parameters, so writing it literally would mean interpolating a user id into SQL text. Nothing in v1 reads it back: it is there for the v2 history trigger (§13) and for the policies deferred to the public launch (§8). That is the point of publishing it now — either one becomes a single migration rather than a re-audit of every write path.
@@ -1186,6 +1186,7 @@ The highest-risk tests in the project.
 - Insert stamps `created_by`/`updated_by` from session, ignoring payload ids
 - Update leaves `created_at`/`created_by` untouched
 - Soft delete sets `deleted_at`/`deleted_by`; row vanishes from finders
+- Update and soft delete leave a soft-deleted row as it was, the same call writing its live twin
 - Re-adding a **formal** name after soft delete succeeds — the partial-index test. It must be the formal name, not the display label: display labels are no longer unique in the compendium, so a label-based assertion would pass even with the `WHERE deleted_at IS NULL` stripped off the index, and the test would silently stop testing anything. M5.3 exists to exercise that index and carries the same correction
 
 **Compendium and ingredients**
@@ -1375,6 +1376,8 @@ Store only changed keys in `old_values`/`new_values`, with `changed_keys` as the
 Visibility flips on notes land in `changed_keys`, giving a queryable record of exactly when something went public and who did it.
 
 **Stories:** view an ingredient's history as a timeline · field-level diff between revisions · see who made each change · restore a previous revision (as a new revision, never a rewrite) · undo a soft delete from a trash view.
+
+**Restore, then edit.** Undo is a named writer method per tier — `restoreByIdInWorkspace(membership, …)` and `restoreByIdInCompendium(admin, …)` — that reaches only a deleted row, clears `deleted_at` and `deleted_by`, and stamps `updated_by` as the restorer, which the trigger records as `restore`. An edit is then the ordinary update of the row it brought back, in the same transaction if both are wanted. Nothing writes a row while it stays deleted: v1's writer skips one on every update, and an edit made in place would be a write nobody can see or check until the row came back. The restore needs an `applyAudit` operation of its own, since every payload has the audit columns stripped, and it can meet a partial unique index that a later row now holds, which the service refuses on the field that collides, as it refuses any write.
 
 ### Spell approval for viewers
 

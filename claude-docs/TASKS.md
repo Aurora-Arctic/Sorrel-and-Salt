@@ -1618,6 +1618,8 @@ _Story 17 — As a workspace member, I want to be prevented from editing compend
 
 Read path open to everyone — it takes no session, since the cache M8.6 wraps it in cannot see one (MB.80) — and built by M8.5, which runs first in the wave: `listCompendium`, `getIngredient` and their finders are its, so this task adds the writes; write path restricted to `users.role = admin`. Authorization lives here, not in resolvers, and the tests confirm the mutation surface offers no bypass on update or delete. A write that omits `nomenclature` is rejected before it reaches the database, and the partial-unique-index violation on `canonical_key` is translated into a readable error naming the colliding entry rather than surfacing the raw constraint name.
 
+**Decided while building:** the writes take a proof, as a coven's do. `assertSiteAdmin` in `identity` returns a branded `SiteAdmin`, and three new `AuditWriter` methods — `insertInCompendium`, `updateByIdInCompendium` and `softDeleteByIdInCompendium` — demand it and scope themselves to the live compendium tier. So a compendium write cannot be written without the check, and an admin naming a coven's ingredient by id gets `NotFound` ([`db.md`](db.md), "The SiteAdmin proof"). `deleteCompendiumEntry` is built here, because the non-admin delete refusal needs it; M5.3 proves name reuse over it. The colliding entry is found by `findCompendiumEntryByIdentity`, which builds the key from the values with the generated column's own expression (`canonicalKeyOf`), so the key keeps one spelling. An identity collision lands on `canonicalName` only when the write declares a formal name. §5's cross-namespace case is a `none` label equal to another entry's formal name, and there the field that caused it is `name`, as M8.2's coven writes already path it; the criterion below is corrected to say so ([`db.md`](db.md), "Compendium writes"). Riding in the same PR as a sub-hour fix: every update and soft delete the writer offers now skips a soft-deleted row, which M8.2's `updateWorkspaceIngredient` could rewrite, and the way back — a restore, then an edit — stays v2's, as DESIGN.md §13 now records ([`db.md`](db.md), "The write path").
+
 _Acceptance criteria:_
 
 - The compendium read takes no session and answers a signed-out caller; every workspace read still refuses a null session
@@ -1625,14 +1627,14 @@ _Acceptance criteria:_
 - A non-admin delete is rejected with Forbidden
 - An admin write succeeds and stamps updated_by
 - A compendium write omitting `nomenclature` is rejected
-- A colliding write surfaces a readable error naming the existing entry, not the raw constraint name — as a `ValidationError` whose issue path is `canonicalName`, so the message can land beside the field that caused it (MB.43)
+- A colliding write surfaces a readable error naming the existing entry, not the raw constraint name — as a `ValidationError` pathed to the field that caused it (MB.43): `canonicalName` when the write declares a formal name, `name` when it declares none and its label is its identity
 - Story 17 acceptance test passes
 
 **M5.3 — Soft-delete a compendium entry and prove the name can be reused** · 1h
 
 _Story 25 — As a workspace member, I want deletions to be recoverable, so that a mistake costs a request for help rather than my data._
 
-Admin soft delete stamping deletedAt and deletedBy, plus the test that proves the partial unique index from M4.1a allows re-adding the same **formal name** afterwards. Separate from M5.2 because it exercises the index behaviour rather than the authorization rule — without the WHERE clause, deleting an entry would permanently reserve its identity. The assertion must be on the formal name, not the display label: two compendium entries may already share a label without deletion being involved, so a label-reuse assertion alone would still pass even with the WHERE clause removed.
+Admin soft delete stamping deletedAt and deletedBy, plus the test that proves the partial unique index from M4.1a allows re-adding the same **formal name** afterwards. **Amended by M5.2:** `deleteCompendiumEntry` landed there, because story 17's delete refusal needs it; this task keeps the index-reuse proof and the finder criteria, over that service. Separate from M5.2 because it exercises the index behaviour rather than the authorization rule — without the WHERE clause, deleting an entry would permanently reserve its identity. The assertion must be on the formal name, not the display label: two compendium entries may already share a label without deletion being involved, so a label-reuse assertion alone would still pass even with the WHERE clause removed.
 
 _Acceptance criteria:_
 

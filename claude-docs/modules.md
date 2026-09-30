@@ -173,26 +173,34 @@ The compendium's future extraction unit is the compendium tier of
 `ingredients` plus `vocabulary`. What would make that extraction a rewrite is
 an uncounted set of reads that cross from a workspace's rows into the
 compendium's. So the set is counted: **`TIER_SEAM` in
-`tests/guards/module-boundaries.test.ts` must name every exported function in
-`src/db/repository/` whose SQL reads the compendium tier** — anything calling
-`inCompendium(…)`, the predicate's one spelling since MB.100, or writing
-`workspace_id is null` or `isNull(workspaceId)` out by hand, and anything that
-reads both tiers in one statement. The guard fails an unlisted finder, and it
-fails a listed one that no longer exists.
+`tests/guards/module-boundaries.test.ts` must name every top-level function in
+`src/db/repository/` whose SQL reads the compendium tier**, exported or not —
+anything calling `inCompendium(…)`, the predicate's one spelling since MB.100,
+or writing `workspace_id is null` or `isNull(workspaceId)` out by hand, and
+anything that reads both tiers in one statement. The guard cuts each file at
+every top-level `function` and `const`, so a predicate is named by the
+declaration it is written in, and a private helper is listed under its own
+name rather than credited to whichever export happens to sit above it. It
+fails an unlisted function, and it fails a listed one that no longer exists or
+no longer reads the tier.
 
-It holds the predicate and seven finders today: `inCompendium` in `shapes.ts`,
-which is `workspace_id IS NULL` itself; `findSimilarIngredients` (M4.7), the fuzzy
-duplicate match; `findVocabularySuggestions` (MB.94, forms M4.7a), the
-planet, zodiac and form autofill; `findCommonNameSuggestions` (M4.7a), the
-common-name autofill; `findManyOfIngredients` (M4.8), an ingredient's folk
-names and category links; `findCompendiumPage` (M8.5), the public list, and
-`findCompendiumCount` (MB.105), its count, which read the compendium tier
-alone; and `findOneIngredient` (M8.5), one row in the compendium or a proof's
-coven. Each but the list and its count reads the compendium and the proofs'
-workspaces in a single statement. A later task that adds such a
-finder — M5.1's admin reads, M8.3's local-beats-compendium resolution — adds
-the finder's name to `TIER_SEAM` in its own PR, with a one-line reason beside
-it.
+It holds the predicate, eight finders and the writer today: `inCompendium` in
+`shapes.ts`, which is `workspace_id IS NULL` itself; `findSimilarIngredients`
+(M4.7), the fuzzy duplicate match; `findVocabularySuggestions` (MB.94, forms
+M4.7a), the planet, zodiac and form autofill; `findCommonNameSuggestions`
+(M4.7a), the common-name autofill; `findManyOfIngredients` (M4.8), an
+ingredient's folk names and category links; `findCompendiumPage` (M8.5), the
+public list, and `findCompendiumCount` (MB.105), its count;
+`findOneIngredient` (M8.5), one row in the compendium or a proof's coven;
+`findCompendiumEntryByIdentity` (M5.2), the entry a colliding compendium
+write names; and `writerFor` (M5.2), the private builder of `withAudit`'s
+writer, whose compendium-tier methods update and soft-delete a row only under
+`workspace_id IS NULL`. The list, its count, the identity lookup and the
+writer touch the compendium tier alone; each of the rest reads the compendium
+and the proofs' workspaces in a single statement.
+A later task that adds such a finder — M8.3's local-beats-compendium
+resolution, MB.82's retired-slug lookup — adds the finder's name to
+`TIER_SEAM` in its own PR, with a one-line reason beside it.
 The list is then the scope of the extraction task, read from one file.
 
 ## Tests

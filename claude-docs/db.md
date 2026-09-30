@@ -1679,6 +1679,17 @@ const [spell] = await withAudit(session, (write) =>
 - **`write.softDelete(table, where)`** — stamps `deletedAt`/`deletedBy` and
   leaves the row in place (CLAUDE.md rule 4). Typed to demand a `deletedAt`
   column, so it cannot be pointed at a join table with nothing to stamp.
+
+**No update or soft delete reaches a soft-deleted row.** The writer ANDs
+`deleted_at IS NULL` onto the `where` of every one of them, by the scoped and
+by-id variants too, decided by the table's shape as the finders' filter is —
+`notSoftDeleted(table)`, dropped for a join table, which has no tombstone to
+skip. So a tombstone is never rewritten, a service updating a deleted row by
+id finds nothing and answers `NotFound`, and a second delete cannot
+overwrite who made the first. The way back to a deleted row is v2's restore,
+a named method per tier, with an edit after it rather than in place
+(DESIGN.md §13, "Edit history").
+
 - **`write.delete(table, where)`** — removes the rows outright, for the three
   join tables only (MB.34). Typed to reject any table carrying `deletedAt`, so
   it can never become the way a soft-deletable row is quietly destroyed.
@@ -1829,13 +1840,14 @@ request's DataLoaders ([`graphql.md`](graphql.md), "The two transports").
 The repository splits on the table's own shape, the way it already splits
 `softDelete` from `delete`:
 
-| The table                                                              | Reads                                                                                     | Writes                                                                                                  |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| carries `workspace_id`                                                 | `findManyInWorkspace` / `findOneInWorkspace` / `findOneByIdInWorkspace`, proof first      | `insertInWorkspace`, `updateInWorkspace`, `updateByIdInWorkspace`, `softDeleteInWorkspace`, proof first |
-| carries `visibility` (`spells` alone)                                  | `findManySpells` / `findOneSpell`, proof first                                            | the workspace-scoped writes above                                                                       |
-| carries `spell_id` (the two join tables)                               | `findManyInSpell`, proof first                                                            | `insert`, `update`, `delete`                                                                            |
-| carries `ingredient_id` and no `workspace_id` (folk names, categories) | `findManyOfIngredients`, proofs first                                                     | `insert`, `update`, `softDelete` / `softDeleteByIds` / `delete`                                         |
-| none of those                                                          | `findMany` / `findOne` / `findOneById` / `findManyByIds` / `findManyIncludingSoftDeleted` | `insert`, `update`, `updateById`, `softDelete`, `softDeleteByIds`, `delete`                             |
+| The table                                                              | Reads                                                                                     | Writes                                                                                                                       |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| carries `workspace_id`                                                 | `findManyInWorkspace` / `findOneInWorkspace` / `findOneByIdInWorkspace`, proof first      | `insertInWorkspace`, `updateInWorkspace`, `updateByIdInWorkspace`, `softDeleteInWorkspace`, proof first                      |
+| carries a nullable `workspace_id` (`ingredients`, its retired slugs)   | the scoped reads above, and the named compendium finders                                  | the scoped writes above, and `insertInCompendium`, `updateByIdInCompendium`, `softDeleteByIdInCompendium`, `SiteAdmin` first |
+| carries `visibility` (`spells` alone)                                  | `findManySpells` / `findOneSpell`, proof first                                            | the workspace-scoped writes above                                                                                            |
+| carries `spell_id` (the two join tables)                               | `findManyInSpell`, proof first                                                            | `insert`, `update`, `delete`                                                                                                 |
+| carries `ingredient_id` and no `workspace_id` (folk names, categories) | `findManyOfIngredients`, proofs first                                                     | `insert`, `update`, `softDelete` / `softDeleteByIds` / `delete`                                                              |
+| none of those                                                          | `findMany` / `findOne` / `findOneById` / `findManyByIds` / `findManyIncludingSoftDeleted` | `insert`, `update`, `updateById`, `softDelete`, `softDeleteByIds`, `delete`                                                  |
 
 `{ workspaceId: AnyPgColumn }` and `{ workspaceId?: never }` are the two
 constraints, so each finder admits exactly one of the two sets and a table
@@ -1867,8 +1879,9 @@ both tiers as explicitly as this paragraph asks, and each listed on
 [the tier seam](modules.md#the-tier-seam). The plain compendium read is
 `findCompendiumPage` (M8.5), with its count `findCompendiumCount` (MB.105),
 each ANDing `inCompendium` as explicitly as the scoped finders AND their proof, and `findOneIngredient` reads one row in the
-compendium or a proof's coven ("The compendium read"); the
-local-beats-compendium resolution (§5) wants both tiers under an anti-join and
+compendium or a proof's coven ("The compendium read"), and
+`findCompendiumEntryByIdentity` (M5.2) reads the entry holding an identity
+("Compendium writes"); the local-beats-compendium resolution (§5) wants both tiers under an anti-join and
 is a further named finder, M8.3's. The point of the narrowing is that a read
 of that table has to say which tier it means instead of getting whichever the
 default was.
@@ -1939,6 +1952,52 @@ does catch — the object literal and the forgery from a session — as
 `@ts-expect-error` lines, which fail `npm run typecheck` the moment the brand
 stops being required. A runtime assertion could not see that at all: it would
 pass just as happily against a signature that had quietly gone optional.
+
+## The SiteAdmin proof (M5.2)
+
+Rule 5's two layers, on the site role rather than a workspace role.
+`assertSiteAdmin(session)` in `identity`'s `services/site-admin.ts` is the
+check — `session.role === 'admin'`, or `Forbidden` — and the `SiteAdmin` it
+returns, `{ userId }` under a brand the file does not export, is the proof.
+The writer's three compendium-tier methods demand it:
+
+```ts
+const admin = assertSiteAdmin(session);
+await withAudit(session, (write) => write.insertInCompendium(admin, ingredients, values));
+```
+
+- **`insertInCompendium(admin, table, values)`** fills `workspace_id` with
+  null, after `values`, as `insertInWorkspace` fills it from its proof.
+- **`updateByIdInCompendium(admin, table, id, values)`** and
+  **`softDeleteByIdInCompendium(admin, table, id)`** reach the one row with
+  that id only while it is live and in the compendium — `workspace_id IS NULL`
+  and `deleted_at IS NULL`, the second as every update ANDs it. A coven's row
+  or a deleted one is written nothing and returns nothing, so an admin naming
+  a coven's ingredient by id changes nothing.
+
+**Why a proof, when the check is one comparison.** `ingredients` holds both
+tiers in one table, so without it a compendium write would be one method call
+away from every service that writes ingredients, the coven's own included, and
+the admin check would be absent there rather than impossible — the test rule 5
+sets. The proof carries nothing the query reads, since the compendium tier has
+no id to scope by; what it buys is that the call cannot be written without the
+check having run. It is erased at runtime, like `Membership`.
+
+The methods take a **two-tier** table only: `TwoTier` in `shapes.ts`,
+`{ workspaceId: AnyPgColumn<{ notNull: false }> }`, which `ingredients` and
+`retired_ingredient_slugs` satisfy and a table whose `workspace_id` is
+`NOT NULL`, like `spells`, does not. The vocabulary tables — categories,
+forms, the astrology vocabularies — carry no `workspace_id`, have one tier,
+and are written through `insert` and `updateById`: nothing below their
+services stops a non-admin write to them, so each of those services checks
+the site role itself.
+
+The site role is a separate axis from the workspace role, as `assertMembership`
+keeps it: `assertSiteAdmin` reads `session.role` and nothing else, which the
+request read off the user's row, and a workspace role counts for nothing. A
+cast from the proof's public shape compiles, as `Membership`'s does, and is
+review's job; the object literal is pinned as a `@ts-expect-error` in
+`tests/db/repository/write.test.ts`.
 
 ## Spell visibility (M10.3)
 
@@ -2099,9 +2158,9 @@ holds none of them, as everywhere in a coven.
 **The tier is the proof's, so nothing here promotes a row to the compendium.**
 `insertInWorkspace` fills `workspace_id` from the proof, `updateByIdInWorkspace`
 cannot reassign it, and `LocalIngredientInput` strips a `workspaceId` a caller
-smuggles in. The update and the read reach a row only through
-`workspace_id = membership.workspaceId`, so a compendium entry's id or another
-coven's answers `NotFound`, the same as an id that names nothing, and naming a
+smuggles in. The update and the read reach only a live row, and only through
+`workspace_id = membership.workspaceId`, so a compendium entry's id, another
+coven's or a soft-deleted ingredient's answers `NotFound`, the same as an id that names nothing, and naming a
 coven the caller is not in answers `Forbidden` before any row is read, a coven
 id that is not a uuid included ("What the check asks"). An ingredient id that
 is not a uuid is `NotFound`, as `getIngredient` answers it, rather than a
@@ -2146,9 +2205,10 @@ the address, and can fire only on create until MB.82 makes an update move the
 slug. Catching the failure rather than checking first is deliberate: a
 check-then-write leaves a window for a concurrent save, and the index is the
 one arbiter either way. The message names what the input asked for, not the
-row already holding it. Naming the holder of an identity would take a lookup by
-`canonical_key`, which the service has no value to compare with, because the
-database computes it.
+row already holding it. The compendium's writes do name the holder, through a
+finder that builds the key from the values ("Compendium writes"); inside one
+coven the label index makes the case that needs it rarer, and a coven-scoped
+twin of that finder is the change that would add it here.
 
 ## The compendium read (M8.5)
 
@@ -2261,6 +2321,72 @@ takes an optional `workspaceId`; with one it asks
 `assertMembership(…, { ingredient: ['read'] })` — a signed-out caller, a site
 admin and a non-member get `Forbidden` — and reads both tiers, without one it
 reads the compendium alone, and a miss is `NotFound` either way.
+
+## Compendium writes (M5.2)
+
+Three services in `ingredients`' `services/compendium.ts`, beside the reads:
+`createCompendiumEntry(session, input)`, `updateCompendiumEntry(session, id,
+input)` and `deleteCompendiumEntry(session, id)`. Each opens with
+`assertSiteAdmin`, before the input is parsed, so a non-admin is refused the
+same way whatever they sent, and writes through the compendium-tier methods
+under its proof ("The SiteAdmin proof"). A workspace role counts for nothing:
+a coven's owner is refused as its viewer is.
+
+**They mirror the coven's writes** ("Workspace ingredients") in everything but
+the tier. The input is the whole entry, so an update replaces the row. Folk
+names are written in the same transaction, the update's diff reading the live
+ones through `findManyOfIngredients` with no proofs, which is the compendium
+alone. The slug is set on create and left alone on update until MB.82 moves
+it. The row mapping and the folk-name diff live in one internal file,
+`services/ingredient-rows.ts`, which both services import. Categories are not
+written here, since `CompendiumIngredientInput` carries none.
+
+**`nomenclature` is required.** `CompendiumIngredientInput` gives it no
+default, because every compendium entry declares a naming system, `none` and
+`unknown` included as answers (§5). A write that leaves it out, or sends
+null, is a `ValidationError` on `nomenclature` from the parse, before
+`withAudit` opens; the column's `NOT NULL` would have answered with a driver
+error instead.
+
+**The reach is the compendium's live rows.** A coven's ingredient, a
+soft-deleted entry, an id that names nothing and one that is not a uuid are
+all `NotFound`. So the site admin reaches no coven's ingredients by id — the
+invariant in `CLAUDE.md` — and the service test asserts it on update and
+delete with the row first shown reachable by its own coven. A delete is soft
+and stamps `deleted_by`; the entry's folk names and category links stay,
+since nothing reads them past a deleted parent and their unique indexes are
+per ingredient. A `workspaceId` in the input is stripped by the Zod object,
+and `insertInCompendium` would overwrite it if it were not.
+
+**A collision is a `ValidationError` on the field that caused it, naming the
+entry that already holds the identity.** As in the coven's writes, the service
+catches the write's failure and reads the index off it with
+`violatedUniqueIndex`:
+
+- `ingredients_compendium_identity_unique` lands on `canonicalName` when the
+  input declares a formal name, and on `name` when it does not. A `none` or
+  `unknown` entry keys as its label, and §5's cross-namespace case is a label
+  equal to another entry's formal name, where a message beside the empty
+  formal-name field would point at a box the admin never filled in. The
+  message names the holder by its label, formal name and form:
+  `Already in the compendium as "Mugwort" (Artemisia vulgaris, herb)`.
+- `ingredients_compendium_slug_unique` lands on `name`, naming the address,
+  as the coven's does. Naming the entry that holds the address is MB.82's.
+
+The holder is read after the write has rolled back, by
+`findCompendiumEntryByIdentity({ name, canonicalName, form })`: the live
+compendium row whose `canonical_key` equals the key those values would take.
+The key comes from `canonicalKeyOf` in the table's schema file, the builder
+the generated column is built from too, so the finder folds the values
+exactly as Postgres folded the row and the key has one spelling. Given the
+bare column names it renders the text the migrations hold, byte for byte, so
+`db:generate` sees no change. A holder gone by the time it is read — deleted
+between the two statements — leaves the message without a name rather than
+surfacing the raw error.
+
+Firing `revalidateTag` after each write is M8.7's, once M8.6 has put the
+compendium behind the cache (CLAUDE.md rule 6). The GraphQL mutations over
+these services are M5.5's.
 
 ## Soft-delete filtering and the partial-index convention (M1.20)
 
