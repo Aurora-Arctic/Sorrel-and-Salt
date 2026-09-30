@@ -769,8 +769,9 @@ the spec aborts and fails on any request to `/api/auth/sign-in/`.
   throws on the unset URL rather than reporting that no mail arrived.
 - **A signed-in browser without a provider** (MB.71). No spec can finish a
   real OAuth round trip, so `tests/e2e/session.ts`'s `signInAs(page, email,
-providers)` writes what a Discord sign-in would leave into `sorrel_e2e`: a
-  verified user stamped as its own creator, one `accounts` row per provider
+providers, role)` writes what a Discord sign-in would leave into `sorrel_e2e`: a
+  verified user stamped as its own creator, holding the site role given
+  (`user` unless the spec asks for `admin`), one `accounts` row per provider
   named, and a session. It then hands the browser the session cookie Better
   Auth would have set. The value is the token, a dot, and its base64
   HMAC-SHA256 under `BETTER_AUTH_SECRET`, percent-encoded as better-call's

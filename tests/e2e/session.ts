@@ -20,14 +20,15 @@ function signed(value: string, secret: string): string {
 
 /**
  * Makes `page` a browser signed in to a new verified user holding one account
- * per provider named. The cookie rides as a request header rather than in the
- * cookie jar: a `Secure` cookie is never sent to the plain-http origin the
- * remote browser reaches the server on.
+ * per provider named, with the site role given. The cookie rides as a request
+ * header rather than in the cookie jar: a `Secure` cookie is never sent to the
+ * plain-http origin the remote browser reaches the server on.
  */
 export async function signInAs(
   page: Page,
   email: string,
   providers: readonly string[] = ['discord'],
+  role: 'user' | 'admin' = 'user',
 ): Promise<{ userId: string }> {
   const secret = process.env.BETTER_AUTH_SECRET;
   if (!secret)
@@ -40,8 +41,8 @@ export async function signInAs(
     await sql.begin(async (tx) => {
       // Stamped as its own creator, as the sign-up hook stamps one.
       await tx`
-        insert into users (id, name, email, email_verified, created_by, updated_by)
-        values (${userId}, 'Fixture Person', ${email}, true, ${userId}, ${userId})
+        insert into users (id, name, email, email_verified, role, created_by, updated_by)
+        values (${userId}, 'Fixture Person', ${email}, true, ${role}, ${userId}, ${userId})
       `;
       for (const [index, providerId] of providers.entries()) {
         await tx`

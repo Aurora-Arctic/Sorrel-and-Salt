@@ -24,6 +24,9 @@ const nextConfig: NextConfig = {
     // reloads the server's modules from disk after an edit instead
     // (claude-docs/debugging.md).
     turbopackServerFastRefresh: false,
+    // `forbidden()` and `src/app/forbidden.tsx`: the `/admin` guard's 403
+    // (claude-docs/auth.md, "The admin guard").
+    authInterrupts: true,
   },
 };
 
