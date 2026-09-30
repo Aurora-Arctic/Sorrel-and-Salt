@@ -297,12 +297,7 @@ export function ListField({ name, legend, entry, hint }: ListFieldProps): ReactE
           }}
           {...boxProps}
         />
-        <button
-          type="button"
-          className="btn"
-          aria-label={`Add ${entry.toLowerCase()}`}
-          onClick={add}
-        >
+        <button type="button" className="btn" aria-label={`Add ${entry}`} onClick={add}>
           Add
         </button>
       </div>

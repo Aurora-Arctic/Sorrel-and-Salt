@@ -44,7 +44,7 @@ const save = () => {
 /** Types an entry into a list's box and presses its Add button. */
 const addEntry = (entry: string, value: string) => {
   type(entry, value);
-  fireEvent.click(screen.getByRole('button', { name: `Add ${entry.toLowerCase()}` }));
+  fireEvent.click(screen.getByRole('button', { name: `Add ${entry}` }));
 };
 const removeButton = (value: string) => screen.getByRole('button', { name: `Remove ${value}` });
 
@@ -98,14 +98,14 @@ describe('IngredientForm', () => {
 
       type('Name', 'Testwort');
       choose('Classification', 'botanical');
-      type('Formal name', 'Fixtura testalis');
+      type('Formal Name', 'Fixtura testalis');
       type('Form', 'dried leaf');
       type('Description', 'A fixture herb.');
       choose('Element', 'air');
       type('Planet', 'Mercury');
-      type('Zodiac sign', 'Gemini');
+      type('Zodiac Sign', 'Gemini');
       type('Colour', 'Silver-green');
-      type('Safety notes', 'None known.');
+      type('Safety Notes', 'None known.');
       save();
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
@@ -157,11 +157,11 @@ describe('IngredientForm', () => {
       renderForm();
 
       type('Name', 'Testwort');
-      addEntry('Folk name', 'Hedge Fixture');
-      addEntry('Folk name', 'hedge fixture');
+      addEntry('Folk Name', 'Hedge Fixture');
+      addEntry('Folk Name', 'hedge fixture');
       save();
 
-      const box = textbox('Folk name');
+      const box = textbox('Folk Name');
       await waitFor(() => expectErrorOn(box, 'This folk name is already listed'));
       expect(box).toHaveFocus();
       // The entry itself says why, and its twin says nothing.
@@ -179,13 +179,13 @@ describe('IngredientForm', () => {
       renderForm();
 
       type('Name', 'Testwort');
-      addEntry('Folk name', 'Hedge Fixture');
-      addEntry('Folk name', 'hedge fixture');
+      addEntry('Folk Name', 'Hedge Fixture');
+      addEntry('Folk Name', 'hedge fixture');
       save();
-      await waitFor(() => expect(textbox('Folk name')).toBeInvalid());
+      await waitFor(() => expect(textbox('Folk Name')).toBeInvalid());
       fireEvent.click(removeButton('hedge fixture'));
 
-      await waitFor(() => expect(textbox('Folk name')).not.toBeInvalid());
+      await waitFor(() => expect(textbox('Folk Name')).not.toBeInvalid());
       expect(screen.queryByText(/This folk name is already listed/)).not.toBeInTheDocument();
     });
   });
@@ -202,10 +202,10 @@ describe('IngredientForm', () => {
 
       type('Name', 'Testwort');
       choose('Classification', 'botanical');
-      type('Formal name', 'Fixtura testalis');
+      type('Formal Name', 'Fixtura testalis');
       save();
 
-      const formal = textbox('Formal name');
+      const formal = textbox('Formal Name');
       await waitFor(() => expectErrorOn(formal, 'This coven already has Fixtura testalis'));
       expect(formal).toHaveFocus();
     });
@@ -241,15 +241,15 @@ describe('IngredientForm', () => {
       renderForm();
 
       type('Name', 'Testwort');
-      addEntry('Folk name', 'Fixture Bane');
-      addEntry('Folk name', 'Fixture Wort');
-      addEntry('Folk name', 'Hedge Fixture');
+      addEntry('Folk Name', 'Fixture Bane');
+      addEntry('Folk Name', 'Fixture Wort');
+      addEntry('Folk Name', 'Hedge Fixture');
       save();
 
       await waitFor(() =>
-        expectErrorOn(textbox('Folk name'), 'Another entry here claims Hedge Fixture'),
+        expectErrorOn(textbox('Folk Name'), 'Another entry here claims Hedge Fixture'),
       );
-      expect(textbox('Folk name')).toHaveFocus();
+      expect(textbox('Folk Name')).toHaveFocus();
       expect(removeButton('Hedge Fixture')).toHaveAccessibleDescription(
         expect.stringContaining('Another entry here claims Hedge Fixture'),
       );
@@ -360,7 +360,7 @@ describe('IngredientForm', () => {
       save();
 
       await waitFor(() =>
-        expectErrorOn(textbox('Formal name'), 'A botanical entry needs its formal name'),
+        expectErrorOn(textbox('Formal Name'), 'A botanical entry needs its formal name'),
       );
       expect(calls).toHaveLength(0);
     });
@@ -372,10 +372,10 @@ describe('IngredientForm', () => {
       const onSaved = renderForm();
 
       type('Name', 'Testwort');
-      type('Formal name', 'Fixtura testalis');
+      type('Formal Name', 'Fixtura testalis');
       choose('Classification', 'none');
 
-      const formal = textbox('Formal name');
+      const formal = textbox('Formal Name');
       expect(formal).toBeDisabled();
       expect(formal).toHaveValue('');
       expect(formal).toHaveAccessibleDescription(
@@ -391,13 +391,13 @@ describe('IngredientForm', () => {
       renderForm();
 
       choose('Classification', 'unknown');
-      expect(textbox('Formal name')).toHaveAccessibleDescription(
+      expect(textbox('Formal Name')).toHaveAccessibleDescription(
         expect.stringContaining('An "unknown" entry records no formal name.'),
       );
       choose('Classification', 'mineral');
 
-      expect(textbox('Formal name')).toBeEnabled();
-      expect(textbox('Formal name')).not.toHaveAccessibleDescription(
+      expect(textbox('Formal Name')).toBeEnabled();
+      expect(textbox('Formal Name')).not.toHaveAccessibleDescription(
         expect.stringContaining('records no formal name'),
       );
     });
@@ -407,7 +407,7 @@ describe('IngredientForm', () => {
       renderForm();
 
       type('Name', 'Testwort');
-      type('Formal name', 'Fixtura testalis');
+      type('Formal Name', 'Fixtura testalis');
       save();
 
       await waitFor(() =>
@@ -426,11 +426,11 @@ describe('IngredientForm', () => {
       type('Name', 'Testwort');
       choose('Classification', 'botanical');
       save();
-      await waitFor(() => expect(textbox('Formal name')).toBeInvalid());
+      await waitFor(() => expect(textbox('Formal Name')).toBeInvalid());
       choose('Classification', 'unknown');
 
-      await waitFor(() => expect(textbox('Formal name')).not.toBeInvalid());
-      expect(textbox('Formal name')).toBeDisabled();
+      await waitFor(() => expect(textbox('Formal Name')).not.toBeInvalid());
+      expect(textbox('Formal Name')).toBeDisabled();
     });
 
     it('clears the classification error when the formal name is cleared', async () => {
@@ -438,10 +438,10 @@ describe('IngredientForm', () => {
       renderForm();
 
       type('Name', 'Testwort');
-      type('Formal name', 'Fixtura testalis');
+      type('Formal Name', 'Fixtura testalis');
       save();
       await waitFor(() => expect(select('Classification')).toBeInvalid());
-      type('Formal name', '');
+      type('Formal Name', '');
 
       await waitFor(() => expect(select('Classification')).not.toBeInvalid());
     });
@@ -470,7 +470,7 @@ describe('IngredientForm', () => {
       renderForm();
 
       expect(textbox('Name')).toBeRequired();
-      expect(textbox('Formal name')).not.toBeRequired();
+      expect(textbox('Formal Name')).not.toBeRequired();
       expect(select('Classification')).not.toBeRequired();
     });
 
@@ -478,19 +478,19 @@ describe('IngredientForm', () => {
       renderForm();
 
       choose('Classification', 'mineral');
-      expect(textbox('Formal name')).toBeRequired();
+      expect(textbox('Formal Name')).toBeRequired();
 
       choose('Classification', 'unknown');
-      expect(textbox('Formal name')).not.toBeRequired();
+      expect(textbox('Formal Name')).not.toBeRequired();
     });
 
     it('marks the classification required while a formal name is typed', () => {
       renderForm();
 
-      type('Formal name', 'Fixtura testalis');
+      type('Formal Name', 'Fixtura testalis');
       expect(select('Classification')).toBeRequired();
 
-      type('Formal name', '   ');
+      type('Formal Name', '   ');
       expect(select('Classification')).not.toBeRequired();
     });
 
@@ -502,7 +502,7 @@ describe('IngredientForm', () => {
         'Botanical for a plant, mineral for a stone',
       );
 
-      act(() => textbox('Folk name').focus());
+      act(() => textbox('Folk Name').focus());
       expect(screen.getByRole('tooltip')).toHaveTextContent('Other names it goes by');
     });
 
@@ -545,11 +545,11 @@ describe('IngredientForm', () => {
   });
 
   describe.each([
-    { legend: 'Folk names', entry: 'Folk name', field: 'folkNames' },
+    { legend: 'Folk Names', entry: 'Folk Name', field: 'folkNames' },
     { legend: 'Deities', entry: 'Deity', field: 'deities' },
     {
-      legend: 'Substitute ingredients',
-      entry: 'Substitute ingredient',
+      legend: 'Substitute Ingredients',
+      entry: 'Substitute Ingredient',
       field: 'substitutes',
     },
   ] as const)('the $legend list', ({ legend, entry, field }) => {
@@ -651,7 +651,7 @@ describe('IngredientForm', () => {
       expect(box).toHaveFocus();
       expect(calls).toHaveLength(0);
 
-      fireEvent.click(screen.getByRole('button', { name: `Add ${entry.toLowerCase()}` }));
+      fireEvent.click(screen.getByRole('button', { name: `Add ${entry}` }));
       await waitFor(() => expect(box).not.toBeInvalid());
       save();
 

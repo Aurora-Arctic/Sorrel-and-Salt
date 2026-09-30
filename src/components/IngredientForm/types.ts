@@ -94,9 +94,9 @@ export interface SelectOption {
 
 export interface ListFieldProps {
   name: ListFieldName;
-  /** The group's legend: "Folk names". */
+  /** The group's legend: "Folk Names". */
   legend: string;
-  /** One entry, singular: the box's label, and its Add button's name, "Add folk name". */
+  /** One entry, singular: the box's label, and its Add button's name, "Add Folk Name". */
   entry: string;
   /** What the list is for, behind an info tip beside the legend. */
   hint?: string;

@@ -81,14 +81,14 @@ planet, zodiac sign, colour, deities, substitute ingredients and safety notes
   box adds nothing. Each entry is a pill with an ×, labelled "Remove Hedge
   Fixture" rather than a bare "Remove", and pressing it sends the focus back
   to the box, since the pressed × goes with its entry. The box is labelled
-  by the singular, "Folk name", since the legend names the group, and its
-  button is named "Add folk name". Entries are a `useFieldArray` of `{ value }`
+  by the singular, "Folk Name", since the legend names the group, and its
+  button is named "Add Folk Name". Entries are a `useFieldArray` of `{ value }`
   objects, since react-hook-form refuses an array of bare strings. What sits
   in a box is the form's own `drafts`, which `toInput` leaves out. A list's
   info tip sits in its legend, so the fieldset is named by the legend's text
   alone, through `aria-labelledby`: the tip's button would otherwise join the
-  group's name, "Folk names About Folk names". `substitutes` is labelled
-  "Substitute ingredients", its box "Substitute ingredient". A substitute is
+  group's name, "Folk Names About Folk Names". `substitutes` is labelled
+  "Substitute Ingredients", its box "Substitute Ingredient". A substitute is
   text for now: MB.138 to MB.140 let an entry link an existing ingredient,
   and MB.131 picks one.
 - **Text left in a box stops the save.** The form's resolver adds an error to
