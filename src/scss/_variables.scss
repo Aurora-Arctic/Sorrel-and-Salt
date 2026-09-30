@@ -23,7 +23,7 @@ $sorrel: #4a6b34;
 $wax: #8c3b2e;
 
 // ---------------------------------------------------------------------------
-// Derived — color.adjust() from the four above, never re-picked by eye
+// Derived — color.adjust() or color.mix() from the above, never re-picked by eye
 // ---------------------------------------------------------------------------
 // Each clears 4.5:1 on both surfaces of its theme. Dark variants move away from
 // the ground by lightening, so "punchier" is lighter on dark, darker on light.
@@ -33,15 +33,24 @@ $sorrel-glow: color.adjust(
   $saturation: 8%
 ); // dark accent, hover
 $sorrel-deep: color.adjust($sorrel, $lightness: -8%); // light accent, hover
+// The solid button's hover, a larger step than a link's: a fill changing one
+// step under the pointer barely registers. More saturated, rather than only
+// further from the ground.
+$sorrel-spring: color.adjust($sorrel, $lightness: 38%, $saturation: 40%); // dark
+$sorrel-rich: color.adjust($sorrel, $lightness: -8%, $saturation: 20%); // light
 $wax-warm: color.adjust($wax, $lightness: 22%); // dark secondary
 $wax-glow: color.adjust(
   color.adjust($wax, $lightness: 30%),
   $saturation: 5%
 ); // dark secondary, hover
-$wax-deep: color.adjust($wax, $lightness: -6%); // light secondary, hover
+// $wax itself reads brown on parchment, so an error there barely registers.
+$wax-vivid: color.adjust($wax, $saturation: 30%, $lightness: 4%); // light secondary
+$wax-deep: color.adjust($wax-vivid, $lightness: -6%); // light secondary, hover
 
-// Body ink at lower strength rather than a separate grey, so it still clears 4.5:1.
-$chalk-muted: color.adjust($chalk, $lightness: -22%);
+// Body ink at lower strength rather than a separate grey, so it still clears
+// 4.5:1. Dark mixes the ink into the ground, which lowers its chroma with its
+// strength; darkening it in HSL kept the saturation and turned it gold.
+$chalk-muted: color.mix($chalk, $soot, 80%);
 $ink-muted: color.adjust($iron-gall, $lightness: 20%);
 
 // A 0.8-alpha shadow reads as a hole punched in parchment; light gets a softer one.
@@ -237,6 +246,7 @@ $text-primary: var(--text-primary);
 $text-muted: var(--text-muted);
 $accent: var(--accent);
 $accent-hover: var(--accent-hover);
+$accent-solid-hover: var(--accent-solid-hover);
 $secondary: var(--secondary);
 $secondary-hover: var(--secondary-hover);
 $shadow-elevated: var(--shadow-elevated);
@@ -290,6 +300,25 @@ $font-heading: var(--font-display), 'Cormorant Unicase', Georgia, 'Times New Rom
 // No webfont: incidental inline code, and every platform ships a good monospace.
 $font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
 
+// The sizes below body copy, by role. The headings' scale is typography-base's.
+$type-sizes: (
+  'body': 1rem,
+  // Labels, buttons, notices and field errors: text a person acts on.
+  'small': 0.875rem,
+  // Hints, metadata, chips and badges.
+  'caption': 0.8125rem,
+  // The uppercase, letter-spaced .eyebrow.
+  'overline': 0.75rem,
+);
+
+@function type-size($role) {
+  @if not map.has-key($type-sizes, $role) {
+    @error 'Unknown type size "#{$role}". The sizes are: #{map.keys($type-sizes)}.';
+  }
+
+  @return map.get($type-sizes, $role);
+}
+
 // The reading measure: the longest comfortable line of body copy. `ch` is the
 // width of "0" in the element's own font, so the measure follows the text it
 // caps. typography-base caps every paragraph at it, so a page wider than it — a
@@ -304,3 +333,46 @@ $theme-transition-easing: ease-in-out;
 
 // The only width-based breakpoint; everything else keys off media preferences.
 $breakpoint-desktop: 1024px;
+
+// ---------------------------------------------------------------------------
+// Spacing and radius
+// ---------------------------------------------------------------------------
+// The steps every margin, padding and gap is taken from, on a 0.25rem base.
+// A chip's or badge's inner padding is its own geometry, trimmed by its 1px
+// edge, and stays off the scale. claude-docs/styling.md, "Spacing".
+$space-steps: (
+  1: 0.25rem,
+  2: 0.5rem,
+  3: 0.75rem,
+  4: 1rem,
+  5: 1.5rem,
+  6: 2rem,
+  7: 3rem,
+  8: 4rem,
+);
+
+@function space($step) {
+  @if not map.has-key($space-steps, $step) {
+    @error 'Unknown space step "#{$step}". The steps are: #{map.keys($space-steps)}.';
+  }
+
+  @return map.get($space-steps, $step);
+}
+
+$radii: (
+  // A badge: square enough not to read as a chip.
+  'sharp': 2px,
+  // What a person types into or presses: fields, buttons, notices.
+  'control': 0.333rem,
+  // What holds controls: panels, cards, modals.
+  'surface': 0.5rem,
+  'pill': 999px
+);
+
+@function radius($role) {
+  @if not map.has-key($radii, $role) {
+    @error 'Unknown radius "#{$role}". The radii are: #{map.keys($radii)}.';
+  }
+
+  @return map.get($radii, $role);
+}

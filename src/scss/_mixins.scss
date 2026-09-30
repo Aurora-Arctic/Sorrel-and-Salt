@@ -48,7 +48,7 @@
 @mixin modal-surface($shadow: $shadow-elevated) {
   background-color: $surface-card;
   color: $text-primary;
-  border-radius: 0.5rem;
+  border-radius: radius('surface');
   box-shadow: $shadow;
 
   @include theme-transition(background-color, color);
@@ -68,9 +68,9 @@
   align-items: center;
   padding: 0.1875rem 0.6875rem;
   border: 1px solid $color;
-  border-radius: 999px;
+  border-radius: radius('pill');
   font-family: $font-body;
-  font-size: 0.8125rem;
+  font-size: type-size('caption');
   // A step over Lexend's 300, so the label holds its colour at chip size.
   font-weight: 500;
   line-height: 1.4;
@@ -101,9 +101,9 @@
   display: inline-flex;
   align-items: center;
   padding: 0.125rem 0.4375rem;
-  border-radius: 2px;
+  border-radius: radius('sharp');
   font-family: $font-body;
-  font-size: 0.8125rem;
+  font-size: type-size('caption');
   // 300 goes thin at this size.
   font-weight: 500;
   line-height: 1.4;
@@ -152,6 +152,7 @@
   --text-muted: #{$chalk-muted};
   --accent: #{$sorrel-bright};
   --accent-hover: #{$sorrel-glow};
+  --accent-solid-hover: #{$sorrel-spring};
   --secondary: #{$wax-warm};
   --secondary-hover: #{$wax-glow};
   --shadow-elevated: 0 20px 45px #{$shadow-dark};
@@ -172,7 +173,8 @@
   --text-muted: #{$ink-muted};
   --accent: #{$sorrel};
   --accent-hover: #{$sorrel-deep};
-  --secondary: #{$wax};
+  --accent-solid-hover: #{$sorrel-rich};
+  --secondary: #{$wax-vivid};
   --secondary-hover: #{$wax-deep};
   --shadow-elevated: 0 20px 45px #{$shadow-light};
   --shadow-floating: 0 2px 8px #{$shadow-light};

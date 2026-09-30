@@ -1,5 +1,7 @@
 // typography-base hung off .ladle-story-frame rather than `body`, so its bare
-// element selectors stay off Ladle's own chrome.
+// element selectors stay off Ladle's own chrome. Inside `:where()`, so the
+// scope adds no specificity: a component's own class beats a rule here as it
+// beats `body p` in the app, and a story renders as the page does.
 
 @use '../src/scss/variables' as *;
 @use '../src/scss/mixins' as *;
@@ -14,6 +16,6 @@
   --font-display: 'Cormorant Unicase';
 }
 
-.ladle-story-frame {
+:where(.ladle-story-frame) {
   @include typography-base;
 }

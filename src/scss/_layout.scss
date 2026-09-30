@@ -7,22 +7,22 @@
   section {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    margin: 1rem 0;
+    gap: space(4);
+    margin: space(4) 0;
   }
 
   header {
-    margin-bottom: 1rem;
+    margin-bottom: space(4);
   }
 
   .header {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: space(2);
   }
 
   .footer {
     border-top: 1px solid $text-muted;
-    padding-top: 1.5rem;
+    padding-top: space(5);
   }
 }

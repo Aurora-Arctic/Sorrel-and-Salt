@@ -12,8 +12,13 @@
 .ladle-story-frame {
   box-sizing: border-box;
   min-height: 100%;
-  // The gutter .ladle-main gave up.
+  // The gutter .ladle-main gave up; a phone's own at phone width, where 3rem
+  // a side would leave a 375px story 279px to render in.
   padding: 3rem;
+
+  @media (max-width: 30rem) {
+    padding: space(4);
+  }
   // Any transform makes this the containing block for `position: fixed`, so
   // ThemeToggle pins to the frame rather than the viewport.
   transform: translateZ(0);

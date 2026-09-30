@@ -54,7 +54,7 @@ that one shape and routes it to one of two places:
 
 | Error                                                                | Where it lands                                                                                                                                            |
 | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `VALIDATION` with a `fieldErrors` entry whose path starts at `email` | Inline beside the input (`.email-form__field-error`), which the input references through `aria-describedby`; `aria-invalid` is set.                       |
+| `VALIDATION` with a `fieldErrors` entry whose path starts at `email` | Inline beneath the input (`.field__error`), which the input references through `aria-describedby`; `aria-invalid` is set.                                 |
 | Any other `VALIDATION` issue, `FORBIDDEN`, `NOT_FOUND`, masked       | The `role="alert"` region, showing the error's own message — or `GENERIC_EMAIL_ERROR` when there is none, or the rejection is not a `ClientError` at all. |
 
 Both are cleared, along with the last success, when a new submit starts, so
@@ -69,9 +69,8 @@ The submit is disabled only while the value, trimmed and lower-cased, equals
 to send — and while the mutation is pending. An unverified, unchanged address
 stays submittable: the service resends its link. It is a real `disabled`
 attribute, not `aria-disabled` — unlike SignInPanel's roster, a submit with
-nothing to send is fine to skip in the tab order — so `_primitives.scss`'s
-`.btn[aria-disabled='true']` greying does not apply, and the component
-restates it off `:disabled`.
+nothing to send is fine to skip in the tab order. `.btn` greys out under
+either, so the component styles neither.
 
 ## The cooldown
 
@@ -104,14 +103,14 @@ it then.
 
 ## Styling
 
-Tokens and mixins only: `focus-ring()`, `theme-transition()`,
-`reduced-motion`, `$text-muted` (the status line, the input edge, the disabled
-submit), `$secondary` (the error banner, the field error, the invalid edge),
-`$accent` (the success banner), `$surface-card`, `$text-primary`, `$font-body`,
-`$text-on-color`. There is no input primitive yet, so the field's edge, padding
-and focus ring are this component's own and will move to a primitive when one
-lands. "Continue" is `.btn` on an anchor and restates the link colour the way
-Welcome does.
+Built on the form primitives in `_primitives.scss` ([`styling.md`](../styling.md),
+"Form fields"): `.form` and `.form__actions`, one `.field` with its
+`.field__label`, `.input` and `.field__error`, and `.notice--error` /
+`.notice--success` for the alert and the sent message. The status line is a
+`.lede`. Send Confirmation and Continue are each the view's one primary action,
+so both are `.btn--solid`; Continue is `.btn` on an anchor and restates the
+label colour the way Welcome does, since `a:visited` outranks `.btn`. The
+component's own stylesheet is the page frame and the column's layout.
 
 ## Stories
 
