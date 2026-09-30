@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { and, eq } from 'drizzle-orm';
 import {
   type AuditWriter,
@@ -7,7 +7,10 @@ import {
   findOne,
   withAudit,
 } from '@/db/repository';
+import { WORKSPACE_W_ID } from '@/db/seed/standard';
+import { type Membership, assertMembership } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
+import { A, asUser } from '../../support/as-user';
 import {
   herbs,
   impostor,
@@ -442,5 +445,106 @@ describe('the compendium tier, under the SiteAdmin proof', () => {
     expect(intoAWorkspaceOnlyTable).toBeInstanceOf(Function);
     expect(intoAnUnscopedTable).toBeInstanceOf(Function);
     expect(withoutTheProof).toBeInstanceOf(Function);
+  });
+});
+
+// CLAUDE.md rule 4 on the write side: a soft-deleted row is out of reach of
+// every update and every soft delete, decided by the table's shape as the
+// finders' filter is (claude-docs/db.md, "The write path"). The way back to
+// one is a restore, which is v2's.
+describe('a soft-deleted row, out of reach of every update and soft delete', () => {
+  const DELETED_AT = new Date('2020-01-01T00:00:00Z');
+  const stamps = { created_by: session.userId, updated_by: session.userId };
+  const deleted = { deleted_at: DELETED_AT, deleted_by: session.userId };
+
+  type Call = (write: AuditWriter, id: string) => Promise<unknown[]>;
+
+  /** A live row and a deleted twin, written by the raw client, and a reader for either. */
+  async function herbPair() {
+    const [live] = await sql`
+      insert into repository_probe_herbs ${sql({ name: 'Rue', ...stamps })} returning *`;
+    const [tombstone] = await sql`
+      insert into repository_probe_herbs ${sql({ name: 'Rue', ...stamps, ...deleted })}
+      returning *`;
+    const read = async (id: string) =>
+      (await sql`select * from repository_probe_herbs where id = ${id}`)[0];
+    return { live, tombstone, read };
+  }
+
+  async function jarPair() {
+    const inW = { workspace_id: WORKSPACE_W_ID, label: 'Rue', ...stamps };
+    const [live] = await sql`insert into repository_probe_jars ${sql(inW)} returning *`;
+    const [tombstone] = await sql`
+      insert into repository_probe_jars ${sql({ ...inW, ...deleted })} returning *`;
+    const read = async (id: string) =>
+      (await sql`select * from repository_probe_jars where id = ${id}`)[0];
+    return { live, tombstone, read };
+  }
+
+  let inW: Membership;
+  beforeAll(async () => {
+    // A owns W in `standard`, the scenario every db worker's clone carries.
+    inW = await assertMembership(asUser(A), WORKSPACE_W_ID, { ingredient: ['update'] });
+  });
+
+  const unscoped: [string, Call][] = [
+    ['update', (write, id) => write.update(herbs, { name: 'Wild rue' }, eq(herbs.id, id))],
+    ['updateById', (write, id) => write.updateById(herbs, id, { name: 'Wild rue' })],
+    ['softDelete', (write, id) => write.softDelete(herbs, eq(herbs.id, id))],
+    ['softDeleteByIds', (write, id) => write.softDeleteByIds(herbs, [id])],
+  ];
+
+  const scoped: [string, Call][] = [
+    [
+      'updateInWorkspace',
+      (write, id) => write.updateInWorkspace(inW, jars, { label: 'Wild rue' }, eq(jars.id, id)),
+    ],
+    [
+      'updateByIdInWorkspace',
+      (write, id) => write.updateByIdInWorkspace(inW, jars, id, { label: 'Wild rue' }),
+    ],
+    [
+      'softDeleteInWorkspace',
+      (write, id) => write.softDeleteInWorkspace(inW, jars, eq(jars.id, id)),
+    ],
+  ];
+
+  // Why each could have written the tombstone: the same call, naming its live
+  // twin the same way, writes that one. The deleted row keeps its stamps —
+  // `updated_at` and `deleted_by` included — so a second delete cannot
+  // rewrite who made the first.
+  it.each(unscoped)(
+    '%s writes the live row and leaves the deleted one as it was',
+    async (_method, call) => {
+      const { live, tombstone, read } = await herbPair();
+
+      await expect(withAudit(impostor, (write) => call(write, live.id))).resolves.toHaveLength(1);
+      await expect(withAudit(impostor, (write) => call(write, tombstone.id))).resolves.toEqual([]);
+      expect(await read(tombstone.id)).toEqual(tombstone);
+    },
+  );
+
+  it.each(scoped)(
+    '%s writes the live row and leaves the deleted one as it was',
+    async (_method, call) => {
+      const { live, tombstone, read } = await jarPair();
+
+      await expect(withAudit(impostor, (write) => call(write, live.id))).resolves.toHaveLength(1);
+      await expect(withAudit(impostor, (write) => call(write, tombstone.id))).resolves.toEqual([]);
+      expect(await read(tombstone.id)).toEqual(tombstone);
+    },
+  );
+
+  it('still writes a table with no deleted_at, which has no tombstone to skip', async () => {
+    const herbId = '22222222-2222-2222-2222-222222222222';
+    const charmId = '33333333-3333-3333-3333-333333333333';
+    const otherCharmId = '44444444-4444-4444-4444-444444444444';
+    await withAudit(session, (write) => write.insert(pairs, { herbId, charmId }));
+
+    const [updated] = await withAudit(impostor, (write) =>
+      write.update(pairs, { charmId: otherCharmId }, eq(pairs.charmId, charmId)),
+    );
+
+    expect(updated).toMatchObject({ herbId, charmId: otherCharmId, updatedBy: impostor.userId });
   });
 });

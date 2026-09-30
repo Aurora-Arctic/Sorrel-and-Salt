@@ -408,6 +408,26 @@ describe('updateWorkspaceIngredient', () => {
     expect((await rowOf(id)).workspace_id).toBe(WORKSPACE_W_ID);
   });
 
+  it('answers NotFound for a soft-deleted ingredient, leaving it as it was', async () => {
+    const id = await seed(local());
+    // Why it could have been written: the row is there, and a live one is reached by this call.
+    await expect(
+      updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id, inputOf(local())),
+    ).resolves.toMatchObject({ id });
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
+    const before = await rowOf(id);
+
+    await expect(
+      updateWorkspaceIngredient(
+        asUser(B),
+        WORKSPACE_W_ID,
+        id,
+        inputOf(local({ name: 'Testwort, relabelled' })),
+      ),
+    ).rejects.toThrow(NotFound);
+    expect(await rowOf(id)).toEqual(before);
+  });
+
   // Asked of the database, an id that is not a uuid is a driver error, not a miss.
   it('answers an id that is not a uuid as NotFound', async () => {
     await expect(
