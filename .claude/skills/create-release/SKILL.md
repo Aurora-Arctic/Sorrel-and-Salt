@@ -59,7 +59,7 @@ Cut a new Gitflow release: compute the next semver version, branch off the lates
 
 ## Notes
 
-- Version naming follows the Gitflow rules in [`CLAUDE.md`](../../../CLAUDE.md), which only accept `release/MAJOR.MINOR.PATCH` as a source into `main`/`staging` — this skill's naming isn't just a convention. Once M0.17/M0.20 add `.github/workflows/gitflow.yml`, PRs from a differently-named release branch will fail the required `gitflow` check.
+- Version naming follows the Gitflow rules in [`CLAUDE.md`](../../../CLAUDE.md), which only accept `release/MAJOR.MINOR.PATCH` as a source into `main`/`staging` — this skill's naming isn't just a convention. `.github/workflows/gitflow.yml` enforces it: a PR from a differently-named release branch fails the required `gitflow` check.
 - Never force-pushes; never deletes anything.
 - Pushing the branch and tag here (rather than deferring to `/create-pr`) is a deliberate exception to this repo's normal "ask before anything visible to others" caution — invoking `/create-release` is itself the user's request for a real, shared release artifact. `.claude/settings.json`'s `permissions.ask` entry for `git push origin *` still prompts for confirmation on the actual pushes.
 - If `git fetch origin --tags` fails (no network, no remote), stop and report the error rather than computing a version from a possibly-stale local tag list.

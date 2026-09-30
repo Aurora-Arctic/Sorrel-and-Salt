@@ -2813,6 +2813,8 @@ _Acceptance criteria:_
 - TASKS.md's "Standing rules" is one line, and `create-feature` and `create-hotfix` share one reference file
 - `tests/guards/doc-citation.test.ts` passes, and every citation in a rule file resolves
 
+**Decided while building.** A fresh `claude -p` session settled what loads a rule file: reading a file under `src/db/` with the Read tool brought in the database rule alone, a component brought in the components rule and not the database's, and the same `src/db/` file read with `head` through the shell brought in nothing. `CLAUDE.md` therefore names every rule file and says to open the one for the area being edited, and `tests/guards/claude-rules.test.ts` checks each glob with picomatch, the matcher Vitest uses, rather than asking Claude Code. That guard also holds `CLAUDE.md` to 20,000 bytes and pins each numbered rule to the clauses code cites it for. `doc-citation.test.ts` now reads `CLAUDE.md` and every markdown file under `.claude/`. TASKS.md's standing rules were all in `CLAUDE.md` bar one, that the OAuth handshake at `/api/auth/*` carries no application data, and code cites rule 1 for it, so rule 1 took it. The comment rule and the doc-correction rule bind every area, so their long forms went to README.md's "Comments in code" and "Correcting a doc" rather than to a rule file. The Skills table keeps its rows and triggers with shorter descriptions, since a session already lists each skill's own. The shared branch steps are `create-feature/reference-branch.md`, so that every directory under `.claude/skills/` is a skill. `create-release` and `create-main-sync` lose the same stale `gitflow` hedge `create-pr` did, one sentence each.
+
 **MB.145 — Split db.md by section** · 2h
 
 _Story:_ As a developer, I want one section of the database summary to cost one section, so that reading how keyset pages work does not mean reading 236 KB.
@@ -2845,6 +2847,6 @@ Measured before the pass: 6,537 eight-word runs occur in two or more of the 82 l
 _Acceptance criteria:_
 
 - README.md carries the rule and the table of homes
-- The GitHub milestone description carries the id list and a link to the wave file, and CLAUDE.md's "Board layout" says so
+- The GitHub milestone description carries the id list and a link to the wave file, and the task-tracking rule's "Board layout" (`.claude/rules/task-tracking.md`) says so
 - `scripts/doc-overlap.mjs` runs from a clean checkout, and the PR body records its count before and after
 - `tests/guards` pass

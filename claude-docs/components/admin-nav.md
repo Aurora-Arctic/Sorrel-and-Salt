@@ -39,8 +39,8 @@ Layout only. `index.scss` also carries `.admin-layout`, the frame the layout
 renders — a 64rem column, nav above page — beside the nav it holds, as
 `EmailForm`'s carries `.email-page`. It is wider than the reading measure on
 purpose, for the tables the admin pages will hold; their paragraphs still stop
-at `$measure` through `typography-base` (CLAUDE.md, "Body copy keeps to the
-reading measure"). The list is a wrapping row with no bullets, and no
+at `$measure` through `typography-base` ([`styling.md`](../styling.md),
+"Binding rules"). The list is a wrapping row with no bullets, and no
 `typography-base` ◆ marker either: a row of links is not a bulleted list, and
 the marker sat against the previous link. No tokens used.
 

@@ -6,8 +6,8 @@ archived and are not required reading.
 The SCSS foundation every component builds on: the palette, type, spacing,
 radius and the shared primitives, settled by the foundations design review
 (MB.114) and shown in the workshop's `Foundations` page. Each section's own
-design is its review's, built on this layer ([`CLAUDE.md`](../CLAUDE.md), "The
-design will change"); "Designing a section" below is the direction they design
+design is its review's, built on this layer ([`.claude/rules/components.md`](../.claude/rules/components.md),
+"The design will change"); "Designing a section" below is the direction they design
 to.
 
 ## Binding rules
