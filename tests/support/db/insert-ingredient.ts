@@ -3,7 +3,8 @@ import { type IngredientFixture, ingredientColumns } from '../fixtures/ingredien
 
 // The one way a test seeds an ingredient it is not testing the writing of.
 // Through the raw client rather than `withAudit`: setup must not depend on the
-// code under test, and the writer cannot produce a compendium row at all
+// code under test, and the writer produces a compendium row only under the
+// site admin's proof, as the compendium service's own write
 // (claude-docs/testing.md, "Fixture factories"). What it does instead is what
 // the seed does — the author's stamps and the GUC, inside one transaction.
 

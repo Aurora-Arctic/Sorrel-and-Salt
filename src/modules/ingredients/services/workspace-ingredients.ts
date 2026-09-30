@@ -1,20 +1,20 @@
 import 'server-only';
 import type { z } from 'zod';
-import {
-  type AuditWriter,
-  findManyOfIngredients,
-  findOneByIdInWorkspace,
-  withAudit,
-} from '../../../db/repository';
+import { findOneByIdInWorkspace, withAudit } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { ingredientSlug } from '../../../lib/slugify';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
-import { ingredientFolkNames } from '../schema/ingredient-folk-names';
 import { ingredients } from '../schema/ingredients';
 import { LocalIngredientInput } from '../validation/ingredient';
-import { type Membership, assertMembership } from '@/modules/coven';
+import {
+  type IngredientFields,
+  addFolkNames,
+  columnsOf,
+  replaceFolkNames,
+} from './ingredient-rows';
+import { assertMembership } from '@/modules/coven';
 
 // Story 15: a coven's own ingredients. Every read and write is under the
 // proof, so the tier is the proof's — `workspace_id` is never read from the
@@ -81,7 +81,7 @@ export async function updateWorkspaceIngredient(
   return withAudit(session, async (write) => {
     const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, columnsOf(fields));
     if (!row) throw new NotFound('No such ingredient in this coven');
-    await replaceFolkNames(write, membership, id, folkNames ?? []);
+    await replaceFolkNames(write, [membership], id, folkNames ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields));
 }
@@ -111,11 +111,7 @@ export async function getWorkspaceIngredient(
  * identity of an entry with no formal name, so its identity collision is
  * reported on `name`. `slug` is the one this write set — an update sets none.
  */
-function refuseCollision(
-  error: unknown,
-  fields: Omit<LocalIngredientInput, 'folkNames'>,
-  slug?: string,
-): never {
+function refuseCollision(error: unknown, fields: IngredientFields, slug?: string): never {
   const refuse = (path: string, message: string) => {
     throw new ValidationError([{ path: [path], message }]);
   };
@@ -141,55 +137,4 @@ function refuseCollision(
       );
   }
   throw error;
-}
-
-/**
- * The parsed input as columns, every optional one written — `null` where the
- * input has nothing — so an update replaces the row rather than merging into it.
- */
-function columnsOf(fields: Omit<LocalIngredientInput, 'folkNames'>) {
-  return {
-    name: fields.name,
-    canonicalName: fields.canonicalName ?? null,
-    nomenclature: fields.nomenclature,
-    form: fields.form ?? null,
-    description: fields.description ?? null,
-    element: fields.element ?? null,
-    planet: fields.planet ?? null,
-    zodiac: fields.zodiac ?? null,
-    deities: fields.deities ?? null,
-    color: fields.color ?? null,
-    safetyNotes: fields.safetyNotes ?? null,
-    substitutes: fields.substitutes ?? null,
-  };
-}
-
-async function addFolkNames(write: AuditWriter, ingredientId: string, names: readonly string[]) {
-  for (const name of names) await write.insert(ingredientFolkNames, { ingredientId, name });
-}
-
-/**
- * Brings the live folk names to exactly `names`, compared as written: a change
- * of case is a new name. Dropped rows go first, so a name re-added in another
- * case clears the case-folded unique index.
- */
-async function replaceFolkNames(
-  write: AuditWriter,
-  membership: Membership,
-  ingredientId: string,
-  names: readonly string[],
-) {
-  const current = await findManyOfIngredients([membership], ingredientFolkNames, [ingredientId]);
-  const listed = new Set(names);
-  const kept = new Set(current.map((row) => row.name));
-
-  await write.softDeleteByIds(
-    ingredientFolkNames,
-    current.filter((row) => !listed.has(row.name)).map((row) => row.id),
-  );
-  await addFolkNames(
-    write,
-    ingredientId,
-    names.filter((name) => !kept.has(name)),
-  );
 }

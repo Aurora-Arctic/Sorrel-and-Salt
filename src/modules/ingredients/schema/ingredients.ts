@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { type SQL, type SQLWrapper, sql } from 'drizzle-orm';
 import {
   check,
   index,
@@ -23,12 +23,22 @@ export const nomenclatureKind = pgEnum('nomenclature_kind', NOMENCLATURE_KINDS);
 // A correspondence, not identity: five values, closed — the opposite of `form`.
 export const ingredientElement = pgEnum('ingredient_element', INGREDIENT_ELEMENTS);
 
-// DESIGN.md §5's expression verbatim. Literal SQL because it names columns of
-// the table still being built; every function in it is IMMUTABLE and no enum
-// cast is involved, which is what makes a stored generated column legal.
-const CANONICAL_KEY = sql`
-  lower(coalesce(canonical_name, name)) || coalesce(' :: ' || lower(btrim(form)), '')
+/**
+ * DESIGN.md §5's identity key over its three parts: the generated column's
+ * own expression, and what a finder compares that column against to find the
+ * row a write's values would key as. One builder, so the key has one spelling.
+ */
+export function canonicalKeyOf(name: SQLWrapper, canonicalName: SQLWrapper, form: SQLWrapper): SQL {
+  return sql`
+  lower(coalesce(${canonicalName}, ${name})) || coalesce(' :: ' || lower(btrim(${form})), '')
 `;
+}
+
+// The column names raw because they name columns of the table still being
+// built; every function in the key is IMMUTABLE and no enum cast is involved,
+// which is what makes a stored generated column legal. The text is the
+// migrations' own, byte for byte, so `db:generate` sees no change.
+const CANONICAL_KEY = canonicalKeyOf(sql.raw('name'), sql.raw('canonical_name'), sql.raw('form'));
 
 // One table, two tiers: `workspace_id IS NULL` is the compendium (everyone
 // reads, admins write), set is local to that workspace, where a formal name

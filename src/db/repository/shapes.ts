@@ -16,6 +16,11 @@ export type HardDeletable = { deletedAt?: never };
 export type WorkspaceScoped = { workspaceId: AnyPgColumn };
 export type Unscoped = { workspaceId?: never };
 
+// A scoped table whose `workspace_id` is nullable has a second tier, the
+// compendium, where it is null — `ingredients` and `retired_ingredient_slugs`.
+// Only such a table takes the compendium-tier writes, under a `SiteAdmin`.
+export type TwoTier = { workspaceId: AnyPgColumn<{ notNull: false }> };
+
 // And once more for visibility (M10.3), so that a table goes through exactly
 // one finder — claude-docs/db.md, "Spell visibility". `spells` is
 // workspace-scoped *and* carries a per-row reader rule, so `NotVisibilityScoped`

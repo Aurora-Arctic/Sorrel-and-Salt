@@ -5,11 +5,15 @@ import { applyAudit, type AuditSession } from '../audit';
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
 import type { Membership } from '@/modules/coven';
+import type { SiteAdmin } from '@/modules/identity';
 import {
+  inCompendium,
+  notSoftDeleted,
   scopedTo,
   type HardDeletable,
   type Identified,
   type SoftDeletable,
+  type TwoTier,
   type Unscoped,
   type WorkspaceScoped,
   type Writable,
@@ -30,7 +34,10 @@ export interface AuditWriter {
     table: TTable,
     values: WritableInWorkspace<TTable>,
   ): Promise<TTable['$inferSelect'][]>;
-  /** Update matching rows, stamping updated_* only — created_* is never touched. */
+  /**
+   * Update matching rows, stamping updated_* only — created_* is never touched.
+   * A soft-deleted row never matches, here or in any update below.
+   */
   update<TTable extends PgTable & Unscoped>(
     table: TTable,
     values: Partial<Writable<TTable>>,
@@ -65,7 +72,11 @@ export interface AuditWriter {
     id: string,
     values: Partial<WritableInWorkspace<TTable>>,
   ): Promise<TTable['$inferSelect'][]>;
-  /** Soft-delete matching rows: stamps deleted_*, leaving the row in place (CLAUDE.md rule 4). */
+  /**
+   * Soft-delete matching rows: stamps deleted_*, leaving the row in place
+   * (CLAUDE.md rule 4). A row already deleted never matches, here or below, so
+   * it keeps the stamps of whoever deleted it.
+   */
   softDelete<TTable extends PgTable & SoftDeletable & Unscoped>(
     table: TTable,
     where: SQL,
@@ -84,6 +95,33 @@ export interface AuditWriter {
   softDeleteByIds<TTable extends PgTable & SoftDeletable & Unscoped & Identified>(
     table: TTable,
     ids: readonly string[],
+  ): Promise<TTable['$inferSelect'][]>;
+  /**
+   * Insert one row into the compendium tier of a two-tier table, filling
+   * `workspace_id` with null — the site role's counterpart of
+   * `insertInWorkspace`, under its proof.
+   */
+  insertInCompendium<TTable extends PgTable & TwoTier>(
+    admin: SiteAdmin,
+    table: TTable,
+    values: WritableInWorkspace<TTable>,
+  ): Promise<TTable['$inferSelect'][]>;
+  /**
+   * Update the one live compendium row with this id, stamping updated_* only.
+   * A workspace's row, or a soft-deleted one, is not reached: nothing is
+   * written and nothing returned.
+   */
+  updateByIdInCompendium<TTable extends PgTable & TwoTier & Identified>(
+    admin: SiteAdmin,
+    table: TTable,
+    id: string,
+    values: Partial<WritableInWorkspace<TTable>>,
+  ): Promise<TTable['$inferSelect'][]>;
+  /** Soft-delete the one live compendium row with this id, on the same terms. */
+  softDeleteByIdInCompendium<TTable extends PgTable & TwoTier & SoftDeletable & Identified>(
+    admin: SiteAdmin,
+    table: TTable,
+    id: string,
   ): Promise<TTable['$inferSelect'][]>;
   /**
    * Hard-delete, for the join tables that carry no `deleted_at` (MB.34). A
@@ -107,19 +145,25 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       .values(applyAudit('insert', values, session) as never)
       .returning() as never;
 
+  // Rule 4 on the write side: every update and soft delete skips a deleted
+  // row, decided by the table's shape as a finder's filter is. The way back to
+  // one is a restore, which is v2's.
   const update = (table: PgTable, values: object, where: SQL | undefined) =>
     tx
       .update(table)
       .set(applyAudit('update', values, session) as never)
-      .where(where)
+      .where(and(notSoftDeleted(table), where))
       .returning() as never;
 
   const softDelete = (table: PgTable, where: SQL | undefined) =>
     tx
       .update(table)
       .set(applyAudit('delete', {}, session) as never)
-      .where(where)
+      .where(and(notSoftDeleted(table), where))
       .returning() as never;
+
+  const inCompendiumById = (table: PgTable & TwoTier & Identified, id: string) =>
+    and(inCompendium(table), eq(table.id, id));
 
   return {
     insert,
@@ -138,6 +182,14 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       ids.length === 0 ? Promise.resolve([]) : softDelete(table, inArray(table.id, [...ids])),
     softDeleteInWorkspace: (membership, table, where) =>
       softDelete(table, and(scopedTo(membership, table), where)),
+    // The proof is not read: unlike a `Membership` it carries nothing the
+    // query needs, and what it buys is that the call cannot be written without
+    // it. `workspaceId` last, as above.
+    insertInCompendium: (_admin, table, values) => insert(table, { ...values, workspaceId: null }),
+    updateByIdInCompendium: (_admin, table, id, values) =>
+      update(table, values, inCompendiumById(table, id)),
+    softDeleteByIdInCompendium: (_admin, table, id) =>
+      softDelete(table, inCompendiumById(table, id)),
     delete: (table, where) => tx.delete(table).where(where).returning() as never,
   };
 }

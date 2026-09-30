@@ -4,6 +4,11 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { slugify } from '@/lib/slugify';
+import {
+  createCompendiumEntry,
+  deleteCompendiumEntry,
+  updateCompendiumEntry,
+} from '@/modules/ingredients';
 import type { CompendiumIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import type { CategoryInput } from '@/modules/vocabulary/validation/category';
 import { A, B, C, E, asUser } from '../support/as-user';
@@ -11,13 +16,13 @@ import { useTestDatabase } from '../support/db/database';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { type IngredientFixture, makeIngredient } from '../support/fixtures';
 
-// Stories 17 and 18 against the services M5.2 and M5.3 (compendium entries)
-// and M5.6 (categories) will build. None exists yet, so each is looked up on
-// its module's surface at runtime rather than imported by name: an import that
-// is not there fails typecheck instead of the test it belongs to, the reason
-// 01-accounts.test.ts reads a page's source rather than rendering it. The task
-// that builds a service replaces its lookup with the import and drops the
-// signature stated for it here (claude-docs/testing.md, "Acceptance").
+// Stories 17 and 18 against the compendium's writes (M5.2) and the category
+// vocabulary's (M5.6). The second do not exist yet, so they are looked up on
+// the vocabulary module's surface at runtime rather than imported by name: an
+// import that is not there fails typecheck instead of the test it belongs to,
+// the reason 01-accounts.test.ts reads a page's source rather than rendering
+// it. M5.6 replaces the lookup with the import and drops the signature stated
+// for it here (claude-docs/testing.md, "Acceptance").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -27,17 +32,6 @@ useTestDatabase((client) => {
 /** What a write answers: the row, of which these stories read the id. */
 interface Row {
   id: string;
-}
-
-/** The compendium tier's writes — admin only, every one. */
-interface CompendiumWrites {
-  createCompendiumEntry(session: Session, input: CompendiumIngredientInput): Promise<Row>;
-  updateCompendiumEntry(
-    session: Session,
-    id: string,
-    input: CompendiumIngredientInput,
-  ): Promise<Row>;
-  deleteCompendiumEntry(session: Session, id: string): Promise<void>;
 }
 
 /** The global category vocabulary's writes — admin only, every one. */
@@ -110,11 +104,6 @@ async function membershipRole(userId: string): Promise<string | undefined> {
 
 describe('Story 17: Be prevented from editing compendium entries.', () => {
   it('refuses an update and a delete from the owner, a member and a viewer of a coven alike, and the entry stays as it was', async () => {
-    const compendium = surface<CompendiumWrites>(
-      await import('@/modules/ingredients'),
-      ['updateCompendiumEntry', 'deleteCompendiumEntry'],
-      'M5.2',
-    );
     const fixture = makeIngredient();
     const id = await insertIngredient(sql, fixture, E.id);
     const before = await entryRow(id);
@@ -134,14 +123,12 @@ describe('Story 17: Be prevented from editing compendium entries.', () => {
 
     for (const user of [A, B, C]) {
       await expect(
-        compendium.updateCompendiumEntry(asUser(user), id, {
+        updateCompendiumEntry(asUser(user), id, {
           ...inputOf(fixture),
           name: 'Testwort, relabelled',
         }),
       ).rejects.toBeInstanceOf(Forbidden);
-      await expect(compendium.deleteCompendiumEntry(asUser(user), id)).rejects.toBeInstanceOf(
-        Forbidden,
-      );
+      await expect(deleteCompendiumEntry(asUser(user), id)).rejects.toBeInstanceOf(Forbidden);
     }
 
     // `updated_at` included: a refused write that had touched the row first
@@ -152,11 +139,6 @@ describe('Story 17: Be prevented from editing compendium entries.', () => {
 
 describe('Story 18: As an admin, add, edit, and soft-delete compendium entries and categories.', () => {
   it('lets the site admin add, edit and soft-delete an entry and a category, every write stamped as the admin and the deleted rows kept', async () => {
-    const compendium = surface<CompendiumWrites>(
-      await import('@/modules/ingredients'),
-      ['createCompendiumEntry', 'updateCompendiumEntry', 'deleteCompendiumEntry'],
-      'M5.2',
-    );
     const categories = surface<CategoryWrites>(
       await import('@/modules/vocabulary'),
       ['createCategory', 'updateCategory', 'deleteCategory'],
@@ -167,7 +149,7 @@ describe('Story 18: As an admin, add, edit, and soft-delete compendium entries a
     expect(await siteRole(E.id)).toBe('admin');
 
     const fixture = makeIngredient({ name: 'Testcap', nomenclature: 'fungal' });
-    const entry = await compendium.createCompendiumEntry(admin, inputOf(fixture));
+    const entry = await createCompendiumEntry(admin, inputOf(fixture));
     expect(await entryRow(entry.id)).toMatchObject({
       name: 'Testcap',
       workspace_id: null,
@@ -176,7 +158,7 @@ describe('Story 18: As an admin, add, edit, and soft-delete compendium entries a
       deleted_at: null,
     });
 
-    await compendium.updateCompendiumEntry(admin, entry.id, {
+    await updateCompendiumEntry(admin, entry.id, {
       ...inputOf(fixture),
       name: 'Testcap, relabelled',
     });
@@ -185,7 +167,7 @@ describe('Story 18: As an admin, add, edit, and soft-delete compendium entries a
       updated_by: E.id,
     });
 
-    await compendium.deleteCompendiumEntry(admin, entry.id);
+    await deleteCompendiumEntry(admin, entry.id);
     const deletedEntry = await entryRow(entry.id);
     expect(deletedEntry).toMatchObject({ deleted_by: E.id });
     expect(deletedEntry.deleted_at).not.toBeNull();

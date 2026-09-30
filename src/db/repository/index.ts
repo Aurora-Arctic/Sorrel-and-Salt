@@ -28,12 +28,14 @@ export {
 export { findManyInSpell, findManySpells, findOneSpell } from './spells';
 export {
   findCompendiumCount,
+  findCompendiumEntryByIdentity,
   findCompendiumPage,
   findManyOfIngredients,
   findOneIngredient,
   findSimilarIngredients,
   type CompendiumScore,
   type IngredientFilter,
+  type IngredientIdentity,
   type SimilarityScore,
 } from './ingredients';
 export {

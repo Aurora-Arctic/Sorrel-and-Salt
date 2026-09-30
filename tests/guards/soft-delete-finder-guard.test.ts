@@ -30,6 +30,7 @@ const EXPORTED_FUNCTIONS = [
   'deleteProvisionalUsers',
   'findCommonNameSuggestions',
   'findCompendiumCount',
+  'findCompendiumEntryByIdentity',
   'findCompendiumPage',
   'findIngredientFormValues',
   'findMany',
