@@ -290,6 +290,12 @@ $font-heading: var(--font-display), 'Cormorant Unicase', Georgia, 'Times New Rom
 // No webfont: incidental inline code, and every platform ships a good monospace.
 $font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
 
+// The reading measure: the longest comfortable line of body copy. `ch` is the
+// width of "0" in the element's own font, so the measure follows the text it
+// caps. typography-base caps every paragraph at it, so a page wider than it — a
+// table, a grid — still sets its prose readably.
+$measure: 66ch;
+
 // ---------------------------------------------------------------------------
 // Motion and layout
 // ---------------------------------------------------------------------------

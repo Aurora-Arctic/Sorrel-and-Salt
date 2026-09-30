@@ -13,14 +13,14 @@
   padding: 2rem 1rem;
 }
 
-// A reading measure, not a panel: three short paragraphs and a button, so
+// The reading measure, not a panel: three short paragraphs and a button, so
 // the width is the longest comfortable line rather than a card.
 .welcome {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
   width: 100%;
-  max-width: 36rem;
+  max-width: $measure;
   margin-inline: auto;
 }
 

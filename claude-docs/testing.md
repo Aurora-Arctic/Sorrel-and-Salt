@@ -756,6 +756,17 @@ the spec aborts and fails on any request to `/api/auth/sign-in/`.
   concurrently and threw `duplicate key value violates unique constraint
 "pg_database_datname_index"` before this was added. `serial` pins the
   whole file to one worker, so the reset genuinely happens once.
+- **One worker, until each has its own database** (M5.4). `serial` keeps a
+  file's reset to one worker, but not one file's reset away from another's:
+  every server reads the one `sorrel_e2e`, and `recreateE2eDatabase()` drops
+  it `WITH (FORCE)`, so a reseed on a second worker cuts the first's
+  connections mid-test, and two files starting together race the same
+  `CREATE DATABASE`. CI's two default workers only ever reseeded apart by
+  the order the files happened to fall in; `admin.spec.ts` sorts beside
+  `account.spec.ts` and collided with it. So `playwright.config.ts` sets
+  `workers: 1`, which is what makes "each file starts from the seeded
+  baseline" true here. MB.112 restores parallelism by giving each worker slot
+  its own server and database, as Vitest's pool slots each have a database.
 - **Mail is read back from Mailpit** (MB.65). `tests/e2e/mailpit.ts`'s
   `latestMessageTo(address)` searches Mailpit's REST API at `MAILPIT_URL` for
   the newest message to that address and returns its sender, recipients,
@@ -769,8 +780,9 @@ the spec aborts and fails on any request to `/api/auth/sign-in/`.
   throws on the unset URL rather than reporting that no mail arrived.
 - **A signed-in browser without a provider** (MB.71). No spec can finish a
   real OAuth round trip, so `tests/e2e/session.ts`'s `signInAs(page, email,
-providers)` writes what a Discord sign-in would leave into `sorrel_e2e`: a
-  verified user stamped as its own creator, one `accounts` row per provider
+providers, role)` writes what a Discord sign-in would leave into `sorrel_e2e`: a
+  verified user stamped as its own creator, holding the site role given
+  (`user` unless the spec asks for `admin`), one `accounts` row per provider
   named, and a session. It then hands the browser the session cookie Better
   Auth would have set. The value is the token, a dot, and its base64
   HMAC-SHA256 under `BETTER_AUTH_SECRET`, percent-encoded as better-call's

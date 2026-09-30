@@ -1,0 +1,27 @@
+// The `/admin` layout's frame, beside the nav it carries, as `.email-page`
+// sits beside the form: no AppShell exists yet. The nav above, the page below.
+.admin-layout {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 64rem;
+  margin-inline: auto;
+  padding: 2rem 1rem;
+}
+
+.admin-nav__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  // A row of links, not a bulleted list: typography-base's ◆ marker would sit
+  // against the previous link and hang outside the first.
+  li::before {
+    content: none;
+  }
+}

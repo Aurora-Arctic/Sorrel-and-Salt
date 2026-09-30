@@ -14,15 +14,18 @@ vi.mock('@/lib/auth', () => ({
   auth: { api: { getSession: getSessionMock, listUserAccounts: listUserAccountsMock } },
 }));
 vi.mock('next/headers', () => ({ headers: async () => requestHeaders }));
-// Next's own redirect throws a framework error the router catches; this one
-// throws something a test can read the destination off.
+// Next's own redirect and forbidden throw framework errors the router catches;
+// these throw something a test can read the outcome off.
 vi.mock('next/navigation', () => ({
   redirect: (url: string) => {
     throw new Error(`redirect:${url}`);
   },
+  forbidden: () => {
+    throw new Error('forbidden');
+  },
 }));
 
-const { getSession, linkedAccounts, requireSession, sessionFromHeaders } =
+const { getSession, linkedAccounts, requireAdminSession, requireSession, sessionFromHeaders } =
   await import('@/lib/request-session');
 
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
@@ -147,6 +150,47 @@ describe('requireSession', () => {
         'redirect:/account/email?next=%2Faccount%2Femails',
       );
     });
+  });
+});
+
+// The `/admin` guard (M5.4): a signed-in non-admin is answered with Next's 403
+// page rather than a redirect or a 404, since everyone knows the path exists
+// (claude-docs/auth.md, "The admin guard").
+describe('requireAdminSession', () => {
+  it('returns the session of an admin, without redirecting or refusing', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('admin'));
+    await expect(requireAdminSession()).resolves.toEqual({ userId: USER_ID, role: 'admin' });
+  });
+
+  it('answers a signed-in user who is not an admin with the forbidden page', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user'));
+    requestHeaders.set(RETURN_PATH_HEADER, '/admin');
+
+    // Why the refusal could have been anything else: the session is live and
+    // verified, so requireSession() lets it through, and only the role differs
+    // from the admin above.
+    await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
+    await expect(requireAdminSession()).rejects.toThrow('forbidden');
+  });
+
+  it('sends a signed-out visitor to /sign-in with the return path, not to the forbidden page', async () => {
+    getSessionMock.mockResolvedValue(null);
+    requestHeaders.set(RETURN_PATH_HEADER, '/admin?tab=forms');
+
+    await expect(requireAdminSession()).rejects.toThrow(
+      `redirect:/sign-in?next=${encodeURIComponent('/admin?tab=forms')}`,
+    );
+  });
+
+  // The role is not a way around the email page: a provisional account can do
+  // nothing else, whatever its row says.
+  it('sends an unverified admin to the email page first', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('admin', false));
+    requestHeaders.set(RETURN_PATH_HEADER, '/admin');
+
+    await expect(requireAdminSession()).rejects.toThrow(
+      `redirect:/account/email?next=${encodeURIComponent('/admin')}`,
+    );
   });
 });
 

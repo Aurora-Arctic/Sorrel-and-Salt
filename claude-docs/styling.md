@@ -39,6 +39,17 @@ deliberately unbuilt (see [`CLAUDE.md`](../CLAUDE.md), "The design will change")
   component restating a mixin's colour is a bug.
 - **`adjustFontFallback` stays `true`** in `src/app/fonts.ts`; setting it false
   reintroduces layout shift.
+- **Body copy keeps to the reading measure, `$measure` (66ch)** — the longest
+  line that still reads comfortably. `ch` is the width of "0" in the element's
+  own font, so the measure follows the text it caps: 660px of Lexend at 1rem.
+  `typography-base` sets `max-width: $measure` on every `p`, so a layout can be
+  as wide as a table or grid needs while its prose stays readable, and no page
+  has to remember it. A component never widens a paragraph past it; running
+  text that is not a `p`, such as a long list item or a description, takes
+  `max-width: $measure` itself; and a narrower column, as the forms use, is a
+  component's own choice. `Welcome` and `NotAuthorized` size their whole
+  column to it. `tests/e2e/admin.spec.ts` asserts it on a layout wider than
+  the measure, with 66ch measured in the paragraph's own font.
 
 ## The palette
 
@@ -261,15 +272,16 @@ heavier than the reverse; light reverts to the browser default.
 ## The files
 
 - `src/scss/_variables.scss` — base colour palette, type scale, category-group
-  and safety tokens, and the `$font-body` / `$font-heading` / `$font-mono`
-  stacks a component `@use`s directly.
+  and safety tokens, the `$font-body` / `$font-heading` / `$font-mono`
+  stacks and the `$measure` a component `@use`s directly.
 - `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `theme-dark` /
   `theme-light`, `semantic-tokens` (the per-theme category-group and badge
   custom properties), `focus-ring`, `theme-transition`, `reduced-motion`,
   `font-smoothing-antialiased`.
 - **Three `*-base` mixins**, each emitting nothing on its own `@use` and
   `@include`d at exactly one site, `globals.scss`'s `body`:
-  - `_typography.scss` → `typography-base` — headings, body copy, links, lists,
+  - `_typography.scss` → `typography-base` — headings, body copy capped at
+    `$measure`, links, lists,
     the `.eyebrow` overline, `.tight-headings`.
   - `_layout.scss` → `layout-base` — bare `section` / `header` structure, plus
     `.header` / `.footer`.

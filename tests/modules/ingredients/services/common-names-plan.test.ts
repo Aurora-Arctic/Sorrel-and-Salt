@@ -89,7 +89,9 @@ describe('the common-name suggestion query', () => {
     // probe and a walk of a partial unique index, not a foregone one. The
     // display-name arm needs more than the folk-name arm: its scope is the
     // compendium's own partial index, which the planner walks in preference
-    // to the probe at thirty thousand entries and not at fifty.
+    // to the probe at thirty thousand entries and not at fifty. Eighty thousand
+    // rows through six trigram indexes outrun the 10s default hook timeout on
+    // CI's shared runner, so the seed carries its own.
     beforeEach(async () => {
       await sql`
         insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
@@ -103,7 +105,7 @@ describe('the common-name suggestion query', () => {
       `;
       await sql`analyze ingredients`;
       await sql`analyze ingredient_folk_names`;
-    });
+    }, 60_000);
 
     async function planOf({ query, params }: Logged): Promise<string> {
       return await sql.begin(async (tx) => {

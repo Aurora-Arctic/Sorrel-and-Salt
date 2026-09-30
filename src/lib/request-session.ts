@@ -1,7 +1,9 @@
 import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { forbidden, redirect } from 'next/navigation';
 import { cache } from 'react';
+import { assertSiteAdmin } from '@/modules/identity';
 import { auth } from './auth';
+import { Forbidden } from './errors';
 import type { Session, UserRole, SessionState } from './session';
 import { emailPagePath, isEmailPage } from './account-email';
 import { RETURN_PATH_HEADER, safeReturnPath, signInPath } from './sign-in';
@@ -63,6 +65,24 @@ export async function requireSession(): Promise<Session> {
   if (!session) redirect(signInPath(returnPath));
   if (!emailVerified && !isEmailPage(returnPath)) {
     redirect(emailPagePath(safeReturnPath(returnPath)));
+  }
+  return session;
+}
+
+/**
+ * `requireSession()`, then the site-role check: a signed-in non-admin gets
+ * Next's forbidden page, with a 403, rather than a redirect or a 404 —
+ * `/admin` is a path everyone already knows (claude-docs/auth.md, "The admin
+ * guard"). The layout under `/admin` calls it, and so does every page there,
+ * because a layout does not re-run on client-side navigation.
+ */
+export async function requireAdminSession(): Promise<Session> {
+  const session = await requireSession();
+  try {
+    assertSiteAdmin(session);
+  } catch (error) {
+    if (error instanceof Forbidden) forbidden();
+    throw error;
   }
   return session;
 }

@@ -61,9 +61,12 @@ resolve: async (_query, { workspaceId }, { session }) =>
   server actions, and `tests/guards/no-server-actions.test.ts` fails a
   `'use server'` directive anywhere under `src/`, because a directive is not an
   import and no lint rule sees it. There are no bespoke route handlers beyond
-  this one and `/api/auth/*` ([`auth.md`](auth.md)'s one exception).
+  this one and `/api/auth/*` ([`auth.md`](auth.md)'s one exception), and
+  `tests/guards/route-handlers.test.ts` fails any other `route` file under
+  `src/app/`, for the same reason: a file is not an import either.
 - **Admin is not an exception to either.** `/admin`'s pages read through
-  services, and its writes go through this endpoint.
+  services, and its writes go through this endpoint ([`auth.md`](auth.md),
+  "The admin guard").
 - **The service enforces its own authorization,** never trusting a caller to
   have checked. `tests/modules/coven/services/two-transports.test.ts` proves one refusal
   arrives the same way by both paths: a direct call and a resolver over a

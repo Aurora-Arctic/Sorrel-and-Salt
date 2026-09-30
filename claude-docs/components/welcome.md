@@ -37,12 +37,12 @@ noun (CLAUDE.md, "Vocabulary").
 ## Styling
 
 Layout only — a `.welcome-page` frame that centers the page without an
-AppShell, the same reason `.sign-in-page` exists, and a 36rem reading measure.
+AppShell, the same reason `.sign-in-page` exists, and the reading measure, `$measure`.
 The heading and paragraphs take `_typography.scss`'s global rules; the link
 takes `.btn` (`_primitives.scss`). This is the first `.btn` on an anchor, so
 the component restates `.btn`'s own text colour for `:visited` and on hover
 (`_typography.scss`'s `a:visited` outranks `.btn` alone) and drops the
-underline. Tokens used: `$accent`, `$text-on-color`.
+underline. Tokens used: `$accent`, `$text-on-color`, `$measure`.
 
 ## Stories
 
