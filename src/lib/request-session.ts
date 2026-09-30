@@ -2,10 +2,11 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 import { auth } from './auth';
-import type { Session, UserRole } from './session';
+import type { Session, UserRole, SessionState } from './session';
 import { emailPagePath, isEmailPage } from './account-email';
 import { RETURN_PATH_HEADER, safeReturnPath, signInPath } from './sign-in';
-import { SOCIAL_PROVIDERS, type LinkedAccount, type ProviderId } from './social-providers';
+import { SOCIAL_PROVIDERS } from './social-providers';
+import type { LinkedAccount, ProviderId } from './types';
 
 // Where the request becomes a service-level `Session`: server components and
 // the GraphQL context call this, then hand the result to a service. A service
@@ -19,13 +20,6 @@ function toUserRole(role: unknown): UserRole {
   // Better Auth types the additional field as a plain string. Reading an
   // unknown value as 'user' would hide whatever wrote it.
   throw new Error(`Unrecognised user role: ${String(role)}`);
-}
-
-// `emailVerified` stays off the service-level session: only `requireSession`
-// reads it, to keep an unverified account on the email page.
-interface SessionState {
-  session: Session | null;
-  emailVerified: boolean;
 }
 
 async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> {

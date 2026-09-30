@@ -5,9 +5,11 @@ import {
   type GraphQLResponseBody,
   type GraphQLVariables,
 } from 'msw';
-import { type ErrorCode, maskError } from '@/graphql/errors';
-import { Forbidden, NotFound, ValidationError, type ValidationIssue } from '@/lib/errors';
+import { maskError } from '@/graphql/errors';
+import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import { server } from './server';
+import type { ValidationIssue } from '@/lib/types';
+import type { ErrorCode } from '@/graphql/types';
 
 // Scoped to /api/graphql. No base handlers: an operation nothing has mocked
 // falls through to setup-msw.ts's `onUnhandledRequest: 'error'`.

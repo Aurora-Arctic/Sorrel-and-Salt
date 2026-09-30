@@ -804,12 +804,13 @@ an id is still the row's own uuid. Its offset-based helpers
 It runs in three layers, so the transport, the service and the repository
 each keep to their own rules:
 
-- **`src/lib/pagination.ts`** is pure. It holds the two numbers, the `Cursor`,
-  the `PageRequest` a finder is asked for, and `resolvePage`. `resolvePage`
-  decodes the cursors and clamps the size with `@pothos/core`'s
-  `parseCursorConnectionArgs`. It then asks for one row more than the page,
-  because the extra row says whether another page follows, and builds `edges`
-  and `pageInfo` from the answer. A service names these types without
+- **`src/lib/pagination.ts`** is pure. It holds the two numbers and
+  `resolvePage`, which decodes the cursors and clamps the size with
+  `@pothos/core`'s `parseCursorConnectionArgs`. It then asks for one row more
+  than the page, because the extra row says whether another page follows, and
+  builds `edges` and `pageInfo` from the answer. The `Cursor`, the
+  `PageRequest` a finder is asked for and the page shapes are in
+  `src/lib/types.ts`, which imports nothing, so a service names them without
   importing any runtime code.
 - **`t.pagedConnection`** in `src/graphql/pagination.ts` is added to every
   field builder, the same way the Relay plugin adds `t.connection`.
@@ -956,7 +957,8 @@ mapping, using `me` signed out. `tests/support/msw/graphql.ts`'s
 ## The request context
 
 `src/graphql/context.ts`'s `createContext` runs once per request, as Yoga's
-`context` option. It gives every resolver three things:
+`context` option. It gives every resolver three things, typed as `Context` in
+`src/graphql/types.ts`:
 
 - **`session`**, the service-level `Session` from `sessionFromHeaders` over the
   request's own headers, or `null` when signed out. It does not use
@@ -977,7 +979,9 @@ level would outlive the request and serve one viewer's answers to the next
 merely absent:
 
 - **`defineLoader(batch)`** in `src/graphql/loaders/define-loader.ts` returns a
-  _factory_, `(session) => DataLoader`, not an instance. `batch` receives the
+  _factory_, `(session) => DataLoader`, not an instance; its type,
+  `LoaderFactory`, is in `loaders/types.ts`, which imports `dataloader` as a
+  type only. `batch` receives the
   request's session first, because the service it batches takes one too: a
   loader batches a service call and never bypasses one.
 - **`src/graphql/loaders/index.ts`** registers each factory in `LOADERS`, under

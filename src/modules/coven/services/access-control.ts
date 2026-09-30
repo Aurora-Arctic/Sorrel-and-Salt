@@ -1,7 +1,7 @@
 import 'server-only';
 import { createAccessControl } from 'better-auth/plugins/access';
 import type { RoleAuthorizeRequest } from 'better-auth/plugins/access';
-import type { workspaceMembers } from '../schema/workspaces';
+import type { WorkspaceRole } from '../types';
 
 // What each **workspace** role may do. The site role on the session
 // (`user` | `admin`) is a different axis and is not read here: an admin
@@ -12,9 +12,6 @@ import type { workspaceMembers } from '../schema/workspaces';
 // it — a curator, a billing contact — would leave every "at least member"
 // call site meaning something nobody checked. The argument is
 // claude-docs/design-decisions/m6.3-permission-statements.md.
-
-/** `'viewer' | 'member' | 'owner'`, read off the column rather than restated. */
-export type WorkspaceRole = (typeof workspaceMembers.$inferSelect)['role'];
 
 /**
  * The resources a workspace role acts on, one per surface DESIGN.md §9 routes

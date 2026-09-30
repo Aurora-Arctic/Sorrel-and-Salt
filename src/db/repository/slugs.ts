@@ -2,15 +2,14 @@ import { and, eq, gt, ne, not } from 'drizzle-orm';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { findOneIngredient } from './ingredients';
+import { inCompendium, notSoftDeleted } from './predicates';
 import { existsIn, selectFrom } from './select';
-import { inCompendium, notSoftDeleted } from './shapes';
+import type { IngredientRow, SlugRedirect } from './types';
 
 // A compendium entry's addresses (claude-docs/db.md, "Ingredient slugs"): the
 // slug it holds, and the slugs it moved off, each redirecting to it until the
 // retirement's `expires_at`. `at` is the caller's clock rather than the
 // database's, so a window is exact wherever it is read from.
-
-type IngredientRow = typeof ingredients.$inferSelect;
 
 /** The live compendium entry at `slug`, or `undefined`. */
 export async function findCompendiumEntryBySlug(slug: string): Promise<IngredientRow | undefined> {
@@ -19,12 +18,6 @@ export async function findCompendiumEntryBySlug(slug: string): Promise<Ingredien
     and(inCompendium(ingredients), notSoftDeleted(ingredients), eq(ingredients.slug, slug)),
   );
   return row;
-}
-
-/** A redirect from a slug an entry moved off: the entry, at its current slug, and when it ends. */
-export interface SlugRedirect {
-  entry: IngredientRow;
-  expiresAt: Date;
 }
 
 /**

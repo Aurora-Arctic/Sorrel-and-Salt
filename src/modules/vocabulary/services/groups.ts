@@ -3,13 +3,11 @@ import { findManyByIds } from '../../../db/repository';
 import { NotFound } from '../../../lib/errors';
 import { categoryGroups } from '../schema/categories';
 import { ingredientFormGroups } from '../schema/ingredient-forms';
+import type { CategoryGroupRow, IngredientFormGroupRow } from '../types';
 
 // The two group lookups behind `Category.group` and `IngredientFormValue.group`.
 // Public reference data — a compendium chip wears its group's colours for a
 // signed-out visitor too (MB.80) — so neither takes a session.
-
-export type CategoryGroupRow = typeof categoryGroups.$inferSelect;
-export type IngredientFormGroupRow = typeof ingredientFormGroups.$inferSelect;
 
 /**
  * The category groups by id, one answer per id in the order given: the row,

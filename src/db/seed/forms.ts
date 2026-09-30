@@ -1,11 +1,15 @@
-// `./idempotent` (and through it `./bootstrap-admin`) first, and load-bearing — see minimal.ts.
 import { beginSeedTransaction } from './idempotent';
 import {
   ingredientFormGroups,
   ingredientForms,
 } from '../../modules/vocabulary/schema/ingredient-forms';
 import { seedTwoTierVocabulary } from './two-tier-vocabulary';
-import type { SeedDatabase, SeedTransaction } from './index';
+import type {
+  SeedDatabase,
+  SeedIngredientForm,
+  SeedIngredientFormGroup,
+  SeedTransaction,
+} from './types';
 
 // DESIGN.md §5's form vocabulary: six groups and every form, a starting set an
 // admin may edit. Reference data, not a scenario — migrate.yml seeds it alone,
@@ -15,18 +19,6 @@ import type { SeedDatabase, SeedTransaction } from './index';
 // stays free text and surfaces for curation. No slug is written down; every one
 // is `slugify(name)`. Where a value fits two groups the seed takes one sense and
 // leaves the other row for an admin (claude-docs/db.md, "The form vocabulary seed").
-
-export interface SeedIngredientFormGroup {
-  name: string;
-  description: string;
-}
-
-export interface SeedIngredientForm {
-  name: string;
-  /** The `name` of the group in FORM_GROUPS this belongs to. */
-  group: string;
-  description: string;
-}
 
 /**
  * §5's six groups in §5's order, which nothing reads — groups list

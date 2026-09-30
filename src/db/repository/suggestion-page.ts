@@ -1,27 +1,8 @@
 import { and, asc, desc, gt, lt, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
 import { InvalidCursor } from '../../lib/errors';
-import type { Cursor, PageEntry, PageRequest } from '../../lib/pagination';
+import type { Cursor, PageEntry, PageRequest } from '../../lib/types';
 import { selectFrom } from './select';
-
-/** An in-scope ingredient already holding a suggested value. */
-export interface Claimant {
-  name: string;
-  /** Its formal name; an entry whose nomenclature is `none` or `unknown` has none. */
-  canonicalName: string | null;
-}
-
-/** One row of a suggestion statement, as `readSuggestionPage` reads it. */
-export interface SuggestionRow {
-  /** 0 a curated name match, 1 a curated description match, 2 in use outside the vocabulary. */
-  tier: number;
-  value: string;
-  description: string | null;
-  group: string | null;
-  fold: string;
-  /** The curated row's id; an in-use value's fold, which its tier holds once. */
-  tiebreak: string;
-  claimants: Claimant[];
-}
+import type { Claimant, SuggestionRow } from './types';
 
 const column = <T = unknown>(name: string) => sql<T>`${sql.identifier(name)}`;
 const ORDER = [column('tier'), column('fold'), column('tiebreak')];

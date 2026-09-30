@@ -97,7 +97,7 @@ test, it is a file nothing runs.
   globs, since a file in none is a file nothing runs and a file in two runs
   twice unnoticed.
   - `setupFiles: ['@testing-library/jest-dom/vitest']` registers the jest-dom
-    matchers (`toBeInTheDocument`, `toHaveClass`, …); `src/vitest-env.d.ts`
+    matchers (`toBeInTheDocument`, `toHaveClass`, …); `tests/vitest-env.d.ts`
     (`/// <reference types="@testing-library/jest-dom/vitest" />`) gives `tsc`
     the same augmentation, since a `setupFiles` entry only affects the Vitest
     runtime, not the separate `typecheck` pass.

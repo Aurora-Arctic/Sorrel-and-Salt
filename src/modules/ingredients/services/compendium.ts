@@ -1,5 +1,4 @@
 import 'server-only';
-import type { z } from 'zod';
 import {
   type CompendiumScore,
   findCompendiumCount,
@@ -11,7 +10,6 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
-import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import { ingredientSlug } from '../../../lib/slugify';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
@@ -20,14 +18,11 @@ import { ingredients } from '../schema/ingredients';
 import { retiredIngredientSlugs } from '../schema/retired-ingredient-slugs';
 import { CompendiumFilter, type CompendiumFilterInput } from '../validation/compendium-filter';
 import { CompendiumIngredientInput } from '../validation/ingredient';
-import {
-  type IngredientFields,
-  addFolkNames,
-  columnsOf,
-  replaceFolkNames,
-} from './ingredient-rows';
+import { addFolkNames, columnsOf, replaceFolkNames } from './ingredient-rows';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
+import type { CompendiumAddress, CompendiumWrite, IngredientFields, IngredientRow } from '../types';
 
 // The compendium: the public surface (MB.80), so the list takes no session at
 // all and an entry answers anyone (claude-docs/db.md, "The compendium read");
@@ -35,14 +30,6 @@ import { assertSiteAdmin } from '@/modules/identity';
 // (claude-docs/db.md, "Compendium writes"); and its addresses, which follow an
 // entry's name and redirect from the old one for a window
 // (claude-docs/db.md, "Ingredient slugs").
-
-export type IngredientRow = typeof ingredients.$inferSelect;
-
-/**
- * What a write takes: the admin form's values, or a mutation's input, and the
- * admin's confirmation that the write may end another entry's redirect.
- */
-type CompendiumWrite = z.input<typeof CompendiumIngredientInput> & { endRedirect?: boolean };
 
 /**
  * One page of the compendium under `filter`, best match first on a search,
@@ -188,16 +175,6 @@ export async function updateCompendiumEntry(
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
 }
-
-/** What a compendium address answers: the entry there, or the slug it moved to. */
-export type CompendiumAddress =
-  | {
-      kind: 'entry';
-      entry: IngredientRow;
-      /** The entry that moved off this address, while its redirect's window is open. */
-      movedAway: IngredientRow | null;
-    }
-  | { kind: 'moved'; slug: string };
 
 /**
  * The public route's one read of an address, taking no session: the live

@@ -1,13 +1,12 @@
 import { users } from '../../modules/identity/schema/users';
-import { applyAudit, type AuditSession } from '../audit';
+import { applyAudit } from '../audit';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
-import type { SeedTransaction } from './index';
+import type { AuditSession } from '../types';
+import type { SeedTransaction, SeedUser } from './types';
 
 // Every seeded row needs a creator, so the bootstrap admin is a precondition of
 // any seed, not a detail of `minimal` — the category seed runs alone in
 // production. One of CLAUDE.md rule 3's two identity bootstraps, stamping itself.
-
-type SeedUser = Pick<typeof users.$inferInsert, 'id' | 'name' | 'email' | 'role'>;
 
 export const BOOTSTRAP_ADMIN: SeedUser = {
   id: BOOTSTRAP_USER_ID,

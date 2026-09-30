@@ -6,16 +6,11 @@ import { safeReturnPath, signInErrorMessage } from '../../lib/sign-in';
 // bundle; only the resulting `configured` ids are passed as a prop.
 // oxlint-disable-next-line no-restricted-imports
 import { configuredProviders } from '../../lib/social-providers-config';
+import type { SignInPageProps } from './types';
 
 export const metadata: Metadata = {
   title: 'Sign in — Sorrel & Salt',
 };
-
-interface SignInPageProps {
-  // A promise in Next 16 (node_modules/next/dist/docs/01-app/03-api-reference/
-  // 03-file-conventions/page.md) — must be awaited before use.
-  searchParams: Promise<{ next?: string | string[]; error?: string | string[] }>;
-}
 
 // No AppShell: DESIGN.md §9 scopes it to signed-in pages, and this page is
 // reachable while signed out.

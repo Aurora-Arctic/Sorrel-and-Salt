@@ -5,6 +5,7 @@ import { ClientError } from 'graphql-request';
 import { type FormEvent, type ReactElement, useEffect, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import type { EmailFormProps, Failure } from './types';
 import './index.scss';
 
 // The `/account/email` page's one form: show the account's address and its
@@ -30,31 +31,9 @@ export const GENERIC_EMAIL_ERROR = "That didn't work. Please try again.";
 /** How long the submit stays down after a send: one mail a minute from a form. */
 export const RESEND_DELAY_SECONDS = 60;
 
-export interface EmailFormProps {
-  /** The account's address, or '' when the provider shared none. */
-  email: string;
-  verified: boolean;
-  /** The address was just proved by a followed link: show it and the way on, with nothing to edit. */
-  confirmed?: boolean;
-  /** Where "Continue" goes; already run through safeReturnPath. */
-  next: string;
-  /** A readable sentence for a failed verification link, from verifyErrorMessage — never a raw code. */
-  error?: string;
-  /** Seconds the server will refuse another mail for as of this render, so the countdown starts where it stands. */
-  waitSeconds?: number;
-  resendDelaySeconds?: number;
-}
-
 /** As the column stores it, so "unchanged" compares what the server would see. */
 function normalise(input: string): string {
   return input.trim().toLowerCase();
-}
-
-interface Failure {
-  /** Lands beside the input: a VALIDATION issue pathed to `email`. */
-  field?: string;
-  /** Lands in the alert region: anything else. */
-  alert?: string;
 }
 
 // The shape claude-docs/graphql.md, "Errors" describes: the first error's

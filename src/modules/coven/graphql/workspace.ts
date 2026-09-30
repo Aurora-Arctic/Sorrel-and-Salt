@@ -2,7 +2,7 @@ import { UserRef } from '@/modules/identity';
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { workspaceRole } from '../schema/workspaces';
-import type { MembershipWithWorkspace, WorkspaceRow } from '../services/memberships';
+import type { MembershipWithWorkspace, WorkspaceRow } from '../types';
 
 const WorkspaceRoleEnum = builder.enumType('WorkspaceRole', {
   values: workspaceRole.enumValues,

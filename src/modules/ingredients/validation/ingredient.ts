@@ -3,8 +3,8 @@ import {
   INGREDIENT_ELEMENTS,
   NAMELESS_KINDS,
   NOMENCLATURE_KINDS,
-  type NomenclatureKind,
 } from '../schema/ingredient-enums';
+import type { Lists, Parsed } from './types';
 
 // One ingredient as IngredientForm submits it and the service parses it: the
 // resolver runs these before a request is sent, and the service runs them
@@ -47,12 +47,6 @@ const dropBlankEntries = <T extends Lists>(value: T): T => ({
   folkNames: withoutBlanks(value.folkNames),
 });
 
-interface Lists {
-  deities?: string[] | null;
-  substitutes?: string[] | null;
-  folkNames?: string[] | null;
-}
-
 const fields = {
   name: requiredText('Give the ingredient a name'),
   canonicalName: optionalText,
@@ -76,13 +70,6 @@ const nomenclature = z.enum(NOMENCLATURE_KINDS, {
       ? 'Choose a naming system — or "none" or "unknown"'
       : 'Not a naming system',
 });
-
-interface Parsed {
-  name: string;
-  canonicalName?: string | null;
-  nomenclature: NomenclatureKind;
-  folkNames?: string[] | null;
-}
 
 /**
  * The rules across fields: the database's kind↔name biconditional, in both

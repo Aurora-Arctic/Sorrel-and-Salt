@@ -14,6 +14,7 @@ replace, is
 ```
 src/modules/<name>/
   index.ts        # the public surface: services, types, GraphQL refs, loader factories
+  types.ts        # the module's types, named by the index — internal, see "Where types live"
   schema/*.ts     # the Drizzle tables the module owns — public too, see below
   validation/*.ts # Zod input schemas the form and the service share — public, see below
   services/*.ts   # authorization + business logic; every file opens with `import 'server-only'`
@@ -46,7 +47,7 @@ What stays outside a module, and why:
   through the modules' schema files.
 - **`src/graphql/`** — the builder, the context, pagination, armor, Altair,
   `loaders/define-loader.ts`, `schema/audit.ts` (the cross-cutting
-  `AuditInfo`), the printed SDL, and the two composition points:
+  `AuditInfo`), a `types.ts` beside each of the three, the printed SDL, and the two composition points:
   `schema/index.ts` and `loaders/index.ts`.
 - **`src/lib/`** — the host and the pure functions: `auth.ts` (Better Auth
   composition), the session helpers, `mail.ts`, `errors.ts`, `slugify.ts`
@@ -78,8 +79,8 @@ The compendium is the `workspace_id IS NULL` tier, reached through
 A module offers three things to the rest of the tree, and nothing else:
 
 - **`index.ts`** — the behaviour surface. It re-exports the services the
-  module means to offer, their types, its GraphQL refs and its loader
-  factories. A name missing from it is a decision to take in the module, not a
+  module means to offer, its GraphQL refs and its loader factories, and names
+  the public ones of its types from `types.ts`. A name missing from it is a decision to take in the module, not a
   reason to import the file underneath.
 - **`schema/*.ts`** — the data surface. The seed, the repository, drizzle-kit
   and a cross-module foreign key all need a table object without loading a
@@ -95,8 +96,8 @@ A module offers three things to the rest of the tree, and nothing else:
   `tests/guards/client-safe-validation.test.ts` fails one that reaches further
   ([`validation.md`](validation.md)).
 
-`services/`, `graphql/` and `loaders/` are internal. A deep import of any of
-them from outside the module is a boundary violation, whatever the importer.
+`services/`, `graphql/`, `loaders/` and `types.ts` are internal. A deep import
+of any of them from outside the module is a boundary violation, whatever the importer.
 
 ## The boundary
 
@@ -137,8 +138,8 @@ feedback and the guard gives precision:
 
 - **Lint.** `.oxlintrc.json` carries one `no-restricted-imports` pattern group
   banning `@/modules/*/services`, `@/modules/*/services/**`,
-  `@/modules/*/graphql`, `@/modules/*/graphql/**`, `@/modules/*/loaders` and
-  `@/modules/*/loaders/**`. It is restated in every override, because an
+  `@/modules/*/graphql`, `@/modules/*/graphql/**`, `@/modules/*/loaders`,
+  `@/modules/*/loaders/**` and `@/modules/*/types`. It is restated in every override, because an
   override replaces the top-level rule rather than merging with it
   ([`db.md`](db.md), "Where queries may be built"). The bare
   `@/modules/<name>` index import matches none of the patterns, so no
@@ -185,7 +186,7 @@ fails an unlisted function, and it fails a listed one that no longer exists or
 no longer reads the tier.
 
 It holds the predicate, ten finders and the writer today: `inCompendium` in
-`shapes.ts`, which is `workspace_id IS NULL` itself; `findSimilarIngredients`
+`predicates.ts`, which is `workspace_id IS NULL` itself; `findSimilarIngredients`
 (M4.7), the fuzzy duplicate match; `findVocabularySuggestions` (MB.94, forms
 M4.7a), the planet, zodiac and form autofill; `findCommonNameSuggestions`
 (M4.7a), the common-name autofill; `findManyOfIngredients` (M4.8), an
@@ -204,6 +205,70 @@ proofs' workspaces in a single statement. A later task that adds such a finder
 — M8.3's local-beats-compendium resolution — adds the finder's name to
 `TIER_SEAM` in its own PR, with a one-line reason beside it.
 The list is then the scope of the extraction task, read from one file.
+
+## Where types live
+
+A `type` or `interface` lives in a type-only file, one whose every statement
+is an import, a type, a `declare` or an `export type` re-export, and a code file
+declares none (MB.108). The default home is a `types.ts` beside the code that
+uses it, rather than a central `src/types/`, so a type is found next to its
+users and a code file reads as behaviour.
+
+Three kinds stay in their code file, because moving them would cost more than
+it tidies:
+
+- **A type derived from a value declared in the same file**, such as
+  `z.output<typeof LocalIngredientInput>`, `(typeof UNIT_DIMENSIONS)[number]`
+  or `Loaders` from the private `LOADERS`. A types file would have to import
+  the value back. The Zod pairs also share one name between the schema and its
+  type, so one import carries both.
+- **A branded proof**, `Membership` and `SiteAdmin`. Its `unique symbol` stays
+  unexported beside the one function that mints it (CLAUDE.md rule 5).
+- **`Executor` and `Transaction`** in the repository, both `typeof db`. Only
+  the files whose exemptions `lint-db-client-boundary.test.ts` pins may import
+  the client, and a types file would be one more.
+
+A type declared inside a function, a `describe` or a `declare global` block
+belongs to that code and stays with it. So `src/graphql/pagination.ts` keeps
+its `PothosSchemaTypes` augmentation beside the prototype patch it types.
+
+Where the file goes follows from who imports it, because importing a types
+file, `import type` included, carries that file's own imports along:
+
+- **A module's types** are in `src/modules/<name>/types.ts`, at the module
+  root rather than under `services/`, so the file carries no
+  `import 'server-only'`. It is internal like `services/`: the index names its
+  public types in one `export type { … } from './types'` line, which keeps a
+  module-internal type such as `IngredientFields` off the surface, and the lint
+  group and the guard above ban a deep import of it.
+- **A validation file's helper types** are in `validation/types.ts`, not the
+  module's `types.ts`. `client-safe-validation.test.ts` follows type imports
+  too, and the module's file reaches its tables.
+- **`src/lib/types.ts` imports nothing.** `lib/validation.ts` reaches it
+  through `errors.ts`, which puts it inside that same client-safe walk. The
+  session types read the `users` table and Better Auth, so they are in
+  `src/lib/session.ts` instead.
+- **The repository's types** are in `src/db/repository/types.ts`. The index
+  re-exports the writer's type, and the types a caller passes to a finder or
+  gets back from one, by name. The table shapes and the rest of `selectFrom`'s
+  options stay inside the folder ([`db.md`](db.md),
+  "The repository's files").
+- **Presentation's types** sit beside the component, route or template that
+  uses them. A component's props are in `src/components/<Name>/types.ts`, which
+  its story imports too. An app route's are in a `types.ts` in the route's
+  directory, which Next never serves, because only a `page` or `route` file
+  makes a segment public.
+- **A script's types** are in `scripts/types.ts`, imported as
+  `import type { … } from './types.ts'`. Node's own type stripping runs those
+  scripts, and it needs the extension and erases only a type-only import.
+
+`tests/guards/types-in-type-files.test.ts` enforces this over `src/` and
+`scripts/`. It reads every column-0 `type` and `interface` in a file that is
+not type-only, and fails any that is not one of the three kinds above. It
+recognises the first two from the declaration itself: a `typeof` naming a
+value the same file declares, or a key naming a `declare const …: unique
+symbol` in the same file. The third is a pinned list, so a new exception is a
+change to the guard rather than a quiet addition.
 
 ## Tests
 

@@ -1,10 +1,6 @@
 import { defineLoader } from '../../../graphql/loaders/define-loader';
-import {
-  type CategoryRow,
-  type IngredientKey,
-  categoriesOf,
-  folkNamesOf,
-} from '../services/ingredient-children';
+import { categoriesOf, folkNamesOf } from '../services/ingredient-children';
+import type { CategoryRow, IngredientKey } from '../types';
 
 // Keyed by the parent row rather than its id, so the service knows which
 // coven to check without a read of its own; cached by id, since the same

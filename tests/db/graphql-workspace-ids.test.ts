@@ -3,7 +3,6 @@ import type { GraphQLObjectType } from 'graphql';
 import { beforeAll, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import type { Context } from '@/graphql/context';
 import { maskedErrors } from '@/graphql/errors';
 import { createLoaders } from '@/graphql/loaders';
 import { schema } from '@/graphql/schema';
@@ -11,6 +10,7 @@ import { A, B, asUser } from '../support/as-user';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { noSender } from '../support/email-verification';
 import { makeIngredient } from '../support/fixtures';
+import type { Context } from '@/graphql/types';
 
 // A `workspaceId` is whatever string the client sent, and asked of the
 // database one that is not a uuid is a driver error, which leaves masked as

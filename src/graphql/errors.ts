@@ -1,17 +1,10 @@
 import { GraphQLError } from 'graphql';
 import { maskError as yogaMaskError, type YogaServerOptions } from 'graphql-yoga';
-import { Forbidden, NotFound, ValidationError, type ValidationIssue } from '../lib/errors';
+import { Forbidden, NotFound, ValidationError } from '../lib/errors';
+import type { ErrorExtensions } from './types';
 
 // The transport's half of src/lib/errors.ts: each service error leaves with a
 // code, and anything else leaves masked (claude-docs/graphql.md, "Errors").
-
-export type ErrorCode = 'VALIDATION' | 'FORBIDDEN' | 'NOT_FOUND';
-
-/** What a mapped error carries under `extensions`; `fieldErrors` only on VALIDATION. */
-export interface ErrorExtensions {
-  code: ErrorCode;
-  fieldErrors?: ValidationIssue[];
-}
 
 function extensionsFor(error: unknown): ErrorExtensions | null {
   if (error instanceof ValidationError) {

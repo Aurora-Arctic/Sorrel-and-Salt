@@ -1,13 +1,13 @@
 import { graphql } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import type { Context } from '@/graphql/context';
 import { createLoaders } from '@/graphql/loaders';
 import { noSender } from '../../../support/email-verification';
 import { schema } from '@/graphql/schema';
 import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { A, asUser } from '../../../support/as-user';
+import type { Context } from '@/graphql/types';
 
 // `me` over the real schema, with the context built the way `createContext`
 // builds it minus the cookie parsing tests/graphql/context.test.ts covers.

@@ -71,8 +71,8 @@ function probe(directory: string, name: string, source: string): string {
 }
 
 // Every module under src/db, by both spellings an importer reaches it by. The
-// repository and the client are the two the task names; audit.ts, the seed
-// and bootstrap.ts are "below services" just the same. The client
+// repository and the client are the two the task names; audit.ts, types.ts,
+// the seed and bootstrap.ts are "below services" just the same. The client
 // also draws rule 2's own diagnostic, which is why these count the boundary's
 // message rather than every diagnostic: oxlint reports each matching group,
 // and a gitignore-style `!**/db/connection` in this group silences the client
@@ -83,6 +83,7 @@ const DB_SPECIFIERS = [
   '@/db/connection',
   '../../db/connection',
   '@/db/audit',
+  '@/db/types',
   '@/db/seed',
   '@/db/bootstrap',
 ];
@@ -111,7 +112,7 @@ const typeOnlyProbes = ABOVE.map(
       probe(
         directory,
         'db-type-only',
-        "import type { users } from '@/modules/identity/schema/users';\nimport type { AuditSession } from '@/db/audit';\nexport type U = typeof users | AuditSession;\n",
+        "import type { users } from '@/modules/identity/schema/users';\nimport type { AuditSession } from '@/db/types';\nexport type U = typeof users | AuditSession;\n",
       ),
     ] as const,
 );
@@ -159,8 +160,9 @@ const schemaProbes = ABOVE.map(
 );
 
 // The deep import the index exists to replace, by both spellings of the
-// internal directory and as a type: a type deep-import couples to the same
-// internals, which is why the group carries no `allowTypeImports`.
+// internal directory, as a type, and into the module's types file: a type
+// deep-import couples to the same internals, which is why the group carries
+// no `allowTypeImports`.
 const deepProbes = ABOVE.flatMap((directory) =>
   [
     [
@@ -171,6 +173,10 @@ const deepProbes = ABOVE.flatMap((directory) =>
     [
       'type',
       "import type { Membership } from '@/modules/coven/services/membership';\nexport type M = Membership;\n",
+    ],
+    [
+      'types file',
+      "import type { WorkspaceRole } from '@/modules/coven/types';\nexport type W = WorkspaceRole;\n",
     ],
   ].map(([name, source]) => [directory, name, probe(directory, `deep-${name}`, source)] as const),
 );
@@ -202,8 +208,8 @@ const belowProbes = BELOW.map(
     ] as const,
 );
 
-// The repository's folder-private files — the select builder and the writer
-// — by the alias, by a relative path, and as a type.
+// The repository's folder-private files — the select builder, the writer
+// and the types file — by the alias, by a relative path, and as a type.
 const repositoryInternalProbes = OUTSIDE_REPOSITORY.flatMap((directory) =>
   [
     [
@@ -214,7 +220,7 @@ const repositoryInternalProbes = OUTSIDE_REPOSITORY.flatMap((directory) =>
       'relative',
       "import { writerFor } from '../../../../db/repository/write';\nexport const w = writerFor;\n",
     ],
-    ['type', "import type { Keyset } from '@/db/repository/select';\nexport type K = Keyset;\n"],
+    ['type', "import type { Keyset } from '@/db/repository/types';\nexport type K = Keyset;\n"],
   ].map(
     ([name, source]) =>
       [directory, name, probe(directory, `repository-internal-${name}`, source)] as const,
@@ -289,7 +295,7 @@ describe('M3.9: resolvers and server components reach services and nothing below
   });
 
   it.each(deepProbes)(
-    'bans %s reaching a module service by its %s, with the message that names the index',
+    "bans %s reaching a module's internals by its %s, with the message that names the index",
     (_directory, _name, file) => {
       expect(deep(file)).toBe(1);
     },

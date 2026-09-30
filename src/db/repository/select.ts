@@ -11,69 +11,22 @@ import {
   sql,
   type SQL,
 } from 'drizzle-orm';
-import { type AnyPgColumn, PgColumn, PgTable } from 'drizzle-orm/pg-core';
+import { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
 import { InvalidCursor } from '../../lib/errors';
-import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/pagination';
-import { notSoftDeleted } from './shapes';
-
-/**
- * A sort column a page can be keyed on. NOT NULL, because a NULL key makes
- * the row comparison below NULL and the row falls out of every page.
- */
-export type SortColumn = AnyPgColumn<{ notNull: true }>;
-
-/**
- * One part of a page's sort, always ascending: a column, or an expression and
- * the type it is read as, which its cursor text casts back to. An
- * expression's nullness is not in its type, so one that can be NULL is the
- * caller's bug, with the column's consequence. A descending part is written
- * negated.
- */
-export type SortPart = SortColumn | { expression: SQL; type: string };
-
-/** A list's key, and what reading it joins and is read under: what its pages and its count share. */
-export interface KeyOrder {
-  sort: readonly SortPart[];
-  id: AnyPgColumn;
-  /** A parenthesised, aliased statement joined to the table, which a sort part or the `where` may read. */
-  join?: { source: SQL; on: SQL };
-  /**
-   * The `where` holds a `<%` search, so the read runs in a transaction
-   * under `SEARCH_WORD_SIMILARITY_THRESHOLD` rather than the server's.
-   */
-  wordMatch?: boolean;
-  /**
-   * The `where` holds a `%` match, so the read runs in a transaction under
-   * `SIMILARITY_THRESHOLD`, the one a `Similarity` read sets, rather than
-   * pg_trgm's 0.3.
-   */
-  similarityMatch?: boolean;
-}
-
-/** How `selectFrom` orders, bounds and keys a page; the cursor bounds are in its `where`. */
-export interface Keyset<Carried extends object = {}> extends KeyOrder {
-  request: PageRequest;
-  /**
-   * Values selected beside the row and carried onto its entry, and so onto its
-   * edge. Each is read as the driver returns it: a `mapWith` on one is dropped.
-   */
-  carry?: { [K in keyof Carried]: SQL<Carried[K]> };
-}
-
-/**
- * How `selectFrom` counts a keyset list rather than paging it: every row the
- * `where` holds, and how many come before `start` in `count`'s order. The
- * `where` is a page's without its bounds, and the read takes the key's join
- * and threshold but no order and no limit.
- */
-export interface KeysetCount {
-  count: KeyOrder;
-  /** A page's first row. None on an empty page, whose `countBefore` is null. */
-  start: Cursor | undefined;
-}
+import type { Cursor, PageCount, PageEntry } from '../../lib/types';
+import { notSoftDeleted } from './predicates';
+import type {
+  Derived,
+  KeyOrder,
+  Keyset,
+  KeysetCount,
+  Similarity,
+  SortColumn,
+  SortPart,
+} from './types';
 
 /**
  * DESIGN.md §5's fuzzy-match threshold. pg_trgm's `%` reads it from
@@ -96,28 +49,6 @@ const WORD_SIMILARITY_THRESHOLD = 0.6;
  * word-similar to Mugwort — and still finds a two-letter prefix.
  */
 const SEARCH_WORD_SIMILARITY_THRESHOLD = 0.5;
-
-/**
- * How `selectFrom` runs a trigram match: `%` and `<%` in its `where` mean
- * the two thresholds above, and the first `limit` rows come back in
- * `orderBy`'s order. Never a `similarity(a, b) > n` comparison in the `where`:
- * no trigram index can answer a function call (claude-docs/db.md, "Fuzzy
- * matching").
- */
-export interface Similarity {
-  orderBy: SQL[];
-  limit: number;
-}
-
-/**
- * A statement's rows read as a table: `source` is the parenthesised statement
- * and its alias, `fields` the columns read off it. For a read no one table
- * holds — a union across two — still built here, under the threshold.
- */
-export interface Derived<TRow extends Record<string, unknown>> {
-  source: SQL;
-  fields: { [K in keyof TRow]: SQL<TRow[K]> };
-}
 
 type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 

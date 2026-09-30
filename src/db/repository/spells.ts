@@ -2,8 +2,9 @@ import { and, eq, or, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { spells } from '../../modules/grimoire/schema/spells';
 import type { Membership } from '@/modules/coven';
+import { notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, selectFrom } from './select';
-import { notSoftDeleted, scopedTo, type SpellScoped, type Unscoped } from './shapes';
+import type { SpellScoped, Unscoped } from './types';
 
 /**
  * §5's reader rule, as a predicate: the coven's own spells, shared ones plus

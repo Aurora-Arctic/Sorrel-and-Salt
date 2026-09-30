@@ -1,13 +1,13 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
-import type { Message } from '@/lib/mail';
 import {
   cookieHeader,
   expectSignedIn,
   signIn as signInThrough,
   stubProviderCredentials,
 } from '../support/oauth';
+import type { Message } from '@/lib/types';
 
 // `account.encryptOAuthTokens` through a real sign-in: the access and refresh
 // tokens in `accounts` are unreadable without BETTER_AUTH_SECRET, and a row

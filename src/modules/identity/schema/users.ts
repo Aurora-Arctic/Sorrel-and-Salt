@@ -10,11 +10,8 @@ import {
   check,
   timestamp,
 } from 'drizzle-orm/pg-core';
-import {
-  auditStampColumnsReferencing,
-  deletionColumnsReferencing,
-  type UsersIdReference,
-} from '../../../db/audit';
+import { auditStampColumnsReferencing, deletionColumnsReferencing } from '../../../db/audit';
+import type { UsersIdReference } from '../../../db/types';
 
 // The audit column instances every table spreads, built here because each
 // references `users.id` — `users` included, so the thunk resolves the table

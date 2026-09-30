@@ -3,8 +3,10 @@
 import { type ReactElement, useState, useSyncExternalStore } from 'react';
 import { getLastUsedLoginMethod, signIn } from '../../lib/auth-client';
 import { GENERIC_SIGN_IN_ERROR, signInPath } from '../../lib/sign-in';
-import { SOCIAL_PROVIDERS, type ProviderId } from '../../lib/social-providers';
+import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import { DiscordIcon, FacebookIcon, GoogleIcon, MicrosoftIcon } from './icons';
+import type { ProviderId } from '../../lib/types';
+import type { SignInPanelProps } from './types';
 import './index.scss';
 
 // The familiar per-provider "Continue with X" mark, matched to each
@@ -20,15 +22,6 @@ const PROVIDER_ICONS: Record<ProviderId, () => ReactElement> = {
 // A cookie announces no change, and only a callback, a full navigation away,
 // writes this one: there is nothing to subscribe to.
 const noSubscription = () => () => {};
-
-export interface SignInPanelProps {
-  /** Where a successful sign-in returns to; already run through safeReturnPath. */
-  next: string;
-  /** A readable sentence for a failed callback, from signInErrorMessage — never a raw code. */
-  error?: string;
-  /** Providers this environment has credentials for; the rest render greyed out. */
-  configured: readonly ProviderId[];
-}
 
 const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElement => {
   // Seeded from the server-rendered callback error, then replaced by a

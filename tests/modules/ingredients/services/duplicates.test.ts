@@ -2,11 +2,11 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
-import type { PageRequest } from '@/lib/pagination';
 import { findPossibleDuplicates } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
+import type { PageRequest } from '@/lib/types';
 
 // DESIGN.md §5, "Fuzzy duplicate warning": near-misses on the display name,
 // the formal name or any folk name, from the compendium and the caller's own

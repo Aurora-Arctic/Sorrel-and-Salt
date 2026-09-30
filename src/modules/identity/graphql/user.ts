@@ -3,7 +3,8 @@ import { AuditInfo } from '../../../graphql/schema/audit';
 import { Forbidden } from '../../../lib/errors';
 import { userRole } from '../schema/users';
 import { setEmail } from '../services/email';
-import { type UserRow, getMe } from '../services/profile';
+import { getMe } from '../services/profile';
+import type { UserRow } from '../types';
 
 const UserRoleEnum = builder.enumType('UserRole', { values: userRole.enumValues });
 

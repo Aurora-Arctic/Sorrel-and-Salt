@@ -2,7 +2,6 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import { emailVerificationSender } from '@/lib/email-verification';
-import type { Message } from '@/lib/mail';
 import { sweepProvisionalAccounts } from '@/modules/identity';
 import {
   EMAIL_PAGE,
@@ -15,6 +14,7 @@ import {
   type Profile,
   type ProviderId,
 } from '../support/oauth';
+import type { Message } from '@/lib/types';
 
 // Story 59, through Better Auth's real endpoints: an address becomes the
 // account's when the mailed change link is followed from a session holding

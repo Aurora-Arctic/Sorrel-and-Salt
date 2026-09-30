@@ -1,32 +1,10 @@
-// `./idempotent` (and through it `./bootstrap-admin`) first, and load-bearing — see minimal.ts.
 import { insertMissing, requireFrom } from './idempotent';
 import { slugify } from '../../lib/slugify';
-import type { categories, categoryGroups } from '../../modules/vocabulary/schema/categories';
-import type {
-  ingredientFormGroups,
-  ingredientForms,
-} from '../../modules/vocabulary/schema/ingredient-forms';
-import type { SeedTransaction } from './index';
+import type { GroupTable, SeedTransaction, TwoTierVocabulary } from './types';
 
 // The shape §5's forms and §6's categories share: a group table and an item
 // table filed under it, both keyed by a slug nobody writes down. The literals
 // stay with their own vocabulary; only the two inserts are one.
-
-/** The two pairs are typed as a union rather than a generic: their columns are identical, so the row type survives. */
-type GroupTable = typeof categoryGroups | typeof ingredientFormGroups;
-type ItemTable = typeof categories | typeof ingredientForms;
-
-interface TwoTierVocabulary<
-  G extends { name: string; description: string },
-  I extends { name: string; group: string; description: string },
-> {
-  groupTable: GroupTable;
-  itemTable: ItemTable;
-  groups: readonly G[];
-  items: readonly I[];
-  /** Capitalised, for the error naming an item whose group is missing: `Category`, `Form`. */
-  itemNoun: string;
-}
 
 /**
  * Groups first — `group_id` is a NOT NULL foreign key — then items, each

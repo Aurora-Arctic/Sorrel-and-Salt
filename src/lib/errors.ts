@@ -1,3 +1,4 @@
+import type { ValidationIssue } from './types';
 // The three ways a service ends a call it cannot perform — two refusals and a
 // bad value — thrown rather than answered with an empty list, a null, or a
 // success that did nothing. Separate types because the route decides what the
@@ -28,13 +29,6 @@ export class NotFound extends Error {
     super(message);
     this.name = 'NotFound';
   }
-}
-
-/** One rule a value broke, pathed to the input field it is about. */
-export interface ValidationIssue {
-  /** In the shape of the operation's input — `['folkNames', 2]`; empty for no one field. */
-  path: (string | number)[];
-  message: string;
 }
 
 /**

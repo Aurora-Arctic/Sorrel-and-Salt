@@ -1,7 +1,7 @@
 import type { Story } from '@ladle/react';
 import EmailPreview, { WORKSHOP_ORIGIN } from '../../.ladle/EmailPreview';
-import type { ProviderId } from '../lib/social-providers';
 import { verifyEmailMessage } from './verify-email';
+import type { ProviderId } from '../lib/types';
 
 // Render-only; content is asserted in tests/emails/verify-email.test.tsx. The
 // link is invented and goes nowhere; the images and fonts come from the

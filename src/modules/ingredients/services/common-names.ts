@@ -1,8 +1,8 @@
 import 'server-only';
 import { type CommonNameSuggestion, findCommonNameSuggestions } from '../../../db/repository';
-import type { PageEntry, PageRequest } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import { assertMembership } from '@/modules/coven';
+import type { PageEntry, PageRequest } from '../../../lib/types';
 
 export type { CommonNameSuggestion };
 

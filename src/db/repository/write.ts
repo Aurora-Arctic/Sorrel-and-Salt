@@ -1,150 +1,15 @@
 import { and, eq, inArray, lte, sql, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
-import { applyAudit, type AuditSession } from '../audit';
+import { applyAudit } from '../audit';
+import type { AuditSession } from '../types';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
-import type { Membership } from '@/modules/coven';
-import type { SiteAdmin } from '@/modules/identity';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
-import {
-  inCompendium,
-  notSoftDeleted,
-  scopedTo,
-  type HardDeletable,
-  type Identified,
-  type SoftDeletable,
-  type TwoTier,
-  type Unscoped,
-  type WorkspaceScoped,
-  type Writable,
-  type WritableInWorkspace,
-} from './shapes';
+import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
+import type { AuditWriter, Identified, TwoTier } from './types';
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
-export interface AuditWriter {
-  /** Insert one row, stamping created_* and updated_* from the session. */
-  insert<TTable extends PgTable & Unscoped>(
-    table: TTable,
-    values: Writable<TTable>,
-  ): Promise<TTable['$inferSelect'][]>;
-  /** Insert one row into the workspace the proof names, filling `workspace_id` from it. */
-  insertInWorkspace<TTable extends PgTable & WorkspaceScoped>(
-    membership: Membership,
-    table: TTable,
-    values: WritableInWorkspace<TTable>,
-  ): Promise<TTable['$inferSelect'][]>;
-  /**
-   * Update matching rows, stamping updated_* only — created_* is never touched.
-   * A soft-deleted row never matches, here or in any update below.
-   */
-  update<TTable extends PgTable & Unscoped>(
-    table: TTable,
-    values: Partial<Writable<TTable>>,
-    where: SQL,
-  ): Promise<TTable['$inferSelect'][]>;
-  /**
-   * The same, naming the one row by its own id — for a table no proof scopes.
-   * A service cannot build the `where` above: MB.33 bars it from importing
-   * `drizzle-orm` at runtime.
-   */
-  updateById<TTable extends PgTable & Unscoped & Identified>(
-    table: TTable,
-    id: string,
-    values: Partial<Writable<TTable>>,
-  ): Promise<TTable['$inferSelect'][]>;
-  /** The same, with `workspace_id = membership.workspaceId` ANDed onto the `where`. */
-  updateInWorkspace<TTable extends PgTable & WorkspaceScoped>(
-    membership: Membership,
-    table: TTable,
-    values: Partial<WritableInWorkspace<TTable>>,
-    where: SQL,
-  ): Promise<TTable['$inferSelect'][]>;
-  /**
-   * The same, naming the one row by its own id. A service cannot build the
-   * `where` the method above wants — MB.33 bars it from importing
-   * `drizzle-orm` at runtime — so the predicate every entity update needs is
-   * built here instead.
-   */
-  updateByIdInWorkspace<TTable extends PgTable & WorkspaceScoped & Identified>(
-    membership: Membership,
-    table: TTable,
-    id: string,
-    values: Partial<WritableInWorkspace<TTable>>,
-  ): Promise<TTable['$inferSelect'][]>;
-  /**
-   * Soft-delete matching rows: stamps deleted_*, leaving the row in place
-   * (CLAUDE.md rule 4). A row already deleted never matches, here or below, so
-   * it keeps the stamps of whoever deleted it.
-   */
-  softDelete<TTable extends PgTable & SoftDeletable & Unscoped>(
-    table: TTable,
-    where: SQL,
-  ): Promise<TTable['$inferSelect'][]>;
-  /** The same, scoped by the proof. */
-  softDeleteInWorkspace<TTable extends PgTable & SoftDeletable & WorkspaceScoped>(
-    membership: Membership,
-    table: TTable,
-    where: SQL,
-  ): Promise<TTable['$inferSelect'][]>;
-  /**
-   * `softDelete`, naming the rows by their own ids — the soft-delete twin of
-   * `findManyByIds`, for the reason `updateById` gives. An empty list deletes
-   * nothing without a statement.
-   */
-  softDeleteByIds<TTable extends PgTable & SoftDeletable & Unscoped & Identified>(
-    table: TTable,
-    ids: readonly string[],
-  ): Promise<TTable['$inferSelect'][]>;
-  /**
-   * Insert one row into the compendium tier of a two-tier table, filling
-   * `workspace_id` with null — the site role's counterpart of
-   * `insertInWorkspace`, under its proof.
-   */
-  insertInCompendium<TTable extends PgTable & TwoTier>(
-    admin: SiteAdmin,
-    table: TTable,
-    values: WritableInWorkspace<TTable>,
-  ): Promise<TTable['$inferSelect'][]>;
-  /**
-   * Update the one live compendium row with this id, stamping updated_* only.
-   * A workspace's row, or a soft-deleted one, is not reached: nothing is
-   * written and nothing returned.
-   */
-  updateByIdInCompendium<TTable extends PgTable & TwoTier & Identified>(
-    admin: SiteAdmin,
-    table: TTable,
-    id: string,
-    values: Partial<WritableInWorkspace<TTable>>,
-  ): Promise<TTable['$inferSelect'][]>;
-  /** Soft-delete the one live compendium row with this id, on the same terms. */
-  softDeleteByIdInCompendium<TTable extends PgTable & TwoTier & SoftDeletable & Identified>(
-    admin: SiteAdmin,
-    table: TTable,
-    id: string,
-  ): Promise<TTable['$inferSelect'][]>;
-  /**
-   * Hard-delete the compendium's slug retirements that have lapsed by `at`:
-   * each redirect ended at its `expires_at`, so the row answers nothing and
-   * is removed rather than tombstoned. Named for its one table, as the
-   * provisional-account delete is, because the table carries `deleted_at`.
-   */
-  deleteLapsedSlugRetirements(
-    admin: SiteAdmin,
-    at: Date,
-  ): Promise<(typeof retiredIngredientSlugs.$inferSelect)[]>;
-  /**
-   * Hard-delete, for the join tables that carry no `deleted_at` (MB.34). A
-   * table carrying one is rejected by the type, as is one carrying
-   * `workspace_id`: no table is both today, and the one that is first adds its
-   * proof-scoped counterpart rather than being hard-deleted unscoped.
-   */
-  delete<TTable extends PgTable & HardDeletable & Unscoped>(
-    table: TTable,
-    where: SQL,
-  ): Promise<TTable['$inferSelect'][]>;
-}
 
 // Drizzle types `.values()`/`.set()` against the table's own insert model, which
 // `applyAudit` widens by exactly that table's audit columns; the cast is

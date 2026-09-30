@@ -2,6 +2,7 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { type Query, QueryClient, queryOptions } from '@tanstack/react-query';
 import { getOperationAST } from 'graphql';
 import { ClientError, request } from 'graphql-request';
+import type { VariablesArg } from './types';
 
 // The browser's half of the API: graphql-request sends a codegen document and
 // TanStack Query caches the answer, with no second, normalized cache beside it
@@ -15,10 +16,6 @@ const STALE_TIME_MS = 30_000;
 
 /** Two retries, so three attempts in all. */
 const MAX_RETRIES = 2;
-
-/** Optional when the document declares no variables, required when it does. */
-type VariablesArg<TVariables> =
-  TVariables extends Record<string, never> ? [variables?: TVariables] : [variables: TVariables];
 
 async function send<TResult, TVariables extends object>(
   document: TypedDocumentNode<TResult, TVariables>,

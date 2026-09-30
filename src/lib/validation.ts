@@ -1,5 +1,6 @@
 import { type ZodType, z } from 'zod';
-import { ValidationError, type ValidationIssue } from './errors';
+import { ValidationError } from './errors';
+import type { ValidationIssue } from './types';
 
 // The Zod half of MB.43's ValidationError, and the id shape every module
 // checks. Kept out of errors.ts so that file stays schema-library-free, and out

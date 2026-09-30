@@ -10,11 +10,11 @@ second provider is added this way and never at sign-in is
 
 ## The props contract
 
-| Prop         | Meaning                                                                                                                                                                                                           |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `linked`     | The signed-in user's provider accounts as `{ id, providerId }`: `id` is the `accounts` row's own id, which `/unlink-account` takes. `LinkedAccount` lives in `src/lib/social-providers.ts`, which is client-safe. |
-| `configured` | Providers this environment has credentials for, from `configuredProviders()`. The rest cannot be added.                                                                                                           |
-| `error`      | A readable sentence for a failed link, from `linkErrorMessage()` (`src/lib/sign-in.ts`), never a raw `?error=` code. Shown as an alert on mount.                                                                  |
+| Prop         | Meaning                                                                                                                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `linked`     | The signed-in user's provider accounts as `{ id, providerId }`: `id` is the `accounts` row's own id, which `/unlink-account` takes. `LinkedAccount` lives in `src/lib/types.ts`, which is client-safe. |
+| `configured` | Providers this environment has credentials for, from `configuredProviders()`. The rest cannot be added.                                                                                                |
+| `error`      | A readable sentence for a failed link, from `linkErrorMessage()` (`src/lib/sign-in.ts`), never a raw `?error=` code. Shown as an alert on mount.                                                       |
 
 ## Adding one leaves the page
 

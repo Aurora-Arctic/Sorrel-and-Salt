@@ -4,69 +4,17 @@ import {
   type FieldKind,
   type FieldRef,
   type InputFieldMap,
-  type InputShapeFromFields,
-  type ObjectFieldsShape,
-  type ObjectRef,
   type SchemaTypes,
 } from '@pothos/core';
 import { InvalidCursor } from '../lib/errors';
-import {
-  type ConnectionArgs,
-  type Cursor,
-  type PageCount,
-  type PageEntry,
-  type PageRequest,
-  decodeCursor,
-  resolvePage,
-} from '../lib/pagination';
+import { decodeCursor, resolvePage } from '../lib/pagination';
+import type { ConnectionArgs, PageCount } from '../lib/types';
+import type { PagedConnectionOptions, Counted } from './types';
 
 // `t.pagedConnection`, added to every field builder the way the Relay plugin
 // adds `t.connection`: a method, so the parent's shape comes from the builder
 // rather than being inferred through it. Imported by `builder.ts` for that
 // side effect.
-
-export interface PagedConnectionOptions<
-  Types extends SchemaTypes,
-  ParentShape,
-  Node,
-  Args extends InputFieldMap,
-  Edge extends object,
-> {
-  type: ObjectRef<Types, Node>;
-  description?: string;
-  /** The field's own arguments, beside the four the connection adds. */
-  args?: Args;
-  /**
-   * One page from a keyset finder. It receives a decoded, clamped
-   * `PageRequest` and never the client's `first`/`after`, so it cannot skip
-   * the maximum or read a cursor as an offset.
-   */
-  resolve: (
-    parent: ParentShape,
-    args: InputShapeFromFields<Args>,
-    page: PageRequest,
-    context: Types['Context'],
-  ) => Promise<PageEntry<Node, Edge>[]>;
-  /** Fields of the edge beside `cursor` and `node`, read off what each entry carries. */
-  edgeFields?: ObjectFieldsShape<Types, { cursor: string; node: Node } & Edge>;
-  /**
-   * The list's size under the field's arguments, and how many of its rows
-   * come before `start` — the page's first row, none on an empty page.
-   * Emitted as `totalCount` and `countBefore`, and called once per
-   * connection, only when one of the two is selected.
-   */
-  count?: (
-    parent: ParentShape,
-    args: InputShapeFromFields<Args>,
-    start: Cursor | undefined,
-    context: Types['Context'],
-  ) => Promise<PageCount>;
-}
-
-/** What a counted connection's two fields read: one count, asked for on first use. */
-interface Counted {
-  count: () => Promise<PageCount>;
-}
 
 declare global {
   export namespace PothosSchemaTypes {

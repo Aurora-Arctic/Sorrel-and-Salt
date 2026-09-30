@@ -4,15 +4,18 @@ import { ingredientCategories } from '../../modules/ingredients/schema/ingredien
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { canonicalKeyOf, ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { Membership } from '@/modules/coven';
-import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/pagination';
-import { type Keyset, existsIn, pageBounds, selectFrom } from './select';
-import {
-  type IngredientScoped,
-  type Unscoped,
-  inCompendium,
-  notSoftDeleted,
-  scopedTo,
-} from './shapes';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
+import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
+import { existsIn, pageBounds, selectFrom } from './select';
+import type {
+  CompendiumScore,
+  IngredientFilter,
+  IngredientIdentity,
+  IngredientScoped,
+  Keyset,
+  SimilarityScore,
+  Unscoped,
+} from './types';
 
 /**
  * The rows of `ingredient_folk_names` or `ingredient_categories` belonging to
@@ -44,11 +47,6 @@ export function findManyOfIngredients<TTable extends PgTable & IngredientScoped 
       existsIn(ingredients, readableParent),
     ),
   );
-}
-
-/** What a possible duplicate carries onto its edge: its trigram similarity to the name. */
-export interface SimilarityScore {
-  score: number;
 }
 
 /**
@@ -103,21 +101,6 @@ export function findSimilarIngredients(
     ),
     keyset,
   );
-}
-
-/** What a list of ingredients is narrowed by. Each part is optional, and absent means no filter. */
-export interface IngredientFilter {
-  /** Word-similar (`<%`, at 0.5) to the label, the formal name or a live folk name, case- and accent-folded. */
-  query?: string;
-  /** Every one of these, not any: an entry must carry each id listed. */
-  categoryIds?: readonly string[];
-  /** The form, folded as `canonical_key` folds it. */
-  form?: string;
-}
-
-/** What a compendium entry carries onto its edge: its word similarity to the query, on a search. */
-export interface CompendiumScore {
-  score: number | null;
 }
 
 /**
@@ -177,13 +160,6 @@ export async function findOneIngredient(
     ),
   );
   return row;
-}
-
-/** An ingredient's identity as a write gives it: the three parts its `canonical_key` is built from. */
-export interface IngredientIdentity {
-  name: string;
-  canonicalName?: string | null;
-  form?: string | null;
 }
 
 /**

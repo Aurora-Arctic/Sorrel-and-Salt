@@ -1,8 +1,8 @@
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import SignInMethods from '@/components/SignInMethods';
-import type { LinkedAccount, ProviderId } from '@/lib/social-providers';
 import { GENERIC_LINK_ERROR, GENERIC_UNLINK_ERROR } from '@/lib/sign-in';
+import type { LinkedAccount, ProviderId } from '@/lib/types';
 
 // Mocked wholesale, as in SignInPanel's test: a link assigns
 // `window.location.href`, which jsdom cannot follow.

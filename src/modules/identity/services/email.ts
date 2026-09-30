@@ -1,26 +1,17 @@
 import 'server-only';
-import type { AuditSession } from '../../../db/audit';
 import { findOneById, findUserByEmail, withAudit } from '../../../db/repository';
-import { ValidationError, type ValidationIssue } from '../../../lib/errors';
+import { ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
-import { getMe, type UserRow } from './profile';
+import { getMe } from './profile';
+import type { AuditSession } from '../../../db/types';
+import type { ValidationIssue } from '../../../lib/types';
+import type { EmailVerificationSender, UserRow } from '../types';
 
 // The address an account is mailed at changes only at verification: asking
 // for a new one is a token and a mail, never a write to `users.email`, so an
 // established account never re-enters the provisional sweep
 // (claude-docs/auth.md, "The email page").
-
-/**
- * How what this service decides gets delivered. Built per request by the
- * GraphQL context, because it reaches Better Auth and a service may not.
- */
-export interface EmailVerificationSender {
-  /** Mails the row's own, still-unverified address its link again. */
-  resend(email: string): Promise<void>;
-  /** Mails `next` a link that, followed from the row's session, makes it the row's address. */
-  requestChange(current: string, next: string): Promise<void>;
-}
 
 // `.invalid` is reserved (RFC 2606): no mailbox can exist under it, so the
 // placeholder can neither be mailed nor match an invitation.

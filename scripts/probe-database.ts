@@ -18,6 +18,7 @@ import { readFileSync } from 'node:fs';
 import postgres from 'postgres';
 
 import { parseEnvFile, validateDatabaseUrl } from './assert-pulled-env.ts';
+import type { ProbeResult } from './types.ts';
 
 /**
  * What to do about each failure whose code alone would still mean reading a
@@ -112,14 +113,6 @@ export function describeConnectionError(error: unknown, url: string | undefined)
   if (code && probeHints[code]) parts.push(`\n  → ${probeHints[code]}`);
 
   return parts.join('\n  ');
-}
-
-export interface ProbeResult {
-  ok: boolean;
-  /** Present on success — which database actually answered. */
-  identity?: { database: string; user: string; version: string };
-  /** Present on failure — already scrubbed, safe to print. */
-  description?: string;
 }
 
 /**

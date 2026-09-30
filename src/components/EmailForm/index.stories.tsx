@@ -1,6 +1,7 @@
 import type { Story } from '@ladle/react';
 import { verifyErrorMessage } from '../../lib/account-email';
-import EmailForm, { type EmailFormProps } from '.';
+import EmailForm from '.';
+import type { EmailFormProps } from './types';
 
 // Render-only; behaviour is asserted in tests/components/EmailForm. The
 // component talks to the network only on submit, so nothing is mocked — a

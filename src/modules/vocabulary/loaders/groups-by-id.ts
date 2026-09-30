@@ -1,10 +1,6 @@
 import { defineLoader } from '../../../graphql/loaders/define-loader';
-import {
-  type CategoryGroupRow,
-  type IngredientFormGroupRow,
-  categoryGroupsOf,
-  formGroupsOf,
-} from '../services/groups';
+import { categoryGroupsOf, formGroupsOf } from '../services/groups';
+import type { CategoryGroupRow, IngredientFormGroupRow } from '../types';
 
 // Keyed by id and answered for anyone: the groups are public reference data,
 // so the request's session is taken and ignored, as the services take none.

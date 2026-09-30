@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { Message } from '../src/lib/mail';
 import { LIGHT_MEDIA } from '../src/emails/parts/layout';
+import type { Message } from '../src/lib/types';
 
 // Shows a mail as a client would: the HTML in an iframe, so neither the
 // workshop's styles nor its document reach it, and the plain-text part beneath.

@@ -1,5 +1,9 @@
-import type { AuditSession } from '../db/audit';
+import type { createAuthMiddleware } from 'better-auth/api';
+import type { AuditSession } from '../db/types';
 import type { users } from '../modules/identity/schema/users';
+
+// The session types. Apart from `types.ts`, which imports nothing, because they
+// read the `users` table and Better Auth.
 
 // The service-level session: who is acting. Not Better Auth's `sessions` row,
 // which is the browser's proof and lives behind `/api/auth`. Extends
@@ -19,3 +23,13 @@ export type UserRole = (typeof users.$inferSelect)['role'];
 export interface Session extends AuditSession {
   role: UserRole;
 }
+
+// `emailVerified` stays off the service-level session: only `requireSession`
+// reads it, to keep an unverified account on the email page.
+export interface SessionState {
+  session: Session | null;
+  emailVerified: boolean;
+}
+
+/** What a Better Auth hook handler is handed: the request, and the session once there is one. */
+export type HookContext = Parameters<Parameters<typeof createAuthMiddleware>[0]>[0];

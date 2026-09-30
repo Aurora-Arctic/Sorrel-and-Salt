@@ -6,15 +6,10 @@ import { auditColumns } from '@/modules/identity/schema/users';
 import { type SortPart, findPage, findPageInWorkspace, withAudit } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { InvalidCursor } from '@/lib/errors';
-import {
-  type ConnectionArgs,
-  type Page,
-  decodeCursor,
-  encodeCursor,
-  resolvePage,
-} from '@/lib/pagination';
+import { decodeCursor, encodeCursor, resolvePage } from '@/lib/pagination';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { A, D, asUser } from '../support/as-user';
+import type { ConnectionArgs, Page } from '@/lib/types';
 
 // CLAUDE.md rule 8, end to end below the transport: `resolvePage` drives the
 // repository's keyset finders exactly as a connection resolver will.

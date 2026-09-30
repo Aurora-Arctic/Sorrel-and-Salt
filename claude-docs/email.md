@@ -49,7 +49,8 @@ await send(await verifyEmailMessage({ to, url, providers }));
 - **Where things go.** A template is a top-level `src/emails/<name>.tsx` with
   a sibling `<name>.stories.tsx`, which `tests/guards/workshop-guards.test.ts`
   requires. The frame every mail shares is `src/emails/parts/layout.tsx`
-  (`EmailLayout`, `Paragraph`, `Action`). Not in `src/components/`: a mail is
+  (`EmailLayout`, `Paragraph`, `Action`). Their types are in `parts/types.ts`, and the
+  templates' in `src/emails/types.ts`. Not in `src/components/`: a mail is
   not a page component. Tests mirror the path: `theme.test.ts` in the `unit`
   project, `verify-email.test.tsx` in `dom`, since it is a `.tsx` (MB.97).
 - **Plain words.** A mail is read by anyone who signed in, often on a phone:
@@ -101,6 +102,9 @@ does it, so each piece has an email-safe stand-in.
   It allows each channel a step or two of rounding, because libvips takes a
   different SIMD path on x64 than on arm64 and the two round a few pixels
   apart, so an image built on either architecture passes on the other.
+  Node runs that script with its own type stripping, so whatever `theme.ts` or
+  `ornaments.ts` takes from `./types` must come in by `import type`, which it
+  erases.
 - **The text sits on the page, and the photographs run under it.** No card:
   the text is on the page colour, as on the site. The photographs are the
   backgrounds of two nested sections, top left and bottom right, and the

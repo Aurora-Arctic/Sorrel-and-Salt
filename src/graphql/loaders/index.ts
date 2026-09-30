@@ -2,7 +2,7 @@ import { membershipsByUser } from '@/modules/coven';
 import { categoriesByIngredient, folkNamesByIngredient } from '@/modules/ingredients';
 import { categoryGroupsById, ingredientFormGroupsById } from '@/modules/vocabulary';
 import type { Session } from '../../lib/session';
-import type { LoaderFactory } from './define-loader';
+import type { Built, LoaderFactory } from './types';
 
 // Every loader the context builds, by the name a resolver reads it as. Each
 // is added by the task that adds its schema, off its module's index
@@ -14,10 +14,6 @@ const LOADERS = {
   categoryGroupsById,
   ingredientFormGroupsById,
 } satisfies Record<string, LoaderFactory<never, unknown>>;
-
-type Built<F extends Record<string, LoaderFactory<never, unknown>>> = {
-  [Name in keyof F]: ReturnType<F[Name]>;
-};
 
 export type Loaders = Built<typeof LOADERS>;
 

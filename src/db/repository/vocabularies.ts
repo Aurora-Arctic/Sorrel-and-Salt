@@ -7,10 +7,11 @@ import {
   ingredientForms,
 } from '../../modules/vocabulary/schema/ingredient-forms';
 import type { Membership } from '@/modules/coven';
-import type { PageEntry, PageRequest } from '../../lib/pagination';
+import type { PageEntry, PageRequest } from '../../lib/types';
+import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, pageBounds, selectFrom } from './select';
-import { inCompendium, notSoftDeleted, scopedTo } from './shapes';
-import { type Claimant, claimantList, readSuggestionPage } from './suggestion-page';
+import { claimantList, readSuggestionPage } from './suggestion-page';
+import type { FormSuggestion, SuggestingVocabulary, VocabularySuggestion } from './types';
 
 /**
  * One page of the curated form vocabulary in `(name, id)` order, for
@@ -34,35 +35,17 @@ export function findIngredientFormValues(
   );
 }
 
-/** A vocabulary a member's autofill suggests from. */
-export type SuggestingVocabulary = typeof planets | typeof zodiacSigns | typeof ingredientForms;
-
 /**
  * The ingredient column each vocabulary suggests values for, keyed by table
- * name: a vocabulary added to the union above fails to compile until it names
- * its column, and a caller passes a table alone, so it cannot pair one with
- * the other's column.
+ * name: a vocabulary added to `SuggestingVocabulary` fails to compile until
+ * it names its column, and a caller passes a table alone, so it cannot pair
+ * one with the other's column.
  */
 const IN_USE_COLUMN = {
   planets: ingredients.planet,
   zodiac_signs: ingredients.zodiac,
   ingredient_forms: ingredients.form,
 } satisfies Record<SuggestingVocabulary['_']['name'], AnyPgColumn>;
-
-/** A curated row, or a value written on an ingredient that matches none. */
-export interface VocabularySuggestion {
-  value: string;
-  /** The curated row's; a value in use outside the vocabulary has none. */
-  description: string | null;
-  curated: boolean;
-}
-
-/** A form suggestion, which alone carries a group and who already claims it. */
-export interface FormSuggestion extends VocabularySuggestion {
-  /** The curated row's group, which tells two same-named forms apart; none in use. */
-  group: string | null;
-  claimants: Claimant[];
-}
 
 /**
  * One page of what a member's autofill offers for `vocabulary`'s column:

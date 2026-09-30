@@ -1,7 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
-import type { Message } from '@/lib/mail';
 import {
   LINK_LANDING,
   ORIGIN,
@@ -14,6 +13,7 @@ import {
   type Profile,
   type ProviderId,
 } from '../support/oauth';
+import type { Message } from '@/lib/types';
 
 // Story 1, through Better Auth's real endpoints: a second provider is added
 // from a signed-in session with /link-social, and from then on signs in by its

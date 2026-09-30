@@ -1,9 +1,10 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { findIngredientFormValues } from '@/db/repository';
-import { type ConnectionArgs, type Page, resolvePage } from '@/lib/pagination';
+import { resolvePage } from '@/lib/pagination';
 import type { ingredientForms } from '@/modules/vocabulary/schema/ingredient-forms';
 import { A } from '../../support/as-user';
+import type { ConnectionArgs, Page } from '@/lib/types';
 
 // The curated form vocabulary as `ingredientFormValues` pages it: every live
 // form whose group is live too, in (name, id) order — the same "curated"

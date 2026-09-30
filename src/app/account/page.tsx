@@ -7,16 +7,11 @@ import { linkErrorMessage } from '../../lib/sign-in';
 // resulting `configured` ids reach the client component.
 // oxlint-disable-next-line no-restricted-imports
 import { configuredProviders } from '../../lib/social-providers-config';
+import type { AccountPageProps } from './types';
 
 export const metadata: Metadata = {
   title: 'Sign-in methods — Sorrel & Salt',
 };
-
-interface AccountPageProps {
-  // A promise in Next 16 (node_modules/next/dist/docs/01-app/03-api-reference/
-  // 03-file-conventions/page.md) — must be awaited before use.
-  searchParams: Promise<{ error?: string | string[] }>;
-}
 
 // Where a second provider is added (claude-docs/auth.md, "Linking a second
 // provider"). A link lands back here, with `?error=` when it failed.

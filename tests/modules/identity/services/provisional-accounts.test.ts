@@ -2,7 +2,6 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
-import type { Message } from '@/lib/mail';
 import { signInErrorMessage } from '@/lib/sign-in';
 import {
   ORIGIN,
@@ -13,6 +12,7 @@ import {
   type Profile,
   type ProviderId,
 } from '../../../support/oauth';
+import type { Message } from '@/lib/types';
 
 // Story 58, through Better Auth's real endpoints: an unverified account lapses
 // one verification lifetime after its last mail, and the next OAuth callback

@@ -1,5 +1,4 @@
 import { eq, inArray, isNull } from 'drizzle-orm';
-// `./idempotent` (and through it `./bootstrap-admin`) first, and load-bearing — see minimal.ts.
 import { beginSeedTransaction, insertMissing, requireFrom } from './idempotent';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { spells } from '../../modules/grimoire/schema/spells';
@@ -13,19 +12,19 @@ import {
   identityOf,
   seedStandardContent,
 } from './standard';
-import type { SeedDatabase, SeedTransaction } from './index';
+import type {
+  SeedDatabase,
+  SeedLayerIngredient,
+  SeedSpell,
+  SeedTransaction,
+  SeedWorkspaceIngredient,
+} from './types';
 
 // The `demo` scenario: `standard` plus spells with ingredients and layer order,
 // written as a member would write them since screenshots are taken against it.
 // It adds W's own ingredients, so the jars mix both tiers, and one custom
 // one-off layer with no `ingredient_id` (claude-docs/db.md, "The demo
 // scenario"). Writes go through the handle `seed()` was given — see minimal.ts.
-
-/** W's own ingredients — the workspace tier, `workspace_id` set rather than null. */
-type SeedWorkspaceIngredient = Pick<
-  typeof ingredients.$inferInsert,
-  'name' | 'canonicalName' | 'nomenclature' | 'form' | 'description' | 'element'
->;
 
 /**
  * Rosemary the coven grows, beside the compendium's entry for the same species
@@ -65,36 +64,6 @@ export const WORKSPACE_W_INGREDIENTS: SeedWorkspaceIngredient[] = [
   HEARTH_ASH,
   HOUSE_CHAMOMILE,
 ];
-
-/** What a layer points at: an ingredient in either tier, or a custom row carrying its own name and form. */
-type SeedLayerIngredient =
-  | {
-      tier: 'compendium' | 'workspace';
-      entry: { name: string; canonicalName?: string | null; form?: string | null };
-    }
-  | { tier: 'custom'; name: string; form: string };
-
-/** One layer. `layerOrder` is the position in the array below, so two layers cannot share a depth. */
-type SeedLayer = Pick<typeof spellIngredients.$inferInsert, 'quantity' | 'unit' | 'note'> & {
-  ingredient: SeedLayerIngredient;
-};
-
-type SeedSpell = Pick<
-  typeof spells.$inferInsert,
-  | 'title'
-  | 'intent'
-  | 'jarSize'
-  | 'sealWaxColor'
-  | 'moonPhase'
-  | 'dayOfWeek'
-  | 'instructions'
-  | 'status'
-> & {
-  id: string;
-  /** §6 categories by name — what the spell *intends*, never what its contents imply (§9). */
-  categories: string[];
-  layers: SeedLayer[];
-};
 
 /**
  * A compendium entry `standard` seeds, looked up at module load so a layer

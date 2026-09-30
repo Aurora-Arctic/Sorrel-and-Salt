@@ -1,5 +1,7 @@
 # Split `src/db/repository.ts` into `src/db/repository/` (MB.87)
 
+> `shapes.ts` below became `types.ts` and `predicates.ts` in MB.108 ([`mb.108-types-in-type-files.md`](mb.108-types-in-type-files.md)).
+
 ## Context
 
 `src/db/repository.ts` is 530 lines, and M3.10 is adding three more finders to it. It mixes six concerns in one file: the table-shape types, the audited write path, the one select builder and its keyset paging, the generic finders, the spell visibility finders, the two reads that take no proof, and the provisional-account delete. Its test, `tests/db/repository.test.ts`, is 819 lines. The aim is a `src/db/repository/` folder with one file per concern and a test tree that mirrors it. Callers don't change, because `@/db/repository` and `../../../db/repository` resolve to `index.ts` under `moduleResolution: bundler`.
