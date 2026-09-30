@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 import { fromRoot } from '../support/paths';
+import type { CopyInstruction } from './types';
 
 // The CI images carry no source layer: both Dockerfiles copy the manifests,
 // run `npm ci`, and stop, so the checkout is the only source a job sees
@@ -17,12 +18,6 @@ const ALLOWED_SOURCES: Record<string, readonly string[]> = {
   // of that stage works without the bind mount that shadows it at runtime.
   'Docker/Dockerfile.e2e': ['package.json', 'package-lock.json', 'Docker/playwright-entrypoint.sh'],
 };
-
-interface CopyInstruction {
-  /** The instruction as written, continuations joined, for the failure message. */
-  text: string;
-  sources: string[];
-}
 
 /**
  * Every `COPY`/`ADD` in a Dockerfile, sources split out: continuations joined

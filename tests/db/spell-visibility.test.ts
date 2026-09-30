@@ -8,6 +8,7 @@ import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { assertMembership } from '@/modules/coven';
 import { A, B, C, D, asUser } from '../support/as-user';
 import { makeSpell } from '../support/fixtures';
+import type { SpellVisibility } from '@/modules/grimoire';
 
 // DESIGN.md §5: a `workspace` spell is readable by every member, viewers
 // included; a `private` one by its author alone, owners not excepted. The
@@ -32,8 +33,6 @@ beforeEach(async () => {
   await sql`truncate spells cascade`;
 });
 
-type Visibility = 'private' | 'workspace';
-
 /**
  * A spell with one layer and one assigned category, written the way a service
  * writes one: the author's own session stamps `created_by`, which is what
@@ -41,7 +40,7 @@ type Visibility = 'private' | 'workspace';
  */
 async function cast(
   author: typeof A,
-  visibility: Visibility,
+  visibility: SpellVisibility,
   workspaceId: string = WORKSPACE_W_ID,
 ): Promise<string> {
   const session = asUser(author);
@@ -156,7 +155,7 @@ describe('findOneSpell', () => {
   });
 
   it('refuses another coven’s spell by direct id at either visibility', async () => {
-    for (const visibility of ['private', 'workspace'] as Visibility[]) {
+    for (const visibility of ['private', 'workspace'] as SpellVisibility[]) {
       const spellId = await cast(D, visibility, WORKSPACE_X_ID);
 
       expect(await rowExists(spellId)).toBe(true);

@@ -2,12 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { compileString } from 'sass';
 import { EMAIL_THEMES } from '@/emails/theme';
 import { fromRoot } from '../support/paths';
+import type { Theme } from './types';
 
 // A mail cannot read the site's CSS custom properties, so src/emails/theme.ts
 // carries the hexes by hand. This compiles the site's own theme mixins and
 // fails when the two disagree, so a palette change reaches the mail or fails CI.
-
-type Theme = keyof typeof EMAIL_THEMES;
 
 function compiledTokens(theme: Theme): Record<string, string> {
   const { css } = compileString(`@use 'mixins' as m;\n.t { @include m.theme-${theme}; }`, {

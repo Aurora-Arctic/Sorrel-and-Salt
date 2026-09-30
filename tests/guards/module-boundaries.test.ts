@@ -3,6 +3,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
+import type { ImportEdge } from './types';
 
 // The module boundary, whole: a module under `src/modules/` is reached only
 // through its `index.ts`, its `schema/` or its `validation/` files, a module
@@ -147,19 +148,14 @@ const moduleOf = (path: string) => /^src\/modules\/([^/]+)(?:\/|$)/.exec(path)?.
 const isPublic = (path: string) =>
   /^src\/modules\/[^/]+\/(?:index|(?:schema|validation)\/[^/]+)$/.test(path);
 
-interface Edge {
-  from: string;
-  to: string;
-}
-
-const EDGES: Edge[] = sourceFiles().flatMap((from) =>
+const EDGES: ImportEdge[] = sourceFiles().flatMap((from) =>
   specifiers(readFileSync(join(REPO_ROOT, from), 'utf8'))
     .map((specifier) => resolve(from, specifier))
     .filter((to): to is string => to !== null && to.startsWith('src/'))
     .map((to) => ({ from, to })),
 );
 
-const describeEdge = ({ from, to }: Edge) => `${from} → ${to}`;
+const describeEdge = ({ from, to }: ImportEdge) => `${from} → ${to}`;
 
 describe('the module boundary (claude-docs/modules.md)', () => {
   it('names every directory under src/modules, and no other', () => {

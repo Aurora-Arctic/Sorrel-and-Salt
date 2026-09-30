@@ -6,6 +6,7 @@ import { schema } from '@/graphql/schema';
 import type { Session } from '@/lib/session';
 import { B, asUser } from '../../../support/as-user';
 import { noSender } from '../../../support/email-verification';
+import type { FormValueConnection } from './types';
 
 // `ingredientFormValues`: the curated form vocabulary as `IngredientFormValue`
 // — named apart from the `IngredientForm` component — a page at a time, each
@@ -32,23 +33,10 @@ beforeEach(() => {
   repository.findWorkspaceRole.mockClear();
 });
 
-interface Node {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  group: { id: string; name: string; slug: string; description: string };
-}
-
-interface Connection {
-  edges: { cursor: string; node: Node }[];
-  pageInfo: { hasNextPage: boolean; endCursor: string | null };
-}
-
 function run(
   session: Session | null,
   variables: Record<string, unknown> = {},
-): Promise<ExecutionResult<{ ingredientFormValues: Connection }>> {
+): Promise<ExecutionResult<{ ingredientFormValues: FormValueConnection }>> {
   return graphql({
     schema,
     source: `query ($first: Int, $after: String) {
@@ -59,7 +47,7 @@ function run(
     }`,
     variableValues: variables,
     contextValue: { session, loaders: createLoaders(session), emailVerification: noSender },
-  }) as Promise<ExecutionResult<{ ingredientFormValues: Connection }>>;
+  }) as Promise<ExecutionResult<{ ingredientFormValues: FormValueConnection }>>;
 }
 
 /** The curated forms in the finder's order, from the database's own collation. */
@@ -81,7 +69,7 @@ describe('ingredientFormValues', () => {
     const result = await run(null);
 
     expect(result.errors).toBeUndefined();
-    const page = result.data?.ingredientFormValues as Connection;
+    const page = result.data?.ingredientFormValues as FormValueConnection;
     expect(page.edges.map((edge) => edge.node.id)).toEqual(expected.slice(0, 25));
     expect(page.pageInfo.hasNextPage).toBe(true);
     for (const { node } of page.edges) {
@@ -93,11 +81,11 @@ describe('ingredientFormValues', () => {
     const expected = await expectedOrder();
 
     const first = await run(null, { first: 25 });
-    const page = first.data?.ingredientFormValues as Connection;
+    const page = first.data?.ingredientFormValues as FormValueConnection;
     const rest = await run(null, { first: 1000, after: page.pageInfo.endCursor });
 
     expect(rest.errors).toBeUndefined();
-    const tail = rest.data?.ingredientFormValues as Connection;
+    const tail = rest.data?.ingredientFormValues as FormValueConnection;
     expect([...page.edges, ...tail.edges].map((edge) => edge.node.id)).toEqual(expected);
     expect(tail.pageInfo.hasNextPage).toBe(false);
   });

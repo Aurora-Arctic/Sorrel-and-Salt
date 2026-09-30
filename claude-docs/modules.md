@@ -258,17 +258,21 @@ file, `import type` included, carries that file's own imports along:
   its story imports too. An app route's are in a `types.ts` in the route's
   directory, which Next never serves, because only a `page` or `route` file
   makes a segment public.
+- **A test's types** are in the `types.ts` of its own directory, and the
+  harness's in `tests/support/`'s. A shape two tests share is declared once
+  there, and one that repeats a `src/` type imports that type instead, so a
+  test cannot drift from the shape it tests.
 - **A script's types** are in `scripts/types.ts`, imported as
   `import type { … } from './types.ts'`. Node's own type stripping runs those
   scripts, and it needs the extension and erases only a type-only import.
 
-`tests/guards/types-in-type-files.test.ts` enforces this over `src/` and
-`scripts/`. It reads every column-0 `type` and `interface` in a file that is
-not type-only, and fails any that is not one of the three kinds above. It
-recognises the first two from the declaration itself: a `typeof` naming a
-value the same file declares, or a key naming a `declare const …: unique
-symbol` in the same file. The third is a pinned list, so a new exception is a
-change to the guard rather than a quiet addition.
+`tests/guards/types-in-type-files.test.ts` enforces this over `src/`, `scripts/`
+and `tests/` (MB.109). It reads every column-0 `type` and `interface` in a file
+that is not type-only, and fails any that is not one of the three kinds above.
+It recognises the first two from the declaration itself: a `typeof` naming a
+value the same file declares, or a key naming a `declare const …: unique symbol`
+in the same file. The third is a pinned list, so a new exception is a change to
+the guard rather than a quiet addition.
 
 ## Tests
 

@@ -1,16 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { fromRoot } from './paths';
+import type { Story } from './types';
 
 // The v1 user stories, parsed out of DESIGN.md §10 rather than copied: a second
 // list here would drift without a test failing. stories.test.ts pins what the
 // parse must find.
-
-export interface Story {
-  /** The story's number in §10. 35–46 are v2 and never appear. */
-  id: number;
-  /** The story's wording in §10, verbatim. */
-  title: string;
-}
 
 const SECTION_HEADING = /^## 10\. User stories\s*$/m;
 const NEXT_SECTION = /^## \d+\./m;

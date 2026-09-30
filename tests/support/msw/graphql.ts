@@ -8,8 +8,7 @@ import {
 import { maskError } from '@/graphql/errors';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import { server } from './server';
-import type { ValidationIssue } from '@/lib/types';
-import type { ErrorCode } from '@/graphql/types';
+import type { MockedError } from './types';
 
 // Scoped to /api/graphql. No base handlers: an operation nothing has mocked
 // falls through to setup-msw.ts's `onUnhandledRequest: 'error'`.
@@ -35,14 +34,6 @@ export function mockGraphQLMutation<
       HttpResponse.json({ data: resolveData(variables) }),
     ),
   );
-}
-
-export interface MockedError {
-  code: ErrorCode;
-  /** VALIDATION only; each lands beside the input field its path names. */
-  fieldErrors?: ValidationIssue[];
-  /** The service's message; the thrown type's default when omitted. */
-  message?: string;
 }
 
 function thrownFor({ code, fieldErrors = [], message }: MockedError): Error {

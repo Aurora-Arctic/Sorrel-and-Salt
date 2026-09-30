@@ -11,10 +11,10 @@ import {
   landingOf,
   signIn as signInThrough,
   stubProviderCredentials,
-  type Profile,
-  type ProviderId,
 } from '../support/oauth';
-import type { Message } from '@/lib/types';
+import type { Message, ProviderId } from '@/lib/types';
+import type { Profile } from '../support/types';
+import type { UserRow } from './types';
 
 // Story 59, through Better Auth's real endpoints: an address becomes the
 // account's when the mailed change link is followed from a session holding
@@ -69,16 +69,6 @@ afterEach(() => {
 
 const signIn = (provider: ProviderId, profile: Profile) =>
   signInThrough(auth, server, provider, profile);
-
-interface UserRow {
-  id: string;
-  email: string;
-  email_verified: boolean;
-  updated_by: string;
-  created_at: Date;
-  updated_at: Date;
-  verification_sent_at: Date | null;
-}
 
 async function userRow(email: string): Promise<UserRow | undefined> {
   const [row] = await sql`

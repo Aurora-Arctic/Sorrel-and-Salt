@@ -1,5 +1,6 @@
 import type postgres from 'postgres';
-import { type IngredientFixture, ingredientColumns } from '../fixtures/ingredient';
+import { ingredientColumns } from '../fixtures/ingredient';
+import type { IngredientFixture } from '../fixtures/types';
 
 // The one way a test seeds an ingredient it is not testing the writing of.
 // Through the raw client rather than `withAudit`: setup must not depend on the

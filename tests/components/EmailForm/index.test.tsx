@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import EmailForm from '@/components/EmailForm';
+import type { SetEmailMutation, SetEmailMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
@@ -10,8 +11,6 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 // /api/graphql answers (tests/support/msw/graphql.ts), so what the component
 // reads back is the route's own error mapping, not a hand-written body
 // (claude-docs/components/email-form.md).
-
-type SetEmailVariables = { email: string };
 
 function renderForm(ui: ReactNode) {
   return render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
@@ -22,14 +21,11 @@ const submit = () => screen.getByRole('button', { name: 'Send Confirmation' });
 
 /** Answers `SetEmail` with the row as it is, recording the variables it was sent. */
 function acceptSetEmail() {
-  const calls: SetEmailVariables[] = [];
-  mockGraphQLMutation<{ setEmail: { id: string; email: string } }, SetEmailVariables>(
-    'SetEmail',
-    (variables) => {
-      calls.push(variables);
-      return { setEmail: { id: 'u1', email: 'old@example.test' } };
-    },
-  );
+  const calls: SetEmailMutationVariables[] = [];
+  mockGraphQLMutation<SetEmailMutation, SetEmailMutationVariables>('SetEmail', (variables) => {
+    calls.push(variables);
+    return { setEmail: { id: 'u1', email: 'old@example.test' } };
+  });
   return calls;
 }
 

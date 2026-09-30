@@ -7,6 +7,7 @@ import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { PLANETS, ZODIAC_SIGNS, seedAstrology } from '@/db/seed/astrology';
 import { slugify } from '@/lib/slugify';
+import type { VocabularyRow } from './types';
 
 // §5's planet and zodiac vocabularies, asserted against §5's own table rather
 // than a copy, against the real tables emptied first — claude-docs/db.md,
@@ -44,16 +45,6 @@ const VOCABULARIES = [
 ] as const;
 
 // --- database ---------------------------------------------------------------
-
-interface VocabularyRow {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  created_by: string;
-  updated_by: string;
-  deleted_at: Date | null;
-}
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;

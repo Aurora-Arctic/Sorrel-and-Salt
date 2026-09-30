@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildChecklist, formatChecklist } from './story-checklist';
-import type { ReportedModule, SuiteState } from './story-checklist';
 import { V1_STORIES } from './stories';
+import type { ReportedModule, SuiteState } from './types';
 
 // The inputs are the narrow shape the builder reads off Vitest's TestModule,
 // so the cases are plain objects rather than a run. Counts follow §10 rather

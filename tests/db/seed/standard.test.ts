@@ -15,6 +15,7 @@ import {
   seedStandard,
 } from '@/db/seed/standard';
 import { seed } from '@/db/seed/index';
+import type { CompendiumEntryRow, MemberRow, UserRow } from './types';
 
 // The `standard` scenario against the real schema, every table emptied first:
 // membership is two real foreign keys and the compendium's identity a
@@ -23,37 +24,6 @@ import { seed } from '@/db/seed/index';
 // claude-docs/db.md, "The standard scenario".
 
 const PROBE = 'standard_probe_acting_user';
-
-interface UserRow {
-  id: string;
-  name: string;
-  email: string;
-  role: 'user' | 'admin';
-  can_create_workspace: boolean;
-  created_by: string;
-  updated_by: string;
-  deleted_at: Date | null;
-}
-
-interface MemberRow {
-  workspace_id: string;
-  user_id: string;
-  role: 'viewer' | 'member' | 'owner';
-  created_by: string;
-}
-
-interface IngredientRow {
-  id: string;
-  workspace_id: string | null;
-  name: string;
-  canonical_name: string | null;
-  nomenclature: string;
-  form: string | null;
-  planet: string | null;
-  canonical_key: string;
-  slug: string;
-  created_by: string;
-}
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
@@ -66,8 +36,8 @@ async function allMembers(): Promise<MemberRow[]> {
   return sql<MemberRow[]>`select * from workspace_members order by workspace_id, user_id`;
 }
 
-async function compendium(): Promise<IngredientRow[]> {
-  return sql<IngredientRow[]>`
+async function compendium(): Promise<CompendiumEntryRow[]> {
+  return sql<CompendiumEntryRow[]>`
     select * from ingredients where workspace_id is null order by name, canonical_name
   `;
 }

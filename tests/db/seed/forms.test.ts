@@ -7,6 +7,7 @@ import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { FORM_GROUPS, FORMS, seedForms } from '@/db/seed/forms';
 import { slugify } from '@/lib/slugify';
+import type { DesignFormGroup, FormGroupRow, FormRow } from './types';
 
 // §5's six form groups and every form under them, asserted against §5's own
 // table rather than a copy, against the real tables emptied first —
@@ -48,13 +49,8 @@ function listBetween(from: string, to: string): string[] {
   return commaList(DESIGN_SECTION.slice(start + from.length, end));
 }
 
-interface DesignGroup {
-  name: string;
-  forms: string[];
-}
-
 /** §5's table: `| Botanical | herb, root, … |`, in the order §5 writes it. */
-const DESIGN_GROUPS: DesignGroup[] = DESIGN_SECTION.split('\n')
+const DESIGN_GROUPS: DesignFormGroup[] = DESIGN_SECTION.split('\n')
   .filter((line) => line.startsWith('|'))
   .map((line) => line.split('|').map((cell) => cell.trim()))
   .filter((cells) => cells[1] !== 'Group' && !cells[1].startsWith('---'))
@@ -70,32 +66,11 @@ const DESIGN_ADDITIONS = listBetween('whole-organism cases (', ').');
 
 // --- database ---------------------------------------------------------------
 
-interface GroupRow {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  created_by: string;
-  updated_by: string;
-  deleted_at: Date | null;
-}
-
-interface FormRow {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  group_id: string;
-  created_by: string;
-  updated_by: string;
-  deleted_at: Date | null;
-}
-
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
 
-async function allGroups(): Promise<GroupRow[]> {
-  return sql<GroupRow[]>`select * from ingredient_form_groups order by slug`;
+async function allGroups(): Promise<FormGroupRow[]> {
+  return sql<FormGroupRow[]>`select * from ingredient_form_groups order by slug`;
 }
 
 async function allForms(): Promise<FormRow[]> {

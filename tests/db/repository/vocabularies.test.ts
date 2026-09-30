@@ -2,15 +2,13 @@ import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { findIngredientFormValues } from '@/db/repository';
 import { resolvePage } from '@/lib/pagination';
-import type { ingredientForms } from '@/modules/vocabulary/schema/ingredient-forms';
 import { A } from '../../support/as-user';
 import type { ConnectionArgs, Page } from '@/lib/types';
+import type { IngredientFormValueRow } from '@/modules/vocabulary';
 
 // The curated form vocabulary as `ingredientFormValues` pages it: every live
 // form whose group is live too, in (name, id) order — the same "curated"
 // `findVocabularySuggestions` means (claude-docs/db.md, "The compendium read").
-
-type Row = typeof ingredientForms.$inferSelect;
 
 let sql: ReturnType<typeof postgres>;
 
@@ -24,7 +22,7 @@ afterEach(async () => {
   await sql`update ingredient_form_groups set deleted_at = null, deleted_by = null`;
 });
 
-function pageOf(args: ConnectionArgs = {}): Promise<Page<Row>> {
+function pageOf(args: ConnectionArgs = {}): Promise<Page<IngredientFormValueRow>> {
   return resolvePage(args, (request) => findIngredientFormValues(request));
 }
 
@@ -34,7 +32,7 @@ async function walk(first?: number): Promise<{ ids: string[]; sizes: number[] }>
   const sizes: number[] = [];
   let after: string | null = null;
   for (;;) {
-    const page: Page<Row> = await pageOf({ first, after });
+    const page: Page<IngredientFormValueRow> = await pageOf({ first, after });
     ids.push(...page.edges.map((edge) => edge.node.id));
     sizes.push(page.edges.length);
     if (!page.pageInfo.hasNextPage) return { ids, sizes };

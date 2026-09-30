@@ -10,10 +10,9 @@ import {
   link as linkThrough,
   signIn as signInThrough,
   stubProviderCredentials,
-  type Profile,
-  type ProviderId,
 } from '../support/oauth';
-import type { Message } from '@/lib/types';
+import type { Message, ProviderId } from '@/lib/types';
+import type { Profile } from '../support/types';
 
 // Story 1, through Better Auth's real endpoints: a second provider is added
 // from a signed-in session with /link-social, and from then on signs in by its

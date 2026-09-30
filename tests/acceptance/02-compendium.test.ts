@@ -13,6 +13,7 @@ import { useTestDatabase } from '../support/db/database';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { noSender } from '../support/email-verification';
 import { makeIngredient } from '../support/fixtures';
+import type { Entry } from './types';
 
 // Stories 15 and 14 against the services and queries that answer them, each
 // written with its task (M8.2, M8.5): M8.1's scaffold for story 16 runs later
@@ -100,15 +101,6 @@ function query<T>(
     variableValues: variables,
     contextValue: { session, loaders: createLoaders(session), emailVerification: noSender },
   }) as Promise<ExecutionResult<T>>;
-}
-
-interface Entry {
-  id: string;
-  name: string;
-  canonicalName: string | null;
-  nomenclature: string;
-  folkNames: string[];
-  categories: { name: string; group: { name: string } }[];
 }
 
 const LIST = `query ($query: String, $categoryIds: [ID!], $form: String) {

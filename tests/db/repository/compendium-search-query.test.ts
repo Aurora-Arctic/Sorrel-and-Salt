@@ -4,17 +4,13 @@ import { findCompendiumCount, findCompendiumPage } from '@/db/repository';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import { useTestDatabase } from '../../support/db/database';
 import type { PageRequest } from '@/lib/types';
+import type { Logged } from '../../support/db/types';
 
 // The statements a compendium search sends, read off the connection: `<%`
 // means "word-similar by pg_trgm.word_similarity_threshold", whose default is
 // 0.6, so the search's 0.5 has to be set in the read's own transaction — and
 // only when there is a `query` to match (claude-docs/db.md, "The compendium read").
 // And the plan the ranked search runs, read off the same log.
-
-interface Logged {
-  query: string;
-  params: unknown[];
-}
 
 const logged = vi.hoisted(() => [] as Logged[]);
 

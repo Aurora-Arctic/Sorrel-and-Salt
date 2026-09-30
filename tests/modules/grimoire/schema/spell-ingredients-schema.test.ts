@@ -8,6 +8,7 @@ import { inventoryUnit } from '@/modules/ingredients/schema/inventory-items';
 import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
 import { spells } from '@/modules/grimoire/schema/spells';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
+import type { LayerRow } from './types';
 
 // §5's columns; `name` and `form` are a custom one-off layer's, in place of an
 // `ingredient_id` (MB.40).
@@ -147,17 +148,6 @@ let ROSEMARY: string;
 let STOCK_ONLY: string;
 let hearthGuard: string;
 let otherSpell: string;
-
-interface LayerRow {
-  spellId?: string;
-  ingredientId?: string | null;
-  name?: string | null;
-  form?: string | null;
-  quantity?: string | null;
-  unit?: string | null;
-  layerOrder?: number;
-  note?: string | null;
-}
 
 async function layer({
   spellId = hearthGuard,

@@ -4,7 +4,6 @@ import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import {
   type IngredientFixture,
-  type Overrides,
   ingredientColumns,
   makeIngredient,
 } from '../../../support/fixtures';
@@ -15,6 +14,7 @@ import {
 } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import { workspaces } from '@/modules/coven/schema/workspaces';
+import type { IngredientOverrides } from './types';
 
 // DESIGN.md §5's seven values, in the order the design doc's table lists them.
 const NOMENCLATURE_VALUES = [
@@ -133,8 +133,6 @@ const WORKSPACE = WORKSPACE_W_ID;
 // The shared factory plus this file's author. `makeIngredient` re-derives
 // `canonicalName` when `nomenclature` alone is overridden, so only a test
 // naming both writes a row the biconditional CHECK rejects.
-type IngredientOverrides = Overrides<IngredientFixture>;
-
 function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
   return {
     ...ingredientColumns(makeIngredient(overrides)),

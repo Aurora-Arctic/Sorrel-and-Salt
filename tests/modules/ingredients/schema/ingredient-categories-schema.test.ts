@@ -8,6 +8,7 @@ import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-ca
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { withAudit } from '@/db/repository';
 import { FIXTURE_USERS } from '@/db/seed/standard';
+import type { IngredientCategoryPair } from './types';
 
 const PRIMARY_KEY = 'ingredient_categories_ingredient_id_category_id_pk';
 const REVERSE_INDEX = 'ingredient_categories_category_id_idx';
@@ -103,9 +104,7 @@ async function assign(ingredientId: string, categoryId: string, author = AUTHOR)
   `;
 }
 
-type Pair = { ingredientId: string; categoryId: string };
-
-async function pairs(): Promise<Pair[]> {
+async function pairs(): Promise<IngredientCategoryPair[]> {
   const rows = await sql`
     select ingredient_id, category_id from ingredient_categories
     order by ingredient_id, category_id
@@ -118,7 +117,7 @@ async function pairs(): Promise<Pair[]> {
 
 // Sorted as `pairs()` reads: the seed generates the ids, and a uuid orders
 // bytewise, which for its lowercase text is plain string comparison.
-function inPairOrder(expected: Pair[]): Pair[] {
+function inPairOrder(expected: IngredientCategoryPair[]): IngredientCategoryPair[] {
   const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
   return [...expected].sort(
     (a, b) => compare(a.ingredientId, b.ingredientId) || compare(a.categoryId, b.categoryId),

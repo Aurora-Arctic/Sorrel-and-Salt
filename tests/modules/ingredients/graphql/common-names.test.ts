@@ -9,6 +9,7 @@ import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
+import type { CommonNameConnection } from './types';
 
 // The transport half of M4.7a's common-name lookup: one bucket, each name
 // with its claimants, refused signed out before the service is reached and by
@@ -26,15 +27,10 @@ beforeEach(async () => {
   await insertIngredient(sql, makeIngredient({ folkNames: ['Fixture Bane'] }), A.id);
 });
 
-interface Connection {
-  edges: { cursor: string; node: Record<string, unknown> }[];
-  pageInfo: { hasNextPage: boolean; endCursor: string | null };
-}
-
 function run(
   session: Session | null,
   variables: Record<string, unknown>,
-): Promise<ExecutionResult<{ commonNameSuggestions: Connection }>> {
+): Promise<ExecutionResult<{ commonNameSuggestions: CommonNameConnection }>> {
   return graphql({
     schema,
     source: `query ($workspaceId: ID!, $query: String, $first: Int, $after: String) {
@@ -45,7 +41,7 @@ function run(
     }`,
     variableValues: { workspaceId: WORKSPACE_W_ID, ...variables },
     contextValue: { session, loaders: createLoaders(session) },
-  }) as Promise<ExecutionResult<{ commonNameSuggestions: Connection }>>;
+  }) as Promise<ExecutionResult<{ commonNameSuggestions: CommonNameConnection }>>;
 }
 
 describe('commonNameSuggestions', () => {
@@ -62,7 +58,7 @@ describe('commonNameSuggestions', () => {
 
   it('pages by cursor', async () => {
     const first = await run(asUser(B), { first: 1 });
-    const page = first.data?.commonNameSuggestions as Connection;
+    const page = first.data?.commonNameSuggestions as CommonNameConnection;
     expect(page.pageInfo.hasNextPage).toBe(true);
 
     const next = await run(asUser(B), { first: 100, after: page.pageInfo.endCursor });

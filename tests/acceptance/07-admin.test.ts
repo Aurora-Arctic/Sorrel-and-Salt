@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
-import type { Session } from '@/lib/session';
 import { slugify } from '@/lib/slugify';
 import {
   createCompendiumEntry,
@@ -15,6 +14,7 @@ import { A, B, C, E, asUser } from '../support/as-user';
 import { useTestDatabase } from '../support/db/database';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { type IngredientFixture, makeIngredient } from '../support/fixtures';
+import type { CategoryWrites, Stamps } from './types';
 
 // Stories 17 and 18 against the compendium's writes (M5.2) and the category
 // vocabulary's (M5.6). The second do not exist yet, so they are looked up on
@@ -28,18 +28,6 @@ let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
 });
-
-/** What a write answers: the row, of which these stories read the id. */
-interface Row {
-  id: string;
-}
-
-/** The global category vocabulary's writes — admin only, every one. */
-interface CategoryWrites {
-  createCategory(session: Session, input: CategoryInput): Promise<Row>;
-  updateCategory(session: Session, id: string, input: CategoryInput): Promise<Row>;
-  deleteCategory(session: Session, id: string): Promise<void>;
-}
 
 /**
  * `module` as `T`, once each of `names` is a function on it — failing with the
@@ -63,14 +51,6 @@ function surface<T extends object>(
 function inputOf(fixture: IngredientFixture): CompendiumIngredientInput {
   const { workspaceId: _tier, categories: _categories, ...input } = fixture;
   return input;
-}
-
-interface Stamps {
-  created_by: string;
-  updated_by: string;
-  updated_at: Date;
-  deleted_at: Date | null;
-  deleted_by: string | null;
 }
 
 async function entryRow(id: string) {

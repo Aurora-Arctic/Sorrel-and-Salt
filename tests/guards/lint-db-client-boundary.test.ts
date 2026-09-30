@@ -3,6 +3,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
+import type { Diagnostic } from './types';
 
 // Both `no-restricted-imports` boundaries in `.oxlintrc.json` actually fire:
 // only `src/db/repository/` may import the database client (CLAUDE.md rule
@@ -70,11 +71,6 @@ const CLIENT_EXEMPT = [
   'scripts/db-seed.ts',
   'tests/db/test-database-isolation.test.ts',
 ];
-
-interface Diagnostic {
-  code: string;
-  filename: string;
-}
 
 /** Probe files, keyed by the repo-relative path each is written to. */
 const probes = new Map<string, string>();

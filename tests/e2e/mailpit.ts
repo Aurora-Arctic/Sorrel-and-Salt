@@ -1,18 +1,8 @@
+import type { Detail, MailpitMessage, Summary } from './types';
+
 // Reads what the app mailed from Mailpit's REST API, which is how a spec
 // follows a mailed link. MAILPIT_URL is set by compose's `e2e` and
 // `devcontainer` services and by playwright.yml.
-
-export type MailpitMessage = {
-  from: string;
-  to: string[];
-  subject: string;
-  text: string;
-  html: string;
-};
-
-type Address = { Address: string };
-type Summary = { ID: string };
-type Detail = { From: Address; To: Address[]; Subject: string; Text: string; HTML: string };
 
 function mailpitUrl(path: string): URL {
   const base = process.env.MAILPIT_URL;

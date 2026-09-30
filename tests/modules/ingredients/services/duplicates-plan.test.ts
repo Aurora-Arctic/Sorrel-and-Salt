@@ -3,6 +3,7 @@ import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { findPossibleDuplicates } from '@/modules/ingredients';
 import { A, B, asUser } from '../../../support/as-user';
+import type { Logged } from '../../../support/db/types';
 
 // The query findPossibleDuplicates actually sends, planned. Its results look
 // the same whether or not the trigram indexes are reachable, so the plan is
@@ -10,11 +11,6 @@ import { A, B, asUser } from '../../../support/as-user';
 //
 // The connection is rebuilt with a logger rather than the query copied here:
 // a hand-written copy would prove a plan for SQL the service may not send.
-
-interface Logged {
-  query: string;
-  params: unknown[];
-}
 
 const logged = vi.hoisted(() => [] as Logged[]);
 

@@ -3,17 +3,13 @@ import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { suggestCommonNames } from '@/modules/ingredients';
 import { A, B, asUser } from '../../../support/as-user';
+import type { Logged } from '../../../support/db/types';
 
 // The statement suggestCommonNames actually sends, read and planned, as
 // duplicates-plan.test.ts reads findPossibleDuplicates': a `similarity() > n`
 // written by mistake returns the same rows, so only the SQL and the plan tell
 // them apart. Unlike the vocabularies, both tables here grow with use, so the
 // plan is asserted (claude-docs/db.md, "The member's autofill").
-
-interface Logged {
-  query: string;
-  params: unknown[];
-}
 
 const logged = vi.hoisted(() => [] as Logged[]);
 

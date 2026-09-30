@@ -1,6 +1,6 @@
 import type { Session } from '@/lib/session';
-import type { users } from '@/modules/identity/schema/users';
 import { FIXTURE_USERS } from '@/db/seed/standard';
+import type { SessionUser } from './types';
 
 // The letters are bindings re-exported from the seed, not redeclared: a second
 // copy of the ids would drift from the database without a test failing.
@@ -12,9 +12,6 @@ import { FIXTURE_USERS } from '@/db/seed/standard';
  * session; the workspace roles are `workspace_members` rows.
  */
 export const { A, B, C, D, E } = FIXTURE_USERS;
-
-/** Any user row, not only a fixture one. */
-type SessionUser = Pick<typeof users.$inferSelect, 'id' | 'role'>;
 
 /**
  * The session a service would have received had this user signed in.

@@ -3,6 +3,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
+import type { Diagnostic } from './types';
 
 // A DataLoader's cache lives as long as the instance, so one built at module
 // level serves one request's answers to the next — another viewer's included
@@ -26,11 +27,6 @@ const PROBE_DIRS = [
   'src/modules/coven/services/__lint-probe-loader__',
   'src/db/__lint-probe-loader__',
 ];
-
-interface Diagnostic {
-  code: string;
-  filename: string;
-}
 
 const probes = new Map<string, string>();
 function probe(directory: string, name: string, source: string): string {

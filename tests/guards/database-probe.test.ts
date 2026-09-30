@@ -4,6 +4,7 @@ import { parse } from 'yaml';
 
 import { describeConnectionError, probeHints, scrub } from '../../scripts/probe-database';
 import { fromRoot } from '../support/paths';
+import type { Step, Workflow } from './types';
 
 // drizzle-kit swallows the driver's error and exits 1, so an unreachable host,
 // a wrong password, an `sslmode` mismatch and a `channel_binding` parameter
@@ -132,20 +133,8 @@ describe('describeConnectionError never leaks the credentials', () => {
 describe('every workflow that consumes DATABASE_URL', () => {
   const WORKFLOWS = fromRoot('.github/workflows');
 
-  interface Step {
-    name?: string;
-    run?: string;
-    if?: string;
-    with?: Record<string, unknown>;
-  }
-  interface Job {
-    steps?: Step[];
-  }
-
-  function workflow(file: string): { jobs?: Record<string, Job> } {
-    return parse(readFileSync(fromRoot('.github/workflows', file), 'utf8')) as {
-      jobs?: Record<string, Job>;
-    };
+  function workflow(file: string): Workflow {
+    return parse(readFileSync(fromRoot('.github/workflows', file), 'utf8')) as Workflow;
   }
 
   const PROBE = /probe-database\.ts/;

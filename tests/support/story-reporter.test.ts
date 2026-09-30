@@ -4,8 +4,8 @@ import { join } from 'node:path';
 import type { Vitest } from 'vitest/node';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import StoryReporter from './story-reporter';
-import type { ReportedModule } from './story-checklist';
 import { V1_STORIES } from './stories';
+import type { ReportedModule } from './types';
 
 // Only the plumbing; what the checklist says is story-checklist.test.ts's.
 

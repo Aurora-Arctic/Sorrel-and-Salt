@@ -1,5 +1,6 @@
 import type { ForeignKey, PgTable } from 'drizzle-orm/pg-core';
 import { getTableConfig } from 'drizzle-orm/pg-core';
+import type { ForeignKeyFacts } from './types';
 
 // Transcribed, never read off `src/db/audit.ts`: a table compared against
 // `Object.keys(auditColumns)` matches for any value of `auditColumns`, an
@@ -50,15 +51,6 @@ export const AUDITED_TABLES = [
 // columns; Better Auth's own `$onUpdate` stamps them. A real counter-example
 // for "only the audited tables". `rate_limits` has no `updated_at` to mistake.
 export const UNAUDITED_TABLES = ['accounts', 'sessions', 'verifications'].sort();
-
-export interface ForeignKeyFacts {
-  /** The referencing column, on the table the facts were read from. */
-  column: string;
-  /** The constraint name, as Postgres reports it in `constraint_name`. */
-  name: string;
-  foreignColumnName: string;
-  foreignTable: PgTable;
-}
 
 function foreignKeyFacts(fk: ForeignKey): ForeignKeyFacts {
   const { columns, foreignColumns, foreignTable } = fk.reference();

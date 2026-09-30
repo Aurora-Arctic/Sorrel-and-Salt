@@ -1,5 +1,6 @@
 import { afterAll, beforeAll } from 'vitest';
 import postgres from 'postgres';
+import type { IndexRow, CatalogueReads } from './types';
 
 // One client per test file, opened in `beforeAll` and ended in `afterAll`: the
 // harness re-clones the worker's database `WITH (FORCE)` before every file,
@@ -7,22 +8,6 @@ import postgres from 'postgres';
 // (claude-docs/testing.md, "The db test harness"). Vitest's `sequence.hooks`
 // is `stack`, so a call at the top of a file opens before the file's own
 // `beforeAll` and closes after its `afterAll`.
-
-export interface IndexRow {
-  unique: boolean;
-  /** As Postgres renders it — `(deleted_at IS NULL)` — or `null` on a plain index. */
-  predicate: string | null;
-  definition: string;
-}
-
-export interface CatalogueReads {
-  /** Every column of `table`, sorted by name. */
-  columnNames(table: string): Promise<string[]>;
-  /** One of `table`'s indexes, or `undefined` when it carries none by that name. */
-  indexRow(table: string, name: string): Promise<IndexRow | undefined>;
-  /** `table`'s unique indexes, the primary key's included, sorted by name. */
-  uniqueIndexNames(table: string): Promise<string[]>;
-}
 
 /**
  * Hands the client to `bind` rather than returning it, so a file's existing

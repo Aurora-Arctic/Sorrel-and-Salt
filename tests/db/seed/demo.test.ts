@@ -12,6 +12,7 @@ import {
 } from '@/db/seed/standard';
 import { DEMO_SPELLS, WORKSPACE_W_INGREDIENTS, seedDemo } from '@/db/seed/demo';
 import { seed } from '@/db/seed/index';
+import type { IngredientSlugRow, LayerRow, SpellRow } from './types';
 
 // The `demo` scenario against the real schema: a layer's integrity is three
 // CHECKs, two partial indexes and a composite key no returned object can
@@ -19,38 +20,6 @@ import { seed } from '@/db/seed/index';
 // down itself — claude-docs/db.md, "The demo scenario".
 
 const PROBE = 'demo_probe_acting_user';
-
-interface SpellRow {
-  id: string;
-  workspace_id: string;
-  title: string;
-  intent: string | null;
-  status: 'draft' | 'complete';
-  created_by: string;
-  updated_by: string;
-  deleted_at: Date | null;
-}
-
-interface LayerRow {
-  spell_id: string;
-  ingredient_id: string | null;
-  name: string | null;
-  form: string | null;
-  quantity: string | null;
-  unit: string | null;
-  layer_order: number;
-  note: string | null;
-  created_by: string;
-}
-
-interface IngredientRow {
-  id: string;
-  workspace_id: string | null;
-  name: string;
-  canonical_name: string | null;
-  form: string | null;
-  slug: string;
-}
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
@@ -65,10 +34,10 @@ async function layersOf(spellId: string): Promise<LayerRow[]> {
   `;
 }
 
-async function ingredientsIn(workspaceId: string | null): Promise<IngredientRow[]> {
+async function ingredientsIn(workspaceId: string | null): Promise<IngredientSlugRow[]> {
   return workspaceId === null
-    ? sql<IngredientRow[]>`select * from ingredients where workspace_id is null order by name`
-    : sql<IngredientRow[]>`
+    ? sql<IngredientSlugRow[]>`select * from ingredients where workspace_id is null order by name`
+    : sql<IngredientSlugRow[]>`
         select * from ingredients where workspace_id = ${workspaceId} order by name
       `;
 }

@@ -2,21 +2,13 @@ import { expect } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import type { SetupServer } from 'msw/node';
 import type { auth as Auth } from '@/lib/auth';
+import type { ProviderId } from '@/lib/types';
+import type { Profile } from './types';
 
 // Drives Better Auth's real `/api/auth/*` endpoints with MSW standing in for
 // each provider, so what is under test is Better Auth's own flow with our
 // hooks attached, not a hand-built context. MSW intercepts only what the
 // server fetches; the requests into Better Auth are `auth.handler` calls.
-
-export type ProviderId = 'google' | 'discord' | 'facebook' | 'microsoft';
-
-export interface Profile {
-  /** The provider's own stable account id. */
-  sub: string;
-  /** Absent or `null`: the provider shared no address, as Discord and Facebook can. */
-  email?: string | null;
-  verified: boolean;
-}
 
 export const ORIGIN = 'http://localhost:8000';
 

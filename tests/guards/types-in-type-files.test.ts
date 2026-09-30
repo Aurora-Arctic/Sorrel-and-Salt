@@ -16,7 +16,7 @@ import { REPO_ROOT } from '../support/paths';
 // global` block is the enclosing code's own, and prettier is what makes column
 // 0 a reliable statement boundary.
 
-const ROOTS = ['src', 'scripts'];
+const ROOTS = ['src', 'scripts', 'tests'];
 
 /**
  * Declarations that stay in a code file for a reason the scan cannot read.

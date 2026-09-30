@@ -9,10 +9,10 @@ import {
   expectSignedIn,
   signIn as signInThrough,
   stubProviderCredentials,
-  type Profile,
-  type ProviderId,
 } from '../../../support/oauth';
-import type { Message } from '@/lib/types';
+import type { Message, ProviderId } from '@/lib/types';
+import type { Profile } from '../../../support/types';
+import type { ProvisionalUserRow } from './types';
 
 // Story 58, through Better Auth's real endpoints: an unverified account lapses
 // one verification lifetime after its last mail, and the next OAuth callback
@@ -70,19 +70,12 @@ afterEach(() => {
 const signIn = (provider: ProviderId, profile: Profile) =>
   signInThrough(auth, server, provider, profile);
 
-interface UserRow {
-  id: string;
-  email_verified: boolean;
-  updated_by: string;
-  updated_at: Date;
-}
-
-async function userRow(email: string): Promise<UserRow | undefined> {
+async function userRow(email: string): Promise<ProvisionalUserRow | undefined> {
   const [row] = await sql`
     select id, email_verified, updated_by, updated_at
     from users where email = ${email} and deleted_at is null
   `;
-  return row as UserRow | undefined;
+  return row as ProvisionalUserRow | undefined;
 }
 
 async function linkedRows(userId: string) {

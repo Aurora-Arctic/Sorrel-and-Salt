@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
 import { fromRoot } from '../support/paths';
+import type { GateWorkflow } from './types';
 
 // A closed PR's gate run gates nothing, so it is cancelled rather than run
 // out, and an edited PR's gate run must not cancel the one in flight, since
@@ -12,30 +13,11 @@ import { fromRoot } from '../support/paths';
 // runner that is a bill. This reads the workflow as data: it proves what the
 // file says, not that GitHub evaluates it as written.
 
-interface Step {
-  if?: string;
-  run?: string;
-}
-
-interface Job {
-  if?: string;
-  needs?: string | string[];
-  permissions?: Record<string, string>;
-  concurrency?: { group: string; 'cancel-in-progress'?: boolean | string };
-  steps?: Step[];
-}
-
-interface Workflow {
-  on: { pull_request: { types: string[] } };
-  concurrency: { group: string; 'cancel-in-progress': boolean | string };
-  jobs: Record<string, Job>;
-}
-
 /** The first step of `changes`: the one place a run decides not to gate. */
 const SELF_CANCEL_IF =
   "github.event.pull_request.state == 'closed' || (github.event.action == 'edited' && github.event.changes.base == null)";
 
-const gate = parse(readFileSync(fromRoot('.github/workflows/pr-gate.yml'), 'utf8')) as Workflow;
+const gate = parse(readFileSync(fromRoot('.github/workflows/pr-gate.yml'), 'utf8')) as GateWorkflow;
 const jobs = Object.entries(gate.jobs);
 
 function needs(name: string): string[] {

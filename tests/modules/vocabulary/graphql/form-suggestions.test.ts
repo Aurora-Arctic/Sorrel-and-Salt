@@ -9,6 +9,7 @@ import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
+import type { FormSuggestionConnection } from './types';
 
 // The transport half of M4.7a's form lookup: a page of both buckets, each
 // curated row carrying its group and every suggestion its claimants, refused
@@ -37,15 +38,10 @@ beforeEach(async () => {
   );
 });
 
-interface Connection {
-  edges: { cursor: string; node: Record<string, unknown> }[];
-  pageInfo: { hasNextPage: boolean; endCursor: string | null };
-}
-
 function run(
   session: Session | null,
   variables: Record<string, unknown>,
-): Promise<ExecutionResult<{ formSuggestions: Connection }>> {
+): Promise<ExecutionResult<{ formSuggestions: FormSuggestionConnection }>> {
   return graphql({
     schema,
     source: `query ($workspaceId: ID!, $query: String, $first: Int, $after: String) {
@@ -56,7 +52,7 @@ function run(
     }`,
     variableValues: { workspaceId: WORKSPACE_W_ID, ...variables },
     contextValue: { session, loaders: createLoaders(session) },
-  }) as Promise<ExecutionResult<{ formSuggestions: Connection }>>;
+  }) as Promise<ExecutionResult<{ formSuggestions: FormSuggestionConnection }>>;
 }
 
 describe('formSuggestions', () => {
@@ -94,7 +90,7 @@ describe('formSuggestions', () => {
 
   it('pages by cursor', async () => {
     const first = await run(asUser(B), { query: 'root', first: 1 });
-    const page = first.data?.formSuggestions as Connection;
+    const page = first.data?.formSuggestions as FormSuggestionConnection;
     expect(page.pageInfo.hasNextPage).toBe(true);
 
     const next = await run(asUser(B), {
