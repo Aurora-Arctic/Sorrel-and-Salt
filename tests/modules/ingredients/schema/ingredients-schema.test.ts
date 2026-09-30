@@ -29,31 +29,33 @@ const NOMENCLATURE_VALUES = [
 
 const ELEMENT_VALUES = ['earth', 'air', 'fire', 'water', 'spirit'] as const;
 
+// §5's columns and the six audit ones: what the schema declares and, once a
+// dropped column's migration has run, all the database holds.
+const COLUMNS = [
+  'id',
+  'workspace_id',
+  'name',
+  'canonical_name',
+  'nomenclature',
+  'canonical_key',
+  'form',
+  'description',
+  'element',
+  'planet',
+  'zodiac',
+  'deities',
+  'color',
+  'safety_notes',
+  'substitutes',
+  'slug',
+  ...AUDIT_COLUMNS,
+].sort();
+
 describe('ingredients schema', () => {
   const { byName, foreignKeys } = tableFacts(ingredients);
 
   it('has DESIGN.md §5 columns and nothing else', () => {
-    expect(Object.keys(byName).sort()).toEqual(
-      [
-        'id',
-        'workspace_id',
-        'name',
-        'canonical_name',
-        'nomenclature',
-        'canonical_key',
-        'form',
-        'description',
-        'element',
-        'planet',
-        'zodiac',
-        'deities',
-        'color',
-        'safety_notes',
-        'substitutes',
-        'slug',
-        ...AUDIT_COLUMNS,
-      ].sort(),
-    );
+    expect(Object.keys(byName).sort()).toEqual(COLUMNS);
   });
 
   // `workspace_id IS NULL` is the compendium, set is a workspace's own drawer:
@@ -142,7 +144,7 @@ function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
 }
 
 let sql: ReturnType<typeof postgres>;
-useTestDatabase((client) => (sql = client));
+const catalogue = useTestDatabase((client) => (sql = client));
 
 async function insert(overrides: IngredientOverrides = {}): Promise<string> {
   const [inserted] = await sql`
@@ -161,6 +163,12 @@ beforeEach(async () => {
 });
 
 describe('ingredients table', () => {
+  // No column the schema has stopped declaring outlives it in the database —
+  // MB.81's pending claims were the last.
+  it('carries exactly the columns the schema declares', async () => {
+    expect(await catalogue.columnNames('ingredients')).toEqual(COLUMNS);
+  });
+
   it('rejects an insert that omits nomenclature, since the column has no default', async () => {
     const error = await failureOf(sql`
       insert into ingredients (name, canonical_name, slug, created_by, updated_by)
