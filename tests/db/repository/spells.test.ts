@@ -2,12 +2,14 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import {
   findIngredientsInSpellsIncludingSoftDeleted,
+  findManyInSpell,
   findManyOfIngredients,
   findManyOfSpellIngredientsIncludingSoftDeleted,
   findOneIngredient,
 } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
+import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
 import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
 import { A, B, C, D, E, asUser } from '../../support/as-user';
@@ -37,6 +39,12 @@ beforeEach(async () => {
 
 const softDelete = (table: 'ingredients' | 'spells', id: string) =>
   sql`update ${sql(table)} set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
+
+/** Pulls the layer holding `ingredientId` out of the spell, as B. */
+const removeLayer = (spellId: string, ingredientId: string) =>
+  sql`
+    update spell_ingredients set deleted_at = now(), deleted_by = ${B.id}
+    where spell_id = ${spellId} and ingredient_id = ${ingredientId} and deleted_at is null`;
 
 /** A compendium entry, filed under Protection, with a live and a removed folk name. */
 async function entry(): Promise<string> {
@@ -256,5 +264,98 @@ describe('findManyOfSpellIngredientsIncludingSoftDeleted', () => {
         unheldId,
       ]),
     ).resolves.toEqual([]);
+  });
+});
+
+// A layer pulled out of a jar is a tombstone (MB.110), and every read of the
+// jar lets it go: the ingredient it held is no longer something the spell holds.
+describe('a layer removed from a spell', () => {
+  it('is gone from findManyInSpell, beside the layer still in the jar', async () => {
+    const entryId = await entry();
+    const localId = await local(WORKSPACE_W_ID, A);
+    const spellId = await spellHolding([entryId, localId]);
+    // Why it could have been answered: both layers are read until the removal.
+    const before = await findManyInSpell(await proofFor(B), spellIngredients, spellId);
+    expect(before.map((row) => row.ingredientId).sort()).toEqual([entryId, localId].sort());
+
+    await removeLayer(spellId, localId);
+
+    const after = await findManyInSpell(await proofFor(B), spellIngredients, spellId);
+    expect(after.map((row) => row.ingredientId)).toEqual([entryId]);
+    const [tombstone] = await sql`
+      select deleted_by from spell_ingredients
+      where spell_id = ${spellId} and ingredient_id = ${localId}`;
+    expect(tombstone.deleted_by).toBe(B.id);
+  });
+
+  it('takes its ingredient out of findIngredientsInSpellsIncludingSoftDeleted, deleted or not', async () => {
+    const localId = await local(WORKSPACE_W_ID, A);
+    const spellId = await spellHolding([localId]);
+    // Why it could have been answered: the spell holds it until the removal.
+    await expect(
+      findIngredientsInSpellsIncludingSoftDeleted(await proofFor(B), [localId]),
+    ).resolves.toHaveLength(1);
+
+    await removeLayer(spellId, localId);
+
+    await expect(
+      findIngredientsInSpellsIncludingSoftDeleted(await proofFor(B), [localId]),
+    ).resolves.toEqual([]);
+    await softDelete('ingredients', localId);
+    await expect(
+      findIngredientsInSpellsIncludingSoftDeleted(await proofFor(B), [localId]),
+    ).resolves.toEqual([]);
+  });
+
+  // The removal is the one layer's: another jar holding the same ingredient still does.
+  it('leaves the ingredient to another spell that still holds it', async () => {
+    const localId = await local(WORKSPACE_W_ID, A);
+    const removedFrom = await spellHolding([localId]);
+    await spellHolding([localId]);
+
+    await removeLayer(removedFrom, localId);
+    await softDelete('ingredients', localId);
+
+    await expect(
+      findIngredientsInSpellsIncludingSoftDeleted(await proofFor(C), [localId]),
+    ).resolves.toEqual([expect.objectContaining({ id: localId })]);
+  });
+
+  it('takes its ingredient’s categories and folk names out of findManyOfSpellIngredientsIncludingSoftDeleted', async () => {
+    const entryId = await entry();
+    const spellId = await spellHolding([entryId]);
+    await softDelete('ingredients', entryId);
+    // Why they could have been answered: the spell hands them over until the removal.
+    await expect(
+      findManyOfSpellIngredientsIncludingSoftDeleted(await proofFor(C), ingredientCategories, [
+        entryId,
+      ]),
+    ).resolves.toHaveLength(1);
+
+    await removeLayer(spellId, entryId);
+
+    for (const table of [ingredientCategories, ingredientFolkNames]) {
+      await expect(
+        findManyOfSpellIngredientsIncludingSoftDeleted(await proofFor(C), table, [entryId]),
+      ).resolves.toEqual([]);
+    }
+  });
+
+  it('is replaced, not revived, when the ingredient is laid back in the jar', async () => {
+    const localId = await local(WORKSPACE_W_ID, A);
+    const spellId = await spellHolding([localId]);
+    const [removed] = await findManyInSpell(await proofFor(B), spellIngredients, spellId);
+    await removeLayer(spellId, localId);
+
+    await sql`
+      insert into spell_ingredients (spell_id, ingredient_id, layer_order, created_by, updated_by)
+      values (${spellId}, ${localId}, 1, ${B.id}, ${B.id})`;
+
+    const layers = await findManyInSpell(await proofFor(B), spellIngredients, spellId);
+    expect(layers).toEqual([expect.objectContaining({ ingredientId: localId, layerOrder: 1 })]);
+    expect(layers[0].id).not.toBe(removed.id);
+    await expect(
+      findIngredientsInSpellsIncludingSoftDeleted(await proofFor(B), [localId]),
+    ).resolves.toHaveLength(1);
   });
 });
