@@ -3,8 +3,12 @@
 This summary is self-contained — M0's transcripts and decision records are
 archived and are not required reading.
 
-The SCSS foundation every component builds on. The design above this layer is
-deliberately unbuilt (see [`CLAUDE.md`](../CLAUDE.md), "The design will change").
+The SCSS foundation every component builds on: the palette, type, spacing,
+radius and the shared primitives, settled by the foundations design review
+(MB.114) and shown in the workshop's `Foundations` page. Each section's own
+design is its review's, built on this layer ([`CLAUDE.md`](../CLAUDE.md), "The
+design will change"); "Designing a section" below is the direction they design
+to.
 
 ## Binding rules
 
@@ -39,6 +43,10 @@ deliberately unbuilt (see [`CLAUDE.md`](../CLAUDE.md), "The design will change")
   component restating a mixin's colour is a bug.
 - **`adjustFontFallback` stays `true`** in `src/app/fonts.ts`; setting it false
   reintroduces layout shift.
+- **Lengths, radii and small type come from their scales**: `space()`,
+  `radius()` and `type-size()`. A length off the scale is a chip's or a
+  badge's inner geometry, a control's target size, or a heading's size — and
+  says so in a comment.
 - **Body copy keeps to the reading measure, `$measure` (66ch)** — the longest
   line that still reads comfortably. `ch` is the width of "0" in the element's
   own font, so the measure follows the text it caps: 660px of Lexend at 1rem.
@@ -57,7 +65,7 @@ Two layers live in `_variables.scss`, and the split is what keeps the derived
 colours honest:
 
 1. **The raw palette** — eight hand-picked hues, compile-time Sass values, plus
-   everything `color.adjust()`ed from them. They are named for the material
+   everything `color.adjust()`ed or `color.mix()`ed from them. They are named for the material
    rather than the role, since a role can change and `#14120e` cannot.
 2. **The token aliases** — thin `var(--token)` wrappers components consume.
    Theming happens at runtime through these, not by recompiling, which is what
@@ -83,15 +91,38 @@ The grounds are warm near-blacks rather than neutral ones: a herbal has no pure
 black in it, and a green accent over a blue-grey ground reads cold.
 
 **Derivation runs one way only.** Every hover, muted and per-theme variant is a
-`color.adjust()` of the four above — none is re-picked by eye — and each clears
-4.5:1 against both surfaces of the theme it is used in. Dark-theme variants move
-_away_ from the ground by lightening (a darker accent on `$soot` loses
-contrast), so "hover is punchier" is spelled lighter-and-more-saturated on dark
-and darker on light. `$chalk-muted` / `$ink-muted` are the body ink at reduced
-strength rather than a separate grey, so metadata reads as the same ink and
-still clears 4.5:1 instead of sitting at the decorative-grey level that fails it.
-Shadow inks are per-theme: a 0.8-alpha near-black under a card reads as a hole
-punched in parchment, so light mode gets a much softer one.
+`color.adjust()` or `color.mix()` of the palette above — none is re-picked by
+eye — and each clears 4.5:1 against both surfaces of the theme it is used in.
+Dark-theme variants move _away_ from the ground by lightening (a darker accent
+on `$soot` loses contrast), so "hover is punchier" is spelled
+lighter-and-more-saturated on dark and darker on light.
+
+`$chalk-muted` / `$ink-muted` are the body ink at reduced strength rather than
+a separate grey, so metadata reads as the same ink and still clears 4.5:1
+instead of sitting at the decorative-grey level that fails it. **Dark mixes the
+ink into the ground** — `color.mix($chalk, $soot, 80%)`, `#c0baac`, 8.79:1 on
+the card and a visible step below the body ink. It was `$chalk` lightened down
+22% in HSL, which keeps the saturation while the lightness falls and so raises
+the chroma: it read gold, beside the prosperity chip, rather than as a quieter
+chalk. A mix lowers the chroma with the strength, as ink thinned on paper does.
+Light keeps `$iron-gall` lightened 20% (`#5e5645`), which reads as the same
+ink.
+
+Two variants exist for one use each:
+
+- **`$wax-vivid`, the light theme's `--secondary`**: `$wax` at +30% saturation
+  and +4% lightness, `#ba2b14`, 5.02:1 on the page. `$wax` itself reads
+  brown on parchment, and an error edge in it barely separates from a field's
+  own. Dark keeps `$wax-warm`. Destructive buttons share the token.
+- **`$sorrel-spring` / `$sorrel-rich`, the solid button's hover
+  (`--accent-solid-hover`)**: `$sorrel` at +38% lightness and +40% saturation
+  on dark (`#a5eb76`), and −8% lightness and +20% saturation on light
+  (`#355b1b`). The link's `--accent-hover` is one step, which a filled
+  button barely shows under the pointer; these are larger and more saturated,
+  rather than only further from the ground. The label on them measures 13.13:1
+  and 6.48:1.
+  Shadow inks are per-theme: a 0.8-alpha near-black under a card reads as a hole
+  punched in parchment, so light mode gets a much softer one.
 
 ## Category-group colours
 
@@ -244,6 +275,131 @@ the three the scale uses (500/600/700) are requested.
 - **Links get an underline under `prefers-contrast: more`**, on the body ink
   rather than a further-pushed sorrel: WCAG's "don't rely on colour alone", for
   users who have explicitly asked for more contrast than the baseline gives.
+- **A heading gathers four text roles**, all in `typography-base`: the
+  `.eyebrow` above it, naming the section it sits in; `.meta`, a
+  caption-size muted line tight under it — a formal name and form, a date, a
+  count; `.binomial`, the italic of a botanical, fungal or zoological
+  binomial, which the component adds only for those nomenclatures, since
+  mineral and chemical names are set upright; and `.lede`, the muted sentence
+  or two saying what the section is for, at body size because it is read.
+  Wrapped in `.header`, they are the head of every section on the
+  Foundations page.
+
+## Spacing
+
+Every margin, padding and gap takes a step from `space()`, eight steps on a
+0.25rem base: 0.25, 0.5, 0.75, 1, 1.5, 2, 3 and 4rem. `space(4)` is 1rem. An
+unknown step fails to compile, as a mistyped group does. The steps are the
+values the components had already converged on; the few between them (0.375,
+0.625, 1.25rem) fold into a neighbour when their section is designed.
+
+**Two things stay off the scale.** A chip's or badge's inner padding is its
+own geometry: it is trimmed by the 1px edge so the label sits optically
+centred, and rounding it to a step moves the label. A control's height is a
+target size rather than a gap — `.input` sets `min-height: 2.75rem`, 44px at
+body size, whatever the platform's line height.
+
+Below body copy, type takes one of four sizes by role from `type-size()`:
+`small` (0.875rem) for what a person acts on — labels, buttons, notices,
+field errors; `caption` (0.8125rem) for hints, metadata, chips and badges; and
+`overline` (0.75rem) for the `.eyebrow`. The headings' scale is
+`typography-base`'s, above.
+
+## Corner radius
+
+Four radii by role, from `radius()`:
+
+| Role      | Radius   | For                                                           |
+| --------- | -------- | ------------------------------------------------------------- |
+| `sharp`   | 2px      | A badge, square enough not to read as a chip                  |
+| `control` | 0.333rem | What a person types into or presses: fields, buttons, notices |
+| `surface` | 0.5rem   | What holds controls: panels, cards, modals                    |
+| `pill`    | 999px    | A chip                                                        |
+
+A button beside a field matches it, and a panel holding both reads as the
+thing that holds them. Buttons were 0.5rem and panels 0.25rem until MB.114.
+
+## Buttons
+
+`.btn` is the shape every button shares, `SignInPanel`'s brand buttons
+included. Four variants:
+
+- **The outline (`.btn`)**, the default: the accent on an edge, filling on
+  hover.
+- **`.btn--solid`**, a view's one primary action — Save, Send, Continue.
+  Filled in the accent, with the label on `$text-on-color`, and its own hover
+  step (`--accent-solid-hover`, above).
+- **`.btn--quiet`**, an action that changes nothing: Cancel, Keep It, Back.
+  The body ink on an edge, so it neither competes with the primary nor reads as
+  destructive — and, unlike the muted ink, not as disabled either.
+- **`.btn--secondary`**, what destroys something: Delete, Remove. The wax.
+
+**Disabled is dashed and faded**, from `disabled` or `aria-disabled`: the
+edge dashes, the fill clears, and the whole button drops to 55%. Neither
+state needs a component to restate it.
+
+## Form fields
+
+The class layer every form is built from, in `_primitives.scss`:
+
+| Class                                            | What it is                                                                |
+| ------------------------------------------------ | ------------------------------------------------------------------------- |
+| `.form`, `.form__actions`                        | The column of fields, a `space(5)` apart, and the row of buttons after it |
+| `.field`                                         | One field: label, optional hint, control and error, `space(2)` apart      |
+| `.field__label`, `.field__hint`, `.field__error` | The parts around the control                                              |
+| `.input`, `.textarea`, `.select`                 | The control, one box for all three                                        |
+| `.checkbox`                                      | A `<label>` wrapping its box, so the whole line is the target             |
+| `.fieldset`, `.fieldset__legend`                 | Rows under one name: checkboxes, or a list of entries                     |
+| `.notice`, `--error`, `--success`                | A sentence about the whole view rather than one field                     |
+
+- **The error sits beneath its control**, nearest what was typed, and is
+  drawn the same whichever side found it: the resolver before a request, or
+  the server's `fieldErrors` after (DESIGN.md §7, "Errors"). The control names
+  the error and the hint in `aria-describedby` and carries `aria-invalid`,
+  which is what draws the error edge — so the markup that makes the error
+  announced is the markup that makes it visible, and one cannot ship without
+  the other.
+- **The error edge is a shape as well as a colour**: `aria-invalid` turns the
+  border to `$secondary` and adds a second pixel inside it, so the state does
+  not rest on hue alone (WCAG 1.4.1).
+- **A rule that belongs to no one field is a `.notice` above them all** — an
+  empty-path error. Its role is the markup's: `role="alert"` for an error that
+  arrives after the page did, `<output>` for news of success.
+- **What a person typed is weight 400**, a step firmer than the prose around
+  it. Field errors and notices are 400 too: coloured text at `small` size
+  thins out at 300.
+- **The select draws its own chevron**, two gradient triangles in the muted
+  ink, since the platform's arrow varies by OS and ignores the theme. Under
+  `forced-colors` the native arrow comes back, because forced colours drop
+  background images.
+- **The checkbox is the platform's**, coloured by `accent-color`, which takes
+  the token and picks its own check-mark contrast.
+- **Disabled is an attribute, not a class**, and looks the same on a field as
+  on a button: a dashed edge and no fill. A disabled field also takes the muted
+  ink and dims its `.field__label`, since a faded box alone reads as a live
+  one on a dim screen. A component never restates it.
+
+## Designing a section
+
+What each section review (MB.115 to MB.124) designs to:
+
+- **Build from this layer, and grow it rather than going round it.** A page
+  takes its colours from the tokens, its lengths from `space()`, its radii from
+  `radius()` and its small type from `type-size()`. A shape two sections
+  need is a primitive in `_primitives.scss`, drawn on the `Foundations` page,
+  not two component rules.
+- **One solid button per view**, on its primary action. Everything else is an
+  outline, quiet, or the wax for what destroys something.
+- **Forms are the field primitives.** An error is a `.field__error` beneath
+  its control from either source, and a rule that belongs to no field is a
+  `.notice` above them all.
+- **A section head is `.header`** with an `.eyebrow`, the heading, and a
+  `.lede` where the section needs saying what it is for.
+- **Prose stops at the measure**; a table or a grid may be as wide as it
+  needs.
+- **Both themes, and 375px.** A review signs off in the workshop in both, at
+  phone width, with every text pairing at 4.5:1 and every edge a control
+  depends on at 3:1.
 
 ## Theme resolution
 
@@ -271,9 +427,10 @@ heavier than the reverse; light reverts to the browser default.
 
 ## The files
 
-- `src/scss/_variables.scss` — base colour palette, type scale, category-group
-  and safety tokens, the `$font-body` / `$font-heading` / `$font-mono`
-  stacks and the `$measure` a component `@use`s directly.
+- `src/scss/_variables.scss` — base colour palette, category-group and badge
+  tokens, the `$font-body` / `$font-heading` / `$font-mono` stacks, the
+  `$measure`, and the three scales with their accessors — `type-size()`,
+  `space()` and `radius()` — a component `@use`s directly.
 - `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `theme-dark` /
   `theme-light`, `semantic-tokens` (the per-theme category-group and badge
   custom properties), `focus-ring`, `theme-transition`, `reduced-motion`,
@@ -281,14 +438,15 @@ heavier than the reverse; light reverts to the browser default.
 - **Three `*-base` mixins**, each emitting nothing on its own `@use` and
   `@include`d at exactly one site, `globals.scss`'s `body`:
   - `_typography.scss` → `typography-base` — headings, body copy capped at
-    `$measure`, links, lists,
-    the `.eyebrow` overline, `.tight-headings`.
+    `$measure`, links, lists, the text roles `.eyebrow`, `.meta`,
+    `.binomial` and `.lede`, and `.tight-headings`.
   - `_layout.scss` → `layout-base` — bare `section` / `header` structure, plus
     `.header` / `.footer`.
   - `_primitives.scss` → `primitives-base` — the class layer: `.panel`,
-    `.btn` / `.btn--secondary`, `.modal` / `.modal__actions`, `.specimen*`, and
-    the classes over `chip()` / `badge()`. Meant to be used site-wide ahead of
-    the milestones that would otherwise define these shapes.
+    `.btn` and its `--solid` / `--quiet` / `--secondary` variants, `.notice`,
+    the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
+    `.checkbox`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
+    and the classes over `chip()` / `badge()`.
 - `src/app/fonts.ts` — Cormorant Unicase (weights 500/600/700) and Lexend,
   self-hosted at build time via `next/font/google`. The CSS variables it defines
   on `<html>` are what `$font-heading` / `$font-body` reference.
@@ -297,7 +455,7 @@ heavier than the reverse; light reverts to the browser default.
   the theme in **three** states, not two: `:root { @include theme-dark }` (dark
   is the default), a `prefers-color-scheme: light` block, and an explicit
   `html[data-theme='light']` override.
-- No `_buttons.scss` — `.btn` / `.btn--secondary` live in `_primitives.scss`.
+- No `_buttons.scss` — `.btn` and its variants live in `_primitives.scss`.
   No `_print.scss` outside M10.22 (the spell recipe view).
 - Component styling adds no new hand-picked colour and no per-component design
   work beyond the tokens, mixins and the `_primitives.scss` class layer.
