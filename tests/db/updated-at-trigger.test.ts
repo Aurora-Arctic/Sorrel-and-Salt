@@ -9,7 +9,7 @@ import { users } from '@/modules/identity/schema/users';
 import { findOne, withAudit } from '@/db/repository';
 
 // One function attached to every audited table —
-// claude-docs/db.md, "updated_at is the database's".
+// claude-docs/db/updated-at.md, "updated_at is the database's".
 const FUNCTION = 'set_updated_at';
 // Same name on every table: a trigger name is scoped to its table.
 const TRIGGER = 'set_updated_at';

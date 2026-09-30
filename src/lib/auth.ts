@@ -9,7 +9,7 @@ import {
 } from '@better-auth/core/context';
 import { appendQueryParams } from '@better-auth/core/utils/url';
 // Better Auth's drizzleAdapter takes the client itself rather than a writer, so
-// this cannot go through withAudit — claude-docs/db.md, "Who may import the client".
+// this cannot go through withAudit — claude-docs/db/client-imports.md, "Who may import the client".
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../db/connection';
 import { users } from '../modules/identity/schema/users';

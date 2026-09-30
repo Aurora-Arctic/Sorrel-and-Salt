@@ -7,7 +7,7 @@ import { auditColumns } from '../../identity/schema/users';
 // asserts so): a member must be able to write `Eris` before anyone curates it.
 // Two tables rather than one with a `kind`, so a suggestion query has no
 // predicate to forget; one tier, no colour, no order column
-// (claude-docs/db.md, "The astrology vocabularies").
+// (claude-docs/db/astrology-vocabularies.md, "The astrology vocabularies").
 export const planets = pgTable(
   'planets',
   {
@@ -29,7 +29,7 @@ export const planets = pgTable(
     check('planets_description_not_blank', sql`btrim(description) <> ''`),
     // The suggestion query matches name and description alike, by `%` and
     // `<%` under per-transaction thresholds — never a `similarity()`
-    // comparison (claude-docs/db.md, "The member's autofill").
+    // comparison (claude-docs/db/member-autofill.md, "The member's autofill").
     index('planets_trgm').using(
       'gin',
       sql`${table.name} gin_trgm_ops`,

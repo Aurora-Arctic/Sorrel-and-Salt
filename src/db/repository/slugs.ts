@@ -6,7 +6,7 @@ import { inCompendium, notSoftDeleted } from './predicates';
 import { existsIn, selectFrom } from './select';
 import type { IngredientRow, SlugRedirect } from './types';
 
-// A compendium entry's addresses (claude-docs/db.md, "Ingredient slugs"): the
+// A compendium entry's addresses (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"): the
 // slug it holds, and the slugs it moved off, each redirecting to it until the
 // retirement's `expires_at`. `at` is the caller's clock rather than the
 // database's, so a window is exact wherever it is read from.

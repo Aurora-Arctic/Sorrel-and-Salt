@@ -244,7 +244,7 @@ describe('the fixtures the --self-test runs', () => {
 // An acknowledgement is a sidecar beside its migration and covers only that
 // migration — strictly stronger than the retired PR-body line, which blessed
 // every finding in the diff and was gone on merge
-// (claude-docs/db.md, "Expand/contract and the destructive-DDL check").
+// (claude-docs/db/expand-contract.md, "Expand/contract and the destructive-DDL check").
 describe('the acknowledgement sidecar', () => {
   const drop = (file: string) => ({
     file,

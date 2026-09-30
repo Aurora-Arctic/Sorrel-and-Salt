@@ -14,7 +14,7 @@ const EXPIRES_AT = sql`date_trunc('day', retired_at) + interval '180 days'`;
 // entry holds the slug, it answers a 308 to the entry's current slug; an entry
 // that takes the slug ends that, once the admin confirms it. Expiry is a
 // predicate on `expires_at`, so nothing runs on a schedule
-// (claude-docs/db.md, "Ingredient slugs").
+// (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
 export const retiredIngredientSlugs = pgTable(
   'retired_ingredient_slugs',
   {

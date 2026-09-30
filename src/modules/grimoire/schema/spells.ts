@@ -11,7 +11,7 @@ export const spellStatus = pgEnum('spell_status', ['draft', 'complete']);
 // does not: `public`.
 export const spellVisibility = pgEnum('spell_visibility', ['private', 'workspace']);
 
-// The grimoire: what a workspace makes (claude-docs/db.md, "The grimoire").
+// The grimoire: what a workspace makes (claude-docs/db/grimoire.md, "The grimoire").
 export const spells = pgTable('spells', {
   id: uuid('id')
     .default(sql`pg_catalog.gen_random_uuid()`)

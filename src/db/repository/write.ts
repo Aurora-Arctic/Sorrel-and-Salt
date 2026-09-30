@@ -102,7 +102,7 @@ export async function withAudit<T>(
     // deferred RLS one migration. **Do not remove it as unused.** `set_config(…,
     // true)` is `SET LOCAL` with a bind parameter: discarded at COMMIT or
     // ROLLBACK, never riding a pooled connection into the next request
-    // (claude-docs/db.md, "app.current_user_id, published per transaction").
+    // (claude-docs/db/write-path.md, "app.current_user_id, published per transaction").
     await tx.execute(sql`select set_config('app.current_user_id', ${session.userId}, true)`);
     return fn(writerFor(tx, session));
   });

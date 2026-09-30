@@ -6,7 +6,7 @@ import { auditColumns, auditStampColumns } from '@/modules/identity/schema/users
 
 // The repository's own tests run against scratch tables rather than real ones:
 // the contract is the audit columns and the table shapes, not any one table's
-// other constraints (claude-docs/db.md, "The write path").
+// other constraints (claude-docs/db/write-path.md, "The write path").
 
 // A scratch table spreading the real `auditColumns` minus their FKs to
 // `users`: the contract is about the six columns, not any one table.

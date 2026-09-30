@@ -9,11 +9,12 @@ import type { IngredientOverrides, Inserted } from './types';
 
 // §5's three partial unique indexes. Identity is `canonical_key`, so the
 // compendium is unique on identity and label uniqueness survives only inside
-// a workspace — claude-docs/db.md, "The ingredient identity model".
+// a workspace — claude-docs/db/identity-model.md, "The ingredient identity model".
 const COMPENDIUM_IDENTITY = 'ingredients_compendium_identity_unique';
 const WORKSPACE_IDENTITY = 'ingredients_workspace_identity_unique';
 const WORKSPACE_LABEL = 'ingredients_workspace_label_unique';
-// MB.80's two: the public address unique per tier — claude-docs/db.md, "Ingredient slugs".
+// MB.80's two: the public address unique per tier —
+// claude-docs/db/ingredient-slugs.md, "Ingredient slugs".
 const COMPENDIUM_SLUG = 'ingredients_compendium_slug_unique';
 const WORKSPACE_SLUG = 'ingredients_workspace_slug_unique';
 const DECLARED = [

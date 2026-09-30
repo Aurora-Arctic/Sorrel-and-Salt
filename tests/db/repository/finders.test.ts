@@ -113,7 +113,7 @@ describe('soft-delete filtering (M1.20)', () => {
     });
   });
 
-  // claude-docs/db.md, "Soft-delete filtering and the partial-index convention".
+  // claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention".
   describe('the partial unique index convention', () => {
     it('still blocks a live duplicate', async () => {
       await withAudit(session, (write) => write.insert(charms, { name: 'Ward' }));

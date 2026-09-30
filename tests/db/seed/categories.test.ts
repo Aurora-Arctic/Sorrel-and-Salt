@@ -19,7 +19,7 @@ import type { CategoryGroupRow, CategoryRow, DesignCategoryGroup } from './types
 // than copies: the vocabulary parsed from DESIGN.md §6's table, the colours
 // resolved by compiling `category-group-color()`, the contrast floor recomputed
 // from the seeded hex. Against the real tables, emptied first —
-// claude-docs/db.md, "The category seed".
+// claude-docs/db/category-seed.md, "The category seed".
 
 const DESIGN_DOC = fromRoot('claude-docs/DESIGN.md');
 const SCSS_DIR = fromRoot('src/scss');

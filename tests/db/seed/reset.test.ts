@@ -6,7 +6,8 @@ import { dropSchema } from '@/db/seed/reset';
 // The drop half of `db:reset`, run against a database of its own: `dropSchema`
 // removes `public` outright, and the worker clone is shared with every file in
 // the same pool slot. The same `CREATE DATABASE` the harness uses keeps the
-// blast radius inside this file — claude-docs/db.md, "Migrations and scripts".
+// blast radius inside this file — claude-docs/db/migrations-and-scripts.md,
+// "Migrations and scripts".
 
 /** Reachable as the `sorrel` role, which owns the database it is about to gut. */
 function adminUrl(): string {

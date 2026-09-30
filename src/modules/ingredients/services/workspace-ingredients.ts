@@ -14,7 +14,7 @@ import type { IngredientFields, IngredientRow, IngredientValues } from '../types
 // Story 15: a coven's own ingredients. Every read and write is under the
 // proof, so the tier is the proof's — `workspace_id` is never read from the
 // input, and nothing here can write the compendium or move a row into it
-// (claude-docs/db.md, "Workspace ingredients").
+// (claude-docs/db/workspace-ingredients.md, "Workspace ingredients").
 
 /**
  * Creates an ingredient in this coven, with its folk names, in one
@@ -86,7 +86,7 @@ export async function updateWorkspaceIngredient(
 /**
  * Soft-deletes an ingredient of this coven, stamping who deleted it. Its folk
  * names, category links and stock stay; a spell holding it still reaches it
- * (claude-docs/db.md, "Workspace ingredients").
+ * (claude-docs/db/workspace-ingredients.md, "Workspace ingredients").
  *
  * @throws {Forbidden} the caller may not delete this coven's ingredients.
  * @throws {NotFound} no live ingredient in this coven has this id — one

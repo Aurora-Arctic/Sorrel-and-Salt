@@ -25,11 +25,11 @@ import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/typ
 import type { CompendiumAddress, CompendiumWrite, IngredientFields, IngredientRow } from '../types';
 
 // The compendium: the public surface (MB.80), so the list takes no session at
-// all and an entry answers anyone (claude-docs/db.md, "The compendium read");
+// all and an entry answers anyone (claude-docs/db/compendium-read.md, "The compendium read");
 // its writes, which are the site admin's alone and reach no coven's rows
-// (claude-docs/db.md, "Compendium writes"); and its addresses, which follow an
+// (claude-docs/db/compendium-writes.md, "Compendium writes"); and its addresses, which follow an
 // entry's name and redirect from the old one for a window
-// (claude-docs/db.md, "Ingredient slugs").
+// (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
 
 /**
  * One page of the compendium under `filter`, best match first on a search,
@@ -241,7 +241,7 @@ function inUtc(at: Date): string {
 /**
  * Soft-deletes a compendium entry, stamping who deleted it. Its folk names
  * and category links stay, and a spell holding it still reaches it
- * (claude-docs/db.md, "What a spell holds").
+ * (claude-docs/db/spell-visibility.md, "What a spell holds").
  *
  * @throws {Forbidden} the caller is not a site admin.
  * @throws {NotFound} no live compendium entry has this id — one already

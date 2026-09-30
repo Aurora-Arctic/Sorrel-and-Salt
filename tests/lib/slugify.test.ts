@@ -49,7 +49,7 @@ describe('slugify', () => {
 // MB.80/MB.81: an ingredient's address is its label, its form and its formal
 // name, always, so two entries sharing a label and a form are told apart by
 // the name that is their identity rather than by insertion order —
-// claude-docs/db.md, "Ingredient slugs".
+// claude-docs/db/ingredient-slugs.md, "Ingredient slugs".
 describe('ingredientSlug', () => {
   it('joins the label, the form and the formal name under the one slug rule', () => {
     expect(ingredientSlug("Cat's Claw", 'bark', 'Uncaria tomentosa')).toBe(

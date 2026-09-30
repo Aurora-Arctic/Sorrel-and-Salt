@@ -18,7 +18,7 @@ import type { FormSuggestion, SuggestingVocabulary, VocabularySuggestion } from 
  * `ingredientFormValues`: the live forms whose group is live too, which is
  * what "curated" means to `findVocabularySuggestions` as well, with the
  * group's `deleted_at` read by the builder's correlated `EXISTS`. Public
- * reference data, so no proof (claude-docs/db.md, "The compendium read").
+ * reference data, so no proof (claude-docs/db/compendium-read.md, "The compendium read").
  */
 export function findIngredientFormValues(
   page: PageRequest,
@@ -56,7 +56,7 @@ const IN_USE_COLUMN = {
  *
  * A name or value matches by `%` or `<%` and a description by `<%` alone, so
  * a query finds a word inside a description and completes a typed prefix
- * (claude-docs/db.md, "The member's autofill").
+ * (claude-docs/db/member-autofill.md, "The member's autofill").
  *
  * A form suggestion also carries its group and the in-scope ingredients whose
  * form folds to it. A form is curated only while its group is live too.

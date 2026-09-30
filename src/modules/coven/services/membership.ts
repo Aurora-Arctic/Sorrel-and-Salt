@@ -9,7 +9,7 @@ import type { WorkspaceRole } from '../types';
 
 // CLAUDE.md rule 5's two layers live here: `assertMembership` is the check,
 // and the `Membership` it returns is the proof the check ran. The brand below
-// is the whole mechanism — see claude-docs/db.md, "The Membership proof".
+// is the whole mechanism — see claude-docs/db/membership-proof.md, "The Membership proof".
 
 // Not exported, which is what makes `Membership` unconstructible outside this
 // module: no other file can name the property, so no object literal satisfies

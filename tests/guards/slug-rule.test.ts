@@ -7,7 +7,7 @@ import { REPO_ROOT } from '../support/paths';
 import { slugify } from '@/lib/slugify';
 
 // Every slug comes from `src/lib/slugify.ts`, the only file that may import
-// the package or name a slug character class (claude-docs/db.md, "The category
+// the package or name a slug character class (claude-docs/db/category-seed.md, "The category
 // seed"). A second rule fails quietly: two slug rules do not collide, they
 // disagree, and that surfaces only as a lookup finding nothing.
 //

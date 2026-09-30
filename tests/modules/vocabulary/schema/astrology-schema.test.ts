@@ -46,7 +46,8 @@ describe.each(VOCABULARIES)('$name schema', ({ table, name }) => {
     }
   });
 
-  // One tier, uncoloured, unordered and global (claude-docs/db.md, "The astrology vocabularies").
+  // One tier, uncoloured, unordered and global
+  // (claude-docs/db/astrology-vocabularies.md, "The astrology vocabularies").
   it('carries no group, colour, ordering column or workspace scoping', () => {
     expect(byName.group_id).toBeUndefined();
     expect(byName.workspace_id).toBeUndefined();

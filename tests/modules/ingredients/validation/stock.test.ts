@@ -24,8 +24,9 @@ describe('StockInput', () => {
     expect(StockInput.parse(input)).toEqual({ ...input, source: 'foraged by the creek' });
   });
 
-  // `0` is out of stock and null is "we have this, unweighed" (db.md); both
-  // are values, and neither is refused.
+  // `0` is out of stock and null is "we have this, unweighed"
+  // (claude-docs/db/stock.md, "Nullability"); both are values, and neither is
+  // refused.
   it('takes zero, and takes nothing at all', () => {
     expect(StockInput.safeParse({ quantityOnHand: 0, lowStockThreshold: 0 }).success).toBe(true);
     expect(StockInput.safeParse({}).success).toBe(true);

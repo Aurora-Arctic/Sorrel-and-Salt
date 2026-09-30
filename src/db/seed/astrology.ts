@@ -8,7 +8,8 @@ import type { SeedAstrologyValue, SeedDatabase, SeedTransaction } from './types'
 // inserts the bootstrap admin itself. §5's table is lower-case; each name here
 // is the proper noun it renders as, and no slug is written down. A description
 // is search surface, so it carries the words a reader reaches for — Black
-// Moon, Rahu, Serpentarius (claude-docs/db.md, "The astrology vocabulary seed").
+// Moon, Rahu, Serpentarius (claude-docs/db/astrology-vocabulary-seed.md, "The
+// astrology vocabulary seed").
 
 /** The luminaries, the planets outward from the Sun, then the other bodies modern practice reads. */
 export const PLANETS: SeedAstrologyValue[] = [

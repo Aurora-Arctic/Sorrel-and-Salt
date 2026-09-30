@@ -13,7 +13,7 @@ import {
 } from '../support/db/table-metadata';
 // First, before any table that spreads the audit columns: `audit.ts` and
 // `schema/users.ts` import each other, and entering the cycle from the audit
-// side builds `users` with no audit columns (claude-docs/db.md, "The seed module").
+// side builds `users` with no audit columns (claude-docs/db/seed-module.md, "The seed module").
 import { users } from '@/modules/identity/schema/users';
 import { categories, categoryGroups } from '@/modules/vocabulary/schema/categories';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';

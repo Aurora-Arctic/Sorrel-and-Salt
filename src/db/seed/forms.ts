@@ -18,7 +18,8 @@ import type {
 // three by state (Fluid, Curio, Substance), and no `Other` — an unfitting value
 // stays free text and surfaces for curation. No slug is written down; every one
 // is `slugify(name)`. Where a value fits two groups the seed takes one sense and
-// leaves the other row for an admin (claude-docs/db.md, "The form vocabulary seed").
+// leaves the other row for an admin (claude-docs/db/form-vocabulary-seed.md,
+// "The form vocabulary seed").
 
 /**
  * §5's six groups in §5's order, which nothing reads — groups list

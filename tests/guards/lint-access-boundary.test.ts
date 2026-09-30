@@ -305,7 +305,7 @@ describe('M3.9: resolvers and server components reach services and nothing below
   });
 });
 
-describe('the repository is reached through its index (claude-docs/db.md)', () => {
+describe('the repository is reached through its index (claude-docs/db/repository-files.md)', () => {
   it.each(repositoryInternalProbes)(
     'bans %s importing a repository-internal file by its %s',
     (_directory, _name, file) => {

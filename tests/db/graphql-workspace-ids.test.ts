@@ -19,7 +19,7 @@ import type { Answer, WorkspaceIdProbe } from './types';
 // the answer a coven the caller is not in gets. Every field taking a
 // `workspaceId` is named here, and the first test fails on one that is not,
 // so a field added later is held to the same answer
-// (claude-docs/db.md, "What the check asks").
+// (claude-docs/db/membership-proof.md, "What the check asks").
 
 const MALFORMED = ['not-a-coven', WORKSPACE_W_ID.slice(0, -1)];
 

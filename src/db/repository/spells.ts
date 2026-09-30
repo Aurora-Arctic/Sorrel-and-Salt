@@ -72,7 +72,7 @@ export function findManyInSpell<TTable extends PgTable & SpellScoped & Unscoped>
  * The ingredients among `ingredientIds` that a spell this member may read
  * holds — soft-deleted ones included. The second escape hatch, and the only
  * read that returns a deleted ingredient: a spell is a record of a working, so
- * what went into the jar stays in it (claude-docs/db.md, "What a spell holds").
+ * what went into the jar stays in it (claude-docs/db/spell-visibility.md, "What a spell holds").
  * Everything else still filters. The spell must be readable and live, the
  * layer live, and the ingredient in the compendium or the proof's coven — a
  * layer's foreign key checks the id alone, so the tier is held here.

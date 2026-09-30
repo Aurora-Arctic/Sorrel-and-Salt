@@ -69,7 +69,7 @@ describe('inventory_items schema', () => {
   });
 
   // "Held, not yet measured" and "held, none left" are different facts —
-  // claude-docs/db.md, "Nullability, and why zero is not the same as nothing".
+  // claude-docs/db/stock.md, "Nullability, and why zero is not the same as nothing".
   it('leaves the measurements nullable, so an unmeasured jar is not an empty one', () => {
     for (const column of [
       'quantity_on_hand',

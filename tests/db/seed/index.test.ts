@@ -10,7 +10,7 @@ import type { UserRow } from './types';
 // The `minimal` scenario against the real schema, every table emptied first.
 // The handle is this file's own; that the seed writes through it rather than
 // a client of its own is enforced by lint, not here —
-// claude-docs/db.md, "The seed module".
+// claude-docs/db/seed-module.md, "The seed module".
 
 // Every admin-curated table; `minimal` leaves all of them empty.
 const COMPENDIUM_TABLES = [

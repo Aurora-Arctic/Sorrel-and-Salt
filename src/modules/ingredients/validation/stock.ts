@@ -7,7 +7,7 @@ import { UNITS } from '../schema/units';
 // derives it from `unit` with `dimensionOf`, so the two cannot disagree.
 
 // Not a CHECK constraint: a negative amount is a refusal with something to
-// say, so it is said here (claude-docs/db.md, "Nullability, and why zero is not
+// say, so it is said here (claude-docs/db/stock.md, "Nullability, and why zero is not
 // the same as nothing").
 const amount = (label: string) =>
   z

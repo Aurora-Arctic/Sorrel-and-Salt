@@ -6,7 +6,7 @@ import { spells } from './spells';
 // What a spell is *meant to do* (story 48) — the assigned categories, never the
 // derived ones, which are the union of its ingredients' and stored nowhere.
 // Hard-deleted (MB.34), no `workspace_id`, so the service scopes through the
-// parent spell (claude-docs/db.md, "spell_categories").
+// parent spell (claude-docs/db/spell-categories.md, "spell_categories").
 export const spellCategories = pgTable(
   'spell_categories',
   {

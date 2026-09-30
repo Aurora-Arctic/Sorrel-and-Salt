@@ -7,7 +7,7 @@ import { auditColumns } from '../../identity/schema/users';
 // clear 4.5:1 on both grounds; stored as hexes because a runtime group has no
 // build-time Sass token; no CHECK — the service validates, where it can name
 // the ratio missed. No order column: groups list alphabetically
-// (claude-docs/db.md, "Categories, and the two group vocabularies").
+// (claude-docs/db/categories.md, "Categories, and the two group vocabularies").
 export const categoryGroups = pgTable(
   'category_groups',
   {

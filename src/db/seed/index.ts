@@ -22,7 +22,10 @@ export function resolveScenario(value: string | undefined): SeedScenario {
   return scenario;
 }
 
-/** One seed module for Docker, Vitest and Playwright; each hands over its own handle (claude-docs/db.md, "The seed module"). */
+/**
+ * One seed module for Docker, Vitest and Playwright; each hands over its own
+ * handle (claude-docs/db/seed-module.md, "The seed module").
+ */
 export async function seed(
   db: SeedDatabase,
   { scenario }: { scenario: SeedScenario },

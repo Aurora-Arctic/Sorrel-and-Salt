@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // The repo's one database CLI: reaching the database means importing the
-// client, and that exemption set is six files pinned by test (claude-docs/db.md,
+// client, and that exemption set is six files pinned by test (claude-docs/db/client-imports.md,
 // "Who may import the client"). `categories`, `forms` and `astrology` are
 // reference data, not scenarios — what migrate.yml seeds after migrating. Runs through `tsx`:
 // Node's own type stripping resolves no extensionless relative import.

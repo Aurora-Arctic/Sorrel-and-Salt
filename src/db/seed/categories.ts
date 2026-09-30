@@ -8,7 +8,7 @@ import type { SeedCategory, SeedCategoryGroup, SeedDatabase, SeedTransaction } f
 // an admin may edit. Not a scenario — migrate.yml seeds it on its own after
 // migrating, so it inserts the bootstrap admin itself. No slug is written down:
 // every one is `slugify(name)`, which expands `&` to `and`
-// (claude-docs/db.md, "The category seed").
+// (claude-docs/db/category-seed.md, "The category seed").
 
 /**
  * Each group's name mapped to its key in M0.7's `$category-groups` Sass map —

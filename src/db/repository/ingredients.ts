@@ -61,7 +61,7 @@ export function findManyOfIngredients<
  * The three matches are a `UNION ALL` under `id IN (…)`, not an `OR` beside
  * the scope: Postgres cannot turn a subquery inside an `OR` into a join, so
  * that form walks `ingredients` whole, and `UNION`'s de-duplication (which
- * `IN` already does) walks `ingredients_pkey` whole (claude-docs/db.md,
+ * `IN` already does) walks `ingredients_pkey` whole (claude-docs/db/fuzzy-matching.md,
  * "Fuzzy matching").
  */
 export function findSimilarIngredients(
@@ -108,7 +108,7 @@ export function findSimilarIngredients(
 
 /**
  * One page of the compendium under `filter` — the public list, so no proof
- * (claude-docs/db.md, "The compendium read"). A search pages best match first,
+ * (claude-docs/db/compendium-read.md, "The compendium read"). A search pages best match first,
  * `(score DESC, name, id)`, and carries each row's score; a list without one
  * pages `(name, id)` with a null score.
  */
@@ -129,7 +129,7 @@ export function findCompendiumPage(
  * How many rows the compendium holds under `filter`, and how many of them come
  * before `start` in its pages' order — the position of the page whose first
  * row `start` is, null with none. One statement, over the page's own filter,
- * key and search join (claude-docs/db.md, "The compendium read").
+ * key and search join (claude-docs/db/compendium-read.md, "The compendium read").
  */
 export function findCompendiumCount(
   filter: IngredientFilter,
@@ -226,7 +226,7 @@ function compendiumList(filter: IngredientFilter): {
  * `word_similarity` — which the index's recheck has just computed — and the
  * score is the best of them, `max … group by id`. A plain column, so the
  * order and the page bound read it per matched row rather than a correlated
- * folk-name subquery per compendium row (claude-docs/db.md, "The compendium
+ * folk-name subquery per compendium row (claude-docs/db/compendium-read.md, "The compendium
  * read"). Blank means no search.
  */
 function searchMatch(

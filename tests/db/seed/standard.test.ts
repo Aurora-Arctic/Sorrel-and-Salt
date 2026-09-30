@@ -21,7 +21,7 @@ import type { CompendiumEntryRow, MemberRow, UserRow } from './types';
 // membership is two real foreign keys and the compendium's identity a
 // generated column. It is awkward on purpose — five "Cat's Claw"s, a mineral
 // variety, a `none`, an `unknown`, an uncurated form —
-// claude-docs/db.md, "The standard scenario".
+// claude-docs/db/standard-scenario.md, "The standard scenario".
 
 const PROBE = 'standard_probe_acting_user';
 

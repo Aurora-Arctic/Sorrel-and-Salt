@@ -26,7 +26,7 @@ export const unitDimension = pgEnum('unit_dimension', UNIT_DIMENSIONS);
 // from the same map as the enums. Literal SQL for ingredients.ts's reason; only
 // this module's constants are interpolated. The first conjunct is not optional:
 // a CHECK passes on NULL, so without the `is null` biconditional a half-null
-// row would slip through (claude-docs/db.md, "The dimension stored beside the unit").
+// row would slip through (claude-docs/db/stock.md, "The dimension stored beside the unit").
 const UNIT_MATCHES_DIMENSION = sql.raw(
   [
     '(unit is null) = (unit_dimension is null)',

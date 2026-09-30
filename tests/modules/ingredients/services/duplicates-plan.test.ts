@@ -7,7 +7,7 @@ import type { Logged } from '../../../support/db/types';
 
 // The query findPossibleDuplicates actually sends, planned. Its results look
 // the same whether or not the trigram indexes are reachable, so the plan is
-// the only evidence (claude-docs/db.md, "Fuzzy matching").
+// the only evidence (claude-docs/db/fuzzy-matching.md, "Fuzzy matching").
 //
 // The connection is rebuilt with a logger rather than the query copied here:
 // a hand-written copy would prove a plan for SQL the service may not send.

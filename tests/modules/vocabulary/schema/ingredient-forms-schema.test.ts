@@ -101,7 +101,8 @@ describe('ingredient_forms schema', () => {
   });
 
   // The autofill matches a description as well as a name, by `%` and `<%`,
-  // and only a trigram index answers either (claude-docs/db.md, "The member's autofill").
+  // and only a trigram index answers either (claude-docs/db/member-autofill.md,
+  // "The member's autofill").
   it('declares one gin trigram index over name and description, neither unique nor partial', () => {
     const trigram = indexes.find((index) => index.config.name === FORMS_TRGM);
 
@@ -124,7 +125,7 @@ describe('ingredient_forms schema', () => {
 // §5: `ingredients.form` is text, not a foreign key to this table — an FK would
 // key identity on a surrogate id and make an uncurated value unwritable.
 // Asserted from both the Drizzle schema and the shipped SQL —
-// claude-docs/db.md, "The ingredient identity model".
+// claude-docs/db/identity-model.md, "The ingredient identity model".
 describe('ingredients.form is text over this vocabulary, not a foreign key to it', () => {
   it('declares form as a nullable text column', () => {
     const form = tableFacts(ingredients).columns.find((column) => column.name === 'form');

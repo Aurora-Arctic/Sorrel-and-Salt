@@ -11,7 +11,7 @@ import type { DesignFormGroup, FormGroupRow, FormRow } from './types';
 
 // §5's six form groups and every form under them, asserted against §5's own
 // table rather than a copy, against the real tables emptied first —
-// claude-docs/db.md, "The form vocabulary seed". The regrouping's own property
+// claude-docs/db/form-vocabulary-seed.md, "The form vocabulary seed". The regrouping's own property
 // is asserted too: no section holds more than half the list.
 
 const DESIGN_DOC = fromRoot('claude-docs/DESIGN.md');

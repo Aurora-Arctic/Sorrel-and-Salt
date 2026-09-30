@@ -12,7 +12,7 @@ import { ingredientSlug } from '@/lib/slugify';
 
 // The compendium search folds accents through `unaccent_immutable`, and the
 // two expression indexes are what let a fold reach a trigram index at all —
-// claude-docs/db.md, "The compendium read".
+// claude-docs/db/compendium-read.md, "The compendium read".
 const UNACCENT_INDEX = 'ingredients_unaccent_trgm';
 const FOLK_NAMES_UNACCENT_INDEX = 'ingredient_folk_names_unaccent_trgm';
 const WRAPPER = 'unaccent_immutable';

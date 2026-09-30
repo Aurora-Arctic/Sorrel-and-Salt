@@ -14,7 +14,7 @@ import type {
 // `auditColumns` existed and silently dropped its stamps (MB.60). The
 // instances live beside `users`, in src/modules/identity/schema/users.ts,
 // so this module depends on nothing in a module and any schema file can be
-// the first one loaded (claude-docs/db.md, "Audit columns and applyAudit").
+// the first one loaded (claude-docs/db/audit-columns.md, "Audit columns and applyAudit").
 export function auditStampColumnsReferencing(usersId: UsersIdReference) {
   return {
     createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -25,7 +25,7 @@ export function auditStampColumnsReferencing(usersId: UsersIdReference) {
 }
 
 // The two the soft-deleted tables add to the stamps. Which tables take which:
-// claude-docs/db.md, "Hard delete on two join tables".
+// claude-docs/db/hard-delete-join-tables.md, "Hard delete on two join tables".
 export function deletionColumnsReferencing(usersId: UsersIdReference) {
   return {
     deletedAt: timestamp('deleted_at'),

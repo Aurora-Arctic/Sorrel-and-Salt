@@ -25,7 +25,7 @@ import type {
 // same person in every suite. The compendium is deliberately awkward — five
 // "Cat's Claw" rows, mineral varieties, `none` and `unknown`, an uncurated
 // form — because tidy data exercises nothing the identity model exists for
-// (claude-docs/db.md, "The compendium is awkward on purpose"). Writes go through
+// (claude-docs/db/standard-scenario.md, "The compendium is awkward on purpose"). Writes go through
 // the handle `seed()` was given, not `withAudit` — see minimal.ts.
 
 /**
