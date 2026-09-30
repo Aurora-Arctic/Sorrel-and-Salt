@@ -240,7 +240,8 @@ function inUtc(at: Date): string {
 
 /**
  * Soft-deletes a compendium entry, stamping who deleted it. Its folk names
- * and category links stay: nothing reads them past a deleted parent.
+ * and category links stay, and a spell holding it still reaches it
+ * (claude-docs/db.md, "What a spell holds").
  *
  * @throws {Forbidden} the caller is not a site admin.
  * @throws {NotFound} no live compendium entry has this id — one already
