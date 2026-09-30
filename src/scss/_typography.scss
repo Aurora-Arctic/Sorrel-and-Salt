@@ -130,6 +130,29 @@
     color: $text-muted;
   }
 
+  // The muted sentence or two under a heading that says what the section is
+  // for. Body size: it is read, not skimmed. A `p` already stops at the
+  // measure; anything else given the class stops there too.
+  .lede {
+    max-width: $measure;
+    color: $text-muted;
+  }
+
+  // A metadata line — a formal name and form, a date, a count — tight under
+  // what it describes.
+  .meta {
+    margin: 0;
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+
+  // The italic of a botanical, fungal or zoological binomial. Mineral and
+  // chemical names are set upright, so the component that knows the
+  // nomenclature decides whether to add it.
+  .binomial {
+    font-style: italic;
+  }
+
   // For headings that stack directly, as in a type sample.
   .tight-headings {
     h1,
