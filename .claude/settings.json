@@ -4,6 +4,9 @@
     "pr": "",
     "sessionUrl": false
   },
+  "enabledPlugins": {
+    "vercel@claude-plugins-official": false
+  },
   "permissions": {
     "ask": [
       "Bash(git push origin *)",
