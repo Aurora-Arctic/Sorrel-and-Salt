@@ -288,13 +288,11 @@ describe('Grimoire — the spell and what it is made of', () => {
   });
 });
 
-// M5.2's admin curation service (Wave 8) is what will actually read and write
-// the compendium; nothing that far ahead exists yet to call. What this proves
-// instead is the invariant that has to hold for it to work when it lands:
-// `assertMembership` neither special-cases nor penalizes the admin role
-// (membership.ts, "A site admin gets no bypass"), so E's refusal above is the
-// ordinary stranger's refusal and nothing about it can regress a capability
-// that is checked on `session.role` alone.
+// The compendium's writes check the site role alone (`assertSiteAdmin`), so
+// what has to hold beside them is that `assertMembership` neither
+// special-cases nor penalizes the admin role (membership.ts, "A site admin
+// gets no bypass"): E's refusal above is the ordinary stranger's refusal, and
+// nothing about it can regress a capability checked on `session.role`.
 describe('E’s site role carries no bypass and no penalty from the membership check', () => {
   it('is refused W exactly as a non-admin stranger with no membership row would be', async () => {
     const stranger = { id: '00000000-0000-0000-0000-0000000000fe', role: 'user' as const };
