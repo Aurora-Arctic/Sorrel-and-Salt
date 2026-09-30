@@ -9,8 +9,8 @@
   // Not modal-surface(): its shadow and radius would read as a dialog.
   .panel {
     background-color: $surface-card;
-    border-radius: 0.25rem;
-    padding: 1.5rem;
+    border-radius: radius('surface');
+    padding: space(5);
     @include theme-transition(background-color, border-color);
 
     @include reduced-motion {
@@ -20,7 +20,7 @@
 
   .badges {
     display: flex;
-    gap: 0.75rem;
+    gap: space(3);
     align-items: center;
   }
 
@@ -44,17 +44,17 @@
   // the padding and heading trim every instance wants.
   .modal {
     @include modal-surface;
-    padding: 1.5rem;
+    padding: space(5);
 
     h4 {
-      margin-bottom: 0.5rem;
+      margin-bottom: space(2);
     }
   }
 
   .modal__actions {
     display: flex;
-    gap: 0.75rem;
-    margin-top: 1rem;
+    gap: space(3);
+    margin-top: space(4);
   }
 
   // Shape shared by every button in the app, `SignInPanel`'s included
@@ -66,12 +66,13 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    // Between a mark and its label; SignInPanel's column is sized by it.
     gap: 0.625rem;
     font-family: $font-body;
-    font-size: 0.875rem;
+    font-size: type-size('small');
     font-weight: 500;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
+    padding: space(3) space(5);
+    border-radius: radius('control');
     border: 1px solid $accent;
     background-color: transparent;
     color: $accent;
@@ -103,29 +104,31 @@
     }
   }
 
-  // `[aria-disabled='true']` rather than a modifier class: a disabled `.btn`
-  // is a state, not a variant a caller opts into separately, and the
-  // attribute is what SignInPanel already sets to keep the button in the tab
-  // order (`disabled` itself would remove it — see claude-docs/components/sign-in-panel.md,
-  // "Unavailable providers"). Desaturated toward
-  // $text-muted rather than removed, so it still reads as a button rather
-  // than a blank slot. `:hover`/`:focus-visible` restate every property
-  // rather than leaving `.btn`'s own hover free to compete: a caller adding
-  // its own colour modifier (SignInPanel's brand classes) would otherwise
-  // tie this rule in specificity and the winner would depend on source
-  // order — SignInPanel avoids the whole question by not applying its
-  // brand-colour class to a disabled button at all.
+  // A state rather than a modifier class, from either attribute: `disabled`
+  // for a submit with nothing to send, which may leave the tab order, and
+  // `aria-disabled` for a button that must stay in it, as SignInPanel's
+  // unavailable providers do (claude-docs/components/sign-in-panel.md,
+  // "Unavailable providers"). Dashed and faded, the same as a disabled field,
+  // so it reads as a button that is off rather than a quiet one.
+  // `:hover`/`:focus-visible` restate every property rather than leaving
+  // `.btn`'s own hover free to compete: a caller adding its own colour
+  // modifier (SignInPanel's brand classes) would otherwise tie this rule in
+  // specificity and the winner would depend on source order — SignInPanel
+  // avoids the whole question by not applying its brand-colour class to a
+  // disabled button at all.
+  .btn:disabled,
   .btn[aria-disabled='true'] {
-    background-color: $surface-card;
+    background-color: transparent;
     border-color: $text-muted;
+    border-style: dashed;
     color: $text-muted;
-    opacity: 0.7;
+    opacity: 0.55;
     cursor: not-allowed;
     box-shadow: none;
 
     &:hover,
     &:focus-visible {
-      background-color: $surface-card;
+      background-color: transparent;
       border-color: $text-muted;
       color: $text-muted;
       box-shadow: none;
@@ -136,11 +139,258 @@
     }
   }
 
+  // The one filled button in a view: its primary action. Its hover is a
+  // step of its own, larger than a link's, or the fill barely changes.
+  .btn--solid {
+    background-color: $accent;
+    color: $text-on-color;
+
+    &:hover,
+    &:focus-visible {
+      background-color: $accent-solid-hover;
+      border-color: $accent-solid-hover;
+    }
+  }
+
+  // Cancel, dismiss, go back: an action that changes nothing, in the body
+  // ink, so it neither competes with the primary nor reads as destructive —
+  // and, unlike the muted ink, not as disabled either.
+  .btn--quiet {
+    border-color: $text-primary;
+    color: $text-primary;
+    box-shadow: none;
+
+    &:hover,
+    &:focus-visible {
+      background-color: $text-primary;
+    }
+  }
+
+  // A sentence about the whole view rather than one field: a form's root
+  // error, a sent confirmation. The role (`alert`, or `<output>`'s status)
+  // is the markup's, since only it knows whether the text arrived late.
+  .notice {
+    display: block;
+    max-width: $measure;
+    margin: 0;
+    padding: space(3) space(4);
+    border: 1px solid $text-muted;
+    border-radius: radius('control');
+    color: $text-primary;
+    font-size: type-size('small');
+    // A step over the 300 body weight: coloured text at this size thins out.
+    font-weight: 400;
+    @include theme-transition(border-color, color);
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
+
+  .notice--error {
+    border-color: $secondary;
+    color: $secondary;
+  }
+
+  .notice--success {
+    border-color: $accent;
+    color: $accent;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Form fields
+  // ---------------------------------------------------------------------------
+  // A field is its label, an optional hint, the control and, when there is
+  // one, its error — the resolver's or the server's, drawn the same. The
+  // control names the hint and the error in `aria-describedby` and carries
+  // `aria-invalid`, which is what draws the error edge.
+  // claude-docs/styling.md, "Form fields".
+
+  .form {
+    display: flex;
+    flex-direction: column;
+    // Wider than a field's own gap, so each field reads as one group.
+    gap: space(5);
+  }
+
+  .form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space(3);
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: space(2);
+  }
+
+  .field__label {
+    font-size: type-size('small');
+    font-weight: 500;
+  }
+
+  .field:has(:disabled) .field__label {
+    color: $text-muted;
+  }
+
+  .field__hint,
+  .field__error {
+    max-width: $measure;
+    margin: 0;
+  }
+
+  .field__hint {
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+
+  .field__error {
+    color: $secondary;
+    font-size: type-size('small');
+    font-weight: 400;
+  }
+
+  // Text, textarea and select share one box. Weight 400 rather than the body's
+  // 300: what a person typed should read firmer than the prose around it.
+  .input,
+  .textarea,
+  .select {
+    box-sizing: border-box;
+    width: 100%;
+    // A 44px target at body size, whatever the platform's line height.
+    min-height: 2.75rem;
+    margin: 0;
+    padding: space(2) space(3);
+    border: 1px solid $text-muted;
+    border-radius: radius('control');
+    background-color: $surface-card;
+    color: $text-primary;
+    font-family: $font-body;
+    font-size: type-size('body');
+    font-weight: 400;
+    @include theme-transition(background-color, border-color, box-shadow, color);
+
+    &::placeholder {
+      color: $text-muted;
+      opacity: 1;
+    }
+
+    &:hover {
+      border-color: $text-primary;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    // A second pixel inside the edge, so the error is a change of shape as
+    // well as of colour.
+    &[aria-invalid='true'] {
+      border-color: $secondary;
+      box-shadow: inset 0 0 0 1px $secondary;
+    }
+
+    // Dashed and unfilled, as a disabled button is, with its label dimmed
+    // below: a faded field alone reads as a live one on a dim screen.
+    &:disabled {
+      border-style: dashed;
+      background-color: transparent;
+      color: $text-muted;
+      opacity: 0.7;
+      cursor: not-allowed;
+
+      &:hover {
+        border-color: $text-muted;
+      }
+    }
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
+
+  .textarea {
+    min-height: 6rem;
+    line-height: 1.5;
+    resize: vertical;
+  }
+
+  // The platform's own arrow varies by OS and ignores the theme, so the
+  // chevron is two gradient triangles in the muted ink.
+  .select {
+    appearance: none;
+    padding-right: space(7);
+    background-image:
+      linear-gradient(45deg, transparent 50%, $text-muted 50%),
+      linear-gradient(135deg, $text-muted 50%, transparent 50%);
+    background-position:
+      calc(100% - 1.25rem) 50%,
+      calc(100% - 0.9375rem) 50%;
+    background-size: 0.3125rem 0.3125rem;
+    background-repeat: no-repeat;
+    cursor: pointer;
+
+    // Forced colours drop background images, and the chevron with them.
+    @media (forced-colors: active) {
+      appearance: auto;
+      background-image: none;
+    }
+  }
+
+  // A label wrapping its box, so the whole line is the target.
+  .checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: space(2);
+    cursor: pointer;
+
+    input {
+      flex: none;
+      width: 1.125rem;
+      height: 1.125rem;
+      margin: 0;
+      accent-color: $accent;
+      cursor: inherit;
+
+      &:focus-visible {
+        @include focus-ring;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+      }
+    }
+
+    &:has(input:disabled) {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  // Groups rows under one name — checkboxes, or a list of entries.
+  .fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: space(2);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .fieldset__legend {
+    margin-bottom: space(2);
+    padding: 0;
+    font-size: type-size('small');
+    font-weight: 500;
+  }
+
   // Chips and badges laid out as an IngredientCard will need; composes with `.modal`.
   .specimen {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: space(3);
   }
 
   .specimen__top {
@@ -148,7 +398,7 @@
     justify-content: space-between;
     // The badge cluster hugs its own content rather than stretching.
     align-items: flex-start;
-    gap: 1rem;
+    gap: space(4);
 
     h4 {
       margin-bottom: 0;
@@ -160,17 +410,17 @@
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: space(2);
   }
 
   .specimen__stock {
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
+    gap: space(4);
     margin: 0;
-    padding-top: 0.5rem;
+    padding-top: space(2);
     border-top: 1px solid $text-muted;
-    font-size: 0.8rem;
+    font-size: type-size('caption');
     color: $text-muted;
     opacity: 0.85;
   }
