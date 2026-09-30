@@ -32,12 +32,15 @@ $sorrel-glow: color.adjust(
   color.adjust($sorrel, $lightness: 32%),
   $saturation: 8%
 ); // dark accent, hover
-$sorrel-deep: color.adjust($sorrel, $lightness: -8%); // light accent, hover
+// $sorrel itself reads olive-black on parchment, so an outline button in it
+// barely reads as green. Darkened as it is saturated, to hold 4.5:1.
+$sorrel-vivid: color.adjust($sorrel, $saturation: 40%, $lightness: -5%); // light accent
+$sorrel-deep: color.adjust($sorrel-vivid, $lightness: -8%); // light accent, hover
 // The solid button's hover, a larger step than a link's: a fill changing one
 // step under the pointer barely registers. More saturated, rather than only
 // further from the ground.
 $sorrel-spring: color.adjust($sorrel, $lightness: 38%, $saturation: 40%); // dark
-$sorrel-rich: color.adjust($sorrel, $lightness: -8%, $saturation: 20%); // light
+$sorrel-rich: color.adjust($sorrel-vivid, $lightness: -8%, $saturation: 20%); // light
 $wax-warm: color.adjust($wax, $lightness: 22%); // dark secondary
 $wax-glow: color.adjust(
   color.adjust($wax, $lightness: 30%),
@@ -179,11 +182,11 @@ $badge-palettes: (
     dark: $chalk-muted,
     light: $ink-muted,
   ),
-  // The accent's own inks: $text-on-color on them is 7.95:1 dark, 5.03:1 light.
+  // The accent's own inks: $text-on-color on them is 7.95:1 dark, 4.68:1 light.
   'last-used': (
       treatment: solid,
       dark: $sorrel-bright,
-      light: $sorrel,
+      light: $sorrel-vivid,
     )
 );
 
@@ -262,7 +265,7 @@ $ornament-multiply: var(--ornament-multiply);
 
 // The label on a solid fill — the selected chip, the safety badge. An alias for
 // the page surface: on dark the fill is the light thing and the label goes
-// dark, on light the reverse. Worst pairing 4.74:1. See
+// dark, on light the reverse. Worst pairing 4.68:1. See
 // claude-docs/styling.md, "$text-on-color".
 $text-on-color: var(--surface-page);
 

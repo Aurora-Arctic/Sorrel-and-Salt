@@ -19,8 +19,8 @@ to.
   `badge-token('safety', 'fill')`, `$text-on-color`. A typo is then a compile
   error rather than a silently wrong colour.
 - **WCAG AA 4.5:1 is the floor for every token, in both themes**, and several
-  pairings sit close to it (`wellbeing` at 4.74 against the light page,
-  `--secondary` at 4.80 against the dark card). Re-measure when changing a
+  pairings sit close to it (the light `--accent` at 4.68 and `wellbeing` at
+  4.74 against the light page, `--secondary` at 4.80 against the dark card). Re-measure when changing a
   colour; do not assume headroom.
 - **Only `_variables.scss` and the theme mixins may name a raw hue.** Needing a
   colour that is not a token means adding a token, not inlining one.
@@ -108,19 +108,26 @@ chalk. A mix lowers the chroma with the strength, as ink thinned on paper does.
 Light keeps `$iron-gall` lightened 20% (`#5e5645`), which reads as the same
 ink.
 
-Two variants exist for one use each:
+Three variants exist for one use each:
 
+- **`$sorrel-vivid`, the light theme's `--accent`**: `$sorrel` at +40%
+  saturation and −5% lightness, `#397511`, 4.68:1 on the page and 5.20:1 on
+  the card. `$sorrel` itself reads olive-black on parchment, and an outline
+  button in it barely registers as green; saturating it alone lifts it under
+  4.5:1, so it darkens as it saturates. The light hovers derive from it rather
+  than from `$sorrel`, or hovering would look like the colour draining out.
+  Dark keeps `$sorrel-bright`.
 - **`$wax-vivid`, the light theme's `--secondary`**: `$wax` at +30% saturation
   and +4% lightness, `#ba2b14`, 5.02:1 on the page. `$wax` itself reads
   brown on parchment, and an error edge in it barely separates from a field's
   own. Dark keeps `$wax-warm`. Destructive buttons share the token.
 - **`$sorrel-spring` / `$sorrel-rich`, the solid button's hover
   (`--accent-solid-hover`)**: `$sorrel` at +38% lightness and +40% saturation
-  on dark (`#a5eb76`), and −8% lightness and +20% saturation on light
-  (`#355b1b`). The link's `--accent-hover` is one step, which a filled
+  on dark (`#a5eb76`), and `$sorrel-vivid` at −8% lightness and +20%
+  saturation on light (`#265a03`). The link's `--accent-hover` is one step, which a filled
   button barely shows under the pointer; these are larger and more saturated,
   rather than only further from the ground. The label on them measures 13.13:1
-  and 6.48:1.
+  and 6.80:1.
   Shadow inks are per-theme: a 0.8-alpha near-black under a card reads as a hole
   punched in parchment, so light mode gets a much softer one.
 
@@ -172,8 +179,8 @@ exactly one alarming badge in the app and spends no hue, which matters because e
 hue not already reserved belongs to one of the eight groups. **Last used** marks
 the sign-in button this browser last signed in with (MB.77). It is a pointer,
 not a warning, so it is drawn solid in the accent's own inks (`$sorrel-bright`
-dark, `$sorrel` light), a hue already reserved, and spends none of the groups'.
-Its label on the fill is 7.95:1 dark and 5.03:1 light.
+dark, `$sorrel-vivid` light), a hue already reserved, and spends none of the groups'.
+Its label on the fill is 7.95:1 dark and 4.68:1 light.
 
 Each palette is one ink per theme plus the **treatment** it is drawn in, and the
 treatment decides which parts it emits:
@@ -218,7 +225,7 @@ thing and the label goes dark, on light the reverse.
 It needs no contrast table of its own. A solid fill's label sits on the fill, and
 the fill's ratio against the page surface is exactly the `vs page` figure already
 measured for every group and every ink — the two questions have the same
-arithmetic. **Worst pairing in the set is 4.74:1.**
+arithmetic. **Worst pairing in the set is 4.68:1**, the light accent.
 
 ### `$ornament-screen` and `$ornament-multiply`
 

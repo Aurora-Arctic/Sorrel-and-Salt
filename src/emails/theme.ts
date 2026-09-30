@@ -18,7 +18,7 @@ export const EMAIL_THEMES = {
     page: '#efe9da',
     text: '#23201a',
     muted: '#5e5645',
-    accent: '#4a6b34',
+    accent: '#397511',
     onAccent: '#efe9da',
     ornament: { blend: 'multiply', opacity: 0.4 },
   },
