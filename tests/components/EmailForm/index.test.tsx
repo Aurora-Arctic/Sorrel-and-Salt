@@ -105,9 +105,20 @@ describe('EmailForm', () => {
       "We've sent a link to new@example.test. Open it in this browser within an hour to confirm it.",
     );
     // The typed value goes as typed; normalising is the service's job.
-    expect(calls).toEqual([{ email: 'New@Example.test' }]);
+    expect(calls).toEqual([{ email: 'New@Example.test', next: '/coven' }]);
     // The row's own address (still the old one) is never what the message names.
     expect(status).not.toHaveTextContent('old@example.test');
+  });
+
+  // The link it asks for lands back here, and Continue goes on from there.
+  it('sends where Continue goes with the address, so the mailed link carries it', async () => {
+    const calls = acceptSetEmail();
+    renderForm(<EmailForm email="ada@example.test" verified={false} next="/admin" />);
+
+    fireEvent.submit(submit().closest('form') as HTMLFormElement);
+
+    await screen.findByRole('status');
+    expect(calls).toEqual([{ email: 'ada@example.test', next: '/admin' }]);
   });
 
   // One mail per minute from a form, so a held-down Enter key or a nervous

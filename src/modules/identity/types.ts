@@ -23,8 +23,11 @@ export type PrimaryAdminOutcome =
  * GraphQL context, because it reaches Better Auth and a service may not.
  */
 export interface EmailVerificationSender {
-  /** Mails the row's own, still-unverified address its link again. */
-  resend(email: string): Promise<void>;
-  /** Mails `next` a link that, followed from the row's session, makes it the row's address. */
-  requestChange(current: string, next: string): Promise<void>;
+  /** Mails the row's own, still-unverified address its link again, landing on the way to `next`. */
+  resend(email: string, next?: string): Promise<void>;
+  /**
+   * Mails `address` a link that, followed from the row's session, makes it the
+   * row's address, landing on the way to `next`.
+   */
+  requestChange(current: string, address: string, next?: string): Promise<void>;
 }

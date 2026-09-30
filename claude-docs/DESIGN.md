@@ -709,7 +709,7 @@ type Mutation {
   createInvitation(workspaceId: ID!, email: String!, role: InvitableRole!): Invitation! # the link is mailed; no response carries it
   acceptInvitation(token: String!): WorkspaceMember! # the session's verified email must match the invitation's
   revokeInvitation(id: ID!): Invitation!
-  setEmail(email: String!): User! # MB.54; counts once verified by mail
+  setEmail(email: String!, next: String): User! # MB.54; counts once verified by mail; the link lands on the way to next (MB.111)
   # admin mutations gated by users.role; grantWorkspaceCreation(userId) is admin-only
   createAdminInvitation(email: String!, note: String): AdminInvitation! # mailed, never returned (MB.70)
   acceptAdminInvitation(token: String!): User! # a grant, through the admin role service

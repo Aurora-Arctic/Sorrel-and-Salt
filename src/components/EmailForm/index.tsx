@@ -18,8 +18,8 @@ import './index.scss';
 // DESIGN.md §7's resolver pattern arrives with the shared Zod schemas (M4.5).
 
 const SetEmailDocument = graphql(`
-  mutation SetEmail($email: String!) {
-    setEmail(email: $email) {
+  mutation SetEmail($email: String!, $next: String) {
+    setEmail(email: $email, next: $next) {
       id
       email
     }
@@ -98,7 +98,8 @@ const EmailForm = ({
   const coolingDown = secondsLeft > 0;
 
   const mutation = useMutation({
-    mutationFn: (address: string) => graphqlRequest(SetEmailDocument, { email: address }),
+    // The link it asks for lands back here, and Continue goes on to `next`.
+    mutationFn: (address: string) => graphqlRequest(SetEmailDocument, { email: address, next }),
     onSuccess: (_data, address) => {
       setSentTo(normalise(address));
       setCooldownUntil(Date.now() + resendDelaySeconds * 1000);

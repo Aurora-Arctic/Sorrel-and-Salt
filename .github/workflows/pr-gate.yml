@@ -1,5 +1,16 @@
 name: PR Gate
 
+# The run's title in the Actions list. The default is the PR's title alone,
+# under which an edit's run and a close's run — both of which stand down in
+# `changes` — look like the gate they queue behind, and a gate cancelled by
+# hand to let one through leaves its commit ungated. The group keys on
+# `github.workflow`, the name above, which this does not touch.
+run-name: >-
+  ${{ github.event.pull_request.title }}${{
+  github.event.action == 'edited' && ' · edit: waits, then cancels itself unless retargeted'
+  || github.event.action == 'closed' && ' · close: cancels the runs for this PR, then itself'
+  || '' }}
+
 # The gate on every PR into `main`, `staging` or `release/*`. format, audit
 # and gitflow always run; the rest are path-filtered by `changes`.
 # claude-docs/ci.md, "Aggregating workflows" is the walkthrough.

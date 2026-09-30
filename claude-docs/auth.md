@@ -583,14 +583,15 @@ proved. Stories 58 and 59; the plan is
 component is [`components/email-form.md`](components/email-form.md).
 
 - **One rule: an address becomes the account's at verification, never
-  before.** `setEmail(session, email, sender)` in
+  before.** `setEmail(session, email, sender, next?)` in
   `src/modules/identity/services/email.ts` writes nothing to `users.email`.
   It normalises and validates the address (`ValidationError` on `email`),
   refuses one a live _verified_ account holds — a provisional holder lapses
   first — stamps the row as mailed (`recordVerificationSent`, which is also
   what restarts a provisional caller's window), and asks the sender to mail
   the new address a change link. The row's own, still-unverified address is
-  mailed again instead; verified, there is nothing to do. The criterion this
+  mailed again instead; verified, there is nothing to do. Either way `next`
+  is handed to the sender as given, for the link's landing. The criterion this
   replaced, "marks the row unverified", would have put an account older than
   the cap under the sweep.
 - **One verification mail a minute per account.** `users.verification_sent_at`
@@ -614,12 +615,29 @@ component is [`components/email-form.md`](components/email-form.md).
   Following it, `/verify-email` swaps `email` and sets `emailVerified` in one
   adapter write, stamped by the update hook. `user.changeEmail` stays off:
   this replaces it, and nothing on `/api/auth` is added.
-- **Every link lands on the confirmed view.** Better Auth would land a
-  sign-up's link where the sign-in asked to go; the `sendVerificationEmail`
-  hook rewrites the link's `callbackURL` to `VERIFIED_LANDING`
-  (`/account/email?verified`, `src/lib/account-email.ts`), and the resend
-  and change links carry it from the start. A refusal drops the flag before
-  appending `?error=`, so the page never reads a refusal as a confirmation.
+- **Every link lands on the confirmed view, carrying where the account was
+  going** (MB.111). Better Auth would land a sign-up's link where the sign-in
+  asked to go; the `sendVerificationEmail` hook rewrites the link's
+  `callbackURL` to `verifiedLanding(next)` (`src/lib/account-email.ts`),
+  `/account/email?verified&next=<path>`, and the confirmed view's Continue
+  goes on to that `next`. The hook reads `next` off the link's own
+  `callbackURL` with `returnPathOf`: a sign-up's is the sign-in's
+  destination, the one the after-hook put on the email page it landed on;
+  one already on the email page — a resend's landing, or a sign-in headed
+  there — gives up its own `next`, never the page itself. The email page
+  hands its `next` to `setEmail`, and the sender builds the resend and
+  change links' landings with the same `verifiedLanding`. `next` passes
+  `safeReturnPath` when the link is built as well as when the page reads
+  it, so a mailed link never names another site — one that would is dropped,
+  and the link lands as it would with none. `/coven`, where Continue goes
+  without a `next`, is left off too, so a link with nowhere else to go lands
+  on `/account/email?verified` as it always did.
+- **A refusal keeps the rest of the landing.** `refuseVerification` drops the
+  flag before appending `?error=`, so the page never reads a refusal as a
+  confirmation, and keeps `next`, so a link sent again from there still
+  carries it. Better Auth's own refusals — an expired or broken token — append
+  to the landing verbatim, flag and all; the page reads any `?error=` as a
+  refusal.
 - **Gated before the endpoint.** Better Auth's change branch calls no
   `beforeEmailVerification` and, given no session, mints one for whoever
   opened the link. `gateEmailChange`, a `hooks.before` on `/verify-email` in
@@ -636,11 +654,11 @@ component is [`components/email-form.md`](components/email-form.md).
   (`/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify`), whose sentence
   says to sign in and open the link again — the token is still good, since
   the gate refused before the endpoint saw it. Nothing from the link travels:
-  not the token, not the address, and `next` is the fixed email page, so
-  signing in with the right account lands there with no error to explain
-  away. Only a browser signed in as someone else is sent to the email page
-  with `?error=SIGN_IN_TO_VERIFY`: it is signed in, so the page can tell it
-  which account to use. Signed out, the email page itself is unreachable —
+  not the token, not the address, not the link's own `next`. The sign-in's
+  `next` is the fixed email page, so signing in with the right account lands
+  there with no error to explain away. Only a browser signed in as someone
+  else is sent to the email page with `?error=SIGN_IN_TO_VERIFY`: it is
+  signed in, so the page can tell it which account to use. Signed out, the email page itself is unreachable —
   `requireSession()` would have bounced it to sign-in with the error in the
   return path, which is the confusion this avoids.
 - **The sender comes through the GraphQL context.** A service may not import
@@ -650,8 +668,9 @@ component is [`components/email-form.md`](components/email-form.md).
   the `setEmail` resolver — the way loaders are. `resend` calls
   `auth.api.sendVerificationEmail` with the request's own headers, so the
   existing hook restarts the window and mails; `requestChange` mints and
-  sends as above. `auth` is imported at call time there, since the route is
-  built at `NODE_ENV=production` in its tests.
+  sends as above. Each takes the `next` `setEmail` was given and lands its
+  link at `verifiedLanding(next)`. `auth` is imported at call time there,
+  since the route is built at `NODE_ENV=production` in its tests.
 - **A provider that shared no address gets a placeholder.** `orPlaceholder`
   in `socialProviders()` maps a profile with no email to
   `<providerId>-<providerAccountId>@pending.invalid`, `emailVerified: false`:
@@ -688,10 +707,14 @@ path>` from every page but that one (`isEmailPage`, exact on the pathname),
   session and the services refuse what a provisional account may not do,
   which is everything but `me` and `setEmail`.
 - **Tests.** `tests/modules/identity/services/email.test.ts` (the service,
-  with a fake sender), `tests/db/email-change.test.ts` (the whole round trip
-  through Better Auth's endpoints, including that an aged verified account
-  survives the sweep before and after a change), `tests/lib/auth.test.ts`
-  (the placeholder mapping), and `tests/acceptance/08-email-and-admin.test.ts`
+  with a fake sender), `tests/modules/identity/graphql/set-email.test.ts`
+  (the mutation's `next` reaching the sender), `tests/db/email-change.test.ts`
+  (the whole round trip through Better Auth's endpoints, including that an
+  aged verified account survives the sweep before and after a change, and
+  the change and resend links' landings), `tests/db/email-verification.test.ts`
+  (the sign-up link's landing and its refusals), `tests/lib/account-email.test.ts`
+  (`verifiedLanding` and `returnPathOf`), `tests/lib/auth.test.ts` (the
+  placeholder mapping), and `tests/acceptance/08-email-and-admin.test.ts`
   (stories 58 and 59).
 
 ### Granting a second admin — decided, not built (M2.9)

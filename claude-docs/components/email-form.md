@@ -8,14 +8,14 @@ the rendering and the `setEmail` mutation.
 
 ## The props contract
 
-| Prop          | Meaning                                                                                                                                                                                         |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `email`       | The row's address, or `''` when the provider shared none. The page maps a placeholder (`isPlaceholderEmail`, `@/modules/identity`) to `''`; the form never shows one.                           |
-| `verified`    | `users.email_verified`. Decides the status line and whether an unchanged address has anything to send.                                                                                          |
-| `confirmed`   | The page sets it when a followed link landed here (`?verified` on a verified row, with no `?error=`). The confirmed view: the verified line, the address, and "Continue" — no field, no button. |
-| `waitSeconds` | Seconds the server will refuse another mail for as of this render (`verificationWaitSeconds` of the row's `verification_sent_at`), so the countdown starts where it stands.                     |
-| `next`        | Where "Continue" goes — already run through `safeReturnPath()` (`src/lib/sign-in.ts`), the same guard `/sign-in` uses, so the page and this component agree on what is safe.                    |
-| `error`       | A readable sentence for a failed verification link, from `verifyErrorMessage()` (`src/lib/account-email.ts`) — never a raw `?error=` code. Shown as an alert on mount.                          |
+| Prop          | Meaning                                                                                                                                                                                                                                                            |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `email`       | The row's address, or `''` when the provider shared none. The page maps a placeholder (`isPlaceholderEmail`, `@/modules/identity`) to `''`; the form never shows one.                                                                                              |
+| `verified`    | `users.email_verified`. Decides the status line and whether an unchanged address has anything to send.                                                                                                                                                             |
+| `confirmed`   | The page sets it when a followed link landed here (`?verified` on a verified row, with no `?error=`). The confirmed view: the verified line, the address, and "Continue" — no field, no button.                                                                    |
+| `waitSeconds` | Seconds the server will refuse another mail for as of this render (`verificationWaitSeconds` of the row's `verification_sent_at`), so the countdown starts where it stands.                                                                                        |
+| `next`        | Where "Continue" goes — already run through `safeReturnPath()` (`src/lib/sign-in.ts`), the same guard `/sign-in` uses, so the page and this component agree on what is safe. Sent with every `setEmail`, so the link it mails lands back here carrying it (below). |
+| `error`       | A readable sentence for a failed verification link, from `verifyErrorMessage()` (`src/lib/account-email.ts`) — never a raw `?error=` code. Shown as an alert on mount.                                                                                             |
 
 Outside the confirmed view the field is always editable, whatever `verified`
 is: this page is how any user changes the address at any later time, not only
@@ -32,6 +32,16 @@ trimmed and lower-cased for display (the same normalisation the service
 stores), never the returned row's `email`. The typed value itself goes to the
 server untouched; normalising is the service's job, and doing it twice would
 let the two drift.
+
+## The link carries `next`
+
+Every submit sends `next` beside the typed address, and `setEmail` hands it to
+the sender, so the resend or change link lands on this page's confirmed view
+with the same `next`, and Continue goes on there
+([`auth.md`](../auth.md), "The email page"). A refused link lands here with
+`next` still beside its `?error=`, so a link sent again from that page
+carries it too. The component sends it as it was given; the sender guards it
+again where it builds the link.
 
 ## Two error surfaces
 
@@ -126,8 +136,8 @@ the prefilled and empty field; the confirmed view and the verified return
 visit; the status lines; the submit disabled for
 an unchanged verified address (case and whitespace included) and enabled once
 edited, or when unverified; the typed value sent as typed and named, normalised,
-in the status; a `VALIDATION` field error beside the input with `aria-invalid`
-and `aria-describedby`; a `FORBIDDEN` message in the alert; the last outcome
+in the status, with `next` beside it; a `VALIDATION` field error beside the
+input with `aria-invalid` and `aria-describedby`; a `FORBIDDEN` message in the alert; the last outcome
 cleared on resubmit; the cooldown, a submit refused inside it and the button
 back once it passes, and one started from `waitSeconds`; an empty field sent
 to the server with no native check in the way; a passed-in `error` as an

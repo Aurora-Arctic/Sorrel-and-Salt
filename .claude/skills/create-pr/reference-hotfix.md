@@ -10,10 +10,8 @@ A `hotfix/*` source branch always needs to land in both `main` (production) and 
 
 **Step 7 — gathering context.** Run `git diff <target>...HEAD` and `git log <target>..HEAD` once per target — the diffs will usually differ across targets (e.g. `staging` may already contain commits `main` doesn't), so each PR's summary should reflect its own comparison, not be copy-pasted from another target's. Task identification (the second half of `SKILL.md`'s step 7) runs once for the whole branch, not per target — do it alongside the first target's diff, and reuse the same issue (its `number` and `url`) for every target's PR in step 8.
 
-**Step 8 — drafting.** Reuse the same title across every target's PR unless the diffs genuinely warrant different framing. Each PR gets its own Summary/Test plan body based on its own step-7 diff, but the same `Closes #<number>` line (if step 7 found an issue) opens every target's body.
+**Step 8 — drafting.** Reuse the same title across every target's PR unless the diffs genuinely warrant different framing. Each PR gets its own Summary/Test plan body based on its own step-7 diff, but the same `Closes #<number>` line (if step 7 found an issue) opens every target's body. Run the tally once and end every target's body with the same block.
 
 **Step 9 — creating/updating.** Do this independently per target — an existing PR into one doesn't affect the others, and skipping one target (per step 7, if its diff against `HEAD` is empty) doesn't block creating/updating the rest. Report every PR URL back to the user.
 
 **Step 10 — the board.** Run once, not per target. After every PR has been created/updated, post a single `node scripts/task-board.mjs comment <ID> "<text>"` that lists all of them (`main`, `staging`, and the optional `release/*`), then `node scripts/task-board.mjs status <ID> "In Review"` once. If every target only updated an already-open PR, add the comment and leave the status alone. `SKILL.md`'s step 7 covers task identification and the not-found handling unchanged.
-
-**Step 11 — progress comment.** Run the tally once and post it on every PR step 9 created; an updated PR gets none.

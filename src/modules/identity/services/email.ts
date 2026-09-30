@@ -96,7 +96,8 @@ export async function isEmailHeldByAnother(email: string, userId: string): Promi
  * followed from this account's session. The row is stamped as mailed, which
  * also restarts a provisional caller's window so the link cannot outlive the
  * row. The row's own address, still unverified, is mailed again instead;
- * verified, there is nothing to do.
+ * verified, there is nothing to do. Either link lands on the way to `next`,
+ * which the sender guards where it builds the link.
  *
  * @throws {ValidationError} on `email`: malformed, unmailable, held by a
  * live verified account, or mailed within the last minute.
@@ -105,6 +106,7 @@ export async function setEmail(
   session: Session,
   input: string,
   sender: EmailVerificationSender,
+  next?: string,
 ): Promise<UserRow> {
   const me = await getMe(session);
   const email = normaliseEmail(input);
@@ -129,11 +131,11 @@ export async function setEmail(
 
   if (unchanged) {
     // Better Auth's endpoint: its hook stamps the row and mails.
-    await sender.resend(email);
+    await sender.resend(email, next);
     return me;
   }
 
   await recordVerificationSent(session);
-  await sender.requestChange(me.email, email);
+  await sender.requestChange(me.email, email, next);
   return me;
 }

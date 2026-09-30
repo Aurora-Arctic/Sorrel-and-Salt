@@ -40,15 +40,16 @@ builder.queryField('me', (t) =>
 );
 
 // Returns the row as it is: the address counts once the mailed link is
-// followed, so the answer's `email` is still the old one.
+// followed, so the answer's `email` is still the old one. `next` is where
+// the link's landing goes on to.
 builder.mutationField('setEmail', (t) =>
   t.field({
     type: UserRef,
-    args: { email: t.arg.string({ required: true }) },
+    args: { email: t.arg.string({ required: true }), next: t.arg.string() },
     authScopes: { signedIn: true },
-    resolve: (_root, { email }, { session, emailVerification }) => {
+    resolve: (_root, { email, next }, { session, emailVerification }) => {
       if (!session) throw new Forbidden();
-      return setEmail(session, email, emailVerification);
+      return setEmail(session, email, emailVerification, next ?? undefined);
     },
   }),
 );

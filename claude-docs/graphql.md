@@ -263,11 +263,12 @@ reaches no workspace. A `WorkspaceMember` carries `role`, `joinedAt`,
 the minimum a switcher needs, and M6 adds to it. `memberships` is a bare list,
 bounded by its parent, like every nested list (DESIGN.md §7).
 
-`setEmail(email: String!): User!` is the schema's first mutation (MB.54),
-registered by `identity` on the `Mutation` root that `src/graphql/schema/index.ts`
-declares beside `Query`. Signed-in only, by scope; the resolver hands the
-session, the address and the context's `emailVerification` sender to
-`setEmail` in the identity module. It answers the row as it is — the address
+`setEmail(email: String!, next: String): User!` is the schema's first
+mutation (MB.54), registered by `identity` on the `Mutation` root that
+`src/graphql/schema/index.ts` declares beside `Query`. Signed-in only, by
+scope; the resolver hands the session, the address, the context's
+`emailVerification` sender and `next` — where the mailed link's landing
+goes on to (MB.111) — to `setEmail` in the identity module. It answers the row as it is — the address
 changes only once the mailed link is followed
 ([`auth.md`](auth.md), "The email page") — and a refusal, an address held by
 another verified account or a second mail inside the minute included, is a

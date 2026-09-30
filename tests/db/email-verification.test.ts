@@ -7,6 +7,7 @@ import {
   ORIGIN,
   cookieHeader,
   expectSignedIn,
+  landingOf,
   signIn as signInThrough,
   stubProviderCredentials,
 } from '../support/oauth';
@@ -58,8 +59,8 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-const signIn = (provider: ProviderId, profile: Profile) =>
-  signInThrough(auth, server, provider, profile);
+const signIn = (provider: ProviderId, profile: Profile, callbackURL?: string) =>
+  signInThrough(auth, server, provider, profile, callbackURL);
 
 async function userRow(email: string) {
   const [row] = await sql`
@@ -134,7 +135,8 @@ describe('Story 58: following the link', () => {
     const response = await follow(link, cookie);
 
     expect(response.status).toBe(302);
-    // The email page's confirmed view, not where the sign-in was going.
+    // The email page's confirmed view. The sign-in was going to /coven, where
+    // Continue goes without a `next`, so the link carries none.
     expect(response.headers.get('location')).toBe('/account/email?verified');
     expect(await userRow(OWNER)).toMatchObject({ email_verified: true, updated_by: before.id });
   });
@@ -189,6 +191,63 @@ describe('Story 58: following the link', () => {
 
     expect(response.headers.get('location')).toBe('/account/email?verified');
     expect(await userRow(OWNER)).toEqual(verified);
+  });
+});
+
+describe('Story 58: the link carries on to where the account was going', () => {
+  const ADMIN_LANDING = '/account/email?verified&next=%2Fadmin';
+
+  /** A Microsoft sign-up headed for /admin, with its session and its mailed link. */
+  async function signUpHeadedForAdmin() {
+    const response = await signIn(
+      'microsoft',
+      { sub: 'ms-next', email: OWNER, verified: true },
+      '/admin',
+    );
+    // The `next` the account was sent with: the email page it landed on carries it.
+    expect(landingOf(response)).toBe('/account/email?next=%2Fadmin');
+    expect((await userRow(OWNER))?.email_verified).toBe(false);
+    return { cookie: cookieHeader(response), link: mailedLink() };
+  }
+
+  it("lands a sign-up's link on the confirmed view carrying the sign-in's destination", async () => {
+    const { cookie, link } = await signUpHeadedForAdmin();
+
+    expect(new URL(link).searchParams.get('callbackURL')).toBe(ADMIN_LANDING);
+
+    const response = await follow(link, cookie);
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get('location')).toBe(ADMIN_LANDING);
+    expect((await userRow(OWNER))?.email_verified).toBe(true);
+  });
+
+  it("keeps next beside the gate's error, and sends a signed-out click to sign in with nothing from the link", async () => {
+    const { cookie, link } = await signUpHeadedForAdmin();
+    const other = await signIn('google', { sub: 'g-next', email: STRANGER, verified: true });
+    expectSignedIn(other);
+
+    expect((await follow(link, cookieHeader(other))).headers.get('location')).toBe(
+      '/account/email?next=%2Fadmin&error=SIGN_IN_TO_VERIFY',
+    );
+    expect((await follow(link)).headers.get('location')).toBe(
+      '/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify',
+    );
+    // Both refusals were the session's: the owner's own follows it.
+    expect((await follow(link, cookie)).headers.get('location')).toBe(ADMIN_LANDING);
+  });
+
+  // Better Auth's own refusal, which appends to the landing verbatim, flag and
+  // all; the page reads any `?error=` as a refusal.
+  it("keeps next beside Better Auth's own error for a broken token", async () => {
+    const { cookie, link } = await signUpHeadedForAdmin();
+    const broken = new URL(link);
+    broken.searchParams.set('token', 'not.a.token');
+
+    const response = await follow(broken.href, cookie);
+
+    expect(response.headers.get('location')).toBe(`${ADMIN_LANDING}&error=INVALID_TOKEN`);
+    expect((await userRow(OWNER))?.email_verified).toBe(false);
   });
 });
 
