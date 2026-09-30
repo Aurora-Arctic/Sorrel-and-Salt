@@ -212,13 +212,18 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
   // `findManyByIds`. Thirteen since M5.2, whose admin writes are the first to
   // a two-tier table's compendium rows, which neither the unscoped methods
   // (the table carries `workspace_id`) nor the proof-scoped ones (the proof
-  // names a workspace) can reach. A fourteenth is the next such decision.
-  it('offers exactly thirteen writer methods — a fourteenth is a decision, not a convenience', async () => {
+  // names a workspace) can reach. Fourteen since MB.82, whose lapsed slug
+  // retirements are hard-deleted though the table carries `deleted_at`: a
+  // redirect that has ended answers nothing, and `delete` is typed to refuse
+  // such a table, so the one delete is named for it. A fifteenth is the next
+  // such decision.
+  it('offers exactly fourteen writer methods — a fifteenth is a decision, not a convenience', async () => {
     const methods = await withAudit(session, async (write) => Object.keys(write).sort());
 
     expect(methods).toEqual(
       [
         'delete',
+        'deleteLapsedSlugRetirements',
         'insert',
         'insertInCompendium',
         'insertInWorkspace',

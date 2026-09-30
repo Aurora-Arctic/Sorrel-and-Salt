@@ -70,6 +70,10 @@ const TIER_SEAM: string[] = [
   'findOneIngredient',
   // The entry a colliding compendium write names, found by the key it holds (M5.2).
   'findCompendiumEntryByIdentity',
+  // The entry at a compendium address, for the public route (MB.82).
+  'findCompendiumEntryBySlug',
+  // The entry a compendium address redirects to while its window runs (MB.82).
+  'findCompendiumSlugRedirect',
   // `withAudit`'s writer: the compendium tier's by-id writes, under the SiteAdmin proof (M5.2).
   'writerFor',
 ];
