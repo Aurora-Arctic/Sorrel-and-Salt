@@ -152,6 +152,7 @@
   --text-muted: #{$chalk-muted};
   --accent: #{$sorrel-bright};
   --accent-hover: #{$sorrel-glow};
+  --accent-solid-hover: #{$sorrel-spring};
   --secondary: #{$wax-warm};
   --secondary-hover: #{$wax-glow};
   --shadow-elevated: 0 20px 45px #{$shadow-dark};
@@ -172,7 +173,8 @@
   --text-muted: #{$ink-muted};
   --accent: #{$sorrel};
   --accent-hover: #{$sorrel-deep};
-  --secondary: #{$wax};
+  --accent-solid-hover: #{$sorrel-rich};
+  --secondary: #{$wax-vivid};
   --secondary-hover: #{$wax-deep};
   --shadow-elevated: 0 20px 45px #{$shadow-light};
   --shadow-floating: 0 2px 8px #{$shadow-light};

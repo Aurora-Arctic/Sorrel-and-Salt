@@ -9,7 +9,7 @@ export const EMAIL_THEMES = {
   dark: {
     page: '#14120e',
     text: '#ebe4d4',
-    muted: '#c7b487',
+    muted: '#c0baac',
     accent: '#88b669',
     onAccent: '#14120e',
     ornament: { blend: 'screen', opacity: 0.3 },

@@ -23,7 +23,7 @@ $sorrel: #4a6b34;
 $wax: #8c3b2e;
 
 // ---------------------------------------------------------------------------
-// Derived — color.adjust() from the four above, never re-picked by eye
+// Derived — color.adjust() or color.mix() from the above, never re-picked by eye
 // ---------------------------------------------------------------------------
 // Each clears 4.5:1 on both surfaces of its theme. Dark variants move away from
 // the ground by lightening, so "punchier" is lighter on dark, darker on light.
@@ -33,15 +33,24 @@ $sorrel-glow: color.adjust(
   $saturation: 8%
 ); // dark accent, hover
 $sorrel-deep: color.adjust($sorrel, $lightness: -8%); // light accent, hover
+// The solid button's hover, a larger step than a link's: a fill changing one
+// step under the pointer barely registers. More saturated, rather than only
+// further from the ground.
+$sorrel-spring: color.adjust($sorrel, $lightness: 38%, $saturation: 40%); // dark
+$sorrel-rich: color.adjust($sorrel, $lightness: -8%, $saturation: 20%); // light
 $wax-warm: color.adjust($wax, $lightness: 22%); // dark secondary
 $wax-glow: color.adjust(
   color.adjust($wax, $lightness: 30%),
   $saturation: 5%
 ); // dark secondary, hover
-$wax-deep: color.adjust($wax, $lightness: -6%); // light secondary, hover
+// $wax itself reads brown on parchment, so an error there barely registers.
+$wax-vivid: color.adjust($wax, $saturation: 30%, $lightness: 4%); // light secondary
+$wax-deep: color.adjust($wax-vivid, $lightness: -6%); // light secondary, hover
 
-// Body ink at lower strength rather than a separate grey, so it still clears 4.5:1.
-$chalk-muted: color.adjust($chalk, $lightness: -22%);
+// Body ink at lower strength rather than a separate grey, so it still clears
+// 4.5:1. Dark mixes the ink into the ground, which lowers its chroma with its
+// strength; darkening it in HSL kept the saturation and turned it gold.
+$chalk-muted: color.mix($chalk, $soot, 80%);
 $ink-muted: color.adjust($iron-gall, $lightness: 20%);
 
 // A 0.8-alpha shadow reads as a hole punched in parchment; light gets a softer one.
@@ -237,6 +246,7 @@ $text-primary: var(--text-primary);
 $text-muted: var(--text-muted);
 $accent: var(--accent);
 $accent-hover: var(--accent-hover);
+$accent-solid-hover: var(--accent-solid-hover);
 $secondary: var(--secondary);
 $secondary-hover: var(--secondary-hover);
 $shadow-elevated: var(--shadow-elevated);
