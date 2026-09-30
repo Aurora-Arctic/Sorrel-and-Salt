@@ -1,14 +1,5 @@
 import { type SQL, type SQLWrapper, sql } from 'drizzle-orm';
-import {
-  check,
-  index,
-  pgEnum,
-  pgTable,
-  text,
-  timestamp,
-  uniqueIndex,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { check, index, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS } from './ingredient-enums';
 import { auditColumns } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
@@ -54,13 +45,10 @@ export const ingredients = pgTable(
     name: text('name').notNull(),
     // The public address: `ingredientSlug` of the label, the form and the
     // formal name (src/lib/slugify.ts). No default: one in SQL would be a
-    // second slug rule. It follows a change to any of the three, the old one
-    // moving to `retired_ingredient_slugs`; a change whose slug is still
-    // reserved there waits as the pending claim below
+    // second slug rule. It follows a change to any of the three, and a
+    // compendium entry's old one moves to `retired_ingredient_slugs`
     // (claude-docs/db.md, "Ingredient slugs").
     slug: text('slug').notNull(),
-    pendingSlug: text('pending_slug'),
-    pendingSlugEffectiveAt: timestamp('pending_slug_effective_at'),
     canonicalName: text('canonical_name'),
     // No database default: the workspace-local Zod variant supplies `none`
     // and the compendium variant makes the admin answer.
@@ -111,23 +99,15 @@ export const ingredients = pgTable(
       .on(table.workspaceId, sql`lower(${table.name})`)
       .where(sql`${table.workspaceId} is not null and ${table.deletedAt} is null`),
 
-    // The address unique per tier, and one pending claim per slug per tier.
-    // The two workspace indexes carry no tier predicate, as DESIGN.md §5
-    // writes them: a null `workspace_id` collides with nothing in a btree.
+    // The address unique per tier. The workspace index carries no tier
+    // predicate, as DESIGN.md §5 writes it: a null `workspace_id` collides
+    // with nothing in a btree.
     uniqueIndex('ingredients_compendium_slug_unique')
       .on(table.slug)
       .where(sql`${table.workspaceId} is null and ${table.deletedAt} is null`),
     uniqueIndex('ingredients_workspace_slug_unique')
       .on(table.workspaceId, table.slug)
       .where(sql`${table.deletedAt} is null`),
-    uniqueIndex('ingredients_compendium_pending_slug_unique')
-      .on(table.pendingSlug)
-      .where(
-        sql`${table.workspaceId} is null and ${table.deletedAt} is null and ${table.pendingSlug} is not null`,
-      ),
-    uniqueIndex('ingredients_workspace_pending_slug_unique')
-      .on(table.workspaceId, table.pendingSlug)
-      .where(sql`${table.deletedAt} is null and ${table.pendingSlug} is not null`),
 
     // One multicolumn `gin_trgm_ops` index serves a predicate on either column
     // alone (asserted by EXPLAIN in ingredients-trigram.test.ts). Not partial:

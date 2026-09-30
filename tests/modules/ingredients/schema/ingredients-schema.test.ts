@@ -51,8 +51,6 @@ describe('ingredients schema', () => {
         'safety_notes',
         'substitutes',
         'slug',
-        'pending_slug',
-        'pending_slug_effective_at',
         ...AUDIT_COLUMNS,
       ].sort(),
     );
@@ -101,17 +99,11 @@ describe('ingredients schema', () => {
     expect(byName.substitutes.getSQLType()).toBe('text[]');
   });
 
-  // MB.80: the public address, and the claim a relabel leaves behind while its
-  // slug is still reserved. The columns are MB.81's, the rule MB.82's.
-  it('requires slug, and leaves the pending claim and its date optional', () => {
+  // MB.80: the public address, derived by whoever writes the row, so no default.
+  it('requires slug, with no default', () => {
     expect(byName.slug.getSQLType()).toBe('text');
     expect(byName.slug.notNull).toBe(true);
     expect(byName.slug.hasDefault).toBe(false);
-    expect(byName.pending_slug.getSQLType()).toBe('text');
-    expect(byName.pending_slug.notNull).toBe(false);
-    // `timestamp`, not `timestamptz`, like every timestamp here; it holds UTC.
-    expect(byName.pending_slug_effective_at.getSQLType()).toBe('timestamp');
-    expect(byName.pending_slug_effective_at.notNull).toBe(false);
   });
 
   // Drizzle omits a generated column from $inferInsert, so TypeScript refuses

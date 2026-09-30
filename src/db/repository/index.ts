@@ -46,6 +46,7 @@ export {
   type VocabularySuggestion,
 } from './vocabularies';
 export { findCommonNameSuggestions, type CommonNameSuggestion } from './common-names';
+export { findCompendiumEntryBySlug, findCompendiumSlugRedirect, type SlugRedirect } from './slugs';
 export type { Claimant } from './suggestion-page';
 export type { SortPart } from './select';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';

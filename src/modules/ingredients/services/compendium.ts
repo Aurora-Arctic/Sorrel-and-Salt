@@ -4,7 +4,9 @@ import {
   type CompendiumScore,
   findCompendiumCount,
   findCompendiumEntryByIdentity,
+  findCompendiumEntryBySlug,
   findCompendiumPage,
+  findCompendiumSlugRedirect,
   findOneIngredient,
   withAudit,
 } from '../../../db/repository';
@@ -15,6 +17,7 @@ import { ingredientSlug } from '../../../lib/slugify';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
 import { ingredients } from '../schema/ingredients';
+import { retiredIngredientSlugs } from '../schema/retired-ingredient-slugs';
 import { CompendiumFilter, type CompendiumFilterInput } from '../validation/compendium-filter';
 import { CompendiumIngredientInput } from '../validation/ingredient';
 import {
@@ -28,13 +31,18 @@ import { assertSiteAdmin } from '@/modules/identity';
 
 // The compendium: the public surface (MB.80), so the list takes no session at
 // all and an entry answers anyone (claude-docs/db.md, "The compendium read");
-// and its writes, which are the site admin's alone and reach no coven's rows
-// (claude-docs/db.md, "Compendium writes").
+// its writes, which are the site admin's alone and reach no coven's rows
+// (claude-docs/db.md, "Compendium writes"); and its addresses, which follow an
+// entry's name and redirect from the old one for a window
+// (claude-docs/db.md, "Ingredient slugs").
 
 export type IngredientRow = typeof ingredients.$inferSelect;
 
-/** What a write parses: the admin form's values, or a mutation's input. */
-type CompendiumValues = z.input<typeof CompendiumIngredientInput>;
+/**
+ * What a write takes: the admin form's values, or a mutation's input, and the
+ * admin's confirmation that the write may end another entry's redirect.
+ */
+type CompendiumWrite = z.input<typeof CompendiumIngredientInput> & { endRedirect?: boolean };
 
 /**
  * One page of the compendium under `filter`, best match first on a search,
@@ -96,23 +104,28 @@ export async function getIngredient(
 
 /**
  * Creates a compendium entry, with its folk names, in one transaction. The
- * slug is set here from the label, the form and the formal name.
+ * slug is set here from the label, the form and the formal name, and the
+ * compendium's lapsed retirements are cleared in the same write.
  *
  * @throws {Forbidden} the caller is not a site admin — checked before the
  * input is read.
  * @throws {ValidationError} the input breaks `CompendiumIngredientInput` — a
- * missing `nomenclature` included — or collides with another entry.
+ * missing `nomenclature` included — collides with another entry, or would
+ * end another entry's redirect without `endRedirect`.
  */
 export async function createCompendiumEntry(
   session: Session,
-  input: CompendiumValues,
+  input: CompendiumWrite,
 ): Promise<IngredientRow> {
   const admin = assertSiteAdmin(session);
   const { folkNames, ...fields } = parseInput(CompendiumIngredientInput, input);
 
   const slug = ingredientSlug(fields.name, fields.form, fields.canonicalName);
+  const at = new Date();
+  await refuseEndingARedirect(slug, at, input.endRedirect);
 
   return withAudit(session, async (write) => {
+    await write.deleteLapsedSlugRetirements(admin, at);
     const [row] = await write.insertInCompendium(admin, ingredients, {
       ...columnsOf(fields),
       slug,
@@ -125,30 +138,127 @@ export async function createCompendiumEntry(
 /**
  * Replaces a compendium entry with `input` — the whole entry as the form
  * submits it, so a field left out is cleared — and its folk names with
- * `input.folkNames`, in one transaction. The slug is left as it was.
+ * `input.folkNames`, in one transaction. The slug follows the label, the form
+ * and the formal name; when it moves, the old one is retired as this admin's,
+ * and redirects to the entry for 180 days.
+ *
+ * The row is read before the transaction, for the slug it holds; two admins
+ * saving one entry at the same instant can retire the older slug rather
+ * than the one the other just wrote.
  *
  * @throws {Forbidden} the caller is not a site admin.
- * @throws {ValidationError} the input breaks `CompendiumIngredientInput`, or
- * collides with another entry.
+ * @throws {ValidationError} the input breaks `CompendiumIngredientInput`,
+ * collides with another entry, or would end another entry's redirect without
+ * `endRedirect`.
  * @throws {NotFound} no live compendium entry has this id — a coven's
  * ingredient included, and an id that is not one.
  */
 export async function updateCompendiumEntry(
   session: Session,
   id: string,
-  input: CompendiumValues,
+  input: CompendiumWrite,
 ): Promise<IngredientRow> {
   const admin = assertSiteAdmin(session);
   const { folkNames, ...fields } = parseInput(CompendiumIngredientInput, input);
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
+  const current = await findOneIngredient([], id);
+  if (!current) throw new NotFound('No such compendium entry');
+
+  const slug = ingredientSlug(fields.name, fields.form, fields.canonicalName);
+  const at = new Date();
+  const moves = slug !== current.slug;
+  if (moves) await refuseEndingARedirect(slug, at, input.endRedirect, id);
 
   return withAudit(session, async (write) => {
-    const [row] = await write.updateByIdInCompendium(admin, ingredients, id, columnsOf(fields));
+    await write.deleteLapsedSlugRetirements(admin, at);
+    const [row] = await write.updateByIdInCompendium(admin, ingredients, id, {
+      ...columnsOf(fields),
+      slug,
+    });
     if (!row) throw new NotFound('No such compendium entry');
+    if (moves) {
+      await write.insertInCompendium(admin, retiredIngredientSlugs, {
+        ingredientId: id,
+        slug: current.slug,
+        retiredAt: at,
+      });
+    }
     await replaceFolkNames(write, [], id, folkNames ?? []);
     return row;
-  }).catch((error: unknown) => refuseCollision(error, fields));
+  }).catch((error: unknown) => refuseCollision(error, fields, slug));
+}
+
+/** What a compendium address answers: the entry there, or the slug it moved to. */
+export type CompendiumAddress =
+  | {
+      kind: 'entry';
+      entry: IngredientRow;
+      /** The entry that moved off this address, while its redirect's window is open. */
+      movedAway: IngredientRow | null;
+    }
+  | { kind: 'moved'; slug: string };
+
+/**
+ * The public route's one read of an address, taking no session: the live
+ * entry holding `slug`, naming an entry that moved off it while that entry's
+ * window is open; else the current slug of the entry whose redirect from
+ * `slug` is still running, for a 308.
+ *
+ * @throws {NotFound} nothing is at `slug` and nothing redirects from it — a
+ * coven's slug included, since a coven entry's existence is private.
+ */
+export async function resolveCompendiumSlug(slug: string): Promise<CompendiumAddress> {
+  const at = new Date();
+  const entry = await findCompendiumEntryBySlug(slug);
+  if (entry) {
+    const previous = await findCompendiumSlugRedirect(slug, at, entry.id);
+    return { kind: 'entry', entry, movedAway: previous?.entry ?? null };
+  }
+  const redirect = await findCompendiumSlugRedirect(slug, at);
+  if (redirect) return { kind: 'moved', slug: redirect.entry.slug };
+  throw new NotFound('No such compendium entry');
+}
+
+/**
+ * Refuses a write whose slug another entry's redirect runs from, unless the
+ * admin has confirmed ending it. On `endRedirect`, so the form can ask and
+ * send the write again; the retirement stays, so the page at the address can
+ * link to the entry that moved. Read before the write rather than inside it:
+ * two admins saving at once can both pass it.
+ */
+async function refuseEndingARedirect(
+  slug: string,
+  at: Date,
+  confirmed: boolean | undefined,
+  excluding?: string,
+): Promise<void> {
+  if (confirmed === true) return;
+  const redirect = await findCompendiumSlugRedirect(slug, at, excluding);
+  if (!redirect) return;
+  throw new ValidationError([
+    {
+      path: ['endRedirect'],
+      message: `"${slug}" redirects to ${describeEntry(redirect.entry)} until ${inUtc(redirect.expiresAt)} — confirm to end that redirect`,
+    },
+  ]);
+}
+
+/** An instant as a person reads it, in UTC: `28 August 2026, 00:00 UTC`. */
+function inUtc(at: Date): string {
+  const day = at.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+  const time = at.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone: 'UTC',
+  });
+  return `${day}, ${time} UTC`;
 }
 
 /**
@@ -176,12 +286,13 @@ export async function deleteCompendiumEntry(session: Session, id: string): Promi
  * write rolled back: a label with no formal name keys as another entry's
  * formal name (DESIGN.md §5), so the input alone would not say which entry
  * that is. That collision is reported on `name`, the field the admin filled
- * in. `slug` is the one this write set — an update sets none.
+ * in. A slug collision names the entry holding the address, as the slug the
+ * two fold to is not always one the admin can see in either input.
  */
 async function refuseCollision(
   error: unknown,
   fields: IngredientFields,
-  slug?: string,
+  slug: string,
 ): Promise<never> {
   const refuse = (path: string, message: string) => {
     throw new ValidationError([{ path: [path], message }]);
@@ -198,11 +309,13 @@ async function refuseCollision(
       );
       break;
     }
-    case 'ingredients_compendium_slug_unique':
+    case 'ingredients_compendium_slug_unique': {
+      const holder = await findCompendiumEntryBySlug(slug);
       refuse(
         'name',
-        `Another compendium entry already has the address "${slug}" — change the name, form or formal name`,
+        `${holder ? describeEntry(holder) : 'Another compendium entry'} already has the address "${slug}" — change the name, form or formal name`,
       );
+    }
   }
   throw error;
 }

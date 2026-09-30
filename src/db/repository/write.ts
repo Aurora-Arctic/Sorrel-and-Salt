@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, lte, sql, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { applyAudit, type AuditSession } from '../audit';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
@@ -6,6 +6,7 @@ import { applyAudit, type AuditSession } from '../audit';
 import { db } from '../connection';
 import type { Membership } from '@/modules/coven';
 import type { SiteAdmin } from '@/modules/identity';
+import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import {
   inCompendium,
   notSoftDeleted,
@@ -124,6 +125,16 @@ export interface AuditWriter {
     id: string,
   ): Promise<TTable['$inferSelect'][]>;
   /**
+   * Hard-delete the compendium's slug retirements that have lapsed by `at`:
+   * each redirect ended at its `expires_at`, so the row answers nothing and
+   * is removed rather than tombstoned. Named for its one table, as the
+   * provisional-account delete is, because the table carries `deleted_at`.
+   */
+  deleteLapsedSlugRetirements(
+    admin: SiteAdmin,
+    at: Date,
+  ): Promise<(typeof retiredIngredientSlugs.$inferSelect)[]>;
+  /**
    * Hard-delete, for the join tables that carry no `deleted_at` (MB.34). A
    * table carrying one is rejected by the type, as is one carrying
    * `workspace_id`: no table is both today, and the one that is first adds its
@@ -190,6 +201,11 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       update(table, values, inCompendiumById(table, id)),
     softDeleteByIdInCompendium: (_admin, table, id) =>
       softDelete(table, inCompendiumById(table, id)),
+    deleteLapsedSlugRetirements: (_admin, at) =>
+      tx
+        .delete(retiredIngredientSlugs)
+        .where(and(inCompendium(retiredIngredientSlugs), lte(retiredIngredientSlugs.expiresAt, at)))
+        .returning(),
     delete: (table, where) => tx.delete(table).where(where).returning() as never,
   };
 }
