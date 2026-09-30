@@ -70,9 +70,11 @@ planet, zodiac sign, colour, deities, substitute ingredients and safety notes
   calls the naming system the formal name belongs to. The label is the one a
   practitioner reads (amethyst is mineral, lavender botanical), and the
   schema's messages use the same word.
-- **`form`, `planet` and `zodiac` are free text**, as the schema takes them.
-  M5.10a's suggesting combobox over the curated vocabularies replaces the
-  plain inputs, and accepts free text all the same.
+- **`form`, `planet`, `zodiac` and `color` are single free-text fields**, as
+  the schema takes them for now. M5.10a's combobox replaces `form`'s plain
+  input and puts the common-name lookup on the folk-name box. Planet, zodiac
+  sign and colour become list fields in MB.136, planet and zodiac with lookups
+  in MB.131; colour takes no suggestions.
 - **The three lists are one box each, with the entries above it.** Typing and
   pressing Add, or Enter, adds the text as an entry, trimmed, and empties the
   box. The box keeps the focus, so the next one can be typed at once. A blank
@@ -86,7 +88,9 @@ planet, zodiac sign, colour, deities, substitute ingredients and safety notes
   info tip sits in its legend, so the fieldset is named by the legend's text
   alone, through `aria-labelledby`: the tip's button would otherwise join the
   group's name, "Folk names About Folk names". `substitutes` is labelled
-  "Substitute ingredients", its box "Substitute ingredient".
+  "Substitute ingredients", its box "Substitute ingredient". A substitute is
+  text for now: MB.138 to MB.140 let an entry link an existing ingredient,
+  and MB.131 picks one.
 - **Text left in a box stops the save.** The form's resolver adds an error to
   any box still holding text, 'Press Add to keep "Hedge Fixture", or clear
   the box', on the list's error element, so a save never sends a list the
