@@ -1,10 +1,18 @@
-import { and, eq, or, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, or, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
+import { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
 import { spells } from '../../modules/grimoire/schema/spells';
+import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { Membership } from '@/modules/coven';
-import { notSoftDeleted, scopedTo } from './predicates';
+import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, selectFrom } from './select';
-import type { SpellScoped, Unscoped } from './types';
+import type {
+  IngredientRow,
+  IngredientScoped,
+  NotSpellScoped,
+  SpellScoped,
+  Unscoped,
+} from './types';
 
 /**
  * §5's reader rule, as a predicate: the coven's own spells, shared ones plus
@@ -56,6 +64,67 @@ export function findManyInSpell<TTable extends PgTable & SpellScoped & Unscoped>
       notSoftDeleted(table),
       eq(table.spellId, spellId),
       existsIn(spells, and(eq(spells.id, table.spellId), readableSpells(membership))),
+    ),
+  );
+}
+
+/**
+ * The ingredients among `ingredientIds` that a spell this member may read
+ * holds — soft-deleted ones included. The second escape hatch, and the only
+ * read that returns a deleted ingredient: a spell is a record of a working, so
+ * what went into the jar stays in it (claude-docs/db.md, "What a spell holds").
+ * Everything else still filters. The spell must be readable and live, the
+ * layer live, and the ingredient in the compendium or the proof's coven — a
+ * layer's foreign key checks the id alone, so the tier is held here.
+ */
+export function findIngredientsInSpellsIncludingSoftDeleted(
+  membership: Membership,
+  ingredientIds: readonly string[],
+): Promise<IngredientRow[]> {
+  if (ingredientIds.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    ingredients,
+    and(
+      inArray(ingredients.id, [...ingredientIds]),
+      or(inCompendium(ingredients), scopedTo(membership, ingredients)),
+      existsIn(
+        spellIngredients,
+        and(
+          eq(spellIngredients.ingredientId, ingredients.id),
+          existsIn(
+            spells,
+            and(eq(spells.id, spellIngredients.spellId), readableSpells(membership)),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/**
+ * The live rows of `ingredient_categories` or `ingredient_folk_names` of the
+ * ingredients a readable spell holds, the deleted ones' included — so a
+ * spell's derived categories stay what they were. The child's own tombstone
+ * still filters. Two statements: the parent is read through the finder above,
+ * because `existsIn` filters a deleted parent by construction.
+ */
+export async function findManyOfSpellIngredientsIncludingSoftDeleted<
+  TTable extends PgTable & IngredientScoped & Unscoped & NotSpellScoped,
+>(
+  membership: Membership,
+  table: TTable,
+  ingredientIds: readonly string[],
+): Promise<TTable['$inferSelect'][]> {
+  const held = await findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds);
+  if (held.length === 0) return [];
+  return selectFrom(
+    table,
+    and(
+      notSoftDeleted(table),
+      inArray(
+        table.ingredientId,
+        held.map((row) => row.id),
+      ),
     ),
   );
 }

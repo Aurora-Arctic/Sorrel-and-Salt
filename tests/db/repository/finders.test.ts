@@ -6,6 +6,8 @@ import {
   findManyByIds,
   findManyIncludingSoftDeleted,
   findManyInWorkspace,
+  findManyOfIngredients,
+  findManyOfSpellIngredientsIncludingSoftDeleted,
   findOne,
   findOneById,
   findOneByIdInWorkspace,
@@ -396,12 +398,26 @@ describe('the Membership proof (M6.3)', () => {
       // which is exactly why it goes through its spell instead.
       findManyInWorkspace(membership, spellCategories);
 
+    const readLayersAsAnIngredientsChildren = () =>
+      // @ts-expect-error — `spell_ingredients` carries an ingredient_id too, but
+      // its reach is its spell's: read through a compendium entry, it would be
+      // every coven's layers of that entry, private spells included.
+      findManyOfIngredients([], spellIngredients, [WORKSPACE_W_ID]);
+
+    const readLayersAsAHeldIngredientsChildren = (membership: Membership) =>
+      // @ts-expect-error — nor are layers a held ingredient's children.
+      findManyOfSpellIngredientsIncludingSoftDeleted(membership, spellIngredients, [
+        WORKSPACE_W_ID,
+      ]);
+
     expect(readSpellsWithoutTheVisibilityRule).toBeInstanceOf(Function);
     expect(readOneSpellWithoutTheVisibilityRule).toBeInstanceOf(Function);
     expect(readLayersUnscoped).toBeInstanceOf(Function);
     expect(readAssignmentsUnscoped).toBeInstanceOf(Function);
     expect(readLayersThroughTheHatch).toBeInstanceOf(Function);
     expect(scopeAJoinTableByWorkspace).toBeInstanceOf(Function);
+    expect(readLayersAsAnIngredientsChildren).toBeInstanceOf(Function);
+    expect(readLayersAsAHeldIngredientsChildren).toBeInstanceOf(Function);
   });
 
   it("refuses the generic finders an ingredient's children at compile time", () => {

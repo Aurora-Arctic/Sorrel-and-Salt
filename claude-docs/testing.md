@@ -373,6 +373,13 @@ run as a test.
   is `tests/db/insert-ingredient.test.ts`, under `tests/db/` because that is
   the project with a database.
 
+- **`insert-spell.ts` — `insertSpell(sql, fixture, author)`** (M5.3). The
+  same for a spell: its row, its layers and its assigned categories, on
+  `insertIngredient`'s terms. `author` is `created_by`, which is whom a
+  private spell is readable by, and a layer's ingredient id is written as
+  given, which is how a test writes the cross-coven link a finder must
+  withhold. Its test is `tests/db/insert-spell.test.ts`.
+
 - **`tests/db/audit-columns.test.ts` — one sweep instead of a copy per
   file.** It holds two transcribed lists of Drizzle table _objects_ — the
   fourteen six-column tables and the three four-column join tables — asserts
@@ -574,7 +581,9 @@ inside the transaction, so a v2 history trigger would record the author
 rather than nothing; category names are resolved through the seeded
 `categories`, and a name with no live row is a thrown error naming it, never a
 silent skip. Every ingredient-family service, loader and GraphQL test seeds
-through it, keeping at most a one-line adapter from what the file states to a
+through it, and a test that needs a spell seeds through
+`tests/support/db/insert-spell.ts`'s `insertSpell`, which does the same for a
+spell, its layers and its categories — each keeping at most a one-line adapter from what the file states to a
 fixture. Two kinds of raw insert stay, on purpose: a schema test's, which is
 its subject, and the volume loads in
 `tests/modules/ingredients/services/*-plan.test.ts` — tens of thousands of
