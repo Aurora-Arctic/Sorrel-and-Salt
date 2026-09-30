@@ -161,7 +161,7 @@ describe('createCompendiumEntry', () => {
       await expect(attempt).rejects.toThrow(ValidationError);
       await expect(attempt).rejects.toMatchObject({
         issues: [
-          { path: ['nomenclature'], message: 'Choose a naming system — or "none" or "unknown"' },
+          { path: ['nomenclature'], message: 'Choose a classification — or "none" or "unknown"' },
         ],
       });
       expect(await countIngredients()).toBe(0);

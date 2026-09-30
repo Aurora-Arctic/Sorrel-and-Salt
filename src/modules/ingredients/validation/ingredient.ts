@@ -67,8 +67,8 @@ const fields = {
 const nomenclature = z.enum(NOMENCLATURE_KINDS, {
   error: (issue) =>
     issue.input === undefined || issue.input === null
-      ? 'Choose a naming system — or "none" or "unknown"'
-      : 'Not a naming system',
+      ? 'Choose a classification — or "none" or "unknown"'
+      : 'Not a classification',
 });
 
 /**
@@ -82,7 +82,7 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
     ctx.addIssue({
       code: 'custom',
       path: ['canonicalName'],
-      message: `A "${value.nomenclature}" entry carries no formal name — clear it, or choose the naming system it belongs to`,
+      message: `A "${value.nomenclature}" entry carries no formal name — clear it, or choose the classification it belongs to`,
     });
   } else if (!nameless && !named) {
     ctx.addIssue({
@@ -139,7 +139,7 @@ export const LocalIngredientInput = z
     ctx.addIssue({
       code: 'custom',
       path: ['nomenclature'],
-      message: 'Choose the naming system this formal name belongs to',
+      message: 'Choose the classification this formal name belongs to',
     });
     return z.NEVER;
   })
