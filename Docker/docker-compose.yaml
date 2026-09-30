@@ -198,11 +198,11 @@ services:
       - node_modules_e2e:/app/node_modules
     init: true
     ports:
-      - '8001:8001' # next start (production build), matching playwright.config.ts
+      - '8001:8001' # the first worker's next start (production build); tests/e2e/slots.ts
     environment:
       NODE_ENV: test
       CI: 'true'
-      # tests/e2e/database.ts swaps the pathname to sorrel_e2e.
+      # tests/e2e/database.ts swaps the pathname to each worker's sorrel_e2e_<slot>.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       # The `build` script forces NODE_ENV=production, where Better Auth
       # requires a secret and auth.ts a primary admin address — this one on
