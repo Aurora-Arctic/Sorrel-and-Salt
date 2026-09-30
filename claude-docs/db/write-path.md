@@ -49,8 +49,8 @@ unchanged. A session with no `userId` is rejected before the transaction
 opens, rather than stamping a blank acting user.
 
 The read-side finder builder that applies `deleted_at IS NULL` (M1.20)
-deliberately lands on top of this rather than beside it — see "Soft-delete
-filtering and the partial-index convention" below.
+deliberately lands on top of this rather than beside it — see ["Soft-delete
+filtering and the partial-index convention"](soft-delete.md).
 
 ### `app.current_user_id`, published per transaction (M1.19)
 
@@ -73,7 +73,7 @@ today.
 branded `Membership` — the value `assertMembership` returns, which every
 workspace-scoped finder and `AuditWriter` method demands as its first argument
 so the omission is a compile error rather than a missing runtime check. M6.3
-built it; "The Membership proof" below is how it works. The specification for
+built it; ["The Membership proof"](membership-proof.md) is how it works. The specification for
 the eventual policies —
 the role split they need, `FORCE`, the `security definer` helper, and why a
 policy test connected as the table owner proves nothing — is

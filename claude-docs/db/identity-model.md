@@ -16,7 +16,7 @@ What follows describes all three as built.
 
 - **`ingredients`** — `id`, `workspaceId` (nullable: `NULL` is the compendium
   tier, non-null is a workspace's own ingredient), `name`, `slug` (MB.81;
-  "Ingredient slugs" below), `canonicalName`, `nomenclature`, `form`, the generated `canonicalKey`, the correspondence
+  ["Ingredient slugs"](ingredient-slugs.md)), `canonicalName`, `nomenclature`, `form`, the generated `canonicalKey`, the correspondence
   columns (`description`, `element`, `planet`, `zodiac`, `deities[]`, `color`,
   `safetyNotes`, `substitutes[]`), + audit. `name` is the display label —
   what it's called here — and stays freely relabellable, because identity
@@ -27,9 +27,9 @@ What follows describes all three as built.
   but never interchangeable. `deities` and `substitutes` are native
   `text[]` columns, one of the things SQLite could not have run (DESIGN.md
   §14). Seven declared indexes: M4.1a's three partial unique ones (below),
-  MB.81's two on the slug ("Ingredient slugs" below), `ingredients_trgm`
+  MB.81's two on the slug (["Ingredient slugs"](ingredient-slugs.md)), `ingredients_trgm`
   (M4.6), one multicolumn `gin_trgm_ops` index over `name` and
-  `canonical_name` — see "Fuzzy matching" below — and its folded twin
+  `canonical_name` — see ["Fuzzy matching"](fuzzy-matching.md) — and its folded twin
   `ingredients_unaccent_trgm` ("The compendium read"). The database holds two
   more until MB.107, MB.81's undeclared pending-claim indexes.
 - **`ingredient_folk_names`** — `id`, `ingredientId` (FK to `ingredients`),
@@ -47,8 +47,8 @@ What follows describes all three as built.
   audit. Shaped like `categories`: global, admin-curated, no workspace
   scoping. This is the third resource admins curate globally, alongside the
   compendium and categories (CLAUDE.md). Its `groupId` points at
-  `ingredient_form_groups`, admin-curated in turn — see the categories
-  section below, which settles both (MB.35).
+  `ingredient_form_groups`, admin-curated in turn — see the
+  [categories section](categories.md), which settles both (MB.35).
 
 **`nomenclature`** is a seven-value `pgEnum`, `NOT NULL` with no default:
 `botanical`, `fungal`, `zoological`, `mineral`, `chemical`, `unknown`, `none`.
@@ -129,13 +129,13 @@ CREATE UNIQUE INDEX ingredients_workspace_label_unique
   WHERE workspace_id IS NOT NULL AND deleted_at IS NULL;
 ```
 
-All three carry `WHERE deleted_at IS NULL`, per the partial-index convention
-above — deleting a row must not permanently reserve its identity or its
+All three carry `WHERE deleted_at IS NULL`, per the [partial-index convention](soft-delete.md)
+— deleting a row must not permanently reserve its identity or its
 label (CLAUDE.md rule 4). The label index is workspace-tier only: inside one
 workspace an ambiguous label is a mistake, but the compendium deliberately
 allows several rows to display the same label (four unrelated "Cat's Claw"
 entries) as long as they're different identities; the formal name that keeps
-them apart is in the slug too ("Ingredient slugs" below). They're indexes rather
+them apart is in the slug too (["Ingredient slugs"](ingredient-slugs.md)). They're indexes rather
 than unique constraints because Drizzle's `nullsNotDistinct()` exists only
 on constraints, and a constraint can't carry a `WHERE` predicate at all —
 since every unique index in this schema must be partial, the constraint form

@@ -3,8 +3,8 @@
 `src/modules/coven/schema/workspaces.ts` holds DESIGN.md §5's two workspace tables and
 the `workspace_role` enum (`viewer`, `member`, `owner`). The declaration
 order reads as a hierarchy and is not one: M6.3 gives each role its own
-permission statements, so nothing compares two roles (see "The Membership
-proof" below).
+permission statements, so nothing compares two roles (see ["The Membership
+proof"](membership-proof.md)).
 `0004_black_slyde.sql` is the migration.
 
 - **`workspaces`** — `id`, `name`, `slug`, + audit, and **nothing else**.
@@ -16,8 +16,9 @@ proof" below).
   routes under `/coven/[slug]`; only the URL segment says coven (§5's naming
   note).
 - **`workspaces_slug_unique`** is partial on `deleted_at IS NULL`, per the
-  convention above — the slug is what `/coven/[slug]` routes on, so a plain
-  unique constraint would let a deleted workspace hold a name hostage forever.
+  [partial-index convention](soft-delete.md) — the slug is what
+  `/coven/[slug]` routes on, so a plain unique constraint would let a deleted
+  workspace hold a name hostage forever.
 - **`workspace_members`** — `workspaceId`, `userId`, `role`, `joinedAt`, +
   audit, with a composite primary key on the pair and no surrogate `id`. The
   pair _is_ the membership's identity: a surrogate key would let the same user
@@ -26,7 +27,7 @@ proof" below).
   rewrites the row without changing when the person joined.
 - **`owner` is a role here but not an invitable one.** That narrowing lives on
   `workspace_invitations` (M7.1), whose check constraint rejects it — see
-  "Invitations" below; ownership is granted afterwards by an existing owner on
+  ["Invitations"](invitations.md); ownership is granted afterwards by an existing owner on
   the members page.
 - Both tables carry the full six-column audit spread, and every `*_by` column
   references `users.id` as MB.5 specifies. `workspace_members` keeps all six

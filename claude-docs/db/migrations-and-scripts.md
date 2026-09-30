@@ -54,7 +54,7 @@
   re-applying the file is a no-op independently of the journal, for the same
   reason 0000 and 0011 carry an `IF NOT EXISTS`, and it needs no
   destructive-DDL acknowledgement because it drops nothing. See
-  "`updated_at` is the database's" below.
+  ["`updated_at` is the database's"](updated-at.md).
 - **`0017_custom-spell-ingredients.sql`** (MB.40) reshapes `spell_ingredients`
   so a layer may be a custom, one-off ingredient — see "Custom ingredients"
   under the grimoire. `drizzle-kit generate` wrote the statements and the file
@@ -98,8 +98,9 @@
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
   `seed(db, { scenario })` from `src/db/seed/index.ts` and then
   closes the pool `connection.ts` opened, or the process never exits.
-  All three scenarios are implemented (M1.21, M1.22, M1.23 — "The seed
-  module", "The standard scenario" and "The demo scenario" below) and all
+  All three scenarios are implemented (M1.21, M1.22, M1.23 — ["The seed
+  module"](seed-module.md), ["The standard scenario"](standard-scenario.md) and
+  ["The demo scenario"](demo-scenario.md)) and all
   three are reachable from the CLI as of M1.24: **`SEED_SCENARIO`** picks one,
   defaulting to `minimal`. The script runs
   through **`tsx`**, alone among the scripts: bare Node's type stripping

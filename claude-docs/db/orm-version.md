@@ -34,6 +34,6 @@ point rather than an architectural commitment.
   with no hand-editing. M4.6: it emitted the multicolumn trigram index from a
   schema-level `index().using('gin', …)`, both `gin_trgm_ops` operator classes
   included. The one hand-edit that migration carries is an `IF NOT EXISTS`
-  added for idempotency (see the migrations section) — a keyword, not DDL the
-  generator could not express.
+  added for idempotency (see the [migrations section](migrations-and-scripts.md))
+  — a keyword, not DDL the generator could not express.
 - The advisory gains a runtime path, or escalates past moderate.

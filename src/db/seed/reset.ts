@@ -3,7 +3,7 @@ import type { SeedDatabase } from './types';
 
 // The drop half of `db:reset`: drizzle-kit skips every migration its journal
 // records as applied, so migrate-then-seed resets nothing. Beside the seed so
-// the client exemption set stays at four, taking the handle it is given.
+// the client exemption set stays at six, taking the handle it is given.
 
 /**
  * Drops `public` (tables, enums, `set_updated_at()`, pg_trgm — migration 0000

@@ -3,9 +3,9 @@
 `planets` and `zodiac_signs` are the vocabularies behind
 `ingredients.planet` and `ingredients.zodiac`, in
 `src/modules/vocabulary/schema/astrology.ts`, migration
-`0023_correspondence-vocabularies.sql`, seeded by
-`src/db/seed/astrology.ts` (below), and read by a member's autofill ("The
-member's autofill" below). They
+`0023_correspondence-vocabularies.sql`, seeded by `src/db/seed/astrology.ts`
+(["The astrology vocabulary seed"](astrology-vocabulary-seed.md)), and read
+by a member's autofill (["The member's autofill"](member-autofill.md)). They
 replace a TypeScript constant of the same lists, deleted with the seed: a list
 an admin cannot extend without a deploy is the shape `form` had before MB.35,
 and wrong for the same reason. Files, scripts and functions say _astrology_
@@ -34,7 +34,8 @@ are two: a suggestion query that forgot the `kind` predicate would offer a
 sign for `planet`, and two tables leave no predicate to forget.
 
 **Uniqueness is on `slug`, partial on `deleted_at IS NULL`**, as on the four
-tables above, and the display name carries no constraint. The description CHECK
+tables in the [categories section](categories.md), and the display name
+carries no constraint. The description CHECK
 is the form tables': a curated value explains itself, and here the description
 is also search surface.
 

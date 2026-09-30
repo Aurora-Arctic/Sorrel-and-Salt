@@ -19,7 +19,7 @@ the schema graph is what drizzle-kit loads.
 
 Every table spreads `...auditColumns` **except two join tables**:
 `ingredient_categories` and `spell_categories` spread `...auditStampColumns`
-and are hard-deleted (MB.34) — see "Hard delete on two join tables" below for
+and are hard-deleted (MB.34) — see ["Hard delete on two join tables"](hard-delete-join-tables.md) for
 why, and note that `workspace_members`, `ingredient_folk_names` and, since
 MB.110, `spell_ingredients` are _not_ in that set. Writing the six columns as the
 four plus two rather than listing them twice is what stops the two sets
@@ -50,7 +50,7 @@ audit fields the caller supplied stripped out and replaced with the correct
 ones for that operation:
 
 - `insert` sets `createdAt`/`createdBy`/`updatedAt`/`updatedBy` from `session`
-- `update` sets only `updatedAt`/`updatedBy`, leaving `createdAt`/`createdBy` absent from the returned payload so the `UPDATE` never touches them — and the `updatedAt` it sets is then overwritten by the database (see "`updated_at` is the database's" below), so the column carries one clock rather than two
+- `update` sets only `updatedAt`/`updatedBy`, leaving `createdAt`/`createdBy` absent from the returned payload so the `UPDATE` never touches them — and the `updatedAt` it sets is then overwritten by the database (see ["`updated_at` is the database's"](updated-at.md)), so the column carries one clock rather than two
 - `delete` (soft delete) sets only `deletedAt`/`deletedBy`
 
 Audit ids never come from the caller: `applyAudit` deletes any of the six

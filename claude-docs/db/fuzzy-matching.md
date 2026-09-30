@@ -38,8 +38,8 @@ true), set_config('pg_trgm.word_similarity_threshold', '0.6', true)` in it,
 and runs the read in the same transaction. `set_config(…, true)` is
 `SET LOCAL` taking a bind parameter, as `withAudit`'s GUC is. So a finder
 cannot forget either threshold, and each is written in one place. The second
-is `<%`'s, word similarity, which is how a description is searched ("The
-member's autofill" below); 0.6 is pg_trgm's own default, set anyway so the
+is `<%`'s, word similarity, which is how a description is searched (["The
+member's autofill"](member-autofill.md)); 0.6 is pg_trgm's own default, set anyway so the
 server's configuration cannot move it. A keyset page can ask the same way.
 A `Keyset` marked `wordMatch` is read in a transaction that first sets the
 word threshold to the search's 0.5 ("The compendium read"). One marked
@@ -84,7 +84,7 @@ sharing one prefix, the plan shows the walk even for a query that can reach
 the trigram index.
 
 **Accent insensitivity is the compendium search's, through `unaccent`** (M8.5;
-"The compendium read" below). It is not the fuzzy matches': `%` reads the raw
+["The compendium read"](compendium-read.md)). It is not the fuzzy matches': `%` reads the raw
 columns and the raw trigram indexes, and one diacritic barely moves a trigram
 score, so the duplicate warning is accent-tolerant without folding. Folding it
 too would be a small task of its own, not a gap.

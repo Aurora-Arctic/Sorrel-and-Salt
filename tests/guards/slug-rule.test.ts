@@ -13,7 +13,7 @@ import { slugify } from '@/lib/slugify';
 //
 // Not an oxlint `no-restricted-imports` entry like rules 2 and 4: slugify.ts
 // would then need an `oxlint-disable-next-line` to import its own package, and
-// lint-db-client-boundary.test.ts pins that set at exactly four files.
+// lint-db-client-boundary.test.ts pins that set at exactly six files.
 
 /** The one file allowed to import the package, and to know its options. */
 const SLUG_RULE = 'src/lib/slugify.ts';

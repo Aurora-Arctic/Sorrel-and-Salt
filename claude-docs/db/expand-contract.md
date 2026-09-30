@@ -177,12 +177,12 @@ acknowledgements it needed only ever existed in PR bodies.
 
 Four migrations carry findings today, and each has its sidecar:
 
-| Migration                           | Findings                                                                                                            |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `0002_solid_marauders.sql`          | `DROP CONSTRAINT users_email_unique`, and `created_by` / `updated_by` added `NOT NULL`                              |
-| `0017_custom-spell-ingredients.sql` | the `(spell_id, ingredient_id)` primary key and the `(spell_id, layer_order)` unique index dropped                  |
-| `0025_ingredient-slugs.sql`         | `ingredients.slug` set `NOT NULL` with no backfill between, the seed standing in for one ("Ingredient slugs" above) |
-| `0028_drop-pending-slugs.sql`       | the two pending-slug indexes and columns dropped, the contract half of MB.82's change ("Expand/contract")           |
+| Migration                           | Findings                                                                                                                             |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `0002_solid_marauders.sql`          | `DROP CONSTRAINT users_email_unique`, and `created_by` / `updated_by` added `NOT NULL`                                               |
+| `0017_custom-spell-ingredients.sql` | the `(spell_id, ingredient_id)` primary key and the `(spell_id, layer_order)` unique index dropped                                   |
+| `0025_ingredient-slugs.sql`         | `ingredients.slug` set `NOT NULL` with no backfill between, the seed standing in for one (["Ingredient slugs"](ingredient-slugs.md)) |
+| `0028_drop-pending-slugs.sql`       | the two pending-slug indexes and columns dropped, the contract half of MB.82's change ("Expand/contract")                            |
 
 **`0002`'s sidecar was written retroactively, and says so.** This document
 previously claimed its `DROP CONSTRAINT` and two `NOT NULL` columns "were

@@ -55,7 +55,7 @@ mistake, and `UNAUDITED_TABLES` leaves it out.
 
 An event trigger would attach one automatically on `CREATE TABLE`, but
 `CREATE EVENT TRIGGER` requires superuser and `sorrel` deliberately is not one
-("Migrations and scripts" above). So **a new audited table adds its own
+(["Migrations and scripts"](migrations-and-scripts.md)). So **a new audited table adds its own
 `CREATE OR REPLACE TRIGGER` line in its own migration** — one line, copied.
 `0023_correspondence-vocabularies.sql` (MB.92) is the first to do it, for
 `planets` and `zodiac_signs`.

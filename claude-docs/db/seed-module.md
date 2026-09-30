@@ -17,7 +17,7 @@ over. What `withAudit` guarantees is kept rather than re-argued: one
 transaction, `app.current_user_id` published first in the same
 parameterised `set_config` form (M1.19), every stamp produced by the shared
 `applyAudit`. The seed cannot hold any other handle — `src/db/seed/` is not
-among the four files allowed to import `connection.ts` — which is what makes
+among the six files allowed to import `connection.ts` — which is what makes
 the handle honest. The reasoning, and the alternatives it rules out, are in
 [`design-decisions/m1.21-seed-writes-through-its-handle.md`](../design-decisions/m1.21-seed-writes-through-its-handle.md).
 
@@ -70,4 +70,5 @@ user is `MINIMAL_USER_ID` (`…0002`), created by the bootstrap user. Both
 keep `canCreateWorkspace` false — a bare install has granted nothing. It is
 **idempotent by fixed id** (`ON CONFLICT (id) DO NOTHING`), not by
 truncating: a re-run adds nothing, and nothing is dropped — the reset that
-drops is M1.24's. `standard` is M1.22's and `demo` M1.23's, both below.
+drops is M1.24's. [`standard`](standard-scenario.md) is M1.22's and [`demo`](demo-scenario.md)
+M1.23's.

@@ -51,7 +51,7 @@ their coven and their visibility through the parent spell, which
 `findManyInSpell` expresses as a correlated `EXISTS` over `readableSpells` —
 in SQL, per CLAUDE.md rule 7, so a row a caller may not see is never fetched to
 be filtered out afterwards. The subquery is `existsIn`'s, the repository's
-second read builder ("Soft-delete filtering" below), which ANDs the spell's
+second read builder (["Soft-delete filtering"](soft-delete.md)), which ANDs the spell's
 `deleted_at IS NULL` onto it by construction; `readableSpells` carries the same
 filter for the two finders that read `spells` directly, so in this one finder
 the parent is filtered twice, and neither copy is the other's to forget.
@@ -90,7 +90,7 @@ ask about. `findManyOfIngredients` refuses `spell_ingredients` at compile time
 since M5.3: the table carries an `ingredient_id`, and read through a
 compendium entry it would have been every coven's layers of that entry,
 private spells included. The soft-delete guard pins both hatches' shape
-("Soft-delete filtering" below); the argument, and v2's revision-pinned layers,
+(["Soft-delete filtering"](soft-delete.md)); the argument, and v2's revision-pinned layers,
 are [`m5.3-spells-keep-deleted-ingredients.md`](../design-decisions/m5.3-spells-keep-deleted-ingredients.md).
 
 ### Writing: the one-way rule

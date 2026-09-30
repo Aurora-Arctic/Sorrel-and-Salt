@@ -227,7 +227,7 @@ matrix's generated job name, not the leg's.
   any `DROP` except
   `DROP NOT NULL` and `DROP DEFAULT` (which widen), `RENAME`,
   `ALTER COLUMN ... TYPE`, `SET NOT NULL`, and `ADD COLUMN ... NOT NULL` with
-  no `DEFAULT` — see `claude-docs/db.md`'s Migrations section for the policy.
+  no `DEFAULT` — see `claude-docs/db/expand-contract.md` for the policy.
   Blocking, like `lint`/`typecheck`.
   - **It needs one thing a `workflow_call` file cannot read off its own
     trigger**, which is why it has an input where the other legs have none: the

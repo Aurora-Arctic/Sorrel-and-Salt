@@ -26,7 +26,7 @@ past its tombstone, and nothing else past one, for a member who may read a
 spell holding it ("What a spell holds").
 
 Neither builder is in the repository's surface — their siblings import them,
-and nothing outside the folder may ("The repository's files" above) — so
+and nothing outside the folder may (["The repository's files"](repository-files.md)) — so
 there is no public handle a finder could reach the database through while
 skipping the filter — the same shape as `AuditWriter` gives writes no path
 around `applyAudit`.
@@ -71,7 +71,7 @@ skipping the ingredient's filter alone: the spell's `readableSpells`, the
 layer's `existsIn` and the proof's tier stay in the body.
 
 A query built _outside_ the repository is the linter's job, not this test's —
-see "Where queries may be built" below. It was this test's until MB.33, by
+see ["Where queries may be built"](query-building.md). It was this test's until MB.33, by
 reading every tracked source file as text and looking for `.select(`, which
 banned one spelling of a finder rather than the capability: `function findX()`
 was caught and `const findX = () =>` was not, the global regex carried its

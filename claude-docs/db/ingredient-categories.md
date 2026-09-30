@@ -25,7 +25,7 @@ answerable.
   unique — uniqueness is the primary key's job, and a unique index here would
   refuse a category its second ingredient.
 - **No partial index, because there is no tombstone to dodge.** The
-  partial-index convention above exists so a soft-deleted row cannot reserve its
+  [partial-index convention](soft-delete.md) exists so a soft-deleted row cannot reserve its
   name forever; this table hard-deletes, so the pair is either there or it is
   not, and `WHERE deleted_at IS NULL` would not even compile against its
   columns.

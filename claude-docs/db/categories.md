@@ -16,15 +16,16 @@ away.
 - **`category_groups`** — `id`, `name`, `slug`, `colorDark`, `colorLight`,
   `description`, + audit. Global, admin-curated. §6 seeds eight; an admin
   may add more. Listed alphabetically by `name`.
-- **`ingredient_forms`** — as in the identity section above, with `groupId`
+- **`ingredient_forms`** — as in the [identity section](identity-model.md), with `groupId`
   (FK to `ingredient_form_groups`) in place of the earlier `group` text.
 - **`ingredient_form_groups`** — `id`, `name`, `slug`, `description`, +
   audit. Seeds §5's six groups. No colour: form
   groups section an autofill dropdown, not chips. Also alphabetical.
 
-A category reaches an ingredient through `ingredient_categories` (M4.4) and a
-spell through `spell_categories` (M10.4), both join tables and so both
-hard-deleted — each has its own section below.
+A category reaches an ingredient through
+[`ingredient_categories`](ingredient-categories.md) (M4.4) and a spell through
+[`spell_categories`](spell-categories.md) (M10.4), both join tables and so both
+hard-deleted — each has its own section.
 
 **Groups are rows, not enums, because an admin mutation cannot run DDL.**
 `ALTER TYPE … ADD VALUE` is a migration, migrations here are forward-only and
@@ -80,7 +81,7 @@ per-category override is ever wanted it is addable as a widening.
 **Uniqueness is on `slug`, partial on `deleted_at IS NULL`, on all four
 tables** — `category_groups_slug_unique`, `categories_slug_unique`,
 `ingredient_form_groups_slug_unique` and `ingredient_forms_slug_unique`, the
-partial-index convention below. Slug uniqueness is global rather than per
+[partial-index convention](soft-delete.md). Slug uniqueness is global rather than per
 group on both child tables: the slug is what a chip filter and M4.3/M4.3a's
 idempotency keys read, and none of them carries a group alongside it. Display
 names carry no constraint: two groups may each want a "Protection", and the
@@ -115,7 +116,7 @@ acknowledgement (rule 10).
 `ingredient_forms_group_id_ingredient_form_groups_id_fk`). Constraining now is
 the reversible direction: dropping a `NOT NULL` later is a widening, where
 adding one is destructive DDL needing a PR acknowledgement (rule 10, and the
-section below).
+[destructive-DDL check](expand-contract.md)).
 
 **The two form tables go one step further than NOT NULL on `description`**, in
 `ingredient_form_groups_description_not_blank` and

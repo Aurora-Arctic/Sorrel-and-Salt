@@ -23,7 +23,7 @@ holds (`inventory_items`).
 is what made "existing seeded spells migrate to workspace visibility" a
 criterion that could be tested rather than one an empty table satisfied for
 free (TASKS.md, "Breaking the M1.23 ↔ M10.3 cycle"). The rule it carries is
-["Spell visibility"](spell-visibility.md) below.
+["Spell visibility"](spell-visibility.md).
 
 ### The join names the ingredient, never the stock row
 

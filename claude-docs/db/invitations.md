@@ -32,7 +32,8 @@ table, reusing the `workspace_role` enum declared beside `workspaces`.
 - **`workspace_invitations_token_hash_unique`** is the acceptance path's
   lookup, and unique as well as indexed: one hash must resolve to at most one
   invitation, or redeeming it is a coin toss between two rows that may name
-  different roles. Partial on `deleted_at IS NULL` per the convention below.
+  different roles. Partial on `deleted_at IS NULL` per the
+  [partial-index convention](soft-delete.md).
   The usual argument for that predicate is weak here — nothing re-proposes a
   particular random hash — but the rule is absolute and the predicate is free.
 - **Four lifecycle columns, not one `status` enum.** `expiresAt` is a clock
