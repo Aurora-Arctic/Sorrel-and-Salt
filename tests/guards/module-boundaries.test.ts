@@ -47,7 +47,10 @@ const NEVER_FROM_A_MODULE = ['src/app', 'src/components', 'src/emails', 'src/pro
 
 const REPOSITORY = 'src/db/repository';
 
-/** Exported repository functions that read the compendium tier, or both tiers at once. */
+/**
+ * Top-level repository functions that read the compendium tier, or both tiers
+ * at once — exported or not, so a predicate is named where it is written.
+ */
 const TIER_SEAM: string[] = [
   // The tier's one predicate, `workspace_id IS NULL`; a finder crosses the seam by calling it.
   'inCompendium',
@@ -255,15 +258,18 @@ describe('the repository’s surface (claude-docs/db.md)', () => {
 });
 
 describe('the tier seam in the repository (claude-docs/modules.md)', () => {
-  /** Every repository file's text, cut at each top-level export so a match has a name. */
+  /**
+   * Every repository file's text, cut at each top-level function or `const`,
+   * exported or not, so a match is named by the declaration it sits in.
+   */
   function chunks(): { name: string; body: string }[] {
     const files = readdirSync(join(REPO_ROOT, REPOSITORY)).filter((file) => file.endsWith('.ts'));
     return files.flatMap((file) => {
       const text = readFileSync(join(REPO_ROOT, REPOSITORY, file), 'utf8');
-      const heads = [...text.matchAll(/^export (?:async )?(?:function|const) (\w+)/gm)];
+      const heads = [...text.matchAll(/^(?:export )?(?:async )?(?:function|const) (\w+)/gm)];
       const cuts = [0, ...heads.map((head) => head.index)];
       return cuts.map((start, i) => ({
-        name: i === 0 ? `(${file}, before the first export)` : heads[i - 1][1],
+        name: i === 0 ? `(${file}, before the first declaration)` : heads[i - 1][1],
         body: text.slice(start, cuts[i + 1] ?? text.length),
       }));
     });
@@ -286,6 +292,8 @@ describe('the tier seam in the repository (claude-docs/modules.md)', () => {
     const names = chunks().map((chunk) => chunk.name);
     expect(names).toContain('withAudit');
     expect(names).toContain('findManyInWorkspace');
+    // A private function is a chunk of its own, not the tail of the export above it.
+    expect(names).toContain('writerFor');
   });
 
   it('names every exported function that reads the compendium tier in TIER_SEAM', () => {
