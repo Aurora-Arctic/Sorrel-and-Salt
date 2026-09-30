@@ -87,7 +87,8 @@ without a page routed to it.
   `$text-primary` so a story needs no per-story setup; `transform`, making the
   frame the containing block so a `position: fixed` child pins to the story
   rather than Ladle's chrome; `overflow: hidden` so it clips like a viewport;
-  `.ladle-main` gutter zeroed and re-added on the frame. Also carries the
+  `.ladle-main` gutter zeroed and re-added on the frame, 3rem a side, and
+  `space(4)` below 30rem, where 3rem would leave a 375px story 279px. Also carries the
   `.ladle-story-frame--reduced-motion` rule the `reducedMotion` pin above
   toggles — a `!important` blanket over every transition in the frame, not
   just the ones the app's own `reduced-motion` mixin reaches, since the real
