@@ -13,6 +13,7 @@ import {
   seedCategories,
 } from '@/db/seed/categories';
 import { slugify } from '@/lib/slugify';
+import type { CategoryGroupRow, CategoryRow, DesignCategoryGroup } from './types';
 
 // §6's eight groups and every category, asserted against their sources rather
 // than copies: the vocabulary parsed from DESIGN.md §6's table, the colours
@@ -29,13 +30,7 @@ const GROUNDS = { dark: '#14120e', light: '#efe9da' } as const;
 
 // --- DESIGN.md §6, parsed ---------------------------------------------------
 
-interface DesignGroup {
-  name: string;
-  slug: string;
-  categories: string[];
-}
-
-function designSection6(): DesignGroup[] {
+function designSection6(): DesignCategoryGroup[] {
   const doc = readFileSync(DESIGN_DOC, 'utf8');
   const section = doc.slice(doc.indexOf('## 6. Category seed'));
   const rows = section
@@ -117,34 +112,11 @@ const SASS_TOKEN_COLORS = resolveSassTokenColors();
 
 // --- database ---------------------------------------------------------------
 
-interface GroupRow {
-  id: string;
-  name: string;
-  slug: string;
-  color_dark: string;
-  color_light: string;
-  description: string;
-  created_by: string;
-  updated_by: string;
-  deleted_at: Date | null;
-}
-
-interface CategoryRow {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  group_id: string;
-  created_by: string;
-  updated_by: string;
-  deleted_at: Date | null;
-}
-
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
 
-async function allGroups(): Promise<GroupRow[]> {
-  return sql<GroupRow[]>`select * from category_groups order by slug`;
+async function allGroups(): Promise<CategoryGroupRow[]> {
+  return sql<CategoryGroupRow[]>`select * from category_groups order by slug`;
 }
 
 async function allCategories(): Promise<CategoryRow[]> {

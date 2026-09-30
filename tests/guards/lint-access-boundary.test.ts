@@ -3,6 +3,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
+import type { Diagnostic } from './types';
 
 // Resolvers and server components reach services and nothing below them
 // (CLAUDE.md rule 1): `.oxlintrc.json`'s override for `src/graphql`, `src/app`,
@@ -56,12 +57,6 @@ const BELOW = ['src/modules/coven/services', 'src/lib'];
  * block must carry the repository's internal-file ban.
  */
 const OUTSIDE_REPOSITORY = [...BELOW, 'src/db/seed', 'tests/db'];
-
-interface Diagnostic {
-  code: string;
-  filename: string;
-  help?: string;
-}
 
 const probes = new Map<string, string>();
 function probe(directory: string, name: string, source: string): string {

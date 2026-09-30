@@ -11,6 +11,7 @@ import { insertIngredient } from '../support/db/insert-ingredient';
 import { noSender } from '../support/email-verification';
 import { makeIngredient } from '../support/fixtures';
 import type { Context } from '@/graphql/types';
+import type { Answer, WorkspaceIdProbe } from './types';
 
 // A `workspaceId` is whatever string the client sent, and asked of the
 // database one that is not a uuid is a driver error, which leaves masked as
@@ -21,11 +22,6 @@ import type { Context } from '@/graphql/types';
 // (claude-docs/db.md, "What the check asks").
 
 const MALFORMED = ['not-a-coven', WORKSPACE_W_ID.slice(0, -1)];
-
-interface Probe {
-  source: string;
-  variables?: () => Record<string, unknown>;
-}
 
 let ingredientId: string;
 
@@ -39,7 +35,7 @@ beforeAll(async () => {
   await sql.end();
 });
 
-const suggestion = (field: string): Probe => ({
+const suggestion = (field: string): WorkspaceIdProbe => ({
   source: `query ($workspaceId: ID!) {
     ${field}(workspaceId: $workspaceId, first: 1) { edges { node { value } } }
   }`,
@@ -61,7 +57,7 @@ const WHOLE_INGREDIENT = {
   folkNames: [],
 };
 
-const PROBES: Record<string, Probe> = {
+const PROBES: Record<string, WorkspaceIdProbe> = {
   commonNameSuggestions: suggestion('commonNameSuggestions'),
   formSuggestions: suggestion('formSuggestions'),
   planetSuggestions: suggestion('planetSuggestions'),
@@ -92,13 +88,8 @@ const PROBES: Record<string, Probe> = {
 
 const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
 
-interface Answer {
-  data?: Record<string, unknown> | null;
-  errors?: { path?: (string | number)[]; extensions?: { code?: string } }[];
-}
-
 /** The probe as B, a member of W, so the signed-in scope passes and only the id can refuse. */
-async function run(probe: Probe, workspaceId: string): Promise<Answer> {
+async function run(probe: WorkspaceIdProbe, workspaceId: string): Promise<Answer> {
   const session = asUser(B);
   const response = await yoga.fetch(
     'http://localhost/graphql',

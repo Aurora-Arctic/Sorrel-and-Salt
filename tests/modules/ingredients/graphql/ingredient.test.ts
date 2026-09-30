@@ -10,6 +10,7 @@ import { A, B, C, D, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { noSender } from '../../../support/email-verification';
 import { makeIngredient } from '../../../support/fixtures';
+import type { IngredientNode } from './types';
 
 // The `ingredient` detail query: a compendium entry for anyone, and a coven's
 // own entry for its members when they name the coven. Non-null: a miss is
@@ -42,20 +43,10 @@ beforeEach(async () => {
   );
 });
 
-interface Node {
-  id: string;
-  name: string;
-  nomenclature: string;
-  canonicalName: string | null;
-  isGlobal: boolean;
-  folkNames: string[];
-  categories: { name: string }[];
-}
-
 function run(
   session: Session | null,
   variables: { id: string; workspaceId?: string },
-): Promise<ExecutionResult<{ ingredient: Node }>> {
+): Promise<ExecutionResult<{ ingredient: IngredientNode }>> {
   return graphql({
     schema,
     source: `query ($id: ID!, $workspaceId: ID) {
@@ -65,7 +56,7 @@ function run(
     }`,
     variableValues: variables,
     contextValue: { session, loaders: createLoaders(session), emailVerification: noSender },
-  }) as Promise<ExecutionResult<{ ingredient: Node }>>;
+  }) as Promise<ExecutionResult<{ ingredient: IngredientNode }>>;
 }
 
 describe('ingredient', () => {

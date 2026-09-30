@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
 import { fromRoot } from '../support/paths';
+import type { Job, Step, VercelPull, Workflow } from './types';
 
 // Every preview `vercel pull` passes `--git-branch`, and no production one
 // does (claude-docs/ci.md, "Deploy"). Without the flag nothing fails: the pull
@@ -12,25 +13,6 @@ import { fromRoot } from '../support/paths';
 // through two steps, one per target, selected by a YAML `if:` this test can
 // read as data — it proves the two conditions are paired with their flags,
 // not that GitHub evaluates them as written.
-
-interface Step {
-  name?: string;
-  /** Ties an invocation to the one target its flags are legal on. */
-  if?: string;
-  run?: string;
-  env?: Record<string, string>;
-}
-
-interface Job {
-  outputs?: Record<string, string>;
-  steps?: Step[];
-  with?: Record<string, string | boolean>;
-}
-
-interface Workflow {
-  on?: { workflow_call?: { inputs?: Record<string, { required?: boolean; type?: string }> } };
-  jobs: Record<string, Job>;
-}
 
 const WORKFLOWS_DIR = fromRoot('.github/workflows');
 
@@ -50,16 +32,8 @@ function stepNamed(job: Job, name: string): Step {
  */
 const INVOCATION = /(?:^|&&|\|\||;|\|)\s*vercel pull\b/;
 
-interface Pull {
-  file: string;
-  job: string;
-  /** The step the invocation lives in, so its `if:` can be read alongside it. */
-  step: Step;
-  command: string;
-}
-
 /** Every `run:` line that invokes `vercel pull`, across every workflow. */
-function everyVercelPull(): Pull[] {
+function everyVercelPull(): VercelPull[] {
   return readdirSync(WORKFLOWS_DIR)
     .filter((file) => file.endsWith('.yml') || file.endsWith('.yaml'))
     .flatMap((file) =>
@@ -80,8 +54,8 @@ function everyVercelPull(): Pull[] {
  * `--environment` literally: an invocation that interpolates it cannot be
  * classified, and an unclassifiable pull is one whose flags nothing can check.
  */
-const isProductionPull = (pull: Pull) => pull.command.includes('--environment=production');
-const isPreviewPull = (pull: Pull) => pull.command.includes('--environment=preview');
+const isProductionPull = (pull: VercelPull) => pull.command.includes('--environment=production');
+const isPreviewPull = (pull: VercelPull) => pull.command.includes('--environment=preview');
 
 describe('every `vercel pull` in CI', () => {
   const pulls = everyVercelPull();
@@ -208,9 +182,7 @@ describe('deploy.yml resolve-target', () => {
 
   it('has both refs available to it', () => {
     expect(script).toBeTruthy();
-    const step = stepNamed(job, 'Resolve deploy target') as Step & {
-      env?: Record<string, string>;
-    };
+    const step = stepNamed(job, 'Resolve deploy target') as Step;
     expect(step.env).toMatchObject({
       REF_NAME: '${{ github.ref_name }}',
       HEAD_REF: '${{ github.head_ref }}',

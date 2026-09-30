@@ -18,6 +18,7 @@ import {
 } from '@/modules/ingredients/schema/inventory-items';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { workspaces } from '@/modules/coven/schema/workspaces';
+import type { StockRow } from './types';
 
 // DESIGN.md §5's column list, transcribed.
 const OWN_COLUMNS = [
@@ -139,17 +140,6 @@ const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
 const catalogue = useTestDatabase((client) => (sql = client));
-
-interface StockRow {
-  workspaceId?: string;
-  ingredientId?: string;
-  quantity?: string | null;
-  unit?: string | null;
-  dimension?: string | null;
-  threshold?: string | null;
-  source?: string | null;
-  acquiredDate?: string | null;
-}
 
 async function hold({
   workspaceId = COVEN,

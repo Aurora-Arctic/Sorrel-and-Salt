@@ -1,7 +1,5 @@
 import os from 'node:os';
-import type { ViteUserConfig } from 'vitest/config';
-
-type TestConfig = NonNullable<ViteUserConfig['test']>;
+import type { TestConfig } from './types.ts';
 
 // The Postgres-backed harness, spread into both the `db` project and the
 // acceptance config so the second cannot quietly diverge from the first.

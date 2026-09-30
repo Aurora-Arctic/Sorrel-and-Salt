@@ -9,10 +9,9 @@ import {
   expectSignedIn,
   signIn as signInThrough,
   stubProviderCredentials,
-  type Profile,
-  type ProviderId,
 } from '../support/oauth';
-import type { Message } from '@/lib/types';
+import type { Message, ProviderId } from '@/lib/types';
+import type { Profile } from '../support/types';
 
 // Story 58, through Better Auth's real endpoints: an OAuth sign-up mails a
 // link, and following it verifies the address only from a session holding

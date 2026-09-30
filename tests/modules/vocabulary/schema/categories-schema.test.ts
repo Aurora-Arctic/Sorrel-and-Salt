@@ -4,6 +4,7 @@ import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { categories, categoryGroups } from '@/modules/vocabulary/schema/categories';
 import { FIXTURE_USERS } from '@/db/seed/standard';
+import type { Row } from './types';
 
 const GROUPS_SLUG_UNIQUE = 'category_groups_slug_unique';
 const CATEGORIES_SLUG_UNIQUE = 'categories_slug_unique';
@@ -107,8 +108,6 @@ describe('categories schema', () => {
 
 const AUTHOR = FIXTURE_USERS.A.id;
 const ABSENT_GROUP = '99999999-9999-9999-9999-999999999999';
-
-type Row = Record<string, string | null>;
 
 function groupRow(overrides: Row = {}): Row {
   return {

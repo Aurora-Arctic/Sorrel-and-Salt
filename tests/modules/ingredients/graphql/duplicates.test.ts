@@ -1,4 +1,4 @@
-import { graphql, type ExecutionResult } from 'graphql';
+import { graphql } from 'graphql';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
@@ -10,6 +10,7 @@ import type { Session } from '@/lib/session';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
+import type { DuplicateNode, DuplicateConnection, Result } from './types';
 
 // The transport half of M4.7's duplicate warning: what M5.10's debounced
 // lookup calls. The table is emptied per test, so every row a result could
@@ -31,21 +32,6 @@ function addIngredient(entry: Overrides<IngredientFixture>): Promise<string> {
   return insertIngredient(sql, makeIngredient({ nomenclature, ...entry }), A.id);
 }
 
-interface Node {
-  id: string;
-  name: string;
-  canonicalName: string | null;
-  isGlobal: boolean;
-  folkNames: string[];
-}
-
-interface Connection {
-  edges: { cursor: string; score: number; node: Node }[];
-  pageInfo: { hasNextPage: boolean; endCursor: string | null };
-}
-
-type Result = ExecutionResult<{ possibleDuplicates: Connection }>;
-
 function run(
   session: Session | null,
   variables: { name: string; workspaceId?: string; first?: number; after?: string | null },
@@ -63,7 +49,10 @@ function run(
   }) as Promise<Result>;
 }
 
-async function nodesFor(session: Session, variables: Parameters<typeof run>[1]): Promise<Node[]> {
+async function nodesFor(
+  session: Session,
+  variables: Parameters<typeof run>[1],
+): Promise<DuplicateNode[]> {
   const result = await run(session, variables);
   expect(result.errors).toBeUndefined();
   return result.data?.possibleDuplicates.edges.map((edge) => edge.node) ?? [];
@@ -189,7 +178,7 @@ describe('possibleDuplicates', () => {
       await addIngredient({ name: 'Mugwart', workspaceId: WORKSPACE_W_ID });
 
       const first = await run(asUser(B), { name: 'Mugwart', first: 1 });
-      const page = first.data?.possibleDuplicates as Connection;
+      const page = first.data?.possibleDuplicates as DuplicateConnection;
       expect(page.edges.map((edge) => edge.node.name)).toEqual(['Mugwart']);
       expect(page.pageInfo.hasNextPage).toBe(true);
 
@@ -200,7 +189,7 @@ describe('possibleDuplicates', () => {
       });
 
       expect(next.errors).toBeUndefined();
-      const rest = next.data?.possibleDuplicates as Connection;
+      const rest = next.data?.possibleDuplicates as DuplicateConnection;
       expect(rest.edges.map((edge) => edge.node.name)).toEqual(['Mugwort']);
       expect(rest.pageInfo.hasNextPage).toBe(false);
     });

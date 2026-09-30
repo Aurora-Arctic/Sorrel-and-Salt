@@ -8,6 +8,7 @@ import { assertMembership } from '@/modules/coven';
 import { setSpellVisibility } from '@/modules/grimoire';
 import { A, B, C, D, asUser } from '../../../support/as-user';
 import { makeSpell } from '../../../support/fixtures';
+import type { SpellVisibility } from '@/modules/grimoire';
 
 // DESIGN.md §5's one-way rule: `private` may be widened to `workspace`, and
 // `workspace` may never be narrowed back. Once the coven has read a spell and
@@ -27,11 +28,9 @@ beforeEach(async () => {
   await sql`truncate spells cascade`;
 });
 
-type Visibility = 'private' | 'workspace';
-
 async function cast(
   author: typeof A,
-  visibility: Visibility,
+  visibility: SpellVisibility,
   workspaceId: string = WORKSPACE_W_ID,
 ): Promise<string> {
   const session = asUser(author);
@@ -138,7 +137,7 @@ describe('setSpellVisibility', () => {
   });
 
   describe('restating the visibility a spell already has', () => {
-    for (const visibility of ['private', 'workspace'] as Visibility[]) {
+    for (const visibility of ['private', 'workspace'] as SpellVisibility[]) {
       it(`leaves a ${visibility} spell ${visibility}`, async () => {
         const spellId = await cast(B, visibility);
 

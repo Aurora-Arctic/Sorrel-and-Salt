@@ -3,6 +3,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
+import type { Diagnostic } from './types';
 
 // A service receives the session as its first argument; it never reads the
 // request to find one (claude-docs/auth.md, "Route protection"). A service
@@ -19,11 +20,6 @@ const config = join(REPO_ROOT, '.oxlintrc.json');
 
 /** Untracked, gitignored, and removed in `afterAll`. */
 const PROBE_DIR = 'src/modules/coven/services/__lint-probe-session__';
-
-interface Diagnostic {
-  code: string;
-  filename: string;
-}
 
 const probes = new Map<string, string>();
 function probe(name: string, source: string, directory = PROBE_DIR): string {

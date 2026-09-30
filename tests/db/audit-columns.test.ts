@@ -31,6 +31,7 @@ import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
 import { spells } from '@/modules/grimoire/schema/spells';
 import { workspaceInvitations } from '@/modules/coven/schema/workspace-invitations';
 import { workspaceMembers, workspaces } from '@/modules/coven/schema/workspaces';
+import type { Reference } from './types';
 
 // One sweep rather than a copy in every schema test: a table added without
 // `...auditColumns` fails here, where a per-file copy would simply not exist.
@@ -68,12 +69,6 @@ const named = (tables: PgTable[]) =>
 
 let sql: ReturnType<typeof postgres>;
 const catalogue = useTestDatabase((client) => (sql = client));
-
-interface Reference {
-  column_name: string;
-  foreign_table: string;
-  foreign_column: string;
-}
 
 /** Every `*_by` foreign key `table` declares, keyed by column, as the catalogue reports it. */
 async function byReferencesOf(table: string): Promise<Record<string, Reference>> {

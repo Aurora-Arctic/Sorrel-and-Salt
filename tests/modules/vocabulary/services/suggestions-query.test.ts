@@ -3,6 +3,7 @@ import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { suggestForms, suggestPlanets } from '@/modules/vocabulary';
 import { B, asUser } from '../../../support/as-user';
+import type { Logged } from '../../../support/db/types';
 
 // The statements suggestPlanets actually sends, as duplicates-plan.test.ts
 // reads findPossibleDuplicates': the thresholds and the operators are only
@@ -11,11 +12,6 @@ import { B, asUser } from '../../../support/as-user';
 // thirteen signs and seventy-eight forms fit a few pages, and the planner will
 // never reach for a trigram index over a table that small, so an index-scan
 // assertion could only fail (claude-docs/db.md, "The astrology vocabularies").
-
-interface Logged {
-  query: string;
-  params: unknown[];
-}
 
 const logged = vi.hoisted(() => [] as Logged[]);
 

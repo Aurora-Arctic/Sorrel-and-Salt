@@ -9,6 +9,7 @@ import {
 } from '@/modules/vocabulary/schema/ingredient-forms';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS } from '@/db/seed/standard';
+import type { Row } from './types';
 
 const GROUPS_SLUG_UNIQUE = 'ingredient_form_groups_slug_unique';
 const FORMS_SLUG_UNIQUE = 'ingredient_forms_slug_unique';
@@ -151,8 +152,6 @@ describe('ingredients.form is text over this vocabulary, not a foreign key to it
 
 const AUTHOR = FIXTURE_USERS.A.id;
 const ABSENT_GROUP = '99999999-9999-9999-9999-999999999999';
-
-type Row = Record<string, string | null>;
 
 function groupRow(overrides: Row = {}): Row {
   return {

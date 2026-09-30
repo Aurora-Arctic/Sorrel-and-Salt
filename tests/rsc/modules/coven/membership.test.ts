@@ -2,9 +2,9 @@ import { createElement, type ReactNode } from 'react';
 import { renderToReadableStream } from 'react-server-dom-webpack/server.edge';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import type { Session } from '@/lib/session';
 import { type WorkspacePermission, assertMembership } from '@/modules/coven';
 import { A, asUser } from '../../../support/as-user';
+import type { Ask } from './types';
 
 // The server read path, observed from where it happens: React's `cache()`
 // memoises only while the Flight renderer is running, so the dedupe cannot be
@@ -21,12 +21,6 @@ vi.mock('@/db/repository', () => ({ findWorkspaceRole }));
 
 const READ: WorkspacePermission = { workspace: ['read'] };
 const CREATE: WorkspacePermission = { spell: ['create'] };
-
-interface Ask {
-  session: Session;
-  workspaceId: string;
-  permission: WorkspacePermission;
-}
 
 /** What a page does: check, then render from the proof. */
 async function Page({ session, workspaceId, permission }: Ask) {

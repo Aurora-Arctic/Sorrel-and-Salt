@@ -9,6 +9,7 @@ import {
   type EmailVerificationSender,
 } from '@/modules/identity';
 import { A, B, asUser } from '../../../support/as-user';
+import type { EmailUserRow } from './types';
 
 // Story 59's service half: asking for an address writes nothing to
 // `users.email` — the address becomes the row's at verification — so an
@@ -34,21 +35,12 @@ const sender: EmailVerificationSender = {
   requestChange: vi.fn(async () => {}),
 };
 
-interface UserRow {
-  id: string;
-  email: string;
-  email_verified: boolean;
-  updated_by: string;
-  updated_at: Date;
-  verification_sent_at: Date | null;
-}
-
-async function userRow(id: string): Promise<UserRow> {
+async function userRow(id: string): Promise<EmailUserRow> {
   const [row] = await sql`
     select id, email, email_verified, updated_by, updated_at, verification_sent_at
     from users where id = ${id}
   `;
-  return row as UserRow;
+  return row as EmailUserRow;
 }
 
 /** When the row's last verification mail went out; `null` for never. */

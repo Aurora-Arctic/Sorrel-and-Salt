@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
 import { fromRoot } from '../support/paths';
+import type { Workflow } from './types';
 
 // Staging serves the component workshop from public/workshop/, behind the
 // proxy's admin gate on /workshop (claude-docs/workshop.md, "On staging").
@@ -11,15 +12,7 @@ import { fromRoot } from '../support/paths';
 // ships it to production. This reads the step as data — it proves what the
 // workflow says, not that GitHub evaluates it as written.
 
-interface Step {
-  name?: string;
-  if?: string;
-  run?: string;
-}
-
-const deploy = parse(readFileSync(fromRoot('.github/workflows/deploy.yml'), 'utf8')) as {
-  jobs: Record<string, { steps?: Step[] }>;
-};
+const deploy = parse(readFileSync(fromRoot('.github/workflows/deploy.yml'), 'utf8')) as Workflow;
 const steps = deploy.jobs.deploy?.steps ?? [];
 const WORKSHOP_BUILD = /\bnpm run workshop:build\b/;
 

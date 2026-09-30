@@ -1,54 +1,17 @@
-import type { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
-import type { spells } from '@/modules/grimoire/schema/spells';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { toColumns } from './columns';
-import { type Overrides, mergeFixture, stated } from './merge';
+import { mergeFixture, stated } from './merge';
+import type {
+  SpellLayerFixture,
+  SpellLayerOverrides,
+  SpellFixture,
+  SpellOverrides,
+  Overrides,
+} from './types';
 
 // A jar: the spell row, the categories it intends, and the stack inside it.
 // The categories here are the *assigned* ones; derived categories are computed
 // from the ingredients, so a fixture has none to give.
-
-/**
- * One layer of the stack: it points at an ingredient *or* names one of its own
- * (`num_nonnulls(ingredient_id, name) = 1`), with `form` only beside a name.
- */
-export interface SpellLayerFixture extends Required<
-  Pick<
-    typeof spellIngredients.$inferInsert,
-    'ingredientId' | 'name' | 'form' | 'quantity' | 'unit' | 'note' | 'layerOrder'
-  >
-> {}
-
-/**
- * What a test says about a layer. `layerOrder` is the position in the array,
- * so it cannot be stated as well.
- */
-export type SpellLayerOverrides = Omit<Overrides<SpellLayerFixture>, 'layerOrder'>;
-
-/** A spell, plus the categories it intends and the layers it is built from. */
-export interface SpellFixture extends Required<
-  Pick<
-    typeof spells.$inferInsert,
-    | 'workspaceId'
-    | 'title'
-    | 'intent'
-    | 'jarSize'
-    | 'sealWaxColor'
-    | 'moonPhase'
-    | 'dayOfWeek'
-    | 'instructions'
-    | 'status'
-    | 'visibility'
-  >
-> {
-  /** §6 categories by name — what the spell *intends*, never what its contents imply (§9). */
-  categories: string[];
-  layers: SpellLayerFixture[];
-}
-
-export type SpellOverrides = Omit<Overrides<SpellFixture>, 'layers'> & {
-  layers?: SpellLayerOverrides[];
-};
 
 // Invented, like every name a fixture supplies on its own (CLAUDE.md, Testing).
 const DEFAULT_LAYER_NAME = 'Fixture Ash';

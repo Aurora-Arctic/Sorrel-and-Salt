@@ -9,6 +9,7 @@ import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
+import type { AstrologySuggestionConnection } from './types';
 
 // The transport half of MB.94: two connection fields over one type, a page
 // each, refused by the schema before the service is reached when signed
@@ -36,17 +37,6 @@ beforeEach(async () => {
   );
 });
 
-interface Suggestion {
-  value: string;
-  description: string | null;
-  curated: boolean;
-}
-
-interface Connection {
-  edges: { cursor: string; node: Suggestion }[];
-  pageInfo: { hasNextPage: boolean; endCursor: string | null };
-}
-
 const PAGE = `{
   edges { cursor node { value description curated } }
   pageInfo { hasNextPage endCursor }
@@ -56,7 +46,7 @@ function run(
   session: Session | null,
   field: 'planetSuggestions' | 'zodiacSuggestions',
   variables: Record<string, unknown>,
-): Promise<ExecutionResult<Record<string, Connection>>> {
+): Promise<ExecutionResult<Record<string, AstrologySuggestionConnection>>> {
   return graphql({
     schema,
     source: `query ($workspaceId: ID!, $query: String, $first: Int, $after: String) {
@@ -64,7 +54,7 @@ function run(
     }`,
     variableValues: { workspaceId: WORKSPACE_W_ID, ...variables },
     contextValue: { session, loaders: createLoaders(session) },
-  }) as Promise<ExecutionResult<Record<string, Connection>>>;
+  }) as Promise<ExecutionResult<Record<string, AstrologySuggestionConnection>>>;
 }
 
 describe('planetSuggestions', () => {
@@ -90,7 +80,7 @@ describe('planetSuggestions', () => {
   it('pages by cursor', async () => {
     const first = await run(asUser(B), 'planetSuggestions', { query: 'moon', first: 1 });
     expect(first.errors).toBeUndefined();
-    const page = first.data?.planetSuggestions as Connection;
+    const page = first.data?.planetSuggestions as AstrologySuggestionConnection;
     expect(page.edges.map((edge) => edge.node.value)).toEqual(['Moon']);
     expect(page.pageInfo.hasNextPage).toBe(true);
 
@@ -101,7 +91,7 @@ describe('planetSuggestions', () => {
     });
 
     expect(next.errors).toBeUndefined();
-    const rest = next.data?.planetSuggestions as Connection;
+    const rest = next.data?.planetSuggestions as AstrologySuggestionConnection;
     expect(rest.edges.map((edge) => edge.node.value)).not.toContain('Moon');
     expect(rest.edges[0]?.node).toMatchObject({ value: 'Lilith', curated: true });
     expect(rest.pageInfo.hasNextPage).toBe(false);

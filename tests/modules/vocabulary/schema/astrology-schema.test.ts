@@ -6,13 +6,12 @@ import { foreignKeyStatements, shippedMigrationStatements } from '../../../suppo
 import { planets, zodiacSigns } from '@/modules/vocabulary/schema/astrology';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS } from '@/db/seed/standard';
+import type { Row } from './types';
 
 // As in ingredient-forms-schema.test.ts: a hand-ordering column under any usual name; §5 lists none.
 const ORDERING_COLUMNS = ['order', 'position', 'sort', 'sort_order', 'rank', 'display_order'];
 
 const AUTHOR = FIXTURE_USERS.A.id;
-
-type Row = Record<string, string | null>;
 
 // Invented values, so no row here collides with what MB.93 seeds.
 const VOCABULARIES = [

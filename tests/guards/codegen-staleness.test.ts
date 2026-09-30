@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import config from '../../codegen';
 import { fromRoot } from '../support/paths';
+import type { FileOutput } from './types';
 
 // src/gql/ is committed generated output (claude-docs/graphql.md, "Client
 // types"). This regenerates it in memory from the committed SDL and fails on
@@ -15,12 +16,6 @@ import { fromRoot } from '../support/paths';
 // `generate` itself, which rejects it at validation.
 
 const OUTPUT_DIR = 'src/gql';
-
-/** One generated file; `generate`'s own typings return `any`. */
-interface FileOutput {
-  filename: string;
-  content: string;
-}
 
 /** `npm run codegen`, returning the files instead of writing them. */
 function run(overrides: Partial<CodegenConfig> = {}): Promise<FileOutput[]> {

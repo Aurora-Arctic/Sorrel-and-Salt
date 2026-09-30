@@ -7,6 +7,7 @@ import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { retiredIngredientSlugs } from '@/modules/ingredients/schema/retired-ingredient-slugs';
 import { workspaces } from '@/modules/coven/schema/workspaces';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
+import type { Retired } from './types';
 
 // MB.80's ledger: a slug an ingredient moved off, answering a 308 and reserved
 // until `expires_at`. The columns and the generated expiry only — MB.82 is
@@ -96,11 +97,6 @@ async function insertIngredient(workspaceId: string | null = null): Promise<stri
     })} returning id
   `;
   return row.id as string;
-}
-
-interface Retired {
-  retired_at: string;
-  expires_at: string;
 }
 
 /** A retirement stamped at `retiredAt`, both stamps read back as text so no driver clock reinterprets them. */

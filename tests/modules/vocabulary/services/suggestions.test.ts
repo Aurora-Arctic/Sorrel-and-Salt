@@ -14,6 +14,7 @@ import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { ConnectionArgs, Page } from '@/lib/types';
+import type { Suggest } from './types';
 
 // DESIGN.md §5, "The two readers are scoped differently": a member's autofill
 // for `planet` or `zodiac` offers the curated vocabulary first, then the
@@ -54,8 +55,6 @@ async function descriptionOf(planet: string): Promise<string> {
   const [row] = await sql`select description from planets where name = ${planet}`;
   return row.description as string;
 }
-
-type Suggest = typeof suggestPlanets;
 
 function pageOf(
   suggest: Suggest,

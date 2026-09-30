@@ -6,15 +6,11 @@ import { createLoaders } from '@/graphql/loaders';
 import { noSender } from '../support/email-verification';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '@/lib/types';
 import type { Context } from '@/graphql/types';
+import type { Leaf, LeavesData, CountedData } from './types';
 
 // The transport half of CLAUDE.md rule 8, over a throwaway schema: a list of
 // 250 branches, each with a connection of 250 leaves, so no page size is
 // bounded by running out of rows.
-
-interface Leaf {
-  id: string;
-  name: string;
-}
 
 const LEAVES: Leaf[] = Array.from({ length: 250 }, (_, index) => ({
   id: `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
@@ -82,13 +78,6 @@ async function run(
 ) {
   return graphql({ schema, source, variableValues, contextValue: { ...context } });
 }
-
-type LeavesData = {
-  leaves: {
-    edges: { cursor: string; node: { name: string } }[];
-    pageInfo: { hasNextPage: boolean; endCursor: string | null };
-  };
-};
 
 const PAGE = 'edges { cursor node { name } } pageInfo { hasNextPage endCursor }';
 
@@ -262,15 +251,6 @@ function countedSchema(starts: (Cursor | undefined)[] = []): GraphQLSchema {
   });
   return scratch.toSchema();
 }
-
-type CountedData = {
-  leaves: {
-    totalCount?: number;
-    countBefore?: number | null;
-    edges: { node: { name: string } }[];
-    pageInfo: { endCursor: string | null };
-  };
-};
 
 describe('a paged connection given a count', () => {
   it('declares totalCount and countBefore, and only then', () => {

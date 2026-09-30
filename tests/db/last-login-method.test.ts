@@ -12,10 +12,9 @@ import {
   providerHandlers,
   signIn as signInThrough,
   stubProviderCredentials,
-  type Profile,
-  type ProviderId,
 } from '../support/oauth';
-import type { Message } from '@/lib/types';
+import type { Message, ProviderId } from '@/lib/types';
+import type { Profile } from '../support/types';
 
 // Story 1, through Better Auth's real endpoints: the lastLoginMethod plugin
 // writes a readable cookie naming the provider whenever a callback sets the

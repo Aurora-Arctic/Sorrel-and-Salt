@@ -15,6 +15,7 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { noSender } from '../../../support/email-verification';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { Context } from '@/graphql/types';
+import type { Answer, WorkspaceIngredientNode } from './types';
 
 // Stories 15 and 34 over the wire: the two mutations a coven's ingredient form
 // saves through. Run through Yoga with the route's own error mapping, so a
@@ -32,17 +33,6 @@ beforeEach(async () => {
 });
 
 const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
-
-interface WireError {
-  message: string;
-  path?: (string | number)[];
-  extensions?: { code?: string; fieldErrors?: { path: (string | number)[]; message: string }[] };
-}
-
-interface Answer<T> {
-  data?: T | null;
-  errors?: WireError[];
-}
 
 async function run<T>(
   session: Session | null,
@@ -67,18 +57,6 @@ const FIELDS = `
   audit { createdBy updatedBy }
 `;
 
-interface Node {
-  id: string;
-  name: string;
-  nomenclature: string;
-  element: string | null;
-  deities: string[] | null;
-  folkNames: string[];
-  isGlobal: boolean;
-  audit: { createdBy: string; updatedBy: string };
-  [field: string]: unknown;
-}
-
 const CREATE = `mutation ($workspaceId: ID!, $input: IngredientInput!) {
   createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) { ${FIELDS} }
 }`;
@@ -95,17 +73,22 @@ const create = (
   session: Session | null,
   input: Record<string, unknown>,
   workspaceId = WORKSPACE_W_ID,
-) => run<{ createWorkspaceIngredient: Node }>(session, CREATE, { workspaceId, input });
+) =>
+  run<{ createWorkspaceIngredient: WorkspaceIngredientNode }>(session, CREATE, {
+    workspaceId,
+    input,
+  });
 
 const update = (
   session: Session | null,
   id: string,
   input: Record<string, unknown>,
   workspaceId = WORKSPACE_W_ID,
-) => run<{ updateIngredient: Node }>(session, UPDATE, { workspaceId, id, input });
+) =>
+  run<{ updateIngredient: WorkspaceIngredientNode }>(session, UPDATE, { workspaceId, id, input });
 
 const read = (session: Session | null, id: string) =>
-  run<{ ingredient: Node }>(session, READ, { id, workspaceId: WORKSPACE_W_ID });
+  run<{ ingredient: WorkspaceIngredientNode }>(session, READ, { id, workspaceId: WORKSPACE_W_ID });
 
 /** A W-local fixture: no formal name, and so `none`, unless one is stated. */
 function local(overrides: Overrides<IngredientFixture> = {}): IngredientFixture {
@@ -164,7 +147,7 @@ describe('createWorkspaceIngredient', () => {
       isGlobal: false,
       folkNames: [],
     });
-    const created = result.data?.createWorkspaceIngredient as Node;
+    const created = result.data?.createWorkspaceIngredient as WorkspaceIngredientNode;
     expect((await rowOf(created.id)).workspace_id).toBe(WORKSPACE_W_ID);
   });
 
@@ -179,7 +162,7 @@ describe('createWorkspaceIngredient', () => {
       folkNames: ['Test Root', 'Fixture Herb'],
     });
 
-    const answered = result.data?.createWorkspaceIngredient as Node;
+    const answered = result.data?.createWorkspaceIngredient as WorkspaceIngredientNode;
     expect([...answered.folkNames].sort()).toEqual(['Fixture Herb', 'Test Root']);
     const fresh = await read(asUser(B), answered.id);
     expect(fresh.errors).toBeUndefined();
@@ -189,7 +172,7 @@ describe('createWorkspaceIngredient', () => {
   it('stamps the ingredient and its folk names from the session, in one transaction', async () => {
     const result = await create(asUser(B), { name: 'Testwort', folkNames: ['Test Root'] });
 
-    const answered = result.data?.createWorkspaceIngredient as Node;
+    const answered = result.data?.createWorkspaceIngredient as WorkspaceIngredientNode;
     expect(answered.audit).toEqual({ createdBy: B.id, updatedBy: B.id });
     const row = await rowOf(answered.id);
     expect(row).toMatchObject({ created_by: B.id, updated_by: B.id });
@@ -275,7 +258,7 @@ describe('updateIngredient', () => {
     );
 
     expect(result.errors).toBeUndefined();
-    const answered = result.data?.updateIngredient as Node;
+    const answered = result.data?.updateIngredient as WorkspaceIngredientNode;
     expect(answered).toMatchObject({
       id,
       name: 'Testroot',
@@ -442,12 +425,16 @@ describe('updateIngredient', () => {
       second: updateIngredient(workspaceId: $workspaceId, id: $id, input: $second) { folkNames }
     }`;
 
-    const result = await run<{ first: Node; second: Node }>(asUser(B), twice, {
-      workspaceId: WORKSPACE_W_ID,
-      id,
-      first: wholeInput(local({ folkNames: ['First Root'] })),
-      second: wholeInput(local({ folkNames: ['Second Root'] })),
-    });
+    const result = await run<{ first: WorkspaceIngredientNode; second: WorkspaceIngredientNode }>(
+      asUser(B),
+      twice,
+      {
+        workspaceId: WORKSPACE_W_ID,
+        id,
+        first: wholeInput(local({ folkNames: ['First Root'] })),
+        second: wholeInput(local({ folkNames: ['Second Root'] })),
+      },
+    );
 
     expect(result.errors).toBeUndefined();
     expect(result.data?.first.folkNames).toEqual(['First Root']);

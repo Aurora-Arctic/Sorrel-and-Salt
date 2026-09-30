@@ -10,6 +10,7 @@ import { A, B, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { noSender } from '../../../support/email-verification';
 import { makeIngredient } from '../../../support/fixtures';
+import type { CompendiumConnection } from './types';
 
 // The `compendium` query over the standard seed's 26 entries: public (MB.80),
 // filtered in SQL, a page at a time, with folk names and categories batched.
@@ -50,26 +51,10 @@ beforeEach(() => {
   Object.values(repository).forEach((spy) => spy.mockClear());
 });
 
-interface Node {
-  id: string;
-  name: string;
-  canonicalName: string | null;
-  nomenclature: string;
-  form: string | null;
-  isGlobal: boolean;
-  folkNames: string[];
-  categories: { name: string; group: { name: string; colorDark: string } }[];
-}
-
-interface Connection {
-  edges: { cursor: string; score: number | null; node: Node }[];
-  pageInfo: { hasNextPage: boolean; endCursor: string | null };
-}
-
 function run(
   session: Session | null,
   variables: Record<string, unknown> = {},
-): Promise<ExecutionResult<{ compendium: Connection }>> {
+): Promise<ExecutionResult<{ compendium: CompendiumConnection }>> {
   return graphql({
     schema,
     source: `query ($query: String, $categoryIds: [ID!], $form: String, $first: Int, $after: String) {
@@ -88,7 +73,7 @@ function run(
     }`,
     variableValues: variables,
     contextValue: { session, loaders: createLoaders(session), emailVerification: noSender },
-  }) as Promise<ExecutionResult<{ compendium: Connection }>>;
+  }) as Promise<ExecutionResult<{ compendium: CompendiumConnection }>>;
 }
 
 // Fifty, not the maximum: a page of 100 with categories and their groups costs
@@ -97,7 +82,7 @@ function run(
 async function nodesOf(variables: Record<string, unknown>, session: Session | null = null) {
   const result = await run(session, { first: 50, ...variables });
   expect(result.errors).toBeUndefined();
-  const data = result.data as { compendium: Connection };
+  const data = result.data as { compendium: CompendiumConnection };
   return data.compendium.edges.map((edge) => edge.node);
 }
 
@@ -121,9 +106,9 @@ describe('compendium', () => {
 
     const first = await run(null);
     expect(first.errors).toBeUndefined();
-    const page = first.data?.compendium as Connection;
+    const page = first.data?.compendium as CompendiumConnection;
     const rest = await run(null, { after: page.pageInfo.endCursor });
-    const tail = rest.data?.compendium as Connection;
+    const tail = rest.data?.compendium as CompendiumConnection;
 
     expect(page.edges).toHaveLength(25);
     expect(page.pageInfo.hasNextPage).toBe(true);
@@ -159,7 +144,7 @@ describe('compendium', () => {
   it('ranks a search best match first, with the score on each edge', async () => {
     const result = await run(null, { query: 'sal', first: 50 });
     expect(result.errors).toBeUndefined();
-    const edges = (result.data as { compendium: Connection }).compendium.edges;
+    const edges = (result.data as { compendium: CompendiumConnection }).compendium.edges;
 
     expect(edges.map((edge) => [edge.node.name, edge.score])).toEqual([
       ['Black Salt', 0.75],
@@ -175,7 +160,7 @@ describe('compendium', () => {
     const result = await run(null);
 
     expect(result.errors).toBeUndefined();
-    const edges = (result.data as { compendium: Connection }).compendium.edges;
+    const edges = (result.data as { compendium: CompendiumConnection }).compendium.edges;
     expect(edges).toHaveLength(25);
     expect(edges.every((edge) => edge.score === null)).toBe(true);
   });
@@ -184,7 +169,7 @@ describe('compendium', () => {
     const result = await run(null, { query: 'c', first: 50 });
 
     expect(result.errors).toBeUndefined();
-    const edges = (result.data as { compendium: Connection }).compendium.edges;
+    const edges = (result.data as { compendium: CompendiumConnection }).compendium.edges;
     expect(edges.map((edge) => edge.node.id)).toEqual(await expectedOrder());
     expect(edges.every((edge) => edge.score === null)).toBe(true);
   });
@@ -234,7 +219,7 @@ describe('compendium', () => {
     const result = await run(null);
 
     expect(result.errors).toBeUndefined();
-    const page = result.data?.compendium as Connection;
+    const page = result.data?.compendium as CompendiumConnection;
     expect(page.edges.some((edge) => edge.node.categories.length > 0)).toBe(true);
     expect(page.edges.some((edge) => edge.node.folkNames.length > 0)).toBe(true);
     // Folk names and category links, then categories and their groups.

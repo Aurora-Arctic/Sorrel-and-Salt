@@ -16,15 +16,10 @@ import {
 } from '@/lib/graphql-client';
 import { graphqlLink, mockGraphQLQuery } from '../support/msw/graphql';
 import { server } from '../support/msw/server';
+import type { OkQuery, OkQueryVariables, EchoQuery, EchoQueryVariables } from './types';
 
-// Typed by hand the way client-preset types a document, so the tests need no
-// document under src/ that would ship in src/gql/.
-type OkQuery = { ok: boolean };
-type OkQueryVariables = { [key: string]: never };
 const OkDocument = parse('query Ok { ok }') as TypedDocumentNode<OkQuery, OkQueryVariables>;
 
-type EchoQuery = { echo: string };
-type EchoQueryVariables = { word: string };
 const EchoDocument = parse('query Echo($word: String!) { echo(word: $word) }') as TypedDocumentNode<
   EchoQuery,
   EchoQueryVariables

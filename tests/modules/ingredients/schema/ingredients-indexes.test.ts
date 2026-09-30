@@ -2,14 +2,10 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { tableFacts } from '../../../support/db/table-metadata';
-import {
-  type IngredientFixture,
-  type Overrides,
-  ingredientColumns,
-  makeIngredient,
-} from '../../../support/fixtures';
+import { ingredientColumns, makeIngredient } from '../../../support/fixtures';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
+import type { IngredientOverrides, Inserted } from './types';
 
 // §5's three partial unique indexes. Identity is `canonical_key`, so the
 // compendium is unique on identity and label uniqueness survives only inside
@@ -58,8 +54,6 @@ const WORKSPACE_A = WORKSPACE_W_ID;
 const WORKSPACE_B = WORKSPACE_X_ID;
 
 // The shared factory plus this file's author; the audit stamps are never the fixture's.
-type IngredientOverrides = Overrides<IngredientFixture>;
-
 function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
   return {
     ...ingredientColumns(makeIngredient(overrides)),
@@ -70,8 +64,6 @@ function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
 
 let sql: ReturnType<typeof postgres>;
 const catalogue = useTestDatabase((client) => (sql = client));
-
-type Inserted = { id: string; canonicalKey: string };
 
 async function insert(overrides: IngredientOverrides = {}): Promise<Inserted> {
   const [inserted] = await sql`

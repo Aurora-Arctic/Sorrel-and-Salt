@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '../support/msw/server';
 import { send } from '@/lib/mail';
+import type { Captured } from './types';
 
 const MESSAGE = {
   to: 'recipient@example.test',
@@ -12,8 +13,6 @@ const MESSAGE = {
 
 const MAILPIT_URL = 'http://mailpit.test:8025';
 const MAILTRAP_SANDBOX_ID = '4242';
-
-type Captured = { url: string; headers: Headers; body: unknown };
 
 // Every request `send` makes, whatever its URL. MSW's `onUnhandledRequest:
 // 'error'` is not enough to prove nothing was sent: `send` swallows errors by

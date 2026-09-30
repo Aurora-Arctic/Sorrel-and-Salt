@@ -12,6 +12,7 @@ import {
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
+import type { Written } from './types';
 
 // The query count, observed at the repository: every read the path reaches is
 // wrapped so the test counts calls without changing what they answer. A role
@@ -35,13 +36,6 @@ const countOf = () =>
   );
 
 let sql: ReturnType<typeof postgres>;
-
-/** The ingredients this file wrote, each with the children it was given. */
-interface Written {
-  ref: IngredientKey;
-  folkNames: string[];
-  categories: string[];
-}
 
 // Three of §6's seeded categories, picked by name so the expectation reads;
 // the ids are what the loader answers with.

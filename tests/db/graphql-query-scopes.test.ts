@@ -6,20 +6,13 @@ import { createLoaders } from '@/graphql/loaders';
 import { schema } from '@/graphql/schema';
 import { Forbidden } from '@/lib/errors';
 import { noSender } from '../support/email-verification';
+import type { ScopeProbe } from './types';
 
 // MB.80's line, drawn field by field: the compendium is the one public
 // surface, so its three queries answer a null session and every other query
 // refuses one. Every `Query` field is classified here, and the first test
 // fails on one that is not, so a field added later has to say which side it
 // is on (claude-docs/graphql.md, "Auth scopes").
-
-type Outcome = 'answers' | 'refuses';
-
-interface Probe {
-  source: string;
-  variables?: Record<string, unknown>;
-  outcome: Outcome;
-}
 
 let compendiumId: string;
 
@@ -32,7 +25,7 @@ beforeAll(async () => {
   await sql.end();
 });
 
-const suggestion = (field: string): Probe => ({
+const suggestion = (field: string): ScopeProbe => ({
   source: `query ($workspaceId: ID!) {
     ${field}(workspaceId: $workspaceId, first: 1) { edges { node { value } } }
   }`,
@@ -40,7 +33,7 @@ const suggestion = (field: string): Probe => ({
   outcome: 'refuses',
 });
 
-const PROBES: Record<string, Probe> = {
+const PROBES: Record<string, ScopeProbe> = {
   ok: { source: '{ ok }', outcome: 'answers' },
   me: { source: '{ me { id } }', outcome: 'refuses' },
   compendium: {

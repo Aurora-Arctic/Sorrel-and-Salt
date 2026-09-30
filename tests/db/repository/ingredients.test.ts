@@ -5,24 +5,24 @@ import {
   findCompendiumEntryByIdentity,
   findCompendiumPage,
   findOneIngredient,
+  type CompendiumScore,
   type IngredientFilter,
+  type IngredientRow,
 } from '@/db/repository';
 import { InvalidCursor } from '@/lib/errors';
 import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import type { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { A, B, D, asUser } from '../../support/as-user';
 import { insertIngredient } from '../../support/db/insert-ingredient';
 import { makeIngredient } from '../../support/fixtures';
 import type { ConnectionArgs, Page, PageCount } from '@/lib/types';
+import type { Walk } from './types';
 
 // The compendium read's two finders (claude-docs/db.md, "The compendium
 // read"): the public list under its filters, and one row by id in the
 // compendium or a proof's coven. Every expected order comes from SQL, because
 // the database collates `en_US.utf8` and JS does not.
-
-type Row = typeof ingredients.$inferSelect;
 
 let sql: ReturnType<typeof postgres>;
 
@@ -41,9 +41,10 @@ async function add(
   return insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', ...overrides }), A.id);
 }
 
-type Scored = { score: number | null };
-
-function pageOf(filter: IngredientFilter, args: ConnectionArgs = {}): Promise<Page<Row, Scored>> {
+function pageOf(
+  filter: IngredientFilter,
+  args: ConnectionArgs = {},
+): Promise<Page<IngredientRow, CompendiumScore>> {
   return resolvePage(args, (request) => findCompendiumPage(filter, request));
 }
 
@@ -60,14 +61,12 @@ async function expectedOrder(): Promise<string[]> {
 }
 
 /** The count a connection reads for a page: from its first row, or from none on an empty one. */
-function countFor(filter: IngredientFilter, page: Page<Row, Scored>): Promise<PageCount> {
+function countFor(
+  filter: IngredientFilter,
+  page: Page<IngredientRow, CompendiumScore>,
+): Promise<PageCount> {
   const start = page.pageInfo.startCursor;
   return findCompendiumCount(filter, start === null ? undefined : decodeCursor(start));
-}
-
-interface Walk {
-  ids: string[];
-  counts: PageCount[];
 }
 
 /** Every page of `filter` at `size`, from the first, each with its count. */
@@ -75,7 +74,7 @@ async function walkForwards(filter: IngredientFilter, size: number): Promise<Wal
   const walk: Walk = { ids: [], counts: [] };
   let after: string | null = null;
   for (;;) {
-    const page: Page<Row, Scored> = await pageOf(filter, { first: size, after });
+    const page: Page<IngredientRow, CompendiumScore> = await pageOf(filter, { first: size, after });
     walk.ids.push(...page.edges.map((edge) => edge.node.id));
     walk.counts.push(await countFor(filter, page));
     if (!page.pageInfo.hasNextPage) break;
@@ -94,7 +93,7 @@ async function walkBackwards(filter: IngredientFilter, size: number): Promise<Wa
   const walk: Walk = { ids: [], counts: [] };
   let args: ConnectionArgs = { last: totalCount % size || size };
   for (;;) {
-    const page: Page<Row, Scored> = await pageOf(filter, args);
+    const page: Page<IngredientRow, CompendiumScore> = await pageOf(filter, args);
     walk.ids.unshift(...page.edges.map((edge) => edge.node.id));
     walk.counts.unshift(await countFor(filter, page));
     if (!page.pageInfo.hasPreviousPage) break;
@@ -271,7 +270,10 @@ describe('findCompendiumPage', () => {
       const ids: string[] = [];
       let after: string | null = null;
       for (;;) {
-        const page: Page<Row, Scored> = await pageOf({ query: QUERY }, { first: 2, after });
+        const page: Page<IngredientRow, CompendiumScore> = await pageOf(
+          { query: QUERY },
+          { first: 2, after },
+        );
         ids.push(...page.edges.map((edge) => edge.node.id));
         if (!page.pageInfo.hasNextPage) break;
         after = page.pageInfo.endCursor;
@@ -286,7 +288,10 @@ describe('findCompendiumPage', () => {
       const ids: string[] = [];
       let before: string | null = null;
       for (;;) {
-        const page: Page<Row, Scored> = await pageOf({ query: QUERY }, { last: 2, before });
+        const page: Page<IngredientRow, CompendiumScore> = await pageOf(
+          { query: QUERY },
+          { last: 2, before },
+        );
         ids.unshift(...page.edges.map((edge) => edge.node.id));
         if (!page.pageInfo.hasPreviousPage) break;
         before = page.pageInfo.startCursor;
@@ -397,7 +402,7 @@ describe('findCompendiumPage', () => {
       const sizes: number[] = [];
       let after: string | null = null;
       for (;;) {
-        const page: Page<Row, Scored> = await pageOf({}, { first: 7, after });
+        const page: Page<IngredientRow, CompendiumScore> = await pageOf({}, { first: 7, after });
         ids.push(...page.edges.map((edge) => edge.node.id));
         sizes.push(page.edges.length);
         if (!page.pageInfo.hasNextPage) break;
