@@ -1,6 +1,6 @@
 ---
 name: create-pr
-description: Use when the user asks to open a PR, create a pull request, or wrap up the current branch for review (e.g. "create a PR", "open a PR for this", "let's get this reviewed"). Commits (after asking) and automatically pushes the current branch's work, then opens a PR with a generated summary of the work done — proposes a target branch based on the repo's Gitflow rules for the current branch's prefix (feature/release/hotfix/staging); `hotfix/*` branches automatically get PRs into both `main` and `staging`, plus a third into an in-flight `release/*` branch if the user opts in. On creating a PR it also opens the body with `Closes #<issue>`, moves the linked task to `In Review` on the GitHub board and comments the PR link on its issue, then comments the `/project-progress` tally on the new PR.
+description: Use when the user asks to open a PR, create a pull request, or wrap up the current branch for review (e.g. "create a PR", "open a PR for this", "let's get this reviewed"). Commits (after asking) and automatically pushes the current branch's work, then opens a PR with a generated summary of the work done — proposes a target branch based on the repo's Gitflow rules for the current branch's prefix (feature/release/hotfix/staging); `hotfix/*` branches automatically get PRs into both `main` and `staging`, plus a third into an in-flight `release/*` branch if the user opts in. On creating a PR it also opens the body with `Closes #<issue>` and ends it with the `/project-progress` tally, moves the linked task to `In Review` on the GitHub board and comments the PR link on its issue.
 ---
 
 # create-pr
@@ -73,10 +73,11 @@ Turn the current branch's work into a pull request against a Gitflow-appropriate
 8. **Draft the PR.**
    - Title: short, under ~70 characters, imperative mood.
    - Body: if step 7 identified a task, start with a single `Closes #<number>` line followed by a blank line — one line, not a section, so it doesn't crowd out what follows. `Closes` goes on the PR that completes the task, because `.github/workflows/close-task-on-merge.yml` reads it on merge; a PR that leaves the task open (a stacked or partial one) opens with `Refs #<number>` instead. Then a `## Summary` section (1-4 bullet points on _what_ changed and _why_, based on step 7's diff/log — not a restatement of commit messages) and a `## Test plan` section (checklist of how this was/should be verified — reference this repo's actual checks per what was actually touched: `npm run pre-commit`, `npm run test:coverage`, `npm run test:stories`, and the Playwright run. Name only the checks the diff calls for).
+   - Last, after a `---` rule, [`/project-progress`](../project-progress/SKILL.md)'s tally: run `git fetch -q origin staging` (continue if it fails), then `node .claude/skills/project-progress/tally.mjs`, and append its output verbatim — add nothing to it, the output is already markdown. Its figures are `origin/staging`'s, so this PR's own task shows as under way rather than completed; that is correct, not stale, since it completes on merge. It lives in the body rather than in a comment because step 9 regenerates the body on a re-run, so the tally refreshes instead of stacking a duplicate.
    - Pass the body via a HEREDOC to `gh pr create` for correct formatting, same as this repo's standard PR-creation convention.
 
 9. **Create or update the PR.**
-   - If step 2 found an existing open PR for this branch with a matching `baseRefName`, update it instead of opening a duplicate: `gh pr edit <number> --title "..." --body "$(cat <<'EOF' ... EOF)"`. No need to ask first — updating an already-open PR with the branch's current state is the expected outcome of running this skill again.
+   - If step 2 found an existing open PR for this branch with a matching `baseRefName`, update it instead of opening a duplicate: `gh pr edit <number> --title "..." --body "$(cat <<'EOF' ... EOF)"`. No need to ask first — updating an already-open PR with the branch's current state is the expected outcome of running this skill again, and the regenerated body carries a fresh tally.
    - Otherwise, run `gh pr create --base <target> --title "..." --body "$(cat <<'EOF' ... EOF)"`.
    - Report the PR URL back to the user.
 
@@ -86,12 +87,6 @@ Turn the current branch's work into a pull request against a Gitflow-appropriate
     - When step 9 **created** a new PR: in this same turn, `node scripts/task-board.mjs comment <ID> "PR opened into <target>: <url>"`, then `node scripts/task-board.mjs status <ID> "In Review"`. For a `hotfix/*` branch, list every PR opened (`main`, `staging`, and the optional `release/*`) in the one comment, and set `In Review` once — see [reference-hotfix.md](reference-hotfix.md).
     - When step 9 only **updated** an already-open PR: the task is already `In Review` — just post a `task-board.mjs comment` noting the PR was updated, and leave the status alone.
     - Status moves forward only: the script refuses a backward step and refuses `Done`. Never close the issue by hand — `.github/workflows/close-task-on-merge.yml` closes it when the PR merges into `staging`, and GitHub itself does when a PR merges into `main`; its closing keywords fire only on the default branch, which is why the Action exists.
-
-11. **Comment the project progress on the PR.**
-    - Only when step 9 **created** a PR — an update posts nothing, so a re-run doesn't stack duplicate tallies.
-    - Run `git fetch -q origin staging` (continue if it fails), then post [`/project-progress`](../project-progress/SKILL.md)'s tally verbatim: `gh pr comment <number> --body "$(node .claude/skills/project-progress/tally.mjs)"`. Add nothing to it — the output is already markdown.
-    - The figures are `origin/staging`'s, so this PR's own task shows as under way rather than completed. That is correct, not stale: it completes on merge.
-    - For a `hotfix/*` branch, comment on every PR step 9 created.
 
 ## Notes
 
