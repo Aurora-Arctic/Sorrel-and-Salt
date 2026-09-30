@@ -87,7 +87,7 @@ nothing in `Docker/docker-compose.yaml` to publish a port from.
 
 From the **host**, the `make` equivalents are `make dev-debug`,
 `make test-debug`, `make test-ui`, `make e2e-ui`, `make e2e-trace`, exactly
-mirroring CLAUDE.md's Commands table (neither `make` nor `docker` exists
+mirroring [`commands.md`](commands.md) (neither `make` nor `docker` exists
 inside the devcontainer itself — run the npm scripts directly there).
 
 ## Server-side debugging

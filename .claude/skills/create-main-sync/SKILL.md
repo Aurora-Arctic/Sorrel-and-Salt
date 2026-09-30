@@ -51,7 +51,7 @@ Bring commits that landed on `main` but not yet on `staging` (most commonly a `h
 
 ## Notes
 
-- Branch naming follows the Gitflow rules in [`CLAUDE.md`](../../../CLAUDE.md), which only accept `main-sync/YYYY-MM-DD-HH-MM-SS` as a source into `staging` — this skill's naming isn't just a convention. Once M0.17/M0.20 add `.github/workflows/gitflow.yml`, PRs from a differently-named sync branch will fail the required `gitflow` check.
+- Branch naming follows the Gitflow rules in [`CLAUDE.md`](../../../CLAUDE.md), which only accept `main-sync/YYYY-MM-DD-HH-MM-SS` as a source into `staging` — this skill's naming isn't just a convention. `.github/workflows/gitflow.yml` enforces it: a PR from a differently-named sync branch fails the required `gitflow` check.
 - `main-sync/*` branches are only ever a valid source into `staging`, never into `main` or `release/*` — this skill never asks which target to use, unlike `/create-pr`.
 - Never force-pushes; never deletes anything.
 - Pushing the branch here (rather than deferring to `/create-pr`) is a deliberate exception to this repo's normal "ask before anything visible to others" caution — invoking `/create-main-sync` is itself the user's request for a real, shared sync PR, same reasoning `/create-release` uses for its own push. `.claude/settings.json`'s `permissions.ask` entry for `git push origin *` still prompts for confirmation on the actual push.

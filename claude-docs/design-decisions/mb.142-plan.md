@@ -116,13 +116,13 @@ Verification: as D.
 
 The rule, added to `claude-docs/README.md` beside "a summary must stand on its own": a summary stands on its own for the **current shape**; for the **argument** it cites. Each fact has one home, and every other mention is a clause plus a citation:
 
-| Fact                                | Home                                    | Today's other copies, to become citations                                                                                                          |
-| ----------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A binding rule                      | `CLAUDE.md` / its `.claude/rules/` file | subsystem docs, TASKS entries                                                                                                                      |
-| A subsystem's current shape         | `claude-docs/<subsystem>/`              | `DESIGN.md` §5 restated in `db/identity-model.md` and others (460 runs)                                                                            |
-| The argument for a contested choice | `design-decisions/<id>.md`              | "Decided while building X" paragraphs in TASKS entries (725 runs with `mb.100-plan.md` alone), wave reasoning                                      |
-| A task's scope                      | its entry in `claude-docs/tasks/`       | the § of `DESIGN.md` it restates (597 runs)                                                                                                        |
-| Ordering reasoning                  | `claude-docs/waves/wave-NN.md`          | milestone "Sequencing" preambles (9.9 KB); the GitHub milestone description carries the id list and a link, and CLAUDE.md's "Board layout" says so |
+| Fact                                | Home                                    | Today's other copies, to become citations                                                                                                                       |
+| ----------------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A binding rule                      | `CLAUDE.md` / its `.claude/rules/` file | subsystem docs, TASKS entries                                                                                                                                   |
+| A subsystem's current shape         | `claude-docs/<subsystem>/`              | `DESIGN.md` §5 restated in `db/identity-model.md` and others (460 runs)                                                                                         |
+| The argument for a contested choice | `design-decisions/<id>.md`              | "Decided while building X" paragraphs in TASKS entries (725 runs with `mb.100-plan.md` alone), wave reasoning                                                   |
+| A task's scope                      | its entry in `claude-docs/tasks/`       | the § of `DESIGN.md` it restates (597 runs)                                                                                                                     |
+| Ordering reasoning                  | `claude-docs/waves/wave-NN.md`          | milestone "Sequencing" preambles (9.9 KB); the GitHub milestone description carries the id list and a link, and the task-tracking rule's "Board layout" says so |
 
 The pass works pair by pair from the table above, largest first, and stops at the pairs under ~60 shared runs. The 8-word-shingle script that produced the map is kept as `scripts/doc-overlap.mjs` so the number can be re-read after the pass and by MW.15; it is a report, not a guard, because a threshold would penalise the legitimate mentions.
 

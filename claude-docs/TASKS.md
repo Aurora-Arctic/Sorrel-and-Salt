@@ -8,17 +8,7 @@ Story references point at the numbered user stories in §10 of the design doc. I
 
 ## Standing rules
 
-- One task per PR. Do not combine tasks, even small adjacent ones. A task is sized to one sitting; a sub-hour fix noticed along the way rides in the PR at hand and is named in its body rather than being minted as an MB id (MB.31).
-- Two access paths, one set of rules. Server components read through cache()-wrapped services. Everything the browser initiates — every mutation, and every read without a navigation — goes through GraphQL. Admin is not an exception to either (M3.8).
-- Services are the authorization boundary. Both paths end there, so a permission enforced once holds for both. No server actions, no bespoke route handlers, no admin-only access path.
-- The OAuth handshake at /api/auth/* is outside both paths and carries no application data (M2.2).
-- A task is done when every acceptance criterion is demonstrably met, not when the code appears to work.
-- No print styles anywhere except the spell recipe view (M10.22).
-- The design will change, one section at a time. A building task styles no further than the tokens and mixins in M0.7 and M0.8; each section is designed by its design review (MB.114 to MB.124) once it is built.
-- Tests never touch Neon. Neon is deployment-only.
-- Staging carries the same protections as production. Local development is the only relaxed environment.
-- There are no personal workspaces. Every workspace can take members and be deleted by an owner.
-- The site is invite-gated. Signing in with any registered provider earns an account and nothing else. Creation rights come from accepting a workspace invitation (M7.5) or an admin approval (M5.8), and once held they persist.
+The rules every task follows are [`CLAUDE.md`](../CLAUDE.md)'s, with their long forms in `.claude/rules/`; this file does not restate them.
 
 ## Deferred to v2
 

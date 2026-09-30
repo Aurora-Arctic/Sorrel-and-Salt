@@ -6,7 +6,9 @@ import { REPO_ROOT } from '../support/paths';
 
 // A comment defers its argument to claude-docs/, so a citation that does not
 // resolve costs the reader the argument — and fails silently, because nothing
-// reads a comment.
+// reads a comment. CLAUDE.md and the rule and skill files under .claude/ defer
+// the same way, and are read by an agent that cannot tell a dead link from a
+// missing rule.
 
 // Assembled so this file does not match its own assertions and report itself.
 const DOCS = 'claude-docs';
@@ -37,11 +39,23 @@ function unwrap(section: string): string {
  * Tracked files plus untracked ones git would not ignore, so a citation is
  * caught in the diff that adds it. `src/db/migrations/` is excluded: drizzle
  * hashes each migration's content, so fixing a comment there is not the
- * harmless edit it looks like.
+ * harmless edit it looks like. A pathspec's `*` crosses `/`, so
+ * `.claude/*.md` reaches every rule and skill file.
  */
 function citingFiles(): string[] {
   const args = ['-c', 'safe.directory=*', 'ls-files', '--cached', '--others', '--exclude-standard'];
-  const globs = ['*.ts', '*.tsx', '*.mts', '*.mjs', '*.scss', '*.yml', '*.yaml', 'makefile'];
+  const globs = [
+    '*.ts',
+    '*.tsx',
+    '*.mts',
+    '*.mjs',
+    '*.scss',
+    '*.yml',
+    '*.yaml',
+    'makefile',
+    'CLAUDE.md',
+    '.claude/*.md',
+  ];
   return execFileSync('git', [...args, ...globs], { cwd: REPO_ROOT, encoding: 'utf8' })
     .split('\n')
     .filter(Boolean)
@@ -67,6 +81,8 @@ describe('every claude-docs citation resolves', () => {
     expect(FILES.length).toBeGreaterThan(50);
     expect(CITED.length).toBeGreaterThan(10);
     expect(CITED.map(({ file }) => file)).toContain('src/db/repository/write.ts');
+    expect(FILES).toContain('CLAUDE.md');
+    expect(FILES).toContain('.claude/rules/database.md');
   });
 
   it('names a file that exists', () => {
