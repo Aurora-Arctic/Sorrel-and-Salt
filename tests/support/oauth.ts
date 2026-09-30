@@ -136,12 +136,16 @@ export function cookieHeader(response: Response): string {
     .join('; ');
 }
 
-/** One full round trip: start the sign-in, then land on the callback. Returns the callback's redirect. */
+/**
+ * One full round trip: start the sign-in headed for `callbackURL`, then land
+ * on the callback. Returns the callback's redirect.
+ */
 export async function signIn(
   auth: typeof Auth,
   server: SetupServer,
   provider: ProviderId,
   profile: Profile,
+  callbackURL = '/coven',
 ): Promise<Response> {
   server.use(...providerHandlers(provider, profile));
 
@@ -149,7 +153,7 @@ export async function signIn(
     new Request(`${ORIGIN}/api/auth/sign-in/social`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', origin: ORIGIN },
-      body: JSON.stringify({ provider, callbackURL: '/coven' }),
+      body: JSON.stringify({ provider, callbackURL }),
     }),
   );
   expect(start.status, await start.clone().text()).toBe(200);

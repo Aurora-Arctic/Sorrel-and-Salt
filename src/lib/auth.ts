@@ -20,7 +20,7 @@ import { SOCIAL_PROVIDERS } from './social-providers';
 import { clientCredentials } from './social-providers-config';
 import type { UserRole, HookContext } from './session';
 import { send } from './mail';
-import { emailPagePath, VERIFIED_LANDING } from './account-email';
+import { emailPagePath, returnPathOf, verifiedLanding } from './account-email';
 import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH } from './sign-in';
 import { verifyEmailMessage } from '../emails/verify-email';
 import {
@@ -342,9 +342,12 @@ export const auth = betterAuth({
       // so the stamp, which restarts the provisional window too, is the row's own.
       await recordVerificationSent({ userId: user.id });
       // Better Auth lands a sign-up's link where the sign-in asked to go; every
-      // link lands on the email page's confirmed view instead.
+      // link lands on the email page's confirmed view instead, carrying that
+      // destination on to Continue. A resend's `callbackURL` is already the
+      // landing, and passes the same guard as a sign-up's.
       const link = new URL(url);
-      link.searchParams.set('callbackURL', VERIFIED_LANDING);
+      const next = returnPathOf(link.searchParams.get('callbackURL'));
+      link.searchParams.set('callbackURL', verifiedLanding(next));
       const accounts = await ctx.context.internalAdapter.findAccounts(user.id);
       await send(
         await verifyEmailMessage({

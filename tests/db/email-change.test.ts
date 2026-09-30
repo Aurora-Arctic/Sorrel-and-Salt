@@ -94,10 +94,10 @@ async function age(id: string, by: string): Promise<void> {
   });
 }
 
-/** What the email page's mutation does: the sender bound to the browser's own request. */
-function requestChange(cookie: string, current: string, next: string): Promise<void> {
+/** The sender the email page's mutation uses, bound to the browser's own request. */
+function sender(cookie: string) {
   const request = new Request(`${ORIGIN}/api/graphql`, { method: 'POST', headers: { cookie } });
-  return emailVerificationSender(request).requestChange(current, next);
+  return emailVerificationSender(request);
 }
 
 /** The link in the one mail sent since the last reset. */
@@ -123,10 +123,15 @@ async function signUpUnverified(email = OWNER, sub = 'ms-owner') {
   return { cookie: cookieHeader(response), before };
 }
 
-/** A change link for `next`, requested from the row's own session. */
-async function changeLink(cookie: string, current: string, next = NEW): Promise<string> {
-  await requestChange(cookie, current, next);
-  expect(send.mock.calls[0][0]).toMatchObject({ to: next });
+/** A change link for `address`, requested from the row's own session, carrying `next` if given. */
+async function changeLink(
+  cookie: string,
+  current: string,
+  address = NEW,
+  next?: string,
+): Promise<string> {
+  await sender(cookie).requestChange(current, address, next);
+  expect(send.mock.calls[0][0]).toMatchObject({ to: address });
   return mailedLink();
 }
 
@@ -234,8 +239,12 @@ describe('Story 59: asking for a new address', () => {
   });
 });
 
-/** Better Auth's own resend endpoint, as the email page's `resend` reaches it. */
-function resend(cookie: string | undefined, email: string): Promise<Response> {
+/** Better Auth's own resend endpoint, posted to directly. */
+function resend(
+  cookie: string | undefined,
+  email: string,
+  callbackURL = '/account/email',
+): Promise<Response> {
   return auth.handler(
     new Request(`${ORIGIN}/api/auth/send-verification-email`, {
       method: 'POST',
@@ -244,7 +253,7 @@ function resend(cookie: string | undefined, email: string): Promise<Response> {
         origin: ORIGIN,
         ...(cookie ? { cookie } : {}),
       },
-      body: JSON.stringify({ email, callbackURL: '/account/email' }),
+      body: JSON.stringify({ email, callbackURL }),
     }),
   );
 }
@@ -298,6 +307,78 @@ describe('Story 59: one verification mail a minute', () => {
     expect(await userRow('discord-80351110224678914@pending.invalid')).toMatchObject({
       verification_sent_at: null,
     });
+  });
+});
+
+describe('Story 59: the link carries on to where the account was going', () => {
+  const ADMIN_LANDING = '/account/email?verified&next=%2Fadmin';
+
+  const callbackOf = (link: string) => new URL(link).searchParams.get('callbackURL');
+
+  /** Lets the row be mailed again: its sign-up mail was inside the minute. */
+  async function outOfCooldown(id: string): Promise<void> {
+    await sql`update users set verification_sent_at = now() - interval '61 seconds' where id = ${id}`;
+  }
+
+  it('lands a change link on the confirmed view carrying the next it was asked with', async () => {
+    const { cookie, before } = await signUpUnverified();
+
+    const link = await changeLink(cookie, OWNER, NEW, '/admin');
+
+    expect(callbackOf(link)).toBe(ADMIN_LANDING);
+    expect(landingOf(await follow(link, cookie))).toBe(ADMIN_LANDING);
+    expect(await userRow(NEW)).toMatchObject({ id: before.id, email_verified: true });
+  });
+
+  it('drops a next that leaves the site when the change link is built, landing as it does today', async () => {
+    const { cookie } = await signUpUnverified();
+
+    const link = await changeLink(cookie, OWNER, NEW, '//evil.example');
+
+    expect(callbackOf(link)).toBe('/account/email?verified');
+    expect(landingOf(await follow(link, cookie))).toBe('/account/email?verified');
+  });
+
+  it('keeps next beside the error when the change link is refused', async () => {
+    const { cookie, before } = await signUpUnverified();
+    const link = await changeLink(cookie, OWNER, NEW, '/admin');
+    expectSignedIn(await signIn('google', { sub: 'g-taker', email: NEW, verified: true }));
+
+    const response = await follow(link, cookie);
+
+    expect(landingOf(response)).toBe('/account/email?next=%2Fadmin&error=EMAIL_TAKEN');
+    expect(await userRow(OWNER)).toEqual(before);
+  });
+
+  it("lands a resend's link carrying the next the email page asked with", async () => {
+    const { cookie, before } = await signUpUnverified();
+    await outOfCooldown(before.id);
+
+    await sender(cookie).resend(OWNER, '/admin');
+
+    const link = mailedLink();
+    expect(callbackOf(link)).toBe(ADMIN_LANDING);
+    expect(landingOf(await follow(link, cookie))).toBe(ADMIN_LANDING);
+  });
+
+  // The hook builds every link Better Auth mails, so a callbackURL posted
+  // straight to the endpoint passes the same guard as one the sender built.
+  it('keeps a same-site next posted straight to the resend endpoint and drops one that leaves the site', async () => {
+    const { cookie, before } = await signUpUnverified();
+    await outOfCooldown(before.id);
+
+    expect((await resend(cookie, OWNER, ADMIN_LANDING)).status).toBe(200);
+
+    // Why the second could carry it: the hook reads the posted landing's `next`.
+    expect(callbackOf(mailedLink())).toBe(ADMIN_LANDING);
+    send.mockReset();
+    await outOfCooldown(before.id);
+
+    const offsite = await resend(cookie, OWNER, '/account/email?verified&next=%2F%2Fevil.example');
+
+    // Better Auth accepted the landing and mailed; the hook dropped the `next`.
+    expect(offsite.status).toBe(200);
+    expect(callbackOf(mailedLink())).toBe('/account/email?verified');
   });
 });
 
