@@ -81,10 +81,8 @@
   gap: 0.5rem 0.75rem;
 }
 
-// No `_typography.scss` bullet: the rows are controls, not prose. Two classes,
-// because the workshop hangs that rule off `.ladle-story-frame`, which one
-// class would not outrank.
-.sign-in-methods__list .sign-in-methods__item::before {
+// No `_typography.scss` bullet: the rows are controls, not prose.
+.sign-in-methods__item::before {
   content: none;
 }
 

@@ -93,9 +93,15 @@ without a page routed to it.
   just the ones the app's own `reduced-motion` mixin reaches, since the real
   media feature zeroes transitions app-wide too.
 - **`typography.scss`, `layout.scss`, `primitives.scss`** — each `@include`s
-  its `src/scss/` `*-base` mixin into `.ladle-story-frame`, so a story gets the
-  identical prose, document structure and class layer a page does while Ladle's
-  own `<ul>` / `<li>` / `<a>` chrome, outside the frame, stays untouched.
+  its `src/scss/` `*-base` mixin into `:where(.ladle-story-frame)`, so a story
+  gets the identical prose, document structure and class layer a page does
+  while Ladle's own `<ul>` / `<li>` / `<a>` chrome, outside the frame, stays
+  untouched. **The `:where()` is load-bearing**: it gives the scope no
+  specificity, as `body` has next to nothing in the app. Scoped by a bare class,
+  `.ladle-story-frame p` (0,1,1) outranked every component's own `p` class
+  (0,1,0), so the workshop drew `EmailForm`'s notice at body size with the
+  paragraph margin, and `AdminNav`'s rows with the ◆ bullet the page never
+  shows (MB.114).
 - **`UnoptimizedLink.tsx`** — what `next/link` resolves to here, via the alias in
   `vite.config.ts`: a plain anchor, the substitution Ladle's Next.js guide
   prescribes. Vite has no Next router and no `process.env`, and the first

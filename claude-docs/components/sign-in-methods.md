@@ -35,9 +35,7 @@ needs no credentials.
 
 A linked provider is the row without an Add: it shows its Remove while
 another is left, and nothing at all when it is the only one. The rows carry
-no `_typography.scss` bullet, since they are controls rather than prose. The
-rule is compounded from two classes because the workshop hangs the global
-bullet off `.ladle-story-frame`, which one class would not outrank.
+no `_typography.scss` bullet, since they are controls rather than prose.
 
 ## Removing one answers in place
 
