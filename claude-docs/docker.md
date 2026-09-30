@@ -74,7 +74,8 @@ no Neon connection and no host Node-version juggling.
       can disable it (the preload list is compiled into the binary, not
       loaded at runtime). Nothing else in this repo hits `app` from a real
       browser — the remote-browser e2e path's `baseURL` is
-      `http://devcontainer:8001` — so this only bit `make docker-codegen`
+      `http://devcontainer:<port>`, the worker slot's server on 8001 and up
+      or 8100 — so this only bit `make docker-codegen`
       (`claude-docs/debugging.md`), which is what surfaced it. Every
       non-browser reference (`DATABASE_URL`-style service-to-service
       traffic) keeps using bare `app`; `sorrel-app` exists solely for URLs a

@@ -64,7 +64,8 @@ attached at all.
 | Port  | What                                                 | Where it's forwarded/published                                                                                            |
 | ----- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | 8000  | `next dev`                                           | devcontainer.json, `app` service (Docker/docker-compose.yaml)                                                             |
-| 8001  | `next start` (production build, e2e target)          | devcontainer.json                                                                                                         |
+| 8001+ | `next start`, one per e2e worker slot (MB.112)       | devcontainer.json forwards 8001 alone; slot `n` serves on `8001 + n`, reached inside the compose network                  |
+| 8100  | `next start`, e2e configured providers (MB.112)      | none — reached inside the compose network                                                                                 |
 | 4983  | Drizzle Studio (MB.21)                               | devcontainer.json, `studio` service                                                                                       |
 | 9229  | Node inspector — `next dev --inspect`                | devcontainer.json, `app` service                                                                                          |
 | 9230  | Node inspector — `vitest --inspect-brk`              | devcontainer.json only (no long-running compose service serves this)                                                      |
@@ -77,7 +78,8 @@ attached at all.
 | 7900  | Playwright display — codegen, `page.pause()` (MB.23) | devcontainer.json, `playwright-server` service — a page you open, unlike 4444                                             |
 
 Everything in that table except 8000, 8001, 4983, 4444 and 61000 is new to
-MB.22; 7900 is MB.23's. All the
+MB.22; 7900 is MB.23's, and 8100 and the slot ports past 8001 are MB.112's.
+All the
 `devcontainer.json`-only rows are forwarded because the process that opens
 them runs inside the devcontainer and is started from an editor terminal or
 a `tasks.json` task, not by a long-running compose service — there is
@@ -211,14 +213,17 @@ broader would silently make both depend on `playwright-server` being up,
 which it never is in either context.
 
 **The remote branch also moves `baseURL`, and deliberately not the readiness
-check.** When `PLAYWRIGHT_WS_ENDPOINT` is set, `playwright.config.ts`
-switches `baseURL` to `http://devcontainer:8001` — a remote browser cannot
-resolve the runner's own `localhost`, and `next start --hostname 0.0.0.0`
-already binds every interface, so the compose service name works. The
-`webServer.url` readiness poll stays on `http://localhost:8001`
-unconditionally, because that poll runs in the runner's own process no
-matter where the browser lives. The asymmetry is correct; making both sides
-match breaks one of them.
+check.** When `PLAYWRIGHT_WS_ENDPOINT` is set, every `baseURL` becomes
+`http://devcontainer:<port>` (`tests/e2e/slots.ts`'s `browserUrl`) — the
+worker slot's server, on 8001 and up, or 8100 for the configured-providers
+project. A remote browser cannot resolve the runner's own `localhost`, and
+`next start --hostname 0.0.0.0` already binds every interface, so the
+compose service name works. Each `webServer.url` readiness poll stays on
+`http://localhost:<port>` unconditionally, because that poll runs in the
+runner's own process no matter where the browser lives. The asymmetry is
+correct; making both sides match breaks one of them. `devcontainer.json`
+forwards 8001 alone: the remote browser reaches every server inside the
+compose network, and only slot 0's is worth opening from the host.
 
 **`ws://playwright-server:4444/` is a WebSocket address, not a URL you open
 in a browser.** It's what `playwright.config.ts` passes as
@@ -322,8 +327,8 @@ A recorded spec is a draft, not something to open a PR with as-is:
    `devcontainer`/`localhost`, never `sorrel-app`.
 3. If it touches the database, add `test.describe.configure({ mode: 'serial'
 })` and a `beforeAll` calling `recreateE2eDatabase()` from `./database` —
-   see the comment atop `tests/e2e/smoke.spec.ts` for why parallel workers racing
-   `DROP/CREATE DATABASE` isn't theoretical.
+   `serial` keeps the file's tests, and its one reseed of the worker's
+   database, on one worker (`claude-docs/testing.md`, "E2E — Playwright").
 4. Consider `assertNoAccessibilityViolations` from `./axe` for any new page.
 5. Strip codegen's redundant assertions and any brittle `nth()`-match
    locator it fell back to.

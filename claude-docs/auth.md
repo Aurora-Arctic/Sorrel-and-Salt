@@ -1300,6 +1300,6 @@ page.tsx`'s own source for the invite-only explanation M2.8 adds, since
   signed out. `requireSession()` has no end-to-end test until the first page
   calls it: a forged cookie passes the proxy by design, and only a real page
   can show the database-backed check refusing it. That page's PR adds the test,
-  signing in with a `sessions` row plus a signed cookie (the MB.30 recipe) —
-  in a spec that does not also reset `sorrel_e2e`, or one that shares
-  smoke.spec.ts's, since two files resetting it from different workers race.
+  signing in with a `sessions` row plus a signed cookie (the MB.30 recipe,
+  which `tests/e2e/session.ts`'s `signInAs()` writes) — into the calling
+  worker's own slot database, which no other worker's reseed touches.

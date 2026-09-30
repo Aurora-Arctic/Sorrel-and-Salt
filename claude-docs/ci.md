@@ -316,10 +316,13 @@ matrix's generated job name, not the leg's.
   the job; M2.1 decides how a deliberately red scaffold is tolerated.
   `pr-gate.yml`'s `vitest` filter lists `vitest.stories.config.mts` and the
   script, so editing either reruns the job.
-- **`playwright.yml`** (M1.14) — `npm run e2e` against the app
-  `webServer` already builds and serves on 8001 (see `testing.md`'s E2E
-  section). Runs in `build-e2e-image.yml`'s dedicated image, **not**
-  `build-image.yml`'s — same `inputs.db-image`/`services: postgres:` shape
+- **`playwright.yml`** (M1.14) — `npm run e2e` against the servers
+  `webServer` builds and starts: one per worker slot on 8001 and up — two
+  on GitHub's 4-vCPU runner, since `E2E_WORKERS` is unset and defaults to
+  half the CPUs — and the configured-providers server on 8100 (see
+  `testing.md`'s E2E section). Runs in `build-e2e-image.yml`'s dedicated
+  image, **not** `build-image.yml`'s — same
+  `inputs.db-image`/`services: postgres:` shape
   as `vitest.yml`, fed by the same caller-built `build-db-image` job (one
   build, shared by both — see `vitest.yml`'s entry above). Uploads
   `.reports/playwright-report/`/`.reports/test-results/` on failure and

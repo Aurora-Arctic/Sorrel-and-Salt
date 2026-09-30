@@ -183,8 +183,8 @@ for the other:
 
 | Spec                                             | Server state                                | Covers                                                                                                                                                                                                                                |
 | ------------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tests/e2e/sign-in.spec.ts`                      | No provider configured (8001)               | Every button `aria-disabled` and still reached by Tab; axe over the greyed page (the `.sign-in-panel__note` text, Facebook's transparent chip), the error state, and the last-used badge, waited for since it arrives after hydration |
-| `tests/e2e/sign-in-configured-providers.spec.ts` | All four configured, placeholder ids (8002) | Every button available with no note; axe over the brand colours at rest, then once per button while hovered — after asserting its background actually changed; and the last-used badge on a live button, once per theme               |
+| `tests/e2e/sign-in.spec.ts`                      | No provider configured (8001 and up)        | Every button `aria-disabled` and still reached by Tab; axe over the greyed page (the `.sign-in-panel__note` text, Facebook's transparent chip), the error state, and the last-used badge, waited for since it arrives after hydration |
+| `tests/e2e/sign-in-configured-providers.spec.ts` | All four configured, placeholder ids (8100) | Every button available with no note; axe over the brand colours at rest, then once per button while hovered — after asserting its background actually changed; and the last-used badge on a live button, once per theme               |
 
 **The configured scan exists because the greyed one could not see the
 brand colours**: an unavailable button drops its brand class, so a CI with
@@ -193,5 +193,7 @@ no credentials scanned a page on which `#1877f2` did not exist, and passed a
 the configured project's resting scan and every hover scan but Facebook's
 own. Each spec also asserts its own state before scanning, so a server that
 picked up the wrong credentials fails rather than quietly scanning the other
-page. See [`testing.md`](../testing.md), "E2E — Playwright", for how the two
-servers are wired.
+page. The unconfigured state is every worker slot's own server, on 8001 and
+up; the configured one is a server of its own on 8100, reading
+`sorrel_e2e_providers`, which no spec reseeds. See
+[`testing.md`](../testing.md), "E2E — Playwright", for how they are wired.
