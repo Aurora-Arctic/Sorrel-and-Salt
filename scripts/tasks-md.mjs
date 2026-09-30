@@ -1,17 +1,43 @@
-// The TASKS.md reader the board script and the migration share: task
-// headings in file order, and the execution-order table's rows with their
-// `→` ranges expanded. A range means the headings between its ends in file
-// order, not a numeric span, so a task added between two numbered ones sits
-// inside it (claude-docs/task-tracking.md, "Order").
+// The breakdown's reader, shared by the board script, the migration and the
+// project-progress tally: task headings in file order, and the execution-order
+// table's rows with their `→` ranges expanded. A range means the headings
+// between its ends in file order, not a numeric span, so a task added between
+// two numbered ones sits inside it (claude-docs/task-tracking.md, "Order").
 
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-/** The file itself, resolved from this script rather than the cwd. */
-export const TASKS_MD = fileURLToPath(new URL('../claude-docs/TASKS.md', import.meta.url));
+/**
+ * The breakdown's files, repo-relative and in reading order: TASKS.md, whose
+ * table names the waves, then the milestone sections. Declared rather than
+ * listed from the directory because the order is what a range is expanded
+ * by; tests/guards/tasks-md-sequence.test.ts fails a file in
+ * claude-docs/tasks/ this list leaves out.
+ */
+export const TASKS_FILES = [
+  'claude-docs/TASKS.md',
+  'claude-docs/tasks/m0.md',
+  'claude-docs/tasks/m1.md',
+  'claude-docs/tasks/m2.md',
+  'claude-docs/tasks/m3.md',
+  'claude-docs/tasks/m4.md',
+  'claude-docs/tasks/m5.md',
+  'claude-docs/tasks/m6.md',
+  'claude-docs/tasks/m7.md',
+  'claude-docs/tasks/m8.md',
+  'claude-docs/tasks/m9.md',
+  'claude-docs/tasks/m10.md',
+  'claude-docs/tasks/m11.md',
+  'claude-docs/tasks/m7a.md',
+  'claude-docs/tasks/mb.md',
+  'claude-docs/tasks/mw.md',
+];
 
-// The heading and id regexes are tally.mjs's, so the skill reads the same
-// TASKS.md the same way.
+/** A repo-relative path, resolved from this script rather than the cwd. */
+const fromRepo = (path) => fileURLToPath(new URL(`../${path}`, import.meta.url));
+
+// `ID` and `HEADING` are what the project-progress tally imports, so the skill
+// reads the same headings the same way.
 export const ID = String.raw`[A-Z]+[0-9]*(?:\.[A-Z0-9]+)*[a-z]?`;
 // `**M2.6 — Title** · 2h …` or `**M6.4 — ~~Title~~** · **RETIRED …**`
 export const HEADING = new RegExp(String.raw`^\*\*(${ID}) — .*?\*\* · (?:([0-9.]+)h|\*\*RETIRED)`);
@@ -67,5 +93,9 @@ export function readTasksMd(text) {
   return { order, hours, retired, waves, unresolved };
 }
 
-/** `readTasksMd` over the file on disk. */
-export const loadTasksMd = () => readTasksMd(readFileSync(TASKS_MD, 'utf8'));
+/** Every file in `TASKS_FILES`, in that order, as one text. */
+export const loadTasksMdText = () =>
+  TASKS_FILES.map((path) => readFileSync(fromRepo(path), 'utf8')).join('\n');
+
+/** `readTasksMd` over the files on disk. */
+export const loadTasksMd = () => readTasksMd(loadTasksMdText());

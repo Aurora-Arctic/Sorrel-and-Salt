@@ -61,7 +61,7 @@ them since M2.6. Delete them from Vercel, alongside the GitHub OAuth App
 below.
 
 **The GitHub OAuth App is not deleted by this doc or this task.** It was
-registered under M2.5, which M2.6 reverses (`claude-docs/TASKS.md`). Its
+registered under M2.5, which M2.6 reverses (`claude-docs/tasks/m2.md`). Its
 client id/secret can come out of `.env.local` and Vercel once nothing reads
 them (they already have, in `.env.local` — this task removed the lines),
 but deleting the OAuth App itself on GitHub's side is a manual step: GitHub

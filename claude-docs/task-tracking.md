@@ -3,10 +3,11 @@
 The issues of `Aurora-Arctic/Sorrel-and-Salt`, with the org Project **Sorrel &
 Salt** over them, are the live list of what to work on (MB.89).
 [`TASKS.md`](TASKS.md) is the reasoning behind the breakdown and the two are
-expected to agree: a task minted as an issue is added to `TASKS.md` in the same
-pass. Everything reaches the board through `gh`, and the calls the skills make
-are wrapped once in `scripts/task-board.mjs`, so the lookup rule and the
-Project's field ids live in one file rather than four skills. The board moved
+expected to agree: a task minted as an issue gets its entry in
+`tasks/<milestone>.md` in the same pass. Everything reaches the board through
+`gh`, and the calls the skills make are wrapped once in
+`scripts/task-board.mjs`, so the lookup rule and the Project's field ids live
+in one file rather than four skills. The board moved
 here from Asana; the argument for the move, and for accepting that a public
 repo makes every issue and comment public, is the decision record for MB.89.
 The rule that costs is under **Comments**.
@@ -18,7 +19,7 @@ The rule that costs is under **Comments**.
 | Repo        | `Aurora-Arctic/Sorrel-and-Salt`                                                                                                                                                                                                                                                                                                                                      |
 | Project     | Org project **Sorrel & Salt**, number `1`, linked to the repo. `task-board.mjs` carries the number as `PROJECT` and reads the node id and field ids at runtime, off the issue's own Project item.                                                                                                                                                                    |
 | `Status`    | Single-select field: `Not Started` · `In Progress` · `In Review` · `Done`.                                                                                                                                                                                                                                                                                           |
-| `Estimate`  | Number field, in hours — the `· Nh` on the task's `TASKS.md` heading.                                                                                                                                                                                                                                                                                                |
+| `Estimate`  | Number field, in hours — the `· Nh` on the task's heading in `tasks/<milestone>.md`.                                                                                                                                                                                                                                                                                 |
 | Milestones  | One per wave (`Wave 07 — GraphQL`, two digits because GitHub sorts milestones alphabetically) and one per pre-wave feature grouping (`M0 · Repo bootstrap`), plus a closed `Retired — not done` milestone for the tasks MB.31 retired — every issue has a milestone. The description opens with the wave's task ids in execution order, then the deferral reasoning. |
 | Issue types | `Bug` for `MB.*`, `Task` for everything else. The org has to have both types enabled; `gh issue create --type` fails otherwise.                                                                                                                                                                                                                                      |
 | Labels      | `tracked` on every task — it is the Project's auto-add filter, and an issue without it is a visitor's until someone triages it. `hotfix` on a task that branches off `main`.                                                                                                                                                                                         |
@@ -26,7 +27,7 @@ The rule that costs is under **Comments**.
 
 ## The title rule
 
-An issue is titled `<Task ID> — <title>`, exactly as `TASKS.md` heads it, with
+An issue is titled `<Task ID> — <title>`, exactly as its `tasks/` entry heads it, with
 nothing before the id — no marker, no emoji. Status is a field, so a status
 change never rewrites a title. A retired task reads `<ID> — [RETIRED] <title>`
 and is closed as `not planned`; a done task is closed as `completed`.
@@ -88,7 +89,11 @@ harmless. If a PR is closed without merging, the task goes back to
 
 The Project's manual item order is execution order: the wave table in
 [`TASKS.md`](TASKS.md)'s Execution order section, wave by wave, each wave's
-row in its order. `node scripts/task-board.mjs reorder` is what keeps it so.
+row in its order. The row names the ids and links the wave's reasoning,
+[`waves/wave-NN.md`](waves/); a range in it (`M3.3 → M3.10`) is the headings
+between its ends across `TASKS.md` and the milestone files in [`tasks/`](tasks/),
+read in the order `scripts/tasks-md.mjs`'s `TASKS_FILES` declares.
+`node scripts/task-board.mjs reorder` is what keeps the board so.
 Without an argument it is a dry run: it prints every way the rows and the
 board disagree, then the moves, and writes nothing. `--apply` makes the
 moves one at a time and ends by reading the order again and printing the
@@ -170,8 +175,8 @@ new id, and a stale constant would set nothing while reporting success — and
 they are read off the issue's own item, through one `issue.projectItems`
 query, never by listing every item on the Project. The migration script
 imports the same helpers, which is why they are exported, and both read
-`TASKS.md` through `scripts/tasks-md.mjs`, the one parser of its headings and
-its wave table.
+the breakdown through `scripts/tasks-md.mjs`, the one parser of its headings
+and its wave table and the one place its files are named in reading order.
 
 **Every command is cheap by design (MB.102).** The issue list is REST —
 `gh api --paginate --slurp`, one request per hundred issues against the core
@@ -198,12 +203,13 @@ node scripts/task-board.mjs estimate MB.90 3
 node scripts/task-board.mjs reorder --apply
 ```
 
-The notes are the `TASKS.md` entry's text. The entry, the wave's row in the
-execution-order table, the summary table and the milestone's description are
-edited in the same pass; a task on the board and not in `TASKS.md` is a task
-whose reasoning is nowhere. The auto-add appends the new item at the bottom
-of the Project, and `reorder --apply` moves it to the row's place (**Order**),
-so the row is edited before it runs. `--milestone <name>` on create does not
+The notes are the entry's text in `tasks/<milestone>.md`. The entry, the wave's
+row in `TASKS.md`'s execution-order table, its `waves/wave-NN.md` where the
+reasoning changes, `tasks/mb.md`'s summary table and the milestone's
+description are edited in the same pass; a task on the board and not in
+`tasks/` is a task whose reasoning is nowhere. The auto-add appends the new
+item at the bottom of the Project, and `reorder --apply` moves it to the row's
+place (**Order**), so the row is edited before it runs. `--milestone <name>` on create does not
 resolve a closed milestone; an issue minted into one for the record takes it
 afterwards, by number, through `gh api -X PATCH repos/…/issues/<n> -F milestone=<m>`,
 and is closed before `reorder` runs.
@@ -221,15 +227,15 @@ board ever had):
 1. **`export`** — reads the Asana project through its REST API with
    `ASANA_PAT`: the project's tasks, each task's subtasks recursively, and each
    task's stories, keeping the `comment` ones. One JSON tree.
-2. **`plan`** — reads the export and `TASKS.md` and prints what `apply` would
+2. **`plan`** — reads the export and the breakdown and prints what `apply` would
    do: counts, the milestone table, unplaced ids, ids whose notes mention a
-   hotfix without the name saying so, ids on the board with no `TASKS.md`
+   hotfix without the name saying so, ids on the board with no task
    heading. A name that starts with a task id and `—` (or the older `-`,
    normalised) is an issue; any other card is a milestone. An issue's milestone
    is its parent card's name, or failing a parent the wave whose row in
    `TASKS.md`'s execution-order table names it, or none — reported, never
    guessed. Status comes from the Asana marker (`▶ ` → `In Progress`, `◔ ` →
-   `In Review`, completed → `Done`), the estimate from the `TASKS.md` heading,
+   `In Review`, completed → `Done`), the estimate from the task's heading,
    the type from the id, the `hotfix` label from the name. An id-bearing card
    under an id-bearing card becomes a sub-issue.
 3. **`scan`** — every body, comment and milestone description through

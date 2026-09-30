@@ -1,6 +1,6 @@
 // Hand-written beside the script, as task-board.d.mts is: `allowJs` is off.
 
-export const TASKS_MD: string;
+export const TASKS_FILES: string[];
 export const ID: string;
 export const HEADING: RegExp;
 export const WAVE_ROW: RegExp;
@@ -24,4 +24,5 @@ export interface TasksMd {
 
 export function expandIds(cell: string, order: string[]): { ids: string[]; unresolved: string[] };
 export function readTasksMd(text: string): TasksMd;
+export function loadTasksMdText(): string;
 export function loadTasksMd(): TasksMd;

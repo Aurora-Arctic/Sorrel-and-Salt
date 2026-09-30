@@ -320,7 +320,7 @@ Five things, in one PR, or the guard fails:
 3. Create `tests/modules/<name>/`.
 4. Add the row to the ownership table above, to
    [`DESIGN.md`](DESIGN.md) §3's tree if the shape changes, and to
-   `TASKS.md`'s entry for the task that adds it.
+   the entry in `claude-docs/tasks/` for the task that adds it.
 5. Say in the PR body why the existing five could not own it.
 
 ## Adding a table

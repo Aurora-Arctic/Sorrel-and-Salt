@@ -1,6 +1,6 @@
 ---
 name: project-progress
-description: Use when the user asks how far along the project is (e.g. "project progress", "task progress", "how many hours are left", "how much is done", "/project-progress"). Prints tasks and hours completed, remaining and total, from local data — TASKS.md estimates and git merge history — with no board calls unless the user asks to verify against the GitHub issues.
+description: Use when the user asks how far along the project is (e.g. "project progress", "task progress", "how many hours are left", "how much is done", "/project-progress"). Prints tasks and hours completed, remaining and total, from local data — the breakdown's task-heading estimates and git merge history — with no board calls unless the user asks to verify against the GitHub issues.
 ---
 
 # project-progress
@@ -9,11 +9,11 @@ Show a summary of completed, remaining and total **tasks** and **hours**, sized 
 
 | Figure | Local source                                                                                                                                                                                                                              |
 | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hours  | The `· Nh` on each `**ID — title**` heading in `claude-docs/TASKS.md`. A `**RETIRED …**` heading is excluded from every figure.                                                                                                           |
+| Hours  | The `· Nh` on each `**ID — title**` heading in the breakdown — `claude-docs/TASKS.md` and `claude-docs/tasks/`, the files `scripts/tasks-md.mjs` names. A `**RETIRED …**` heading is excluded from every figure.                          |
 | Done   | Merged into `origin/staging`, taken from the merge commit's `feature/<id>-…`/`hotfix/<id>-…` branch name, an id that opens a subject (`M2.4/M2.5/M0.27 — …`), or a trailing `(MB.13)`, plus `tally.mjs`'s list of tasks done outside git. |
-| Total  | Every non-retired id in TASKS.md, plus any merged id that has no heading, counted at 0h.                                                                                                                                                  |
+| Total  | Every non-retired id in the breakdown, plus any merged id that has no heading, counted at 0h.                                                                                                                                             |
 
-Both sources are read at the same ref (`git show origin/staging:claude-docs/TASKS.md`), so an unmerged edit to TASKS.md on the current branch does not skew the figures.
+Both sources are read at the same ref — `git show origin/staging:<file>` for each file `TASKS_FILES` names, skipping one the ref lacks, so a ref from before MB.143's split still tallies — and an unmerged edit to the breakdown on the current branch does not skew the figures.
 
 ## Steps
 

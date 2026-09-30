@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-// Task and hour progress from local data only: hours from TASKS.md, and
-// "completed" from what has merged into the ref — both read at the same ref,
-// so the plan and the history agree on when they were taken. The GitHub issue
+// Task and hour progress from local data only: hours from the breakdown's
+// task headings, and "completed" from what has merged into the ref — both
+// read at the same ref, so the plan and the history agree on when they were
+// taken. The GitHub issue
 // tracker stays the source of truth for status: this trades exactness for zero API
 // calls; the skill's verify mode is where the two are compared.
 //
@@ -9,18 +10,31 @@
 
 import { execFileSync } from 'node:child_process';
 
+import { HEADING, ID, TASKS_FILES } from '../../../scripts/tasks-md.mjs';
+
 const args = process.argv.slice(2);
 const ref = args.includes('--ref') ? args[args.indexOf('--ref') + 1] : 'origin/staging';
 const git = (...a) => execFileSync('git', a, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+// Resolved first, so a ref that does not exist fails here rather than reading as
+// a breakdown with no files.
+const sha = git('rev-parse', '--short', ref).trim();
 
-const ID = String.raw`[A-Z]+[0-9]*(?:\.[A-Z0-9]+)*[a-z]?`;
-
-// `**M2.6 — Title** · 2h …` or `**M6.4 — ~~Title~~** · **RETIRED …**`
-const HEADING = new RegExp(String.raw`^\*\*(${ID}) — .*?\*\* · (?:([0-9.]+)h|\*\*RETIRED)`);
+// A ref from before the split (MB.143) holds the whole breakdown in TASKS.md and
+// none of the other files, so a file the ref lacks contributes nothing.
+function existsAt(path) {
+  try {
+    execFileSync('git', ['cat-file', '-e', `${ref}:${path}`], { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
 const plan = new Map();
-for (const line of git('show', `${ref}:claude-docs/TASKS.md`).split('\n')) {
-  const m = HEADING.exec(line);
-  if (m) plan.set(m[1], m[2] === undefined ? { retired: true } : { hours: Number(m[2]) });
+for (const path of TASKS_FILES.filter(existsAt)) {
+  for (const line of git('show', `${ref}:${path}`).split('\n')) {
+    const m = HEADING.exec(line);
+    if (m) plan.set(m[1], m[2] === undefined ? { retired: true } : { hours: Number(m[2]) });
+  }
 }
 const canonical = new Map([...plan.keys()].map((id) => [id.toUpperCase(), id]));
 const norm = (id) => canonical.get(id.toUpperCase()) ?? id.toUpperCase();
@@ -82,8 +96,6 @@ const bar = (n, d, width = 24) => {
   const filled = d ? Math.round((n / d) * width) : 0;
   return '█'.repeat(filled) + '░'.repeat(width - filled);
 };
-const sha = git('rev-parse', '--short', ref).trim();
-
 const out = [
   `**Sorrel & Salt progress** · \`${ref}\` @ \`${sha}\``,
   '',
