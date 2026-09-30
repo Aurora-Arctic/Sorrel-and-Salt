@@ -434,7 +434,11 @@ matrix's generated job name, not the leg's.
   edit replacing an earlier — and when the run in flight finishes, the first
   step of `changes` cancels it unless the payload carries `changes.base`, the
   one edit the gate cares about, which then gates as any push would. A retarget
-  is therefore delayed by one gate rather than cancelling it.
+  is therefore delayed by one gate rather than cancelling it. The edit's run
+  and the close's run carry a suffix in the workflow's `run-name`, so the
+  Actions list says beside the real gate what each will do. Neither ever
+  covers a commit: a gate cancelled by hand to let the queued edit run through
+  leaves its commit ungated, and the answer is to re-run the cancelled gate.
   - **Why every job now `needs: changes`.** A job that had started in a run
     about to cancel itself leaves a cancelled check run under its own name,
     newer than the real run's on the same commit, and a required check reads
