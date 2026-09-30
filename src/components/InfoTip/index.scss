@@ -1,0 +1,95 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The owner's pace, on the theme change's easing.
+$fade: 500ms;
+
+.info-tip {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+// 1.5rem: WCAG 2.2's 24px minimum target, around a 1rem glyph that sits
+// beside a label without raising its line much.
+.info-tip__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: radius('pill');
+  background-color: transparent;
+  color: $text-muted;
+  cursor: help;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $text-primary;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// Drawn as the low-stock badge is — the muted ink tinted into the surface,
+// square-cornered, at caption size — so it reads as a note beside the label
+// rather than as another field. Its ground is an opaque mix, so the control
+// beneath it does not show through.
+//
+// Placed against the nearest positioned ancestor rather than the button, from
+// its left edge: a form's label row, which starts at the column's edge, so a
+// tip no wider than 18rem never runs off a phone the way one hung off an icon
+// at the end of a long label would. Above the row, not below it: the tip
+// opens while its field has focus, and below it would cover what is typed.
+.info-tip__bubble {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  z-index: 1;
+  width: max-content;
+  max-width: min(18rem, calc(100vw - #{space(6)}));
+  margin-bottom: space(1);
+  padding: space(1) space(2);
+  border: 1px solid badge-token('low-stock', 'border');
+  border-radius: radius('sharp');
+  background-color: badge-token('low-stock', 'bg');
+  color: badge-token('low-stock', 'fg');
+  font-size: type-size('caption');
+  font-weight: 500;
+  line-height: 1.4;
+  // Closed: faded out and a hair lower, then out of the way of the pointer
+  // once the fade ends. It rises the 2px as it fades in.
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(2px);
+  transition:
+    opacity $fade $theme-transition-easing,
+    transform $fade $theme-transition-easing,
+    visibility 0s linear $fade;
+
+  &.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition:
+      opacity $fade $theme-transition-easing,
+      transform $fade $theme-transition-easing,
+      visibility 0s;
+  }
+
+  @include reduced-motion {
+    transition: none;
+
+    &.is-open {
+      transition: none;
+    }
+  }
+}
