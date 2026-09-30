@@ -118,7 +118,7 @@ describe('setEmail', () => {
     // The same address held by a provisional row is not refused: that row lapses.
     await setVerified(A.id, false);
     await expect(setEmail(asUser(B), A.email, sender)).resolves.toMatchObject({ id: B.id });
-    expect(sender.requestChange).toHaveBeenCalledWith(B.email, A.email);
+    expect(sender.requestChange).toHaveBeenCalledWith(B.email, A.email, undefined);
   });
 
   it("restarts a provisional caller's window, stamped as them, and mails the new address — the row's own stays", async () => {
@@ -133,7 +133,7 @@ describe('setEmail', () => {
     expect(after.updated_by).toBe(B.id);
     expect(after.updated_at.getTime()).toBeGreaterThan(before.updated_at.getTime());
     expect(after.verification_sent_at).toBeInstanceOf(Date);
-    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW);
+    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW, undefined);
     expect(sender.resend).not.toHaveBeenCalled();
   });
 
@@ -147,7 +147,7 @@ describe('setEmail', () => {
     const after = await userRow(B.id);
     expect(after).toMatchObject({ email: before.email, email_verified: true, updated_by: B.id });
     expect(after.verification_sent_at).toBeInstanceOf(Date);
-    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW);
+    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW, undefined);
   });
 
   // One mail a minute per account, whichever path would send it, so the
@@ -184,13 +184,13 @@ describe('setEmail', () => {
 
     await expect(setEmail(asUser(B), NEW, sender)).resolves.toMatchObject({ id: B.id });
 
-    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW);
+    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW, undefined);
   });
 
   it("mails the row's own address again when it is asked for unchanged and still unverified", async () => {
     await setEmail(asUser(B), B.email, sender);
 
-    expect(sender.resend).toHaveBeenCalledExactlyOnceWith(B.email);
+    expect(sender.resend).toHaveBeenCalledExactlyOnceWith(B.email, undefined);
     expect(sender.requestChange).not.toHaveBeenCalled();
   });
 
@@ -209,6 +209,19 @@ describe('setEmail', () => {
   it('normalises what was typed before comparing or mailing it', async () => {
     await setEmail(asUser(B), `  New${DOMAIN.toUpperCase()} `, sender);
 
-    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW);
+    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW, undefined);
+  });
+
+  // Where the page was sent from rides on the link's landing; guarding it is
+  // the sender's, where the link is built, so the service passes it as given.
+  it('hands the sender the return path on both the change and the resend path', async () => {
+    await setEmail(asUser(B), NEW, sender, '/admin');
+
+    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW, '/admin');
+
+    await setSentAt(B.id, null);
+    await setEmail(asUser(B), B.email, sender, '/admin');
+
+    expect(sender.resend).toHaveBeenCalledExactlyOnceWith(B.email, '/admin');
   });
 });
