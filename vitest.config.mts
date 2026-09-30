@@ -57,6 +57,19 @@ export default defineConfig({
     ],
   },
   test: {
+    // Quiet under Claude Code, which sets `CLAUDECODE=1` in its shell and
+    // nothing else does: a session reads the per-file coverage table and the
+    // per-file test lines, ~400 lines a run, and needs neither — a failure
+    // still prints in full, and the per-file numbers are in
+    // .reports/coverage/coverage-summary.json, and `passed-only` keeps a
+    // failing test's console output while dropping the ~12,000 lines of pg
+    // NOTICEs and React warnings a green run prints. The host and CI are
+    // unchanged.
+    reporters: process.env.CLAUDECODE ? ['dot'] : ['default'],
+    silent: process.env.CLAUDECODE ? 'passed-only' : false,
+    // Node 24 warns from every worker that `localStorage` has no
+    // `--localstorage-file`: two lines a worker, 185 workers a run.
+    execArgv: process.env.CLAUDECODE ? ['--disable-warning=ExperimentalWarning'] : [],
     // Both under .reports/ with the rest of the generated output; without
     // `outputFile`, the json and html reporters would write to `.vitest/`.
     // CI's `--outputFile` on the command line still wins.
@@ -68,7 +81,9 @@ export default defineConfig({
       provider: 'v8',
       reportsDirectory: '.reports/coverage',
       // 'json-summary' feeds .github/scripts/summarize-vitest.mjs.
-      reporter: ['text', 'lcov', 'html', 'json-summary'],
+      reporter: process.env.CLAUDECODE
+        ? ['text-summary', 'lcov', 'html', 'json-summary']
+        : ['text', 'lcov', 'html', 'json-summary'],
       include: ['src/**/*.{ts,tsx}'],
       // src/db/seed is test infrastructure; a bug there fails the tests that
       // consume it. src/gql is generated, and its guard compares it rather than

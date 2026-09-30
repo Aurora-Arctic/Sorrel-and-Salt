@@ -308,6 +308,15 @@ run. `vitest.config.mts`'s coverage `reporter` also gained `json-summary`
 alongside its existing `text`/`lcov`/`html`, so the PR comment can show a
 coverage table (`.github/scripts/summarize-vitest.mjs`).
 
+**Quiet under Claude Code (MB.142).** `CLAUDECODE=1`, which only Claude Code's
+shell sets, switches the test reporter to `dot`, the coverage reporter to
+`text-summary`, and `silent` to `passed-only`, which drops the console output
+of passing tests — a green run printed ~12,000 lines of pg notices and React
+warnings, against ~200 for the coverage table. A failure still prints in full,
+with its console output, and the per-file numbers are read from
+`.reports/coverage/coverage-summary.json`. The host and CI see everything as
+before — CI's own `--reporter` flags replace the config's list either way.
+
 ## The db test harness — `tests/support/db/` (MB.51)
 
 Two modules the `tests/db/` and `tests/modules/` files share, a sweep built

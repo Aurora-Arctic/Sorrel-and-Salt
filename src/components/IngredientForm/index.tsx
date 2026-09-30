@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, useEffect, useRef } from 'react';
+import { type ReactElement, useLayoutEffect, useRef } from 'react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -63,8 +63,10 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
 
   // A submit's last update carries its count and every error it found, the
   // resolver's or the server's, so this runs once they are all drawn: the
-  // first field marked invalid, in page order, takes the focus.
-  useEffect(() => {
+  // first field marked invalid, in page order, takes the focus. A layout
+  // effect, so the focus moves in the commit that draws the error: a passive
+  // effect leaves a gap in which the error shows and the focus has not moved.
+  useLayoutEffect(() => {
     if (submitCount > 0) form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
   }, [submitCount]);
 
