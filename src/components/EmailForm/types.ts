@@ -4,7 +4,7 @@ export interface EmailFormProps {
   verified: boolean;
   /** The address was just proved by a followed link: show it and the way on, with nothing to edit. */
   confirmed?: boolean;
-  /** Where "Continue" goes; already run through safeReturnPath. */
+  /** Where "Continue" goes, and where the links it asks for carry on to; already run through safeReturnPath. */
   next: string;
   /** A readable sentence for a failed verification link, from verifyErrorMessage — never a raw code. */
   error?: string;
