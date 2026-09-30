@@ -84,6 +84,7 @@
     "@vitest/coverage-v8": "^5.0.2",
     "@vitest/ui": "^5.0.0",
     "drizzle-kit": "^0.31.11",
+    "github-slugger": "^2.0.0",
     "jsdom": "^30.1.1",
     "monocart-coverage-reports": "^2.13.0",
     "msw": "^2.15.0",
