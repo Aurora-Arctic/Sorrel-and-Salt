@@ -218,8 +218,10 @@ db:migrate && db:seed`, and that first step is what makes it a reset rather
   database as a template requires either owning it or being a superuser.
   This is what lets the test harness (`tests/support/seeded-database.ts`)
   run `CREATE DATABASE sorrel_test_template TEMPLATE sorrel_template` as
-  `sorrel`, migrate and seed that, and clone `sorrel_test_<n>` and
-  `sorrel_e2e` from it. See `testing.md`.
+  `sorrel`, migrate and seed that, and clone `sorrel_test_<n>` from it — and,
+  by the same route through `sorrel_e2e_template`, each Playwright worker
+  slot's `sorrel_e2e_<n>` and the configured-providers server's
+  `sorrel_e2e_providers`. See `testing.md`.
 - **`npm run db:studio`** (`make db-studio`, MB.21) is `drizzle-kit studio
 --host 0.0.0.0 --port 4983`. It reads the same `drizzle.config.ts` as
   `db:generate`/`db:migrate` — no separate configuration — and needs no

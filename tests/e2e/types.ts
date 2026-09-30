@@ -12,3 +12,10 @@ export type MailpitMessage = {
 export type Address = { Address: string };
 export type Summary = { ID: string };
 export type Detail = { From: Address; To: Address[]; Subject: string; Text: string; HTML: string };
+
+/** `process.env` satisfies it; named so a test can pass a two-key literal. */
+export interface SlotEnv {
+  E2E_WORKERS?: string;
+  TEST_PARALLEL_INDEX?: string;
+  [key: string]: string | undefined;
+}

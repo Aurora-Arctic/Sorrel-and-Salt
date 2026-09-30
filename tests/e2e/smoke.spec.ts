@@ -2,9 +2,10 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 
-// `fullyParallel` would split this file across workers and run `beforeAll`
-// once per worker, racing DROP/CREATE on `sorrel_e2e`. Every db-touching spec
-// file needs this.
+// `fullyParallel` would split this file across workers, each running
+// `beforeAll` and a share of the tests against its own slot's database.
+// Serial keeps the file's tests in order on one worker, against its one
+// reseed. Every db-touching spec file needs this.
 test.describe.configure({ mode: 'serial' });
 
 test.beforeAll(async () => {

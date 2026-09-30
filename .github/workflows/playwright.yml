@@ -95,7 +95,7 @@ jobs:
       CI: true
       # Read by summarize-playwright.mjs.
       PLAYWRIGHT_JSON_OUTPUT_NAME: /app/playwright-results.json
-      # tests/e2e/database.ts derives sorrel_e2e's URL from it.
+      # tests/e2e/database.ts derives each worker's sorrel_e2e_<slot> URL from it.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       # The webServer's production build needs a Better Auth secret, and a
       # primary admin address on the reserved `.invalid` domain.
