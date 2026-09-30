@@ -2,6 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import {
   findCompendiumCount,
+  findCompendiumEntryByIdentity,
   findCompendiumPage,
   findOneIngredient,
   type IngredientFilter,
@@ -548,5 +549,65 @@ describe('findOneIngredient', () => {
 
     await expect(findOneIngredient([], compendiumId)).resolves.toBeUndefined();
     await expect(findOneIngredient([inW], localId)).resolves.toBeUndefined();
+  });
+});
+
+// What a colliding compendium write is refused with names this row, so the
+// finder must read the key `ingredients_compendium_identity_unique` holds,
+// folded as the generated column folds it.
+describe('findCompendiumEntryByIdentity', () => {
+  let entryId: string;
+
+  beforeEach(async () => {
+    entryId = await add('Testwort', {
+      canonicalName: 'Fixtura testalis',
+      nomenclature: 'botanical',
+      form: 'root bark',
+    });
+  });
+
+  it('finds the entry holding a formal name and form, folded as canonical_key folds them', async () => {
+    await expect(
+      findCompendiumEntryByIdentity({
+        name: 'Another label',
+        canonicalName: 'FIXTURA Testalis',
+        form: '  Root Bark ',
+      }),
+    ).resolves.toMatchObject({ id: entryId, name: 'Testwort' });
+  });
+
+  // DESIGN.md §5's one cross-namespace collision: a label with no formal name
+  // keys the same as another entry's formal name.
+  it('finds it by a label standing in for the formal name', async () => {
+    await expect(
+      findCompendiumEntryByIdentity({
+        name: 'Fixtura testalis',
+        canonicalName: null,
+        form: 'root bark',
+      }),
+    ).resolves.toMatchObject({ id: entryId });
+  });
+
+  it('tells a form apart from no form', async () => {
+    await expect(
+      findCompendiumEntryByIdentity({ name: 'Testwort', canonicalName: 'Fixtura testalis' }),
+    ).resolves.toBeUndefined();
+  });
+
+  it('reads the compendium alone, and only its live rows', async () => {
+    const identity = { name: 'Testleaf', canonicalName: null, form: null };
+    // Why nothing could still be found: both rows hold the key, one in a coven
+    // and one deleted, and a live compendium row holding it is found.
+    const localId = await add('Testleaf', { workspaceId: WORKSPACE_W_ID, form: null });
+    const deletedId = await add('Testleaf', { form: null });
+    await expect(findCompendiumEntryByIdentity(identity)).resolves.toMatchObject({
+      id: deletedId,
+    });
+    await sql`
+      update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${deletedId}`;
+
+    await expect(findCompendiumEntryByIdentity(identity)).resolves.toBeUndefined();
+    const [local] = await sql`select canonical_key from ingredients where id = ${localId}`;
+    expect(local.canonical_key).toBe('testleaf');
   });
 });

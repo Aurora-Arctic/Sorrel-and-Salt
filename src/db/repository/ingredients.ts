@@ -2,7 +2,7 @@ import { and, eq, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable, alias } from 'drizzle-orm/pg-core';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
-import { ingredients } from '../../modules/ingredients/schema/ingredients';
+import { canonicalKeyOf, ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/pagination';
 import { type Keyset, existsIn, pageBounds, selectFrom } from './select';
@@ -175,6 +175,35 @@ export async function findOneIngredient(
       notSoftDeleted(ingredients),
       eq(ingredients.id, id),
     ),
+  );
+  return row;
+}
+
+/** An ingredient's identity as a write gives it: the three parts its `canonical_key` is built from. */
+export interface IngredientIdentity {
+  name: string;
+  canonicalName?: string | null;
+  form?: string | null;
+}
+
+/**
+ * The live compendium entry keyed as `identity` would be — the row a
+ * compendium write carrying it collides with — or `undefined`. The key is the
+ * generated column's own expression over the values, so both sides fold alike.
+ */
+export async function findCompendiumEntryByIdentity(
+  identity: IngredientIdentity,
+): Promise<typeof ingredients.$inferSelect | undefined> {
+  // A parameter's type is otherwise left to `coalesce` and `btrim` to infer.
+  const text = (value: string | null | undefined) => sql`${value ?? null}::text`;
+  const key = canonicalKeyOf(
+    text(identity.name),
+    text(identity.canonicalName),
+    text(identity.form),
+  );
+  const [row] = await selectFrom(
+    ingredients,
+    and(inCompendium(ingredients), notSoftDeleted(ingredients), eq(ingredients.canonicalKey, key)),
   );
   return row;
 }
