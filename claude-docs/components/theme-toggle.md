@@ -9,8 +9,9 @@ that writes the theme attribute.
 `try`/`catch`. Both it and `STORAGE_KEY` are **exported**, because two other
 places drive the same attribute and key:
 
-- **The pre-paint script** inlined in `src/app/layout.tsx` re-implements the read
-  half inline (it must run before any JS module loads). It sets `data-theme`
+- **The pre-paint script** in `src/app/pre-paint-scripts.tsx`, rendered in the
+  root layout's `<head>`, re-implements the read half inline (it must run
+  before any JS module loads). It sets `data-theme`
   **only when a stored choice exists** — with none, no attribute is set and
   `globals.scss` resolves the theme through `prefers-color-scheme`. That is why
   no `matchMedia` listener is needed: the system-preference tier stays live

@@ -3,7 +3,7 @@
 import { type ReactElement, useEffect, useRef } from 'react';
 import './index.scss';
 
-// The pre-paint script in src/app/layout.tsx reads this key inline; keep in sync.
+// The pre-paint script in src/app/pre-paint-scripts.tsx reads this key inline; keep in sync.
 export const STORAGE_KEY = 'theme';
 
 // The one theme write; the Ladle decorator calls it too.

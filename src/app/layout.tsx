@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import Backdrop from '../components/Backdrop';
 import ThemeToggle from '../components/ThemeToggle';
 import { body, display } from './fonts';
+import PrePaintScripts from './pre-paint-scripts';
 import Providers from './providers';
 import './globals.scss';
 
@@ -11,27 +12,13 @@ export const metadata: Metadata = {
   description: 'A compendium, ingredient store and grimoire.',
 };
 
-// Runs before first paint, so a stored choice never flashes the wrong theme.
-// With nothing stored it sets nothing: globals.scss resolves an absent
-// data-theme through prefers-color-scheme, and stamping one here would need a
-// matchMedia listener. A blocked localStorage costs persistence, not the page.
-const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}})()`;
-
-// Facebook sends the browser back to the redirect URI with `#_=_` appended,
-// and a fragment survives every redirect whose Location carries none, so it
-// reaches whatever page the sign-in lands on — where the server, which never
-// sees a fragment, cannot strip it. Exactly that fragment, before first paint;
-// an in-page anchor keeps its own.
-const STRIP_FACEBOOK_HASH_SCRIPT = `(function(){if(location.hash==="#_=_"){try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}}})()`;
-
 export default function RootLayout({ children }: { children: ReactNode }) {
   // CSS variables rather than className: the Sass stacks read --font-* document-wide.
-  // suppressHydrationWarning on <html> alone, the one element the script mutates.
+  // suppressHydrationWarning on <html> alone, the one element the theme script mutates.
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-        <script dangerouslySetInnerHTML={{ __html: STRIP_FACEBOOK_HASH_SCRIPT }} />
+        <PrePaintScripts />
       </head>
       <body>
         {/* Every page gets it, signed in or not — M2.6 moved it here from the
