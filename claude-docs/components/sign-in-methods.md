@@ -6,7 +6,8 @@ another one is left. Server component `src/app/account/page.tsx` reads the
 session, `linkedAccounts()` and `?error=`, and hands the results down as props.
 This component renders the list and makes the two Better Auth calls. Why a
 second provider is added this way and never at sign-in is
-[`auth.md`](../auth.md), "Linking a second provider".
+[`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "Linking a second
+provider".
 
 ## The props contract
 

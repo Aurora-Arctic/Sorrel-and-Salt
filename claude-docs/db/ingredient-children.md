@@ -24,10 +24,10 @@ tiers in one statement, so it is on [the tier seam](../modules.md#the-tier-seam)
 **Two services and two loaders over it**, in `ingredients`: `categoriesOf` and
 `folkNamesOf` in `services/ingredient-children.ts`, batched as
 `categoriesByIngredient` and `folkNamesByIngredient`
-([`graphql.md`](../graphql.md), "Loaders"). A key is the parent row's `{ id,
-workspaceId }`. The `workspaceId` decides which proof to ask for, one
-`assertMembership(…, { ingredient: ['read'] })` per coven the batch names, and
-a coven the caller may not read answers `Forbidden` in its own keys' slots
+([`graphql/loaders.md`](../graphql/loaders.md), "Loaders"). A key is the parent
+row's `{ id, workspaceId }`. The `workspaceId` decides which proof to ask for,
+one `assertMembership(…, { ingredient: ['read'] })` per coven the batch names,
+and a coven the caller may not read answers `Forbidden` in its own keys' slots
 while the rest of the batch stands. It is never the scope. A key that lies about
 its tier gets zero rows, because the `EXISTS` reads the parent's real one. So a
 workspace entry's children are refused by three layers, each sufficient alone:

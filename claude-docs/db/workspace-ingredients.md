@@ -23,29 +23,29 @@ rather than a driver error.
 **A delete is soft, and frees what the ingredient held** (M5.3).
 `deleteWorkspaceIngredient` tombstones the row through
 `softDeleteByIdInWorkspace`, with the update's reach: an id this coven does not
-hold live answers `NotFound`. Its folk names, category links and stock row
-stay. A spell holding the ingredient still reaches it
-(["What a spell holds"](spell-visibility.md#what-a-spell-holds-m53)),
-and nothing else reads past a deleted parent — stock included, whose reads go
-through a live ingredient (M9.3). The service test asks each read a member
-reaches the coven's ingredients through whether it shows the ingredient,
-before the delete and after, then brings back its label, its formal name
-under another label and the whole ingredient at its old address, each refused
-while it was live. Inside a coven the label is unique too, so there a label
-coming back does prove its index's predicate. Its mutation is
-`deleteIngredient` ([`graphql.md`](../graphql.md), "The workspace ingredient
+hold live answers `NotFound`. Its folk names, category links and stock row stay.
+A spell holding the ingredient still reaches it (["What a spell
+holds"](spell-visibility.md#what-a-spell-holds-m53)), and nothing else reads
+past a deleted parent — stock included, whose reads go through a live ingredient
+(M9.3). The service test asks each read a member reaches the coven's ingredients
+through whether it shows the ingredient, before the delete and after, then
+brings back its label, its formal name under another label and the whole
+ingredient at its old address, each refused while it was live. Inside a coven
+the label is unique too, so there a label coming back does prove its index's
+predicate. Its mutation is `deleteIngredient`
+([`graphql/schema.md`](../graphql/schema.md), "The workspace ingredient
 mutations").
 
 **The input is the whole ingredient**, as `IngredientForm` submits it, parsed
 again by the service with `parseInput` because the browser is not the only
-caller. An update therefore replaces the row: every optional column is
-written, `null` where the input has nothing. A merge would break the
-nomenclature biconditional, because a missing `nomenclature` parses to
-`none`, and `none` beside a kept `canonical_name` is the row the CHECK refuses.
-Categories are not written here, since `LocalIngredientInput` carries none.
-The service itself clears a field the input leaves out. Its mutation,
-`updateIngredient`, makes leaving one out a schema error and clearing an
-explicit `""` or `[]` ([`graphql.md`](../graphql.md), "The workspace ingredient
+caller. An update therefore replaces the row: every optional column is written,
+`null` where the input has nothing. A merge would break the nomenclature
+biconditional, because a missing `nomenclature` parses to `none`, and `none`
+beside a kept `canonical_name` is the row the CHECK refuses. Categories are not
+written here, since `LocalIngredientInput` carries none. The service itself
+clears a field the input leaves out. Its mutation, `updateIngredient`, makes
+leaving one out a schema error and clearing an explicit `""` or `[]`
+([`graphql/schema.md`](../graphql/schema.md), "The workspace ingredient
 mutations").
 
 **Folk names are written in the ingredient's own `withAudit` transaction**,

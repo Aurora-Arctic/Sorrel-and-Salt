@@ -39,18 +39,19 @@ let the two drift.
 Every submit sends `next` beside the typed address, and `setEmail` hands it to
 the sender, so the resend or change link lands on this page's confirmed view
 with the same `next`, and Continue goes on there
-([`auth.md`](../auth.md), "The email page"). A refused link lands here with
-`next` still beside its `?error=`, so a link sent again from that page
-carries it too. The component sends it as it was given; the sender guards it
-again where it builds the link. With no `next` it sends none, so the link
-lands bare and Continue takes the role's landing when it is followed.
+([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The email page"). A
+refused link lands here with `next` still beside its `?error=`, so a link sent
+again from that page carries it too. The component sends it as it was given; the
+sender guards it again where it builds the link. With no `next` it sends none,
+so the link lands bare and Continue takes the role's landing when it is
+followed.
 
 ## Two error surfaces
 
 A failed mutation rejects with graphql-request's `ClientError`, whose
 `response.errors[0].extensions` carries the code and, for `VALIDATION`, the
-field errors ([`graphql.md`](../graphql.md), "Errors"). The component reads
-that one shape and routes it to one of two places:
+field errors ([`graphql/errors.md`](../graphql/errors.md), "Errors"). The
+component reads that one shape and routes it to one of two places:
 
 | Error                                                                | Where it lands                                                                                                                                            |
 | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -82,7 +83,7 @@ without that the first thing it saw would be a refusal. It is timed off `Date.no
 than counted in ticks, so a tab left in the background waits the real minute.
 This is a courtesy: the rule is the service's, which refuses a second mail
 within the minute with a `VALIDATION` field error naming the wait
-([`auth.md`](auth.md), "The email page"), and that lands beside the input
+([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The email page"), and that lands beside the input
 like any other. The `resendDelaySeconds` prop exists so the test can wait
 one second rather than fake the timers MSW's fetch shares.
 

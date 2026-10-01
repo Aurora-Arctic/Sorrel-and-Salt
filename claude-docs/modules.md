@@ -291,7 +291,7 @@ the guard rather than a quiet addition.
 
 Infrastructure tests stay in `tests/db/` — the repository, audit, seed,
 trigger, isolation and pagination tests — and the shared db harness is
-`tests/support/db/` ([`testing.md`](testing.md)).
+`tests/support/db/` ([`testing/db-harness.md`](testing/db-harness.md)).
 
 ## GraphQL registrations and loaders
 

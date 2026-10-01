@@ -20,7 +20,7 @@ Vercel CLI (`vercel pull`/`build`/`deploy --prebuilt`/`alias`) on a push to
 on a `hotfix/** → main` PR (a per-PR preview, commented on the PR and torn down
 on close). `vercel.json` sets `deploymentEnabled: { "**": false }`, so Vercel's
 Git integration deploys nothing and the workflow is the only path. There is no
-local deploy command ([`ci.md`](ci.md), "Deploy").
+local deploy command ([`ci/deploy.md`](ci/deploy.md), "Deploy").
 
 ## The app
 

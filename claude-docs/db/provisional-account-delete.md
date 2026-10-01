@@ -15,4 +15,4 @@ address with no `deleted_at` filter, so a tombstone would keep refusing the
 owner's sign-in. It runs outside `withAudit` because there is no session and
 no surviving row to stamp. Two partial indexes serve it, one per half of the `OR`:
 `users_provisional_updated_at_idx` and `users_provisional_created_at_idx`,
-each `WHERE email_verified = false`. The rest is [`auth.md`](../auth.md), "Provisional accounts".
+each `WHERE email_verified = false`. The rest is [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "Provisional accounts".

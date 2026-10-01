@@ -98,7 +98,7 @@ against this database on 18.6); the limitation is Drizzle's.
 
 **How the table is tested.** The worker's `sorrel_test_<n>` clone arrives
 with every migration applied and the `standard` scenario seeded, re-cloned
-that way before each test file (M1.27, `testing.md`), so
+that way before each test file (M1.27, `testing/where-tests-live.md`), so
 `tests/modules/ingredients/schema/ingredients-schema.test.ts` asserts against the real table as
 production's migrations built it: no DDL is applied or hand-copied in the
 test, and nothing is dropped afterwards. Its `beforeEach` is `truncate

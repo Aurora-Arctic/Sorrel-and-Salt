@@ -2844,6 +2844,8 @@ _Acceptance criteria:_
 - `tests/guards/doc-citation.test.ts` passes, no section citation in code or another summary names one of the four indexes, and no intra-doc anchor link is left dangling
 - No "above" or "below" in the four directories points into another file, and a section named in another file is a link
 
+**Decided while building.** Each file is named for its heading, shortened as MB.145's were, and no subsection is carved out, since nothing here is condensed. The repoint reached 148 section citations in code rather than 138: `CLAUDE.md`'s cite of "The email page" closes its code span before the comma, a form `scripts/doc-citations.mjs` did not read, so the guard had never checked it; it reads it now, with a test. Four comments that named one of the four summaries alone but meant one section point at that section's file, as do 23 such mentions in other summaries, and those meaning the whole summary keep the index: the two rule files, DESIGN.md's CI inventory, and `db/migrations-and-scripts.md`'s pointer to both test harnesses. The other summaries' 38 section citations name the file too, which mends `components/email-form.md`'s link to `auth.md`, written as if from the directory above; decision records, task entries and transcripts keep theirs, as in MB.145. In `auth/tests.md`, "the wiring above" meant the whole summary and reads "the auth wiring". Paragraphs a link lengthened were rewrapped at 80 where they were already wrapped there, never inside a code span, which prettier outdents.
+
 **MB.147 — One home per fact across the docs** · 3h
 
 _Story:_ As a developer, I want each fact stated once and cited elsewhere, so that a correction is one edit and a read is one page.

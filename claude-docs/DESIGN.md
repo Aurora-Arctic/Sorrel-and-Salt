@@ -583,7 +583,7 @@ No database access in a resolver, ever. Same lint rule as `db`.
 
 ### Errors — one shape, so a message can land beside its field
 
-Services throw rather than answering with an empty list or a success that did nothing — §11 asserts it as "not a silent no-op", and `auth.md` carries the full argument. Three types live in `src/lib/errors.ts`: `Forbidden`, `NotFound`, and `ValidationError`, which carries `issues: { path: (string | number)[]; message: string }[]`. None of the three carries a status code or a GraphQL error code — a service called from a seed or a script has no use for one — so the mapping below belongs to the transport, and MB.43 is where it lives.
+Services throw rather than answering with an empty list or a success that did nothing — §11 asserts it as "not a silent no-op", and `auth/service-session.md` carries the full argument. Three types live in `src/lib/errors.ts`: `Forbidden`, `NotFound`, and `ValidationError`, which carries `issues: { path: (string | number)[]; message: string }[]`. None of the three carries a status code or a GraphQL error code — a service called from a seed or a script has no use for one — so the mapping below belongs to the transport, and MB.43 is where it lives.
 
 Yoga maps them on the way out through `maskedErrors.maskError`, which keeps masking on: anything that is _not_ one of the three leaves as "Unexpected error", so no stack trace and no constraint name reaches a client. M11.10 makes the same promise for pages.
 
