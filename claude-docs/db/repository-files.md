@@ -31,6 +31,7 @@ rather than merges), and `tests/guards/module-boundaries.test.ts`, which
 resolves every import in `src/` and fails any edge into the folder that is
 not its index — the spellings a glob cannot see included. The index itself
 declares nothing and has no `export *`, so what it names _is_ the surface;
-`soft-delete-finder-guard.test.ts` asserts both. Its first import is
-`schema/users.ts`, for the load-order reason under "The seed module" —
-`tests/db/repository/index.test.ts` pins it.
+`soft-delete-finder-guard.test.ts` asserts both. Import order is not
+load-bearing (["The seed module"](seed-module.md)), and
+`tests/db/repository/index.test.ts` pins that entering the database layer here
+builds `users` with its audit columns.

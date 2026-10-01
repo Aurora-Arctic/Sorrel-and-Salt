@@ -202,7 +202,7 @@ describe('the module boundary (claude-docs/modules.md)', () => {
       ]),
     );
     expect(EDGES.map(describeEdge)).toContain(
-      `${REPOSITORY}/index.ts → src/modules/identity/schema/users`,
+      `${REPOSITORY}/users.ts → src/modules/identity/schema/users`,
     );
   });
 

@@ -1,9 +1,3 @@
-// Entered through `users` before anything reaches `../audit`: the two import
-// each other, and entered through `audit.ts` first, `users` is built with no
-// audit columns and every write to it skips its stamps (claude-docs/db/seed-module.md,
-// "The seed module").
-import '../../modules/identity/schema/users';
-
 // CLAUDE.md rule 2: the only application code that imports the client
 // (claude-docs/db/client-imports.md, "Who may import the client"). `db` is not re-exported and
 // callers never see the transaction — `withAudit`'s `AuditWriter` is the sole
