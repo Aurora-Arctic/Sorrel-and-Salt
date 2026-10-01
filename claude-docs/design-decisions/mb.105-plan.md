@@ -47,19 +47,7 @@ MB.105 sits in Wave 8 as `M8.5 · MB.104 · MB.105 · M8.8`.
 
 ## MB.105's mechanism
 
-**The count option.**
-
-- `pagedConnection` gains an optional `count`. It is emitted as `totalCount: Int!` and `countBefore: Int` through the Relay plugin's connection options.
-- Both fields share one memoised call per connection, so selecting both runs one query and selecting neither runs none. The typeahead selects neither.
-
-**The count statement.**
-
-- It is one statement: `count(*)` beside `count(*) filter (where <row> < <first edge's key>)`.
-- It is built by a count mode on `selectFrom` over the page's own `where` and search join, with no order and no limit, and adds no new `.select(`.
-- The keyset is built once and shared by the page and the count, so the two cannot drift.
-- On a search the count runs under the page's word-similarity threshold of 0.5. Read at the server's 0.6, it would count fewer rows than the pages hold.
-
-**Pricing.** It is priced as `pageInfo` is, at the page size.
+The count option, the count statement and its pricing went into MB.105's entry in [`tasks/mb.md`](../tasks/mb.md) as approved, and the entry holds them.
 
 **The client's formula**, recorded in graphql.md when MB.105 lands:
 

@@ -64,49 +64,13 @@ This is stronger than today, not merely tidier: the subquery's filter becomes en
 
 ## MB.100 — the task to mint
 
-**Title:** `MB.100 — Raw SQL only where a rule or the planner needs it` · **3h** · type Bug · milestone `Wave 08 — Compendium and admin` · label `tracked`.
-
-**Placement:** Wave 8, immediately after M4.8 and before MB.81 / M8.2. The sweep-task rule: a code sweep lands as a mechanism plus a guard as early as it can be written, and M8.2's and M5.1's finders then adopt `existsIn` in their own PRs rather than retrofit it.
-
-**Entry text** (goes into `TASKS.md` beside MB.99, and is the issue body):
-
-> _Story:_ As a developer, I want a `sql\`` fragment in the repository to mean something a Drizzle builder cannot say, so that a reviewer reading one knows it is there for a reason rather than by habit.
->
-> M4.8's review found the compendium-tier predicate written as `sql\`${ingredients.workspaceId} is null\``in a fourth finder, copied from three neighbours, where`isNull()`exists. A survey of`src/`found 48`sql\``fragments, every one in`src/db/repository/`— MB.33 holds above it. Three kinds: **31 have no builder** — pg_trgm's`%`, `<%`and`similarity()`, `union all`, `mode() within group`, window functions, `json_agg`, row-value cursor comparisons, casts to a column's own type, and `set_config`with bind parameters — and stay. **5 are plain swaps**:`notSoftDeleted`'s `is null`in`shapes.ts`, and the compendium predicate written three times in `ingredients.ts`, `vocabularies.ts`and`common-names.ts`, which becomes one helper beside `scopedTo`. **4 are correlated `exists (select 1 …)`subqueries** —`findManyInSpell`, `findMembershipsOfUsers`, `findManyOfIngredients`, `deleteProvisionalUsers`— written raw only because`soft-delete-finder-guard.test.ts`allows exactly one`.select(`in the folder. That rule's purpose, no read leaving`select.ts`unfiltered, is right; its mechanism makes those four the least-checked reads in the repository, since a guard cannot see inside a string and their`notSoftDeleted`is by convention. This task changes the mechanism, not the purpose:`existsIn(table, where)`beside`selectFrom`, on the same `db`, ANDing `notSoftDeleted(table)`itself and returning`SQL`rather than a builder; the guard counts two`.select(`calls, both in`select.ts`, one per named body, and asserts `existsIn`carries the filter;`existsIn`joins`INTERNAL`. `Derived`sources and`union all` arms stay raw and the doc says why.
->
-> _Acceptance criteria:_
->
-> - `existsIn` exists in `select.ts`, applies `notSoftDeleted` by construction, returns `SQL`, and is in the guard's `INTERNAL` list; the guard asserts exactly two `.select(` calls in the folder, both in `select.ts`, one in each of `selectFrom` and `existsIn`, and that `existsIn`'s body calls `notSoftDeleted(`
-> - The four raw `exists (select 1 …)` fragments are gone; every direct-id denial test over those finders still passes, and each still fails with `existsIn`'s filter removed (the mutation check is recorded in the PR body)
-> - No `sql\`… is null\``remains where`isNull()` serves; the compendium-tier predicate has one definition
-> - Every `sql\`` left in `src/db/repository/`is one a reviewer can justify from`db.md` "Where queries may be built", which gains the list of what has no builder and what a rule requires; a fragment that is not obviously one of those carries a one-clause comment
-> - `db.md` "Soft-delete filtering" and "Spell visibility", the four finder comments and CLAUDE.md rule 4's text describe the two-builder guard; `tests/db/repository/*` and the ingredient/spell/membership tests are green
-
-**Files it touches (for the estimate):** `src/db/repository/{select,shapes,spells,memberships,ingredients,provisional-users,vocabularies,common-names}.ts`, `tests/guards/soft-delete-finder-guard.test.ts`, `claude-docs/db.md`, `CLAUDE.md`, `TASKS.md`.
+Minted as MB.100 (**3h**, type Bug, milestone `Wave 08 — Compendium and admin`, label `tracked`), placed after M4.8 so that M8.2's and M5.1's finders adopt `existsIn` rather than retrofit it ([`waves/wave-08.md`](../waves/wave-08.md)). The entry text drafted here became its entry in [`tasks/mb.md`](../tasks/mb.md) and the issue body, which hold its scope. It was estimated against eight files in `src/db/repository/` (`select`, `shapes`, the four finders' files, `vocabularies` and `common-names`), the guard, `claude-docs/db.md`, `CLAUDE.md` and `TASKS.md`.
 
 ---
 
 ## MB.101 — the second task to mint
 
-**Title:** `MB.101 — One inserter for an ingredient and its children in tests` · **2h** · type Bug · milestone `Wave 08 — Compendium and admin` · label `tracked`.
-
-**Placement:** Wave 8, after MB.100 and before MB.81 / M8.2 — M8.2's and M5.2's tests are the next to seed ingredients, and should call the inserter rather than add an eighteenth copy.
-
-**Entry text** (beside MB.100's in `TASKS.md`; the issue body):
-
-> _Story:_ As a developer, I want a test to seed an ingredient with its folk names and categories in one call, so that the seventeen files that each hand-roll the insert stop drifting from each other.
->
-> M4.8's review asked whether test setup should go through `withAudit` rather than the raw `postgres` client. It should not, and this task records why while fixing what the question found. The raw client is the right default for setup: it does not depend on the code under test, the writer refuses states setup needs — an already-deleted row, an un-delete, a backdated stamp, a Better Auth row — and a compendium ingredient cannot be written through `withAudit` at all (`write.insert` rejects `ingredients` as `WorkspaceScoped`; `insertInWorkspace` fills the column from the proof). The seed is the one sanctioned writer outside `withAudit`, and a test inserter is the same kind of thing. What is wrong is the duplication: every ingredient-family service, loader and GraphQL test carries its own `addIngredient` with slightly different columns, and `makeIngredient()` carries `folkNames` and `categories` that nothing inserts. One `insertIngredient(sql, fixture, author)` in `tests/support/db/` writes the row, its folk names and its category links (names resolved to ids through the seeded `categories`), stamps `created_by`/`updated_by` from `author`, and publishes `app.current_user_id` in its transaction the way the seed does, so a v2 history trigger records the author rather than nothing. `testing.md` states the convention: setup rows go through the raw client and the shared inserters; a test whose subject is the write path uses `withAudit`.
->
-> _Acceptance criteria:_
->
-> - `tests/support/db/insert-ingredient.ts` (or beside `probe-tables.ts`) exports `insertIngredient`, takes an `IngredientFixture` and an author id, writes ingredient + folk names + category links in one transaction with the GUC published, and returns the row's id; its own test covers a compendium row, a workspace row, and a category name the seed does not hold (a thrown error naming it, never a silent skip)
-> - The ingredient-family tests — `ingredients/services/{common-name-suggestions,common-names-plan,duplicates,duplicates-plan}`, `ingredients/loaders/ingredient-children`, `ingredients/graphql/common-names`, `vocabulary/services/{form-suggestions,suggestions}`, `vocabulary/graphql/{form-suggestions,suggestions}` — seed through it; no file under `tests/modules/` still carries a private `insert into ingredients`
-> - Schema tests and `tests/db/` are untouched: their raw inserts are the subject or the mechanism, and the entry says so
-> - `testing.md` "Fixture factories" states the convention in one paragraph and links the inserter; CLAUDE.md's Testing section gains one line
-> - Coverage is unchanged or higher; `npm run test:coverage` green
-
-**Files it touches:** `tests/support/db/insert-ingredient.ts` (+ its test), the eleven test files named, `claude-docs/testing.md`, `CLAUDE.md`, `TASKS.md`.
+Minted as MB.101 (**2h**, type Bug, the same milestone and label), placed after MB.100 and before MB.81 / M8.2 so that M8.2's and M5.2's tests call the inserter rather than add an eighteenth copy ([`waves/wave-08.md`](../waves/wave-08.md)). The entry text drafted here became its entry in [`tasks/mb.md`](../tasks/mb.md) and the issue body, which hold its scope, and which record the two test files on the drafted list that turned out not to be fixture tests. It was estimated against the inserter and its test, the ingredient-family test files the entry names, `claude-docs/testing.md`, `CLAUDE.md` and `TASKS.md`.
 
 ---
 

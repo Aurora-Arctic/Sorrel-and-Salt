@@ -63,24 +63,22 @@ Match `m2.9-granting-admin.md`'s shape: `# MB.61 — …`, then `**Decided 2026-
 
 ### 3. Follow-up tasks (ids MB.65 onward; MB.64 is the highest today)
 
+Each was minted with the scope drafted here; its entry now holds it, in [`tasks/mb.md`](../tasks/mb.md) or, for M7.3–M7.5, [`tasks/m7.md`](../tasks/m7.md).
+
 Wave 6, after MB.61 and before MB.54, in this order:
 
-- **MB.65 — Mail transport: Resend, Mailtrap Sandbox and Mailpit over HTTP** · 2h. Deps none; needed by MB.66, M7.3, MB.70. `src/lib/mail.ts`, one `send`, three HTTP transports selected by `MAIL_TRANSPORT` with a test per transport against a mocked fetch and the environment guard asserted both ways (production + `mailpit` refused, preview + `resend` refused); compose `mailpit` service, `e2e` and `playwright.yml` set `MAIL_TRANSPORT=mailpit` and `MAILPIT_URL`; a Playwright helper reads the latest message for an address from Mailpit's API; `secrets.md` rows for `MAIL_TRANSPORT`, `MAIL_FROM`, `RESEND_API_KEY` (Production only, Sensitive, runtime-only), `MAILTRAP_SANDBOX_TOKEN` and `MAILTRAP_SANDBOX_ID` (Preview only, Sensitive, runtime-only), plus the manual steps for the Resend domain and DNS and for creating the sandbox; `docker.md`, `ci.md`; nothing read at build, so `pulled-env-assertion.test.ts` is untouched.
-- **MB.66 — Turn on Better Auth email verification, audited** · 3h (bigger: config, three hooks, session binding, two test files, one doc). Deps MB.65. `emailVerification` configured and each value pinned by test; the `/verify-email` write stamps `updated_by` with the user's own id; `beforeEmailVerification` refuses a request whose session is not that user's, asserted both ways; Facebook and Microsoft `mapProfileToUser` pinned unverified, Google and Discord unchanged; `sign-in.ts` maps `email_not_verified` to a sentence naming the resend page; an unverified user still gets a session, asserted; `auth.md` "First-party verification"; CLAUDE.md rule 3 sentence names the update hook.
-- **MB.67 — Provisional accounts: expire unverified rows and sweep them at the next callback** · 2h. Deps MB.66. Sweep in `hooks.before` on `/callback/:id`, keyed on `updated_at` older than one token lifetime, removing `accounts` and `sessions` rows too, asserted end to end with a squatting Facebook row present and a verified Google sign-in creating a fresh account; a row inside the window is kept and a resend pushes it forward; partial index (additive, no sidecar); `account_not_linked` mapped in `sign-in.ts`; `auth.md` and `secrets.md` drop "have the owner sign in first".
-- **MB.68 — Promote the primary admin at first-party verification** · 1h. Deps MB.66. `afterEmailVerification` on the bootstrap address calls `promotePrimaryAdmin` through `withAudit` with the user's own session (ledger row once MB.58 exists); MB.60's sign-in rule and tests stay; a Microsoft-only owner is promoted after clicking the mail from their own session, and a click from another browser is refused, asserted.
-- **MB.54** — re-scoped in place, 3h: `/account/email`, `setEmail` mutation and service, resend, the `.invalid` sentinel for a provider with no address, the "bootstrap address refused outright" criterion dropped (verifying it is the promotion), stories 58 and 59 in a new `tests/acceptance/08-email-and-admin.test.ts`, `email_not_found` mapping removed.
+- **MB.65 — Mail transport: Resend, Mailtrap Sandbox and Mailpit over HTTP** · 2h. Deps none; needed by MB.66, M7.3, MB.70.
+- **MB.66 — Turn on Better Auth email verification, audited** · 3h (bigger: config, three hooks, session binding, two test files, one doc). Deps MB.65.
+- **MB.67 — Provisional accounts: expire unverified rows and sweep them at the next callback** · 2h. Deps MB.66.
+- **MB.68 — Promote the primary admin at first-party verification** · 1h. Deps MB.66.
+- **MB.54** — re-scoped in place, 3h.
 
 Wave 8, after MB.63:
 
-- **MB.69 — `admin_invitations` schema** · 1h. Deps MB.58. Columns `id`, `email`, `tokenHash`, `expiresAt` (7d default), `acceptedAt`, `acceptedBy`, `revokedAt`, `note`, `...auditColumns`; index on `tokenHash`; `set_updated_at` trigger line; schema test; repository insert, read and the two stamp updates only; additive.
-- **MB.70 — Invite an admin by email** · 3h (bigger). Deps MB.69, MB.59, MB.63, MB.65. `createAdminInvitation(email)` admin-only, hashes the token, mails the link, returns no URL, refused for a non-primary admin while paused; `/admin-invite/[token]` public in `proxy.ts`, prompts sign-in, accepts only a verified case-insensitive match (the same session unverified is refused); acceptance through `setUserRole` with ledger row, `canCreateWorkspace`, pause refusal; expired/revoked/accepted rejected distinctly; pending list and revoke on `/admin/users`; story 62 acceptance test; `auth.md`.
+- **MB.69 — `admin_invitations` schema** · 1h. Deps MB.58.
+- **MB.70 — Invite an admin by email** · 3h (bigger). Deps MB.69, MB.59, MB.63, MB.65.
 
-Wave 10, rewritten in place with the same ids and sizes:
-
-- **M7.3 — createInvitation mails the link** · 2h. Deps M7.2, MB.65. Returns `Invitation`, no `url`; the link goes to the invited address through `mail.send` and appears in no response or query; a send failure is logged and the row stays pending so the owner can revoke and re-invite.
-- **M7.4 — InviteDialog** · 2h. Email field, role selector viewer/member with the ownership line, sends and confirms "sent to <address>"; no copy control, no link rendered; focus trap, Escape, focus restored, axe clean.
-- **M7.5 — Invitation acceptance page** · 2h. Accepts only when the signed-in account's verified email matches, else a message naming the mismatch without the workspace; an unverified match is pointed at `/account/email`; the rest as written.
+Wave 10, rewritten in place with the same ids and sizes: **M7.3** (createInvitation mails the link; deps M7.2, MB.65), **M7.4** (InviteDialog) and **M7.5** (the acceptance page), 2h each.
 
 ### 4. Files and sections to edit, in order
 
