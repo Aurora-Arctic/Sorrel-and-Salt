@@ -34,7 +34,7 @@ nothing and this workflow is the only path.
   scope**, not a personal scope. A personal-scope token is accepted as valid and
   then fails at `vercel pull` with `Could not retrieve Project Settings…`.
 - **Every _preview_ `vercel pull` passes `--git-branch`, and no production one
-  does** (MB.27, narrowed by MB.45). Vercel resolves a branch-scoped
+  does** (MB.27, MB.45). Vercel resolves a branch-scoped
   environment variable only when the pull names the branch, and `staging`'s
   `DATABASE_URL` is precisely such a variable — the override that keeps staging
   off the Neon integration's per-preview ephemeral branches
@@ -45,9 +45,8 @@ nothing and this workflow is the only path.
   branch-scoped overrides are a Preview-only feature, and the API rejects the
   pair outright with
   ``Invalid request: `target` must be "preview" when specifying a `gitBranch` ``.
-  MB.27 passed it unconditionally and broke every production
-  deploy until MB.45; production has no branch-resolved value to miss, so it
-  loses nothing by omitting it.
+  Production has no branch-resolved value to miss, so it loses nothing by
+  omitting it.
 
   Each workflow therefore pulls through **two steps, one per target**, selected
   by a YAML `if:` on the resolved environment — not one command with an
@@ -100,36 +99,31 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   `claude-docs/secrets.md` is the matrix and the source of truth for which rows
   are set.
 - **`migrate.yml` (M1.4)** — reusable (`workflow_call`-only) workflow, applying
-  `npm run db:migrate` against the environment's `DATABASE_URL`. `deploy.yml`
-  splits its old single `deploy` job into three: `resolve-target` (the old
-  "Resolve deploy target" step, now standalone since both later jobs need its
-  output), `migrate` (`needs: resolve-target`, calls this workflow with
-  `secrets: inherit`, and carries its own `group: migrate` /
+  `npm run db:migrate` against the environment's `DATABASE_URL`. In
+  `deploy.yml` the `migrate` job sits between `resolve-target`, whose output
+  both later jobs need, and `deploy`. It calls this workflow with
+  `secrets: inherit` and carries its own `group: migrate` /
   `cancel-in-progress: false` concurrency lock so two merges never migrate at
-  once), and `deploy`, whose `if: success()` is load-bearing: a custom `if:`
+  once. `deploy`'s `if: success()` is load-bearing: a custom `if:`
   on a job with `needs:` replaces the implicit needs-all-succeeded check, so
   any other condition there would let a failed `migrate` through to the
   deploy. Same `vercel-secrets-guard` skip as `deploy.yml` when the `VERCEL_*`
-  secrets are absent. `vercel pull --environment=preview --git-branch=<branch>`, or
-  `vercel pull --environment=production` with no branch (MB.45), resolves the
-  right `DATABASE_URL` for each target the same way `deploy.yml`'s own two
-  pulls do — the branch-scoped override for
-  `staging`, the integration's per-deployment ephemeral Neon branch for a
-  hotfix preview (see
-  `claude-docs/design-decisions/m1.1-neon-branch-strategy.md`) — read from
-  `.vercel/.env.<environment>.local` and masked before use. Both halves of that
-  come from `resolve-target`: `git-branch` is a **required** `workflow_call`
-  input, so a caller that cannot say which branch it is migrating fails to
-  start rather than migrating the wrong database. M1.1's "Cross-task impact"
-  requires the two workflows to resolve `DATABASE_URL` identically, and that is
-  the requirement in mechanical form.
+  secrets are absent. It pulls through the same two steps, one per target, and
+  resolves `DATABASE_URL` as the next item describes — a named secret on
+  `staging` and `main`, the integration's per-deployment ephemeral Neon branch
+  for a hotfix preview (see
+  `claude-docs/design-decisions/m1.1-neon-branch-strategy.md`) — masked before
+  use. `environment` and `git-branch` both come from `resolve-target`, and
+  `git-branch` is the **required** input above, so a caller that cannot say
+  which branch it is migrating fails to start rather than migrating the wrong
+  database. M1.1's "Cross-task impact" requires the two workflows to resolve
+  `DATABASE_URL` identically, and that is the requirement in mechanical form.
 - **`DATABASE_URL` and `BETTER_AUTH_SECRET` come from GitHub secrets, not from
-  the pull** (MB.47). Both are marked Sensitive in Vercel, and a Sensitive
-  variable cannot be read back by `vercel pull` — the pull writes the literal
-  string `[SENSITIVE]` instead, which is non-empty and so passes any check that
-  only asks whether something is set. A diagnostic run pulled staging both with
-  and without `--git-branch` and got the placeholder either way, so no
-  arrangement of flags fixes it. A `${{ secrets.X }}` reference to a secret
+  the pull** (MB.47). Both are Sensitive in Vercel, so the pull writes the
+  literal `[SENSITIVE]` in their place, and CI keeps its own copy of each as a
+  repository secret named per target. [`secrets.md`](../secrets.md) has why no
+  pull can read them, the rotation rule a second copy creates, and why named
+  secrets rather than GitHub Environments. A `${{ secrets.X }}` reference to a secret
   that does not exist resolves to the empty string rather than failing, so a
   misspelt name reads as an unset value; the guard pins the names in use.
 
@@ -143,47 +137,38 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   selections together: choosing differently would migrate one database and
   serve another.
 
-  Named secrets rather than GitHub Environments, deliberately — an environment
-  would need a new `workflow_call` input, a new `resolve-target` output and an
-  `environment:` key on two jobs, to say what the secret's name already says.
-  `claude-docs/secrets.md` carries the rotation rule this creates, and the
-  Neon-API route that could retire it, and why it has not.
-
 - **Both jobs assert the pulled environment before using it** (MB.46), via
   `scripts/assert-pulled-env.ts`. It does two things. It **asserts** the keys
   that job needs, failing with a named cause (missing · empty · placeholder ·
   not a postgres URL · scheme without `user@host/database` · surviving quotes
   or whitespace · a libpq client-only parameter, MB.49) rather than letting the
   value reach a consumer that cannot describe it. `deploy` requires
-  `DATABASE_URL` and `BETTER_AUTH_SECRET`, both of which the override step
-  above has just written into the file. `migrate` requires **nothing** and runs
-  report-only: since MB.47 its `DATABASE_URL` no longer comes from this file on
-  either long-lived target, so requiring it here would fail on a value nothing
-  reads. What that job validates instead is the **resolved** URL, one step
-  later — see the probe below.
+  `DATABASE_URL`, `BETTER_AUTH_SECRET` and `ADMIN_BOOTSTRAP_EMAIL`, the first
+  two just written into the file by the override step above. `migrate` requires
+  **nothing** and runs report-only: on either long-lived target its
+  `DATABASE_URL` comes from a secret, not this file, so requiring it here would
+  fail on a value nothing reads. What that job validates instead is the
+  **resolved** URL, one step later — see the probe below.
 
   And it **reports** every key the pull
   returned, with a classification and its length, never a value; that report
   prints even when the run is about to fail.
 
-  The report is the half worth having. CI previously could not answer "what did
-  the pull actually return?" — `migrate.yml` masked the value before anything
-  could print it, and `deploy.yml` never read the file at all, handing it
-  straight to `vercel build`. So MB.27 dropping variables produced
-  `ERR_INVALID_URL` with the input shown as `***` in one job and
-  `BETTER_AUTH_SECRET is not set` in the other, and neither said which
-  variables had survived the pull. Key names are not secret —
+  The report is the half worth having: without it, a variable the pull lost
+  surfaces only as whatever its consumer throws — `ERR_INVALID_URL` with the
+  input shown as `***`, or `BETTER_AUTH_SECRET is not set` — and neither names
+  which variables survived. MB.46 tells the outage that showed it. Key names are not secret —
   `claude-docs/secrets.md` enumerates them — and that no value is ever printed
   is asserted in `tests/guards/pulled-env-assertion.test.ts` rather than
   intended. The same file sweeps the workflow directory, so a `vercel pull`
   added without an assertion beside it fails in the diff that adds it.
 
-  Why `deploy` needs `BETTER_AUTH_SECRET` in particular: `vercel build` runs
-  `next build` with `NODE_ENV=production`, which traces
-  `/api/auth/[...all]` → `src/lib/auth.ts` → `src/db/connection.ts`.
-  `auth.ts` throws on an unset secret, and `connection.ts` calls `postgres()`
-  at module scope, which parses its URL eagerly. A placeholder is therefore not
-  harmless to a build that issues no query.
+  A build that issues no query still needs `DATABASE_URL` and
+  `BETTER_AUTH_SECRET` real: `next build`
+  under `NODE_ENV=production` traces `/api/auth/[...all]` into
+  `src/lib/auth.ts`, which throws on an unset secret, and into
+  `src/db/connection.ts`, whose module-scope `postgres()` parses its URL
+  eagerly. A placeholder is not harmless to it.
 
 - **Both jobs then open the connection, before anything consumes it** (MB.49),
   via `scripts/probe-database.ts`. It reads a connection string from a file,
@@ -192,41 +177,33 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   message — scrubbed of the credentials, never the URL.
 
   It exists because `drizzle-kit migrate` catches whatever postgres.js throws
-  and exits 1 without printing it. A failed staging migration said exactly
-  this, and nothing else:
-
-  ```
-  Using 'postgres' driver for database querying
-  [⣟] applying migrations...
-  ##[error]Process completed with exit code 1.
-  ```
-
-  Reproduced locally, an unreachable host, a wrong password, an `sslmode`
-  mismatch and a `channel_binding` parameter **all produce that byte-identical
-  output**. Four different fixes, one indistinguishable failure — which is why
-  MB.45, MB.46 and MB.47 each ended on a hypothesis rather than a diagnosis.
-  `ECONNREFUSED`, `ENOTFOUND`, `28P01`, `3D000` and `42704` now each name
+  and exits 1 without printing it: its log stops at `applying migrations...`
+  whether the host is unreachable, the password wrong, `sslmode` mismatched or
+  a `channel_binding` parameter present — four fixes behind one identical
+  failure (MB.49 has the log and the deploys it cost). In the probe's output
+  `ECONNREFUSED`, `ENOTFOUND`, `28P01`, `3D000` and `42704` each name
   themselves, and the codes worth a sentence carry one.
 
   **It is fatal in `migrate` and advisory in `deploy`, deliberately.** A
   migration cannot proceed without a connection, so a probe that warned there
   would leave the job as silent as it was. A build genuinely does not need the
-  database — it parses the URL without issuing a query — so failing a deploy on
-  a transient blip would trade one outage for another; what the warning buys is
+  database — it parses the URL without issuing a query — so failing a deploy
+  on a momentary blip would swap one outage for another; what the warning buys is
   that a deploy about to serve 500s says so at build time.
   `tests/guards/database-probe.test.ts` asserts the two apart, and sweeps the
   workflow directory so a job that migrates or builds without probing first
   fails in the diff that adds it.
 
   **In `migrate` it reads the resolved URL, not the pulled file**, and that is
-  the point rather than a detail. MB.46 validated what `vercel pull` wrote;
-  MB.47 then took `DATABASE_URL` from a GitHub secret instead and handed it
-  straight to drizzle-kit, reopening the gap one task after it closed. So
-  `Resolve DATABASE_URL` now writes whichever value won to
-  `$RUNNER_TEMP/resolved.env` under `umask 077`, and the probe reads that —
-  secret or pulled `POSTGRES_URL` alike. The value reaches the script as a file
-  path for the same reason MB.46's does: argv is visible to `ps` and echoed by
-  `set -x`, and a step-level `env:` is printed in that step's own env block.
+  the point rather than a detail: on `staging` and `main` `DATABASE_URL` comes
+  from a secret, which a check of the pulled file never sees, so a malformed secret
+  would fail as silently as drizzle-kit does (MB.49 tells how that gap
+  reopened). The `Resolve DATABASE_URL` step writes the winning value, secret
+  or pulled `POSTGRES_URL` alike, to `$RUNNER_TEMP/resolved.env` under
+  `umask 077`, which is the file the probe reads. It reaches the script as a
+  file path, as the pulled file reaches `assert-pulled-env.ts`: argv is visible
+  to `ps` and echoed by `set -x`, and a step-level `env:` is printed in that
+  step's own env block.
 
   **`channel_binding` has its own rule**, in the validator rather than the
   probe, so it fails before a connection is even attempted. postgres.js
@@ -257,7 +234,7 @@ db:seed:categories`, `npm run db:seed:forms` and `npm run db:seed:astrology`
   separately — one `job-summary` call each — so a failed seed does not read as
   a failed migration, and a failed seed blocks `deploy` for free, because it
   fails the job `deploy` already depends on.
-- **`deploy.yml` gains one job, `seed-changed`**, which diffs
+- **`deploy.yml`'s `seed-changed` job** diffs
   `github.event.before`..`github.sha` over the seeds' own files
   (`src/db/seed/categories.ts`, `src/db/seed/forms.ts`,
   `src/db/seed/astrology.ts`, `src/db/seed/flat-vocabulary.ts`,

@@ -68,11 +68,13 @@ a service lands in the module that owns the table it writes.
 | `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs` | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`; `schema/units.ts` is the unit vocabulary |
 | `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                           | `spell-visibility.ts`                                                                                                              |
 
-**The compendium is a tier inside `ingredients`, not a module.** Both tiers
-share one table, one identity model, one search component and one detail
-page, and the local-beats-compendium resolution reads both in one statement.
-The compendium is the `workspace_id IS NULL` tier, reached through
-`ingredients`' services; the reads that cross the tiers are the seam below.
+**The compendium is a tier inside `ingredients`, not a module**: the
+`workspace_id IS NULL` tier of the one table, reached through `ingredients`'
+services, because a module of its own would own no table and import
+everything `ingredients` owns
+([`design-decisions/mb.86-modular-monolith.md`](design-decisions/mb.86-modular-monolith.md),
+"The five modules"; splitting the table is under its "What it rules out").
+The reads that cross the tiers are the seam below.
 
 ## The public surface
 
@@ -82,12 +84,12 @@ A module offers three things to the rest of the tree, and nothing else:
   module means to offer, its GraphQL refs and its loader factories, and names
   the public ones of its types from `types.ts`. A name missing from it is a decision to take in the module, not a
   reason to import the file underneath.
-- **`schema/*.ts`** — the data surface. The seed, the repository, drizzle-kit
-  and a cross-module foreign key all need a table object without loading a
-  service, and a service carries `server-only`, which the seed's `tsx` runtime
-  cannot resolve. A table object is inert without the database client or a
-  runtime `drizzle-orm`, both already banned above the database layer, so
-  letting a page import one leaks nothing.
+- **`schema/*.ts`** — the data surface, for whatever needs a table object
+  without loading a `server-only` service: the seed, the repository,
+  drizzle-kit and a cross-module foreign key. Above the database layer a
+  table object is inert, so a page importing one leaks nothing
+  ([`design-decisions/mb.86-modular-monolith.md`](design-decisions/mb.86-modular-monolith.md),
+  "The five modules").
 - **`validation/*.ts`** — the input surface. A Zod schema is run by the
   form before a request is sent and by the service again after, so a client
   component must be able to import it — which the index cannot offer once it

@@ -1,11 +1,13 @@
 # Task tracking
 
 The issues of `Aurora-Arctic/Sorrel-and-Salt`, with the org Project **Sorrel &
-Salt** over them, are the live list of what to work on (MB.89).
-[`TASKS.md`](TASKS.md) is the reasoning behind the breakdown and the two are
-expected to agree: a task minted as an issue gets its entry in
-`tasks/<milestone>.md` in the same pass. Everything reaches the board through
-`gh`, and the calls the skills make are wrapped once in
+Salt** over them, are the live list of what to work on (MB.89), and
+[`TASKS.md`](TASKS.md) is the reasoning behind them. This page is the board's
+shape and its mechanics. The rules for working it are
+[`.claude/rules/task-tracking.md`](../.claude/rules/task-tracking.md)'s, the
+long form of `CLAUDE.md`'s GitHub task tracking section, and are not restated
+here. Everything reaches the board through `gh`, and the calls the skills
+make are wrapped once in
 `scripts/task-board.mjs`, so the lookup rule and the Project's field ids live
 in one file rather than four skills. The board moved
 here from Asana; the argument for the move, and for accepting that a public
@@ -14,23 +16,25 @@ The rule that costs is under **Comments**.
 
 ## The board
 
-| Object      | Value                                                                                                                                                                                                                                                                                                                                                                |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repo        | `Aurora-Arctic/Sorrel-and-Salt`                                                                                                                                                                                                                                                                                                                                      |
-| Project     | Org project **Sorrel & Salt**, number `1`, linked to the repo. `task-board.mjs` carries the number as `PROJECT` and reads the node id and field ids at runtime, off the issue's own Project item.                                                                                                                                                                    |
-| `Status`    | Single-select field: `Not Started` · `In Progress` · `In Review` · `Done`.                                                                                                                                                                                                                                                                                           |
-| `Estimate`  | Number field, in hours — the `· Nh` on the task's heading in `tasks/<milestone>.md`.                                                                                                                                                                                                                                                                                 |
-| Milestones  | One per wave (`Wave 07 — GraphQL`, two digits because GitHub sorts milestones alphabetically) and one per pre-wave feature grouping (`M0 · Repo bootstrap`), plus a closed `Retired — not done` milestone for the tasks MB.31 retired — every issue has a milestone. The description opens with the wave's task ids in execution order, then the deferral reasoning. |
-| Issue types | `Bug` for `MB.*`, `Task` for everything else. The org has to have both types enabled; `gh issue create --type` fails otherwise.                                                                                                                                                                                                                                      |
-| Labels      | `tracked` on every task — it is the Project's auto-add filter, and an issue without it is a visitor's until someone triages it. `hotfix` on a task that branches off `main`.                                                                                                                                                                                         |
-| Sub-issues  | Only for a genuine parent/child (`M7.A.*` under `M7.A`, or a task split mid-flight). A wave is a milestone, never a parent issue.                                                                                                                                                                                                                                    |
+| Object      | Value                                                                                                                                                                                                                                                                                                                     |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repo        | `Aurora-Arctic/Sorrel-and-Salt`                                                                                                                                                                                                                                                                                           |
+| Project     | Org project **Sorrel & Salt**, number `1`, linked to the repo. `task-board.mjs` carries the number as `PROJECT` and reads the node id and field ids at runtime, off the issue's own Project item.                                                                                                                         |
+| `Status`    | Single-select field: `Not Started` · `In Progress` · `In Review` · `Done`.                                                                                                                                                                                                                                                |
+| `Estimate`  | Number field, in hours — the `· Nh` on the task's heading in `tasks/<milestone>.md`.                                                                                                                                                                                                                                      |
+| Milestones  | One per wave (`Wave 07 — GraphQL`) and per pre-wave grouping, plus a closed `Retired — not done`, so every issue has one. A wave's description is its id list on the first line, then a link to its [`waves/wave-NN.md`](waves/) on `staging`, the one home of its reasoning; `reorder` reads the first line (**Order**). |
+| Issue types | `Bug` for `MB.*`, `Task` for everything else. The org has to have both types enabled; `gh issue create --type` fails otherwise.                                                                                                                                                                                           |
+| Labels      | `tracked` on every task, the Project's auto-add filter; `hotfix` on a task that branches off `main`.                                                                                                                                                                                                                      |
+| Sub-issues  | Only for a genuine parent/child; a wave is a milestone, never a parent issue.                                                                                                                                                                                                                                             |
+
+How each object is named, labelled and kept is the rule file's "Board layout".
 
 ## The title rule
 
-An issue is titled `<Task ID> — <title>`, exactly as its `tasks/` entry heads it, with
-nothing before the id — no marker, no emoji. Status is a field, so a status
-change never rewrites a title. A retired task reads `<ID> — [RETIRED] <title>`
-and is closed as `not planned`; a done task is closed as `completed`.
+An issue is titled `<Task ID> — <title>`, nothing before the id. The rule, with
+its retired and done variants, is
+[`.claude/rules/task-tracking.md`](../.claude/rules/task-tracking.md)'s "Board
+layout"; what it buys is an exact lookup.
 
 `node scripts/task-board.mjs find M2.6` lists every tracked issue, open and
 closed, through the REST issues endpoint, and keeps the ones whose title
@@ -43,12 +47,9 @@ a guess.
 
 ## Status
 
-| Status        | Set it when                                                                                                                                                                                                                                |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Not Started` | The Project's **Item added to project** workflow sets it the moment the auto-add places the issue — seconds after `gh issue create --label tracked`. Never set by hand: `find` printing `status: null` means the auto-add has not run yet. |
-| `In Progress` | The feature branch exists and work has started — not when the task is merely read or planned. The script's.                                                                                                                                |
-| `In Review`   | The PR is open. Set in the same turn the PR is created, beside the comment carrying the PR link. The script's.                                                                                                                             |
-| `Done`        | The PR is **merged** — by mechanism, never by hand. A green CI run is not a merge.                                                                                                                                                         |
+When each status is set is
+[`.claude/rules/task-tracking.md`](../.claude/rules/task-tracking.md)'s
+"Status"; this section is the machinery that sets it.
 
 `node scripts/task-board.mjs status <ID> "<Status>"` moves the field forward;
 it refuses a backward step and refuses `Done` outright. `Done` is set through
@@ -82,12 +83,11 @@ can write.
 
 A closed issue outranks its field: an issue closed as `completed` is done
 whatever `Status` says, which is what makes a field left behind by a mistake
-harmless. If a PR is closed without merging, the task goes back to
-`In Progress` by hand — not `Done`, not `Not Started`.
+harmless.
 
 ## Order
 
-The Project's manual item order is execution order: the wave table in
+The Project's manual item order follows the wave table in
 [`TASKS.md`](TASKS.md)'s Execution order section, wave by wave, each wave's
 row in its order. The row names the ids and links the wave's reasoning,
 [`waves/wave-NN.md`](waves/); a range in it (`M3.3 → M3.10`) is the headings
@@ -136,11 +136,11 @@ item where it belongs.
 
 ## Comments
 
-`node scripts/task-board.mjs comment <ID> "<text>"` posts to the issue. The
-rule is **names, never values**: a comment may name an env var, a file or a
-provider, and never carries a value, a token, a connection string, an address
-or a dashboard URL — the repo is public and a comment is indexed before anyone
-reads it. The script refuses text that trips one of its `SECRET_PATTERNS`
+`node scripts/task-board.mjs comment <ID> "<text>"` posts to the issue, under
+the rule a public repo costs: **names, never values**, which `CLAUDE.md` and
+[`.claude/rules/task-tracking.md`](../.claude/rules/task-tracking.md)'s "PR
+bodies and comments" state. The script enforces what a
+pattern can catch: it refuses text that trips one of its `SECRET_PATTERNS`
 (connection strings, `vercel.com` and `console.neon.tech` URLs, the common
 token prefixes, `Bearer` followed by a token, a long token-like run that is not
 a git SHA, an email address) and names the pattern class rather than echoing
@@ -150,9 +150,6 @@ A comment carried over from Asana opens with `[YYYY-MM-DD HH:MM UTC]`, and
 that bracket is its true date. GitHub stamps a comment with the moment it is
 posted and offers no override, so on anything older than the migration the
 bracket is the date and the comment's own metadata is not.
-
-Comment as work proceeds. The status field is the at-a-glance summary of those
-comments, not a replacement for them.
 
 ## `scripts/task-board.mjs`
 
@@ -194,22 +191,14 @@ hour.
 
 ## Minting a task
 
-Re-check the next free id right before minting — another session may have
-taken it — then:
-
-```sh
-gh issue create --title "MB.90 — <title>" --type Bug --label tracked --milestone "Wave 07 — GraphQL" --body-file <notes>
-node scripts/task-board.mjs estimate MB.90 3
-node scripts/task-board.mjs reorder --apply
-```
-
-The notes are the entry's text in `tasks/<milestone>.md`. The entry, the wave's
-row in `TASKS.md`'s execution-order table, its `waves/wave-NN.md` where the
-reasoning changes, `tasks/mb.md`'s summary table and the milestone's
-description are edited in the same pass; a task on the board and not in
-`tasks/` is a task whose reasoning is nowhere. The auto-add appends the new
-item at the bottom of the Project, and `reorder --apply` moves it to the row's
-place (**Order**), so the row is edited before it runs. `--milestone <name>` on create does not
+Minting is `gh issue create`, then `estimate`, then `reorder --apply`, with
+the docs edited in the same pass and the new id added to the first line of
+its milestone's description; the commands and the list of edits are
+[`.claude/rules/task-tracking.md`](../.claude/rules/task-tracking.md)'s
+"Minting a task". A task on the board and not in `tasks/` is a task
+whose reasoning is nowhere. The auto-add appends the new item at the bottom of
+the Project and `reorder --apply` moves it to its row's place (**Order**),
+which is why the row is edited first. `--milestone <name>` on create does not
 resolve a closed milestone; an issue minted into one for the record takes it
 afterwards, by number, through `gh api -X PATCH repos/…/issues/<n> -F milestone=<m>`,
 and is closed before `reorder` runs.

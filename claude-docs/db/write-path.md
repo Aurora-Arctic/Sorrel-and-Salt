@@ -64,27 +64,21 @@ select set_config('app.current_user_id', $1, true)
 **Nothing reads this back, and that is expected.** It is published for two
 readers that do not exist yet: the v2 history trigger's `changed_by`
 (DESIGN.md §13), and the RLS policies MB.29 deferred to the public launch
-(DESIGN.md §8). Setting it now is what makes either one a single migration
-rather than a re-audit of every write path — so do not remove it on the
-grounds that it is unused, and do not describe it as protecting anything
-today.
+(DESIGN.md §8), each of which it leaves one migration away (§5). So do not
+remove it on the grounds that it is unused, and do not describe it as
+protecting anything today.
 
 **The second authorization layer is not here.** It is CLAUDE.md rule 5's
 branded `Membership` — the value `assertMembership` returns, which every
 workspace-scoped finder and `AuditWriter` method demands as its first argument
 so the omission is a compile error rather than a missing runtime check. M6.3
-built it; ["The Membership proof"](membership-proof.md) is how it works. The specification for
-the eventual policies —
-the role split they need, `FORCE`, the `security definer` helper, and why a
-policy test connected as the table owner proves nothing — is
-[`mb.24-rls-role-split.md`](../design-decisions/mb.24-rls-role-split.md),
-superseded as a plan for v1 and intact as a plan for then.
+built it; ["The Membership proof"](membership-proof.md) is how it works. The eventual
+policies' specification is
+[`mb.24-rls-role-split.md`](../design-decisions/mb.24-rls-role-split.md)
+(DESIGN.md §8).
 
-**Why `set_config(.., true)` and not `SET LOCAL`.** They have identical
-semantics — the third argument `is_local => true` _is_ `LOCAL` — but
-`SET LOCAL` accepts no bind parameters, so writing it literally would mean
-interpolating a user id into SQL text. `set_config` takes the value as a
-parameter.
+**Why `set_config(.., true)` and not `SET LOCAL`**: the same semantics, with
+the user id a bind parameter rather than text in the SQL (DESIGN.md §5).
 
 Transaction scoping is the whole point of `LOCAL`: the value is discarded
 at `COMMIT` or `ROLLBACK`, so it cannot ride a pooled connection into the

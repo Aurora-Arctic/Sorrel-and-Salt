@@ -89,24 +89,10 @@ another verified account or a second mail inside the minute included, is a
 ### `planetSuggestions` and `zodiacSuggestions`
 
 The autofill behind the planet and zodiac fields (MB.94), registered by
-`vocabulary`:
+`vocabulary`. Each takes `workspaceId`, an optional `query` and the
+connection arguments, as DESIGN.md §7's sketch gives them, and its nodes are:
 
 ```graphql
-type Query {
-  planetSuggestions(
-    workspaceId: ID!
-    query: String
-    first: Int
-    after: String
-  ): QueryPlanetSuggestionsConnection!
-  zodiacSuggestions(
-    workspaceId: ID!
-    query: String
-    first: Int
-    after: String
-  ): QueryZodiacSuggestionsConnection!
-}
-
 type CorrespondenceSuggestion {
   value: String!
   description: String # the curated row's; null for a value only in use
@@ -193,18 +179,11 @@ type SuggestionClaimant {
 
 Story 16's "did you mean" (MB.11), registered by `ingredients` over M4.7's
 `findPossibleDuplicates` ([`db/fuzzy-matching.md`](../db/fuzzy-matching.md),
-"Fuzzy matching"). M5.10's name field calls it as the name is typed:
+"Fuzzy matching"). M5.10's name field calls it as the name is typed, with
+`workspaceId`, the whole `name` and the connection arguments (DESIGN.md §7's
+sketch); its edge carries the match's score:
 
 ```graphql
-type Query {
-  possibleDuplicates(
-    workspaceId: ID!
-    name: String!
-    first: Int
-    after: String
-  ): QueryPossibleDuplicatesConnection!
-}
-
 type QueryPossibleDuplicatesConnectionEdge {
   cursor: String!
   node: Ingredient!
@@ -243,20 +222,11 @@ type QueryPossibleDuplicatesConnectionEdge {
 The compendium's reads (M8.5), registered by `ingredients`, with the
 vocabulary types by `vocabulary`. All three are public (MB.80): no `signedIn`
 scope, and the list and the vocabulary resolvers pass no session at all.
+Their arguments, `Ingredient` and the four vocabulary types are DESIGN.md §7's
+sketch, and `src/graphql/schema.graphql` is the SDL as built; what the sketch
+leaves out is the list's connection:
 
 ```graphql
-type Query {
-  compendium(
-    query: String
-    categoryIds: [ID!]
-    form: String
-    first: Int
-    after: String
-  ): QueryCompendiumConnection!
-  ingredient(id: ID!, workspaceId: ID): Ingredient!
-  ingredientFormValues(first: Int, after: String): QueryIngredientFormValuesConnection!
-}
-
 type QueryCompendiumConnection {
   edges: [QueryCompendiumConnectionEdge!]!
   pageInfo: PageInfo!
@@ -268,59 +238,6 @@ type QueryCompendiumConnectionEdge {
   cursor: String!
   node: Ingredient!
   score: Float # the search's word similarity, 0 to 1; null without a search
-}
-
-type Ingredient {
-  id: ID!
-  name: String!
-  slug: String!
-  canonicalName: String # null exactly when nomenclature is none or unknown
-  nomenclature: Nomenclature!
-  form: String # free text over the curated vocabulary
-  description: String
-  element: IngredientElement
-  planet: String
-  zodiac: String
-  deities: [String!]
-  color: String
-  safetyNotes: String
-  substitutes: [String!]
-  isGlobal: Boolean! # the compendium tier
-  folkNames: [String!]! # the folkNamesByIngredient loader
-  categories: [Category!]! # the categoriesByIngredient loader
-  audit: AuditInfo!
-}
-
-type Category {
-  id: ID!
-  name: String!
-  slug: String!
-  description: String!
-  group: CategoryGroup! # the categoryGroupsById loader
-}
-
-type CategoryGroup {
-  id: ID!
-  name: String!
-  slug: String!
-  description: String!
-  colorDark: String! # the pair a chip wears (MB.36)
-  colorLight: String!
-}
-
-type IngredientFormValue {
-  id: ID!
-  name: String!
-  slug: String!
-  description: String!
-  group: IngredientFormGroup! # the ingredientFormGroupsById loader
-}
-
-type IngredientFormGroup {
-  id: ID!
-  name: String!
-  slug: String!
-  description: String!
 }
 ```
 
@@ -359,9 +276,10 @@ type IngredientFormGroup {
   id is a miss, not a driver error.
 - **`Ingredient` is declared over the row** (`typeof ingredients.$inferSelect`)
   and never exposes `canonicalKey` or `workspaceId`. `folkNames` and
-  `categories` go through the two ingredient loaders, keyed by the row itself;
-  `Category.group` and `IngredientFormValue.group` through the two id-keyed
-  group loaders (["Loaders"](loaders.md)).
+  `categories` go through the two ingredient loaders, `folkNamesByIngredient`
+  and `categoriesByIngredient`, keyed by the row itself; `Category.group` and
+  `IngredientFormValue.group` through the two id-keyed group loaders,
+  `categoryGroupsById` and `ingredientFormGroupsById` (["Loaders"](loaders.md)).
 - **`IngredientFormValue`, not `IngredientForm`**: one row is one permitted
   value of `ingredients.form`, and `IngredientForm` is the entry-form component
   (DESIGN.md §7). Only forms whose group is live are listed, as
@@ -380,15 +298,9 @@ type IngredientFormGroup {
 Stories 15, 25 and 34's writes (M8.8, the delete M5.3), registered by
 `ingredients` over the services in `services/workspace-ingredients.ts`
 ([`db/workspace-ingredients.md`](../db/workspace-ingredients.md), "Workspace
-ingredients"):
-
-```graphql
-type Mutation {
-  createWorkspaceIngredient(workspaceId: ID!, input: IngredientInput!): Ingredient!
-  updateIngredient(workspaceId: ID!, id: ID!, input: IngredientUpdateInput!): Ingredient!
-  deleteIngredient(workspaceId: ID!, id: ID!): ID!
-}
-```
+ingredients"): `createWorkspaceIngredient`, `updateIngredient` and
+`deleteIngredient`, each taking the coven as `workspaceId`, with the
+signatures DESIGN.md §7's sketch gives them.
 
 - **The coven is an argument, and neither input can name a tier or a
   stamp.** Neither input type declares `workspaceId` or an audit column, and

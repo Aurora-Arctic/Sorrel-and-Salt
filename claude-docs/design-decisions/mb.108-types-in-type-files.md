@@ -15,13 +15,13 @@ The owner's call: types cluttered the files whose job is behaviour. Before this,
 
 **A types file inherits the import reach of everything that imports it**, because the guards that walk imports follow `import type` too. Three placements follow from that:
 
-- **`src/lib/types.ts` imports nothing.** `client-safe-validation.test.ts` walks from `src/lib/validation.ts` through `errors.ts` into it, and fails on any package but zod. The session types read the `users` table and Better Auth, so they stay in `src/lib/session.ts`, as does Better Auth's hook context.
+- **`src/lib/types.ts` imports nothing.** `client-safe-validation.test.ts` walks from `src/lib/validation.ts` through `errors.ts` into it, and fails on any package but zod. That is what keeps the session types, which need `users` and Better Auth, in `src/lib/session.ts`, with Better Auth's hook context.
 - **A validation file's helper types go to `validation/types.ts`.** The module's own `types.ts` reaches its tables and so `drizzle-orm`.
-- **A module's `types.ts` sits at the module root**, not under `services/`, so it carries no `server-only`. It is internal like `services/`. The index names the public types in one `export type { … } from './types'` line, so the module's surface is exactly what it was, and a module-internal type stays off it. It is not made a fourth public surface beside the index, `schema/` and `validation/`: the index already offers every public type, and a fourth entry point would widen the boundary for nothing. The lint's deep-import group gains `@/modules/*/types`.
+- **A module's `types.ts` sits at the module root**, internal, with the index naming its public types (the summary has the shape), so the module's surface stayed exactly what it was. At the root rather than under `services/` it needs no `server-only`. It is not made a fourth public surface beside the index, `schema/` and `validation/`: the index already offers every public type, and a fourth entry point would widen the boundary for nothing. The lint's deep-import group gains `@/modules/*/types`.
 
-**The repository's `shapes.ts` split in two.** Its types, with the ones the finders and the writer declared, are `types.ts`. Its three predicates are `predicates.ts`. The index re-exports the writer's type, and the types a caller passes to a finder or gets back from one, from `types.ts` in one line. The table shapes and the rest of `selectFrom`'s options stay inside the folder, as before.
+**The repository's `shapes.ts` split in two.** Its types, with the ones the finders and the writer declared, are `types.ts`, and its three predicates `predicates.ts`; what the index re-exports is the summary's.
 
-**Scripts import `import type { … } from './types.ts'`.** Node's own type stripping runs them, which needs the extension, and it erases only an import marked `type`.
+**Scripts import their types with `import type` and the `.ts` extension**, both of which Node's own type stripping needs.
 
 ## What stays, and why
 
@@ -33,7 +33,7 @@ A type declared inside a function, a `describe` block or a `declare global` bloc
 
 ## The guard
 
-`tests/guards/types-in-type-files.test.ts` reads every column-0 `type` and `interface` in a file that is not type-only. It fails any that is not one of the three kinds. The first two are recognised from the declaration itself: a `typeof` naming a value the same file declares, or a key naming a `declare const …: unique symbol` in the same file. The third is a pinned list with a staleness check. A precondition asserts that the scan found and exempted both proofs and a Zod pair, so an empty scan cannot pass.
+What `tests/guards/types-in-type-files.test.ts` checks is the summary's. Two choices in it are this record's: the pinned list of the third kind carries a staleness check, and a precondition asserts that the scan found and exempted both proofs and a Zod pair, so an empty scan cannot pass.
 
 It reads text rather than a syntax tree. Prettier, which pre-commit and CI both run, puts every top-level statement at column 0 and indents everything nested. That makes column 0 a reliable statement boundary without a parser. A declaration's extent runs to its closing `;` or `}` by bracket depth, skipping strings and comments, which is what lets it see a brand key four lines below the head.
 

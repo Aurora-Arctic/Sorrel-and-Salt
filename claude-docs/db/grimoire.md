@@ -5,12 +5,10 @@ DESIGN.md §5's two grimoire tables; `0014_cooing_bug.sql` is the migration.
 What a workspace _makes_, as against what exists (the compendium) and what it
 holds (`inventory_items`).
 
-- **`spells`** — `id`, `workspaceId`, `title`, `intent`, `jarSize`,
-  `sealWaxColor`, `moonPhase`, `dayOfWeek`, `instructions`, `status`,
-  `visibility`, + the full six-column audit spread. Stories 47 and 50's table.
-- **`spell_ingredients`** — `id`, `spellId`, `ingredientId` (nullable),
-  `name`, `form`, `quantity`, `unit`, `layerOrder`, `note`, + the full
-  six-column audit spread: soft-deleted (MB.110), keyed on the surrogate `id`,
+- **`spells`** — §5's columns, with the full six-column audit spread. Stories
+  47 and 50's table.
+- **`spell_ingredients`** — §5's columns, `ingredientId` nullable, with the
+  full six-column audit spread: soft-deleted (MB.110), keyed on the surrogate `id`,
   with `(spell_id, layer_order)` unique among live rows. Stories 50 and 57's
   table: a layer is an ingredient the workspace knows or a custom name written
   for this one jar. M10.2 shipped it keyed on `(spell_id, ingredient_id)`;
@@ -75,8 +73,7 @@ within is written down before the reorder is.
 
 ### Custom ingredients (MB.40)
 
-Story 57: a spell may call for something the workspace will never stock. A row
-in `spell_ingredients` is either an ingredient the workspace knows
+For story 57, a row in `spell_ingredients` is either an ingredient the workspace knows
 (`ingredient_id`) or a name written for this one jar (`name`, with an optional
 free-text `form`) — exactly one of the two. The design argument is in DESIGN.md
 §5 and [`mb.40-custom-spell-ingredients.md`](../design-decisions/mb.40-custom-spell-ingredients.md);
@@ -103,19 +100,15 @@ this is what holds it in the database.
   jar, the shape of `ingredients_workspace_label_unique`. Both are partial on
   the discriminator, so each index covers exactly the rows that have the column
   it is unique on, and since MB.110 on rule 4's `deleted_at IS NULL` beside it.
-- **Name only, not name plus form, in the custom-name index.** A custom row is
-  never matched against anything, so there is no identity key for `form` to be
-  part of; a jar that wants valerian root and valerian leaf writes two names.
-  This is the one judgment call in the shape, and the decision record says so.
-- **Soft-deleted with the rest of the table** (MB.110). MB.40 kept the table
-  hard-deleted on MB.34's argument: the `deleted_at IS NULL` a service joining
-  _through_ it would have to remember by hand, which is how derived categories
-  (M10.7) reach `ingredient_categories`. M5.3 settled it the other way. A
-  spell is a record of a working, so a removed layer, custom or linked, is a
-  tombstone, and what joins through the table does so by `existsIn`, which ANDs
-  the layer's filter by construction.
+- **Name only, not name plus form, in the custom-name index**, since a custom
+  row is matched against nothing. It is the one judgment call in the shape,
+  and the decision record argues it.
+- **Soft-deleted with the rest of the table** (MB.110): a removed layer, custom
+  or linked, is a tombstone, and what joins through the table goes by
+  `existsIn` ([`hard-delete-join-tables.md`](hard-delete-join-tables.md), "Hard
+  delete on two join tables").
 - **`form` is text, not a foreign key**, for the reason `ingredients.form` is
-  not: a member must be able to write `rhizome` before anyone has curated it.
+  not (DESIGN.md §5).
 
 `spell-ingredients-schema.test.ts` proves every refusal by its
 `constraint_name` and pairs each with the insert that shows why it could have

@@ -16,7 +16,7 @@ Route on the `hotfix` label first, then on what the issue itself says:
 | No `hotfix` label, and nothing in the title or body marks it urgent                                         | `create-feature` (`feature/<slug>` off `staging`) |
 | Carries the `hotfix` label; or the title or body calls it a hotfix, or it fixes something already on `main` | `create-hotfix` (`hotfix/<slug>` off `main`)      |
 
-The id prefix does **not** decide this: `MB.*` covers ordinary bugfixes and hotfixes alike, and the `Bug` issue type holds both. The rest of the board's shape, and the status values step 3 reads, are in [`CLAUDE.md`](../../../CLAUDE.md)'s "GitHub task tracking" section.
+The id prefix does **not** decide this: an `MB.*` id, and the `Bug` issue type, hold ordinary bugfixes and hotfixes alike. The status values step 3 reads are in [`CLAUDE.md`](../../../CLAUDE.md)'s "GitHub task tracking" section, and the rest of the board's shape in [`claude-docs/task-tracking.md`](../../../claude-docs/task-tracking.md).
 
 ## Steps
 
@@ -24,7 +24,7 @@ The id prefix does **not** decide this: `MB.*` covers ordinary bugfixes and hotf
    - Send a `PushNotification` (status `proactive`) saying input is needed, then ask in plain chat for the task's `Task ID` — the `M0.1`-style identifier. Free-text, no multiple-choice options. Wait for the reply.
 
 2. **Find the task.**
-   - `node scripts/task-board.mjs find <ID>` — prints one JSON object (`number`, `title`, `state`, `stateReason`, `url`, `milestone`, `labels`, `status`) on exactly one match and exits non-zero otherwise. It matches the title on `<ID> — ` exactly, because thirty of the board's ids are a strict prefix of another (`M2.1` and `M2.10`, `M4.1` and `M4.1a`) and GitHub's search tokenises on punctuation, so a search query cannot tell them apart.
+   - `node scripts/task-board.mjs find <ID>` — prints one JSON object (`number`, `title`, `state`, `stateReason`, `url`, `milestone`, `labels`, `status`) on exactly one match and exits non-zero otherwise. It matches the title on `<ID> — ` exactly, so `M2.1` never finds `M2.10`; look a task up through it and nothing else ([`claude-docs/task-tracking.md`](../../../claude-docs/task-tracking.md), "The title rule", says why).
    - Zero matches, or more than one: stop, tell the user what you found, and don't guess.
 
 3. **Check the task isn't already underway.**
@@ -42,7 +42,7 @@ The id prefix does **not** decide this: `MB.*` covers ordinary bugfixes and hotf
 6. **Start the work.**
    - The branch exists and the task is `In Progress`. Pull the full issue — `gh issue view <number> --json body,title,milestone,labels` for the complete body (user story, description, acceptance criteria) — and read the `DESIGN.md` §section it references, the task's entry — from its `**<ID> — ` heading to the next — in `claude-docs/tasks/<milestone>.md` (`m0` … `m11`, `m7a`, `mb` or `mw`), and its wave's `claude-docs/waves/wave-<NN>.md`, plus any `claude-docs/design-decisions/` record for a prior task it builds on. Never the whole milestone file: `mb.md` alone is 400 KB.
    - Implement it following [`CLAUDE.md`](../../../CLAUDE.md): TDD (write the failing test first, watch it fail, then the minimum), **one task per PR** — do only this task, not adjacent ones — and document as you go in `claude-docs/`.
-   - Comment progress as work proceeds: `node scripts/task-board.mjs comment <ID> "<text>"`. **Names, never values** — a comment may name an env var, a file or a provider, and never carries a value, a token, a connection string, an address or a dashboard URL, because the repo is public and a comment is indexed before anyone reads it. Do **not** move the status past `In Progress`: `/create-pr` sets `In Review`, and `Done` is the merge's.
+   - Comment progress as work proceeds: `node scripts/task-board.mjs comment <ID> "<text>"`. **Names, never values**, as [`CLAUDE.md`](../../../CLAUDE.md) spells out: a comment may name an env var, a file or a provider, never what it holds. Do **not** move the status past `In Progress`: `/create-pr` sets `In Review`, and `Done` is the merge's.
    - Stop when every acceptance criterion is demonstrably met and the checks named in [`CLAUDE.md`](../../../CLAUDE.md) for what you touched pass. Tell the user it's ready; opening the PR is a separate, explicit `/create-pr`.
 
 ## Notes
@@ -50,4 +50,4 @@ The id prefix does **not** decide this: `MB.*` covers ordinary bugfixes and hotf
 - Branch creation and git are entirely the delegated branch skill's job (steps 1–5). If it stops early (dirty tree, branch-name collision, `fetch` failure), this skill stops with it and step 6 never starts.
 - Step 6 is the one place this skill edits the repo. It still never commits or opens the PR — that stays an explicit `/create-pr`.
 - The routing table is the only project-specific knowledge here. If the board's layout changes, update the table above and step 4.
-- The lookup, the status values and the comment rule are mirrored from [`CLAUDE.md`](../../../CLAUDE.md)'s "GitHub task tracking" section — that section is the source of truth if they ever drift.
+- The lookup, the status values and the comment rule are mirrored from [`CLAUDE.md`](../../../CLAUDE.md)'s "GitHub task tracking" section and its long form, [`.claude/rules/task-tracking.md`](../../rules/task-tracking.md) — those are the source of truth if they ever drift.

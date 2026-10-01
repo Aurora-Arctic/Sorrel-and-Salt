@@ -284,7 +284,9 @@ page to do that from. The row expires if it is never verified, and a sweep
 clears it.
 
 **A squatted address resolves by expiry.** The owner blocked inside the
-window is told an unverified account holds the address and when it lapses.
+window waits for the row to lapse, shown the generic `account_not_linked`
+sentence rather than the reason, since naming the squat would confirm the
+address is taken (MB.71, "Provisional accounts and the sweep" below).
 
 **Delivery is Resend in production, the Mailtrap Sandbox in previews, Mailpit
 locally, all over HTTP,** chosen by `MAIL_TRANSPORT` and guarded so that a
@@ -463,12 +465,10 @@ records, and a Mailtrap account with one sandbox. Both go into `secrets.md`'s
 
 **Corrected by MB.54's build** ([`mb.54-plan.md`](mb.54-plan.md)): a change
 never writes `users.email` and never unverifies a row, because an established
-account marked unverified would be older than the cap below and swept. The
-new address is mailed Better Auth's own change link (`updateTo`), and
-`/verify-email` swaps the address and verifies it in one write from a session
-holding the row, gated by a `hooks.before` since that branch skips
-`beforeEmailVerification`. The shape is [`auth.md`](../auth.md), "The email
-page"; the rest of this section stands.
+account marked unverified would be older than the cap below and swept; the
+new address is mailed Better Auth's own change link instead. The shape is
+[`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The email page
+(MB.54)"; the rest of this section stands.
 
 `/account/email`, protected, shows the current address and whether it is
 verified. Changing it is a `setEmail` mutation to a service, refused when a
@@ -503,19 +503,15 @@ mutations M7.5 and M7.6 always needed and the sketch never named.
 
 ## The admin invitation (story 62)
 
-M2.9's option B, now buildable. `admin_invitations` (MB.69) carries `email`,
-`tokenHash`, `expiresAt` defaulting to seven days, `acceptedAt`,
-`acceptedBy`, `revokedAt`, a `note`, and the six audit columns, indexed on the
-hash. `createAdminInvitation(email)` (MB.70) is admin-only, generates the
-token with `crypto.randomBytes`, stores only the hash, mails the link and
-returns no URL; it is refused for a non-primary admin while changes are
-paused. `/admin-invite/[token]` is public, prompts sign-in, and accepts only a
-signed-in account whose verified email matches the invitation's. Accepting is
-a grant through MB.59's `setUserRole`, so it writes the ledger row naming the
-invitation, sets `canCreateWorkspace`, and is refused while paused. Expired,
-revoked and already-accepted tokens are rejected with distinct messages, as
-M7.7 does for workspace invitations, and pending invitations are listed and
-revocable on `/admin/users`.
+M2.9's option B, now buildable, as a table task and a behaviour task.
+`admin_invitations` (MB.69) is shaped like `workspace_invitations`: only the
+token's hash is stored, and it expires in seven days. `createAdminInvitation`
+(MB.70) mails the link and returns no URL, and `/admin-invite/[token]` accepts
+only a signed-in account whose verified email matches the invitation's.
+Accepting is a grant through MB.59's `setUserRole`, so it writes the ledger
+row and is refused while changes are paused. The two entries in
+[`tasks/mb.md`](../tasks/mb.md) hold the columns, the rejections and the
+admin list's controls.
 
 ## Which of MB.60's restrictions each follow-up lifts
 
@@ -575,9 +571,8 @@ M7.3, M7.4 and M7.5 rewritten in place; MB.54 re-scoped; story 62 added to
   send with; verification before the sweep, since the sweep keys on the
   column and the resend clock; promotion last, since it is one hook on top.
   MB.54 follows them because its page is built on the session and the resend
-  they provide. It then moved to the end of Wave 7, after MB.43: its
-  `setEmail` mutation needs M3.1's `/api/graphql` and M3.10's `User` type,
-  and rule 1 allows it no other transport.
+  they provide. It later moved to the end of Wave 7, after MB.43, for the
+  reason its entry gives.
 - **MB.69 and MB.70** follow MB.63 in Wave 8: the admin invitation is a grant
   through MB.59's service under MB.63's pause, and its table lands alone
   first. Two tasks because CLAUDE.md puts a table and the service that

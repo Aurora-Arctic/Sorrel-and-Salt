@@ -51,10 +51,25 @@
   promotion: a Microsoft-only owner is promoted by following the link from
   their own session and by nothing else; the refusals from another browser
   and from none leave the role alone and the owner's session then promotes,
-  so it was the session binding that refused; and a change-email link minted
-  by hand verifies with no session and promotes nobody, a case that fails
-  with the acting-user check removed. `tests/modules/identity/services/admin-role.test.ts`
+  so it was the session binding that refused; and a change link to the
+  bootstrap address, minted by hand, is sent to sign-in from no session with
+  the row unchanged, then swaps the address and promotes from the row's own
+  session. `tests/modules/identity/services/admin-role.test.ts`
   covers `promotePrimaryAdminAtVerification`'s outcomes directly.
+- **The email page (MB.54, MB.111, MB.113)** —
+  `tests/modules/identity/services/email.test.ts` (the service, with a fake
+  sender), `tests/modules/identity/graphql/set-email.test.ts` (the
+  mutation's `next` reaching the sender), `tests/db/email-change.test.ts`
+  (the whole round trip through Better Auth's endpoints, including that an
+  aged verified account survives the sweep before and after a change, and
+  the change and resend links' landings), `tests/db/email-verification.test.ts`
+  (the sign-up link's landing and its refusals), `tests/lib/account-email.test.ts`
+  (`verifiedLanding` and `returnPathOf`), `tests/lib/auth.test.ts` (the
+  placeholder mapping), `tests/app/account/email/page.test.tsx` (where
+  Continue goes, by `next` or by role), `tests/db/sign-in-landing.test.ts`
+  (the callback's landing, the email page's and the sign-up link's, by role
+  and by return path), and `tests/acceptance/08-email-and-admin.test.ts`
+  (stories 58 and 59).
 - **`tests/db/account-linking.test.ts` (MB.71)**: `/link-social` and
   `/unlink-account` through `auth.handler`, on `tests/support/oauth.ts`'s
   `link` helper. A Microsoft profile reporting `email_verified: false` links

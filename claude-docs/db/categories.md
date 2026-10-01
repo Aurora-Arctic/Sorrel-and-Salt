@@ -4,79 +4,54 @@ DESIGN.md §5 specifies four tables here, and all four are now written: M4.2
 added `category_groups` and `categories` in migration
 `0007_even_wild_pack.sql`, and M4.2a added `ingredient_form_groups` and
 `ingredient_forms` in `0008_unknown_lyja.sql`. MB.35
-recorded the model first, as MB.28 did for ingredients — and for a sharper
-reason: M4.2 had already been built and verified as a `category_group`
-pgEnum before the question "can an admin add a ninth group?" was asked. The
-enum was a faithful transcription of §6's closed eight and had to be thrown
-away.
+recorded the model first, after M4.2 had been built as a `category_group`
+pgEnum that could not take a ninth group.
 
-- **`categories`** — `id`, `name`, `slug`, `description`, `groupId` (FK to
-  `category_groups`), + audit. Global, admin-curated, no workspace scoping.
-  §6 seeds 52. **No colour of its own** — see below.
-- **`category_groups`** — `id`, `name`, `slug`, `colorDark`, `colorLight`,
-  `description`, + audit. Global, admin-curated. §6 seeds eight; an admin
-  may add more. Listed alphabetically by `name`.
+- **`categories`** — `groupId` an FK to `category_groups`; §6 seeds 52.
+  **No colour of its own** — see below.
+- **`category_groups`** — `colorDark` and `colorLight`; §6 seeds eight, and
+  an admin may add more.
 - **`ingredient_forms`** — as in the [identity section](identity-model.md), with `groupId`
   (FK to `ingredient_form_groups`) in place of the earlier `group` text.
-- **`ingredient_form_groups`** — `id`, `name`, `slug`, `description`, +
-  audit. Seeds §5's six groups. No colour: form
-  groups section an autofill dropdown, not chips. Also alphabetical.
+- **`ingredient_form_groups`** — seeds §5's six; no colour (§5).
+
+Each is global and admin-curated, carries the columns §5 lists, and lists
+alphabetically by `name`.
 
 A category reaches an ingredient through
 [`ingredient_categories`](ingredient-categories.md) (M4.4) and a spell through
 [`spell_categories`](spell-categories.md) (M10.4), both join tables and so both
 hard-deleted — each has its own section.
 
-**Groups are rows, not enums, because an admin mutation cannot run DDL.**
-`ALTER TYPE … ADD VALUE` is a migration, migrations here are forward-only and
-CI-gated, and the whole point of the change is that adding a group needs no
-deploy. As a table the group also gets what an open set needs and a closed
-one could imply: a colour per row, below. It does _not_ get an order column
-— groups list alphabetically by `name`, which needs nothing stored and puts
-an admin-added group where a reader would look for it.
+**Groups are rows, not enums, because an admin mutation cannot run DDL** —
+the argument, and why there is no order column, is §14's.
 
-**Two group tables, not one with a `kind` column.** A shared table with a
-discriminator would let `categories.groupId` point at a form group, and the
-mistake would surface only when a chip section rendered empty. Two tables
-make it a foreign-key violation — impossible rather than merely absent, for
-the price of one more `CREATE TABLE`.
+**Two group tables, not one with a `kind` column**, so a category pointing at
+a form group is a foreign-key violation rather than an empty chip section
+(§5, §14).
 
 **Both `groupId`s are foreign keys, and `ingredients.form` is not — that is
-a rule, not an inconsistency.** `ingredients.form` is written by a _member_,
-who must be able to write `rhizome` before an admin has curated it, so it is
-text over a vocabulary. A category, a form, and the groups they point at are
-written only by admins, on both sides, so an FK blocks nobody — and a
-typo'd group would otherwise silently empty a section. Generalised: a
-vocabulary a member writes is text; a vocabulary only an admin writes is a
-foreign key.
+a rule, not an inconsistency**: a member writes `form`, and only admins write
+either side of a group link (§5, §14).
 
-**A group's colour is two hexes on the row, one per theme, each validated on
-write — not a build-time token.** M0.7 emits one `--group-<slug>` custom
+**A group's colour is §5's pair of hexes on the row, not a build-time
+token**, and §14 says why one per theme. M0.7 emits one `--group-<slug>` custom
 property per key of `$category-groups` at Sass compile time, which is
 exactly what a group created at runtime cannot have. So the map becomes the
-**seed source**: it already carries a `dark` and a `light` value per group,
-and M4.3 resolves each to a hex once and writes both onto the row, carrying
+**seed source**: M4.3 resolves each group's `dark` and `light` value to a hex
+once and writes both onto the row, carrying
 M0.7's hue rotation and per-theme contrast tuning across into data. From
 then on the chip reads the row (MB.36 changes the mixin to take the pair).
-Two columns rather than one because the grounds differ — M0.7 lifts a
-dark-theme colour and darkens a light-theme one, and no single hex clears
-4.5:1 on both soot and parchment without being mud on at least one. The
-validation is M5.6b's, in the service and not a CHECK constraint, because
+The validation is M5.6b's, in the service and not a CHECK constraint, because
 the failure needs a readable message and the ground to compare against:
 `colorDark` is checked against the dark ground only, `colorLight` against
 the light, so each floor is exact. What an admin adds is legible in both
 themes but does not join the rotation — the accepted cost of an open set,
 stated in §6 rather than glossed.
 
-**The colour lives on the group only, and a category has none (M4.2).** §5,
-§6 and this file all listed a `color` on `categories` until the table was
-written, carried over from before MB.35 made a group's colour a _pair_ of
-hexes — which a single category column cannot hold either half of, and which
-M4.3 has nothing to seed a per-category counterpart from, since the
-resolution it describes writes onto the group row. One source for a chip's
-colour, rather than a per-category override shadowing a per-group value; §6's
-grouping exists so 52 chips read as eight families in the first place. If a
-per-category override is ever wanted it is addable as a widening.
+**The colour lives on the group only, and a category has none (M4.2)** — a
+single category column could hold neither half of the pair; §14 has the rest
+of the argument.
 
 **Uniqueness is on `slug`, partial on `deleted_at IS NULL`, on all four
 tables** — `category_groups_slug_unique`, `categories_slug_unique`,
@@ -101,9 +76,8 @@ is case-sensitive, so it would still admit "Root" beside "root" — two
 identical strings once `canonicalKey` lowercases `form` — and _wax_ is
 legitimately both a part of the bee and a preparation of it, which the index
 would force an admin to rename their way out of. **The disambiguation moved to
-the autofill instead**: M4.7a returns each curated suggestion's group and
-M5.10a renders it, so the dropdown offers "Wax (animal)" beside "Wax
-(substance)". The schema test asserts the same-named pair is _accepted_, so
+the autofill instead**, as §5 specifies: M4.7a returns each curated
+suggestion's group and M5.10a renders it. The schema test asserts the same-named pair is _accepted_, so
 the gap stays a recorded decision. Adding the index later is the reversible
 direction — `CREATE UNIQUE INDEX` is expand-direction DDL that only fails if
 duplicates already exist, where dropping one is a `DROP` needing a PR
@@ -122,8 +96,8 @@ adding one is destructive DDL needing a PR acknowledgement (rule 10, and the
 `ingredient_form_groups_description_not_blank` and
 `ingredient_forms_description_not_blank`: §5 asks for a description that is
 required _and non-empty_, and `NOT NULL` alone accepts `''` and `'   '` — a
-curated value that curates nothing, when the whole point of the column is that
-`rootBark` can say "the bark of the root, not the stem". It is a CHECK rather
+curated value that curates nothing, when the column exists so that a curated
+value explains itself (§5). It is a CHECK rather
 than service-side validation, unlike M5.6b's contrast floor, because "say
 something" needs no ratio in its error message. The two category tables carry
 no counterpart: §5 asks for non-empty only on the form vocabulary, so M4.2

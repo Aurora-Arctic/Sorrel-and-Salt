@@ -9,26 +9,18 @@ and starts its own servers rather than attaching to ones left over on the
 ports.
 
 **Each worker slot has a server and a database of its own** (MB.112), as each
-Vitest pool slot has a database. A database each, because a spec file's
-reseed drops its database `WITH (FORCE)`: shared between workers, one file's
-reseed would cut another worker's connections mid-test, and two files
-starting together would race the same `CREATE DATABASE` — M5.4 held the suite
-to one worker for that until MB.112. A server each, because in Playwright the
-code under test does not run in the worker. Vitest's
-`tests/support/db-setup.ts` sets `DATABASE_URL` before anything imports
-`src/db/connection.ts`, which builds its client at import, so a Vitest
-worker's own process reads the worker's own database. A Playwright worker
-runs only the spec and drives the browser; the app runs in a `next start`
-that built its client from `DATABASE_URL` once at boot. Swapping the variable
-in the worker would move only what runs there — `recreateE2eDatabase()` and
-`signInAs()` — so the worker would seed and sign in to its own database while
-the page it opened read the server's.
+Vitest pool slot has a database. A database each, because each spec file
+reseeds by dropping its database `WITH (FORCE)`, which would cut a sharing
+worker's connections mid-test. A server each, because the code under test
+runs in `next start`, which built its client at boot, not in the Playwright
+worker, so a database swapped in the worker would never reach the page.
 [`design-decisions/mb.112-server-per-worker.md`](../design-decisions/mb.112-server-per-worker.md)
-records the two alternatives turned down: a server each worker starts for
-itself, and one server choosing its database per request.
+holds the argument, and the two alternatives turned down: a server each
+worker starts for itself, and one server picking a database per request.
 
 - **The slot is Playwright's `parallelIndex`** — `TEST_PARALLEL_INDEX` inside
-  the worker, which `tests/e2e/slots.ts`'s `currentSlot()` reads. It is unique
+  the worker, which `tests/e2e/slots.ts`'s `currentSlot()` reads, throwing
+  outside a Playwright worker. It is unique
   among running workers, and the worker Playwright starts to replace one
   after a failed test keeps it. The reseed, `signInAs()` and `baseURL` each
   read it, so a retried test's database, session and pages always agree on
@@ -50,10 +42,9 @@ itself, and one server choosing its database per request.
   `baseURL` with the slot's server for any project that sets none, so the
   default `chromium` project reaches its own slot's; there is no top-level
   `use.baseURL`.
-- **A further slot costs about half a second and 180 MB.** One more
-  `next start` over the built `.next-e2e` answers in about 0.5 s and holds
-  about 180 MB resident, and the servers start one after another, so each
-  slot adds its half second to startup.
+- **A further slot costs about half a second and 180 MB**, MB.112's
+  measurement of one more `next start` over the built `.next-e2e`; the
+  servers start in turn, so the half seconds add to startup.
 
 **The configured-providers server is one more**, because the sign-in page
 reads OAuth credentials per request and its two provider states cannot share
@@ -87,12 +78,12 @@ on any request to `/api/auth/sign-in/`.
   and `dropE2eTemplate()` removes the template again.
 - **`globalSetup: './tests/e2e/global-setup.ts'`** calls `seedE2eTemplate()`
   and then `cloneE2eDatabases()`, once per run. It runs _after_ the servers
-  have started, not before, as this section once said: Playwright's runner
-  orders plugin setup — the `webServer` entries — ahead of the global setups,
-  and a throwaway config logged its server about 100 ms before its
-  `globalSetup` ran. Setup still finishes before any test, and that is enough
-  only because postgres.js connects on its first query, and the readiness
-  poll's `GET /`, carrying no session cookie, reads no database.
+  have started, since Playwright sets up the `webServer` entries first, and
+  still finishes before any test. So nothing may query a database at server
+  boot or on the readiness poll's `GET /`, which on a first run would find
+  none
+  ([`design-decisions/mb.112-server-per-worker.md`](../design-decisions/mb.112-server-per-worker.md),
+  "Setup runs after the servers").
   `global-teardown.ts` drops the template after the last spec; the slot and
   providers databases are left for inspection.
 - **Reseeding between spec files** is each spec file's own `test.beforeAll`,
@@ -148,17 +139,14 @@ providers, role)` writes what a Discord sign-in would leave into the calling
   on 8000 (CLAUDE.md's Commands table promises both can run at once) never
   shares — and can't corrupt — the production build e2e is serving from.
 - **`next.config.ts`'s `experimental.isrFlushToDisk`** is off when
-  `NEXT_ISR_FLUSH_TO_DISK` is `'false'`, which every e2e server sets. They
-  all serve the one `.next-e2e` build, and Next flushes its data cache —
-  `unstable_cache`, which the compendium read sits under (CLAUDE.md rule 6) —
-  to `.next-e2e/cache/fetch-cache` and reads it back on a memory miss, while
-  `revalidateTag` reaches only its own process: shared on disk, one slot's
-  server would serve another slot's cached compendium. Off, each server
-  keeps its data cache in its own memory. The flag also gates runtime ISR
-  writes and the image optimiser's disk cache; pages prerendered at build
-  are still read from disk. On Vercel it is off regardless — Next's build
-  passes `false` under `hasNextSupport`, and a server in minimal mode never
-  flushes — so this moves e2e towards production, not away from it.
+  `NEXT_ISR_FLUSH_TO_DISK` is `'false'`, which every e2e server sets, so each
+  server keeps its data cache — the compendium read's `unstable_cache`
+  (CLAUDE.md rule 6) — in its own memory. The servers share one `.next-e2e`
+  build, and a cache flushed to disk there would hand one slot's compendium
+  to another. It also stops runtime ISR writes and the image optimiser's disk
+  cache, and it is off on Vercel anyway
+  ([`design-decisions/mb.112-server-per-worker.md`](../design-decisions/mb.112-server-per-worker.md),
+  "The data cache is per server too").
 - **No Neon connection anywhere** — `e2eDatabaseUrl()`/`adminUrl()` only ever
   rewrite the pathname of the ambient `DATABASE_URL`, which points at the
   local `postgres` Docker service exactly as Vitest's does.

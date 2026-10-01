@@ -5,9 +5,8 @@ table; `0013_illegal_red_hulk.sql` is the migration. The unit vocabulary it is
 built from sits beside it, in `src/modules/ingredients/schema/units.ts`, and
 imports nothing.
 
-- **`inventory_items`** — `id`, `workspaceId`, `ingredientId`,
-  `quantityOnHand`, `unit`, `unitDimension`, `lowStockThreshold`, `source`,
-  `acquiredDate`, + the full six-column audit spread. Story 20's table: what a
+- **`inventory_items`** — §5's columns, with the full six-column audit
+  spread. Story 20's table: what a
   workspace _holds_, as against what exists (the compendium) and what it makes
   (the grimoire).
 - **Stock hangs off the ingredient, never the other way round.** A compendium
@@ -16,8 +15,7 @@ imports nothing.
   `ingredients` rather than this table — a saved spell survives running out of
   something, and M10.21 tests exactly that.
 - **`inventory_items_workspace_id_ingredient_id_unique`** is §5's partial
-  unique index on `(workspace_id, ingredient_id) WHERE deleted_at IS NULL`. It
-  is what "already added" _means_: M9.4's `addIngredientToWorkspace` is
+  unique index on the pair. It is what "already added" _means_: M9.4's `addIngredientToWorkspace` is
   idempotent against it rather than defining the notion again. The predicate is
   load-bearing rather than ceremonial here — story 25 soft-deletes a row and
   calls it recoverable, so without it, throwing a jar out would reserve that
@@ -27,9 +25,8 @@ imports nothing.
 
 ### One module owns the units
 
-`src/modules/ingredients/schema/units.ts` is the single source of the vocabulary — three dimensions,
-metric and imperial in each: weight (mg, g, kg, oz, lb), volume (ml, l, tsp,
-tbsp, fl_oz, cup), count (piece, drop, pinch). Both pgEnums (`inventory_unit`,
+`src/modules/ingredients/schema/units.ts` is the single source of §5's
+vocabulary, its three dimensions and their units. Both pgEnums (`inventory_unit`,
 `unit_dimension`), the CHECK constraint below, M9.5's `unitConvert()`, M9.8's
 badges and every later Zod enum are built from it. **Adding a unit is one
 edit** — that map, plus a regenerated migration.
@@ -58,10 +55,10 @@ module because nothing reads it.
 
 ### The dimension stored beside the unit
 
-`unitDimension` is stored rather than derived at each call site, so a query can
-filter or group by it and M9.5 has something to check against. The redundancy
-is deliberate, and `inventory_items_unit_matches_dimension` is what pays for
-it: a row whose dimension contradicts its unit cannot be written. The
+`unitDimension` is stored for §5's reason, and so M9.5 has something to check
+against. The redundancy is deliberate, and
+`inventory_items_unit_matches_dimension` is what pays for it, refusing the
+contradiction §5 rules out. The
 expression is generated from the same map the enums are, so the constraint
 cannot fall behind the vocabulary it constrains.
 
@@ -103,9 +100,8 @@ test: `0.000` and `NULL` are asserted to be distinguishable on the row.
   also gives `StockInput` its ceiling of 999,999,999.999, so an amount the
   column cannot hold is a field error rather than a raw overflow
   ([`validation.md`](../validation.md)).
-- `lowStockThreshold` carries **no database default**. M9.8 writes a
-  dimension-appropriate value onto the row at creation (3 for count, 10 g for
-  weight, 15 ml for volume, converted into the row's unit) rather than applying
+- `lowStockThreshold` carries **no database default**. M9.8 writes §5's
+  dimension-appropriate value onto the row at creation rather than applying
   a constant at read time, so it stays visible and editable and changing the
   constant later does not silently reinterpret every existing row. A column
   default could not do it anyway: the value depends on the row's own unit,

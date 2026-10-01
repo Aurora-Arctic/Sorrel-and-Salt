@@ -1,12 +1,12 @@
 ## Reusable checks (`workflow_call`, never triggered directly)
 
 - **`checks.yml`** (MB.32) — one matrix job running `lint`, `format`,
-  `typecheck`, `build` and `audit`, each reporting as `checks / <name>`. These
-  were five near-identical workflows until MB.32: the same
-  `image`/`pr-number`/`merge-queue`/`should-run` inputs, the same
-  `container: image: ${{ inputs.image }}` job (`options: --user root`), the
-  same checkout, `job-summary` and `pr-comment` scaffolding, differing in one
-  npm script and one summarising step.
+  `typecheck`, `build` and `audit`, each reporting as `checks / <name>`. One
+  workflow, because the legs share their inputs, their
+  `container: image: ${{ inputs.image }}` job (`options: --user root`) and
+  their checkout, `job-summary` and `pr-comment` scaffolding, and differ in
+  one npm script and one summarising step (MB.32 collapsed the five
+  workflows they were).
   - Every leg runs its command under `set -o pipefail` inside a brace group,
     teeing the output to `/app/output.log`, then turns that log into a
     one-line stat and a capped collapsible breakdown through its own script in
@@ -20,30 +20,26 @@
     unsatisfied — so one failing leg would otherwise block the PR on four
     checks that never got to run.
   - **`run-lint` / `run-typecheck` / `run-build` / `run-destructive-ddl` are
-    the path-filter inputs**, one per filtered leg, in place of the single
-    `should-run` each workflow used to take. `format` has none and always runs,
+    the path-filter inputs**, one per filtered leg. `format` has none and always runs,
     since Prettier covers non-code files; `audit` has none because it is
     non-blocking and PR-only. The first step resolves the four down to one flag
     for the leg it is running, and treats an empty flag as true — so `act`,
     which applies no `workflow_call` input defaults, cannot report a check it
     never ran.
-  - **`build`'s extras all survive the collapse**: the `/app/.next/cache`
-    restore through `actions/cache`, `DATABASE_URL`/`BETTER_AUTH_SECRET`, and
+  - **`build`'s extras**: the `/app/.next/cache` restore through
+    `actions/cache`, `DATABASE_URL`/`BETTER_AUTH_SECRET`, and
     `npm run workshop:build` chained onto `npm run build` with `&&`, which
-    short-circuits the same way separate steps did. The story gate rode here
-    too until MB.38 moved it — and the theme-default guard, which had only
-    ever run in pre-commit — into `workshop-guards.test.ts` on the `vitest`
-    job (`src/test/` then; `tests/guards/` since MB.41). It posts no PR
-    comment, as `build.yml` didn't.
+    short-circuits the same way separate steps would. The story gate and the
+    theme-default guard are not here: they run in
+    `tests/guards/workshop-guards.test.ts` on the `vitest` job (MB.38). It
+    posts no PR comment.
     - **The cache `path` is the absolute `/app/.next/cache`**, not a
       workspace-relative path: `hashFiles()` reads `$GITHUB_WORKSPACE`, but
       the job's working directory is `/app`.
-    - **The cache never hit before MB.37.** `actions/cache` runs inside the
-      `testing` container, and the Alpine image's busybox `tar` rejects
-      `--posix`, so every save failed with a warning and every restore missed
-      — from the step's first commit (`3d9735e`) until MB.37 added GNU `tar`
-      and `zstd` to the image's `testing` stage. The `testing` image hash
-      moved with that Dockerfile change, as it does for any.
+    - **The `testing` stage carries GNU `tar` and `zstd` for this cache**
+      (MB.37). `actions/cache` runs inside the container, and the Alpine
+      image's busybox `tar` rejects `--posix`, so without them every save
+      fails with a warning and every restore misses.
     - **`package.json`'s `build` script forces `NODE_ENV=production`.** The
       `testing` image bakes in `NODE_ENV=test`, and Turbopack crashes
       prerendering `/_global-error` under anything but `production`/unset —
@@ -95,37 +91,27 @@
     wider filter's list would hand a changed `pr-gate.yml` or `checks.yml` to
     the script as if it were SQL, and `*.sql` keeps Drizzle's `meta/*.json`
     out as well.
-  - **It took the PR body as a second input until MB.48**, as `pr-body` →
-    `DESTRUCTIVE_DDL_PR_BODY`. Both are gone. A PR body is visible from one
-    branch base and gone on merge, so a release PR — which the script sends at
-    `origin/main`, rescanning every migration since the last release — saw none
-    of the acknowledgements that let those migrations land; release 0.2.0's PR
-    failed this leg for exactly that reason and was merged past it. And one
-    line in a body blessed every finding in the diff whatever file it was in.
-    The PR-body path is retired rather than OR-ed with the sidecar, since an
-    `OR` would keep the uncorrelated hole open. **The leg now reads nothing
-    from GitHub but the file list**, so `make act-check CHECK=destructive-ddl`
-    proves the scan rather than the wiring, and
-    `npm run check:destructive-ddl -- --all` is a usable audit instead of
-    permanently red.
+  - **The leg reads nothing from GitHub but the file list.** The
+    acknowledgement is the sidecar, never a PR-body line — why, and the
+    `pr-body` input MB.48 retired, are `claude-docs/db/expand-contract.md`'s —
+    so `make act-check CHECK=destructive-ddl` proves the scan rather than the
+    wiring, and `npm run check:destructive-ddl -- --all` is a usable audit
+    instead of permanently red.
   - **`DESTRUCTIVE_DDL_FILES` is always set, even to an empty string.** The
     script reads set-but-empty as "no migrations changed, scan nothing" and
     _unset_ as "work out what this branch changed from git" — the second is a
     local convenience and must never be what CI does.
-  - ⚠️ **MB.32 deleted its calling job and did not replace it.** The check ran
-    on nothing from 2026-09-17 until MB.37 folded it in as a leg; PRs #104–#107
-    were never gated by it, and two migrations (`0005`, `0006`) landed
-    unscanned. The `changes` job kept computing its filters the whole time,
-    which is why nothing looked wrong. MB.37 also widened `DROP` past
-    `COLUMN`/`TABLE` — `0002`'s `DROP CONSTRAINT users_email_unique` had passed
-    — and stopped `migrations/meta/*.json` being handed to the script as SQL.
-    That same window is why `0002` has no acknowledgement in its own PR (#73)
-    and its sidecar had to be written retroactively.
+  - ⚠️ **It is a leg, not a job of its own, so it cannot be dropped without
+    the matrix noticing.** As a separate job it was deleted by MB.32 and ran on
+    nothing from 2026-09-17 until MB.37, PRs #104–#107 and migrations `0005`
+    and `0006` included, while the `changes` job kept computing its filters and
+    nothing looked wrong. MB.37 has that window and what it fixed besides; it is also
+    why `0002`'s sidecar was written retroactively
+    (`claude-docs/db/expand-contract.md`).
   - Its `run-destructive-ddl: false` path exists for a merge-queue caller (same
     reason as `gitflow`'s `should-run` — `merge_group` has no diffable source
     ref, so it can only trust that `pr-gate.yml` already gated the PR before it
-    reached the queue). `merge-queue.yml` was that caller until MB.32 deleted
-    it.
+    reached the queue). None exists until M7.A.1 restores `merge-queue.yml`.
 
 - **`build-image.yml`** — builds the shared `testing` image once and exposes its
   ref as an `image` output. A checkout, then the `build-image` action with
@@ -144,8 +130,8 @@
   from the caller (`pr-gate.yml`'s own top-level
   `build-db-image` job, `uses: ./.github/workflows/build-db-image.yml`,
   same shape as `build-image`); `vitest.yml` doesn't call `build-db-image.yml`
-  itself — it used to, and so did `playwright.yml` separately, which meant
-  building the same content-addressed image twice per run for no reason.
+  itself, and neither does `playwright.yml`, so the image is built once per
+  run for both.
   `DATABASE_URL` is `postgres://sorrel:sorrel@postgres:5432/sorrel`, the same
   credentials `Docker/docker-compose.yaml`'s `app` service uses locally;
   `tests/support/db-global-setup.ts`/`db-setup.ts` rewrite the database name per

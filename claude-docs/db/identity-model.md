@@ -57,22 +57,18 @@ It names _which naming system_ a formal name belongs to, not which rank
 within that system — `Quartz var. amethyst` and `Lapis lazuli` are both
 `mineral` even though one is an IMA variety and the other a rock. `unknown`
 and `none` are both answers, not the absence of one: `unknown` means a formal
-name exists in some system but nobody has looked it up yet (`WHERE
-nomenclature = 'unknown'` is a findable curation to-do list); `none` is the
+name exists in some system but nobody has looked it up yet (§5 says why that
+earns a value of its own); `none` is the
 positive claim that no naming system names this thing at all (graveyard
 dirt, moon water, black salt). A CHECK ties the two together —
 `(nomenclature IN ('none','unknown')) = (canonical_name IS NULL)`, enforced
 in both directions, so the enum value and the presence of a formal name can
 never disagree.
 
-**`canonical_key`**, the generated identity column:
-
-```sql
-canonical_key text NOT NULL GENERATED ALWAYS AS (
-  lower(COALESCE(canonical_name, name))
-  || COALESCE(' :: ' || lower(btrim(form)), '')
-) STORED
-```
+**`canonical_key`**, the generated identity column, is DESIGN.md §5's
+`GENERATED ALWAYS AS (…) STORED` expression as written there: the lower-cased
+formal name, or the label where there is none, then `::` and the trimmed,
+lower-cased `form` when one is set.
 
 Every function in that expression — `lower`, `btrim`, `||`, `COALESCE` — is
 IMMUTABLE, which Postgres requires of anything inside a `GENERATED ALWAYS AS
@@ -114,23 +110,11 @@ of the file needs no database at all and reads `getTableConfig`, the same as
 `workspaces-schema.test.ts`.
 
 **Three partial unique indexes, not two, and indexes rather than
-constraints** — M4.1a, as built:
-
-```sql
-CREATE UNIQUE INDEX ingredients_compendium_identity_unique
-  ON ingredients (canonical_key)
-  WHERE workspace_id IS NULL AND deleted_at IS NULL;
-
-CREATE UNIQUE INDEX ingredients_workspace_identity_unique
-  ON ingredients (workspace_id, canonical_key)
-  WHERE workspace_id IS NOT NULL AND deleted_at IS NULL;
-
-CREATE UNIQUE INDEX ingredients_workspace_label_unique
-  ON ingredients (workspace_id, lower(name))
-  WHERE workspace_id IS NOT NULL AND deleted_at IS NULL;
-```
-
-All three carry `WHERE deleted_at IS NULL`, per the [partial-index convention](soft-delete.md)
+constraints** — M4.1a, built from DESIGN.md §5's SQL:
+`ingredients_compendium_identity_unique` on `canonical_key` in the compendium
+tier, and `ingredients_workspace_identity_unique` on `(workspace_id,
+canonical_key)` and `ingredients_workspace_label_unique` on `(workspace_id,
+lower(name))` in the workspace tier. All three carry `WHERE deleted_at IS NULL`, per the [partial-index convention](soft-delete.md)
 — deleting a row must not permanently reserve its identity or its
 label (CLAUDE.md rule 4). The label index is workspace-tier only: inside one
 workspace an ambiguous label is a mistake, but the compendium deliberately

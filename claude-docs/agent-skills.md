@@ -13,8 +13,8 @@ this page holds the shape.
 | `create-feature`   | Branches `feature/<slug>` off latest `origin/staging`, asking for the name first. A wrapper over `create-feature/reference-branch.md`, the steps it shares with `create-hotfix`.                                                                                                                                                |
 | `create-hotfix`    | Branches `hotfix/<slug>` off latest `origin/main` through the same `create-feature/reference-branch.md`. The two differ only in base and prefix.                                                                                                                                                                                |
 | `create-pr`        | Commits (after asking), pushes, opens a PR against a target `.github/workflows/gitflow.yml` allows, and ends each PR's body with the `project-progress` tally. `hotfix/*` opens PRs into both `main` and `staging` — see `create-pr/reference-hotfix.md`.                                                                       |
-| `create-release`   | Computes the next semver, branches `release/<version>` off `staging`, tags `v<version>`, opens a PR into `main`.                                                                                                                                                                                                                |
-| `create-main-sync` | Branches `main-sync/<timestamp>` off `main`, opens a PR bringing `main`-only commits back into `staging`.                                                                                                                                                                                                                       |
+| `create-release`   | Computes the next semver, branches `release/<version>` off `staging`, tags `v<version>`, opens a PR into `main`. The merged-PR lookup and the notes it shares with `create-main-sync` are `create-release/reference-shared.md`.                                                                                                 |
+| `create-main-sync` | Branches `main-sync/<timestamp>` off `main`, opens a PR bringing `main`-only commits back into `staging`, through the same `create-release/reference-shared.md`.                                                                                                                                                                |
 | `prune-branches`   | Deletes merged/gone local branches automatically, asks about never-pushed ones. Never touches `main`/`staging`.                                                                                                                                                                                                                 |
 | `project-progress` | Tasks and hours completed, remaining and total, from local data only: the `· Nh` estimates in `claude-docs/tasks/` joined to what has merged into `origin/staging`. The issue tracker is read only in its opt-in verify mode, via `task-board.mjs list`; work done outside git is a short list in `project-progress/tally.mjs`. |
 
@@ -29,10 +29,11 @@ to.
   prompt on. **Personal permission grants and MCP configuration belong in
   `.claude/settings.local.json`**, which is not committed.
 - **A skill's supporting files sit beside its `SKILL.md`**:
-  `create-pr/reference-hotfix.md`, `project-progress/tally.mjs`, and
-  `create-feature/reference-branch.md`, which `create-hotfix` also follows. A
-  file two skills share goes inside one of them, so that every directory under
-  `.claude/skills/` is a skill.
+  `create-pr/reference-hotfix.md`, `project-progress/tally.mjs`,
+  `create-feature/reference-branch.md`, which `create-hotfix` also follows,
+  and `create-release/reference-shared.md`, which `create-main-sync` also
+  follows. A file two skills share goes inside one of them, so that every
+  directory under `.claude/skills/` is a skill.
 - **Adding a skill means adding its row to `CLAUDE.md`'s Skills table** and
   updating this summary, in the same PR. (Its transcript was archived by
   M0.34, and MB.31 retired the obligation to keep writing one — a PR body

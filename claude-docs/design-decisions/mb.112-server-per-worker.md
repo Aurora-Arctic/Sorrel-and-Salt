@@ -64,20 +64,18 @@ would serve one slot's cached compendium to every slot.
 
 **A server per slot, declared up front**, the owner's choice.
 
-- **`tests/e2e/slots.ts` holds the count and the ports.** `E2E_SLOTS` is
-  `E2E_WORKERS`, or else half the CPUs floored at one — Playwright's own
-  default, which a `workers` left unset would have given, and two on CI's
-  four-vCPU runner. Anything but a whole number from 1 to `MAX_SLOTS` (99)
-  throws, naming the variable.
-- **The slot is `parallelIndex`.** `currentSlot()` reads
-  `TEST_PARALLEL_INDEX`, and throws outside a Playwright worker or past the
-  last server, naming the limit and saying to raise `E2E_WORKERS` rather
-  than pass `--workers`. A worker-scoped auto fixture reads it, so every
-  test on a worker without a server fails, including one that opens no page.
-- **Retries stay on one slot.** The reseed, `signInAs()` and the `baseURL`
-  fixture each read the same `TEST_PARALLEL_INDEX`, and the worker that
-  replaces a failed one keeps its `parallelIndex`, so a retried test's
-  database, session and pages always agree.
+The shape it took is [`testing/e2e.md`](../testing/e2e.md)'s; what follows is
+why each part has the form it does.
+
+- **`tests/e2e/slots.ts` holds the count and the ports**, and the count
+  defaults to what a `workers` left unset would have given, so the switch
+  from `--workers` changes nothing for a run that never set one.
+- **The slot is `parallelIndex`**, read by a worker-scoped auto fixture, so a
+  worker past the last server fails every test it runs — one that opens no
+  page included — rather than reaching for a server nothing started.
+- **Retries stay on one slot**, because the worker that replaces a failed one
+  keeps its `parallelIndex`, and the reseed, the session and the pages all
+  read it.
 - **The configured-providers server takes 8100 and `sorrel_e2e_providers`**,
   which no spec reseeds. A fixed port above every slot's, with the 99-slot
   cap keeping the slots below it, means no slot reaches it — or, under a

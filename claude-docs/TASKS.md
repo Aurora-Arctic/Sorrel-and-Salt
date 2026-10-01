@@ -58,7 +58,7 @@ The authorization rules must not come early for the opposite reason. A rule writ
 | **14 — Sweep close-out**     | M6.17 · MB.39 · MB.90                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | [wave-14.md](waves/wave-14.md) |
 | **15 — Launch**              | M11.1 → M11.7 · M11.16 · M11.8 → M11.10 · MB.124 · M11.11 → M11.14 · MW.15 · M7.A.1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | [wave-15.md](waves/wave-15.md) |
 
-**Unscheduled by design:** M7.A.1 (require merge queue) is trigger-based, not wave-based — do it when a second contributor arrives or PR volume makes untested merge combinations a real risk, whichever comes first. It is not a prerequisite for anything. On the board it sits on the Wave 15 — Launch milestone and last in that wave's row, the latest point it could still fire before v1, so every open task has a milestone and a place; the trigger, not the milestone or the position, is what starts it.
+**Unscheduled by design:** M7.A.1 (require merge queue) is trigger-based, not wave-based, and sits last in Wave 15's row only so every open task has a place ([wave-15.md](waves/wave-15.md)).
 
 ### Breaking the M1.23 ↔ M10.3 cycle
 
@@ -72,14 +72,12 @@ What the criterion was reaching for — proof that rows written before the colum
 
 ### The sweep-task rule
 
-> A sweep that attaches to **database objects** lands once, immediately after the last object it covers, protected by a catalogue-introspection test — never by a later "re-assert" task. A sweep that attaches to **code** lands as a mechanism plus a mechanical guard, as early as the mechanism can be written, and is adopted by each later task in that task's own PR — never retrofitted.
-
-The tell is whether the thing can be made _impossible_ or only _absent_. DDL can only be added retroactively, so wait for the objects; code conventions can be made impossible prospectively, so land the guard first.
+The rule is in CLAUDE.md's Conventions. A database-object sweep is never followed by a later "re-assert" task, and a code sweep is never retrofitted. The tell divides them because DDL can only be added retroactively, so that sweep waits for the objects, while a code convention can be made impossible prospectively, so its guard lands first.
 
 - M1.18's trigger → end of Wave 3, guarded by a `pg_trigger` coverage test
 - M6.3's `Membership` proof → Wave 5, the _code_ half of the rule: the mechanism plus a `@ts-expect-error` compile assertion, adopted by each later workspace-scoped finder in its own PR. MB.29 retired the database-object sweep that used to sit here (M6.4's RLS, guarded by a `pg_class`/`pg_policy` catalogue test); when policies land at the public launch they bring that guard back with them
 - M1.20 soft-delete, M1.17/M3.9 access boundary, M3.6 pagination → land the mechanism early, guard via lint fixture, the `server-only` guard and the M3.4 SDL snapshot
-- M6.17 is the one exception: it is a _census_, not an enforcer — M6.3 does the enforcing, adopted per-PR — and a census of an incomplete set is worthless, so it closes at Wave 14
+- M6.17 is the one exception, a _census_ rather than an enforcer, so it closes at Wave 14 ([wave-14.md](waves/wave-14.md))
 
 ### A table task, then a behaviour task
 
@@ -87,7 +85,7 @@ The ordering bug was never really a scheduling mistake; it was a **granularity**
 
 ### Wave close-out and the MW namespace
 
-The compression pass began as one per milestone, was re-anchored to the wave when milestones stopped executing as contiguous blocks, and is **retired by MB.31** — leaving MW.15, the v1 close-out, as the third and last pass rather than the sixteenth. `MW.1` and `MW.2` ran; `MW.3` through `MW.14` are retired without being done, and `MW.15` survives as the v1 close-out rather than a sixteenth compression.
+The compression pass began as one per milestone, was re-anchored to the wave when milestones stopped executing as contiguous blocks, and is **retired by MB.31**: `MW.1` and `MW.2` ran, `MW.3` through `MW.14` are retired without being done, and `MW.15` survives as the v1 close-out, the third and last pass rather than the sixteenth.
 
 What replaced it is not nothing. A scheduled pass over every doc is a slow way to find the two statements a wave actually staled, and it defers the fix to whoever runs the pass — by which point the person who knows which statement went wrong has moved on. Correcting a doc in the PR that stales it is the same work, done where it is cheapest and by the person holding the context. The rule survives in CLAUDE.md's Conventions; only the scheduled task is gone.
 

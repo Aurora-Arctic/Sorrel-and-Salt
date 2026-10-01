@@ -33,7 +33,7 @@ Only `vitest.yml` runs on Blacksmith's `blacksmith-8vcpu-ubuntu-2404` while ever
 
 ## Smoke checks
 
-None remain: the checks exercise every composite action, a sourceless image and its guard test close the stale-file hole that left, and no workflow may publish a status-check context `pr-gate.yml` also publishes. [`ci/smoke-checks.md`](ci/smoke-checks.md)
+None remain: the checks exercise every composite action, a sourceless image and its guard test close the stale-file hole that left, no workflow may publish a status-check context `pr-gate.yml` also publishes, and each check's path filter lists the inputs of the image it runs against. [`ci/smoke-checks.md`](ci/smoke-checks.md)
 
 ## Database image
 
