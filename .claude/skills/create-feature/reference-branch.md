@@ -1,6 +1,6 @@
 # Branch off the latest base: shared steps
 
-`create-feature` and `create-hotfix` both follow these steps. Their `SKILL.md` passes `<base>` and `<prefix>`; the last two rows below follow from the base. `start-task` cites these steps by number, so keep the numbering.
+`create-feature` and `create-hotfix` both follow these steps. Their `SKILL.md` passes `<base>` and `<prefix>`; the last two rows below follow from the base. `start-task` cites these steps by number, and `create-release` and `create-main-sync` cite step 1, so keep the numbering.
 
 | Parameter                            | `create-feature`                                           | `create-hotfix`                                                                                 |
 | ------------------------------------ | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
