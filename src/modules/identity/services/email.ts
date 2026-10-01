@@ -1,26 +1,17 @@
 import 'server-only';
-import type { AuditSession } from '../../../db/audit';
 import { findOneById, findUserByEmail, withAudit } from '../../../db/repository';
-import { ValidationError, type ValidationIssue } from '../../../lib/errors';
+import { ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
-import { getMe, type UserRow } from './profile';
+import { getMe } from './profile';
+import type { AuditSession } from '../../../db/types';
+import type { ValidationIssue } from '../../../lib/types';
+import type { EmailVerificationSender, UserRow } from '../types';
 
 // The address an account is mailed at changes only at verification: asking
 // for a new one is a token and a mail, never a write to `users.email`, so an
 // established account never re-enters the provisional sweep
-// (claude-docs/auth.md, "The email page").
-
-/**
- * How what this service decides gets delivered. Built per request by the
- * GraphQL context, because it reaches Better Auth and a service may not.
- */
-export interface EmailVerificationSender {
-  /** Mails the row's own, still-unverified address its link again. */
-  resend(email: string): Promise<void>;
-  /** Mails `next` a link that, followed from the row's session, makes it the row's address. */
-  requestChange(current: string, next: string): Promise<void>;
-}
+// (claude-docs/auth/admin-bootstrap.md, "The email page").
 
 // `.invalid` is reserved (RFC 2606): no mailbox can exist under it, so the
 // placeholder can neither be mailed nor match an invitation.
@@ -85,7 +76,7 @@ export async function verificationWaitFor(userId: string): Promise<number> {
  * Stamps the row as mailed now, before the mail goes out. Being an update,
  * it restarts a provisional row's window through the trigger too, which is
  * why it takes the row's own session and never a stranger's
- * (claude-docs/auth.md, "Provisional accounts").
+ * (claude-docs/auth/admin-bootstrap.md, "Provisional accounts").
  */
 export async function recordVerificationSent(session: AuditSession): Promise<void> {
   await withAudit(session, (write) =>
@@ -105,7 +96,8 @@ export async function isEmailHeldByAnother(email: string, userId: string): Promi
  * followed from this account's session. The row is stamped as mailed, which
  * also restarts a provisional caller's window so the link cannot outlive the
  * row. The row's own address, still unverified, is mailed again instead;
- * verified, there is nothing to do.
+ * verified, there is nothing to do. Either link lands on the way to `next`,
+ * which the sender guards where it builds the link.
  *
  * @throws {ValidationError} on `email`: malformed, unmailable, held by a
  * live verified account, or mailed within the last minute.
@@ -114,6 +106,7 @@ export async function setEmail(
   session: Session,
   input: string,
   sender: EmailVerificationSender,
+  next?: string,
 ): Promise<UserRow> {
   const me = await getMe(session);
   const email = normaliseEmail(input);
@@ -138,11 +131,11 @@ export async function setEmail(
 
   if (unchanged) {
     // Better Auth's endpoint: its hook stamps the row and mails.
-    await sender.resend(email);
+    await sender.resend(email, next);
     return me;
   }
 
   await recordVerificationSent(session);
-  await sender.requestChange(me.email, email);
+  await sender.requestChange(me.email, email, next);
   return me;
 }

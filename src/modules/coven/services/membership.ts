@@ -3,11 +3,13 @@ import { cache } from 'react';
 import { findWorkspaceRole } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { type WorkspacePermission, type WorkspaceRole, rolePermits } from './access-control';
+import { RowId } from '../../../lib/validation';
+import { type WorkspacePermission, rolePermits } from './access-control';
+import type { WorkspaceRole } from '../types';
 
 // CLAUDE.md rule 5's two layers live here: `assertMembership` is the check,
 // and the `Membership` it returns is the proof the check ran. The brand below
-// is the whole mechanism — see claude-docs/db.md, "The Membership proof".
+// is the whole mechanism — see claude-docs/db/membership-proof.md, "The Membership proof".
 
 // Not exported, which is what makes `Membership` unconstructible outside this
 // module: no other file can name the property, so no object literal satisfies
@@ -18,7 +20,7 @@ declare const brand: unique symbol;
 // pages ask and whatever permission each asks for: the check below the lookup
 // stays uncached. Keyed by the two ids rather than the session, which
 // `cache()` would compare by identity. Outside a render — the GraphQL route
-// handler included — it is the plain finder (claude-docs/graphql.md, "The two
+// handler included — it is the plain finder (claude-docs/graphql/two-transports.md, "The two
 // transports").
 const workspaceRole = cache(findWorkspaceRole);
 
@@ -48,8 +50,9 @@ export type Membership = {
  * A site admin gets no bypass: admins curate the compendium and reach no
  * workspace (CLAUDE.md's domain invariants), so `session.role` is not read.
  *
- * @throws {Forbidden} the user holds no live membership of `workspaceId`, or
- * holds one whose role does not carry `permission`.
+ * @throws {Forbidden} the user holds no live membership of `workspaceId` —
+ * an id that is not a uuid included — or holds one whose role does not carry
+ * `permission`.
  */
 export async function assertMembership(
   session: Session,
@@ -63,10 +66,15 @@ export async function assertMembership(
     throw new Error('assertMembership requires a permission to check');
   }
 
+  // An id is whatever string the client sent. One that cannot name a
+  // workspace is refused as one the user is not in, rather than asked of the
+  // database, where it would be a driver error.
+  if (!RowId.safeParse(workspaceId).success) throw new Forbidden();
+
   const role = await workspaceRole(session.userId, workspaceId);
 
   // Bare, and deliberately the same refusal a wrong id earns: whether a
-  // workspace exists is itself private (claude-docs/auth.md).
+  // workspace exists is itself private (claude-docs/auth/service-session.md).
   if (!role) throw new Forbidden();
 
   if (!rolePermits(role, permission)) {

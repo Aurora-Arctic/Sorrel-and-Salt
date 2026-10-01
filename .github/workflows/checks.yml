@@ -2,7 +2,7 @@ name: Checks
 
 # One matrix job for lint, format, typecheck, build, destructive-ddl and
 # audit, each reporting as `checks / <name>`. workflow_call only, from
-# pr-gate.yml. claude-docs/ci.md, "Reusable checks" is the walkthrough.
+# pr-gate.yml. claude-docs/ci/reusable-checks.md, "Reusable checks" is the walkthrough.
 #
 # vitest.yml and playwright.yml are not legs: a `services: postgres:` block
 # and artifact uploads are a different job shape, not a different script.
@@ -213,7 +213,7 @@ jobs:
 
       # An empty `comment` skips the step; .github/actions/pr-comment has the modes.
       # `!cancelled()`, not `always()`: the action reads a cancelled run as a
-      # failure, and a newer push cancels this one (claude-docs/ci.md).
+      # failure, and a newer push cancels this one (claude-docs/ci/composite-actions.md).
       - name: Comment on PR
         if: ${{ !cancelled() && inputs.pr-number && matrix.comment != '' && steps.flags.outputs.should-run == 'true' }}
         uses: ./.github/actions/pr-comment

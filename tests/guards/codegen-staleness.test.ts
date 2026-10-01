@@ -1,6 +1,3 @@
-// @vitest-environment node
-// Node, not the unit project's jsdom: codegen's loaders read the filesystem.
-
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -9,8 +6,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import config from '../../codegen';
 import { fromRoot } from '../support/paths';
+import type { FileOutput } from './types';
 
-// src/gql/ is committed generated output (claude-docs/graphql.md, "Client
+// src/gql/ is committed generated output (claude-docs/graphql/client-types.md, "Client
 // types"). This regenerates it in memory from the committed SDL and fails on
 // any file that differs, is missing, or is left over — so a document added,
 // changed or removed without `npm run codegen` fails CI's vitest job. A
@@ -18,12 +16,6 @@ import { fromRoot } from '../support/paths';
 // `generate` itself, which rejects it at validation.
 
 const OUTPUT_DIR = 'src/gql';
-
-/** One generated file; `generate`'s own typings return `any`. */
-interface FileOutput {
-  filename: string;
-  content: string;
-}
 
 /** `npm run codegen`, returning the files instead of writing them. */
 function run(overrides: Partial<CodegenConfig> = {}): Promise<FileOutput[]> {
@@ -78,11 +70,10 @@ describe('the staleness comparison', () => {
       `${OUTPUT_DIR}/leftover.ts`,
     ]);
   });
-});
 
-describe('the committed client types', () => {
-  it('match a fresh run of `npm run codegen`', async () => {
-    const outputs = await run();
+  // The same run the fixture was copied from, so the suite generates once for
+  // both: a `generate()` over src/ is the slowest thing in this file.
+  it('finds the committed client types match a fresh run of `npm run codegen`', () => {
     expect(staleFiles(outputs, fromRoot(), OUTPUT_DIR)).toEqual([]);
   });
 });

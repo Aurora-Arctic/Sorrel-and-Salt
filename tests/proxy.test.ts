@@ -18,7 +18,7 @@ const { config, proxy } = await import('@/proxy');
 // Route protection is deny-by-default: the proxy names what is public, so a
 // route nobody thought about is protected rather than open. The proxy's check is
 // optimistic — a cookie is present — and the page's requireSession() is the one
-// that asks the database (claude-docs/auth.md, "Route protection").
+// that asks the database (claude-docs/auth/route-protection.md, "Route protection").
 
 const ORIGIN = 'http://localhost:8000';
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
@@ -133,7 +133,8 @@ describe('proxy', () => {
 
   it('does not reflect a protocol-relative pathname into the return path', async () => {
     const response = await proxy(request('//evil.example/x'));
-    expect(getRedirectUrl(response)).toBe(`${ORIGIN}/sign-in?next=%2Fcoven`);
+    // Dropped, not replaced: a sign-in with no return path lands by role.
+    expect(getRedirectUrl(response)).toBe(`${ORIGIN}/sign-in`);
   });
 
   // An unrelated cookie is not a session: the check is for Better Auth's name.

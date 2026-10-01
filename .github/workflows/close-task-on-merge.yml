@@ -1,0 +1,49 @@
+name: Close Task On Merge
+
+# GitHub's closing keywords (`Closes #N`) fire only on a PR into the default
+# branch, and feature PRs target `staging`, so this closes the issues a merged
+# PR's body names; the Project's built-in workflow then moves the closed item
+# to Done. A PR into `main` needs nothing — GitHub does it there.
+# claude-docs/task-tracking.md, "Status".
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [staging]
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  close:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Close the issues the PR body names
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Env vars, never interpolated into the script: a PR body is untrusted text.
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -eo pipefail
+          numbers=$(printf '%s\n' "$PR_BODY" \
+            | grep -oiE '\b(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved):? +#[0-9]+' \
+            | grep -oE '[0-9]+$' \
+            | sort -un || true)
+          if [ -z "$numbers" ]; then
+            echo "PR #${PR_NUMBER} names no issue to close."
+            exit 0
+          fi
+          for n in $numbers; do
+            state=$(gh issue view "$n" --repo "$REPO" --json state --jq .state)
+            if [ "$state" = "OPEN" ]; then
+              gh issue close "$n" --repo "$REPO" --reason completed \
+                --comment "Merged into staging in #${PR_NUMBER}."
+              echo "Closed #${n}."
+            else
+              echo "#${n} is already ${state}."
+            fi
+          done

@@ -4,59 +4,15 @@ import {
   validateConnectionArguments,
 } from '@pothos/core';
 import { InvalidCursor } from './errors';
+import type { ConnectionArgs, Cursor, PageRequest, PageEntry, Page } from './types';
 
-// CLAUDE.md rule 8, the one pagination rule: the numbers, the cursor, and the
-// page a connection is built from. Pure, so the repository and services can
-// name its types without importing it. claude-docs/graphql.md, "Pagination".
+// CLAUDE.md rule 8, the one pagination rule: the numbers, the cursor codec,
+// and the page a connection is built from; the shapes they pass are in
+// `types.ts`. claude-docs/graphql/pagination.md, "Pagination".
 
 export const DEFAULT_PAGE_SIZE = 25;
 /** The hard server-side maximum. A client asking for more gets this many, not an error. */
 export const MAX_PAGE_SIZE = 100;
-
-/** A connection field's arguments, as the Relay plugin hands them to a resolver. */
-export interface ConnectionArgs {
-  first?: number | null;
-  last?: number | null;
-  after?: string | null;
-  before?: string | null;
-}
-
-/**
- * A position in a list: the row's sort key, as Postgres prints it, and its id
- * as the tie-break. Never an offset, so a row inserted or deleted ahead of it
- * cannot shift the page under a reader. The key is text because a
- * `timestamptz` read into a JS `Date` loses its microseconds.
- */
-export interface Cursor {
-  key: string;
-  id: string;
-}
-
-/** What a repository page finder is asked for. */
-export interface PageRequest {
-  after?: Cursor;
-  before?: Cursor;
-  /** Rows to fetch: the page plus one, whose presence says another page follows. */
-  limit: number;
-  /** Walking backwards (`last`): rows come nearest-first and the page reverses them. */
-  inverted: boolean;
-}
-
-/** One row of a page, with the position it was found at. */
-export interface PageEntry<T> {
-  cursor: Cursor;
-  node: T;
-}
-
-export interface Page<T> {
-  edges: { cursor: string; node: T }[];
-  pageInfo: {
-    startCursor: string | null;
-    endCursor: string | null;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-  };
-}
 
 const LIMITS = { defaultSize: DEFAULT_PAGE_SIZE, maxSize: MAX_PAGE_SIZE };
 
@@ -86,13 +42,15 @@ export function decodeCursor(cursor: string): Cursor {
     decoded === null ||
     !('k' in decoded) ||
     !('i' in decoded) ||
-    typeof decoded.k !== 'string' ||
+    !Array.isArray(decoded.k) ||
+    decoded.k.length === 0 ||
+    !decoded.k.every((part) => typeof part === 'string') ||
     typeof decoded.i !== 'string' ||
     decoded.i === ''
   ) {
     throw new InvalidCursor();
   }
-  return { key: decoded.k, id: decoded.i };
+  return { key: decoded.k as string[], id: decoded.i };
 }
 
 /**
@@ -101,10 +59,10 @@ export function decodeCursor(cursor: string): Cursor {
  * from what came back. `fetch` sees a `PageRequest` and never the client's
  * raw arguments, so no finder can skip the clamp.
  */
-export async function resolvePage<T>(
+export async function resolvePage<T, Edge extends object = {}>(
   args: ConnectionArgs,
-  fetch: (request: PageRequest) => PageEntry<T>[] | Promise<PageEntry<T>[]>,
-): Promise<Page<T>> {
+  fetch: (request: PageRequest) => PageEntry<T, Edge>[] | Promise<PageEntry<T, Edge>[]>,
+): Promise<Page<T, Edge>> {
   const after = args.after == null ? undefined : decodeCursor(args.after);
   const before = args.before == null ? undefined : decodeCursor(args.before);
   const { limit, expectedSize, inverted, hasNextPage, hasPreviousPage } = parseCursorConnectionArgs(
@@ -120,7 +78,10 @@ export async function resolvePage<T>(
 
   const page = entries.slice(0, expectedSize);
   if (inverted) page.reverse();
-  const edges = page.map(({ cursor, node }) => ({ cursor: encodeCursor(cursor), node }));
+  const edges = page.map(({ cursor, ...edge }) => ({
+    ...edge,
+    cursor: encodeCursor(cursor),
+  })) as Page<T, Edge>['edges'];
 
   return {
     edges,

@@ -1,15 +1,7 @@
+import type { Plain, Overrides } from './types';
 // How every factory applies its overrides: a nested object merges key by key,
 // an array replaces wholesale, `undefined` says nothing and `null` replaces.
-// claude-docs/testing.md, "Overrides merge; arrays replace".
-
-type Plain = Record<string, unknown>;
-
-/** Overrides for `T`: every property optional all the way down, arrays left whole. */
-export type Overrides<T> = T extends readonly unknown[]
-  ? T
-  : T extends object
-    ? { [K in keyof T]?: Overrides<T[K]> }
-    : T;
+// claude-docs/testing/fixture-factories.md, "Overrides merge; arrays replace".
 
 // A Date, a class instance or an array is a value to replace, not a shape to walk.
 function isPlainObject(value: unknown): value is Plain {

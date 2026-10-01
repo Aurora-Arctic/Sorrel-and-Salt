@@ -4,12 +4,14 @@ import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { categories, categoryGroups } from '@/modules/vocabulary/schema/categories';
 import { FIXTURE_USERS } from '@/db/seed/standard';
+import type { Row } from './types';
 
 const GROUPS_SLUG_UNIQUE = 'category_groups_slug_unique';
 const CATEGORIES_SLUG_UNIQUE = 'categories_slug_unique';
 
 // Names a hand-ordering column usually takes; §5 lists none, since groups and
-// categories sort by name — claude-docs/db.md, "Categories, and the two group vocabularies".
+// categories sort by name — claude-docs/db/categories.md, "Categories, and the
+// two group vocabularies".
 const ORDERING_COLUMNS = ['order', 'position', 'sort', 'sort_order', 'rank', 'display_order'];
 
 describe('category_groups schema', () => {
@@ -107,8 +109,6 @@ describe('categories schema', () => {
 
 const AUTHOR = FIXTURE_USERS.A.id;
 const ABSENT_GROUP = '99999999-9999-9999-9999-999999999999';
-
-type Row = Record<string, string | null>;
 
 function groupRow(overrides: Row = {}): Row {
   return {

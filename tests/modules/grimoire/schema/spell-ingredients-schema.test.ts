@@ -1,17 +1,19 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
-import { STAMP_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
+import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { UNITS, dimensionOf } from '@/modules/ingredients/schema/units';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { inventoryUnit } from '@/modules/ingredients/schema/inventory-items';
 import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
 import { spells } from '@/modules/grimoire/schema/spells';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
+import type { LayerRow } from './types';
 
 // §5's columns; `name` and `form` are a custom one-off layer's, in place of an
 // `ingredient_id` (MB.40).
 const OWN_COLUMNS = [
+  'id',
   'spell_id',
   'ingredient_id',
   'name',
@@ -22,12 +24,14 @@ const OWN_COLUMNS = [
   'note',
 ];
 
-// The key is the layer: the `(spell_id, ingredient_id)` pair is absent on a
-// custom row, so one-ingredient-per-jar is the partial index's now —
-// claude-docs/db.md, "Layer order is the identity, and what that costs the reorder".
-const PRIMARY_KEY = 'spell_ingredients_spell_id_layer_order_pk';
+// A removed layer is a tombstone that must not hold its depth, so the key is a
+// surrogate id and the layer is unique among live rows — claude-docs/db/grimoire.md,
+// "Layer order is the identity, and what that costs the reorder".
+const PRIMARY_KEY = 'spell_ingredients_pkey';
+const LAYER_INDEX = 'spell_ingredients_spell_id_layer_order_unique';
 const INGREDIENT_INDEX = 'spell_ingredients_spell_id_ingredient_id_unique';
 const CUSTOM_NAME_INDEX = 'spell_ingredients_spell_id_custom_name_unique';
+const UNIQUE_INDEXES = [LAYER_INDEX, INGREDIENT_INDEX, CUSTOM_NAME_INDEX].sort();
 const SPELL_FK = 'spell_ingredients_spell_id_spells_id_fk';
 const INGREDIENT_FK = 'spell_ingredients_ingredient_id_ingredients_id_fk';
 
@@ -51,21 +55,18 @@ describe('spell_ingredients schema', () => {
     foreignKeyByColumn,
   } = tableFacts(spellIngredients);
 
-  // Four stamps and no tombstone (MB.34): an ingredient pulled out leaves no
-  // row. A custom row's content is addressable only through its spell, and
-  // nothing in v1 reads a removed one.
+  // The full six (MB.110): a spell is a record of a working, so a layer
+  // pulled out of it is a tombstone rather than gone.
   it('has DESIGN.md §5 columns and nothing else', () => {
-    expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...STAMP_COLUMNS].sort());
+    expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
 
-  // Not a surrogate id, which says nothing about the jar; not the pair, absent on a custom row.
-  it('has no surrogate id, keying on the layer instead', () => {
-    expect(byName.id).toBeUndefined();
-
-    const [key, ...rest] = primaryKeys;
-    expect(rest).toEqual([]);
-    expect(key.columns.map((column) => column.name)).toEqual(['spell_id', 'layer_order']);
-    expect(key.getName()).toBe(PRIMARY_KEY);
+  // Not the layer, which a tombstone would go on holding; not the pair, absent on a custom row.
+  it('keys on a surrogate id, so a removed layer holds no depth', () => {
+    expect(byName.id.primary).toBe(true);
+    expect(byName.id.notNull).toBe(true);
+    expect(byName.id.hasDefault).toBe(true);
+    expect(primaryKeys).toEqual([]);
   });
 
   it('requires the spell and the layer, and makes the ingredient optional', () => {
@@ -98,17 +99,22 @@ describe('spell_ingredients schema', () => {
     expect(foreignKeyByColumn.spell_id.name).toBe(SPELL_FK);
   });
 
-  // Two partial unique indexes whose predicate is the discriminator, not rule
-  // 4's `deleted_at`: one over linked rows, one over custom rows, each unique
-  // within its own kind.
-  it('declares two partial unique indexes: one ingredient per jar, one custom name per jar', () => {
-    expect(Object.keys(indexByName).sort()).toEqual([INGREDIENT_INDEX, CUSTOM_NAME_INDEX].sort());
+  // Three partial unique indexes over live rows: one layer per depth, and —
+  // with the discriminator beside rule 4's predicate — one ingredient per jar
+  // over linked rows and one custom name per jar over custom rows.
+  it('declares three partial unique indexes: the depth, the ingredient, the custom name', () => {
+    expect(Object.keys(indexByName).sort()).toEqual(UNIQUE_INDEXES);
 
-    for (const name of [INGREDIENT_INDEX, CUSTOM_NAME_INDEX]) {
+    for (const name of UNIQUE_INDEXES) {
       expect(indexByName[name].config.unique).toBe(true);
       expect(indexByName[name].config.where).toBeDefined();
     }
 
+    expect(
+      indexByName[LAYER_INDEX].config.columns.map(
+        (column: unknown) => (column as { name: string }).name,
+      ),
+    ).toEqual(['spell_id', 'layer_order']);
     expect(
       indexByName[INGREDIENT_INDEX].config.columns.map(
         (column: unknown) => (column as { name: string }).name,
@@ -135,6 +141,7 @@ describe('spell_ingredients schema', () => {
 });
 
 const AUTHOR = FIXTURE_USERS.A.id;
+const REMOVER = FIXTURE_USERS.B.id;
 const COVEN = WORKSPACE_W_ID;
 const ABSENT = '99999999-9999-9999-9999-999999999999';
 
@@ -147,17 +154,6 @@ let ROSEMARY: string;
 let STOCK_ONLY: string;
 let hearthGuard: string;
 let otherSpell: string;
-
-interface LayerRow {
-  spellId?: string;
-  ingredientId?: string | null;
-  name?: string | null;
-  form?: string | null;
-  quantity?: string | null;
-  unit?: string | null;
-  layerOrder?: number;
-  note?: string | null;
-}
 
 async function layer({
   spellId = hearthGuard,
@@ -180,6 +176,14 @@ async function layer({
 /** A custom, one-off layer: a name in place of an ingredient id. */
 async function custom(name: string | null, overrides: Omit<LayerRow, 'name'> = {}): Promise<void> {
   await layer({ ingredientId: null, name, ...overrides });
+}
+
+/** Pulls the live layer at `layerOrder` out of the jar, as `B`. */
+async function removeLayer(layerOrder: number, spellId: string = hearthGuard): Promise<void> {
+  await sql`
+    update spell_ingredients set deleted_at = now(), deleted_by = ${REMOVER}
+    where spell_id = ${spellId} and layer_order = ${layerOrder} and deleted_at is null
+  `;
 }
 
 async function layerOrders(spellId: string): Promise<number[]> {
@@ -227,9 +231,9 @@ beforeEach(async () => {
 });
 
 describe('spell_ingredients table', () => {
-  it('carries §5’s columns beside the four audit stamps', async () => {
+  it('carries §5’s columns beside the six audit columns', async () => {
     expect(await catalogue.columnNames('spell_ingredients')).toEqual(
-      [...OWN_COLUMNS, ...STAMP_COLUMNS].sort(),
+      [...OWN_COLUMNS, ...AUDIT_COLUMNS].sort(),
     );
   });
 
@@ -319,16 +323,16 @@ describe('spell_ingredients table', () => {
     });
   });
 
-  // The primary key: one row per depth in a jar, whichever kind of row it is.
+  // One live row per depth in a jar, whichever kind of row it is.
   describe('the layer is the identity', () => {
     it('refuses two ingredients laid at the same depth', async () => {
       await layer();
 
-      // 23505 is unique_violation, named: the refusal is the primary key's.
+      // 23505 is unique_violation, named: the refusal is the layer index's.
       const error = await failureOf(layer({ ingredientId: ROSEMARY }));
 
       expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(PRIMARY_KEY);
+      expect(error.constraint_name).toBe(LAYER_INDEX);
     });
 
     it('refuses a custom name laid at the depth an ingredient occupies', async () => {
@@ -337,7 +341,7 @@ describe('spell_ingredients table', () => {
       const error = await failureOf(custom('Garden dust'));
 
       expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(PRIMARY_KEY);
+      expect(error.constraint_name).toBe(LAYER_INDEX);
     });
 
     it('refuses two custom names laid at the same depth', async () => {
@@ -346,10 +350,10 @@ describe('spell_ingredients table', () => {
       const error = await failureOf(custom('Threshold salt'));
 
       expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(PRIMARY_KEY);
+      expect(error.constraint_name).toBe(LAYER_INDEX);
     });
 
-    // Why those refusals could have succeeded: the key leads on `spell_id`.
+    // Why those refusals could have succeeded: the index leads on `spell_id`.
     it('lets two spells each have a first layer', async () => {
       await layer();
 
@@ -385,15 +389,16 @@ describe('spell_ingredients table', () => {
         `,
       );
 
-      // 23502: a primary key column is NOT NULL by construction.
+      // 23502: the depth is required whatever kind of row it is.
       expect(error.code).toBe('23502');
       expect(error.column_name).toBe('layer_order');
     });
 
-    // The key is checked per row, not at end of statement, so a reorder cannot
-    // be one `layer_order + 1` sweep even though the final state is
-    // conflict-free; it rewrites the jar's rows.
-    it('refuses a shift that collides mid-statement, so a reorder rewrites', async () => {
+    // A unique index is checked per row, not at end of statement, so a reorder
+    // cannot be one `layer_order + 1` sweep even though the final state is
+    // conflict-free. Nor can it remove and re-add the jar, which would leave a
+    // tombstone per layer: it moves the live rows through a scratch offset.
+    it('refuses a shift that collides mid-statement, so a reorder moves rows in place', async () => {
       await layer({ layerOrder: 1 });
       await layer({ ingredientId: ROSEMARY, layerOrder: 2 });
 
@@ -401,16 +406,23 @@ describe('spell_ingredients table', () => {
         sql`update spell_ingredients set layer_order = layer_order + 1 where spell_id = ${hearthGuard}`,
       );
       expect(error.code).toBe('23505');
+      expect(error.constraint_name).toBe(LAYER_INDEX);
 
-      await sql`delete from spell_ingredients where spell_id = ${hearthGuard}`;
-      await layer({ ingredientId: ROSEMARY, layerOrder: 1 });
-      await layer({ layerOrder: 2 });
+      await sql.begin(async (tx) => {
+        await tx`
+          update spell_ingredients set layer_order = layer_order + 1000
+          where spell_id = ${hearthGuard} and deleted_at is null`;
+        await tx`
+          update spell_ingredients set layer_order = 3 - (layer_order - 1000)
+          where spell_id = ${hearthGuard} and deleted_at is null`;
+      });
 
       const rows = await sql`
-        select ingredient_id, layer_order from spell_ingredients
+        select ingredient_id, layer_order, deleted_at from spell_ingredients
         where spell_id = ${hearthGuard} order by layer_order
       `;
       expect(rows.map((row) => row.ingredient_id)).toEqual([ROSEMARY, MUGWORT]);
+      expect(rows.map((row) => row.deleted_at)).toEqual([null, null]);
     });
   });
 
@@ -524,45 +536,71 @@ describe('spell_ingredients table', () => {
     });
   });
 
-  // MB.34: pulled out leaves no row, and re-adding is an ordinary insert.
-  describe('removal is a hard delete', () => {
-    it('leaves no row behind', async () => {
+  // MB.110: pulled out is a tombstone, which frees everything the live row
+  // held. Each reuse is shown refused while the row was live, so it is the
+  // index's `deleted_at IS NULL` that lets it through.
+  describe('removal is a soft delete', () => {
+    it('keeps the removed layer, stamped by whoever removed it', async () => {
       await layer();
 
-      await sql`
-        delete from spell_ingredients
-        where spell_id = ${hearthGuard} and ingredient_id = ${MUGWORT}
-      `;
+      await removeLayer(1);
 
-      const rows = await sql`select * from spell_ingredients where spell_id = ${hearthGuard}`;
-      expect(rows).toEqual([]);
+      const [row] = await sql`
+        select ingredient_id, deleted_at, deleted_by from spell_ingredients
+        where spell_id = ${hearthGuard}
+      `;
+      expect(row.ingredient_id).toBe(MUGWORT);
+      expect(row.deleted_at).toBeInstanceOf(Date);
+      expect(row.deleted_by).toBe(REMOVER);
     });
 
-    it('lets the same ingredient be added back to the same spell', async () => {
+    it('frees the removed layer’s depth', async () => {
       await layer();
-      await sql`
-        delete from spell_ingredients
-        where spell_id = ${hearthGuard} and ingredient_id = ${MUGWORT}
-      `;
+      const refused = await failureOf(layer({ ingredientId: ROSEMARY }));
+      expect(refused.constraint_name).toBe(LAYER_INDEX);
+
+      await removeLayer(1);
+
+      await expect(layer({ ingredientId: ROSEMARY })).resolves.toBeUndefined();
+    });
+
+    it('lets the removed ingredient be laid in the same spell again', async () => {
+      await layer();
+      const refused = await failureOf(layer({ layerOrder: 2 }));
+      expect(refused.constraint_name).toBe(INGREDIENT_INDEX);
+
+      await removeLayer(1);
+
+      await expect(layer({ layerOrder: 2 })).resolves.toBeUndefined();
+    });
+
+    it('lets a removed custom name be written in the same spell again, whatever its case', async () => {
+      await custom('Threshold Salt');
+      const refused = await failureOf(custom('threshold salt', { layerOrder: 2 }));
+      expect(refused.constraint_name).toBe(CUSTOM_NAME_INDEX);
+
+      await removeLayer(1);
+
+      await expect(custom('threshold salt', { layerOrder: 2 })).resolves.toBeUndefined();
+    });
+
+    // Tombstones are outside every index, so they cannot collide with each other either.
+    it('lets the same layer be removed and written back more than once', async () => {
+      for (let round = 0; round < 2; round += 1) {
+        await layer();
+        await removeLayer(1);
+      }
 
       await expect(layer()).resolves.toBeUndefined();
-    });
-
-    // A custom row's address is its layer.
-    it('removes a custom row by its layer, and lets the name be written again', async () => {
-      await custom('Garden dust');
-
-      await sql`
-        delete from spell_ingredients where spell_id = ${hearthGuard} and layer_order = 1
+      const [{ count }] = await sql`
+        select count(*)::int as count from spell_ingredients
+        where spell_id = ${hearthGuard} and deleted_at is not null
       `;
-
-      const rows = await sql`select * from spell_ingredients where spell_id = ${hearthGuard}`;
-      expect(rows).toEqual([]);
-      await expect(custom('Garden dust')).resolves.toBeUndefined();
+      expect(count).toBe(2);
     });
   });
 
-  it('declares the primary key and the two partial indexes, and nothing else', async () => {
+  it('declares the surrogate key and the three partial indexes, and nothing else', async () => {
     const rows = await sql`
       select c.relname as name
       from pg_index i
@@ -571,9 +609,24 @@ describe('spell_ingredients table', () => {
       order by c.relname
     `;
 
-    expect(rows.map((row) => row.name)).toEqual(
-      [PRIMARY_KEY, INGREDIENT_INDEX, CUSTOM_NAME_INDEX].sort(),
-    );
+    expect(rows.map((row) => row.name)).toEqual([PRIMARY_KEY, ...UNIQUE_INDEXES].sort());
+  });
+
+  // Rule 4, read back from the catalogue: a unique index that counted
+  // tombstones would let a removed layer hold its depth, ingredient or name.
+  it('makes every unique index but the key partial on deleted_at IS NULL', async () => {
+    const unique = await catalogue.uniqueIndexNames('spell_ingredients');
+    // Precondition: the sweep below has every index to read, not an empty list.
+    expect(unique).toEqual([PRIMARY_KEY, ...UNIQUE_INDEXES].sort());
+
+    for (const name of UNIQUE_INDEXES) {
+      const index = await catalogue.indexRow('spell_ingredients', name);
+      expect(index?.predicate, name).toContain('deleted_at IS NULL');
+    }
+
+    const key = await catalogue.indexRow('spell_ingredients', PRIMARY_KEY);
+    expect(key?.predicate).toBeNull();
+    expect(key?.definition).toContain('(id)');
   });
 
   // Read back from the catalogue: each index covers one kind of row, and the custom one folds case.
@@ -587,9 +640,9 @@ describe('spell_ingredients table', () => {
     );
 
     expect(definitionOf[INGREDIENT_INDEX]).toContain('(spell_id, ingredient_id)');
-    expect(definitionOf[INGREDIENT_INDEX]).toContain('WHERE (ingredient_id IS NOT NULL)');
+    expect(definitionOf[INGREDIENT_INDEX]).toContain('(ingredient_id IS NOT NULL)');
     expect(definitionOf[CUSTOM_NAME_INDEX]).toContain('(spell_id, lower(name))');
-    expect(definitionOf[CUSTOM_NAME_INDEX]).toContain('WHERE (ingredient_id IS NULL)');
+    expect(definitionOf[CUSTOM_NAME_INDEX]).toContain('(ingredient_id IS NULL)');
   });
 
   it('declares the four checks and no others', async () => {

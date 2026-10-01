@@ -4,8 +4,7 @@ import { findOneById } from '../../../db/repository';
 import { NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
-
-export type UserRow = typeof users.$inferSelect;
+import type { UserRow } from '../types';
 
 // Keyed by the id rather than the session, which `cache()` compares by
 // identity: a layout and a page asking cost one query per render.
@@ -14,7 +13,7 @@ const userById = cache((id: string) => findOneById(users, id));
 /**
  * The signed-in user's own row. It takes no id, so there is no other user a
  * caller could name; `User`'s private fields are scoped again in the schema
- * as the second check (claude-docs/graphql.md, "Auth scopes").
+ * as the second check (claude-docs/graphql/schema.md, "Auth scopes").
  *
  * @throws {NotFound} the row is gone or soft-deleted — Better Auth reads the
  * session's user without our filter, so a session can outlive its row.

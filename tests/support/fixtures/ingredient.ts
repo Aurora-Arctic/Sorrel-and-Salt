@@ -1,16 +1,16 @@
-import type { ingredients } from '@/modules/ingredients/schema/ingredients';
+import { ingredientSlug } from '@/lib/slugify';
 import { toColumns } from './columns';
-import { type Overrides, mergeFixture, stated } from './merge';
+import { mergeFixture, stated } from './merge';
+import type { Nomenclature, IngredientFixture, Overrides } from './types';
 
 // The compendium entry a test writes when the ingredient is not what is under
-// test. `import type` only: the fixtures carry no runtime dependency on the
-// database layer, which is what lets the `unit` project test them.
+// test.
 
 /**
  * §5's seven values, in its order. Written out rather than read off
- * `nomenclatureKind.enumValues`, a runtime import of drizzle-orm; the type
- * below is the table's, so a value added to the enum and forgotten here is a
- * type error.
+ * `nomenclatureKind.enumValues`, a runtime import of drizzle-orm; `Nomenclature`
+ * is the table's, so a value added to the enum and forgotten here is a type
+ * error.
  */
 export const NOMENCLATURE_KINDS = [
   'botanical',
@@ -21,35 +21,6 @@ export const NOMENCLATURE_KINDS = [
   'unknown',
   'none',
 ] as const satisfies readonly Nomenclature[];
-
-type Nomenclature = typeof ingredients.$inferInsert.nomenclature;
-
-/**
- * An ingredient plus its folk names and categories, the latter by §6 name
- * rather than id. `canonicalKey` is absent: GENERATED ALWAYS, so Drizzle omits
- * it from the insert model.
- */
-export interface IngredientFixture extends Required<
-  Pick<
-    typeof ingredients.$inferInsert,
-    | 'workspaceId'
-    | 'name'
-    | 'canonicalName'
-    | 'nomenclature'
-    | 'form'
-    | 'description'
-    | 'element'
-    | 'planet'
-    | 'zodiac'
-    | 'deities'
-    | 'color'
-    | 'safetyNotes'
-    | 'substitutes'
-  >
-> {
-  folkNames: string[];
-  categories: string[];
-}
 
 /**
  * The formal name each nomenclature comes with, `null` for the two that must
@@ -111,11 +82,15 @@ export function makeIngredient(overrides: Overrides<IngredientFixture> = {}): In
 /**
  * The fixture as an insert into `ingredients`, by column name. The child
  * collections are destructured off by name rather than filtered by shape:
- * `deities` and `substitutes` are `text[]` columns too. No audit stamps
- * (rule 3).
+ * `deities` and `substitutes` are `text[]` columns too. The slug is derived
+ * from the label, the form and the formal name, as the seed derives it, never
+ * stated. No audit stamps (rule 3).
  */
 export function ingredientColumns(fixture: IngredientFixture): Record<string, unknown> {
   const { folkNames: _folkNames, categories: _categories, ...row } = fixture;
 
-  return toColumns(row);
+  return {
+    ...toColumns(row),
+    slug: ingredientSlug(fixture.name, fixture.form, fixture.canonicalName),
+  };
 }

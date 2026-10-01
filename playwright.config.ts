@@ -1,13 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
-import { e2eDatabaseUrl } from './tests/e2e/database';
-
-// Not the dev server's 8000, so `npm run dev` and an e2e run can sit side by side.
-const PORT = 8001;
-// A second `next start` over the same build, differing only in having every
-// OAuth provider configured — the sign-in page reads credentials per request,
-// so its two availability states need two servers.
-// claude-docs/components/sign-in-panel.md, "Testing".
-const CONFIGURED_PROVIDERS_PORT = 8002;
+import { CONFIGURED_PROVIDERS_DATABASE, e2eDatabaseUrl, slotDatabase } from './tests/e2e/database';
+import {
+  CONFIGURED_PROVIDERS_PORT,
+  E2E_SLOTS,
+  browserUrl,
+  serverUrl,
+  slotPort,
+  wsEndpoint,
+} from './tests/e2e/slots';
 
 const PROVIDER_ENV_VARS = [
   'GOOGLE_CLIENT_ID',
@@ -32,23 +32,39 @@ const PLACEHOLDER_PROVIDERS = Object.fromEntries(
   PROVIDER_ENV_VARS.map((name) => [name, `e2e-placeholder-${name.toLowerCase()}`]),
 );
 
-// Set only by the `devcontainer` compose service: the browser then runs in
-// the `playwright-server` service while the runner stays local, which is why
-// `webServer`'s readiness poll stays on `localhost`. claude-docs/testing.md,
-// "E2E".
-const wsEndpoint = process.env.PLAYWRIGHT_WS_ENDPOINT;
-const serverUrl = (port: number) => `http://localhost:${port}`;
-// A remote browser cannot resolve the runner's `localhost`; `start` binds
-// 0.0.0.0, so the compose service name reaches it.
-const browserUrl = (port: number) => (wsEndpoint ? `http://devcontainer:${port}` : serverUrl(port));
-
-const serverEnv = (port: number, providers: Record<string, string>) => ({
+const serverEnv = (port: number, database: string, providers: Record<string, string>) => ({
   PORT: String(port),
-  DATABASE_URL: e2eDatabaseUrl(),
+  DATABASE_URL: e2eDatabaseUrl(database),
   // Out of `next dev`'s way — see next.config.ts.
   NEXT_DIST_DIR: '.next-e2e',
+  // Every server serves that one build directory, so a data cache flushed to
+  // it would hand one slot's cached reads to another slot's server.
+  NEXT_ISR_FLUSH_TO_DISK: 'false',
   ...providers,
 });
+
+// The first slot's server builds; Playwright starts the entries in order, so
+// every later one serves the build the first has finished.
+const slotServers = Array.from({ length: E2E_SLOTS }, (_, slot) => ({
+  command: slot === 0 ? 'npm run build && npm run start' : 'npm run start',
+  url: serverUrl(slotPort(slot)),
+  reuseExistingServer: !process.env.CI,
+  timeout: slot === 0 ? 180_000 : 60_000,
+  env: serverEnv(slotPort(slot), slotDatabase(slot), UNCONFIGURED_PROVIDERS),
+}));
+
+// One more `next start` over the same build, differing only in having every
+// OAuth provider configured — the sign-in page reads credentials per request,
+// so its two availability states need two servers — and in a database of its
+// own, since whichever slot ran beside it would otherwise reseed it.
+// claude-docs/components/sign-in-panel.md, "Testing".
+const configuredProvidersServer = {
+  command: 'npm run start',
+  url: serverUrl(CONFIGURED_PROVIDERS_PORT),
+  reuseExistingServer: !process.env.CI,
+  timeout: 60_000,
+  env: serverEnv(CONFIGURED_PROVIDERS_PORT, CONFIGURED_PROVIDERS_DATABASE, PLACEHOLDER_PROVIDERS),
+};
 
 const CONFIGURED_PROVIDERS_SPEC = /sign-in-configured-providers\.spec\.ts/;
 
@@ -61,13 +77,16 @@ export default defineConfig({
   testDir: './tests/e2e',
   outputDir: '.reports/test-results',
   fullyParallel: true,
+  // One per slot server; tests/e2e/slots.ts.
+  workers: E2E_SLOTS,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [['list'], ['json'], ['html', HTML_REPORT]] : [['html', HTML_REPORT]],
   globalSetup: './tests/e2e/global-setup.ts',
   globalTeardown: './tests/e2e/global-teardown.ts',
+  // No `baseURL` here: tests/e2e/fixtures.ts gives each worker its own slot's
+  // server wherever a project names none.
   use: {
-    baseURL: browserUrl(PORT),
     // On CI a retry filters flake first; locally there is no retry, so the
     // first failure must carry its own evidence.
     trace: process.env.CI ? 'on-first-retry' : 'retain-on-failure',
@@ -75,25 +94,8 @@ export default defineConfig({
     video: process.env.CI ? 'off' : 'retain-on-failure',
     ...(wsEndpoint ? { connectOptions: { wsEndpoint } } : {}),
   },
-  // Production build, against `sorrel_e2e` rather than the dev database.
-  // Playwright starts these in order, so the second serves the build the
-  // first has finished.
-  webServer: [
-    {
-      command: 'npm run build && npm run start',
-      url: serverUrl(PORT),
-      reuseExistingServer: !process.env.CI,
-      timeout: 180_000,
-      env: serverEnv(PORT, UNCONFIGURED_PROVIDERS),
-    },
-    {
-      command: 'npm run start',
-      url: serverUrl(CONFIGURED_PROVIDERS_PORT),
-      reuseExistingServer: !process.env.CI,
-      timeout: 60_000,
-      env: serverEnv(CONFIGURED_PROVIDERS_PORT, PLACEHOLDER_PROVIDERS),
-    },
-  ],
+  // Production build, against the e2e databases rather than the dev one.
+  webServer: [...slotServers, configuredProvidersServer],
   projects: [
     {
       name: 'chromium',

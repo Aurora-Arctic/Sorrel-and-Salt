@@ -8,25 +8,34 @@ import { MIGRATIONS_DIR } from '../../../support/paths';
 import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS } from '@/db/seed/standard';
+import { ingredientSlug } from '@/lib/slugify';
 
 // §9's one multicolumn gin index serves a predicate on either column alone,
 // which the planner assertions below prove —
-// claude-docs/db.md, "Fuzzy matching: one index, and a rule every caller is bound by".
+// claude-docs/db/fuzzy-matching.md, "Fuzzy matching: one index, and a rule
+// every caller is bound by".
 const TRIGRAM_INDEX = 'ingredients_trgm';
 const FOLK_NAMES_TRIGRAM_INDEX = 'ingredient_folk_names_trgm';
+// The folded twin, owned by ingredients-unaccent.test.ts; named here so the
+// declaration pin stays exact.
+const UNACCENT_INDEX = 'ingredients_unaccent_trgm';
 
 // Named so the declaration test says the trigram index joined them, not replaced one.
 const UNIQUE_INDEXES = [
   'ingredients_compendium_identity_unique',
   'ingredients_workspace_identity_unique',
   'ingredients_workspace_label_unique',
+  'ingredients_compendium_slug_unique',
+  'ingredients_workspace_slug_unique',
 ];
 
 describe('ingredients trigram index declaration', () => {
   const { byIndexName: byName } = tableFacts(ingredients);
 
-  it('declares the trigram index beside M4.1a’s three unique ones', () => {
-    expect(Object.keys(byName).sort()).toEqual([...UNIQUE_INDEXES, TRIGRAM_INDEX].sort());
+  it('declares the trigram index beside the five unique ones and its folded twin', () => {
+    expect(Object.keys(byName).sort()).toEqual(
+      [...UNIQUE_INDEXES, TRIGRAM_INDEX, UNACCENT_INDEX].sort(),
+    );
   });
 
   it('builds it as a gin index over both names', () => {
@@ -68,9 +77,10 @@ const catalogue = useTestDatabase((client) => (sql = client));
 
 async function addIngredient(name: string, canonicalName: string | null): Promise<string> {
   const [inserted] = await sql`
-    insert into ingredients (name, canonical_name, nomenclature, created_by, updated_by)
+    insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
     values (
       ${name},
+      ${ingredientSlug(name, null, canonicalName)},
       ${canonicalName},
       ${canonicalName === null ? 'none' : 'botanical'},
       ${AUTHOR},
@@ -85,8 +95,8 @@ async function addIngredient(name: string, canonicalName: string | null): Promis
 // assertions disable sequential scans regardless.
 async function fillWithDecoys(): Promise<void> {
   await sql`
-    insert into ingredients (name, canonical_name, nomenclature, created_by, updated_by)
-    select 'Decoy ' || g, 'Decoyus ' || g, 'botanical', ${AUTHOR}, ${AUTHOR}
+    insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
+    select 'Decoy ' || g, 'decoy-' || g, 'Decoyus ' || g, 'botanical', ${AUTHOR}, ${AUTHOR}
     from generate_series(1, 2000) g
   `;
   await sql`analyze ingredients`;
@@ -105,13 +115,13 @@ async function planFor(query: string, threshold = 0.4): Promise<string> {
   });
 }
 
-async function matchingNames(term: string, threshold?: number): Promise<string[]> {
+async function matchingNames(name: string, threshold?: number): Promise<string[]> {
   const rows = await sql.begin(async (tx) => {
     if (threshold !== undefined) {
       await tx.unsafe(`set local pg_trgm.similarity_threshold = ${threshold}`);
     }
     return await tx`
-      select name from ingredients where name % ${term} order by similarity(name, ${term}) desc
+      select name from ingredients where name % ${name} order by similarity(name, ${name}) desc
     `;
   });
   return rows.map((row) => row.name as string);
@@ -250,7 +260,8 @@ describe('ingredients trigram index', () => {
         await sql.unsafe(statement);
       }
 
-      // Still exactly one gin index on the table, not a second alongside it.
+      // Still one raw gin index on the table, not a second alongside it; the
+      // folded one is 0027's and ingredients-unaccent.test.ts's.
       const rows = await sql`
         select c.relname as name
         from pg_index i
@@ -260,7 +271,7 @@ describe('ingredients trigram index', () => {
         order by c.relname
       `;
 
-      expect(rows.map((row) => row.name as string)).toEqual([TRIGRAM_INDEX]);
+      expect(rows.map((row) => row.name as string)).toEqual([TRIGRAM_INDEX, UNACCENT_INDEX]);
     });
   });
 });

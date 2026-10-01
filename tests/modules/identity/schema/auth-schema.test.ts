@@ -8,7 +8,7 @@ import { rateLimits } from '@/modules/identity/schema/auth';
 
 // Better Auth's `rateLimit` model for `storage: 'database'`: `key` unique,
 // `count`, and `lastRequest` a bigint of epoch milliseconds, which outgrows an
-// integer (claude-docs/auth.md, "Tables").
+// integer (claude-docs/auth/tables.md, "Tables").
 describe('rate_limits schema', () => {
   const { byName, columns } = tableFacts(rateLimits);
 

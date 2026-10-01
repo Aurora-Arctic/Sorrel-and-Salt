@@ -3,7 +3,9 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
+import { ingredientSlug } from '@/lib/slugify';
 import { CATEGORIES } from '@/db/seed/categories';
+import { PLANETS, ZODIAC_SIGNS } from '@/db/seed/astrology';
 import { FORMS } from '@/db/seed/forms';
 import {
   COMPENDIUM_INGREDIENTS,
@@ -13,43 +15,15 @@ import {
   seedStandard,
 } from '@/db/seed/standard';
 import { seed } from '@/db/seed/index';
+import type { CompendiumEntryRow, MemberRow, UserRow } from './types';
 
 // The `standard` scenario against the real schema, every table emptied first:
 // membership is two real foreign keys and the compendium's identity a
 // generated column. It is awkward on purpose — five "Cat's Claw"s, a mineral
 // variety, a `none`, an `unknown`, an uncurated form —
-// claude-docs/db.md, "The standard scenario".
+// claude-docs/db/standard-scenario.md, "The standard scenario".
 
 const PROBE = 'standard_probe_acting_user';
-
-interface UserRow {
-  id: string;
-  name: string;
-  email: string;
-  role: 'user' | 'admin';
-  can_create_workspace: boolean;
-  created_by: string;
-  updated_by: string;
-  deleted_at: Date | null;
-}
-
-interface MemberRow {
-  workspace_id: string;
-  user_id: string;
-  role: 'viewer' | 'member' | 'owner';
-  created_by: string;
-}
-
-interface IngredientRow {
-  id: string;
-  workspace_id: string | null;
-  name: string;
-  canonical_name: string | null;
-  nomenclature: string;
-  form: string | null;
-  canonical_key: string;
-  created_by: string;
-}
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
@@ -62,8 +36,8 @@ async function allMembers(): Promise<MemberRow[]> {
   return sql<MemberRow[]>`select * from workspace_members order by workspace_id, user_id`;
 }
 
-async function compendium(): Promise<IngredientRow[]> {
-  return sql<IngredientRow[]>`
+async function compendium(): Promise<CompendiumEntryRow[]> {
+  return sql<CompendiumEntryRow[]>`
     select * from ingredients where workspace_id is null order by name, canonical_name
   `;
 }
@@ -224,10 +198,31 @@ describe('the compendium', () => {
   it('seeds the admin-curated reference data the scenario stands on', async () => {
     await seedStandard(db);
 
-    // A whole compendium: categories and forms are what an entry is filed
-    // under and what its `form` is autofilled from.
+    // A whole compendium: categories are what an entry is filed under, and
+    // the forms, planets and signs what its `form`, `planet` and `zodiac`
+    // are autofilled from.
     expect(await countOf('categories')).toBe(CATEGORIES.length);
     expect(await countOf('ingredient_forms')).toBe(FORMS.length);
+    expect(await countOf('planets')).toBe(PLANETS.length);
+    expect(await countOf('zodiac_signs')).toBe(ZODIAC_SIGNS.length);
+  });
+
+  // Unlike `form`, no uncurated planet is seeded: the admin's to-do list is
+  // exercised by the tests that write one.
+  it('sets only curated planets, compared case-insensitively', async () => {
+    await seedStandard(db);
+
+    const curated = await sql<{ name: string }[]>`select name from planets`;
+    const curatedNames = new Set(curated.map((row) => row.name.toLowerCase()));
+    const inUse = [
+      ...new Set((await compendium()).flatMap((e) => (e.planet === null ? [] : [e.planet]))),
+    ];
+
+    // Precondition: there are planets on both sides to compare.
+    expect(curatedNames.size).toBe(PLANETS.length);
+    expect(inUse.length).toBeGreaterThanOrEqual(5);
+
+    expect(inUse.filter((planet) => !curatedNames.has(planet.toLowerCase()))).toEqual([]);
   });
 
   it('holds enough entries to exercise search', async () => {
@@ -289,6 +284,28 @@ describe('the compendium', () => {
     expect(new Set(catsClaws.map((e) => e.canonical_key)).size).toBe(5);
   });
 
+  // MB.80's public address, derived and never written down (CLAUDE.md's slug
+  // rule): the label, the form and the formal name, and no two alike among the
+  // live entries.
+  it('gives every entry the slug of its label, form and formal name, no two alike', async () => {
+    await seedStandard(db);
+
+    const entries = await compendium();
+    expect(entries.length).toBe(COMPENDIUM_INGREDIENTS.length);
+    for (const entry of entries) {
+      expect(entry.slug).toBe(ingredientSlug(entry.name, entry.form, entry.canonical_name));
+    }
+    expect(new Set(entries.map((e) => e.slug)).size).toBe(entries.length);
+
+    // The pair that put the formal name in the slug: one label, one form, two plants.
+    const barks = entries.filter((e) => e.name === "Cat's Claw" && e.form === 'bark');
+    expect(barks.map((e) => e.canonical_name).sort()).toEqual([
+      'Uncaria guianensis',
+      'Uncaria tomentosa',
+    ]);
+    expect(new Set(barks.map((e) => e.slug)).size).toBe(2);
+  });
+
   it('puts an in-use form outside the curated vocabulary, and most inside it', async () => {
     await seedStandard(db);
 
@@ -341,6 +358,8 @@ describe('re-running the scenario', () => {
       assignments: await countOf('ingredient_categories'),
       categories: await countOf('categories'),
       forms: await countOf('ingredient_forms'),
+      planets: await countOf('planets'),
+      zodiacSigns: await countOf('zodiac_signs'),
     };
 
     await expect(seedStandard(db)).resolves.toBeUndefined();
@@ -354,6 +373,8 @@ describe('re-running the scenario', () => {
       assignments: await countOf('ingredient_categories'),
       categories: await countOf('categories'),
       forms: await countOf('ingredient_forms'),
+      planets: await countOf('planets'),
+      zodiacSigns: await countOf('zodiac_signs'),
     }).toEqual(before);
   });
 

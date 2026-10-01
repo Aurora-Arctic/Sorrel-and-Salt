@@ -104,6 +104,21 @@ describe('assertMembership', () => {
     ).rejects.toBeInstanceOf(Forbidden);
   });
 
+  // Asked of the database, an id that is not a uuid is a driver error rather
+  // than a refusal. B is a member of W, so the only thing refused is the id.
+  it.each(['not-a-coven', WORKSPACE_W_ID.slice(0, -1), ''])(
+    'refuses a workspace id that is not a uuid, %o',
+    async (workspaceId) => {
+      await expect(
+        assertMembership(asUser(B), WORKSPACE_W_ID, { spell: ['read'] }),
+      ).resolves.toBeDefined();
+
+      await expect(
+        assertMembership(asUser(B), workspaceId, { spell: ['read'] }),
+      ).rejects.toBeInstanceOf(Forbidden);
+    },
+  );
+
   it('refuses a membership that has been soft-deleted', async () => {
     // Why this could have succeeded: B's row is present and admits B a moment
     // earlier, so the refusal below is the `deleted_at IS NULL` filter and not

@@ -1,15 +1,13 @@
 # Debugging — summary
 
-This summary is self-contained (MB.22, extended by MB.23) — nothing here
+This summary is self-contained (MB.22, MB.23) — nothing here
 requires opening `package.json`, `makefile`, `Docker/docker-compose.yaml`,
 `.devcontainer/`, `Docker/Dockerfile.e2e`, or `playwright.config.ts` to
 follow.
 
-Before this task there was no debugging story at all: no Node inspector
-wired anywhere in the container, no `.vscode/` directory, no way to step
-into a service, a repository call, or a test, and no way to watch what
-`withAudit` actually does to a query beyond reading its output. This is tooling only — no table, no service, no
-page.
+It covers stepping into a server, a service, a repository call or a test,
+watching what `withAudit` does to a query, and recording a Playwright spec.
+Tooling only — no table, no service, no page.
 
 ## Getting set up
 
@@ -64,7 +62,8 @@ attached at all.
 | Port  | What                                                 | Where it's forwarded/published                                                                                            |
 | ----- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | 8000  | `next dev`                                           | devcontainer.json, `app` service (Docker/docker-compose.yaml)                                                             |
-| 8001  | `next start` (production build, e2e target)          | devcontainer.json                                                                                                         |
+| 8001+ | `next start`, one per e2e worker slot (MB.112)       | devcontainer.json forwards 8001 alone; slot `n` serves on `8001 + n`, reached inside the compose network                  |
+| 8100  | `next start`, e2e configured providers (MB.112)      | none — reached inside the compose network                                                                                 |
 | 4983  | Drizzle Studio (MB.21)                               | devcontainer.json, `studio` service                                                                                       |
 | 9229  | Node inspector — `next dev --inspect`                | devcontainer.json, `app` service                                                                                          |
 | 9230  | Node inspector — `vitest --inspect-brk`              | devcontainer.json only (no long-running compose service serves this)                                                      |
@@ -77,7 +76,8 @@ attached at all.
 | 7900  | Playwright display — codegen, `page.pause()` (MB.23) | devcontainer.json, `playwright-server` service — a page you open, unlike 4444                                             |
 
 Everything in that table except 8000, 8001, 4983, 4444 and 61000 is new to
-MB.22; 7900 is MB.23's. All the
+MB.22; 7900 is MB.23's, and 8100 and the slot ports past 8001 are MB.112's.
+All the
 `devcontainer.json`-only rows are forwarded because the process that opens
 them runs inside the devcontainer and is started from an editor terminal or
 a `tasks.json` task, not by a long-running compose service — there is
@@ -85,7 +85,7 @@ nothing in `Docker/docker-compose.yaml` to publish a port from.
 
 From the **host**, the `make` equivalents are `make dev-debug`,
 `make test-debug`, `make test-ui`, `make e2e-ui`, `make e2e-trace`, exactly
-mirroring CLAUDE.md's Commands table (neither `make` nor `docker` exists
+mirroring [`commands.md`](commands.md) (neither `make` nor `docker` exists
 inside the devcontainer itself — run the npm scripts directly there).
 
 ## Server-side debugging
@@ -106,6 +106,42 @@ component code running in the browser, not the server) is host Chrome
 DevTools against the forwarded port 8000 directly — there is no VS Code
 client-side (Chrome/Edge) launch config, and none is planned, for the same
 reason.
+
+## Server edits reload the server's modules
+
+`next.config.ts` sets `experimental.turbopackServerFastRefresh: false`, so
+after an edit `next dev` drops its server modules and loads them from disk on
+the next request. Next 16.3's default instead patches the running process: it
+re-runs the edited module and every module that imports it, and nothing
+below them. That breaks the GraphQL schema, which each module registers on
+the one `builder` from `src/graphql/builder.ts` as it loads:
+
+- **Edit a module's GraphQL file** (`src/modules/*/graphql/*.ts`) and it
+  re-runs against the builder it already registered on. Every request to
+  `/api/graphql` then fails with `PothosSchemaError: Duplicate field …` until
+  the server restarts.
+- **Edit `src/graphql/pagination.ts`** and the patch applies without an
+  error, but the endpoint goes on serving the schema it started with.
+
+Both were reproduced on a second `next dev` inside the devcontainer, so the
+file watcher is not the cause: Turbopack logged "Compiled" within 3 s of the
+save either way. With the setting off, both edits are served within 3 s. The
+cost is the first request after an edit, which reloads the server's modules:
+about 150–270 ms against 10 ms, for the GraphQL route.
+
+Two alternatives were not taken:
+
+- **Declining hot updates in the schema modules**, through Turbopack's
+  `module.hot`, would keep in-place patching for pages. It is an
+  undocumented server-side API, and it has to be repeated in every file that
+  registers on the builder.
+- **Registering types through a function the route calls** rather than as
+  each module loads would make the schema safe to re-run. That rewrites every
+  module's `graphql/` files for a development-only benefit.
+
+A CLI `--server-fast-refresh` overrides the config, so no `dev` script passes
+it. `tests/guards/dev-server-fast-refresh.test.ts` fails if the setting is
+removed.
 
 ## Test debugging
 
@@ -175,14 +211,17 @@ broader would silently make both depend on `playwright-server` being up,
 which it never is in either context.
 
 **The remote branch also moves `baseURL`, and deliberately not the readiness
-check.** When `PLAYWRIGHT_WS_ENDPOINT` is set, `playwright.config.ts`
-switches `baseURL` to `http://devcontainer:8001` — a remote browser cannot
-resolve the runner's own `localhost`, and `next start --hostname 0.0.0.0`
-already binds every interface, so the compose service name works. The
-`webServer.url` readiness poll stays on `http://localhost:8001`
-unconditionally, because that poll runs in the runner's own process no
-matter where the browser lives. The asymmetry is correct; making both sides
-match breaks one of them.
+check.** When `PLAYWRIGHT_WS_ENDPOINT` is set, every `baseURL` becomes
+`http://devcontainer:<port>` (`tests/e2e/slots.ts`'s `browserUrl`) — the
+worker slot's server, on 8001 and up, or 8100 for the configured-providers
+project. A remote browser cannot resolve the runner's own `localhost`, and
+`next start --hostname 0.0.0.0` already binds every interface, so the
+compose service name works. Each `webServer.url` readiness poll stays on
+`http://localhost:<port>` unconditionally, because that poll runs in the
+runner's own process no matter where the browser lives. The asymmetry is
+correct; making both sides match breaks one of them. `devcontainer.json`
+forwards 8001 alone: the remote browser reaches every server inside the
+compose network, and only slot 0's is worth opening from the host.
 
 **`ws://playwright-server:4444/` is a WebSocket address, not a URL you open
 in a browser.** It's what `playwright.config.ts` passes as
@@ -193,7 +232,7 @@ _do_ open in a host browser are the forwarded ports: 9323 for the trace
 viewer, 9324 for UI mode. Both work the same over a remote browser as over a
 local one, because both are the _runner's_ own UI, not the browser's.
 
-**Headed/interactive Playwright now has somewhere to draw (MB.23).**
+**Headed/interactive Playwright draws on a virtual display (MB.23).**
 `playwright-server` carries a virtual display (Xvfb + a window manager),
 reachable from an ordinary host browser tab at **`http://localhost:7900`**
 over noVNC — `page.pause()`'s Inspector overlay and UI mode's live locator
@@ -286,8 +325,8 @@ A recorded spec is a draft, not something to open a PR with as-is:
    `devcontainer`/`localhost`, never `sorrel-app`.
 3. If it touches the database, add `test.describe.configure({ mode: 'serial'
 })` and a `beforeAll` calling `recreateE2eDatabase()` from `./database` —
-   see the comment atop `tests/e2e/smoke.spec.ts` for why parallel workers racing
-   `DROP/CREATE DATABASE` isn't theoretical.
+   `serial` keeps the file's tests, and its one reseed of the worker's
+   database, on one worker (`claude-docs/testing/e2e.md`, "E2E — Playwright").
 4. Consider `assertNoAccessibilityViolations` from `./axe` for any new page.
 5. Strip codegen's redundant assertions and any brittle `nth()`-match
    locator it fell back to.
@@ -312,15 +351,15 @@ sorrel` against the running compose Postgres: a raw SQL prompt for poking
   a test is doing.
 - **Drizzle Studio** (`npm run db:studio` / `make db-studio` /
   `make docker-studio`, port 4983) — a visual browser for the local
-  database, predates this task (MB.21). Its own UI is hosted externally at
+  database (MB.21). Its own UI is hosted externally at
   `https://local.drizzle.studio` and connects back to the forwarded/published
   port; not re-explained here beyond that it's part of the same "how do I
   see what the database actually holds" story as `DEBUG_SQL` and `db-psql`.
 
 ## Next.js DevTools MCP
 
-`.mcp.json` gained a `next-devtools` server (`npx -y next-devtools-mcp@latest`),
-alongside the pre-existing `asana` one. It gives an agent (Claude Code
+`.mcp.json` carries a `next-devtools` server (`npx -y next-devtools-mcp@latest`).
+It gives an agent (Claude Code
 itself, or any other MCP client) tools to inspect a running Next.js dev
 server directly — routes, build errors, runtime state — rather than
 inferring them from terminal output.

@@ -8,7 +8,7 @@ import { REPO_ROOT } from '../support/paths';
 // `import 'server-only'`, which Next resolves to a build error in any client
 // bundle that reaches it — directly or through a module in between — so the
 // boundary is `next build`'s rather than a path glob's, and holds for a
-// `'use client'` file wherever it lives (claude-docs/graphql.md, "The access
+// `'use client'` file wherever it lives (claude-docs/graphql/access-boundary.md, "The access
 // boundary"). Vitest aliases the marker to Next's empty stub, which is why a
 // test can still import a service.
 //

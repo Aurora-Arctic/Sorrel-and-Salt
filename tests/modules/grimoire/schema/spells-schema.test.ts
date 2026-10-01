@@ -10,7 +10,7 @@ import { spellStatus, spellVisibility, spells } from '@/modules/grimoire/schema/
 import { workspaces } from '@/modules/coven/schema/workspaces';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 
-// §5's columns, `visibility` included as of M10.3 — claude-docs/db.md,
+// §5's columns, `visibility` included as of M10.3 — claude-docs/db/grimoire.md,
 // "The grimoire".
 const OWN_COLUMNS = [
   'id',
@@ -31,7 +31,7 @@ const WORKSPACE_FK = 'spells_workspace_id_workspaces_id_fk';
 describe('spells schema', () => {
   const { byName, indexes, checks, foreignKeyByColumn } = tableFacts(spells);
 
-  // The full six: story 54's delete is recoverable. Only the three join tables take four (MB.34).
+  // The full six: story 54's delete is recoverable. Only two join tables take four (MB.34).
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });

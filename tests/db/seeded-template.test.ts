@@ -5,6 +5,7 @@ import postgres from 'postgres';
 import { MIGRATIONS_DIR } from '../support/paths';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { CATEGORIES } from '@/db/seed/categories';
+import { PLANETS, ZODIAC_SIGNS } from '@/db/seed/astrology';
 import { FORMS } from '@/db/seed/forms';
 import {
   COMPENDIUM_INGREDIENTS,
@@ -14,7 +15,7 @@ import {
 } from '@/db/seed/standard';
 
 // The baseline every other file under tests/db/ may assume; this one builds no
-// schema and seeds nothing — claude-docs/testing.md, "Where tests live".
+// schema and seeds nothing — claude-docs/testing/where-tests-live.md, "Where tests live".
 
 let sql: ReturnType<typeof postgres>;
 
@@ -61,9 +62,11 @@ describe('the seeded template every db worker clones', () => {
     expect(rows.map((r) => r.id)).toEqual([WORKSPACE_W_ID, WORKSPACE_X_ID].sort());
   });
 
-  it('holds the full category and form vocabularies', async () => {
+  it('holds the full category, form, planet and zodiac vocabularies', async () => {
     expect(await countOf('categories')).toBe(CATEGORIES.length);
     expect(await countOf('ingredient_forms')).toBe(FORMS.length);
+    expect(await countOf('planets')).toBe(PLANETS.length);
+    expect(await countOf('zodiac_signs')).toBe(ZODIAC_SIGNS.length);
   });
 
   it('holds the standard compendium and no workspace ingredients', async () => {

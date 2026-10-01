@@ -6,8 +6,9 @@ import { and, eq } from 'drizzle-orm';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
-import { findMany, withAudit } from '@/db/repository';
+import { withAudit } from '@/db/repository';
 import { FIXTURE_USERS } from '@/db/seed/standard';
+import type { IngredientCategoryPair } from './types';
 
 const PRIMARY_KEY = 'ingredient_categories_ingredient_id_category_id_pk';
 const REVERSE_INDEX = 'ingredient_categories_category_id_idx';
@@ -18,7 +19,7 @@ describe('ingredient_categories schema', () => {
   const { byName, indexes, primaryKeys, foreignKeyByColumn } = tableFacts(ingredientCategories);
 
   // Four stamps and no tombstone (MB.34): a removed pair leaves no row —
-  // claude-docs/db.md, "Hard delete on the three join tables".
+  // claude-docs/db/hard-delete-join-tables.md, "Hard delete on two join tables".
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
       ['ingredient_id', 'category_id', ...STAMP_COLUMNS].sort(),
@@ -103,9 +104,7 @@ async function assign(ingredientId: string, categoryId: string, author = AUTHOR)
   `;
 }
 
-type Pair = { ingredientId: string; categoryId: string };
-
-async function pairs(): Promise<Pair[]> {
+async function pairs(): Promise<IngredientCategoryPair[]> {
   const rows = await sql`
     select ingredient_id, category_id from ingredient_categories
     order by ingredient_id, category_id
@@ -118,7 +117,7 @@ async function pairs(): Promise<Pair[]> {
 
 // Sorted as `pairs()` reads: the seed generates the ids, and a uuid orders
 // bytewise, which for its lowercase text is plain string comparison.
-function inPairOrder(expected: Pair[]): Pair[] {
+function inPairOrder(expected: IngredientCategoryPair[]): IngredientCategoryPair[] {
   const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
   return [...expected].sort(
     (a, b) => compare(a.ingredientId, b.ingredientId) || compare(a.categoryId, b.categoryId),
@@ -268,9 +267,6 @@ describe('a pair removed through write.delete', () => {
 
     expect(removed).toHaveLength(1);
     expect(await pairs()).toEqual([]);
-    // `findMany` writes no `deleted_at IS NULL` for this table, so an empty
-    // read is an empty table.
-    expect(await findMany(ingredientCategories)).toEqual([]);
   });
 
   it('can be re-added afterwards, with no partial index to make it possible', async () => {

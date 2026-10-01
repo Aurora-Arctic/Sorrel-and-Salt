@@ -2,26 +2,19 @@ import { expect } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import type { SetupServer } from 'msw/node';
 import type { auth as Auth } from '@/lib/auth';
+import { socialSignInTarget } from '@/lib/sign-in';
+import type { ProviderId } from '@/lib/types';
+import type { Profile } from './types';
 
 // Drives Better Auth's real `/api/auth/*` endpoints with MSW standing in for
 // each provider, so what is under test is Better Auth's own flow with our
 // hooks attached, not a hand-built context. MSW intercepts only what the
 // server fetches; the requests into Better Auth are `auth.handler` calls.
 
-export type ProviderId = 'google' | 'discord' | 'facebook' | 'microsoft';
-
-export interface Profile {
-  /** The provider's own stable account id. */
-  sub: string;
-  /** Absent or `null`: the provider shared no address, as Discord and Facebook can. */
-  email?: string | null;
-  verified: boolean;
-}
-
 export const ORIGIN = 'http://localhost:8000';
 
-/** Where an unverified sign-in lands (MB.54), carrying the sign-in's own destination. */
-export const EMAIL_PAGE = '/account/email?next=%2Fcoven';
+/** Where an unverified sign-in lands (MB.54) when it asked for no return path, as `signIn` does by default. */
+export const EMAIL_PAGE = '/account/email';
 
 /** Registers all four providers with test credentials; call before importing `@/lib/auth`. */
 export function stubProviderCredentials(stubEnv: (name: string, value: string) => void): void {
@@ -144,12 +137,17 @@ export function cookieHeader(response: Response): string {
     .join('; ');
 }
 
-/** One full round trip: start the sign-in, then land on the callback. Returns the callback's redirect. */
+/**
+ * One full round trip: start the sign-in headed for `next`, or for no return
+ * path at all, with what SignInPanel would send, then land on the callback.
+ * Returns the callback's redirect.
+ */
 export async function signIn(
   auth: typeof Auth,
   server: SetupServer,
   provider: ProviderId,
   profile: Profile,
+  next?: string,
 ): Promise<Response> {
   server.use(...providerHandlers(provider, profile));
 
@@ -157,7 +155,7 @@ export async function signIn(
     new Request(`${ORIGIN}/api/auth/sign-in/social`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', origin: ORIGIN },
-      body: JSON.stringify({ provider, callbackURL: '/coven' }),
+      body: JSON.stringify({ provider, ...socialSignInTarget(next) }),
     }),
   );
   expect(start.status, await start.clone().text()).toBe(200);
@@ -220,11 +218,11 @@ export function landingOf(response: Response): string {
 }
 
 /**
- * The callback signed the browser in: it went where the sign-in asked, or to
- * the email page an unverified account lands on, and not to an error page.
- * A test about which of the two asserts `landingOf` itself.
+ * The callback signed the browser in: it went to the landing a sign-in with
+ * no return path gets, or to the email page an unverified account lands on,
+ * and not to an error page. A test about which asserts `landingOf` itself.
  */
 export function expectSignedIn(response: Response): void {
   expect(response.status).toBe(302);
-  expect(['/coven', EMAIL_PAGE]).toContain(landingOf(response));
+  expect(['/coven', '/admin', EMAIL_PAGE]).toContain(landingOf(response));
 }

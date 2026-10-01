@@ -2,14 +2,8 @@ import 'server-only';
 import { findManyByIds, findMembershipsOfUsers } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { type workspaceMembers, workspaces } from '../schema/workspaces';
-
-export type WorkspaceRow = typeof workspaces.$inferSelect;
-
-/** One membership, carrying the workspace it is of. */
-export type MembershipWithWorkspace = typeof workspaceMembers.$inferSelect & {
-  workspace: WorkspaceRow;
-};
+import { workspaces } from '../schema/workspaces';
+import type { MembershipWithWorkspace } from '../types';
 
 /**
  * The live memberships of each user named, one answer per id in the order

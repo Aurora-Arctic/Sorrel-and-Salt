@@ -7,7 +7,7 @@ import { storyNamingViolations } from '../support/story-naming';
 import { REPO_ROOT } from '../support/paths';
 
 // Every top-level describe under tests/acceptance/ names a v1 story
-// (claude-docs/testing.md, "Acceptance"). A suite that leaves its story off is
+// (claude-docs/testing/acceptance.md, "Acceptance"). A suite that leaves its story off is
 // not a red line on the checklist — it is a line that never appears.
 //
 // Tracked plus untracked, as slug-rule.test.ts scans: the file this guard

@@ -6,7 +6,7 @@ import { auditColumns, auditStampColumns } from '@/modules/identity/schema/users
 
 // The repository's own tests run against scratch tables rather than real ones:
 // the contract is the audit columns and the table shapes, not any one table's
-// other constraints (claude-docs/db.md, "The write path").
+// other constraints (claude-docs/db/write-path.md, "The write path").
 
 // A scratch table spreading the real `auditColumns` minus their FKs to
 // `users`: the contract is about the six columns, not any one table.
@@ -54,6 +54,15 @@ export const jars = pgTable('repository_probe_jars', {
   id: uuid('id').defaultRandom().primaryKey(),
   workspaceId: uuid('workspace_id').notNull(),
   label: text('label').notNull(),
+  ...auditColumns,
+});
+
+// The two-tier shape: a nullable `workspace_id`, null meaning the compendium,
+// as `ingredients` has it — what the compendium-tier writes accept.
+export const tinctures = pgTable('repository_probe_tinctures', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id'),
+  name: text('name').notNull(),
   ...auditColumns,
 });
 
@@ -126,6 +135,19 @@ export function useProbeTables() {
       )
     `;
     await sql`
+      create table repository_probe_tinctures (
+        id uuid primary key default gen_random_uuid(),
+        workspace_id uuid,
+        name text not null,
+        created_at timestamp not null default now(),
+        created_by uuid not null,
+        updated_at timestamp not null default now(),
+        updated_by uuid not null,
+        deleted_at timestamp,
+        deleted_by uuid
+      )
+    `;
+    await sql`
       create unique index repository_probe_charms_name_unique
         on repository_probe_charms (name)
         where deleted_at is null
@@ -137,6 +159,7 @@ export function useProbeTables() {
     await sql`drop table if exists repository_probe_charms`;
     await sql`drop table if exists repository_probe_pairs`;
     await sql`drop table if exists repository_probe_jars`;
+    await sql`drop table if exists repository_probe_tinctures`;
     await sql.end();
   });
 
@@ -145,5 +168,6 @@ export function useProbeTables() {
     await sql`truncate repository_probe_charms`;
     await sql`truncate repository_probe_pairs`;
     await sql`truncate repository_probe_jars`;
+    await sql`truncate repository_probe_tinctures`;
   });
 }

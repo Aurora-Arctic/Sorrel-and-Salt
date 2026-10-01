@@ -1,7 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
-import type { Message } from '@/lib/mail';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 import {
   EMAIL_PAGE,
@@ -13,13 +12,13 @@ import {
   providerHandlers,
   signIn as signInThrough,
   stubProviderCredentials,
-  type Profile,
-  type ProviderId,
 } from '../support/oauth';
+import type { Message, ProviderId } from '@/lib/types';
+import type { Profile } from '../support/types';
 
 // Story 1, through Better Auth's real endpoints: the lastLoginMethod plugin
 // writes a readable cookie naming the provider whenever a callback sets the
-// session, and at no other point (claude-docs/auth.md, "Plugins").
+// session, and at no other point (claude-docs/auth/plugins.md, "Plugins").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));

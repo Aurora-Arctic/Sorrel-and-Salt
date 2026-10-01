@@ -1,7 +1,7 @@
 name: Vitest
 
 # The Vitest suite with coverage, then the acceptance story checklist.
-# workflow_call only, from pr-gate. claude-docs/ci.md, "Reusable checks" is
+# workflow_call only, from pr-gate. claude-docs/ci/reusable-checks.md, "Reusable checks" is
 # the walkthrough. `services: postgres:` is why the `db` project can run; the
 # image is built once by the caller and shared with playwright.yml.
 on:
@@ -45,7 +45,13 @@ permissions:
 
 jobs:
   vitest:
-    runs-on: ubuntu-26.04
+    # Blacksmith, not GitHub: eight vCPUs give the suite seven workers, and it
+    # caches the job and service images. Everything else stays on GitHub's
+    # runners, which are free and unlimited on a public repo, where
+    # Blacksmith's free tier is capped. The work runs in `container:`, so the
+    # host's 24.04 (Blacksmith has no 26.04) is only Docker and the runner
+    # agent. claude-docs/ci/runner-budget.md, "Runner budget".
+    runs-on: blacksmith-8vcpu-ubuntu-2404
     container:
       image: ${{ inputs.image }}
       credentials:
@@ -63,9 +69,13 @@ jobs:
           POSTGRES_USER: sorrel
           POSTGRES_PASSWORD: sorrel
           POSTGRES_DB: sorrel
+        # Probed every second for the first ten while it starts, not after the
+        # first 5s interval, so the job waits on the service rather than the clock.
         options: >-
           --health-cmd="pg_isready -U postgres -d sorrel_template"
           --health-interval=5s
+          --health-start-period=10s
+          --health-start-interval=1s
           --health-timeout=5s
           --health-retries=10
     defaults:
@@ -87,6 +97,8 @@ jobs:
         if: inputs.should-run
         run: |
           set -o pipefail
+          # The db project runs cores - 1 workers; this puts the count in the log.
+          echo "nproc: $(nproc)"
           npm run test:coverage -- --reporter=default --reporter=json --outputFile=/app/vitest-results.json 2>&1 | tee /app/output.log
 
       - name: Summarize output
@@ -97,10 +109,10 @@ jobs:
       # Its own config and no `--coverage`: a story never moves the 80%
       # threshold. `always()` because the checklist is a progress report.
       # `continue-on-error`: M2.1 lands the first acceptance file
-      # deliberately red (TASKS.md, M2 sequencing), so a failing story cannot
+      # deliberately red (claude-docs/tasks/m2.md, M2 sequencing), so a failing story cannot
       # fail this job until M2 closes — `steps.stories.outcome` below still
       # reads the real result, only `conclusion` (what gates the job) is
-      # affected. Revert once every M2 story is green (claude-docs/testing.md,
+      # affected. Revert once every M2 story is green (claude-docs/testing/acceptance.md,
       # "Acceptance").
       - name: Run acceptance stories
         id: stories

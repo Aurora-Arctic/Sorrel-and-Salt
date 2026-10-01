@@ -13,7 +13,7 @@ import { createBuilder } from '@/graphql/builder';
 import { schema } from '@/graphql/schema';
 import { REPO_ROOT } from '../support/paths';
 
-// CLAUDE.md rule 8's guard (claude-docs/graphql.md, "Pagination"): a later
+// CLAUDE.md rule 8's guard (claude-docs/graphql/pagination.md, "Pagination"): a later
 // task that declares a list query without the helper fails here, in its own
 // diff, rather than shipping a field that can return the whole table.
 

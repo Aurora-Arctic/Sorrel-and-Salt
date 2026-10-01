@@ -13,7 +13,9 @@ vi.mock('@/graphql/schema', async () => {
   const scratch = createBuilder();
   const id = '00000000-0000-4000-8000-000000000000';
   const page = (limit: number) =>
-    Promise.resolve(Array.from({ length: limit }, () => ({ cursor: { key: 'k', id }, node: {} })));
+    Promise.resolve(
+      Array.from({ length: limit }, () => ({ cursor: { key: ['k'], id }, node: {} })),
+    );
   const Leaf = scratch.objectRef<object>('Leaf');
   Leaf.implement({ fields: (t) => ({ name: t.string({ resolve: () => 'leaf' }) }) });
   const Node = scratch.objectRef<object>('Node');
@@ -94,7 +96,7 @@ describe.each(['development', 'production'])('graphql-armor at NODE_ENV=%s', (no
   });
 
   // Priced by the complexity plugin at the page each connection will fetch
-  // (claude-docs/graphql.md, "Protections"), so a refusal is an execution
+  // (claude-docs/graphql/protections.md, "Protections"), so a refusal is an execution
   // error: `data` is null rather than absent.
   describe('cost', () => {
     const refusal = [

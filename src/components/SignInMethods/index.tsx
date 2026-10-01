@@ -3,7 +3,9 @@
 import { type ReactElement, useState } from 'react';
 import { linkSocial, unlinkAccount } from '../../lib/auth-client';
 import { ACCOUNT_PATH, GENERIC_LINK_ERROR, unlinkErrorMessage } from '../../lib/sign-in';
-import { SOCIAL_PROVIDERS, type LinkedAccount, type ProviderId } from '../../lib/social-providers';
+import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
+import type { LinkedAccount, ProviderId } from '../../lib/types';
+import type { SignInMethodsProps } from './types';
 import './index.scss';
 
 // The account page's list of the ways into this account: each roster
@@ -11,15 +13,6 @@ import './index.scss';
 // Better Auth's /link-social, which leaves for the provider and lands back on
 // the account page; removing one is /unlink-account, answered in place.
 // See claude-docs/components/sign-in-methods.md.
-
-export interface SignInMethodsProps {
-  /** The signed-in user's provider accounts, from `linkedAccounts()`. */
-  linked: readonly LinkedAccount[];
-  /** Providers this environment has credentials for; the rest cannot be added. */
-  configured: readonly ProviderId[];
-  /** A readable sentence for a failed link, from linkErrorMessage — never a raw code. */
-  error?: string;
-}
 
 const SignInMethods = ({ linked, configured, error }: SignInMethodsProps): ReactElement => {
   // Seeded from the server's list; a removal answers in place rather than
@@ -65,13 +58,13 @@ const SignInMethods = ({ linked, configured, error }: SignInMethodsProps): React
       <h1 className="sign-in-methods__heading">Sign-in methods</h1>
       <p className="sign-in-methods__intro">Any of these signs you in to this account.</p>
       {alert && (
-        <p className="sign-in-methods__error" role="alert">
+        <p className="notice notice--error" role="alert">
           {alert}
         </p>
       )}
       {removed && (
         // `output` carries the status role itself, so no `role` attribute.
-        <output className="sign-in-methods__removed">{removed} was removed.</output>
+        <output className="notice notice--success">{removed} was removed.</output>
       )}
       <ul className="sign-in-methods__list">
         {SOCIAL_PROVIDERS.map((provider) => {
@@ -86,7 +79,7 @@ const SignInMethods = ({ linked, configured, error }: SignInMethodsProps): React
                 removable && (
                   <button
                     type="button"
-                    className="btn sign-in-methods__button"
+                    className="btn"
                     disabled={pending !== undefined}
                     onClick={() => handleRemove(account, provider.label)}
                   >
@@ -97,7 +90,7 @@ const SignInMethods = ({ linked, configured, error }: SignInMethodsProps): React
                 <>
                   <button
                     type="button"
-                    className="btn sign-in-methods__button"
+                    className="btn"
                     // Not `disabled`, as on /sign-in: it stays in the tab order.
                     aria-disabled={isAvailable ? undefined : true}
                     aria-describedby={isAvailable ? undefined : noteId}

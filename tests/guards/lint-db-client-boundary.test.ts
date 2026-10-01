@@ -3,11 +3,12 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
+import type { Diagnostic } from './types';
 
 // Both `no-restricted-imports` boundaries in `.oxlintrc.json` actually fire:
 // only `src/db/repository/` may import the database client (CLAUDE.md rule
 // 2), and only the database layer may import `drizzle-orm` at runtime (rule 4)
-// — claude-docs/db.md, "Where queries may be built".
+// — claude-docs/db/query-building.md, "Where queries may be built".
 //
 // Two oxlint 1.82 facts shape the config: a rule set to `"off"` inside an
 // `overrides` block is ignored, so the database layer's exemption is a
@@ -70,11 +71,6 @@ const CLIENT_EXEMPT = [
   'scripts/db-seed.ts',
   'tests/db/test-database-isolation.test.ts',
 ];
-
-interface Diagnostic {
-  code: string;
-  filename: string;
-}
 
 /** Probe files, keyed by the repo-relative path each is written to. */
 const probes = new Map<string, string>();

@@ -1,22 +1,10 @@
-import type { workspaceMembers, workspaces } from '@/modules/coven/schema/workspaces';
 import { slugify } from '@/lib/slugify';
 import { A } from '../as-user';
-import { type Overrides, mergeFixture, stated } from './merge';
+import { mergeFixture, stated } from './merge';
+import type { WorkspaceFixture, Overrides } from './types';
 
 // A coven and who is in it. The pair is the point: a workspace nobody belongs
 // to denies everyone and proves nothing.
-
-export type WorkspaceMemberFixture = Pick<typeof workspaceMembers.$inferInsert, 'userId' | 'role'>;
-
-/**
- * A workspace plus its membership. `workspaceId` is absent from the members:
- * it is the workspace they are members *of*.
- */
-export interface WorkspaceFixture extends Required<
-  Pick<typeof workspaces.$inferInsert, 'name' | 'slug'>
-> {
-  members: WorkspaceMemberFixture[];
-}
 
 // Neither W nor X, and invented (CLAUDE.md, Testing); workspace.test.ts checks
 // it against the seed.

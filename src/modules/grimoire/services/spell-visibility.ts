@@ -4,9 +4,7 @@ import { spells } from '../schema/spells';
 import { Forbidden, NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { assertMembership } from '@/modules/coven';
-
-/** `'private' | 'workspace'`, read off the column rather than restated. */
-export type SpellVisibility = (typeof spells.$inferSelect)['visibility'];
+import type { SpellVisibility } from '../types';
 
 /**
  * DESIGN.md §5's one-way rule, as the caller meets it. Widening is a gift and

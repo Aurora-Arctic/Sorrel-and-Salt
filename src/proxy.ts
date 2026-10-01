@@ -8,7 +8,7 @@ import { assertWorkshopAccess } from '@/modules/identity';
 // about is protected rather than open. The check is optimistic — is a session
 // cookie present — and never touches the database; `requireSession()` in the
 // page is the check that does — except under /workshop, below. See
-// claude-docs/auth.md, "Route protection".
+// claude-docs/auth/route-protection.md, "Route protection".
 
 /**
  * The pages a signed-out visitor may reach. An entry is an exact path, or a

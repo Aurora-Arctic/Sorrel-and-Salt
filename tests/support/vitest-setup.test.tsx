@@ -7,7 +7,7 @@ import { server } from './msw/server';
 // and not been undone by hand, so the hook under test is the only thing that
 // could have reset the state.
 
-describe('vitest.setup.ts — RTL cleanup', () => {
+describe('setup-dom.ts — RTL cleanup', () => {
   it('renders a marker element', () => {
     render(<div data-testid="cleanup-marker">first render</div>);
     expect(screen.getByTestId('cleanup-marker')).toBeInTheDocument();
@@ -19,7 +19,7 @@ describe('vitest.setup.ts — RTL cleanup', () => {
   });
 });
 
-describe('vitest.setup.ts — localStorage polyfill', () => {
+describe('setup-dom.ts — localStorage polyfill', () => {
   it('is a fully working Storage, not the Node native shadow', () => {
     expect(window.localStorage.getItem('missing')).toBeNull();
 
@@ -42,7 +42,7 @@ describe('vitest.setup.ts — localStorage polyfill', () => {
   });
 });
 
-describe('vitest.setup.ts — MSW server lifecycle', () => {
+describe('setup-msw.ts — MSW server lifecycle', () => {
   it('is listening, so a one-off handler intercepts a request', async () => {
     server.use(http.get('https://vitest-setup.test/ping', () => HttpResponse.json({ ok: true })));
 

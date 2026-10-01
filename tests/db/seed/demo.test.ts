@@ -3,6 +3,7 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
+import { ingredientSlug } from '@/lib/slugify';
 import {
   COMPENDIUM_INGREDIENTS,
   FIXTURE_USERS,
@@ -11,44 +12,14 @@ import {
 } from '@/db/seed/standard';
 import { DEMO_SPELLS, WORKSPACE_W_INGREDIENTS, seedDemo } from '@/db/seed/demo';
 import { seed } from '@/db/seed/index';
+import type { IngredientSlugRow, LayerRow, SpellRow } from './types';
 
 // The `demo` scenario against the real schema: a layer's integrity is three
 // CHECKs, two partial indexes and a composite key no returned object can
 // demonstrate. Every table is emptied first, and `seedDemo` lays `standard`
-// down itself — claude-docs/db.md, "The demo scenario".
+// down itself — claude-docs/db/demo-scenario.md, "The demo scenario".
 
 const PROBE = 'demo_probe_acting_user';
-
-interface SpellRow {
-  id: string;
-  workspace_id: string;
-  title: string;
-  intent: string | null;
-  status: 'draft' | 'complete';
-  created_by: string;
-  updated_by: string;
-  deleted_at: Date | null;
-}
-
-interface LayerRow {
-  spell_id: string;
-  ingredient_id: string | null;
-  name: string | null;
-  form: string | null;
-  quantity: string | null;
-  unit: string | null;
-  layer_order: number;
-  note: string | null;
-  created_by: string;
-}
-
-interface IngredientRow {
-  id: string;
-  workspace_id: string | null;
-  name: string;
-  canonical_name: string | null;
-  form: string | null;
-}
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
@@ -57,16 +28,18 @@ async function allSpells(): Promise<SpellRow[]> {
   return sql<SpellRow[]>`select * from spells order by title`;
 }
 
+/** A jar's live layers, in order: what a member pulled out is a tombstone. */
 async function layersOf(spellId: string): Promise<LayerRow[]> {
   return sql<LayerRow[]>`
-    select * from spell_ingredients where spell_id = ${spellId} order by layer_order
+    select * from spell_ingredients
+    where spell_id = ${spellId} and deleted_at is null order by layer_order
   `;
 }
 
-async function ingredientsIn(workspaceId: string | null): Promise<IngredientRow[]> {
+async function ingredientsIn(workspaceId: string | null): Promise<IngredientSlugRow[]> {
   return workspaceId === null
-    ? sql<IngredientRow[]>`select * from ingredients where workspace_id is null order by name`
-    : sql<IngredientRow[]>`
+    ? sql<IngredientSlugRow[]>`select * from ingredients where workspace_id is null order by name`
+    : sql<IngredientSlugRow[]>`
         select * from ingredients where workspace_id = ${workspaceId} order by name
       `;
 }
@@ -152,6 +125,10 @@ describe('demo is standard plus spells', () => {
       WORKSPACE_W_INGREDIENTS.map((i) => i.name).sort(),
     );
     expect(await ingredientsIn(WORKSPACE_X_ID)).toEqual([]);
+    // Slugged as the compendium is: label, form and formal name, by the one rule.
+    for (const row of local) {
+      expect(row.slug).toBe(ingredientSlug(row.name, row.form, row.canonical_name));
+    }
   });
 });
 
@@ -321,15 +298,16 @@ describe('re-running the scenario', () => {
     const before = await layersOf(spell.id);
     const pulled = before[2];
 
-    // A member pulls the third layer out (a hard delete) and the ones below close the gap.
+    // A member pulls the third layer out (a soft delete) and the ones below close the gap.
     await sql`
-      delete from spell_ingredients
+      update spell_ingredients set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
       where spell_id = ${spell.id} and layer_order = ${pulled.layer_order}
     `;
     for (const layer of before.filter((l) => l.layer_order > pulled.layer_order)) {
       await sql`
         update spell_ingredients set layer_order = ${layer.layer_order - 1}
         where spell_id = ${spell.id} and layer_order = ${layer.layer_order}
+          and deleted_at is null
       `;
     }
 
@@ -342,6 +320,24 @@ describe('re-running the scenario', () => {
     expect(
       after.filter((l) => l.ingredient_id === pulled.ingredient_id && l.name === pulled.name),
     ).toEqual([]);
+  });
+
+  // A tombstone is a layer the jar has had, so a jar whose every layer was
+  // pulled out has been edited, not left unstocked.
+  it('does not restock a jar whose every layer was pulled out', async () => {
+    await seedDemo(db);
+
+    const spell = DEMO_SPELLS[0];
+    await sql`
+      update spell_ingredients set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
+      where spell_id = ${spell.id}
+    `;
+    // Why it could have been restocked: the jar reads as empty.
+    expect(await layersOf(spell.id)).toEqual([]);
+
+    await seedDemo(db);
+
+    expect(await layersOf(spell.id)).toEqual([]);
   });
 
   it('does not re-add a layer of a jar someone has reordered', async () => {

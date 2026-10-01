@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import type { Reporter, SerializedError, TestModule, TestRunEndReason, Vitest } from 'vitest/node';
 import { buildChecklist, formatChecklist } from './story-checklist';
+import type { StoryReporterOptions } from './types';
 
 // The Vitest reporter behind `make test-stories`: prints the checklist at the
 // end of the run and, when an output file is configured, writes it as JSON for
@@ -11,11 +12,6 @@ import { buildChecklist, formatChecklist } from './story-checklist';
 // `--outputFile=stories.json` reaches every reporter as one string;
 // `--outputFile.stories=…` addresses this one by name, as the built-in json
 // reporter is addressed.
-
-export interface StoryReporterOptions {
-  /** Where to write the checklist as JSON; relative paths resolve against the root. */
-  outputFile?: string;
-}
 
 export default class StoryReporter implements Reporter {
   private vitest!: Vitest;

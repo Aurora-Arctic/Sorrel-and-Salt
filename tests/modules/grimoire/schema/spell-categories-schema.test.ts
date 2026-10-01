@@ -11,6 +11,7 @@ import { findManyInSpell, withAudit } from '@/db/repository';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import { assertMembership } from '@/modules/coven';
 import { A, asUser } from '../../../support/as-user';
+import type { SpellCategoryPair } from './types';
 
 // DESIGN.md §5's column list, transcribed.
 const OWN_COLUMNS = ['spell_id', 'category_id'];
@@ -24,7 +25,7 @@ describe('spell_categories schema', () => {
   const { byName, indexes, primaryKeys, checks, foreignKeyByColumn } = tableFacts(spellCategories);
 
   // Four stamps and no tombstone (MB.34): a removed assignment leaves no row —
-  // claude-docs/db.md, "Hard delete on the three join tables".
+  // claude-docs/db/hard-delete-join-tables.md, "Hard delete on two join tables".
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...STAMP_COLUMNS].sort());
   });
@@ -113,12 +114,7 @@ async function assign(spellId: string, categoryId: string, author = AUTHOR): Pro
   `;
 }
 
-interface Pair {
-  spellId: string;
-  categoryId: string;
-}
-
-async function pairs(): Promise<Pair[]> {
+async function pairs(): Promise<SpellCategoryPair[]> {
   const rows = await sql`
     select spell_id, category_id from spell_categories order by spell_id, category_id
   `;
@@ -129,7 +125,7 @@ async function pairs(): Promise<Pair[]> {
 }
 
 // Sorted as `pairs()` reads: the ids are generated, so their order is unknown when written.
-function inReadOrder(expected: Pair[]): Pair[] {
+function inReadOrder(expected: SpellCategoryPair[]): SpellCategoryPair[] {
   return [...expected].sort(
     (a, b) => a.spellId.localeCompare(b.spellId) || a.categoryId.localeCompare(b.categoryId),
   );

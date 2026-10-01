@@ -5,11 +5,12 @@ import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { MINIMAL_USER_ID } from '@/db/seed/minimal';
 import { SEED_SCENARIOS, resolveScenario, seed } from '@/db/seed/index';
+import type { UserRow } from './types';
 
 // The `minimal` scenario against the real schema, every table emptied first.
 // The handle is this file's own; that the seed writes through it rather than
 // a client of its own is enforced by lint, not here —
-// claude-docs/db.md, "The seed module".
+// claude-docs/db/seed-module.md, "The seed module".
 
 // Every admin-curated table; `minimal` leaves all of them empty.
 const COMPENDIUM_TABLES = [
@@ -24,16 +25,6 @@ const PROBE = 'seed_probe_acting_user';
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
-
-interface UserRow {
-  id: string;
-  email: string;
-  role: 'user' | 'admin';
-  can_create_workspace: boolean;
-  created_by: string;
-  updated_by: string;
-  deleted_at: Date | null;
-}
 
 async function allUsers(): Promise<UserRow[]> {
   return sql<UserRow[]>`

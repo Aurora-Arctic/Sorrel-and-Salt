@@ -3,7 +3,7 @@ name: Migrate
 # Applies pending migrations to the deploy target, then seeds the reference
 # vocabularies when `seed-reference` says so. workflow_call only, from
 # deploy.yml, which `needs:` it so a deploy never promotes past a schema its
-# migrations have not reached. claude-docs/ci.md, "Deploy" is the walkthrough.
+# migrations have not reached. claude-docs/ci/deploy.md, "Deploy" is the walkthrough.
 #
 # The seed rides in this job so it shares the migration lock and never seeds
 # mid-migration; it reports separately so a failed seed is not read as a
@@ -33,11 +33,12 @@ on:
         type: string
       seed-reference:
         description: >-
-          Seed the two reference vocabularies after migrating — DESIGN.md §6's
-          categories and §5's ingredient forms. deploy.yml passes true only
-          when the push changed a seed's own files — both seeds are additive
-          and idempotent, so running them again would be harmless, but
-          "harmless" is not a reason to write to production on every merge.
+          Seed the reference vocabularies after migrating — DESIGN.md §6's
+          categories and §5's ingredient forms, planets and zodiac signs.
+          deploy.yml passes true only when the push changed a seed's own
+          files — every seed is additive and idempotent, so running them
+          again would be harmless, but "harmless" is not a reason to write
+          to production on every merge.
         required: false
         default: false
         type: boolean
@@ -238,7 +239,7 @@ jobs:
 
       # After the migrations that create its tables. Deploys are CI-only and
       # neither database has a shell, so this is how reference data arrives at
-      # all. One step for both vocabularies: half-seeded is not a state worth
+      # all. One step for every vocabulary: half-seeded is not a state worth
       # reporting.
       - name: Seed the reference vocabularies
         id: seed
@@ -247,6 +248,7 @@ jobs:
           set -o pipefail
           npm run db:seed:categories 2>&1 | tee seed.log
           npm run db:seed:forms 2>&1 | tee -a seed.log
+          npm run db:seed:astrology 2>&1 | tee -a seed.log
 
       - name: Write seed job summary
         if: always() && steps.guard.outputs.enabled == 'true' && inputs.seed-reference
@@ -255,4 +257,4 @@ jobs:
           check-name: Seed reference data (${{ inputs.environment }})
           outcome: ${{ steps.seed.outcome }}
           log-file: seed.log
-          summary: ${{ steps.seed.outcome == 'success' && 'Category and form vocabularies seeded' || 'Seed failed' }}
+          summary: ${{ steps.seed.outcome == 'success' && 'Category, form, planet and zodiac vocabularies seeded' || 'Seed failed' }}

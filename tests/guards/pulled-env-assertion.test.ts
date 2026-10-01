@@ -12,9 +12,10 @@ import {
   validateDatabaseUrl,
 } from '../../scripts/assert-pulled-env';
 import { fromRoot } from '../support/paths';
+import type { Workflow } from './types';
 
 // What the pulled environment file has to satisfy before CI trusts it
-// (claude-docs/ci.md, "Deploy"). Two things are pinned: a required key that
+// (claude-docs/ci/deploy.md, "Deploy"). Two things are pinned: a required key that
 // is missing, empty, a placeholder or not a postgres URL fails with its own
 // named cause; and every key the pull returned is reported with a
 // classification and never a value — asserted, not intended.
@@ -284,17 +285,10 @@ describe('every workflow that pulls a Vercel environment', () => {
   const WORKFLOWS_DIR = fromRoot('.github/workflows');
   const INVOCATION = /(?:^|&&|\|\||;|\|)\s*vercel pull\b/;
 
-  interface Step {
-    name?: string;
-    run?: string;
-  }
-
   const jobsThatPull = readdirSync(WORKFLOWS_DIR)
     .filter((file) => file.endsWith('.yml') || file.endsWith('.yaml'))
     .flatMap((file) => {
-      const doc = parse(readFileSync(`${WORKFLOWS_DIR}/${file}`, 'utf8')) as {
-        jobs?: Record<string, { steps?: Step[] }>;
-      };
+      const doc = parse(readFileSync(`${WORKFLOWS_DIR}/${file}`, 'utf8')) as Workflow;
       return Object.entries(doc.jobs ?? {})
         .filter(([, job]) =>
           (job.steps ?? []).some((step) =>

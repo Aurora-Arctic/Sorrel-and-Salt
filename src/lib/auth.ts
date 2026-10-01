@@ -9,19 +9,19 @@ import {
 } from '@better-auth/core/context';
 import { appendQueryParams } from '@better-auth/core/utils/url';
 // Better Auth's drizzleAdapter takes the client itself rather than a writer, so
-// this cannot go through withAudit — claude-docs/db.md, "Who may import the client".
+// this cannot go through withAudit — claude-docs/db/client-imports.md, "Who may import the client".
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../db/connection';
 import { users } from '../modules/identity/schema/users';
 import { sessions, accounts, verifications, rateLimits } from '../modules/identity/schema/auth';
-import { SOCIAL_PROVIDERS, type ProviderId } from './social-providers';
+import { SOCIAL_PROVIDERS } from './social-providers';
 // Server-only — see social-providers-config.ts's own header.
 // oxlint-disable-next-line no-restricted-imports
 import { clientCredentials } from './social-providers-config';
-import type { UserRole } from './session';
+import type { UserRole, HookContext } from './session';
 import { send } from './mail';
-import { emailPagePath, VERIFIED_LANDING } from './account-email';
-import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH } from './sign-in';
+import { emailPagePath, returnPathOf, verifiedLanding } from './account-email';
+import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH, postSignInLanding } from './sign-in';
 import { verifyEmailMessage } from '../emails/verify-email';
 import {
   promotePrimaryAdmin,
@@ -38,12 +38,11 @@ import {
   placeholderEmail,
   sweepProvisionalAccounts,
 } from '@/modules/identity';
-
-type HookContext = Parameters<Parameters<typeof createAuthMiddleware>[0]>[0];
+import type { ProviderId } from './types';
 
 // Better Auth's own `validateSecret` is swallowed — with the secret unset it
 // logs and still answers 200 on the well-known default. Production-only:
-// `next dev` and Vitest have no use for it. See claude-docs/auth.md, "Config".
+// `next dev` and Vitest have no use for it. See claude-docs/auth/config.md, "Config".
 function authSecret(): string | undefined {
   const secret = process.env.BETTER_AUTH_SECRET;
   if (!secret && process.env.NODE_ENV === 'production') {
@@ -59,7 +58,7 @@ function authSecret(): string | undefined {
 // A provider that shared no address — Discord for an account without a
 // verified one, Facebook under narrowed permissions — would end the callback
 // at `email_not_found`. The placeholder lets the row and its session exist, so
-// /account/email can ask for one (claude-docs/auth.md, "The email page").
+// /account/email can ask for one (claude-docs/auth/admin-bootstrap.md, "The email page").
 function orPlaceholder(providerId: ProviderId, accountId: unknown, email: unknown) {
   if (email) return {};
   return { email: placeholderEmail(providerId, String(accountId)), emailVerified: false };
@@ -74,10 +73,17 @@ async function isExplicitLink(): Promise<boolean> {
 
 // Inside an explicit link every provider vouches: there the value feeds only
 // Better Auth's link gate, and the account signs in by its id from then on.
-// On a sign-in each provider keeps its own answer (claude-docs/auth.md,
+// On a sign-in each provider keeps its own answer (claude-docs/auth/admin-bootstrap.md,
 // "Linking a second provider").
 async function vouchWhenLinking(): Promise<{ emailVerified?: true }> {
   return (await isExplicitLink()) ? { emailVerified: true } : {};
+}
+
+// A sign-in that asked for no return path (`NO_RETURN_PATH`), whose landing
+// is then its role's. The flag is the client's `additionalData`, so it is
+// trusted only to choose between two landings the account could open anyway.
+async function asksNoReturnPath(): Promise<boolean> {
+  return (await hasRequestState()) && (await getOAuthState())?.noReturnPath === true;
 }
 
 function socialProviders(): BetterAuthOptions['socialProviders'] {
@@ -88,7 +94,7 @@ function socialProviders(): BetterAuthOptions['socialProviders'] {
     if (!credentials) continue;
 
     // Each mapping is spread after the provider's own, so it wins. Facebook
-    // and Microsoft never vouch for an address at sign-in (claude-docs/auth.md,
+    // and Microsoft never vouch for an address at sign-in (claude-docs/auth/admin-bootstrap.md,
     // "First-party verification"), so a true users.emailVerified means
     // Google, Discord or our own mail did. A link writes nothing to the row.
     switch (provider.id) {
@@ -168,7 +174,7 @@ function baseURL(): BetterAuthOptions['baseURL'] {
   return 'http://localhost:8000';
 }
 
-// Names the primary admin (claude-docs/auth.md, "Admin bootstrap"). Required
+// Names the primary admin (claude-docs/auth/admin-bootstrap.md, "Admin bootstrap"). Required
 // wherever BETTER_AUTH_SECRET is, and for the same reason: every deploy runs at
 // NODE_ENV=production. Unset elsewhere, it promotes nobody.
 function primaryAdminEmail(): string | undefined {
@@ -267,7 +273,7 @@ function tokenClaims(token: unknown): { email?: string; updateTo?: string } | un
 // opened the link. So MB.66's rule is applied here, before the endpoint: only
 // a session holding the row may follow it, and the address must still be free,
 // or the unique index would fail the write. The plain branch is gated by
-// `beforeEmailVerification` as before (claude-docs/auth.md, "The email page").
+// `beforeEmailVerification` as before (claude-docs/auth/admin-bootstrap.md, "The email page").
 async function gateEmailChange(ctx: HookContext): Promise<void> {
   const claims = tokenClaims(ctx.query?.token);
   if (!claims?.email || !claims.updateTo) return;
@@ -306,14 +312,14 @@ export const auth = betterAuth({
   // Better Auth's own default, stated so a bump cannot move it: on in every
   // deploy, off under `next dev` and the test suites. In the database because
   // each Fluid Compute instance would otherwise count alone
-  // (claude-docs/auth.md, "Rate limiting").
+  // (claude-docs/auth/rate-limiting.md, "Rate limiting").
   rateLimit: {
     enabled: process.env.NODE_ENV === 'production',
     storage: 'database',
   },
   // Cookie only: `storeInDatabase` would add a users column nothing reads.
   // The sign-in page marks the provider this browser last used, and the
-  // server says nothing about an address (claude-docs/auth.md, "Plugins").
+  // server says nothing about an address (claude-docs/auth/plugins.md, "Plugins").
   plugins: [lastLoginMethod({ cookieName: LAST_USED_PROVIDER_COOKIE })],
   advanced: {
     // Matches users.id's uuid type so every FK lines up without a cast.
@@ -327,7 +333,7 @@ export const auth = betterAuth({
     },
   },
   // Offered at sign-up, never required for a session: what needs a verified
-  // address checks the column. claude-docs/auth.md, "First-party verification".
+  // address checks the column. claude-docs/auth/admin-bootstrap.md, "First-party verification".
   emailVerification: {
     sendOnSignUp: true,
     expiresIn: VERIFICATION_LIFETIME_SECONDS,
@@ -343,9 +349,15 @@ export const auth = betterAuth({
       // so the stamp, which restarts the provisional window too, is the row's own.
       await recordVerificationSent({ userId: user.id });
       // Better Auth lands a sign-up's link where the sign-in asked to go; every
-      // link lands on the email page's confirmed view instead.
+      // link lands on the email page's confirmed view instead, carrying that
+      // destination on to Continue — none for a sign-up that asked for none,
+      // whose `callbackURL` only stands in. A resend's `callbackURL` is already
+      // the landing, and passes the same guard as a sign-up's.
       const link = new URL(url);
-      link.searchParams.set('callbackURL', VERIFIED_LANDING);
+      const next = (await asksNoReturnPath())
+        ? undefined
+        : returnPathOf(link.searchParams.get('callbackURL'));
+      link.searchParams.set('callbackURL', verifiedLanding(next));
       const accounts = await ctx.context.internalAdapter.findAccounts(user.id);
       await send(
         await verifyEmailMessage({
@@ -460,6 +472,8 @@ export const auth = betterAuth({
         ctx.context.logger.warn(`primary admin not promoted: user ${user.id} (${outcome})`);
       }
 
+      const noReturnPath = await asksNoReturnPath();
+
       // An unverified account can do nothing else, so it lands on the email
       // page, address prefilled, until the address is proven; where the
       // sign-in was going rides along. The endpoint's own redirect is the
@@ -470,8 +484,18 @@ export const auth = betterAuth({
           ctx.context.baseURL,
         );
         throw new APIError('FOUND', undefined, {
-          Location: emailPagePath(`${landing.pathname}${landing.search}`),
+          Location: emailPagePath(
+            noReturnPath ? undefined : `${landing.pathname}${landing.search}`,
+          ),
         });
+      }
+
+      // With no return path, the landing is the role's as it stands after any
+      // promotion just now; otherwise the endpoint's redirect already goes
+      // where the sign-in asked, `/coven` included.
+      if (noReturnPath) {
+        const role: UserRole = outcome === 'promoted' ? 'admin' : (user.role as UserRole);
+        throw new APIError('FOUND', undefined, { Location: postSignInLanding(role) });
       }
     }),
   },

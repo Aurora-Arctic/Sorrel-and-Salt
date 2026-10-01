@@ -4,7 +4,6 @@ import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import {
   type IngredientFixture,
-  type Overrides,
   ingredientColumns,
   makeIngredient,
 } from '../../../support/fixtures';
@@ -15,6 +14,7 @@ import {
 } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import { workspaces } from '@/modules/coven/schema/workspaces';
+import type { IngredientOverrides } from './types';
 
 // DESIGN.md §5's seven values, in the order the design doc's table lists them.
 const NOMENCLATURE_VALUES = [
@@ -29,30 +29,33 @@ const NOMENCLATURE_VALUES = [
 
 const ELEMENT_VALUES = ['earth', 'air', 'fire', 'water', 'spirit'] as const;
 
+// §5's columns and the six audit ones: what the schema declares and, once a
+// dropped column's migration has run, all the database holds.
+const COLUMNS = [
+  'id',
+  'workspace_id',
+  'name',
+  'canonical_name',
+  'nomenclature',
+  'canonical_key',
+  'form',
+  'description',
+  'element',
+  'planet',
+  'zodiac',
+  'deities',
+  'color',
+  'safety_notes',
+  'substitutes',
+  'slug',
+  ...AUDIT_COLUMNS,
+].sort();
+
 describe('ingredients schema', () => {
   const { byName, foreignKeys } = tableFacts(ingredients);
 
   it('has DESIGN.md §5 columns and nothing else', () => {
-    expect(Object.keys(byName).sort()).toEqual(
-      [
-        'id',
-        'workspace_id',
-        'name',
-        'canonical_name',
-        'nomenclature',
-        'canonical_key',
-        'form',
-        'description',
-        'element',
-        'planet',
-        'zodiac',
-        'deities',
-        'color',
-        'safety_notes',
-        'substitutes',
-        ...AUDIT_COLUMNS,
-      ].sort(),
-    );
+    expect(Object.keys(byName).sort()).toEqual(COLUMNS);
   });
 
   // `workspace_id IS NULL` is the compendium, set is a workspace's own drawer:
@@ -98,6 +101,13 @@ describe('ingredients schema', () => {
     expect(byName.substitutes.getSQLType()).toBe('text[]');
   });
 
+  // MB.80: the public address, derived by whoever writes the row, so no default.
+  it('requires slug, with no default', () => {
+    expect(byName.slug.getSQLType()).toBe('text');
+    expect(byName.slug.notNull).toBe(true);
+    expect(byName.slug.hasDefault).toBe(false);
+  });
+
   // Drizzle omits a generated column from $inferInsert, so TypeScript refuses
   // first; `npm run typecheck` covers this file, so the @ts-expect-error
   // reddens if the column ever becomes writable. Postgres's refusal is below.
@@ -125,8 +135,6 @@ const WORKSPACE = WORKSPACE_W_ID;
 // The shared factory plus this file's author. `makeIngredient` re-derives
 // `canonicalName` when `nomenclature` alone is overridden, so only a test
 // naming both writes a row the biconditional CHECK rejects.
-type IngredientOverrides = Overrides<IngredientFixture>;
-
 function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
   return {
     ...ingredientColumns(makeIngredient(overrides)),
@@ -136,7 +144,7 @@ function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
 }
 
 let sql: ReturnType<typeof postgres>;
-useTestDatabase((client) => (sql = client));
+const catalogue = useTestDatabase((client) => (sql = client));
 
 async function insert(overrides: IngredientOverrides = {}): Promise<string> {
   const [inserted] = await sql`
@@ -155,15 +163,33 @@ beforeEach(async () => {
 });
 
 describe('ingredients table', () => {
+  // No column the schema has stopped declaring outlives it in the database —
+  // MB.81's pending claims were the last.
+  it('carries exactly the columns the schema declares', async () => {
+    expect(await catalogue.columnNames('ingredients')).toEqual(COLUMNS);
+  });
+
   it('rejects an insert that omits nomenclature, since the column has no default', async () => {
     const error = await failureOf(sql`
-      insert into ingredients (name, canonical_name, created_by, updated_by)
-      values ('Mugwort', 'Artemisia vulgaris', ${AUTHOR}, ${AUTHOR})
+      insert into ingredients (name, canonical_name, slug, created_by, updated_by)
+      values ('Mugwort', 'Artemisia vulgaris', 'mugwort', ${AUTHOR}, ${AUTHOR})
     `);
 
     // 23502 is not_null_violation: the column was reached and found no default.
     expect(error.code).toBe('23502');
     expect(error.column_name).toBe('nomenclature');
+  });
+
+  // Derived by whoever writes the row, never defaulted by the table: a default
+  // would be a second slug rule, in SQL.
+  it('rejects an insert that omits slug, since the column has no default', async () => {
+    const error = await failureOf(sql`
+      insert into ingredients (name, nomenclature, canonical_name, created_by, updated_by)
+      values ('Mugwort', 'botanical', 'Artemisia vulgaris', ${AUTHOR}, ${AUTHOR})
+    `);
+
+    expect(error.code).toBe('23502');
+    expect(error.column_name).toBe('slug');
   });
 
   it('accepts a row in each tier: compendium (workspace_id null) and workspace-local', async () => {
@@ -248,8 +274,8 @@ describe('ingredients table', () => {
   describe('canonical_key', () => {
     it('is refused by Postgres on insert, not merely absent from the type', async () => {
       const error = await failureOf(sql`
-        insert into ingredients (name, nomenclature, canonical_name, canonical_key, created_by, updated_by)
-        values ('Mugwort', 'botanical', 'Artemisia vulgaris', 'forged', ${AUTHOR}, ${AUTHOR})
+        insert into ingredients (name, nomenclature, canonical_name, slug, canonical_key, created_by, updated_by)
+        values ('Mugwort', 'botanical', 'Artemisia vulgaris', 'mugwort', 'forged', ${AUTHOR}, ${AUTHOR})
       `);
 
       // 428C9 is ERRCODE_GENERATED_ALWAYS — the column refusing the write itself.

@@ -3,7 +3,6 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import { emailVerificationSender } from '@/lib/email-verification';
-import type { Message } from '@/lib/mail';
 import { fromRoot } from '../support/paths';
 import {
   EMAIL_PAGE,
@@ -13,12 +12,12 @@ import {
   landingOf,
   signIn as signInThrough,
   stubProviderCredentials,
-  type Profile,
-  type ProviderId,
 } from '../support/oauth';
+import type { Message, ProviderId } from '@/lib/types';
+import type { Profile } from '../support/types';
 
 // Stories 58 and 59 through Better Auth's real endpoints, with MSW standing in
-// for the provider and the transport mocked (claude-docs/auth.md, "First-party
+// for the provider and the transport mocked (claude-docs/auth/admin-bootstrap.md, "First-party
 // verification" and "The email page"). Stories 60–62 are MB.58–MB.63 and
 // MB.69–MB.70's, and have no test yet.
 

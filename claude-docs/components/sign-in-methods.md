@@ -6,15 +6,16 @@ another one is left. Server component `src/app/account/page.tsx` reads the
 session, `linkedAccounts()` and `?error=`, and hands the results down as props.
 This component renders the list and makes the two Better Auth calls. Why a
 second provider is added this way and never at sign-in is
-[`auth.md`](../auth.md), "Linking a second provider".
+[`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "Linking a second
+provider".
 
 ## The props contract
 
-| Prop         | Meaning                                                                                                                                                                                                           |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `linked`     | The signed-in user's provider accounts as `{ id, providerId }`: `id` is the `accounts` row's own id, which `/unlink-account` takes. `LinkedAccount` lives in `src/lib/social-providers.ts`, which is client-safe. |
-| `configured` | Providers this environment has credentials for, from `configuredProviders()`. The rest cannot be added.                                                                                                           |
-| `error`      | A readable sentence for a failed link, from `linkErrorMessage()` (`src/lib/sign-in.ts`), never a raw `?error=` code. Shown as an alert on mount.                                                                  |
+| Prop         | Meaning                                                                                                                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `linked`     | The signed-in user's provider accounts as `{ id, providerId }`: `id` is the `accounts` row's own id, which `/unlink-account` takes. `LinkedAccount` lives in `src/lib/types.ts`, which is client-safe. |
+| `configured` | Providers this environment has credentials for, from `configuredProviders()`. The rest cannot be added.                                                                                                |
+| `error`      | A readable sentence for a failed link, from `linkErrorMessage()` (`src/lib/sign-in.ts`), never a raw `?error=` code. Shown as an alert on mount.                                                       |
 
 ## Adding one leaves the page
 
@@ -35,9 +36,7 @@ needs no credentials.
 
 A linked provider is the row without an Add: it shows its Remove while
 another is left, and nothing at all when it is the only one. The rows carry
-no `_typography.scss` bullet, since they are controls rather than prose. The
-rule is compounded from two classes because the workshop hangs the global
-bullet off `.ladle-story-frame`, which one class would not outrank.
+no `_typography.scss` bullet, since they are controls rather than prose.
 
 ## Removing one answers in place
 
@@ -51,8 +50,8 @@ the error's `code` goes through `unlinkErrorMessage()`:
 `FAILED_TO_UNLINK_LAST_ACCOUNT` (two tabs racing), `SESSION_NOT_FRESH` (the
 session is older than a day: sign in again), or the generic sentence. While a
 removal is in flight every Remove is `disabled`, so two cannot race to leave
-none. The component restates the greying off `:disabled`, as EmailForm does,
-because `_primitives.scss` styles only `aria-disabled`.
+none. `.btn` greys out under `disabled` as under `aria-disabled`, so the
+component adds no styling of its own for it.
 
 The alert and the removal message replace each other, and both clear when a
 new action starts. Neither element exists in the DOM without a message.

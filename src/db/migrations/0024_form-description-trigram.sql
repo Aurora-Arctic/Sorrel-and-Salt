@@ -1,0 +1,1 @@
+CREATE INDEX "ingredient_forms_trgm" ON "ingredient_forms" USING gin ("name" gin_trgm_ops,"description" gin_trgm_ops);

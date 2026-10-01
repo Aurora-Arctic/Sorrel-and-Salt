@@ -1,7 +1,7 @@
 name: Playwright E2E
 
 # The Playwright e2e suite against a built and served site. workflow_call
-# only, from pr-gate. claude-docs/ci.md, "Reusable checks" is the walkthrough.
+# only, from pr-gate. claude-docs/ci/reusable-checks.md, "Reusable checks" is the walkthrough.
 # Runs in Docker/Dockerfile.e2e's image, not the Alpine `testing` one:
 # Playwright's Chromium has no musl support.
 on:
@@ -63,18 +63,25 @@ jobs:
           POSTGRES_USER: sorrel
           POSTGRES_PASSWORD: sorrel
           POSTGRES_DB: sorrel
+        # Probed every second for the first ten while it starts, not after the
+        # first 5s interval, so the job waits on the service rather than the clock.
         options: >-
           --health-cmd="pg_isready -U postgres -d sorrel_template"
           --health-interval=5s
+          --health-start-period=10s
+          --health-start-interval=1s
           --health-timeout=5s
           --health-retries=10
       # The inbox src/lib/mail.ts's `mailpit` transport sends to and
       # tests/e2e/mailpit.ts reads back; pinned to compose's tag.
       mailpit:
         image: axllent/mailpit:v1.31.2
+        # Probed like postgres above.
         options: >-
           --health-cmd="/mailpit readyz"
           --health-interval=5s
+          --health-start-period=10s
+          --health-start-interval=1s
           --health-timeout=5s
           --health-retries=10
     defaults:
@@ -88,7 +95,7 @@ jobs:
       CI: true
       # Read by summarize-playwright.mjs.
       PLAYWRIGHT_JSON_OUTPUT_NAME: /app/playwright-results.json
-      # tests/e2e/database.ts derives sorrel_e2e's URL from it.
+      # tests/e2e/database.ts derives each worker's sorrel_e2e_<slot> URL from it.
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       # The webServer's production build needs a Better Auth secret, and a
       # primary admin address on the reserved `.invalid` domain.

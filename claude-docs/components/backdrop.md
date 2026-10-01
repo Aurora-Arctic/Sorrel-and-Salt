@@ -70,13 +70,13 @@ photographs go through the same script.
 
 ## Served under a content hash
 
-The images sit in the component's directory and are referenced relatively
-from its stylesheet, so Next serves them from `/_next/static/media` under a
-content hash. A rebuilt image is a new URL: no browser, CDN or dev-server
-cache can keep showing the old one, which a fixed path in `public/` did
-during review. It also keeps them off the proxy's deny-by-default rule,
-which exempts `/_next/*` and nothing in `public/` (`claude-docs/auth.md`,
-"Route protection").
+The images sit in the component's directory and are referenced relatively from
+its stylesheet, so Next serves them from `/_next/static/media` under a content
+hash. A rebuilt image is a new URL: no browser, CDN or dev-server cache can keep
+showing the old one, which a fixed path in `public/` did during review. It also
+keeps them off the proxy's deny-by-default rule, which exempts `/_next/*` and
+nothing in `public/` (`claude-docs/auth/route-protection.md`, "Route
+protection").
 
 ## Size and placement
 

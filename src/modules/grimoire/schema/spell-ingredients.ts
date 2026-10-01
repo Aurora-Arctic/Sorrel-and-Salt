@@ -1,15 +1,6 @@
 import { sql } from 'drizzle-orm';
-import {
-  check,
-  integer,
-  numeric,
-  pgTable,
-  primaryKey,
-  text,
-  uniqueIndex,
-  uuid,
-} from 'drizzle-orm/pg-core';
-import { auditStampColumns } from '../../identity/schema/users';
+import { check, integer, numeric, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { auditColumns } from '../../identity/schema/users';
 import { ingredients } from '../../ingredients/schema/ingredients';
 import { inventoryUnit } from '../../ingredients/schema/inventory-items';
 import { spells } from './spells';
@@ -19,12 +10,17 @@ import { spells } from './spells';
 //
 // It references the ingredient, never the inventory item: stock is what a
 // workspace holds today, and a recipe pointing at it would be damaged by
-// running out. Hard-deleted (MB.34) — `auditStampColumns`, no `deleted_at`,
-// no rule-4 partial index; the two partial indexes below split the custom
-// rows from the ingredient rows (claude-docs/db.md, "The grimoire").
+// running out. Soft-deleted, unlike the other two join tables (MB.110): a
+// spell is a record of a working, so a layer taken out of it is a tombstone
+// (claude-docs/db/grimoire.md, "The grimoire").
 export const spellIngredients = pgTable(
   'spell_ingredients',
   {
+    // A surrogate key, because the layer cannot be one: a removed layer's
+    // tombstone would go on holding its depth.
+    id: uuid('id')
+      .default(sql`pg_catalog.gen_random_uuid()`)
+      .primaryKey(),
     spellId: uuid('spell_id')
       .notNull()
       .references(() => spells.id),
@@ -43,31 +39,33 @@ export const spellIngredients = pgTable(
     // The same enum a jar is measured in, so the converter can go between them.
     // No `unitDimension` here: nothing groups a spell's layers by dimension.
     unit: inventoryUnit('unit'),
-    // Stored, never inferred from insertion order; `notNull` and half the
-    // primary key, since distinct NULLs would collide with nothing.
+    // Stored, never inferred from insertion order; `notNull`, since distinct
+    // NULLs would collide with nothing in the layer index below.
     layerOrder: integer('layer_order').notNull(),
     // A short line on this ingredient's role in the jar — unrelated to the
     // deferred notes subsystem (§13).
     note: text('note'),
-    ...auditStampColumns,
+    ...auditColumns,
   },
   (table) => [
-    // A row's identity is the layer it sits at; leading on `spell_id` makes the
-    // index the one that reads a jar in order. Checked per row, not at end of
-    // statement, so a reorder rewrites the jar's rows rather than sweeping
-    // `layer_order + 1` — see above.
-    primaryKey({ columns: [table.spellId, table.layerOrder] }),
+    // One live layer per depth; leading on `spell_id` makes it the index that
+    // reads a jar in order. Checked per row, not at end of statement, so a
+    // reorder moves the live rows through a scratch offset rather than
+    // sweeping `layer_order + 1`.
+    uniqueIndex('spell_ingredients_spell_id_layer_order_unique')
+      .on(table.spellId, table.layerOrder)
+      .where(sql`${table.deletedAt} is null`),
 
     // One ingredient per jar: wanted at two depths is one row with a note.
-    // Partial, since a custom row's null `ingredient_id` is nothing to be unique about.
+    // A custom row's null `ingredient_id` is nothing to be unique about.
     uniqueIndex('spell_ingredients_spell_id_ingredient_id_unique')
       .on(table.spellId, table.ingredientId)
-      .where(sql`${table.ingredientId} is not null`),
+      .where(sql`${table.ingredientId} is not null and ${table.deletedAt} is null`),
     // Its mirror over the custom rows, on name alone: a custom row is matched
     // against nothing, so `form` is part of no key.
     uniqueIndex('spell_ingredients_spell_id_custom_name_unique')
       .on(table.spellId, sql`lower(${table.name})`)
-      .where(sql`${table.ingredientId} is null`),
+      .where(sql`${table.ingredientId} is null and ${table.deletedAt} is null`),
 
     // Exactly one of the two. Enforced in Zod too, so the CHECK is never what a
     // user sees.

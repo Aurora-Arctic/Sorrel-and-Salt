@@ -1,20 +1,16 @@
-import { GraphQLError, graphql, type GraphQLSchema } from 'graphql';
+import { GraphQLError, graphql, type GraphQLObjectType, type GraphQLSchema } from 'graphql';
 import { complexityFromQuery } from '@pothos/plugin-complexity';
 import { describe, expect, it } from 'vitest';
 import { MAX_COST, createBuilder } from '@/graphql/builder';
-import type { Context } from '@/graphql/context';
 import { createLoaders } from '@/graphql/loaders';
 import { noSender } from '../support/email-verification';
-import type { PageEntry, PageRequest } from '@/lib/pagination';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '@/lib/types';
+import type { Context } from '@/graphql/types';
+import type { Leaf, LeavesData, CountedData } from './types';
 
 // The transport half of CLAUDE.md rule 8, over a throwaway schema: a list of
 // 250 branches, each with a connection of 250 leaves, so no page size is
 // bounded by running out of rows.
-
-interface Leaf {
-  id: string;
-  name: string;
-}
 
 const LEAVES: Leaf[] = Array.from({ length: 250 }, (_, index) => ({
   id: `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
@@ -25,7 +21,8 @@ const LEAVES: Leaf[] = Array.from({ length: 250 }, (_, index) => ({
 function fakeFindPage(page: PageRequest, requests: PageRequest[] = []): PageEntry<Leaf>[] {
   requests.push(page);
   const position = (leaf: Leaf) => `${leaf.name}\u0000${leaf.id}`;
-  const bound = (cursor: { key: string; id: string }) => `${cursor.key}\u0000${cursor.id}`;
+  const bound = (cursor: { key: readonly string[]; id: string }) =>
+    `${cursor.key[0]}\u0000${cursor.id}`;
   const rows = LEAVES.filter(
     (leaf) =>
       (!page.after || position(leaf) > bound(page.after)) &&
@@ -34,7 +31,7 @@ function fakeFindPage(page: PageRequest, requests: PageRequest[] = []): PageEntr
   if (page.inverted) rows.reverse();
   return rows
     .slice(0, page.limit)
-    .map((leaf) => ({ cursor: { key: leaf.name, id: leaf.id }, node: leaf }));
+    .map((leaf) => ({ cursor: { key: [leaf.name], id: leaf.id }, node: leaf }));
 }
 
 function leafSchema(requests: PageRequest[] = []): GraphQLSchema {
@@ -81,13 +78,6 @@ async function run(
 ) {
   return graphql({ schema, source, variableValues, contextValue: { ...context } });
 }
-
-type LeavesData = {
-  leaves: {
-    edges: { cursor: string; node: { name: string } }[];
-    pageInfo: { hasNextPage: boolean; endCursor: string | null };
-  };
-};
 
 const PAGE = 'edges { cursor node { name } } pageInfo { hasNextPage endCursor }';
 
@@ -137,7 +127,7 @@ describe('a paged connection', () => {
       'Leaf 005',
     ]);
     expect(requests[1]).toEqual({
-      after: { key: 'Leaf 002', id: LEAVES[2].id },
+      after: { key: ['Leaf 002'], id: LEAVES[2].id },
       limit: 4,
       inverted: false,
     });
@@ -182,6 +172,41 @@ describe('a paged connection', () => {
     expect(result.errors?.[0].originalError).not.toBeInstanceOf(GraphQLError);
   });
 
+  it('exposes what an entry carries as the edge fields it declares', async () => {
+    const scratch = createBuilder();
+    const LeafRef = scratch.objectRef<Leaf>('Leaf');
+    LeafRef.implement({ fields: (t) => ({ name: t.exposeString('name') }) });
+    scratch.queryType({
+      fields: (t) => ({
+        leaves: t.pagedConnection({
+          type: LeafRef,
+          resolve: (_parent, _args, page) =>
+            Promise.resolve(
+              fakeFindPage(page).map((entry, index) => ({
+                ...entry,
+                rank: index % 2 === 0 ? index : null,
+              })),
+            ),
+          edgeFields: (edge) => ({
+            rank: edge.int({ nullable: true, resolve: (entry) => entry.rank }),
+          }),
+        }),
+      }),
+    });
+
+    const result = await run(
+      scratch.toSchema(),
+      '{ leaves(first: 3) { edges { rank node { name } } } }',
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect((result.data as { leaves: { edges: { rank: number | null }[] } }).leaves.edges).toEqual([
+      { rank: 0, node: { name: 'Leaf 000' } },
+      { rank: null, node: { name: 'Leaf 001' } },
+      { rank: 2, node: { name: 'Leaf 002' } },
+    ]);
+  });
+
   it('refuses a negative size', async () => {
     const result = await run(leafSchema(), `{ leaves(first: -1) { ${PAGE} } }`);
 
@@ -197,6 +222,92 @@ describe('a paged connection', () => {
     expect(connection?.args.map((arg) => arg.name).sort()).toEqual(
       ['after', 'before', 'first', 'last', 'prefix'].sort(),
     );
+  });
+});
+
+/**
+ * A connection given a `count`, which records each start it is asked from and
+ * answers as a counting finder would: the whole array, and the rows before
+ * the start — null with none.
+ */
+function countedSchema(starts: (Cursor | undefined)[] = []): GraphQLSchema {
+  const scratch = createBuilder();
+  const LeafRef = scratch.objectRef<Leaf>('Leaf');
+  LeafRef.implement({ fields: (t) => ({ name: t.exposeString('name') }) });
+  scratch.queryType({
+    fields: (t) => ({
+      leaves: t.pagedConnection({
+        type: LeafRef,
+        resolve: (_parent, _args, page) => Promise.resolve(fakeFindPage(page)),
+        count: (_parent, _args, start): Promise<PageCount> => {
+          starts.push(start);
+          return Promise.resolve({
+            totalCount: LEAVES.length,
+            countBefore: start ? LEAVES.findIndex((leaf) => leaf.id === start.id) : null,
+          });
+        },
+      }),
+    }),
+  });
+  return scratch.toSchema();
+}
+
+describe('a paged connection given a count', () => {
+  it('declares totalCount and countBefore, and only then', () => {
+    const counted = countedSchema().getType('QueryLeavesConnection') as GraphQLObjectType;
+    const plain = leafSchema().getType('QueryLeavesConnection') as GraphQLObjectType;
+
+    expect(String(counted.getFields().totalCount?.type)).toBe('Int!');
+    expect(String(counted.getFields().countBefore?.type)).toBe('Int');
+    expect(Object.keys(plain.getFields()).sort()).toEqual(['edges', 'pageInfo']);
+  });
+
+  it('counts nothing when neither field is selected', async () => {
+    const starts: (Cursor | undefined)[] = [];
+
+    const result = await run(countedSchema(starts), `{ leaves(first: 3) { ${PAGE} } }`);
+
+    expect(result.errors).toBeUndefined();
+    expect((result.data as CountedData).leaves.edges).toHaveLength(3);
+    expect(starts).toEqual([]);
+  });
+
+  it('counts once for both fields, from the page’s first row', async () => {
+    const starts: (Cursor | undefined)[] = [];
+    const schema = countedSchema(starts);
+    const first = await run(schema, `{ leaves(first: 3) { ${PAGE} } }`);
+    const after = (first.data as CountedData).leaves.pageInfo.endCursor;
+
+    const next = await run(
+      schema,
+      'query ($after: String) { leaves(first: 3, after: $after) { totalCount countBefore edges { node { name } } } }',
+      { after },
+    );
+
+    expect(next.errors).toBeUndefined();
+    expect((next.data as CountedData).leaves).toMatchObject({ totalCount: 250, countBefore: 3 });
+    expect(starts).toEqual([{ key: ['Leaf 003'], id: LEAVES[3].id }]);
+  });
+
+  it('counts from no start on an empty page, whose countBefore is null', async () => {
+    const starts: (Cursor | undefined)[] = [];
+    const schema = countedSchema(starts);
+    const last = await run(schema, `{ leaves(last: 1) { ${PAGE} } }`);
+    const after = (last.data as CountedData).leaves.pageInfo.endCursor;
+
+    const past = await run(
+      schema,
+      'query ($after: String) { leaves(after: $after) { totalCount countBefore edges { node { name } } } }',
+      { after },
+    );
+
+    expect(past.errors).toBeUndefined();
+    expect((past.data as CountedData).leaves).toEqual({
+      totalCount: 250,
+      countBefore: null,
+      edges: [],
+    });
+    expect(starts).toEqual([undefined]);
   });
 });
 
@@ -247,6 +358,22 @@ describe('the complexity limit prices a connection at the page it will fetch', (
       expect(result.data).toBeNull();
       expect(result.errors?.map((error) => error.message)).toEqual(refusal);
     }
+  });
+
+  // One field under the connection each, so a count costs what a `pageInfo`
+  // field does at every size: the page it sits beside, not the list it counts.
+  it('prices the two count fields as it prices pageInfo, at the page size', () => {
+    const counted = (source: string) =>
+      complexityFromQuery(source, { schema: countedSchema(), ctx: { ...context } }).complexity;
+
+    for (const size of ['', '(first: 10)', '(first: 100)', '(last: 1000)']) {
+      expect(counted(`{ leaves${size} { totalCount countBefore } }`)).toBe(
+        counted(`{ leaves${size} { pageInfo { hasNextPage } } }`),
+      );
+    }
+    expect(counted('{ leaves(first: 100) { totalCount } }')).toBeGreaterThan(
+      counted('{ leaves(first: 10) { totalCount } }'),
+    );
   });
 
   it('refuses before any resolver runs', async () => {

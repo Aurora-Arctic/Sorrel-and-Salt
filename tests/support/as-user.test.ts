@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { AuditSession } from '@/db/audit';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import { A, B, C, D, E, asUser } from './as-user';
+import type { AuditSession } from '@/db/types';
 
 // The session is built from the same constant the seed inserts; a second copy
 // of the ids here would drift silently.

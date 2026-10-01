@@ -1,0 +1,3 @@
+# Wave 13 — Grimoire
+
+M10's tables landed in Wave 3 and its visibility rule in Wave 5, so this is the service and UI half. **M10.6's visibility rules block M10.9, M10.11 and M10.13**, since every list, search and page filters in SQL under rule 7, and M10.7 and M10.8, the pure comparison functions, block M10.17's comparison panel. **MB.8's Zod schema precedes M10.10**, which needs it; M4.5 covered ingredient and category only. **MB.6's recipe view precedes M10.22**, which had no page to attach print styles to. **MB.123 closes the wave**, M5.4's design review of the grimoire once its print layout lands. MW.13 is retired (MB.31).

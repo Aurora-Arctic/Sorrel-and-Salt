@@ -11,9 +11,6 @@ import {
   UNAUDITED_TABLES,
   tableFacts,
 } from '../support/db/table-metadata';
-// First, before any table that spreads the audit columns: `audit.ts` and
-// `schema/users.ts` import each other, and entering the cycle from the audit
-// side builds `users` with no audit columns (claude-docs/db.md, "The seed module").
 import { users } from '@/modules/identity/schema/users';
 import { categories, categoryGroups } from '@/modules/vocabulary/schema/categories';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
@@ -24,17 +21,20 @@ import {
 } from '@/modules/vocabulary/schema/ingredient-forms';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { inventoryItems } from '@/modules/ingredients/schema/inventory-items';
+import { retiredIngredientSlugs } from '@/modules/ingredients/schema/retired-ingredient-slugs';
+import { planets, zodiacSigns } from '@/modules/vocabulary/schema/astrology';
 import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
 import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
 import { spells } from '@/modules/grimoire/schema/spells';
 import { workspaceInvitations } from '@/modules/coven/schema/workspace-invitations';
 import { workspaceMembers, workspaces } from '@/modules/coven/schema/workspaces';
+import type { Reference } from './types';
 
 // One sweep rather than a copy in every schema test: a table added without
 // `...auditColumns` fails here, where a per-file copy would simply not exist.
 // Both halves are asserted because they can disagree — a spread removed from
 // a schema file leaves the migrated database's columns standing
-// (claude-docs/testing.md, "The db test harness").
+// (claude-docs/testing/db-harness.md, "The db test harness").
 
 // Table objects, transcribed: an empty list is a failing test, not a vacuous pass.
 const AUDITED: PgTable[] = [
@@ -45,15 +45,19 @@ const AUDITED: PgTable[] = [
   ingredientForms,
   ingredients,
   inventoryItems,
+  planets,
+  retiredIngredientSlugs,
+  spellIngredients,
   spells,
   users,
   workspaceInvitations,
   workspaceMembers,
   workspaces,
+  zodiacSigns,
 ];
 
 /** Hard-deleted, so four stamps and no tombstone (MB.34). */
-const STAMPED: PgTable[] = [ingredientCategories, spellCategories, spellIngredients];
+const STAMPED: PgTable[] = [ingredientCategories, spellCategories];
 
 const AUDIT_IDS = ['created_by', 'updated_by', 'deleted_by'];
 const STAMP_IDS = ['created_by', 'updated_by'];
@@ -63,12 +67,6 @@ const named = (tables: PgTable[]) =>
 
 let sql: ReturnType<typeof postgres>;
 const catalogue = useTestDatabase((client) => (sql = client));
-
-interface Reference {
-  column_name: string;
-  foreign_table: string;
-  foreign_column: string;
-}
 
 /** Every `*_by` foreign key `table` declares, keyed by column, as the catalogue reports it. */
 async function byReferencesOf(table: string): Promise<Record<string, Reference>> {
@@ -94,9 +92,9 @@ async function byReferencesOf(table: string): Promise<Record<string, Reference>>
 const USERS_ID = { foreign_table: 'users', foreign_column: 'id' };
 
 describe('the audited tables', () => {
-  it('are the fifteen the updated_at sweep names: twelve audited, three stamped', () => {
-    expect(AUDITED).toHaveLength(12);
-    expect(STAMPED).toHaveLength(3);
+  it('are the eighteen the updated_at sweep names: sixteen audited, two stamped', () => {
+    expect(AUDITED).toHaveLength(16);
+    expect(STAMPED).toHaveLength(2);
     expect([...named(AUDITED), ...named(STAMPED)].map(([name]) => name).sort()).toEqual(
       AUDITED_TABLES,
     );

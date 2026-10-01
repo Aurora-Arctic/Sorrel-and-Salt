@@ -18,7 +18,7 @@
     // on a dark ground. claude-docs/styling.md, "Type".
     font-weight: 700;
     letter-spacing: 0.01em;
-    margin: 0 0 1rem;
+    margin: 0 0 space(4);
     text-wrap: balance;
   }
 
@@ -44,8 +44,9 @@
   }
 
   p {
-    margin: 0.5rem 0;
-    font-size: 1rem;
+    max-width: $measure;
+    margin: space(2) 0;
+    font-size: type-size('body');
     line-height: 1.5;
     font-weight: 300;
   }
@@ -101,7 +102,7 @@
 
     li {
       position: relative;
-      margin: 0.25rem 0;
+      margin: space(1) 0;
 
       &::before {
         content: '◆';
@@ -122,11 +123,34 @@
   .eyebrow {
     margin: 0;
     font-family: $font-body;
-    font-size: 0.75rem;
+    font-size: type-size('overline');
     font-weight: 500;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: $text-muted;
+  }
+
+  // The muted sentence or two under a heading that says what the section is
+  // for. Body size: it is read, not skimmed. A `p` already stops at the
+  // measure; anything else given the class stops there too.
+  .lede {
+    max-width: $measure;
+    color: $text-muted;
+  }
+
+  // A metadata line — a formal name and form, a date, a count — tight under
+  // what it describes.
+  .meta {
+    margin: 0;
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+
+  // The italic of a botanical, fungal or zoological binomial. Mineral and
+  // chemical names are set upright, so the component that knows the
+  // nomenclature decides whether to add it.
+  .binomial {
+    font-style: italic;
   }
 
   // For headings that stack directly, as in a type sample.
@@ -135,7 +159,7 @@
     h2,
     h3,
     h4 {
-      margin-bottom: 0.25rem;
+      margin-bottom: space(1);
     }
   }
 }

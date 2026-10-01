@@ -56,7 +56,7 @@ no Neon connection and no host Node-version juggling.
     - **`SEED_SCENARIO: ${SEED_SCENARIO:-minimal}`** — host environment or
       `Docker/.env`, defaulting to the bare install. An unrecognised name fails
       this container (and so `app`) rather than quietly seeding `minimal`; see
-      `resolveScenario` in `claude-docs/db.md`.
+      `resolveScenario` in `claude-docs/db/migrations-and-scripts.md`.
     - **It re-runs on every `docker compose up`, deliberately.** Migrations are
       journal-guarded and every scenario is idempotent by fixed id, so the cost
       is a few seconds and the payoff is that a developer who just pulled new
@@ -74,7 +74,8 @@ no Neon connection and no host Node-version juggling.
       can disable it (the preload list is compiled into the binary, not
       loaded at runtime). Nothing else in this repo hits `app` from a real
       browser — the remote-browser e2e path's `baseURL` is
-      `http://devcontainer:8001` — so this only bit `make docker-codegen`
+      `http://devcontainer:<port>`, the worker slot's server on 8001 and up
+      or 8100 — so this only bit `make docker-codegen`
       (`claude-docs/debugging.md`), which is what surfaced it. Every
       non-browser reference (`DATABASE_URL`-style service-to-service
       traffic) keeps using bare `app`; `sorrel-app` exists solely for URLs a
@@ -225,6 +226,8 @@ NAME=<spec>` (MB.23) — starts `playwright-server` if needed, then `exec`s
     `/home/node/.claude` so Claude's context survives `make docker-rebuild`;
     `initializeCommand` `mkdir`s it host-side first. The Claude CLI itself comes
     from the `anthropics/devcontainer-features/claude-code` feature.
-    - **`~/.claude.json` is NOT under that bind mount**, and it is where the
-      Asana MCP OAuth grant lives — so expect to re-authorize Asana after a
-      `make docker-rebuild`.
+    - **`~/.claude.json` is NOT under that bind mount**, so anything an MCP
+      server stores there — an OAuth grant, for one — is lost on
+      `make docker-rebuild`. Nothing in `.mcp.json` needs one today; the Asana
+      server that did was retired in MB.89. `/home/node/worktrees` is not
+      preserved either, so commit worktree work before a rebuild.

@@ -1,33 +1,68 @@
+import type { UserRole } from './session';
+
 // Pure helpers for /sign-in?next=&error=, shared by the sign-in page and route
 // protection (src/proxy.ts, src/lib/request-session.ts) — one rule for which
 // return paths are safe, applied on the way out and on the way back — and the
 // sentences for the account page's own OAuth round trip, the link.
 
 /**
- * Where a sign-in goes when no page asked for the visitor back: the
- * post-sign-in landing (M2.8), not `/` — `/` is the public front door, and a
- * visitor who has just signed in has been through it already
+ * Where a sign-in goes when no page asked for the visitor back, for anyone
+ * but an admin: the post-sign-in landing (M2.8), not `/` — `/` is the public
+ * front door, and a visitor who has just signed in has been through it already
  * (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
  */
 export const POST_SIGN_IN_LANDING = '/coven';
+
+/** An admin's landing instead: curating starts in the admin area (MB.113). */
+export const ADMIN_LANDING = '/admin';
+
+/** Where a sign-in with no return path lands, by the role the account holds once it has signed in. */
+export function postSignInLanding(role: UserRole): string {
+  return role === 'admin' ? ADMIN_LANDING : POST_SIGN_IN_LANDING;
+}
 
 /**
  * The open-redirect guard for `?next=`. A same-site absolute path is kept
  * verbatim; anything else — an absolute URL, a protocol-relative `//host`, a
  * `/\host` some browsers still resolve as one, a relative path, a missing
- * value, or Next's array-valued searchParams for a repeated key — falls back
- * to the landing. Without this, `?next=https://evil.example` would make
- * /sign-in redirect anywhere after a real sign-in.
+ * value, or Next's array-valued searchParams for a repeated key — is no
+ * return path at all, and the landing is then the role's (`postSignInLanding`).
+ * Without this, `?next=https://evil.example` would make /sign-in redirect
+ * anywhere after a real sign-in.
  */
-export function safeReturnPath(raw: string | string[] | undefined): string {
-  if (typeof raw !== 'string' || raw.length === 0) return POST_SIGN_IN_LANDING;
+export function safeReturnPath(raw: string | string[] | undefined): string | undefined {
+  if (typeof raw !== 'string' || raw.length === 0) return undefined;
   // A single leading slash, not a second slash or backslash right after it —
   // both are how a URL parser can be tricked into reading the rest as a host.
-  if (!/^\/(?!\/|\\)/.test(raw)) return POST_SIGN_IN_LANDING;
+  if (!/^\/(?!\/|\\)/.test(raw)) return undefined;
   // A newline anywhere would let this value smuggle a second header into
   // whatever eventually turns it into a redirect response.
-  if (/[\r\n]/.test(raw)) return POST_SIGN_IN_LANDING;
+  if (/[\r\n]/.test(raw)) return undefined;
   return raw;
+}
+
+/**
+ * What a sign-in with no return path tells the callback, in Better Auth's
+ * `additionalData`, so that it lands the account by role. A flag rather than
+ * a landing path for the callback to recognise: `/coven` asked for by name
+ * must still win for an admin.
+ */
+export const NO_RETURN_PATH = { noReturnPath: true } as const;
+
+/**
+ * `signIn.social`'s destinations for a sign-in headed for `next`, or for none.
+ * With none, `callbackURL` is only what Better Auth requires, since the
+ * callback replaces it, and a failed attempt keeps asking for none.
+ */
+export function socialSignInTarget(next: string | undefined) {
+  if (next === undefined) {
+    return {
+      callbackURL: POST_SIGN_IN_LANDING,
+      errorCallbackURL: signInPath(undefined),
+      additionalData: NO_RETURN_PATH,
+    };
+  }
+  return { callbackURL: next, errorCallbackURL: signInPath(next) };
 }
 
 /**
@@ -49,8 +84,10 @@ export const SIGN_IN_TO_VERIFY_PATH = '/sign-in?next=%2Faccount%2Femail&error=si
 export const LAST_USED_PROVIDER_COOKIE = 'better-auth.last_used_login_method';
 
 /** `/sign-in`, carrying `returnPath` as `?next=` once it has passed `safeReturnPath`. */
-export function signInPath(returnPath: string | undefined): `/sign-in?next=${string}` {
-  return `/sign-in?next=${encodeURIComponent(safeReturnPath(returnPath))}`;
+export function signInPath(returnPath: string | undefined): '/sign-in' | `/sign-in?next=${string}` {
+  const path = safeReturnPath(returnPath);
+  if (path === undefined) return '/sign-in';
+  return `/sign-in?next=${encodeURIComponent(path)}`;
 }
 
 // Better Auth's own OAuth callback error codes (node_modules/better-auth/dist/

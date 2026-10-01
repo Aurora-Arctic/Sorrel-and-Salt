@@ -1,10 +1,9 @@
 import { sql } from 'drizzle-orm';
 import type { PgInsertValue, PgTable } from 'drizzle-orm/pg-core';
-// `./bootstrap-admin` first, and load-bearing — see minimal.ts.
 import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
 import { applyAudit } from '../audit';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
-import type { SeedDatabase, SeedTransaction } from './index';
+import type { InsertStamps, SeedDatabase, SeedTransaction } from './types';
 
 // The three moves every seed makes. Writes go through the handle the caller
 // gives, not `withAudit` (claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md).
@@ -24,9 +23,6 @@ export async function beginSeedTransaction<T>(
     return body(tx);
   });
 }
-
-/** The stamps `applyAudit('insert', …)` supplies, so a caller's row is typed without them. */
-type InsertStamps = 'createdAt' | 'createdBy' | 'updatedAt' | 'updatedBy';
 
 /**
  * Inserts every `wanted` whose key `existing` did not return, stamped by the

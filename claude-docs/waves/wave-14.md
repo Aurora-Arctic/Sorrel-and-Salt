@@ -1,0 +1,3 @@
+# Wave 14 — Sweep close-out
+
+**M6.17 is the one deliberate exception to the sweep-task rule.** It is a census, not an enforcer: M6.3 does the enforcing, adopted per PR by each mutating service as it is written. A census of an incomplete set is worthless, so it closes here, where "every mutating workspace service" is finally a finite existing set. **MB.39 moved here from Wave 3**, where it followed MB.38 unstarted: it is CI-only and blocks nothing, so it can move again without consequence. **MB.90 is documentation and tooling** and depends on nothing in the wave; it sits here because the board placed it here, and can move to any wave without consequence. MW.14 is retired (MB.31).

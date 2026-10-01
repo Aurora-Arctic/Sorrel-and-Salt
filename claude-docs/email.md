@@ -6,16 +6,16 @@ The decision record behind delivery and verification is
 
 ## Sending
 
-`src/lib/mail.ts`'s `send({ to, subject, text, html })` is the one way the
-site mails (MB.65). `MAIL_TRANSPORT` picks Resend in production, the Mailtrap
-Sandbox in previews and Mailpit in compose and CI; unset, the message is
-logged and not sent, which is what Vitest sees. A refused or failed send is
-logged and never thrown. A recipient under `.invalid` is refused before any
-transport is chosen: RFC 2606 reserves the domain, and it is where the
-placeholder for a provider that shared no address lives (MB.54;
-[`auth.md`](auth.md), "The email page"). The variables and the
-per-environment guard are in [`secrets.md`](secrets.md); the Mailpit
-container is in [`docker.md`](docker.md).
+`src/lib/mail.ts`'s `send({ to, subject, text, html })` is the one way the site
+mails (MB.65). `MAIL_TRANSPORT` picks Resend in production, the Mailtrap Sandbox
+in previews and Mailpit in compose and CI; unset, the message is logged and not
+sent, which is what Vitest sees. A refused or failed send is logged and never
+thrown. A recipient under `.invalid` is refused before any transport is chosen:
+RFC 2606 reserves the domain, and it is where the placeholder for a provider
+that shared no address lives (MB.54;
+[`auth/admin-bootstrap.md`](auth/admin-bootstrap.md), "The email page"). The
+variables and the per-environment guard are in [`secrets.md`](secrets.md); the
+Mailpit container is in [`docker.md`](docker.md).
 
 ## Templates: React Email (MB.66)
 
@@ -49,8 +49,10 @@ await send(await verifyEmailMessage({ to, url, providers }));
 - **Where things go.** A template is a top-level `src/emails/<name>.tsx` with
   a sibling `<name>.stories.tsx`, which `tests/guards/workshop-guards.test.ts`
   requires. The frame every mail shares is `src/emails/parts/layout.tsx`
-  (`EmailLayout`, `Paragraph`, `Action`). Not in `src/components/`: a mail is
-  not a page component. Tests mirror the path, in the `unit` project.
+  (`EmailLayout`, `Paragraph`, `Action`). Their types are in `parts/types.ts`, and the
+  templates' in `src/emails/types.ts`. Not in `src/components/`: a mail is
+  not a page component. Tests mirror the path: `theme.test.ts` in the `unit`
+  project, `verify-email.test.tsx` in `dom`, since it is a `.tsx` (MB.97).
 - **Plain words.** A mail is read by anyone who signed in, often on a phone:
   short sentences, everyday vocabulary, and one thing to do.
 
@@ -100,6 +102,9 @@ does it, so each piece has an email-safe stand-in.
   It allows each channel a step or two of rounding, because libvips takes a
   different SIMD path on x64 than on arm64 and the two round a few pixels
   apart, so an image built on either architecture passes on the other.
+  Node runs that script with its own type stripping, so whatever `theme.ts` or
+  `ornaments.ts` takes from `./types` must come in by `import type`, which it
+  erases.
 - **The text sits on the page, and the photographs run under it.** No card:
   the text is on the page colour, as on the site. The photographs are the
   backgrounds of two nested sections, top left and bottom right, and the
@@ -146,6 +151,7 @@ render shows the previous fix's failure, not this one's result.
 | `src/emails/verify-email.tsx`                      | Better Auth's `sendVerificationEmail`, at sign-up and on request                    | The one-hour `/verify-email` link, the providers linked to the account, and that it must be opened from a browser signed in to it                             |
 | `src/emails/verify-email.tsx`, `purpose: 'change'` | `src/lib/email-verification.ts`'s `requestChange`, from the email page's `setEmail` | The same link with a change token, to the _new_ address: its first sentence says an existing account asked for this address, since the reader did not sign up |
 
-The verification flow itself is [`auth.md`](auth.md), "First-party
-verification" and "The email page". M7.3's invitation and MB.70's admin
-invitation add their templates here.
+The verification flow itself is
+[`auth/admin-bootstrap.md`](auth/admin-bootstrap.md), "First-party verification"
+and "The email page". M7.3's invitation and MB.70's admin invitation add their
+templates here.

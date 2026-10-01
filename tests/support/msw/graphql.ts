@@ -5,12 +5,13 @@ import {
   type GraphQLResponseBody,
   type GraphQLVariables,
 } from 'msw';
-import { type ErrorCode, maskError } from '@/graphql/errors';
-import { Forbidden, NotFound, ValidationError, type ValidationIssue } from '@/lib/errors';
+import { maskError } from '@/graphql/errors';
+import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import { server } from './server';
+import type { MockedError } from './types';
 
 // Scoped to /api/graphql. No base handlers: an operation nothing has mocked
-// falls through to vitest.setup.ts's `onUnhandledRequest: 'error'`.
+// falls through to setup-msw.ts's `onUnhandledRequest: 'error'`.
 export const graphqlLink = graphql.link('/api/graphql');
 
 export function mockGraphQLQuery<
@@ -33,14 +34,6 @@ export function mockGraphQLMutation<
       HttpResponse.json({ data: resolveData(variables) }),
     ),
   );
-}
-
-export interface MockedError {
-  code: ErrorCode;
-  /** VALIDATION only; each lands beside the input field its path names. */
-  fieldErrors?: ValidationIssue[];
-  /** The service's message; the thrown type's default when omitted. */
-  message?: string;
 }
 
 function thrownFor({ code, fieldErrors = [], message }: MockedError): Error {

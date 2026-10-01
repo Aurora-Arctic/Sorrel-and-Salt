@@ -1,3 +1,4 @@
+import type { Message, Outgoing } from './types';
 // Outgoing mail, over HTTP to every target: SMTP from a Vercel function is
 // unreliable. A refused or failed send is logged and never thrown, so a
 // provider outage costs a resend rather than a sign-in or an invitation.
@@ -6,8 +7,6 @@
 
 // A send never throws, so the log is how a refused or failed one is seen.
 /* oxlint-disable no-console */
-
-export type Message = { to: string; subject: string; text: string; html: string };
 
 // The one transport each deployed environment may use. Anything else there,
 // unset included, is refused: a copied variable cannot point a preview at live
@@ -20,8 +19,6 @@ const REQUIRED_TRANSPORT: Record<string, string> = {
 // The captures never deliver, so their sender needs no verified domain;
 // Resend's comes from MAIL_FROM, which must be on the domain Resend verified.
 const CAPTURE_FROM = { email: 'noreply@sorrelandsalt.com', name: 'Sorrel & Salt' };
-
-type Outgoing = { url: string; headers: Record<string, string>; body: unknown };
 
 /** The request for a transport, or why it cannot be built. Keys are read here, at send time, never at build. */
 function outgoing(transport: string, message: Message): Outgoing | string {

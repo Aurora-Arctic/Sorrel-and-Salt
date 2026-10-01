@@ -2,7 +2,6 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
-import type { Message } from '@/lib/mail';
 import { signInErrorMessage } from '@/lib/sign-in';
 import {
   ORIGIN,
@@ -10,13 +9,14 @@ import {
   expectSignedIn,
   signIn as signInThrough,
   stubProviderCredentials,
-  type Profile,
-  type ProviderId,
 } from '../../../support/oauth';
+import type { Message, ProviderId } from '@/lib/types';
+import type { Profile } from '../../../support/types';
+import type { ProvisionalUserRow } from './types';
 
 // Story 58, through Better Auth's real endpoints: an unverified account lapses
 // one verification lifetime after its last mail, and the next OAuth callback
-// sweeps it (claude-docs/auth.md, "Provisional accounts").
+// sweeps it (claude-docs/auth/admin-bootstrap.md, "Provisional accounts").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
@@ -70,19 +70,12 @@ afterEach(() => {
 const signIn = (provider: ProviderId, profile: Profile) =>
   signInThrough(auth, server, provider, profile);
 
-interface UserRow {
-  id: string;
-  email_verified: boolean;
-  updated_by: string;
-  updated_at: Date;
-}
-
-async function userRow(email: string): Promise<UserRow | undefined> {
+async function userRow(email: string): Promise<ProvisionalUserRow | undefined> {
   const [row] = await sql`
     select id, email_verified, updated_by, updated_at
     from users where email = ${email} and deleted_at is null
   `;
-  return row as UserRow | undefined;
+  return row as ProvisionalUserRow | undefined;
 }
 
 async function linkedRows(userId: string) {

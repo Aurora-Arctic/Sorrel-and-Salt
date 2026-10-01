@@ -1,3 +1,4 @@
+import type { SocialProvider } from './types';
 // The roster src/lib/auth.ts registers providers from and /sign-in greys
 // buttons from — one source, so a button cannot be live for a provider
 // Better Auth never registered, or greyed for one that works. Adding or
@@ -10,23 +11,10 @@
 // lives in social-providers-config.ts, which nothing client-side may import
 // (.oxlintrc.json's no-restricted-imports).
 //
-// Apple was considered and dropped (claude-docs/auth.md, "Social providers"):
+// Apple was considered and dropped (claude-docs/auth/social-providers.md, "Social providers"):
 // its client secret is a JWT Apple caps at six months, expiring silently
 // rather than failing loudly, on top of a paid Developer Program membership
 // the other four don't need.
-
-export type ProviderId = 'google' | 'discord' | 'facebook' | 'microsoft';
-
-export interface SocialProvider {
-  id: ProviderId;
-  label: string;
-}
-
-/** One of a user's provider accounts: the row id `/unlink-account` takes, and its provider. */
-export interface LinkedAccount {
-  id: string;
-  providerId: ProviderId;
-}
 
 export const SOCIAL_PROVIDERS: readonly SocialProvider[] = [
   { id: 'discord', label: 'Discord' },

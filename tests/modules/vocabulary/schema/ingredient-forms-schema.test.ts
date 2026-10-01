@@ -1,20 +1,20 @@
-import { join } from 'node:path';
-import { readFileSync, readdirSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
-import { MIGRATIONS_DIR } from '../../../support/paths';
+import { foreignKeyStatements, shippedMigrationStatements } from '../../../support/db/migrations';
 import {
   ingredientFormGroups,
   ingredientForms,
 } from '@/modules/vocabulary/schema/ingredient-forms';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS } from '@/db/seed/standard';
+import type { Row } from './types';
 
 const GROUPS_SLUG_UNIQUE = 'ingredient_form_groups_slug_unique';
 const FORMS_SLUG_UNIQUE = 'ingredient_forms_slug_unique';
 const FORMS_GROUP_FK = 'ingredient_forms_group_id_ingredient_form_groups_id_fk';
+const FORMS_TRGM = 'ingredient_forms_trgm';
 
 // As in categories-schema.test.ts: a hand-ordering column under any usual name; §5 lists none.
 const ORDERING_COLUMNS = ['order', 'position', 'sort', 'sort_order', 'rank', 'display_order'];
@@ -100,24 +100,32 @@ describe('ingredient_forms schema', () => {
     expect(slugIndex?.config.where).toBeDefined();
   });
 
+  // The autofill matches a description as well as a name, by `%` and `<%`,
+  // and only a trigram index answers either (claude-docs/db/member-autofill.md,
+  // "The member's autofill").
+  it('declares one gin trigram index over name and description, neither unique nor partial', () => {
+    const trigram = indexes.find((index) => index.config.name === FORMS_TRGM);
+
+    expect(trigram?.config.method).toBe('gin');
+    expect(trigram?.config.columns).toHaveLength(2);
+    expect(trigram?.config.unique).toBe(false);
+    expect(trigram?.config.where).toBeUndefined();
+    expect(indexes.map((index) => index.config.name).sort()).toEqual([
+      FORMS_SLUG_UNIQUE,
+      FORMS_TRGM,
+    ]);
+  });
+
   it('carries no workspace scoping', () => {
     expect(byName.workspace_id).toBeUndefined();
     expect(nonAuditForeignKeys.map((fk) => fk.foreignTable)).toEqual([ingredientFormGroups]);
   });
 });
 
-// Read from disk for the one assertion a hand-edited migration would hide from the schema.
-function migrationFiles(): string[] {
-  return readdirSync(MIGRATIONS_DIR)
-    .filter((name) => name.endsWith('.sql'))
-    .sort()
-    .map((name) => readFileSync(join(MIGRATIONS_DIR, name), 'utf8'));
-}
-
 // §5: `ingredients.form` is text, not a foreign key to this table — an FK would
 // key identity on a surrogate id and make an uncurated value unwritable.
 // Asserted from both the Drizzle schema and the shipped SQL —
-// claude-docs/db.md, "The ingredient identity model".
+// claude-docs/db/identity-model.md, "The ingredient identity model".
 describe('ingredients.form is text over this vocabulary, not a foreign key to it', () => {
   it('declares form as a nullable text column', () => {
     const form = tableFacts(ingredients).columns.find((column) => column.name === 'form');
@@ -134,19 +142,17 @@ describe('ingredients.form is text over this vocabulary, not a foreign key to it
     expect(referenced).not.toContain(ingredientFormGroups);
   });
 
+  // Read from disk: a hand-edited migration could add a key the schema lacks.
   it('ships no migration adding such a foreign key', () => {
-    const offending = migrationFiles().filter((contents) =>
-      /alter table\s+"?ingredients"?[\s\S]*?references\s+"?ingredient_forms"?/i.test(contents),
-    );
+    const statements = shippedMigrationStatements();
 
-    expect(offending).toEqual([]);
+    expect(foreignKeyStatements(statements, 'ingredients', 'ingredient_forms')).toEqual([]);
+    expect(foreignKeyStatements(statements, 'ingredients', 'ingredient_form_groups')).toEqual([]);
   });
 });
 
 const AUTHOR = FIXTURE_USERS.A.id;
 const ABSENT_GROUP = '99999999-9999-9999-9999-999999999999';
-
-type Row = Record<string, string | null>;
 
 function groupRow(overrides: Row = {}): Row {
   return {
@@ -371,6 +377,14 @@ describe('ingredient_forms table', () => {
     `;
     expect(rows.map((r) => r.name)).toEqual(['Root', 'Root']);
     expect(rows.map((r) => r.group_name)).toEqual(['Botanical', 'Substance']);
+  });
+
+  it('indexes name and description for trigram matching in one gin index', async () => {
+    const index = await catalogue.indexRow('ingredient_forms', FORMS_TRGM);
+
+    expect(index?.unique).toBe(false);
+    expect(index?.predicate).toBeNull();
+    expect(index?.definition).toContain('USING gin (name gin_trgm_ops, description gin_trgm_ops)');
   });
 
   it('requires the name, slug and description', async () => {

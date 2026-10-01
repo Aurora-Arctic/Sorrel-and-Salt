@@ -1,45 +1,16 @@
 import { V1_STORIES, parseStoryHeading } from './stories';
-import type { Story } from './stories';
+import type {
+  SuiteState,
+  ReportedModule,
+  StoryStatus,
+  UnknownSuite,
+  Checklist,
+  Story,
+} from './types';
 
 // One entry per v1 story in §10 order, whether or not anything tested it — a
 // story with no test yet is a line on the report, not an omission. Every suite
 // at any depth naming a story counts, so a story may be tested from two files.
-
-export type SuiteState = 'passed' | 'failed' | 'skipped' | 'pending';
-
-/** The little of Vitest's TestSuite the checklist reads. */
-export interface ReportedSuite {
-  readonly name: string;
-  state(): SuiteState;
-}
-
-/** The little of Vitest's TestModule the checklist reads. */
-export interface ReportedModule {
-  readonly relativeModuleId: string;
-  readonly children: { allSuites(): Iterable<ReportedSuite> };
-}
-
-export type StoryStatus = 'passed' | 'failed' | 'skipped' | 'untested';
-
-export interface StoryEntry extends Story {
-  status: StoryStatus;
-  /** Every module holding a suite that names this story. */
-  suites: string[];
-}
-
-export interface UnknownSuite {
-  /** A number §10 does not list — a v2 story, or a typo. */
-  id: number;
-  name: string;
-  module: string;
-}
-
-export interface Checklist {
-  stories: StoryEntry[];
-  unknown: UnknownSuite[];
-  counts: Record<StoryStatus, number>;
-  total: number;
-}
 
 /**
  * A failure anywhere fails the story; a skip anywhere leaves it not fully

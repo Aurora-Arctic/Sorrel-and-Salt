@@ -4,7 +4,8 @@ import {
   GENERIC_VERIFY_ERROR,
   hasVerifiedFlag,
   isEmailPage,
-  VERIFIED_LANDING,
+  returnPathOf,
+  verifiedLanding,
   verifyErrorMessage,
 } from '@/lib/account-email';
 
@@ -42,8 +43,49 @@ describe('verifyErrorMessage', () => {
 });
 
 describe("the email page's paths", () => {
-  it('lands a followed link on the confirmed view', () => {
-    expect(VERIFIED_LANDING).toBe('/account/email?verified');
+  it('lands a followed link with no return path on the confirmed view, as it always has', () => {
+    expect(verifiedLanding(undefined)).toBe('/account/email?verified');
+  });
+
+  it('carries a same-site return path on to Continue, encoded', () => {
+    expect(verifiedLanding('/admin')).toBe('/account/email?verified&next=%2Fadmin');
+    expect(verifiedLanding('/coven/hearth?tab=mine')).toBe(
+      '/account/email?verified&next=%2Fcoven%2Fhearth%3Ftab%3Dmine',
+    );
+  });
+
+  // The open-redirect guard runs when the link is built, not only when the
+  // page reads it back: a mailed link never names somewhere else.
+  it.each(['//evil.example', 'https://evil.example', '/\\evil.example', 'coven', ''])(
+    'drops a return path that leaves the site (%s), landing as it always has',
+    (next) => {
+      expect(verifiedLanding(next)).toBe('/account/email?verified');
+    },
+  );
+
+  // Continue's landing without one is the role's, so an explicit /coven is
+  // carried like any other: an admin who asked for it still lands on it (MB.113).
+  it('carries an explicit /coven, which is not the same as none', () => {
+    expect(verifiedLanding('/coven')).toBe('/account/email?verified&next=%2Fcoven');
+  });
+
+  it("reads a sign-up link's callbackURL as where the sign-in was going", () => {
+    expect(returnPathOf('/admin')).toBe('/admin');
+    expect(returnPathOf('/coven/hearth?tab=mine')).toBe('/coven/hearth?tab=mine');
+  });
+
+  // A resend's callbackURL is the landing the email page asked for, and a
+  // sign-in may itself have been headed for the email page: either way the
+  // page's own `next` is the one to carry, never the page.
+  it("reads the email page's own next out of a callbackURL on it", () => {
+    expect(returnPathOf('/account/email?verified&next=%2Fadmin')).toBe('/admin');
+    expect(returnPathOf('/account/email?next=%2Fadmin')).toBe('/admin');
+    expect(returnPathOf('/account/email?verified')).toBeUndefined();
+    expect(returnPathOf('/account/email')).toBeUndefined();
+  });
+
+  it('reads nothing from a link with no callbackURL', () => {
+    expect(returnPathOf(null)).toBeUndefined();
   });
 
   // Present is enough: a bare `?verified` reads as '', and a URL rebuilt
@@ -59,6 +101,10 @@ describe("the email page's paths", () => {
     expect(emailPagePath('/coven/hearth?tab=mine')).toBe(
       '/account/email?next=%2Fcoven%2Fhearth%3Ftab%3Dmine',
     );
+  });
+
+  it('is the bare page when there is no return path', () => {
+    expect(emailPagePath(undefined)).toBe('/account/email');
   });
 
   it('recognises the page with or without a query, and nothing that only starts like it', () => {

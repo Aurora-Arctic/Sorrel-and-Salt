@@ -1,14 +1,15 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { eq } from 'drizzle-orm';
+import { eq, sql as fragment } from 'drizzle-orm';
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '@/modules/identity/schema/users';
-import { findPage, findPageInWorkspace, withAudit } from '@/db/repository';
+import { type SortPart, findPage, findPageInWorkspace, withAudit } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { InvalidCursor } from '@/lib/errors';
-import { type ConnectionArgs, type Page, encodeCursor, resolvePage } from '@/lib/pagination';
+import { decodeCursor, encodeCursor, resolvePage } from '@/lib/pagination';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { A, D, asUser } from '../support/as-user';
+import type { ConnectionArgs, Page } from '@/lib/types';
 
 // CLAUDE.md rule 8, end to end below the transport: `resolvePage` drives the
 // repository's keyset finders exactly as a connection resolver will.
@@ -97,7 +98,7 @@ async function expectedOrder(): Promise<string[]> {
 type Leaf = typeof leaves.$inferSelect;
 
 function leafPage(args: ConnectionArgs): Promise<Page<Leaf>> {
-  return resolvePage(args, (request) => findPage(leaves, leaves.name, request));
+  return resolvePage(args, (request) => findPage(leaves, [leaves.name], request));
 }
 
 /** Follows `endCursor` until the last page, collecting ids and page sizes. */
@@ -216,7 +217,7 @@ describe('Keyset pagination through the repository', () => {
     // Bounded: a cursor that replays rows would otherwise walk forever.
     for (let pages = 0; pages < 10; pages += 1) {
       const page: Page<Leaf> = await resolvePage({ first: 2, after }, (request) =>
-        findPage(leaves, leaves.pickedAt, request),
+        findPage(leaves, [leaves.pickedAt], request),
       );
       ids.push(...page.edges.map((edge) => edge.node.id));
       if (!page.pageInfo.hasNextPage) break;
@@ -230,20 +231,20 @@ describe('Keyset pagination through the repository', () => {
 
   it('refuses a cursor whose key is not a value of the sort column', async () => {
     await seedLeaves();
-    const forged = encodeCursor({ key: 'Leaf 07', id: '0f9c2b1e-6a51-4c3f-9d7e-2b8a4e1c5d60' });
+    const forged = encodeCursor({ key: ['Leaf 07'], id: '0f9c2b1e-6a51-4c3f-9d7e-2b8a4e1c5d60' });
 
     // The same cursor is a fine position in a list sorted by name, so the
     // refusal is the timestamp cast and not the cursor's shape.
     await expect(leafPage({ after: forged })).resolves.toBeDefined();
     await expect(
-      resolvePage({ after: forged }, (request) => findPage(leaves, leaves.pickedAt, request)),
+      resolvePage({ after: forged }, (request) => findPage(leaves, [leaves.pickedAt], request)),
     ).rejects.toThrow(InvalidCursor);
   });
 
   // Only a cursor is client text, so only a data exception is a bad cursor;
   // a fault in the query itself is not the client's to hear about.
   it('passes any other database error through unchanged', async () => {
-    const attempt = resolvePage({}, (request) => findPage(leaves, jars.label, request));
+    const attempt = resolvePage({}, (request) => findPage(leaves, [jars.label], request));
 
     await expect(attempt).rejects.toThrow(/pagination_probe_jars/);
     await expect(attempt).rejects.not.toBeInstanceOf(InvalidCursor);
@@ -251,7 +252,25 @@ describe('Keyset pagination through the repository', () => {
 
   it('refuses a cursor whose id is not an id', async () => {
     await expect(
-      leafPage({ after: encodeCursor({ key: 'Leaf 07', id: 'seven' }) }),
+      leafPage({ after: encodeCursor({ key: ['Leaf 07'], id: 'seven' }) }),
+    ).rejects.toThrow(InvalidCursor);
+  });
+
+  it('refuses a cursor whose key has the wrong number of parts, before any read', async () => {
+    await seedLeaves();
+    const id = '0f9c2b1e-6a51-4c3f-9d7e-2b8a4e1c5d60';
+
+    // The one-part cursor is a fine position here, so the refusals are the count.
+    await expect(
+      leafPage({ after: encodeCursor({ key: ['Leaf 07'], id }) }),
+    ).resolves.toBeDefined();
+    await expect(
+      leafPage({ after: encodeCursor({ key: ['Leaf 07', 'Leaf 08'], id }) }),
+    ).rejects.toThrow(InvalidCursor);
+    await expect(
+      resolvePage({ before: encodeCursor({ key: ['Leaf 07'], id }) }, (request) =>
+        findPage(leaves, COMPUTED, request),
+      ),
     ).rejects.toThrow(InvalidCursor);
   });
 
@@ -260,7 +279,88 @@ describe('Keyset pagination through the repository', () => {
     // A NULL sort key makes the row comparison NULL, and the row vanishes
     // from every page.
     // @ts-expect-error — `note` is nullable.
-    void (() => findPage(leaves, leaves.note, request));
+    void (() => findPage(leaves, [leaves.note], request));
+  });
+});
+
+/**
+ * A key of two parts, the first computed: the name's length over three,
+ * negated, so longer names come first and the part is a fraction a cursor
+ * has to carry exactly — then the name. `real`, as the compendium's score is.
+ */
+const COMPUTED: SortPart[] = [
+  { expression: fragment`-(length(${leaves.name})::real / 3)`, type: 'real' },
+  leaves.name,
+];
+
+describe('Keyset pagination on a compound, computed key', () => {
+  /**
+   * Forty leaves over five lengths and fifteen names, so rows tie on the
+   * computed part, on both parts, and only the id tells them apart.
+   */
+  async function seedTies() {
+    await sql`
+      insert into pagination_probe_leaves (name, created_by, updated_by)
+      select repeat('x', n % 5 + 1) || ' ' || (n % 3), ${session.userId}, ${session.userId}
+      from generate_series(1, 40) as n`;
+  }
+
+  async function expectedComputedOrder(): Promise<string[]> {
+    const rows = await sql<{ id: string }[]>`
+      select id from pagination_probe_leaves
+      order by -(length(name)::real / 3), name, id`;
+    return rows.map((row) => row.id);
+  }
+
+  const computedPage = (args: ConnectionArgs) =>
+    resolvePage(args, (request) => findPage(leaves, COMPUTED, request));
+
+  it('walks every row once, in order, across ties on either part', async () => {
+    await seedTies();
+    const expected = await expectedComputedOrder();
+    // The precondition for the ties: fewer distinct keys than rows, at either depth.
+    const [{ lengths, names }] = await sql<{ lengths: number; names: number }[]>`
+      select count(distinct length(name))::int as lengths, count(distinct name)::int as names
+      from pagination_probe_leaves`;
+    expect([lengths, names]).toEqual([5, 15]);
+
+    const ids: string[] = [];
+    let after: string | null = null;
+    for (;;) {
+      const page: Page<Leaf> = await computedPage({ first: 7, after });
+      ids.push(...page.edges.map((edge) => edge.node.id));
+      if (!page.pageInfo.hasNextPage) break;
+      after = page.pageInfo.endCursor;
+    }
+
+    expect(ids).toEqual(expected);
+  });
+
+  it('walks it backwards with `last`, mirroring the forward walk', async () => {
+    await seedTies();
+    const expected = await expectedComputedOrder();
+
+    const ids: string[] = [];
+    let before: string | null = null;
+    for (;;) {
+      const page: Page<Leaf> = await computedPage({ last: 7, before });
+      ids.unshift(...page.edges.map((edge) => edge.node.id));
+      if (!page.pageInfo.hasPreviousPage) break;
+      before = page.pageInfo.startCursor;
+    }
+
+    expect(ids).toEqual(expected);
+  });
+
+  it('keys each row by every part, as Postgres prints it', async () => {
+    await sql`
+      insert into pagination_probe_leaves (name, created_by, updated_by)
+      values ('xx', ${session.userId}, ${session.userId})`;
+
+    const page = await computedPage({ first: 1 });
+
+    // -2/3 as a `real` prints shortest-exact, and casts back to the same value.
+    expect(decodeCursor(page.pageInfo.endCursor as string).key).toEqual(['-0.6666667', 'xx']);
   });
 });
 
@@ -289,7 +389,7 @@ describe('Keyset pagination inside a workspace', () => {
     expect(count).toBe(3);
 
     const page = await resolvePage({ first: 100 }, (request) =>
-      findPageInWorkspace(inW, jars, jars.label, request),
+      findPageInWorkspace(inW, jars, [jars.label], request),
     );
 
     expect(page.edges.map((edge) => edge.node.label)).toEqual(['W jar 0', 'W jar 1', 'W jar 2']);
@@ -298,6 +398,6 @@ describe('Keyset pagination inside a workspace', () => {
   it('reaches a workspace-scoped table only with a proof', () => {
     const request = { limit: 1, inverted: false };
     // @ts-expect-error — `jars` carries `workspace_id`, so the unscoped finder refuses it.
-    void (() => findPage(jars, jars.label, request));
+    void (() => findPage(jars, [jars.label], request));
   });
 });

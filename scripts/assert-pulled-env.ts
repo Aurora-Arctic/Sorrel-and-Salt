@@ -1,7 +1,7 @@
 /**
  * Assert, and report on, the environment `vercel pull` wrote — run by
  * deploy.yml and migrate.yml before anything consumes that file
- * (claude-docs/ci.md, "Deploy").
+ * (claude-docs/ci/deploy.md, "Deploy").
  *
  * A required key that is missing, empty, a placeholder or not a connection
  * string fails the job with its own named cause; every key the pull returned
@@ -11,6 +11,7 @@
  */
 
 import { readFileSync } from 'node:fs';
+import type { Classification, Verdict, Failure, AssertionResult } from './types.ts';
 
 /**
  * What `vercel pull` writes in place of a value it cannot read back. Listed
@@ -18,22 +19,6 @@ import { readFileSync } from 'node:fs';
  * more than one spelling across versions.
  */
 export const PLACEHOLDERS = ['[SENSITIVE]', '[REDACTED]', '<REDACTED>'] as const;
-
-export type Classification = 'missing' | 'empty' | 'placeholder' | 'present';
-
-export type Verdict = { ok: true } | { ok: false; code: string; message: string };
-
-export interface Failure {
-  key: string;
-  code: string;
-  message: string;
-}
-
-export interface AssertionResult {
-  ok: boolean;
-  report: string[];
-  failures: Failure[];
-}
 
 /**
  * The dotenv shape `vercel pull` writes: `KEY="value"`, one per line. Split on

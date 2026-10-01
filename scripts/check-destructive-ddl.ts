@@ -2,7 +2,7 @@
 // Flags destructive DDL in the migrations this branch adds or changes unless an
 // acknowledgement sidecar (`<migration>.ack.md`, carrying a line matching
 // ACK_LINE_RE) sits beside the migration. The policy, the five forms and the
-// sidecar are in claude-docs/db.md, "Expand/contract and the destructive-DDL
+// sidecar are in claude-docs/db/expand-contract.md, "Expand/contract and the destructive-DDL
 // check"; keep ACK_LINE_RE and that doc in sync. It reads nothing from GitHub.
 //
 // The file list, in precedence order: DESTRUCTIVE_DDL_FILES (CI's changed-file
@@ -24,6 +24,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import type { Finding } from './types.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 const MIGRATIONS_DIR = join(REPO_ROOT, 'src', 'db', 'migrations');
@@ -33,12 +34,6 @@ const FIXTURES_DIR = join(import.meta.dirname, '__fixtures__', 'destructive-ddl'
 const MIGRATIONS_PATHSPEC = 'src/db/migrations/*.sql';
 
 export const ACK_LINE_RE = /^destructive ddl acknowledged:\s*\S.*$/im;
-
-export interface Finding {
-  file: string;
-  rule: string;
-  statement: string;
-}
 
 // One rule per form in CLAUDE.md rule 10, matched per statement rather than
 // per line so a DEFAULT on its own line still counts.
@@ -333,7 +328,7 @@ export function report(
   for (const file of unacknowledged) console.error(`  ${sidecarPath(file)}`);
   console.error(
     '\nThe reason should say why the change is safe, or how it was expand/contracted — ' +
-      "see claude-docs/db.md's Migrations section for the convention and a worked rename " +
+      'see claude-docs/db/expand-contract.md for the convention and a worked rename ' +
       'example. Better still, avoid the destructive change entirely.',
   );
 

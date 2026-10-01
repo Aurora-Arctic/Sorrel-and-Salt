@@ -2,10 +2,12 @@
 #
 # catthehacker/ubuntu:act-latest is the closest public match to GitHub's
 # hosted Ubuntu runner and ships multi-arch (amd64 + arm64), so it also runs
-# unmodified on Apple Silicon. The label on the left is the one every
-# workflow pins in `runs-on:` (ubuntu-26.04 since MB.37, not the floating
-# ubuntu-latest) — bump both together or act finds no platform for the jobs.
+# unmodified on Apple Silicon. The labels on the left are the ones the
+# workflows pin in `runs-on:` — ubuntu-26.04 everywhere since MB.37, not the
+# floating ubuntu-latest, and Blacksmith's for vitest.yml since MB.96. A label
+# with no line here leaves act no platform for its job, so bump them together.
 # --pull=false leaves the first-use pull to docker and skips a redundant
 # registry round-trip on every later run.
 -P ubuntu-26.04=catthehacker/ubuntu:act-latest
+-P blacksmith-8vcpu-ubuntu-2404=catthehacker/ubuntu:act-latest
 --pull=false

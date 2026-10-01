@@ -1,5 +1,4 @@
 import { inArray, isNull } from 'drizzle-orm';
-// `./bootstrap-admin` first, and load-bearing — see minimal.ts.
 import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { users } from '../../modules/identity/schema/users';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
@@ -7,35 +6,33 @@ import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
 import { applyAudit } from '../audit';
-import { slugify } from '../../lib/slugify';
+import { ingredientSlug, slugify } from '../../lib/slugify';
 import { categoryIdByName, seedCategoryVocabulary } from './categories';
+import { seedAstrologyVocabularies } from './astrology';
 import { seedFormVocabulary } from './forms';
 import { beginSeedTransaction, insertMissing, requireFrom } from './idempotent';
-import type { SeedDatabase, SeedTransaction } from './index';
+import type {
+  FixtureUser,
+  SeedDatabase,
+  SeedIngredient,
+  SeedMembership,
+  SeedTransaction,
+  SeedWorkspace,
+} from './types';
 
 // The `standard` scenario: five fixture users, workspaces W and X, and a
 // populated compendium. The cast is fixed, not generated, so `asUser(A)` is the
 // same person in every suite. The compendium is deliberately awkward — five
 // "Cat's Claw" rows, mineral varieties, `none` and `unknown`, an uncurated
 // form — because tidy data exercises nothing the identity model exists for
-// (claude-docs/db.md, "The compendium is awkward on purpose"). Writes go through
+// (claude-docs/db/standard-scenario.md, "The compendium is awkward on purpose"). Writes go through
 // the handle `seed()` was given, not `withAudit` — see minimal.ts.
-
-/**
- * `id` is required rather than picked: the table defaults it, and a test
- * asserting against A has to name one id. `…0003`–`…0007` continue the
- * bootstrap's series.
- */
-type SeedUser = Pick<
-  typeof users.$inferInsert,
-  'name' | 'email' | 'role' | 'canCreateWorkspace'
-> & { id: string };
 
 /**
  * A owns W, B is a member of W, C a viewer in W, D a member of unrelated X, E a
  * site admin in no workspace. `canCreateWorkspace` follows the invite gate: A–D
  * earned it by membership, E was never invited and creates workspaces as an
- * admin instead.
+ * admin instead. `…0003`–`…0007` continue the bootstrap's series.
  */
 export const FIXTURE_USERS = {
   A: {
@@ -73,14 +70,12 @@ export const FIXTURE_USERS = {
     role: 'admin',
     canCreateWorkspace: false,
   },
-} satisfies Record<'A' | 'B' | 'C' | 'D' | 'E', SeedUser>;
+} satisfies Record<'A' | 'B' | 'C' | 'D' | 'E', FixtureUser>;
 
 /** W — the workspace A owns and B and C work in. */
 export const WORKSPACE_W_ID = '00000000-0000-0000-0001-000000000001';
 /** X — unrelated, and the other half of every isolation assertion. */
 export const WORKSPACE_X_ID = '00000000-0000-0000-0001-000000000002';
-
-type SeedWorkspace = Pick<typeof workspaces.$inferInsert, 'name'> & { id: string };
 
 // No slug is written down (CLAUDE.md's slug rule). Exported so the fixture
 // factories can avoid these names.
@@ -88,8 +83,6 @@ export const FIXTURE_WORKSPACES: SeedWorkspace[] = [
   { id: WORKSPACE_W_ID, name: 'Whitethorn Coven' },
   { id: WORKSPACE_X_ID, name: 'Ninebark Coven' },
 ];
-
-type SeedMembership = Pick<typeof workspaceMembers.$inferInsert, 'workspaceId' | 'userId' | 'role'>;
 
 const MEMBERSHIPS: SeedMembership[] = [
   { workspaceId: WORKSPACE_W_ID, userId: FIXTURE_USERS.A.id, role: 'owner' },
@@ -99,22 +92,6 @@ const MEMBERSHIPS: SeedMembership[] = [
   // E is deliberately absent: "an admin has no access to any workspace" is
   // only assertable against one in no workspace.
 ];
-
-/** One compendium entry plus its folk names and categories, named rather than keyed. */
-type SeedIngredient = Pick<
-  typeof ingredients.$inferInsert,
-  | 'name'
-  | 'canonicalName'
-  | 'nomenclature'
-  | 'form'
-  | 'description'
-  | 'element'
-  | 'planet'
-  | 'safetyNotes'
-> & {
-  folkNames?: string[];
-  categories: string[];
-};
 
 /**
  * Every entry declares a `nomenclature`. The awkward ones are the point: five
@@ -410,6 +387,7 @@ export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
   // key. Inside this transaction so a scenario is never half-applied.
   await seedFormVocabulary(tx);
   await seedCategoryVocabulary(tx);
+  await seedAstrologyVocabularies(tx);
 
   await insertMissingUsers(tx);
   await insertMissingWorkspaces(tx);
@@ -514,7 +492,11 @@ async function insertMissingIngredients(tx: SeedTransaction): Promise<Map<string
       .insert(ingredients)
       .values(
         missing.map(({ folkNames: _folkNames, categories: _categories, ...entry }) =>
-          applyAudit('insert', entry, BOOTSTRAP_SESSION),
+          applyAudit(
+            'insert',
+            { ...entry, slug: ingredientSlug(entry.name, entry.form, entry.canonicalName) },
+            BOOTSTRAP_SESSION,
+          ),
         ),
       )
       .returning({

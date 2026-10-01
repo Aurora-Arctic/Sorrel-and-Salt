@@ -5,15 +5,15 @@ description: Use when the user asks to sync main into staging, bring main-only c
 
 # create-main-sync
 
-Bring commits that landed on `main` but not yet on `staging` (most commonly a `hotfix/*` merged straight into `main`) back down into `staging`: branch off the latest `main` as `main-sync/<timestamp>`, push it, and open a PR into `staging`.
+Bring commits that landed on `main` but not yet on `staging` (most commonly a `hotfix/*` merged straight into `main`) back down into `staging`: branch off the latest `main` as `main-sync/<timestamp>`, push it, and open a PR into `staging`. The steps it shares with `/create-release` are [`../create-release/reference-shared.md`](../create-release/reference-shared.md)'s, with `<from>` `main` and `<into>` `staging`.
 
 ## Steps
 
 1. **Verify GitHub authentication.**
-   - Run `gh auth status`. Only if it reports not-logged-in or invalid/expired credentials, authenticate: `gh auth login --hostname github.com --git-protocol ssh --skip-ssh-key --with-token <<< "$GITHUB_PERSONAL_ACCESS_TOKEN"` (never `--web`). Skip straight to step 2 if already authenticated — same convention as `/create-pr` step 1.
+   - Follow [`/create-pr`](../create-pr/SKILL.md) step 1 as written, then go on to step 2 here.
 
 2. **Check for a clean working tree.**
-   - Run `git status`. If there are uncommitted or unstaged changes, warn the user that they'll carry onto the new branch and use AskUserQuestion to confirm how to proceed: bring the changes along, stash them first (`git stash push -u`), or stop.
+   - Follow [`create-feature/reference-branch.md`](../create-feature/reference-branch.md) step 1 as written.
 
 3. **Fetch the latest `main` and `staging`.**
    - `git fetch origin main staging`.
@@ -31,16 +31,15 @@ Bring commits that landed on `main` but not yet on `staging` (most commonly a `h
    - `git checkout --no-track -b main-sync/<timestamp> origin/main` — `--no-track` so the branch’s upstream is its own remote branch once the next step pushes it, never `origin/main` (MB.13).
 
 8. **Push the branch.**
-   - `git push -u origin main-sync/<timestamp>`. Unlike `/create-feature`/`/create-hotfix` (which leave pushing to `/create-pr`), the sync PR is the point of this skill — push directly, same as `/create-release` does for its release branch.
+   - `git push -u origin main-sync/<timestamp>`. The sync PR is the point of this skill, so it pushes directly (the shared notes say why).
 
 9. **Gather context for the PR summary.**
    - `git diff origin/staging...HEAD` and `git log origin/staging..HEAD` (triple-dot vs double-dot — same distinction `/create-pr`/`/create-release` use) to see the full set of changes the sync will bring into `staging`.
-   - **Find which merged PRs are actually included**, so the summary can credit real authors instead of guessing from commit messages: `gh pr list --base main --state merged --limit 200 --json number,title,author,mergedAt,url,mergeCommit`. Squash/rebase merges don't leave merge commits, so don't rely on `git log --merges` — instead, for each PR in that list check `git merge-base --is-ancestor <mergeCommit.oid> HEAD` (it's in this sync) and NOT `git merge-base --is-ancestor <mergeCommit.oid> origin/staging` (not already in `staging`) to decide whether it's part of this sync. Sort the matches by `mergedAt`.
-   - If the merged-PR lookup comes back empty despite there being commits in range (e.g. someone pushed straight to `main` without a PR), just omit the `## Included PRs` section rather than inventing entries.
+   - **Find which merged PRs are actually included**: [`reference-shared.md`](../create-release/reference-shared.md) step 1, with `<from>` `main` and `<into>` `staging`. The branch was just cut from `origin/main` with nothing added, so `origin/main` and `HEAD` are the same commit here.
 
 10. **Draft the PR.**
     - Title: `Sync main into staging (<timestamp>)`.
-    - Body: `## Summary` (prose on what's coming down from `main` and why — usually "catch staging up after a hotfix", pulled from the commit log, not a restatement of every commit), `## Included PRs` (when step 9 found matches: one line per PR as `- [#<number>](<url>) <title> — @<author.login>`), and `## Test plan`.
+    - Body: `## Summary` (prose on what's coming down from `main` and why — usually "catch staging up after a hotfix", pulled from the commit log, not a restatement of every commit), `## Included PRs` (that file's step 2), and `## Test plan`.
     - Pass the body via a HEREDOC to `gh pr create`, same as this repo's standard PR-creation convention.
 
 11. **Create the PR.**
@@ -51,8 +50,5 @@ Bring commits that landed on `main` but not yet on `staging` (most commonly a `h
 
 ## Notes
 
-- Branch naming follows the Gitflow rules in [`CLAUDE.md`](../../../CLAUDE.md), which only accept `main-sync/YYYY-MM-DD-HH-MM-SS` as a source into `staging` — this skill's naming isn't just a convention. Once M0.17/M0.20 add `.github/workflows/gitflow.yml`, PRs from a differently-named sync branch will fail the required `gitflow` check.
+- The shared notes in [`../create-release/reference-shared.md`](../create-release/reference-shared.md) apply: the Gitflow name `gitflow.yml` enforces, no force-push or deletion, why this skill pushes its own branch, and stopping on a failed `git fetch origin main staging`.
 - `main-sync/*` branches are only ever a valid source into `staging`, never into `main` or `release/*` — this skill never asks which target to use, unlike `/create-pr`.
-- Never force-pushes; never deletes anything.
-- Pushing the branch here (rather than deferring to `/create-pr`) is a deliberate exception to this repo's normal "ask before anything visible to others" caution — invoking `/create-main-sync` is itself the user's request for a real, shared sync PR, same reasoning `/create-release` uses for its own push. `.claude/settings.json`'s `permissions.ask` entry for `git push origin *` still prompts for confirmation on the actual push.
-- If `git fetch origin main staging` fails (no network, no remote), stop and report the error rather than computing a diff from possibly-stale local refs.

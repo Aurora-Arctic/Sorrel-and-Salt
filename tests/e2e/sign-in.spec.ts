@@ -4,7 +4,7 @@ import { assertNoAccessibilityViolations } from './axe';
 
 // /sign-in touches no database — unlike smoke.spec.ts, no
 // test.describe.configure({ mode: 'serial' }) or recreateE2eDatabase() is
-// needed here (claude-docs/testing.md, "E2E — Playwright").
+// needed here (claude-docs/testing/e2e.md, "E2E — Playwright").
 //
 // The default server blanks every provider's credentials
 // (playwright.config.ts), so every button renders greyed via

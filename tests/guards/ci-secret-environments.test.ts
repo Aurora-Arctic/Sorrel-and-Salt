@@ -3,30 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
 import { fromRoot } from '../support/paths';
+import type { Job, Step, Workflow } from './types';
 
 // `DATABASE_URL` and `BETTER_AUTH_SECRET` are marked Sensitive in Vercel, so
 // `vercel pull` writes `[SENSITIVE]` in their place and CI keeps its own copy
-// of each as a repository secret named per target (claude-docs/ci.md,
+// of each as a repository secret named per target (claude-docs/ci/deploy.md,
 // "Deploy"). What this file guards is the selection: `secrets.X` for a secret
 // that does not exist resolves to the empty string rather than erroring, so a
 // typo or a missed arm migrates the wrong database with nothing failing.
 
 const WORKFLOWS_DIR = fromRoot('.github/workflows');
-
-interface Step {
-  name?: string;
-  if?: string;
-  run?: string;
-  env?: Record<string, string>;
-}
-
-interface Job {
-  steps?: Step[];
-}
-
-interface Workflow {
-  jobs: Record<string, Job>;
-}
 
 function workflow(file: string): Workflow {
   return parse(readFileSync(`${WORKFLOWS_DIR}/${file}`, 'utf8')) as Workflow;

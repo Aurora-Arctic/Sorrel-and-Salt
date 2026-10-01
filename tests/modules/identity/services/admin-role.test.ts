@@ -12,9 +12,9 @@ import {
   expectSignedIn,
   signIn as signInThrough,
   stubProviderCredentials,
-  type Profile,
-  type ProviderId,
 } from '../../../support/oauth';
+import type { Profile } from '../../../support/types';
+import type { ProviderId } from '@/lib/types';
 
 // The primary admin is promoted at a sign-in whose fresh provider profile is
 // Google or Discord and verified —

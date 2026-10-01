@@ -1,15 +1,14 @@
 import { isNull } from 'drizzle-orm';
-// `./idempotent` (and through it `./bootstrap-admin`) first, and load-bearing — see minimal.ts.
 import { beginSeedTransaction } from './idempotent';
 import { categories, categoryGroups } from '../../modules/vocabulary/schema/categories';
 import { seedTwoTierVocabulary } from './two-tier-vocabulary';
-import type { SeedDatabase, SeedTransaction } from './index';
+import type { SeedCategory, SeedCategoryGroup, SeedDatabase, SeedTransaction } from './types';
 
 // DESIGN.md §6's vocabulary: eight groups and every category, a starting set
 // an admin may edit. Not a scenario — migrate.yml seeds it on its own after
 // migrating, so it inserts the bootstrap admin itself. No slug is written down:
 // every one is `slugify(name)`, which expands `&` to `and`
-// (claude-docs/db.md, "The category seed").
+// (claude-docs/db/category-seed.md, "The category seed").
 
 /**
  * Each group's name mapped to its key in M0.7's `$category-groups` Sass map —
@@ -26,20 +25,6 @@ export const SASS_TOKEN_BY_GROUP_NAME: Record<string, string> = {
   'Craft & Change': 'craft',
   'Practice & Place': 'practice',
 };
-
-export interface SeedCategoryGroup {
-  name: string;
-  colorDark: string;
-  colorLight: string;
-  description: string;
-}
-
-export interface SeedCategory {
-  name: string;
-  /** The `name` of the group in CATEGORY_GROUPS this belongs to. */
-  group: string;
-  description: string;
-}
 
 /**
  * The eight groups in §6's order, each carrying the hex pair M0.7's

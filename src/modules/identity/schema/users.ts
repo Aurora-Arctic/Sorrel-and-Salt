@@ -10,16 +10,14 @@ import {
   check,
   timestamp,
 } from 'drizzle-orm/pg-core';
-import {
-  auditStampColumnsReferencing,
-  deletionColumnsReferencing,
-  type UsersIdReference,
-} from '../../../db/audit';
+import { auditStampColumnsReferencing, deletionColumnsReferencing } from '../../../db/audit';
+import type { UsersIdReference } from '../../../db/types';
 
 // The audit column instances every table spreads, built here because each
 // references `users.id` — `users` included, so the thunk resolves the table
 // below after it exists. Import them from this file, never from db/audit.ts,
-// which exports only the factories (claude-docs/db.md, "Audit columns and applyAudit").
+// which exports only the factories (claude-docs/db/audit-columns.md, "Audit
+// columns and applyAudit").
 const usersId: UsersIdReference = () => users.id;
 export const auditStampColumns = auditStampColumnsReferencing(usersId);
 // The four stamps plus two, spread from the same instance, so the six-column
@@ -32,7 +30,7 @@ export const userRole = pgEnum('user_role', ['user', 'admin']);
 // Better Auth's adapter table plus the app columns. `name`/`image` keep Better
 // Auth's names (DESIGN.md was corrected, not the fields). `created_by`
 // self-references `users.id`; the sign-up hook and seed bootstrap satisfy it
-// within one statement (claude-docs/db.md, "Audit columns and applyAudit").
+// within one statement (claude-docs/db/audit-columns.md, "Audit columns and applyAudit").
 export const users = pgTable(
   'users',
   {
@@ -46,7 +44,7 @@ export const users = pgTable(
     role: userRole('role').notNull().default('user'),
     canCreateWorkspace: boolean('can_create_workspace').notNull().default(false),
     // When the last verification mail went out, so the next is a minute away
-    // at least; null until the first (claude-docs/auth.md, "The email page").
+    // at least; null until the first (claude-docs/auth/admin-bootstrap.md, "The email page").
     verificationSentAt: timestamp('verification_sent_at'),
     ...auditColumns,
   },
@@ -61,7 +59,7 @@ export const users = pgTable(
     check('users_email_lower_case', sql`${table.email} = lower(${table.email})`),
     // The provisional-account sweep's two halves, the window and the cap, run
     // on every OAuth callback and almost always empty: only unverified rows are
-    // in them (claude-docs/auth.md, "Provisional accounts").
+    // in them (claude-docs/auth/admin-bootstrap.md, "Provisional accounts").
     index('users_provisional_updated_at_idx')
       .on(table.updatedAt)
       .where(sql`${table.emailVerified} = false`),

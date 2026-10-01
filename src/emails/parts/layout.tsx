@@ -14,6 +14,7 @@ import {
 } from '@react-email/components';
 import { EMAIL_THEMES } from '../theme';
 import { ORNAMENTS, ornamentPath, type Corner } from '../ornaments';
+import type { EmailLayoutProps, Part } from './types';
 
 // Every mail's frame: the site's palette, type and corner photographs
 // (claude-docs/email.md, "Design"). Dark is written inline, because clients
@@ -89,15 +90,6 @@ function ornament(corner: Corner, origin: string, position: string): CSSProperti
     backgroundPosition: position,
     backgroundSize: `${width}px ${height}px`,
   };
-}
-
-interface EmailLayoutProps {
-  /** The line a client shows beside the subject in the inbox. */
-  preview: string;
-  heading: string;
-  /** The site's origin, which serves the images and fonts under /email/. */
-  origin: string;
-  children: ReactNode;
 }
 
 export function EmailLayout({ preview, heading, origin, children }: EmailLayoutProps) {
@@ -253,14 +245,6 @@ export function Action({ href, label, part }: { href: string; label: string; par
     </>
   );
 }
-
-/**
- * Which part of the message is rendering. Where the two media differ, a
- * template words each its own way. A prop, never React context or state:
- * src/lib/auth.ts imports the templates, so Next compiles them as server
- * components, where `createContext` does not exist.
- */
-export type Part = 'html' | 'text';
 
 /** Renders a template once per part, so the text part is written for text rather than stripped from the HTML. */
 export async function renderParts(

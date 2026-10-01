@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { check, index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 
 // Form groups: global, admin-curated, `category_groups` minus the colour pair —
@@ -48,10 +48,19 @@ export const ingredientForms = pgTable(
   (table) => [
     // Partial per rule 4, global rather than per group. The display name is
     // deliberately unindexed: two live forms may both be "Wax", and the
-    // autofill tells them apart by group (claude-docs/db.md, "The form vocabulary seed").
+    // autofill tells them apart by group
+    // (claude-docs/db/form-vocabulary-seed.md, "The form vocabulary seed").
     uniqueIndex('ingredient_forms_slug_unique')
       .on(table.slug)
       .where(sql`${table.deletedAt} is null`),
     check('ingredient_forms_description_not_blank', sql`btrim(description) <> ''`),
+    // The autofill matches a description as well as a name — typing `salve`
+    // offers Ointment — by `%` and `<%` under per-transaction thresholds
+    // (claude-docs/db/member-autofill.md, "The member's autofill").
+    index('ingredient_forms_trgm').using(
+      'gin',
+      sql`${table.name} gin_trgm_ops`,
+      sql`${table.description} gin_trgm_ops`,
+    ),
   ],
 );

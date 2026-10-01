@@ -7,7 +7,7 @@ import SignInPanel from '.';
 // sign-in requires a browser round trip through a real provider, so every
 // story here fixes `configured` by hand rather than reading env.
 export default {
-  title: 'Sign In Panel',
+  title: 'Sign In / Panel',
 };
 
 const ALL_PROVIDERS = ['discord', 'google', 'facebook', 'microsoft'] as const;

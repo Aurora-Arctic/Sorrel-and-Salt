@@ -1,0 +1,14 @@
+# Wave 03 — Schema block
+
+Every table task as one block, in FK order: the DDL only, never the policies, with every constraint §5 specifies landed at full strength while the tables are still empty ([`TASKS.md`](../TASKS.md), "The core move: land the DDL early, the policies late"). M6.2 and M9.2 each block the rest of their milestone (M9.8's badges read M9.2's `lowStockThreshold` and unit dimensions), and both land here with the other tables. **M1.18's trigger closes the wave**, attaching to every audited table at once under a `pg_trigger` coverage test. **M4.2a (`ingredient_forms`) and M4.4a (`ingredient_folk_names`) therefore land before M1.18**, so the trigger sweep covers both in one pass. This is the hard ordering constraint in the wave, since the sweep-task rule forbids a later "re-assert" task. **M10.3 is deliberately excluded**: it is the visibility rule and lands in Wave 5, after M1.23 has seeded spells ([`TASKS.md`](../TASKS.md), "Breaking the M1.23 ↔ M10.3 cycle").
+
+**The doc and tooling block runs before M4.1**, in this order:
+
+- **MB.31 first**, because it removes the `TASKS.csv` sync obligation from every PR after it.
+- **MB.29 next**, because it retired MB.25 out of this wave and MB.26 out of the next, so it had to precede both.
+- **MB.30 before M4.1**, because `ingredients.workspaceId` is a foreign key and the spike decides what it points at. Learning that after nine tables reference `workspaces` is a migration rather than a decision.
+- **MB.32 and MB.33** depend on nothing and could sit anywhere in the block. They are placed here so the tooling change lands before there is code to retrofit, per the sweep-task rule.
+
+**MB.28 precedes M4.1** because M4.1 is transcription: §5 must specify the ingredient identity model before the DDL is written. **MB.35 precedes M4.2 for exactly that reason, one table later**: M4.2 had already been built against §6's closed eight and had to be rebuilt, which is the cost MB.28 existed to avoid and the argument for spending the doc task first rather than after. MB.36 is its code half, in Wave 8 ([wave-08.md](wave-08.md)). **MB.37 and MB.38 sit between MB.35 and M4.2**, where they are CI-only and block nothing. MB.37 is a defect in MB.32 found while M4.2 was in flight, and a migration task should not be the one to discover its gate has not run since #104, so it lands before the next `CREATE TABLE`, not after. MB.38 follows it because both touch `checks.yml`. **MB.34 sits immediately before M4.4**, the first of the three join tables it governs: after M4.4, M10.2 and M10.4 ship, the same change becomes a contract migration with an M1.5 acknowledgement line rather than a one-line schema choice.
+
+MB.24 is merged, and superseded by MB.29 the same wave. **MB.25 was on this row and is retired** (MB.29), so nothing here depends on Wave 4's M1.27 any longer. MW.3 is retired (MB.31).

@@ -9,6 +9,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { QUANTITY_PRECISION, QUANTITY_SCALE } from './quantities';
 import { UNITS, UNITS_BY_DIMENSION, UNIT_DIMENSIONS } from './units';
 import { auditColumns } from '../../identity/schema/users';
 import { ingredients } from './ingredients';
@@ -25,7 +26,7 @@ export const unitDimension = pgEnum('unit_dimension', UNIT_DIMENSIONS);
 // from the same map as the enums. Literal SQL for ingredients.ts's reason; only
 // this module's constants are interpolated. The first conjunct is not optional:
 // a CHECK passes on NULL, so without the `is null` biconditional a half-null
-// row would slip through (claude-docs/db.md, "The dimension stored beside the unit").
+// row would slip through (claude-docs/db/stock.md, "The dimension stored beside the unit").
 const UNIT_MATCHES_DIMENSION = sql.raw(
   [
     '(unit is null) = (unit_dimension is null)',
@@ -51,16 +52,22 @@ export const inventoryItems = pgTable(
     ingredientId: uuid('ingredient_id')
       .notNull()
       .references(() => ingredients.id),
-    // `numeric`, not a float, so 0.1 kg round-trips as 0.1; three decimals is a
-    // milligram in grams. Nullable because `0` already means out of stock, and
-    // "we have this, unweighed" must stay sayable.
-    quantityOnHand: numeric('quantity_on_hand', { precision: 12, scale: 3 }),
+    // Precision and scale from ./quantities.ts, which the Zod ceiling reads too.
+    // Nullable because `0` already means out of stock, and "we have this,
+    // unweighed" must stay sayable.
+    quantityOnHand: numeric('quantity_on_hand', {
+      precision: QUANTITY_PRECISION,
+      scale: QUANTITY_SCALE,
+    }),
     unit: inventoryUnit('unit'),
     // Stored beside the unit rather than derived, so a query can group by it.
     unitDimension: unitDimension('unit_dimension'),
     // Written at creation with a dimension-appropriate default, not defaulted
     // at read time; no database default, since it depends on the row's unit.
-    lowStockThreshold: numeric('low_stock_threshold', { precision: 12, scale: 3 }),
+    lowStockThreshold: numeric('low_stock_threshold', {
+      precision: QUANTITY_PRECISION,
+      scale: QUANTITY_SCALE,
+    }),
     // Where this jar came from ("foraged by the creek") — where the stock came
     // from, not where the entry did (`ingredients.workspace_id`).
     source: text('source'),

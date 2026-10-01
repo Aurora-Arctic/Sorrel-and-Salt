@@ -7,13 +7,13 @@ import { REPO_ROOT } from '../support/paths';
 import { slugify } from '@/lib/slugify';
 
 // Every slug comes from `src/lib/slugify.ts`, the only file that may import
-// the package or name a slug character class (claude-docs/db.md, "The category
+// the package or name a slug character class (claude-docs/db/category-seed.md, "The category
 // seed"). A second rule fails quietly: two slug rules do not collide, they
 // disagree, and that surfaces only as a lookup finding nothing.
 //
 // Not an oxlint `no-restricted-imports` entry like rules 2 and 4: slugify.ts
 // would then need an `oxlint-disable-next-line` to import its own package, and
-// lint-db-client-boundary.test.ts pins that set at exactly four files.
+// lint-db-client-boundary.test.ts pins that set at exactly six files.
 
 /** The one file allowed to import the package, and to know its options. */
 const SLUG_RULE = 'src/lib/slugify.ts';

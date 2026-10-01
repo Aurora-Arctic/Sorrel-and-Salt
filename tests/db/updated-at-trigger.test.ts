@@ -9,7 +9,7 @@ import { users } from '@/modules/identity/schema/users';
 import { findOne, withAudit } from '@/db/repository';
 
 // One function attached to every audited table —
-// claude-docs/db.md, "updated_at is the database's".
+// claude-docs/db/updated-at.md, "updated_at is the database's".
 const FUNCTION = 'set_updated_at';
 // Same name on every table: a trigger name is scoped to its table.
 const TRIGGER = 'set_updated_at';
@@ -270,7 +270,7 @@ describe('the updated_at trigger', () => {
     });
   });
 
-  // The join tables carry no `deleted_at`, so the function has to reach a row
+  // The hard-deleted join tables carry no `deleted_at`, so the function has to reach a row
   // it can never soft-delete.
   describe('a join table carrying only the four stamps', () => {
     it('stamps a spell_categories row the same way', async () => {

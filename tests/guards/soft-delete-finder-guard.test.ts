@@ -3,13 +3,17 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
-// The inside of the repository — claude-docs/db.md, "Soft-delete filtering":
-// every SELECT is built in the one `selectFrom`, the index re-exports a pinned
-// surface that leaves it out, and every exported finder but the escape hatch
-// filters. `selectFrom` is exported from `select.ts` so its siblings can build
-// on it; that it goes no further than the folder is module-boundaries.test.ts's
-// deep-import rule and the lint group it backs. A SELECT built *outside* the
-// repository is the linter's job, asserted by lint-db-client-boundary.test.ts.
+// The inside of the repository — claude-docs/db/soft-delete.md, "Soft-delete filtering":
+// every SELECT is built in `select.ts`, by `selectFrom` or by `existsIn`, the
+// index re-exports a pinned surface that leaves both out, and every exported
+// finder but the named escape hatches filters. `existsIn` is the correlated subquery a
+// finder scopes by a parent row with, and it ANDs the filter itself: as a raw
+// `sql` string the subquery's filter was the caller's to remember, where no
+// guard can see it. Both builders are exported from `select.ts` so their
+// siblings can build on them; that they go no further than the folder is
+// module-boundaries.test.ts's deep-import rule and the lint group it backs. A
+// SELECT built *outside* the repository is the linter's job, asserted by
+// lint-db-client-boundary.test.ts.
 //
 // Read as text rather than imported: importing the repository would
 // instantiate a Postgres client, which the `unit` project must not.
@@ -24,29 +28,63 @@ const SELECT_CALL = /\.select(?:Distinct)?(?:Fields)?\s*\(|\bdb\.query\./g;
 /** The repository's exported surface, pinned. A finder is added here too. */
 const EXPORTED_FUNCTIONS = [
   'deleteProvisionalUsers',
+  'findCommonNameSuggestions',
+  'findCompendiumCount',
+  'findCompendiumEntryByIdentity',
+  'findCompendiumEntryBySlug',
+  'findCompendiumPage',
+  'findCompendiumSlugRedirect',
+  'findIngredientFormValues',
+  'findIngredientsInSpellsIncludingSoftDeleted',
   'findMany',
   'findManyByIds',
   'findManyIncludingSoftDeleted',
   'findManyInSpell',
+  'findManyOfIngredients',
+  'findManyOfSpellIngredientsIncludingSoftDeleted',
   'findManyInWorkspace',
   'findManySpells',
   'findMembershipsOfUsers',
   'findOne',
   'findOneById',
+  'findOneByIdInWorkspace',
+  'findOneIngredient',
   'findOneInWorkspace',
   'findOneSpell',
   'findPage',
   'findPageInWorkspace',
+  'findSimilarIngredients',
   'findUserByEmail',
+  'findVocabularySuggestions',
   'findWorkspaceRole',
   'withAudit',
 ];
 
 /** Folder-internal: exported for the siblings, never re-exported by the index. */
-const INTERNAL = ['selectFrom', 'writerFor', 'scopedTo', 'notSoftDeleted', 'readableSpells'];
+const INTERNAL = [
+  'selectFrom',
+  'existsIn',
+  'writerFor',
+  'scopedTo',
+  'inCompendium',
+  'notSoftDeleted',
+  'readableSpells',
+  'readSuggestionPage',
+  'claimantList',
+];
 
 /** Rule 5's half: a finder over a table carrying `workspace_id` scopes by the proof. */
-const SCOPED_FINDERS = ['findManyInWorkspace', 'findOneInWorkspace', 'findPageInWorkspace'];
+const SCOPED_FINDERS = [
+  'findCommonNameSuggestions',
+  'findIngredientsInSpellsIncludingSoftDeleted',
+  'findManyInWorkspace',
+  'findOneByIdInWorkspace',
+  'findOneIngredient',
+  'findOneInWorkspace',
+  'findPageInWorkspace',
+  'findSimilarIngredients',
+  'findVocabularySuggestions',
+];
 
 /**
  * M10.3's half: a finder reaching a spell, or what a spell is made of, narrows
@@ -55,10 +93,28 @@ const SCOPED_FINDERS = ['findManyInWorkspace', 'findOneInWorkspace', 'findPageIn
  * table with no `workspace_id` to AND on, so `scopedTo(` alone would pass it
  * for the wrong reason.
  */
-const VISIBILITY_FINDERS = ['findManySpells', 'findOneSpell', 'findManyInSpell'];
+const VISIBILITY_FINDERS = [
+  'findManySpells',
+  'findOneSpell',
+  'findManyInSpell',
+  'findIngredientsInSpellsIncludingSoftDeleted',
+];
 
-/** The one exported finder allowed to skip the filter — the escape hatch. */
+/** The generic escape hatch, for v2's restore paths: it skips the filter outright. */
 const ESCAPE_HATCH = 'findManyIncludingSoftDeleted';
+
+/**
+ * A spell's reach past an ingredient's tombstone (M5.3): what went into a jar
+ * stays in it. Each skips the ingredient's filter and nothing else, which the
+ * last test below pins.
+ */
+const SPELL_HATCHES = [
+  'findIngredientsInSpellsIncludingSoftDeleted',
+  'findManyOfSpellIngredientsIncludingSoftDeleted',
+];
+
+/** Every exported finder allowed to skip a filter, each saying so in its name. */
+const ESCAPE_HATCHES = [ESCAPE_HATCH, ...SPELL_HATCHES];
 
 const source = (file: string) => readFileSync(join(REPO_ROOT, file), 'utf8');
 
@@ -109,13 +165,23 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     expect(FILES.length).toBeGreaterThan(3);
   });
 
-  it('builds every SELECT inside the one selectFrom', () => {
+  it('builds every SELECT inside selectFrom or existsIn, both in select.ts', () => {
     const selects = FILES.flatMap((file) => source(file).match(SELECT_CALL) ?? []);
-    const insideBuilder = functionBody('selectFrom').match(SELECT_CALL) ?? [];
+    const insideSelectFrom = functionBody('selectFrom').match(SELECT_CALL) ?? [];
+    const insideExistsIn = functionBody('existsIn').match(SELECT_CALL) ?? [];
 
     expect(fileDeclaring('selectFrom')).toBe(BUILDER);
-    expect(selects).toHaveLength(1);
-    expect(insideBuilder).toHaveLength(1);
+    expect(fileDeclaring('existsIn')).toBe(BUILDER);
+    expect(selects).toHaveLength(2);
+    expect(insideSelectFrom).toHaveLength(1);
+    expect(insideExistsIn).toHaveLength(1);
+  });
+
+  // The subquery builder is what makes a parent's `deleted_at IS NULL` the
+  // repository's rather than each caller's: it is ANDed inside, on the table
+  // the subquery reads, so a finder scoping by a parent cannot leave it out.
+  it('ANDs the filter inside existsIn, so a parent row is checked by construction', () => {
+    expect(functionBody('existsIn')).toMatch(/notSoftDeleted\(/);
   });
 
   // The index is the repository's only public file, so what it names is the
@@ -136,9 +202,9 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     expect(reexported().sort()).toEqual([...EXPORTED_FUNCTIONS].sort());
   });
 
-  it('applies the filter in every exported finder but the escape hatch', () => {
+  it('applies the filter in every exported finder but the escape hatches', () => {
     const finders = EXPORTED_FUNCTIONS.filter(
-      (name) => name !== ESCAPE_HATCH && name.startsWith('find'),
+      (name) => !ESCAPE_HATCHES.includes(name) && name.startsWith('find'),
     );
 
     expect(finders.length).toBeGreaterThan(0);
@@ -189,11 +255,29 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     expect(body).toMatch(/membership\.userId/);
   });
 
-  it('names the escape hatch so a reviewer cannot miss it, and keeps it alone', () => {
+  it('names every escape hatch so a reviewer cannot miss it, and admits no other', () => {
     const hatches = EXPORTED_FUNCTIONS.filter((name) => name.endsWith('IncludingSoftDeleted'));
 
-    expect(hatches).toEqual([ESCAPE_HATCH]);
+    expect(hatches.sort()).toEqual([...ESCAPE_HATCHES].sort());
     // It says what it is at the call site, and says why in its own doc comment.
     expect(functionBody(ESCAPE_HATCH)).not.toMatch(/notSoftDeleted\(/);
+  });
+
+  // The spell hatches skip one filter, the ingredient's. The spell's stays
+  // (`readableSpells` carries it, pinned above), the layer's stays by
+  // construction (`existsIn`), and the tier is still the proof's; the
+  // children's finder reaches its parents through the first, and a child's own
+  // tombstone still filters.
+  it('lets the spell hatches past the ingredient’s tombstone and nothing else', () => {
+    const held = functionBody('findIngredientsInSpellsIncludingSoftDeleted');
+    expect(held).toMatch(/readableSpells\(/);
+    expect(held).toMatch(/existsIn\(\s*spellIngredients\b/);
+    expect(held).toMatch(/inCompendium\(ingredients\)/);
+    expect(held).toMatch(/scopedTo\(membership, ingredients\)/);
+    expect(held).not.toMatch(/notSoftDeleted\(/);
+
+    const children = functionBody('findManyOfSpellIngredientsIncludingSoftDeleted');
+    expect(children).toMatch(/findIngredientsInSpellsIncludingSoftDeleted\(/);
+    expect(children).toMatch(/notSoftDeleted\(table\)/);
   });
 });

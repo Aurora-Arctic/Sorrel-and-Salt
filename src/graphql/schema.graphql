@@ -5,18 +5,253 @@ type AuditInfo {
   updatedBy: ID!
 }
 
+type Category {
+  description: String!
+  group: CategoryGroup!
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+type CategoryGroup {
+  colorDark: String!
+  colorLight: String!
+  description: String!
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+type CommonNameSuggestion {
+  claimants: [SuggestionClaimant!]!
+  value: String!
+}
+
+type CorrespondenceSuggestion {
+  curated: Boolean!
+  description: String
+  value: String!
+}
+
 """
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.This scalar is serialized to a string in ISO 8601 format and parsed from a string in ISO 8601 format.
 """
 scalar DateTime
 
+type FormSuggestion {
+  claimants: [SuggestionClaimant!]!
+  curated: Boolean!
+  description: String
+  group: String
+  value: String!
+}
+
+type Ingredient {
+  audit: AuditInfo!
+  canonicalName: String
+  categories: [Category!]!
+  color: String
+  deities: [String!]
+  description: String
+  element: IngredientElement
+  folkNames: [String!]!
+  form: String
+  id: ID!
+  isGlobal: Boolean!
+  name: String!
+  nomenclature: Nomenclature!
+  planet: String
+  safetyNotes: String
+  slug: String!
+  substitutes: [String!]
+  zodiac: String
+}
+
+enum IngredientElement {
+  air
+  earth
+  fire
+  spirit
+  water
+}
+
+type IngredientFormGroup {
+  description: String!
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+type IngredientFormValue {
+  description: String!
+  group: IngredientFormGroup!
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+input IngredientInput {
+  canonicalName: String
+  color: String
+  deities: [String!]
+  description: String
+  element: IngredientElement
+  folkNames: [String!]
+  form: String
+  name: String!
+  nomenclature: Nomenclature
+  planet: String
+  safetyNotes: String
+  substitutes: [String!]
+  zodiac: String
+}
+
+"""
+The whole ingredient, replacing the row. Every field is sent, and "" or [] clears one; `element` alone is nullable, and null or leaving it out clears it.
+"""
+input IngredientUpdateInput {
+  canonicalName: String!
+  color: String!
+  deities: [String!]!
+  description: String!
+  element: IngredientElement
+  folkNames: [String!]!
+  form: String!
+  name: String!
+  nomenclature: Nomenclature!
+  planet: String!
+  safetyNotes: String!
+  substitutes: [String!]!
+  zodiac: String!
+}
+
 type Mutation {
-  setEmail(email: String!): User!
+  createWorkspaceIngredient(input: IngredientInput!, workspaceId: ID!): Ingredient!
+  deleteIngredient(id: ID!, workspaceId: ID!): ID!
+  setEmail(email: String!, next: String): User!
+  updateIngredient(id: ID!, input: IngredientUpdateInput!, workspaceId: ID!): Ingredient!
+}
+
+enum Nomenclature {
+  botanical
+  chemical
+  fungal
+  mineral
+  none
+  unknown
+  zoological
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
 }
 
 type Query {
+  commonNameSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryCommonNameSuggestionsConnection!
+  compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, query: String): QueryCompendiumConnection!
+  formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryFormSuggestionsConnection!
+  ingredient(id: ID!, workspaceId: ID): Ingredient!
+  ingredientFormValues(after: String, before: String, first: Int, last: Int): QueryIngredientFormValuesConnection!
   me: User!
   ok: Boolean!
+  planetSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryPlanetSuggestionsConnection!
+  possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID!): QueryPossibleDuplicatesConnection!
+  zodiacSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryZodiacSuggestionsConnection!
+}
+
+type QueryCommonNameSuggestionsConnection {
+  edges: [QueryCommonNameSuggestionsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryCommonNameSuggestionsConnectionEdge {
+  cursor: String!
+  node: CommonNameSuggestion!
+}
+
+type QueryCompendiumConnection {
+  """
+  How many of the list's rows come before this page's first edge: 0 on the first page, so the page is floor(countBefore / size) + 1. Null on an empty page.
+  """
+  countBefore: Int
+  edges: [QueryCompendiumConnectionEdge!]!
+  pageInfo: PageInfo!
+
+  """How many rows the list holds under its arguments."""
+  totalCount: Int!
+}
+
+type QueryCompendiumConnectionEdge {
+  cursor: String!
+  node: Ingredient!
+
+  """
+  The word similarity of the query to the entry, 0 to 1 — its best across the label, formal name and folk names. Null without a query.
+  """
+  score: Float
+}
+
+type QueryFormSuggestionsConnection {
+  edges: [QueryFormSuggestionsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryFormSuggestionsConnectionEdge {
+  cursor: String!
+  node: FormSuggestion!
+}
+
+type QueryIngredientFormValuesConnection {
+  edges: [QueryIngredientFormValuesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryIngredientFormValuesConnectionEdge {
+  cursor: String!
+  node: IngredientFormValue!
+}
+
+type QueryPlanetSuggestionsConnection {
+  edges: [QueryPlanetSuggestionsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryPlanetSuggestionsConnectionEdge {
+  cursor: String!
+  node: CorrespondenceSuggestion!
+}
+
+type QueryPossibleDuplicatesConnection {
+  edges: [QueryPossibleDuplicatesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryPossibleDuplicatesConnectionEdge {
+  cursor: String!
+  node: Ingredient!
+
+  """
+  The name's trigram similarity to the entry, 0.4 to 1 — its best across the label, formal name and folk names. 1 is an exact match.
+  """
+  score: Float!
+}
+
+type QueryZodiacSuggestionsConnection {
+  edges: [QueryZodiacSuggestionsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryZodiacSuggestionsConnectionEdge {
+  cursor: String!
+  node: CorrespondenceSuggestion!
+}
+
+type SuggestionClaimant {
+  canonicalName: String
+  name: String!
 }
 
 type User {

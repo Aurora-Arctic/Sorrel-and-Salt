@@ -1,21 +1,28 @@
-import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import {
+  DOCS,
+  citationsIn,
+  citingFiles,
+  isSplitIndex,
+  sectionCitesIn,
+} from '../../scripts/doc-citations.mjs';
 import { REPO_ROOT } from '../support/paths';
 
 // A comment defers its argument to claude-docs/, so a citation that does not
 // resolve costs the reader the argument — and fails silently, because nothing
-// reads a comment.
+// reads a comment. CLAUDE.md and the rule and skill files under .claude/ defer
+// the same way, and are read by an agent that cannot tell a dead link from a
+// missing rule. What counts as a citation is scripts/doc-citations.mjs's,
+// shared with the repoint that follows a summary split.
 
-// Assembled so this file does not match its own assertions and report itself.
-const DOCS = 'claude-docs';
-const CITATION = new RegExp(`${DOCS}/[\\w./-]*\\.md`, 'g');
 // A citation left hanging on a line break, the rest on the next comment line.
 // A filename splits as readily as a directory does, and either form is
 // invisible to the resolve check, which reads one line at a time. Only a
 // fragment running to end-of-line counts: naming the directory mid-sentence
 // is ordinary prose, and trailing sentence punctuation is not part of the path.
+// Assembled so this file does not match its own assertions and report itself.
 const PATH_CHARS = new RegExp(`${DOCS}/[\\w./-]*`, 'g');
 
 function wrappedCitation(text: string): boolean {
@@ -27,38 +34,16 @@ function wrappedCitation(text: string): boolean {
     }),
   );
 }
-const SECTION = new RegExp(`([\\w.-]+\\.md)['"]?,?s? "([^"]+)"`, 'g');
-
-function unwrap(section: string): string {
-  return section.replace(/\s*\n\s*(?:\/\/|\*|#)?\s*/g, ' ').trim();
-}
-
-/**
- * Tracked files plus untracked ones git would not ignore, so a citation is
- * caught in the diff that adds it. `src/db/migrations/` is excluded: drizzle
- * hashes each migration's content, so fixing a comment there is not the
- * harmless edit it looks like.
- */
-function citingFiles(): string[] {
-  const args = ['-c', 'safe.directory=*', 'ls-files', '--cached', '--others', '--exclude-standard'];
-  const globs = ['*.ts', '*.tsx', '*.mts', '*.mjs', '*.scss', '*.yml', '*.yaml', 'makefile'];
-  return execFileSync('git', [...args, ...globs], { cwd: REPO_ROOT, encoding: 'utf8' })
-    .split('\n')
-    .filter(Boolean)
-    .filter((file) => !file.startsWith(`${DOCS}/`) && !file.startsWith('src/db/migrations/'));
-}
 
 function read(file: string): string {
   return readFileSync(join(REPO_ROOT, file), 'utf8');
 }
 
-/** Every `claude-docs/….md` a file names, in source order, with duplicates dropped. */
-function citationsIn(file: string): string[] {
-  return [...new Set(read(file).match(CITATION) ?? [])];
-}
-
-const FILES = citingFiles();
-const CITED = FILES.flatMap((file) => citationsIn(file).map((path) => ({ file, path })));
+const FILES = citingFiles(REPO_ROOT);
+const CITED = FILES.flatMap((file) => citationsIn(read(file)).map((path) => ({ file, path })));
+const SECTION_CITES = FILES.flatMap((file) =>
+  sectionCitesIn(read(file)).map((cite) => ({ file, ...cite })),
+);
 
 describe('every claude-docs citation resolves', () => {
   // Precondition: an empty listing would satisfy every `toEqual([])` below
@@ -67,6 +52,12 @@ describe('every claude-docs citation resolves', () => {
     expect(FILES.length).toBeGreaterThan(50);
     expect(CITED.length).toBeGreaterThan(10);
     expect(CITED.map(({ file }) => file)).toContain('src/db/repository/write.ts');
+    expect(FILES).toContain('CLAUDE.md');
+    expect(FILES).toContain('.claude/rules/database.md');
+    // A section named on the line after its path is read too.
+    expect(SECTION_CITES.map(({ file }) => file)).toContain('tests/db/seed/astrology.test.ts');
+    // The index rule below has a split summary to bite on.
+    expect(isSplitIndex(REPO_ROOT, `${DOCS}/db.md`)).toBe(true);
   });
 
   it('names a file that exists', () => {
@@ -92,20 +83,24 @@ describe('every claude-docs citation resolves', () => {
   // A real file, a section never written. Headings carry a trailing task-ID
   // parenthetical, so the quoted name is matched as a prefix.
   it('names a section that exists, where it names one', () => {
-    const dangling = FILES.flatMap((file) => {
-      const cited = citationsIn(file);
-      return [...read(file).matchAll(SECTION)].flatMap(([, doc, quoted]) => {
-        const path = cited.find((candidate) => candidate.endsWith(`/${doc}`));
-        if (!path || !existsSync(join(REPO_ROOT, path))) return [];
-
-        const section = unwrap(quoted);
-        const headings = [...read(path).matchAll(/^#+\s+(.*)$/gm)].map(([, text]) =>
-          text.replace(/`/g, ''),
-        );
-        return headings.some((heading) => heading.startsWith(section)) ? [] : [{ file, section }];
-      });
-    });
+    const dangling = SECTION_CITES.filter(({ path, section }) => {
+      if (!existsSync(join(REPO_ROOT, path))) return false;
+      const headings = [...read(path).matchAll(/^#+\s+(.*)$/gm)].map(([, text]) =>
+        text.replace(/`/g, ''),
+      );
+      return !headings.some((heading) => heading.startsWith(section));
+    }).map(({ file, section }) => ({ file, section }));
 
     expect(dangling).toEqual([]);
+  });
+
+  // The index resolves every heading, so a citation through it passes the check
+  // above and still sends the reader through the index before the section.
+  it("names the file a split summary's section lives in, not the index", () => {
+    const throughIndex = SECTION_CITES.filter(({ path }) => isSplitIndex(REPO_ROOT, path)).map(
+      ({ file, section }) => ({ file, section }),
+    );
+
+    expect(throughIndex).toEqual([]);
   });
 });

@@ -17,6 +17,21 @@ const nextConfig: NextConfig = {
   // altair-static reads its dist/index.html from disk by `__dirname`, which a
   // bundled copy no longer has; it is loaded only under `next dev`.
   serverExternalPackages: ['altair-static'],
+  experimental: {
+    // Server Fast Refresh re-runs an edited module and its importers but not
+    // the GraphQL builder they register on, so an edited GraphQL module adds
+    // its fields twice and every request fails until a restart. Off, `next dev`
+    // reloads the server's modules from disk after an edit instead
+    // (claude-docs/debugging.md).
+    turbopackServerFastRefresh: false,
+    // `forbidden()` and `src/app/forbidden.tsx`: the `/admin` guard's 403
+    // (claude-docs/auth/admin-guard.md, "The admin guard").
+    authInterrupts: true,
+    // Off for the e2e servers, which share one build directory and so would
+    // share a data cache flushed to it (claude-docs/testing/e2e.md, "E2E"). Vercel
+    // ignores it, keeping its data cache off the function's disk.
+    isrFlushToDisk: process.env.NEXT_ISR_FLUSH_TO_DISK !== 'false',
+  },
 };
 
 export default nextConfig;

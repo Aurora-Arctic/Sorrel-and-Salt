@@ -8,14 +8,15 @@ the rendering and the `setEmail` mutation.
 
 ## The props contract
 
-| Prop          | Meaning                                                                                                                                                                                         |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `email`       | The row's address, or `''` when the provider shared none. The page maps a placeholder (`isPlaceholderEmail`, `@/modules/identity`) to `''`; the form never shows one.                           |
-| `verified`    | `users.email_verified`. Decides the status line and whether an unchanged address has anything to send.                                                                                          |
-| `confirmed`   | The page sets it when a followed link landed here (`?verified` on a verified row, with no `?error=`). The confirmed view: the verified line, the address, and "Continue" — no field, no button. |
-| `waitSeconds` | Seconds the server will refuse another mail for as of this render (`verificationWaitSeconds` of the row's `verification_sent_at`), so the countdown starts where it stands.                     |
-| `next`        | Where "Continue" goes — already run through `safeReturnPath()` (`src/lib/sign-in.ts`), the same guard `/sign-in` uses, so the page and this component agree on what is safe.                    |
-| `error`       | A readable sentence for a failed verification link, from `verifyErrorMessage()` (`src/lib/account-email.ts`) — never a raw `?error=` code. Shown as an alert on mount.                          |
+| Prop          | Meaning                                                                                                                                                                                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `email`       | The row's address, or `''` when the provider shared none. The page maps a placeholder (`isPlaceholderEmail`, `@/modules/identity`) to `''`; the form never shows one.                                                                                   |
+| `verified`    | `users.email_verified`. Decides the status line and whether an unchanged address has anything to send.                                                                                                                                                  |
+| `confirmed`   | The page sets it when a followed link landed here (`?verified` on a verified row, with no `?error=`). The confirmed view: the verified line, the address, and "Continue" — no field, no button.                                                         |
+| `waitSeconds` | Seconds the server will refuse another mail for as of this render (`verificationWaitSeconds` of the row's `verification_sent_at`), so the countdown starts where it stands.                                                                             |
+| `next`        | Where the account was going, if anywhere — already run through `safeReturnPath()` (`src/lib/sign-in.ts`), the same guard `/sign-in` uses. Continue goes there, and every `setEmail` sends it, so the link it mails lands back here carrying it (below). |
+| `landing`     | Where Continue goes with no `next`: `postSignInLanding()` of the session's role — `/admin` for an admin, `/coven` for anyone else (MB.113). The page reads the role; the component never guesses one.                                                   |
+| `error`       | A readable sentence for a failed verification link, from `verifyErrorMessage()` (`src/lib/account-email.ts`) — never a raw `?error=` code. Shown as an alert on mount.                                                                                  |
 
 Outside the confirmed view the field is always editable, whatever `verified`
 is: this page is how any user changes the address at any later time, not only
@@ -33,16 +34,28 @@ stores), never the returned row's `email`. The typed value itself goes to the
 server untouched; normalising is the service's job, and doing it twice would
 let the two drift.
 
+## The link carries `next`
+
+Every submit sends `next` beside the typed address, and `setEmail` hands it to
+the sender, so the resend or change link lands on this page's confirmed view
+with the same `next`, and Continue goes on there
+([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The email page"). A
+refused link lands here with `next` still beside its `?error=`, so a link sent
+again from that page carries it too. The component sends it as it was given; the
+sender guards it again where it builds the link. With no `next` it sends none,
+so the link lands bare and Continue takes the role's landing when it is
+followed.
+
 ## Two error surfaces
 
 A failed mutation rejects with graphql-request's `ClientError`, whose
 `response.errors[0].extensions` carries the code and, for `VALIDATION`, the
-field errors ([`graphql.md`](../graphql.md), "Errors"). The component reads
-that one shape and routes it to one of two places:
+field errors ([`graphql/errors.md`](../graphql/errors.md), "Errors"). The
+component reads that one shape and routes it to one of two places:
 
 | Error                                                                | Where it lands                                                                                                                                            |
 | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `VALIDATION` with a `fieldErrors` entry whose path starts at `email` | Inline beside the input (`.email-form__field-error`), which the input references through `aria-describedby`; `aria-invalid` is set.                       |
+| `VALIDATION` with a `fieldErrors` entry whose path starts at `email` | Inline beneath the input (`.field__error`), which the input references through `aria-describedby`; `aria-invalid` is set.                                 |
 | Any other `VALIDATION` issue, `FORBIDDEN`, `NOT_FOUND`, masked       | The `role="alert"` region, showing the error's own message — or `GENERIC_EMAIL_ERROR` when there is none, or the rejection is not a `ClientError` at all. |
 
 Both are cleared, along with the last success, when a new submit starts, so
@@ -57,9 +70,8 @@ The submit is disabled only while the value, trimmed and lower-cased, equals
 to send — and while the mutation is pending. An unverified, unchanged address
 stays submittable: the service resends its link. It is a real `disabled`
 attribute, not `aria-disabled` — unlike SignInPanel's roster, a submit with
-nothing to send is fine to skip in the tab order — so `_primitives.scss`'s
-`.btn[aria-disabled='true']` greying does not apply, and the component
-restates it off `:disabled`.
+nothing to send is fine to skip in the tab order. `.btn` greys out under
+either, so the component styles neither.
 
 ## The cooldown
 
@@ -71,7 +83,7 @@ without that the first thing it saw would be a refusal. It is timed off `Date.no
 than counted in ticks, so a tab left in the background waits the real minute.
 This is a courtesy: the rule is the service's, which refuses a second mail
 within the minute with a `VALIDATION` field error naming the wait
-([`auth.md`](auth.md), "The email page"), and that lands beside the input
+([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The email page"), and that lands beside the input
 like any other. The `resendDelaySeconds` prop exists so the test can wait
 one second rather than fake the timers MSW's fetch shares.
 
@@ -92,14 +104,14 @@ it then.
 
 ## Styling
 
-Tokens and mixins only: `focus-ring()`, `theme-transition()`,
-`reduced-motion`, `$text-muted` (the status line, the input edge, the disabled
-submit), `$secondary` (the error banner, the field error, the invalid edge),
-`$accent` (the success banner), `$surface-card`, `$text-primary`, `$font-body`,
-`$text-on-color`. There is no input primitive yet, so the field's edge, padding
-and focus ring are this component's own and will move to a primitive when one
-lands. "Continue" is `.btn` on an anchor and restates the link colour the way
-Welcome does.
+Built on the form primitives in `_primitives.scss` ([`styling.md`](../styling.md),
+"Form fields"): `.form` and `.form__actions`, one `.field` with its
+`.field__label`, `.input` and `.field__error`, and `.notice--error` /
+`.notice--success` for the alert and the sent message. The status line is a
+`.lede`. Send Confirmation and Continue are each the view's one primary action,
+so both are `.btn--solid`; Continue is `.btn` on an anchor and restates the
+label colour the way Welcome does, since `a:visited` outranks `.btn`. The
+component's own stylesheet is the page frame and the column's layout.
 
 ## Stories
 
@@ -126,11 +138,11 @@ the prefilled and empty field; the confirmed view and the verified return
 visit; the status lines; the submit disabled for
 an unchanged verified address (case and whitespace included) and enabled once
 edited, or when unverified; the typed value sent as typed and named, normalised,
-in the status; a `VALIDATION` field error beside the input with `aria-invalid`
-and `aria-describedby`; a `FORBIDDEN` message in the alert; the last outcome
+in the status, with `next` beside it, or none; a `VALIDATION` field error beside the
+input with `aria-invalid` and `aria-describedby`; a `FORBIDDEN` message in the alert; the last outcome
 cleared on resubmit; the cooldown, a submit refused inside it and the button
 back once it passes, and one started from `waitSeconds`; an empty field sent
 to the server with no native check in the way; a passed-in `error` as an
 alert on mount; and "Continue"
-only when verified, pointing at `next`. Role and label queries only. Runs in
-the `unit` (jsdom) Vitest project — `npm run test:coverage`.
+only when verified, pointing at `next`, or at `landing` without one. Role and label queries only. Runs in
+the `dom` (jsdom) Vitest project — `npm run test:coverage`.

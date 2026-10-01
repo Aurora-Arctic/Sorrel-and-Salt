@@ -5,6 +5,7 @@ import { ClientError } from 'graphql-request';
 import { type FormEvent, type ReactElement, useEffect, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import type { EmailFormProps, Failure } from './types';
 import './index.scss';
 
 // The `/account/email` page's one form: show the account's address and its
@@ -17,8 +18,8 @@ import './index.scss';
 // DESIGN.md §7's resolver pattern arrives with the shared Zod schemas (M4.5).
 
 const SetEmailDocument = graphql(`
-  mutation SetEmail($email: String!) {
-    setEmail(email: $email) {
+  mutation SetEmail($email: String!, $next: String) {
+    setEmail(email: $email, next: $next) {
       id
       email
     }
@@ -30,34 +31,12 @@ export const GENERIC_EMAIL_ERROR = "That didn't work. Please try again.";
 /** How long the submit stays down after a send: one mail a minute from a form. */
 export const RESEND_DELAY_SECONDS = 60;
 
-export interface EmailFormProps {
-  /** The account's address, or '' when the provider shared none. */
-  email: string;
-  verified: boolean;
-  /** The address was just proved by a followed link: show it and the way on, with nothing to edit. */
-  confirmed?: boolean;
-  /** Where "Continue" goes; already run through safeReturnPath. */
-  next: string;
-  /** A readable sentence for a failed verification link, from verifyErrorMessage — never a raw code. */
-  error?: string;
-  /** Seconds the server will refuse another mail for as of this render, so the countdown starts where it stands. */
-  waitSeconds?: number;
-  resendDelaySeconds?: number;
-}
-
 /** As the column stores it, so "unchanged" compares what the server would see. */
 function normalise(input: string): string {
   return input.trim().toLowerCase();
 }
 
-interface Failure {
-  /** Lands beside the input: a VALIDATION issue pathed to `email`. */
-  field?: string;
-  /** Lands in the alert region: anything else. */
-  alert?: string;
-}
-
-// The shape claude-docs/graphql.md, "Errors" describes: the first error's
+// The shape claude-docs/graphql/errors.md, "Errors" describes: the first error's
 // `extensions` carries the code and, for VALIDATION, the field errors.
 function readFailure(error: unknown): Failure {
   if (!(error instanceof ClientError)) return { alert: GENERIC_EMAIL_ERROR };
@@ -85,6 +64,7 @@ const EmailForm = ({
   verified,
   confirmed = false,
   next,
+  landing,
   error,
   waitSeconds = 0,
   resendDelaySeconds = RESEND_DELAY_SECONDS,
@@ -119,7 +99,8 @@ const EmailForm = ({
   const coolingDown = secondsLeft > 0;
 
   const mutation = useMutation({
-    mutationFn: (address: string) => graphqlRequest(SetEmailDocument, { email: address }),
+    // The link it asks for lands back here, and Continue goes on to `next`.
+    mutationFn: (address: string) => graphqlRequest(SetEmailDocument, { email: address, next }),
     onSuccess: (_data, address) => {
       setSentTo(normalise(address));
       setCooldownUntil(Date.now() + resendDelaySeconds * 1000);
@@ -150,7 +131,7 @@ const EmailForm = ({
         <p className="email-form__continue">
           {/* A plain anchor rather than <Link>: typed routes refuse a route
               that is not built yet, and `next` is whatever page sent us here. */}
-          <a className="btn" href={next}>
+          <a className="btn btn--solid" href={next ?? landing}>
             Continue
           </a>
         </p>
@@ -165,28 +146,28 @@ const EmailForm = ({
   return (
     <div className="email-form">
       <h1 className="email-form__heading">Your email</h1>
-      <p className="email-form__status">{statusLine(email, verified)}</p>
+      <p className="lede email-form__status">{statusLine(email, verified)}</p>
       {alert && (
-        <p className="email-form__error" role="alert">
+        <p className="notice notice--error" role="alert">
           {alert}
         </p>
       )}
       {sentTo && (
         // `output` carries the status role itself, so no `role` attribute.
-        <output className="email-form__sent">
+        <output className="notice notice--success">
           We&apos;ve sent a link to {sentTo}. Open it in this browser within an hour to confirm it.
         </output>
       )}
       {/* `noValidate`: every refusal is the server's, worded and placed like
           the rest, rather than the browser's own bubble. */}
-      <form className="email-form__form" onSubmit={handleSubmit} noValidate>
-        <div className="email-form__field">
-          <label className="email-form__label" htmlFor={inputId}>
+      <form className="form" onSubmit={handleSubmit} noValidate>
+        <div className="field">
+          <label className="field__label" htmlFor={inputId}>
             Email address
           </label>
           <input
             id={inputId}
-            className="email-form__input"
+            className="input"
             type="email"
             autoComplete="email"
             value={value}
@@ -195,15 +176,15 @@ const EmailForm = ({
             aria-describedby={fieldError ? fieldErrorId : undefined}
           />
           {fieldError && (
-            <p id={fieldErrorId} className="email-form__field-error">
+            <p id={fieldErrorId} className="field__error">
               {fieldError}
             </p>
           )}
         </div>
-        <div className="email-form__actions">
+        <div className="form__actions">
           <button
             type="submit"
-            className="btn email-form__submit"
+            className="btn btn--solid"
             disabled={nothingToDo || mutation.isPending || coolingDown}
           >
             {coolingDown ? `Send Again in ${secondsLeft}s` : 'Send Confirmation'}

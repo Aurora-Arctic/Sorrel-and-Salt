@@ -21,10 +21,19 @@ from this page. The state is single-use and expires after ten minutes, so the
 obvious retry, going back through the provider's tab, replays a state that is
 already dead. That is how MB.12's Facebook check first failed.
 
-`errorCallbackURL` is built here, not passed in, as `` `/sign-in?next=${encodeURIComponent(next)}` ``
-— carrying `next` forward is what keeps a failed attempt from losing the
-destination and landing back at a bare `/sign-in`. Better Auth appends its own
-`&error=<code>` to whatever URL is given it.
+`next` is absent when the page was given none, or an unsafe one: there is no
+return path, and the callback lands the account by its role, `/admin` for an
+admin and `/coven` for anyone else
+([`auth/route-protection.md`](../auth/route-protection.md), "Route protection").
+`socialSignInTarget(next)` (`src/lib/sign-in.ts`) builds what the click hands
+`signIn.social`. With a `next`: it as `callbackURL`, and `errorCallbackURL` as
+`` `/sign-in?next=${encodeURIComponent(next)}` `` — carrying `next` forward is
+what keeps a failed attempt from losing the destination and landing back at a
+bare `/sign-in`. With none: the `NO_RETURN_PATH` flag as `additionalData`, which
+is how the callback tells it from an explicit `/coven`, a `callbackURL` of
+`/coven` only because Better Auth requires one, and a bare `/sign-in` as
+`errorCallbackURL`, so a retry still asks for none. Better Auth appends its own
+`?error=<code>` or `&error=<code>` to whatever URL is given it.
 
 ## Provider branding
 
@@ -44,7 +53,10 @@ stylesheet are two separate compiled CSS files, and nothing guarantees which
 one a bundler emits first, so a same-specificity single-class rule could lose
 a property `.btn` also sets (its `border` shorthand touches `border-color`,
 which every provider overrides) depending on load order neither file
-controls. The extra class is what makes the color win regardless.
+controls. The extra class is what makes the color win regardless. The same
+compound rule puts the edge back to 1px from `.btn`'s 1.6px: Google's and
+Microsoft's guidelines draw their buttons with a 1px stroke, and the other
+two take it too so the roster stays one height.
 
 The icons are a close hand recreation of each provider's own published mark
 (Google's identity branding guidelines; Discord's and Facebook's own
@@ -97,7 +109,7 @@ button's text would run the label into the badge ("Discord Last used"), and the
 comma gives a screen reader a pause without displaying anything. Only the marked
 button carries one. The provider comes from the
 `better-auth.last_used_login_method` cookie, which Better Auth's `lastLoginMethod` plugin sets on a callback that
-signs the browser in (`auth.md`, "The last-used provider"). It exists so that
+signs the browser in (`auth/plugins.md`, "The last-used provider"). It exists so that
 MB.71's `account_not_linked` sentence, "sign in that way", has an answer the
 server could not give without revealing that the address has an account. No
 cookie, or a value naming no roster provider, marks nothing. An unavailable
@@ -164,7 +176,9 @@ assigning `window.location.href`, which jsdom cannot follow
 client). The rest of the module is the real one, so the last-used read is the
 client plugin's own, against jsdom's `document.cookie`. Covers: every roster
 provider renders as a native `<button>` by accessible name; a click calls
-`signIn.social` with the right `provider`/`callbackURL`/`errorCallbackURL`;
+`signIn.social` with the right `provider`/`callbackURL`/`errorCallbackURL`,
+with the `NO_RETURN_PATH` flag when there is no `next` and without it for an
+explicit `/coven`;
 no alert exists without an error and one appears with a passed-in error or a
 failing `signIn.social` result; an unavailable provider is `aria-disabled`,
 described by its note, still lacks `disabled`, and its click never reaches
@@ -175,7 +189,7 @@ recoverable error. That last test fails with the client read as the server
 snapshot, since jsdom has a `document` even under `renderToString`. Role and
 label queries only.
 
-Runs in the `unit` (jsdom) Vitest project — `npm run test:coverage`. Real
+Runs in the `dom` (jsdom) Vitest project — `npm run test:coverage`. Real
 keyboard reachability and the axe scans are asserted in Playwright, per
 CLAUDE.md's "Accessibility is asserted in Playwright", once per provider
 state — each state has a surface the other lacks, so neither scan stands in
@@ -183,15 +197,17 @@ for the other:
 
 | Spec                                             | Server state                                | Covers                                                                                                                                                                                                                                |
 | ------------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tests/e2e/sign-in.spec.ts`                      | No provider configured (8001)               | Every button `aria-disabled` and still reached by Tab; axe over the greyed page (the `.sign-in-panel__note` text, Facebook's transparent chip), the error state, and the last-used badge, waited for since it arrives after hydration |
-| `tests/e2e/sign-in-configured-providers.spec.ts` | All four configured, placeholder ids (8002) | Every button available with no note; axe over the brand colours at rest, then once per button while hovered — after asserting its background actually changed; and the last-used badge on a live button, once per theme               |
+| `tests/e2e/sign-in.spec.ts`                      | No provider configured (8001 and up)        | Every button `aria-disabled` and still reached by Tab; axe over the greyed page (the `.sign-in-panel__note` text, Facebook's transparent chip), the error state, and the last-used badge, waited for since it arrives after hydration |
+| `tests/e2e/sign-in-configured-providers.spec.ts` | All four configured, placeholder ids (8100) | Every button available with no note; axe over the brand colours at rest, then once per button while hovered — after asserting its background actually changed; and the last-used badge on a live button, once per theme               |
 
-**The configured scan exists because the greyed one could not see the
-brand colours**: an unavailable button drops its brand class, so a CI with
-no credentials scanned a page on which `#1877f2` did not exist, and passed a
-4.23:1 contrast failure three times. Reverting `#0866ff` to `#1877f2` fails
-the configured project's resting scan and every hover scan but Facebook's
-own. Each spec also asserts its own state before scanning, so a server that
-picked up the wrong credentials fails rather than quietly scanning the other
-page. See [`testing.md`](../testing.md), "E2E — Playwright", for how the two
-servers are wired.
+**The configured scan exists because the greyed one could not see the brand
+colours**: an unavailable button drops its brand class, so a CI with no
+credentials scanned a page on which `#1877f2` did not exist, and passed a 4.23:1
+contrast failure three times. Reverting `#0866ff` to `#1877f2` fails the
+configured project's resting scan and every hover scan but Facebook's own. Each
+spec also asserts its own state before scanning, so a server that picked up the
+wrong credentials fails rather than quietly scanning the other page. The
+unconfigured state is every worker slot's own server, on 8001 and up; the
+configured one is a server of its own on 8100, reading `sorrel_e2e_providers`,
+which no spec reseeds. See [`testing/e2e.md`](../testing/e2e.md), "E2E —
+Playwright", for how they are wired.

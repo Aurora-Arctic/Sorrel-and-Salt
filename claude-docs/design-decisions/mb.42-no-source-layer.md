@@ -9,8 +9,8 @@ deleted": `Dockerfile.node` and `Dockerfile.e2e` baked the whole repo into
 since the image was last built was still on disk in every container job,
 untracked, not ignored, and linted, typechecked and globbed as if the branch
 had it. This record exists because the task was built one way, reversed on
-the same PR, and built the other way; CLAUDE.md warns that a change argued at
-length and reversed nowhere reads as intent, so the reversal is argued here.
+the same PR, and built the other way; [`README.md`](../README.md), "Correcting a
+doc", warns that a change argued at length and reversed nowhere reads as intent, so the reversal is argued here.
 
 ## What was tried first
 

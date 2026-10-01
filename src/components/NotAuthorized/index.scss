@@ -1,0 +1,30 @@
+@use '../../scss/variables' as *;
+
+// The page-level frame, like `.welcome-page`: no AppShell exists yet to
+// center a page.
+.not-authorized-page {
+  // Or the viewport-high frame plus its own padding overflows by the padding
+  // and the page scrolls by 4rem with nothing to scroll to.
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 2rem 1rem;
+}
+
+// The reading measure, as `.welcome` has: a heading, a sentence and a link.
+.not-authorized {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: $measure;
+  margin-inline: auto;
+}
+
+.not-authorized__title,
+.not-authorized__reason,
+.not-authorized__way-back {
+  margin: 0;
+}

@@ -3,26 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
 import { fromRoot } from '../support/paths';
+import type { Compose, ComposeService } from './types';
 
 // Two pieces of wiring no runtime test reaches: `npm run db:reset` drops
-// before it migrates and seeds (claude-docs/db.md, "Migrations and scripts"),
-// and `app` in compose waits on the one-shot `db-init` service
-// (claude-docs/docker.md). Either can go missing with nothing failing until a
-// developer hits it by hand. The compose file is parsed rather than grepped:
-// the claim is that `service_completed_successfully` is `app`'s condition on
-// `db-init`, not that the phrase appears somewhere.
-
-interface ComposeService {
-  profiles?: string[];
-  command?: string[] | string;
-  environment?: Record<string, string>;
-  depends_on?: Record<string, { condition?: string }>;
-}
-
-interface Compose {
-  services: Record<string, ComposeService>;
-  volumes: Record<string, unknown>;
-}
+// before it migrates and seeds (claude-docs/db/migrations-and-scripts.md,
+// "Migrations and scripts"), and `app` in compose waits on the one-shot
+// `db-init` service (claude-docs/docker.md). Either can go missing with nothing
+// failing until a developer hits it by hand. The compose file is parsed rather
+// than grepped: the claim is that `service_completed_successfully` is `app`'s
+// condition on `db-init`, not that the phrase appears somewhere.
 
 const compose = parse(readFileSync(fromRoot('Docker/docker-compose.yaml'), 'utf8')) as Compose;
 const scripts = (

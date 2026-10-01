@@ -2,9 +2,12 @@
 -- at build time by Docker/Dockerfile.postgres rather than run at a
 -- container's first boot. See that file for why it has to happen there.
 --
--- pg_trgm backs DESIGN.md §5's fuzzy duplicate warning. No other extension is
--- named anywhere in the design — do not add one speculatively.
+-- pg_trgm backs DESIGN.md §5's fuzzy duplicate warning and the compendium
+-- search; unaccent folds that search's accents. They are the two extensions
+-- the design names — do not add one speculatively. Migrations 0000 and 0026
+-- create both `IF NOT EXISTS`, so a from-scratch database matches this image.
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS unaccent;
 
 -- `app` and the devcontainer connect as `sorrel`. PGDATA is already
 -- populated when a container starts, so the entrypoint's first-boot "create
@@ -23,3 +26,4 @@ CREATE DATABASE sorrel OWNER sorrel;
 ALTER DATABASE sorrel_template OWNER TO sorrel;
 \connect sorrel
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS unaccent;

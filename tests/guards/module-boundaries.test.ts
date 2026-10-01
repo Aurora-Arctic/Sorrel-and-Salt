@@ -3,14 +3,15 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
+import type { ImportEdge } from './types';
 
 // The module boundary, whole: a module under `src/modules/` is reached only
-// through its `index.ts` or its `schema/` files, a module imports only the
-// modules its line in `ALLOWED` names, and no module reaches up into the app
-// (claude-docs/modules.md, "The boundary"). `.oxlintrc.json` bans the
-// `@/modules/<name>/services` spelling, and that is all a path glob can see: a
-// relative `../../coven/services/membership` leaves a module by a path no
-// glob names, and whether the edge it makes is one the graph allows is not a
+// through its `index.ts`, its `schema/` or its `validation/` files, a module
+// imports only the modules its line in `ALLOWED` names, and no module reaches
+// up into the app (claude-docs/modules.md, "The boundary"). `.oxlintrc.json`
+// bans the `@/modules/<name>/services` spelling, and that is all a path glob
+// can see: a relative `../../coven/services/membership` leaves a module by a
+// path no glob names, and whether the edge it makes is one the graph allows is not a
 // question about the specifier at all. So this guard resolves every import in
 // `src/` to a file and checks the edge — the same scan as slug-rule.test.ts,
 // over the index plus untracked files, so a violation fails in the diff that
@@ -23,7 +24,7 @@ import { REPO_ROOT } from '../support/paths';
 //
 // The last two blocks are different boundaries in the same place. The
 // repository is a folder whose files import each other's builders, so only
-// its `index.ts` may be imported from outside it (claude-docs/db.md,
+// its `index.ts` may be imported from outside it (claude-docs/db/soft-delete.md,
 // "Soft-delete filtering"). And `ingredients` holds two tiers in one table,
 // the compendium tier being the one a later extraction would take out
 // (claude-docs/modules.md, "The tier seam"): a function in `src/db/repository/`
@@ -37,7 +38,7 @@ const MODULES = ['identity', 'coven', 'vocabulary', 'ingredients', 'grimoire'];
 const ALLOWED: Record<string, string[]> = {
   identity: [],
   coven: ['identity'],
-  vocabulary: ['identity'],
+  vocabulary: ['identity', 'coven'],
   ingredients: ['identity', 'coven', 'vocabulary'],
   grimoire: ['identity', 'coven', 'vocabulary', 'ingredients'],
 };
@@ -47,15 +48,47 @@ const NEVER_FROM_A_MODULE = ['src/app', 'src/components', 'src/emails', 'src/pro
 
 const REPOSITORY = 'src/db/repository';
 
-/** Exported repository functions that read the compendium tier, or both tiers at once. */
-const TIER_SEAM: string[] = [];
+/**
+ * Top-level repository functions that read the compendium tier, or both tiers
+ * at once — exported or not, so a predicate is named where it is written.
+ */
+const TIER_SEAM: string[] = [
+  // The tier's one predicate, `workspace_id IS NULL`; a finder crosses the seam by calling it.
+  'inCompendium',
+  // Story 16's warning: a near-miss in the compendium or this workspace, in one ranked list.
+  'findSimilarIngredients',
+  // A planet, sign or form autofill's in-use bucket, and a form's claimants: the compendium and this workspace.
+  'findVocabularySuggestions',
+  // The common-name field's suggestions and their claimants: the compendium and this workspace.
+  'findCommonNameSuggestions',
+  // An ingredient's folk names and categories, read for the compendium and the proofs' covens at once.
+  'findManyOfIngredients',
+  // The public compendium list: the compendium tier alone, under the client's filters (M8.5).
+  'findCompendiumPage',
+  // How many rows that list holds, and how many come before a page (MB.105).
+  'findCompendiumCount',
+  // One ingredient by id, in the compendium or a proof's coven (M8.5).
+  'findOneIngredient',
+  // The entry a colliding compendium write names, found by the key it holds (M5.2).
+  'findCompendiumEntryByIdentity',
+  // The entry at a compendium address, for the public route (MB.82).
+  'findCompendiumEntryBySlug',
+  // The entry a compendium address redirects to while its window runs (MB.82).
+  'findCompendiumSlugRedirect',
+  // What a readable spell holds, deleted or not: the compendium and the proof's coven (M5.3).
+  'findIngredientsInSpellsIncludingSoftDeleted',
+  // `withAudit`'s writer: the compendium tier's by-id writes, under the SiteAdmin proof (M5.2).
+  'writerFor',
+];
 
 /**
- * A compendium-tier read, in either of Drizzle's spellings. `deleted_at IS
- * NULL` is every finder's business and must not match; the column name is
- * what keeps it out.
+ * A compendium-tier read: the repository's `inCompendium` predicate, or the
+ * `workspace_id IS NULL` it stands for in either of Drizzle's spellings, so a
+ * finder that writes the column out by hand is caught as surely as one that
+ * calls the helper. `deleted_at IS NULL` is every finder's business and must
+ * not match; the column name is what keeps it out.
  */
-const TIER_READ = /workspace_?[iI]d[^\n]*\bis null\b|isNull\([^)]*workspaceId/;
+const TIER_READ = /\binCompendium\(|workspace_?[iI]d[^\n]*\bis null\b|isNull\([^)]*workspaceId/;
 
 /** The lint guards' throwaway probe directories, which land under `src/`. */
 const isProbe = (path: string) => /(^|\/)__lint-probe[^/]*__(\/|$)/.test(path);
@@ -114,21 +147,17 @@ function resolve(file: string, specifier: string): string | null {
 }
 
 const moduleOf = (path: string) => /^src\/modules\/([^/]+)(?:\/|$)/.exec(path)?.[1] ?? null;
-const isPublic = (path: string) => /^src\/modules\/[^/]+\/(?:index|schema\/[^/]+)$/.test(path);
+const isPublic = (path: string) =>
+  /^src\/modules\/[^/]+\/(?:index|(?:schema|validation)\/[^/]+)$/.test(path);
 
-interface Edge {
-  from: string;
-  to: string;
-}
-
-const EDGES: Edge[] = sourceFiles().flatMap((from) =>
+const EDGES: ImportEdge[] = sourceFiles().flatMap((from) =>
   specifiers(readFileSync(join(REPO_ROOT, from), 'utf8'))
     .map((specifier) => resolve(from, specifier))
     .filter((to): to is string => to !== null && to.startsWith('src/'))
     .map((to) => ({ from, to })),
 );
 
-const describeEdge = ({ from, to }: Edge) => `${from} → ${to}`;
+const describeEdge = ({ from, to }: ImportEdge) => `${from} → ${to}`;
 
 describe('the module boundary (claude-docs/modules.md)', () => {
   it('names every directory under src/modules, and no other', () => {
@@ -173,14 +202,14 @@ describe('the module boundary (claude-docs/modules.md)', () => {
       ]),
     );
     expect(EDGES.map(describeEdge)).toContain(
-      `${REPOSITORY}/index.ts → src/modules/identity/schema/users`,
+      `${REPOSITORY}/users.ts → src/modules/identity/schema/users`,
     );
   });
 
   // R1, from outside: infrastructure and the app reach a module through its
   // surface — `src/db/audit.ts` and the repository import a table, a page or
   // a resolver imports a service off the index.
-  it('reaches a module only through its index or its schema files, from outside', () => {
+  it('reaches a module only through its index, schema or validation files, from outside', () => {
     const violations = EDGES.filter(
       ({ from, to }) => moduleOf(from) === null && moduleOf(to) !== null && !isPublic(to),
     );
@@ -215,7 +244,7 @@ describe('the module boundary (claude-docs/modules.md)', () => {
   });
 });
 
-describe('the repository’s surface (claude-docs/db.md)', () => {
+describe('the repository’s surface (claude-docs/db/repository-files.md)', () => {
   const inside = (path: string) => path.startsWith(`${REPOSITORY}/`);
 
   // Precondition: the folder's files do import each other, so an empty result
@@ -235,15 +264,18 @@ describe('the repository’s surface (claude-docs/db.md)', () => {
 });
 
 describe('the tier seam in the repository (claude-docs/modules.md)', () => {
-  /** Every repository file's text, cut at each top-level export so a match has a name. */
+  /**
+   * Every repository file's text, cut at each top-level function or `const`,
+   * exported or not, so a match is named by the declaration it sits in.
+   */
   function chunks(): { name: string; body: string }[] {
     const files = readdirSync(join(REPO_ROOT, REPOSITORY)).filter((file) => file.endsWith('.ts'));
     return files.flatMap((file) => {
       const text = readFileSync(join(REPO_ROOT, REPOSITORY, file), 'utf8');
-      const heads = [...text.matchAll(/^export (?:async )?(?:function|const) (\w+)/gm)];
+      const heads = [...text.matchAll(/^(?:export )?(?:async )?(?:function|const) (\w+)/gm)];
       const cuts = [0, ...heads.map((head) => head.index)];
       return cuts.map((start, i) => ({
-        name: i === 0 ? `(${file}, before the first export)` : heads[i - 1][1],
+        name: i === 0 ? `(${file}, before the first declaration)` : heads[i - 1][1],
         body: text.slice(start, cuts[i + 1] ?? text.length),
       }));
     });
@@ -252,16 +284,22 @@ describe('the tier seam in the repository (claude-docs/modules.md)', () => {
   // The regex is the guard; pin what it does and does not match before
   // trusting it over a file that today contains neither form.
   it('recognises a compendium-tier read and not the soft-delete filter', () => {
+    expect(TIER_READ.test('or(inCompendium(ingredients), scopedTo(membership, ingredients))')).toBe(
+      true,
+    );
     expect(TIER_READ.test('where ${sql`workspace_id is null`}')).toBe(true);
     expect(TIER_READ.test('or(isNull(ingredients.workspaceId), eq(...))')).toBe(true);
     expect(TIER_READ.test('and(scopedTo(m, t), sql`deleted_at is null`)')).toBe(false);
     expect(TIER_READ.test('isNull(table.deletedAt)')).toBe(false);
+    expect(TIER_READ.test('and(notSoftDeleted(table), where)')).toBe(false);
   });
 
   it('is scanning the repository', () => {
     const names = chunks().map((chunk) => chunk.name);
     expect(names).toContain('withAudit');
     expect(names).toContain('findManyInWorkspace');
+    // A private function is a chunk of its own, not the tail of the export above it.
+    expect(names).toContain('writerFor');
   });
 
   it('names every exported function that reads the compendium tier in TIER_SEAM', () => {

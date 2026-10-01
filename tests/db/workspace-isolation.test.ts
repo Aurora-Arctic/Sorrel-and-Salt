@@ -13,6 +13,7 @@ import { assertMembership } from '@/modules/coven';
 import { setSpellVisibility } from '@/modules/grimoire';
 import { A, D, E, asUser } from '../support/as-user';
 import { makeIngredient, makeSpell } from '../support/fixtures';
+import { ingredientSlug } from '@/lib/slugify';
 
 // Story 19 — an outsider and a site admin both refused a coven's ingredients
 // and grimoire, by direct id and on every write, with a refusal that hands
@@ -65,7 +66,10 @@ async function castIngredient(): Promise<string> {
   } = makeIngredient({ workspaceId: WORKSPACE_W_ID });
 
   return withAudit(session, async (write) => {
-    const [ingredient] = await write.insertInWorkspace(membership, ingredients, row);
+    const [ingredient] = await write.insertInWorkspace(membership, ingredients, {
+      ...row,
+      slug: ingredientSlug(row.name, row.form, row.canonicalName),
+    });
     return ingredient.id;
   });
 }
@@ -284,13 +288,11 @@ describe('Grimoire — the spell and what it is made of', () => {
   });
 });
 
-// M5.2's admin curation service (Wave 8) is what will actually read and write
-// the compendium; nothing that far ahead exists yet to call. What this proves
-// instead is the invariant that has to hold for it to work when it lands:
-// `assertMembership` neither special-cases nor penalizes the admin role
-// (membership.ts, "A site admin gets no bypass"), so E's refusal above is the
-// ordinary stranger's refusal and nothing about it can regress a capability
-// that is checked on `session.role` alone.
+// The compendium's writes check the site role alone (`assertSiteAdmin`), so
+// what has to hold beside them is that `assertMembership` neither
+// special-cases nor penalizes the admin role (membership.ts, "A site admin
+// gets no bypass"): E's refusal above is the ordinary stranger's refusal, and
+// nothing about it can regress a capability checked on `session.role`.
 describe('E’s site role carries no bypass and no penalty from the membership check', () => {
   it('is refused W exactly as a non-admin stranger with no membership row would be', async () => {
     const stranger = { id: '00000000-0000-0000-0000-0000000000fe', role: 'user' as const };

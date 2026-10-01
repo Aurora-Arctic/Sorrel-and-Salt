@@ -87,11 +87,13 @@
 
 // Every roster button carries `.btn` (_primitives.scss) for its shape —
 // padding, radius, shadow, focus ring, transition — the same primitive any
-// other button in the app uses. This rule is only the two ways a
-// provider's brand button differs from `.btn`'s own defaults: the icon
-// sits at the left edge rather than centered, and the button fills its
-// grid column rather than sizing to its own content. Compounded with
-// `.btn` (`.sign-in-panel__button.btn`) so these two overrides apply
+// other button in the app uses. This rule is only the ways a provider's
+// brand button differs from `.btn`'s own defaults: the icon sits at the
+// left edge rather than centered, the button fills its grid column rather
+// than sizing to its own content, and the edge is the 1px stroke Google's
+// and Microsoft's guidelines draw rather than `.btn`'s 1.6px — on all four,
+// so the roster stays one height. Compounded with
+// `.btn` (`.sign-in-panel__button.btn`) so these overrides apply
 // regardless of the two stylesheets' load order. Colour is never here —
 // every provider's own colour and mark replaces `.btn`'s
 // (claude-docs/components/sign-in-panel.md, "Provider branding").
@@ -100,6 +102,7 @@
   position: relative;
   justify-content: flex-start;
   width: 100%;
+  border-width: 1px;
   border-color: transparent;
 }
 

@@ -2,9 +2,9 @@ import { describe, expect, it, beforeAll } from 'vitest';
 
 // GraphQL is the only application-data path (CLAUDE.md rule 1); /api/auth/*
 // is the one deliberate exception, for the OAuth handshake itself — see
-// claude-docs/auth.md. `/ok` is Better Auth's own built-in health endpoint
-// and never touches the database, so this exercises real route mounting
-// without needing Postgres.
+// claude-docs/auth/graphql-only-exception.md. `/ok` is Better Auth's own
+// built-in health endpoint and never touches the database, so this exercises
+// real route mounting without needing Postgres.
 describe('GET /api/auth/*', () => {
   beforeAll(() => {
     process.env.DATABASE_URL ??= 'postgres://sorrel:sorrel@localhost:5432/sorrel';
@@ -30,4 +30,4 @@ describe('GET /api/auth/*', () => {
 //
 // `tests/lib/auth.test.ts` covers the config wiring without a database, and the
 // real authorization URL shape was verified by hand against a running server —
-// recorded in claude-docs/auth.md, "Config".
+// recorded in claude-docs/auth/config.md, "Config".
