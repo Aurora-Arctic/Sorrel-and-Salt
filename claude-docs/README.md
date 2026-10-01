@@ -34,10 +34,11 @@ each loaded only once a file in its area is read ([`agent-skills.md`](agent-skil
 - A **summary** is the page you read first, and the only one you should need. It
   carries the decision and the constraint, not the story of how they were
   reached. Where a constraint would look arbitrary without a reason, give the
-  reason in a clause — not a link out.
+  reason in a clause; the argument at length is its decision record's, cited
+  ("One home per fact" below).
 - A **code comment** is the other half of that rule, pointing the other way. The
   comment says what the code is and why it is not the obvious alternative; the
-  argument for the choice lives here, in the summary. So a doc that defers
+  argument for the choice lives here, in the docs. So a doc that defers
   outward is a defect, and a comment that re-argues a decision at length is
   duplication — the doc is the copy that can be corrected in one place, where the
   comment is the copy that gets pasted into sixteen files and drifts. The rule
@@ -50,6 +51,42 @@ each loaded only once a file in its area is read ([`agent-skills.md`](agent-skil
   does not get re-argued.
 - A summary is corrected in the PR that makes it wrong — "Correcting a doc"
   below.
+
+## One home per fact
+
+A summary stands on its own for the **current shape**, and cites for the
+**argument**. Each fact has one home, and every other mention is a clause and a
+citation, so that a correction is one edit and a read is one page (MB.147):
+
+| Fact                                | Home                                                       |
+| ----------------------------------- | ---------------------------------------------------------- |
+| A binding rule                      | `CLAUDE.md`, or its long form in `.claude/rules/<area>.md` |
+| Specified behaviour and data model  | `DESIGN.md`, cited by §                                    |
+| A subsystem's current shape         | its summary, `<subsystem>.md` or `<summary>/<section>.md`  |
+| The argument for a contested choice | its decision record in `design-decisions/`                 |
+| A task's scope                      | its entry in `tasks/<milestone>.md`                        |
+| Ordering reasoning                  | its wave's `waves/wave-NN.md`                              |
+
+- A **task entry** keeps its story, scope and acceptance criteria, and cites the
+  §, summary or rule it implements. Its "Decided while building" keeps the
+  decision in a sentence and cites the record for the argument, unless no
+  record holds it, in which case the entry is its home.
+- A **plan record** keeps the context and argument behind what was approved;
+  the tasks it minted are their entries, not a draft beside them.
+- A **summary** keeps the reason for a constraint in a clause and drops the
+  history of how it got there, which is its tasks' and records'.
+- A **rule file** loads beside `CLAUDE.md`, so it adds to `CLAUDE.md`'s line
+  rather than repeating it.
+- A **wave's GitHub milestone** carries its task ids and a link to its wave
+  file; the reasoning is the wave file's alone.
+
+`node scripts/doc-overlap.mjs` measures what is left: the runs of eight words
+that two or more live docs and skills share, and the pairs sharing most, while
+`node scripts/doc-overlap.mjs <a.md> <b.md>` prints the passages one shares
+with the other. It is a report, not a guard, because a citation's clause
+legitimately repeats a few words of what it cites and no threshold tells that
+from a copy. MB.147's pass took it from 7,536 runs to 3,937, working pair
+by pair from the largest and stopping where a pair shares under about 60.
 
 ## Comments in code
 
