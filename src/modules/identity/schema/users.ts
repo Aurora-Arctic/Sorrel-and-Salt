@@ -16,7 +16,8 @@ import type { UsersIdReference } from '../../../db/types';
 // The audit column instances every table spreads, built here because each
 // references `users.id` — `users` included, so the thunk resolves the table
 // below after it exists. Import them from this file, never from db/audit.ts,
-// which exports only the factories (claude-docs/db.md, "Audit columns and applyAudit").
+// which exports only the factories (claude-docs/db/audit-columns.md, "Audit
+// columns and applyAudit").
 const usersId: UsersIdReference = () => users.id;
 export const auditStampColumns = auditStampColumnsReferencing(usersId);
 // The four stamps plus two, spread from the same instance, so the six-column
@@ -29,7 +30,7 @@ export const userRole = pgEnum('user_role', ['user', 'admin']);
 // Better Auth's adapter table plus the app columns. `name`/`image` keep Better
 // Auth's names (DESIGN.md was corrected, not the fields). `created_by`
 // self-references `users.id`; the sign-up hook and seed bootstrap satisfy it
-// within one statement (claude-docs/db.md, "Audit columns and applyAudit").
+// within one statement (claude-docs/db/audit-columns.md, "Audit columns and applyAudit").
 export const users = pgTable(
   'users',
   {

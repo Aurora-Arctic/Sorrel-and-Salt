@@ -7,7 +7,7 @@ import { A, E, asUser } from '../../support/as-user';
 import { insertIngredient } from '../../support/db/insert-ingredient';
 import { makeIngredient } from '../../support/fixtures';
 
-// The compendium's addresses (claude-docs/db.md, "Ingredient slugs"): the
+// The compendium's addresses (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"): the
 // entry at a slug, and a slug an entry moved off, which redirects to it until
 // the retirement's `expires_at` — midnight UTC of the retirement's date, plus
 // 180 days. Every instant below is UTC; the columns are `timestamp` holding UTC.

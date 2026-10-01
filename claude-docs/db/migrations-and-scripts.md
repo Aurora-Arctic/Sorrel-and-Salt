@@ -1,0 +1,168 @@
+## Migrations and scripts (M1.3)
+
+- **`npm run db:generate`** is `drizzle-kit generate` — diffs `src/modules/*/schema`
+  against `src/db/migrations` and writes a new migration for any change. The
+  first migration (`0000_enable-extensions.sql`) was written by hand with
+  `drizzle-kit generate --custom`, since enabling an extension isn't
+  something schema-diffing can express; `0001_lucky_centennial.sql` (M2.2) is
+  the first one it actually generated, from `users.ts` and `auth.ts` (now `src/modules/identity/schema/`)
+  — see `claude-docs/auth.md`.
+- **`npm run db:migrate`** is `drizzle-kit migrate` — applies every migration
+  under `src/db/migrations` not yet recorded in the `drizzle` schema's
+  `__drizzle_migrations` table it creates on first run. That table is what
+  makes re-running idempotent: a migration already recorded is skipped, not
+  reapplied.
+- **A failed migration names its cause, since MB.49.** `drizzle-kit migrate`
+  catches whatever the driver throws and exits 1 without printing it, so a
+  failure against staging once read in full:
+
+  ```
+  Using 'postgres' driver for database querying
+  [⣟] applying migrations...
+  ##[error]Process completed with exit code 1.
+  ```
+
+  An unreachable host, a wrong password, an `sslmode` mismatch and a
+  `channel_binding` parameter all produce that byte-identical output — the
+  shape carries no information at all. `migrate.yml` therefore runs
+  `scripts/probe-database.ts` first, which opens the connection itself and
+  prints the driver's error code and message (`ECONNREFUSED`, `ENOTFOUND`,
+  `28P01`, `3D000`, `42704`) before drizzle-kit can swallow it. Locally the
+  same script is the fastest way to tell a bad URL from a stopped container:
+  `node scripts/probe-database.ts --file <a dotenv file holding DATABASE_URL>`.
+  `claude-docs/ci.md` carries the CI wiring.
+
+- **`0000_enable-extensions.sql`** runs `CREATE EXTENSION IF NOT EXISTS pg_trgm`
+  — the only extension DESIGN.md §5 names (the fuzzy duplicate-name
+  warning's `gin_trgm_ops` index). `IF NOT EXISTS` also makes it a no-op
+  against `sorrel`/`sorrel_template`, which already have `pg_trgm` baked in
+  at the Postgres image's build time (`Docker/postgres-init/`) — the
+  migration is what makes a from-scratch database (e.g. Neon) match.
+- **`0011_breezy_bastion.sql`** (M4.6) creates `ingredients_trgm`, the
+  multicolumn `gin_trgm_ops` index DESIGN.md §9's fuzzy duplicate warning
+  reads. `drizzle-kit generate` wrote the statement; the `IF NOT EXISTS` was
+  added by hand, for the reason 0000 carries one — the journal already skips an
+  applied migration, and the keyword makes re-applying the file a no-op
+  independently of it. Hand-editing the SQL is safe here because `db:generate`
+  diffs the `meta/` snapshots rather than the statements, so the keyword
+  changes nothing a later generate sees.
+- **`0016_updated-at-trigger.sql`** (M1.18) is the third hand-written one,
+  again via `generate --custom`: it adds the `set_updated_at()` trigger
+  function and attaches it to every audited table, neither of which schema
+  diffing can express. `CREATE OR REPLACE TRIGGER` (Postgres 14+) is the
+  idempotent form — there is no `CREATE TRIGGER IF NOT EXISTS` — so
+  re-applying the file is a no-op independently of the journal, for the same
+  reason 0000 and 0011 carry an `IF NOT EXISTS`, and it needs no
+  destructive-DDL acknowledgement because it drops nothing. See
+  ["`updated_at` is the database's"](updated-at.md).
+- **`0017_custom-spell-ingredients.sql`** (MB.40) reshapes `spell_ingredients`
+  so a layer may be a custom, one-off ingredient — see
+  ["Custom ingredients"](grimoire.md#custom-ingredients-mb40)
+  under the grimoire. `drizzle-kit generate` wrote the statements and the file
+  was reordered by hand, expand first (two columns, two partial unique indexes,
+  four checks) and contract last (the `(spell_id, ingredient_id)` primary key
+  replaced by `(spell_id, layer_order)`, `ingredient_id` made nullable, the old
+  layer index dropped as redundant), so every guarantee is held by its
+  replacement before the thing that used to hold it goes. It is the first
+  migration here to carry rule 10's destructive-DDL acknowledgement, for the
+  `DROP CONSTRAINT` and the `DROP INDEX`; `DROP NOT NULL` widens and is exempt.
+  A contract migration was affordable because the table was empty and
+  unqueried — the table-task-then-behaviour-task rule paying out.
+- **`0026_unaccent.sql`** (M8.5) is the fourth hand-written one, via
+  `generate --custom`: `CREATE EXTENSION IF NOT EXISTS unaccent`, for the
+  compendium search's accent folding, and `unaccent_immutable(text)`, a
+  SQL-language wrapper declared `IMMUTABLE` because it names the dictionary —
+  `unaccent()` itself is `STABLE`, since which dictionary it reads depends on
+  `search_path`, and an expression index takes an immutable function only.
+  `IF NOT EXISTS` for 0000's reason: `sorrel_template`/`sorrel` have the
+  extension from the image build (`Docker/postgres-init/`), and the migration
+  is what makes a from-scratch database match. A trusted extension, so
+  `sorrel`, no superuser, and a Neon role may create it; `LANGUAGE sql`
+  because a C-language wrapper would need superuser.
+- **`0027_unaccent-indexes.sql`** (M8.5) adds `ingredients_unaccent_trgm` and
+  `ingredient_folk_names_unaccent_trgm`, `gin_trgm_ops` over
+  `unaccent_immutable(…)` of the searched columns — beside the raw trigram
+  indexes rather than in their place, since the fuzzy finders still match the
+  raw columns. `drizzle-kit generate` wrote the statements; `IF NOT EXISTS`
+  was added by hand, as 0011's was. See
+  ["The compendium read"](compendium-read.md).
+- **`0029_spell-layers-soft-delete.sql`** (MB.110) makes `spell_ingredients`
+  soft-deleted — see
+  ["Layer order is the identity"](grimoire.md#layer-order-is-the-identity-and-what-that-costs-the-reorder)
+  under the grimoire.
+  `drizzle-kit generate` wrote the statements and the file was reordered by
+  hand, as 0017 was: the delete columns and the partial layer index first,
+  while every row is live, then the `(spell_id, layer_order)` key dropped for
+  a surrogate `id`, then the other two partial indexes re-created under their
+  own names with `deleted_at IS NULL` added. Its sidecar acknowledges the three
+  drops and says why it is one PR rather than rule 10's two: no column is
+  dropped, and nothing in `src/` names the constraints.
+- **Migration files are committed**, not generated at deploy/build time —
+  `src/db/migrations/**` is real source, reviewed like any other change.
+- **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
+  `seed(db, { scenario })` from `src/db/seed/index.ts` and then
+  closes the pool `connection.ts` opened, or the process never exits.
+  All three scenarios are implemented (M1.21, M1.22, M1.23 — ["The seed
+  module"](seed-module.md), ["The standard scenario"](standard-scenario.md) and
+  ["The demo scenario"](demo-scenario.md)) and all
+  three are reachable from the CLI as of M1.24: **`SEED_SCENARIO`** picks one,
+  defaulting to `minimal`. The script runs
+  through **`tsx`**, alone among the scripts: bare Node's type stripping
+  resolves no extensionless relative import, and the seed is the first thing
+  under `src/` a script executes that has one.
+- **`resolveScenario` (M1.24) refuses an unrecognised name rather than falling
+  back to `minimal`.** Both readers of `SEED_SCENARIO` — the CLI and the
+  `db-init` compose service through it — go through that one parse, so they
+  cannot disagree about what `demo` means. A silent fallback would hand
+  someone who mistyped `demo` one admin and one user, and they would then
+  debug the app rather than the variable. Unset or blank is still `minimal`.
+- **`npm run db:drop` and `npm run db:reset`** (M1.24). `db:drop` calls
+  `dropSchema` from `src/db/seed/reset.ts`; `db:reset` is `db:drop &&
+db:migrate && db:seed`, and that first step is what makes it a reset rather
+  than a re-run. `dropSchema` drops **two** schemas inside one transaction:
+  `public` (the tables, the enums, `set_updated_at()`, `pg_trgm`) and
+  `drizzle` (drizzle-kit's `__drizzle_migrations` journal). Leaving the
+  journal is the trap — `db:migrate` reads every migration as already applied,
+  does nothing, and the seed then fails on tables that are gone. It recreates
+  an empty `public` for migration `0000_enable-extensions` to put `pg_trgm`
+  back into, which is why the reset is drop _then_ migrate and never a drop
+  alone. A `SET LOCAL client_min_messages = warning` rides at the head of the
+  transaction: `DROP ... CASCADE` emits a NOTICE per dependent object, around
+  thirty of them by Wave 4, each rendered by postgres-js as a multi-line
+  object that reads like a stack trace. Schemas the app does not own are left
+  alone. `drop` is the one destructive verb in the CLI and refuses to run
+  under `NODE_ENV=production`; nothing in `deploy.yml` or `migrate.yml` calls
+  it, so the accident worth refusing is a production `DATABASE_URL` in a shell
+  that also has this script.
+- **`Docker/postgres-init/enable-extensions.sql`** also creates the `sorrel`
+  role and database now, not just `pg_trgm`. Without it, a container built
+  from `Dockerfile.postgres` would never get a `sorrel` role/database at
+  all: `PGDATA` is already populated at image build time, so the entrypoint's
+  usual first-boot "create `POSTGRES_USER`/`POSTGRES_DB` from env" step never
+  runs for it. Still no schema or seed data: `db-init` applies both to
+  `sorrel` at container start (M1.24), and the test harness applies them to
+  its own clones of `sorrel_template` at test-run setup (M1.27) — nothing is
+  baked in.
+- **`sorrel` holds `CREATEDB` and owns `sorrel_template`** (M1.9), granted in
+  the same init script. `postgres`'s own password is generated and discarded
+  within that build step (`Dockerfile.postgres`), so `sorrel` is the only
+  role any runtime connection can ever authenticate as — and cloning a
+  database as a template requires either owning it or being a superuser.
+  This is what lets the test harness (`tests/support/seeded-database.ts`)
+  run `CREATE DATABASE sorrel_test_template TEMPLATE sorrel_template` as
+  `sorrel`, migrate and seed that, and clone `sorrel_test_<n>` from it — and,
+  by the same route through `sorrel_e2e_template`, each Playwright worker
+  slot's `sorrel_e2e_<n>` and the configured-providers server's
+  `sorrel_e2e_providers`. See `testing.md`.
+- **`npm run db:studio`** (`make db-studio`, MB.21) is `drizzle-kit studio
+--host 0.0.0.0 --port 4983`. It reads the same `drizzle.config.ts` as
+  `db:generate`/`db:migrate` — no separate configuration — and needs no
+  schema or seed data to work, it just shows empty tables until M1.21–M1.23
+  land. The UI itself is hosted at `https://local.drizzle.studio`; the page
+  connects from the browser back to `127.0.0.1:4983`, so the server only
+  ever needs to serve data, never a UI bundle. From the devcontainer, run
+  `npm run db:studio` directly (no `make`/`docker` there) — port 4983 is
+  forwarded by `.devcontainer/devcontainer.json`. From the host, `make
+docker-studio` starts it as a profiled compose service (`studio`), the
+  same shape as `workshop`; `make docker-all` brings up every long-running
+  service, studio included.

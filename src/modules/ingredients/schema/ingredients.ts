@@ -8,7 +8,7 @@ import { workspaces } from '../../coven/schema/workspaces';
 // rank within it; `fungal` is split from botanical because curators shelve
 // mushrooms apart from herbs; `unknown` and `none` are both answers — `none`
 // claims no system names this, `unknown` that nobody has looked it up
-// (claude-docs/db.md, "The ingredient identity model").
+// (claude-docs/db/identity-model.md, "The ingredient identity model").
 export const nomenclatureKind = pgEnum('nomenclature_kind', NOMENCLATURE_KINDS);
 
 // A correspondence, not identity: five values, closed — the opposite of `form`.
@@ -47,7 +47,7 @@ export const ingredients = pgTable(
     // formal name (src/lib/slugify.ts). No default: one in SQL would be a
     // second slug rule. It follows a change to any of the three, and a
     // compendium entry's old one moves to `retired_ingredient_slugs`
-    // (claude-docs/db.md, "Ingredient slugs").
+    // (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
     slug: text('slug').notNull(),
     canonicalName: text('canonical_name'),
     // No database default: the workspace-local Zod variant supplies `none`
@@ -114,7 +114,7 @@ export const ingredients = pgTable(
     // it reserves nothing. A match must be written `name % $1` under a
     // per-transaction `pg_trgm.similarity_threshold`, never
     // `similarity(name, $1) > 0.4`, which no trigram index can answer
-    // (claude-docs/db.md, "Fuzzy matching"). pg_trgm is enabled by migration 0000.
+    // (claude-docs/db/fuzzy-matching.md, "Fuzzy matching"). pg_trgm is enabled by migration 0000.
     index('ingredients_trgm').using(
       'gin',
       sql`${table.name} gin_trgm_ops`,
@@ -122,7 +122,7 @@ export const ingredients = pgTable(
     ),
     // The same pair folded through `unaccent_immutable` (migration 0026), for
     // the compendium search's accent-insensitive `<%`: only an expression
-    // index lets a fold reach a trigram index (claude-docs/db.md, "The
+    // index lets a fold reach a trigram index (claude-docs/db/compendium-read.md, "The
     // compendium read"). Beside the raw one, not instead of it — the fuzzy
     // finders still match the raw columns.
     index('ingredients_unaccent_trgm').using(

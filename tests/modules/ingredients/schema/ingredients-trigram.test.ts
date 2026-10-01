@@ -12,7 +12,8 @@ import { ingredientSlug } from '@/lib/slugify';
 
 // §9's one multicolumn gin index serves a predicate on either column alone,
 // which the planner assertions below prove —
-// claude-docs/db.md, "Fuzzy matching: one index, and a rule every caller is bound by".
+// claude-docs/db/fuzzy-matching.md, "Fuzzy matching: one index, and a rule
+// every caller is bound by".
 const TRIGRAM_INDEX = 'ingredients_trgm';
 const FOLK_NAMES_TRIGRAM_INDEX = 'ingredient_folk_names_trgm';
 // The folded twin, owned by ingredients-unaccent.test.ts; named here so the

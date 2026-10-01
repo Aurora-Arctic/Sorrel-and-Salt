@@ -97,7 +97,7 @@ deleted_at IS NULL`, CLAUDE.md rule 4) in the same migration that added
   the three FKs in `0003_sweet_madame_masque.sql` once every `users` column
   existed, including `users`' own self-reference. The mechanics — the
   `AnyPgColumn` annotation the module cycle needs, and the self-satisfying
-  bootstrap insert — are in `claude-docs/db.md`.
+  bootstrap insert — are in `claude-docs/db/audit-columns.md`.
 
 ## Config (`src/lib/auth.ts`)
 
@@ -1013,9 +1013,10 @@ an import error: a service may not import `next/headers`, `better-auth/cookies`,
 `lib/auth` or `lib/request-session`. It may still `import type { Session }`
 and better-auth's `createAccessControl`. The override restates the three
 top-level bans because an override replaces the rule rather than merging
-(`claude-docs/db.md`). `tests/guards/lint-service-session-boundary.test.ts`
-asserts all of it with probe files, in a probe directory of its own so it
-cannot race `lint-db-client-boundary.test.ts`'s.
+(`claude-docs/db/query-building.md`).
+`tests/guards/lint-service-session-boundary.test.ts` asserts all of it with
+probe files, in a probe directory of its own so it cannot race
+`lint-db-client-boundary.test.ts`'s.
 
 ## The admin guard (M5.4)
 

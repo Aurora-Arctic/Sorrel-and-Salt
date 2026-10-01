@@ -9,7 +9,7 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import type { PageRequest } from '@/lib/types';
 
-// The compendium's two reads (claude-docs/db.md, "The compendium read"): the
+// The compendium's two reads (claude-docs/db/compendium-read.md, "The compendium read"): the
 // public list, which takes no session at all, and one entry by id, which a
 // coven's member may also point at the coven's own row. The table is emptied
 // per test, so every row a result could come from is one this file wrote.

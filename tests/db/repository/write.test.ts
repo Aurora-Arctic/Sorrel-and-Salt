@@ -341,7 +341,7 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
 });
 
 // The compendium tier of a two-tier table, `workspace_id IS NULL`, reached
-// only under the site role's proof (claude-docs/db.md, "The SiteAdmin proof").
+// only under the site role's proof (claude-docs/db/site-admin-proof.md, "The SiteAdmin proof").
 describe('the compendium tier, under the SiteAdmin proof', () => {
   const admin = assertSiteAdmin({ ...session, role: 'admin' });
   const workspaceId = '55555555-5555-5555-5555-555555555555';
@@ -457,7 +457,7 @@ describe('the compendium tier, under the SiteAdmin proof', () => {
 
 // CLAUDE.md rule 4 on the write side: a soft-deleted row is out of reach of
 // every update and every soft delete, decided by the table's shape as the
-// finders' filter is (claude-docs/db.md, "The write path"). The way back to
+// finders' filter is (claude-docs/db/write-path.md, "The write path"). The way back to
 // one is a restore, which is v2's.
 describe('a soft-deleted row, out of reach of every update and soft delete', () => {
   const DELETED_AT = new Date('2020-01-01T00:00:00Z');

@@ -9,7 +9,7 @@ import type { Logged } from '../../../support/db/types';
 // duplicates-plan.test.ts reads findPossibleDuplicates': a `similarity() > n`
 // written by mistake returns the same rows, so only the SQL and the plan tell
 // them apart. Unlike the vocabularies, both tables here grow with use, so the
-// plan is asserted (claude-docs/db.md, "The member's autofill").
+// plan is asserted (claude-docs/db/member-autofill.md, "The member's autofill").
 
 const logged = vi.hoisted(() => [] as Logged[]);
 

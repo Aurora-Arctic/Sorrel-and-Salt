@@ -5,7 +5,7 @@ import type { Session } from '../../../lib/session';
 // CLAUDE.md rule 5's two layers, on the site role rather than a workspace
 // role: `assertSiteAdmin` is the check, and the `SiteAdmin` it returns is the
 // proof the check ran, which every compendium-tier `AuditWriter` method
-// demands — see claude-docs/db.md, "The SiteAdmin proof".
+// demands — see claude-docs/db/site-admin-proof.md, "The SiteAdmin proof".
 
 // Not exported, so no object literal outside this file satisfies `SiteAdmin`.
 declare const brand: unique symbol;

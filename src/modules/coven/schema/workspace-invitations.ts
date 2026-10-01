@@ -5,7 +5,7 @@ import { auditColumns } from '../../identity/schema/users';
 import { workspaceRole, workspaces } from './workspaces';
 
 // A default, not a policy — a caller may pass its own `expiresAt`; the column
-// exists so omitting one cannot mean forever (claude-docs/db.md, "Invitations").
+// exists so omitting one cannot mean forever (claude-docs/db/invitations.md, "Invitations").
 const DEFAULT_LIFETIME = sql`now() + interval '7 days'`;
 
 // An owner generates a link, shown once; only the hash is stored and there

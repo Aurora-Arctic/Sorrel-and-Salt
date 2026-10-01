@@ -17,7 +17,8 @@ import type { CommonNameSuggestion } from './types';
  * A blank `query` matches everything.
  *
  * Each arm matches its own column by `%` or `<%`, so each can reach its own
- * trigram index; the fold happens after (claude-docs/db.md, "The member's autofill").
+ * trigram index; the fold happens after (claude-docs/db/member-autofill.md,
+ * "The member's autofill").
  */
 export async function findCommonNameSuggestions(
   membership: Membership,

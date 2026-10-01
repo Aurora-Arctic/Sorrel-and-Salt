@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
-// The inside of the repository — claude-docs/db.md, "Soft-delete filtering":
+// The inside of the repository — claude-docs/db/soft-delete.md, "Soft-delete filtering":
 // every SELECT is built in `select.ts`, by `selectFrom` or by `existsIn`, the
 // index re-exports a pinned surface that leaves both out, and every exported
 // finder but the named escape hatches filters. `existsIn` is the correlated subquery a

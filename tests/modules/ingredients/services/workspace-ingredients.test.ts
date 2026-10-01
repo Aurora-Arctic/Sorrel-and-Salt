@@ -368,7 +368,7 @@ describe('updateWorkspaceIngredient', () => {
   });
 
   // No route reads a coven ingredient's slug, so it follows the name and
-  // nothing redirects from the old one (claude-docs/db.md, "Ingredient slugs").
+  // nothing redirects from the old one (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
   it('moves the slug with the label, form and formal name, retiring nothing', async () => {
     const id = await seed(local());
 
@@ -674,7 +674,7 @@ describe('deleteWorkspaceIngredient', () => {
 });
 
 // Story 25 in the coven: a deleted ingredient is gone from every read its
-// members make, and what it held is free again (claude-docs/db.md,
+// members make, and what it held is free again (claude-docs/db/workspace-ingredients.md,
 // "Workspace ingredients").
 describe('a deleted coven ingredient', () => {
   /** Room for every row a test here writes, so one page is the whole answer. */
@@ -748,7 +748,7 @@ describe('a deleted coven ingredient', () => {
   });
 
   // A spell is a record of a working: what went into the jar stays in it
-  // (claude-docs/db.md, "What a spell holds").
+  // (claude-docs/db/spell-visibility.md, "What a spell holds").
   it('stays in a spell that holds it, for every member who may read the spell', async () => {
     const id = await seed(local());
     await insertSpell(sql, makeSpell({ layers: [{ ingredientId: id }] }), A.id);

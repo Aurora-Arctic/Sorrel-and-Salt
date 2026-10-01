@@ -11,7 +11,8 @@ import type { Logged } from '../../../support/db/types';
 // the same rows. Unlike that test there is no EXPLAIN here: nineteen planets,
 // thirteen signs and seventy-eight forms fit a few pages, and the planner will
 // never reach for a trigram index over a table that small, so an index-scan
-// assertion could only fail (claude-docs/db.md, "The astrology vocabularies").
+// assertion could only fail (claude-docs/db/astrology-vocabularies.md, "The
+// astrology vocabularies").
 
 const logged = vi.hoisted(() => [] as Logged[]);
 

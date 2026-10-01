@@ -12,7 +12,7 @@ import { spells } from './spells';
 // workspace holds today, and a recipe pointing at it would be damaged by
 // running out. Soft-deleted, unlike the other two join tables (MB.110): a
 // spell is a record of a working, so a layer taken out of it is a tombstone
-// (claude-docs/db.md, "The grimoire").
+// (claude-docs/db/grimoire.md, "The grimoire").
 export const spellIngredients = pgTable(
   'spell_ingredients',
   {

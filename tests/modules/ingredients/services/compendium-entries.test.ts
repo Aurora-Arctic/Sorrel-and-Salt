@@ -34,7 +34,7 @@ import {
 } from '../../../support/fixtures';
 
 // Story 17's service: the compendium's writes, which the site admin makes and
-// nobody else does, whatever their standing in a coven (claude-docs/db.md,
+// nobody else does, whatever their standing in a coven (claude-docs/db/compendium-writes.md,
 // "Compendium writes"). The table is emptied per test, so every row a result
 // could come from is one this file wrote.
 
@@ -318,7 +318,7 @@ describe('deleteCompendiumEntry', () => {
 
 // Story 25's promise, over the compendium: a deleted entry is gone from every
 // read, and what it held is free again, while its row stays for a restore
-// (claude-docs/db.md, "Compendium writes").
+// (claude-docs/db/compendium-writes.md, "Compendium writes").
 describe('a deleted entry', () => {
   /** Room for every row a test here writes, so one page is the whole answer. */
   const PAGE: PageRequest = { limit: 26, inverted: false };
@@ -455,7 +455,7 @@ describe('a deleted entry', () => {
   });
 
   // A spell is a record of a working: what went into the jar stays in it
-  // (claude-docs/db.md, "What a spell holds").
+  // (claude-docs/db/spell-visibility.md, "What a spell holds").
   it('stays in a spell that holds it, for every member who may read the spell', async () => {
     const id = await seed();
     await insertSpell(sql, makeSpell({ layers: [{ ingredientId: id }] }), B.id);
@@ -620,7 +620,7 @@ describe('a collision with another compendium entry', () => {
   });
 });
 
-// MB.82's rule (claude-docs/db.md, "Ingredient slugs"): the address follows the
+// MB.82's rule (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"): the address follows the
 // label, the form and the formal name; the one it leaves redirects to the entry
 // for 180 days; and a write that would take another entry's redirected address
 // ends that redirect only once the admin confirms it. The clock is pinned, so

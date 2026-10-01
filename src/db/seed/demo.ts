@@ -23,7 +23,7 @@ import type {
 // The `demo` scenario: `standard` plus spells with ingredients and layer order,
 // written as a member would write them since screenshots are taken against it.
 // It adds W's own ingredients, so the jars mix both tiers, and one custom
-// one-off layer with no `ingredient_id` (claude-docs/db.md, "The demo
+// one-off layer with no `ingredient_id` (claude-docs/db/demo-scenario.md, "The demo
 // scenario"). Writes go through the handle `seed()` was given — see minimal.ts.
 
 /**
@@ -299,7 +299,7 @@ function layerIdentity(
  * A jar's stack is seeded whole or not at all: a layer's identity is a depth in
  * a shared sequence, so patching one into an edited stack collides on either
  * index. A jar that already has layers is left as it is
- * (claude-docs/db.md, "A jar's stack is seeded whole or not at all").
+ * (claude-docs/db/demo-scenario.md, "A jar's stack is seeded whole or not at all").
  */
 async function insertMissingLayers(
   tx: SeedTransaction,

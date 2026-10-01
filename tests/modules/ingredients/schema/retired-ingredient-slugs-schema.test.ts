@@ -11,7 +11,7 @@ import type { Retired } from './types';
 
 // MB.80's ledger: a slug an ingredient moved off, answering a 308 and reserved
 // until `expires_at`. The columns and the generated expiry only — MB.82 is
-// the first thing to read it (claude-docs/db.md, "Ingredient slugs").
+// the first thing to read it (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
 
 const SLUG_INDEX = 'retired_ingredient_slugs_slug_idx';
 

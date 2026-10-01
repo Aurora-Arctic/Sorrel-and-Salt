@@ -1,7 +1,7 @@
 // DESIGN.md §5's unit vocabulary, written down once: both pgEnums, the CHECK
 // constraint, `unitConvert()` and every Zod enum are built from this map. It
 // imports nothing, so the schema, the converter and the Zod schemas all reach it.
-// See claude-docs/db.md, "Stock, and the one module that owns the units".
+// See claude-docs/db/stock.md, "Stock, and the one module that owns the units".
 
 export const UNIT_DIMENSIONS = ['weight', 'volume', 'count'] as const;
 

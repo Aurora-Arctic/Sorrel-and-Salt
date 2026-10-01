@@ -21,7 +21,7 @@ import { makeIngredient, makeSpell } from '../../support/fixtures';
 // What a spell holds, read past a tombstone: a spell is a record of a working,
 // so an ingredient deleted after it went into the jar is still in it — and
 // its categories still count — for everyone who may read the spell and nobody
-// else (claude-docs/db.md, "What a spell holds"). Every row a result could
+// else (claude-docs/db/spell-visibility.md, "What a spell holds"). Every row a result could
 // come from is one this file wrote.
 
 let sql: postgres.Sql;

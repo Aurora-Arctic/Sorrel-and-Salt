@@ -227,7 +227,7 @@ matrix's generated job name, not the leg's.
   any `DROP` except
   `DROP NOT NULL` and `DROP DEFAULT` (which widen), `RENAME`,
   `ALTER COLUMN ... TYPE`, `SET NOT NULL`, and `ADD COLUMN ... NOT NULL` with
-  no `DEFAULT` — see `claude-docs/db.md`'s Migrations section for the policy.
+  no `DEFAULT` — see `claude-docs/db/expand-contract.md` for the policy.
   Blocking, like `lint`/`typecheck`.
   - **It needs one thing a `workflow_call` file cannot read off its own
     trigger**, which is why it has an input where the other legs have none: the
@@ -1023,10 +1023,11 @@ db:seed:categories`, `npm run db:seed:forms` and `npm run db:seed:astrology`
 - **`migrate.yml` snapshots production before it migrates it** (M1.6), by
   branching Neon's `main` branch as `snapshot-<short sha>` through the Neon
   API. That branch is the known-good point
-  [`db.md`](db.md)'s restore runbook promotes back to if a migration corrupts
-  data. Preview never snapshots — a staging or hotfix database is already
-  disposable. The step is guarded on `NEON_API_KEY`/`NEON_PROJECT_ID` and
-  warns rather than fails while they are unset (`claude-docs/secrets.md`).
+  [`db/snapshot-and-restore.md`](db/snapshot-and-restore.md)'s restore
+  runbook promotes back to if a migration corrupts data. Preview never
+  snapshots — a staging or hotfix database is already disposable. The step is
+  guarded on `NEON_API_KEY`/`NEON_PROJECT_ID` and warns rather than fails
+  while they are unset (`claude-docs/secrets.md`).
 - **`neon-snapshot-prune.yml` is the only scheduled workflow in the repo** —
   Sundays at 06:00 UTC, outside any deploy window, plus `workflow_dispatch`.
   Nothing calls it. **Neon's free tier caps a project at 10 branches in

@@ -2815,28 +2815,34 @@ _Acceptance criteria:_
 
 **Decided while building.** A fresh `claude -p` session settled what loads a rule file: reading a file under `src/db/` with the Read tool brought in the database rule alone, a component brought in the components rule and not the database's, and the same `src/db/` file read with `head` through the shell brought in nothing. `CLAUDE.md` therefore names every rule file and says to open the one for the area being edited, and `tests/guards/claude-rules.test.ts` checks each glob with picomatch, the matcher Vitest uses, rather than asking Claude Code. That guard also holds `CLAUDE.md` to 20,000 bytes and pins each numbered rule to the clauses code cites it for. `doc-citation.test.ts` now reads `CLAUDE.md` and every markdown file under `.claude/`. TASKS.md's standing rules were all in `CLAUDE.md` bar one, that the OAuth handshake at `/api/auth/*` carries no application data, and code cites rule 1 for it, so rule 1 took it. The comment rule and the doc-correction rule bind every area, so their long forms went to README.md's "Comments in code" and "Correcting a doc" rather than to a rule file. The Skills table keeps its rows and triggers with shorter descriptions, since a session already lists each skill's own. The shared branch steps are `create-feature/reference-branch.md`, so that every directory under `.claude/skills/` is a skill. `create-release` and `create-main-sync` lose the same stale `gitflow` hedge `create-pr` did, one sentence each.
 
-**MB.145 — Split db.md by section** · 2h
+**MB.145 — Split db.md by section** · 4h
 
 _Story:_ As a developer, I want one section of the database summary to cost one section, so that reading how keyset pages work does not mean reading 236 KB.
 
 Verbatim: each of the 37 `## ` sections moves to `claude-docs/db/<slug>.md`, and `db.md` becomes the index, keeping every `## ` heading with one sentence and a link. The doc-citation guard resolves a `db.md, "Section"` cite by heading prefix in the cited file, so the 105 section citations and 159 plain citations in code keep resolving and no code file changes. Intra-doc `#anchor` links move to the new files.
 
+**Widened while building, on the owner's decision.** The five subsections large enough to read alone — "Fuzzy matching", "Ingredient slugs", "The member's autofill", "The finder convention" and "What a `sql` fragment is for" — move to files of their own, each leaving a one-line pointer where it stood. Every section citation in code and in the other summaries then names the file its section lives in rather than `db.md`, and the guard fails one that names a split summary's index, so the index is for reading and not a hop every citation pays. The move's fallout is corrected in the same PR: a mention of a section that now sits in another file, "above", "below" or by name, becomes a link to that file, and the client-import exemption count, "four" in three sections and three comments since MB.87 split the repository, becomes six.
+
 _Acceptance criteria:_
 
-- `claude-docs/db/` holds one file per section, moved without a rewrite, and `db.md` lists every one under its original heading
-- `tests/guards/doc-citation.test.ts` passes unchanged, and no `db.md#` link remains in `claude-docs/`
-- README.md names the layout
+- `claude-docs/db/` holds one file per section and per carved subsection, moved without a rewrite bar links, and `db.md` lists every one under its original heading
+- `tests/guards/doc-citation.test.ts` fails a section cited through a split summary's index, reads a citation whose section starts the next comment line, and passes
+- No `db.md#` link remains in `claude-docs/`, no "above" or "below" in `claude-docs/db/` points into another file, and a section named in another file is a link
+- README.md names the layout and the citation rule
 
-**MB.146 — Split auth.md, ci.md, testing.md and graphql.md by section** · 2h
+**Decided while building.** The index keeps every `### ` heading too, each linked to where it lives: the guard matches a cited section against a heading at any level of the cited file, and 35 of the 103 section citations named a subsection. That puts the index at 15 KB rather than the plan's 6. The sections keep their `## ` headings, as MB.143's did; a carved subsection's `### ` becomes its file's `## `, and each file is named for its heading, shortened and without the task id. Nine citations put the quoted section on the next comment line, which the guard's pattern did not read, so they had never been checked; it reads them now, and all nine resolved. Five citations named `db.md` alone but meant one section — `check-destructive-ddl.ts`'s message among them, naming a "Migrations section" no heading carries — and point at that section's file; `.claude/rules/database.md`'s means the whole summary and keeps the index. Comment lines the longer paths pushed past 100 columns were rewrapped to their paragraph's width. A mention that names a section in another file without "above" or "below" still read correctly, but no longer resolved by searching the file it sits in, so on the owner's decision it became a link too. On the owner's request the split and the repoint are kept, as `scripts/split-doc.mjs` and `scripts/repoint-doc-citations.mjs`, for MB.146: the repoint reads citations through `scripts/doc-citations.mjs`, which the guard now imports too, so the rewrite reaches exactly what the guard reads, and anchors come from `github-slugger`, GitHub's own algorithm, rather than a hand-kept pattern. Found along the way and fixed here, as a sub-hour fix: `src/db/repository/index.ts` still imported `users` first against a `users` ↔ `audit.ts` cycle MB.86 had removed. The import goes, with the comments and records that argued for it; the test that entering through the repository builds `users` with its audit columns stays, and a cycle put back makes it throw.
+
+**MB.146 — Split auth.md, ci.md, testing.md and graphql.md by section** · 3h
 
 _Story:_ As a developer, I want the next four largest summaries to cost a section each, so that the auth doc's 35 KB bootstrap section is read only by the task that needs it.
 
-MB.145's move for the next four, 47 sections into `claude-docs/auth/`, `ci/`, `testing/` and `graphql/`, each original file becoming its index. Nothing is condensed here: `auth.md`'s "Admin bootstrap and the self-created user" moves as is, and MB.147 shortens it.
+MB.145's move for the next four, 47 sections into `claude-docs/auth/`, `ci/`, `testing/` and `graphql/`, each original file becoming its index. Nothing is condensed here: `auth.md`'s "Admin bootstrap and the self-created user" moves as is, and MB.147 shortens it. As in MB.145, and with its `scripts/split-doc.mjs` and `scripts/repoint-doc-citations.mjs`, every section citation in code and in the other summaries then names the file its section lives in, since the guard fails one named through an index — 138 on one line alone, by the count taken during MB.145 — and a mention of a section that now sits in another file, "above", "below" or by name, becomes a link to it.
 
 _Acceptance criteria:_
 
 - The four directories hold one file per section, moved without a rewrite, and each index lists every one under its original heading
-- `tests/guards/doc-citation.test.ts` passes unchanged, and no intra-doc anchor link is left dangling
+- `tests/guards/doc-citation.test.ts` passes, no section citation in code or another summary names one of the four indexes, and no intra-doc anchor link is left dangling
+- No "above" or "below" in the four directories points into another file, and a section named in another file is a link
 
 **MB.147 — One home per fact across the docs** · 3h
 

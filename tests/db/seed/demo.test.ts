@@ -17,7 +17,7 @@ import type { IngredientSlugRow, LayerRow, SpellRow } from './types';
 // The `demo` scenario against the real schema: a layer's integrity is three
 // CHECKs, two partial indexes and a composite key no returned object can
 // demonstrate. Every table is emptied first, and `seedDemo` lays `standard`
-// down itself — claude-docs/db.md, "The demo scenario".
+// down itself — claude-docs/db/demo-scenario.md, "The demo scenario".
 
 const PROBE = 'demo_probe_acting_user';
 

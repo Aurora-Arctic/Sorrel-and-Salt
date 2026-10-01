@@ -10,7 +10,7 @@ import { spellStatus, spellVisibility, spells } from '@/modules/grimoire/schema/
 import { workspaces } from '@/modules/coven/schema/workspaces';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 
-// §5's columns, `visibility` included as of M10.3 — claude-docs/db.md,
+// §5's columns, `visibility` included as of M10.3 — claude-docs/db/grimoire.md,
 // "The grimoire".
 const OWN_COLUMNS = [
   'id',

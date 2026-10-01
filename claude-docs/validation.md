@@ -55,7 +55,8 @@ beside the field.
 The same file exports `RowId`, an id as Postgres's `uuid` type takes it. A
 schema checks an id list with it, and a service checks an id it is about to
 compare with a `uuid` column, since anything else is a driver error there.
-`assertMembership` checks every `workspaceId` with it ([`db.md`](db.md),
+`assertMembership` checks every `workspaceId` with it
+([`db/membership-proof.md`](db/membership-proof.md#what-the-check-asks),
 "What the check asks").
 
 ## The two ingredient variants
@@ -104,8 +105,9 @@ Rules both variants enforce:
   like `form`: trimmed, a blank one becomes `null`, and anything else is
   written. The project serves a wide range of practices, and any closed list
   refuses some of them. The suggestions are the admin-curated `planets` and
-  `zodiac_signs` vocabularies ([`db.md`](db.md), "The astrology
-  vocabularies"), and a value off them is as valid as one on them.
+  `zodiac_signs` vocabularies
+  ([`db/astrology-vocabularies.md`](db/astrology-vocabularies.md), "The
+  astrology vocabularies"), and a value off them is as valid as one on them.
 
 The schemas describe a whole ingredient, as the form submits it on create and
 on edit. A partial update would need its own schema: the local variant's
@@ -116,10 +118,12 @@ default would otherwise overwrite a kind the input merely left out.
 `StockInput` is what the stock mutations (M9.4) and inline row editing (M9.9)
 write through. `quantityOnHand` and `lowStockThreshold` are numbers, nullable,
 and refuse a negative value with a message. That rule is deliberately not a
-CHECK constraint ([`db.md`](db.md), "Nullability, and why zero is not the same
-as nothing"). They also refuse anything above 999,999,999.999, the most a
-`numeric(12, 3)` column holds, which Postgres would otherwise refuse with a raw
-overflow. The ceiling is computed from `schema/quantities.ts`, the same
+CHECK constraint
+([`db/stock.md`](db/stock.md#nullability-and-why-zero-is-not-the-same-as-nothing),
+"Nullability, and why zero is not the same as nothing"). They also refuse
+anything above 999,999,999.999, the most a `numeric(12, 3)` column holds,
+which Postgres would otherwise refuse with a raw overflow. The ceiling is
+computed from `schema/quantities.ts`, the same
 precision and scale the two columns are built from, so the two cannot drift. `unit` is validated against `UNITS` from `schema/units.ts`, never
 a second list. `unitDimension` is not input: the service derives it with
 `dimensionOf`. `acquiredDate` is a calendar date, `YYYY-MM-DD`.

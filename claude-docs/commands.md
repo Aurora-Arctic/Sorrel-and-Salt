@@ -58,7 +58,7 @@ local deploy command ([`ci.md`](ci.md), "Deploy").
 | `npm run db:seed:astrology`                                    | Seeds §5's planet and zodiac vocabularies, nineteen bodies and thirteen signs (MB.93) — reference data, run by `migrate.yml` in the same step as the other two                                                                                         |
 | `npm run db:studio` (`make db-studio`)                         | Drizzle Studio on **4983**, browsing the local database via `drizzle.config.ts`; the UI is `https://local.drizzle.studio`                                                                                                                              |
 | `make db-psql`                                                 | `psql` against the compose Postgres service (host only)                                                                                                                                                                                                |
-| `npm run check:destructive-ddl` (`make check-destructive-ddl`) | Scans migrations new on this branch against its Gitflow base; `-- --base <ref>` picks another, `-- --all` audits every committed migration ([`db.md`](db.md), "Expand/contract and the destructive-DDL check")                                         |
+| `npm run check:destructive-ddl` (`make check-destructive-ddl`) | Scans migrations new on this branch against its Gitflow base; `-- --base <ref>` picks another, `-- --all` audits every committed migration ([`db/expand-contract.md`](db/expand-contract.md), "Expand/contract and the destructive-DDL check")         |
 
 ## The workshop
 

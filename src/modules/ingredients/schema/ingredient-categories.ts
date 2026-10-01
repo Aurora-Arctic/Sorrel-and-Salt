@@ -5,7 +5,7 @@ import { ingredients } from './ingredients';
 
 // An ingredient is protective *and* cleansing (story 22). Hard-deleted
 // (MB.34): `auditStampColumns`, no `deleted_at`, no partial index
-// (claude-docs/db.md, "Hard delete on two join tables").
+// (claude-docs/db/hard-delete-join-tables.md, "Hard delete on two join tables").
 export const ingredientCategories = pgTable(
   'ingredient_categories',
   {

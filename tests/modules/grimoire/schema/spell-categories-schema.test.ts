@@ -25,7 +25,7 @@ describe('spell_categories schema', () => {
   const { byName, indexes, primaryKeys, checks, foreignKeyByColumn } = tableFacts(spellCategories);
 
   // Four stamps and no tombstone (MB.34): a removed assignment leaves no row —
-  // claude-docs/db.md, "Hard delete on two join tables".
+  // claude-docs/db/hard-delete-join-tables.md, "Hard delete on two join tables".
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...STAMP_COLUMNS].sort());
   });

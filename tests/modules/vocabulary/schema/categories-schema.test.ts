@@ -10,7 +10,8 @@ const GROUPS_SLUG_UNIQUE = 'category_groups_slug_unique';
 const CATEGORIES_SLUG_UNIQUE = 'categories_slug_unique';
 
 // Names a hand-ordering column usually takes; §5 lists none, since groups and
-// categories sort by name — claude-docs/db.md, "Categories, and the two group vocabularies".
+// categories sort by name — claude-docs/db/categories.md, "Categories, and the
+// two group vocabularies".
 const ORDERING_COLUMNS = ['order', 'position', 'sort', 'sort_order', 'rank', 'display_order'];
 
 describe('category_groups schema', () => {

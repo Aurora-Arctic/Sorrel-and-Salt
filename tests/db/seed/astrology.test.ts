@@ -10,7 +10,7 @@ import { slugify } from '@/lib/slugify';
 import type { VocabularyRow } from './types';
 
 // §5's planet and zodiac vocabularies, asserted against §5's own table rather
-// than a copy, against the real tables emptied first — claude-docs/db.md,
+// than a copy, against the real tables emptied first — claude-docs/db/astrology-vocabulary-seed.md,
 // "The astrology vocabulary seed".
 
 const DESIGN_DOC = fromRoot('claude-docs/DESIGN.md');

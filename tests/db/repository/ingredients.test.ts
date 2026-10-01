@@ -19,7 +19,7 @@ import { makeIngredient } from '../../support/fixtures';
 import type { ConnectionArgs, Page, PageCount } from '@/lib/types';
 import type { Walk } from './types';
 
-// The compendium read's two finders (claude-docs/db.md, "The compendium
+// The compendium read's two finders (claude-docs/db/compendium-read.md, "The compendium
 // read"): the public list under its filters, and one row by id in the
 // compendium or a proof's coven. Every expected order comes from SQL, because
 // the database collates `en_US.utf8` and JS does not.

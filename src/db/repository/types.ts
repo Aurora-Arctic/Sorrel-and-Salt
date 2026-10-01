@@ -34,7 +34,7 @@ export type Unscoped = { workspaceId?: never };
 export type TwoTier = { workspaceId: AnyPgColumn<{ notNull: false }> };
 
 // And once more for visibility (M10.3), so that a table goes through exactly
-// one finder — claude-docs/db.md, "Spell visibility". `spells` is
+// one finder — claude-docs/db/spell-visibility.md, "Spell visibility". `spells` is
 // workspace-scoped *and* carries a per-row reader rule, so `NotVisibilityScoped`
 // takes it off the generic scoped finders and `findManySpells`/`findOneSpell`
 // name it directly; the two join tables carry a `spell_id` and no workspace of
@@ -122,7 +122,7 @@ export interface KeysetCount {
  * How `selectFrom` runs a trigram match: `%` and `<%` in its `where` mean
  * `select.ts`'s `SIMILARITY_THRESHOLD` and `WORD_SIMILARITY_THRESHOLD`, and the first `limit` rows come back in
  * `orderBy`'s order. Never a `similarity(a, b) > n` comparison in the `where`:
- * no trigram index can answer a function call (claude-docs/db.md, "Fuzzy
+ * no trigram index can answer a function call (claude-docs/db/fuzzy-matching.md, "Fuzzy
  * matching").
  */
 export interface Similarity {

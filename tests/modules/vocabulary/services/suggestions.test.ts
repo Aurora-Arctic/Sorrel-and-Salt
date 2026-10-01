@@ -345,7 +345,7 @@ describe('suggestPlanets', () => {
 });
 
 // The same service over the other table. Two tables rather than a `kind`
-// column, so a sign cannot be offered for `planet` (claude-docs/db.md, "The
+// column, so a sign cannot be offered for `planet` (claude-docs/db/astrology-vocabularies.md, "The
 // astrology vocabularies") — asserted rather than assumed.
 describe('suggestZodiacSigns', () => {
   it('offers a sign by its description, and never as a planet', async () => {

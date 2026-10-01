@@ -24,7 +24,7 @@ import type { ImportEdge } from './types';
 //
 // The last two blocks are different boundaries in the same place. The
 // repository is a folder whose files import each other's builders, so only
-// its `index.ts` may be imported from outside it (claude-docs/db.md,
+// its `index.ts` may be imported from outside it (claude-docs/db/soft-delete.md,
 // "Soft-delete filtering"). And `ingredients` holds two tiers in one table,
 // the compendium tier being the one a later extraction would take out
 // (claude-docs/modules.md, "The tier seam"): a function in `src/db/repository/`
@@ -202,7 +202,7 @@ describe('the module boundary (claude-docs/modules.md)', () => {
       ]),
     );
     expect(EDGES.map(describeEdge)).toContain(
-      `${REPOSITORY}/index.ts → src/modules/identity/schema/users`,
+      `${REPOSITORY}/users.ts → src/modules/identity/schema/users`,
     );
   });
 
@@ -244,7 +244,7 @@ describe('the module boundary (claude-docs/modules.md)', () => {
   });
 });
 
-describe('the repository’s surface (claude-docs/db.md)', () => {
+describe('the repository’s surface (claude-docs/db/repository-files.md)', () => {
   const inside = (path: string) => path.startsWith(`${REPOSITORY}/`);
 
   // Precondition: the folder's files do import each other, so an empty result

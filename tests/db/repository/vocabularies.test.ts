@@ -8,7 +8,7 @@ import type { IngredientFormValueRow } from '@/modules/vocabulary';
 
 // The curated form vocabulary as `ingredientFormValues` pages it: every live
 // form whose group is live too, in (name, id) order — the same "curated"
-// `findVocabularySuggestions` means (claude-docs/db.md, "The compendium read").
+// `findVocabularySuggestions` means (claude-docs/db/compendium-read.md, "The compendium read").
 
 let sql: ReturnType<typeof postgres>;
 

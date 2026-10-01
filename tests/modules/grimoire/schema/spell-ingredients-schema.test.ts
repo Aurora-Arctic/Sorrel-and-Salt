@@ -25,7 +25,7 @@ const OWN_COLUMNS = [
 ];
 
 // A removed layer is a tombstone that must not hold its depth, so the key is a
-// surrogate id and the layer is unique among live rows — claude-docs/db.md,
+// surrogate id and the layer is unique among live rows — claude-docs/db/grimoire.md,
 // "Layer order is the identity, and what that costs the reorder".
 const PRIMARY_KEY = 'spell_ingredients_pkey';
 const LAYER_INDEX = 'spell_ingredients_spell_id_layer_order_unique';
