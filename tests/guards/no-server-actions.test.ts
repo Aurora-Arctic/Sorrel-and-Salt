@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
 // A write reaches the database through `/api/graphql` and nothing else
-// (CLAUDE.md rule 1; claude-docs/graphql.md, "The two transports"). A server
+// (CLAUDE.md rule 1; claude-docs/graphql/two-transports.md, "The two transports"). A server
 // action is the one way a page could write without it, and it is a directive
 // rather than an import, so no `no-restricted-imports` rule will ever see one.
 // Untracked files are scanned too, for the reason slug-rule.test.ts gives.

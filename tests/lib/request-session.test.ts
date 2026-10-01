@@ -156,7 +156,7 @@ describe('requireSession', () => {
 
 // The `/admin` guard (M5.4): a signed-in non-admin is answered with Next's 403
 // page rather than a redirect or a 404, since everyone knows the path exists
-// (claude-docs/auth.md, "The admin guard").
+// (claude-docs/auth/admin-guard.md, "The admin guard").
 describe('requireAdminSession', () => {
   it('returns the session of an admin, without redirecting or refusing', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('admin'));

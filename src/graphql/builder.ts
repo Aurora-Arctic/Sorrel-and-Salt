@@ -31,7 +31,7 @@ export function createBuilder() {
     defaultFieldNullability: false,
     // Cost is priced here rather than by graphql-armor, which runs before
     // variables are bound and so prices `first: $n` at one row
-    // (claude-docs/graphql.md, "Protections").
+    // (claude-docs/graphql/protections.md, "Protections").
     complexity: {
       limit: { complexity: MAX_COST },
     },

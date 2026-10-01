@@ -16,7 +16,7 @@ import type { Profile } from '../support/types';
 
 // Story 58, through Better Auth's real endpoints: an OAuth sign-up mails a
 // link, and following it verifies the address only from a session holding
-// that account (claude-docs/auth.md, "First-party verification").
+// that account (claude-docs/auth/admin-bootstrap.md, "First-party verification").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));

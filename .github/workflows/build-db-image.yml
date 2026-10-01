@@ -1,7 +1,7 @@
 name: Build DB Image
 
 # Builds Docker/Dockerfile.postgres and publishes it to GHCR for CI;
-# docker-compose.yaml builds the same file locally. claude-docs/ci.md,
+# docker-compose.yaml builds the same file locally. claude-docs/ci/database-image.md,
 # "Database image" is the walkthrough.
 #
 # Content-addressed tag, no `latest`; the build-image action skips a tag

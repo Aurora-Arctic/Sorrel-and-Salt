@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import ForbiddenPage from '@/app/forbidden';
 
 // Next renders this file, with a 403, wherever `forbidden()` is thrown — today
-// only by the `/admin` guard (claude-docs/auth.md, "The admin guard").
+// only by the `/admin` guard (claude-docs/auth/admin-guard.md, "The admin guard").
 
 describe('the forbidden page', () => {
   it('is the not-authorized page, inside the main landmark', () => {

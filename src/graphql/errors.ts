@@ -4,7 +4,7 @@ import { Forbidden, NotFound, ValidationError } from '../lib/errors';
 import type { ErrorExtensions } from './types';
 
 // The transport's half of src/lib/errors.ts: each service error leaves with a
-// code, and anything else leaves masked (claude-docs/graphql.md, "Errors").
+// code, and anything else leaves masked (claude-docs/graphql/errors.md, "Errors").
 
 function extensionsFor(error: unknown): ErrorExtensions | null {
   if (error instanceof ValidationError) {

@@ -1,7 +1,7 @@
 /**
  * Assert, and report on, the environment `vercel pull` wrote — run by
  * deploy.yml and migrate.yml before anything consumes that file
- * (claude-docs/ci.md, "Deploy").
+ * (claude-docs/ci/deploy.md, "Deploy").
  *
  * A required key that is missing, empty, a placeholder or not a connection
  * string fails the job with its own named cause; every key the pull returned

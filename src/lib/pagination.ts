@@ -8,7 +8,7 @@ import type { ConnectionArgs, Cursor, PageRequest, PageEntry, Page } from './typ
 
 // CLAUDE.md rule 8, the one pagination rule: the numbers, the cursor codec,
 // and the page a connection is built from; the shapes they pass are in
-// `types.ts`. claude-docs/graphql.md, "Pagination".
+// `types.ts`. claude-docs/graphql/pagination.md, "Pagination".
 
 export const DEFAULT_PAGE_SIZE = 25;
 /** The hard server-side maximum. A client asking for more gets this many, not an error. */

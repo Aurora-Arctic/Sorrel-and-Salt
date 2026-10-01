@@ -44,7 +44,8 @@ describe('auth-client', () => {
     });
   });
 
-  // The account page's two calls (claude-docs/auth.md, "Linking a second provider").
+  // The account page's two calls (claude-docs/auth/admin-bootstrap.md, "Linking
+  // a second provider").
   it('posts a link to /api/auth/link-social with the provider and the account page as both landings', async () => {
     const fetchMock = vi.fn(
       async (_url: string, _init?: RequestInit) =>

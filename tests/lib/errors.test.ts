@@ -45,7 +45,7 @@ describe('NotFound', () => {
 describe('telling the two apart', () => {
   // Separate types because a route decides differently: /coven/[slug]
   // answers 404 to a non-member, /admin a styled refusal.
-  // claude-docs/auth.md, "The service-level session, and the three errors".
+  // claude-docs/auth/service-session.md, "The service-level session, and the three errors".
   it('a Forbidden is not a NotFound, and a NotFound is not a Forbidden', () => {
     expect(new Forbidden()).not.toBeInstanceOf(NotFound);
     expect(new NotFound()).not.toBeInstanceOf(Forbidden);

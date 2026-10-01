@@ -50,7 +50,7 @@ describe('the GraphQL request context', () => {
   });
 
   // Bound to the request, since the change link it mints carries the
-  // request's own host (claude-docs/auth.md, "The email page").
+  // request's own host (claude-docs/auth/admin-bootstrap.md, "The email page").
   it('exposes a verification sender, one per request', async () => {
     sessionFromHeaders.mockResolvedValue(null);
 

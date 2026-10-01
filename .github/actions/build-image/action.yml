@@ -3,7 +3,7 @@ description: >-
   Computes a content-addressed GHCR tag for one of the CI images, logs in,
   and builds and pushes it only when that tag is not already published.
   Shared by build-image.yml, build-e2e-image.yml and build-db-image.yml;
-  claude-docs/ci.md, "Composite actions" is the walkthrough.
+  claude-docs/ci/composite-actions.md, "Composite actions" is the walkthrough.
 
 # The caller checks out first (a local action needs the repo on disk) and
 # passes `hashFiles()` in, since that function takes literal globs and the
@@ -99,6 +99,6 @@ runs:
         tags: ${{ steps.tag.outputs.image }}
         # In the registry, not `type=gha`: the Actions cache keeps a PR's
         # entries to that PR. `mode=max` caches the stages before the target
-        # too. claude-docs/ci.md, "Composite actions".
+        # too. claude-docs/ci/composite-actions.md, "Composite actions".
         cache-from: type=registry,ref=${{ steps.tag.outputs.cache }}
         cache-to: type=registry,ref=${{ steps.tag.outputs.cache }},mode=max

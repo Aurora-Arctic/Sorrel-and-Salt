@@ -11,7 +11,7 @@ import type { SocialProvider } from './types';
 // lives in social-providers-config.ts, which nothing client-side may import
 // (.oxlintrc.json's no-restricted-imports).
 //
-// Apple was considered and dropped (claude-docs/auth.md, "Social providers"):
+// Apple was considered and dropped (claude-docs/auth/social-providers.md, "Social providers"):
 // its client secret is a JWT Apple caps at six months, expiring silently
 // rather than failing loudly, on top of a paid Developer Program membership
 // the other four don't need.

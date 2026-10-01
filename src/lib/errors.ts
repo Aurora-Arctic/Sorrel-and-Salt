@@ -5,7 +5,7 @@ import type { ValidationIssue } from './types';
 // browser sees; types rather than messages so a test survives a rewording.
 // Neither type carries a status code or a GraphQL error code: a seed or a
 // script has no use for one. The code is attached on the way out, by
-// src/graphql/errors.ts in the /api/graphql route. See claude-docs/auth.md,
+// src/graphql/errors.ts in the /api/graphql route. See claude-docs/auth/service-session.md,
 // "The service-level session, and the three errors". `InvalidCursor`, below
 // them, is bad input the pagination helper reports on its own.
 

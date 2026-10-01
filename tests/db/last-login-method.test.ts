@@ -18,7 +18,7 @@ import type { Profile } from '../support/types';
 
 // Story 1, through Better Auth's real endpoints: the lastLoginMethod plugin
 // writes a readable cookie naming the provider whenever a callback sets the
-// session, and at no other point (claude-docs/auth.md, "Plugins").
+// session, and at no other point (claude-docs/auth/plugins.md, "Plugins").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));

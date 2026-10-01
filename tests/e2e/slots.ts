@@ -4,7 +4,7 @@ import type { SlotEnv } from './types';
 // One `next start` and one database per worker slot, as each Vitest pool slot
 // has a database — but a server as well, because the code under test runs in
 // the server, which reads `DATABASE_URL` once at boot
-// (claude-docs/testing.md, "E2E"). The servers are declared up front, so the
+// (claude-docs/testing/e2e.md, "E2E"). The servers are declared up front, so the
 // worker count is fixed here rather than chosen by Playwright.
 
 /** Not the dev server's 8000, so `npm run dev` and an e2e run sit side by side. */
@@ -56,7 +56,7 @@ export function currentSlot(env: SlotEnv = process.env, slots = E2E_SLOTS): numb
 
 // Set only by the `devcontainer` compose service: the browser then runs in
 // the `playwright-server` service while the runner stays local, which is why
-// `webServer`'s readiness poll stays on `localhost`. claude-docs/testing.md,
+// `webServer`'s readiness poll stays on `localhost`. claude-docs/testing/e2e.md,
 // "E2E".
 export const wsEndpoint = process.env.PLAYWRIGHT_WS_ENDPOINT;
 

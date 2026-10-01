@@ -9,7 +9,7 @@ import type { Diagnostic } from './types';
 // (CLAUDE.md rule 1): `.oxlintrc.json`'s override for `src/graphql`, `src/app`,
 // `src/components` and a module's `graphql/` and `loaders/` bans a runtime import of anything under `src/db`, so a
 // service is the only route from either transport to the database
-// (claude-docs/graphql.md, "The access boundary"). `import type` stays legal —
+// (claude-docs/graphql/access-boundary.md, "The access boundary"). `import type` stays legal —
 // it is erased at compile time and can reach nothing, and it is how a resolver
 // names a row type. A module's `schema/` files are reachable at runtime from
 // above: a table object is inert without the client or `drizzle-orm`, and both

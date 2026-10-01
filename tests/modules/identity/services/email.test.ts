@@ -14,7 +14,7 @@ import type { EmailUserRow } from './types';
 // Story 59's service half: asking for an address writes nothing to
 // `users.email` — the address becomes the row's at verification — so an
 // established account never re-enters the provisional sweep
-// (claude-docs/auth.md, "The email page"). What goes out is the sender's
+// (claude-docs/auth/admin-bootstrap.md, "The email page"). What goes out is the sender's
 // business, which is why it is a fake here.
 
 const DOMAIN = '@email-service.test';

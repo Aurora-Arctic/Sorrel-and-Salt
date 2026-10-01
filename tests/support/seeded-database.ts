@@ -4,7 +4,7 @@ import postgres from 'postgres';
 // The one place a test database is made from the migrated schema and the
 // `standard` scenario; db-global-setup.ts and tests/e2e/global-setup.ts both clone
 // from what it builds. Built at test-run setup rather than baked into the
-// Postgres image: claude-docs/testing.md, "Where tests live".
+// Postgres image: claude-docs/testing/where-tests-live.md, "Where tests live".
 //
 // Migrate and seed are spawned as the same two npm scripts compose's `db-init`
 // runs, not imported: that is what makes local and CI run the same migrations

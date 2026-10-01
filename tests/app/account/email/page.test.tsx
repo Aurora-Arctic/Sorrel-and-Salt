@@ -7,7 +7,7 @@ import type { Session } from '@/lib/session';
 // Where the email page's Continue goes once a followed link has proved the
 // address: the `next` the account was sent with, or with none, the landing
 // for the role it holds now — a primary admin promoted by that very link
-// included (claude-docs/auth.md, "The email page"). The session and the row
+// included (claude-docs/auth/admin-bootstrap.md, "The email page"). The session and the row
 // are mocked; what they are is tests/lib/request-session.test.ts's and the
 // identity service's.
 

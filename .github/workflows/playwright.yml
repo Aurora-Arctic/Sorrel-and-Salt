@@ -1,7 +1,7 @@
 name: Playwright E2E
 
 # The Playwright e2e suite against a built and served site. workflow_call
-# only, from pr-gate. claude-docs/ci.md, "Reusable checks" is the walkthrough.
+# only, from pr-gate. claude-docs/ci/reusable-checks.md, "Reusable checks" is the walkthrough.
 # Runs in Docker/Dockerfile.e2e's image, not the Alpine `testing` one:
 # Playwright's Chromium has no musl support.
 on:

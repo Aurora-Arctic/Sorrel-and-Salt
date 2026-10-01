@@ -6,7 +6,7 @@ import { REPO_ROOT } from '../support/paths';
 import type { Diagnostic } from './types';
 
 // A service receives the session as its first argument; it never reads the
-// request to find one (claude-docs/auth.md, "Route protection"). A service
+// request to find one (claude-docs/auth/route-protection.md, "Route protection"). A service
 // that could would stop being callable from a test, a script or the GraphQL
 // context, and `asUser(A)` would stop meaning anything. `.oxlintrc.json`'s
 // `src/modules/*/services/**` override makes that an import error. The override

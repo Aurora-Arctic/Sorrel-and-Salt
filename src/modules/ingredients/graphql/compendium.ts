@@ -6,7 +6,7 @@ import { IngredientRef } from './ingredient';
 // scope (MB.80); tests/db/graphql-query-scopes.test.ts holds every other
 // query to its refusal. The filtering is the service's, in SQL: the browser
 // never holds more than a page, so it cannot be the search
-// (claude-docs/graphql.md, "compendium, ingredient and ingredientFormValues").
+// (claude-docs/graphql/schema.md, "compendium, ingredient and ingredientFormValues").
 
 builder.queryField('compendium', (t) =>
   t.pagedConnection({
@@ -18,7 +18,7 @@ builder.queryField('compendium', (t) =>
     },
     resolve: (_root, { query, categoryIds, form }, page) =>
       listCompendium({ query, categoryIds, form }, page),
-    // "Page X of Y" (claude-docs/graphql.md, "Pagination").
+    // "Page X of Y" (claude-docs/graphql/pagination.md, "Pagination").
     count: (_root, { query, categoryIds, form }, start) =>
       countCompendium({ query, categoryIds, form }, start),
     edgeFields: (t) => ({

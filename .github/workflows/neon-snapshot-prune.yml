@@ -2,7 +2,7 @@ name: Neon Snapshot Prune
 
 # Prunes migrate.yml's `snapshot-*` Neon branches: the free tier caps a
 # project at 10 branches, shared with production, staging and every hotfix
-# preview. claude-docs/ci.md, "Neon snapshots". The only scheduled workflow;
+# preview. claude-docs/ci/neon-snapshots.md, "Neon snapshots". The only scheduled workflow;
 # guarded the same warn-and-skip way as migrate.yml's Neon step.
 
 on:

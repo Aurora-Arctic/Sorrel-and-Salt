@@ -4,7 +4,7 @@ import { fromRoot } from '../support/paths';
 
 // Story 1's page exists (M2.6) — Better Auth, the current provider roster
 // (Google, Discord, Facebook, Microsoft) and the users table are all live
-// (M2.2-M2.6; claude-docs/auth.md, "Social providers"). Story 2 is blocked on
+// (M2.2-M2.6; claude-docs/auth/social-providers.md, "Social providers"). Story 2 is blocked on
 // UI Wave 10 hasn't built yet, and its check reads the route's own source
 // rather than importing or rendering it: the page doesn't exist yet, and
 // importing one that isn't there would fail typecheck instead of the test it

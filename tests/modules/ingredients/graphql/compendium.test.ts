@@ -77,7 +77,7 @@ function run(
 }
 
 // Fifty, not the maximum: a page of 100 with categories and their groups costs
-// more than MAX_COST allows, by design (claude-docs/graphql.md, "Protections"),
+// more than MAX_COST allows, by design (claude-docs/graphql/protections.md, "Protections"),
 // and the seed holds 26.
 async function nodesOf(variables: Record<string, unknown>, session: Session | null = null) {
   const result = await run(session, { first: 50, ...variables });

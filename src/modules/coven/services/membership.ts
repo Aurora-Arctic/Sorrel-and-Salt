@@ -20,7 +20,7 @@ declare const brand: unique symbol;
 // pages ask and whatever permission each asks for: the check below the lookup
 // stays uncached. Keyed by the two ids rather than the session, which
 // `cache()` would compare by identity. Outside a render — the GraphQL route
-// handler included — it is the plain finder (claude-docs/graphql.md, "The two
+// handler included — it is the plain finder (claude-docs/graphql/two-transports.md, "The two
 // transports").
 const workspaceRole = cache(findWorkspaceRole);
 
@@ -74,7 +74,7 @@ export async function assertMembership(
   const role = await workspaceRole(session.userId, workspaceId);
 
   // Bare, and deliberately the same refusal a wrong id earns: whether a
-  // workspace exists is itself private (claude-docs/auth.md).
+  // workspace exists is itself private (claude-docs/auth/service-session.md).
   if (!role) throw new Forbidden();
 
   if (!rolePermits(role, permission)) {

@@ -13,7 +13,7 @@ run-name: >-
 
 # The gate on every PR into `main`, `staging` or `release/*`. format, audit
 # and gitflow always run; the rest are path-filtered by `changes`.
-# claude-docs/ci.md, "Aggregating workflows" is the walkthrough.
+# claude-docs/ci/aggregating-workflows.md, "Aggregating workflows" is the walkthrough.
 #
 # NO JOB HERE MAY CARRY A JOB-LEVEL `if:`. It makes GitHub report the check
 # under a bare name ("checks" instead of "checks / lint") that never
@@ -191,7 +191,7 @@ jobs:
 
   # Cancellable like every job here: a cancelled build leaves no tag and no
   # cache index behind, so the next run rebuilds rather than reusing half an
-  # image. claude-docs/ci.md, "Aggregating workflows".
+  # image. claude-docs/ci/aggregating-workflows.md, "Aggregating workflows".
   build-image:
     needs: [changes]
     uses: ./.github/workflows/build-image.yml

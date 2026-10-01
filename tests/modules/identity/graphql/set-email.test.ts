@@ -9,7 +9,7 @@ import { B, asUser } from '../../../support/as-user';
 
 // `setEmail` over the real schema, with a sender that records what it was
 // asked to mail: the mutation's `next` is where the link lands afterwards
-// (claude-docs/auth.md, "The email page").
+// (claude-docs/auth/admin-bootstrap.md, "The email page").
 
 const NEW = 'new@set-email.test';
 

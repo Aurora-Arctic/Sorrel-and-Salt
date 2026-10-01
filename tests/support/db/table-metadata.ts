@@ -4,7 +4,7 @@ import type { ForeignKeyFacts } from './types';
 
 // Transcribed, never read off `src/db/audit.ts`: a table compared against
 // `Object.keys(auditColumns)` matches for any value of `auditColumns`, an
-// empty one included (claude-docs/testing.md, "The db test harness").
+// empty one included (claude-docs/testing/db-harness.md, "The db test harness").
 export const STAMP_COLUMNS: readonly string[] = [
   'created_at',
   'created_by',

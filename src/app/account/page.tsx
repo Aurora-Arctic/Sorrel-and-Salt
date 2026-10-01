@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: 'Sign-in methods — Sorrel & Salt',
 };
 
-// Where a second provider is added (claude-docs/auth.md, "Linking a second
+// Where a second provider is added (claude-docs/auth/admin-bootstrap.md, "Linking a second
 // provider"). A link lands back here, with `?error=` when it failed.
 export default async function AccountPage({ searchParams }: AccountPageProps) {
   const [, params] = await Promise.all([requireSession(), searchParams]);

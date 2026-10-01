@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { mergeFixture, stated } from './merge';
 
 // The cases where "merge" and "replace" disagree, each a decision:
-// claude-docs/testing.md, "Overrides merge; arrays replace".
+// claude-docs/testing/fixture-factories.md, "Overrides merge; arrays replace".
 
 describe('mergeFixture', () => {
   it('keeps every default the override does not mention', () => {

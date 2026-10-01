@@ -16,7 +16,7 @@ import type { Profile } from '../support/types';
 // sign-in has run — lands on /admin, and everyone else on /coven. An
 // unverified account lands on the email page first, whatever its role. Driven
 // through Better Auth's real endpoints, as SignInPanel starts them
-// (claude-docs/auth.md, "Route protection").
+// (claude-docs/auth/route-protection.md, "Route protection").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));

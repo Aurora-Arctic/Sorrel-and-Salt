@@ -23,7 +23,7 @@ const subscribeToNothing = () => () => {};
  * empty error shell and has the browser render the page itself; a script React
  * creates there never runs, and React warns. The server snapshot is what the
  * server and hydration see, so the scripts exist exactly as long as the
- * server's HTML does (claude-docs/auth.md, "The admin guard").
+ * server's HTML does (claude-docs/auth/admin-guard.md, "The admin guard").
  */
 export default function PrePaintScripts() {
   const fromServerHtml = useSyncExternalStore(

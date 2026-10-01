@@ -25,10 +25,10 @@ const nextConfig: NextConfig = {
     // (claude-docs/debugging.md).
     turbopackServerFastRefresh: false,
     // `forbidden()` and `src/app/forbidden.tsx`: the `/admin` guard's 403
-    // (claude-docs/auth.md, "The admin guard").
+    // (claude-docs/auth/admin-guard.md, "The admin guard").
     authInterrupts: true,
     // Off for the e2e servers, which share one build directory and so would
-    // share a data cache flushed to it (claude-docs/testing.md, "E2E"). Vercel
+    // share a data cache flushed to it (claude-docs/testing/e2e.md, "E2E"). Vercel
     // ignores it, keeping its data cache off the function's disk.
     isrFlushToDisk: process.env.NEXT_ISR_FLUSH_TO_DISK !== 'false',
   },

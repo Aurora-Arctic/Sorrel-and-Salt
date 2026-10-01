@@ -1,7 +1,7 @@
 name: Vitest
 
 # The Vitest suite with coverage, then the acceptance story checklist.
-# workflow_call only, from pr-gate. claude-docs/ci.md, "Reusable checks" is
+# workflow_call only, from pr-gate. claude-docs/ci/reusable-checks.md, "Reusable checks" is
 # the walkthrough. `services: postgres:` is why the `db` project can run; the
 # image is built once by the caller and shared with playwright.yml.
 on:
@@ -50,7 +50,7 @@ jobs:
     # runners, which are free and unlimited on a public repo, where
     # Blacksmith's free tier is capped. The work runs in `container:`, so the
     # host's 24.04 (Blacksmith has no 26.04) is only Docker and the runner
-    # agent. claude-docs/ci.md, "Runner budget".
+    # agent. claude-docs/ci/runner-budget.md, "Runner budget".
     runs-on: blacksmith-8vcpu-ubuntu-2404
     container:
       image: ${{ inputs.image }}
@@ -112,7 +112,7 @@ jobs:
       # deliberately red (claude-docs/tasks/m2.md, M2 sequencing), so a failing story cannot
       # fail this job until M2 closes — `steps.stories.outcome` below still
       # reads the real result, only `conclusion` (what gates the job) is
-      # affected. Revert once every M2 story is green (claude-docs/testing.md,
+      # affected. Revert once every M2 story is green (claude-docs/testing/acceptance.md,
       # "Acceptance").
       - name: Run acceptance stories
         id: stories

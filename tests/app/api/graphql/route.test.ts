@@ -175,7 +175,7 @@ describe('/api/graphql', () => {
     expect(result.errors[0].extensions).toEqual({ code: 'FORBIDDEN' });
   });
 
-  // The mapping is claude-docs/graphql.md's "Errors"; tests/graphql/errors.test.ts
+  // The mapping is claude-docs/graphql/errors.md's "Errors"; tests/graphql/errors.test.ts
   // covers each type. This is the route carrying it: `me` signed out is refused
   // by its scope, which throws the same `Forbidden` a service does.
   it.each(['production', 'development'])('answers a refusal with its code in %s', async (env) => {
