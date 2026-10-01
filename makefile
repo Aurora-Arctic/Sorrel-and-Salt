@@ -193,7 +193,7 @@ docker-codegen: playwright-server-up
 		npx playwright codegen --target playwright-test \
 		--output tests/e2e/$(NAME).spec.ts http://sorrel-app:8000
 
-# Local CI via act — claude-docs/ci.md, "Running CI locally". `act-image`
+# Local CI via act — claude-docs/ci/running-ci-locally.md, "Running CI locally". `act-image`
 # builds the `testing` target under the tag the job asks for, so GHCR is
 # never reached and the `credentials:` block is a no-op (hence the dummy
 # token); checkout-to-app resolves by remote ref, so act needs a clone at its

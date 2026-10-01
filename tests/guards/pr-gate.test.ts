@@ -8,10 +8,10 @@ import type { GateWorkflow } from './types';
 // A closed PR's gate run gates nothing, so it is cancelled rather than run
 // out, and an edited PR's gate run must not cancel the one in flight, since
 // an edit changes nothing the gate checks unless it retargeted the base
-// (claude-docs/ci.md, "Aggregating workflows"). Nothing fails if that drifts —
-// a dropped trigger or a reordered step only spends CI again, and on a metered
-// runner that is a bill. This reads the workflow as data: it proves what the
-// file says, not that GitHub evaluates it as written.
+// (claude-docs/ci/aggregating-workflows.md, "Aggregating workflows"). Nothing
+// fails if that drifts — a dropped trigger or a reordered step only spends CI
+// again, and on a metered runner that is a bill. This reads the workflow as
+// data: it proves what the file says, not that GitHub evaluates it as written.
 
 /** The first step of `changes`: the one place a run decides not to gate. */
 const SELF_CANCEL_IF =

@@ -34,7 +34,7 @@ import type { Reference } from './types';
 // `...auditColumns` fails here, where a per-file copy would simply not exist.
 // Both halves are asserted because they can disagree — a spread removed from
 // a schema file leaves the migrated database's columns standing
-// (claude-docs/testing.md, "The db test harness").
+// (claude-docs/testing/db-harness.md, "The db test harness").
 
 // Table objects, transcribed: an empty list is a failing test, not a vacuous pass.
 const AUDITED: PgTable[] = [

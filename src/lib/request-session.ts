@@ -12,7 +12,7 @@ import type { LinkedAccount, ProviderId } from './types';
 
 // Where the request becomes a service-level `Session`: server components and
 // the GraphQL context call this, then hand the result to a service. A service
-// never calls it — the import is banned there (claude-docs/auth.md, "Route
+// never calls it — the import is banned there (claude-docs/auth/route-protection.md, "Route
 // protection").
 
 const USER_ROLES: readonly UserRole[] = ['user', 'admin'];
@@ -56,7 +56,7 @@ export async function getSession(): Promise<Session | null> {
  * path back as `?next=` when there is none, and to the email page, carrying
  * the same, while the account's address is unverified — a provisional account
  * can do nothing else, so no other page shows it anything
- * (claude-docs/auth.md, "The email page"). The call every protected page
+ * (claude-docs/auth/admin-bootstrap.md, "The email page"). The call every protected page
  * makes before it reads anything; the email page is the one it lets through.
  */
 export async function requireSession(): Promise<Session> {
@@ -72,7 +72,7 @@ export async function requireSession(): Promise<Session> {
 /**
  * `requireSession()`, then the site-role check: a signed-in non-admin gets
  * Next's forbidden page, with a 403, rather than a redirect or a 404 —
- * `/admin` is a path everyone already knows (claude-docs/auth.md, "The admin
+ * `/admin` is a path everyone already knows (claude-docs/auth/admin-guard.md, "The admin
  * guard"). The layout under `/admin` calls it, and so does every page there,
  * because a layout does not re-run on client-side navigation.
  */

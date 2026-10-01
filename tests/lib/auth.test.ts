@@ -5,7 +5,7 @@ import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 
 // Better Auth's own production check swallows its rejection and answers 200
 // on the default secret, so the repo enforces it synchronously before
-// `betterAuth()`: claude-docs/auth.md, "Config".
+// `betterAuth()`: claude-docs/auth/config.md, "Config".
 describe('auth secret', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -33,7 +33,7 @@ describe('auth secret', () => {
 // configured provider. The roster is Google, Discord, Facebook and Microsoft
 // (M2.6) — GitHub (M2.5) was removed when the roster was re-scoped, and
 // Apple was considered and dropped for a client secret that expires every
-// six months (claude-docs/auth.md, "Social providers").
+// six months (claude-docs/auth/social-providers.md, "Social providers").
 describe('social providers', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -348,7 +348,7 @@ describe('options that would move the primary admin', () => {
   });
 });
 
-// The explicit link from a signed-in session (claude-docs/auth.md, "Linking a
+// The explicit link from a signed-in session (claude-docs/auth/admin-bootstrap.md, "Linking a
 // second provider"). Neither option is read at sign-in.
 describe('linking a second provider', () => {
   afterEach(() => {
@@ -370,7 +370,7 @@ describe('linking a second provider', () => {
   });
 });
 
-// First-party verification (claude-docs/auth.md, "First-party verification").
+// First-party verification (claude-docs/auth/admin-bootstrap.md, "First-party verification").
 // Each value is pinned because each one, changed, changes who can verify what.
 describe('email verification', () => {
   afterEach(() => {
@@ -438,7 +438,7 @@ describe('email verification', () => {
   });
 });
 
-// Better Auth's limiter (claude-docs/auth.md, "Rate limiting"). Each value is
+// Better Auth's limiter (claude-docs/auth/rate-limiting.md, "Rate limiting"). Each value is
 // pinned because a dependency bump moving its default would change who is
 // limited, or stop limiting anyone, with no diff here to review.
 describe('rate limiting', () => {
@@ -514,7 +514,7 @@ describe('stored OAuth tokens', () => {
 
 // The browser remembers its own last provider, and nothing about an address
 // reaches it: with `storeInDatabase` on, the plugin would add a `users` column
-// and write it on every session (claude-docs/auth.md, "Plugins").
+// and write it on every session (claude-docs/auth/plugins.md, "Plugins").
 describe('last login method', () => {
   afterEach(() => {
     vi.unstubAllEnvs();

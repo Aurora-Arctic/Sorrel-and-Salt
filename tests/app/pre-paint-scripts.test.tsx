@@ -8,7 +8,7 @@ import PrePaintScripts from '@/app/pre-paint-scripts';
 // The root layout's two pre-paint scripts run from the server's HTML. A
 // document the browser renders itself — Next's recovery when `forbidden()` or
 // `notFound()` is thrown — must not get them: React creates such a script
-// inert and warns (claude-docs/auth.md, "The admin guard").
+// inert and warns (claude-docs/auth/admin-guard.md, "The admin guard").
 
 afterEach(() => {
   vi.restoreAllMocks();

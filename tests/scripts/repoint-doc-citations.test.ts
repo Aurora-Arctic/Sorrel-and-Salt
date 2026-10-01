@@ -45,6 +45,13 @@ describe('repointCitations', () => {
     expect(count).toBe(1);
   });
 
+  it('reads a path whose code span closes before the section', () => {
+    const { text, count } = repoint(`- the page (\`${D}/things.md\`, "Beta part").\n`);
+
+    expect(text).toBe(`- the page (\`${D}/things/beta.md\`, "Beta part").\n`);
+    expect(count).toBe(1);
+  });
+
   it('leaves a citation of the whole summary, and other docs, alone', () => {
     const source = `// see ${D}/things.md and ${D}/other.md, "Alpha".\n`;
 

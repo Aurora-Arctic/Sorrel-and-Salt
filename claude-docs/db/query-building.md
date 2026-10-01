@@ -49,7 +49,8 @@ the default tier.
 | `selectFrom` unexported (M1.20) | Reaching an unfiltered read from inside the repository.                                                          |
 | Access boundary (M3.9)          | A resolver, page or component reaching the repository, or anything under `src/db`, without passing a service.    |
 
-The access boundary is described in [`graphql.md`](../graphql.md), "The access
+The access boundary is described in
+[`graphql/access-boundary.md`](../graphql/access-boundary.md), "The access
 boundary". Its second half, `server-only` on every service, stops a client
 component from importing a service at all.
 

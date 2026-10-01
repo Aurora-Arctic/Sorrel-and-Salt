@@ -12,7 +12,7 @@ import type { ScopeProbe } from './types';
 // surface, so its three queries answer a null session and every other query
 // refuses one. Every `Query` field is classified here, and the first test
 // fails on one that is not, so a field added later has to say which side it
-// is on (claude-docs/graphql.md, "Auth scopes").
+// is on (claude-docs/graphql/schema.md, "Auth scopes").
 
 let compendiumId: string;
 

@@ -4,7 +4,7 @@ import { signInAs } from './session';
 import { E2E_SLOTS, browserUrl, slotPort } from './slots';
 
 // Each worker's reseed, `signInAs` and pages reach its own slot's database and
-// server, and no other slot's (claude-docs/testing.md, "E2E").
+// server, and no other slot's (claude-docs/testing/e2e.md, "E2E").
 test.describe.configure({ mode: 'serial' });
 
 test.beforeAll(async () => {

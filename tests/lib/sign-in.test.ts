@@ -185,7 +185,7 @@ describe('signInErrorMessage', () => {
   });
 });
 
-// The account page's callback codes (claude-docs/auth.md, "Linking a second
+// The account page's callback codes (claude-docs/auth/admin-bootstrap.md, "Linking a second
 // provider"): a link lands on /account with `?error=`, never on /sign-in.
 describe('linkErrorMessage', () => {
   it('is undefined with no code, or a repeated one', () => {

@@ -3,7 +3,7 @@ name: Migrate
 # Applies pending migrations to the deploy target, then seeds the reference
 # vocabularies when `seed-reference` says so. workflow_call only, from
 # deploy.yml, which `needs:` it so a deploy never promotes past a schema its
-# migrations have not reached. claude-docs/ci.md, "Deploy" is the walkthrough.
+# migrations have not reached. claude-docs/ci/deploy.md, "Deploy" is the walkthrough.
 #
 # The seed rides in this job so it shares the migration lock and never seeds
 # mid-migration; it reports separately so a failed seed is not read as a

@@ -6,7 +6,7 @@ import type { CopyInstruction } from './types';
 
 // The CI images carry no source layer: both Dockerfiles copy the manifests,
 // run `npm ci`, and stop, so the checkout is the only source a job sees
-// (claude-docs/ci.md, "Composite actions"). A build instruction is unreachable
+// (claude-docs/ci/composite-actions.md, "Composite actions"). A build instruction is unreachable
 // from a runtime test, so this parses every `COPY`/`ADD` and checks each
 // source against an allowlist rather than a `.` denylist: `COPY src src` is
 // as much a source layer as `COPY . .`.

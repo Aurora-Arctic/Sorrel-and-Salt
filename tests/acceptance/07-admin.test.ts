@@ -22,7 +22,7 @@ import type { CategoryWrites, Stamps } from './types';
 // import that is not there fails typecheck instead of the test it belongs to,
 // the reason 01-accounts.test.ts reads a page's source rather than rendering
 // it. M5.6 replaces the lookup with the import and drops the signature stated
-// for it here (claude-docs/testing.md, "Acceptance").
+// for it here (claude-docs/testing/acceptance.md, "Acceptance").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

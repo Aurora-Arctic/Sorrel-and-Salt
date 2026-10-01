@@ -7,7 +7,7 @@ import type { ProviderId } from './types';
 // endpoint, and a change mints the change token its /verify-email endpoint
 // already honours — under the same secret and the request's own base URL, so
 // a preview host gets a link to itself. Handed to the service by the GraphQL
-// context, since a service may not import `auth` (claude-docs/auth.md, "The
+// context, since a service may not import `auth` (claude-docs/auth/admin-bootstrap.md, "The
 // email page"). `auth` is imported at call time: the GraphQL route is built
 // under NODE_ENV=production in its tests, where Better Auth refuses to start
 // without its secrets, and nothing there sends mail. Either link lands on the

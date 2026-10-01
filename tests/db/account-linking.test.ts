@@ -16,7 +16,7 @@ import type { Profile } from '../support/types';
 
 // Story 1, through Better Auth's real endpoints: a second provider is added
 // from a signed-in session with /link-social, and from then on signs in by its
-// account id (claude-docs/auth.md, "Linking a second provider").
+// account id (claude-docs/auth/admin-bootstrap.md, "Linking a second provider").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));

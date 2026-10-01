@@ -3,7 +3,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// The `/admin` guard against the built server (M5.4; claude-docs/auth.md, "The
+// The `/admin` guard against the built server (M5.4; claude-docs/auth/admin-guard.md, "The
 // admin guard"): a signed-out visitor is sent to sign in, a signed-in
 // non-admin is refused with a 403 page, and an admin sees the layout.
 test.describe.configure({ mode: 'serial' });

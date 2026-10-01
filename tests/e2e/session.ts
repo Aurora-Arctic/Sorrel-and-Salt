@@ -7,7 +7,7 @@ import { e2eDatabaseUrl } from './database';
 // the rows a Discord sign-in would leave, written straight to this worker's
 // slot database — the one its server reads — and the session cookie Better
 // Auth would have set, signed with the secret the served build shares with
-// this runner (claude-docs/testing.md, "E2E").
+// this runner (claude-docs/testing/e2e.md, "E2E").
 
 // A production build's base URL forces https (src/lib/auth.ts, "baseURL"),
 // so Better Auth names the cookie with the `__Secure-` prefix.

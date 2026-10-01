@@ -13,8 +13,9 @@
 
 It takes no props. `src/app/admin/layout.tsx` renders it above the page, after
 the guard has passed, so it appears for admins only
-([`auth.md`](../auth.md), "The admin guard"). The site-wide nav's own Admin
-entry is AppShell's (MB.7), and is shown to admins only too.
+([`auth/admin-guard.md`](../auth/admin-guard.md), "The admin guard"). The
+site-wide nav's own Admin entry is AppShell's (MB.7), and is shown to admins
+only too.
 
 ## Contracts
 

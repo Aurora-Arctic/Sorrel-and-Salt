@@ -36,7 +36,7 @@ function normalise(input: string): string {
   return input.trim().toLowerCase();
 }
 
-// The shape claude-docs/graphql.md, "Errors" describes: the first error's
+// The shape claude-docs/graphql/errors.md, "Errors" describes: the first error's
 // `extensions` carries the code and, for VALIDATION, the field errors.
 function readFailure(error: unknown): Failure {
   if (!(error instanceof ClientError)) return { alert: GENERIC_EMAIL_ERROR };

@@ -6,7 +6,7 @@ import { fromRoot } from '../support/paths';
 import type { Job, Step, VercelPull, Workflow } from './types';
 
 // Every preview `vercel pull` passes `--git-branch`, and no production one
-// does (claude-docs/ci.md, "Deploy"). Without the flag nothing fails: the pull
+// does (claude-docs/ci/deploy.md, "Deploy"). Without the flag nothing fails: the pull
 // succeeds, the deploy succeeds, and staging quietly builds against the
 // Preview-wide `DATABASE_URL` rather than its branch-scoped override. With it
 // on production the API rejects the pull outright. So each workflow pulls

@@ -20,7 +20,8 @@ export const CorrespondenceSuggestionRef = builder
   });
 
 // One type for both fields: a planet and a sign suggestion carry the same
-// three things, and neither carries a group (claude-docs/graphql.md).
+// three things, and neither carries a group (claude-docs/graphql/schema.md,
+// "planetSuggestions and zodiacSuggestions").
 const FIELDS = { planetSuggestions: suggestPlanets, zodiacSuggestions: suggestZodiacSigns };
 
 for (const [name, suggest] of Object.entries(FIELDS)) {

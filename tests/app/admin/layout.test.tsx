@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The `/admin` layout and its index page each run the guard themselves: a
 // layout does not re-run on client-side navigation, so a page that trusted it
-// would render for whoever reached it that way (claude-docs/auth.md, "The
+// would render for whoever reached it that way (claude-docs/auth/admin-guard.md, "The
 // admin guard"). What the guard decides is tests/lib/request-session.test.ts's;
 // here it is mocked, to prove each route awaits it before rendering anything.
 

@@ -9,7 +9,7 @@ import { makeIngredient, makeSpell } from '../support/fixtures';
 
 // The setup inserter for a spell, held to insert-ingredient.ts's terms: every
 // row stamped by the author, and a category name the database does not hold
-// live refused by name (claude-docs/testing.md, "Fixture factories").
+// live refused by name (claude-docs/testing/fixture-factories.md, "Fixture factories").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

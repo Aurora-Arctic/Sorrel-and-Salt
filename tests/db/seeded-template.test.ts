@@ -15,7 +15,7 @@ import {
 } from '@/db/seed/standard';
 
 // The baseline every other file under tests/db/ may assume; this one builds no
-// schema and seeds nothing — claude-docs/testing.md, "Where tests live".
+// schema and seeds nothing — claude-docs/testing/where-tests-live.md, "Where tests live".
 
 let sql: ReturnType<typeof postgres>;
 

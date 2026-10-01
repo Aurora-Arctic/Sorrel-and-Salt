@@ -16,7 +16,7 @@ import type { ProvisionalUserRow } from './types';
 
 // Story 58, through Better Auth's real endpoints: an unverified account lapses
 // one verification lifetime after its last mail, and the next OAuth callback
-// sweeps it (claude-docs/auth.md, "Provisional accounts").
+// sweeps it (claude-docs/auth/admin-bootstrap.md, "Provisional accounts").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));

@@ -9,7 +9,7 @@ import type { Step, Workflow } from './types';
 // drizzle-kit swallows the driver's error and exits 1, so an unreachable host,
 // a wrong password, an `sslmode` mismatch and a `channel_binding` parameter
 // fail identically; the probe opens the connection itself and prints the
-// driver's own error first (claude-docs/ci.md, "Deploy"). What this file pins
+// driver's own error first (claude-docs/ci/deploy.md, "Deploy"). What this file pins
 // is that the output NAMES the cause and never carries the credentials — the
 // value is masked in CI, so a message that leaked it would print `***`.
 

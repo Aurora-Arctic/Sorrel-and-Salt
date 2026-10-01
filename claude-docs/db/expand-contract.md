@@ -141,9 +141,9 @@ Destructive DDL acknowledged: <reason>
 ```
 
 (case-insensitive, a non-empty reason required) — see the script's own header
-comment for the regex and the reasoning. There's no such line format
-elsewhere in the repo to stay consistent with; this is the one place it's
-defined, so `claude-docs/ci.md` and the script both point back here.
+comment for the regex and the reasoning. There's no such line format elsewhere
+in the repo to stay consistent with; this is the one place it's defined, so
+`claude-docs/ci/reusable-checks.md` and the script both point back here.
 
 **It used to live in the PR body, and that was wrong twice over.** A PR body is
 visible from one branch base and gone on merge, so a release PR — which

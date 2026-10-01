@@ -6,7 +6,7 @@ import config from '../../vitest.config.mts';
 import { REPO_ROOT } from '../support/paths';
 
 // Every Vitest file lives under tests/, and every Playwright spec under
-// tests/e2e/ (claude-docs/testing.md, "Where tests live"). The failure is
+// tests/e2e/ (claude-docs/testing/where-tests-live.md, "Where tests live"). The failure is
 // silent either way: Vitest's `include` is scoped to `tests/` and Playwright's
 // `testDir` to `tests/e2e/`, so a test written beside its code is a file
 // nothing runs.

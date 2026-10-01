@@ -328,7 +328,7 @@ A recorded spec is a draft, not something to open a PR with as-is:
 3. If it touches the database, add `test.describe.configure({ mode: 'serial'
 })` and a `beforeAll` calling `recreateE2eDatabase()` from `./database` —
    `serial` keeps the file's tests, and its one reseed of the worker's
-   database, on one worker (`claude-docs/testing.md`, "E2E — Playwright").
+   database, on one worker (`claude-docs/testing/e2e.md`, "E2E — Playwright").
 4. Consider `assertNoAccessibilityViolations` from `./axe` for any new page.
 5. Strip codegen's redundant assertions and any brittle `nth()`-match
    locator it fell back to.

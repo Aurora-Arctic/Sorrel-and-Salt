@@ -8,7 +8,7 @@ import config from '../../codegen';
 import { fromRoot } from '../support/paths';
 import type { FileOutput } from './types';
 
-// src/gql/ is committed generated output (claude-docs/graphql.md, "Client
+// src/gql/ is committed generated output (claude-docs/graphql/client-types.md, "Client
 // types"). This regenerates it in memory from the committed SDL and fails on
 // any file that differs, is missing, or is left over — so a document added,
 // changed or removed without `npm run codegen` fails CI's vitest job. A

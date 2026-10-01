@@ -24,7 +24,7 @@ export const test = base.extend<{ coverageAutoFixture: string }, { slot: number 
       const isChromium = test.info().project.name === 'chromium';
 
       // JS only: CSS coverage has no sourcemap path back to Sass.
-      // claude-docs/testing.md, "Coverage".
+      // claude-docs/testing/coverage.md, "Coverage".
       const startCoverage = async (page: Page) => {
         await page.coverage.startJSCoverage({ resetOnNavigation: false });
       };

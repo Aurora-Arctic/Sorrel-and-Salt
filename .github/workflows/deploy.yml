@@ -1,7 +1,7 @@
 name: Deploy
 
 # The only path that ships code: vercel.json disables Vercel's Git
-# integration. claude-docs/ci.md, "Deploy" is the walkthrough.
+# integration. claude-docs/ci/deploy.md, "Deploy" is the walkthrough.
 #
 #   push to main               -> production (sorrelandsalt.com)
 #   push to staging            -> preview, aliased staging.sorrelandsalt.com

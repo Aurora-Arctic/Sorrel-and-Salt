@@ -68,7 +68,7 @@ hand has to arrive with the deploy that needs it. M4.3a's form vocabulary
 and MB.93's planet and zodiac vocabularies share that step, that gate and
 that summary — see ["The form vocabulary seed"](form-vocabulary-seed.md),
 ["The astrology vocabulary seed"](astrology-vocabulary-seed.md) and
-`claude-docs/ci.md`.
+`claude-docs/ci/deploy.md`.
 
 One rule a later scenario inherits: write through the handle, stamping via
 `applyAudit`, in `minimal.ts`'s shape.

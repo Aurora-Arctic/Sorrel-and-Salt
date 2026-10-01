@@ -29,7 +29,7 @@ describe('users schema', () => {
   });
 
   // Set whenever a verification mail goes out, so a second within the minute
-  // can be refused; null until the first (claude-docs/auth.md, "The email page").
+  // can be refused; null until the first (claude-docs/auth/admin-bootstrap.md, "The email page").
   it("has a nullable verification_sent_at, the last verification mail's clock (MB.54)", () => {
     expect(byName.verification_sent_at).toBeDefined();
     expect(byName.verification_sent_at.notNull).toBe(false);
@@ -48,7 +48,7 @@ describe('users schema', () => {
 
 // The provisional-account sweep runs on every OAuth callback and almost always
 // finds nothing, so its predicate has an index that holds only unverified rows
-// (claude-docs/auth.md, "Provisional accounts").
+// (claude-docs/auth/admin-bootstrap.md, "Provisional accounts").
 describe('users provisional-account index', () => {
   const catalogue = useTestDatabase(() => {});
 

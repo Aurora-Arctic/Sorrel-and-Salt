@@ -1,7 +1,7 @@
 import type { Plain, Overrides } from './types';
 // How every factory applies its overrides: a nested object merges key by key,
 // an array replaces wholesale, `undefined` says nothing and `null` replaces.
-// claude-docs/testing.md, "Overrides merge; arrays replace".
+// claude-docs/testing/fixture-factories.md, "Overrides merge; arrays replace".
 
 // A Date, a class instance or an array is a value to replace, not a shape to walk.
 function isPlainObject(value: unknown): value is Plain {

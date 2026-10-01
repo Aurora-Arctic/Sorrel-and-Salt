@@ -11,7 +11,7 @@ import type { EmailVerificationSender, UserRow } from '../types';
 // The address an account is mailed at changes only at verification: asking
 // for a new one is a token and a mail, never a write to `users.email`, so an
 // established account never re-enters the provisional sweep
-// (claude-docs/auth.md, "The email page").
+// (claude-docs/auth/admin-bootstrap.md, "The email page").
 
 // `.invalid` is reserved (RFC 2606): no mailbox can exist under it, so the
 // placeholder can neither be mailed nor match an invitation.
@@ -76,7 +76,7 @@ export async function verificationWaitFor(userId: string): Promise<number> {
  * Stamps the row as mailed now, before the mail goes out. Being an update,
  * it restarts a provisional row's window through the trigger too, which is
  * why it takes the row's own session and never a stranger's
- * (claude-docs/auth.md, "Provisional accounts").
+ * (claude-docs/auth/admin-bootstrap.md, "Provisional accounts").
  */
 export async function recordVerificationSent(session: AuditSession): Promise<void> {
   await withAudit(session, (write) =>

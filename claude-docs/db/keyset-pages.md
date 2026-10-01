@@ -13,11 +13,11 @@ order by a, b, id
 limit $limit  -- the page plus one
 ```
 
-- **`page` is a `PageRequest` from `src/lib/types.ts`**, already decoded
-  and clamped by `resolvePage` (claude-docs/graphql.md, "Pagination"). `after`
-  bounds from below and `before` from above. `inverted`, when walking backwards
-  with `last`, reverses the `ORDER BY` only, and `resolvePage` puts the rows
-  back in order.
+- **`page` is a `PageRequest` from `src/lib/types.ts`**, already decoded and
+  clamped by `resolvePage` (claude-docs/graphql/pagination.md, "Pagination").
+  `after` bounds from below and `before` from above. `inverted`, when walking
+  backwards with `last`, reverses the `ORDER BY` only, and `resolvePage` puts
+  the rows back in order.
 - **A part is a column, or an expression with the type it is read as**
   (`SortPart`: `leaves.name`, or `{ expression, type: 'real' }`). An expression
   is read as `cast(expression as type)` in the order, the bound and the key
@@ -69,7 +69,7 @@ limit $limit  -- the page plus one
   one of that guard's `SCOPED_FINDERS`.
 
 **A keyset list can be counted as well as paged** (MB.105), for a
-connection's `totalCount` and `countBefore` (claude-docs/graphql.md,
+connection's `totalCount` and `countBefore` (claude-docs/graphql/pagination.md,
 "Pagination"). `selectFrom`'s count mode takes a `KeysetCount` — the list's
 `KeyOrder` and a `start` cursor, the page's first row — and sends one
 statement:

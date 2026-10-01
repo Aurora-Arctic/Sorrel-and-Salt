@@ -2,15 +2,15 @@
 
 `findVocabularySuggestions(membership, vocabulary, query, page)` in
 `src/db/repository/vocabularies.ts` is the read behind `planetSuggestions`,
-`zodiacSuggestions` and `formSuggestions` ([`graphql.md`](../graphql.md)). Its
-services are `suggestPlanets`, `suggestZodiacSigns` and `suggestForms` in
-`vocabulary`, which ask
-`ingredient: ['read']`: the curated rows are global, and every in-use value is
-one a reader of the workspace could already list. A caller names a table and
+`zodiacSuggestions` and `formSuggestions`
+([`graphql/schema.md`](../graphql/schema.md)). Its services are
+`suggestPlanets`, `suggestZodiacSigns` and `suggestForms` in `vocabulary`, which
+ask `ingredient: ['read']`: the curated rows are global, and every in-use value
+is one a reader of the workspace could already list. A caller names a table and
 nothing else. The ingredient column each table suggests for is paired in the
-repository, keyed by table name, so a caller cannot hand `planets` the
-`zodiac` column, and a fourth vocabulary does not compile until it names its
-column. `ingredient_forms` is the third, paired with `form` (M4.7a).
+repository, keyed by table name, so a caller cannot hand `planets` the `zodiac`
+column, and a fourth vocabulary does not compile until it names its column.
+`ingredient_forms` is the third, paired with `form` (M4.7a).
 
 One page is one statement: a `UNION ALL` of three tiers, sorted, bounded and
 cut by cursor as a whole.

@@ -7,7 +7,7 @@ import type { PrimaryAdminOutcome, SignInProfile } from '../types';
 // The primary admin is promoted at sign-in, by a provider that vouches for the
 // address, or at first-party verification, by our own mail:
 // claude-docs/design-decisions/m2.9-granting-admin.md, "The primary admin",
-// and claude-docs/auth.md, "Admin bootstrap".
+// and claude-docs/auth/admin-bootstrap.md, "Admin bootstrap".
 
 /**
  * Google marks an address verified only for a domain its owner has proved to

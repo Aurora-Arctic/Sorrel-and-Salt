@@ -6,7 +6,7 @@ import type { Built, LoaderFactory } from './types';
 
 // Every loader the context builds, by the name a resolver reads it as. Each
 // is added by the task that adds its schema, off its module's index
-// (claude-docs/graphql.md, "Loaders").
+// (claude-docs/graphql/loaders.md, "Loaders").
 const LOADERS = {
   membershipsByUser,
   categoriesByIngredient,

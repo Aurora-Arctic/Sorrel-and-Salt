@@ -15,7 +15,7 @@ import { fromRoot } from '../support/paths';
 import type { Workflow } from './types';
 
 // What the pulled environment file has to satisfy before CI trusts it
-// (claude-docs/ci.md, "Deploy"). Two things are pinned: a required key that
+// (claude-docs/ci/deploy.md, "Deploy"). Two things are pinned: a required key that
 // is missing, empty, a placeholder or not a postgres URL fails with its own
 // named cause; and every key the pull returned is reported with a
 // classification and never a value — asserted, not intended.

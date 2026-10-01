@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures';
 
 // M2.7 against the built server: the proxy's redirect, and what stays public
-// (claude-docs/auth.md, "Route protection"). `/` is public too; smoke.spec.ts
+// (claude-docs/auth/route-protection.md, "Route protection"). `/` is public too; smoke.spec.ts
 // renders it signed out.
 
 // A route whose page does not exist yet: the proxy answers before routing does,

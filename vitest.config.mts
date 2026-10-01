@@ -26,7 +26,7 @@ export const DOM_TS = ['tests/lib/auth-client.test.ts', 'tests/support/msw/graph
 // spreads too; and `rsc` for what can only be observed from inside a server
 // render. The acceptance suite is deliberately not a fifth project, and the
 // first two exclude it so their globs do not sweep those files up:
-// claude-docs/testing.md, "Acceptance".
+// claude-docs/testing/acceptance.md, "Acceptance".
 //
 // `unit` and `dom` split on the file extension: a `.tsx` test renders and gets
 // jsdom, a `.ts` test runs in node unless DOM_TS names it. jsdom, jest-dom and

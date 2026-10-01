@@ -9,7 +9,7 @@ import { makeIngredient } from '../support/fixtures';
 // outside `withAudit` as the seed does, so what it has to match is the seed:
 // the author's stamps on every row, the GUC published inside the one
 // transaction, and a category name the database does not hold live refused by
-// name (claude-docs/testing.md, "Fixture factories").
+// name (claude-docs/testing/fixture-factories.md, "Fixture factories").
 
 let sql: ReturnType<typeof postgres>;
 

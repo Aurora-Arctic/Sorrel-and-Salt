@@ -6,7 +6,7 @@
   `drizzle-kit generate --custom`, since enabling an extension isn't
   something schema-diffing can express; `0001_lucky_centennial.sql` (M2.2) is
   the first one it actually generated, from `users.ts` and `auth.ts` (now `src/modules/identity/schema/`)
-  — see `claude-docs/auth.md`.
+  — see `claude-docs/auth/tables.md`.
 - **`npm run db:migrate`** is `drizzle-kit migrate` — applies every migration
   under `src/db/migrations` not yet recorded in the `drizzle` schema's
   `__drizzle_migrations` table it creates on first run. That table is what
@@ -30,7 +30,7 @@
   `28P01`, `3D000`, `42704`) before drizzle-kit can swallow it. Locally the
   same script is the fastest way to tell a bad URL from a stopped container:
   `node scripts/probe-database.ts --file <a dotenv file holding DATABASE_URL>`.
-  `claude-docs/ci.md` carries the CI wiring.
+  `claude-docs/ci/deploy.md` carries the CI wiring.
 
 - **`0000_enable-extensions.sql`** runs `CREATE EXTENSION IF NOT EXISTS pg_trgm`
   — the only extension DESIGN.md §5 names (the fuzzy duplicate-name

@@ -8,7 +8,7 @@ const serverOnlyStub = require.resolve('next/dist/compiled/server-only/empty.js'
 // `npm run test:stories`: the acceptance suite alone, printed as a checklist
 // of the v1 stories. A config of its own rather than a third project, so a red
 // scaffold cannot fail the unit run and a passing story cannot lift the
-// coverage threshold: claude-docs/testing.md, "Acceptance".
+// coverage threshold: claude-docs/testing/acceptance.md, "Acceptance".
 //
 // The reporter is named by path, not imported: Vitest loads a path through
 // its module runner, where an import here runs at config-load time. `default`

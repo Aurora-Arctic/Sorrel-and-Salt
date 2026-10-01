@@ -5,7 +5,7 @@ import type { IndexRow, CatalogueReads } from './types';
 // One client per test file, opened in `beforeAll` and ended in `afterAll`: the
 // harness re-clones the worker's database `WITH (FORCE)` before every file,
 // which kills any connection that outlived the file it was opened for
-// (claude-docs/testing.md, "The db test harness"). Vitest's `sequence.hooks`
+// (claude-docs/testing/db-harness.md, "The db test harness"). Vitest's `sequence.hooks`
 // is `stack`, so a call at the top of a file opens before the file's own
 // `beforeAll` and closes after its `afterAll`.
 

@@ -3,7 +3,7 @@ import type { CodegenConfig } from '@graphql-codegen/cli';
 // Client types for the browser's half of the API. The schema source is the
 // committed SDL snapshot rather than the Pothos module, so codegen needs no
 // database, no env and no TypeScript loader, and every contract change passes
-// through one reviewable file first: claude-docs/graphql.md, "Client types".
+// through one reviewable file first: claude-docs/graphql/client-types.md, "Client types".
 const config: CodegenConfig = {
   schema: 'src/graphql/schema.graphql',
   // The lint guards' throwaway probes land under src/ and are deleted while a

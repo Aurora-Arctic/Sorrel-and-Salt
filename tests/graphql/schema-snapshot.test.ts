@@ -7,7 +7,7 @@ import { fromRoot } from '../support/paths';
 // contract, so a change to it is a diff to this committed file. Vitest writes
 // a missing snapshot locally but never under `CI`, and never overwrites one
 // without `-u`, so a schema change fails until someone regenerates the file on
-// purpose — claude-docs/graphql.md, "The SDL snapshot".
+// purpose — claude-docs/graphql/schema.md, "The SDL snapshot".
 const SDL_FILE = fromRoot('src/graphql/schema.graphql');
 
 describe('the GraphQL SDL', () => {

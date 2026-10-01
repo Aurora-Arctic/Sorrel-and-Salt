@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
 // The browser reaches the server through `/api/graphql` and Better Auth's
-// `/api/auth/*`, and nothing else (CLAUDE.md rule 1; claude-docs/graphql.md,
+// `/api/auth/*`, and nothing else (CLAUDE.md rule 1; claude-docs/graphql/two-transports.md,
 // "The two transports") — admin included. A route handler is the other way a
 // page could write without GraphQL, beside the server action
 // no-server-actions.test.ts refuses, and it is a file rather than an import,

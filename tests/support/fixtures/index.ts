@@ -1,7 +1,7 @@
 // The factories, in one import: a test states the one thing it is about and
 // the factory answers the rest, including the fields a CHECK binds together.
 // Plain objects, not inserts — nothing here touches Postgres.
-// claude-docs/testing.md, "Fixture factories".
+// claude-docs/testing/fixture-factories.md, "Fixture factories".
 
 export { toColumns } from './columns';
 export { NOMENCLATURE_KINDS, ingredientColumns, makeIngredient } from './ingredient';

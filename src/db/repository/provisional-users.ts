@@ -15,7 +15,7 @@ import { existsIn } from './select';
  * Hard rather than soft, and outside `withAudit`: Better Auth finds a user by
  * address without our `deleted_at` filter, so a tombstone would go on
  * blocking the owner's sign-in, and there is no session to stamp one with
- * (claude-docs/auth.md, "Provisional accounts"). The one users delete, pinned
+ * (claude-docs/auth/admin-bootstrap.md, "Provisional accounts"). The one users delete, pinned
  * by `soft-delete-finder-guard.test.ts`'s export list.
  */
 export async function deleteProvisionalUsers(

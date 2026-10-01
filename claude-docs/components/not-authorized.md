@@ -5,7 +5,7 @@ a level-one "Not authorized", one sentence saying the account does not have
 admin rights, and a link back to `/`. It takes no props. `src/app/forbidden.tsx`
 wraps it in `<main className="not-authorized-page">` and Next renders that,
 with a 403, wherever `forbidden()` is thrown — today only by the `/admin`
-guard ([`auth.md`](../auth.md), "The admin guard").
+guard ([`auth/admin-guard.md`](../auth/admin-guard.md), "The admin guard").
 
 ## Copy
 

@@ -55,7 +55,7 @@ the proof's workspace whose display name, formal name or a live folk name is
 similarities. It reads one keyset page at a time, keyed `[-score, name]` and
 marked `similarityMatch`, and carries each row's score, because
 `possibleDuplicates` (MB.11) pages it through the helper
-(claude-docs/graphql.md, "`possibleDuplicates`"). Each row
+(claude-docs/graphql/schema.md, "`possibleDuplicates`"). Each row
 carries `canonical_name`, which is what tells five Cat's Claws apart. The
 three matches are a `UNION ALL` under `id IN (…)`, and each detail is
 load-bearing:

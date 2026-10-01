@@ -52,11 +52,12 @@ field it does not name.
 layout and a page asking about the same workspace in one server render cost one
 query, whatever permission each asks for; the permission check under it runs
 every time and costs nothing. The cache is keyed by `(userId, workspaceId)`
-rather than the session, because `cache()` compares object arguments by
-identity and two callers holding equal sessions would each miss. It lives as
-long as the render and no longer, and outside a render it is the plain finder:
-the GraphQL route handler has no React cache scope, so its dedupe is the
-request's DataLoaders ([`graphql.md`](../graphql.md), "The two transports").
+rather than the session, because `cache()` compares object arguments by identity
+and two callers holding equal sessions would each miss. It lives as long as the
+render and no longer, and outside a render it is the plain finder: the GraphQL
+route handler has no React cache scope, so its dedupe is the request's
+DataLoaders ([`graphql/two-transports.md`](../graphql/two-transports.md), "The
+two transports").
 
 **The finder convention** has a file of its own: [`finder-convention.md`](finder-convention.md).
 
@@ -76,12 +77,12 @@ builder. Who may ask about which ids is the calling service's decision:
 other, an admin's included.
 
 `findUserByEmail(email)` is the third (MB.54), for the same kind of reason
-again: an address is claimed site-wide, so there is no workspace to hold a
-proof for. It answers the live row holding the address, compared lower-cased
-as `users_email_lower_case` holds every row to, and what a hit means is the
-calling service's decision — `setEmail` refuses an address a verified row
-holds and lets a provisional one be claimed over, and the `/verify-email` gate
-refuses one any other live row holds (`auth.md`, "The email page").
+again: an address is claimed site-wide, so there is no workspace to hold a proof
+for. It answers the live row holding the address, compared lower-cased as
+`users_email_lower_case` holds every row to, and what a hit means is the calling
+service's decision — `setEmail` refuses an address a verified row holds and lets
+a provisional one be claimed over, and the `/verify-email` gate refuses one any
+other live row holds (`auth/admin-bootstrap.md`, "The email page").
 
 `tests/db/repository/index.test.ts` and `soft-delete-finder-guard.test.ts`
 both pin the repository's export list, so a fourth exception is a decision

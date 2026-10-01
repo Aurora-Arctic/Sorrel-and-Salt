@@ -3,7 +3,7 @@ import postgres from 'postgres';
 import type { BetterAuthOptions } from 'better-auth';
 
 // Better Auth's limiter through its real endpoint, counting in `rate_limits`
-// (claude-docs/auth.md, "Rate limiting"). At NODE_ENV=production, as every
+// (claude-docs/auth/rate-limiting.md, "Rate limiting"). At NODE_ENV=production, as every
 // deploy is: outside it the limiter is off, and under test Better Auth falls
 // back to 127.0.0.1 for a request with no resolvable address rather than to
 // the `no-trusted-ip` bucket a deploy would use. Better Auth reads NODE_ENV

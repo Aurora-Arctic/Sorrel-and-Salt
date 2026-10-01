@@ -13,7 +13,7 @@ import { fromRoot } from '../support/paths';
 
 // Each Playwright worker slot has a server and a database of its own, as each
 // Vitest pool slot has a database: one database shared between workers is one
-// that a spec file's reseed drops under another's (claude-docs/testing.md,
+// that a spec file's reseed drops under another's (claude-docs/testing/e2e.md,
 // "E2E"). The servers are declared up front, so the worker count is a config
 // value, and a worker past it must fail rather than reach another's server.
 

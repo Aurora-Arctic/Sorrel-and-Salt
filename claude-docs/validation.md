@@ -40,10 +40,10 @@ reach a package other than `zod`. A table file fails it, because it imports
 
 ## Raising the error
 
-`src/lib/validation.ts` is the Zod half of MB.43's `ValidationError`. A
-service calls `parseInput(schema, input)`, which returns the parsed value or
-throws a `ValidationError` with one issue per Zod issue, path and message kept.
-The route maps that to `fieldErrors` ([`graphql.md`](graphql.md), "Errors"),
+`src/lib/validation.ts` is the Zod half of MB.43's `ValidationError`. A service
+calls `parseInput(schema, input)`, which returns the parsed value or throws a
+`ValidationError` with one issue per Zod issue, path and message kept. The route
+maps that to `fieldErrors` ([`graphql/errors.md`](graphql/errors.md), "Errors"),
 and the form puts each one beside its field through `setError`. The adapter is
 in `src/lib/` rather than `errors.ts`, so the error type stays free of any
 schema library and a seed can throw one. It isn't in any one module, because

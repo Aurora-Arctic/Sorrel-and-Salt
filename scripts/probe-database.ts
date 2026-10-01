@@ -4,7 +4,7 @@
  * it, so an unreachable host, a wrong password, an `sslmode` mismatch and a
  * `channel_binding` parameter are byte-identical in its output. This runs
  * first, connects, runs `select 1`, and on failure prints the driver's own
- * error code and message (claude-docs/ci.md, "Deploy").
+ * error code and message (claude-docs/ci/deploy.md, "Deploy").
  *
  * Two disciplines shared with scripts/assert-pulled-env.ts: the URL arrives
  * as a FILE PATH, never on argv (visible to `ps`, echoed by `set -x`); and

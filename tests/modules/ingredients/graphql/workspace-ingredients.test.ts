@@ -444,7 +444,7 @@ describe('updateIngredient', () => {
 
 // Story 25 over the wire. The answer is the deleted id rather than the
 // entity: a list evicts a row by its id, and a deleted ingredient's children
-// would read as empty (claude-docs/graphql.md, "The workspace ingredient mutations").
+// would read as empty (claude-docs/graphql/schema.md, "The workspace ingredient mutations").
 describe('deleteIngredient', () => {
   const DELETE = `mutation ($workspaceId: ID!, $id: ID!) {
     deleteIngredient(workspaceId: $workspaceId, id: $id)

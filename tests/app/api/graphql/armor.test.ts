@@ -96,7 +96,7 @@ describe.each(['development', 'production'])('graphql-armor at NODE_ENV=%s', (no
   });
 
   // Priced by the complexity plugin at the page each connection will fetch
-  // (claude-docs/graphql.md, "Protections"), so a refusal is an execution
+  // (claude-docs/graphql/protections.md, "Protections"), so a refusal is an execution
   // error: `data` is null rather than absent.
   describe('cost', () => {
     const refusal = [

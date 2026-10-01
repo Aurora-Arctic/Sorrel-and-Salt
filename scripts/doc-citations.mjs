@@ -12,8 +12,9 @@ export const DOCS = 'claude-docs';
 export const CITATION = new RegExp(`${DOCS}/[\\w./-]*\\.md`, 'g');
 
 // What may sit between a cited file and the section it names: `, "…"`, `'s "…"`,
-// or the comma ending one comment line and the quote opening the next.
-const TO_SECTION = `['"]?,?s?(?: |\\s*\\n\\s*(?://|\\*|#)\\s*)"([^"]+)"`;
+// either after the backtick closing a code span round the path, or the comma
+// ending one comment line and the quote opening the next.
+const TO_SECTION = `\`?['"]?,?s?(?: |\\s*\\n\\s*(?://|\\*|#)\\s*)"([^"]+)"`;
 export const SECTION = new RegExp(`([\\w.-]+\\.md)${TO_SECTION}`, 'g');
 
 /** A section named after `path`: group 1 runs from the path's end through the quote, group 2 is the quote. */

@@ -44,7 +44,7 @@ export const users = pgTable(
     role: userRole('role').notNull().default('user'),
     canCreateWorkspace: boolean('can_create_workspace').notNull().default(false),
     // When the last verification mail went out, so the next is a minute away
-    // at least; null until the first (claude-docs/auth.md, "The email page").
+    // at least; null until the first (claude-docs/auth/admin-bootstrap.md, "The email page").
     verificationSentAt: timestamp('verification_sent_at'),
     ...auditColumns,
   },
@@ -59,7 +59,7 @@ export const users = pgTable(
     check('users_email_lower_case', sql`${table.email} = lower(${table.email})`),
     // The provisional-account sweep's two halves, the window and the cap, run
     // on every OAuth callback and almost always empty: only unverified rows are
-    // in them (claude-docs/auth.md, "Provisional accounts").
+    // in them (claude-docs/auth/admin-bootstrap.md, "Provisional accounts").
     index('users_provisional_updated_at_idx')
       .on(table.updatedAt)
       .where(sql`${table.emailVerified} = false`),

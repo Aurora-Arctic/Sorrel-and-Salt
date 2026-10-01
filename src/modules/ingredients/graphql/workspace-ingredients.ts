@@ -9,7 +9,7 @@ import { IngredientElementEnum, IngredientRef, NomenclatureEnum } from './ingred
 
 // A coven's own ingredients, written as IngredientForm submits them. Neither
 // input names a tier or a stamp: the coven is the argument the proof is asked
-// for, and the stamps are the session's (claude-docs/graphql.md, "The workspace
+// for, and the stamps are the session's (claude-docs/graphql/schema.md, "The workspace
 // ingredient mutations").
 
 /** DESIGN.md §7's `IngredientInput`: only `name` is required, so story 29's stub saves. */

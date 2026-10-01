@@ -4,7 +4,7 @@ import type { SpellFixture } from '../fixtures/types';
 
 // The one way a test seeds a spell it is not testing the writing of, on
 // insert-ingredient.ts's terms: the raw client, one transaction, the author's
-// stamps and the GUC (claude-docs/testing.md, "Fixture factories").
+// stamps and the GUC (claude-docs/testing/fixture-factories.md, "Fixture factories").
 
 /**
  * Writes `fixture`'s spell, its layers and its assigned categories, stamped by
