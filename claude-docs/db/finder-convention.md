@@ -30,25 +30,28 @@ row cannot be moved between workspaces by an update.
 and the trash view is v2, so the task that adds one adds its proof-scoped
 counterpart then rather than leaving a widened hatch waiting. It is one of
 three hatches: the other two read what a spell holds past an ingredient's
-tombstone, proof first ("What a spell holds").
+tombstone, proof first
+(["What a spell holds"](spell-visibility.md#what-a-spell-holds-m53)).
 
 **`ingredients` is on the scoped side, so its compendium tier has no generic
 finder.** The column is nullable — `workspace_id IS NULL` is the
 compendium, everything else is a workspace's own — so the table matches
 `{ workspaceId: AnyPgColumn }` and `findMany(ingredients)` does not compile.
-The reads of it so far are `findSimilarIngredients` (see "Fuzzy matching"),
-`findVocabularySuggestions` and `findCommonNameSuggestions` (see "The
-member's autofill"), `findManyOfIngredients` through the parent of a folk
-name or a category link (see "Ingredient children"), and
+The reads of it so far are `findSimilarIngredients` (see
+["Fuzzy matching"](fuzzy-matching.md)), `findVocabularySuggestions` and
+`findCommonNameSuggestions` (see ["The member's autofill"](member-autofill.md)),
+`findManyOfIngredients` through the parent of a folk name or a category link
+(see ["Ingredient children"](ingredient-children.md)), and
 `findIngredientsInSpellsIncludingSoftDeleted` through a spell holding it (see
-"What a spell holds"), each naming
+["What a spell holds"](spell-visibility.md#what-a-spell-holds-m53)), each naming
 both tiers as explicitly as this paragraph asks, and each listed on
 [the tier seam](../modules.md#the-tier-seam). The plain compendium read is
 `findCompendiumPage` (M8.5), with its count `findCompendiumCount` (MB.105),
 each ANDing `inCompendium` as explicitly as the scoped finders AND their proof, and `findOneIngredient` reads one row in the
-compendium or a proof's coven ("The compendium read"), and
+compendium or a proof's coven (["The compendium read"](compendium-read.md)), and
 `findCompendiumEntryByIdentity` (M5.2) reads the entry holding an identity
-("Compendium writes"); the local-beats-compendium resolution (§5) wants both tiers under an anti-join and
+(["Compendium writes"](compendium-writes.md)); the local-beats-compendium
+resolution (§5) wants both tiers under an anti-join and
 is a further named finder, M8.3's. The point of the narrowing is that a read
 of that table has to say which tier it means instead of getting whichever the
 default was.

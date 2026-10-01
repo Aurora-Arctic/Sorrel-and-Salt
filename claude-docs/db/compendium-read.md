@@ -25,7 +25,8 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   `unaccent_immutable` (0026) is the `IMMUTABLE` wrapper an expression index
   needs; `ingredients-unaccent.test.ts` proves by `EXPLAIN` that each
   predicate reaches its index. The three matches are a `UNION ALL`, the
-  shape "Fuzzy matching" argues for over an `OR` beside the scope.
+  shape ["Fuzzy matching"](fuzzy-matching.md) argues for over an `OR` beside
+  the scope.
 - **The score is the row's best word similarity** across the three, and it is
   the search's order. Each `UNION ALL` arm selects
   `word_similarity(query, text)` beside the id it matched — the value the GIN
@@ -64,12 +65,13 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
 
 Names order under the database's own collation (`en_US.utf8` in the image).
 M8.14's `(lower(name), canonical_key, id)` declares its parts on the same
-keyset mechanism ("Keyset pages"). Moving a cursor's sort is harmless, since a
-cursor lives only as long as the page it came from.
+keyset mechanism (["Keyset pages"](keyset-pages.md)). Moving a cursor's sort
+is harmless, since a cursor lives only as long as the page it came from.
 
 **`findCompendiumCount(filter, start)`** (MB.105) numbers those pages: how
 many entries the filter holds, and how many precede `start`, a page's first
-row — the count mode of "Keyset pages". It and `findCompendiumPage` each
+row — the count mode of ["Keyset pages"](keyset-pages.md). It and
+`findCompendiumPage` each
 state the tier and the soft-delete filter, since the tier seam and the
 soft-delete guard read each exported finder, and both take the filter's arms
 and the key from one private `compendiumList(filter)`, so the count reads

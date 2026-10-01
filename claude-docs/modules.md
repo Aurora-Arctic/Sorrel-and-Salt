@@ -141,9 +141,9 @@ feedback and the guard gives precision:
   `@/modules/*/graphql`, `@/modules/*/graphql/**`, `@/modules/*/loaders`,
   `@/modules/*/loaders/**` and `@/modules/*/types`. It is restated in every override, because an
   override replaces the top-level rule rather than merging with it
-  ([`db.md`](db.md), "Where queries may be built"). The bare
-  `@/modules/<name>` index import matches none of the patterns, so no
-  negation is needed. The lint sees only the alias spelling.
+  ([`db/query-building.md`](db/query-building.md), "Where queries may be
+  built"). The bare `@/modules/<name>` index import matches none of the
+  patterns, so no negation is needed. The lint sees only the alias spelling.
 - **Guard.** `tests/guards/module-boundaries.test.ts` scans every file under
   `src/` — the git index plus untracked files, as `slug-rule.test.ts` does —
   and resolves both alias and relative specifiers to a path. It asserts: an
@@ -252,7 +252,8 @@ file, `import type` included, carries that file's own imports along:
 - **The repository's types** are in `src/db/repository/types.ts`. The index
   re-exports the writer's type, and the types a caller passes to a finder or
   gets back from one, by name. The table shapes and the rest of `selectFrom`'s
-  options stay inside the folder ([`db.md`](db.md),
+  options stay inside the folder
+  ([`db/repository-files.md`](db/repository-files.md),
   "The repository's files").
 - **Presentation's types** sit beside the component, route or template that
   uses them. A component's props are in `src/components/<Name>/types.ts`, which

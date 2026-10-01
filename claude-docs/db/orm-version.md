@@ -22,8 +22,8 @@ clears is not reachable. What makes staying put sustainable is MB.20 — droppin
 `@pothos/plugin-drizzle` removes the component that tracked the ORM's version
 and would eventually have forced the upgrade. With it gone, `drizzle-orm` is
 reachable only from the database layer, and is banned by lint everywhere else
-(see "Where queries may be built"), so it is a query builder behind a choke
-point rather than an architectural commitment.
+(see ["Where queries may be built"](query-building.md)), so it is a query
+builder behind a choke point rather than an architectural commitment.
 
 **Revisit when any of these fires** — not before:
 

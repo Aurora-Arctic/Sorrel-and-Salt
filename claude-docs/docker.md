@@ -56,7 +56,7 @@ no Neon connection and no host Node-version juggling.
     - **`SEED_SCENARIO: ${SEED_SCENARIO:-minimal}`** — host environment or
       `Docker/.env`, defaulting to the bare install. An unrecognised name fails
       this container (and so `app`) rather than quietly seeding `minimal`; see
-      `resolveScenario` in `claude-docs/db.md`.
+      `resolveScenario` in `claude-docs/db/migrations-and-scripts.md`.
     - **It re-runs on every `docker compose up`, deliberately.** Migrations are
       journal-guarded and every scenario is idempotent by fixed id, so the cost
       is a few seconds and the payoff is that a developer who just pulled new

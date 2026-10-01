@@ -137,7 +137,7 @@ soft-delete twin of `findManyByIds` — unscoped, typed to demand a
 `deletedAt` and refuse a `workspace_id`, and an empty list writes nothing.
 The proof still governs it: the ids come from `findManyOfIngredients` under
 the parent’s tier, inside the transaction that has just written the parent
-through the proof (see "Workspace ingredients").
+through the proof (see ["Workspace ingredients"](workspace-ingredients.md)).
 
 **`softDeleteByIdInWorkspace` is the fifteenth** (M5.3), the delete-side twin
 of `updateByIdInWorkspace`: a coven member's delete names its ingredient by

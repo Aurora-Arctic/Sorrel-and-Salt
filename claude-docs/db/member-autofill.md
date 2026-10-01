@@ -26,8 +26,8 @@ cut by cursor as a whole.
   similar to Ophiuchus's description and `black moon` 0.22 to Lilith's, far
   under 0.4. `<%` is word similarity, the query against the best-matching run
   of words in the text, and scores both 1.0. It is a trigram operator too, so
-  "Fuzzy matching"'s rule still holds, and its threshold is the second one
-  `selectFrom` sets.
+  ["Fuzzy matching"](fuzzy-matching.md)'s rule still holds, and its threshold
+  is the second one `selectFrom` sets.
 - **A name or an in-use value matches by either.** `<%` completes a typed
   prefix: `mer` is 0.33 similar to Mercury and 0.75 word-similar. A name
   should never be harder to find than its own description.

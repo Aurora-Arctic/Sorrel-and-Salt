@@ -31,6 +31,7 @@ answerable.
   columns.
 
 Its reader is M4.8's `categoriesByIngredient` loader, through
-`findManyOfIngredients` and never a generic finder (see "Ingredient children"). §12's
+`findManyOfIngredients` and never a generic finder
+(see ["Ingredient children"](ingredient-children.md)). §12's
 assigned-versus-derived distinction reads it from the derived side: a spell's
 derived categories are the union of what this table holds for its ingredients.

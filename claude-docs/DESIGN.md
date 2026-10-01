@@ -325,7 +325,7 @@ Twelve of those are the vocabulary as MB.28 first wrote it — herb, root, bark,
 | Planets      | sun, moon, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto, chiron, ceres, pallas, juno, vesta, lilith, north node, south node |
 | Zodiac signs | aries, taurus, gemini, cancer, leo, virgo, libra, scorpio, ophiuchus, sagittarius, capricorn, aquarius, pisces                                      |
 
-The bodies run the luminaries, the planets outward from the Sun, then the other bodies modern practice reads; Ophiuchus sits where the sidereal thirteen-sign zodiac puts it. Earth, Chiron, the lunar nodes and Ophiuchus are listed because practices use them, not because a source gives them herb correspondences — few do, and "few sources" is not a reason to refuse a practice. A body a practice reads that is not listed, Eris or Sedna, is typed as free text and surfaces on the admin page for curation. The sources the lists were drawn from are in [`db.md`](db.md).
+The bodies run the luminaries, the planets outward from the Sun, then the other bodies modern practice reads; Ophiuchus sits where the sidereal thirteen-sign zodiac puts it. Earth, Chiron, the lunar nodes and Ophiuchus are listed because practices use them, not because a source gives them herb correspondences — few do, and "few sources" is not a reason to refuse a practice. A body a practice reads that is not listed, Eris or Sedna, is typed as free text and surfaces on the admin page for curation. The sources the lists were drawn from are in [`db/astrology-vocabulary-seed.md`](db/astrology-vocabulary-seed.md).
 
 **One tier, not two.** Neither vocabulary has a group: nineteen bodies and thirteen signs section nothing, so there is no group table, no colour, and the seed is a flat helper rather than the two-tier one the forms and categories share. **Two tables rather than one with a `kind` column**, by the argument that settled the groups (§14): a planet query that forgot its `kind` predicate would offer Scorpio for `planet`, and two tables make that query unwritable rather than merely wrong.
 
@@ -495,7 +495,7 @@ The spell builder shows both side by side, flagging intent categories with no in
 
 ### Fuzzy duplicate warning
 
-`pg_trgm`, available on Neon (as is `unaccent`, the design's only other extension: it folds the compendium search's accents, §7's `compendium(query:)`, through an `IMMUTABLE` wrapper and expression indexes — `claude-docs/db.md`, "The compendium read"):
+`pg_trgm`, available on Neon (as is `unaccent`, the design's only other extension: it folds the compendium search's accents, §7's `compendium(query:)`, through an `IMMUTABLE` wrapper and expression indexes — `claude-docs/db/compendium-read.md`, "The compendium read"):
 
 ```sql
 CREATE INDEX ON ingredients USING gin (name gin_trgm_ops, canonical_name gin_trgm_ops);

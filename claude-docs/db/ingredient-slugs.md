@@ -33,7 +33,7 @@ follows is what exists.
   claim a relabel made when its slug was reserved. MB.82 dropped the
   reservation and the schema's declarations, and MB.107's
   `0028_drop-pending-slugs.sql` dropped the four from the database once that
-  had deployed: a column drop is two PRs ("Expand/contract").
+  had deployed: a column drop is two PRs (["Expand/contract"](expand-contract.md)).
 - **Two entries may share a label and a form; the formal name tells them
   apart, in the slug as in the identity key.** The `standard` seed's two
   _Cat's Claw_ barks, _Uncaria tomentosa_ and _U. guianensis_, are

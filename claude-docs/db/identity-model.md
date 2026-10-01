@@ -27,11 +27,12 @@ What follows describes all three as built.
   but never interchangeable. `deities` and `substitutes` are native
   `text[]` columns, one of the things SQLite could not have run (DESIGN.md
   §14). Seven declared indexes: M4.1a's three partial unique ones (below),
-  MB.81's two on the slug (["Ingredient slugs"](ingredient-slugs.md)), `ingredients_trgm`
+  MB.81's two on the slug ("Ingredient slugs"), `ingredients_trgm`
   (M4.6), one multicolumn `gin_trgm_ops` index over `name` and
   `canonical_name` — see ["Fuzzy matching"](fuzzy-matching.md) — and its folded twin
-  `ingredients_unaccent_trgm` ("The compendium read"). The database holds two
-  more until MB.107, MB.81's undeclared pending-claim indexes.
+  `ingredients_unaccent_trgm` (["The compendium read"](compendium-read.md)).
+  The database holds two more until MB.107, MB.81's undeclared pending-claim
+  indexes.
 - **`ingredient_folk_names`** — `id`, `ingredientId` (FK to `ingredients`),
   `name`, + audit. Common names, one row each, scoped to the ingredient that
   claims them. Two indexes: `ingredient_folk_names_unique` over

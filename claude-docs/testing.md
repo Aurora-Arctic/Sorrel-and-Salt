@@ -579,7 +579,8 @@ states setup regularly needs — an already-deleted row, an un-delete, a
 backdated stamp, a Better Auth row — while a compendium ingredient is written
 through `withAudit` only by `insertInCompendium` under the `SiteAdmin` proof,
 which is the compendium service's own write and so the code under test
-wherever the compendium is ([`db.md`](db.md), "The SiteAdmin proof").
+wherever the compendium is
+([`db/site-admin-proof.md`](db/site-admin-proof.md), "The SiteAdmin proof").
 The seed is the one sanctioned writer outside `withAudit` (CLAUDE.md rule 3),
 and a test inserter is the same kind of thing, so it does what the seed does.
 [`tests/support/db/insert-ingredient.ts`](../tests/support/db/insert-ingredient.ts)'s

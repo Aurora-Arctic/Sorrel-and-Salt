@@ -22,8 +22,8 @@ NULL` ANDed onto whatever `where` the caller supplied — or the caller's
 There are two such decisions, and both are the same one: what a spell holds.
 `findIngredientsInSpellsIncludingSoftDeleted` and
 `findManyOfSpellIngredientsIncludingSoftDeleted` (M5.3) read an ingredient
-past its tombstone, and nothing else past one, for a member who may read a
-spell holding it ("What a spell holds").
+past its tombstone, and nothing else past one, for a member who may read a spell
+holding it (["What a spell holds"](spell-visibility.md#what-a-spell-holds-m53)).
 
 Neither builder is in the repository's surface — their siblings import them,
 and nothing outside the folder may (["The repository's files"](repository-files.md)) — so
@@ -47,8 +47,8 @@ builds the subquery on the same `db`, ANDs `notSoftDeleted(table)` itself —
 `accounts` among them — and returns `SQL` rather than the builder, so a caller
 can neither append to it nor await it. The outer row is named through its own
 table's columns, which Drizzle qualifies, so the subquery correlates without
-an alias. What stays a `sql` string is what no builder can say — "Where
-queries may be built" lists it.
+an alias. What stays a `sql` string is what no builder can say — ["Where
+queries may be built"](query-building.md) lists it.
 
 **The mechanical guard.** This is a code sweep (CLAUDE.md's sweep-task rule),
 so it landed as the mechanism above plus a guard — and since MB.33 the sweep is

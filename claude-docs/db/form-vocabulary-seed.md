@@ -4,15 +4,17 @@
 `ingredient_form_groups` rows — Botanical, Animal, Mineral, Substance, Fluid,
 Curio — then the 78 `ingredient_forms` §5's table files under them, including
 the twelve MB.28 first wrote and the seventeen the animal-derived and
-whole-organism cases added. **It is not a scenario**, for the same reason the category seed is not one, and it lands a
+whole-organism cases added. **It is not a scenario**, for the same reason
+[the category seed](category-seed.md) is not one, and it lands a
 task ahead of M1.22 for the same reason too: M1.22's ingredients carry `form`
 values, and those should come from a vocabulary that already exists.
 `npm run db:seed:forms` runs it — `scripts/db-seed.ts` with a `forms` argument,
 the second target on the same script, because the client import there is one
 of the six pinned exemptions (["Who may import the client"](client-imports.md)).
 
-Everything structural is the category seed's, and since MB.51 literally so —
-both call [`seedTwoTierVocabulary`](seed-module.md) with their own tables and literals:
+Everything structural is [the category seed](category-seed.md)'s, and since
+MB.51 literally so — both call [`seedTwoTierVocabulary`](seed-module.md) with
+their own tables and literals:
 groups first (`ingredient_forms.group_id` is a NOT NULL foreign key),
 idempotency keyed on the slug and **ignoring `deleted_at`**, no update to
 anything already present, every slug derived by `slugify(name)` rather than

@@ -2,7 +2,8 @@
 
 `src/db/seed/astrology.ts` seeds DESIGN.md §5's planet and zodiac
 table: nineteen `planets` and thirteen `zodiac_signs`, in §5's order, as the
-`PLANETS` and `ZODIAC_SIGNS` literals. It takes the form seed's shape —
+`PLANETS` and `ZODIAC_SIGNS` literals. It takes
+[the form seed](form-vocabulary-seed.md)'s shape —
 reference data rather than a scenario, `npm run db:seed:astrology` as a
 third `scripts/db-seed.ts` target, run by `migrate.yml` in the same step as the
 other two, idempotent by slug and ignoring `deleted_at`, updating nothing

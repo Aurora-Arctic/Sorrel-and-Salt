@@ -15,15 +15,17 @@ smuggles in. The update and the read reach only a live row, and only through
 `workspace_id = membership.workspaceId`, so a compendium entry's id, another
 coven's or a soft-deleted ingredient's answers `NotFound`, the same as an id that names nothing, and naming a
 coven the caller is not in answers `Forbidden` before any row is read, a coven
-id that is not a uuid included ("What the check asks"). An ingredient id that
-is not a uuid is `NotFound`, as `getIngredient` answers it, rather than a
-driver error.
+id that is not a uuid included
+(["What the check asks"](membership-proof.md#what-the-check-asks)). An
+ingredient id that is not a uuid is `NotFound`, as `getIngredient` answers it,
+rather than a driver error.
 
 **A delete is soft, and frees what the ingredient held** (M5.3).
 `deleteWorkspaceIngredient` tombstones the row through
 `softDeleteByIdInWorkspace`, with the update's reach: an id this coven does not
 hold live answers `NotFound`. Its folk names, category links and stock row
-stay. A spell holding the ingredient still reaches it ("What a spell holds"),
+stay. A spell holding the ingredient still reaches it
+(["What a spell holds"](spell-visibility.md#what-a-spell-holds-m53)),
 and nothing else reads past a deleted parent — stock included, whose reads go
 through a live ingredient (M9.3). The service test asks each read a member
 reaches the coven's ingredients through whether it shows the ingredient,
@@ -60,7 +62,7 @@ transaction writes carries its id.
 `NOT NULL`, so a create writes `ingredientSlug` of the three, and an update
 writes it again from the new values. Nothing redirects from the old one: no
 route reads a coven ingredient's slug, so MB.82's retirements are the
-compendium's alone ("Ingredient slugs").
+compendium's alone (["Ingredient slugs"](ingredient-slugs.md)).
 
 **A collision is a `ValidationError` on the field that caused it**, never the
 raw index error. The service catches the write's failure and reads the index
@@ -73,6 +75,7 @@ the address, on a create or on an update that moves the slug. Catching the failu
 check-then-write leaves a window for a concurrent save, and the index is the
 one arbiter either way. The message names what the input asked for, not the
 row already holding it. The compendium's writes do name the holder, through a
-finder that builds the key from the values ("Compendium writes"); inside one
+finder that builds the key from the values
+(["Compendium writes"](compendium-writes.md)); inside one
 coven the label index makes the case that needs it rarer, and a coven-scoped
 twin of that finder is the change that would add it here.

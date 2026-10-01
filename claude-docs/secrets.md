@@ -229,7 +229,8 @@ a fact CI states rather than one inferred from which consumer broke first.
 ## GitHub Actions repository secrets
 
 Used by `deploy.yml`/`migrate.yml` to drive the Vercel CLI and, on
-production only, a pre-migration Neon snapshot (`claude-docs/db.md`,
+production only, a pre-migration Neon snapshot
+(`claude-docs/db/snapshot-and-restore.md`,
 "Snapshot before production migrations"). None of these are read by
 `pr-gate.yml`'s own build/test/lint jobs — **no
 credential is required to run tests locally or in a PR check**, per

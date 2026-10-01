@@ -56,7 +56,8 @@
   destructive-DDL acknowledgement because it drops nothing. See
   ["`updated_at` is the database's"](updated-at.md).
 - **`0017_custom-spell-ingredients.sql`** (MB.40) reshapes `spell_ingredients`
-  so a layer may be a custom, one-off ingredient — see "Custom ingredients"
+  so a layer may be a custom, one-off ingredient — see
+  ["Custom ingredients"](grimoire.md#custom-ingredients-mb40)
   under the grimoire. `drizzle-kit generate` wrote the statements and the file
   was reordered by hand, expand first (two columns, two partial unique indexes,
   four checks) and contract last (the `(spell_id, ingredient_id)` primary key
@@ -83,9 +84,12 @@
   `unaccent_immutable(…)` of the searched columns — beside the raw trigram
   indexes rather than in their place, since the fuzzy finders still match the
   raw columns. `drizzle-kit generate` wrote the statements; `IF NOT EXISTS`
-  was added by hand, as 0011's was. See "The compendium read".
+  was added by hand, as 0011's was. See
+  ["The compendium read"](compendium-read.md).
 - **`0029_spell-layers-soft-delete.sql`** (MB.110) makes `spell_ingredients`
-  soft-deleted — see "Layer order is the identity" under the grimoire.
+  soft-deleted — see
+  ["Layer order is the identity"](grimoire.md#layer-order-is-the-identity-and-what-that-costs-the-reorder)
+  under the grimoire.
   `drizzle-kit generate` wrote the statements and the file was reordered by
   hand, as 0017 was: the delete columns and the partial layer index first,
   while every row is live, then the `(spell_id, layer_order)` key dropped for

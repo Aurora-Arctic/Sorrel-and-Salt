@@ -42,9 +42,9 @@ is `<%`'s, word similarity, which is how a description is searched (["The
 member's autofill"](member-autofill.md)); 0.6 is pg_trgm's own default, set anyway so the
 server's configuration cannot move it. A keyset page can ask the same way.
 A `Keyset` marked `wordMatch` is read in a transaction that first sets the
-word threshold to the search's 0.5 ("The compendium read"). One marked
-`similarityMatch` first sets the similarity threshold to the same 0.4
-constant, which is how `findSimilarIngredients` pages (below). These are the
+word threshold to the search's 0.5 (["The compendium read"](compendium-read.md)).
+One marked `similarityMatch` first sets the similarity threshold to the same
+0.4 constant, which is how `findSimilarIngredients` pages (below). These are the
 reads that open a transaction: they carry a planner setting, not an identity,
 so they are not the read-side `withAudit` that MB.29 declined to build.
 

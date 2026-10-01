@@ -5,15 +5,17 @@ Three services in `ingredients`' `services/compendium.ts`, beside the reads:
 input)` and `deleteCompendiumEntry(session, id)`. Each opens with
 `assertSiteAdmin`, before the input is parsed, so a non-admin is refused the
 same way whatever they sent, and writes through the compendium-tier methods
-under its proof ("The SiteAdmin proof"). A workspace role counts for nothing:
-a coven's owner is refused as its viewer is.
+under its proof (["The SiteAdmin proof"](site-admin-proof.md)). A workspace
+role counts for nothing: a coven's owner is refused as its viewer is.
 
-**They mirror the coven's writes** ("Workspace ingredients") in everything but
+**They mirror the coven's writes**
+(["Workspace ingredients"](workspace-ingredients.md)) in everything but
 the tier. The input is the whole entry, so an update replaces the row. Folk
 names are written in the same transaction, the update's diff reading the live
 ones through `findManyOfIngredients` with no proofs, which is the compendium
 alone. The slug follows the label, the form and the formal name, and the one
-an update leaves is retired and redirects for 180 days ("Ingredient slugs").
+an update leaves is retired and redirects for 180 days
+(["Ingredient slugs"](ingredient-slugs.md)).
 The row mapping and the folk-name diff live in one internal file,
 `services/ingredient-rows.ts`, which both services import. Categories are not
 written here, since `CompendiumIngredientInput` carries none.
@@ -31,7 +33,8 @@ all `NotFound`. So the site admin reaches no coven's ingredients by id — the
 invariant in `CLAUDE.md` — and the service test asserts it on update and
 delete with the row first shown reachable by its own coven. A delete is soft
 and stamps `deleted_by`; the entry's folk names and category links stay,
-since only a spell holding the entry reads them past it ("What a spell holds")
+since only a spell holding the entry reads them past it
+(["What a spell holds"](spell-visibility.md#what-a-spell-holds-m53))
 and their unique indexes are per ingredient. A `workspaceId` in the input is stripped by the Zod object,
 and `insertInCompendium` would overwrite it if it were not.
 

@@ -99,10 +99,11 @@ the other spell finders.
 
 A page over rows no one table holds writes its own bounds under the same
 rules: `findVocabularySuggestions` and `findCommonNameSuggestions` key a
-statement by `[tier, fold]` and a tie-break ("The member's autofill"). That
-page is read under the similarity thresholds, whose branch maps no data
-exception to `InvalidCursor`, so `readSuggestionPage` checks the key's two
-parts and the tier itself before building the bound.
+statement by `[tier, fold]` and a tie-break
+(["The member's autofill"](member-autofill.md)). That page is read under the
+similarity thresholds, whose branch maps no data exception to `InvalidCursor`,
+so `readSuggestionPage` checks the key's two parts and the tier itself before
+building the bound.
 
 `tests/db/pagination.test.ts` walks probe tables through `resolvePage` and the
 real finders:

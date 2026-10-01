@@ -51,7 +51,7 @@ resolve: async (_query, { workspaceId }, { session }) =>
   Wrap the _lookup_, keyed by ids and other primitives, not a function taking
   the session: `cache()` compares objects by identity, so two callers holding
   equal sessions would each miss. `assertMembership`'s role lookup is the
-  first (db.md, "One lookup per render").
+  first (db/membership-proof.md, "One lookup per render").
 - **`cache()` does nothing in the route handler.** Only the Flight renderer
   opens a React cache scope; a Next route handler runs without one, and there
   `cache(fn)` is `fn`. The GraphQL path's dedupe is the request's DataLoaders
@@ -309,7 +309,7 @@ type CorrespondenceSuggestion {
   first, name matches before description matches, then values in use in the
   compendium and the named workspace that no live row curates. `curated` tells
   a client which bucket a row came from, and the order is the finder's
-  ([`db.md`](db.md), "The member's autofill").
+  ([`db/member-autofill.md`](db/member-autofill.md), "The member's autofill").
 - **`query` is optional.** Blank or absent, the field lists the whole
   vocabulary and every in-use value, still a page at a time.
 - **Two refusals, one type.** Signed out, the resolver refuses with
@@ -380,8 +380,8 @@ type SuggestionClaimant {
 ### `possibleDuplicates`
 
 Story 16's "did you mean" (MB.11), registered by `ingredients` over M4.7's
-`findPossibleDuplicates` ([`db.md`](db.md), "Fuzzy matching"). M5.10's name
-field calls it as the name is typed:
+`findPossibleDuplicates` ([`db/fuzzy-matching.md`](db/fuzzy-matching.md),
+"Fuzzy matching"). M5.10's name field calls it as the name is typed:
 
 ```graphql
 type Query {
@@ -513,7 +513,8 @@ type IngredientFormGroup {
 ```
 
 - **The `compendium` query is the search.** `query`, `categoryIds` and
-  `form` are the service's, filtered in SQL ([`db.md`](db.md), "The compendium
+  `form` are the service's, filtered in SQL
+  ([`db/compendium-read.md`](db/compendium-read.md), "The compendium
   read"): the query at least 0.5 word-similar (`<%`) to the label, the formal
   name or a live folk name, case- and accent-folded, so a prefix and a
   transposed pair both find their entry; every listed category (AND; M8.12
@@ -528,8 +529,8 @@ type IngredientFormGroup {
   query shorter than two characters is no search — one letter would filter and
   rank by noise — so it lists every entry, unranked. The score lives on the
   edge rather than on `Ingredient` because it describes the match, not the
-  entry. How the rank reaches a keyset page is [`db.md`](db.md)'s ("The
-  compendium read").
+  entry. How the rank reaches a keyset page is
+  [`db/compendium-read.md`](db/compendium-read.md)'s ("The compendium read").
 - **The list numbers its pages.** `totalCount` and `countBefore` are
   `countCompendium`'s, over the same parsed filter as the page, so a search
   counts at the page's 0.5 rather than the server's 0.6 and never counts
@@ -565,7 +566,8 @@ type IngredientFormGroup {
 
 Stories 15, 25 and 34's writes (M8.8, the delete M5.3), registered by
 `ingredients` over the services in `services/workspace-ingredients.ts`
-([`db.md`](db.md), "Workspace ingredients"):
+([`db/workspace-ingredients.md`](db/workspace-ingredients.md), "Workspace
+ingredients"):
 
 ```graphql
 type Mutation {
@@ -582,7 +584,9 @@ type Mutation {
   `['update']` or `['delete']`, which owners and members hold and viewers,
   site admins and non-members do not. All three carry the `signedIn` scope. A coven id
   that is not a uuid answers `FORBIDDEN`, as it does at every field taking a
-  `workspaceId` ([`db.md`](db.md), "What the check asks"), and an ingredient
+  `workspaceId`
+  ([`db/membership-proof.md`](db/membership-proof.md#what-the-check-asks),
+  "What the check asks"), and an ingredient
   id that is not one answers `NOT_FOUND`: the same answers a real id the
   caller cannot reach gets, never a masked driver error.
 - **`IngredientInput` is the create's.** Only `name` is required, so story
@@ -834,7 +838,7 @@ each keep to their own rules:
   `score` is the one so far. `count` adds `totalCount` and `countBefore` to
   the connection (below).
 - **`findPage` and `findPageInWorkspace`** in the repository run the keyset
-  query (claude-docs/db.md, "Keyset pages").
+  query (claude-docs/db/keyset-pages.md, "Keyset pages").
 
 **A cursor is the sort key and the id, never an offset**: base64url of
 `{"k": [<part>, …], "i": <id>}`, one part per sort part. An offset moves when
@@ -1012,7 +1016,8 @@ merely absent:
   third type parameter names what it returns. The two ingredient loaders are
   keyed by the parent row's `{ id, workspaceId }` and cached by `id`. The
   service needs the `workspaceId` to know which coven to check without a read
-  of its own, and it never trusts it as the scope ([`db.md`](db.md),
+  of its own, and it never trusts it as the scope
+  ([`db/ingredient-children.md`](db/ingredient-children.md),
   "Ingredient children"). The two group loaders are keyed by id, and a group
   that is missing or retired is a `NotFound` in its own slot.
 - **A null session is not always a refusal.** `membershipsByUser` refuses
@@ -1045,7 +1050,8 @@ shortcut could take:
   own group. `src/lib` is outside the override because `lib/auth.ts` hands
   Better Auth the schema tables. The override restates the four top-level bans,
   because an override replaces the rule rather than merging with it
-  ([`db.md`](db.md), "Where queries may be built").
+  ([`db/query-building.md`](db/query-building.md), "Where queries may be
+  built").
 - **No client component imports a service.** Every file under
   `src/modules/*/services` opens with `import 'server-only'`. Next resolves that marker
   to a build error in any client bundle that reaches it, whether directly or
