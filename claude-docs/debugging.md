@@ -1,15 +1,13 @@
 # Debugging — summary
 
-This summary is self-contained (MB.22, extended by MB.23) — nothing here
+This summary is self-contained (MB.22, MB.23) — nothing here
 requires opening `package.json`, `makefile`, `Docker/docker-compose.yaml`,
 `.devcontainer/`, `Docker/Dockerfile.e2e`, or `playwright.config.ts` to
 follow.
 
-Before this task there was no debugging story at all: no Node inspector
-wired anywhere in the container, no `.vscode/` directory, no way to step
-into a service, a repository call, or a test, and no way to watch what
-`withAudit` actually does to a query beyond reading its output. This is tooling only — no table, no service, no
-page.
+It covers stepping into a server, a service, a repository call or a test,
+watching what `withAudit` does to a query, and recording a Playwright spec.
+Tooling only — no table, no service, no page.
 
 ## Getting set up
 
@@ -234,7 +232,7 @@ _do_ open in a host browser are the forwarded ports: 9323 for the trace
 viewer, 9324 for UI mode. Both work the same over a remote browser as over a
 local one, because both are the _runner's_ own UI, not the browser's.
 
-**Headed/interactive Playwright now has somewhere to draw (MB.23).**
+**Headed/interactive Playwright draws on a virtual display (MB.23).**
 `playwright-server` carries a virtual display (Xvfb + a window manager),
 reachable from an ordinary host browser tab at **`http://localhost:7900`**
 over noVNC — `page.pause()`'s Inspector overlay and UI mode's live locator
@@ -353,14 +351,14 @@ sorrel` against the running compose Postgres: a raw SQL prompt for poking
   a test is doing.
 - **Drizzle Studio** (`npm run db:studio` / `make db-studio` /
   `make docker-studio`, port 4983) — a visual browser for the local
-  database, predates this task (MB.21). Its own UI is hosted externally at
+  database (MB.21). Its own UI is hosted externally at
   `https://local.drizzle.studio` and connects back to the forwarded/published
   port; not re-explained here beyond that it's part of the same "how do I
   see what the database actually holds" story as `DEBUG_SQL` and `db-psql`.
 
 ## Next.js DevTools MCP
 
-`.mcp.json` gained a `next-devtools` server (`npx -y next-devtools-mcp@latest`).
+`.mcp.json` carries a `next-devtools` server (`npx -y next-devtools-mcp@latest`).
 It gives an agent (Claude Code
 itself, or any other MCP client) tools to inspect a running Next.js dev
 server directly — routes, build errors, runtime state — rather than

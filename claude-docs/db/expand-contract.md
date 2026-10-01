@@ -16,10 +16,10 @@ that shipped it _and_ the one before it — the expand/contract pattern:
    release later, after the transition period has had a chance to run in
    production), a later migration removes it.
 
-**A drop is the contract step alone, and it is two PRs, each its own task.**
-The first removes every code reference — the Drizzle schema included — and
-ships no migration. The second, once the first has deployed, is the migration
-`drizzle-kit generate` then produces, with its sidecar. `migrate.yml` runs
+**A drop is the contract step alone, split across two tasks** — code
+references out first, the migration `drizzle-kit generate` then produces in a
+second PR, with its sidecar (CLAUDE.md rule 10; the procedure is
+`.claude/rules/database.md`'s). `migrate.yml` runs
 before `deploy.yml` promotes, and Drizzle names every declared column in a
 `SELECT`, so dropping a column the live deploy still declares breaks its reads
 for the length of the rollout, and a rollback past the migration for good.

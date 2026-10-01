@@ -27,24 +27,21 @@ workflows pin — `ubuntu-26.04` and `blacksmith-8vcpu-ubuntu-2404` — and
   is in `act-test`. The build leg wants `actions/cache@v6` pre-cached the way
   `act-cache-checkout` pre-caches `checkout-to-app`; the audit leg wants a real
   PR to comment on.
-- **`CHECK=destructive-ddl` still scans nothing locally, and that is the honest
-  outcome rather than a gap** — but for one reason now rather than two. Its
+- **`CHECK=destructive-ddl` scans nothing locally, and that is the honest
+  outcome rather than a gap.** Its
   `destructive-ddl-files` input comes from `pr-gate.yml`'s `changes` job, which
   does not exist under a bare `act -W ... --matrix name:destructive-ddl`, so it
   arrives empty; `checks.yml` sets `DESTRUCTIVE_DDL_FILES` from the input
   regardless, and the script reads set-but-empty as "no migrations changed".
-  The `pr-body` input is gone entirely (MB.48), so the leg no longer depends on
-  a real `github.event.pull_request.body` — which is what makes the scan
-  provable locally at all: `npm run check:destructive-ddl -- --all` now reads
-  every acknowledgement from the repository itself and is green, where it was
-  permanently red while they lived in PR bodies. What proves the leg's own
+  The leg reads no `github.event.pull_request.body` (MB.48 retired its
+  `pr-body` input), which is what makes the scan provable locally at all:
+  `npm run check:destructive-ddl -- --all` reads every acknowledgement from
+  the repository itself and is green. What proves the leg's own
   gating is `tests/guards/destructive-ddl-check.test.ts` (the rules, the
   file-list resolution, the branch diff and the per-file sidecar correlation,
   each asserted to fail with its guard removed) and
   `npm run check:destructive-ddl -- --self-test` (the sidecar gating, against
   the fixtures under `scripts/__fixtures__/destructive-ddl/`).
-  Before MB.37 this target claimed to fall back to scanning every committed
-  migration; it never did — the workflow always exported the variable.
 - **`act-vitest` / `act-playwright` still do not exist**, even though
   `vitest.yml`/`playwright.yml` landed in M1.14. Unlike the `checks.yml` legs
   (single job, every input passed directly), both take a `db-image` input that

@@ -16,13 +16,7 @@ A tool for tracking spell ingredients and composing spell jars. The site is invi
 
 ### Vocabulary
 
-Three domain nouns, each meaning exactly one thing. Used consistently in routes, components, tests, and conversation.
-
-| Term            | Meaning                                                      |
-| --------------- | ------------------------------------------------------------ |
-| **Compendium**  | The global, admin-curated ingredient reference. What exists. |
-| **Ingredients** | A workspace's own ingredients and stock. What you have.      |
-| **Grimoire**    | A workspace's spells. What you make.                         |
+Three domain nouns, each meaning exactly one thing: the **Compendium** is what exists, a workspace's **Ingredients** are what it has, and its **Grimoire** is what it makes. CLAUDE.md's Vocabulary table defines them and binds their use in routes, components, tests and conversation.
 
 ---
 
@@ -84,7 +78,7 @@ Browser
   └── Client Components ──► /api/graphql ──► resolvers ──► services/ ──►┘
 ```
 
-**One rule holds the whole thing together: authorization lives in `src/modules/*/services/`, never in resolvers or pages.**
+**One rule holds the whole thing together: authorization is decided in `src/modules/*/services/` and nowhere else** (CLAUDE.md rule 1).
 
 Server components call services directly. No HTTP loopback to your own GraphQL endpoint — that would double latency and burn function invocations for nothing. Client components go through GraphQL. Both paths converge on the same service functions, so there is exactly one place where "can this user see this row" is decided.
 
@@ -219,15 +213,15 @@ export const auditColumns = {
 
 Spread as `...auditColumns` into every table **except two join tables** — `ingredient_categories` and `spell_categories` spread `...auditStampColumns` and are hard-deleted (MB.34). The third, `spell_ingredients`, carries the full set: a layer taken out of a spell is a tombstone (MB.110). The six-column set is defined as the four-column one plus the two delete columns, so it has one definition rather than two that can drift.
 
-**Why those three and only those three.** Every chip toggled off in the ingredient form and every ingredient pulled out of a spell is a write to one of them, so a soft delete fills the highest-churn tables in the schema with tombstones nothing reads: there is no restore UI in v1, and the trash view is v2. Each would also need a partial unique index so the same pair could be re-added, and — the real argument — each would add a `deleted_at IS NULL` that a service joining _through_ the table must remember by hand. That is exactly the mistake the third enforcement rule below exists to prevent, and the one place the repository cannot prevent it, since a finder filters the table it selects from and not the tables it joins. The v2 history trigger records a `DELETE` as readily as an `UPDATE`, so nothing is lost to history.
+**Why those two and only those two.** Every category chip toggled off, on an ingredient or on a spell, is a write to one of them, so a soft delete fills the highest-churn tables in the schema with tombstones nothing reads: there is no restore UI in v1, and the trash view is v2. Each would also need a partial unique index so the same pair could be re-added, and — the real argument — each would add a `deleted_at IS NULL` that a service joining _through_ the table must remember by hand. That is exactly the mistake the third enforcement rule below exists to prevent, and the one place the repository cannot prevent it, since a finder filters the table it selects from and not the tables it joins. The v2 history trigger records a `DELETE` as readily as an `UPDATE`, so nothing is lost to history.
 
-The four stamp columns stay on all three: `created_by` on a join row answers "who added this ingredient to this spell", which story 13 asks for. `workspace_members` keeps the full six — who removed whom, and when, is worth keeping — and so does `ingredient_folk_names`, which holds content rather than a link.
+The four stamp columns stay on both: `created_by` on a join row answers who added the link. `workspace_members` keeps the full six — who removed whom, and when, is worth keeping — and so does `ingredient_folk_names`, which holds content rather than a link.
 
 **Four enforcement rules, because audit columns rot the moment one path skips them:**
 
 1. **`*_by` never comes from a request body.** All writes go through `withAudit(session, fn)`, which injects them. A lint rule bans importing `db` outside `src/db/repository/`.
 2. **`updated_at` is a database trigger**, so a manual `psql` fix still stamps it.
-3. **Soft-delete filtering happens in the repository**, never at call sites. There is no exported query that can forget `deleted_at IS NULL`: `findMany`/`findOne` apply it where the column exists and read a join table that has none, deciding on the table's own shape rather than on a flag a caller passes. The writer holds the same line: every update and soft delete skips a deleted row, decided the same way, so a tombstone is never rewritten and a second delete never overwrites who made the first. The way back to a deleted row is v2's restore, and an edit follows it (§13, "Edit history"). **One exception, named rather than flagged: what a spell holds.** A spell keeps reaching an ingredient soft-deleted after it went into the jar, through two finders whose names end `…IncludingSoftDeleted` and which skip the ingredient's filter and no other (M5.3; `spell_ingredients` below).
+3. **Soft-delete filtering is the repository's** (CLAUDE.md rule 4). There is no exported query that can forget `deleted_at IS NULL`: `findMany`/`findOne` apply it where the column exists and read a join table that has none, deciding on the table's own shape rather than on a flag a caller passes. The writer holds the same line: every update and soft delete skips a deleted row, decided the same way, so a tombstone is never rewritten and a second delete never overwrites who made the first. The way back to a deleted row is v2's restore, and an edit follows it (§13, "Edit history"). **One exception, named rather than flagged: what a spell holds.** A spell keeps reaching an ingredient soft-deleted after it went into the jar, through two finders whose names end `…IncludingSoftDeleted` and which skip the ingredient's filter and no other (M5.3; `spell_ingredients` below).
 4. **The hard delete is a named method, not a flag.** `write.delete(table, where)` removes rows outright and is typed to reject any table carrying `deletedAt` at compile time; `softDelete` demands one. Same shape as `findManyIncludingSoftDeleted` — the escape hatch is narrow and impossible to point at the wrong thing.
 
 Every write transaction publishes the acting user as a transaction-local GUC, `app.current_user_id`. The statement is `select set_config('app.current_user_id', $1, true)` rather than a literal `SET LOCAL` — `is_local => true` _is_ `LOCAL`, and `SET LOCAL` accepts no bind parameters, so writing it literally would mean interpolating a user id into SQL text. Nothing in v1 reads it back: it is there for the v2 history trigger (§13) and for the policies deferred to the public launch (§8). That is the point of publishing it now — either one becomes a single migration rather than a re-audit of every write path.
@@ -246,7 +240,7 @@ Code, schema, and prose use _workspace_. Only the URL segment says _coven_.
 
 **`users`** — `id`, `email`, `emailVerified`, `name`, `image`, `role` (`user` | `admin`), `canCreateWorkspace` (boolean, default `false`), `verificationSentAt` (nullable; when the last verification mail went out, so the next is at least a minute away), + audit. `emailVerified` is true when Google or Discord reported the address verified or when the user followed our own verification mail (MB.66); Facebook and Microsoft profiles arrive unverified whatever they report. A provider that does not vouch is never matched to an existing row by its address: it is added to an account only by an explicit link from a signed-in session on `/account` (MB.71), after which its sign-in resolves by the provider account id and never by the address. An unverified account is provisional and lapses one verification window after its last mail, and three hours after sign-up at most (MB.67), which is how an address squatted by an unverified sign-up returns to its owner. An address changes only at verification (MB.54): asking for a new one mails it a change link and writes nothing to the row, so an established account never becomes provisional. `name`/`image` (not `displayName`/`avatarUrl`) deliberately — they're Better Auth's own core `User` field names (§2, §8), and renaming them would need a `user.fields` mapping in `src/lib/auth.ts` for no real benefit.
 
-`role` is a column, not a table; v1 needs no granular platform permissions. Admins can write the global compendium, global categories, the ingredient form vocabulary, the two group vocabularies that organise them (`category_groups`, `ingredient_form_groups`), and the planet and zodiac vocabularies (`planets`, `zodiac_signs`), and **nothing else** — an admin has no access to any workspace's ingredients or grimoire. The **primary admin** is the live admin whose email matches the `ADMIN_BOOTSTRAP_EMAIL` env var. It is promoted at a Google or Discord sign-in that reports the address verified, since those are the two providers whose verification can be trusted, or on verifying the address through our own mail from a session holding the row (MB.68); the address cannot be registered any other way. It cannot be revoked or deleted by anyone, itself included. Changing who it is means changing the variable and redeploying, and the previous primary admin stays an ordinary admin. Every other admin is granted and revoked by an existing admin from `/admin/users`, verified or not, every change is appended to an `admin_role_changes` ledger, a revoke that would leave zero admins is refused as a fallback for the gap between changing the variable and the new address signing in, and the primary admin can pause granting site-wide, itself included, through a one-row `site_settings` table (M2.9, built by MB.58–MB.63). An admin account is still an ordinary member of whatever workspaces it belongs to; the site role and the workspace roles are independent. Until then, the sign-in promotion is the only way to grant admin (MB.60).
+`role` is a column, not a table; v1 needs no granular platform permissions. Admins can write the global compendium, global categories, the ingredient form vocabulary, the two group vocabularies that organise them (`category_groups`, `ingredient_form_groups`), and the planet and zodiac vocabularies (`planets`, `zodiac_signs`), and **nothing else** — an admin has no access to any workspace's ingredients or grimoire. The **primary admin** is the live admin whose email matches the `ADMIN_BOOTSTRAP_EMAIL` env var. It is promoted at a Google or Discord sign-in that reports the address verified, since those are the two providers whose verification can be trusted, or on verifying the address through our own mail from a session holding the row (MB.68); the address cannot be registered any other way. It cannot be revoked or deleted by anyone, itself included. Changing who it is means changing the variable and redeploying, and the previous primary admin stays an ordinary admin. Every other admin is granted and revoked by an existing admin from `/admin/users`, verified or not, every change is appended to an `admin_role_changes` ledger, a revoke that would leave zero admins is refused as a fallback for the gap between changing the variable and the new address signing in, and the primary admin can pause granting site-wide, itself included, through a one-row `site_settings` table (M2.9, built by MB.58–MB.63). An admin account is still an ordinary member of whatever workspaces it belongs to; the site role and the workspace roles are independent. Until then, the primary admin's promotion, at sign-in or at verification, is the only way to grant admin (MB.60, MB.68).
 
 `canCreateWorkspace` defaults to `false`. Signing in with any registered provider earns an account and nothing more. The flag turns `true` by one of two routes — accepting a workspace invitation or an admin granting it — and once `true` it stays `true`, so an established user can create as many workspaces as they like. Admins can always create workspaces regardless of the flag, and nothing in the OAuth flow sets it. Being made admin sets it `true` all the same (MB.59), so the row states what the person may do without a reader knowing the admin rule, and revoking admin leaves it.
 
@@ -618,7 +612,7 @@ The message is the service's, verbatim. That is what carries M5.6b's "which colu
 
 ### Caching — three layers in v1
 
-**One rule above all: never cache anything not keyed by viewer identity.** A cache is the easiest way to leak one workspace's data into another's response.
+**One rule above all: a cache is keyed by viewer identity or holds nothing workspace-scoped** (CLAUDE.md rule 6). A cache is the easiest way to leak one workspace's data into another's response.
 
 **1. DataLoader — per-request batching.** Collapses the 50-ingredient N+1 from 101 queries to 3. Free, no invalidation problem, non-negotiable.
 
@@ -1061,7 +1055,7 @@ Keeping a spell `private` while building it, and the one-way widen to `workspace
 
 ## 11. TDD approach
 
-Every story becomes a failing test first: **write test → watch it fail → minimum code → refactor.** Both suites keep the 80% threshold on lines, branches, functions, and statements, with coverage artifacts uploaded. Per the `resume-2026` CLAUDE.md rule, run the `:coverage` variants when verifying — a plain pass can still fail CI on coverage alone.
+Every story becomes a failing test first: **write test → watch it fail → minimum code → refactor.** Both suites keep the 80% threshold on lines, branches, functions, and statements, with coverage artifacts uploaded. Verification runs the `:coverage` variants, for the reason CLAUDE.md's Commands section gives.
 
 ### Test database: local Postgres, not Neon, not SQLite
 
@@ -1238,7 +1232,7 @@ The highest-risk tests in the project.
 
 ### Component — Vitest + RTL
 
-`tests/components/<Name>/index.test.tsx`, importing the component as `@/components/<Name>`. Mirrored under `tests/` rather than colocated: MB.41 moved the whole suite out of `src/`, so the directory a component test sits in is the component's own path with the tree swapped, and nothing under `src/` is a test. Role and label queries only; no test ids for anything a user can see.
+`tests/components/<Name>/index.test.tsx`, importing the component as `@/components/<Name>`. Mirrored under `tests/` rather than colocated: MB.41 moved the whole suite out of `src/`, so the directory a component test sits in is the component's own path with the tree swapped, and nothing under `src/` is a test. Queries are by role and label (CLAUDE.md, Testing).
 
 - `IngredientSearch` — filtering, chip toggle, grouped chips collapse, clear, debounce via fake timers
 - `IngredientForm` — fuzzy warning renders and names each match's formal name, Create Anyway proceeds, compendium entries read-only for non-admins, the formal-name and form fields suggest in scope and accept free text outside the vocabulary
@@ -1262,7 +1256,7 @@ Specs: admin adds a compendium entry; A adds it to W's ingredients with a quanti
 ### Rules
 
 - Bug fixes start with a regression test.
-- No snapshots except design tokens and the GraphQL schema.
+- Snapshots for design tokens and the GraphQL schema only.
 - `fixtures/` factories, so tests read `makeIngredient({ categories: ['protection'] })`.
 
 ---
@@ -1488,7 +1482,7 @@ The staging component workshop is admin-only in v1 (M2.10): reviewers who should
 
 ### Try before sign-up
 
-Better Auth's `anonymous` plugin mints a `users` row and a session for a visitor so work done before signing up can be kept — a visitor drafting a spell against the public compendium, then keeping it by accepting an invitation. Declined for v1 by MB.80, where it was weighed against the public compendium: a public read needs no identity, and the plugin would write a row on every visit and every crawl, put a cookie on pages that are static without one, and add a third identity bootstrap outside `withAudit`. If the feature is wanted, the plugin is the mechanism, and its rows would need the same provisional-account expiry MB.67 gives unverified sign-ups. The mb.74 record moved it from "never" to here.
+Better Auth's `anonymous` plugin mints a `users` row and a session for a visitor so work done before signing up can be kept — a visitor drafting a spell against the public compendium, then keeping it by accepting an invitation. Declined for v1 by MB.80, where it was weighed against the public compendium, whose read needs no identity ([`mb.80-public-compendium.md`](design-decisions/mb.80-public-compendium.md), "What it rules out"). If the feature is wanted, the plugin is the mechanism, and its rows would need the same provisional-account expiry MB.67 gives unverified sign-ups. The mb.74 record moved it from "never" to here.
 
 ### Subscription billing
 

@@ -14,10 +14,9 @@ inferable from contents. Nothing in the schema enforces the distinction, because
 nothing can: the two are the same pair of columns pointing at the same
 `categories` rows, and the difference is which table they came from.
 
-- **The composite primary key is the assignment's identity**, as on
-  `ingredient_categories`. No surrogate `id`: one would let the same category be
-  assigned to the same spell twice, with nothing downstream able to tell the
-  rows apart. A duplicate is a `23505` naming
+- **The composite primary key is the assignment's identity**, with no
+  surrogate `id`, for [`ingredient_categories`](ingredient-categories.md)'
+  reason. A duplicate is a `23505` naming
   `spell_categories_spell_id_category_id_pk`, whoever adds it — the pair is the
   identity and the stamps are only who touched it, so a second member toggling
   the same chip on is the same row.
@@ -25,17 +24,15 @@ nothing can: the two are the same pair of columns pointing at the same
   `spell_categories_category_id_categories_id_fk`. `categories` is referenced by
   **id**, unlike the free text `spells` uses for moon phase and wax colour:
   §5's rule is that a vocabulary a member writes is text and one only an admin
-  writes is a foreign key, and here there is no vocabulary question at all,
-  since the row _is_ the link. The test proves which table each key names rather
+  writes is a foreign key, and a link has no vocabulary question to ask. The
+  test proves which table each key names rather
   than asserting it twice — a real category id in the spell column is refused,
   and so is a real spell id in the category column, each naming its own
   constraint. Repoint either key and that pair is what reddens.
-- **Indexed in both directions.** The primary key's index leads on `spell_id`
-  ("what is this spell tagged for"); `spell_categories_category_id_idx` leads on
-  `category_id` for "which spells are tagged for prosperity", with `spell_id`
-  riding along so the question is answerable from the index alone. It is not
-  unique — that is the primary key's job, and a unique index here would refuse a
-  category its second spell.
+- **Indexed in both directions**, as `ingredient_categories` is: the primary
+  key's index leads on `spell_id` ("what is this spell tagged for"), and the
+  non-unique `spell_categories_category_id_idx` on `category_id`, with
+  `spell_id` riding along, for "which spells are tagged for prosperity".
 - **The reverse index has a named v1 reader, which is why it exists here and not
   on `spell_ingredients`.** M10.11's grimoire list is filterable by category, so
   the category-to-spell direction is a real query; no v1 feature lists spells by
@@ -43,7 +40,7 @@ nothing can: the two are the same pair of columns pointing at the same
   `ingredient_categories` and is silent for this table — M10.4's acceptance
   criteria ("indexed both ways") and M10.11's filter are what settle it, and §5
   now says so rather than leaving the silence to be read as a refusal.
-- **No partial index, because there is no tombstone to dodge**, and no CHECK
+- **No partial index**, for `ingredient_categories`' reason, and no CHECK
   constraints: §5 names none, and between the key and the two foreign keys there
   is nothing about an assignment left to constrain.
 - **No `workspace_id`.** §5 names none, and a spell's workspace is the spell's.

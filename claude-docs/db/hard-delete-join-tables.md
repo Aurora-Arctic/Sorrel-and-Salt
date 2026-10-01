@@ -6,21 +6,13 @@ no `deleted_at`. A chip toggled off removes the row. `spell_ingredients` was
 the third until MB.110 — see "Why not `spell_ingredients`" at the end of this
 section.
 
-**Why these two.** They are the highest-churn tables in the schema, and
-nothing in v1 reads a deleted join row — there is no restore UI, and the trash
-view is v2. Soft-deleting them would cost a tombstone per toggle forever, a
-partial unique index on each so the same pair could be re-added, and — the
-argument that actually decided it — a `deleted_at IS NULL` that every service
-joining _through_ the table has to remember by hand. That last one is the
-mistake CLAUDE.md rule 4 exists to prevent, and the one place the repository
-cannot prevent it for you: `findMany` filters the table it selects **from**, not
-the tables it joins. The v2 history trigger records a `DELETE` as readily as an
-`UPDATE`, so history is unaffected.
-
-**What stays.** The four stamp columns: `created_by` on a join row answers "who
-added this ingredient to this spell" (story 13). `workspace_members` keeps the
-full six — who removed whom, and when, is worth keeping — and so does
-`ingredient_folk_names`, which holds content rather than a link.
+**Why these two** is DESIGN.md §5's argument ("Audit columns — on every table,
+and the join-table exception"): what decided it is the `deleted_at IS NULL`
+every service joining _through_ a soft-deleted join table would have to
+remember by hand — CLAUDE.md rule 4's mistake, in the one place the repository
+cannot prevent it, since `findMany` filters the table it selects **from**. The
+four stamp columns stay, and `workspace_members` and `ingredient_folk_names`
+keep the full six (§5).
 
 **No `deleted_at` also means no partial unique index**, on either.
 Rule 4's convention exists so a tombstone cannot reserve a name forever, and a

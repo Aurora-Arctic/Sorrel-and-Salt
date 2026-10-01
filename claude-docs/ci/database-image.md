@@ -31,15 +31,12 @@
   this workflow at all, and the image rebuilds only when the Dockerfile or its
   init script changes.
 
-  **No `push` trigger** (MB.99). One on `staging`/`main`, path-filtered to the
-  image's inputs, existed to seed the layer cache: under `type=gha` a
-  `pull_request` run wrote only to its own merge-ref scope, so only a push to
-  `staging` or `main` wrote an entry another branch could restore (a cold build
-  step was ~25s, a warm one ~6–8s). The cache is in the registry now, one copy
+  **No `push` trigger** (MB.99). The layer cache is in the registry, one copy
   every build writes and every branch reads ([Composite
-  actions](composite-actions.md)). The push had stopped building anyway: a PR
-  that changes the image builds it through `pr-gate.yml` first, so the push
-  found the tag already published and skipped.
+  actions](composite-actions.md)), so a push has no branch-scoped cache to
+  seed; and a PR that changes the image builds it through `pr-gate.yml`
+  first, so a push would find the tag already published. MB.17 and MB.99 have
+  the trigger's history and the timings.
 
 - **`build-db-image.yml`'s `workflow_call` trigger** (M1.14) runs whenever
   it is called, whatever the calling PR touched, and exposes an `image`

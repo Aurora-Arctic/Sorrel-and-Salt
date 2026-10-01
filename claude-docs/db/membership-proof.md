@@ -13,9 +13,8 @@ await withAudit(session, (write) => write.insertInWorkspace(membership, spells, 
 brand that `src/modules/coven/services/membership.ts` does not export. No other file can
 name the property, so no object literal satisfies the type and the one cast to
 it in the codebase sits past both of `assertMembership`'s refusals. The brand
-is erased at compile time: the layer costs nothing at runtime — no second
-connection, no transaction on the read path, no per-environment credentials,
-which is the trade MB.29 made when it deferred RLS.
+is erased at compile time, so the layer costs nothing at runtime (DESIGN.md
+§8) — the trade MB.29 made when it deferred RLS.
 
 ### What the check asks
 
@@ -23,9 +22,9 @@ The third argument is a **permission**, not a minimum role: `{ spell:
 ['create'] }`, checked against per-role statements built with better-auth's
 `createAccessControl` (`src/modules/coven/services/access-control.ts`). Naming a resource or
 an action the statements do not declare is a compile error. Several resources
-in one request are ANDed. An empty request throws an `Error` rather than a
-`Forbidden` — it would authorize vacuously, so it is a caller's bug and reads
-as one.
+in one request are ANDed, and an empty one throws (§8) an `Error` rather than a
+`Forbidden`: a request that would authorize vacuously is a caller's bug, and
+reads as one.
 
 Why statements rather than the rank the design doc originally specified, and
 what that costs while most of the services are still unwritten:
@@ -90,32 +89,20 @@ rather than an addition.
 
 ### Where the proof is weaker than a policy
 
-Stated rather than glossed, because the type looks like it closes more than it
-does. **Both gaps are covered by M6.6's per-entity direct-id denial tests**,
-which is the same coverage that would have caught a policy written wrong:
+DESIGN.md §8 states the three gaps — a hand-written `where` under a valid
+proof, the tables with no `workspace_id` of their own, and a cast — because
+the type looks like it closes more than it does.
 
-- A service holding a **valid proof for W** that hand-writes a `where` naming
-  X's ids satisfies the type and still reads across workspaces. The proof
-  constrains which workspace the query is scoped to, not which ids the caller
-  chose to ask about.
-- **`spell_ingredients` and `spell_categories` carry no `workspace_id`**, so
-  the column name a guard would infer the scoped set from says "unscoped" about
-  the two tables holding what a spell is made of — which is why DESIGN.md §8
-  says "workspace-scoped" is not the same as "has a `workspace_id` column".
-  M10.3 closed this one by making it a third shape rather than a subset of the
-  unscoped side: both tables carry a `spell_id`, the unscoped finders now
-  refuse them on it, and `findManyInSpell` reaches them through the parent
-  spell. M4.8 closed the same gap for `ingredient_folk_names` and
-  `ingredient_categories`, which carry an `ingredient_id` and no
-  `workspace_id`: the unscoped finders refuse them on it, and
-  `findManyOfIngredients` reaches them through the parent ingredient. That
-  leaves the first gap above as the live one.
-
-A cast is the third gap, and it is review's job rather than the type's: a value
-that already has the proof's public shape is _comparable_ to it, so
-`{ workspaceId, userId, role } as Membership` compiles where `session as
-Membership` does not. `tests/modules/coven/services/membership.test.ts` pins the two the type
-does catch — the object literal and the forgery from a session — as
-`@ts-expect-error` lines, which fail `npm run typecheck` the moment the brand
-stops being required. A runtime assertion could not see that at all: it would
-pass just as happily against a signature that had quietly gone optional.
+- **The first is the live one.** The proof constrains which workspace a query
+  is scoped to, not which ids the caller chose to ask about; M6.6's
+  per-entity direct-id denial tests cover it.
+- **The second is closed.** `spell_ingredients` and `spell_categories` carry a
+  `spell_id`, which the unscoped finders refuse and `findManyInSpell` reaches
+  through the parent spell (M10.3); `ingredient_folk_names` and
+  `ingredient_categories` carry an `ingredient_id`, refused the same way and
+  reached through the parent ingredient by `findManyOfIngredients` (M4.8).
+- **The third is review's.** `tests/modules/coven/services/membership.test.ts` pins the two the type
+  does catch — the object literal and the forgery from a session — as
+  `@ts-expect-error` lines, which fail `npm run typecheck` the moment the brand
+  stops being required. A runtime assertion could not see that at all: it would
+  pass just as happily against a signature that had quietly gone optional.

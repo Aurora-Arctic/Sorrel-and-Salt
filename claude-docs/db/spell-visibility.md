@@ -97,9 +97,7 @@ are [`m5.3-spells-keep-deleted-ingredients.md`](../design-decisions/m5.3-spells-
 
 `src/modules/grimoire/services/spell-visibility.ts`'s `setSpellVisibility(session, workspaceId,
 spellId, visibility)`. `private` may be widened to `workspace`; `workspace` may
-never be narrowed back. Once the coven has read a spell and built on it, hiding
-it retracts something they were relying on — widening is a gift, narrowing is a
-retraction, so only one direction is allowed. The narrowing is refused with a
+never be narrowed back, for §5's reason. The narrowing is refused with a
 `Forbidden` **carrying a message that says so**, not the bare one: the caller
 holds the permission, and a two-word refusal would send them looking for a
 role they already have. The rule governs visibility and not existence — a

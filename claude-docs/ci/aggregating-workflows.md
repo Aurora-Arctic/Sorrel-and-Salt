@@ -3,25 +3,21 @@
 - **`pr-gate.yml`** — path-filters `lint`/`typecheck`/`build`/`destructive-ddl`
   (passed to `checks.yml` as its four `run-*` inputs), `vitest` and
   `playwright` via `dorny/paths-filter`; `format`, `audit` and `gitflow` always
-  run. It calls `checks.yml` **once**, as the `checks` job, where lint, format,
-  typecheck, build and audit used to be five jobs calling five workflows — so a
-  change to `checks.yml` now flips the lint, typecheck, build and
-  destructive-ddl filters together, which is what sharing one workflow costs. `vitest`/`playwright`
-  (M1.14) are real `workflow_call` jobs now, same job names the M0-era stubs
-  used so no required-status-check rename was ever needed.
+  run. It calls `checks.yml` **once**, as the `checks` job, so a change to
+  `checks.yml` flips the lint, typecheck, build and destructive-ddl filters
+  together, which is what sharing one workflow costs. `vitest`/`playwright`
+  (M1.14) are `workflow_call` jobs under the job names the M0-era stubs used,
+  so no required-status-check rename was ever needed.
 - **One concurrency group per PR, and every job in it cancellable.**
   `pr-gate.yml`'s workflow-level group is `PR Gate-<pr number>` with
   `cancel-in-progress: ${{ github.event.action != 'edited' }}`, so a push, a
   reopen or a close cancels the PR's run in flight, whole, and an edit waits
   (below). The check jobs and `gitflow` also carry job-level
   groups that cancel in progress; the workflow's group already covers them, and
-  they are left alone. **The three image builds are cancellable too** (MB.98).
-  Until then each carried a job-level group with `cancel-in-progress: false`,
-  meant to stop a cancelled push freezing a half-written layer under its
-  content-addressed tag. That protected nothing: a job's own group cannot
-  outlast the workflow cancelling the whole run, and three of the ten most
-  recent cancelled runs had all three builds cancelled. Nothing needed
-  protecting either. A push writes the tag with the manifest, after every blob
+  they are left alone. **The three image builds are cancellable too** (MB.98),
+  with no job-level group of their own: one cannot outlast the workflow
+  cancelling the whole run, and a cancelled build has no half-written layer
+  to protect. A push writes the tag with the manifest, after every blob
   it names, so a cancelled one leaves no tag for `build-image`'s
   `imagetools inspect` to find, and the layer cache commits each blob whole
   and writes its index last. The next run just rebuilds.
@@ -51,8 +47,8 @@
 - **An edited PR's gate run waits, then cancels itself unless the edit
   retargeted the base** (MB.100). `edited` is in the trigger types so a
   retarget re-runs the gate against the new base, but an edit to a title or a
-  description changes nothing the gate checks, and until MB.100 its run
-  cancelled the one in flight like a push. Blacksmith's [code]smith appends a
+  description changes nothing the gate checks, and once its run cancelled the
+  one in flight like a push. Blacksmith's [code]smith appends a
   footer to every new PR's body four to nine seconds after it opens, so every
   PR since the app was installed had its `opened` run cancelled and re-run;
   on #535 the cancellation wedged, `build-image` neither running nor
@@ -135,15 +131,10 @@
   through inputs instead — `run-lint`/`run-typecheck`/`run-build` on
   `checks.yml`, `should-run` elsewhere — and every calling job itself runs
   unconditionally.
-  - **Provenance.** It arrived at M0.16 (`1db422a`) as a byte-for-byte copy of
-    `resume-2026`'s own `should-run` comments; that task's decision record
-    verified YAML parsing and a `diff` against the upstream originals, and
-    nothing about check-run naming. M0.20 (`860d10f`) re-cited it as
-    "upstream's own `should-run` comments". The doc consolidation (`ecce1f1`)
-    lifted it into this file as a general rule, and MB.32 (`2e7dcfe`) extended
-    it to matrix jobs. **No commit, decision record or transcript in this repo
-    describes the symptom being observed** — and none could, since no ruleset
-    here has ever required a status check.
+  - **Provenance.** Copied in from another repo's comments at M0.16 and
+    re-cited since (M0.20 `860d10f`, `ecce1f1`, MB.32 `2e7dcfe`), never
+    observed: **nothing in this repo records the symptom**, and nothing could
+    have, with no status check ever required here. MB.39 has the trace.
   - **Its scope is narrower than this bullet has been stating.** Every
     assertion in the workflow files is written about _the job that calls a
     reusable workflow_ — `pr-gate.yml`'s `checks`/`vitest`/`playwright`. Whether

@@ -169,11 +169,9 @@ hotfix build ever needs to exercise a real sign-in, do it against
 is by design** (MB.47). Both are marked Sensitive in Vercel, and a Sensitive
 variable cannot be read back — the pull says so ("Secret values cannot be
 pulled from the `<env>` Environment") and writes `[SENSITIVE]` in place of the
-value. That is a perfectly non-empty string, so it sails through any check that
-only asks whether something is set, which is how it once reached `drizzle-kit`
-and produced an `ERR_INVALID_URL` with its own input masked out of the stack
-trace. A diagnostic run pulled staging both with and without `--git-branch` and
-got the placeholder either way; no arrangement of flags changes it.
+value. That is a perfectly non-empty string, so a check that asks only whether
+something is set lets it through, and no `vercel pull` flag changes it — MB.47
+has the diagnostic run that showed both, and what the placeholder broke.
 
 So **CI keeps its own copy of exactly those two**, and nothing else:
 
@@ -183,14 +181,16 @@ So **CI keeps its own copy of exactly those two**, and nothing else:
 | `BETTER_AUTH_SECRET` | `BETTER_AUTH_SECRET`                               | One value for both environments, so one secret                      |
 | a hotfix preview     | the pulled `POSTGRES_URL`                          | Its Neon branch is created per deployment; no static value names it |
 
-**The runtime is untouched.** A deployed function reads its environment from
-the Vercel platform, not from the pulled file. Only `vercel build` and
+**The runtime is untouched.** Deployed functions take their environment from
+the Vercel platform, not the pulled file. Only `vercel build` and
 `drizzle-kit migrate` read that file, and both run in CI — so this is a CI
 problem with a CI answer, and the Sensitive flag stays on.
 
 **Named secrets rather than GitHub Environments**, deliberately: an environment
-would need a new `workflow_call` input, a new `resolve-target` output and an
-`environment:` key on two jobs, to express what the secret's name already says.
+would add an input, an output and two `environment:` keys to the workflows to
+say what the secret's name already says (MB.47 built it first and reverted it).
+How the workflows select between the secrets is
+[`ci/deploy.md`](ci/deploy.md), "Deploy".
 
 **The cost, stated as a rule rather than hoped away: the connection string now
 lives in two places.** Rotating a database credential means changing it in
@@ -206,22 +206,19 @@ between the same two secrets the same way, and
 `tests/guards/ci-secret-environments.test.ts` is what holds those two
 selections together.
 
-**Could be retired, and deliberately is not yet.** `NEON_API_KEY`/`NEON_PROJECT_ID`
-are set, so `GET /projects/{id}/connection_uri?branch_id=…` could give every
-branch its own connection string from Neon directly — one source of truth, no
-second copy, and ephemeral branches covered too. The key already exists for the
-production snapshot, so the reason not to do it is scope rather than missing
-keys: the snapshot key can create branches, and reading connection strings with
-it would put that key on every deploy's path, including staging's. That is a
-broader credential than one connection string. It would not replace
-`BETTER_AUTH_SECRET` either way.
+**Could be retired, and deliberately is not yet** (MB.47).
+`GET /projects/{id}/connection_uri?branch_id=…` could give every branch its
+connection string from Neon directly — one copy, ephemeral branches covered
+too — and `NEON_API_KEY`/`NEON_PROJECT_ID` are already set. What stops it is
+scope: the snapshot key can create branches, and this would put it on every
+deploy's path, staging's included. It would not replace `BETTER_AUTH_SECRET`
+either way.
 
 `--git-branch` stays on the preview pull regardless (MB.27): the OAuth
 secrets exist _only_ as `staging`-branch-scoped rows and are absent from
-an unscoped pull. The production pull passes no branch and must not — Vercel
-rejects the pair with
-``Invalid request: `target` must be "preview" when specifying a `gitBranch` `` —
-so each workflow pulls through two steps, one per target (MB.45).
+an unscoped pull. The production pull passes no branch and must not, so each
+workflow pulls through two steps, one per target (MB.45;
+[`ci/deploy.md`](ci/deploy.md) has the rejection).
 
 `scripts/assert-pulled-env.ts` (MB.46) reports every key a pull returned, with
 a classification and a length and never a value, so which variables survived is
@@ -269,17 +266,14 @@ devcontainer carries isn't scoped to manage Actions secrets/variables
    (`main`, `staging`) → Connection Details.
 
    **Delete `channel_binding=require` from whatever the console hands you**
-   (MB.49). It puts that parameter in by default and it does not work with
-   this stack: `channel_binding` is a libpq _client-side_ option, and
-   postgres.js consumes `sslmode` and its own known keys and then forwards
-   every remaining query parameter to the server as a **startup parameter**.
-   Postgres has never heard of it and answers `42704 unrecognized
-configuration parameter "channel_binding"`, which `drizzle-kit migrate`
-   swallows — so the migration exits 1 in total silence. Keep
-   `sslmode=require`: that one postgres.js does consume, and it is what
-   actually requests TLS. `scripts/assert-pulled-env.ts` now rejects the
-   parameter by name before CI tries to connect, so this is a rule the
-   pipeline enforces rather than one to remember.
+   (MB.49). The console puts it in by default, and it does not work with
+   this stack: a libpq _client-side_ option that postgres.js hands to the
+   server, which refuses it with `42704` — and `drizzle-kit migrate` swallows
+   that into a silent exit 1 ([`ci/deploy.md`](ci/deploy.md), "Deploy", has
+   the mechanism). Keep `sslmode=require`: that one postgres.js does consume,
+   and it is what actually requests TLS. `scripts/assert-pulled-env.ts`
+   rejects the parameter by name before CI tries to connect, so this is a
+   rule the pipeline enforces rather than one to remember.
 
 3. **Google OAuth client**: Google Cloud Console → APIs & Services →
    Credentials → Create OAuth client ID (Web application). Authorized

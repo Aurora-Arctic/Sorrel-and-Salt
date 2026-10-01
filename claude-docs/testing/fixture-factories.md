@@ -20,9 +20,9 @@ fixture that names it. The schema import is `import type`: a runtime import of
 the schema is a runtime import of drizzle-orm, and `tests/support/` is not
 among the paths allowed to make one (CLAUDE.md rule 4 / MB.33).
 
-**Setup rows go through the raw `postgres` client and the shared inserters;
-a test whose subject is the write path is the one that uses `withAudit`**
-(MB.101). Setup must not depend on the code under test, and the writer refuses
+**Setup rows bypass the writer** (MB.101; the rule is CLAUDE.md's Testing
+section, its long form `.claude/rules/testing.md`). Setup must not depend on
+the code under test, and the writer refuses
 states setup regularly needs — an already-deleted row, an un-delete, a
 backdated stamp, a Better Auth row — while a compendium ingredient is written
 through `withAudit` only by `insertInCompendium` under the `SiteAdmin` proof,
@@ -57,9 +57,8 @@ defaults are names that cannot be seeded: `makeIngredient()` is Testwort /
 _Fixtura testalis_, every formal name the nomenclature table supplies is of
 the same kind, `makeSpell()`'s default custom layer is Fixture Ash, and
 `makeWorkspace()` is Fixture Coven. A fixture is what a test writes _beside_
-the seeded world; the rule covers every ingredient or coven name a factory
-supplies on its own, while a test that _states_ a real name is stating what
-it is about. `makeSpell()` still lands in W — `workspaceId` is a reference,
+the seeded world, so the rule binds a factory's own defaults and not a name a
+test states (`.claude/rules/testing.md`, "Fixtures"). `makeSpell()` still lands in W — `workspaceId` is a reference,
 not an insert, and a fixture spell and a seeded spell belong in the same
 coven. `ingredient.test.ts` and `workspace.test.ts` also check the defaults
 against `COMPENDIUM_INGREDIENTS` and `FIXTURE_WORKSPACES`, read from

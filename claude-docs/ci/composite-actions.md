@@ -1,10 +1,8 @@
 ## Composite actions
 
-`.github/actions/` — five actions. `timer-start` and `timer-elapsed` were two
-more until MB.32 deleted them: 46 lines across twelve workflows to
-print an elapsed time into a job summary. `duration` stays an **optional**
-input on `job-summary` and `pr-comment`, so restoring a timer would need no
-edit at any call site; nothing passes it today.
+`.github/actions/` — five actions. `duration` is an **optional** input on
+`job-summary` and `pr-comment`, so restoring the timer actions MB.32 deleted
+would need no edit at any call site; nothing passes it today.
 
 - **`checkout-to-app`** — `actions/checkout`, then
   `cp -a "$GITHUB_WORKSPACE"/. /app/`. Every other local action resolves as
@@ -16,13 +14,10 @@ edit at any call site; nothing passes it today.
     nothing underneath for a stale file to survive _as_: `Dockerfile.node`
     copies in the two manifests, runs `npm ci`, and stops, so `node_modules` is
     all the image contributes to `/app` and the checkout is the only source a
-    job ever sees. Until MB.42 both `Dockerfile.node` and `Dockerfile.e2e`
-    baked the whole repo in with `COPY . .`, and every file dropped from the
-    repo since the image was last built stayed on disk after the overlay —
-    untracked, not gitignored, and indistinguishable to `oxlint`, `tsc` or a
-    `tests/**` glob from a file the branch actually had. That layer was
-    shadowed by the `..:/app` bind mount in every compose service and in the
-    devcontainer; CI was its only reader, and there it was the bug.
+    job ever sees; `Dockerfile.e2e` is the same. How a baked-in `COPY . .`
+    once left every deleted file on disk in every job, and why removing the
+    layer beat cleaning up after it, is MB.42's and
+    [`design-decisions/mb.42-no-source-layer.md`](../design-decisions/mb.42-no-source-layer.md).
   - **`tests/guards/image-source-layer.test.ts` is what keeps it that way.**
     It parses every `COPY`/`ADD` in both Dockerfiles and checks each source
     against a per-file allowlist — the two manifests, plus
@@ -31,17 +26,10 @@ edit at any call site; nothing passes it today.
     layer as `COPY . .`, and a new COPY is a decision, not a convenience. The
     guard runs in CI's `vitest` job, so a source layer re-added tomorrow fails
     in the diff that adds it rather than on the next PR that deletes a file.
-    And the fix is live on the PR that makes it: `pr-gate.yml` builds the
-    image under a tag hashed from `Dockerfile.node` and `package-lock.json`,
-    so a Dockerfile change runs on its own image — unlike an edit to this
-    action, which every caller resolves at `@main`.
-  - Found by MB.41, whose new test-location guard failed on its first CI run
-    reporting 34 test files outside `tests/` — every one of them that move's own
-    predecessor, still sitting where the image had baked it. The count is the
-    tell: 34, not that branch's 39, because the image predated the five test
-    files added since. The guard was changed to scan the git index instead,
-    which is right on its own merits and left the condition itself untouched
-    until MB.42.
+    A Dockerfile change also runs on its own PR, because `pr-gate.yml` builds
+    the image under a tag hashed from `Dockerfile.node` and
+    `package-lock.json`; an edit to this action does not, because every caller
+    resolves it at `@main`.
 - **`job-summary`** — a pass/fail `$GITHUB_STEP_SUMMARY` callout, with a tailed
   log excerpt on failure.
 - **`pr-comment`** — upserts one marked comment per check (`<!-- ci-<slug> -->`),
@@ -71,14 +59,13 @@ edit at any call site; nothing passes it today.
     `buildcache`.
   - **Why not the Actions cache.** A `type=gha` entry written by a
     `pull_request` run can be restored only by re-runs of that PR, so each
-    PR stored its own copy of the same blobs. At MB.99 the Actions cache held
-    94 entries and 10,219 MB against its 10 GB cap, 67 of them buildkit blobs
-    under PR merge refs, and GitHub was evicting by last access — which
-    meant the Next.js build cache and the npm cache, the entries that do
-    pay. The export was slow too: PR 510's build pushed its image in 43s and
-    then spent 32s writing the same layers into the Actions cache. A
-    registry export finds the blobs the push has just uploaded and writes a
-    manifest.
+    PR stored its own copy of the same blobs, filled the 10 GB cap, and got
+    the Next.js and npm caches, the entries that do pay, evicted by last
+    access. Exporting there also rewrote layers the push had just uploaded,
+    where a registry export finds those blobs and writes a manifest. The
+    measurements are
+    [`design-decisions/mb.96-plan.md`](../design-decisions/mb.96-plan.md),
+    "Facts the plan rests on".
   - **Cost.** GHCR storage is free for a public repo. Each build moves
     `:buildcache` and leaves the previous cache manifest untagged, the same
     way the hash tags already accumulate; pruning the packages' old versions
