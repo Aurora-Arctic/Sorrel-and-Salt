@@ -15,6 +15,7 @@ import { users } from '@/modules/identity/schema/users';
 import { categories, categoryGroups } from '@/modules/vocabulary/schema/categories';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
 import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
+import { ingredientSubstitutes } from '@/modules/ingredients/schema/ingredient-substitutes';
 import {
   ingredientFormGroups,
   ingredientForms,
@@ -41,6 +42,7 @@ const AUDITED: PgTable[] = [
   categoryGroups,
   categories,
   ingredientFolkNames,
+  ingredientSubstitutes,
   ingredientFormGroups,
   ingredientForms,
   ingredients,
@@ -92,8 +94,8 @@ async function byReferencesOf(table: string): Promise<Record<string, Reference>>
 const USERS_ID = { foreign_table: 'users', foreign_column: 'id' };
 
 describe('the audited tables', () => {
-  it('are the eighteen the updated_at sweep names: sixteen audited, two stamped', () => {
-    expect(AUDITED).toHaveLength(16);
+  it('are the nineteen the updated_at sweep names: seventeen audited, two stamped', () => {
+    expect(AUDITED).toHaveLength(17);
     expect(STAMPED).toHaveLength(2);
     expect([...named(AUDITED), ...named(STAMPED)].map(([name]) => name).sort()).toEqual(
       AUDITED_TABLES,
