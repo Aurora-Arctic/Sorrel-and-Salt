@@ -29,6 +29,14 @@ data migration may still ride in the first, written with `generate --custom`,
 which copies the last snapshot rather than diffing the schema, so the
 undeclared columns stay in it: MB.136's `0031_refill-ingredient-lists` is
 the worked case.
+**A table added while a drop is pending is `generate --custom` too**, with the
+DDL taken from a `generate` run into a scratch copy of `src/db/migrations`
+(`--config` naming a copy of `drizzle.config.ts` whose `out` is the copy), and
+the drop it also emits left out. The new snapshot is the copied one plus that
+run's entry for the table, so the undeclared columns stay in it and the drop
+is still the second task's to generate. MB.139's
+`0032_ingredient-substitutes` is the worked case, made while MB.137's drop of
+the planet, zodiac and colour singles was pending.
 MB.82 and MB.107 are the worked case: MB.82 stopped declaring `pending_slug`
 and its date, and MB.107 dropped them.
 

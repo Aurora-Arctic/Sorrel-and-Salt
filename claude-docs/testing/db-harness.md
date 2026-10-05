@@ -50,7 +50,7 @@ run as a test.
   filtered out. `AUDIT_COLUMNS`, `STAMP_COLUMNS` and `DELETE_COLUMNS` are
   **literal string lists, deliberately not derived from `src/db/audit.ts`**:
   a test comparing a table against `Object.keys(auditColumns)` passes for any
-  value of `auditColumns`, an empty one included. `AUDITED_TABLES` (eighteen
+  value of `auditColumns`, an empty one included. `AUDITED_TABLES` (nineteen
   names, the two hard-deleted join tables among them) and
   `UNAUDITED_TABLES` (Better Auth's `accounts`, `sessions`, `verifications`)
   moved here from `updated-at-trigger.test.ts` so the trigger sweep and the

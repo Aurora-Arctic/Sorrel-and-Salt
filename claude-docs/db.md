@@ -47,7 +47,7 @@ The `db:*` scripts (generate, migrate, seed, drop, reset, studio), `probe-databa
 
 ## The ingredient identity model (MB.28, table M4.1)
 
-`ingredients` (both tiers in one table), `ingredient_forms` and `ingredient_folk_names`: identity is formal name plus form in the generated `canonical_key`, unique per tier by partial index; planets, zodiac signs and colours are `text[]` lists stored as `deities` is, in the order entered (MB.134, MB.136). [`db/identity-model.md`](db/identity-model.md)
+`ingredients` (both tiers in one table), `ingredient_forms`, `ingredient_folk_names` and `ingredient_substitutes`, each substitute a link or a typed name (MB.138, table MB.139): identity is formal name plus form in the generated `canonical_key`, unique per tier by partial index; planets, zodiac signs and colours are `text[]` lists stored as `deities` is, in the order entered (MB.134, MB.136). [`db/identity-model.md`](db/identity-model.md)
 
 ### Fuzzy matching: one index, and a rule every caller is bound by (M4.6)
 
