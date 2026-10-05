@@ -228,8 +228,24 @@ and below on top of that, so they read as a row of their own. An entry is a pill
 in the chip's geometry but neutral, edged in the muted ink, since a free-text
 entry has no category group to take a colour from. The entry an error names
 takes the field's error edge. Its × is a 24px target, WCAG 2.2's minimum,
-inside a pill too short for 44px. Nothing yet bounds a long entry, which can run past
-the column: MB.133 settles how one is drawn.
+inside a pill too short for 44px.
+
+**A long entry is cut off, never wrapped or let run** (MB.133). A pill is no
+wider than the column, and its text ends in an ellipsis where the column does,
+so every pill stays one line in the chip's shape and nothing scrolls the page
+sideways at 320px. The × never shrinks: the text gives way. The whole text
+stays reachable three ways: it is the entry's text in the DOM, so a screen
+reader reads it in full; the × is still named by it; and a tooltip,
+`role="tooltip"`, shows it above the pill while the entry is hovered or its
+× has focus. It is [`InfoTip`](info-tip.md)'s bubble and fade, through the
+`tip-bubble` mixin, and like InfoTip's it stays in the page while closed,
+faded out and `aria-hidden`, so it fades out as well as in. The tooltip
+opens only on an entry that is cut off, measured as it opens, closes on Escape
+(WCAG 1.4.13), waits 150ms before closing as the pointer leaves, as InfoTip
+does, so the pointer can cross onto it, and breaks an unbroken text anywhere
+to stay inside the column. On touch it opens from the emulated hover a tap on the
+entry's text fires. List entries take no length cap: the layout holds any
+length, and no other text field has one either.
 
 ## Stories
 
@@ -269,6 +285,12 @@ pass on whatever an earlier step had focused. It covers:
   as free text, and each list's box, Add, Enter, blank, remove, focus, order
   and announcements, and a save refused while a box holds text until it is
   added or cleared.
+- **A long entry**: a cut-off entry's tooltip shown on hover and while its ×
+  has focus, closed on Escape, and absent for an entry that fits, with the
+  layout jsdom lacks stubbed through `scrollWidth` and `clientWidth`; its ×
+  still named by the whole text. The hover is fired on the entry's words, found
+  by their text, the closed tooltip that repeats them ignored: the wrapper
+  that listens has no role to query by.
 
 Role and label queries only. It runs in the `dom` (jsdom) Vitest project —
 `npm run test:coverage`.

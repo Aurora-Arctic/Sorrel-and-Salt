@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
 import type {
   CreateWorkspaceIngredientMutation,
@@ -622,6 +622,74 @@ describe('IngredientForm', () => {
 
       expect(entries()).toEqual(['Remove Second Fixture']);
       expect(textbox(entry)).toHaveFocus();
+    });
+
+    describe('a long entry', () => {
+      const long =
+        'Fixturawortiamtestalisfixturawortiamtestalisfixturawortiamtestalisfixturawortiam';
+      const tooltip = () => within(group()).queryByRole('tooltip');
+
+      // jsdom lays nothing out, so an entry's text is cut off when it is
+      // longer than 30 characters: wider than the 240px left to it.
+      beforeEach(() => {
+        vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockImplementation(function (
+          this: HTMLElement,
+        ) {
+          return (this.textContent ?? '').length * 8;
+        });
+        vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(240);
+      });
+      afterEach(() => vi.restoreAllMocks());
+
+      // What a pointer rests on: the entry's words, not the tooltip that
+      // repeats them, which stays in the page while closed.
+      const entryText = (value: string) =>
+        within(within(group()).getByRole('list')).getByText(value, {
+          ignore: '[role="tooltip"]',
+        });
+
+      it('shows its whole text in a tooltip on hover, until the pointer leaves', async () => {
+        renderForm();
+
+        addEntry(entry, long);
+        const text = entryText(long);
+        expect(tooltip()).not.toBeInTheDocument();
+        fireEvent.mouseEnter(text);
+
+        expect(tooltip()).toHaveTextContent(long);
+        fireEvent.mouseLeave(text);
+        await waitFor(() => expect(tooltip()).not.toBeInTheDocument());
+      });
+
+      it('shows it while its x has focus, and closes on Escape', () => {
+        renderForm();
+
+        addEntry(entry, long);
+        act(() => removeButton(long).focus());
+
+        expect(tooltip()).toHaveTextContent(long);
+        fireEvent.keyDown(document, { key: 'Escape' });
+        expect(tooltip()).not.toBeInTheDocument();
+        expect(removeButton(long)).toHaveFocus();
+      });
+
+      it('keeps its x named by the whole text', () => {
+        renderForm();
+
+        addEntry(entry, long);
+
+        expect(removeButton(long)).toBeInTheDocument();
+      });
+
+      it('shows no tooltip on an entry that fits', () => {
+        renderForm();
+
+        addEntry(entry, 'Testwort');
+        fireEvent.mouseEnter(entryText('Testwort'));
+        act(() => removeButton('Testwort').focus());
+
+        expect(tooltip()).not.toBeInTheDocument();
+      });
     });
 
     it('sends the entries in order, less any removed', async () => {

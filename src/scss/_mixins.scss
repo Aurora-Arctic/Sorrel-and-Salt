@@ -130,7 +130,7 @@
 // A tip's bubble: drawn as the low-stock badge is, square-cornered at caption
 // size, and faded in and out over 500ms, the owner's pace, rising 2px as it
 // opens. `.is-open` shows it; closed, it takes no pointer once the fade ends.
-// No position or width: each tip places itself.
+// No position or width: InfoTip's and a list entry's tooltip sit differently.
 // claude-docs/components/info-tip.md, "Styling".
 @mixin tip-bubble {
   $fade: 500ms;

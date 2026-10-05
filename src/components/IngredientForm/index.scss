@@ -39,11 +39,17 @@
 
 // A pill in the chip's geometry, but neutral: a free-text entry has no
 // category group to take a colour from. The x's own target stands in for
-// the right-hand padding.
+// the right-hand padding. No wider than the column: a longer text is cut off
+// rather than wrapped, so every pill stays one line in the chip's shape, and
+// the min-width lets it shrink below its text's width. Positioned for its
+// tooltip.
 .ingredient-form__entry {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: space(1);
+  min-width: 0;
+  max-width: 100%;
   // The gap spaces them, not typography-base's margin on a list item.
   margin: 0;
   padding: 0.125rem 0.125rem 0.125rem 0.6875rem;
@@ -66,8 +72,44 @@
   }
 }
 
+// The text and its tooltip, the hover target: it shrinks with the pill so the
+// text inside it can be cut off.
+.ingredient-form__entry-label {
+  display: flex;
+  min-width: 0;
+}
+
+// The entry's text, cut off with an ellipsis where the column ends; the
+// tooltip shows the rest.
+.ingredient-form__entry-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// A cut-off entry's whole text, in InfoTip's bubble and its fade, above the
+// pill from its left edge. A cut-off pill spans the column, so the tip's 100%
+// is the column too, and an unbroken text breaks anywhere to stay inside it.
+.ingredient-form__entry-tip {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  z-index: 1;
+  // Border-box, so the padding sits inside the 100% rather than past it.
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 100%;
+  margin-bottom: space(1);
+  overflow-wrap: anywhere;
+
+  @include tip-bubble;
+}
+
 // 1.5rem: WCAG 2.2's 24px minimum target, inside a pill too short for 44px.
+// Never shrunk: the text gives way, not the x.
 .ingredient-form__remove {
+  flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
