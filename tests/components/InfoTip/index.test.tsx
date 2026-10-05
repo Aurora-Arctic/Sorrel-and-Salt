@@ -11,7 +11,7 @@ const TEXT = 'What this coven calls it.';
 function renderTip() {
   render(
     <>
-      <InfoTip id="name-tip" label="Name" controlId="name-control">
+      <InfoTip id="name-tip" label="Name">
         {TEXT}
       </InfoTip>
       <input id="name-control" aria-label="Name" aria-describedby="name-tip" />
@@ -71,39 +71,14 @@ describe('InfoTip', () => {
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
   });
 
-  it('opens while the field it describes has focus, and Escape closes it there', () => {
+  it('stays shut while the field it describes has focus', () => {
     renderTip();
     const field = screen.getByRole('textbox', { name: 'Name' });
 
     act(() => field.focus());
-    expect(screen.getByRole('tooltip')).toHaveTextContent(TEXT);
 
-    fireEvent.keyDown(field, { key: 'Escape' });
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-    // Dismissed without moving the focus, as WCAG 1.4.13 asks.
-    expect(field).toHaveFocus();
-
-    act(() => field.blur());
-    act(() => field.focus());
-    expect(screen.getByRole('tooltip')).toBeInTheDocument();
-    act(() => field.blur());
-    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-  });
-
-  it('closes once something is typed in the field, until the field is entered again', () => {
-    renderTip();
-    const field = screen.getByRole('textbox', { name: 'Name' });
-
-    act(() => field.focus());
-    expect(screen.getByRole('tooltip')).toBeInTheDocument();
-    fireEvent.input(field, { target: { value: 'T' } });
-    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-
-    fireEvent.input(field, { target: { value: 'Te' } });
-    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-    act(() => field.blur());
-    act(() => field.focus());
-    expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    expect(field).toHaveAccessibleDescription(TEXT);
   });
 
   it('opens on a tap, and a second tap leaves it open', () => {

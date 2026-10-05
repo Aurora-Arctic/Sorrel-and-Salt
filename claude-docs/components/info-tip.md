@@ -7,39 +7,34 @@ it; others adopt it as their design reviews reach them.
 
 ## The props contract
 
-| Prop        | Meaning                                                                                        |
-| ----------- | ---------------------------------------------------------------------------------------------- |
-| `id`        | The tip's id. The field it explains lists it in `aria-describedby`, beside its error's id.     |
-| `label`     | What the tip is about. It names the button, "About Classification".                            |
-| `controlId` | Optional. The id of the field it describes: focus there opens the tip, as focus on the ⓘ does. |
-| `children`  | The text.                                                                                      |
+| Prop       | Meaning                                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------ |
+| `id`       | The tip's id. The field it explains lists it in `aria-describedby`, beside its error's id. |
+| `label`    | What the tip is about. It names the button, "About Classification".                        |
+| `children` | The text.                                                                                  |
 
 ## Behaviour
 
 It follows WCAG 1.4.13, content on hover or focus:
 
-- **It opens on hover, on a tap, and on focus: the ⓘ's, or the field's own.**
-  The field's matters most. Safari, and Firefox on macOS by default, skip
-  buttons when tabbing, so a keyboard user there never lands on the ⓘ, and
-  sees the hint only because entering the field shows it. The field is found
-  by `controlId` once the tip has rendered, since whoever holds the tip
-  renders the field too. A tap opens rather than toggles: on touch the
-  emulated hover has already opened it, and a toggle would shut it again at
-  once.
-- **The ⓘ stays in the tab order**, the owner's call in M5.9, though a
-  field's own focus also opens its tip: it is how a keyboard reaches the tip
-  of a field it cannot focus, such as a disabled one, and it costs one stop
-  per field.
+- **It opens on hover, on a tap, and on the ⓘ's focus.** A tap opens rather
+  than toggles: on touch the emulated hover has already opened it, and a
+  toggle would shut it again at once.
+- **Never on the field's own focus**, the owner's call in MB.133, reversing
+  M5.9: a tip opening on every field entered cluttered the form for little
+  value. The cost is a sighted keyboard user in Safari, or Firefox on
+  macOS by default, which skip buttons when tabbing: they never land on the
+  ⓘ, so never see the tip. A screen reader user loses nothing, since the
+  field reads the hint as its description, open or not.
+- **The ⓘ stays in the tab order**, the owner's call in M5.9: it is how a
+  keyboard opens the tip, and it costs one stop per field.
 - **It stays open while the pointer is over it.** Hover is heard on the
   wrapper, which holds the tip as well as the button. Leaving both closes it
   after 150ms, long enough to cross the gap onto the tip, and coming back
   cancels that.
-- **It closes once the field takes input**, typing or a choice: whoever is
-  doing either has read it. It stays shut until the field is entered again.
 - **It closes on Escape, blur, or the pointer leaving both.** Escape is heard
   on the document, since a tip opened by hover has no focus to listen from,
-  and it closes the tip without moving the focus, so a field's hint can be
-  dismissed while typing in it.
+  and it closes the tip without moving the focus.
 
 **The text is in the page while closed**, faded out and `aria-hidden` rather
 than unmounted, so the field that lists the id still reads it as part of its
@@ -50,8 +45,8 @@ it is open.
 ## Placement
 
 The tip is placed against its **nearest positioned ancestor**, not against the
-button, from that ancestor's left edge, **above** it: the tip opens while its
-field has focus, and beneath the label it would cover what is typed. It is as
+button, from that ancestor's left edge, **above** it: beneath the label it would
+cover the field, and what is typed in it. It is as
 wide as its text, up to 18rem and never more than the viewport less 2rem. In
 `IngredientForm` that ancestor is the field's label row, which starts at the
 column's edge, so an open tip lies above the label, over the end of the field
@@ -90,7 +85,6 @@ at once.
 timers for the close delay: closed at first with its text still describing the
 button and a field; opened by hover and closed a moment after the pointer
 leaves; kept open while the pointer is on the tip; opened by focus and closed
-by blur; opened while the field it describes has focus, closed there by Escape
-without the focus moving, and closed by input until the field is entered
-again; opened by a tap that a second tap does not
+by blur; shut while the field it describes has focus, which still reads its
+text; opened by a tap that a second tap does not
 shut; closed by Escape from anywhere.

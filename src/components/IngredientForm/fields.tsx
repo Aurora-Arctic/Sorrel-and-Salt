@@ -80,7 +80,7 @@ function FieldShell({
           )}
         </label>
         {hint && (
-          <InfoTip id={hintId} label={label} controlId={controlId}>
+          <InfoTip id={hintId} label={label}>
             {hint}
           </InfoTip>
         )}
@@ -260,7 +260,7 @@ export function ListField({ name, legend, entry, hint }: ListFieldProps): ReactE
       <legend className="fieldset__legend ingredient-form__label-row">
         <span id={legendId}>{legend}</span>
         {hint && (
-          <InfoTip id={hintId} label={legend} controlId={boxId}>
+          <InfoTip id={hintId} label={legend}>
             {hint}
           </InfoTip>
         )}

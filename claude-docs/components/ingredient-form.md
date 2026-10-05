@@ -50,10 +50,9 @@ planet, zodiac sign, colour, deities, substitute ingredients and safety notes
   not a line beneath it, on every field whose meaning is not plain from its
   label: name, classification, formal name, form, folk names, planet,
   colour, deities, substitute ingredients and safety notes. Colour's says it
-  is a correspondence, not the colour the thing is. A tip opens while its
-  field has focus as well as on its ⓘ, above the label so it never covers
-  what is typed, and closes once the field takes input; each field hands the
-  tip its control's id for that. Its text stays in the control's
+  is a correspondence, not the colour the thing is. A tip opens on its ⓘ, by
+  hover, tap or focus, and never on the field's own focus (MB.133), above
+  the label so it never covers the field. Its text stays in the control's
   `aria-describedby`, so a screen reader reads it with the field, open or
   not. A field's `note` is the one line kept beneath a label, for a state
   that must stay in view: only the formal name's reason for being shut uses
@@ -265,8 +264,8 @@ pass on whatever an earlier step had focused. It covers:
   with its reason, and opened again for a named one; the two issues that
   remain, and each cleared inline by changing the other field.
 - **Fields**: Name alone marked required; each hint behind an info tip yet
-  still read with its field, and shown while its field, or a list's box, has
-  focus; the classification's placeholder and the element's "None", `form`
+  still read with its field, and kept shut while its field, or a list's box,
+  has focus; the classification's placeholder and the element's "None", `form`
   as free text, and each list's box, Add, Enter, blank, remove, focus, order
   and announcements, and a save refused while a box holds text until it is
   added or cleared.

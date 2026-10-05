@@ -494,16 +494,20 @@ describe('IngredientForm', () => {
       expect(select('Classification')).not.toBeRequired();
     });
 
-    it("shows a field's hint while the field has focus", () => {
+    it("keeps a field's hint shut while the field has focus, still reading it with the field", () => {
       renderForm();
 
       act(() => select('Classification').focus());
-      expect(screen.getByRole('tooltip')).toHaveTextContent(
-        'Botanical for a plant, mineral for a stone',
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      expect(select('Classification')).toHaveAccessibleDescription(
+        expect.stringContaining('Botanical for a plant, mineral for a stone'),
       );
 
       act(() => textbox('Folk Name').focus());
-      expect(screen.getByRole('tooltip')).toHaveTextContent('Other names it goes by');
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      expect(textbox('Folk Name')).toHaveAccessibleDescription(
+        expect.stringContaining('Other names it goes by'),
+      );
     });
 
     it("tucks a field's hint behind an info tip by its label, still read with the field", () => {
