@@ -17,6 +17,18 @@ export interface StockRow {
   acquiredDate?: string | null;
 }
 
+/** One `information_schema.columns` row, as ingredient-lists.test.ts reads it. */
+export interface ColumnRow {
+  column_name: string;
+  data_type: string;
+  udt_name: string;
+  is_nullable: string;
+  column_default: string | null;
+}
+
+/** An ingredient's id beside its single columns and the lists they fill (MB.135). */
+export type ListedIngredientRow = { id: string } & Record<string, string | string[] | null>;
+
 export interface Retired {
   retired_at: string;
   expires_at: string;
