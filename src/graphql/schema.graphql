@@ -50,7 +50,7 @@ type Ingredient {
   audit: AuditInfo!
   canonicalName: String
   categories: [Category!]!
-  color: String
+  colors: [String!]
   deities: [String!]
   description: String
   element: IngredientElement
@@ -60,11 +60,11 @@ type Ingredient {
   isGlobal: Boolean!
   name: String!
   nomenclature: Nomenclature!
-  planet: String
+  planets: [String!]
   safetyNotes: String
   slug: String!
   substitutes: [String!]
-  zodiac: String
+  zodiacSigns: [String!]
 }
 
 enum IngredientElement {
@@ -92,7 +92,7 @@ type IngredientFormValue {
 
 input IngredientInput {
   canonicalName: String
-  color: String
+  colors: [String!]
   deities: [String!]
   description: String
   element: IngredientElement
@@ -100,10 +100,10 @@ input IngredientInput {
   form: String
   name: String!
   nomenclature: Nomenclature
-  planet: String
+  planets: [String!]
   safetyNotes: String
   substitutes: [String!]
-  zodiac: String
+  zodiacSigns: [String!]
 }
 
 """
@@ -111,7 +111,7 @@ The whole ingredient, replacing the row. Every field is sent, and "" or [] clear
 """
 input IngredientUpdateInput {
   canonicalName: String!
-  color: String!
+  colors: [String!]!
   deities: [String!]!
   description: String!
   element: IngredientElement
@@ -119,10 +119,10 @@ input IngredientUpdateInput {
   form: String!
   name: String!
   nomenclature: Nomenclature!
-  planet: String!
+  planets: [String!]!
   safetyNotes: String!
   substitutes: [String!]!
-  zodiac: String!
+  zodiacSigns: [String!]!
 }
 
 type Mutation {

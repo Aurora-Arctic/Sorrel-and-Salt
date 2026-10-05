@@ -78,8 +78,18 @@ describe('the suggestion query', () => {
     it('matches an in-use value the way it matches a name', async () => {
       const { query } = match(await statementsFor('moon'));
 
-      expect(query).toMatch(/"ingredients"\."planet" % \$\d+/);
-      expect(query).toMatch(/\$\d+ <% "ingredients"\."planet"/);
+      expect(query).toMatch(/"entry"\."value" % \$\d+/);
+      expect(query).toMatch(/\$\d+ <% "entry"\."value"/);
+    });
+
+    // A list's entries are the in-use values, not the list (MB.136).
+    it('reads each entry of the planets list, unnested', async () => {
+      const { query } = match(await statementsFor('moon'));
+
+      expect(query).toMatch(
+        /from "ingredients" cross join lateral unnest\("ingredients"\."planets"\) as "entry"\("value"\)/,
+      );
+      expect(query).not.toMatch(/"ingredients"\."planet"/);
     });
   });
 
@@ -101,9 +111,9 @@ describe('the suggestion query', () => {
       const { query } = match(await statementsFor('moon'));
 
       expect(query).toMatch(
-        /lower\(btrim\("ingredients"\."planet"\)\) not in \(select lower\("planets"\."name"\)/,
+        /lower\(btrim\("entry"\."value"\)\) not in \(select lower\("planets"\."name"\)/,
       );
-      expect(query).toMatch(/group by lower\(btrim\("ingredients"\."planet"\)\)/);
+      expect(query).toMatch(/group by lower\(btrim\("entry"\."value"\)\)/);
     });
   });
 

@@ -258,23 +258,54 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
   // Suggested, not enforced: practices differ on both, so a value off the
   // autofill list is written as readily as one on it.
   describe.each([
-    ['planet', PLANETS.map((row) => row.name), ['sedna', 'Eris', 'Black Moon Lilith']],
-    ['zodiac', ZODIAC_SIGNS.map((row) => row.name), ['Serpentarius', 'the Pleiades']],
+    ['planets', PLANETS.map((row) => row.name), ['sedna', 'Eris', 'Black Moon Lilith']],
+    ['zodiacSigns', ZODIAC_SIGNS.map((row) => row.name), ['Serpentarius', 'the Pleiades']],
   ])('%s', (field, suggestions, unlisted) => {
-    it('takes every suggestion, and values off the list', () => {
-      for (const value of [...suggestions, ...unlisted]) {
-        expect(
-          Schema.safeParse({ name: 'Testwort', nomenclature: 'none', [field]: value }).success,
-        ).toBe(true);
-      }
+    it('takes every suggestion, and values off the list, in one list', () => {
+      const values = [...suggestions, ...unlisted];
+
+      expect(
+        Schema.parse({ name: 'Testwort', nomenclature: 'none', [field]: values }),
+      ).toMatchObject({ [field]: values });
+    });
+  });
+
+  // DESIGN.md §5 (MB.134): the three lists are validated as `deities` is.
+  describe.each(['planets', 'zodiacSigns', 'colors'])('%s', (field) => {
+    const base = { name: 'Testwort', nomenclature: 'none' };
+
+    it('trims each entry and drops a blank one', () => {
+      expect(Schema.parse({ ...base, [field]: ['  Ceres ', '  ', 'Vesta'] })).toMatchObject({
+        [field]: ['Ceres', 'Vesta'],
+      });
     });
 
-    it('trims, and treats a blank as absent', () => {
-      const base = { name: 'Testwort', nomenclature: 'none' };
-
-      expect(Schema.parse({ ...base, [field]: '  Ceres ' })).toMatchObject({ [field]: 'Ceres' });
-      expect(Schema.parse({ ...base, [field]: '  ' })).toMatchObject({ [field]: null });
+    it('keeps the order entered, and a repeated entry', () => {
+      expect(Schema.parse({ ...base, [field]: ['Vesta', 'Ceres', 'Vesta'] })).toMatchObject({
+        [field]: ['Vesta', 'Ceres', 'Vesta'],
+      });
     });
+
+    it('takes a list left with no entries as absent', () => {
+      expect(Schema.parse({ ...base, [field]: [] })).toMatchObject({ [field]: null });
+      expect(Schema.parse({ ...base, [field]: [' '] })).toMatchObject({ [field]: null });
+    });
+  });
+
+  // The single columns are undeclared (MB.136), so a caller still sending one
+  // writes nothing through it.
+  it('carries no single planet, zodiac sign or colour', () => {
+    const parsed = Schema.parse({
+      name: 'Testwort',
+      nomenclature: 'none',
+      planet: 'Moon',
+      zodiac: 'Cancer',
+      color: 'Silver',
+    });
+
+    expect(Object.keys(parsed)).not.toContain('planet');
+    expect(Object.keys(parsed)).not.toContain('zodiac');
+    expect(Object.keys(parsed)).not.toContain('color');
   });
 
   it('takes every correspondence at once', () => {
@@ -285,16 +316,21 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
       form: 'root',
       description: 'An invented herb.',
       element: 'water',
-      planet: 'moon',
-      zodiac: 'cancer',
+      planets: ['moon', 'Venus'],
+      zodiacSigns: ['cancer'],
       deities: [' Testara '],
-      color: 'green',
+      colors: ['green', 'silver'],
       safetyNotes: 'Not for internal use.',
       substitutes: ['Mock Root'],
       folkNames: ['Fixture Bane'],
     });
 
-    expect(parsed).toMatchObject({ deities: ['Testara'], planet: 'moon', zodiac: 'cancer' });
+    expect(parsed).toMatchObject({
+      deities: ['Testara'],
+      planets: ['moon', 'Venus'],
+      zodiacSigns: ['cancer'],
+      colors: ['green', 'silver'],
+    });
   });
 
   it('drops a blank entry from the other array fields', () => {

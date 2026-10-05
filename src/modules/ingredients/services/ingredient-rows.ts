@@ -20,10 +20,10 @@ export function columnsOf(fields: IngredientFields) {
     form: fields.form ?? null,
     description: fields.description ?? null,
     element: fields.element ?? null,
-    planet: fields.planet ?? null,
-    zodiac: fields.zodiac ?? null,
+    planets: fields.planets ?? null,
+    zodiacSigns: fields.zodiacSigns ?? null,
     deities: fields.deities ?? null,
-    color: fields.color ?? null,
+    colors: fields.colors ?? null,
     safetyNotes: fields.safetyNotes ?? null,
     substitutes: fields.substitutes ?? null,
   };

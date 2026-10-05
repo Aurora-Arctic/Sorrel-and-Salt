@@ -1,5 +1,4 @@
-import { and, eq, getTableName, ne, notInArray, or, sql } from 'drizzle-orm';
-import type { AnyPgColumn } from 'drizzle-orm/pg-core';
+import { type SQLWrapper, and, eq, getTableName, ne, notInArray, or, sql } from 'drizzle-orm';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import {
@@ -11,7 +10,12 @@ import type { PageEntry, PageRequest } from '../../lib/types';
 import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, pageBounds, selectFrom } from './select';
 import { claimantList, readSuggestionPage } from './suggestion-page';
-import type { FormSuggestion, SuggestingVocabulary, VocabularySuggestion } from './types';
+import type {
+  FormSuggestion,
+  InUseSource,
+  SuggestingVocabulary,
+  VocabularySuggestion,
+} from './types';
 
 /**
  * One page of the curated form vocabulary in `(name, id)` order, for
@@ -36,16 +40,32 @@ export function findIngredientFormValues(
 }
 
 /**
- * The ingredient column each vocabulary suggests values for, keyed by table
- * name: a vocabulary added to `SuggestingVocabulary` fails to compile until
- * it names its column, and a caller passes a table alone, so it cannot pair
- * one with the other's column.
+ * Where each vocabulary's in-use values are written, keyed by table name: a
+ * vocabulary added to `SuggestingVocabulary` fails to compile until it names
+ * its column, and a caller passes a table alone, so it cannot pair one with
+ * the other's column. A list is read entry by entry (MB.136).
  */
-const IN_USE_COLUMN = {
-  planets: ingredients.planet,
-  zodiac_signs: ingredients.zodiac,
-  ingredient_forms: ingredients.form,
-} satisfies Record<SuggestingVocabulary['_']['name'], AnyPgColumn>;
+const IN_USE = {
+  planets: { list: ingredients.planets },
+  zodiac_signs: { list: ingredients.zodiacSigns },
+  ingredient_forms: { column: ingredients.form },
+} satisfies Record<SuggestingVocabulary['_']['name'], InUseSource>;
+
+const ENTRY = sql.identifier('entry');
+
+/**
+ * The rows an in-use scan reads, and the value each holds: the ingredients
+ * themselves for a column, or one row per entry for a list, unnested before
+ * anything trims or folds it — so an entry counts as a column's value would,
+ * and a value held by several lists, or twice by one, is grouped as one.
+ */
+function inUseRows(source: InUseSource): { rows: SQLWrapper; value: SQLWrapper } {
+  if ('column' in source) return { rows: ingredients, value: source.column };
+  return {
+    rows: sql`${ingredients} cross join lateral unnest(${source.list}) as ${ENTRY}(${sql.identifier('value')})`,
+    value: sql`${ENTRY}.${sql.identifier('value')}`,
+  };
+}
 
 /**
  * One page of what a member's autofill offers for `vocabulary`'s column:
@@ -79,8 +99,8 @@ export async function findVocabularySuggestions(
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<VocabularySuggestion | FormSuggestion>[]> {
-  const inUse = IN_USE_COLUMN[getTableName(vocabulary)];
-  const matches = (text: AnyPgColumn) => sql`(${text} % ${query} or ${query} <% ${text})`;
+  const { rows: inUseFrom, value: inUse } = inUseRows(IN_USE[getTableName(vocabulary)]);
+  const matches = (text: SQLWrapper) => sql`(${text} % ${query} or ${query} <% ${text})`;
   const byName = matches(vocabulary.name);
   const fold = sql`lower(btrim(${inUse}))`;
   const inScope = and(
@@ -114,7 +134,7 @@ export async function findVocabularySuggestions(
   const uncurated = sql`
     select 2 as tier, mode() within group (order by btrim(${inUse})) as value,
       null as description, null as group_name, ${fold} as fold, ${fold} as tiebreak
-    from ${ingredients}
+    from ${inUseFrom}
     where ${and(
       inScope,
       query ? matches(inUse) : undefined,
@@ -129,7 +149,7 @@ export async function findVocabularySuggestions(
     ? sql`${suggestions} left join (
         select ${fold} as claimed,
           ${claimantList(ingredients.name, ingredients.canonicalName, ingredients.id)} as claimants
-        from ${ingredients} where ${inScope} group by ${fold}
+        from ${inUseFrom} where ${inScope} group by ${fold}
       ) as ${sql.identifier('claim')} on ${sql.identifier('claimed')} = ${sql.identifier('suggestion')}.${sql.identifier('fold')}`
     : suggestions;
 

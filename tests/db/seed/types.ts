@@ -129,6 +129,8 @@ export interface CompendiumEntryRow {
   canonical_name: string | null;
   nomenclature: string;
   form: string | null;
+  planets: string[] | null;
+  /** Undeclared since MB.136, and in the table until MB.137 drops it. */
   planet: string | null;
   canonical_key: string;
   slug: string;

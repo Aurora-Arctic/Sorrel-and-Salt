@@ -53,7 +53,7 @@ export type SeedIngredient = Pick<
   | 'form'
   | 'description'
   | 'element'
-  | 'planet'
+  | 'planets'
   | 'safetyNotes'
 > & {
   folkNames?: string[];

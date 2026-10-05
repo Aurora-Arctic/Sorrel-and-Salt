@@ -61,20 +61,17 @@ export const ingredients = pgTable(
     canonicalKey: text('canonical_key').notNull().generatedAlwaysAs(CANONICAL_KEY),
     description: text('description'),
     element: ingredientElement('element'),
-    planet: text('planet'),
-    zodiac: text('zodiac'),
-    deities: text('deities').array(),
-    color: text('color'),
-    safetyNotes: text('safety_notes'),
-    substitutes: text('substitutes').array(),
-    // The lists `planet`, `zodiac` and `color` become (MB.134): new names rather
-    // than a type change in place, because a column cannot turn from `text` to
-    // `text[]` under a deployed reader. Filled from the singles by their
-    // migration and read by nothing until MB.136 switches to them; MB.137 drops
-    // the singles (claude-docs/db/identity-model.md, "The ingredient identity model").
+    // Lists rather than the single `planet`, `zodiac` and `color` they
+    // replaced (MB.134): new names, because a column cannot turn from `text` to
+    // `text[]` under a deployed reader. The singles are undeclared but still in
+    // the database until MB.137 drops them, so `db:generate` emits that drop on
+    // any branch before it (claude-docs/db/identity-model.md, "The ingredient identity model").
     planets: text('planets').array(),
     zodiacSigns: text('zodiac_signs').array(),
+    deities: text('deities').array(),
     colors: text('colors').array(),
+    safetyNotes: text('safety_notes'),
+    substitutes: text('substitutes').array(),
     ...auditColumns,
   },
   (table) => [

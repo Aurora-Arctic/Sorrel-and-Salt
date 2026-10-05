@@ -45,10 +45,10 @@ export interface IngredientFixture extends Required<
     | 'form'
     | 'description'
     | 'element'
-    | 'planet'
-    | 'zodiac'
+    | 'planets'
+    | 'zodiacSigns'
     | 'deities'
-    | 'color'
+    | 'colors'
     | 'safetyNotes'
     | 'substitutes'
   >

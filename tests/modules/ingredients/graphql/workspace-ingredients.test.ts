@@ -52,8 +52,8 @@ async function run<T>(
 }
 
 const FIELDS = `
-  id name slug canonicalName nomenclature form description element planet zodiac
-  deities color safetyNotes substitutes isGlobal folkNames categories { name }
+  id name slug canonicalName nomenclature form description element planets zodiacSigns
+  deities colors safetyNotes substitutes isGlobal folkNames categories { name }
   audit { createdBy updatedBy }
 `;
 
@@ -110,10 +110,10 @@ function wholeInput(fixture: IngredientFixture): Record<string, unknown> {
     form: fixture.form ?? '',
     description: fixture.description ?? '',
     element: fixture.element,
-    planet: fixture.planet ?? '',
-    zodiac: fixture.zodiac ?? '',
+    planets: fixture.planets ?? [],
+    zodiacSigns: fixture.zodiacSigns ?? [],
     deities: fixture.deities ?? [],
-    color: fixture.color ?? '',
+    colors: fixture.colors ?? [],
     safetyNotes: fixture.safetyNotes ?? '',
     substitutes: fixture.substitutes ?? [],
     folkNames: fixture.folkNames,
@@ -158,11 +158,19 @@ describe('createWorkspaceIngredient', () => {
       nomenclature: 'botanical',
       form: 'root',
       element: 'water',
+      planets: ['Venus', 'Moon'],
+      zodiacSigns: ['Taurus', 'Cancer'],
       deities: ['Testara'],
+      colors: ['Green', 'Silver'],
       folkNames: ['Test Root', 'Fixture Herb'],
     });
 
     const answered = result.data?.createWorkspaceIngredient as WorkspaceIngredientNode;
+    expect(answered).toMatchObject({
+      planets: ['Venus', 'Moon'],
+      zodiacSigns: ['Taurus', 'Cancer'],
+      colors: ['Green', 'Silver'],
+    });
     expect([...answered.folkNames].sort()).toEqual(['Fixture Herb', 'Test Root']);
     const fresh = await read(asUser(B), answered.id);
     expect(fresh.errors).toBeUndefined();
@@ -247,13 +255,26 @@ describe('createWorkspaceIngredient', () => {
 
 describe('updateIngredient', () => {
   it('replaces the row with the input and answers it as a fresh read would', async () => {
-    const id = await seed(local({ description: 'Dug at dusk', folkNames: ['Dropped Root'] }));
+    const id = await seed(
+      local({
+        description: 'Dug at dusk',
+        planets: ['Moon', 'Venus'],
+        folkNames: ['Dropped Root'],
+      }),
+    );
 
     const result = await update(
       asUser(B),
       id,
       wholeInput(
-        local({ name: 'Testroot', form: 'root', element: 'fire', folkNames: ['Added Root'] }),
+        local({
+          name: 'Testroot',
+          form: 'root',
+          element: 'fire',
+          planets: ['Mars'],
+          colors: ['Red', 'Black'],
+          folkNames: ['Added Root'],
+        }),
       ),
     );
 
@@ -265,6 +286,8 @@ describe('updateIngredient', () => {
       form: 'root',
       element: 'fire',
       description: null,
+      planets: ['Mars'],
+      colors: ['Red', 'Black'],
       folkNames: ['Added Root'],
       audit: { createdBy: A.id, updatedBy: B.id },
     });
@@ -289,7 +312,10 @@ describe('updateIngredient', () => {
         form: 'root',
         description: 'Dug at dusk',
         element: 'water',
+        planets: ['Moon'],
+        zodiacSigns: ['Cancer'],
         deities: ['Testara'],
+        colors: ['Silver'],
         substitutes: ['Mock Root'],
         folkNames: ['Test Root'],
       }),
@@ -302,12 +328,21 @@ describe('updateIngredient', () => {
       form: null,
       description: null,
       element: null,
+      planets: null,
+      zodiacSigns: null,
       deities: null,
+      colors: null,
       substitutes: null,
       folkNames: [],
     });
     // Cleared to NULL, not to an empty array: "none" has one representation.
-    expect(await rowOf(id)).toMatchObject({ deities: null, substitutes: null });
+    expect(await rowOf(id)).toMatchObject({
+      planets: null,
+      zodiac_signs: null,
+      deities: null,
+      colors: null,
+      substitutes: null,
+    });
   });
 
   // `element` is an enum, which has no empty value to send, so it is the one

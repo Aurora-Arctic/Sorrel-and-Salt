@@ -41,17 +41,13 @@ const COLUMNS = [
   'form',
   'description',
   'element',
-  'planet',
-  'zodiac',
+  'planets',
+  'zodiac_signs',
   'deities',
-  'color',
+  'colors',
   'safety_notes',
   'substitutes',
   'slug',
-  // MB.135: the lists beside the single columns, for the deploy until MB.137 drops those.
-  'planets',
-  'zodiac_signs',
-  'colors',
   ...AUDIT_COLUMNS,
 ].sort();
 
@@ -168,10 +164,13 @@ beforeEach(async () => {
 });
 
 describe('ingredients table', () => {
-  // No column the schema has stopped declaring outlives it in the database —
-  // MB.81's pending claims were the last.
-  it('carries exactly the columns the schema declares', async () => {
-    expect(await catalogue.columnNames('ingredients')).toEqual(COLUMNS);
+  // A column the schema has stopped declaring outlives it in the database for
+  // one deploy: `planet`, `zodiac` and `color`, undeclared by MB.136 and
+  // dropped by MB.137, are the only ones.
+  it('carries the columns the schema declares, and the three singles awaiting their drop', async () => {
+    expect(await catalogue.columnNames('ingredients')).toEqual(
+      [...COLUMNS, 'planet', 'zodiac', 'color'].sort(),
+    );
   });
 
   it('rejects an insert that omits nomenclature, since the column has no default', async () => {
