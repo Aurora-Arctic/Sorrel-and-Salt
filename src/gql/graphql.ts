@@ -23,7 +23,7 @@ export type IngredientInput = {
   nomenclature?: Nomenclature | null | undefined;
   planets?: Array<string> | null | undefined;
   safetyNotes?: string | null | undefined;
-  substitutes?: Array<string> | null | undefined;
+  substitutes?: Array<SubstituteInput> | null | undefined;
   zodiacSigns?: Array<string> | null | undefined;
 };
 
@@ -35,6 +35,12 @@ export type Nomenclature =
   | 'none'
   | 'unknown'
   | 'zoological';
+
+/** An ingredient to link, or the name of one not entered: exactly one of the two. */
+export type SubstituteInput = {
+  ingredientId?: string | number | null | undefined;
+  name?: string | null | undefined;
+};
 
 export type SetEmailMutationVariables = Exact<{
   email: string;

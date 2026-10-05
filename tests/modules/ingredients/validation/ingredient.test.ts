@@ -230,6 +230,65 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
     });
   });
 
+  // DESIGN.md §5, `ingredient_substitutes`: each entry links an ingredient or
+  // names one, and an ingredient lists each once.
+  describe('substitutes', () => {
+    const base = { name: 'Testwort', nomenclature: 'none' };
+    const LINKED = '00000000-0000-4000-8000-0000000000a1';
+    const OTHER = '00000000-0000-4000-8000-0000000000a2';
+
+    it('takes links and typed names together, each as exactly one of the two', () => {
+      const parsed = Schema.parse({
+        ...base,
+        substitutes: [{ ingredientId: LINKED }, { name: ' Mock Root ', ingredientId: null }],
+      });
+
+      expect(parsed.substitutes).toEqual([
+        { ingredientId: LINKED, name: null },
+        { ingredientId: null, name: 'Mock Root' },
+      ]);
+    });
+
+    it.each([
+      ['links and names at once', { ingredientId: LINKED, name: 'Mock Root' }],
+      ['does neither', {}],
+      ['names only a blank', { name: '  ' }],
+      ['links an id that is not one', { ingredientId: 'mock-root' }],
+    ])('refuses an entry that %s, pathed to the entry', (_case, entry) => {
+      const result = Schema.safeParse({
+        ...base,
+        substitutes: [{ name: 'Mock Root' }, entry],
+      });
+
+      expect(failedPaths(result)).toEqual([['substitutes', 1]]);
+    });
+
+    // The two partial unique indexes would refuse the second copy; saying so
+    // here keeps the index's 23505 from being what a user sees.
+    it('refuses the same ingredient linked twice, pathed to the repeat', () => {
+      const result = Schema.safeParse({
+        ...base,
+        substitutes: [{ ingredientId: LINKED }, { ingredientId: OTHER }, { ingredientId: LINKED }],
+      });
+
+      expect(failedPaths(result)).toEqual([['substitutes', 2]]);
+    });
+
+    it('refuses the same name twice in any case, pathed to the repeat', () => {
+      const result = Schema.safeParse({
+        ...base,
+        substitutes: [{ name: 'Mock Root' }, { ingredientId: LINKED }, { name: ' mock ROOT' }],
+      });
+
+      expect(failedPaths(result)).toEqual([['substitutes', 2]]);
+    });
+
+    it('takes no substitutes, absent or empty', () => {
+      expect(Schema.parse(base).substitutes ?? []).toEqual([]);
+      expect(Schema.parse({ ...base, substitutes: [] }).substitutes ?? []).toEqual([]);
+    });
+  });
+
   describe('enum fields', () => {
     const base = { name: 'Testwort', nomenclature: 'none' };
 
@@ -321,7 +380,7 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
       deities: [' Testara '],
       colors: ['green', 'silver'],
       safetyNotes: 'Not for internal use.',
-      substitutes: ['Mock Root'],
+      substitutes: [{ name: 'Mock Root' }],
       folkNames: ['Fixture Bane'],
     });
 
@@ -337,11 +396,10 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
     const parsed = Schema.parse({
       name: 'Testwort',
       nomenclature: 'none',
-      deities: [''],
-      substitutes: ['Mock Root', '  '],
+      deities: ['Testara', '  '],
     });
 
-    expect(parsed).toMatchObject({ deities: null, substitutes: ['Mock Root'] });
+    expect(parsed).toMatchObject({ deities: ['Testara'] });
   });
 
   // A list left with no entries is no list: cleared to null, as a blank text
@@ -351,10 +409,10 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
       name: 'Testwort',
       nomenclature: 'none',
       deities: [],
-      substitutes: ['  '],
+      colors: ['  '],
       folkNames: [],
     });
 
-    expect(parsed).toMatchObject({ deities: null, substitutes: null, folkNames: null });
+    expect(parsed).toMatchObject({ deities: null, colors: null, folkNames: null });
   });
 });

@@ -49,8 +49,8 @@ function surface<T extends object>(
 
 /** The fixture as the shared Zod input: everything but the tier and the category names. */
 function inputOf(fixture: IngredientFixture): CompendiumIngredientInput {
-  const { workspaceId: _tier, categories: _categories, ...input } = fixture;
-  return input;
+  const { workspaceId: _tier, categories: _categories, substitutes, ...input } = fixture;
+  return { ...input, substitutes: substitutes.map((name) => ({ ingredientId: null, name })) };
 }
 
 async function entryRow(id: string) {

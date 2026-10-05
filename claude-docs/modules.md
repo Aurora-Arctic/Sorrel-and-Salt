@@ -188,7 +188,7 @@ name rather than credited to whichever export happens to sit above it. It
 fails an unlisted function, and it fails a listed one that no longer exists or
 no longer reads the tier.
 
-It holds the predicate, twelve finders and the writer today: `inCompendium` in
+It holds the predicate, thirteen finders and the writer today: `inCompendium` in
 `predicates.ts`, which is `workspace_id IS NULL` itself; `findSimilarIngredients`
 (M4.7), the fuzzy duplicate match; `findVocabularySuggestions` (MB.94, forms
 M4.7a), the planet, zodiac and form autofill; `findCommonNameSuggestions`
@@ -201,7 +201,8 @@ public list, and `findCompendiumCount` (MB.105), its count;
 write names; `findCompendiumEntryBySlug` and `findCompendiumSlugRedirect`
 (MB.82), the entry at an address and the one a retired address redirects to;
 `findIngredientsInSpellsIncludingSoftDeleted` (M5.3), what a readable spell
-holds, deleted or not; and `writerFor` (M5.2), the private builder of `withAudit`'s writer, whose
+holds, deleted or not; `findSubstitutesIncludingSoftDeleted` (MB.140), an
+ingredient's substitutes and the ingredients they link, deleted or not; and `writerFor` (M5.2), the private builder of `withAudit`'s writer, whose
 compendium-tier methods update and soft-delete a row only under
 `workspace_id IS NULL` and clear the tier's lapsed slug retirements. The
 list, its count, the identity lookup, the two address finders and the writer

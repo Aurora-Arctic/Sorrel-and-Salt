@@ -199,7 +199,7 @@ The three services that create, update and delete a compendium entry, each behin
 
 ## Soft-delete filtering and the partial-index convention (M1.20)
 
-`findMany`, `findOne` and every other exported finder filter `deleted_at` through `selectFrom` or `existsIn`, bar three `…IncludingSoftDeleted` hatches a guard test pins; every unique index is partial, so a deleted row reserves nothing. [`db/soft-delete.md`](db/soft-delete.md)
+`findMany`, `findOne` and every other exported finder filter `deleted_at` through `selectFrom` or `existsIn`, bar four `…IncludingSoftDeleted` hatches a guard test pins; every unique index is partial, so a deleted row reserves nothing. [`db/soft-delete.md`](db/soft-delete.md)
 
 ## Keyset pages (M3.6)
 

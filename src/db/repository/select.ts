@@ -20,9 +20,11 @@ import type { Cursor, PageCount, PageEntry } from '../../lib/types';
 import { notSoftDeleted } from './predicates';
 import type {
   Derived,
+  JoinedRow,
   KeyOrder,
   Keyset,
   KeysetCount,
+  LeftJoin,
   Similarity,
   SortColumn,
   SortPart,
@@ -80,31 +82,43 @@ export function selectFrom<TTable extends PgTable>(
   where: SQL | undefined,
   count: KeysetCount,
 ): Promise<PageCount>;
+export function selectFrom<TTable extends PgTable, TJoined extends PgTable>(
+  table: TTable,
+  where: SQL | undefined,
+  join: LeftJoin<TJoined>,
+): Promise<JoinedRow<TTable['$inferSelect'], TJoined['$inferSelect']>[]>;
 export async function selectFrom(
   relation: PgTable | Derived<Record<string, unknown>>,
   where: SQL | undefined,
-  order?: Keyset<object> | Similarity | KeysetCount,
-) {
+  order?: Keyset<object> | Similarity | KeysetCount | LeftJoin<PgTable>,
+): Promise<unknown> {
   const keyset = order && 'sort' in order ? order : undefined;
   const tally = order && 'count' in order ? order : undefined;
+  const joined = order && 'leftJoin' in order ? order : undefined;
   const keyed = keyset ?? tally?.count;
   // A table is read whole, and a page adds its key — each part read as
   // Postgres prints it: a `timestamptz` read into a Date loses its
   // microseconds, and a cursor built from it would replay rows. A count reads
-  // its two numbers instead. A derived relation names its own columns.
+  // its two numbers instead, and a left join both rows, which Drizzle reads as
+  // null where every joined column is. A derived relation names its own columns.
   const [source, selection] = is(relation, PgTable)
     ? [
         relation,
         tally
           ? countsOf(tally)
-          : keyset && {
-              ...carried(keyset.carry),
-              row: getTableColumns(relation),
-              key: sql<string[]>`array[${sql.join(
-                keyset.sort.map((part) => sql`cast(${expressionOf(part)} as text)`),
-                sql`, `,
-              )}]`,
-            },
+          : keyset
+            ? {
+                ...carried(keyset.carry),
+                row: getTableColumns(relation),
+                key: sql<string[]>`array[${sql.join(
+                  keyset.sort.map((part) => sql`cast(${expressionOf(part)} as text)`),
+                  sql`, `,
+                )}]`,
+              }
+            : joined && {
+                row: getTableColumns(relation),
+                joined: getTableColumns(joined.leftJoin),
+              },
       ]
     : [relation.source, relation.fields];
   // Same cast as `write.ts`'s `writerFor`: `.from()` is typed against the table's own
@@ -115,6 +129,7 @@ export async function selectFrom(
       .from(source as never)
       .$dynamic();
     if (keyed?.join) query.innerJoin(keyed.join.source, keyed.join.on);
+    if (joined) query.leftJoin(joined.leftJoin, joined.on);
     return query.where(where);
   };
 

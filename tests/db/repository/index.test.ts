@@ -36,6 +36,7 @@ describe('repository public API', () => {
         'findIngredientsInSpellsIncludingSoftDeleted',
         'findOneIngredient',
         'findSimilarIngredients',
+        'findSubstitutesIncludingSoftDeleted',
         'findUserByEmail',
         'findVocabularySuggestions',
         'findWorkspaceRole',

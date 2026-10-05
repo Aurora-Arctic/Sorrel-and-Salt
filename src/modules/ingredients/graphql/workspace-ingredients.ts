@@ -12,6 +12,19 @@ import { IngredientElementEnum, IngredientRef, NomenclatureEnum } from './ingred
 // for, and the stamps are the session's (claude-docs/graphql/schema.md, "The workspace
 // ingredient mutations").
 
+/**
+ * One substitute: an ingredient to link, or the name of one not entered —
+ * exactly one, which the shared schema holds rather than the type, as GraphQL
+ * has no one-of input here (DESIGN.md §5, `ingredient_substitutes`).
+ */
+const SubstituteInput = builder.inputType('SubstituteInput', {
+  description: 'An ingredient to link, or the name of one not entered: exactly one of the two.',
+  fields: (t) => ({
+    ingredientId: t.id(),
+    name: t.string(),
+  }),
+});
+
 /** DESIGN.md §7's `IngredientInput`: only `name` is required, so story 29's stub saves. */
 const IngredientInput = builder.inputType('IngredientInput', {
   fields: (t) => ({
@@ -26,7 +39,7 @@ const IngredientInput = builder.inputType('IngredientInput', {
     deities: t.stringList(),
     colors: t.stringList(),
     safetyNotes: t.string(),
-    substitutes: t.stringList(),
+    substitutes: t.field({ type: [SubstituteInput] }),
     folkNames: t.stringList(),
   }),
 });
@@ -50,7 +63,7 @@ const IngredientUpdateInput = builder.inputType('IngredientUpdateInput', {
     deities: t.stringList({ required: true }),
     colors: t.stringList({ required: true }),
     safetyNotes: t.string({ required: true }),
-    substitutes: t.stringList({ required: true }),
+    substitutes: t.field({ type: [SubstituteInput], required: true }),
     folkNames: t.stringList({ required: true }),
   }),
 });
@@ -83,8 +96,10 @@ builder.mutationField('updateIngredient', (t) =>
       if (!session) throw new Forbidden();
       const row = await updateWorkspaceIngredient(session, workspaceId, id, input);
       // Root mutation fields run in turn within one request, so an earlier one
-      // may have read this entry's folk names; the answer must be this write's.
+      // may have read this entry's folk names or substitutes; the answer must
+      // be this write's.
       loaders.folkNamesByIngredient.clear(row);
+      loaders.substitutesByIngredient.clear(row);
       return row;
     },
   }),

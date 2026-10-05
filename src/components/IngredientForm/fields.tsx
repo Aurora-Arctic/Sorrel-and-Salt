@@ -10,7 +10,7 @@ import type {
   SelectFieldProps,
   TextFieldProps,
 } from './types';
-import { commitDraft } from './values';
+import { commitDraft, entryText } from './values';
 
 // IngredientForm's fields, on the form primitives (claude-docs/styling.md,
 // "Form fields"). Each reads its own error out of the form state, so a field
@@ -282,8 +282,8 @@ export function ListField({ name, legend, entry, hint }: ListFieldProps): ReactE
   );
   const boxError: string | undefined = get(errors, box)?.message;
   const message = [
-    ...fields.flatMap(({ value }, index) =>
-      entryErrors[index] ? [`${value}: ${entryErrors[index]}`] : [],
+    ...fields.flatMap((row, index) =>
+      entryErrors[index] ? [`${entryText(row)}: ${entryErrors[index]}`] : [],
     ),
     boxError,
   ]
@@ -328,10 +328,10 @@ export function ListField({ name, legend, entry, hint }: ListFieldProps): ReactE
           {fields.map((row, index) => (
             <EntryChip
               key={row.id}
-              value={row.value}
+              value={entryText(row)}
               errorId={entryErrors[index] && errorId}
               onRemove={() => {
-                setAnnouncement(`Removed ${row.value}`);
+                setAnnouncement(`Removed ${entryText(row)}`);
                 remove(index);
                 revalidate();
                 // The pressed x is about to go; the box keeps the focus.

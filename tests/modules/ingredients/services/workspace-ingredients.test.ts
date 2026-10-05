@@ -49,10 +49,10 @@ function local(overrides: Overrides<IngredientFixture> = {}): IngredientFixture 
   return makeIngredient({ workspaceId: WORKSPACE_W_ID, nomenclature, ...overrides });
 }
 
-/** The fixture as the service's input: everything but the tier and the category names. */
+/** The fixture as the service's input: everything but the tier and the category names, its substitutes typed. */
 function inputOf(fixture: IngredientFixture): LocalIngredientInput {
-  const { workspaceId: _tier, categories: _categories, ...input } = fixture;
-  return input;
+  const { workspaceId: _tier, categories: _categories, substitutes, ...input } = fixture;
+  return { ...input, substitutes: substitutes.map((name) => ({ ingredientId: null, name })) };
 }
 
 /** Seeds a row through the shared inserter, stamped by A — not through the code under test. */

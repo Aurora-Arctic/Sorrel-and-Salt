@@ -93,12 +93,26 @@ Rules both variants enforce:
   per-ingredient `lower(name)` unique index, so that index isn't what a user
   sees either. A blank folk name is dropped, not refused — but only after the
   repeat check, so an issue's position still counts the rows the form sent,
-  blank ones included, and lands beside the right one. `deities` and
-  `substitutes` drop blank entries the same way. A list left with no entries,
+  blank ones included, and lands beside the right one. `deities` drops
+  blank entries the same way. A list left with no entries,
   `[]` or blanks alone, is absent like a blank text field and becomes `null`,
   so a cleared `deities` is stored as NULL rather than `{}`. Two _different_ ingredients sharing a folk name is untouched: §5
   wants it, since several plants claiming "Cat's Claw" is what is being
   documented.
+- **Substitutes, each a link or a name** (DESIGN.md §5,
+  `ingredient_substitutes`; MB.140). An entry is `{ ingredientId }` or
+  `{ name }`, either half trimmed and blank as absent, and the schema holds it
+  to exactly one, as the row's `num_nonnulls` CHECK does: both, or neither — a
+  blank name included — is refused at the entry, and so is an id that is not a
+  uuid. A blank entry is refused rather than dropped, unlike the text lists,
+  so that a refusal the service makes after the parse still counts the
+  entries the caller sent. The same ingredient linked twice, or the same name
+  twice in any case, is refused at the repeat, the two partial unique indexes'
+  keys, so neither index's 23505 is what a member sees. A name equal to a
+  linked ingredient's label is not a repeat. The parse hands the service each
+  entry as `{ ingredientId, name: null }` or `{ ingredientId: null, name }`;
+  which ingredients a link may reach is the service's rule, since it reads
+  other rows (["The workspace ingredient mutations"](graphql/schema.md)).
 - **Closed sets.** `nomenclature` and `element` come from the pgEnums' lists,
   in `schema/ingredient-enums.ts`.
 - **`planets`, `zodiacSigns` and `colors` are lists, validated as `deities`

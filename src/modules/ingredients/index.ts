@@ -14,4 +14,10 @@ export * from './graphql/ingredient-suggestions';
 export * from './graphql/ingredient';
 export * from './graphql/compendium';
 export * from './graphql/workspace-ingredients';
-export type { CategoryRow, CompendiumAddress, IngredientKey, IngredientRow } from './types';
+export type {
+  CategoryRow,
+  CompendiumAddress,
+  IngredientKey,
+  IngredientRow,
+  SubstituteRow,
+} from './types';

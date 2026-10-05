@@ -8,9 +8,10 @@ import {
   type IngredientKey,
   categoriesByIngredient,
   folkNamesByIngredient,
+  substitutesByIngredient,
 } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
-import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { insertIngredient, insertSubstituteLink } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import type { Written } from './types';
 
@@ -20,6 +21,7 @@ import type { Written } from './types';
 const repository = vi.hoisted(() => ({
   findManyOfIngredients: vi.fn(),
   findManyByIds: vi.fn(),
+  findSubstitutesIncludingSoftDeleted: vi.fn(),
   findWorkspaceRole: vi.fn(),
 }));
 vi.mock('@/db/repository', async (importOriginal) => {
@@ -63,7 +65,15 @@ async function addIngredient(
 ): Promise<Written> {
   const id = await insertIngredient(
     sql,
-    makeIngredient({ name, workspaceId, nomenclature: 'none', folkNames, categories }),
+    // Its folk names typed as its substitutes too: a third child read the same way.
+    makeIngredient({
+      name,
+      workspaceId,
+      nomenclature: 'none',
+      folkNames,
+      substitutes: folkNames,
+      categories,
+    }),
     A.id,
   );
   return {
@@ -96,13 +106,18 @@ async function addFifty(): Promise<Written[]> {
 }
 
 const loadersFor = (session: Session | null) =>
-  buildLoaders({ categoriesByIngredient, folkNamesByIngredient }, session);
+  buildLoaders({ categoriesByIngredient, folkNamesByIngredient, substitutesByIngredient }, session);
 
 const categoryNames = async (session: Session | null, ref: IngredientKey) =>
   (await loadersFor(session).categoriesByIngredient.load(ref)).map((category) => category.name);
 
 const folkNames = (session: Session | null, ref: IngredientKey) =>
   loadersFor(session).folkNamesByIngredient.load(ref);
+
+const substituteNames = async (session: Session | null, ref: IngredientKey) =>
+  (await loadersFor(session).substitutesByIngredient.load(ref)).map(
+    (substitute) => substitute.name,
+  );
 
 describe('the categoriesByIngredient loader', () => {
   it('answers fifty ingredients across two tiers with one role lookup and two reads', async () => {
@@ -114,7 +129,12 @@ describe('the categoriesByIngredient loader', () => {
     expect(answers.map((categories) => categories.map((category) => category.name))).toEqual(
       written.map(({ categories }) => categories),
     );
-    expect(countOf()).toEqual({ findManyOfIngredients: 1, findManyByIds: 1, findWorkspaceRole: 1 });
+    expect(countOf()).toEqual({
+      findManyOfIngredients: 1,
+      findManyByIds: 1,
+      findSubstitutesIncludingSoftDeleted: 0,
+      findWorkspaceRole: 1,
+    });
   });
 
   it('answers each key with its own categories, whatever order the keys arrive in', async () => {
@@ -139,7 +159,12 @@ describe('the categoriesByIngredient loader', () => {
     );
 
     expect(answers).toHaveLength(25);
-    expect(countOf()).toEqual({ findManyOfIngredients: 1, findManyByIds: 1, findWorkspaceRole: 0 });
+    expect(countOf()).toEqual({
+      findManyOfIngredients: 1,
+      findManyByIds: 1,
+      findSubstitutesIncludingSoftDeleted: 0,
+      findWorkspaceRole: 0,
+    });
   });
 });
 
@@ -151,7 +176,12 @@ describe('the folkNamesByIngredient loader', () => {
     const answers = await Promise.all(written.map(({ ref }) => loader.load(ref)));
 
     expect(answers).toEqual(written.map(({ folkNames: names }) => names));
-    expect(countOf()).toEqual({ findManyOfIngredients: 1, findManyByIds: 0, findWorkspaceRole: 1 });
+    expect(countOf()).toEqual({
+      findManyOfIngredients: 1,
+      findManyByIds: 0,
+      findSubstitutesIncludingSoftDeleted: 0,
+      findWorkspaceRole: 1,
+    });
   });
 
   it('answers each key with its own folk names, whatever order the keys arrive in', async () => {
@@ -176,11 +206,40 @@ describe('the folkNamesByIngredient loader', () => {
   });
 });
 
-// Both loaders answer through the same two layers; each case runs against
-// both, since a check forgotten in one would pass every test of the other.
+describe('the substitutesByIngredient loader', () => {
+  it('answers fifty ingredients across two tiers with one role lookup and one read', async () => {
+    const written = await addFifty();
+    // Every other one links its neighbour, across the tiers W reads.
+    for (let i = 1; i < written.length; i += 2) {
+      await insertSubstituteLink(sql, written[i].ref.id, written[i - 1].ref.id, A.id);
+    }
+    const { substitutesByIngredient: loader } = loadersFor(asUser(B));
+
+    const answers = await Promise.all(written.map(({ ref }) => loader.load(ref)));
+
+    expect(answers.map((substitutes) => substitutes.map((substitute) => substitute.name))).toEqual(
+      written.map(({ folkNames: names }, i) =>
+        i % 2 === 1 ? [...names, `Fixturewort ${String(i - 1).padStart(2, '0')}`].sort() : names,
+      ),
+    );
+    expect(answers[1].find((substitute) => substitute.ingredient)?.ingredient?.id).toBe(
+      written[0].ref.id,
+    );
+    expect(countOf()).toEqual({
+      findManyOfIngredients: 0,
+      findManyByIds: 0,
+      findSubstitutesIncludingSoftDeleted: 1,
+      findWorkspaceRole: 1,
+    });
+  });
+});
+
+// The loaders answer through the same two layers; each case runs against
+// each, since a check forgotten in one would pass every test of the others.
 describe.each([
   ['categoriesByIngredient', categoryNames, ['Protection']],
   ['folkNamesByIngredient', folkNames, ['Testbane']],
+  ['substitutesByIngredient', substituteNames, ['Testbane']],
 ] as const)('who %s answers', (name, read, children) => {
   let local: Written;
   let compendium: Written;

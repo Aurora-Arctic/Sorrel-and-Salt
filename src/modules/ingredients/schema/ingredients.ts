@@ -71,7 +71,10 @@ export const ingredients = pgTable(
     deities: text('deities').array(),
     colors: text('colors').array(),
     safetyNotes: text('safety_notes'),
-    substitutes: text('substitutes').array(),
+    // `substitutes text[]` is undeclared since MB.140 moved every reader and
+    // writer to `ingredient_substitutes`, and stays in the database until
+    // MB.141 drops it (rule 10), so `db:generate` emits that drop on any
+    // branch before it.
     ...auditColumns,
   },
   (table) => [

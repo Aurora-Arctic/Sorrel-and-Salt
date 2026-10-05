@@ -10,7 +10,8 @@ import type { IngredientFixture } from '../fixtures/types';
 // the seed does — the author's stamps and the GUC, inside one transaction.
 
 /**
- * Writes `fixture`'s row, its folk names and its category links, stamped by
+ * Writes `fixture`'s row, its folk names, its typed substitutes and its
+ * category links, stamped by
  * `author`, and returns the ingredient's id. Categories are named as §6 does
  * and resolved through the seeded `categories`; a name with no live row is a
  * thrown error naming it, so a misspelt category is never a silent skip.
@@ -36,6 +37,15 @@ export async function insertIngredient(
       await tx`insert into ingredient_folk_names ${tx(folkNames)}`;
     }
 
+    if (fixture.substitutes.length > 0) {
+      const substitutes = fixture.substitutes.map((name) => ({
+        ingredient_id: id,
+        name,
+        ...stamps,
+      }));
+      await tx`insert into ingredient_substitutes ${tx(substitutes)}`;
+    }
+
     if (fixture.categories.length > 0) {
       const found = await tx`
         select id, name from categories
@@ -55,4 +65,26 @@ export async function insertIngredient(
 
     return id;
   });
+}
+
+/**
+ * Links `substituteId` as a substitute of `ingredientId`, stamped by `author`,
+ * and returns the row's id. Raw, as `insertIngredient` is, so the tier rule the
+ * service holds is not: a test can write the row the service would refuse.
+ */
+export async function insertSubstituteLink(
+  sql: postgres.Sql,
+  ingredientId: string,
+  substituteId: string,
+  author: string,
+): Promise<string> {
+  const [row] = await sql`
+    insert into ingredient_substitutes ${sql({
+      ingredient_id: ingredientId,
+      substitute_id: substituteId,
+      created_by: author,
+      updated_by: author,
+    })}
+    returning id`;
+  return row.id as string;
 }

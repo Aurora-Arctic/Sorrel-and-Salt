@@ -55,6 +55,7 @@ const EXPORTED_FUNCTIONS = [
   'findPage',
   'findPageInWorkspace',
   'findSimilarIngredients',
+  'findSubstitutesIncludingSoftDeleted',
   'findUserByEmail',
   'findVocabularySuggestions',
   'findWorkspaceRole',
@@ -115,8 +116,15 @@ const SPELL_HATCHES = [
   'findManyOfSpellIngredientsIncludingSoftDeleted',
 ];
 
+/**
+ * A substitute's reach past the tombstone of the ingredient it links (MB.138):
+ * the link is kept and reads as that ingredient's last name. It skips the
+ * linked ingredient's filter and nothing else, which the last test pins.
+ */
+const SUBSTITUTE_HATCH = 'findSubstitutesIncludingSoftDeleted';
+
 /** Every exported finder allowed to skip a filter, each saying so in its name. */
-const ESCAPE_HATCHES = [ESCAPE_HATCH, ...SPELL_HATCHES];
+const ESCAPE_HATCHES = [ESCAPE_HATCH, ...SPELL_HATCHES, SUBSTITUTE_HATCH];
 
 const source = (file: string) => readFileSync(join(REPO_ROOT, file), 'utf8');
 
@@ -281,5 +289,21 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     const children = functionBody('findManyOfSpellIngredientsIncludingSoftDeleted');
     expect(children).toMatch(/findIngredientsInSpellsIncludingSoftDeleted\(/);
     expect(children).toMatch(/notSoftDeleted\(table\)/);
+  });
+
+  // The substitute hatch skips one filter, the linked ingredient's, read
+  // through the `linked` alias. The substitute's own tombstone filters, the
+  // parent is live by construction (`existsIn`) and in a tier the proofs
+  // read, and the link must point at the compendium or the parent's coven.
+  it('lets the substitute hatch past the linked ingredient’s tombstone and nothing else', () => {
+    const body = functionBody(SUBSTITUTE_HATCH);
+
+    expect(body).toMatch(/notSoftDeleted\(ingredientSubstitutes\)/);
+    expect(body).toMatch(/existsIn\(\s*ingredients\b/);
+    expect(body).toMatch(/inCompendium\(ingredients\)/);
+    expect(body).toMatch(/scopedTo\(membership, ingredients\)/);
+    expect(body).toMatch(/inCompendium\(linked\)/);
+    expect(body).toMatch(/eq\(linked\.workspaceId, ingredients\.workspaceId\)/);
+    expect(body).not.toMatch(/notSoftDeleted\(linked\)/);
   });
 });

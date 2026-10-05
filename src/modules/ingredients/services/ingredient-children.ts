@@ -1,12 +1,16 @@
 import 'server-only';
-import { findManyByIds, findManyOfIngredients } from '../../../db/repository';
+import {
+  findManyByIds,
+  findManyOfIngredients,
+  findSubstitutesIncludingSoftDeleted,
+} from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { ingredientCategories } from '../schema/ingredient-categories';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import { type Membership, assertMembership } from '@/modules/coven';
-import type { CategoryRow, IngredientKey } from '../types';
+import type { CategoryRow, IngredientKey, SubstituteRow } from '../types';
 
 /**
  * The categories each ingredient is filed under, one answer per ref in the
@@ -57,10 +61,38 @@ export async function folkNamesOf(
 }
 
 /**
- * The check both reads share: a proof for every coven the refs name that this
+ * The live substitutes of each ingredient, as §7's `Substitute` reads them —
+ * one answer per ref, sorted by the name each shows (DESIGN.md §5,
+ * `ingredient_substitutes`). A link shows its ingredient's label and leads to
+ * it; once that ingredient is deleted it shows the label it was deleted
+ * under and leads nowhere. One read whatever the batch size, the linked
+ * ingredients joined in, plus one role lookup per coven named; refused
+ * exactly as `categoriesOf` refuses.
+ */
+export async function substitutesOf(
+  session: Session | null,
+  refs: readonly IngredientKey[],
+): Promise<(SubstituteRow[] | Forbidden)[]> {
+  const { memberships, ids, answer } = await admit(session, refs);
+  const rows = await findSubstitutesIncludingSoftDeleted(memberships, ids);
+
+  return answer((id) =>
+    rows
+      .filter(({ row }) => row.ingredientId === id)
+      .map(({ row, joined: linked }) => ({
+        // The CHECK holds a row to one of the two, so a typed row has its name.
+        name: linked?.name ?? row.name ?? '',
+        ingredient: linked?.deletedAt === null ? linked : null,
+      }))
+      .sort(byName),
+  );
+}
+
+/**
+ * The check the reads share: a proof for every coven the refs name that this
  * session may read, and a `Forbidden` for each that it may not. `admitted`
- * reads a child table for the refs that passed; `answer` lays the result out
- * in ref order.
+ * reads a child table for the refs that passed, whose `ids` and proofs a read
+ * of its own takes; `answer` lays the result out in ref order.
  */
 async function admit(session: Session | null, refs: readonly IngredientKey[]) {
   const covens = [...new Set(refs.flatMap((ref) => ref.workspaceId ?? []))];
@@ -73,6 +105,8 @@ async function admit(session: Session | null, refs: readonly IngredientKey[]) {
   const ids = [...new Set(refs.filter((ref) => !isRefused(ref)).map((ref) => ref.id))];
 
   return {
+    memberships,
+    ids,
     admitted: <TTable extends typeof ingredientCategories | typeof ingredientFolkNames>(
       table: TTable,
     ) => findManyOfIngredients(memberships, table, ids),

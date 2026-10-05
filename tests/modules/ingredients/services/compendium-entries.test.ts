@@ -56,10 +56,10 @@ beforeEach(async () => {
   await sql`truncate ingredients cascade`;
 });
 
-/** The fixture as the service's input: everything but the tier and the category names. */
+/** The fixture as the service's input: everything but the tier and the category names, its substitutes typed. */
 function inputOf(fixture: IngredientFixture): CompendiumIngredientInput {
-  const { workspaceId: _tier, categories: _categories, ...input } = fixture;
-  return input;
+  const { workspaceId: _tier, categories: _categories, substitutes, ...input } = fixture;
+  return { ...input, substitutes: substitutes.map((name) => ({ ingredientId: null, name })) };
 }
 
 const entry = (overrides: Overrides<IngredientFixture> = {}) => inputOf(makeIngredient(overrides));

@@ -90,9 +90,16 @@ notes — every field `IngredientInput` takes. Categories are not an input yet.
   info tip sits in its legend, so the fieldset is named by the legend's text
   alone, through `aria-labelledby`: the tip's button would otherwise join the
   group's name, "Folk Names About Folk Names". `substitutes` is labelled
-  "Substitute Ingredients", its box "Substitute Ingredient". A substitute is
-  text for now: MB.138 to MB.140 let an entry link an existing ingredient,
-  and MB.131 picks one from MB.138's `ingredientSuggestions`.
+  "Substitute Ingredients", its box "Substitute Ingredient". A substitute
+  entry is typed text, or a link to an ingredient (MB.140): `{ value, link }`,
+  `value` the ingredient's label and `link` its id and formal name. A linked
+  entry's pill reads as the label with its formal name, "Mugwort (Artemisia
+  vulgaris)", and so does its × and any error naming it, since two
+  ingredients can share a label; one with no formal name reads as its label.
+  `toInput` sends a link as `{ ingredientId }` and typed text as `{ name }`
+  (DESIGN.md §5, `ingredient_substitutes`). Nothing in the form makes a link
+  yet: MB.131 picks one from MB.138's `ingredientSuggestions`, and until then
+  Add and Enter add typed text, as in every list.
 - **Text left in a box stops the save.** The form's resolver adds an error to
   any box still holding text, 'Press Add to keep "Hedge Fixture", or clear
   the box', on the list's error element, so a save never sends a list the

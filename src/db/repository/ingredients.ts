@@ -1,7 +1,8 @@
-import { and, eq, inArray, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable, alias } from 'drizzle-orm/pg-core';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
+import { ingredientSubstitutes } from '../../modules/ingredients/schema/ingredient-substitutes';
 import { canonicalKeyOf, ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
@@ -11,7 +12,9 @@ import type {
   CompendiumScore,
   IngredientFilter,
   IngredientIdentity,
+  IngredientRow,
   IngredientScoped,
+  JoinedRow,
   Keyset,
   NotSpellScoped,
   SimilarityScore,
@@ -49,6 +52,50 @@ export function findManyOfIngredients<
       inArray(table.ingredientId, [...ingredientIds]),
       existsIn(ingredients, readableParent),
     ),
+  );
+}
+
+/**
+ * The live substitutes of these ingredients, each beside the ingredient it
+ * links — soft-deleted or not — or null for a typed name. The third escape
+ * hatch (MB.138): a link to a deleted ingredient is kept, and reads as that
+ * ingredient's last name (claude-docs/db/soft-delete.md, "Soft-delete
+ * filtering"). It skips the linked ingredient's filter and no other. The
+ * substitute's own tombstone filters; its parent must be live and readable,
+ * as `findManyOfIngredients` reads it; and the link must point where the
+ * parent's readers may look — the compendium, or the parent's own coven — so a
+ * row written past the service's tier rule shows nothing. One statement for
+ * the whole batch: the linked ingredient is a left join, under an alias, since
+ * the parent's correlated subquery reads `ingredients` itself.
+ */
+export function findSubstitutesIncludingSoftDeleted(
+  memberships: readonly Membership[],
+  ingredientIds: readonly string[],
+): Promise<JoinedRow<typeof ingredientSubstitutes.$inferSelect, IngredientRow>[]> {
+  if (ingredientIds.length === 0) return Promise.resolve([]);
+  const linked = alias(ingredients, 'linked');
+  return selectFrom(
+    ingredientSubstitutes,
+    and(
+      notSoftDeleted(ingredientSubstitutes),
+      inArray(ingredientSubstitutes.ingredientId, [...ingredientIds]),
+      existsIn(
+        ingredients,
+        and(
+          eq(ingredients.id, ingredientSubstitutes.ingredientId),
+          or(
+            inCompendium(ingredients),
+            ...memberships.map((membership) => scopedTo(membership, ingredients)),
+          ),
+          or(
+            isNull(ingredientSubstitutes.substituteId),
+            inCompendium(linked),
+            eq(linked.workspaceId, ingredients.workspaceId),
+          ),
+        ),
+      ),
+    ),
+    { leftJoin: linked, on: eq(linked.id, ingredientSubstitutes.substituteId) },
   );
 }
 

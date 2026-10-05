@@ -131,6 +131,24 @@ export interface Similarity {
 }
 
 /**
+ * How `selectFrom` reads a table beside a second one left-joined to it: each
+ * row with the joined row, or null where `on` matched none. Alias the joined
+ * table when the `where` reads the table itself too, in a correlated
+ * subquery. The joined row takes no filter of its own here: what it must
+ * satisfy is the caller's `on` and `where`.
+ */
+export interface LeftJoin<TJoined extends PgTable> {
+  leftJoin: TJoined;
+  on: SQL;
+}
+
+/** A row read under a `LeftJoin`, and the row joined to it. */
+export interface JoinedRow<TRow, TJoined> {
+  row: TRow;
+  joined: TJoined | null;
+}
+
+/**
  * A statement's rows read as a table: `source` is the parenthesised statement
  * and its alias, `fields` the columns read off it. For a read no one table
  * holds — a union across two — still built by `selectFrom`, under the

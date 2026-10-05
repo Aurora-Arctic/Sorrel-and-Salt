@@ -19,14 +19,27 @@ NULL` ANDed onto whatever `where` the caller supplied — or the caller's
   filter, so a second bypass is a decision argued for in the diff, not a
   convenience appearing quietly beside an import.
 
-There are two such decisions, and both are the same one: what a spell holds.
-`findIngredientsInSpellsIncludingSoftDeleted` and
+There are three such hatches, from two decisions. The first is what a spell
+holds: `findIngredientsInSpellsIncludingSoftDeleted` and
 `findManyOfSpellIngredientsIncludingSoftDeleted` (M5.3) read an ingredient
 past its tombstone, and nothing else past one, for a member who may read a spell
 holding it (["What a spell holds"](spell-visibility.md#what-a-spell-holds-m53)).
-MB.140 adds a third, decided by MB.138: the ingredient a substitute links,
-read past its tombstone so that the substitute shows its last name, and
-nothing else past one (DESIGN.md §5, `ingredient_substitutes`).
+The second, decided by MB.138 and built by MB.140, is the ingredient a
+substitute links: `findSubstitutesIncludingSoftDeleted` reads it past its
+tombstone so that the substitute shows its last name, and nothing else past
+one (DESIGN.md §5, `ingredient_substitutes`). The substitute's own tombstone
+filters, the parent is live by `existsIn` and in a tier the proofs read, and
+the link must point at the compendium or the parent's own coven, so a row
+written past the service's tier rule reads as nothing.
+
+That finder reads each substitute and its linked ingredient in one statement,
+through `selectFrom`'s left join: a `LeftJoin` option names a second table
+and its `on`, and each row comes back beside the joined row, or `null` where
+none matched — a typed name here. The joined table takes no filter from
+`selectFrom`, which is the point of this one finder and why the option
+carries the caller's `on` and `where` alone. The linked ingredient is the
+alias `linked`, since the parent's correlated subquery reads `ingredients`
+itself.
 
 Neither builder is in the repository's surface — their siblings import them,
 and nothing outside the folder may (["The repository's files"](repository-files.md)) — so
@@ -69,9 +82,12 @@ export — a new escape hatch, or a finder that reaches the database some other
 way — turns the test red rather than merely going unreviewed; and every
 exported finder other than the escape hatches either calls `notSoftDeleted(...)`
 directly or delegates to one that does. The hatches are a pinned list, each
-named `…IncludingSoftDeleted`, and a last test holds the two spell hatches to
-skipping the ingredient's filter alone: the spell's `readableSpells`, the
-layer's `existsIn` and the proof's tier stay in the body.
+named `…IncludingSoftDeleted`, and two last tests hold each decision's
+hatches to skipping one filter. The spell hatches skip the ingredient's alone:
+the spell's `readableSpells`, the layer's `existsIn` and the proof's tier stay
+in the body. The substitute hatch skips the linked ingredient's alone: the
+substitute's own `notSoftDeleted`, the parent's `existsIn` and tier, and the
+link's tier against its parent's stay, and nothing filters the `linked` alias.
 
 A query built _outside_ the repository is the linter's job, not this test's —
 see ["Where queries may be built"](query-building.md). It was this test's until MB.33, by

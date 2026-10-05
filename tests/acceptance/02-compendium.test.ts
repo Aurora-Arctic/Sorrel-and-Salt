@@ -38,6 +38,7 @@ describe('Story 15: Create an ingredient local to my workspace when the compendi
     const {
       workspaceId: _tier,
       categories: _categories,
+      substitutes: _substitutes,
       ...fixture
     } = makeIngredient({
       workspaceId: WORKSPACE_W_ID,
@@ -76,6 +77,7 @@ describe('Story 15: Create an ingredient local to my workspace when the compendi
     const {
       workspaceId: _tier,
       categories: _categories,
+      substitutes: _substitutes,
       ...input
     } = makeIngredient({
       name: 'Fixture Viewerwort',
