@@ -71,7 +71,8 @@ the control beneath does not show through.
 It fades in and out over 500ms, the owner's pace, on the theme's easing,
 rising 2px as it appears, and takes the pointer only while open: `visibility`
 flips after the fade out, not before. Under reduced motion it appears and goes
-at once.
+at once. The look and the fade are the `tip-bubble` mixin's, so another tip
+can share them; the tip's position and width stay its own.
 
 ## Stories
 
