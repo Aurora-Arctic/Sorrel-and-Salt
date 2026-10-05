@@ -153,6 +153,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.147 | One home per fact across the docs                                                              | Wave 8  | —                      |
 | MB.148 | A read inside a write runs on the write's transaction                                          | Wave 15 | —                      |
 | MB.149 | Migrations give up a lock they cannot take                                                     | Wave 15 | —                      |
+| MB.150 | Combobox's × buttons move as a button does                                                     | Wave 8  | —                      |
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
@@ -2890,3 +2891,17 @@ _Acceptance criteria:_
 - The migrate job retries a failed migration a bounded number of times with backoff, and a final failure fails the deploy
 - The timeout is set somewhere both the job and `npm run db:migrate` go through, or the doc says why the two differ
 - `claude-docs/db/expand-contract.md` states the timeout, where it is set and why, and the retry
+
+**MB.150 — Combobox's × buttons move as a button does** · 0.5h
+
+_Story:_ As a workspace member, I want the × that removes a list entry to answer the keyboard as it answers the pointer, and as every other button does, so that I can see which entry Tab has reached before I press it.
+
+Minted during M5.10, on the owner's review. `.btn` fades its fill, edge, ink and shadow through `theme-transition`, and draws its hover state on `:focus-visible` as well as `:hover`, so the keyboard sees what the pointer sees. Combobox's × buttons do neither: the chip's remove (`.combobox__entry-remove`) and the clear (`.combobox__indicator`) snap to their hover state, and focus draws only the ring. Both take the button's transition and its focus state, with reduced motion dropping the transition. The chevron shares `.combobox__indicator` and takes the same, since an indicator that moves unlike the clear beside it reads as a different kind of control.
+
+_Acceptance criteria:_
+
+- The chip's × and the clear × fade into and out of their hover state on `theme-transition`, as `.btn` does
+- Each draws its hover state on `:focus-visible` as well as `:hover`, with the focus ring
+- `prefers-reduced-motion: reduce` drops the transition
+- `claude-docs/components/combobox.md`'s Styling section says so
+- Checked by hand in the workshop in both themes, by pointer and by Tab
