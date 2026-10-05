@@ -47,6 +47,10 @@ In [`graphql/schema.md`](graphql/schema.md#formsuggestions-and-commonnamesuggest
 
 In [`graphql/schema.md`](graphql/schema.md#possibleduplicates).
 
+### `ingredientSuggestions`
+
+In [`graphql/schema.md`](graphql/schema.md#ingredientsuggestions).
+
 ### `compendium`, `ingredient` and `ingredientFormValues`
 
 In [`graphql/schema.md`](graphql/schema.md#compendium-ingredient-and-ingredientformvalues).

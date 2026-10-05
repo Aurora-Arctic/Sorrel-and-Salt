@@ -23,7 +23,7 @@ stays under `src/graphql/schema/` ([`modules.md`](../modules.md)).
   §7 sketch reads. A field that can be null says so with `nullable: true`,
   which makes the null something the field means rather than an accident of
   the default. Pothos's own default is the reverse.
-- **Typed text that narrows a list is `query`.** `compendium` and the four
+- **Typed text that narrows a list is `query`.** `compendium` and the five
   autocompletes all take it as `query: String`, and a blank or absent one is
   no filter. The same text is `query` all the way down, through the filter
   types and the services to the SQL. It is not `search` or `term`, because one
@@ -216,6 +216,34 @@ type QueryPossibleDuplicatesConnectionEdge {
   `assertMembership` for `ingredient: ['read']`, which refuses a coven the
   caller is not in, a site admin included. A viewer is answered, because every
   row the field returns is one a reader of the coven could already list.
+
+### `ingredientSuggestions`
+
+The substitute picker's search (MB.138), registered by `ingredients` over
+`suggestIngredients` and the finder `findIngredientSuggestions`
+([`db/compendium-read.md`](../db/compendium-read.md), "The ingredient
+picker's search"). MB.131's combobox calls it as a substitute is typed, with
+`workspaceId`, `query` and the connection arguments, and picking a node
+writes a link to it (DESIGN.md §5, `ingredient_substitutes`).
+
+- **A node is an `Ingredient`**, as on `possibleDuplicates`, because a pick
+  needs the id that `commonNameSuggestions`' strings do not carry. The
+  combobox shows `canonicalName` beside the label and the tier by
+  `isGlobal`, which is what MB.131 asks a substitute suggestion to show.
+- **Compendium entries and the named coven's own, and nothing else**, which
+  is exactly what a coven's substitute may link. A compendium entry's
+  substitute may link only the compendium, so the admin form reads
+  `compendium(query)`, which already holds nothing else.
+- **It matches as `compendium` does**, by word similarity at 0.5 against the
+  label, the formal name and the live folk names, accents folded, so a typed
+  prefix finds its entry. `possibleDuplicates`' whole-string 0.4 does not:
+  `mu` is under 0.4 similar to Mugwort and 0.67 word-similar. Best match
+  first, with no score on the edge, since a picker ranks rather than reports.
+  A blank `query` lists both tiers by name, so an opened box lists something.
+- **The refusals are `possibleDuplicates`'**: `Forbidden` for a signed-out
+  caller from the resolver, then `assertMembership` for `ingredient: ['read']`.
+  A viewer is answered, a coven the caller is not in is refused, and so is a
+  site admin, who belongs to no coven.
 
 ### `compendium`, `ingredient` and `ingredientFormValues`
 

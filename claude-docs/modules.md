@@ -30,7 +30,8 @@ registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
 `User.memberships` field; `vocabulary` has `CorrespondenceSuggestion`,
 `FormSuggestion`, `SuggestionClaimant` and the `planetSuggestions`,
 `zodiacSuggestions` and `formSuggestions` connections; `ingredients` has
-`Ingredient`, the `compendium`, `ingredient` and `possibleDuplicates` queries,
+`Ingredient`, the `compendium`, `ingredient`, `possibleDuplicates` and
+`ingredientSuggestions` queries,
 the two workspace ingredient mutations, and `CommonNameSuggestion` and
 `commonNameSuggestions`, whose claimants reuse `vocabulary`'s
 `SuggestionClaimant` — the edge runs that way round — plus the
@@ -187,7 +188,7 @@ name rather than credited to whichever export happens to sit above it. It
 fails an unlisted function, and it fails a listed one that no longer exists or
 no longer reads the tier.
 
-It holds the predicate, eleven finders and the writer today: `inCompendium` in
+It holds the predicate, twelve finders and the writer today: `inCompendium` in
 `predicates.ts`, which is `workspace_id IS NULL` itself; `findSimilarIngredients`
 (M4.7), the fuzzy duplicate match; `findVocabularySuggestions` (MB.94, forms
 M4.7a), the planet, zodiac and form autofill; `findCommonNameSuggestions`
@@ -195,6 +196,7 @@ M4.7a), the planet, zodiac and form autofill; `findCommonNameSuggestions`
 ingredient's folk names and category links; `findCompendiumPage` (M8.5), the
 public list, and `findCompendiumCount` (MB.105), its count;
 `findOneIngredient` (M8.5), one row in the compendium or a proof's coven;
+`findIngredientSuggestions` (MB.138), the substitute picker's search;
 `findCompendiumEntryByIdentity` (M5.2), the entry a colliding compendium
 write names; `findCompendiumEntryBySlug` and `findCompendiumSlugRedirect`
 (MB.82), the entry at an address and the one a retired address redirects to;
