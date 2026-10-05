@@ -102,9 +102,10 @@ describe('IngredientForm', () => {
       type('Form', 'dried leaf');
       type('Description', 'A fixture herb.');
       choose('Element', 'air');
-      type('Planet', 'Mercury');
-      type('Zodiac Sign', 'Gemini');
-      type('Colour', 'Silver-green');
+      addEntry('Planet', 'Mercury');
+      addEntry('Planet', 'Venus');
+      addEntry('Zodiac Sign', 'Gemini');
+      addEntry('Colour', 'Silver-green');
       type('Safety Notes', 'None known.');
       save();
 
@@ -116,9 +117,9 @@ describe('IngredientForm', () => {
         form: 'dried leaf',
         description: 'A fixture herb.',
         element: 'air',
-        planet: 'Mercury',
-        zodiac: 'Gemini',
-        color: 'Silver-green',
+        planets: ['Mercury', 'Venus'],
+        zodiacSigns: ['Gemini'],
+        colors: ['Silver-green'],
         safetyNotes: 'None known.',
         deities: [],
         substitutes: [],
@@ -548,20 +549,47 @@ describe('IngredientForm', () => {
     });
   });
 
+  // Planets, zodiac signs and colours are lists since MB.136, as DESIGN.md §5 gives them.
   describe.each([
-    { legend: 'Folk Names', entry: 'Folk Name', field: 'folkNames' },
-    { legend: 'Deities', entry: 'Deity', field: 'deities' },
+    {
+      legend: 'Folk Names',
+      entry: 'Folk Name',
+      field: 'folkNames',
+      hint: 'Other names it goes by',
+    },
+    {
+      legend: 'Planets',
+      entry: 'Planet',
+      field: 'planets',
+      hint: 'The heavenly bodies it answers to',
+    },
+    {
+      legend: 'Zodiac Signs',
+      entry: 'Zodiac Sign',
+      field: 'zodiacSigns',
+      hint: 'The signs it answers to',
+    },
+    { legend: 'Colours', entry: 'Colour', field: 'colors', hint: 'not the colour it is' },
+    { legend: 'Deities', entry: 'Deity', field: 'deities', hint: 'The gods and spirits' },
     {
       legend: 'Substitute Ingredients',
       entry: 'Substitute Ingredient',
       field: 'substitutes',
+      hint: 'Other ingredients to use in its place',
     },
-  ] as const)('the $legend list', ({ legend, entry, field }) => {
+  ] as const)('the $legend list', ({ legend, entry, field, hint }) => {
     const group = () => screen.getByRole('group', { name: legend });
     const entries = () =>
       within(group())
         .queryAllByRole('button', { name: /^Remove / })
         .map((button) => button.getAttribute('aria-label'));
+
+    it('tucks its hint behind an info tip by its legend, still read with the box', () => {
+      renderForm();
+
+      expect(screen.getByRole('button', { name: `About ${legend}` })).toBeInTheDocument();
+      expect(textbox(entry)).toHaveAccessibleDescription(expect.stringContaining(hint));
+    });
 
     it('starts with one empty box and no entries', () => {
       renderForm();

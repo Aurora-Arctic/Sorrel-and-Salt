@@ -35,9 +35,9 @@ export interface IngredientFormValues {
   folkNames: ListEntry[];
   description: string;
   element: IngredientElement | '';
-  planet: string;
-  zodiac: string;
-  color: string;
+  planets: ListEntry[];
+  zodiacSigns: ListEntry[];
+  colors: ListEntry[];
   deities: ListEntry[];
   substitutes: ListEntry[];
   safetyNotes: string;
@@ -47,12 +47,12 @@ export interface IngredientFormValues {
 /** What the form sends: its values in the shape the shared schema and the mutation take, unparsed. */
 export type IngredientFormInput = z.input<typeof LocalIngredientInput>;
 
-export type TextFieldName =
-  'name' | 'canonicalName' | 'form' | 'description' | 'planet' | 'zodiac' | 'color' | 'safetyNotes';
+export type TextFieldName = 'name' | 'canonicalName' | 'form' | 'description' | 'safetyNotes';
 
 export type SelectFieldName = 'nomenclature' | 'element';
 
-export type ListFieldName = 'folkNames' | 'deities' | 'substitutes';
+export type ListFieldName =
+  'folkNames' | 'planets' | 'zodiacSigns' | 'colors' | 'deities' | 'substitutes';
 
 /** What every field shares: what it is called, and what it is told about it. */
 interface FieldProps {

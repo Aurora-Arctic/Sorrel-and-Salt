@@ -149,16 +149,23 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
         />
         <TextField name="description" label="Description" multiline />
         <SelectField name="element" label="Element" none="None" options={ELEMENT_OPTIONS} />
-        <TextField
-          name="planet"
-          label="Planet"
-          hint="The heavenly body it answers to: a planet, the Sun or the Moon."
+        <ListField
+          name="planets"
+          legend="Planets"
+          entry="Planet"
+          hint="The heavenly bodies it answers to: the planets, the Sun and the Moon."
         />
-        <TextField name="zodiac" label="Zodiac Sign" />
-        <TextField
-          name="color"
-          label="Colour"
-          hint="The colour it corresponds to in a working, not the colour it is."
+        <ListField
+          name="zodiacSigns"
+          legend="Zodiac Signs"
+          entry="Zodiac Sign"
+          hint="The signs it answers to."
+        />
+        <ListField
+          name="colors"
+          legend="Colours"
+          entry="Colour"
+          hint="The colours it corresponds to in a working, not the colour it is."
         />
         <ListField
           name="deities"
