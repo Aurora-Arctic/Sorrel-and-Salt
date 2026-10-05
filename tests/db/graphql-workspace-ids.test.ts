@@ -69,6 +69,11 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
   formSuggestions: suggestion('formSuggestions'),
   planetSuggestions: suggestion('planetSuggestions'),
   zodiacSuggestions: suggestion('zodiacSuggestions'),
+  ingredientSuggestions: {
+    source: `query ($workspaceId: ID!) {
+      ingredientSuggestions(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
+    }`,
+  },
   possibleDuplicates: {
     source: `query ($workspaceId: ID!) {
       possibleDuplicates(workspaceId: $workspaceId, name: "Testwort", first: 1) { edges { node { id } } }

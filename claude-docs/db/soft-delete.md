@@ -24,6 +24,9 @@ There are two such decisions, and both are the same one: what a spell holds.
 `findManyOfSpellIngredientsIncludingSoftDeleted` (M5.3) read an ingredient
 past its tombstone, and nothing else past one, for a member who may read a spell
 holding it (["What a spell holds"](spell-visibility.md#what-a-spell-holds-m53)).
+MB.140 adds a third, decided by MB.138: the ingredient a substitute links,
+read past its tombstone so that the substitute shows its last name, and
+nothing else past one (DESIGN.md §5, `ingredient_substitutes`).
 
 Neither builder is in the repository's surface — their siblings import them,
 and nothing outside the folder may (["The repository's files"](repository-files.md)) — so

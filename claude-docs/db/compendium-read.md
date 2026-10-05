@@ -111,3 +111,35 @@ takes an optional `workspaceId`; with one it asks
 `assertMembership(…, { ingredient: ['read'] })` — a signed-out caller, a site
 admin and a non-member get `Forbidden` — and reads both tiers, without one it
 reads the compendium alone, and a miss is `NotFound` either way.
+
+## The ingredient picker's search (MB.138)
+
+**`findIngredientSuggestions(membership, query, page)`** is what a coven's
+substitute picker reads, behind `ingredientSuggestions`
+([`graphql/schema.md`](../graphql/schema.md)) and the `ingredients` service
+`suggestIngredients`. It offers exactly what a coven's substitute may link
+(DESIGN.md §5, `ingredient_substitutes`): live entries of the compendium and
+of the proof's workspace, never another, so it is on
+[the tier seam](../modules.md#the-tier-seam).
+
+- **It is `findCompendiumPage` under a wider scope.** It takes the same
+  private `compendiumList({ query })`, so the match is the compendium
+  search's: word similarity at 0.5 against the label, the formal name and the
+  live folk names, accent-folded, best match first, with a blank query
+  listing by `(name, id)`. The service parses the query through
+  `CompendiumFilter`, so a query under `MIN_QUERY_LENGTH` is a blank one here
+  too. Only the tier predicate differs: `workspace_id IS NULL OR
+workspace_id = <the proof's>`.
+- **Not `findSimilarIngredients`.** That one answers whether a whole name is
+  nearly one already there, by `%` at 0.4, and a typed fragment is far under
+  it: `mu` is 0.22 similar to Mugwort and 0.67 word-similar. Not
+  `findCommonNameSuggestions` either, which answers with strings, while a pick
+  writes an ingredient's id.
+- **The plan is the compendium search's.** The scope is read on
+  `ingredients` after the match has joined, so the statement still starts
+  from both expression indexes. `compendium-search-query.test.ts` runs it
+  over the same ~20,000 rows and asserts it, and asserts the threshold is set
+  before the match and the proof's workspace is in the statement.
+- **No local-beats-compendium suppression yet.** A coven entry and the
+  compendium entry it shadows are both offered until M8.3 builds the
+  suppression, which applies here as it does to every workspace result.

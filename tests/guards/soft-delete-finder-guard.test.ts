@@ -35,6 +35,7 @@ const EXPORTED_FUNCTIONS = [
   'findCompendiumPage',
   'findCompendiumSlugRedirect',
   'findIngredientFormValues',
+  'findIngredientSuggestions',
   'findIngredientsInSpellsIncludingSoftDeleted',
   'findMany',
   'findManyByIds',
@@ -76,6 +77,7 @@ const INTERNAL = [
 /** Rule 5's half: a finder over a table carrying `workspace_id` scopes by the proof. */
 const SCOPED_FINDERS = [
   'findCommonNameSuggestions',
+  'findIngredientSuggestions',
   'findIngredientsInSpellsIncludingSoftDeleted',
   'findManyInWorkspace',
   'findOneByIdInWorkspace',

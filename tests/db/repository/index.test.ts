@@ -32,6 +32,7 @@ describe('repository public API', () => {
         'findCompendiumPage',
         'findCompendiumSlugRedirect',
         'findIngredientFormValues',
+        'findIngredientSuggestions',
         'findIngredientsInSpellsIncludingSoftDeleted',
         'findOneIngredient',
         'findSimilarIngredients',

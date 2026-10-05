@@ -141,7 +141,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.135 | List columns for planet, zodiac sign and colour                                                | Wave 8  | MB.136                 |
 | MB.136 | Read and write planet, zodiac sign and colour as lists                                         | Wave 8  | MB.130, MB.131, MB.137 |
 | MB.137 | Drop the single planet, zodiac and colour columns                                              | Wave 8  | —                      |
-| MB.138 | Let a substitute link an existing ingredient                                                   | Wave 8  | MB.139                 |
+| MB.138 | Let a substitute link an existing ingredient                                                   | Wave 8  | MB.139, MB.131         |
 | MB.139 | `ingredient_substitutes` table, filled from the list                                           | Wave 8  | MB.140                 |
 | MB.140 | Read and write substitutes as links or text                                                    | Wave 8  | MB.131, MB.141, M8.19  |
 | MB.141 | Drop `ingredients.substitutes`                                                                 | Wave 8  | —                      |
@@ -2628,7 +2628,7 @@ _Acceptance criteria:_
 
 _Story 16 — As a workspace member, I want the deity, planet, zodiac and substitute fields to suggest from what already exists, so that I pick an entry rather than typing a fourth spelling of it, and a substitute I pick leads to its ingredient._
 
-Minted during M5.9, and widened in the same review once planet and zodiac became lists and a substitute could link an ingredient. Follows M5.10a, whose `Combobox` it reuses, MB.130, and MB.136 and MB.140, which make those changes. The Deities, Planets, Zodiac signs and Substitute ingredients boxes are already that combobox, since M5.10a puts it on every list field; this task gives each its source: deities over `deitySuggestions`, planets and signs over MB.94's `planetSuggestions` and `zodiacSuggestions`, each with curated values distinguished from in-use ones; substitutes over the ingredient search MB.138 names, in the compendium and this coven. Picking a deity, planet or sign adds its text as an entry. Picking an ingredient adds a linked substitute, its pill reading as that ingredient. Free text is still added by Add or Enter, and a typed substitute stays text. Text left in a box, neither picked nor added, still stops the save, as M5.9's boxes do. Colour keeps no suggestions, the owner's call, and folk names keep M5.10a's. The planet and zodiac lookups moved here from M5.10a once they became lists.
+Minted during M5.9, and widened in the same review once planet and zodiac became lists and a substitute could link an ingredient. Follows M5.10a, whose `Combobox` it reuses, MB.130, and MB.136 and MB.140, which make those changes. The Deities, Planets, Zodiac signs and Substitute ingredients boxes are already that combobox, since M5.10a puts it on every list field; this task gives each its source: deities over `deitySuggestions`, planets and signs over MB.94's `planetSuggestions` and `zodiacSuggestions`, each with curated values distinguished from in-use ones; substitutes over MB.138's `ingredientSuggestions`, the compendium and this coven, or on a compendium entry's form over `compendium(query)`, since its substitutes may link only the compendium. Picking a deity, planet or sign adds its text as an entry. Picking an ingredient adds a linked substitute, its pill reading as that ingredient. Free text is still added by Add or Enter, and a typed substitute stays text. Text left in a box, neither picked nor added, still stops the save, as M5.9's boxes do. Colour keeps no suggestions, the owner's call, and folk names keep M5.10a's. The planet and zodiac lookups moved here from M5.10a once they became lists.
 
 _Acceptance criteria:_
 
@@ -2717,43 +2717,46 @@ _Acceptance criteria:_
 - The migration carries its acknowledgement sidecar, and the destructive-DDL check passes with it
 - Lands only after MB.136 has deployed to staging
 
-**MB.138 — Let a substitute link an existing ingredient** · 1.5h
+**MB.138 — Let a substitute link an existing ingredient** · 3h
 
 _Story:_ As a workspace member, I want to pick an existing ingredient as a substitute or type one that is not entered, so that a substitute I have recorded leads to its own page.
 
-Documentation and scoping only. Minted during M5.9, on the owner's decision: `ingredients.substitutes text[]` becomes a child table, one row per substitute, each either a link to an ingredient or a free-text name, the shape MB.40 gave a spell's layers, `CHECK (num_nonnulls(substitute_id, name) = 1)`. This task settles which ingredients a substitute may link: a compendium entry only another compendium entry, since the compendium is public and a coven's entries are not, and a coven's ingredient either tier, its own coven's included. It settles what a link does when its ingredient is deleted, kept and shown by its last name or turned to text; whether a row takes the full audit spread, as content like a folk name, or the stamp columns and a hard delete, as a link (MB.34); whether the list keeps its order; the GraphQL shape, a `Substitute` carrying `name` and a nullable `ingredient`, resolved through a DataLoader (rule 9); and which search the form's picker reads for ingredients to link, since `commonNameSuggestions` returns names rather than ids. The expand, switch and drop follow as MB.139 to MB.141.
+Scoping, and the picker's search. Minted during M5.9, on the owner's decision: `ingredients.substitutes text[]` becomes a child table, one row per substitute, each either a link to an ingredient or a free-text name, the shape MB.40 gave a spell's layers, `CHECK (num_nonnulls(substitute_id, name) = 1)`. This task settles which ingredients a substitute may link: a compendium entry only another compendium entry, since the compendium is public and a coven's entries are not, and a coven's ingredient either tier, its own coven's included. It settles what a link does when its ingredient is deleted, kept and shown by its last name or turned to text; whether a row takes the full audit spread, as content like a folk name, or the stamp columns and a hard delete, as a link (MB.34); whether the list keeps its order; the GraphQL shape, a `Substitute` carrying `name` and a nullable `ingredient`, resolved through a DataLoader (rule 9); and which search the form's picker reads for ingredients to link, since `commonNameSuggestions` returns names rather than ids. The expand, switch and drop follow as MB.139 to MB.141. **Widened while it was built, on the owner's call:** no existing query fits the picker — `possibleDuplicates` compares whole names and never completes a prefix, and `workspaceIngredients` lists only what a coven holds, in wave 11 — so this task also builds the one it names, `ingredientSuggestions`, ahead of MB.131. **Decided** ([`design-decisions/mb.138-substitute-links.md`](../design-decisions/mb.138-substitute-links.md)): a compendium entry links only the compendium, a coven's ingredient either tier; a link to a deleted ingredient is kept and shown by its last name, the owner's choice, through a third named finder in M5.3's shape; the full audit spread, soft-deleted; alphabetical by the name each shows, and each substitute once, both the owner's calls, so nothing stores an order; `Substitute { name, ingredient }`.
 
 _Acceptance criteria:_
 
 - DESIGN.md §5 gains the table and drops `substitutes[]` from the column list, §7's sketch gains `Substitute`, and §9's detail page links a linked substitute
 - The tier rule, the deletion rule, the audit shape and the order rule are each recorded with its reason
 - The picker's search is named, scoped to the compendium and the current coven
+- `ingredientSuggestions` answers a reader of the coven with the live ingredients of the compendium and that coven, matched as `compendium` matches, best first, and never another coven's, asserted with the precondition that another coven holds a match
 
 **MB.139 — `ingredient_substitutes` table, filled from the list** · 1.5h
 
 _Story:_ As a developer, I want the substitutes table in place and filled before any code reads it, so that the switch to links is a code change against rows that already exist.
 
-Table task, in MB.138's shape: the table, its CHECK, an index on the parent and one on the linked ingredient, so a deletion finds what points at it, the audit columns MB.138 chose and, if they are the full spread, its own `set_updated_at` trigger line. The migration copies each `substitutes` entry across as a name. `ingredients.substitutes` stays declared and written until MB.140. Nothing reads the table yet.
+Table task, in MB.138's shape: the table, its CHECKs, an index on the parent over live rows, the two partial unique indexes that hold one link per ingredient and one name per ingredient case-insensitively, and the full audit spread MB.138 chose, so its own `set_updated_at` trigger line. **Amended by MB.138:** no index on the linked ingredient, since under its deletion rule nothing reads from a linked ingredient back to its linkers. The migration copies each `substitutes` entry across as a name. `ingredients.substitutes` stays declared and written until MB.140. Nothing reads the table yet.
 
 _Acceptance criteria:_
 
-- The shape is asserted from the catalogue, and a row that is both a link and a name, or neither, is a 23514 naming the CHECK
-- Every existing entry is a name row, in its order where MB.138 keeps one
-- `AUDITED_TABLES` and `tests/db/updated-at-trigger.test.ts` agree with the audit shape MB.138 chose
+- The shape is asserted from the catalogue, and a row that is both a link and a name, or neither, or that links its own ingredient, is a 23514 naming its CHECK
+- Every existing entry is a name row, and a list repeating an entry, in any case, is copied once, in the spelling it first holds, so the unique index never refuses the fill
+- A second live link to the same ingredient, or a second live name folding alike, is a 23505 naming its index, and a soft-deleted row reserves neither
+- `AUDITED_TABLES` and `tests/db/updated-at-trigger.test.ts` agree with the full audit spread MB.138 chose
 - Nothing reads the table yet
 
 **MB.140 — Read and write substitutes as links or text** · 3h
 
 _Story:_ As a workspace member, I want a substitute I pick to stay linked to its ingredient, so that the detail page can lead me to it.
 
-Switches substitutes to MB.139's table. The shared schema takes each entry as a name or an ingredient id; the services write them in the ingredient's own `withAudit` transaction, replacing the set as M8.8 replaces the row, and refuse a link the tier rule forbids, as a field error pathed to the entry; GraphQL's `Ingredient.substitutes` returns MB.138's `Substitute`, through a loader; the seed and fixtures follow; the Drizzle schema stops declaring `ingredients.substitutes`. `IngredientForm`'s substitute entries carry a link or a name in the same PR, a linked entry's pill reading as its ingredient's label with its formal name. Picking a link in the form is MB.131's.
+Switches substitutes to MB.139's table. The shared schema takes each entry as a name or an ingredient id, and refuses a repeat — the same id twice, or the same name in any case — at the repeat's position, as it refuses a repeated folk name; the services write them in the ingredient's own `withAudit` transaction, bringing the live rows to the list sent as folk names are replaced, so a save that changes nothing writes nothing, and refuse a link the tier rule forbids, as a field error pathed to the entry; GraphQL's `Ingredient.substitutes` returns MB.138's `Substitute`, through a loader whose finder reaches a linked ingredient deleted or not — MB.138's third named `…IncludingSoftDeleted` finder, added to `tests/guards/soft-delete-finder-guard.test.ts`'s pinned hatches and held to skipping the linked ingredient's filter alone; the seed and fixtures follow; the Drizzle schema stops declaring `ingredients.substitutes`. `IngredientForm`'s substitute entries carry a link or a name in the same PR, a linked entry's pill reading as its ingredient's label with its formal name. Picking a link in the form is MB.131's.
 
 _Acceptance criteria:_
 
-- A save carries linked and typed substitutes together, in the order entered
+- A save carries linked and typed substitutes together, read back alphabetically by the name each shows
+- A repeated link or name is a field error pathed to the repeat, never the index's 23505
 - A compendium entry cannot link a coven's ingredient, and a coven's cannot link another coven's — refused by direct id, with the precondition that the id exists
 - A page of ingredients resolves its linked substitutes in one query, through a DataLoader
-- MB.138's deletion rule holds, asserted by soft-deleting a linked ingredient
+- MB.138's deletion rule holds, asserted by soft-deleting a linked ingredient: the substitute reads as its last name with no `ingredient`, survives a save of its parent, and a new link to the deleted ingredient is refused
 - Nothing declares or reads `ingredients.substitutes`, which still exists
 
 **MB.141 — Drop `ingredients.substitutes`** · 1h

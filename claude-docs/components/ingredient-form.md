@@ -92,7 +92,7 @@ notes — every field `IngredientInput` takes. Categories are not an input yet.
   group's name, "Folk Names About Folk Names". `substitutes` is labelled
   "Substitute Ingredients", its box "Substitute Ingredient". A substitute is
   text for now: MB.138 to MB.140 let an entry link an existing ingredient,
-  and MB.131 picks one.
+  and MB.131 picks one from MB.138's `ingredientSuggestions`.
 - **Text left in a box stops the save.** The form's resolver adds an error to
   any box still holding text, 'Press Add to keep "Hedge Fixture", or clear
   the box', on the list's error element, so a save never sends a list the
