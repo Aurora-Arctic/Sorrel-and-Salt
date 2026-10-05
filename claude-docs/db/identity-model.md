@@ -45,6 +45,20 @@ What follows describes all three as built.
   key carries no predicate, and M8.3a's promotion swaps one named row rather
   than reconstructing a pair. No locale or region column — DESIGN.md §5 records
   no regional requirement and nothing renders one.
+- **`ingredient_substitutes`** (MB.139, migration
+  `0032_ingredient-substitutes.sql`; the model is MB.138's, in DESIGN.md §5) —
+  `id`, `ingredientId`, `substituteId` (nullable FK to `ingredients`), `name`
+  (nullable), + audit. One row per substitute, a link or a typed name: three
+  CHECKs hold exactly one of the two, a non-blank name and no link to its own
+  ingredient. Three indexes, all partial on `deleted_at IS NULL`: the
+  parent's, and two unique ones, one link per ingredient and one name per
+  ingredient case-folded, each over its own kind of row. None leads on
+  `substitute_id`, since nothing reads back from a linked ingredient. The
+  migration copies every `substitutes[]` entry across as a name, trimmed, with
+  blanks skipped and an entry repeated in any case kept once, in the spelling
+  it first holds. Nothing reads the table until MB.140 moves every reader and
+  writer to it, and the array stays declared and written until then; MB.141
+  drops it.
 - **`ingredient_forms`** — `id`, `name`, `slug`, `groupId`, `description`, +
   audit. Shaped like `categories`: global, admin-curated, no workspace
   scoping. This is the third resource admins curate globally, alongside the

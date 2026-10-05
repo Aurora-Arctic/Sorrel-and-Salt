@@ -31,6 +31,7 @@ export const AUDITED_TABLES = [
   'category_groups',
   'ingredient_categories',
   'ingredient_folk_names',
+  'ingredient_substitutes',
   'ingredient_form_groups',
   'ingredient_forms',
   'ingredients',
