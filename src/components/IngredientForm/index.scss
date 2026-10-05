@@ -2,8 +2,8 @@
 @use '../../scss/mixins' as *;
 
 // The fields, the notice and the buttons are the form primitives'
-// (_primitives.scss); this is the form's width, a list's entries, and the
-// row its box shares with Add.
+// (_primitives.scss), and a list's box, its entries and its list are the
+// Combobox's; this is the form's width and the row a box shares with Add.
 
 // A column narrower than the measure, as the other forms keep: wide enough
 // for a formal name and a line of description, and no wider, wherever the
@@ -25,114 +25,6 @@
   }
 }
 
-// The entries added to a list, above its box, wrapping as they need, with
-// room above and below on top of the list's own gap, so they read as a row of
-// their own between the legend and the box.
-.ingredient-form__entries {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(3);
-  margin: space(2) 0;
-  padding: 0;
-  list-style: none;
-}
-
-// A pill in the chip's geometry, but neutral: a free-text entry has no
-// category group to take a colour from. The x's own target stands in for
-// the right-hand padding. No wider than the column: a longer text is cut off
-// rather than wrapped, so every pill stays one line in the chip's shape, and
-// the min-width lets it shrink below its text's width. Positioned for its
-// tooltip.
-.ingredient-form__entry {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: space(1);
-  min-width: 0;
-  max-width: 100%;
-  // The gap spaces them, not typography-base's margin on a list item.
-  margin: 0;
-  padding: 0.125rem 0.125rem 0.125rem 0.6875rem;
-  border: 1px solid $text-muted;
-  border-radius: radius('pill');
-  color: $text-primary;
-  font-size: type-size('small');
-  font-weight: 400;
-  line-height: 1.4;
-
-  // The field's error edge, a shape as well as a colour, on the entry it names.
-  &.is-invalid {
-    border-color: $secondary;
-    box-shadow: inset 0 0 0 1px $secondary;
-  }
-
-  // No typography-base ◆: the entries are pills, not prose.
-  &::before {
-    content: none;
-  }
-}
-
-// The text and its tooltip, the hover target: it shrinks with the pill so the
-// text inside it can be cut off.
-.ingredient-form__entry-label {
-  display: flex;
-  min-width: 0;
-}
-
-// The entry's text, cut off with an ellipsis where the column ends; the
-// tooltip shows the rest.
-.ingredient-form__entry-text {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-// A cut-off entry's whole text, in InfoTip's bubble and its fade, above the
-// pill from its left edge. A cut-off pill spans the column, so the tip's 100%
-// is the column too, and an unbroken text breaks anywhere to stay inside it.
-.ingredient-form__entry-tip {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  z-index: 1;
-  // Border-box, so the padding sits inside the 100% rather than past it.
-  box-sizing: border-box;
-  width: max-content;
-  max-width: 100%;
-  margin-bottom: space(1);
-  overflow-wrap: anywhere;
-
-  @include tip-bubble;
-}
-
-// 1.5rem: WCAG 2.2's 24px minimum target, inside a pill too short for 44px.
-// Never shrunk: the text gives way, not the x.
-.ingredient-form__remove {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  border: 0;
-  border-radius: radius('pill');
-  background-color: transparent;
-  color: $text-muted;
-  font-size: type-size('body');
-  line-height: 1;
-  cursor: pointer;
-
-  &:hover {
-    color: $text-primary;
-  }
-
-  &:focus-visible {
-    @include focus-ring;
-  }
-}
-
 // A label and its info tip on one line. Positioned, so an open tip spans the
 // field beneath it rather than hanging off the icon.
 .ingredient-form__label-row {
@@ -148,12 +40,13 @@
   color: $secondary;
 }
 
-// A list's box and its Add button, one line and one height.
+// A list's box and its Add button, one line; the box grows with its entries.
 .ingredient-form__row {
   display: flex;
+  align-items: flex-start;
   gap: space(2);
 
-  .input {
+  > .combobox {
     flex: 1;
     min-width: 0;
   }

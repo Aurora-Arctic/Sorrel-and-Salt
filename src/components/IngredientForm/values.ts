@@ -117,19 +117,28 @@ export function fieldNameOf(
 }
 
 /**
- * Adds what a list's box holds as the list's last entry, trimmed, and empties
- * the box: its Add button, and Enter. Returns the entry added, or undefined
- * when the box was blank.
+ * Adds `text` as the list's last entry, trimmed, and empties the box: a
+ * suggestion picked from it. Returns the entry added, or undefined when the
+ * text was blank.
  */
-export function commitDraft(
+export function addEntry(
   { getValues, setValue }: Pick<UseFormReturn<IngredientFormValues>, 'getValues' | 'setValue'>,
   list: ListFieldName,
+  text: string,
 ): string | undefined {
-  const value = getValues(`drafts.${list}`).trim();
+  const value = text.trim();
   if (value === '') return undefined;
   setValue(list, [...getValues(list), { value }], { shouldDirty: true });
   setValue(`drafts.${list}`, '');
   return value;
+}
+
+/** Adds what a list's box holds: its Add button, and Enter with nothing picked. */
+export function commitDraft(
+  form: Pick<UseFormReturn<IngredientFormValues>, 'getValues' | 'setValue'>,
+  list: ListFieldName,
+): string | undefined {
+  return addEntry(form, list, form.getValues(`drafts.${list}`));
 }
 
 const validate = zodResolver(LocalIngredientInput, undefined, { raw: true });

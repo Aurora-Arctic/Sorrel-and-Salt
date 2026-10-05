@@ -7,12 +7,13 @@ sends `createWorkspaceIngredient`, and puts an error from either side beside
 the field it names. It is built standalone: the add and edit modals and the
 admin compendium page wrap it rather than containing their own form.
 
-| File         | What it holds                                                                                                                                 |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.tsx`  | The form: the mutation, the fields in order, the root alert, where a server error goes, and focus after a submit                              |
-| `fields.tsx` | `TextField`, `SelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip` |
-| `values.ts`  | The empty values, `toInput`, `commitDraft`, `fieldNameOf`, the resolver, and `issuesOf`, which reads a failed save                            |
-| `types.ts`   | The props, the form's own values, and the input it sends                                                                                      |
+| File              | What it holds                                                                                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.tsx`       | The form: the mutation, the fields in order, the root alert, where a server error goes, and focus after a submit                                              |
+| `fields.tsx`      | `TextField`, `SuggestField`, `SelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip` |
+| `suggestions.tsx` | The two lookups (M5.10a): the queries, the hooks that debounce and shape them, and `FormField` and `FolkNamesField`, which wire each to its field             |
+| `values.ts`       | The empty values, `toInput`, `addEntry`, `commitDraft`, `fieldNameOf`, the resolver, and `issuesOf`, which reads a failed save                                |
+| `types.ts`        | The props, the form's own values, and the input it sends                                                                                                      |
 
 ## The props contract
 
@@ -69,25 +70,32 @@ notes — every field `IngredientInput` takes. Categories are not an input yet.
   calls the naming system the formal name belongs to. The label is the one a
   practitioner reads (amethyst is mineral, lavender botanical), and the
   schema's messages use the same word.
-- **`form` is a single free-text field**, as the schema takes it. M5.10a's
-  combobox replaces its plain input and puts the common-name lookup on the
-  folk-name box.
+- **`form` is a single free-text field that suggests** (M5.10a), as the
+  schema takes it: a `SuggestField`, the [`Combobox`](combobox.md) over
+  `useController`, so a pick fills the field with the suggestion's value and
+  links nothing. See "The lookups".
 - **Planets, zodiac signs and colours are list fields** (MB.136), as DESIGN.md
   §5 gives an ingredient several of each, labelled "Planets", "Zodiac Signs"
-  and "Colours" with boxes "Planet", "Zodiac Sign" and "Colour". M5.10a
-  makes every list field's box its `Combobox`, and MB.131 gives planets and
-  signs their lookups; colours take no suggestions.
-- **The six lists are one box each, with the entries above it.** Typing and
-  pressing Add, or Enter, adds the text as an entry, trimmed, and empties the
-  box. The box keeps the focus, so the next one can be typed at once. A blank
-  box adds nothing. Each entry is a pill with an ×, labelled "Remove Hedge
-  Fixture" rather than a bare "Remove", and pressing it sends the focus back
-  to the box, since the pressed × goes with its entry. The box is labelled
-  by the singular, "Folk Name", since the legend names the group, and its
-  button is named "Add Folk Name". Entries are a `useFieldArray` of `{ value }`
+  and "Colours" with boxes "Planet", "Zodiac Sign" and "Colour". Every list
+  field's box is the `Combobox` (M5.10a); folk names have their lookup, MB.131
+  gives planets, signs, deities and substitutes theirs, and colours take none.
+- **The six lists are one combobox each, with the entries inside it.** Typing
+  and pressing Add, or Enter with no suggestion highlighted, adds the text as
+  an entry, trimmed, and empties the box, as does picking a suggestion. The
+  box keeps the focus, so the next one can be typed at once. A blank box adds
+  nothing. The entries sit inside the control ahead of the text, after
+  react-select's multi-select on the owner's call, each a chip with an ×
+  labelled "Remove Hedge Fixture" rather than a bare "Remove"; pressing it
+  sends the focus back to the box, since the pressed × goes with its entry, and Backspace or Delete in the empty box takes the last entry. A
+  "Clear Folk Names" control on the control's right empties the list while it
+  holds entries, beside the chevron a box with a source has. The box is
+  labelled by the singular, "Folk Name", since the legend names the group, and
+  its button is named "Add Folk Name"; Add stays, the task's own criterion,
+  though Enter does the same. Entries are a `useFieldArray` of `{ value }`
   objects, since react-hook-form refuses an array of bare strings. What sits
-  in a box is the form's own `drafts`, which `toInput` leaves out. A list's
-  info tip sits in its legend, so the fieldset is named by the legend's text
+  in a box is the form's own `drafts`, held through `useController` so the
+  combobox can be told its text, which `toInput` leaves out. A list's info
+  tip sits in its legend, so the fieldset is named by the legend's text
   alone, through `aria-labelledby`: the tip's button would otherwise join the
   group's name, "Folk Names About Folk Names". `substitutes` is labelled
   "Substitute Ingredients", its box "Substitute Ingredient". A substitute
@@ -105,10 +113,37 @@ notes — every field `IngredientInput` takes. Categories are not an input yet.
   the box', on the list's error element, so a save never sends a list the
   user thinks holds an entry it does not. The schema never sees a box, so the
   rule is the form's own. Adding the text or clearing the box clears it.
-- **Each add and removal is announced.** A list keeps a visually hidden
-  `<output>`, a status region by its role, which reads "Added Hedge Fixture"
-  or "Removed Hedge Fixture". Otherwise a screen reader hears the box empty,
-  or an entry go, and nothing about what happened (WCAG 4.1.3).
+- **Each add, removal and clear is announced.** A list keeps a visually hidden
+  `<output>`, a status region by its role, named "Folk Names changes" to tell
+  it from the box's own "Folk Name suggestions" region, which reads "Added
+  Hedge Fixture", "Removed Hedge Fixture" or "Cleared Folk Names". Otherwise a
+  screen reader hears the box empty, or an entry go, and nothing about what
+  happened (WCAG 4.1.3).
+
+### The lookups
+
+The form and folk-name boxes suggest from M4.7a's `formSuggestions` and
+`commonNameSuggestions`, through `/api/graphql` with TanStack Query
+([`graphql/client.md`](../graphql/client.md)), the form's first queries.
+`suggestions.tsx` holds both: each hook debounces the box's text through
+`useDebouncedValue` (300ms, `src/lib/debounce.ts`), asks for ten rows with
+the form's `workspaceId`, keeps the last answer on screen while the next is
+fetched, and never throws: a lookup that fails offers nothing. Neither asks
+until its box has been focused, so opening the form sends no request; the
+first ask is for a blank query, the vocabulary and the names in use, which the
+chevron then opens. `FormField` and `FolkNamesField` watch their box's text
+with `useWatch` and hand each field its `Suggestions`, so the fields in
+`fields.tsx` know nothing of the network.
+
+A form suggestion's row is "Wax (Animal)", the group beside the value so two
+same-named forms are told apart (M4.2a), with a second line of the curated
+row's description and "Used by Testwort (Fixtura testalis), Mockleaf", the
+claimants by label and formal name; a claimant with no formal name shows by
+its label. Curated rows and rows in use sit under "Curated" and "In use"
+headings. A common-name row is the value and its claimants, in one bucket,
+since no vocabulary of common names exists. Each list opens with "Use what you typed: rhizome", the owner's call over the issue's "ends in". Picking a form row writes its value into the field, and
+picking a common name adds it as an entry; neither links anything, and free
+text outside the vocabulary saves with no warning, as M4.5's schema asks.
 
 ### The kind↔name coupling, inline
 
@@ -228,25 +263,26 @@ placeholder and a disabled field's dashed edge and dimmed label are the
 primitives' too.
 
 The component's own stylesheet sets the form's width, a column of at most
-`32rem`, narrower than the measure as the other forms keep. It also draws a
-list's entries, lays out the row its box shares with Add, and puts each label
-and its info tip, or a legend and its tip, on one positioned row, so an open
-tip lies above the label from the column's edge rather than hanging off
-the icon. A list's legend, its entries and its box sit a step further apart
-than a single field's label and control, and the entries take a margin above
-and below on top of that, so they read as a row of their own. An entry is a pill
-in the chip's geometry but neutral, edged in the muted ink, since a free-text
-entry has no category group to take a colour from. The entry an error names
-takes the field's error edge. Its × is a 24px target, WCAG 2.2's minimum,
-inside a pill too short for 44px.
+`32rem`, narrower than the measure as the other forms keep. It also lays out
+the row a list's box shares with Add, draws an entry's tooltip, and puts each
+label and its info tip, or a legend and its tip, on one positioned row, so an
+open tip lies above the label from the column's edge rather than hanging off
+the icon. A list's legend and its box sit a step further apart than a single
+field's label and control. The box, its entries and its list are the
+[`Combobox`](combobox.md)'s: an entry is a filled, square-cornered chip in
+the muted ink's wash, neutral since a free-text entry has no category group
+to take a colour from, and the entry an error names takes the field's error
+edge. Its × is a 24px target, WCAG 2.2's minimum, inside a chip too short for
+44px.
 
-**A long entry is cut off, never wrapped or let run** (MB.133). A pill is no
-wider than the column, and its text ends in an ellipsis where the column does,
-so every pill stays one line in the chip's shape and nothing scrolls the page
-sideways at 320px. The × never shrinks: the text gives way. The whole text
+**A long entry is cut off, never wrapped or let run** (MB.133). The entry is
+the Combobox's `ComboboxEntry` since M5.10a ([`combobox.md`](combobox.md),
+"An entry"), and the rule is drawn there: a chip is no wider than the control,
+and its text ends in an ellipsis where the control does, so every chip stays
+one line and nothing scrolls the page sideways at 320px. The × never shrinks: the text gives way. The whole text
 stays reachable three ways: it is the entry's text in the DOM, so a screen
 reader reads it in full; the × is still named by it; and a tooltip,
-`role="tooltip"`, shows it above the pill while the entry is hovered or its
+`role="tooltip"`, shows it above the chip while the entry is hovered or its
 × has focus. It is [`InfoTip`](info-tip.md)'s bubble and fade, through the
 `tip-bubble` mixin, and like InfoTip's it stays in the page while closed,
 faded out and `aria-hidden`, so it fades out as well as in. The tooltip
@@ -270,7 +306,7 @@ provider.
 `tests/components/IngredientForm/index.test.tsx` answers
 `CreateWorkspaceIngredient` through MSW: `mockGraphQLMutation` for a saved
 row, and `mockGraphQLError` for a refusal, so the error body is the route's
-own mapping. Its `save()` focuses the button before clicking it, as a real
+own mapping; the two lookups are answered with `mockGraphQLQuery`. Its `save()` focuses the button before clicking it, as a real
 click does, since `fireEvent` moves no focus and a focus test would otherwise
 pass on whatever an earlier step had focused. It covers:
 
@@ -292,9 +328,19 @@ pass on whatever an earlier step had focused. It covers:
 - **Fields**: Name alone marked required; each hint behind an info tip yet
   still read with its field, and kept shut while its field, or a list's box,
   has focus; the classification's placeholder and the element's "None", `form`
-  as free text, and each list's box, Add, Enter, blank, remove, focus, order
-  and announcements, and a save refused while a box holds text until it is
-  added or cleared.
+  as free text, and each list's box, Add, Enter, blank, remove, Backspace, Clear, focus,
+  order and announcements, the box a combobox with a chevron only where there
+  is a source, the entries inside the control, and a save refused while a box
+  holds text until it is added or cleared.
+- **The lookups**: a request only once the typing settles, with the coven's
+  id and the settled text, and none until the box is used; the vocabulary
+  first with each form's group and claimants, then forms in use, under their
+  headings; a pick filling the form field, and a value in no vocabulary taken
+  from its own row with no warning; a common name picked by click or by
+  keyboard adding an entry, and Enter with nothing picked adding typed text.
+  Both lookups are answered empty by default, so a test about one answers it
+  after rendering, the later handler winning. The debounce runs on fake
+  timers that still advance, so the mocked answers arrive.
 - **A long entry**: a cut-off entry's tooltip shown on hover and while its ×
   has focus, closed on Escape, and absent for an entry that fits, with the
   layout jsdom lacks stubbed through `scrollWidth` and `clientWidth`; its ×
@@ -309,7 +355,9 @@ Role and label queries only. It runs in the `dom` (jsdom) Vitest project —
 holds the form: M5.5's admin page and M8.16's modal each carry an axe scan.
 Until then the form was scanned by hand in M5.9, against the workshop story
 in both themes, blank, after a failed save, with a tip open and with the
-formal name shut: no WCAG 2.2 AA or best-practice violations. Axe could not
+formal name shut: no WCAG 2.2 AA or best-practice violations. M5.10a's
+combobox was not scanned in a browser, the devcontainer having none; its
+ARIA is Downshift's, and M5.5's scan is the first over it. Axe could not
 decide the contrast of the selects, whose chevron is a gradient, or of a
 field an open tip overlaps. Those were measured instead: the placeholder
 4.70:1 light and 6.69:1 dark, and an open tip 5.6:1 and 6.59:1.

@@ -1,0 +1,302 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The control is the form's `.input` primitive, opened up to hold a list's
+// entries ahead of the text, with the indicators on its right and the list
+// beneath it — react-select's multi-select layout, on the tokens and the
+// primitives rather than its own theme (claude-docs/components/combobox.md,
+// "Styling").
+
+.combobox {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+// `.input`'s edge, fill and states, as a flex row that wraps: the entries,
+// then the text, then the indicators. The padding comes down a step so the
+// entries sit inside it at the control's height.
+.combobox__control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(1);
+  padding: space(1) space(2);
+  cursor: text;
+
+  // The ring and the error edge are the inner box's states, drawn on the
+  // control that looks like the box.
+  &:has(.combobox__input:focus-visible) {
+    @include focus-ring;
+  }
+
+  &.is-invalid {
+    border-color: $secondary;
+    box-shadow: inset 0 0 0 1px $secondary;
+  }
+}
+
+.combobox__values {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(1);
+  min-width: 0;
+}
+
+// The text itself, unboxed: the control around it is the box.
+.combobox__input {
+  flex: 1 1 6rem;
+  min-width: 6rem;
+  min-height: 2rem;
+  margin: 0;
+  padding: space(1) 0;
+  border: 0;
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  outline: none;
+
+  &::placeholder {
+    color: $text-placeholder;
+    opacity: 1;
+  }
+}
+
+.combobox__indicators {
+  display: flex;
+  flex: none;
+  align-items: center;
+  align-self: stretch;
+  gap: space(1);
+}
+
+// Between the clear and the chevron, as react-select draws it.
+.combobox__separator {
+  align-self: stretch;
+  width: 1px;
+  margin: space(1) 0;
+  background-color: $text-muted;
+}
+
+// 1.5rem: WCAG 2.2's 24px minimum target, inside a control at the input's
+// height.
+.combobox__indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: radius('sharp');
+  background-color: transparent;
+  color: $text-muted;
+  cursor: pointer;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  &:hover {
+    color: $text-primary;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// The list, floating beneath the control at its width, on the card surface
+// with the floating shadow. Hidden rather than unmounted while closed, since
+// Downshift keeps its ref.
+.combobox__list {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  display: none;
+  box-sizing: border-box;
+  max-height: 18rem;
+  margin: space(1) 0 0;
+  padding: space(1) 0;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid $text-muted;
+
+  @include modal-surface($shadow-floating);
+
+  &.is-open {
+    display: block;
+  }
+}
+
+// A bucket and its rows: no typography-base ◆, no list margins.
+.combobox__group,
+.combobox__option {
+  margin: 0;
+
+  &::before {
+    content: none;
+  }
+}
+
+.combobox__group {
+  padding: 0;
+}
+
+.combobox__heading {
+  padding: space(1) space(3);
+  color: $text-muted;
+  font-size: type-size('caption');
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.combobox__rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// A row, highlighted in a wash of the accent: the arrow keys and the pointer
+// both mark it, through Downshift's `aria-selected`.
+.combobox__option {
+  display: flex;
+  flex-direction: column;
+  padding: space(2) space(3);
+  color: $text-primary;
+  font-size: type-size('body');
+  font-weight: 400;
+  cursor: pointer;
+
+  &.is-highlighted {
+    background-color: color-mix(in srgb, $accent 22%, $surface-card);
+  }
+}
+
+.combobox__option--typed {
+  font-style: italic;
+}
+
+// Who claims the value, or what a curated row stands for, beneath its name.
+.combobox__note {
+  color: $text-muted;
+  font-size: type-size('caption');
+
+  .is-highlighted & {
+    color: $text-primary;
+  }
+}
+
+// An entry a list holds, inside the control ahead of the text: a filled,
+// square-cornered chip in react-select's shape, neutral since a free-text
+// entry has no group to take a colour from. The x's own target stands in for
+// the right-hand padding; it never shrinks, the text gives way. Positioned
+// for a tooltip. The entries are a list with no margins, bullets or gap of
+// typography-base's.
+.combobox__entries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(1);
+  // Bounded by the control, so that one long chip is cut off inside it
+  // rather than pushing past it: a flex item's own minimum is its content.
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.combobox__entry {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 0 0 space(2);
+  border-radius: radius('sharp');
+  background-color: color-mix(in srgb, $text-muted 18%, $surface-card);
+  color: $text-primary;
+  font-size: type-size('small');
+  font-weight: 400;
+  line-height: 1.6;
+
+  &::before {
+    content: none;
+  }
+
+  // The field's error edge, a shape as well as a colour, on the entry it names.
+  &.is-invalid {
+    box-shadow: inset 0 0 0 1px $secondary;
+  }
+}
+
+// 1.5rem: WCAG 2.2's 24px minimum target, inside a chip too short for 44px.
+// Its hover is the warning's wash and ink, as react-select's remove is.
+.combobox__entry-remove {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0 radius('sharp') radius('sharp') 0;
+  background-color: transparent;
+  color: $text-muted;
+  font-size: type-size('body');
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    background-color: color-mix(in srgb, $secondary 20%, $surface-card);
+    color: $secondary;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// The text and its tooltip, the hover target: it shrinks with the chip so the
+// text inside it can be cut off.
+.combobox__entry-label {
+  display: flex;
+  min-width: 0;
+}
+
+// The entry's text, cut off with an ellipsis where the control ends; the
+// tooltip shows the rest (MB.133).
+.combobox__entry-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// A cut-off entry's whole text, in InfoTip's bubble and its fade, above the
+// chip from its left edge. A cut-off chip spans the control, so the tip's
+// 100% is the control too, and an unbroken text breaks anywhere to stay
+// inside it.
+.combobox__entry-tip {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  z-index: 1;
+  // Border-box, so the padding sits inside the 100% rather than past it.
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 100%;
+  margin-bottom: space(1);
+  overflow-wrap: anywhere;
+
+  @include tip-bubble;
+}

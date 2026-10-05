@@ -1,16 +1,24 @@
-import { type KeyboardEvent, type ReactElement, useEffect, useId, useRef, useState } from 'react';
-import { type FieldPath, get, useFieldArray, useFormContext, useFormState } from 'react-hook-form';
+import { type ReactElement, useId, useRef, useState } from 'react';
+import {
+  type FieldPath,
+  get,
+  useController,
+  useFieldArray,
+  useFormContext,
+  useFormState,
+} from 'react-hook-form';
+import Combobox, { ComboboxEntry } from '../Combobox';
 import InfoTip from '../InfoTip';
 import type {
-  EntryChipProps,
   FieldErrorProps,
   FieldShellProps,
   IngredientFormValues,
   ListFieldProps,
   SelectFieldProps,
+  SuggestFieldProps,
   TextFieldProps,
 } from './types';
-import { commitDraft, entryText } from './values';
+import { addEntry, commitDraft, entryText } from './values';
 
 // IngredientForm's fields, on the form primitives (claude-docs/styling.md,
 // "Form fields"). Each reads its own error out of the form state, so a field
@@ -42,6 +50,7 @@ function useField(name: FieldPath<IngredientFormValues>, hint?: string, note?: s
   const describedBy = [hint && hintId, note && noteId, error && errorId].filter(Boolean).join(' ');
   return {
     controlId: `${id}-control`,
+    labelId: `${id}-label`,
     hintId,
     noteId,
     errorId,
@@ -59,6 +68,7 @@ function FieldShell({
   note,
   required,
   controlId,
+  labelId,
   hintId,
   noteId,
   errorId,
@@ -68,7 +78,7 @@ function FieldShell({
   return (
     <div className="field">
       <div className="ingredient-form__label-row">
-        <label className="field__label" htmlFor={controlId}>
+        <label className="field__label" id={labelId} htmlFor={controlId}>
           {label}
           {/* For the eye, hard against the label: "Name*". Hidden from the
               field's name, so a screen reader hears "Name" and the control's
@@ -130,6 +140,41 @@ export function TextField({
   );
 }
 
+/**
+ * A text field whose box suggests as it is typed in (DESIGN.md §14): a pick
+ * fills the field with the suggestion's value and links nothing, and free
+ * text stays as typed, with no warning.
+ */
+export function SuggestField({
+  name,
+  label,
+  hint,
+  suggestions,
+  onActivate,
+}: SuggestFieldProps): ReactElement {
+  const { control } = useFormContext<IngredientFormValues>();
+  const { field } = useController({ control, name });
+  const { aria, ...shell } = useField(name, hint);
+  return (
+    <FieldShell label={label} hint={hint} {...shell}>
+      <Combobox
+        id={shell.controlId}
+        label={label}
+        labelId={shell.labelId}
+        value={field.value}
+        onChange={field.onChange}
+        onFocus={onActivate}
+        onBlur={field.onBlur}
+        onPick={(value) => field.onChange(value)}
+        suggestions={suggestions}
+        inputRef={field.ref}
+        name={field.name}
+        {...aria}
+      />
+    </FieldShell>
+  );
+}
+
 /** A closed set, as a native `<select>` (DESIGN.md §14). */
 export function SelectField({
   name,
@@ -175,93 +220,25 @@ export function SelectField({
   );
 }
 
-// Long enough to cross from the pill onto its tooltip.
-const ENTRY_TIP_CLOSE_DELAY_MS = 150;
-
 /**
- * An entry added to a list: its text, and the x that takes it out. A text too
- * long for the column is cut off with an ellipsis, and shown whole in a
- * tooltip while the entry is hovered or its x has focus — only when it is cut
- * off, and closed by Escape (WCAG 1.4.13).
+ * A list of free-text entries: one combobox to type in, with each entry added
+ * shown inside it ahead of the text. A box with a source suggests, and a pick
+ * adds as Add does. An error naming an entry marks that entry and reads out
+ * on the box, through the list's one error element.
  */
-function EntryChip({ value, errorId, onRemove }: EntryChipProps): ReactElement {
-  const text = useRef<HTMLSpanElement | null>(null);
-  const [open, setOpen] = useState(false);
-  const closing = useRef<ReturnType<typeof setTimeout>>(undefined);
-  // Measured as it opens rather than watched: whether the text fits changes
-  // with the column, and only matters at the moment someone looks.
-  const show = () => {
-    clearTimeout(closing.current);
-    const element = text.current;
-    if (element && element.scrollWidth > element.clientWidth) setOpen(true);
-  };
-  const hide = () => {
-    clearTimeout(closing.current);
-    setOpen(false);
-  };
-  // As InfoTip's: long enough for the pointer to cross from the pill onto the
-  // tooltip above it, whose hover keeps it open.
-  const hideSoon = () => {
-    clearTimeout(closing.current);
-    closing.current = setTimeout(() => setOpen(false), ENTRY_TIP_CLOSE_DELAY_MS);
-  };
-
-  useEffect(() => () => clearTimeout(closing.current), []);
-
-  useEffect(() => {
-    if (!open) return;
-    // On the document: a tooltip opened by hover has no focus to listen from.
-    const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [open]);
-
-  return (
-    <li className={errorId ? 'ingredient-form__entry is-invalid' : 'ingredient-form__entry'}>
-      {/* Hover on a wrapper holding the tooltip as well as the text, so the
-          pointer can move onto the tooltip without closing it. */}
-      <span className="ingredient-form__entry-label" onMouseEnter={show} onMouseLeave={hideSoon}>
-        <span ref={text} className="ingredient-form__entry-text">
-          {value}
-        </span>
-        {/* In the page while closed, faded out and aria-hidden, so it fades
-            both ways as InfoTip's does. */}
-        <span
-          role="tooltip"
-          className={open ? 'ingredient-form__entry-tip is-open' : 'ingredient-form__entry-tip'}
-          aria-hidden={!open}
-        >
-          {value}
-        </span>
-      </span>
-      {/* Named for its entry: a column of bare "Remove"s is no help to a screen reader. */}
-      <button
-        type="button"
-        className="ingredient-form__remove"
-        aria-label={`Remove ${value}`}
-        aria-describedby={errorId}
-        onFocus={show}
-        onBlur={hide}
-        onClick={onRemove}
-      >
-        <span aria-hidden="true">×</span>
-      </button>
-    </li>
-  );
-}
-
-/**
- * A list of free-text entries: one box to type in, and each entry added shown
- * above it. An error naming an entry marks that entry and reads out on the
- * box, through the list's one error element.
- */
-export function ListField({ name, legend, entry, hint }: ListFieldProps): ReactElement {
+export function ListField({
+  name,
+  legend,
+  entry,
+  hint,
+  suggestions,
+  onActivate,
+}: ListFieldProps): ReactElement {
   const form = useFormContext<IngredientFormValues>();
-  const { control, register, trigger } = form;
+  const { control, trigger } = form;
   const { fields, remove } = useFieldArray({ control, name });
   const box = `drafts.${name}` as const;
+  const { field } = useController({ control, name: box });
   const { errors, isSubmitted } = useFormState({ control, name: [name, box] });
   const id = useId();
   // Its own ref rather than setFocus, which waits a tick: the box never
@@ -274,7 +251,6 @@ export function ListField({ name, legend, entry, hint }: ListFieldProps): ReactE
   const boxId = `${id}-box`;
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
-  const { ref: registerBox, ...boxProps } = register(box);
   const focusBox = () => boxElement.current?.focus();
 
   const entryErrors = fields.map(
@@ -296,20 +272,50 @@ export function ListField({ name, legend, entry, hint }: ListFieldProps): ReactE
   const revalidate = () => {
     if (isSubmitted) void trigger([name, box]);
   };
-  const add = () => {
-    const added = commitDraft(form, name);
-    if (added !== undefined) {
-      setAnnouncement(`Added ${added}`);
+  const added = (value: string | undefined) => {
+    if (value !== undefined) {
+      setAnnouncement(`Added ${value}`);
       revalidate();
     }
     focusBox();
   };
-  const addOnEnter = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
-    // Enter in a text box would otherwise submit the whole form.
-    event.preventDefault();
-    add();
+  // Add, and Enter with no suggestion picked, add what the box holds; a pick
+  // adds the suggestion's value.
+  const add = () => added(commitDraft(form, name));
+  const pick = (value: string) => added(addEntry(form, name, value));
+  const clear = () => {
+    setAnnouncement(`Cleared ${legend}`);
+    remove();
+    revalidate();
+    focusBox();
   };
+  // Backspace in the empty box: the last entry goes, as its x would take it.
+  const removeLast = () => {
+    const last = fields[fields.length - 1];
+    if (!last) return;
+    setAnnouncement(`Removed ${entryText(last)}`);
+    remove(fields.length - 1);
+    revalidate();
+  };
+
+  const entries = fields.length > 0 && (
+    <ul className="combobox__entries">
+      {fields.map((row, index) => (
+        <ComboboxEntry
+          key={row.id}
+          value={entryText(row)}
+          errorId={entryErrors[index] && errorId}
+          onRemove={() => {
+            setAnnouncement(`Removed ${entryText(row)}`);
+            remove(index);
+            revalidate();
+            // The pressed x is about to go; the box keeps the focus.
+            focusBox();
+          }}
+        />
+      ))}
+    </ul>
+  );
 
   return (
     // Named by the legend's text alone: the tip's button inside the legend
@@ -323,44 +329,37 @@ export function ListField({ name, legend, entry, hint }: ListFieldProps): ReactE
           </InfoTip>
         )}
       </legend>
-      {fields.length > 0 && (
-        <ul className="ingredient-form__entries">
-          {fields.map((row, index) => (
-            <EntryChip
-              key={row.id}
-              value={entryText(row)}
-              errorId={entryErrors[index] && errorId}
-              onRemove={() => {
-                setAnnouncement(`Removed ${entryText(row)}`);
-                remove(index);
-                revalidate();
-                // The pressed x is about to go; the box keeps the focus.
-                focusBox();
-              }}
-            />
-          ))}
-        </ul>
-      )}
       <div className="ingredient-form__row">
-        <input
+        <Combobox
           id={boxId}
-          className="input"
-          aria-label={entry}
-          aria-invalid={message ? true : undefined}
-          aria-describedby={describedBy || undefined}
-          onKeyDown={addOnEnter}
-          ref={(element) => {
-            registerBox(element);
+          label={entry}
+          value={field.value}
+          onChange={field.onChange}
+          onFocus={onActivate}
+          onBlur={field.onBlur}
+          onPick={pick}
+          onCommit={add}
+          onRemoveLast={removeLast}
+          suggestions={suggestions}
+          entries={entries}
+          clear={fields.length > 0 ? { label: `Clear ${legend}`, onClear: clear } : undefined}
+          inputRef={(element) => {
+            field.ref(element);
             boxElement.current = element;
           }}
-          {...boxProps}
+          name={field.name}
+          aria-invalid={message ? true : undefined}
+          aria-describedby={describedBy || undefined}
         />
         <button type="button" className="btn" aria-label={`Add ${entry}`} onClick={add}>
           Add
         </button>
       </div>
       <FieldError id={errorId} message={message} />
-      <output className="visually-hidden">{announcement}</output>
+      {/* Labelled, so that it is told from the box's own status region. */}
+      <output className="visually-hidden" aria-label={`${legend} changes`}>
+        {announcement}
+      </output>
     </fieldset>
   );
 }
