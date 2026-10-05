@@ -81,7 +81,8 @@
 }
 
 // 1.5rem: WCAG 2.2's 24px minimum target, inside a control at the input's
-// height.
+// height. It fades and takes its hover on focus as `.btn` does, so the
+// keyboard sees what the pointer sees.
 .combobox__indicator {
   display: inline-flex;
   align-items: center;
@@ -94,18 +95,24 @@
   background-color: transparent;
   color: $text-muted;
   cursor: pointer;
+  @include theme-transition(color);
 
   svg {
     width: 1rem;
     height: 1rem;
   }
 
-  &:hover {
+  &:hover,
+  &:focus-visible {
     color: $text-primary;
   }
 
   &:focus-visible {
     @include focus-ring;
+  }
+
+  @include reduced-motion {
+    transition: none;
   }
 }
 
@@ -239,7 +246,8 @@
 }
 
 // 1.5rem: WCAG 2.2's 24px minimum target, inside a chip too short for 44px.
-// Its hover is the warning's wash and ink, as react-select's remove is.
+// Its hover is the warning's wash and ink, as react-select's remove is, faded
+// in and drawn on focus too, as `.btn`'s is.
 .combobox__entry-remove {
   flex: none;
   display: inline-flex;
@@ -255,14 +263,20 @@
   font-size: type-size('body');
   line-height: 1;
   cursor: pointer;
+  @include theme-transition(background-color, color);
 
-  &:hover {
+  &:hover,
+  &:focus-visible {
     background-color: color-mix(in srgb, $secondary 20%, $surface-card);
     color: $secondary;
   }
 
   &:focus-visible {
     @include focus-ring;
+  }
+
+  @include reduced-motion {
+    transition: none;
   }
 }
 

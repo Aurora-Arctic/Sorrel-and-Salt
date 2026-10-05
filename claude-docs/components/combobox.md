@@ -121,9 +121,12 @@ from the box's own states, `:has(.combobox__input:focus-visible)` and
 `modal-surface($shadow-floating)` with the input's edge; a highlighted row is
 a 22% wash of the accent on the card. A chip is a filled, square-cornered
 rectangle in an 18% wash of the muted ink, react-select's shape, and its ×
-hovers in the warning's wash and ink. Every × and indicator is a 24px
-target, WCAG 2.2's minimum. The owner may restyle any of it at the section's
-design review.
+hovers in the warning's wash and ink. The × and the indicators fade into
+their hover as `.btn` does, on `theme-transition` and never under reduced
+motion, and draw it on `:focus-visible` as well as `:hover`, so Tab shows
+which one it has reached (MB.150). Every × and indicator is a 24px target,
+WCAG 2.2's minimum. The owner may restyle any of it at the section's design
+review.
 
 ## Stories
 
