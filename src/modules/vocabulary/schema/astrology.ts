@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { check, index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 
-// The vocabularies behind `ingredients.planet` and `ingredients.zodiac`, and
+// The vocabularies behind `ingredients.planets` and `ingredients.zodiacSigns`, and
 // deliberately not foreign key targets for them (astrology-schema.test.ts
 // asserts so): a member must be able to write `Eris` before anyone curates it.
 // Two tables rather than one with a `kind`, so a suggestion query has no

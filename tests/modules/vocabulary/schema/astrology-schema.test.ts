@@ -18,14 +18,14 @@ const VOCABULARIES = [
   {
     table: planets,
     name: 'planets',
-    column: 'planet',
+    column: 'planets',
     row: { name: 'Testara', slug: 'testara', description: 'A body read only by fixtures.' },
     rename: 'Testara Minor',
   },
   {
     table: zodiacSigns,
     name: 'zodiac_signs',
-    column: 'zodiac',
+    column: 'zodiac_signs',
     row: { name: 'Fixturus', slug: 'fixturus', description: 'A sign read only by fixtures.' },
     rename: 'Fixturus Rising',
   },
@@ -77,16 +77,16 @@ describe.each(VOCABULARIES)('$name schema', ({ table, name }) => {
   });
 });
 
-// §5: the columns are text over these vocabularies, as `form` is over
+// §5: the lists are free text over these vocabularies, as `form` is over
 // `ingredient_forms` — an FK would make an uncurated value unwritable.
 describe.each(VOCABULARIES)(
-  'ingredients.$column is text over $name, not a foreign key to it',
+  'ingredients.$column is a text list over $name, not a foreign key to it',
   ({ table, name, column }) => {
-    it(`declares ${column} as a nullable text column`, () => {
+    it(`declares ${column} as a nullable text[] column`, () => {
       const declared = tableFacts(ingredients).columns.find((c) => c.name === column);
 
       expect(declared).toBeDefined();
-      expect(declared?.getSQLType()).toBe('text');
+      expect(declared?.getSQLType()).toBe('text[]');
       expect(declared?.notNull).toBe(false);
     });
 

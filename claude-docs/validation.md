@@ -101,22 +101,21 @@ Rules both variants enforce:
   documented.
 - **Closed sets.** `nomenclature` and `element` come from the pgEnums' lists,
   in `schema/ingredient-enums.ts`.
-- **`planet` and `zodiac` are free text, suggested rather than enforced**,
-  like `form`: trimmed, a blank one becomes `null`, and anything else is
-  written. The project serves a wide range of practices, and any closed list
-  refuses some of them. The suggestions are the admin-curated `planets` and
-  `zodiac_signs` vocabularies
+- **`planets`, `zodiacSigns` and `colors` are lists, validated as `deities`
+  is** (DESIGN.md §5, MB.134; built by MB.136, replacing the single `planet`,
+  `zodiac` and `color`): free text, each entry trimmed, blank entries dropped
+  by `dropBlankEntries` after the cross-field rules, and a list left with no
+  entries `null`. A repeated entry is not refused — unlike folk names, no
+  unique index stands behind a list — and an entry is never reordered, since
+  each list keeps the order entered. Neither schema has a single field left,
+  so a caller still sending `planet` has it stripped like any unknown key.
+- **Planets and zodiac signs are suggested rather than enforced**, like
+  `form`: anything trimmed and non-blank is written. The project serves a
+  wide range of practices, and any closed list refuses some of them. The
+  suggestions are the admin-curated `planets` and `zodiac_signs` vocabularies
   ([`db/astrology-vocabularies.md`](db/astrology-vocabularies.md), "The
-  astrology vocabularies"), and a value off them is as valid as one on them.
-- **`planets`, `zodiacSigns` and `colors` replace `planet`, `zodiac` and
-  `color` in MB.136** (DESIGN.md §5, MB.134), and are validated as `deities`
-  is: a list of free text, each entry trimmed, blank entries dropped after the
-  cross-field rules, and a list left with no entries `null`. A repeated entry
-  is not refused — unlike folk names, no unique index stands behind a list —
-  and an entry is never reordered, since each list keeps the order entered.
-  The planet and zodiac sign entries are still suggested rather than enforced,
-  as above; a colour has no vocabulary and no suggestions. MB.136 adds the
-  three to `Lists` in `validation/types.ts` and to `dropBlankEntries`.
+  astrology vocabularies"), and an entry off them is as valid as one on them.
+  A colour has no vocabulary and no suggestions.
 
 The schemas describe a whole ingredient, as the form submits it on create and
 on edit. A partial update would need its own schema: the local variant's

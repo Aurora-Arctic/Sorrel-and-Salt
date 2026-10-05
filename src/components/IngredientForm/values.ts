@@ -11,7 +11,14 @@ import type { IngredientFormInput, IngredientFormValues, ListFieldName } from '.
 // issues and the server's `fieldErrors` both go through
 // (claude-docs/components/ingredient-form.md).
 
-export const LIST_FIELDS: readonly ListFieldName[] = ['folkNames', 'deities', 'substitutes'];
+export const LIST_FIELDS: readonly ListFieldName[] = [
+  'folkNames',
+  'planets',
+  'zodiacSigns',
+  'colors',
+  'deities',
+  'substitutes',
+];
 
 export const EMPTY_VALUES: IngredientFormValues = {
   name: '',
@@ -21,13 +28,13 @@ export const EMPTY_VALUES: IngredientFormValues = {
   folkNames: [],
   description: '',
   element: '',
-  planet: '',
-  zodiac: '',
-  color: '',
+  planets: [],
+  zodiacSigns: [],
+  colors: [],
   deities: [],
   substitutes: [],
   safetyNotes: '',
-  drafts: { folkNames: '', deities: '', substitutes: '' },
+  drafts: { folkNames: '', planets: '', zodiacSigns: '', colors: '', deities: '', substitutes: '' },
 };
 
 export const GENERIC_ERROR = "That didn't work. Please try again.";
@@ -43,13 +50,27 @@ const isListField = (field: unknown): field is ListFieldName =>
  * its index here.
  */
 export function toInput(values: IngredientFormValues): IngredientFormInput {
-  const { nomenclature, element, folkNames, deities, substitutes, drafts: _, ...text } = values;
+  const {
+    nomenclature,
+    element,
+    folkNames,
+    planets,
+    zodiacSigns,
+    colors,
+    deities,
+    substitutes,
+    drafts: _,
+    ...text
+  } = values;
   const texts = (rows: { value: string }[]) => rows.map(({ value }) => value);
   return {
     ...text,
     nomenclature: nomenclature || null,
     element: element || null,
     folkNames: texts(folkNames),
+    planets: texts(planets),
+    zodiacSigns: texts(zodiacSigns),
+    colors: texts(colors),
     deities: texts(deities),
     substitutes: texts(substitutes),
   };

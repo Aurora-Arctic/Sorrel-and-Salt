@@ -13,7 +13,7 @@ export type IngredientElement =
 
 export type IngredientInput = {
   canonicalName?: string | null | undefined;
-  color?: string | null | undefined;
+  colors?: Array<string> | null | undefined;
   deities?: Array<string> | null | undefined;
   description?: string | null | undefined;
   element?: IngredientElement | null | undefined;
@@ -21,10 +21,10 @@ export type IngredientInput = {
   form?: string | null | undefined;
   name: string;
   nomenclature?: Nomenclature | null | undefined;
-  planet?: string | null | undefined;
+  planets?: Array<string> | null | undefined;
   safetyNotes?: string | null | undefined;
   substitutes?: Array<string> | null | undefined;
-  zodiac?: string | null | undefined;
+  zodiacSigns?: Array<string> | null | undefined;
 };
 
 export type Nomenclature =

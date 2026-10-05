@@ -30,8 +30,8 @@ arrives with the task that wraps the form for it.
 ## The fields
 
 Name, classification, formal name, form, folk names, description, element,
-planet, zodiac sign, colour, deities, substitute ingredients and safety notes
-— every field `IngredientInput` takes. Categories are not an input yet.
+planets, zodiac signs, colours, deities, substitute ingredients and safety
+notes — every field `IngredientInput` takes. Categories are not an input yet.
 
 - **Name is the one field always required**, as story 29's stub needs, and
   says so twice: `aria-required` on the control for a screen reader, and a
@@ -48,9 +48,9 @@ planet, zodiac sign, colour, deities, substitute ingredients and safety notes
 
 - **A field's hint is an info tip beside its label**, [`InfoTip`](info-tip.md),
   not a line beneath it, on every field whose meaning is not plain from its
-  label: name, classification, formal name, form, folk names, planet,
-  colour, deities, substitute ingredients and safety notes. Colour's says it
-  is a correspondence, not the colour the thing is. A tip opens on its ⓘ, by
+  label: name, classification, formal name, form, folk names, planets,
+  zodiac signs, colours, deities, substitute ingredients and safety notes.
+  The colours tip says each is a correspondence, not the colour the thing is. A tip opens on its ⓘ, by
   hover, tap or focus, and never on the field's own focus (MB.133), above
   the label so it never covers the field. Its text stays in the control's
   `aria-describedby`, so a screen reader reads it with the field, open or
@@ -69,12 +69,15 @@ planet, zodiac sign, colour, deities, substitute ingredients and safety notes
   calls the naming system the formal name belongs to. The label is the one a
   practitioner reads (amethyst is mineral, lavender botanical), and the
   schema's messages use the same word.
-- **`form`, `planet`, `zodiac` and `color` are single free-text fields**, as
-  the schema takes them for now. M5.10a's combobox replaces `form`'s plain
-  input and puts the common-name lookup on the folk-name box. Planet, zodiac
-  sign and colour become list fields in MB.136, planet and zodiac with lookups
-  in MB.131; colour takes no suggestions.
-- **The three lists are one box each, with the entries above it.** Typing and
+- **`form` is a single free-text field**, as the schema takes it. M5.10a's
+  combobox replaces its plain input and puts the common-name lookup on the
+  folk-name box.
+- **Planets, zodiac signs and colours are list fields** (MB.136), as DESIGN.md
+  §5 gives an ingredient several of each, labelled "Planets", "Zodiac Signs"
+  and "Colours" with boxes "Planet", "Zodiac Sign" and "Colour". M5.10a
+  makes every list field's box its `Combobox`, and MB.131 gives planets and
+  signs their lookups; colours take no suggestions.
+- **The six lists are one box each, with the entries above it.** Typing and
   pressing Add, or Enter, adds the text as an entry, trimmed, and empties the
   box. The box keeps the focus, so the next one can be typed at once. A blank
   box adds nothing. Each entry is a pill with an ×, labelled "Remove Hedge

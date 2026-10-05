@@ -8,9 +8,10 @@
 ask `ingredient: ['read']`: the curated rows are global, and every in-use value
 is one a reader of the workspace could already list. A caller names a table and
 nothing else. The ingredient column each table suggests for is paired in the
-repository, keyed by table name, so a caller cannot hand `planets` the `zodiac`
-column, and a fourth vocabulary does not compile until it names its column.
-`ingredient_forms` is the third, paired with `form` (M4.7a).
+repository's `IN_USE`, keyed by table name, so a caller cannot hand `planets`
+the `zodiac_signs` list, and a fourth vocabulary does not compile until it
+names its column. `planets` and `zodiac_signs` are paired with the lists of
+the same names, `ingredient_forms` with the single `form` (M4.7a).
 
 One page is one statement: a `UNION ALL` of three tiers, sorted, bounded and
 cut by cursor as a whole.
@@ -35,6 +36,14 @@ cut by cursor as a whole.
   carry the ranking the story asks for — a name match before a description
   match, curated before in use — and a name is an exact cursor key where a
   float score is not.
+- **A list is read entry by entry** (MB.136). An `InUseSource` is a
+  `column` or a `list`, and `inUseRows` turns a list into
+  `ingredients cross join lateral unnest(list) as entry(value)`, one row per
+  entry, before anything trims or folds it. The scope and the soft-delete
+  filter are still the ingredient's, so an entry is in scope exactly when its
+  row is, and the grouping below makes a value held by several lists, or
+  twice by one, a single suggestion. A row with no list unnests to nothing.
+  MB.130 pairs `deities` the same way.
 - **An in-use value is folded to `lower(btrim(value))`**, so `Moon`, `moon`
   and `Moon` are one value, offered in the spelling most of those entries
   use (`mode()`, a tie broken by sort order). A blank value is no value. A

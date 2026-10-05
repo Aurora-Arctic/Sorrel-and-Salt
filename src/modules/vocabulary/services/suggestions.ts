@@ -29,7 +29,7 @@ async function suggest(
 }
 
 /**
- * What the `planet` field offers as `query` is typed: the curated bodies first,
+ * What a `planets` entry offers as `query` is typed: the curated bodies first,
  * a name match before a description match, then values already written in the
  * compendium or this workspace that no body curates. A blank query offers all.
  *
@@ -45,7 +45,7 @@ export function suggestPlanets(
 }
 
 /**
- * The same for the `zodiac` field, over the signs.
+ * The same for a `zodiacSigns` entry, over the signs.
  *
  * @throws {Forbidden} the caller may not read this workspace's ingredients.
  */

@@ -24,7 +24,11 @@ before `deploy.yml` promotes, and Drizzle names every declared column in a
 `SELECT`, so dropping a column the live deploy still declares breaks its reads
 for the length of the rollout, and a rollback past the migration for good.
 Between the two, `db:generate` on any branch emits the drop; it belongs to
-the second task, and the destructive-DDL check refuses it unacknowledged.
+the second task, and the destructive-DDL check refuses it unacknowledged. A
+data migration may still ride in the first, written with `generate --custom`,
+which copies the last snapshot rather than diffing the schema, so the
+undeclared columns stay in it: MB.136's `0031_refill-ingredient-lists` is
+the worked case.
 MB.82 and MB.107 are the worked case: MB.82 stopped declaring `pending_slug`
 and its date, and MB.107 dropped them.
 

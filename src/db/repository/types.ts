@@ -301,6 +301,12 @@ export interface IngredientIdentity {
 /** A vocabulary a member's autofill suggests from. */
 export type SuggestingVocabulary = typeof planets | typeof zodiacSigns | typeof ingredientForms;
 
+/**
+ * Where a vocabulary's in-use values are written on `ingredients`: one value
+ * to a `column`, or a `list` whose entries are each one (MB.136).
+ */
+export type InUseSource = { column: AnyPgColumn } | { list: AnyPgColumn };
+
 /** A curated row, or a value written on an ingredient that matches none. */
 export interface VocabularySuggestion {
   value: string;

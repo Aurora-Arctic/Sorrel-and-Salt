@@ -42,7 +42,10 @@ function withoutBlanks(list: string[] | null | undefined) {
 
 const dropBlankEntries = <T extends Lists>(value: T): T => ({
   ...value,
+  planets: withoutBlanks(value.planets),
+  zodiacSigns: withoutBlanks(value.zodiacSigns),
   deities: withoutBlanks(value.deities),
+  colors: withoutBlanks(value.colors),
   substitutes: withoutBlanks(value.substitutes),
   folkNames: withoutBlanks(value.folkNames),
 });
@@ -53,12 +56,12 @@ const fields = {
   form: optionalText,
   description: optionalText,
   element: z.enum(INGREDIENT_ELEMENTS, { error: 'Choose one of the five elements' }).nullish(),
-  // Free text like `form`: the `planets` and `zodiac_signs` vocabularies
-  // suggest, nothing refuses.
-  planet: optionalText,
-  zodiac: optionalText,
+  // Lists of free text like `form`'s one value: the `planets` and
+  // `zodiac_signs` vocabularies suggest, nothing refuses (MB.134).
+  planets: textList,
+  zodiacSigns: textList,
   deities: textList,
-  color: optionalText,
+  colors: textList,
   safetyNotes: optionalText,
   substitutes: textList,
   folkNames: textList,

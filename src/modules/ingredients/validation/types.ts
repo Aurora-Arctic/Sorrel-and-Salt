@@ -5,7 +5,10 @@ import type { NomenclatureKind } from '../schema/ingredient-enums';
 
 /** The list fields `dropBlankEntries` clears of blank entries, in either variant. */
 export interface Lists {
+  planets?: string[] | null;
+  zodiacSigns?: string[] | null;
   deities?: string[] | null;
+  colors?: string[] | null;
   substitutes?: string[] | null;
   folkNames?: string[] | null;
 }
