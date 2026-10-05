@@ -16,8 +16,19 @@ export type IngredientKey = Pick<IngredientRow, 'id' | 'workspaceId'>;
 
 export type CategoryRow = typeof categories.$inferSelect;
 
-/** The parsed input without its folk names; both tiers' variants parse to this shape. */
-export type IngredientFields = Omit<LocalIngredientInput, 'folkNames'>;
+/** The parsed input without its child rows; both tiers' variants parse to this shape. */
+export type IngredientFields = Omit<LocalIngredientInput, 'folkNames' | 'substitutes'>;
+
+/**
+ * One substitute as `Ingredient.substitutes` reads it (DESIGN.md §7): the name
+ * it shows — the linked ingredient's label, its last once deleted, or the
+ * typed text — and the ingredient to follow, null on typed text and on a
+ * deleted link.
+ */
+export interface SubstituteRow {
+  name: string;
+  ingredient: IngredientRow | null;
+}
 
 /** What the workspace service parses: the form's values, or the mutation's input. */
 export type IngredientValues = z.input<typeof LocalIngredientInput>;

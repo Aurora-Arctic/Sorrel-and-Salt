@@ -18,7 +18,13 @@ import { ingredients } from '../schema/ingredients';
 import { retiredIngredientSlugs } from '../schema/retired-ingredient-slugs';
 import { CompendiumFilter, type CompendiumFilterInput } from '../validation/compendium-filter';
 import { CompendiumIngredientInput } from '../validation/ingredient';
-import { addFolkNames, columnsOf, replaceFolkNames } from './ingredient-rows';
+import {
+  addFolkNames,
+  addSubstitutes,
+  columnsOf,
+  replaceFolkNames,
+  replaceSubstitutes,
+} from './ingredient-rows';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
@@ -90,22 +96,24 @@ export async function getIngredient(
 }
 
 /**
- * Creates a compendium entry, with its folk names, in one transaction. The
- * slug is set here from the label, the form and the formal name, and the
- * compendium's lapsed retirements are cleared in the same write.
+ * Creates a compendium entry, with its folk names and substitutes, in one
+ * transaction. The slug is set here from the label, the form and the formal
+ * name, and the compendium's lapsed retirements are cleared in the same
+ * write.
  *
  * @throws {Forbidden} the caller is not a site admin — checked before the
  * input is read.
  * @throws {ValidationError} the input breaks `CompendiumIngredientInput` — a
- * missing `nomenclature` included — collides with another entry, or would
- * end another entry's redirect without `endRedirect`.
+ * missing `nomenclature` included — collides with another entry, would end
+ * another entry's redirect without `endRedirect`, or links a substitute
+ * outside the compendium.
  */
 export async function createCompendiumEntry(
   session: Session,
   input: CompendiumWrite,
 ): Promise<IngredientRow> {
   const admin = assertSiteAdmin(session);
-  const { folkNames, ...fields } = parseInput(CompendiumIngredientInput, input);
+  const { folkNames, substitutes, ...fields } = parseInput(CompendiumIngredientInput, input);
 
   const slug = ingredientSlug(fields.name, fields.form, fields.canonicalName);
   const at = new Date();
@@ -118,16 +126,17 @@ export async function createCompendiumEntry(
       slug,
     });
     await addFolkNames(write, row.id, folkNames ?? []);
+    await addSubstitutes(write, [], row.id, substitutes ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
 }
 
 /**
  * Replaces a compendium entry with `input` — the whole entry as the form
- * submits it, so a field left out is cleared — and its folk names with
- * `input.folkNames`, in one transaction. The slug follows the label, the form
- * and the formal name; when it moves, the old one is retired as this admin's,
- * and redirects to the entry for 180 days.
+ * submits it, so a field left out is cleared — and its folk names and
+ * substitutes with the input's, in one transaction. The slug follows the
+ * label, the form and the formal name; when it moves, the old one is retired
+ * as this admin's, and redirects to the entry for 180 days.
  *
  * The row is read before the transaction, for the slug it holds; two admins
  * saving one entry at the same instant can retire the older slug rather
@@ -135,8 +144,8 @@ export async function createCompendiumEntry(
  *
  * @throws {Forbidden} the caller is not a site admin.
  * @throws {ValidationError} the input breaks `CompendiumIngredientInput`,
- * collides with another entry, or would end another entry's redirect without
- * `endRedirect`.
+ * collides with another entry, would end another entry's redirect without
+ * `endRedirect`, or adds a substitute link outside the compendium.
  * @throws {NotFound} no live compendium entry has this id — a coven's
  * ingredient included, and an id that is not one.
  */
@@ -146,7 +155,7 @@ export async function updateCompendiumEntry(
   input: CompendiumWrite,
 ): Promise<IngredientRow> {
   const admin = assertSiteAdmin(session);
-  const { folkNames, ...fields } = parseInput(CompendiumIngredientInput, input);
+  const { folkNames, substitutes, ...fields } = parseInput(CompendiumIngredientInput, input);
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
   const current = await findOneIngredient([], id);
@@ -172,6 +181,7 @@ export async function updateCompendiumEntry(
       });
     }
     await replaceFolkNames(write, [], id, folkNames ?? []);
+    await replaceSubstitutes(write, [], id, substitutes ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
 }

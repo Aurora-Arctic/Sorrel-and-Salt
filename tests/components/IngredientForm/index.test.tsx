@@ -1,8 +1,16 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw';
+import { FormProvider, useForm } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
+import { ListField } from '@/components/IngredientForm/fields';
+import type {
+  IngredientFormInput,
+  IngredientFormValues,
+  SubstituteListEntry,
+} from '@/components/IngredientForm/types';
+import { EMPTY_VALUES, ingredientResolver } from '@/components/IngredientForm/values';
 import type {
   CreateWorkspaceIngredientMutation,
   CreateWorkspaceIngredientMutationVariables,
@@ -579,6 +587,9 @@ describe('IngredientForm', () => {
     },
   ] as const)('the $legend list', ({ legend, entry, field, hint }) => {
     const group = () => screen.getByRole('group', { name: legend });
+    // A typed substitute is sent as a name (DESIGN.md §5, `ingredient_substitutes`).
+    const sent = (values: string[]) =>
+      field === 'substitutes' ? values.map((name) => ({ name })) : values;
     const entries = () =>
       within(group())
         .queryAllByRole('button', { name: /^Remove / })
@@ -732,7 +743,7 @@ describe('IngredientForm', () => {
       save();
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
-      expect(calls[0].input[field]).toEqual(['First Fixture', 'Third Fixture']);
+      expect(calls[0].input[field]).toEqual(sent(['First Fixture', 'Third Fixture']));
     });
 
     it('refuses to save with text left in the box, until it is added', async () => {
@@ -756,7 +767,7 @@ describe('IngredientForm', () => {
       save();
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
-      expect(calls[0].input[field]).toEqual(['First Fixture', 'Second Fixture']);
+      expect(calls[0].input[field]).toEqual(sent(['First Fixture', 'Second Fixture']));
     });
 
     it('lets the save through once text left in the box is cleared', async () => {
@@ -773,6 +784,82 @@ describe('IngredientForm', () => {
       save();
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(calls[0].input[field]).toEqual([]);
+    });
+  });
+
+  // MB.140: a substitute links an ingredient or names one. Nothing in the
+  // form picks a link until MB.131's lookup, so the list is given one here.
+  describe('a linked substitute', () => {
+    const LINKED_ID = '3f6c1d2e-8a4b-4c5d-9e0f-1a2b3c4d5e6f';
+    const linked: SubstituteListEntry = {
+      value: 'Mockleaf',
+      link: { id: LINKED_ID, canonicalName: 'Fixtura testalis' },
+    };
+
+    function renderList(substitutes: SubstituteListEntry[]) {
+      const onSubmit = vi.fn();
+      const Harness = () => {
+        const methods = useForm<IngredientFormValues, unknown, IngredientFormInput>({
+          defaultValues: { ...EMPTY_VALUES, name: 'Testwort', substitutes },
+          resolver: ingredientResolver,
+        });
+        return (
+          <FormProvider {...methods}>
+            <form onSubmit={methods.handleSubmit(onSubmit)}>
+              <ListField
+                name="substitutes"
+                legend="Substitute Ingredients"
+                entry="Substitute Ingredient"
+              />
+              <button type="submit">Save Ingredient</button>
+            </form>
+          </FormProvider>
+        );
+      };
+      render(<Harness />);
+      return onSubmit;
+    }
+
+    it('reads as its ingredient’s label with its formal name', () => {
+      renderList([linked, { value: 'Zest Root' }]);
+
+      const list = within(screen.getByRole('group', { name: 'Substitute Ingredients' }));
+      expect(
+        list.getByText('Mockleaf (Fixtura testalis)', { ignore: '[role="tooltip"]' }),
+      ).toBeInTheDocument();
+      expect(removeButton('Mockleaf (Fixtura testalis)')).toBeInTheDocument();
+      expect(removeButton('Zest Root')).toBeInTheDocument();
+    });
+
+    it('reads as its label alone when the ingredient has no formal name', () => {
+      renderList([{ value: 'Mockleaf', link: { id: LINKED_ID, canonicalName: null } }]);
+
+      expect(removeButton('Mockleaf')).toBeInTheDocument();
+    });
+
+    it('is sent as its ingredient’s id, beside a typed one sent as its name', async () => {
+      const onSubmit = renderList([linked, { value: 'Zest Root' }]);
+
+      save();
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      expect(onSubmit.mock.calls[0][0].substitutes).toEqual([
+        { ingredientId: LINKED_ID },
+        { name: 'Zest Root' },
+      ]);
+    });
+
+    it('marks a refused link beside its pill, named by its formal name too', async () => {
+      renderList([linked, { value: 'Zest Root' }, { ...linked, value: 'Mockleaf' }]);
+
+      save();
+
+      await waitFor(() =>
+        expectErrorOn(
+          textbox('Substitute Ingredient'),
+          'Mockleaf (Fixtura testalis): This ingredient is already listed',
+        ),
+      );
     });
   });
 

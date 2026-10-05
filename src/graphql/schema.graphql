@@ -63,7 +63,7 @@ type Ingredient {
   planets: [String!]
   safetyNotes: String
   slug: String!
-  substitutes: [String!]
+  substitutes: [Substitute!]!
   zodiacSigns: [String!]
 }
 
@@ -102,7 +102,7 @@ input IngredientInput {
   nomenclature: Nomenclature
   planets: [String!]
   safetyNotes: String
-  substitutes: [String!]
+  substitutes: [SubstituteInput!]
   zodiacSigns: [String!]
 }
 
@@ -121,7 +121,7 @@ input IngredientUpdateInput {
   nomenclature: Nomenclature!
   planets: [String!]!
   safetyNotes: String!
-  substitutes: [String!]!
+  substitutes: [SubstituteInput!]!
   zodiacSigns: [String!]!
 }
 
@@ -258,6 +258,29 @@ type QueryZodiacSuggestionsConnection {
 type QueryZodiacSuggestionsConnectionEdge {
   cursor: String!
   node: CorrespondenceSuggestion!
+}
+
+"""
+Another ingredient to use in its place: a link to one, or the name of one not entered.
+"""
+type Substitute {
+  """
+  The ingredient to follow: null on a typed name, and once the linked ingredient is deleted.
+  """
+  ingredient: Ingredient
+
+  """
+  The linked ingredient's label, its last once deleted; the typed name otherwise.
+  """
+  name: String!
+}
+
+"""
+An ingredient to link, or the name of one not entered: exactly one of the two.
+"""
+input SubstituteInput {
+  ingredientId: ID
+  name: String
 }
 
 type SuggestionClaimant {

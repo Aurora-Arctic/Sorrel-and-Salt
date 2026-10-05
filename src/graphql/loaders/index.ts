@@ -1,5 +1,9 @@
 import { membershipsByUser } from '@/modules/coven';
-import { categoriesByIngredient, folkNamesByIngredient } from '@/modules/ingredients';
+import {
+  categoriesByIngredient,
+  folkNamesByIngredient,
+  substitutesByIngredient,
+} from '@/modules/ingredients';
 import { categoryGroupsById, ingredientFormGroupsById } from '@/modules/vocabulary';
 import type { Session } from '../../lib/session';
 import type { Built, LoaderFactory } from './types';
@@ -11,6 +15,7 @@ const LOADERS = {
   membershipsByUser,
   categoriesByIngredient,
   folkNamesByIngredient,
+  substitutesByIngredient,
   categoryGroupsById,
   ingredientFormGroupsById,
 } satisfies Record<string, LoaderFactory<never, unknown>>;

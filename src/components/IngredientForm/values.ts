@@ -4,7 +4,13 @@ import type { FieldError, FieldErrors, FieldPath, Resolver, UseFormReturn } from
 import type { ErrorExtensions } from '../../graphql/types';
 import type { ValidationIssue } from '../../lib/types';
 import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
-import type { IngredientFormInput, IngredientFormValues, ListFieldName } from './types';
+import type {
+  IngredientFormInput,
+  IngredientFormValues,
+  ListEntry,
+  ListFieldName,
+  SubstituteListEntry,
+} from './types';
 
 // The form's values against the shape the schema and the mutation take, and
 // the one mapping from an issue's path back to a field, which the resolver's
@@ -44,7 +50,8 @@ const isListField = (field: unknown): field is ListFieldName =>
 
 /**
  * The values as the mutation takes them: an unanswered closed set is null, a
- * list entry is its text, and the boxes are left behind — the resolver has
+ * list entry is its text — a substitute its link's id, or else its text as a
+ * name — and the boxes are left behind — the resolver has
  * refused a save while one holds text. Nothing is trimmed or dropped — the
  * schema does that on both sides — so an entry's index in an issue's path is
  * its index here.
@@ -72,8 +79,19 @@ export function toInput(values: IngredientFormValues): IngredientFormInput {
     zodiacSigns: texts(zodiacSigns),
     colors: texts(colors),
     deities: texts(deities),
-    substitutes: texts(substitutes),
+    substitutes: substitutes.map(({ value, link }) =>
+      link ? { ingredientId: link.id } : { name: value },
+    ),
   };
+}
+
+/**
+ * What an entry's pill reads: its text, and a linked substitute's formal name
+ * beside its label, so two ingredients sharing a label are told apart.
+ */
+export function entryText(entry: ListEntry | SubstituteListEntry): string {
+  const formalName = 'link' in entry ? entry.link?.canonicalName : undefined;
+  return formalName ? `${entry.value} (${formalName})` : entry.value;
 }
 
 /**

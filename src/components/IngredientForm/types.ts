@@ -24,6 +24,16 @@ export interface ListEntry {
 }
 
 /**
+ * One substitute: typed text, or a link to an ingredient, whose label is
+ * `value` (DESIGN.md §5, `ingredient_substitutes`). Nothing here picks a
+ * link yet: that is MB.131's lookup.
+ */
+export interface SubstituteListEntry extends ListEntry {
+  /** The ingredient linked, with the formal name its pill reads beside the label. */
+  link?: { id: string; canonicalName: string | null };
+}
+
+/**
  * The form's own state: every field as typed, a closed set unanswered as `''`,
  * and what sits in each list's box, not yet added.
  */
@@ -39,7 +49,7 @@ export interface IngredientFormValues {
   zodiacSigns: ListEntry[];
   colors: ListEntry[];
   deities: ListEntry[];
-  substitutes: ListEntry[];
+  substitutes: SubstituteListEntry[];
   safetyNotes: string;
   drafts: Record<ListFieldName, string>;
 }

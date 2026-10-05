@@ -46,7 +46,6 @@ const COLUMNS = [
   'deities',
   'colors',
   'safety_notes',
-  'substitutes',
   'slug',
   ...AUDIT_COLUMNS,
 ].sort();
@@ -96,8 +95,8 @@ describe('ingredients schema', () => {
     expect(foreignKeys.some((fk) => fk.reference().columns[0].name === 'form')).toBe(false);
   });
 
-  it('stores deities, substitutes, planets, zodiac signs and colours as array columns', () => {
-    for (const column of ['deities', 'substitutes', 'planets', 'zodiac_signs', 'colors']) {
+  it('stores deities, planets, zodiac signs and colours as array columns', () => {
+    for (const column of ['deities', 'planets', 'zodiac_signs', 'colors']) {
       expect(byName[column].getSQLType()).toBe('text[]');
     }
   });
@@ -166,10 +165,11 @@ beforeEach(async () => {
 describe('ingredients table', () => {
   // A column the schema has stopped declaring outlives it in the database for
   // one deploy: `planet`, `zodiac` and `color`, undeclared by MB.136 and
-  // dropped by MB.137, are the only ones.
-  it('carries the columns the schema declares, and the three singles awaiting their drop', async () => {
+  // dropped by MB.137, and `substitutes`, undeclared by MB.140 and dropped by
+  // MB.141, are the only ones.
+  it('carries the columns the schema declares, and the four awaiting their drop', async () => {
     expect(await catalogue.columnNames('ingredients')).toEqual(
-      [...COLUMNS, 'planet', 'zodiac', 'color'].sort(),
+      [...COLUMNS, 'planet', 'zodiac', 'color', 'substitutes'].sort(),
     );
   });
 

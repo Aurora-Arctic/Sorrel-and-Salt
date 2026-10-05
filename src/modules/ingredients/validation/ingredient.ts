@@ -4,7 +4,8 @@ import {
   NAMELESS_KINDS,
   NOMENCLATURE_KINDS,
 } from '../schema/ingredient-enums';
-import type { Lists, Parsed } from './types';
+import { RowId } from '../../../lib/validation';
+import type { Lists, Parsed, SubstituteEntry, SubstituteFields } from './types';
 
 // One ingredient as IngredientForm submits it and the service parses it: the
 // resolver runs these before a request is sent, and the service runs them
@@ -46,9 +47,29 @@ const dropBlankEntries = <T extends Lists>(value: T): T => ({
   zodiacSigns: withoutBlanks(value.zodiacSigns),
   deities: withoutBlanks(value.deities),
   colors: withoutBlanks(value.colors),
-  substitutes: withoutBlanks(value.substitutes),
   folkNames: withoutBlanks(value.folkNames),
 });
+
+/**
+ * A substitute links an ingredient or names one (DESIGN.md §5,
+ * `ingredient_substitutes`): either half trimmed, and blank as absent, so
+ * `substituteRules` decides between them. A blank entry is refused rather
+ * than dropped, so a service's refusal, made after the parse, still counts
+ * the entries the caller sent.
+ */
+const substitute = z.object({ ingredientId: optionalText, name: optionalText });
+
+/** Each entry as the one half it carries, once `substituteRules` has held it to one. */
+function asEntries<T extends { substitutes?: SubstituteFields[] | null }>(
+  value: T,
+): Omit<T, 'substitutes'> & { substitutes?: SubstituteEntry[] } {
+  return {
+    ...value,
+    substitutes: value.substitutes?.map(({ ingredientId, name }): SubstituteEntry =>
+      ingredientId ? { ingredientId, name: null } : { ingredientId: null, name: name ?? '' },
+    ),
+  };
+}
 
 const fields = {
   name: requiredText('Give the ingredient a name'),
@@ -63,7 +84,7 @@ const fields = {
   deities: textList,
   colors: textList,
   safetyNotes: optionalText,
-  substitutes: textList,
+  substitutes: z.array(substitute).nullish(),
   folkNames: textList,
 };
 
@@ -118,6 +139,38 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
       message: 'The name is also listed as a folk name — keep it in one place',
     });
   }
+
+  substituteRules(value.substitutes ?? [], ctx);
+}
+
+/**
+ * Each substitute is exactly one of a link and a name, and listed once: the
+ * same ingredient twice, or the same name in any case — the two partial
+ * unique indexes' keys — is refused at the repeat. A name equal to a linked
+ * ingredient's label is not a repeat, since one is text and the other a link.
+ */
+function substituteRules(entries: SubstituteFields[], ctx: z.RefinementCtx) {
+  const refuse = (index: number, message: string) =>
+    ctx.addIssue({ code: 'custom', path: ['substitutes', index], message });
+  const links = new Set<string>();
+  const names = new Set<string>();
+
+  entries.forEach(({ ingredientId, name }, index) => {
+    if (ingredientId && name) {
+      refuse(index, 'A substitute links an ingredient or names one, not both');
+    } else if (ingredientId) {
+      // Not a uuid names nothing, and would be a driver error at the comparison.
+      if (!RowId.safeParse(ingredientId).success) refuse(index, 'No such ingredient to link');
+      else if (links.has(ingredientId)) refuse(index, 'This ingredient is already listed');
+      links.add(ingredientId);
+    } else if (name) {
+      const key = name.toLowerCase();
+      if (names.has(key)) refuse(index, 'This substitute is already listed');
+      names.add(key);
+    } else {
+      refuse(index, 'Name the substitute, or choose an ingredient');
+    }
+  });
 }
 
 /**
@@ -127,7 +180,8 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
 export const CompendiumIngredientInput = z
   .object({ ...fields, nomenclature })
   .superRefine(crossFieldRules)
-  .transform(dropBlankEntries);
+  .transform(dropBlankEntries)
+  .transform(asEntries);
 
 /**
  * The workspace tier: only `name` is required. With no formal name and no
@@ -147,7 +201,8 @@ export const LocalIngredientInput = z
     return z.NEVER;
   })
   .superRefine(crossFieldRules)
-  .transform(dropBlankEntries);
+  .transform(dropBlankEntries)
+  .transform(asEntries);
 
 export type CompendiumIngredientInput = z.output<typeof CompendiumIngredientInput>;
 export type LocalIngredientInput = z.output<typeof LocalIngredientInput>;
