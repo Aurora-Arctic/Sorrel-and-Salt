@@ -68,3 +68,8 @@ export interface WorkspaceIngredientNode {
   audit: { createdBy: string; updatedBy: string };
   [field: string]: unknown;
 }
+
+export interface IngredientSuggestionConnection {
+  edges: { cursor: string; node: DuplicateNode }[];
+  pageInfo: { hasNextPage: boolean; endCursor: string | null };
+}

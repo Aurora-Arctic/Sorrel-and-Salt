@@ -155,6 +155,7 @@ type Query {
   formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryFormSuggestionsConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient!
   ingredientFormValues(after: String, before: String, first: Int, last: Int): QueryIngredientFormValuesConnection!
+  ingredientSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryIngredientSuggestionsConnection!
   me: User!
   ok: Boolean!
   planetSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryPlanetSuggestionsConnection!
@@ -212,6 +213,16 @@ type QueryIngredientFormValuesConnection {
 type QueryIngredientFormValuesConnectionEdge {
   cursor: String!
   node: IngredientFormValue!
+}
+
+type QueryIngredientSuggestionsConnection {
+  edges: [QueryIngredientSuggestionsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryIngredientSuggestionsConnectionEdge {
+  cursor: String!
+  node: Ingredient!
 }
 
 type QueryPlanetSuggestionsConnection {

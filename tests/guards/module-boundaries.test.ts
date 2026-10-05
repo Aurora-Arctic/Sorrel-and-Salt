@@ -69,6 +69,8 @@ const TIER_SEAM: string[] = [
   'findCompendiumCount',
   // One ingredient by id, in the compendium or a proof's coven (M8.5).
   'findOneIngredient',
+  // The substitute picker's search: an ingredient to link, from the compendium or this workspace (MB.138).
+  'findIngredientSuggestions',
   // The entry a colliding compendium write names, found by the key it holds (M5.2).
   'findCompendiumEntryByIdentity',
   // The entry at a compendium address, for the public route (MB.82).

@@ -141,6 +141,33 @@ export function findCompendiumCount(
 }
 
 /**
+ * One page of the live ingredients a coven's substitute may link — the
+ * compendium's and the proof's workspace's (MB.138) — matched and ordered as
+ * the compendium search is, best match first, so a typed prefix finds its
+ * entry where `findSimilarIngredients`' whole-string 0.4 would not. A blank
+ * `query` lists both tiers by name (claude-docs/db/compendium-read.md,
+ * "The ingredient picker's search").
+ */
+export function findIngredientSuggestions(
+  membership: Membership,
+  query: string,
+  page: PageRequest,
+): Promise<PageEntry<typeof ingredients.$inferSelect, CompendiumScore>[]> {
+  const list = compendiumList({ query });
+  const keyset = { ...list.order, request: page };
+  return selectFrom(
+    ingredients,
+    and(
+      or(inCompendium(ingredients), scopedTo(membership, ingredients)),
+      notSoftDeleted(ingredients),
+      list.arms,
+      pageBounds(keyset),
+    ),
+    keyset,
+  );
+}
+
+/**
  * One live ingredient by id, in the compendium or in a coven one of
  * `memberships` proves — `undefined` otherwise, which is also the answer for
  * a coven's row asked for without its proof: a caller holding an id it saw
@@ -190,7 +217,8 @@ export async function findCompendiumEntryByIdentity(
 /**
  * What a compendium page and its count share: the filter's arms, and the key
  * with the search's join — built in one place, so the count reads the rows
- * the pages hold in the order they hold them. A search keys `[-score, name]`,
+ * the pages hold in the order they hold them, and the ingredient picker
+ * matches as the compendium does. A search keys `[-score, name]`,
  * negated so one ascending row comparison bounds it; a browse keys `[name]`.
  */
 function compendiumList(filter: IngredientFilter): {

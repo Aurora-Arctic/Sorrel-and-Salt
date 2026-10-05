@@ -52,6 +52,13 @@ const PROBES: Record<string, ScopeProbe> = {
     outcome: 'answers',
   },
   commonNameSuggestions: suggestion('commonNameSuggestions'),
+  ingredientSuggestions: {
+    source: `query ($workspaceId: ID!) {
+      ingredientSuggestions(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
+    }`,
+    variables: { workspaceId: WORKSPACE_W_ID },
+    outcome: 'refuses',
+  },
   possibleDuplicates: {
     source: `query ($workspaceId: ID!) {
       possibleDuplicates(workspaceId: $workspaceId, name: "Testwort", first: 1) { edges { node { id } } }

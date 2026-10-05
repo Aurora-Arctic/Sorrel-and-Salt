@@ -31,6 +31,7 @@ export {
   findCompendiumCount,
   findCompendiumEntryByIdentity,
   findCompendiumPage,
+  findIngredientSuggestions,
   findManyOfIngredients,
   findOneIngredient,
   findSimilarIngredients,
