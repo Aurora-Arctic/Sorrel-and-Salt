@@ -67,6 +67,14 @@ export const ingredients = pgTable(
     color: text('color'),
     safetyNotes: text('safety_notes'),
     substitutes: text('substitutes').array(),
+    // The lists `planet`, `zodiac` and `color` become (MB.134): new names rather
+    // than a type change in place, because a column cannot turn from `text` to
+    // `text[]` under a deployed reader. Filled from the singles by their
+    // migration and read by nothing until MB.136 switches to them; MB.137 drops
+    // the singles (claude-docs/db/identity-model.md, "The ingredient identity model").
+    planets: text('planets').array(),
+    zodiacSigns: text('zodiac_signs').array(),
+    colors: text('colors').array(),
     ...auditColumns,
   },
   (table) => [

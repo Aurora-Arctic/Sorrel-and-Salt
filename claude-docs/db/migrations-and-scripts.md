@@ -97,6 +97,14 @@
   own names with `deleted_at IS NULL` added. Its sidecar acknowledges the three
   drops and says why it is one PR rather than rule 10's two: no column is
   dropped, and nothing in `src/` names the constraints.
+- **`0030_ingredient-lists.sql`** (MB.135) is the expand of MB.134's lists:
+  `drizzle-kit generate` wrote the three `ADD COLUMN`s for `planets`,
+  `zodiac_signs` and `colors`, and the fill was added by hand, one `UPDATE`
+  per list copying its single column as a one-entry array where one is set.
+  The template is migrated before it is seeded, so its lists start empty and
+  `ingredient-lists.test.ts` re-runs the migration's own `UPDATE`s against the
+  seeded rows. See
+  ["The ingredient identity model"](identity-model.md).
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls

@@ -48,6 +48,10 @@ const COLUMNS = [
   'safety_notes',
   'substitutes',
   'slug',
+  // MB.135: the lists beside the single columns, for the deploy until MB.137 drops those.
+  'planets',
+  'zodiac_signs',
+  'colors',
   ...AUDIT_COLUMNS,
 ].sort();
 
@@ -96,9 +100,10 @@ describe('ingredients schema', () => {
     expect(foreignKeys.some((fk) => fk.reference().columns[0].name === 'form')).toBe(false);
   });
 
-  it('stores deities and substitutes as array columns', () => {
-    expect(byName.deities.getSQLType()).toBe('text[]');
-    expect(byName.substitutes.getSQLType()).toBe('text[]');
+  it('stores deities, substitutes, planets, zodiac signs and colours as array columns', () => {
+    for (const column of ['deities', 'substitutes', 'planets', 'zodiac_signs', 'colors']) {
+      expect(byName[column].getSQLType()).toBe('text[]');
+    }
   });
 
   // MB.80: the public address, derived by whoever writes the row, so no default.
