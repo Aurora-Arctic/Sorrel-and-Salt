@@ -12,6 +12,7 @@ import {
   type NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
 import { ListField, SelectField, TextField } from './fields';
+import { FolkNamesField, FormField } from './suggestions';
 import type { IngredientFormInput, IngredientFormProps, IngredientFormValues } from './types';
 import { EMPTY_VALUES, fieldNameOf, ingredientResolver, issuesOf } from './values';
 import './index.scss';
@@ -140,13 +141,11 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
           required={kind !== '' && !isNameless(kind)}
           deps={['nomenclature']}
         />
-        <TextField name="form" label="Form" hint="How it comes: dried leaf, whole root, oil." />
-        <ListField
-          name="folkNames"
-          legend="Folk Names"
-          entry="Folk Name"
-          hint="Other names it goes by. A search finds it by any of them."
-        />
+        {/* Both suggest from this coven and the compendium (M4.7a): the form
+            from the curated vocabulary and the forms in use, the folk names
+            from the names in use. A pick writes the text and links nothing. */}
+        <FormField workspaceId={workspaceId} />
+        <FolkNamesField workspaceId={workspaceId} />
         <TextField name="description" label="Description" multiline />
         <SelectField name="element" label="Element" none="None" options={ELEMENT_OPTIONS} />
         <ListField

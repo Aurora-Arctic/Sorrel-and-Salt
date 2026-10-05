@@ -6,6 +6,7 @@ import type {
   NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
+import type { Suggestions } from '../Combobox/types';
 
 export interface IngredientFormProps {
   /** The coven the new ingredient is written to. */
@@ -102,6 +103,14 @@ export interface SelectOption {
   label: string;
 }
 
+/** A text field whose box suggests as it is typed in; picking fills it. */
+export interface SuggestFieldProps extends FieldProps {
+  name: TextFieldName;
+  suggestions: Suggestions;
+  /** The box has been focused: the lookup may start asking. */
+  onActivate: () => void;
+}
+
 export interface ListFieldProps {
   name: ListFieldName;
   /** The group's legend: "Folk Names". */
@@ -110,6 +119,21 @@ export interface ListFieldProps {
   entry: string;
   /** What the list is for, behind an info tip beside the legend. */
   hint?: string;
+  /** What the box suggests; left out for a list with no source yet, whose box never opens. */
+  suggestions?: Suggestions;
+  /** The box has been focused: the lookup may start asking. */
+  onActivate?: () => void;
+}
+
+/** A field whose lookup asks about this coven's ingredients. */
+export interface LookupFieldProps {
+  workspaceId: string;
+}
+
+/** An in-scope ingredient already holding a suggested value, as a lookup names it. */
+export interface Claimant {
+  name: string;
+  canonicalName: string | null;
 }
 
 export interface FieldErrorProps {
@@ -119,16 +143,10 @@ export interface FieldErrorProps {
 
 export interface FieldShellProps extends FieldProps {
   controlId: string;
+  labelId: string;
   hintId: string;
   noteId: string;
   errorId: string;
   error?: string;
   children: ReactNode;
-}
-
-export interface EntryChipProps {
-  value: string;
-  /** The list's error element, when this entry is one it names. */
-  errorId?: string;
-  onRemove: () => void;
 }
