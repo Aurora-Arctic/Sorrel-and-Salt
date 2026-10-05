@@ -26,7 +26,7 @@ What follows describes all three as built.
   the exact opposite of `form`, and the reason the two are easy to confuse
   but never interchangeable. `deities` and `substitutes` are native
   `text[]` columns, one of the things SQLite could not have run (DESIGN.md
-  §14). Seven declared indexes: M4.1a's three partial unique ones (below),
+  §14); `planet`, `zodiac` and `color` join them as lists in MB.136 (below). Seven declared indexes: M4.1a's three partial unique ones (below),
   MB.81's two on the slug ("Ingredient slugs"), `ingredients_trgm`
   (M4.6), one multicolumn `gin_trgm_ops` index over `name` and
   `canonical_name` — see ["Fuzzy matching"](fuzzy-matching.md) — and its folded twin
@@ -160,6 +160,34 @@ uniqueness is per ingredient, deliberately not global, since several
 unrelated ingredients claiming the same common name is exactly what's being
 documented, not an error. `lower`, `btrim`, and `similarity`, by contrast,
 are all IMMUTABLE and used freely throughout this model.
+
+**Planet, zodiac sign and colour become lists (MB.134).** DESIGN.md §5 gives
+an ingredient several of each, so `planet`, `zodiac` and `color`, single
+`text` columns as built, give way to `planets`, `zodiac_signs` and `colors`,
+nullable `text[]` with no default, declared in Drizzle as `planets`,
+`zodiacSigns` and `colors`. They are stored as `deities` is: the shared schema
+trims each entry, drops a blank one and turns a list left empty into null
+([`../validation.md`](../validation.md), "The two ingredient variants"), so no row holds `{}`
+or a blank entry, and no CHECK repeats that, since `deities` has none either.
+An array keeps its order, and each list's order is the member's, so nothing
+sorts one on write or read.
+
+- **Arrays, not child tables, unlike folk names.** Folk names moved to a
+  table so a trigram index could reach them. No single column carried one —
+  the planet and zodiac autofill reads the in-use values of the compendium
+  and one workspace with no index behind them — so a list
+  loses no index, and a table per list would buy three joins for nothing.
+- **New names, by rule 10.** A column cannot turn from `text` to `text[]`
+  under a deployed reader, so the lists sit beside the singles for a deploy:
+  MB.135 adds them and fills each from its single column where one is set;
+  MB.136 switches every reader and writer, stops declaring the singles and
+  fills again for any row the live deploy wrote in between; MB.137 fills a
+  last time and drops the singles, with its `.ack.md` sidecar, once MB.136
+  has deployed (["Expand/contract"](expand-contract.md)).
+- **The in-use scan unnests.** Tier 2 of the planet and zodiac autofill
+  reads entries rather than a column, so MB.136 unnests the list before it
+  trims and folds, and a value counts once however many lists hold it.
+  MB.130 adopts that scan for `deities`.
 
 **Fuzzy matching: one index, and a rule every caller is bound by** has a file of its own: [`fuzzy-matching.md`](fuzzy-matching.md).
 
