@@ -5,9 +5,9 @@ import type { InfoTipProps } from './types';
 import './index.scss';
 
 // A field's hint behind an ⓘ beside its label, rather than a line beneath it.
-// It opens on hover, on a tap, and on focus — the ⓘ's, or the field's own, so
-// a keyboard that skips buttons still shows it — stays open while the pointer
-// is on it, and closes on Escape (WCAG 1.4.13) or once the field takes input.
+// It opens on hover, on a tap, and on the ⓘ's focus — never on the field's,
+// which cluttered the form for little value (MB.133) — stays open while the
+// pointer is on it, and closes on Escape (WCAG 1.4.13).
 // The text stays in the page while closed, faded out and `aria-hidden` rather
 // than unmounted, so the field it describes still reads it
 // (claude-docs/components/info-tip.md).
@@ -15,7 +15,7 @@ import './index.scss';
 // Long enough to cross from the button onto the tip.
 const CLOSE_DELAY_MS = 150;
 
-const InfoTip = ({ id, label, controlId, children }: InfoTipProps): ReactElement => {
+const InfoTip = ({ id, label, children }: InfoTipProps): ReactElement => {
   const [open, setOpen] = useState(false);
   const closing = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -41,23 +41,6 @@ const InfoTip = ({ id, label, controlId, children }: InfoTipProps): ReactElement
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [open, hide]);
-
-  // The field is rendered by whoever holds the tip, so it is found by id
-  // rather than handed down as an element. Input closes the tip: whoever is
-  // typing, or has chosen, has read it, and it stays shut until the field is
-  // entered again.
-  useEffect(() => {
-    const control = controlId ? document.getElementById(controlId) : null;
-    if (!control) return;
-    control.addEventListener('focus', show);
-    control.addEventListener('blur', hide);
-    control.addEventListener('input', hide);
-    return () => {
-      control.removeEventListener('focus', show);
-      control.removeEventListener('blur', hide);
-      control.removeEventListener('input', hide);
-    };
-  }, [controlId, show, hide]);
 
   useEffect(() => () => clearTimeout(closing.current), []);
 
