@@ -105,6 +105,16 @@
   `ingredient-lists.test.ts` re-runs the migration's own `UPDATE`s against the
   seeded rows. See
   ["The ingredient identity model"](identity-model.md).
+- **`0031_refill-ingredient-lists.sql`** (MB.136) is the fifth hand-written
+  one, via `generate --custom`, and fills the lists again from the singles
+  MB.136 stops declaring, for anything the live deploy wrote after 0030. It
+  had to be `--custom`: a plain `generate` diffs the schema, which no longer
+  declares the singles, and would have emitted MB.137's drop, while
+  `--custom` copies the last snapshot whole, so the singles stay in it.
+  Data only, so no sidecar. The seed writes lists since MB.136, so
+  `ingredient-lists.test.ts` puts the seeded rows back as a deployed database
+  held them before re-running either fill. See
+  ["The ingredient identity model"](identity-model.md).
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls

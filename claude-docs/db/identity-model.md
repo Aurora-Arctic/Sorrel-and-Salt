@@ -17,16 +17,17 @@ What follows describes all three as built.
 - **`ingredients`** — `id`, `workspaceId` (nullable: `NULL` is the compendium
   tier, non-null is a workspace's own ingredient), `name`, `slug` (MB.81;
   ["Ingredient slugs"](ingredient-slugs.md)), `canonicalName`, `nomenclature`, `form`, the generated `canonicalKey`, the correspondence
-  columns (`description`, `element`, `planet`, `zodiac`, `deities[]`, `color`,
-  `safetyNotes`, `substitutes[]`), + audit. `name` is the display label —
+  columns (`description`, `element`, `planets[]`, `zodiacSigns[]`, `deities[]`,
+  `colors[]`, `safetyNotes`, `substitutes[]`), + audit. `name` is the display label —
   what it's called here — and stays freely relabellable, because identity
   moved off it onto `canonicalName`/`nomenclature`/`form`. Of the
   correspondences only `element` is constrained: an `ingredient_element`
   `pgEnum` of `earth`, `air`, `fire`, `water`, `spirit`, closed and fixed —
   the exact opposite of `form`, and the reason the two are easy to confuse
-  but never interchangeable. `deities` and `substitutes` are native
-  `text[]` columns, one of the things SQLite could not have run (DESIGN.md
-  §14); `planet`, `zodiac` and `color` join them as lists in MB.136 (below). Seven declared indexes: M4.1a's three partial unique ones (below),
+  but never interchangeable. `planets`, `zodiacSigns`, `deities`, `colors`
+  and `substitutes` are native `text[]` columns, one of the things SQLite
+  could not have run (DESIGN.md §14). `planets`, `zodiacSigns` and `colors`
+  replaced single columns in MB.136 (below). Seven declared indexes: M4.1a's three partial unique ones (below),
   MB.81's two on the slug ("Ingredient slugs"), `ingredients_trgm`
   (M4.6), one multicolumn `gin_trgm_ops` index over `name` and
   `canonical_name` — see ["Fuzzy matching"](fuzzy-matching.md) — and its folded twin
@@ -179,15 +180,26 @@ sorts one on write or read.
   loses no index, and a table per list would buy three joins for nothing.
 - **New names, by rule 10.** A column cannot turn from `text` to `text[]`
   under a deployed reader, so the lists sit beside the singles for a deploy:
-  MB.135 adds them and fills each from its single column where one is set;
-  MB.136 switches every reader and writer, stops declaring the singles and
-  fills again for any row the live deploy wrote in between; MB.137 fills a
-  last time and drops the singles, with its `.ack.md` sidecar, once MB.136
-  has deployed (["Expand/contract"](expand-contract.md)).
+  MB.135 added them and filled each from its single column where one was
+  set (`0030_ingredient-lists`); MB.136 switched every reader and writer and
+  stopped declaring the singles, which stay in the database undeclared;
+  MB.137 fills a last time and drops them, with its `.ack.md` sidecar, once
+  MB.136 has deployed (["Expand/contract"](expand-contract.md)).
+- **MB.136's migration rederives the lists.** `0031_refill-ingredient-lists`
+  runs before MB.136 promotes, while only 0030 has written a list, so every
+  list is still its single's: each is set to its single as one entry, or to
+  null where the single is, for whatever the live deploy wrote after 0030 — a
+  new row, a changed value, a cleared one. Only a row that disagrees is
+  written, so `updated_at` moves on no other. It is `generate --custom`,
+  which copies the last snapshot rather than diffing the schema, so the
+  snapshot keeps the undeclared singles and MB.137's `db:generate` still
+  emits their drop.
 - **The in-use scan unnests.** Tier 2 of the planet and zodiac autofill
-  reads entries rather than a column, so MB.136 unnests the list before it
-  trims and folds, and a value counts once however many lists hold it.
-  MB.130 adopts that scan for `deities`.
+  reads entries rather than a column: `cross join lateral unnest(…)` gives
+  one row per entry before anything trims or folds it, so a value counts
+  once however many lists hold it, or however often one does
+  (["The member's autofill"](member-autofill.md)). MB.130 adopts that scan
+  for `deities`.
 
 **Fuzzy matching: one index, and a rule every caller is bound by** has a file of its own: [`fuzzy-matching.md`](fuzzy-matching.md).
 

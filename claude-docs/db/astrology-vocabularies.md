@@ -1,7 +1,8 @@
 ## The astrology vocabularies (MB.91; tables MB.92)
 
-`planets` and `zodiac_signs` are the vocabularies behind
-`ingredients.planet` and `ingredients.zodiac`, in
+`planets` and `zodiac_signs` are the vocabularies behind the lists
+`ingredients.planets` and `ingredients.zodiac_signs` (MB.136; the single
+`planet` and `zodiac` before them), in
 `src/modules/vocabulary/schema/astrology.ts`, migration
 `0023_correspondence-vocabularies.sql`, seeded by `src/db/seed/astrology.ts`
 (["The astrology vocabulary seed"](astrology-vocabulary-seed.md)), and read
@@ -17,12 +18,12 @@ name it shipped under, since its tag is in the journal.
   `description` (NOT NULL, with a non-blank CHECK), + audit. Global,
   admin-curated, in the `vocabulary` module, both in one schema file as the
   form pair is. No group, no colour, no order column, no `workspace_id`.
-  The only foreign keys are the audit stamps, and `ingredients.planet` and
-  `.zodiac` point none at either table — `astrology-schema.test.ts`
+  The only foreign keys are the audit stamps, and `ingredients.planets` and
+  `.zodiac_signs` point none at either table — `astrology-schema.test.ts`
   asserts both from the schema and by scanning the shipped SQL per statement.
 
-**They are `form`'s pattern, and the two columns stay `text`.** A member
-writes `planet` and `zodiac`, so by MB.35's rule each is text over a
+**They are `form`'s pattern, and the two lists stay free text.** A member
+writes planets and zodiac signs, so by MB.35's rule each entry is text over a
 vocabulary rather than a foreign key: a value off the list stays writable,
 soft-deleting a row rewrites no ingredient, and the value moves into the
 uncurated bucket instead. `nomenclature` and `element` stay enums — closed
@@ -31,7 +32,7 @@ sets, and `nomenclature` is coupled to `canonicalName` by a CHECK that names
 
 **Two tables, not one with a `kind` column**, for the reason the group tables
 are two: a suggestion query that forgot the `kind` predicate would offer a
-sign for `planet`, and two tables leave no predicate to forget.
+sign for `planets`, and two tables leave no predicate to forget.
 
 **Uniqueness is on `slug`, partial on `deleted_at IS NULL`**, as on the four
 tables in the [categories section](categories.md), and the display name

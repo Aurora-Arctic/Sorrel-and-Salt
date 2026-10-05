@@ -10,7 +10,7 @@ other two, idempotent by slug and ignoring `deleted_at`, updating nothing
 already present, stamped by the bootstrap admin with the GUC published — with
 `seedFlatVocabulary` in place of the two-tier helper, since there is no group
 to insert first. `standard` seeds both inside its own transaction, and every
-`planet` its compendium sets is a curated one; unlike `form`, no uncurated
+planet its compendium lists is a curated one; unlike `form`, no uncurated
 planet is seeded, so the admin's to-do list is exercised by tests that write
 one. §5's table is lower-case; the seed writes each name in title case
 (`North Node`), and `astrology.test.ts` compares case-insensitively and
@@ -24,7 +24,7 @@ sought — because the suggestion query matches descriptions
 _Black Moon_, the nodes' _Rahu_ and _Ketu_, Ophiuchus's _Serpentarius_, and
 the test asserts those four by name. Ophiuchus has no agreed modality or
 element, so its themes carry it alone. A sign's description leaves out its
-ruling planet, so typing `Mars` into `zodiac` does not offer Aries. As with the
+ruling planet, so typing `Mars` as a zodiac sign does not offer Aries. As with the
 forms, the descriptions are pairwise distinct within each table, and §5's
 table is parsed at test time with the parse itself checked — two vocabularies,
 nineteen and thirteen.

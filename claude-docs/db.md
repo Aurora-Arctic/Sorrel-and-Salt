@@ -47,7 +47,7 @@ The `db:*` scripts (generate, migrate, seed, drop, reset, studio), `probe-databa
 
 ## The ingredient identity model (MB.28, table M4.1)
 
-`ingredients` (both tiers in one table), `ingredient_forms` and `ingredient_folk_names`: identity is formal name plus form in the generated `canonical_key`, unique per tier by partial index; planet, zodiac sign and colour become `text[]` lists stored as `deities` is, in the order entered (MB.134). [`db/identity-model.md`](db/identity-model.md)
+`ingredients` (both tiers in one table), `ingredient_forms` and `ingredient_folk_names`: identity is formal name plus form in the generated `canonical_key`, unique per tier by partial index; planets, zodiac signs and colours are `text[]` lists stored as `deities` is, in the order entered (MB.134, MB.136). [`db/identity-model.md`](db/identity-model.md)
 
 ### Fuzzy matching: one index, and a rule every caller is bound by (M4.6)
 
@@ -63,7 +63,7 @@ The `db:*` scripts (generate, migrate, seed, drop, reset, studio), `probe-databa
 
 ## The astrology vocabularies (MB.91; tables MB.92)
 
-`planets` and `zodiac_signs`, the admin-curated lists behind `ingredients.planet` and `.zodiac` (from MB.136 the lists `.planets` and `.zodiac_signs`), which stay text as `form` does, and the member's autofill, whose finders suggest planets, signs, forms and common names. [`db/astrology-vocabularies.md`](db/astrology-vocabularies.md)
+`planets` and `zodiac_signs`, the admin-curated vocabularies behind the lists `ingredients.planets` and `.zodiac_signs` (MB.136), whose entries stay free text as `form` does, and the member's autofill, whose finders suggest planets, signs, forms and common names. [`db/astrology-vocabularies.md`](db/astrology-vocabularies.md)
 
 ### The member's autofill (MB.94)
 
