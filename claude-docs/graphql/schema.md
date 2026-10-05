@@ -303,11 +303,21 @@ type QueryCompendiumConnectionEdge {
   `Forbidden` — and without it the read is the compendium alone. A malformed
   id is a miss, not a driver error.
 - **`Ingredient` is declared over the row** (`typeof ingredients.$inferSelect`)
-  and never exposes `canonicalKey` or `workspaceId`. `folkNames` and
-  `categories` go through the two ingredient loaders, `folkNamesByIngredient`
-  and `categoriesByIngredient`, keyed by the row itself; `Category.group` and
+  and never exposes `canonicalKey` or `workspaceId`. `folkNames`,
+  `categories` and `substitutes` go through the three ingredient loaders,
+  `folkNamesByIngredient`, `categoriesByIngredient` and
+  `substitutesByIngredient`, keyed by the row itself; `Category.group` and
   `IngredientFormValue.group` through the two id-keyed group loaders,
   `categoryGroupsById` and `ingredientFormGroupsById` (["Loaders"](loaders.md)).
+- **`Substitute` is a link or a typed name** (DESIGN.md §7, MB.138; built by
+  MB.140): `name` is what it shows — the linked ingredient's label, its last
+  once deleted, or the typed text — and `ingredient` is the one to follow,
+  null on typed text and on a deleted link, so a client links exactly when it
+  is set. `Ingredient.substitutes` is non-null, `[]` with none, and sorted by
+  `name`. A page of ingredients reads its substitutes in one statement, the
+  linked ingredients joined in, through the hatch
+  ([`db/soft-delete.md`](../db/soft-delete.md)). It carries no `audit`, as
+  `folkNames` carries none.
 - **`IngredientFormValue`, not `IngredientForm`**: one row is one permitted
   value of `ingredients.form`, and `IngredientForm` is the entry-form component
   (DESIGN.md §7). Only forms whose group is live are listed, as
@@ -353,13 +363,27 @@ signatures DESIGN.md §7's sketch gives them.
   one nullable field, because an enum has no empty value to send: `null`
   clears it, and so does leaving it out. The type's SDL description states the
   rule.
+- **A substitute is a `SubstituteInput`**, `{ ingredientId }` to link or
+  `{ name }` for one not entered. Both fields are nullable, since GraphQL here
+  has no one-of input, and the shared schema holds an entry to exactly one
+  ([`validation.md`](../validation.md)). The service then holds a new link
+  to the tier rule (DESIGN.md §5): a coven's ingredient may link the
+  compendium or its own coven, a compendium entry only the compendium, and
+  never itself. Anything else — another coven's ingredient, a deleted one, an
+  id that names nothing — is the same `VALIDATION` field error on the entry,
+  so a refusal says nothing about what exists elsewhere. A link the ingredient
+  already holds is kept as it is, its ingredient deleted or not. The list
+  replaces the live rows as folk names are replaced: a link matched by its
+  ingredient, a name as written, and a list that changes nothing writes
+  nothing.
 - **The answer is the entity as a fresh read gives it.** It carries every
   field, and its `audit` is stamped from the session. `folkNames` and
   `categories` come through the loaders, after the write has committed. A
   client reconciles its cache from the answer without a refetch.
-  `updateIngredient` first clears the entry from `folkNamesByIngredient`. Root
-  mutation fields run in turn within one request, so an earlier field may
-  already have loaded the folk names this write replaced.
+  `updateIngredient` first clears the entry from `folkNamesByIngredient` and
+  `substitutesByIngredient`. Root mutation fields run in turn within one
+  request, so an earlier field may already have loaded the folk names or
+  substitutes this write replaced.
 - **A delete answers the deleted id, not the entity** — the schema's first
   delete, so this is the convention the next one follows. The row is
   soft-deleted, and a list evicts a row by its id; the deleted `Ingredient`
@@ -370,8 +394,10 @@ signatures DESIGN.md §7's sketch gives them.
 - **A refusal is an error, never a payload** (["Errors"](errors.md)). A Zod
   failure is `VALIDATION`, with one `fieldErrors` entry per issue whose path is
   in the input's own shape, such as `['folkNames', 1]`. A collision is
-  `VALIDATION` on the field that caused it. Either way `data` is null, and the
-  transaction wrote nothing, folk names included.
+  `VALIDATION` on the field that caused it, and a substitute link the tier
+  rule forbids is `VALIDATION` on its entry, such as `['substitutes', 1]`.
+  Either way `data` is null, and the transaction wrote nothing, folk names and
+  substitutes included.
 
 `tests/modules/ingredients/graphql/workspace-ingredients.test.ts` runs the three
 mutations through Yoga with the route's `maskedErrors`, so each refusal is

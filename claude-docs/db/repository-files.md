@@ -3,23 +3,23 @@
 `src/db/repository/` is one file per concern, and callers import only its
 `index.ts` — `@/db/repository` resolves to it:
 
-| File                   | Holds                                                                                                                                                                 |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.ts`             | Named re-exports only — the pinned surface below — and nothing declared                                                                                               |
-| `types.ts`             | The table shapes a finder or writer admits, the options `selectFrom` reads, the `AuditWriter`, and what a finder takes and returns; the index re-exports the last two |
-| `predicates.ts`        | The `scopedTo`, `inCompendium` and `notSoftDeleted` predicates, each decided by the table's shape                                                                     |
-| `write.ts`             | `withAudit` and the writer it builds                                                                                                                                  |
-| `select.ts`            | `selectFrom` and `existsIn`, the two places a read query is built; the keyset bounds a page is cut by; the two similarity thresholds                                  |
-| `ingredients.ts`       | The ingredient finders: the fuzzy-duplicate match, the compendium list and its count, one entry, an entry by identity, and an ingredient's children                   |
-| `slugs.ts`             | The compendium entry at a slug, and the redirect from a retired one                                                                                                   |
-| `vocabularies.ts`      | `findVocabularySuggestions`, the planet, zodiac and form autofill, and `findIngredientFormValues`                                                                     |
-| `common-names.ts`      | `findCommonNameSuggestions`, the common-name autofill                                                                                                                 |
-| `suggestion-page.ts`   | The keyset page and claimant list the two autofills share                                                                                                             |
-| `finders.ts`           | The generic finders, scoped and unscoped, and the escape hatch                                                                                                        |
-| `spells.ts`            | The three spell finders, the `readableSpells` predicate they share, and the two hatches that read what a spell holds past a tombstone                                 |
-| `memberships.ts`       | Two of the three reads that take no proof                                                                                                                             |
-| `users.ts`             | The third: the live row holding an address                                                                                                                            |
-| `provisional-users.ts` | The provisional-account delete                                                                                                                                        |
+| File                   | Holds                                                                                                                                                                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.ts`             | Named re-exports only — the pinned surface below — and nothing declared                                                                                                                                                               |
+| `types.ts`             | The table shapes a finder or writer admits, the options `selectFrom` reads, the `AuditWriter`, and what a finder takes and returns; the index re-exports the last two                                                                 |
+| `predicates.ts`        | The `scopedTo`, `inCompendium` and `notSoftDeleted` predicates, each decided by the table's shape                                                                                                                                     |
+| `write.ts`             | `withAudit` and the writer it builds                                                                                                                                                                                                  |
+| `select.ts`            | `selectFrom` and `existsIn`, the two places a read query is built; the keyset bounds a page is cut by; the two similarity thresholds                                                                                                  |
+| `ingredients.ts`       | The ingredient finders: the fuzzy-duplicate match, the compendium list and its count, one entry, an entry by identity, an ingredient's children, and the hatch reading its substitutes with the ingredients they link, deleted or not |
+| `slugs.ts`             | The compendium entry at a slug, and the redirect from a retired one                                                                                                                                                                   |
+| `vocabularies.ts`      | `findVocabularySuggestions`, the planet, zodiac and form autofill, and `findIngredientFormValues`                                                                                                                                     |
+| `common-names.ts`      | `findCommonNameSuggestions`, the common-name autofill                                                                                                                                                                                 |
+| `suggestion-page.ts`   | The keyset page and claimant list the two autofills share                                                                                                                                                                             |
+| `finders.ts`           | The generic finders, scoped and unscoped, and the escape hatch                                                                                                                                                                        |
+| `spells.ts`            | The three spell finders, the `readableSpells` predicate they share, and the two hatches that read what a spell holds past a tombstone                                                                                                 |
+| `memberships.ts`       | Two of the three reads that take no proof                                                                                                                                                                                             |
+| `users.ts`             | The third: the live row holding an address                                                                                                                                                                                            |
+| `provisional-users.ts` | The provisional-account delete                                                                                                                                                                                                        |
 
 **The rest of the folder is internal, and that is enforced rather than
 conventional.** `selectFrom` and `existsIn` are exported from `select.ts`

@@ -18,16 +18,18 @@ What follows describes all three as built.
   tier, non-null is a workspace's own ingredient), `name`, `slug` (MB.81;
   ["Ingredient slugs"](ingredient-slugs.md)), `canonicalName`, `nomenclature`, `form`, the generated `canonicalKey`, the correspondence
   columns (`description`, `element`, `planets[]`, `zodiacSigns[]`, `deities[]`,
-  `colors[]`, `safetyNotes`, `substitutes[]`), + audit. `name` is the display label —
+  `colors[]`, `safetyNotes`), + audit. `name` is the display label —
   what it's called here — and stays freely relabellable, because identity
   moved off it onto `canonicalName`/`nomenclature`/`form`. Of the
   correspondences only `element` is constrained: an `ingredient_element`
   `pgEnum` of `earth`, `air`, `fire`, `water`, `spirit`, closed and fixed —
   the exact opposite of `form`, and the reason the two are easy to confuse
-  but never interchangeable. `planets`, `zodiacSigns`, `deities`, `colors`
-  and `substitutes` are native `text[]` columns, one of the things SQLite
-  could not have run (DESIGN.md §14). `planets`, `zodiacSigns` and `colors`
-  replaced single columns in MB.136 (below). Seven declared indexes: M4.1a's three partial unique ones (below),
+  but never interchangeable. `planets`, `zodiacSigns`, `deities` and
+  `colors` are native `text[]` columns, one of the things SQLite could not
+  have run (DESIGN.md §14). `planets`, `zodiacSigns` and `colors` replaced
+  single columns in MB.136 (below). Substitutes were a `substitutes[]` column
+  too, until MB.140 moved every reader and writer to `ingredient_substitutes`:
+  the column is undeclared, and stays in the database until MB.141 drops it. Seven declared indexes: M4.1a's three partial unique ones (below),
   MB.81's two on the slug ("Ingredient slugs"), `ingredients_trgm`
   (M4.6), one multicolumn `gin_trgm_ops` index over `name` and
   `canonical_name` — see ["Fuzzy matching"](fuzzy-matching.md) — and its folded twin
@@ -56,9 +58,8 @@ What follows describes all three as built.
   `substitute_id`, since nothing reads back from a linked ingredient. The
   migration copies every `substitutes[]` entry across as a name, trimmed, with
   blanks skipped and an entry repeated in any case kept once, in the spelling
-  it first holds. Nothing reads the table until MB.140 moves every reader and
-  writer to it, and the array stays declared and written until then; MB.141
-  drops it.
+  it first holds. MB.140 moved every reader and writer to the table and
+  stopped declaring the array, which MB.141 drops.
 - **`ingredient_forms`** — `id`, `name`, `slug`, `groupId`, `description`, +
   audit. Shaped like `categories`: global, admin-curated, no workspace
   scoping. This is the third resource admins curate globally, alongside the
