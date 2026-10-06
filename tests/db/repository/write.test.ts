@@ -220,20 +220,26 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
   // reason. Seventeen since MB.62, whose pause ledger is opened and ended by
   // name: the generic insert would take a pause already ended and the generic
   // update would reopen one, so both are refused the table and its two writes
-  // are named for it, the ended pair stamped from the session. An eighteenth
-  // is the next such decision.
-  it('offers exactly seventeen writer methods — an eighteenth is a decision, not a convenience', async () => {
+  // are named for it, the ended pair stamped from the session. Twenty since
+  // MB.69, whose admin invitation will authorise a grant: a generic insert
+  // would let any service mint one, so the table takes a named insert under
+  // the proof and a named accept and revoke, each matching a pending row. A
+  // twenty-first is the next such decision.
+  it('offers exactly twenty writer methods — a twenty-first is a decision, not a convenience', async () => {
     const methods = await withAudit(session, async (write) => Object.keys(write).sort());
 
     expect(methods).toEqual(
       [
+        'acceptAdminInvitation',
         'delete',
         'deleteLapsedSlugRetirements',
         'insert',
+        'insertAdminInvitation',
         'insertInCompendium',
         'insertInWorkspace',
         'pauseAdminRoleChanges',
         'resumeAdminRoleChanges',
+        'revokeAdminInvitation',
         'softDelete',
         'softDeleteByIdInCompendium',
         'softDeleteByIdInWorkspace',

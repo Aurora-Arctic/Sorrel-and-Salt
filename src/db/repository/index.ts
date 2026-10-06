@@ -53,9 +53,12 @@ export { findCommonNameSuggestions } from './common-names';
 export { findCompendiumEntryBySlug, findCompendiumSlugRedirect } from './slugs';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';
 export { findProvidersOfUsers, findUserByEmail, findUserPage } from './users';
+export { findAdminInvitationByToken } from './admin-invitations';
 export { findOpenAdminRoleChangePause } from './admin-roles';
 export { deleteProvisionalUsers } from './provisional-users';
 export type {
+  AdminInvitationRow,
+  AdminInvitationValues,
   AuditWriter,
   CitingLink,
   Claimant,

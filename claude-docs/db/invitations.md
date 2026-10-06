@@ -51,3 +51,65 @@ table, reusing the `workspace_role` enum declared beside `workspaces`.
   and M7.3's mutation land in Wave 10, which is CLAUDE.md's
   table-task-then-behaviour-task rule working as intended: the DDL is
   constrained while the table is empty.
+
+## Admin invitations (MB.69)
+
+`src/modules/identity/schema/admin-invitations.ts` holds story 62's table,
+`0046_admin-invitations.sql` its migration. It is inert until MB.70's
+`createAdminInvitation` and `/admin-invite/[token]` write and read it
+([MB.61's record](../design-decisions/mb.61-email-verification-and-delivery.md),
+"The admin invitation (story 62)").
+
+- **`admin_invitations`** — `id`, `email`, `tokenHash`, `expiresAt`,
+  `acceptedAt`, `acceptedBy`, `revokedAt`, `note`, + the full six-column
+  audit spread. `workspace_invitations` without the workspace or the role,
+  since accepting grants exactly one thing, and with a `note` saying why the
+  person is being invited, optional as `admin_role_changes.note` is.
+- **Everything above carries over**: only the hash is stored and the schema
+  test pins it as a property of the table; the expiry defaults to seven days
+  and is `NOT NULL`; `admin_invitations_token_hash_unique` is partial on
+  `deleted_at IS NULL`; the lifecycle columns stay apart rather than one
+  status; and no constraint pairs `acceptedAt` with `acceptedBy`, since one
+  named write sets both. There is no `revokedBy`: revoking is the last write
+  a row takes, so `updated_by` is who revoked.
+- **Written only through named calls.** A pending row is what will authorise
+  a grant, so a generic insert would let any service mint its own user an
+  admin invitation and accept it. `NotInvitation`, `{ tokenHash?: never }`,
+  takes the table off the writer's generic insert, both updates, both soft
+  deletes and the hard delete, as `NotPauseLedger` does for MB.62's table;
+  `workspace_invitations` carries a `token_hash` too and is already off those
+  methods, which take only an unscoped table. In their place:
+  - **`insertAdminInvitation(admin, values)`**, under the `SiteAdmin` proof,
+    takes the email, the token, the note and an optional expiry, and writes
+    the token's hash and nothing else, so a row starts pending even if a
+    cast smuggled a stamp in;
+  - **`acceptAdminInvitation(token)`** stamps `accepted_at` now and
+    `accepted_by` from the session, under no role's proof, since the
+    invitee is not yet an admin. It matches only while the session's user
+    holds the invited address, verified, on a live row, compared
+    case-insensitively. MB.70's service checks the address first so it can
+    say why, pointing an unverified match at `/account/email`; the statement
+    is what holds if a later path forgets. The pause is MB.70's alone;
+  - **`revokeAdminInvitation(admin, id)`**, under the proof, stamps
+    `revoked_at` now. By id rather than token: an admin revokes from the
+    list, and no admin holds the token.
+
+  Both stamps match a **pending** row only: live, neither accepted nor
+  revoked, and unexpired. So no invitation is accepted twice, a revoked or
+  expired link cannot be redeemed even by a service that forgot to check,
+  and neither stamp overwrites the other; a call that matches nothing
+  returns no row, as MB.62's resume does.
+
+- **The token goes in, never the hash.** `hashToken` in the repository's
+  `tokens.ts`, hex SHA-256, is the only place a hash is made, so a caller
+  never holds one: a hash read out of a dumped row and passed where a token
+  goes is hashed again and matches nothing, and the accept cannot be reached
+  with an invitation's id, which the admin list shows. SHA-256 unsalted
+  rather than a password hash, because a token is `crypto.randomBytes`
+  output with no dictionary to resist. M7.2 can hash workspace invitations'
+  tokens through the same function.
+- **`findAdminInvitationByToken(token)`**, in `admin-invitations.ts`,
+  returns the live row the token names, under no role's proof for the
+  accept's reason: holding the token is what admits. It returns expired,
+  revoked and accepted rows alike: MB.70 rejects each with its own message, as
+  M7.7 does, and can only tell them apart if it sees them.
