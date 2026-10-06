@@ -37,7 +37,11 @@ export {
   findSimilarIngredients,
   findSubstitutesIncludingSoftDeleted,
 } from './ingredients';
-export { findIngredientFormValues, findVocabularySuggestions } from './vocabularies';
+export {
+  findCuratedRowsByName,
+  findIngredientFormValues,
+  findVocabularySuggestions,
+} from './vocabularies';
 export { findCommonNameSuggestions } from './common-names';
 export { findCompendiumEntryBySlug, findCompendiumSlugRedirect } from './slugs';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';

@@ -27,6 +27,24 @@ null, is a `ValidationError` on `nomenclature` from the parse, before
 `withAudit` opens; the column's `NOT NULL` would have answered with a driver
 error instead.
 
+**The form, planets, signs and deities are the curated rows'** (MB.162). A
+coven's write keeps what was typed; these two do not. After the parse,
+`inCuratedSpellings` reads the live curated rows each value folds to, through
+`vocabulary`'s `curatedSpellings`, and refuses every value none holds in one
+`ValidationError`, each issue beside its field — `['form']`, or
+`['planets', i]`, `['zodiacSigns', i]` or `['deities', i]` at the entry sent
+— and naming the list to add it to. A value that matches is written in the
+row's spelling, so `moon ` is stored `Moon`. A form counts only under a live
+group and a deity only under a live tradition, as the autofill reads them
+([`validation.md`](../validation.md), "The two ingredient variants"). The
+rows are read before `withAudit` opens, on the bare client, so an admin
+deleting a row at the same instant can see one entry written with it, the
+window MB.148 would let a lock close
+([`design-decisions/mb.162-compendium-holds-curated-values.md`](../design-decisions/mb.162-compendium-holds-curated-values.md)).
+The vocabulary writes keep the rule after the write: deleting a row a live
+entry holds is refused, and a rename carries onto the entries (M5.6a, MB.95,
+MB.132, M5.6b).
+
 **The reach is the compendium's live rows.** A coven's ingredient, a
 soft-deleted entry, an id that names nothing and one that is not a uuid are
 all `NotFound`. So the site admin reaches no coven's ingredients by id — the

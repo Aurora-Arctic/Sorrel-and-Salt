@@ -99,8 +99,9 @@ const fields = {
   form: optionalText,
   description: optionalText,
   elements: elementList,
-  // Lists of free text like `form`'s one value: the `planets` and
-  // `zodiac_signs` vocabularies suggest, nothing refuses (MB.134).
+  // Lists of free text like `form`'s one value (MB.134): the vocabularies
+  // suggest, and nothing here refuses — the compendium service holds its tier
+  // to them against the database (MB.162), and a coven's stay free text.
   planets: textList,
   zodiacSigns: textList,
   deities: textList,

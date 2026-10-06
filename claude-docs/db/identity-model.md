@@ -160,11 +160,29 @@ predicate reddens six tests, dropping the label index five, and keying the
 compendium on `lower(name)` instead of `canonical_key` four.
 
 **`ingredients.form` is `text`, and deliberately not a foreign key to
-`ingredient_forms`.** The curated table is an autofill vocabulary, not a
-constraint: a foreign key would force identity to key on a surrogate id and
-make an uncurated value like `rhizome` unwritable until an admin curates it
-first. M4.2a asserts the absence of that foreign key by test, since it's the
-property the whole free-text design rests on.
+`ingredient_forms`.** To a coven the curated table is an autofill vocabulary,
+not a constraint: a foreign key would force identity to key on a surrogate id
+and make an uncurated value like `rhizome` unwritable until an admin curates
+it first. M4.2a asserts the absence of that foreign key by test, since it's
+the property the whole free-text design rests on.
+
+**The compendium tier is held to the vocabularies, by the service (MB.162).**
+A compendium entry's `form`, `planets`, `zodiac_signs` and `deities` each
+name a live curated row — a form under a live group, a deity under a live
+tradition — matched as the suggestions fold, `lower(btrim(value)) =
+lower(name)`, and stored in the row's own spelling. `createCompendiumEntry`
+and `updateCompendiumEntry` enforce it after the parse, reading the rows
+through `curatedSpellings` in `vocabulary`, and refuse a value no live row
+holds as a `ValidationError` at `['form']`, or `['planets', i]`,
+`['zodiacSigns', i]` or `['deities', i]` at the entry sent
+([`../validation.md`](../validation.md), "The two ingredient variants"). Not
+Zod, since the check reads the database, and not a key or a CHECK, since the
+columns are shared with the coven tier, which keeps free text. Deleting a
+curated row a live entry holds is refused, and renaming one carries onto the
+entries, so the rule holds after the write as well
+([`../design-decisions/mb.162-compendium-holds-curated-values.md`](../design-decisions/mb.162-compendium-holds-curated-values.md)).
+A form is identity, so a form rename carried onto an entry re-keys it and
+moves its slug.
 
 **Folk names got their own table instead of staying `folkNames text[]`
 because of one verified fact.** On this repo's live PostgreSQL 18.6,

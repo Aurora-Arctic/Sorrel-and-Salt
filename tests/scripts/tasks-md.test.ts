@@ -97,6 +97,10 @@ describe('readEntry', () => {
     '',
     'Table task.',
     '',
+    '**M5.6a — Admin forms page** · 2.5h',
+    '',
+    'Lettered.',
+    '',
     '## Retired',
     '',
     '**M6.4 — ~~Row-Level Security policies~~** · **RETIRED 2026-09-17, not done**',
@@ -126,6 +130,13 @@ describe('readEntry', () => {
       hours: undefined,
       body: 'Superseded.',
     });
+  });
+
+  // `sync` takes an id as typed or upper-cased, as `find` does, and a
+  // lettered heading is lower-case: `M5.6A` names `M5.6a`.
+  it("matches the id whatever its case, answering the heading's own", () => {
+    expect(readEntry(MILESTONE, 'M5.6A')).toMatchObject({ id: 'M5.6a', body: 'Lettered.' });
+    expect(readEntry(MILESTONE, 'mb.128')).toMatchObject({ id: 'MB.128' });
   });
 
   // `MB.12` must not read `MB.127`'s entry, as `find` never matches `M2.60` for `M2.6`.

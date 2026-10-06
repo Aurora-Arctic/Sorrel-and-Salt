@@ -50,10 +50,17 @@ the 26 entries carry §5's own hard cases:
   moon water or black salt; one does name Devil's Shoestring and nobody has
   looked it up, which is the row `where nomenclature = 'unknown'` returns as a
   curation to-do.
-- **One uncurated form**, `rhizome` on Ginger — §5's own example of a value a
-  member writes before an admin curates it, and the second bucket of M4.7a's
-  suggestion list. The other fifteen in-use forms come from M4.3a's vocabulary.
-- **Comfrey beside foxglove**, both `leaf`, both carrying safety notes: §5's
+- **Only curated values** in the four curated fields (MB.162): the fifteen
+  in-use forms come from M4.3a's vocabulary, and every planet, zodiac sign and
+  deity from MB.93's and MB.129's, each spelt as its curated row spells it
+  (`Herb`, not `herb`), since the compendium may hold nothing else. A few
+  entries carry signs and deities — Bay Laurel's `Leo` and `Apollo`,
+  Lavender's `Gemini` and `Virgo`, Mugwort's `Artemis` and `Diana` — so
+  each list is in use. §5's uncurated `rhizome`, a value a member writes
+  before an admin curates it and the second bucket of M4.7a's suggestion list,
+  is a coven's: `demo` seeds it on W's Fresh Ginger, and Ginger here is
+  `Root`. `seeded-template.test.ts` holds the template to it.
+- **Comfrey beside foxglove**, both `Leaf`, both carrying safety notes: §5's
   argument for demanding a formal name in the curated tier is that those two
   are confused in the field.
 
@@ -105,4 +112,11 @@ only a second _live_ row and would let it through.
 The entry key is `(name, canonicalName, form)` rather than `canonicalKey`
 deliberately: those are the three columns §5's generated expression reads, and
 recomputing that normalisation in TypeScript would be a second implementation
-to keep in step — the one that lies is the one nobody runs.
+to keep in step — the one that lies is the one nobody runs. The form alone is
+folded, trimmed and lower-cased as the key folds it: a database seeded before
+MB.162 holds the compendium's forms lower-case, and compose's `db-init`
+reseeds it on every start, so a key on the spelling would insert each entry
+beside itself and fail the scenario on the canonical-key index. A test
+re-cases the forms and reseeds to hold it. Ginger is the exception it cannot
+cover: its form changed rather than its case, so such a database keeps its
+old `rhizome` row beside the new `Root` one until a `db:reset`.

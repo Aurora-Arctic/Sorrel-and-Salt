@@ -50,12 +50,16 @@ cut by cursor as a whole.
   use (`mode()`, a tie broken by sort order). A blank value is no value. A
   fold equal to a live curated name is never in tier 2, whether or not that
   row matched the query, so a value is offered once, as the curated row, or
-  not at all. Soft-deleting a curated row moves its in-use spellings into
-  tier 2.
+  not at all. Soft-deleting a curated row moves a coven's spellings of it
+  into tier 2. A compendium entry's never arrive there, since a row a live
+  entry holds is not deleted (MB.162).
 - **Tier 2 reads both tiers of `ingredients`**, the compendium and the proof's
   workspace and never another, so the finder is on
   [the tier seam](../modules.md#the-tier-seam). The scope is in the statement,
   so a value that only unrelated workspace X holds never reaches the service.
+  The compendium half finds nothing since MB.162, which holds every
+  compendium entry to the curated rows, so every tier-2 row is the
+  workspace's — what lets MB.131 head the tier "From Coven".
 - **A blank query matches everything**, so an opened field can list the whole
   vocabulary before anything is typed. The statement still runs under the
   thresholds, with no trigram predicate in it.
@@ -82,8 +86,10 @@ suggestion has neither, and a deity's has the first alone, below:
   group is live too**: the join filters both `deleted_at`s, in tiers 0 and 1
   and in tier 2's "folds to no live curated name", so a form under a
   soft-deleted group is offered as an in-use value with no group, and a dead
-  group's name is never returned. M5.6b decides what happens to the forms
-  when a group is deleted; this is only what the autofill reads meanwhile.
+  group's name is never returned. A group is not deleted while a form under
+  it is the last live spelling of a compendium entry's form (MB.162), so only
+  a coven's values reach tier 2 this way; what else deleting a group does to
+  its forms is M5.6b's.
 - **Its claimants** — every live ingredient in the compendium or the proof's
   workspace whose `lower(btrim(form))` equals the suggestion's fold, as
   `{ name, canonicalName }`, formal names first (`nulls last`), then label,

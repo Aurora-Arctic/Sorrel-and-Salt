@@ -83,9 +83,10 @@ Rules both variants enforce:
   what a user sees.
 - **`canonicalName` and `form`** are optional and trimmed, and a blank one
   becomes `null` — which the database CHECKs on both columns accept, so a
-  blank never reaches them. Neither has a format regex, and `form` isn't
-  checked against the curated vocabulary, which is an autofill and not a
-  constraint.
+  blank never reaches them. Neither has a format regex, and neither schema
+  checks `form` against the curated vocabulary: on a coven's ingredient it is
+  an autofill and not a constraint, and the compendium's check reads the
+  database, so it is the service's (below).
 - **Folk names, within one ingredient.** `name` may not also be one of the
   same ingredient's folk names, pathed to `name`. One ingredient listing the
   same folk name twice, such as `["Cat's Claw", "cat's claw"]`, is refused at
@@ -138,12 +139,31 @@ Rules both variants enforce:
   each list keeps the order entered. Neither schema has a single field left,
   so a caller still sending `planet` has it stripped like any unknown key.
 - **Planets and zodiac signs are suggested rather than enforced**, like
-  `form`: anything trimmed and non-blank is written. The project serves a
-  wide range of practices, and any closed list refuses some of them. The
-  suggestions are the admin-curated `planets` and `zodiac_signs` vocabularies
+  `form` and `deities`: anything trimmed and non-blank passes either schema.
+  The project serves a wide range of practices, and any closed list refuses
+  some of them. The suggestions are the admin-curated `planets` and
+  `zodiac_signs` vocabularies
   ([`db/astrology-vocabularies.md`](db/astrology-vocabularies.md), "The
-  astrology vocabularies"), and an entry off them is as valid as one on them.
-  A colour has no vocabulary and no suggestions.
+  astrology vocabularies"), and on a coven's ingredient an entry off them is
+  as valid as one on them. A colour has no vocabulary and no suggestions.
+
+**A compendium entry holds curated values alone** (MB.162). After
+`CompendiumIngredientInput` parses, `createCompendiumEntry` and
+`updateCompendiumEntry` match `form` and each entry of `planets`,
+`zodiacSigns` and `deities` against the live curated rows — a form under a
+live group, a deity under a live tradition — folded as the suggestions fold,
+`lower(btrim(value)) = lower(name)`, and write each in its row's spelling. A
+value no live row holds is a `ValidationError` beside it, `['form']` or
+`['planets', i]`, `['zodiacSigns', i]` or `['deities', i]`, the index the
+entry had in what was sent, blanks counted, since the parse drops blank
+entries and the form numbers its rows by what it sent. Every such value is
+refused in one error, and each message names the list to add it to: `No
+curated planet is called "Eris" — add it to the planet list first`. It is
+not in the schema because it reads the database, and the schemas are `zod`
+alone (above); `LocalIngredientInput`'s writes make no such check. Folk names
+and colours have no list and are not checked
+([`db/identity-model.md`](db/identity-model.md), "The ingredient identity
+model").
 
 The schemas describe a whole ingredient, as the form submits it on create and
 on edit. A partial update would need its own schema: the local variant's

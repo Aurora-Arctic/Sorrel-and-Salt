@@ -130,6 +130,8 @@ export interface CompendiumEntryRow {
   nomenclature: string;
   form: string | null;
   planets: string[] | null;
+  zodiac_signs: string[] | null;
+  deities: string[] | null;
   canonical_key: string;
   slug: string;
   created_by: string;
