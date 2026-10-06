@@ -13,6 +13,7 @@ import {
 } from '../support/db/table-metadata';
 import { users } from '@/modules/identity/schema/users';
 import { categories, categoryGroups } from '@/modules/vocabulary/schema/categories';
+import { deities, deityTraditions } from '@/modules/vocabulary/schema/deities';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
 import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
 import { ingredientSubstitutes } from '@/modules/ingredients/schema/ingredient-substitutes';
@@ -41,6 +42,8 @@ import type { Reference } from './types';
 const AUDITED: PgTable[] = [
   categoryGroups,
   categories,
+  deities,
+  deityTraditions,
   ingredientFolkNames,
   ingredientSubstitutes,
   ingredientFormGroups,
@@ -94,8 +97,8 @@ async function byReferencesOf(table: string): Promise<Record<string, Reference>>
 const USERS_ID = { foreign_table: 'users', foreign_column: 'id' };
 
 describe('the audited tables', () => {
-  it('are the nineteen the updated_at sweep names: seventeen audited, two stamped', () => {
-    expect(AUDITED).toHaveLength(17);
+  it('are the twenty-one the updated_at sweep names: nineteen audited, two stamped', () => {
+    expect(AUDITED).toHaveLength(19);
     expect(STAMPED).toHaveLength(2);
     expect([...named(AUDITED), ...named(STAMPED)].map(([name]) => name).sort()).toEqual(
       AUDITED_TABLES,
