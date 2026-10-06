@@ -172,6 +172,7 @@ type Query {
   ok: Boolean!
   planetSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryPlanetSuggestionsConnection!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID!): QueryPossibleDuplicatesConnection!
+  users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String): QueryUsersConnection!
   zodiacSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryZodiacSuggestionsConnection!
 }
 
@@ -272,6 +273,16 @@ type QueryPossibleDuplicatesConnectionEdge {
   score: Float!
 }
 
+type QueryUsersConnection {
+  edges: [QueryUsersConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryUsersConnectionEdge {
+  cursor: String!
+  node: User!
+}
+
 type QueryZodiacSuggestionsConnection {
   edges: [QueryZodiacSuggestionsConnectionEdge!]!
   pageInfo: PageInfo!
@@ -314,10 +325,14 @@ type User {
   audit: AuditInfo!
   canCreateWorkspace: Boolean!
   email: String!
+  emailVerified: Boolean!
   id: ID!
   image: String
   memberships: [WorkspaceMember!]!
   name: String!
+
+  """The sign-in providers linked to the account, by id, sorted."""
+  providers: [String!]!
   role: UserRole!
 }
 

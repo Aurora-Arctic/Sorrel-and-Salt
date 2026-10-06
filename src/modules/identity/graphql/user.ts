@@ -4,6 +4,7 @@ import { Forbidden } from '../../../lib/errors';
 import { userRole } from '../schema/users';
 import { setEmail } from '../services/email';
 import { getMe } from '../services/profile';
+import { listUsers } from '../services/user-list';
 import type { UserRow } from '../types';
 
 const UserRoleEnum = builder.enumType('UserRole', { values: userRole.enumValues });
@@ -23,6 +24,14 @@ export const UserRef = builder.objectRef<UserRow>('User').implement({
     email: t.exposeString('email', { authScopes: selfOrAdmin }),
     role: t.expose('role', { type: UserRoleEnum, authScopes: selfOrAdmin }),
     canCreateWorkspace: t.exposeBoolean('canCreateWorkspace', { authScopes: selfOrAdmin }),
+    emailVerified: t.exposeBoolean('emailVerified', { authScopes: selfOrAdmin }),
+    // An admin's alone, the user's own row included: the account page reads a
+    // user's own from Better Auth, whose table it is.
+    providers: t.stringList({
+      description: 'The sign-in providers linked to the account, by id, sorted.',
+      authScopes: { admin: true },
+      resolve: (user, _args, { loaders }) => loaders.providersByUser.load(user.id),
+    }),
     audit: t.field({ type: AuditInfo, resolve: (user) => user }),
   }),
 });
@@ -50,6 +59,27 @@ builder.mutationField('setEmail', (t) =>
     resolve: (_root, { email, next }, { session, emailVerification }) => {
       if (!session) throw new Forbidden();
       return setEmail(session, email, emailVerification, next ?? undefined);
+    },
+  }),
+);
+
+// The admin user list (MB.52): a read, so the service's own check refuses a
+// non-admin rather than M5.7's mutation scope. Its nodes are the ordinary
+// `User`, so `email` resolves through the scope above and no second path.
+builder.queryField('users', (t) =>
+  t.pagedConnection({
+    type: UserRef,
+    args: {
+      query: t.arg.string({ required: false }),
+      awaitingApproval: t.arg.boolean({ required: false }),
+    },
+    resolve: (_root, { query, awaitingApproval }, page, { session }) => {
+      if (!session) throw new Forbidden();
+      return listUsers(
+        session,
+        { query: query ?? undefined, awaitingApproval: awaitingApproval ?? undefined },
+        page,
+      );
     },
   }),
 );

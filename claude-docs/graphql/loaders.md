@@ -15,6 +15,7 @@ merely absent:
   the name a resolver reads it by. `createLoaders(session)` calls every factory
   and is called only by `createContext`. Each loader arrives with the schema it
   loads: `membershipsByUser` (`coven`, for `User.memberships`),
+  `providersByUser` (`identity`, for `User.providers`, MB.52),
   `categoriesByIngredient`, `folkNamesByIngredient` and
   `substitutesByIngredient` (`ingredients`, for `Ingredient.categories`,
   `Ingredient.folkNames` and `Ingredient.substitutes`), and
@@ -33,8 +34,9 @@ merely absent:
   ([`db/ingredient-children.md`](../db/ingredient-children.md),
   "Ingredient children"). The two group loaders are keyed by id, and a group
   that is missing or retired is a `NotFound` in its own slot.
-- **A null session is not always a refusal.** `membershipsByUser` refuses
-  every key signed out. The ingredient loaders answer a compendium entry for
+- **A null session is not always a refusal.** `membershipsByUser` and
+  `providersByUser` refuse every key signed out, and `providersByUser` every
+  key to a non-admin. The ingredient loaders answer a compendium entry for
   anyone, since the compendium is the public surface (MB.80), and refuse a
   workspace entry's key with `Forbidden` in its own slot; the group loaders
   answer anyone, since a vocabulary is public reference data. A refusal is

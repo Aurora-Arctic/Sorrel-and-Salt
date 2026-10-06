@@ -36,6 +36,7 @@ const suggestion = (field: string): ScopeProbe => ({
 const PROBES: Record<string, ScopeProbe> = {
   ok: { source: '{ ok }', outcome: 'answers' },
   me: { source: '{ me { id } }', outcome: 'refuses' },
+  users: { source: '{ users(first: 1) { edges { node { id } } } }', outcome: 'refuses' },
   compendium: {
     source: '{ compendium(first: 1) { edges { node { id } } } }',
     outcome: 'answers',

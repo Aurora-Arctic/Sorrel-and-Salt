@@ -45,7 +45,7 @@ export {
 export { findCommonNameSuggestions } from './common-names';
 export { findCompendiumEntryBySlug, findCompendiumSlugRedirect } from './slugs';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';
-export { findUserByEmail } from './users';
+export { findProvidersOfUsers, findUserByEmail, findUserPage } from './users';
 export { deleteProvisionalUsers } from './provisional-users';
 export type {
   AuditWriter,
@@ -58,9 +58,11 @@ export type {
   IngredientIdentity,
   IngredientRow,
   JoinedRow,
+  LinkedProvider,
   SimilarityScore,
   SlugRedirect,
   SortPart,
   SuggestingVocabulary,
+  UserFilter,
   VocabularySuggestion,
 } from './types';

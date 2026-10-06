@@ -58,7 +58,8 @@
   nothing. An admin page is still no data boundary: the compendium and the
   vocabularies it lists are public reads, every write is a GraphQL mutation
   whose service asserts the role itself, and a page that reads anything
-  private — `/admin/users` (MB.52) — carries its own service-level assertion.
+  private — `/admin/users` (MB.52) — carries its own service-level assertion
+  ([`admin-users.md`](admin-users.md), "The user list").
 - **No way around `/api/graphql`.** Admin writes are GraphQL mutations like
   every other (CLAUDE.md rule 1): `tests/guards/no-server-actions.test.ts`
   refuses a server action and `tests/guards/route-handlers.test.ts` a route

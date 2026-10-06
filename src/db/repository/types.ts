@@ -392,3 +392,17 @@ export interface SlugRedirect {
   entry: IngredientRow;
   expiresAt: Date;
 }
+
+/** What the admin user list is narrowed by (MB.52). Each part is optional, and absent means no filter. */
+export interface UserFilter {
+  /** A substring of the name or the email, case-insensitive, its `%` and `_` read literally. */
+  query?: string;
+  /** Only the users who may not yet create a workspace: M5.8's to-do list. */
+  awaitingApproval?: boolean;
+}
+
+/** One provider account linked to a user, without the tokens its row holds. */
+export interface LinkedProvider {
+  userId: string;
+  providerId: string;
+}

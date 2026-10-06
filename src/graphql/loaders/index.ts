@@ -1,4 +1,5 @@
 import { membershipsByUser } from '@/modules/coven';
+import { providersByUser } from '@/modules/identity';
 import {
   categoriesByIngredient,
   folkNamesByIngredient,
@@ -13,6 +14,7 @@ import type { Built, LoaderFactory } from './types';
 // (claude-docs/graphql/loaders.md, "Loaders").
 const LOADERS = {
   membershipsByUser,
+  providersByUser,
   categoriesByIngredient,
   folkNamesByIngredient,
   substitutesByIngredient,

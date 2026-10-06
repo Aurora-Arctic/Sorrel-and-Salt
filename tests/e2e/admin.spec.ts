@@ -80,3 +80,50 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
 
   await assertNoAccessibilityViolations(page);
 });
+
+// MB.52: the user list, against the built server. The service's refusal is
+// tests/modules/identity/services/user-list.test.ts's; here the page is
+// refused before it reads anything, and an admin sees each account's methods.
+test('a signed-in non-admin is refused at /admin/users with the 403 page', async ({ page }) => {
+  await signInAs(page, 'not-an-admin@admin-users.test');
+
+  const response = await page.goto('/admin/users');
+
+  expect(response?.status()).toBe(403);
+  expect(await response?.text()).not.toContain('not-an-admin@admin-users.test');
+  await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+});
+
+test('an admin lists the users at /admin/users, filtered, with their sign-in methods', async ({
+  page,
+}) => {
+  await signInAs(page, 'an-admin@admin-users.test', ['discord', 'google'], 'admin');
+
+  const response = await page.goto('/admin/users?query=admin-users.test');
+
+  expect(response?.status()).toBe(200);
+  await expect(page).toHaveTitle('Users — Admin — Sorrel & Salt');
+  await expect(page.getByRole('heading', { level: 1, name: 'Users' })).toBeVisible();
+  await expect(
+    page.getByRole('navigation', { name: 'Admin' }).getByRole('link', { name: 'Users' }),
+  ).toHaveAttribute('href', '/admin/users');
+  await expect(page.getByRole('search').getByLabel('Name or email')).toHaveValue(
+    'admin-users.test',
+  );
+
+  // The filter's two matches, and nothing from admin-guard.test's earlier sign-ins.
+  const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
+  await expect(rows).toHaveCount(2);
+  // Anchored on the name before it: not-an-admin's address ends the same way.
+  const admin = page.getByRole('row', { name: /Fixture Person an-admin@admin-users\.test/ });
+  await expect(admin.getByRole('cell')).toHaveText([
+    'Fixture Person',
+    'an-admin@admin-users.test',
+    'Admin',
+    'No',
+    /^\d{4}-\d{2}-\d{2}$/,
+    'Discord, Google',
+    'Yes',
+  ]);
+  await assertNoAccessibilityViolations(page);
+});

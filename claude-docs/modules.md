@@ -25,7 +25,8 @@ src/modules/<name>/
 A module's index re-exports its `graphql/` files, so loading the index is what
 registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
 `@/modules/coven`, `@/modules/vocabulary` and `@/modules/ingredients` for that side effect, never the
-`graphql/` path, which is internal. `identity` has `User` and `me`; `coven` has
+`graphql/` path, which is internal. `identity` has `User`, `me`, the admin user list's `users` connection and the
+`providersByUser` loader; `coven` has
 `Workspace`, `WorkspaceMember`, the `membershipsByUser` loader and the
 `User.memberships` field; `vocabulary` has `CorrespondenceSuggestion`,
 `FormSuggestion`, `DeitySuggestion`, `SuggestionClaimant` and the

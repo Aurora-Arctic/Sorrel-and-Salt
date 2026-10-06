@@ -57,10 +57,13 @@ could not reach it anyway. A session whose user row is gone or soft-deleted
 gets `NotFound`: Better Auth reads the session's user without our filter, so
 the session can outlive the row.
 
-`User` carries `id`, `name`, `image`, `email`, `role`,
-`canCreateWorkspace`, `memberships` and `audit`. Three of those are private:
-`email`, `role` and `canCreateWorkspace` are the user's own business, not a
-co-member's, and carry the `self`-or-`admin` scope below. They stay
+`User` carries `id`, `name`, `image`, `email`, `emailVerified`, `role`,
+`canCreateWorkspace`, `providers`, `memberships` and `audit`. Four of those
+are private: `email`, `emailVerified`, `role` and `canCreateWorkspace` are the
+user's own business, not a co-member's, and carry the `self`-or-`admin` scope
+below. `providers`, the ids of the sign-in providers linked to the account,
+is an admin's alone, through the `providersByUser` loader: a user reads their
+own from Better Auth, on `/account` (MB.52). They stay
 non-null, so a query for another user's email fails with `Forbidden` rather
 than returning the user without it — ask for what you may read.
 
@@ -74,6 +77,14 @@ reaches no workspace. A `WorkspaceMember` carries `role`, `joinedAt`,
 `workspace` and `audit`; `Workspace` is `id`, `name`, `slug` and `audit`,
 the minimum a switcher needs, and M6 adds to it. `memberships` is a bare list,
 bounded by its parent, like every nested list (DESIGN.md §7).
+
+`users(query: String, awaitingApproval: Boolean)` is the admin user list
+(MB.52), a paged connection of the ordinary `User`, so `email` resolves through
+its scope and no second path. `query` matches a substring of the name or the
+email, and `awaitingApproval` narrows to `canCreateWorkspace = false`. Its
+service, `listUsers`, refuses anyone but a site admin, and the query carries
+no scope of its own: it is a read, which M5.7's mutation sweep does not reach
+([`auth/admin-users.md`](../auth/admin-users.md), "The user list").
 
 `setEmail(email: String!, next: String): User!` is the schema's first
 mutation (MB.54), registered by `identity` on the `Mutation` root that
