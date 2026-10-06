@@ -9,10 +9,13 @@ consumes what this writes, which is why §6's seed lands a task ahead of it.
 import is one of the six pinned exemptions
 (["Who may import the client"](client-imports.md)) and a seventh is a decision.
 
-**Idempotency keys on the slug and ignores `deleted_at`**, which is stronger
-than the partial unique index gives on its own: the index only stops a second
-_live_ row, so a slug an admin had soft-deleted would be re-inserted on the
-next run. Removing a category is a decision, and a seed that runs again on
+**Idempotency keys on the seed key and ignores `deleted_at`** (MB.172), which
+is stronger than the partial unique index gives on its own: the index only
+stops a second _live_ row, so a row an admin had soft-deleted would be
+re-inserted on the next run. A row is the seed's by its `seed_key`, the slug
+it was given at insert, so one an admin has since renamed is not met by its
+original either; a live row an admin wrote under a seed name is taken as
+present by its slug ([seed-module.md](seed-module.md), "The seed module"). Removing a category is a decision, and a seed that runs again on
 every deploy would keep undoing it. Nothing already present is updated either,
 so a retitled category and a retuned colour pair both survive — the point of
 MB.35 is that the colour is the admin's from here on.

@@ -208,6 +208,27 @@ describe('seedAstrology(db)', () => {
     expect(earth[0].deleted_at).not.toBeNull();
   });
 
+  it('keys every row it writes by its slug at insert', async () => {
+    await seedAstrology(db);
+
+    for (const row of [...(await allRows('planets')), ...(await allRows('zodiac_signs'))]) {
+      expect(row.seed_key, row.slug).toBe(row.slug);
+    }
+  });
+
+  // MB.172: the key, not the slug an admin's rename moves, is what the seed knows.
+  it('leaves a body an admin has since renamed alone, and adds nothing', async () => {
+    await seedAstrology(db);
+    await sql`update planets set name = 'Terra', slug = 'terra' where slug = 'earth'`;
+    const planets = await allRows('planets');
+    // Precondition: the slug is no longer the key, so slug keying would twin it.
+    expect(planets.find(({ slug }) => slug === 'terra')?.seed_key).toBe('earth');
+
+    await seedAstrology(db);
+
+    expect(await allRows('planets')).toEqual(planets);
+  });
+
   it('publishes the bootstrap user as app.current_user_id, as withAudit would', async () => {
     await sql`create table seed_astrology_probe (slug text, acting_user text)`;
     await sql.unsafe(`

@@ -22,7 +22,7 @@ describe('deity_traditions schema', () => {
 
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
-      ['id', 'name', 'slug', 'description', ...AUDIT_COLUMNS].sort(),
+      ['id', 'name', 'slug', 'description', 'seed_key', ...AUDIT_COLUMNS].sort(),
     );
   });
 
@@ -44,13 +44,16 @@ describe('deity_traditions schema', () => {
   });
 
   // No trigram index: the autofill returns a tradition's name and never searches it.
-  it('declares one index, the slug, unique and partial on deleted_at IS NULL (rule 4)', () => {
+  it('declares two indexes, the slug and the seed key, each unique and partial on deleted_at IS NULL (rule 4)', () => {
     const slugIndex = byIndexName[TRADITIONS_SLUG_UNIQUE];
 
     expect(slugIndex).toBeDefined();
     expect(slugIndex.config.unique).toBe(true);
     expect(slugIndex.config.where).toBeDefined();
-    expect(Object.keys(byIndexName)).toEqual([TRADITIONS_SLUG_UNIQUE]);
+    expect(Object.keys(byIndexName).sort()).toEqual([
+      'deity_traditions_seed_key_unique',
+      TRADITIONS_SLUG_UNIQUE,
+    ]);
   });
 });
 
@@ -59,7 +62,7 @@ describe('deities schema', () => {
 
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
-      ['id', 'name', 'slug', 'description', 'tradition_id', ...AUDIT_COLUMNS].sort(),
+      ['id', 'name', 'slug', 'description', 'tradition_id', 'seed_key', ...AUDIT_COLUMNS].sort(),
     );
   });
 
@@ -106,7 +109,11 @@ describe('deities schema', () => {
     expect(trigram?.config.columns).toHaveLength(2);
     expect(trigram?.config.unique).toBe(false);
     expect(trigram?.config.where).toBeUndefined();
-    expect(Object.keys(byIndexName).sort()).toEqual([DEITIES_SLUG_UNIQUE, DEITIES_TRGM]);
+    expect(Object.keys(byIndexName).sort()).toEqual([
+      'deities_seed_key_unique',
+      DEITIES_SLUG_UNIQUE,
+      DEITIES_TRGM,
+    ]);
   });
 });
 
@@ -223,8 +230,11 @@ beforeEach(async () => {
 });
 
 describe.each([
-  { table: 'deity_traditions', columns: ['id', 'name', 'slug', 'description'] },
-  { table: 'deities', columns: ['id', 'name', 'slug', 'description', 'tradition_id'] },
+  { table: 'deity_traditions', columns: ['id', 'name', 'slug', 'description', 'seed_key'] },
+  {
+    table: 'deities',
+    columns: ['id', 'name', 'slug', 'description', 'tradition_id', 'seed_key'],
+  },
 ])('$table in the catalogue', ({ table, columns }) => {
   it('carries exactly the §5 columns and the audit spread', async () => {
     expect((await catalogue.columnNames(table)).sort()).toEqual(
@@ -232,9 +242,10 @@ describe.each([
     );
   });
 
-  it('carries no unique index beyond the primary key and the slug', async () => {
+  it('carries no unique index beyond the primary key, the slug and the seed key', async () => {
     expect(await catalogue.uniqueIndexNames(table)).toEqual([
       `${table}_pkey`,
+      `${table}_seed_key_unique`,
       `${table}_slug_unique`,
     ]);
   });
@@ -268,6 +279,7 @@ describe('deity_traditions table', () => {
 
     expect(indexes.map((index) => index.indexname)).toEqual([
       'deity_traditions_pkey',
+      'deity_traditions_seed_key_unique',
       TRADITIONS_SLUG_UNIQUE,
     ]);
   });

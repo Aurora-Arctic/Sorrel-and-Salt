@@ -17,9 +17,15 @@ export const planets = pgTable(
     name: text('name').notNull(),
     slug: text('slug').notNull(),
     description: text('description').notNull(),
+    // The identity the reference seed gave the row, null on any other; never
+    // changed after, so a reseed knows a row an admin has since edited (MB.171).
+    seedKey: text('seed_key'),
     ...auditColumns,
   },
   (table) => [
+    uniqueIndex('planets_seed_key_unique')
+      .on(table.seedKey)
+      .where(sql`${table.seedKey} is not null and ${table.deletedAt} is null`),
     // Partial per CLAUDE.md rule 4, and on the slug alone, never the display name.
     uniqueIndex('planets_slug_unique')
       .on(table.slug)
@@ -47,9 +53,15 @@ export const zodiacSigns = pgTable(
     name: text('name').notNull(),
     slug: text('slug').notNull(),
     description: text('description').notNull(),
+    // The identity the reference seed gave the row, null on any other; never
+    // changed after, so a reseed knows a row an admin has since edited (MB.171).
+    seedKey: text('seed_key'),
     ...auditColumns,
   },
   (table) => [
+    uniqueIndex('zodiac_signs_seed_key_unique')
+      .on(table.seedKey)
+      .where(sql`${table.seedKey} is not null and ${table.deletedAt} is null`),
     uniqueIndex('zodiac_signs_slug_unique')
       .on(table.slug)
       .where(sql`${table.deletedAt} is null`),

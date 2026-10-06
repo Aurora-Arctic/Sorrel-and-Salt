@@ -470,7 +470,8 @@ none of it is built yet. Until MB.58 and MB.59 land, a second admin is an
   [`mb.62-pause-ledger.md`](../design-decisions/mb.62-pause-ledger.md)).
 - **MB.69 and MB.70**: inviting an admin by email, story 62
   ([`design-decisions/mb.61-email-verification-and-delivery.md`](../design-decisions/mb.61-email-verification-and-delivery.md),
-  "The admin invitation (story 62)").
+  "The admin invitation (story 62)"; MB.69 built the table,
+  [`db/invitations.md`](../db/invitations.md), "Admin invitations").
 - **MB.53**: Better Auth's `admin` plugin, with only its two impersonation
   endpoints reachable, since the rest would grant admin or delete users
   outside `withAudit` ([`plugins.md`](plugins.md)).

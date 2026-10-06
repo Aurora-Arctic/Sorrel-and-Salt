@@ -30,7 +30,8 @@ const OPTIONAL_TEXT = [
   'note',
 ];
 const DATES = ['modified', 'accessed'];
-const OWN_COLUMNS = ['id', 'workspace_id', 'kind', 'title', ...OPTIONAL_TEXT, ...DATES];
+// `seed_key` is the reference seed's own (MB.171), outside the blank CHECKs.
+const OWN_COLUMNS = ['id', 'workspace_id', 'kind', 'title', ...OPTIONAL_TEXT, ...DATES, 'seed_key'];
 
 // `url` has no blank CHECK of its own: the http(s) CHECK already refuses one.
 const NOT_BLANK = ['title', ...OPTIONAL_TEXT.filter((column) => column !== 'url')];
@@ -94,9 +95,10 @@ describe('references schema', () => {
     expect(nonAuditForeignKeys.map((fk) => fk.column)).toEqual(['workspace_id']);
   });
 
-  // Two rows may be the same book: nothing short of a librarian identifies a source.
-  it('declares no index', () => {
-    expect(indexes).toEqual([]);
+  // Two rows may be the same book: nothing short of a librarian identifies a
+  // source. The one index is the seed's key for its own rows (MB.171).
+  it('declares no index but the seed key’s', () => {
+    expect(indexes.map((index) => index.config.name)).toEqual(['references_seed_key_unique']);
   });
 
   it('declares a blank CHECK per text column beside the four that make the renderer total', () => {
@@ -161,13 +163,16 @@ describe('references table', () => {
       expect(rows.map((row) => row.enumlabel)).toEqual(KINDS);
     });
 
-    it('carries no index beyond the primary key', async () => {
+    it('carries no index beyond the primary key and the seed key', async () => {
       const rows = await sql`
         select c.relname from pg_index i join pg_class c on c.oid = i.indexrelid
         where i.indrelid = '"references"'::regclass
       `;
 
-      expect(rows.map((row) => row.relname)).toEqual(['references_pkey']);
+      expect(rows.map((row) => row.relname).sort()).toEqual([
+        'references_pkey',
+        'references_seed_key_unique',
+      ]);
     });
 
     it('declares exactly the CHECKs the schema does', async () => {

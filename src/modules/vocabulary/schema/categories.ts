@@ -19,9 +19,15 @@ export const categoryGroups = pgTable(
     colorDark: text('color_dark').notNull(),
     colorLight: text('color_light').notNull(),
     description: text('description').notNull(),
+    // The identity the reference seed gave the row, null on any other; never
+    // changed after, so a reseed knows a row an admin has since edited (MB.171).
+    seedKey: text('seed_key'),
     ...auditColumns,
   },
   (table) => [
+    uniqueIndex('category_groups_seed_key_unique')
+      .on(table.seedKey)
+      .where(sql`${table.seedKey} is not null and ${table.deletedAt} is null`),
     // Partial per CLAUDE.md rule 4, and on the slug alone: two groups may both
     // display "Protection".
     uniqueIndex('category_groups_slug_unique')
@@ -46,9 +52,15 @@ export const categories = pgTable(
     groupId: uuid('group_id')
       .notNull()
       .references(() => categoryGroups.id),
+    // The identity the reference seed gave the row, null on any other; never
+    // changed after, so a reseed knows a row an admin has since edited (MB.171).
+    seedKey: text('seed_key'),
     ...auditColumns,
   },
   (table) => [
+    uniqueIndex('categories_seed_key_unique')
+      .on(table.seedKey)
+      .where(sql`${table.seedKey} is not null and ${table.deletedAt} is null`),
     // Partial per rule 4, and global rather than per group: a chip filter and
     // the seed's idempotency key both read the slug alone.
     uniqueIndex('categories_slug_unique')

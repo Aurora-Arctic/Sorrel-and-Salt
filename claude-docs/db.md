@@ -143,7 +143,7 @@ In [`db/write-path.md`](db/write-path.md#appcurrent_user_id-published-per-transa
 
 ## The Membership proof (M6.3)
 
-`assertMembership` returns the branded `Membership` every workspace-scoped finder and writer takes first: what the check asks, the finder convention, the three reads that take no proof, and where it is weaker than a policy. [`db/membership-proof.md`](db/membership-proof.md)
+`assertMembership` returns the branded `Membership` every workspace-scoped finder and writer takes first: what the check asks, the finder convention, the four reads that take no proof, and where it is weaker than a policy. [`db/membership-proof.md`](db/membership-proof.md)
 
 ### What the check asks
 
@@ -157,9 +157,9 @@ In [`db/membership-proof.md`](db/membership-proof.md#one-lookup-per-render).
 
 [`db/finder-convention.md`](db/finder-convention.md)
 
-### The three reads that take no proof
+### The four reads that take no proof
 
-In [`db/membership-proof.md`](db/membership-proof.md#the-three-reads-that-take-no-proof).
+In [`db/membership-proof.md`](db/membership-proof.md#the-four-reads-that-take-no-proof).
 
 ### Where the proof is weaker than a policy
 
@@ -231,7 +231,7 @@ Story 48's join of a spell to its assigned categories; the derived ones are read
 
 ## The category seed (M4.3)
 
-§6's eight `category_groups` and 63 `categories`, seeded as reference data rather than a scenario: idempotent by slug, with each group's colours resolved once from M0.7's Sass map, and run by `migrate.yml` after it migrates. [`db/category-seed.md`](db/category-seed.md)
+§6's eight `category_groups` and 63 `categories`, seeded as reference data rather than a scenario: idempotent by seed key (MB.172), with each group's colours resolved once from M0.7's Sass map, and run by `migrate.yml` after it migrates. [`db/category-seed.md`](db/category-seed.md)
 
 ## The form vocabulary seed (M4.3a)
 

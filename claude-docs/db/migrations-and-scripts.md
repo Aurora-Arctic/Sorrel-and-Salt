@@ -184,6 +184,11 @@
   the drop `generate` also emitted is left out and the column kept in
   `0044_snapshot.json`: the state ["Expand/contract"](expand-contract.md)'s
   procedure leaves, and a scratch `generate` from it emits that drop alone.
+- **`0046_admin-invitations.sql`** (MB.69) creates `admin_invitations` and
+  its partial unique index on `token_hash`, with the `set_updated_at` trigger
+  added by hand (["Admin invitations"](invitations.md)). Made while MB.168's
+  drop was still pending, it leaves that drop out and keeps the column in
+  `0046_snapshot.json`, as 0044 does.
 - **`0048_drop-deities-list.sql`** (MB.168) is the contract of MB.167's
   switch, a plain `generate` as 0039 was: it emitted the
   `DROP COLUMN "deities"` alone. Before the drop it copies across, as
