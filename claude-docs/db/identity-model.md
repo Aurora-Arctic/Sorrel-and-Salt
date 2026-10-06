@@ -27,7 +27,8 @@ What follows describes all three as built.
   but never interchangeable. `planets`, `zodiacSigns`, `deities` and
   `colors` are native `text[]` columns, one of the things SQLite could not
   have run (DESIGN.md §14). `planets`, `zodiacSigns` and `colors` replaced
-  single columns in MB.136 (below). Substitutes were a `substitutes[]` column
+  single columns in MB.136, and `element` becomes `elements[]`, a list of
+  its enum, in MB.159 (both below). Substitutes were a `substitutes[]` column
   too, until MB.140 moved every reader and writer to `ingredient_substitutes`:
   the column is undeclared, and stays in the database until MB.141 drops it. Seven declared indexes: M4.1a's three partial unique ones (below),
   MB.81's two on the slug ("Ingredient slugs"), `ingredients_trgm`
@@ -216,6 +217,32 @@ sorts one on write or read.
   once however many lists hold it, or however often one does
   (["The member's autofill"](member-autofill.md)). The deity autofill reads
   `deities` the same way (MB.130).
+
+**Element becomes a list (MB.157).** DESIGN.md §5 gives an ingredient
+several elements, so `element`, a single nullable `ingredient_element` column
+as built, gives way to `elements`, a nullable `ingredient_element[]` with no
+default, declared in Drizzle as `ingredientElement('elements').array()`. The
+set stays the `pgEnum`'s five, so the array's type refuses anything else and
+no CHECK says it again. The shared schema refuses a repeat and turns a list
+left empty into null ([`../validation.md`](../validation.md), "The two
+ingredient variants"), so no row holds `{}` or one element twice. No CHECK
+repeats either: comparing an array's entries with each other needs a subquery
+or a hand-written function, and the free-text lists carry no CHECK. The array
+keeps the order chosen, and nothing sorts it.
+
+- **A new name, by rule 10**, as MB.134's lists took one. MB.158 adds
+  `elements` and fills it from `element` where one is set, as a one-entry
+  list. MB.159 switches every reader and writer and stops declaring
+  `element`, and its migration rederives the list from `element` for
+  whatever the live deploy wrote after MB.158, as `0031_refill-ingredient-lists`
+  did. MB.160 fills a last time and drops `element`, with its `.ack.md`
+  sidecar, once MB.159 has deployed. The `ingredient_element` type stays,
+  since the list is of it.
+- **The filter reads containment.** M8.13's element filter matches a row
+  whose list holds the element chosen, among others or alone: Drizzle's
+  `arrayContains`, `@>`, rather than an equality. No index stands behind it,
+  as none stands behind any list; it ANDs onto the compendium read's other
+  predicates over one tier.
 
 **Fuzzy matching: one index, and a rule every caller is bound by** has a file of its own: [`fuzzy-matching.md`](fuzzy-matching.md).
 
