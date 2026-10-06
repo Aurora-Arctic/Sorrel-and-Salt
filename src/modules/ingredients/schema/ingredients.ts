@@ -61,6 +61,11 @@ export const ingredients = pgTable(
     canonicalKey: text('canonical_key').notNull().generatedAlwaysAs(CANONICAL_KEY),
     description: text('description'),
     element: ingredientElement('element'),
+    // The list `element` becomes (MB.157), a new name for the reason the three
+    // lists below have one. Filled from `element` by its migration and read by
+    // nothing until MB.159 switches to it; MB.160 drops the single
+    // (claude-docs/db/identity-model.md, "The ingredient identity model").
+    elements: ingredientElement('elements').array(),
     // Lists rather than the single `planet`, `zodiac` and `color` they
     // replaced (MB.134): new names, because a column cannot turn from `text` to
     // `text[]` under a deployed reader. The singles are undeclared but still in

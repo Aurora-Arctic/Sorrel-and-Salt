@@ -43,6 +43,12 @@ emit the pending drops and nothing else. MB.139's
 `0032_ingredient-substitutes` is the worked case, made while MB.137's drop of
 the planet, zodiac and colour singles was pending, and MB.128's
 `0033_deities` the second, made while MB.141's was pending too.
+A column added to a table with a pending drop works the same way, with one
+more step. drizzle-kit sees a column added beside columns removed and stops
+to ask whether it is a rename, and with no terminal that prompt fails. So the
+pending columns are deleted from the scratch copy's last snapshot first, and
+the scratch run then emits the `ADD COLUMN` alone. MB.158's
+`0034_element-list` is the worked case.
 
 Renaming a column is the canonical case that goes wrong if done directly —
 `ALTER TABLE ... RENAME COLUMN` is atomic in Postgres, but it isn't atomic
