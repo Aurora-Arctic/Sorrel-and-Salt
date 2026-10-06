@@ -32,7 +32,7 @@ const PossibleDuplicatesDocument = graphql(`
 `);
 
 /** Matches a warning names: the closest few, best first, as a sentence can hold them. */
-export const DUPLICATE_ROWS = 3;
+const DUPLICATE_ROWS = 3;
 
 const lookup = (workspaceId: string, name: string) =>
   graphqlQuery(PossibleDuplicatesDocument, { workspaceId, name, first: DUPLICATE_ROWS });

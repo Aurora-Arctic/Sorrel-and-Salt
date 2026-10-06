@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, useLayoutEffect, useRef } from 'react';
+import { type ReactElement, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -13,8 +13,21 @@ import {
 } from '@/modules/ingredients/schema/ingredient-enums';
 import { NameField, useDuplicateWarning } from './duplicates';
 import { ListField, SelectField, TextField } from './fields';
-import { FolkNamesField, FormField } from './suggestions';
-import type { IngredientFormInput, IngredientFormProps, IngredientFormValues } from './types';
+import {
+  FormField,
+  LookupListField,
+  useCommonNameSuggestions,
+  useDeitySuggestions,
+  usePlanetSuggestions,
+  useSubstituteSuggestions,
+  useZodiacSuggestions,
+} from './suggestions';
+import type {
+  AfterSave,
+  IngredientFormInput,
+  IngredientFormProps,
+  IngredientFormValues,
+} from './types';
 import { EMPTY_VALUES, fieldNameOf, ingredientResolver, issuesOf } from './values';
 import './index.scss';
 
@@ -57,6 +70,7 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
     getValues,
     setError,
     setValue,
+    reset,
     formState: { errors, isSubmitting, submitCount },
   } = methods;
   const form = useRef<HTMLFormElement>(null);
@@ -81,6 +95,29 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
     if (blocking) createAnyway.current?.focus();
   }, [blocking, submitCount]);
 
+  // Save & Add Another leaves the form ready for the next ingredient, the owner's call
+  // (MB.131): once the save has landed, every field and list empties and the
+  // name takes the focus. In an effect rather than in `save`, so the reset
+  // comes after react-hook-form's own end-of-submit update, and counted here
+  // rather than read off `isSubmitSuccessful`, which a save held on the
+  // duplicate warning sets too. The name is found in the page, as the error
+  // focus above finds its field: `setFocus` reads a ref the reset has just
+  // dropped, and the field registers again only on the next render.
+  const [saves, setSaves] = useState(0);
+  // What the last save wrote, said above the fields where a refusal would be,
+  // so the cleared form is not the only sign it landed. A new save drops it.
+  const [saved, setSaved] = useState<string | null>(null);
+  // Which save was pressed: read by `save` from a ref, since the submit
+  // handler passes the input alone, and drawn from state as the busy button.
+  const next = useRef<AfterSave>('open');
+  const [pressed, setPressed] = useState<AfterSave>('open');
+  const busy = (button: AfterSave) => (isSubmitting && pressed === button) || undefined;
+  useEffect(() => {
+    if (saves === 0) return;
+    reset(EMPTY_VALUES);
+    form.current?.querySelector<HTMLInputElement>('input[name="name"]')?.focus();
+  }, [saves, reset]);
+
   const mutation = useMutation({
     mutationFn: (input: IngredientFormInput) =>
       graphqlRequest(CreateWorkspaceIngredientDocument, { workspaceId, input }),
@@ -93,7 +130,11 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
     if (await duplicates.check(input.name)) return;
     try {
       const { createWorkspaceIngredient } = await mutation.mutateAsync(input);
-      onSaved?.(createWorkspaceIngredient);
+      onSaved?.(createWorkspaceIngredient, next.current);
+      setSaved(createWorkspaceIngredient.name);
+      // Save Ingredient's page opens what it made, so its form is about to go
+      // and keeps its values; Save & Add Another clears for the next one.
+      if (next.current === 'another') setSaves((count) => count + 1);
     } catch (error) {
       // setError, as the resolver's own errors are set: the next submit or an
       // edit to the field clears them the same way.
@@ -115,9 +156,21 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
         ref={form}
         className="form ingredient-form"
         // Built in the event rather than in render: `save` reads a ref.
-        onSubmit={(event) => handleSubmit(save)(event)}
+        // Which button was pressed is the event's submitter; a submit with
+        // none, Enter in a field, is Save Ingredient's, the form's default.
+        onSubmit={(event) => {
+          const submitter = (event.nativeEvent as SubmitEvent).submitter;
+          next.current = submitter?.getAttribute('value') === 'another' ? 'another' : 'open';
+          setPressed(next.current);
+          setSaved(null);
+          return handleSubmit(save)(event);
+        }}
         noValidate
       >
+        {saved !== null && (
+          // `output` carries the status role itself, so no `role` attribute.
+          <output className="notice notice--success">Saved {saved}.</output>
+        )}
         {errors.root && (
           <p className="notice notice--error" role="alert">
             {errors.root.message}
@@ -162,16 +215,31 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
             from the curated vocabulary and the forms in use, the folk names
             from the names in use. A pick writes the text and links nothing. */}
         <FormField workspaceId={workspaceId} />
-        <FolkNamesField workspaceId={workspaceId} />
+        <LookupListField
+          workspaceId={workspaceId}
+          useSuggestions={useCommonNameSuggestions}
+          name="folkNames"
+          legend="Folk Names"
+          entry="Folk Name"
+          hint="Other names it goes by. A search finds it by any of them."
+        />
         <TextField name="description" label="Description" multiline />
         <SelectField name="element" label="Element" none="None" options={ELEMENT_OPTIONS} />
-        <ListField
+        {/* Each list but the colours suggests (MB.131): planets, signs and
+            deities from their curated vocabularies and the values in use, a
+            pick adding the text; substitutes from the compendium and this
+            coven, a pick adding a link to the ingredient. */}
+        <LookupListField
+          workspaceId={workspaceId}
+          useSuggestions={usePlanetSuggestions}
           name="planets"
           legend="Planets"
           entry="Planet"
           hint="The heavenly bodies it answers to: the planets, the Sun and the Moon."
         />
-        <ListField
+        <LookupListField
+          workspaceId={workspaceId}
+          useSuggestions={useZodiacSuggestions}
           name="zodiacSigns"
           legend="Zodiac Signs"
           entry="Zodiac Sign"
@@ -183,13 +251,17 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
           entry="Colour"
           hint="The colours it corresponds to in a working, not the colour it is."
         />
-        <ListField
+        <LookupListField
+          workspaceId={workspaceId}
+          useSuggestions={useDeitySuggestions}
           name="deities"
           legend="Deities"
           entry="Deity"
           hint="The gods and spirits it is sacred to."
         />
-        <ListField
+        <LookupListField
+          workspaceId={workspaceId}
+          useSuggestions={useSubstituteSuggestions}
           name="substitutes"
           legend="Substitute Ingredients"
           entry="Substitute Ingredient"
@@ -202,17 +274,31 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
           multiline
         />
         <div className="form__actions">
-          {/* Busy from the press to the answer, the duplicate check
-              included, under its own name: a label that changed would
-              change the name a screen reader knows it by. */}
+          {/* Two saves, both held down from the press to the answer, the
+              duplicate check included: Save Ingredient, first and so the
+              default Enter presses, opens what it made; Save & Add Another
+              clears the form for the next. The one pressed says so, "Saving
+              Ingredient" with a spinner and `aria-busy`, the owner's call
+              during MB.131. */}
           <button
             type="submit"
+            value="open"
             className="btn btn--solid"
             disabled={isSubmitting}
-            aria-busy={isSubmitting || undefined}
+            aria-busy={busy('open')}
           >
-            {isSubmitting && <span className="ingredient-form__spinner" aria-hidden="true" />}
-            Save Ingredient
+            {busy('open') && <span className="ingredient-form__spinner" aria-hidden="true" />}
+            {busy('open') ? 'Saving Ingredient' : 'Save Ingredient'}
+          </button>
+          <button
+            type="submit"
+            value="another"
+            className="btn"
+            disabled={isSubmitting}
+            aria-busy={busy('another')}
+          >
+            {busy('another') && <span className="ingredient-form__spinner" aria-hidden="true" />}
+            {busy('another') ? 'Saving Ingredient' : 'Save & Add Another'}
           </button>
         </div>
       </form>

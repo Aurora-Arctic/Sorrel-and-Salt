@@ -19,6 +19,13 @@
   @media (max-width: 30rem) {
     padding: space(4);
   }
+
+  // From 768px Ladle pins its toolbar over the bottom of the window, about
+  // 45px tall, and a story's last line scrolled to the end sat beneath it;
+  // the bottom clears the bar. Below that width the bar follows the story.
+  @media (min-width: 48rem) {
+    padding-bottom: 6rem;
+  }
   // Any transform makes this the containing block for `position: fixed`, so
   // ThemeToggle pins to the frame rather than the viewport.
   transform: translateZ(0);
@@ -40,4 +47,16 @@
 .ladle-story-frame--reduced-motion,
 .ladle-story-frame--reduced-motion * {
   transition: none !important;
+}
+
+// A story's own guide to what to try, set apart from the component beneath it.
+.story-guide {
+  margin-bottom: space(6);
+}
+
+// What a story stands in for, said beneath the component: where a page
+// would navigate, which the workshop has no page for.
+.story-note {
+  display: block;
+  margin-top: space(4);
 }

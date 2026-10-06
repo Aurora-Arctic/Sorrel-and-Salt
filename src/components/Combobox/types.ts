@@ -10,6 +10,8 @@ export interface ComboboxOption {
   note?: string;
   /** Which bucket it is in, curated or in use; left out by a source with one bucket. */
   curated?: boolean;
+  /** What tells it from a row that reads the same — an ingredient's id — where its text cannot. */
+  key?: string;
 }
 
 /** What a source has for the text as it stands: the rows, and whether more are on their way. */
@@ -74,4 +76,32 @@ export interface Bucket<O extends ComboboxOption> {
   /** The heading's id suffix: one word, since a space would split the reference. */
   key: string;
   rows: O[];
+}
+
+/** One choice of a closed set: the value it writes, and what it reads as. */
+export interface ComboboxChoice {
+  value: string;
+  label: string;
+}
+
+/** The select-only box: a closed set, chosen from the same control and list. */
+export interface ComboboxSelectProps {
+  /** The box's id, which a label element's `htmlFor` names. */
+  id: string;
+  /** What the box is called: its `aria-label` unless `labelId` is given, and the list's name. */
+  label: string;
+  /** The id of a label element naming the box. */
+  labelId?: string;
+  value: string;
+  onChange: (value: string) => void;
+  onBlur?: () => void;
+  /** Every choice, in order. One whose value is `''` is the choice that leaves the set unanswered: "None". */
+  choices: readonly ComboboxChoice[];
+  /** Shown while the value is none of the choices, and not itself a choice. */
+  placeholder?: string;
+  required?: boolean;
+  /** The box, which takes the focus: a `div`, since nothing is typed into it. */
+  inputRef?: Ref<HTMLDivElement>;
+  'aria-describedby'?: string;
+  'aria-invalid'?: boolean;
 }

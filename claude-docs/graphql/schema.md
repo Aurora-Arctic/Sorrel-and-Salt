@@ -154,7 +154,7 @@ type CommonNameSuggestion {
 
 type SuggestionClaimant {
   name: String! # the claiming ingredient's display name
-  canonicalName: String # its formal name; null for a `none` or `unknown` entry
+  canonicalName: String # its formal name; null for a `none` entry, and for an `unknown` one with none recorded
 }
 ```
 
