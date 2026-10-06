@@ -79,7 +79,9 @@ reaches no coven's rows (M6.6).
 - _No index leads on `deity_id`:_ nothing in MB.165 reads from a deity back to
   its ingredients. MB.167, moving MB.162's delete refusal onto the link, reads
   the compendium entries linking a deity, and adds an index if its plan finds
-  it wants one.
+  it wants one. Amended by MB.167: those reads are M5.6a's and MB.132's, which
+  add the reverse indexes, since MB.167 builds no read that wants one
+  ([`mb.167-read-and-write-the-pick.md`](mb.167-read-and-write-the-pick.md)).
 
 **The audit shape: the full spread, soft-deleted**, as `ingredient_folk_names`
 and `ingredient_substitutes` are, so the table has its own `set_updated_at`

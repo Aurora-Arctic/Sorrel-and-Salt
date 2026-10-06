@@ -10,9 +10,9 @@ is one a reader of the workspace could already list. A caller names a table and
 nothing else. The ingredient column each table suggests for is paired in the
 repository's `IN_USE`, keyed by table name, so a caller cannot hand `planets`
 the `zodiac_signs` list, and a fifth vocabulary does not compile until it
-names its column. `planets`, `zodiac_signs` and `deities` are paired with
-the lists of the same names, `ingredient_forms` with the single `form`
-(M4.7a).
+names its column. `planets` and `zodiac_signs` are paired with the lists of
+the same names, `ingredient_forms` with the single `form` (M4.7a), and
+`deities` with the rows of `ingredient_deities` (MB.167).
 
 One page is one statement: a `UNION ALL` of three tiers, sorted, bounded and
 cut by cursor as a whole.
@@ -44,7 +44,10 @@ cut by cursor as a whole.
   filter are still the ingredient's, so an entry is in scope exactly when its
   row is, and the grouping below makes a value held by several lists, or
   twice by one, a single suggestion. A row with no list unnests to nothing.
-  `deities` is read the same way (MB.130).
+  `deities` was read the same way (MB.130) until MB.167 made it a `child`
+  source: `ingredient_deities`' live rows inner-joined to their ingredient,
+  each row's `name` a value, so the ingredient's scope and filter still
+  decide it.
 - **An in-use value is folded to `lower(btrim(value))`**, so `Moon`, `moon`
   and `Moon` are one value, offered in the spelling most of those entries
   use (`mode()`, a tie broken by sort order). A blank value is no value. A
@@ -73,6 +76,10 @@ cut by cursor as a whole.
   there is not, throws `InvalidCursor`, as a cursor that will not cast does in
   `findPage`.
 
+**Every row carries an `id`** (MB.167): the curated row's in tiers 0 and 1,
+null in tier 2. Form and deity suggestions expose it, since it is what a pick
+sends; a planet or sign records no pick, so its suggestion does not.
+
 **A form suggestion carries two things more** (M4.7a), and only a form's
 carries both — the finder is overloaded on the table, so a planet or sign
 suggestion has neither, and a deity's has the first alone, below:
@@ -86,8 +93,8 @@ suggestion has neither, and a deity's has the first alone, below:
   group is live too**: the join filters both `deleted_at`s, in tiers 0 and 1
   and in tier 2's "folds to no live curated name", so a form under a
   soft-deleted group is offered as an in-use value with no group, and a dead
-  group's name is never returned. A group is not deleted while a form under
-  it is the last live spelling of a compendium entry's form (MB.162), so only
+  group's name is never returned. A group is not deleted while a live compendium entry
+  picks a form under it (MB.162, on the pick since MB.167), so only
   a coven's values reach tier 2 this way; what else deleting a group does to
   its forms is M5.6b's.
 - **Its claimants** — every live ingredient in the compendium or the proof's

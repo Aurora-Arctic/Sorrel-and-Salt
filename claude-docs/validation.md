@@ -86,7 +86,11 @@ Rules both variants enforce:
   blank never reaches them. Neither has a format regex, and neither schema
   checks `form` against the curated vocabulary: on a coven's ingredient it is
   an autofill and not a constraint, and the compendium's check reads the
-  database, so it is the service's (below).
+  database, so it is the service's (below). A `formId`, the curated form
+  picked (MB.167), must be a uuid, refused at `['formId']`, and needs a
+  `form` beside it, refused at `['form']`; whether it names a curated form,
+  and whether `form` folds to that form's name, read the database, so they
+  are the service's too (DESIGN.md §5, `ingredient_forms`).
 - **Folk names, within one ingredient.** `name` may not also be one of the
   same ingredient's folk names, pathed to `name`. One ingredient listing the
   same folk name twice, such as `["Cat's Claw", "cat's claw"]`, is refused at
@@ -94,10 +98,10 @@ Rules both variants enforce:
   per-ingredient `lower(name)` unique index, so that index isn't what a user
   sees either. A blank folk name is dropped, not refused — but only after the
   repeat check, so an issue's position still counts the rows the form sent,
-  blank ones included, and lands beside the right one. `deities` drops
-  blank entries the same way. A list left with no entries,
+  blank ones included, and lands beside the right one. `planets`,
+  `zodiacSigns` and `colors` drop blank entries the same way. A list left with no entries,
   `[]` or blanks alone, is absent like a blank text field and becomes `null`,
-  so a cleared `deities` is stored as NULL rather than `{}`. Two _different_ ingredients sharing a folk name is untouched: §5
+  so a cleared `planets` is stored as NULL rather than `{}`. Two _different_ ingredients sharing a folk name is untouched: §5
   wants it, since several plants claiming "Cat's Claw" is what is being
   documented.
 - **Substitutes, each a link or a name** (DESIGN.md §5,
@@ -114,6 +118,25 @@ Rules both variants enforce:
   entry as `{ ingredientId, name: null }` or `{ ingredientId: null, name }`;
   which ingredients a link may reach is the service's rule, since it reads
   other rows (["The workspace ingredient mutations"](graphql/schema.md)).
+- **Deities, each a pick or a name** (DESIGN.md §5, `ingredient_deities`;
+  MB.167). An entry is `{ deityId }` or `{ name }`, held to exactly one as a
+  substitute's is: both, neither, or a blank entry is refused at the entry
+  rather than dropped, and so is a `deityId` that is not a uuid. The same
+  deity picked twice, or the same name typed twice in any case, is refused at
+  the repeat, the two partial unique indexes' keys; links to two same-named
+  deities, and a typed name equal to a picked one's, are not repeats. Whether
+  a pick names a curated deity, and which held pick a typed name keeps, read
+  the database, so they are the service's
+  (["Ingredient children"](db/ingredient-children.md)).
+- **References, each an existing one** (DESIGN.md §7; MB.153). An entry is
+  `{ referenceId, locator }`, the id required as `ReferenceLinkInput`'s `ID!`
+  is and trimmed, the locator optional text, blank as none. A blank id, or one
+  that is not a uuid, is refused at the entry rather than dropped, for the
+  substitutes' reason, and the same reference twice is refused at the repeat
+  whatever its locator, `reference_links_ingredient_unique`'s key. Which
+  references an ingredient may cite is the service's rule, since it reads
+  other rows. A new reference is not written through this field: the form
+  creates it first, through `ReferenceInput` below, and sends its id.
 - **Closed sets.** `nomenclature` and the entries of `elements` come from
   the pgEnums' lists, in `schema/ingredient-enums.ts`.
 - **`elements` is a list of that closed set** (DESIGN.md §5, MB.157; built by
@@ -130,13 +153,14 @@ Rules both variants enforce:
   The list keeps the order chosen and is never reordered. Neither schema
   keeps `element`, so a caller still sending it has it stripped like any
   unknown key.
-- **`planets`, `zodiacSigns` and `colors` are lists, validated as `deities`
-  is** (DESIGN.md §5, MB.134; built by MB.136, replacing the single `planet`,
-  `zodiac` and `color`): free text, each entry trimmed, blank entries dropped
-  by `dropBlankEntries` after the cross-field rules, and a list left with no
-  entries `null`. A repeated entry is not refused — unlike folk names, no
-  unique index stands behind a list — and an entry is never reordered, since
-  each list keeps the order entered. Neither schema has a single field left,
+- **`planets`, `zodiacSigns` and `colors` are lists** (DESIGN.md §5,
+  MB.134; built by MB.136, replacing the single `planet`, `zodiac` and
+  `color`): free text, each entry trimmed, blank entries dropped by
+  `dropBlankEntries` after the cross-field rules, and a list left with no
+  entries `null`. A repeat but for case is refused at the repeat, blanks
+  counted, as a folk name's is (MB.167), though no unique index stands behind
+  a list, so a list is never silently stored doubled. An entry is never
+  reordered, since each list keeps the order entered. Neither schema has a single field left,
   so a caller still sending `planet` has it stripped like any unknown key.
 - **Planets and zodiac signs are suggested rather than enforced**, like
   `form` and `deities`: anything trimmed and non-blank passes either schema.
@@ -149,12 +173,14 @@ Rules both variants enforce:
 
 **A compendium entry holds curated values alone** (MB.162). After
 `CompendiumIngredientInput` parses, `createCompendiumEntry` and
-`updateCompendiumEntry` match `form` and each entry of `planets`,
-`zodiacSigns` and `deities` against the live curated rows — a form under a
-live group, a deity under a live tradition — folded as the suggestions fold,
-`lower(btrim(value)) = lower(name)`, and write each in its row's spelling. A
-value no live row holds is a `ValidationError` beside it, `['form']` or
-`['planets', i]`, `['zodiacSigns', i]` or `['deities', i]`, the index the
+`updateCompendiumEntry` hold `form` and each deity to a pick of a live
+curated row — a form under a live group, a deity under a live tradition —
+held or not, so a curated value typed rather than picked is refused as an
+uncurated one is (MB.167, which moved the rule onto the pick). Each entry of
+`planets` and `zodiacSigns` is matched against the live curated rows, folded
+as the suggestions fold, `lower(btrim(value)) = lower(name)`. Each value is
+written in its row's spelling. A value refused is a `ValidationError` beside
+it, `['form']` or `['formId']`, or `['planets', i]`, `['zodiacSigns', i]` or `['deities', i]`, the index the
 entry had in what was sent, blanks counted, since the parse drops blank
 entries and the form numbers its rows by what it sent. Every such value is
 refused in one error, and each message names the list to add it to: `No
@@ -183,6 +209,23 @@ computed from `schema/quantities.ts`, the same
 precision and scale the two columns are built from, so the two cannot drift. `unit` is validated against `UNITS` from `schema/units.ts`, never
 a second list. `unitDimension` is not input: the service derives it with
 `dimensionOf`. `acquiredDate` is a calendar date, `YYYY-MM-DD`.
+
+## References
+
+`ReferenceInput` (MB.153; `validation/reference.ts`) is a reference as the
+form submits it and the service parses it, mirroring the CHECKs MB.152 put on
+`references` with a message on the field each is about, so no refusal surfaces
+as a constraint name (DESIGN.md §5, "References"). `kind` is one of
+`REFERENCE_KINDS`; `title` is required and non-blank; every other text field
+is trimmed and blank as absent, as the table's non-blank CHECKs need. `url`
+is an absolute http(s) address a browser can follow, and `modified` and
+`accessed` are calendar days, `YYYY-MM-DD`. Per `kind`: a chapter, an
+article and an entry each need their `container`, named as the kind names it
+— "Name the journal this article is in"; a web page needs its `url` and its
+`accessed` day; any other kind's `accessed` needs a `url`. One rule is the
+form's rather than the table's, as MB.151 decided: a book needs the year it
+was published. Each issue is pathed to its field, so a web page sent bare is
+refused at `url` and `accessed` both.
 
 ## Categories
 

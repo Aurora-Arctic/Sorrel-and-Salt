@@ -18,7 +18,7 @@ const config: CodegenConfig = {
         // What each custom scalar is on the wire. `strictScalars` fails the
         // run on an unmapped one rather than typing it `any`.
         strictScalars: true,
-        scalars: { DateTime: 'string' },
+        scalars: { DateTime: 'string', LocalDate: 'string' },
         enumsAsTypes: true,
         useTypeImports: true,
       },

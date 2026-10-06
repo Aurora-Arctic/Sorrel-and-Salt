@@ -6,6 +6,7 @@ import {
   updateWorkspaceIngredient,
 } from '../services/workspace-ingredients';
 import { IngredientElementEnum, IngredientRef, NomenclatureEnum } from './ingredient';
+import { ReferenceLinkInput } from './references';
 
 // A coven's own ingredients, written as IngredientForm submits them. Neither
 // input names a tier or a stamp: the coven is the argument the proof is asked
@@ -25,6 +26,18 @@ const SubstituteInput = builder.inputType('SubstituteInput', {
   }),
 });
 
+/**
+ * One deity: the curated one picked, or a name typed — exactly one, held by
+ * the shared schema as `SubstituteInput` is (DESIGN.md §5, `ingredient_deities`).
+ */
+const IngredientDeityInput = builder.inputType('IngredientDeityInput', {
+  description: 'A curated deity picked, or a name typed: exactly one of the two.',
+  fields: (t) => ({
+    deityId: t.id(),
+    name: t.string(),
+  }),
+});
+
 /** DESIGN.md §7's `IngredientInput`: only `name` is required, so story 29's stub saves. */
 const IngredientInput = builder.inputType('IngredientInput', {
   fields: (t) => ({
@@ -32,14 +45,16 @@ const IngredientInput = builder.inputType('IngredientInput', {
     canonicalName: t.string(),
     nomenclature: t.field({ type: NomenclatureEnum }),
     form: t.string(),
+    formId: t.id({ description: 'The curated form picked for `form`; none when it was typed.' }),
     description: t.string(),
     elements: t.field({ type: [IngredientElementEnum] }),
     planets: t.stringList(),
     zodiacSigns: t.stringList(),
-    deities: t.stringList(),
+    deities: t.field({ type: [IngredientDeityInput] }),
     colors: t.stringList(),
     safetyNotes: t.string(),
     substitutes: t.field({ type: [SubstituteInput] }),
+    references: t.field({ type: [ReferenceLinkInput] }),
     folkNames: t.stringList(),
   }),
 });
@@ -56,14 +71,19 @@ const IngredientUpdateInput = builder.inputType('IngredientUpdateInput', {
     canonicalName: t.string({ required: true }),
     nomenclature: t.field({ type: NomenclatureEnum, required: true }),
     form: t.string({ required: true }),
+    formId: t.id({
+      required: true,
+      description: 'The curated form picked for `form`; "" when it was typed.',
+    }),
     description: t.string({ required: true }),
     elements: t.field({ type: [IngredientElementEnum], required: true }),
     planets: t.stringList({ required: true }),
     zodiacSigns: t.stringList({ required: true }),
-    deities: t.stringList({ required: true }),
+    deities: t.field({ type: [IngredientDeityInput], required: true }),
     colors: t.stringList({ required: true }),
     safetyNotes: t.string({ required: true }),
     substitutes: t.field({ type: [SubstituteInput], required: true }),
+    references: t.field({ type: [ReferenceLinkInput], required: true }),
     folkNames: t.stringList({ required: true }),
   }),
 });
@@ -96,10 +116,12 @@ builder.mutationField('updateIngredient', (t) =>
       if (!session) throw new Forbidden();
       const row = await updateWorkspaceIngredient(session, workspaceId, id, input);
       // Root mutation fields run in turn within one request, so an earlier one
-      // may have read this entry's folk names or substitutes; the answer must
-      // be this write's.
+      // may have read this entry's folk names, substitutes or references; the
+      // answer must be this write's.
       loaders.folkNamesByIngredient.clear(row);
       loaders.substitutesByIngredient.clear(row);
+      loaders.deitiesByIngredient.clear(row);
+      loaders.referencesByIngredient.clear(row);
       return row;
     },
   }),

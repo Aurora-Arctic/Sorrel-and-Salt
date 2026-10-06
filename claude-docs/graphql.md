@@ -63,6 +63,10 @@ In [`graphql/schema.md`](graphql/schema.md#compendium-ingredient-and-ingredientf
 
 In [`graphql/schema.md`](graphql/schema.md#the-workspace-ingredient-mutations).
 
+### References: `Reference`, `createReference`, `updateReference` and `referenceSuggestions`
+
+In [`graphql/schema.md`](graphql/schema.md#references-reference-createreference-updatereference-and-referencesuggestions).
+
 ### Auth scopes: the second check
 
 In [`graphql/schema.md`](graphql/schema.md#auth-scopes-the-second-check).

@@ -29,12 +29,18 @@ error instead.
 
 **The form, planets, signs and deities are the curated rows'** (MB.162). A
 coven's write keeps what was typed; these two do not. After the parse,
-`inCuratedSpellings` reads the live curated rows each value folds to, through
-`vocabulary`'s `curatedSpellings`, and refuses every value none holds in one
-`ValidationError`, each issue beside its field — `['form']`, or
+`inCuratedValues` checks the form and the deities by pick and the planets and
+signs by spelling (MB.167, which moved the form and deities onto the pick).
+The form and every deity must be a pick of a curated row, held or not,
+through `resolvePicks`, which `vocabulary`'s `curatedNames` answers by id: a
+curated value typed rather than picked is refused as an uncurated one is, and
+a held deity pick is refused once its deity is retired, where a coven keeps
+it. The planets and signs read the live curated rows each value folds to,
+through `vocabulary`'s `curatedSpellings`. Every value refused is one issue of
+one `ValidationError`, beside its field — `['form']` or `['formId']`, or
 `['planets', i]`, `['zodiacSigns', i]` or `['deities', i]` at the entry sent
-— and naming the list to add it to. A value that matches is written in the
-row's spelling, so `moon ` is stored `Moon`. A form counts only under a live
+— naming the list to pick from or add it to. A value that passes is written in
+the row's spelling, so `moon ` is stored `Moon`. A form counts only under a live
 group and a deity only under a live tradition, as the autofill reads them
 ([`validation.md`](../validation.md), "The two ingredient variants"). The
 rows are read before `withAudit` opens, on the bare client, so an admin
@@ -42,7 +48,7 @@ deleting a row at the same instant can see one entry written with it, the
 window MB.148 would let a lock close
 ([`design-decisions/mb.162-compendium-holds-curated-values.md`](../design-decisions/mb.162-compendium-holds-curated-values.md)).
 The vocabulary writes keep the rule after the write: deleting a row a live
-entry holds is refused, and a rename carries onto the entries (M5.6a, MB.95,
+entry holds — picks, for a form or a deity — is refused, and a rename carries onto the entries (M5.6a, MB.95,
 MB.132, M5.6b).
 
 **The reach is the compendium's live rows.** A coven's ingredient, a

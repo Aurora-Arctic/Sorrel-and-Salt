@@ -110,17 +110,16 @@ describe('deities schema', () => {
   });
 });
 
-// §5: `ingredients.deities` is free text over this vocabulary — an FK would
-// make an uncurated value unwritable (claude-docs/db/deity-vocabulary.md).
-// The deity a member picked is linked from `ingredient_deities` (MB.165),
-// whose name stays text beside the link.
-describe('ingredients.deities is a text list over this vocabulary, not a foreign key to it', () => {
-  it('declares deities as a nullable text[] column', () => {
+// §5: an ingredient's deities are free text over this vocabulary — an FK on
+// the text would make an uncurated value unwritable
+// (claude-docs/db/deity-vocabulary.md). The names moved from
+// `ingredients.deities` to `ingredient_deities.name` (MB.167), and the deity a
+// member picked is linked beside the name (MB.165), never instead of it.
+describe('an ingredient’s deities are text over this vocabulary, not a foreign key to it', () => {
+  it('no longer declares the ingredients.deities list, which ingredient_deities replaced', () => {
     const declared = tableFacts(ingredients).columns.find((column) => column.name === 'deities');
 
-    expect(declared).toBeDefined();
-    expect(declared?.getSQLType()).toBe('text[]');
-    expect(declared?.notNull).toBe(false);
+    expect(declared).toBeUndefined();
   });
 
   it('points no ingredients foreign key at either table', () => {

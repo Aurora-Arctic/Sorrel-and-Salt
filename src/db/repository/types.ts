@@ -1,7 +1,10 @@
 import type { SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { auditColumns } from '../../modules/identity/schema/users';
+import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import type { ingredients } from '../../modules/ingredients/schema/ingredients';
+import type { referenceLinks } from '../../modules/ingredients/schema/reference-links';
+import type { references } from '../../modules/ingredients/schema/references';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import type { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import type { deities } from '../../modules/vocabulary/schema/deities';
@@ -310,6 +313,8 @@ export interface IngredientFilter {
   categoryIds?: readonly string[];
   /** The form, folded as `canonical_key` folds it. */
   form?: string;
+  /** Only entries citing no live compendium reference: the admin's to-do list (MB.153). */
+  withoutReferences?: boolean;
 }
 
 /** What a compendium entry carries onto its edge: its word similarity to the query, on a search. */
@@ -329,10 +334,12 @@ export type SuggestingVocabulary =
   typeof planets | typeof zodiacSigns | typeof ingredientForms | typeof deities;
 
 /**
- * Where a vocabulary's in-use values are written on `ingredients`: one value
- * to a `column`, or a `list` whose entries are each one (MB.136).
+ * Where a vocabulary's in-use values are written: one value to a `column` of
+ * `ingredients`, a `list` whose entries are each one (MB.136), or the `name`
+ * of a `child` table's rows (MB.167).
  */
-export type InUseSource = { column: AnyPgColumn } | { list: AnyPgColumn };
+export type InUseSource =
+  { column: AnyPgColumn } | { list: AnyPgColumn } | { child: typeof ingredientDeities };
 
 /** A curated row, or a value written on an ingredient that matches none. */
 export interface VocabularySuggestion {
@@ -344,6 +351,8 @@ export interface VocabularySuggestion {
 
 /** A form suggestion, which alone carries a group and who already claims it. */
 export interface FormSuggestion extends VocabularySuggestion {
+  /** The curated row's, which a pick sends (MB.167); a value in use outside the vocabulary has none. */
+  id: string | null;
   /** The curated row's group, which tells two same-named forms apart; none in use. */
   group: string | null;
   claimants: Claimant[];
@@ -354,6 +363,8 @@ export interface FormSuggestion extends VocabularySuggestion {
  * group, and no claimants: a deity is no part of an ingredient's identity.
  */
 export interface DeitySuggestion extends VocabularySuggestion {
+  /** The curated row's, which a pick sends (MB.167); a value in use outside the vocabulary has none. */
+  id: string | null;
   /** The curated row's tradition, which tells two same-named deities apart; none in use. */
   tradition: string | null;
 }
@@ -369,6 +380,8 @@ export interface Claimant {
 export interface SuggestionRow {
   /** 0 a curated name match, 1 a curated description match, 2 in use outside the vocabulary. */
   tier: number;
+  /** The curated row's id; none in tier 2. */
+  id: string | null;
   value: string;
   description: string | null;
   group: string | null;
@@ -382,6 +395,18 @@ export interface SuggestionRow {
 export interface CommonNameSuggestion {
   value: string;
   claimants: Claimant[];
+}
+
+/** A `references` row, compendium or coven's, as a finder returns it. */
+export type ReferenceRow = typeof references.$inferSelect;
+
+/** A `reference_links` row, as a finder returns it. */
+export type ReferenceLinkRow = typeof referenceLinks.$inferSelect;
+
+/** A live link, and the live reference it cites. */
+export interface CitingLink {
+  link: ReferenceLinkRow;
+  reference: ReferenceRow;
 }
 
 /** An `ingredients` row, compendium entry or coven's, as a finder returns it. */

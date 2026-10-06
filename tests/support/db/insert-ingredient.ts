@@ -10,8 +10,8 @@ import type { IngredientFixture } from '../fixtures/types';
 // the seed does — the author's stamps and the GUC, inside one transaction.
 
 /**
- * Writes `fixture`'s row, its folk names, its typed substitutes and its
- * category links, stamped by
+ * Writes `fixture`'s row, its folk names, its typed substitutes, its typed
+ * deities at their positions and its category links, stamped by
  * `author`, and returns the ingredient's id. Categories are named as §6 does
  * and resolved through the seeded `categories`; a name with no live row is a
  * thrown error naming it, so a misspelt category is never a silent skip.
@@ -44,6 +44,17 @@ export async function insertIngredient(
         ...stamps,
       }));
       await tx`insert into ingredient_substitutes ${tx(substitutes)}`;
+    }
+
+    // In the order given, counted from 0, as the list keeps the order entered.
+    if (fixture.deities.length > 0) {
+      const deities = fixture.deities.map((name, position) => ({
+        ingredient_id: id,
+        name,
+        position,
+        ...stamps,
+      }));
+      await tx`insert into ingredient_deities ${tx(deities)}`;
     }
 
     if (fixture.categories.length > 0) {
@@ -86,5 +97,26 @@ export async function insertSubstituteLink(
       updated_by: author,
     })}
     returning id`;
+  return row.id as string;
+}
+
+/**
+ * Links the curated deity `deityId` to `ingredientId` at `position`, under the
+ * name it carries now, stamped by `author`, and returns the row's id. Raw, as
+ * `insertSubstituteLink` is: a test can write the row the service would refuse.
+ */
+export async function insertDeityLink(
+  sql: postgres.Sql,
+  ingredientId: string,
+  deityId: string,
+  position: number,
+  author: string,
+): Promise<string> {
+  const [row] = await sql`
+    insert into ingredient_deities (ingredient_id, deity_id, name, position, created_by, updated_by)
+    select ${ingredientId}, id, name, ${position}, ${author}, ${author}
+    from deities where id = ${deityId}
+    returning id`;
+  if (!row) throw new Error(`No deity ${deityId} to link.`);
   return row.id as string;
 }

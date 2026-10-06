@@ -8,7 +8,6 @@ export interface Lists {
   elements?: (typeof INGREDIENT_ELEMENTS)[number][] | null;
   planets?: string[] | null;
   zodiacSigns?: string[] | null;
-  deities?: string[] | null;
   colors?: string[] | null;
   folkNames?: string[] | null;
 }
@@ -27,11 +26,46 @@ export interface SubstituteFields {
 export type SubstituteEntry =
   { ingredientId: string; name: null } | { ingredientId: null; name: string };
 
+/** One reference as the schema reads it: the id may be blank until the rules have run. */
+export interface ReferenceLinkFields {
+  referenceId: string;
+  locator?: string | null;
+}
+
+/**
+ * One reference an ingredient cites (DESIGN.md §7): an existing reference's
+ * id, and the locator the link carries — "p. 112" — or null.
+ */
+export interface ReferenceLinkEntry {
+  referenceId: string;
+  locator: string | null;
+}
+
+/** One deity as the schema reads it: either half may be blank or missing until the rules have run. */
+export interface DeityFields {
+  deityId?: string | null;
+  name?: string | null;
+}
+
+/**
+ * One deity as the schema parses it (DESIGN.md §5, `ingredient_deities`): the
+ * curated deity picked, whose name the service writes beside the link, or a
+ * name typed — exactly one.
+ */
+export type DeityEntry = { deityId: string; name: null } | { deityId: null; name: string };
+
 /** What `crossFieldRules` reads of either variant's value. */
 export interface Parsed {
   name: string;
   canonicalName?: string | null;
   nomenclature: NomenclatureKind;
+  form?: string | null;
+  formId?: string | null;
+  planets?: string[] | null;
+  zodiacSigns?: string[] | null;
+  colors?: string[] | null;
   folkNames?: string[] | null;
   substitutes?: SubstituteFields[] | null;
+  deities?: DeityFields[] | null;
+  references?: ReferenceLinkFields[] | null;
 }

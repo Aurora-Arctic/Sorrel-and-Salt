@@ -36,6 +36,10 @@ member must be able to write `rhizome` before anyone has curated it (§5,
   `lower(btrim(value)) = lower(name)`, and only while its group or tradition
   is live, as the autofill reads it ([`db/member-autofill.md`](../db/member-autofill.md)).
   The value is stored in the row's own spelling, so `moon ` is written `Moon`.
+  Amended by MB.167: the form and each deity must be a pick of a curated row,
+  refused at `['form']`, `['formId']` or `['deities', i]` when typed, and
+  planets and signs alone keep this match
+  ([`mb.167-read-and-write-the-pick.md`](mb.167-read-and-write-the-pick.md)).
 - **Refused beside the field**, as a `ValidationError` from
   `createCompendiumEntry` and `updateCompendiumEntry`: `['form']`, or
   `['planets', i]`, `['zodiacSigns', i]` or `['deities', i]` at the entry the
@@ -77,7 +81,10 @@ Both apply only while the row is the **last live curated spelling of its
 value**: the vocabularies key on the slug, so two live rows may share a name,
 "Wax" under _Animal_ and under _Substance_, and an entry holding `Wax` is
 curated while either is live. Deleting or renaming one of a pair leaves the
-entries curated by the other, so neither blocks nor rewrites them.
+entries curated by the other, so neither blocks nor rewrites them. Amended by
+MB.167: a form's or deity's delete and rename follow the link, so this clause
+holds for planets and signs alone
+([`mb.167-read-and-write-the-pick.md`](mb.167-read-and-write-the-pick.md)).
 
 **A coven's rows never block a delete and are never rewritten.** They keep
 what they wrote; a deleted or renamed value moves into that coven's "From
