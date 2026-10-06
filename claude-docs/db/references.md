@@ -4,17 +4,19 @@
 reference-work entry or a web page — kept once and linked from every row it
 supports through `reference_links`, so a book fifty herbs cite is one row
 edited in one place. Both tables are in the `ingredients` module, built by
-MB.152, written by MB.153's services and MB.156's seed, read on the form
-(MB.154) and the ingredient page (MB.155). The argument for each shape is
-[`mb.151-references.md`](../design-decisions/mb.151-references.md); DESIGN.md
-§5, "References", is the specification this doc expands.
+MB.152 in `0042_references`, written by MB.153's services and MB.156's seed,
+read on the form (MB.154) and the ingredient page (MB.155). The argument for
+each shape is [`mb.151-references.md`](../design-decisions/mb.151-references.md);
+DESIGN.md §5, "References", is the specification this doc expands.
 
 - **`references`** — `id`, `workspace_id` (nullable: null is the compendium
   tier, as on `ingredients`), `kind`, `authors`, `title` (NOT NULL),
   `container`, `contributors`, `edition`, `volume`, `issue`, `series`,
   `place`, `publisher`, `published`, `pages`, `host`, `url`, `modified`,
   `accessed`, `note`, + audit. Every column is text as Chicago prints it, with
-  a non-blank CHECK, except `modified` and `accessed`, which are `date`s.
+  a non-blank CHECK, one per column so a refusal names its field (`url`'s is
+  its http(s) CHECK, which already refuses a blank), except `modified` and
+  `accessed`, which are `date`s.
   `kind` is the enum `reference_kind`: `book`, `chapter`, `article`, `entry`,
   `web_page`.
 - **`reference_links`** — `id`, `reference_id` (NOT NULL), `ingredient_id`,
