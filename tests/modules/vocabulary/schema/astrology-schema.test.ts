@@ -109,7 +109,7 @@ let sql: ReturnType<typeof postgres>;
 const catalogue = useTestDatabase((client) => (sql = client));
 
 beforeEach(async () => {
-  await sql`truncate planets, zodiac_signs`;
+  await sql`truncate planets, zodiac_signs cascade`;
 });
 
 describe.each(VOCABULARIES)('$name table', ({ name, row, rename }) => {

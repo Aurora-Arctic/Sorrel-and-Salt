@@ -60,3 +60,9 @@ export interface DeityRow {
 
 /** A test row of `ingredient_deities`: always a name, and a link when picked (MB.165). */
 export type DeityEntry = { deityId?: string | null; name: string; position: number };
+
+/** A test row of `references`, its columns as Postgres names them (MB.152). */
+export type ReferenceFields = Partial<Record<string, string | null>>;
+
+/** A test row of `reference_links`: the row it sources by column, and a locator (MB.152). */
+export type LinkFields = Partial<Record<string, string | null>>;

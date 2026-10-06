@@ -1,6 +1,6 @@
 {
-  "id": "3aa075c7-bca3-4f40-8114-0c1312bd5497",
-  "prevId": "2711d10c-262e-4d63-ad21-388e64301ed4",
+  "id": "80852c75-480b-459c-8c67-62768125b9fe",
+  "prevId": "3aa075c7-bca3-4f40-8114-0c1312bd5497",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -921,6 +921,120 @@
         "spells_deleted_by_users_id_fk": {
           "name": "spells_deleted_by_users_id_fk",
           "tableFrom": "spells",
+          "tableTo": "users",
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.admin_role_changes": {
+      "name": "admin_role_changes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "pg_catalog.gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "change": {
+          "name": "change",
+          "type": "admin_role_change",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "admin_role_changes_user_id_users_id_fk": {
+          "name": "admin_role_changes_user_id_users_id_fk",
+          "tableFrom": "admin_role_changes",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "admin_role_changes_created_by_users_id_fk": {
+          "name": "admin_role_changes_created_by_users_id_fk",
+          "tableFrom": "admin_role_changes",
+          "tableTo": "users",
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "admin_role_changes_updated_by_users_id_fk": {
+          "name": "admin_role_changes_updated_by_users_id_fk",
+          "tableFrom": "admin_role_changes",
+          "tableTo": "users",
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "admin_role_changes_deleted_by_users_id_fk": {
+          "name": "admin_role_changes_deleted_by_users_id_fk",
+          "tableFrom": "admin_role_changes",
           "tableTo": "users",
           "columnsFrom": ["deleted_by"],
           "columnsTo": ["id"],
@@ -4552,6 +4666,11 @@
       "name": "spell_visibility",
       "schema": "public",
       "values": ["private", "workspace"]
+    },
+    "public.admin_role_change": {
+      "name": "admin_role_change",
+      "schema": "public",
+      "values": ["bootstrap", "grant", "revoke"]
     },
     "public.user_role": {
       "name": "user_role",

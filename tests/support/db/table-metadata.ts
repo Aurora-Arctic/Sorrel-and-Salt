@@ -41,6 +41,8 @@ export const AUDITED_TABLES = [
   'ingredients',
   'inventory_items',
   'planets',
+  'reference_links',
+  'references',
   'retired_ingredient_slugs',
   'spell_categories',
   'spell_ingredients',

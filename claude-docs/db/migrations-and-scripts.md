@@ -168,7 +168,7 @@
   is safe on production: v0.5.0 shipped MB.140 first.
   `ingredient-substitutes-schema.test.ts` adds the column back in its clone
   to re-run both fills. See ["Expand/contract"](expand-contract.md).
-- **`0042_admin-role-changes.sql`** (MB.58) is a plain `generate` of
+- **`0043_admin-role-changes.sql`** (MB.58) is a plain `generate` of
   `admin_role_changes` and its enum, with three statements added by hand: the
   table's `set_updated_at` trigger; the demotion of the seed's bootstrap user,
   which a database seeded before MB.58 holds as an admin and the seed never
