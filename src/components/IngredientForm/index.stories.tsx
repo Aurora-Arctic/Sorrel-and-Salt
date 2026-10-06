@@ -32,8 +32,10 @@ const WORKSPACE_ID = '00000000-0000-4000-8000-000000000000';
 const matches = (query: string, ...texts: (string | null)[]) =>
   texts.some((text) => text?.toLowerCase().includes(query.trim().toLowerCase()));
 
+// A curated row carries the id a pick sends (MB.169); one only in use has none.
 const FORMS = [
   {
+    id: '00000000-0000-4000-8000-000000000101',
     value: 'Wax',
     description: 'Beeswax, as it comes from the comb.',
     group: 'Animal',
@@ -41,15 +43,31 @@ const FORMS = [
     claimants: [{ name: 'Testwort', canonicalName: 'Fixtura testalis' }],
   },
   {
+    id: '00000000-0000-4000-8000-000000000102',
     value: 'Wax',
     description: 'Candle and poppet wax.',
     group: 'Substance',
     curated: true,
     claimants: [],
   },
-  { value: 'Dried leaf', description: null, group: 'Plant part', curated: true, claimants: [] },
-  { value: 'Whole root', description: null, group: 'Plant part', curated: true, claimants: [] },
   {
+    id: '00000000-0000-4000-8000-000000000103',
+    value: 'Dried leaf',
+    description: null,
+    group: 'Plant part',
+    curated: true,
+    claimants: [],
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000104',
+    value: 'Whole root',
+    description: null,
+    group: 'Plant part',
+    curated: true,
+    claimants: [],
+  },
+  {
+    id: null,
     value: 'Moon-dried shavings',
     description: null,
     group: null,
@@ -91,12 +109,48 @@ const SIGNS = [
 ];
 
 const DEITIES = [
-  { value: 'Hecate', description: null, tradition: 'Greek', curated: true },
-  { value: 'Hecate', description: null, tradition: 'Roman', curated: true },
-  { value: 'Hermes', description: null, tradition: 'Greek', curated: true },
-  { value: 'Mercury', description: null, tradition: 'Roman', curated: true },
-  { value: 'Freyja', description: null, tradition: 'Norse', curated: true },
-  { value: 'Hedge Mother Fixture', description: null, tradition: null, curated: false },
+  {
+    id: '00000000-0000-4000-8000-000000000201',
+    value: 'Hecate',
+    description: 'Goddess of crossroads, witchcraft and the night.',
+    tradition: 'Greek',
+    curated: true,
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000202',
+    value: 'Hecate',
+    description: 'Called Trivia in Rome, goddess of the three-way crossroads.',
+    tradition: 'Roman',
+    curated: true,
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000203',
+    value: 'Hermes',
+    description: null,
+    tradition: 'Greek',
+    curated: true,
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000204',
+    value: 'Mercury',
+    description: null,
+    tradition: 'Roman',
+    curated: true,
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000205',
+    value: 'Freyja',
+    description: null,
+    tradition: 'Norse',
+    curated: true,
+  },
+  {
+    id: null,
+    value: 'Hedge Mother Fixture',
+    description: null,
+    tradition: null,
+    curated: false,
+  },
 ];
 
 // The two Testworts differ only in form and tier, which a picked pill's
@@ -299,6 +353,12 @@ function WhatToTry() {
           Compendium and From Coven; &ldquo;hec&rdquo; in Deity shows Hecate under two traditions;
           &ldquo;test&rdquo; in Substitute Ingredient shows one plant twice, the compendium&rsquo;s
           and this coven&rsquo;s.
+        </li>
+        <li>
+          <strong>A pick:</strong> pick either Wax in Form, and its group follows it in the box,
+          muted, its description in a tooltip on hover or focus; edit the text and the group goes.
+          Pick both Hecates in Deity, and each pill reads with its tradition, its description in its
+          tooltip.
         </li>
         <li>
           <strong>Your own text:</strong> type something nothing matches and pick &ldquo;Use what

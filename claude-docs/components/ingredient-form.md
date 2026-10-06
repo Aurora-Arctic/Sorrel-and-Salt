@@ -91,8 +91,10 @@ notes — every field `IngredientInput` takes. Categories are not an input yet.
   schema's messages use the same word.
 - **`form` is a single free-text field that suggests** (M5.10a), as the
   schema takes it: a `SuggestField`, the [`Combobox`](combobox.md) over
-  `useController`, so a pick fills the field with the suggestion's value and
-  links nothing. See "The lookups".
+  `useController`, so a pick fills the field with the suggestion's value. A
+  pick of a curated form links its row as well, and the box shows the row's
+  group beside the text until the text is edited (MB.169). See "The form's
+  pick".
 - **Planets, zodiac signs and colours are list fields** (MB.136), as DESIGN.md
   §5 gives an ingredient several of each, labelled "Planets", "Zodiac Signs"
   and "Colours" with boxes "Planet", "Zodiac Sign" and "Colour". Every list
@@ -135,7 +137,14 @@ notes — every field `IngredientInput` takes. Categories are not an input yet.
   `toInput` sends a link as `{ ingredientId }` and typed text as `{ name }`
   (DESIGN.md §5, `ingredient_substitutes`). A link is made only by picking an
   ingredient from the substitutes' lookup (MB.131); Add, Enter and the typed
-  row add typed text, as in every list.
+  row add typed text, as in every list. A deity entry has the same shape
+  (MB.169): `{ value, link }`, `value` the deity's name and `link` its id,
+  tradition and description. A linked deity's pill reads "Hecate (Greek)",
+  the tradition beside the name as its lookup row reads it, and so do its ×
+  and any error naming it, so Greek and Roman Hecate are two pills that read
+  differently; its `detail` is its description. `toInput` sends a link as
+  `{ deityId }` and typed text as `{ name }`, the two halves of MB.167's
+  `IngredientDeityInput`.
 - **Text left in a box stops the save.** The form's resolver adds an error to
   any box still holding text, 'Press Add to keep "Hedge Fixture", or clear
   the box', on the list's error element, so a save never sends a list the
@@ -175,8 +184,11 @@ claimants by label and formal name; a claimant with no formal name shows by
 its label. Curated rows and rows in use sit under "From Compendium" and "From Coven"
 headings. A common-name row is the value and its claimants, in one bucket,
 since no vocabulary of common names exists. Each list opens with "Use what you typed: rhizome", the owner's call over the issue's "ends in". Picking a form row writes its value into the field, and
-picking a common name adds it as an entry; neither links anything, and free
-text outside the vocabulary saves with no warning, as M4.5's schema asks.
+picking a common name adds it as an entry. A curated form's row carries the
+row's `id` (MB.167) as its `link`, so picking it links the form as well
+("The form's pick", below). A form only in use has no row, so picking it
+links nothing, and neither does picking a common name. Free text outside the
+vocabulary saves with no warning, as M4.5's schema asks.
 
 A planet or sign row is the value, with the curated row's description as its
 second line, under "From Compendium" and "From Coven" as a form's are. The headings
@@ -185,7 +197,10 @@ admin's list, which compendium entries are held to, and a value only in use
 outside it is this coven's. A deity row is
 "Hecate (Greek)", the tradition beside the value as a form's group is
 (MB.130), so two same-named deities are told apart; one in use has no
-tradition. Picking any of the three adds its value, "Hecate", as an entry.
+tradition. Picking a planet or a sign adds its value as an entry. Picking a
+curated deity adds its value linked to the deity through the row's `id`,
+reading "Hecate (Greek)" (MB.169). A deity only in use has no row, so it adds
+its value as typed text.
 On M5.5's compendium form the form, planet, sign and deity boxes are
 choose-only, offering the curated rows alone with no typed row, since the
 compendium services refuse any other value beside its field (MB.162;
@@ -206,6 +221,41 @@ Add and Enter add the text as it stands, sent as `{ name }` with no warning.
 A compendium entry's substitutes may link only the compendium, so the admin
 form M5.5 wraps reads `compendium(query)` in their place; this form writes
 only a coven's ingredient.
+
+### The form's pick
+
+Two curated forms may share a name, Wax under _Animal_ and Wax under
+_Substance_ (DESIGN.md §5), and both fill the box with "Wax". So a pick of a
+curated row is kept beside the text, as `formLink` in the form's values:
+the row's id, the name picked, its group and its description (MB.169).
+
+- **The box shows the group.** "Wax" stays as the box's editable text, and
+  "(Substance)" follows it in the muted ink, so the box reads as the row
+  picked did, "Wax (Substance)", the owner's call. This is the
+  combobox's `qualifier` ([`combobox.md`](combobox.md), "A qualifier").
+  The form's description is the qualifier's tooltip. It opens on hover and
+  while the box has focus, and closes on Escape. Open on focus, it covers the
+  Form label; MB.115's design review settles that, on the owner's word. The group and the
+  description are also the box's accessible description, after its hint.
+- **An edit away from the picked name drops the link, the owner's call.**
+  `FormField` hears each edit through `SuggestField`'s `onEdit`. Once the
+  text is no longer exactly the name picked, the link goes, and the group
+  with it. Typing the name back does not bring it back: what is left is typed
+  text. A pick of the typed row, or of a form only in use, clears the link
+  too, and a later pick replaces it.
+- **It is sent as `formId`**, null for typed text ("What it sends"). The
+  service refuses an id naming no curated form at `['formId']`, and that
+  issue is the Form field's. `fieldNameOf` maps the server's, and the
+  resolver moves the schema's, so it lands beside the box that made the pick
+  rather than above the form.
+- **Save & Add Another clears it** with the rest, since `EMPTY_VALUES` holds
+  `formLink: null`.
+
+The form only creates, so nothing yet reads a pick back into it. An edit
+form would prefill the link from `Ingredient.formChoice`, the curated form
+with its group, and each deity's from `IngredientDeity.deity` with its
+tradition (MB.167). A pick retired since then reads as `null`, so it shows
+as typed text.
 
 ### The duplicate warning
 
@@ -305,9 +355,17 @@ states the rule before anyone breaks it.
 
 The values **as typed**, reshaped by `toInput` into the input the mutation
 and the schema take: an unanswered select becomes `null`, a list entry
-becomes its text, a deity its text as `{ name }` (MB.167), and the boxes are
-left behind. It sends no pick yet, neither a deity's `deityId` nor a
-`formId`: recording a picked row is MB.169's. The elements go as chosen,
+becomes its text, and the boxes are left behind. A pick goes as its row's id
+(MB.169):
+
+- The form goes as its text with `formId`, the picked form's id, or `null`
+  for typed text.
+- A deity goes as `{ deityId }` when picked from the curated rows, and as
+  `{ name }` when typed.
+- A substitute goes as `{ ingredientId }` when linked, and as `{ name }`
+  when typed.
+
+The elements go as chosen,
 `[]` when none is, which `IngredientUpdateInput` needs to clear them and the
 schema reads as absent. Nothing else is trimmed or
 parsed: a blank field goes as `''`, and the service's run of the same schema
@@ -371,6 +429,7 @@ the form's field name:
 | `['name']`              | `name`                                                                |
 | `['folkNames', 2]`      | `folkNames.2.value`, the third entry                                  |
 | `['elements', 1]`       | `elements`, the whole control: its chips are not rows                 |
+| `['formId']`            | `form`, whose box made the pick (MB.169)                              |
 | `[]`                    | none: the root alert                                                  |
 | any path it cannot name | none: the root alert, rather than an unseen error (`drafts` included) |
 
@@ -471,7 +530,8 @@ length, and no other text field has one either.
 `Blank`, unframed, with every lookup answered and the save faked (MB.131),
 under a "What to try" panel saying what to type for each state: the
 suggestions, free text, the duplicate warning, the missing name, the
-classification coupling, text left in a box, a repeated entry, a long entry,
+classification coupling, a pick of a form or a deity, text left in a box, a
+repeated entry, a long entry,
 the two server refusals, and a save. The workshop has no API, and on staging
 its pages may not fetch at all ([`workshop.md`](../workshop.md), "On
 staging"), so the story answers the form itself: while it is mounted it
@@ -512,11 +572,12 @@ pass on whatever an earlier step had focused. It covers:
 - **Resolver errors**: beside the field, focused, invalid and described, with
   no request sent; on the list entry it names, focusing the list's box;
   cleared by an edit, or by removing the entry; an element list given a
-  repeat, refused on the Element control.
+  repeat, refused on the Element control; an issue with the form's pick, or
+  with its text, on the Form field.
 - **Server errors**: beside the field and on the list entry their path names;
   rendered through the same element as a resolver error on that field; an
-  issue pathed to one element on the Element control, focused; cleared by an
-  edit.
+  issue pathed to one element on the Element control, focused; one pathed
+  to `formId` on the Form field; cleared by an edit.
 - **Root errors**: an empty path, a path naming no field, a `FORBIDDEN`'s
   message and a failed fetch, each as an alert above the fields, cleared on
   the next submit.
@@ -537,8 +598,14 @@ pass on whatever an earlier step had focused. It covers:
 - **The lookups**: a request only once the typing settles, with the coven's
   id and the settled text, and none until the box is used; the vocabulary
   first with each form's group and claimants, then forms in use, under their
-  headings; a pick filling the form field, and a value in no vocabulary taken
-  from its own row with no warning; a common name picked by click or by
+  headings; a pick filling the form field, showing its group in the box with
+  its description in a tooltip on hover and focus, closed by Escape, and
+  read as the box's description, and sending its id; a later pick of the
+  other Wax replacing it; a form with no description showing its group and
+  no tooltip; an edit away from the pick dropping the group and the id; a
+  form only in use picked with no id; the pick cleared by Save & Add
+  Another; and a value in no vocabulary taken from its own row with no
+  warning and no id; a common name picked by click or by
   keyboard adding an entry, and Enter with nothing picked adding typed text.
   For each of the planets, signs, deities and substitutes: a request only once
   the typing settles, and none until the box is used; the planets and signs
@@ -546,7 +613,10 @@ pass on whatever an earlier step had focused. It covers:
   tradition, two of one name told apart; a pick adding the value, emptying the
   box and announcing it; a deity picked by the arrow keys and Enter, Escape
   closing the list and keeping the text, and Enter with it closed adding the
-  text; each ingredient with its formal name and tier in the order found; a
+  text, sent as its id and the typed one as its name; Greek and Roman Hecate
+  picked as two pills, each with its tradition and its description, sent as
+  two ids; the same deity picked twice refused beside the repeat; a deity
+  only in use added and sent as its name; each ingredient with its formal name and tier in the order found; a
   picked ingredient saved as a link, its entry reading as it; and a
   substitute added or picked as typed saved as text, with no warning.
   Every lookup, the duplicate check included, is answered empty by default, so

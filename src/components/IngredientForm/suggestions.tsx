@@ -20,6 +20,8 @@ import { ListField, SuggestField } from './fields';
 import type {
   Claimant,
   CorrespondenceNode,
+  FormOption,
+  IngredientFormValues,
   ListOption,
   LookupFieldProps,
   LookupListFieldProps,
@@ -39,6 +41,7 @@ const FormSuggestionsDocument = graphql(`
     formSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
       edges {
         node {
+          id
           value
           description
           group
@@ -102,6 +105,7 @@ const DeitySuggestionsDocument = graphql(`
     deitySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
       edges {
         node {
+          id
           value
           description
           tradition
@@ -168,13 +172,18 @@ function useLookup<TResult, O extends ComboboxOption>(
   return { options, pending: text.trim() !== query || isFetching };
 }
 
-const formOptions = (data: FormSuggestionsQuery): ComboboxOption[] =>
+const formOptions = (data: FormSuggestionsQuery): FormOption[] =>
   data.formSuggestions.edges.map(({ node }) => ({
     value: node.value,
     // The group is what tells two same-named forms apart (M4.2a).
     label: qualified(node.value, node.group),
     note: [node.description, usedBy(node.claimants)].filter(Boolean).join(' · ') || undefined,
     curated: node.curated,
+    // A curated row is what a pick links (MB.169); a form only in use has no
+    // row, and a pick of it is typed text.
+    link: node.id
+      ? { id: node.id, name: node.value, group: node.group, description: node.description }
+      : undefined,
   }));
 
 const commonNameOptions = (data: CommonNameSuggestionsQuery): ListOption[] =>
@@ -201,6 +210,11 @@ const deityOptions = (data: DeitySuggestionsQuery): ListOption[] =>
     ...correspondenceOption(node),
     // The tradition tells two same-named deities apart, as a form's group does.
     label: qualified(node.value, node.tradition),
+    // A curated deity is what a pick links, and its pill reads with its
+    // tradition (MB.169); one only in use has no row, and adds as text.
+    link: node.id
+      ? { id: node.id, tradition: node.tradition, description: node.description }
+      : undefined,
   }));
 
 const substituteOptions = (data: IngredientSuggestionsQuery): ListOption[] =>
@@ -250,10 +264,17 @@ export const useDeitySuggestions = (workspaceId: string, text: string, active: b
 export const useSubstituteSuggestions = (workspaceId: string, text: string, active: boolean) =>
   useLookup(IngredientSuggestionsDocument, workspaceId, text, active, substituteOptions);
 
-/** The form field, suggesting from the curated vocabulary and the forms in use. */
+/**
+ * The form field, suggesting from the curated vocabulary and the forms in
+ * use. A pick of a curated form links it, and the box shows its group, which
+ * the text alone cannot: Wax under _Animal_ and under _Substance_ both read
+ * "Wax" (MB.169). The text stays the member's to edit, and an edit away from
+ * the picked name drops the link, the owner's call: what is left is typed.
+ */
 export function FormField({ workspaceId }: LookupFieldProps): ReactElement {
-  const { control } = useFormContext();
-  const text: string = useWatch({ control, name: 'form' });
+  const { control, getValues, setValue } = useFormContext<IngredientFormValues>();
+  const text = useWatch({ control, name: 'form' });
+  const link = useWatch({ control, name: 'formLink' });
   const [active, setActive] = useState(false);
   const suggestions = useFormSuggestions(workspaceId, text, active);
   return (
@@ -263,6 +284,13 @@ export function FormField({ workspaceId }: LookupFieldProps): ReactElement {
       hint="How it comes: dried leaf, whole root, oil."
       suggestions={suggestions}
       onActivate={() => setActive(true)}
+      onPick={(option) => setValue('formLink', option?.link ?? null)}
+      onEdit={(edited) => {
+        if (edited !== getValues('formLink')?.name) setValue('formLink', null);
+      }}
+      qualifier={
+        link?.group ? { text: link.group, detail: link.description ?? undefined } : undefined
+      }
     />
   );
 }

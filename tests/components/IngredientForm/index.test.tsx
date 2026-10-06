@@ -249,6 +249,8 @@ describe('IngredientForm', () => {
         zodiacSigns: ['Gemini'],
         colors: ['Silver-green'],
         safetyNotes: 'None known.',
+        // Typed, so it records no pick (MB.169).
+        formId: null,
         deities: [],
         substitutes: [],
         folkNames: [],
@@ -360,6 +362,26 @@ describe('IngredientForm', () => {
   });
 
   describe('a resolver error', () => {
+    // The form's pick is not a field of its own: the box that made it is
+    // Form's, so the schema's issue with it lands there (MB.169).
+    it.each([
+      { id: 'not-a-uuid', form: 'Wax', message: 'No such form to pick' },
+      { id: '6e1f2a3b-4c5d-4e7f-8a9b-0c1d2e3f4a5b', form: '', message: 'Name the form you picked' },
+    ])(
+      'puts an issue with the form’s pick, or with its text, on Form ($message)',
+      async ({ id, form, message }) => {
+        const formLink = { id, name: 'Wax', group: null, description: null };
+
+        const { errors } = await ingredientResolver(
+          { ...EMPTY_VALUES, name: 'Testwort', form, formLink },
+          undefined,
+          { fields: {}, shouldUseNativeValidation: false },
+        );
+
+        expect(errors).toEqual({ form: expect.objectContaining({ message }) });
+      },
+    );
+
     it('appears beside its field, focused and announced, before any request is sent', async () => {
       const calls = acceptCreate();
       renderForm();
@@ -440,6 +462,22 @@ describe('IngredientForm', () => {
       const formal = textbox('Formal Name');
       await waitFor(() => expectErrorOn(formal, 'This coven already has Fixtura testalis'));
       expect(formal).toHaveFocus();
+    });
+
+    // A pick the server could not find, the form since retired: its issue is
+    // pathed to the pick, which the form shows as the Form field.
+    it('lands an issue pathed to the form’s pick on the Form field', async () => {
+      mockGraphQLError('CreateWorkspaceIngredient', {
+        code: 'VALIDATION',
+        fieldErrors: [{ path: ['formId'], message: 'No such form to pick' }],
+      });
+      renderForm();
+
+      type('Name', 'Testwort');
+      save();
+
+      await waitFor(() => expectErrorOn(box('Form'), 'No such form to pick'));
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
 
     it('renders through the same element as a resolver error on that field', async () => {
@@ -1463,7 +1501,10 @@ describe('IngredientForm', () => {
   });
 
   describe('the form lookup', () => {
+    const ANIMAL_WAX_ID = '2c9e4b1a-7d3f-4e8a-9b6c-5f0a1d2e3c4b';
+    const SUBSTANCE_WAX_ID = '6e1f2a3b-4c5d-4e7f-8a9b-0c1d2e3f4a5b';
     const WAX_ANIMAL: FormNode = {
+      id: ANIMAL_WAX_ID,
       value: 'Wax',
       description: null,
       group: 'Animal',
@@ -1471,13 +1512,16 @@ describe('IngredientForm', () => {
       claimants: [{ name: 'Testwort', canonicalName: 'Fixtura testalis' }],
     };
     const WAX_SUBSTANCE: FormNode = {
+      id: SUBSTANCE_WAX_ID,
       value: 'Wax',
       description: 'Candle and poppet wax.',
       group: 'Substance',
       curated: true,
       claimants: [],
     };
+    // In use only: no curated row, so nothing to pick.
     const RHIZOMES: FormNode = {
+      id: null,
       value: 'Rhizomes',
       description: null,
       group: null,
@@ -1548,22 +1592,136 @@ describe('IngredientForm', () => {
       expect(rows.getAllByRole('option')[0]).toHaveAccessibleName('Use what you typed: wax');
     });
 
-    it('fills the field from a pick and links nothing', async () => {
+    /** Looks up "wax" in the Form box and picks the row named `option`. */
+    const pickWax = async (calls: unknown[], option: RegExp) => {
+      await use('Form', calls);
+      type('Form', 'wax');
+      settle();
+      fireEvent.click(await screen.findByRole('option', { name: option }));
+    };
+    // The group a pick shows inside the box, not the tooltip that repeats it.
+    const group = (text: string) =>
+      within(box('Form').closest('.combobox') as HTMLElement).queryByText(text, {
+        ignore: '[role="tooltip"]',
+      });
+
+    // MB.169: the text alone reads the same for both Waxes; the group tells
+    // which was picked, and the id records it.
+    it('fills the field from a pick, shows its group in the box and sends its id', async () => {
       const saves = acceptCreate();
       const onSaved = renderForm();
       const calls = offerForms([WAX_ANIMAL, WAX_SUBSTANCE]);
 
-      await use('Form', calls);
-      type('Form', 'wax');
-      settle();
-      fireEvent.click(await screen.findByRole('option', { name: /^Wax \(Substance\)/ }));
+      await pickWax(calls, /^Wax \(Substance\)/);
 
       expect(box('Form')).toHaveValue('Wax');
       expect(box('Form')).toHaveAttribute('aria-expanded', 'false');
+      expect(group('(Substance)')).toBeInTheDocument();
+      expect(box('Form')).toHaveAccessibleDescription(
+        expect.stringContaining('(Substance) Candle and poppet wax.'),
+      );
       type('Name', 'Testwort');
       save();
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
-      expect(saves[0].input.form).toBe('Wax');
+      expect(saves[0].input).toMatchObject({ form: 'Wax', formId: SUBSTANCE_WAX_ID });
+    });
+
+    it('tells two same-named picks apart, the last pick replacing the first', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      const calls = offerForms([WAX_ANIMAL, WAX_SUBSTANCE]);
+
+      await pickWax(calls, /^Wax \(Substance\)/);
+      act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+      fireEvent.click(screen.getByRole('button', { name: 'Show Form suggestions' }));
+      fireEvent.click(await screen.findByRole('option', { name: /^Wax \(Animal\)/ }));
+
+      expect(group('(Animal)')).toBeInTheDocument();
+      expect(group('(Substance)')).not.toBeInTheDocument();
+      type('Name', 'Testwort');
+      save();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves[0].input.formId).toBe(ANIMAL_WAX_ID);
+    });
+
+    it('shows the group’s description in a tooltip on hover and on focus, closed by Escape', async () => {
+      renderForm();
+      const calls = offerForms([WAX_ANIMAL, WAX_SUBSTANCE]);
+      await pickWax(calls, /^Wax \(Substance\)/);
+      const field = within(box('Form').closest('.combobox') as HTMLElement);
+      act(() => box('Form').blur());
+
+      expect(field.queryByRole('tooltip')).not.toBeInTheDocument();
+      fireEvent.mouseEnter(group('(Substance)') as HTMLElement);
+      expect(field.getByRole('tooltip')).toHaveTextContent('Candle and poppet wax.');
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(field.queryByRole('tooltip')).not.toBeInTheDocument();
+
+      act(() => box('Form').focus());
+      expect(field.getByRole('tooltip')).toHaveTextContent('Candle and poppet wax.');
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(field.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('shows the group of a form with no description, and no tooltip', async () => {
+      renderForm();
+      const calls = offerForms([WAX_ANIMAL, WAX_SUBSTANCE]);
+
+      await pickWax(calls, /^Wax \(Animal\)/);
+      fireEvent.mouseEnter(group('(Animal)') as HTMLElement);
+
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      expect(box('Form')).toHaveAccessibleDescription(expect.stringMatching(/\(Animal\)$/));
+    });
+
+    // The owner's call: the text is still the member's to edit, and an edit
+    // away from the pick leaves typed text, which links nothing.
+    it('drops the group and the id once the text is edited away from the pick', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      const calls = offerForms([WAX_ANIMAL, WAX_SUBSTANCE]);
+
+      await pickWax(calls, /^Wax \(Substance\)/);
+      type('Form', 'Waxe');
+      type('Form', 'Wax');
+
+      expect(group('(Substance)')).not.toBeInTheDocument();
+      expect(box('Form')).not.toHaveAccessibleDescription(expect.stringContaining('Substance'));
+      type('Name', 'Testwort');
+      save();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves[0].input).toMatchObject({ form: 'Wax', formId: null });
+    });
+
+    it('records no pick for a form only in use, which has no curated row', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      const calls = offerForms([RHIZOMES]);
+
+      await use('Form', calls);
+      type('Form', 'rhiz');
+      settle();
+      fireEvent.click(await screen.findByRole('option', { name: /^Rhizomes/ }));
+
+      expect(box('Form')).toHaveValue('Rhizomes');
+      type('Name', 'Testwort');
+      save();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves[0].input).toMatchObject({ form: 'Rhizomes', formId: null });
+    });
+
+    it('clears the pick with the rest of the form after Save & Add Another', async () => {
+      acceptCreate();
+      const onSaved = renderForm();
+      const calls = offerForms([WAX_ANIMAL, WAX_SUBSTANCE]);
+
+      await pickWax(calls, /^Wax \(Substance\)/);
+      type('Name', 'Testwort');
+      saveAnother();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+
+      await waitFor(() => expect(box('Form')).toHaveValue(''));
+      expect(group('(Substance)')).not.toBeInTheDocument();
     });
 
     it('takes a value in no vocabulary from its own row, with no warning', async () => {
@@ -1581,7 +1739,7 @@ describe('IngredientForm', () => {
       type('Name', 'Testwort');
       save();
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
-      expect(saves[0].input.form).toBe('rhizome');
+      expect(saves[0].input).toMatchObject({ form: 'rhizome', formId: null });
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
   });
@@ -1667,19 +1825,25 @@ describe('IngredientForm', () => {
       description: null,
       curated: false,
     };
+    const GREEK_HECATE_ID = '4b2a6c8e-1d3f-4a5b-9c7d-8e0f1a2b3c4d';
+    const ROMAN_HECATE_ID = 'c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e7f';
     const HECATE_GREEK: DeityNode = {
+      id: GREEK_HECATE_ID,
       value: 'Hecate',
       description: 'Of crossroads and the moon.',
       tradition: 'Greek',
       curated: true,
     };
     const HECATE_ROMAN: DeityNode = {
+      id: ROMAN_HECATE_ID,
       value: 'Hecate',
       description: null,
       tradition: 'Roman',
       curated: true,
     };
+    // In use only: no curated row, so nothing to pick.
     const HECATE_FIXTURE: DeityNode = {
+      id: null,
       value: 'Hecate Fixturia',
       description: null,
       tradition: null,
@@ -1732,9 +1896,9 @@ describe('IngredientForm', () => {
         legend: 'Deities',
         entry: 'Deity',
         offer: () => offerDeities([HECATE_GREEK, HECATE_FIXTURE]),
-        // The value, never the label: "Hecate", not "Hecate (Greek)".
+        // A pick reads with its tradition, as its row does (MB.169).
         option: /^Hecate \(Greek\)/,
-        value: 'Hecate',
+        value: 'Hecate (Greek)',
       },
       {
         legend: 'Substitute Ingredients',
@@ -1864,7 +2028,7 @@ describe('IngredientForm', () => {
         screen.getByRole('option', { name: /^Hecate \(Greek\)/ }).id,
       );
       fireEvent.keyDown(box('Deity'), { key: 'Enter' });
-      expect(removeButton('Hecate')).toBeInTheDocument();
+      expect(removeButton('Hecate (Greek)')).toBeInTheDocument();
 
       type('Deity', 'Fixture of the Hedge');
       settle();
@@ -1881,9 +2045,70 @@ describe('IngredientForm', () => {
       save();
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(saves[0].input.deities).toEqual([
-        { name: 'Hecate' },
+        { deityId: GREEK_HECATE_ID },
         { name: 'Fixture of the Hedge' },
       ]);
+    });
+
+    // MB.169: the same name in two traditions, told apart on the pill as in
+    // the list, and saved as two picks.
+    it('adds Greek and Roman Hecate as two pills, each with its tradition, and sends two ids', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      const calls = offerDeities([HECATE_GREEK, HECATE_ROMAN]);
+
+      await lookUp('Deity', calls, 'hecate');
+      fireEvent.click(await screen.findByRole('option', { name: /^Hecate \(Greek\)/ }));
+      expect(changes('Deities')).toHaveTextContent('Added Hecate (Greek)');
+      type('Deity', 'hecate');
+      settle();
+      fireEvent.click(await screen.findByRole('option', { name: 'Hecate (Roman)' }));
+
+      // Its description in its tooltip and its x's description, as a linked
+      // substitute's detail is (MB.164); a deity with none has nothing more.
+      expect(removeButton('Hecate (Greek)')).toHaveAccessibleDescription(
+        'Of crossroads and the moon.',
+      );
+      expect(removeButton('Hecate (Roman)')).not.toHaveAccessibleDescription();
+      type('Name', 'Testwort');
+      save();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves[0].input.deities).toEqual([
+        { deityId: GREEK_HECATE_ID },
+        { deityId: ROMAN_HECATE_ID },
+      ]);
+    });
+
+    it('refuses the same deity picked twice, beside the repeat, named with its tradition', async () => {
+      renderForm();
+      const calls = offerDeities([HECATE_GREEK, HECATE_ROMAN]);
+
+      await lookUp('Deity', calls, 'hecate');
+      fireEvent.click(await screen.findByRole('option', { name: /^Hecate \(Greek\)/ }));
+      type('Deity', 'hecate');
+      settle();
+      fireEvent.click(await screen.findByRole('option', { name: /^Hecate \(Greek\)/ }));
+      type('Name', 'Testwort');
+      save();
+
+      await waitFor(() =>
+        expectErrorOn(box('Deity'), 'Hecate (Greek): This deity is already listed'),
+      );
+    });
+
+    it('adds a deity only in use as its name, read and sent as typed', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      const calls = offerDeities([HECATE_FIXTURE]);
+
+      await lookUp('Deity', calls, 'hecate');
+      fireEvent.click(await screen.findByRole('option', { name: 'Hecate Fixturia' }));
+
+      expect(removeButton('Hecate Fixturia')).not.toHaveAccessibleDescription();
+      type('Name', 'Testwort');
+      save();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves[0].input.deities).toEqual([{ name: 'Hecate Fixturia' }]);
     });
 
     it('offers each ingredient with its formal name and whose entry it is, in the order found', async () => {

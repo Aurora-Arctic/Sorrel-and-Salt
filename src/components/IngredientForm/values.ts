@@ -5,13 +5,13 @@ import type { ErrorExtensions } from '../../graphql/types';
 import type { ValidationIssue } from '../../lib/types';
 import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import type {
+  AnyListEntry,
+  DeityLink,
   IngredientFormInput,
   IngredientFormValues,
-  ListEntry,
   ListFieldName,
   MultiSelectFieldName,
   SubstituteLink,
-  SubstituteListEntry,
 } from './types';
 
 // The form's values against the shape the schema and the mutation take, and
@@ -33,6 +33,7 @@ export const EMPTY_VALUES: IngredientFormValues = {
   nomenclature: '',
   canonicalName: '',
   form: '',
+  formLink: null,
   folkNames: [],
   description: '',
   elements: [],
@@ -56,12 +57,15 @@ const isListField = (field: unknown): field is ListFieldName =>
  */
 const WHOLE_LIST: MultiSelectFieldName = 'elements';
 
+/** The form's pick, which the input carries beside its text and the form draws in the Form box. */
+const PICKED_FORM = 'formId';
+
 /**
  * The values as the mutation takes them: an unanswered closed set is null, the
  * elements go as chosen — `[]` for none, which the update input needs to
- * clear them — a list entry is its text — a substitute its link's id, or else its text as a
- * name, and a deity its text as a name until MB.169 sends a pick's id, as it
- * will the form's — and the boxes are left behind — the resolver has
+ * clear them — a list entry is its text — a substitute or a deity its link's
+ * id, or else its text as a name — the form its text and its pick's id, null
+ * for typed text (MB.169) — and the boxes are left behind — the resolver has
  * refused a save while one holds text. Nothing is trimmed or dropped — the
  * schema does that on both sides — so an entry's index in an issue's path is
  * its index here.
@@ -75,6 +79,7 @@ export function toInput(values: IngredientFormValues): IngredientFormInput {
     colors,
     deities,
     substitutes,
+    formLink,
     drafts: _,
     ...text
   } = values;
@@ -82,24 +87,33 @@ export function toInput(values: IngredientFormValues): IngredientFormInput {
   return {
     ...text,
     nomenclature: nomenclature || null,
+    formId: formLink?.id ?? null,
     folkNames: texts(folkNames),
     planets: texts(planets),
     zodiacSigns: texts(zodiacSigns),
     colors: texts(colors),
-    deities: texts(deities).map((name) => ({ name })),
+    deities: deities.map(({ value, link }) => (link ? { deityId: link.id } : { name: value })),
     substitutes: substitutes.map(({ value, link }) =>
       link ? { ingredientId: link.id } : { name: value },
     ),
   };
 }
 
+const linkOf = (entry: AnyListEntry): SubstituteLink | DeityLink | undefined =>
+  'link' in entry ? entry.link : undefined;
+
+const isDeityLink = (link: SubstituteLink | DeityLink): link is DeityLink => 'tradition' in link;
+
 /**
- * What an entry's pill reads: its text, and a linked substitute's formal name
- * beside its label, so two ingredients sharing a label are told apart.
+ * What an entry's pill reads: its text, beside what tells it from a
+ * same-named one — a linked substitute's formal name, so two ingredients
+ * sharing a label are told apart, and a picked deity's tradition, "Hecate
+ * (Greek)", as its lookup row reads (MB.169).
  */
-export function entryText(entry: ListEntry | SubstituteListEntry): string {
-  const formalName = 'link' in entry ? entry.link?.canonicalName : undefined;
-  return formalName ? `${entry.value} (${formalName})` : entry.value;
+export function entryText(entry: AnyListEntry): string {
+  const link = linkOf(entry);
+  const qualifier = link && (isDeityLink(link) ? link.tradition : link.canonicalName);
+  return qualifier ? `${entry.value} (${qualifier})` : entry.value;
 }
 
 /** Whose a linked ingredient is, as its lookup row and its pill's tooltip say. */
@@ -107,14 +121,16 @@ export const tierOf = ({ isGlobal }: Pick<SubstituteLink, 'isGlobal'>): string =
   isGlobal ? 'Compendium entry' : 'This coven’s entry';
 
 /**
- * What a linked substitute's pill leaves out, for its tooltip: "Dried leaf ·
- * Compendium entry — A fixture herb." Its form, which the pill's formal name
- * needs to tell two ingredients apart (§5), its tier and its description
- * (MB.164). Undefined for any other entry, which has nothing more to tell.
+ * What a linked entry's pill leaves out, for its tooltip. A substitute's is
+ * "Dried leaf · Compendium entry — A fixture herb.": its form, which the
+ * pill's formal name needs to tell two ingredients apart (§5), its tier and
+ * its description (MB.164). A deity's is its description (MB.169).
+ * Undefined for a typed entry, which has nothing more to tell.
  */
-export function entryDetail(entry: ListEntry | SubstituteListEntry): string | undefined {
-  const link = 'link' in entry ? entry.link : undefined;
+export function entryDetail(entry: AnyListEntry): string | undefined {
+  const link = linkOf(entry);
   if (!link) return undefined;
+  if (isDeityLink(link)) return link.description ?? undefined;
   const facts = [link.form, tierOf(link)].filter(Boolean).join(' · ');
   return link.description ? `${facts} — ${link.description}` : facts;
 }
@@ -129,6 +145,8 @@ export function fieldNameOf(
   values: IngredientFormValues,
 ): FieldPath<IngredientFormValues> | undefined {
   const [field, index, ...rest] = path;
+  // The pick is the Form field's: its box is what made it (MB.169).
+  if (field === PICKED_FORM && index === undefined && rest.length === 0) return 'form';
   // The boxes are the form's own, not the input's.
   if (rest.length > 0 || typeof field !== 'string' || field === 'drafts' || !(field in values)) {
     return undefined;
@@ -144,19 +162,19 @@ export function fieldNameOf(
 
 /**
  * Adds `text` as the list's last entry, trimmed, and empties the box: a
- * suggestion picked from it, with the ingredient it links when it is a
- * substitute's. Returns what the entry reads as, or undefined when the text
- * was blank.
+ * suggestion picked from it, with the ingredient or the curated deity it
+ * links when it is a substitute's or a deity's. Returns what the entry reads
+ * as, or undefined when the text was blank.
  */
 export function addEntry(
   { getValues, setValue }: Pick<UseFormReturn<IngredientFormValues>, 'getValues' | 'setValue'>,
   list: ListFieldName,
   text: string,
-  link?: SubstituteLink,
+  link?: SubstituteLink | DeityLink,
 ): string | undefined {
   const value = text.trim();
   if (value === '') return undefined;
-  const entry: SubstituteListEntry = link ? { value, link } : { value };
+  const entry: AnyListEntry = link ? { value, link } : { value };
   setValue(list, [...getValues(list), entry], { shouldDirty: true });
   setValue(`drafts.${list}`, '');
   return entryText(entry);
@@ -189,6 +207,13 @@ export const ingredientResolver: Resolver<
   // control — the first, as the field has one error element.
   const elements: unknown = result.errors[WHOLE_LIST];
   if (Array.isArray(elements)) errors[WHOLE_LIST] = elements.find(Boolean);
+  // The pick's issue moves onto the Form field, whose box made the pick. The
+  // schema raises it or one with the text, never both.
+  const picked = (result.errors as Record<string, FieldError | undefined>)[PICKED_FORM];
+  if (picked) {
+    delete (errors as Record<string, unknown>)[PICKED_FORM];
+    errors.form = picked;
+  }
   for (const list of LIST_FIELDS) {
     const entries: unknown = result.errors[list];
     if (Array.isArray(entries)) errors[list] = entries.map((entry) => entry && { value: entry });
