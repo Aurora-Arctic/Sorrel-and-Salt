@@ -1,6 +1,7 @@
 import 'server-only';
 import {
   type Claimant,
+  type DeitySuggestion,
   type FormSuggestion,
   type VocabularySuggestion,
   findVocabularySuggestions,
@@ -8,10 +9,11 @@ import {
 import type { Session } from '../../../lib/session';
 import { assertMembership } from '@/modules/coven';
 import { planets, zodiacSigns } from '../schema/astrology';
+import { deities } from '../schema/deities';
 import { ingredientForms } from '../schema/ingredient-forms';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 
-export type { Claimant, FormSuggestion, VocabularySuggestion };
+export type { Claimant, DeitySuggestion, FormSuggestion, VocabularySuggestion };
 
 /**
  * Asks only `ingredient: ['read']`: the curated rows are global, and every
@@ -74,4 +76,22 @@ export async function suggestForms(
 ): Promise<PageEntry<FormSuggestion>[]> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
   return findVocabularySuggestions(membership, ingredientForms, query.trim(), page);
+}
+
+/**
+ * What a `deities` entry offers as `query` is typed: the curated deities
+ * first, each with its tradition, a name match before a description match,
+ * then values already written in the compendium or this workspace that no
+ * live deity curates.
+ *
+ * @throws {Forbidden} the caller may not read this workspace's ingredients.
+ */
+export async function suggestDeities(
+  session: Session,
+  workspaceId: string,
+  query: string,
+  page: PageRequest,
+): Promise<PageEntry<DeitySuggestion>[]> {
+  const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
+  return findVocabularySuggestions(membership, deities, query.trim(), page);
 }

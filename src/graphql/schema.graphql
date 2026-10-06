@@ -38,6 +38,13 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTime
 
+type DeitySuggestion {
+  curated: Boolean!
+  description: String
+  tradition: String
+  value: String!
+}
+
 type FormSuggestion {
   claimants: [SuggestionClaimant!]!
   curated: Boolean!
@@ -152,6 +159,7 @@ type PageInfo {
 type Query {
   commonNameSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryCommonNameSuggestionsConnection!
   compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, query: String): QueryCompendiumConnection!
+  deitySuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryDeitySuggestionsConnection!
   formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryFormSuggestionsConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient!
   ingredientFormValues(after: String, before: String, first: Int, last: Int): QueryIngredientFormValuesConnection!
@@ -193,6 +201,16 @@ type QueryCompendiumConnectionEdge {
   The word similarity of the query to the entry, 0 to 1 — its best across the label, formal name and folk names. Null without a query.
   """
   score: Float
+}
+
+type QueryDeitySuggestionsConnection {
+  edges: [QueryDeitySuggestionsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryDeitySuggestionsConnectionEdge {
+  cursor: String!
+  node: DeitySuggestion!
 }
 
 type QueryFormSuggestionsConnection {

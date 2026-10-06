@@ -5,10 +5,11 @@
 in the `vocabulary` module, in `src/modules/vocabulary/schema/deities.ts`
 (MB.128), seeded by `src/db/seed/deities.ts` (MB.129) from
 ["The deity vocabulary seed"](deity-vocabulary-seed.md), read by a member's
-autofill (MB.130, on [the member's autofill](member-autofill.md)) and curated
-at `/admin/deities` and `/admin/deity-traditions` (MB.132). Until then the
-deities field suggests nothing, and each member spells a practice's gods their
-own way: one spelling needs someone to curate it.
+autofill, `deitySuggestions` (MB.130, on
+[the member's autofill](member-autofill.md)), and curated at `/admin/deities`
+and `/admin/deity-traditions` (MB.132). Until MB.131 puts that autofill on
+the form, the deities field suggests nothing, and each member spells a
+practice's gods their own way: one spelling needs someone to curate it.
 
 - **`deity_traditions`** — `id`, `name`, `slug`, `description` (NOT NULL, with
   a non-blank CHECK), + audit. Global, admin-curated, `ingredient_form_groups`
@@ -59,9 +60,9 @@ is: a curated value explains itself.
 
 **One multicolumn `gin_trgm_ops` index on `deities` over
 `(name, description)`**, spelled as `ingredient_forms_trgm` is. At 216 rows
-the planner may still prefer a sequential scan, so MB.130 decides whether an
-index-scan assertion holds, as M4.7a's does, or the query-shape assertion
-MB.94 settled for at nineteen rows. `deity_traditions` takes none: the autofill
+the planner still prefers a sequential scan, measured on MB.130's match, so
+MB.130 asserts the query's shape, as MB.94 does at nineteen rows, rather than
+an index scan, as M4.7a does for the common names. `deity_traditions` takes none: the autofill
 returns a tradition's name, and never searches it.
 
 **Where it differs from the form precedent, and why:**

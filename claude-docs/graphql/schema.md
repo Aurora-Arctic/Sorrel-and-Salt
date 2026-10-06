@@ -175,6 +175,32 @@ type SuggestionClaimant {
   signed out, from `assertMembership` when signed in elsewhere, a site admin
   included.
 
+### `deitySuggestions`
+
+The autofill behind the deities field (MB.130), registered by `vocabulary`
+over the same finder, taking the same arguments as `formSuggestions`:
+
+```graphql
+type DeitySuggestion {
+  value: String!
+  description: String # the curated row's; null for a value only in use
+  tradition: String # the curated row's tradition; null for a value only in use
+  curated: Boolean!
+}
+```
+
+- **`tradition` is `formSuggestions`' `group`** under the vocabulary's own
+  word. It tells two same-named deities apart, and a client renders
+  "Hecate (Greek)". A deity under a soft-deleted tradition comes back as a
+  value in use, with no tradition.
+- **No `claimants`.** They show which entries already share an identity with
+  the one being written, and a deity is no part of an ingredient's identity
+  ([`db/member-autofill.md`](../db/member-autofill.md), "The member's
+  autofill").
+- Each entry of an ingredient's `deities` list is one value in use, folded
+  and counted once, from the compendium and the named workspace only.
+- The refusals are `planetSuggestions`'.
+
 ### `possibleDuplicates`
 
 Story 16's "did you mean" (MB.11), registered by `ingredients` over M4.7's

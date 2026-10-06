@@ -4,6 +4,7 @@ import type { auditColumns } from '../../modules/identity/schema/users';
 import type { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import type { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
+import type { deities } from '../../modules/vocabulary/schema/deities';
 import type { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
 import type { Membership } from '@/modules/coven';
 import type { SiteAdmin } from '@/modules/identity';
@@ -317,7 +318,8 @@ export interface IngredientIdentity {
 }
 
 /** A vocabulary a member's autofill suggests from. */
-export type SuggestingVocabulary = typeof planets | typeof zodiacSigns | typeof ingredientForms;
+export type SuggestingVocabulary =
+  typeof planets | typeof zodiacSigns | typeof ingredientForms | typeof deities;
 
 /**
  * Where a vocabulary's in-use values are written on `ingredients`: one value
@@ -338,6 +340,15 @@ export interface FormSuggestion extends VocabularySuggestion {
   /** The curated row's group, which tells two same-named forms apart; none in use. */
   group: string | null;
   claimants: Claimant[];
+}
+
+/**
+ * A deity suggestion, which carries its tradition as a form's carries its
+ * group, and no claimants: a deity is no part of an ingredient's identity.
+ */
+export interface DeitySuggestion extends VocabularySuggestion {
+  /** The curated row's tradition, which tells two same-named deities apart; none in use. */
+  tradition: string | null;
 }
 
 /** An in-scope ingredient already holding a suggested value. */
