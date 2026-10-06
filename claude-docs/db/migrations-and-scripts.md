@@ -122,6 +122,13 @@
   ["Expand/contract"](expand-contract.md). 0033 adds `deity_traditions` and
   `deities`, with their two `set_updated_at` triggers; see
   ["The deity vocabulary"](deity-vocabulary.md).
+- **`0034_element-list.sql`** (MB.158) is the expand of MB.157's list, made
+  the way 0032 was, because MB.137's and MB.141's drops are still pending.
+  Its `ADD COLUMN` for `elements` came from the scratch `generate`. The fill
+  was added by hand, as 0030's was: one `UPDATE` copying `element` as a
+  one-entry array where one is set. `element-list.test.ts` re-runs that
+  `UPDATE` against the seeded rows. See
+  ["The ingredient identity model"](identity-model.md).
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls

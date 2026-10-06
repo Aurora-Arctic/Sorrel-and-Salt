@@ -230,9 +230,9 @@ repeats either: comparing an array's entries with each other needs a subquery
 or a hand-written function, and the free-text lists carry no CHECK. The array
 keeps the order chosen, and nothing sorts it.
 
-- **A new name, by rule 10**, as MB.134's lists took one. MB.158 adds
-  `elements` and fills it from `element` where one is set, as a one-entry
-  list. MB.159 switches every reader and writer and stops declaring
+- **A new name, by rule 10**, as MB.134's lists took one. MB.158 added
+  `elements` and filled it from `element` where one was set, as a one-entry
+  list (`0034_element-list`); nothing reads it yet. MB.159 switches every reader and writer and stops declaring
   `element`, and its migration rederives the list from `element` for
   whatever the live deploy wrote after MB.158, as `0031_refill-ingredient-lists`
   did. MB.160 fills a last time and drops `element`, with its `.ack.md`

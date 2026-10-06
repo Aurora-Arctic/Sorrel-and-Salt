@@ -41,6 +41,8 @@ const COLUMNS = [
   'form',
   'description',
   'element',
+  // MB.158: the list beside the single, for the deploy until MB.160 drops that.
+  'elements',
   'planets',
   'zodiac_signs',
   'deities',
@@ -86,6 +88,11 @@ describe('ingredients schema', () => {
   // A correspondence, not identity: a closed enum, the opposite of `form`.
   it('declares element as a closed five-value enum', () => {
     expect(ingredientElement.enumValues).toEqual(ELEMENT_VALUES);
+  });
+
+  // MB.157: the list is of the same enum, not text, so it stays closed.
+  it('stores elements as an array of that enum', () => {
+    expect(byName.elements.getSQLType()).toBe('ingredient_element[]');
   });
 
   // Text, not an FK: an FK makes an uncurated value unwritable and would put a

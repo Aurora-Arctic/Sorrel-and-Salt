@@ -239,6 +239,13 @@
       "when": 1791252953963,
       "tag": "0033_deities",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1791302037252,
+      "tag": "0034_element-list",
+      "breakpoints": true
     }
   ]
 }
