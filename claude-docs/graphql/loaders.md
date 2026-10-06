@@ -15,20 +15,22 @@ merely absent:
   the name a resolver reads it by. `createLoaders(session)` calls every factory
   and is called only by `createContext`. Each loader arrives with the schema it
   loads: `membershipsByUser` (`coven`, for `User.memberships`),
+  `providersByUser` (`identity`, for `User.providers`, MB.52),
   `categoriesByIngredient`, `folkNamesByIngredient`,
-  `substitutesByIngredient` and `deitiesByIngredient` (`ingredients`, for
-  `Ingredient.categories`, `Ingredient.folkNames`, `Ingredient.substitutes`
-  and `Ingredient.deities`), and `categoryGroupsById`,
-  `ingredientFormGroupsById`, `deityTraditionsById` and `ingredientFormsById`
-  (`vocabulary`, for `Category.group`, `IngredientFormValue.group`,
-  `Deity.tradition` and `Ingredient.formChoice`; the last two MB.167's); M6.11
+  `substitutesByIngredient`, `deitiesByIngredient` and `referencesByIngredient`
+  (`ingredients`, for `Ingredient.categories`, `Ingredient.folkNames`,
+  `Ingredient.substitutes`, `Ingredient.deities` and `Ingredient.references`),
+  and `categoryGroupsById`, `ingredientFormGroupsById`, `deityTraditionsById`
+  and `ingredientFormsById` (`vocabulary`, for `Category.group`,
+  `IngredientFormValue.group`, `Deity.tradition` and `Ingredient.formChoice`;
+  the last two MB.167's); M6.11
   `membersByWorkspace`, MB.9 `ingredientsById` and MB.10 `usersById` follow. A test that builds a context
   by hand calls `createLoaders(session)` rather than passing `{}`, which the
   `Loaders` type no longer admits. A factory is written in its module's `loaders/`, exported
   through the module's index, and spread into `LOADERS` here
   ([`modules.md`](../modules.md)).
 - **A loader keyed by an object** passes `cacheKeyFn`, and `defineLoader`'s
-  third type parameter names what it returns. The four ingredient loaders are
+  third type parameter names what it returns. The five ingredient loaders are
   keyed by the parent row's `{ id, workspaceId }` and cached by `id`. The
   service needs the `workspaceId` to know which coven to check without a read
   of its own, and it never trusts it as the scope
@@ -37,8 +39,9 @@ merely absent:
   that is missing or retired is a `NotFound` in its own slot.
   `ingredientFormsById` is keyed by id too, but answers null for a form no
   longer curated, since a retired pick reads as no pick rather than an error.
-- **A null session is not always a refusal.** `membershipsByUser` refuses
-  every key signed out. The ingredient loaders answer a compendium entry for
+- **A null session is not always a refusal.** `membershipsByUser` and
+  `providersByUser` refuse every key signed out, and `providersByUser` every
+  key to a non-admin. The ingredient loaders answer a compendium entry for
   anyone, since the compendium is the public surface (MB.80), and refuse a
   workspace entry's key with `Forbidden` in its own slot; the group loaders
   and `ingredientFormsById` answer anyone, since a vocabulary is public

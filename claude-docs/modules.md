@@ -25,7 +25,8 @@ src/modules/<name>/
 A module's index re-exports its `graphql/` files, so loading the index is what
 registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
 `@/modules/coven`, `@/modules/vocabulary` and `@/modules/ingredients` for that side effect, never the
-`graphql/` path, which is internal. `identity` has `User` and `me`; `coven` has
+`graphql/` path, which is internal. `identity` has `User`, `me`, the admin user list's `users` connection and the
+`providersByUser` loader; `coven` has
 `Workspace`, `WorkspaceMember`, the `membershipsByUser` loader and the
 `User.memberships` field; `vocabulary` has `CorrespondenceSuggestion`,
 `FormSuggestion`, `DeitySuggestion`, `SuggestionClaimant` and the
@@ -201,7 +202,7 @@ name rather than credited to whichever export happens to sit above it. It
 fails an unlisted function, and it fails a listed one that no longer exists or
 no longer reads the tier.
 
-It holds the predicate, thirteen finders and the writer today: `inCompendium` in
+It holds the predicate, seventeen functions and the writer today: `inCompendium` in
 `predicates.ts`, which is `workspace_id IS NULL` itself; `findSimilarIngredients`
 (M4.7), the fuzzy duplicate match; `findVocabularySuggestions` (MB.94, forms
 M4.7a), the planet, zodiac and form autofill; `findCommonNameSuggestions`
@@ -215,13 +216,18 @@ write names; `findCompendiumEntryBySlug` and `findCompendiumSlugRedirect`
 (MB.82), the entry at an address and the one a retired address redirects to;
 `findIngredientsInSpellsIncludingSoftDeleted` (M5.3), what a readable spell
 holds, deleted or not; `findSubstitutesIncludingSoftDeleted` (MB.140), an
-ingredient's substitutes and the ingredients they link, deleted or not; and `writerFor` (M5.2), the private builder of `withAudit`'s writer, whose
+ingredient's substitutes and the ingredients they link, deleted or not;
+`findReferencesOfIngredients` (MB.153), an ingredient's references, each
+where its readers may look; `findManyReferences` (MB.153), what a row
+written under the proofs may cite; `findReferenceSuggestions` (MB.153), the
+reference picker's search; `citesNothing` (MB.153), the admin's to-do
+filter, an entry citing no compendium reference; and `writerFor` (M5.2), the private builder of `withAudit`'s writer, whose
 compendium-tier methods update and soft-delete a row only under
 `workspace_id IS NULL` and clear the tier's lapsed slug retirements. The
 list, its count, the identity lookup, the two address finders and the writer
-touch the compendium tier alone; each of the rest reads the compendium and the
-proofs' workspaces in a single statement. A later task that adds such a finder
-— M8.3's local-beats-compendium resolution, MB.153's reference finders — adds the finder's name to
+touch the compendium tier alone, as does `citesNothing`; each of the rest
+reads the compendium and the proofs' workspaces in a single statement. A later
+task that adds such a finder — M8.3's local-beats-compendium resolution — adds the finder's name to
 `TIER_SEAM` in its own PR, with a one-line reason beside it.
 The list is then the scope of the extraction task, read from one file.
 

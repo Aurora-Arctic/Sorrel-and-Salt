@@ -98,6 +98,7 @@ type Ingredient {
   name: String!
   nomenclature: Nomenclature!
   planets: [String!]
+  references: [ReferenceLink!]!
   safetyNotes: String
   slug: String!
   substitutes: [Substitute!]!
@@ -162,6 +163,7 @@ input IngredientInput {
   name: String!
   nomenclature: Nomenclature
   planets: [String!]
+  references: [ReferenceLinkInput!]
   safetyNotes: String
   substitutes: [SubstituteInput!]
   zodiacSigns: [String!]
@@ -184,16 +186,27 @@ input IngredientUpdateInput {
   name: String!
   nomenclature: Nomenclature!
   planets: [String!]!
+  references: [ReferenceLinkInput!]!
   safetyNotes: String!
   substitutes: [SubstituteInput!]!
   zodiacSigns: [String!]!
 }
 
+"""
+A local date string (i.e., with no associated timezone) in `YYYY-MM-DD` format, e.g. `2020-01-01`.
+"""
+scalar LocalDate
+
 type Mutation {
+  """A null workspaceId writes the compendium's, under the admin proof."""
+  createReference(input: ReferenceInput!, workspaceId: ID): Reference!
   createWorkspaceIngredient(input: IngredientInput!, workspaceId: ID!): Ingredient!
   deleteIngredient(id: ID!, workspaceId: ID!): ID!
   setEmail(email: String!, next: String): User!
   updateIngredient(id: ID!, input: IngredientUpdateInput!, workspaceId: ID!): Ingredient!
+
+  """Reaches every row citing it; nothing deletes a reference in v1."""
+  updateReference(id: ID!, input: ReferenceInput!, workspaceId: ID): Reference!
 }
 
 enum Nomenclature {
@@ -215,7 +228,7 @@ type PageInfo {
 
 type Query {
   commonNameSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryCommonNameSuggestionsConnection!
-  compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, query: String): QueryCompendiumConnection!
+  compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, query: String, withoutReferences: Boolean): QueryCompendiumConnection!
   deitySuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryDeitySuggestionsConnection!
   formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryFormSuggestionsConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient!
@@ -225,6 +238,8 @@ type Query {
   ok: Boolean!
   planetSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryPlanetSuggestionsConnection!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID!): QueryPossibleDuplicatesConnection!
+  referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryReferenceSuggestionsConnection!
+  users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String): QueryUsersConnection!
   zodiacSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryZodiacSuggestionsConnection!
 }
 
@@ -325,6 +340,26 @@ type QueryPossibleDuplicatesConnectionEdge {
   score: Float!
 }
 
+type QueryReferenceSuggestionsConnection {
+  edges: [QueryReferenceSuggestionsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryReferenceSuggestionsConnectionEdge {
+  cursor: String!
+  node: Reference!
+}
+
+type QueryUsersConnection {
+  edges: [QueryUsersConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryUsersConnectionEdge {
+  cursor: String!
+  node: User!
+}
+
 type QueryZodiacSuggestionsConnection {
   edges: [QueryZodiacSuggestionsConnectionEdge!]!
   pageInfo: PageInfo!
@@ -333,6 +368,84 @@ type QueryZodiacSuggestionsConnection {
 type QueryZodiacSuggestionsConnectionEdge {
   cursor: String!
   node: CorrespondenceSuggestion!
+}
+
+"""A source, kept once and linked from every row it supports."""
+type Reference {
+  accessed: LocalDate
+  audit: AuditInfo!
+  authors: String
+
+  """
+  Chicago bibliography form, rendered on the server, plain; a surface that shows italics renders the parts itself.
+  """
+  citation: String!
+
+  """
+  The book of a chapter, the journal of an article, the reference work of an entry, or a web page's site.
+  """
+  container: String
+  contributors: String
+  edition: String
+
+  """The repository a print work was read through."""
+  host: String
+  id: ID!
+  isGlobal: Boolean!
+  issue: String
+  kind: ReferenceKind!
+  modified: LocalDate
+  note: String
+  pages: String
+  place: String
+  published: String
+  publisher: String
+  series: String
+  title: String!
+  url: String
+  volume: String
+}
+
+"""A reference, whole. On an update, a field left out or null is cleared."""
+input ReferenceInput {
+  accessed: LocalDate
+  authors: String
+  container: String
+  contributors: String
+  edition: String
+  host: String
+  issue: String
+  kind: ReferenceKind!
+  modified: LocalDate
+  note: String
+  pages: String
+  place: String
+  published: String
+  publisher: String
+  series: String
+  title: String!
+  url: String
+  volume: String
+}
+
+enum ReferenceKind {
+  article
+  book
+  chapter
+  entry
+  web_page
+}
+
+"""One row's link to a source."""
+type ReferenceLink {
+  """Where in the source: "p. 112", "chap. 13"."""
+  locator: String
+  reference: Reference!
+}
+
+input ReferenceLinkInput {
+  locator: String
+  referenceId: ID!
 }
 
 """
@@ -367,10 +480,14 @@ type User {
   audit: AuditInfo!
   canCreateWorkspace: Boolean!
   email: String!
+  emailVerified: Boolean!
   id: ID!
   image: String
   memberships: [WorkspaceMember!]!
   name: String!
+
+  """The sign-in providers linked to the account, by id, sorted."""
+  providers: [String!]!
   role: UserRole!
 }
 

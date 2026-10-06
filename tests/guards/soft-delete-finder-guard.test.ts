@@ -47,6 +47,7 @@ const EXPORTED_FUNCTIONS = [
   'findManyOfIngredients',
   'findManyOfSpellIngredientsIncludingSoftDeleted',
   'findManyInWorkspace',
+  'findManyReferences',
   'findManySpells',
   'findMembershipsOfUsers',
   'findOne',
@@ -57,9 +58,13 @@ const EXPORTED_FUNCTIONS = [
   'findOneSpell',
   'findPage',
   'findPageInWorkspace',
+  'findProvidersOfUsers',
+  'findReferenceSuggestions',
+  'findReferencesOfIngredients',
   'findSimilarIngredients',
   'findSubstitutesIncludingSoftDeleted',
   'findUserByEmail',
+  'findUserPage',
   'findVocabularySuggestions',
   'findWorkspaceRole',
   'withAudit',
@@ -77,6 +82,7 @@ const INTERNAL = [
   'readableSpells',
   'readSuggestionPage',
   'claimantList',
+  'citesNothing',
 ];
 
 /** Rule 5's half: a finder over a table carrying `workspace_id` scopes by the proof. */
@@ -86,10 +92,13 @@ const SCOPED_FINDERS = [
   'findIngredientSuggestions',
   'findIngredientsInSpellsIncludingSoftDeleted',
   'findManyInWorkspace',
+  'findManyReferences',
   'findOneByIdInWorkspace',
   'findOneIngredient',
   'findOneInWorkspace',
   'findPageInWorkspace',
+  'findReferenceSuggestions',
+  'findReferencesOfIngredients',
   'findSimilarIngredients',
   'findVocabularySuggestions',
 ];
@@ -310,5 +319,21 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     expect(body).toMatch(/inCompendium\(linked\)/);
     expect(body).toMatch(/eq\(linked\.workspaceId, ingredients\.workspaceId\)/);
     expect(body).not.toMatch(/notSoftDeleted\(linked\)/);
+  });
+
+  // Not a hatch, but a read through a left join, whose joined row takes no
+  // filter of its own: the link's tombstone and the reference's both filter,
+  // the parent is live and in a tier the proofs read, and the reference must
+  // be the compendium's or the parent's coven's (MB.153).
+  it('filters a reference link and the reference it cites, each by its own tombstone', () => {
+    const body = functionBody('findReferencesOfIngredients');
+
+    expect(body).toMatch(/notSoftDeleted\(referenceLinks\)/);
+    expect(body).toMatch(/notSoftDeleted\(references\)/);
+    expect(body).toMatch(/isNotNull\(references\.id\)/);
+    expect(body).toMatch(/existsIn\(\s*ingredients\b/);
+    expect(body).toMatch(/scopedTo\(membership, ingredients\)/);
+    expect(body).toMatch(/inCompendium\(references\)/);
+    expect(body).toMatch(/eq\(references\.workspaceId, ingredients\.workspaceId\)/);
   });
 });

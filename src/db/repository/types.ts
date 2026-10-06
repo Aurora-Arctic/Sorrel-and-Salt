@@ -3,6 +3,8 @@ import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { auditColumns } from '../../modules/identity/schema/users';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import type { ingredients } from '../../modules/ingredients/schema/ingredients';
+import type { referenceLinks } from '../../modules/ingredients/schema/reference-links';
+import type { references } from '../../modules/ingredients/schema/references';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import type { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import type { deities } from '../../modules/vocabulary/schema/deities';
@@ -311,6 +313,8 @@ export interface IngredientFilter {
   categoryIds?: readonly string[];
   /** The form, folded as `canonical_key` folds it. */
   form?: string;
+  /** Only entries citing no live compendium reference: the admin's to-do list (MB.153). */
+  withoutReferences?: boolean;
 }
 
 /** What a compendium entry carries onto its edge: its word similarity to the query, on a search. */
@@ -393,6 +397,18 @@ export interface CommonNameSuggestion {
   claimants: Claimant[];
 }
 
+/** A `references` row, compendium or coven's, as a finder returns it. */
+export type ReferenceRow = typeof references.$inferSelect;
+
+/** A `reference_links` row, as a finder returns it. */
+export type ReferenceLinkRow = typeof referenceLinks.$inferSelect;
+
+/** A live link, and the live reference it cites. */
+export interface CitingLink {
+  link: ReferenceLinkRow;
+  reference: ReferenceRow;
+}
+
 /** An `ingredients` row, compendium entry or coven's, as a finder returns it. */
 export type IngredientRow = typeof ingredients.$inferSelect;
 
@@ -400,4 +416,18 @@ export type IngredientRow = typeof ingredients.$inferSelect;
 export interface SlugRedirect {
   entry: IngredientRow;
   expiresAt: Date;
+}
+
+/** What the admin user list is narrowed by (MB.52). Each part is optional, and absent means no filter. */
+export interface UserFilter {
+  /** A substring of the name or the email, case-insensitive, its `%` and `_` read literally. */
+  query?: string;
+  /** Only the users who may not yet create a workspace: M5.8's to-do list. */
+  awaitingApproval?: boolean;
+}
+
+/** One provider account linked to a user, without the tokens its row holds. */
+export interface LinkedProvider {
+  userId: string;
+  providerId: string;
 }

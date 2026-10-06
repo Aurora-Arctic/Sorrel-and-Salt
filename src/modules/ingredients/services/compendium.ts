@@ -20,11 +20,13 @@ import { CompendiumFilter, type CompendiumFilterInput } from '../validation/comp
 import { CompendiumIngredientInput } from '../validation/ingredient';
 import {
   addFolkNames,
+  addReferenceLinks,
   addSubstitutes,
   columnsOf,
   heldDeities,
   replaceDeities,
   replaceFolkNames,
+  replaceReferenceLinks,
   replaceSubstitutes,
   resolvePicks,
 } from './ingredient-rows';
@@ -114,12 +116,12 @@ export async function getIngredient(
 }
 
 /**
- * Creates a compendium entry, with its folk names, substitutes and deities,
- * in one transaction. Its form and deities are picked from their curated
- * vocabularies and its planets and signs named from theirs, each written in
- * its curated row's spelling. The slug is set here from the label, the form
- * and the formal name, and the compendium's lapsed retirements are cleared in
- * the same write.
+ * Creates a compendium entry, with its folk names, substitutes, deities and
+ * references, in one transaction. Its form and deities are picked from their
+ * curated vocabularies and its planets and signs named from theirs, each
+ * written in its curated row's spelling. The slug is set here from the label,
+ * the form and the formal name, and the compendium's lapsed retirements are
+ * cleared in the same write.
  *
  * @throws {Forbidden} the caller is not a site admin — checked before the
  * input is read.
@@ -127,14 +129,14 @@ export async function getIngredient(
  * missing `nomenclature` included — carries a form or deity not picked from a
  * curated row, a planet or sign no curated row holds, collides with another
  * entry, would end another entry's redirect without `endRedirect`, or links
- * a substitute outside the compendium.
+ * a substitute or cites a reference outside the compendium.
  */
 export async function createCompendiumEntry(
   session: Session,
   input: CompendiumWrite,
 ): Promise<IngredientRow> {
   const admin = assertSiteAdmin(session);
-  const { folkNames, substitutes, deities, ...parsed } = parseInput(
+  const { folkNames, substitutes, deities, references, ...parsed } = parseInput(
     CompendiumIngredientInput,
     input,
   );
@@ -154,6 +156,7 @@ export async function createCompendiumEntry(
     await addFolkNames(write, row.id, folkNames ?? []);
     await addSubstitutes(write, [], row.id, substitutes ?? []);
     await replaceDeities(write, row.id, curated.deities, []);
+    await addReferenceLinks(write, [], row.id, references ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
 }
@@ -161,10 +164,10 @@ export async function createCompendiumEntry(
 /**
  * Replaces a compendium entry with `input` — the whole entry as the form
  * submits it, so a field left out is cleared — and its folk names,
- * substitutes and deities with the input's, in one transaction. The slug
- * follows the label, the form and the formal name; when it moves, the old one
- * is retired as this admin's, and redirects to the entry for 180 days. The
- * curated fields are held as `createCompendiumEntry` holds them.
+ * substitutes, deities and references with the input's, in one transaction.
+ * The slug follows the label, the form and the formal name; when it moves, the
+ * old one is retired as this admin's, and redirects to the entry for 180 days.
+ * The curated fields are held as `createCompendiumEntry` holds them.
  *
  * The row is read before the transaction, for the slug it holds; two admins
  * saving one entry at the same instant can retire the older slug rather
@@ -174,7 +177,8 @@ export async function createCompendiumEntry(
  * @throws {ValidationError} the input breaks `CompendiumIngredientInput`,
  * carries a form or deity not picked from a curated row, a planet or sign no
  * curated row holds, collides with another entry, would end another entry's
- * redirect without `endRedirect`, or adds a substitute link outside the
+ * redirect without `endRedirect`, or adds a substitute link or a reference
+ * outside the
  * compendium.
  * @throws {NotFound} no live compendium entry has this id — a coven's
  * ingredient included, and an id that is not one.
@@ -185,7 +189,7 @@ export async function updateCompendiumEntry(
   input: CompendiumWrite,
 ): Promise<IngredientRow> {
   const admin = assertSiteAdmin(session);
-  const { folkNames, substitutes, deities, ...parsed } = parseInput(
+  const { folkNames, substitutes, deities, references, ...parsed } = parseInput(
     CompendiumIngredientInput,
     input,
   );
@@ -219,6 +223,7 @@ export async function updateCompendiumEntry(
     await replaceFolkNames(write, [], id, folkNames ?? []);
     await replaceSubstitutes(write, [], id, substitutes ?? []);
     await replaceDeities(write, id, curated.deities, held);
+    await replaceReferenceLinks(write, [], id, references ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
 }

@@ -36,6 +36,7 @@ const suggestion = (field: string): ScopeProbe => ({
 const PROBES: Record<string, ScopeProbe> = {
   ok: { source: '{ ok }', outcome: 'answers' },
   me: { source: '{ me { id } }', outcome: 'refuses' },
+  users: { source: '{ users(first: 1) { edges { node { id } } } }', outcome: 'refuses' },
   compendium: {
     source: '{ compendium(first: 1) { edges { node { id } } } }',
     outcome: 'answers',
@@ -62,6 +63,13 @@ const PROBES: Record<string, ScopeProbe> = {
   possibleDuplicates: {
     source: `query ($workspaceId: ID!) {
       possibleDuplicates(workspaceId: $workspaceId, name: "Testwort", first: 1) { edges { node { id } } }
+    }`,
+    variables: { workspaceId: WORKSPACE_W_ID },
+    outcome: 'refuses',
+  },
+  referenceSuggestions: {
+    source: `query ($workspaceId: ID!) {
+      referenceSuggestions(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
     }`,
     variables: { workspaceId: WORKSPACE_W_ID },
     outcome: 'refuses',

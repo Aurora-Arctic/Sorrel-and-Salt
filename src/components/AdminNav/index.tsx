@@ -1,9 +1,9 @@
 import type { ReactElement } from 'react';
 import './index.scss';
 
-// The `/admin` layout's nav: one entry per admin-curated resource. It renders
-// only inside the guarded layout, so only an admin ever sees it
-// (claude-docs/components/admin-nav.md).
+// The `/admin` layout's nav: one entry per admin-curated resource, and the
+// user list. It renders only inside the guarded layout, so only an admin ever
+// sees it (claude-docs/components/admin-nav.md).
 
 const RESOURCES = [
   { href: '/admin/compendium', label: 'Compendium' },
@@ -11,6 +11,7 @@ const RESOURCES = [
   { href: '/admin/forms', label: 'Forms' },
   { href: '/admin/planets', label: 'Planets' },
   { href: '/admin/zodiac-signs', label: 'Zodiac signs' },
+  { href: '/admin/users', label: 'Users' },
 ] as const;
 
 const AdminNav = (): ReactElement => (
@@ -19,7 +20,7 @@ const AdminNav = (): ReactElement => (
       {RESOURCES.map(({ href, label }) => (
         <li key={href}>
           {/* A plain anchor rather than <Link>: typed routes refuse a route
-              that is not built yet, and none of these is. */}
+              that is not built yet, and only the user list is. */}
           <a href={href}>{label}</a>
         </li>
       ))}

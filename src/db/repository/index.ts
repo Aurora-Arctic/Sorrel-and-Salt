@@ -39,6 +39,11 @@ export {
   findSubstitutesIncludingSoftDeleted,
 } from './ingredients';
 export {
+  findManyReferences,
+  findReferenceSuggestions,
+  findReferencesOfIngredients,
+} from './references';
+export {
   findCuratedRowsByIds,
   findCuratedRowsByName,
   findIngredientFormValues,
@@ -47,10 +52,11 @@ export {
 export { findCommonNameSuggestions } from './common-names';
 export { findCompendiumEntryBySlug, findCompendiumSlugRedirect } from './slugs';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';
-export { findUserByEmail } from './users';
+export { findProvidersOfUsers, findUserByEmail, findUserPage } from './users';
 export { deleteProvisionalUsers } from './provisional-users';
 export type {
   AuditWriter,
+  CitingLink,
   Claimant,
   CommonNameSuggestion,
   CompendiumScore,
@@ -60,9 +66,13 @@ export type {
   IngredientIdentity,
   IngredientRow,
   JoinedRow,
+  LinkedProvider,
+  ReferenceLinkRow,
+  ReferenceRow,
   SimilarityScore,
   SlugRedirect,
   SortPart,
   SuggestingVocabulary,
+  UserFilter,
   VocabularySuggestion,
 } from './types';

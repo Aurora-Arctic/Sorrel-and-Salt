@@ -8,6 +8,7 @@ import { createLoaders } from '@/graphql/loaders';
 import { schema } from '@/graphql/schema';
 import { A, B, asUser } from '../support/as-user';
 import { insertIngredient } from '../support/db/insert-ingredient';
+import { insertReference } from '../support/db/insert-reference';
 import { noSender } from '../support/email-verification';
 import { makeIngredient } from '../support/fixtures';
 import type { Context } from '@/graphql/types';
@@ -26,6 +27,8 @@ const MALFORMED = ['not-a-coven', WORKSPACE_W_ID.slice(0, -1)];
 let ingredientId: string;
 // Its own row, so the delete probe's admitted call leaves the update probe's standing.
 let deletableId: string;
+// W's own reference, which the update probe replaces.
+let referenceId: string;
 
 beforeAll(async () => {
   const sql = postgres(process.env.DATABASE_URL as string);
@@ -39,6 +42,7 @@ beforeAll(async () => {
     makeIngredient({ workspaceId: WORKSPACE_W_ID, name: 'Fixture Deleted', nomenclature: 'none' }),
     A.id,
   );
+  referenceId = await insertReference(sql, { workspace_id: WORKSPACE_W_ID }, A.id);
   await sql.end();
 });
 
@@ -63,7 +67,10 @@ const WHOLE_INGREDIENT = {
   safetyNotes: '',
   substitutes: [],
   folkNames: [],
+  references: [],
 };
+
+const REFERENCE = { kind: 'book', title: 'A Herbal of Fixture Covens', published: '1988' };
 
 const PROBES: Record<string, WorkspaceIdProbe> = {
   commonNameSuggestions: suggestion('commonNameSuggestions'),
@@ -97,6 +104,23 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
       updateIngredient(workspaceId: $workspaceId, id: $id, input: $input) { id }
     }`,
     variables: () => ({ id: ingredientId, input: WHOLE_INGREDIENT }),
+  },
+  referenceSuggestions: {
+    source: `query ($workspaceId: ID!) {
+      referenceSuggestions(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
+    }`,
+  },
+  createReference: {
+    source: `mutation ($workspaceId: ID, $input: ReferenceInput!) {
+      createReference(workspaceId: $workspaceId, input: $input) { id }
+    }`,
+    variables: () => ({ input: REFERENCE }),
+  },
+  updateReference: {
+    source: `mutation ($workspaceId: ID, $id: ID!, $input: ReferenceInput!) {
+      updateReference(workspaceId: $workspaceId, id: $id, input: $input) { id }
+    }`,
+    variables: () => ({ id: referenceId, input: REFERENCE }),
   },
   deleteIngredient: {
     source:

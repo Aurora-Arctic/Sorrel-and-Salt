@@ -15,12 +15,14 @@ builder.queryField('compendium', (t) =>
       query: t.arg.string({ required: false }),
       categoryIds: t.arg.idList({ required: false }),
       form: t.arg.string({ required: false }),
+      // The admin's to-do list: live entries citing no live reference (M5.5).
+      withoutReferences: t.arg.boolean({ required: false }),
     },
-    resolve: (_root, { query, categoryIds, form }, page) =>
-      listCompendium({ query, categoryIds, form }, page),
+    resolve: (_root, { query, categoryIds, form, withoutReferences }, page) =>
+      listCompendium({ query, categoryIds, form, withoutReferences }, page),
     // "Page X of Y" (claude-docs/graphql/pagination.md, "Pagination").
-    count: (_root, { query, categoryIds, form }, start) =>
-      countCompendium({ query, categoryIds, form }, start),
+    count: (_root, { query, categoryIds, form, withoutReferences }, start) =>
+      countCompendium({ query, categoryIds, form, withoutReferences }, start),
     edgeFields: (t) => ({
       score: t.float({
         nullable: true,

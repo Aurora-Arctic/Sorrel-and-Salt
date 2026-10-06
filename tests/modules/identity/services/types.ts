@@ -13,3 +13,8 @@ export interface ProvisionalUserRow {
   updated_by: string;
   updated_at: Date;
 }
+
+export interface ListedUserRow {
+  id: string;
+  name: string;
+}

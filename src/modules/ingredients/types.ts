@@ -1,12 +1,13 @@
 import type { z } from 'zod';
-import type { IngredientRow } from '../../db/repository';
+import type { IngredientRow, ReferenceRow } from '../../db/repository';
 import type { ingredientDeities } from './schema/ingredient-deities';
 import type { CompendiumIngredientInput, LocalIngredientInput } from './validation/ingredient';
+import type { ReferenceInput } from './validation/reference';
 import type { DeityRow } from '@/modules/vocabulary';
 import type { categories } from '@/modules/vocabulary/schema/categories';
 
-// The repository's own, rather than a second `typeof ingredients.$inferSelect`.
-export type { IngredientRow };
+// The repository's own, rather than a second `typeof …$inferSelect`.
+export type { IngredientRow, ReferenceRow };
 
 /**
  * An ingredient as its children's loaders key it: the row a resolver already
@@ -19,7 +20,10 @@ export type IngredientKey = Pick<IngredientRow, 'id' | 'workspaceId'>;
 export type CategoryRow = typeof categories.$inferSelect;
 
 /** The parsed input without its child rows; both tiers' variants parse to this shape. */
-export type IngredientFields = Omit<LocalIngredientInput, 'folkNames' | 'substitutes' | 'deities'>;
+export type IngredientFields = Omit<
+  LocalIngredientInput,
+  'folkNames' | 'substitutes' | 'deities' | 'references'
+>;
 
 /** The tier a write is in, which decides what a pick must be (MB.167). */
 export type Tier = 'compendium' | 'coven';
@@ -58,8 +62,21 @@ export interface SubstituteRow {
   ingredient: IngredientRow | null;
 }
 
+/**
+ * One reference as `Ingredient.references` reads it (DESIGN.md §7,
+ * `ReferenceLink`): the source, and the locator the link carries — "p. 112" —
+ * or null.
+ */
+export interface CitedReference {
+  reference: ReferenceRow;
+  locator: string | null;
+}
+
 /** What the workspace service parses: the form's values, or the mutation's input. */
 export type IngredientValues = z.input<typeof LocalIngredientInput>;
+
+/** What the reference service parses: the form's values, or a mutation's input. */
+export type ReferenceValues = z.input<typeof ReferenceInput>;
 
 /**
  * What a compendium write takes: the admin form's values, or a mutation's

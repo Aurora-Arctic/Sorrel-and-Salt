@@ -1,11 +1,12 @@
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS } from '../schema/ingredient-enums';
+import { ReferenceLinkRef } from './references';
 import { CategoryRef, DeityRef, IngredientFormValueRef } from '@/modules/vocabulary';
 import type { IngredientDeityRow, IngredientRow, SubstituteRow } from '../types';
 
 // `Ingredient` as DESIGN.md §7 sketches it, over the row the services return:
-// every correspondence field, the tier as `isGlobal`, and the four children
+// every correspondence field, the tier as `isGlobal`, and the five children
 // and the picked form through the request's loaders. `canonicalKey`,
 // `workspaceId` and `formId` stay off the wire: the key is the database's
 // own, the tier is a flag, and the pick is `formChoice`.
@@ -107,6 +108,11 @@ IngredientRef.implement({
     deities: t.field({
       type: [IngredientDeityRef],
       resolve: (row, _args, { loaders }) => loaders.deitiesByIngredient.load(row),
+    }),
+    // Alphabetical by citation, `[]` when there are none.
+    references: t.field({
+      type: [ReferenceLinkRef],
+      resolve: (row, _args, { loaders }) => loaders.referencesByIngredient.load(row),
     }),
     audit: t.field({ type: AuditInfo, resolve: (row) => row }),
   }),

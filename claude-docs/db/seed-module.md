@@ -75,10 +75,10 @@ lives in `src/db/seed/bootstrap-admin.ts` since M4.3, because every seeded row
 needs a creator and the category seed runs without `minimal` having gone
 first. It is `role: 'user'`, not an admin, since MB.58: it has no OAuth
 account and is unverified, so Better Auth refuses to link a sign-in to it and
-nobody can sign in as it, and as an admin it would only be a revocable row on
-`/admin/users` (`tests/db/account-linking.test.ts` pins the refusal;
-[`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)). The
-file and its exports keep their old names, since `deploy.yml` lists the file.
+nobody can sign in as it (`tests/db/account-linking.test.ts` pins the refusal;
+[`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)), so an
+admin role on it would grant nothing to anyone. `/admin/users` leaves it out
+(MB.52). The file and its exports keep their old names, since `deploy.yml` lists the file.
 The plain
 user is `MINIMAL_USER_ID` (`…0002`), created by the bootstrap user. Both
 keep `canCreateWorkspace` false — a bare install has granted nothing. It is
