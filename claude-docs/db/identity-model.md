@@ -28,8 +28,7 @@ What follows describes all three as built.
   `colors` are native `text[]` columns, one of the things SQLite could not
   have run (DESIGN.md §14). `planets`, `zodiacSigns` and `colors` replaced
   single columns in MB.136, and `elements[]` replaced the single `element`
-  in MB.159 (both below); `element` is undeclared and stays in the database
-  until MB.160 drops it. Substitutes were a `substitutes[]` column
+  in MB.159 (both below); MB.160 dropped `element`. Substitutes were a `substitutes[]` column
   too, until MB.140 moved every reader and writer to `ingredient_substitutes`:
   the column is undeclared, and stays in the database until MB.141 drops it. Seven declared indexes: M4.1a's three partial unique ones (below),
   MB.81's two on the slug ("Ingredient slugs"), `ingredients_trgm`
@@ -247,9 +246,14 @@ keeps the order chosen, and nothing sorts it.
   MB.158 — a new row, a changed value, a cleared one — as
   `0031_refill-ingredient-lists` did, writing only a row that disagrees.
   The seed writes lists since, two of its compendium entries more than one
-  element. MB.160 fills a last time and drops `element`, with its `.ack.md`
-  sidecar, once MB.159 has deployed. The `ingredient_element` type stays,
-  since the list is of it.
+  element. MB.160 drops `element` once MB.159 has deployed
+  (`0037_drop-element`, with its `.ack.md` sidecar). The
+  `ingredient_element` type stays, since the list is of it.
+- **MB.160's drop fills nothing either**, for MB.137's reason: once MB.159
+  promotes, a single that disagrees with its list may hold the old deploy's
+  write between 0035 and the promotion, or the stale value of a list a
+  member has edited since, and copying it in would bring back an element
+  that member removed (`0037_drop-element.ack.md`, "What is lost").
 - **The filter reads containment.** M8.13's element filter matches a row
   whose list holds the element chosen, among others or alone: Drizzle's
   `arrayContains`, `@>`, rather than an equality. No index stands behind it,

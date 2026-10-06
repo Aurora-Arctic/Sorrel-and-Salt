@@ -61,9 +61,8 @@ export const ingredients = pgTable(
     canonicalKey: text('canonical_key').notNull().generatedAlwaysAs(CANONICAL_KEY),
     description: text('description'),
     // A list of the five rather than the single `element` it replaced
-    // (MB.157), a new name for the reason the three lists below have one. The
-    // single is undeclared since MB.159 but still in the database until MB.160
-    // drops it, so `db:generate` emits that drop on any branch before it
+    // (MB.157), a new name for the reason the three lists below have one.
+    // MB.159 stopped declaring the single and MB.160 dropped it
     // (claude-docs/db/identity-model.md, "The ingredient identity model").
     elements: ingredientElement('elements').array(),
     // Lists rather than the single `planet`, `zodiac` and `color` they

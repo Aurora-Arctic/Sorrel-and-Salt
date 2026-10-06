@@ -1,0 +1,13 @@
+-- MB.160, the contract half of rule 10 for MB.157's list: `element` goes, now
+-- that MB.159 neither declares nor writes it and `elements` has taken its
+-- place. The `ingredient_element` type stays, since the list is of it.
+--
+-- No last fill, unlike the refills before it: a list a member has edited
+-- since MB.159 promoted is newer than the single beside it, and nothing in
+-- the row tells that apart from a single the old deploy wrote during MB.159's
+-- rollout (claude-docs/db/identity-model.md, "The ingredient identity model").
+--
+-- Written with `generate --custom`, its snapshot the last one less `element`:
+-- a plain `generate` would also emit MB.141's pending drop
+-- (claude-docs/db/expand-contract.md).
+ALTER TABLE "ingredients" DROP COLUMN "element";

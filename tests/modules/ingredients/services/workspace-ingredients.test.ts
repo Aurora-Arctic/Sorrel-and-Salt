@@ -133,7 +133,6 @@ describe('createWorkspaceIngredient', () => {
       planets: ['Venus', 'Moon'],
       zodiac_signs: ['Taurus', 'Cancer', 'Libra'],
       colors: ['Green', 'Silver'],
-      element: null,
     });
   });
 

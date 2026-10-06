@@ -131,12 +131,12 @@
   ["The ingredient identity model"](identity-model.md).
 - **`0035_refill-element-list.sql`** (MB.159) is 0031 again for MB.157's
   list: `generate --custom`, so `element`, which MB.159 stops declaring,
-  stays in the copied snapshot and MB.160's `generate` emits its drop. One
+  stays in the copied snapshot until MB.160 drops it. One
   `UPDATE` rederives `elements` from `element` for every row that
   disagrees, for anything the live deploy wrote after 0034. Data only, so no
   sidecar. The seed writes lists since MB.159, so `element-list.test.ts`
-  puts the seeded rows back as a deployed database held them before
-  re-running either fill. See
+  put the seeded rows back as a deployed database held them before
+  re-running either fill, until 0037 dropped the column both read. See
   ["The ingredient identity model"](identity-model.md).
 - **`0036_drop-ingredient-singles.sql`** (MB.137) is the contract of MB.134's
   lists: `drizzle-kit generate` wrote the three `DROP COLUMN`s for `planet`,
@@ -144,6 +144,13 @@
   column kept in the snapshot, since that drop is MB.141's. It fills nothing
   first, and its sidecar says why and gates it on a production release
   carrying MB.136. See ["The ingredient identity model"](identity-model.md).
+- **`0037_drop-element.sql`** (MB.160) is the contract of MB.157's list: one
+  `DROP COLUMN "element"`, with its `.ack.md` sidecar, and no last fill.
+  It is `generate --custom`, because a plain `generate` would also emit
+  MB.141's pending drop; its snapshot is 0036's with `element` deleted and
+  nothing else changed. `element-list.test.ts` asserts the column gone, the
+  type kept, and the drop as the file's only statement. See
+  ["The ingredient identity model"](identity-model.md).
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
