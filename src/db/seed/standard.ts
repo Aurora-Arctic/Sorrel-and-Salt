@@ -9,6 +9,7 @@ import { applyAudit } from '../audit';
 import { ingredientSlug, slugify } from '../../lib/slugify';
 import { categoryIdByName, seedCategoryVocabulary } from './categories';
 import { seedAstrologyVocabularies } from './astrology';
+import { seedDeityVocabulary } from './deities';
 import { seedFormVocabulary } from './forms';
 import { beginSeedTransaction, insertMissing, requireFrom } from './idempotent';
 import type {
@@ -388,6 +389,7 @@ export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
   await seedFormVocabulary(tx);
   await seedCategoryVocabulary(tx);
   await seedAstrologyVocabularies(tx);
+  await seedDeityVocabulary(tx);
 
   await insertMissingUsers(tx);
   await insertMissingWorkspaces(tx);

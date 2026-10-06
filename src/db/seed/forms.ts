@@ -359,6 +359,8 @@ export async function seedFormVocabulary(tx: SeedTransaction): Promise<void> {
     itemTable: ingredientForms,
     groups: FORM_GROUPS,
     items: FORMS,
+    groupOf: (form) => form.group,
+    toItemRow: (row, groupId) => ({ ...row, groupId }),
     itemNoun: 'Form',
   });
 }

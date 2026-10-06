@@ -136,3 +136,37 @@ export interface CompendiumEntryRow {
   slug: string;
   created_by: string;
 }
+
+/** A tradition as the deity seed doc tables it. */
+export interface DocDeityTradition {
+  name: string;
+  description: string;
+}
+
+/** A deity as the deity seed doc tables it, its tradition by name. */
+export interface DocDeity {
+  name: string;
+  tradition: string;
+  description: string;
+}
+
+export interface DeityTraditionRow {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  created_by: string;
+  updated_by: string;
+  deleted_at: Date | null;
+}
+
+export interface DeityRow {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  tradition_id: string;
+  created_by: string;
+  updated_by: string;
+  deleted_at: Date | null;
+}

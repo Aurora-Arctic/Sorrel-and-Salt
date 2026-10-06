@@ -117,7 +117,9 @@ jobs:
             src/db/seed/categories.ts \
             src/db/seed/forms.ts \
             src/db/seed/astrology.ts \
+            src/db/seed/deities.ts \
             src/db/seed/flat-vocabulary.ts \
+            src/db/seed/two-tier-vocabulary.ts \
             src/db/seed/bootstrap-admin.ts \
             src/lib/slugify.ts \
             scripts/db-seed.ts \

@@ -1,10 +1,12 @@
 import { insertMissing, requireFrom } from './idempotent';
 import { slugify } from '../../lib/slugify';
-import type { GroupTable, SeedTransaction, TwoTierVocabulary } from './types';
+import type { GroupTable, ItemTable, SeedTransaction, TwoTierVocabulary } from './types';
 
-// The shape §5's forms and §6's categories share: a group table and an item
-// table filed under it, both keyed by a slug nobody writes down. The literals
-// stay with their own vocabulary; only the two inserts are one.
+// The shape §5's forms, §6's categories and MB.127's deities share: a group
+// table and an item table filed under it, both keyed by a slug nobody writes
+// down. The literals stay with their own vocabulary, which also names the
+// item's group and its key column — `tradition` and `traditionId` for a
+// deity; only the two inserts are one.
 
 /**
  * Groups first — `group_id` is a NOT NULL foreign key — then items, each
@@ -15,14 +17,22 @@ import type { GroupTable, SeedTransaction, TwoTierVocabulary } from './types';
  */
 export async function seedTwoTierVocabulary<
   G extends { name: string; description: string },
-  I extends { name: string; group: string; description: string },
+  I extends { name: string; description: string },
+  T extends ItemTable,
 >(
   tx: SeedTransaction,
-  { groupTable, itemTable, groups, items, itemNoun }: TwoTierVocabulary<G, I>,
+  {
+    groupTable,
+    itemTable,
+    groups,
+    items,
+    groupOf,
+    toItemRow,
+    itemNoun,
+  }: TwoTierVocabulary<G, I, T>,
 ): Promise<void> {
   await insertMissing(tx, groupTable, groups, {
-    existing: async (tx) =>
-      (await tx.select({ slug: groupTable.slug }).from(groupTable)).map((row) => row.slug),
+    existing: (tx) => slugsIn(tx, groupTable),
     keyOf: (group) => slugify(group.name),
     toRow: (group) => ({ ...group, slug: slugify(group.name) }),
   });
@@ -30,20 +40,27 @@ export async function seedTwoTierVocabulary<
   const groupIds = await groupIdByName(tx, groupTable);
 
   await insertMissing(tx, itemTable, items, {
-    existing: async (tx) =>
-      (await tx.select({ slug: itemTable.slug }).from(itemTable)).map((row) => row.slug),
+    existing: (tx) => slugsIn(tx, itemTable),
     keyOf: (item) => slugify(item.name),
-    toRow: ({ name, description, group }) => ({
-      name,
-      slug: slugify(name),
-      description,
-      groupId: requireFrom(
-        groupIds,
-        group,
-        () => `${itemNoun} "${name}" names group "${group}", which is not in the database.`,
+    toRow: (item) =>
+      toItemRow(
+        { name: item.name, slug: slugify(item.name), description: item.description },
+        requireFrom(
+          groupIds,
+          groupOf(item),
+          () =>
+            `${itemNoun} "${item.name}" names group "${groupOf(item)}", which is not in the database.`,
+        ),
       ),
-    }),
   });
+}
+
+/**
+ * Every slug in the table, live or soft-deleted. Typed on the unions, not the
+ * caller's generic, which Drizzle's `from()` cannot narrow.
+ */
+async function slugsIn(tx: SeedTransaction, table: GroupTable | ItemTable): Promise<string[]> {
+  return (await tx.select({ slug: table.slug }).from(table)).map((row) => row.slug);
 }
 
 /** Group ids keyed by *name*, which is what an item's `group` names. */

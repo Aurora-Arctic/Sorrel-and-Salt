@@ -1,7 +1,7 @@
 ## The deity vocabulary (MB.127; tables MB.128)
 
 `deities` is the vocabulary behind the list `ingredients.deities`, and
-`deity_traditions` groups it: Hecate under Greek, Brigid under Celtic. Both are
+`deity_traditions` groups it: Hecate under Greek, Brigid under Irish. Both are
 in the `vocabulary` module, in `src/modules/vocabulary/schema/deities.ts`
 (MB.128), seeded by `src/db/seed/deities.ts` (MB.129) from
 ["The deity vocabulary seed"](deity-vocabulary-seed.md), read by a member's
