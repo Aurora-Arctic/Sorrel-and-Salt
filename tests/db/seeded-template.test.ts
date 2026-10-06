@@ -6,6 +6,7 @@ import { MIGRATIONS_DIR } from '../support/paths';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { CATEGORIES } from '@/db/seed/categories';
 import { PLANETS, ZODIAC_SIGNS } from '@/db/seed/astrology';
+import { DEITIES, DEITY_TRADITIONS } from '@/db/seed/deities';
 import { FORMS } from '@/db/seed/forms';
 import {
   COMPENDIUM_INGREDIENTS,
@@ -62,11 +63,13 @@ describe('the seeded template every db worker clones', () => {
     expect(rows.map((r) => r.id)).toEqual([WORKSPACE_W_ID, WORKSPACE_X_ID].sort());
   });
 
-  it('holds the full category, form, planet and zodiac vocabularies', async () => {
+  it('holds the full category, form, planet, zodiac and deity vocabularies', async () => {
     expect(await countOf('categories')).toBe(CATEGORIES.length);
     expect(await countOf('ingredient_forms')).toBe(FORMS.length);
     expect(await countOf('planets')).toBe(PLANETS.length);
     expect(await countOf('zodiac_signs')).toBe(ZODIAC_SIGNS.length);
+    expect(await countOf('deity_traditions')).toBe(DEITY_TRADITIONS.length);
+    expect(await countOf('deities')).toBe(DEITIES.length);
   });
 
   it('holds the standard compendium and no workspace ingredients', async () => {

@@ -66,19 +66,21 @@ Entries also carry folk names (M4.4a's child table — "Uña de Gato" on both
 _Uncaria_ rows, which is the ambiguity that table exists to hold) and category
 assignments into §6's vocabulary.
 
-### One transaction, three vocabularies
+### One transaction, every vocabulary
 
 `standard` is "a populated compendium", and that is all of it: M4.3a's forms
-and M4.3's categories as well as the ingredients. An assignment points at a
-category by foreign key, so those rows have to exist first — which is why both
-seeds land a task ahead of this one.
+and M4.3's categories as well as the ingredients, and since MB.93 and MB.129
+the planet, zodiac and deity vocabularies the autofills read. An assignment
+points at a category by foreign key, so those rows have to exist first — which
+is why both seeds land a task ahead of this one.
 
 It seeds them **inside its own transaction** rather than calling
-`seedCategories(db)` and `seedForms(db)`, which would open two more. Each of
+`seedCategories(db)`, `seedForms(db)` and the rest, which would open one
+more each. Each of
 those now splits into a public `seedX(db)` that opens a transaction and a
 `seedXVocabulary(tx)` that assumes one — the GUC published and the bootstrap
 admin present. A half-applied scenario (categories seeded, users not) is worse
-than one that never ran, and three transactions is three chances at one.
+than one that never ran, and every extra transaction is another chance at one.
 
 `standard` itself takes that same shape since M1.23: `seedStandard(db)` opens
 the transaction, publishes the GUC and inserts the bootstrap admin (the three

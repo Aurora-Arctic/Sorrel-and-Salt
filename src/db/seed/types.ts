@@ -1,3 +1,4 @@
+import type { PgInsertValue } from 'drizzle-orm/pg-core';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type { users } from '../../modules/identity/schema/users';
 import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
@@ -6,6 +7,7 @@ import type { spells } from '../../modules/grimoire/schema/spells';
 import type { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
 import type { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import type { categories, categoryGroups } from '../../modules/vocabulary/schema/categories';
+import type { deities, deityTraditions } from '../../modules/vocabulary/schema/deities';
 import type {
   ingredientFormGroups,
   ingredientForms,
@@ -100,19 +102,33 @@ export type SeedSpell = Pick<
 
 // The reference vocabularies: each shape's tables, then the rows filed in them.
 
-/** The two pairs are typed as a union rather than a generic: their columns are identical, so the row type survives. */
-export type GroupTable = typeof categoryGroups | typeof ingredientFormGroups;
-export type ItemTable = typeof categories | typeof ingredientForms;
+/** The group tables are typed as a union rather than a generic: the columns the seed writes are common to all three, so the row type survives. */
+export type GroupTable =
+  typeof categoryGroups | typeof ingredientFormGroups | typeof deityTraditions;
+/** A generic over this union, not the union itself: `deities` names its key `traditionId`, the others `groupId`. */
+export type ItemTable = typeof categories | typeof ingredientForms | typeof deities;
+
+/** What every item row carries before its foreign key to its group. */
+export interface TwoTierItemRow {
+  name: string;
+  slug: string;
+  description: string;
+}
 
 export interface TwoTierVocabulary<
   G extends { name: string; description: string },
-  I extends { name: string; group: string; description: string },
+  I extends { name: string; description: string },
+  T extends ItemTable,
 > {
   groupTable: GroupTable;
-  itemTable: ItemTable;
+  itemTable: T;
   groups: readonly G[];
   items: readonly I[];
-  /** Capitalised, for the error naming an item whose group is missing: `Category`, `Form`. */
+  /** The `name` of the group an item is filed under: `category.group`, `deity.tradition`. */
+  groupOf: (item: I) => string;
+  /** The item's row with its group's id under the table's own key: `{ ...row, groupId }`. */
+  toItemRow: (row: TwoTierItemRow, groupId: string) => Omit<PgInsertValue<T>, InsertStamps>;
+  /** Capitalised, for the error naming an item whose group is missing: `Category`, `Form`, `Deity`. */
   itemNoun: string;
 }
 
@@ -139,6 +155,18 @@ export interface SeedIngredientForm {
   name: string;
   /** The `name` of the group in FORM_GROUPS this belongs to. */
   group: string;
+  description: string;
+}
+
+export interface SeedDeityTradition {
+  name: string;
+  description: string;
+}
+
+export interface SeedDeity {
+  name: string;
+  /** The `name` of the tradition in DEITY_TRADITIONS this is filed under. */
+  tradition: string;
   description: string;
 }
 

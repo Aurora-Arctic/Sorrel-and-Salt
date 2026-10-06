@@ -6,6 +6,7 @@ import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { ingredientSlug } from '@/lib/slugify';
 import { CATEGORIES } from '@/db/seed/categories';
 import { PLANETS, ZODIAC_SIGNS } from '@/db/seed/astrology';
+import { DEITIES, DEITY_TRADITIONS } from '@/db/seed/deities';
 import { FORMS } from '@/db/seed/forms';
 import {
   COMPENDIUM_INGREDIENTS,
@@ -199,12 +200,14 @@ describe('the compendium', () => {
     await seedStandard(db);
 
     // A whole compendium: categories are what an entry is filed under, and
-    // the forms, planets and signs what its `form`, `planets` and
-    // `zodiacSigns` are autofilled from.
+    // the forms, planets, signs and deities what its `form`, `planets`,
+    // `zodiacSigns` and `deities` are autofilled from.
     expect(await countOf('categories')).toBe(CATEGORIES.length);
     expect(await countOf('ingredient_forms')).toBe(FORMS.length);
     expect(await countOf('planets')).toBe(PLANETS.length);
     expect(await countOf('zodiac_signs')).toBe(ZODIAC_SIGNS.length);
+    expect(await countOf('deity_traditions')).toBe(DEITY_TRADITIONS.length);
+    expect(await countOf('deities')).toBe(DEITIES.length);
   });
 
   // Unlike `form`, no uncurated planet is seeded: the admin's to-do list is
@@ -369,6 +372,7 @@ describe('re-running the scenario', () => {
       forms: await countOf('ingredient_forms'),
       planets: await countOf('planets'),
       zodiacSigns: await countOf('zodiac_signs'),
+      deities: await countOf('deities'),
     };
 
     await expect(seedStandard(db)).resolves.toBeUndefined();
@@ -384,6 +388,7 @@ describe('re-running the scenario', () => {
       forms: await countOf('ingredient_forms'),
       planets: await countOf('planets'),
       zodiacSigns: await countOf('zodiac_signs'),
+      deities: await countOf('deities'),
     }).toEqual(before);
   });
 

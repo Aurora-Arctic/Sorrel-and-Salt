@@ -34,7 +34,8 @@ on:
       seed-reference:
         description: >-
           Seed the reference vocabularies after migrating — DESIGN.md §6's
-          categories and §5's ingredient forms, planets and zodiac signs.
+          categories, §5's ingredient forms, planets and zodiac signs, and
+          the deity traditions and deities.
           deploy.yml passes true only when the push changed a seed's own
           files — every seed is additive and idempotent, so running them
           again would be harmless, but "harmless" is not a reason to write
@@ -249,6 +250,7 @@ jobs:
           npm run db:seed:categories 2>&1 | tee seed.log
           npm run db:seed:forms 2>&1 | tee -a seed.log
           npm run db:seed:astrology 2>&1 | tee -a seed.log
+          npm run db:seed:deities 2>&1 | tee -a seed.log
 
       - name: Write seed job summary
         if: always() && steps.guard.outputs.enabled == 'true' && inputs.seed-reference

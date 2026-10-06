@@ -249,9 +249,9 @@ Fixture users A to E, workspaces W and X and a compendium awkward on purpose: th
 
 In [`db/standard-scenario.md`](db/standard-scenario.md#the-compendium-is-awkward-on-purpose).
 
-### One transaction, three vocabularies
+### One transaction, every vocabulary
 
-In [`db/standard-scenario.md`](db/standard-scenario.md#one-transaction-three-vocabularies).
+In [`db/standard-scenario.md`](db/standard-scenario.md#one-transaction-every-vocabulary).
 
 ## The demo scenario (M1.23)
 
