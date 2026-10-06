@@ -8,6 +8,7 @@ import type { spellIngredients } from '../../modules/grimoire/schema/spell-ingre
 import type { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import type { categories, categoryGroups } from '../../modules/vocabulary/schema/categories';
 import type { deities, deityTraditions } from '../../modules/vocabulary/schema/deities';
+import type { CitationFields } from '../../lib/types';
 import type {
   ingredientFormGroups,
   ingredientForms,
@@ -184,3 +185,41 @@ export interface SeedAstrologyValue {
   name: string;
   description: string;
 }
+
+/** A link from a seeded source to a deity, with where in the work it points. */
+export interface SeedSourceDeity {
+  name: string;
+  locator?: string;
+}
+
+/**
+ * One source the vocabulary seed docs record, and the curated rows it
+ * supports, each named as its seed literal names it. A tradition's source
+ * reaches every deity filed under it as well.
+ */
+export interface SeedSource {
+  reference: CitationFields;
+  traditions?: string[];
+  deities?: SeedSourceDeity[];
+  planets?: string[];
+  zodiacSigns?: string[];
+}
+
+/** A `reference_links` row the sources seed wants, before its stamps. */
+export interface SeedSourceLink {
+  referenceId: string;
+  deityId?: string;
+  deityTraditionId?: string;
+  planetId?: string;
+  zodiacSignId?: string;
+  locator: string | null;
+}
+
+/** A link's identity, as the seed wants it or as `reference_links` holds it. */
+export type SeedSourceLinkKey = Pick<SeedSourceLink, 'referenceId'> & {
+  [column in 'deityId' | 'deityTraditionId' | 'planetId' | 'zodiacSignId']?: string | null;
+};
+
+/** A table a seeded source links, found by the `seed_key` its own seed gave each row. */
+export type SourceTargetTable =
+  typeof deityTraditions | typeof deities | typeof planets | typeof zodiacSigns;
