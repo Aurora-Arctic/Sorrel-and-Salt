@@ -165,11 +165,11 @@ beforeEach(async () => {
 describe('ingredients table', () => {
   // A column the schema has stopped declaring outlives it in the database for
   // one deploy: `planet`, `zodiac` and `color`, undeclared by MB.136 and
-  // dropped by MB.137, and `substitutes`, undeclared by MB.140 and dropped by
-  // MB.141, are the only ones.
-  it('carries the columns the schema declares, and the four awaiting their drop', async () => {
+  // dropped by MB.137, are the only ones. `substitutes`, undeclared by MB.140,
+  // is gone since MB.141.
+  it('carries the columns the schema declares, and the three awaiting their drop', async () => {
     expect(await catalogue.columnNames('ingredients')).toEqual(
-      [...COLUMNS, 'planet', 'zodiac', 'color', 'substitutes'].sort(),
+      [...COLUMNS, 'planet', 'zodiac', 'color'].sort(),
     );
   });
 
