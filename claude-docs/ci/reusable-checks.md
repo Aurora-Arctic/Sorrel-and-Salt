@@ -129,6 +129,10 @@
     which is what `act` gets. Its fetch passes `-c safe.directory=*` for
     the reason the git-reading guards do
     ([`container-jobs.md`](container-jobs.md)).
+    ⚠️ The command is CI's alone: its `--depth=1` fetch in a full clone marks
+    the base's commit shallow, and `git merge` then refuses the base as
+    unrelated history until `git fetch --unshallow`. Locally the check is
+    `npm run check:migration-order`, against the base as last fetched.
   - **Its filter is the journal**, `src/db/migrations/meta/_journal.json`,
     plus what runs the check; a PR that adds no entry cannot misorder one.
     The base's own moves are not a trigger: a branch whose base moved after it
