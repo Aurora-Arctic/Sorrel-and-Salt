@@ -60,6 +60,7 @@ local deploy command ([`ci/deploy.md`](ci/deploy.md), "Deploy").
 | `npm run db:studio` (`make db-studio`)                         | Drizzle Studio on **4983**, browsing the local database via `drizzle.config.ts`; the UI is `https://local.drizzle.studio`                                                                                                                              |
 | `make db-psql`                                                 | `psql` against the compose Postgres service (host only)                                                                                                                                                                                                |
 | `npm run check:destructive-ddl` (`make check-destructive-ddl`) | Scans migrations new on this branch against its Gitflow base; `-- --base <ref>` picks another, `-- --all` audits every committed migration ([`db/expand-contract.md`](db/expand-contract.md), "Expand/contract and the destructive-DDL check")         |
+| `npm run check:migration-order` (`make check-migration-order`) | Refuses a migration older than its Gitflow base's newest, or ahead of one the base has; `-- --base <ref>` picks another base ([`db/migrations-and-scripts.md`](db/migrations-and-scripts.md), "Migration order")                                       |
 
 ## The workshop
 

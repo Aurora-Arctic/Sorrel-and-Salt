@@ -21,7 +21,7 @@ The five actions under `.github/actions/` — `checkout-to-app`, referenced by i
 
 ## Reusable checks (`workflow_call`, never triggered directly)
 
-`checks.yml` runs `lint`, `format`, `typecheck`, `build`, `audit` and `destructive-ddl` as one matrix job with `run-*` path-filter inputs, beside `vitest.yml` and its story step, `playwright.yml`, the two image builds and `gitflow.yml`'s branch-source rules. [`ci/reusable-checks.md`](ci/reusable-checks.md)
+`checks.yml` runs `lint`, `format`, `typecheck`, `build`, `audit`, `destructive-ddl` and `migration-order` as one matrix job with `run-*` path-filter inputs, beside `vitest.yml` and its story step, `playwright.yml`, the two image builds and `gitflow.yml`'s branch-source rules. [`ci/reusable-checks.md`](ci/reusable-checks.md)
 
 ## Aggregating workflows
 

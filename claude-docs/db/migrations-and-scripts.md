@@ -268,3 +268,47 @@ db:migrate && db:seed`, and that first step is what makes it a reset rather
 docker-studio` starts it as a profiled compose service (`studio`), the
   same shape as `workshop`; `make docker-all` brings up every long-running
   service, studio included.
+
+### Migration order
+
+**`db:migrate` applies a migration by its journal `when`, nothing else.**
+Drizzle's migrator reads the newest `created_at` in
+`drizzle.__drizzle_migrations` and applies only the `_journal.json` entries
+whose `when` is later; it compares no tag or hash (`migrate` in
+`drizzle-orm/pg-core/dialect.js`), and a tie is skipped too. `when` is stamped
+when the author runs `generate`, so with several migration branches in flight
+one can reach staging older than a migration already applied there:
+`migrate.yml` passes, the migration never runs, and the deploy meets a schema
+it expects and does not have. No test sees it, since a test database starts
+empty and runs every migration. On 2026-10-06 MB.171's 0045, MB.69's 0046,
+MB.172's 0047 and MB.168's 0048 were in flight together, and regenerating 0046
+to follow 0045 left it newer than 0047 and 0048: merged in number order, both
+would have been skipped.
+
+**`npm run check:migration-order` refuses that before the merge** (MB.173,
+`scripts/check-migration-order.ts`). It reads the branch's journal from the
+working tree, so a just-generated migration counts, against the base's
+committed one, the base resolving as `check:destructive-ddl`'s does
+(`-- --base <ref>` picks another). An entry is the branch's when the base has
+no entry of its tag, and it is refused when it sits ahead of an entry the base
+has, or when its `when` is no later than the base's newest; the journal as a
+whole is refused wherever `when` fails to rise. In CI it is the
+`checks / migration-order` leg ([`ci/reusable-checks.md`](../ci/reusable-checks.md)).
+A run is only as current as the base it read: a branch whose base moves after
+it passed is checked again on its next push, which the merge of the new base
+that a journal conflict forces will be.
+
+**A refused migration is regenerated on the current base**, not re-dated:
+`meta/<NNNN>_snapshot.json`'s `prevId` must name the base's newest snapshot as
+well, which only `generate` rewrites.
+
+1. Merge the base into the branch.
+2. Delete the migration's `.sql`, its `meta/` snapshot and its
+   `_journal.json` entry, taking the base's journal where they conflict.
+3. Run `npm run db:generate -- --name <its name>`, the name after the old
+   number. It numbers the migration after the base's and stamps a new `when`.
+4. Put back whatever was written into the SQL by hand (a header comment, a
+   trigger, a refill), and strip a pending column drop as
+   [rule 10](expand-contract.md) requires while one is in flight.
+5. Run `npm run check:migration-order` and `npm run check:destructive-ddl`; a
+   renamed migration carries its `.ack.md` sidecar under its new tag.

@@ -1,7 +1,7 @@
 name: Checks
 
-# One matrix job for lint, format, typecheck, build, destructive-ddl and
-# audit, each reporting as `checks / <name>`. workflow_call only, from
+# One matrix job for lint, format, typecheck, build, destructive-ddl,
+# migration-order and audit, each reporting as `checks / <name>`. workflow_call only, from
 # pr-gate.yml. claude-docs/ci/reusable-checks.md, "Reusable checks" is the walkthrough.
 #
 # vitest.yml and playwright.yml are not legs: a `services: postgres:` block
@@ -55,6 +55,20 @@ on:
         required: false
         type: boolean
         default: true
+      run-migration-order:
+        description: Set false to skip the migration-order check while still completing its leg under its normal name
+        required: false
+        type: boolean
+        default: true
+      migration-order-base:
+        description: >-
+          The PR's base branch, which the migration-order leg fetches and reads
+          its committed journal from as MIGRATION_ORDER_BASE. Only the caller
+          sees the pull request; empty means `staging`, which is what `act`
+          runs against.
+        required: false
+        type: string
+        default: ''
       destructive-ddl-files:
         description: >-
           JSON array (string) of migration files new/changed in this PR, from
@@ -113,6 +127,17 @@ jobs:
             command: npm run check:destructive-ddl
             summarize: ''
             comment: minimize
+          # Blocking. The checkout is the PR's merge commit, shallow, so the
+          # base is fetched for its journal; the script's output is the report.
+          - name: migration-order
+            label: Migration Order
+            command: >-
+              base="${MIGRATION_ORDER_BASE:-staging}" &&
+              git -c safe.directory='*' fetch --no-tags --depth=1 origin
+              "+refs/heads/${base}:refs/remotes/origin/${base}" &&
+              npm run check:migration-order -- --base "origin/${base}"
+            summarize: ''
+            comment: minimize
           # Non-blocking and never a required check, hence `|| true`. Reports
           # through its own step below.
           - name: audit
@@ -145,6 +170,8 @@ jobs:
       # destructive-ddl leg only. Always set: the script reads set-but-empty
       # as "scan nothing" and unset as "diff the branch", which CI must never do.
       DESTRUCTIVE_DDL_FILES: ${{ inputs.destructive-ddl-files }}
+      # migration-order leg only.
+      MIGRATION_ORDER_BASE: ${{ inputs.migration-order-base }}
     steps:
       # One flag for this leg. Unset means run: `act` applies no workflow_call
       # defaults, and must not pass a check it never ran.
@@ -156,12 +183,14 @@ jobs:
           RUN_TYPECHECK: ${{ inputs.run-typecheck }}
           RUN_BUILD: ${{ inputs.run-build }}
           RUN_DESTRUCTIVE_DDL: ${{ inputs.run-destructive-ddl }}
+          RUN_MIGRATION_ORDER: ${{ inputs.run-migration-order }}
         run: |
           case "$CHECK" in
             lint) flag="$RUN_LINT" ;;
             typecheck) flag="$RUN_TYPECHECK" ;;
             build) flag="$RUN_BUILD" ;;
             destructive-ddl) flag="$RUN_DESTRUCTIVE_DDL" ;;
+            migration-order) flag="$RUN_MIGRATION_ORDER" ;;
             # format and audit are unfiltered.
             *) flag=true ;;
           esac

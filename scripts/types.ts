@@ -10,6 +10,13 @@ export interface Finding {
   statement: string;
 }
 
+/** One `src/db/migrations/meta/_journal.json` entry, as much as the order check reads. */
+export interface JournalEntry {
+  idx: number;
+  tag: string;
+  when: number;
+}
+
 export type Classification = 'missing' | 'empty' | 'placeholder' | 'present';
 
 export type Verdict = { ok: true } | { ok: false; code: string; message: string };
