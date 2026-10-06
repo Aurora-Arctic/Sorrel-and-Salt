@@ -7,14 +7,14 @@ sends `createWorkspaceIngredient`, and puts an error from either side beside
 the field it names. It is built standalone: the add and edit modals and the
 admin compendium page wrap it rather than containing their own form.
 
-| File              | What it holds                                                                                                                                                 |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.tsx`       | The form: the mutation, the fields in order, the root alert, where a server error goes, and focus after a submit                                              |
-| `fields.tsx`      | `TextField`, `SuggestField`, `SelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip` |
-| `suggestions.tsx` | The lookups (M5.10a, MB.131): the queries, `useLookup`, which debounces each, the shapes, and `FormField` and `LookupListField`, which wire one to its field  |
-| `duplicates.tsx`  | The duplicate warning (M5.10): its query, `usePossibleDuplicates`, and `NameField`, the name field with the warning beneath it                                |
-| `values.ts`       | The empty values, `toInput`, `addEntry`, `commitDraft`, `fieldNameOf`, the resolver, and `issuesOf`, which reads a failed save                                |
-| `types.ts`        | The props, the form's own values, and the input it sends                                                                                                      |
+| File              | What it holds                                                                                                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.tsx`       | The form: the mutation, the fields in order, the root alert, where a server error goes, and focus after a submit                                                                  |
+| `fields.tsx`      | `TextField`, `SuggestField`, `SelectField`, `MultiSelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip` |
+| `suggestions.tsx` | The lookups (M5.10a, MB.131): the queries, `useLookup`, which debounces each, the shapes, and `FormField` and `LookupListField`, which wire one to its field                      |
+| `duplicates.tsx`  | The duplicate warning (M5.10): its query, `usePossibleDuplicates`, and `NameField`, the name field with the warning beneath it                                                    |
+| `values.ts`       | The empty values, `toInput`, `addEntry`, `commitDraft`, `fieldNameOf`, the resolver, and `issuesOf`, which reads a failed save                                                    |
+| `types.ts`        | The props, the form's own values, and the input it sends                                                                                                                          |
 
 ## The props contract
 
@@ -64,15 +64,27 @@ notes — every field `IngredientInput` takes. Categories are not an input yet.
   during MB.131: the same control, chevron and list as the form field, with
   nothing to type. `SelectField` holds it through `useController`, its
   `deps` in the controller's rules. The classification is over
-  `NOMENCLATURE_KINDS` and the element over `INGREDIENT_ELEMENTS`, both read
-  from `schema/ingredient-enums.ts`, so the options cannot drift from the
-  schema. Both start with the value `''`, drawn two ways. The classification
-  shows a placeholder, "Choose a classification", which is not in its list,
-  so it cannot be chosen back once a kind is picked. It has no need to be,
-  since "None" is itself a kind. The element's blank is a real choice,
-  "None", first in its list, the one that clears it. A choice is made
-  before the field revalidates, so choosing None empties the formal name
-  first.
+  `NOMENCLATURE_KINDS`, read from `schema/ingredient-enums.ts`, so the
+  options cannot drift from the schema. It starts with the value `''`,
+  shown as a placeholder, "Choose a classification", which is not in its
+  list, so it cannot be chosen back once a kind is picked. It has no need to
+  be, since "None" is itself a kind. A choice is made before the field
+  revalidates, so choosing None empties the formal name first.
+- **The element is a list on the same box** (MB.159), since an ingredient
+  holds several, in the order chosen: `MultiSelectField`, on the combobox's
+  multi-select box, `ComboboxMultiSelect` ([`combobox.md`](combobox.md),
+  "The multi-select box"), over `INGREDIENT_ELEMENTS`. Each element chosen
+  is a chip inside the control with its ×, "Remove Air", and a "Clear
+  Element" and the chevron sit on the control's right, as a list field's
+  do; but nothing is typed and there is no Add, and the list offers only the
+  elements not yet chosen, so none can be chosen twice. A choice keeps the
+  list open for the next; once all five are chosen it has nothing to offer
+  and does not open. Backspace in the box takes the last. None chosen is
+  the answer "none", so there is no None to choose: the box shows the
+  placeholder "Choose elements". It is a field, labelled by its `<label>`
+  and erring through its one error element, rather than a list's fieldset:
+  its values are the enum's strings, `elements: IngredientElement[]`, not a
+  `useFieldArray` of entry rows, so it is not one of `LIST_FIELDS`.
 - **"Classification" is the label for `nomenclature`**, which DESIGN.md §5
   calls the naming system the formal name belongs to. The label is the one a
   practitioner reads (amethyst is mineral, lavender botanical), and the
@@ -276,7 +288,9 @@ states the rule before anyone breaks it.
 
 The values **as typed**, reshaped by `toInput` into the input the mutation
 and the schema take: an unanswered select becomes `null`, a list entry
-becomes its text, and the boxes are left behind. Nothing else is trimmed or
+becomes its text, and the boxes are left behind. The elements go as chosen,
+`[]` when none is, which `IngredientUpdateInput` needs to clear them and the
+schema reads as absent. Nothing else is trimmed or
 parsed: a blank field goes as `''`, and the service's run of the same schema
 turns it into an absence. The resolver runs with `raw: true` for this, so
 what it validated is exactly what is sent.
@@ -337,12 +351,16 @@ the form's field name:
 | ----------------------- | --------------------------------------------------------------------- |
 | `['name']`              | `name`                                                                |
 | `['folkNames', 2]`      | `folkNames.2.value`, the third entry                                  |
+| `['elements', 1]`       | `elements`, the whole control: its chips are not rows                 |
 | `[]`                    | none: the root alert                                                  |
 | any path it cannot name | none: the root alert, rather than an unseen error (`drafts` included) |
 
 The resolver returns an entry's issue at the entry (`folkNames.2`). The
 form's resolver wraps `zodResolver` and moves it onto the entry's `value`,
-which is where `fieldNameOf` puts the server's.
+which is where `fieldNameOf` puts the server's. An element's issue — a
+repeat, which the form cannot make but a caller can — arrives at the
+element too (`elements.1`), and the resolver moves the first onto the field,
+as `fieldNameOf` does.
 
 **A list's errors are the list's.** An entry is not a control, so its error
 cannot sit beneath one. The list has one `FieldError`, beneath its box,
@@ -474,10 +492,12 @@ pass on whatever an earlier step had focused. It covers:
   save; and a refused save keeping what was typed.
 - **Resolver errors**: beside the field, focused, invalid and described, with
   no request sent; on the list entry it names, focusing the list's box;
-  cleared by an edit, or by removing the entry.
+  cleared by an edit, or by removing the entry; an element list given a
+  repeat, refused on the Element control.
 - **Server errors**: beside the field and on the list entry their path names;
-  rendered through the same element as a resolver error on that field;
-  cleared by an edit.
+  rendered through the same element as a resolver error on that field; an
+  issue pathed to one element on the Element control, focused; cleared by an
+  edit.
 - **Root errors**: an empty path, a path naming no field, a `FORBIDDEN`'s
   message and a failed fetch, each as an alert above the fields, cleared on
   the next submit.
@@ -486,11 +506,15 @@ pass on whatever an earlier step had focused. It covers:
   kind; the issue that remains, cleared inline by changing either field.
 - **Fields**: Name alone marked required; each hint behind an info tip yet
   still read with its field, and kept shut while its field, or a list's box,
-  has focus; the classification's placeholder and the element's "None", `form`
+  has focus; the classification's placeholder, `form`
   as free text, and each list's box, Add, Enter, blank, remove, Backspace, Clear, focus,
   order and announcements, the box a combobox with a chevron only where there
   is a source, the entries inside the control, and a save refused while a box
-  holds text until it is added or cleared.
+  holds text until it is added or cleared; the element's five choices and no
+  None, several chosen as chips inside the control, the list offering only
+  those left, Backspace and the × removing, sent in the order chosen, `[]`
+  once cleared, and an element list given its values drawn as chips in that
+  order, as an edit will prefill it.
 - **The lookups**: a request only once the typing settles, with the coven's
   id and the settled text, and none until the box is used; the vocabulary
   first with each form's group and claimants, then forms in use, under their

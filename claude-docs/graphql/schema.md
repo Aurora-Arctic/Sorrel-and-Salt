@@ -386,12 +386,12 @@ signatures DESIGN.md §7's sketch gives them.
   Every field is non-null, so leaving one out is a schema error rather than a
   silent clear. GraphQL has no field that is required and also nullable, so a
   caller clears a text field with `""` and a list with `[]`. The shared Zod
-  schema takes both as absent, as it takes a blank form field. `element` is the
-  one nullable field, because an enum has no empty value to send: `null`
-  clears it, and so does leaving it out. The type's SDL description states the
-  rule. MB.159 ends the exception: `elements`, a `[IngredientElement!]!`
-  where `[]` clears, replaces `element` (DESIGN.md §7, MB.157), and the
-  description loses its clause.
+  schema takes both as absent, as it takes a blank form field. The type's SDL
+  description states the rule. There is no exception: `element` was one, a
+  nullable enum with no empty value to send, until MB.159 replaced it with
+  `elements`, a `[IngredientElement!]!` where `[]` clears (DESIGN.md §7,
+  MB.157). `Ingredient.elements` and `IngredientInput.elements` are the
+  nullable `[IngredientElement!]`, as `planets` is.
 - **A substitute is a `SubstituteInput`**, `{ ingredientId }` to link or
   `{ name }` for one not entered. Both fields are nullable, since GraphQL here
   has no one-of input, and the shared schema holds an entry to exactly one

@@ -60,10 +60,10 @@ export const ingredients = pgTable(
     // omits generated columns from $inferInsert, so TypeScript refuses first.
     canonicalKey: text('canonical_key').notNull().generatedAlwaysAs(CANONICAL_KEY),
     description: text('description'),
-    element: ingredientElement('element'),
-    // The list `element` becomes (MB.157), a new name for the reason the three
-    // lists below have one. Filled from `element` by its migration and read by
-    // nothing until MB.159 switches to it; MB.160 drops the single
+    // A list of the five rather than the single `element` it replaced
+    // (MB.157), a new name for the reason the three lists below have one. The
+    // single is undeclared since MB.159 but still in the database until MB.160
+    // drops it, so `db:generate` emits that drop on any branch before it
     // (claude-docs/db/identity-model.md, "The ingredient identity model").
     elements: ingredientElement('elements').array(),
     // Lists rather than the single `planet`, `zodiac` and `color` they

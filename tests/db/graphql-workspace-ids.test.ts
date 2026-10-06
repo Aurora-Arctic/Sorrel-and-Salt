@@ -54,7 +54,7 @@ const WHOLE_INGREDIENT = {
   nomenclature: 'none',
   form: '',
   description: '',
-  element: null,
+  elements: [],
   planets: [],
   zodiacSigns: [],
   deities: [],

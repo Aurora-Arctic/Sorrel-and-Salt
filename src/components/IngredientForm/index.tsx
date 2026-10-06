@@ -12,7 +12,7 @@ import {
   type NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
 import { NameField, useDuplicateWarning } from './duplicates';
-import { ListField, SelectField, TextField } from './fields';
+import { ListField, MultiSelectField, SelectField, TextField } from './fields';
 import {
   FormField,
   LookupListField,
@@ -224,7 +224,14 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
           hint="Other names it goes by. A search finds it by any of them."
         />
         <TextField name="description" label="Description" multiline />
-        <SelectField name="element" label="Element" none="None" options={ELEMENT_OPTIONS} />
+        {/* Several at once, in the order chosen (MB.159); none chosen is
+            the answer "none", so there is no None to choose. */}
+        <MultiSelectField
+          name="elements"
+          label="Element"
+          placeholder="Choose elements"
+          options={ELEMENT_OPTIONS}
+        />
         {/* Each list but the colours suggests (MB.131): planets, signs and
             deities from their curated vocabularies and the values in use, a
             pick adding the text; substitutes from the compendium and this

@@ -92,6 +92,18 @@
   }
 }
 
+// The multi-select's box, in the text's place after the chips: a `div` that
+// is pressed rather than typed in, its placeholder muted as the input's is.
+.combobox__input--select {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+
+  .is-placeholder {
+    color: $text-placeholder;
+  }
+}
+
 .combobox__indicators {
   display: flex;
   flex: none;

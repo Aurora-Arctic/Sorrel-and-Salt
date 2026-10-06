@@ -1,10 +1,11 @@
-import type { NomenclatureKind } from '../schema/ingredient-enums';
+import type { INGREDIENT_ELEMENTS, NomenclatureKind } from '../schema/ingredient-enums';
 
 // Apart from the module's types.ts, which reaches the schema tables: a form
 // loads this file, so it imports only what a validation file may.
 
-/** The list fields `dropBlankEntries` clears of blank entries, in either variant. */
+/** The list fields `dropBlankEntries` clears of blank entries and takes as absent when empty, in either variant. */
 export interface Lists {
+  elements?: (typeof INGREDIENT_ELEMENTS)[number][] | null;
   planets?: string[] | null;
   zodiacSigns?: string[] | null;
   deities?: string[] | null;

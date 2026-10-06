@@ -35,7 +35,7 @@ const optionalText = z
  */
 const textList = z.array(z.string().trim()).nullish();
 
-function withoutBlanks(list: string[] | null | undefined) {
+function withoutBlanks<T extends string>(list: T[] | null | undefined) {
   if (list == null) return list;
   const entries = list.filter((entry) => entry !== '');
   return entries.length > 0 ? entries : null;
@@ -43,12 +43,33 @@ function withoutBlanks(list: string[] | null | undefined) {
 
 const dropBlankEntries = <T extends Lists>(value: T): T => ({
   ...value,
+  elements: withoutBlanks(value.elements),
   planets: withoutBlanks(value.planets),
   zodiacSigns: withoutBlanks(value.zodiacSigns),
   deities: withoutBlanks(value.deities),
   colors: withoutBlanks(value.colors),
   folkNames: withoutBlanks(value.folkNames),
 });
+
+/**
+ * Closed, unlike the lists above: the five values and nothing typed (DESIGN.md
+ * §5, MB.157). Kept in the order chosen, never sorted, and each element once —
+ * a repeat is refused at the repeat rather than dropped, since the form never
+ * offers a chosen element twice, so one arriving is a caller to correct.
+ */
+const elementList = z
+  .array(z.enum(INGREDIENT_ELEMENTS, { error: 'Choose one of the five elements' }))
+  .superRefine((elements, ctx) => {
+    elements.forEach((element, index) => {
+      if (elements.indexOf(element) === index) return;
+      ctx.addIssue({
+        code: 'custom',
+        path: [index],
+        message: `${element[0]?.toUpperCase()}${element.slice(1)} is already chosen`,
+      });
+    });
+  })
+  .nullish();
 
 /**
  * A substitute links an ingredient or names one (DESIGN.md §5,
@@ -76,7 +97,7 @@ const fields = {
   canonicalName: optionalText,
   form: optionalText,
   description: optionalText,
-  element: z.enum(INGREDIENT_ELEMENTS, { error: 'Choose one of the five elements' }).nullish(),
+  elements: elementList,
   // Lists of free text like `form`'s one value: the `planets` and
   // `zodiac_signs` vocabularies suggest, nothing refuses (MB.134).
   planets: textList,

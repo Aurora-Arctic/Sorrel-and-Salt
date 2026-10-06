@@ -9,10 +9,12 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { ChevronIcon, ClearIcon } from './icons';
 import type { Bucket, ComboboxOption, ComboboxProps, Item, Suggestions, TypedRow } from './types';
 import './index.scss';
 
 export { ComboboxEntry } from './entry';
+export { ComboboxMultiSelect } from './multi-select';
 export { ComboboxSelect } from './select';
 
 // A text box that suggests as it is typed in, on Downshift's `useCombobox`:
@@ -231,14 +233,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 aria-label={clear.label}
                 onClick={clear.onClear}
               >
-                <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-                  <path
-                    d="M4 4l8 8M12 4l-8 8"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
+                <ClearIcon />
               </button>
             )}
             {clear && hasSource && <span className="combobox__separator" aria-hidden="true" />}
@@ -248,16 +243,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 className="combobox__indicator"
                 {...getToggleButtonProps({ 'aria-label': `Show ${label} suggestions` })}
               >
-                <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-                  <path
-                    d="M3.5 6l4.5 4.5L12.5 6"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <ChevronIcon />
               </button>
             )}
           </div>

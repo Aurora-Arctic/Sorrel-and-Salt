@@ -37,7 +37,7 @@ const GARDEN_ROSEMARY: SeedWorkspaceIngredient = {
   nomenclature: 'botanical',
   form: 'herb',
   description: 'Cut from the bush by the back door, dried in bunches over the stove.',
-  element: 'fire',
+  elements: ['fire'],
 };
 
 /** Story 29's one-field stub: a thing no naming system names, so `none`. */
@@ -46,7 +46,7 @@ const HEARTH_ASH: SeedWorkspaceIngredient = {
   nomenclature: 'none',
   form: 'ash',
   description: 'Swept cold from the grate after a Yule fire and kept in a tin.',
-  element: 'fire',
+  elements: ['fire'],
 };
 
 const HOUSE_CHAMOMILE: SeedWorkspaceIngredient = {
@@ -55,7 +55,7 @@ const HOUSE_CHAMOMILE: SeedWorkspaceIngredient = {
   nomenclature: 'botanical',
   form: 'flower',
   description: 'Heads picked through the summer and dried on a screen.',
-  element: 'water',
+  elements: ['water'],
 };
 
 /** Everything W keeps of its own. Seeded into W, and invisible from X. */

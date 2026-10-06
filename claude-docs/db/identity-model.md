@@ -17,18 +17,19 @@ What follows describes all three as built.
 - **`ingredients`** — `id`, `workspaceId` (nullable: `NULL` is the compendium
   tier, non-null is a workspace's own ingredient), `name`, `slug` (MB.81;
   ["Ingredient slugs"](ingredient-slugs.md)), `canonicalName`, `nomenclature`, `form`, the generated `canonicalKey`, the correspondence
-  columns (`description`, `element`, `planets[]`, `zodiacSigns[]`, `deities[]`,
+  columns (`description`, `elements[]`, `planets[]`, `zodiacSigns[]`, `deities[]`,
   `colors[]`, `safetyNotes`), + audit. `name` is the display label —
   what it's called here — and stays freely relabellable, because identity
   moved off it onto `canonicalName`/`nomenclature`/`form`. Of the
-  correspondences only `element` is constrained: an `ingredient_element`
+  correspondences only `elements` is constrained: a list of the `ingredient_element`
   `pgEnum` of `earth`, `air`, `fire`, `water`, `spirit`, closed and fixed —
   the exact opposite of `form`, and the reason the two are easy to confuse
   but never interchangeable. `planets`, `zodiacSigns`, `deities` and
   `colors` are native `text[]` columns, one of the things SQLite could not
   have run (DESIGN.md §14). `planets`, `zodiacSigns` and `colors` replaced
-  single columns in MB.136, and `element` becomes `elements[]`, a list of
-  its enum, in MB.159 (both below). Substitutes were a `substitutes[]` column
+  single columns in MB.136, and `elements[]` replaced the single `element`
+  in MB.159 (both below); `element` is undeclared and stays in the database
+  until MB.160 drops it. Substitutes were a `substitutes[]` column
   too, until MB.140 moved every reader and writer to `ingredient_substitutes`:
   the column is undeclared, and stays in the database until MB.141 drops it. Seven declared indexes: M4.1a's three partial unique ones (below),
   MB.81's two on the slug ("Ingredient slugs"), `ingredients_trgm`
@@ -232,10 +233,13 @@ keeps the order chosen, and nothing sorts it.
 
 - **A new name, by rule 10**, as MB.134's lists took one. MB.158 added
   `elements` and filled it from `element` where one was set, as a one-entry
-  list (`0034_element-list`); nothing reads it yet. MB.159 switches every reader and writer and stops declaring
-  `element`, and its migration rederives the list from `element` for
-  whatever the live deploy wrote after MB.158, as `0031_refill-ingredient-lists`
-  did. MB.160 fills a last time and drops `element`, with its `.ack.md`
+  list (`0034_element-list`). MB.159 switched every reader and writer and
+  stopped declaring `element`, and its migration, `0035_refill-element-list`,
+  rederives the list from `element` for whatever the live deploy wrote after
+  MB.158 — a new row, a changed value, a cleared one — as
+  `0031_refill-ingredient-lists` did, writing only a row that disagrees.
+  The seed writes lists since, two of its compendium entries more than one
+  element. MB.160 fills a last time and drops `element`, with its `.ack.md`
   sidecar, once MB.159 has deployed. The `ingredient_element` type stays,
   since the list is of it.
 - **The filter reads containment.** M8.13's element filter matches a row

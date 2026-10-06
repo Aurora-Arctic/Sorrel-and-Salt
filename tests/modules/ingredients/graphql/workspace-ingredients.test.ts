@@ -52,7 +52,7 @@ async function run<T>(
 }
 
 const FIELDS = `
-  id name slug canonicalName nomenclature form description element planets zodiacSigns
+  id name slug canonicalName nomenclature form description elements planets zodiacSigns
   deities colors safetyNotes substitutes { name ingredient { id } } isGlobal folkNames
   categories { name }
   audit { createdBy updatedBy }
@@ -110,7 +110,7 @@ function wholeInput(fixture: IngredientFixture): Record<string, unknown> {
     nomenclature: fixture.nomenclature,
     form: fixture.form ?? '',
     description: fixture.description ?? '',
-    element: fixture.element,
+    elements: fixture.elements ?? [],
     planets: fixture.planets ?? [],
     zodiacSigns: fixture.zodiacSigns ?? [],
     deities: fixture.deities ?? [],
@@ -159,7 +159,7 @@ describe('createWorkspaceIngredient', () => {
       canonicalName: 'Fixtura testalis',
       nomenclature: 'botanical',
       form: 'root',
-      element: 'water',
+      elements: ['water', 'earth'],
       planets: ['Venus', 'Moon'],
       zodiacSigns: ['Taurus', 'Cancer'],
       deities: ['Testara'],
@@ -175,6 +175,7 @@ describe('createWorkspaceIngredient', () => {
       { name: 'Zest Root', ingredient: null },
     ]);
     expect(answered).toMatchObject({
+      elements: ['water', 'earth'],
       planets: ['Venus', 'Moon'],
       zodiacSigns: ['Taurus', 'Cancer'],
       colors: ['Green', 'Silver'],
@@ -300,7 +301,7 @@ describe('updateIngredient', () => {
         local({
           name: 'Testroot',
           form: 'root',
-          element: 'fire',
+          elements: ['fire'],
           planets: ['Mars'],
           colors: ['Red', 'Black'],
           folkNames: ['Added Root'],
@@ -314,7 +315,7 @@ describe('updateIngredient', () => {
       id,
       name: 'Testroot',
       form: 'root',
-      element: 'fire',
+      elements: ['fire'],
       description: null,
       planets: ['Mars'],
       colors: ['Red', 'Black'],
@@ -336,12 +337,12 @@ describe('updateIngredient', () => {
     ]);
   });
 
-  it('clears a text field sent as "", a list sent as [], and element sent as null', async () => {
+  it('clears a text field sent as "", and a list sent as [], elements included', async () => {
     const id = await seed(
       local({
         form: 'root',
         description: 'Dug at dusk',
-        element: 'water',
+        elements: ['water', 'air'],
         planets: ['Moon'],
         zodiacSigns: ['Cancer'],
         deities: ['Testara'],
@@ -351,13 +352,13 @@ describe('updateIngredient', () => {
       }),
     );
 
-    const result = await update(asUser(B), id, wholeInput(local({ form: null, element: null })));
+    const result = await update(asUser(B), id, wholeInput(local({ form: null })));
 
     expect(result.errors).toBeUndefined();
     expect(result.data?.updateIngredient).toMatchObject({
       form: null,
       description: null,
-      element: null,
+      elements: null,
       planets: null,
       zodiacSigns: null,
       deities: null,
@@ -367,6 +368,7 @@ describe('updateIngredient', () => {
     });
     // Cleared to NULL, not to an empty array: "none" has one representation.
     expect(await rowOf(id)).toMatchObject({
+      elements: null,
       planets: null,
       zodiac_signs: null,
       deities: null,
@@ -378,19 +380,19 @@ describe('updateIngredient', () => {
     expect(n).toBe(0);
   });
 
-  // `element` is an enum, which has no empty value to send, so it is the one
-  // field left nullable — and so the one a caller may leave out.
-  it('declares every field of its input required, but element', () => {
+  // An empty value clears every field, `elements` too since it became a list
+  // (MB.159), so none is left nullable and none may be left out.
+  it('declares every field of its input required', () => {
     const input = schema.getType('IngredientUpdateInput');
     expect(input).toBeInstanceOf(GraphQLInputObjectType);
     const fields = Object.values((input as GraphQLInputObjectType).getFields());
     // Precondition: the input is the whole ingredient, not a stub.
     expect(fields.map((field) => field.name)).toEqual(
-      expect.arrayContaining(['name', 'canonicalName', 'form', 'element', 'folkNames']),
+      expect.arrayContaining(['name', 'canonicalName', 'form', 'elements', 'folkNames']),
     );
 
     expect(fields.filter((field) => !isNonNullType(field.type)).map((field) => field.name)).toEqual(
-      ['element'],
+      [],
     );
   });
 
@@ -410,14 +412,76 @@ describe('updateIngredient', () => {
     expect(await rowOf(id)).toMatchObject({ name: 'Testwort', form: 'root' });
   });
 
-  it('clears element when it is left out', async () => {
-    const id = await seed(local({ element: 'water' }));
-    const { element: _element, ...withoutElement } = wholeInput(local({ element: 'water' }));
+  describe('its elements', () => {
+    it('saves several in the order chosen', async () => {
+      const id = await seed(local());
 
-    const result = await update(asUser(B), id, withoutElement);
+      const result = await update(
+        asUser(B),
+        id,
+        wholeInput(local({ elements: ['water', 'fire', 'spirit'] })),
+      );
 
-    expect(result.errors).toBeUndefined();
-    expect((await rowOf(id)).element).toBeNull();
+      expect(result.errors).toBeUndefined();
+      expect(result.data?.updateIngredient.elements).toEqual(['water', 'fire', 'spirit']);
+      expect((await rowOf(id)).elements).toEqual(['water', 'fire', 'spirit']);
+    });
+
+    it('replaces the list whole rather than adding to it', async () => {
+      const id = await seed(local({ elements: ['earth', 'water'] }));
+
+      const result = await update(asUser(B), id, wholeInput(local({ elements: ['air', 'earth'] })));
+
+      expect(result.errors).toBeUndefined();
+      expect((await rowOf(id)).elements).toEqual(['air', 'earth']);
+    });
+
+    it('refuses one chosen twice as VALIDATION at the repeat, changing nothing', async () => {
+      const id = await seed(local({ elements: ['earth'] }));
+
+      const result = await update(
+        asUser(B),
+        id,
+        wholeInput(local({ elements: ['fire', 'air', 'fire'] })),
+      );
+
+      expect(result.data).toBeNull();
+      expect(result.errors?.[0]?.extensions).toEqual({
+        code: 'VALIDATION',
+        fieldErrors: [{ path: ['elements', 2], message: 'Fire is already chosen' }],
+      });
+      expect((await rowOf(id)).elements).toEqual(['earth']);
+    });
+
+    // The enum refuses it before a resolver runs, so the service never sees it.
+    it('refuses a value outside the five, changing nothing', async () => {
+      const id = await seed(local({ elements: ['earth'] }));
+
+      const result = await update(asUser(B), id, wholeInput(local({ elements: ['fire'] })));
+      expect(result.errors).toBeUndefined();
+      const refused = await update(asUser(B), id, {
+        ...wholeInput(local()),
+        elements: ['fire', 'aether'],
+      });
+
+      expect(refused.data ?? null).toBeNull();
+      expect(refused.errors?.[0]?.message).toMatch(
+        /Value "aether" does not exist in "IngredientElement" enum/,
+      );
+      expect((await rowOf(id)).elements).toEqual(['fire']);
+    });
+
+    it('refuses an input that leaves the list out, as every field', async () => {
+      const id = await seed(local({ elements: ['water'] }));
+      const { elements: _elements, ...withoutElements } = wholeInput(local());
+
+      const result = await update(asUser(B), id, withoutElements);
+
+      expect(result.errors?.[0]?.message).toMatch(
+        /Field "elements" of required type "\[IngredientElement!\]!" was not provided/,
+      );
+      expect((await rowOf(id)).elements).toEqual(['water']);
+    });
   });
 
   it('answers a Zod failure as VALIDATION on the field, changing nothing', async () => {
