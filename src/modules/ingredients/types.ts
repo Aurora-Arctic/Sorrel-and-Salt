@@ -1,6 +1,8 @@
 import type { z } from 'zod';
 import type { IngredientRow } from '../../db/repository';
+import type { ingredientDeities } from './schema/ingredient-deities';
 import type { CompendiumIngredientInput, LocalIngredientInput } from './validation/ingredient';
+import type { DeityRow } from '@/modules/vocabulary';
 import type { categories } from '@/modules/vocabulary/schema/categories';
 
 // The repository's own, rather than a second `typeof ingredients.$inferSelect`.
@@ -17,7 +19,33 @@ export type IngredientKey = Pick<IngredientRow, 'id' | 'workspaceId'>;
 export type CategoryRow = typeof categories.$inferSelect;
 
 /** The parsed input without its child rows; both tiers' variants parse to this shape. */
-export type IngredientFields = Omit<LocalIngredientInput, 'folkNames' | 'substitutes'>;
+export type IngredientFields = Omit<LocalIngredientInput, 'folkNames' | 'substitutes' | 'deities'>;
+
+/** The tier a write is in, which decides what a pick must be (MB.167). */
+export type Tier = 'compendium' | 'coven';
+
+/** One `ingredient_deities` row as the table holds it. */
+export type DeityRecord = typeof ingredientDeities.$inferSelect;
+
+/**
+ * One deity as a save writes it, once its pick is checked: the deity linked,
+ * or none for a typed name, and the name the row holds — a curated pick's in
+ * its row's spelling.
+ */
+export interface PickedDeity {
+  deityId: string | null;
+  name: string;
+}
+
+/**
+ * One deity as `Ingredient.deities` reads it (MB.167): the name the row holds,
+ * and the curated deity picked, null on a typed name and once that deity or
+ * its tradition is retired, when the row reads as its name.
+ */
+export interface IngredientDeityRow {
+  name: string;
+  deity: DeityRow | null;
+}
 
 /**
  * One substitute as `Ingredient.substitutes` reads it (DESIGN.md §7): the name

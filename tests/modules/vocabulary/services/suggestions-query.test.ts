@@ -198,16 +198,18 @@ describe('the deity suggestion query', () => {
     expect(query).toMatch(/\$\d+ <% "deities"\."name"/);
     expect(query).toMatch(/\$\d+ <% "deities"\."description"/);
     expect(query).not.toMatch(/"deities"\."description" %/);
-    expect(query).toMatch(/"entry"\."value" % \$\d+/);
+    expect(query).toMatch(/"ingredient_deities"\."name" % \$\d+/);
     expect(query).not.toMatch(/similarity\([^)]*\)\s*[<>]=?/);
   });
 
-  it('reads each entry of the deities list, unnested, scoped and live', async () => {
+  // MB.167: the deities are `ingredient_deities`' live rows, not the retired list.
+  it('reads each live row of ingredient_deities beside its ingredient, scoped and live', async () => {
     const { query, params } = await deityStatement('hekate');
 
     expect(query).toMatch(
-      /from "ingredients" cross join lateral unnest\("ingredients"\."deities"\) as "entry"\("value"\)/,
+      /from "ingredients" inner join "ingredient_deities" on \("ingredient_deities"\."ingredient_id" = "ingredients"\."id" and "ingredient_deities"\."deleted_at" is null\)/,
     );
+    expect(query).not.toMatch(/"ingredients"\."deities"/);
     expect(query).toMatch(
       /"ingredients"\."workspace_id" is null or "ingredients"\."workspace_id" = \$\d+/,
     );
@@ -222,7 +224,7 @@ describe('the deity suggestion query', () => {
     expect(query).toMatch(/"deities"\."deleted_at" is null/);
     expect(query).toMatch(/"deity_traditions"\."deleted_at" is null/);
     expect(query).toMatch(
-      /lower\(btrim\("entry"\."value"\)\) not in \(select lower\("deities"\."name"\)/,
+      /lower\(btrim\("ingredient_deities"\."name"\)\) not in \(select lower\("deities"\."name"\)/,
     );
   });
 });

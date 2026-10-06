@@ -1,16 +1,13 @@
 import 'server-only';
-import { findCuratedRowsByName } from '../../../db/repository';
+import { findCuratedRowsByIds, findCuratedRowsByName } from '../../../db/repository';
 import { planets, zodiacSigns } from '../schema/astrology';
 import { deities } from '../schema/deities';
 import { ingredientForms } from '../schema/ingredient-forms';
-import type { CuratedField } from '../types';
+import type { CuratedField, IngredientFormValueRow, PickedField } from '../types';
 
-const VOCABULARY_OF = {
-  form: ingredientForms,
-  planets,
-  zodiacSigns,
-  deities,
-} satisfies Record<CuratedField, unknown>;
+const VOCABULARY_OF = { planets, zodiacSigns } satisfies Record<CuratedField, unknown>;
+
+const PICKED_FROM = { form: ingredientForms, deities } satisfies Record<PickedField, unknown>;
 
 /**
  * A value as the curated vocabularies match it: trimmed and lower-cased, the
@@ -41,4 +38,33 @@ export async function curatedSpellings(
     if (!spellings.has(fold)) spellings.set(fold, row.name);
   }
   return spellings;
+}
+
+/**
+ * The name of each of `ids` that a curated row of `field`'s vocabulary holds
+ * — live, under a live group or tradition — keyed by id; an id naming none is
+ * absent. How a pick is checked before it is written (MB.167). A public read,
+ * as `curatedSpellings` is.
+ */
+export async function curatedNames(
+  field: PickedField,
+  ids: readonly string[],
+): Promise<Map<string, string>> {
+  const rows = await findCuratedRowsByIds(PICKED_FROM[field], [...new Set(ids)]);
+  return new Map(rows.map((row) => [row.id, row.name]));
+}
+
+/**
+ * The curated forms by id, one answer per id in the order given: the row, or
+ * null where no curated form carries the id — none ever did, or it or its
+ * group is retired since it was picked, which `Ingredient.formChoice` reads
+ * as no pick (MB.167). One read whatever the batch size, and public, as the
+ * forms are.
+ */
+export async function formChoicesOf(
+  ids: readonly string[],
+): Promise<(IngredientFormValueRow | null)[]> {
+  const rows = await findCuratedRowsByIds(ingredientForms, [...new Set(ids)]);
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return ids.map((id) => byId.get(id) ?? null);
 }

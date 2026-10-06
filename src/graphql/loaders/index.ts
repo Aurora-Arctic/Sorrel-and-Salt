@@ -1,10 +1,16 @@
 import { membershipsByUser } from '@/modules/coven';
 import {
   categoriesByIngredient,
+  deitiesByIngredient,
   folkNamesByIngredient,
   substitutesByIngredient,
 } from '@/modules/ingredients';
-import { categoryGroupsById, ingredientFormGroupsById } from '@/modules/vocabulary';
+import {
+  categoryGroupsById,
+  deityTraditionsById,
+  ingredientFormGroupsById,
+  ingredientFormsById,
+} from '@/modules/vocabulary';
 import type { Session } from '../../lib/session';
 import type { Built, LoaderFactory } from './types';
 
@@ -16,8 +22,11 @@ const LOADERS = {
   categoriesByIngredient,
   folkNamesByIngredient,
   substitutesByIngredient,
+  deitiesByIngredient,
   categoryGroupsById,
   ingredientFormGroupsById,
+  ingredientFormsById,
+  deityTraditionsById,
 } satisfies Record<string, LoaderFactory<never, unknown>>;
 
 export type Loaders = Built<typeof LOADERS>;

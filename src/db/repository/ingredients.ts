@@ -1,13 +1,16 @@
 import { and, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable, alias } from 'drizzle-orm/pg-core';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
+import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredientSubstitutes } from '../../modules/ingredients/schema/ingredient-substitutes';
 import { canonicalKeyOf, ingredients } from '../../modules/ingredients/schema/ingredients';
+import { deities } from '../../modules/vocabulary/schema/deities';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, pageBounds, selectFrom } from './select';
+import { inLiveGroup } from './vocabularies';
 import type {
   CompendiumScore,
   IngredientFilter,
@@ -52,6 +55,47 @@ export function findManyOfIngredients<
       inArray(table.ingredientId, [...ingredientIds]),
       existsIn(ingredients, readableParent),
     ),
+  );
+}
+
+/**
+ * The live deities of these ingredients (MB.167), each beside the curated
+ * deity it links while that deity is curated — live, under a live tradition —
+ * and null for a typed name or a deity since retired, which reads as the name
+ * the row holds. Not an escape hatch: the retired deity is filtered, as
+ * any finder filters it, and the row kept. Readable exactly when the parent
+ * is, as `findManyOfIngredients` reads it. Unordered; a caller sorts by
+ * `position`.
+ */
+export function findDeitiesOfIngredients(
+  memberships: readonly Membership[],
+  ingredientIds: readonly string[],
+): Promise<JoinedRow<typeof ingredientDeities.$inferSelect, typeof deities.$inferSelect>[]> {
+  if (ingredientIds.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    ingredientDeities,
+    and(
+      notSoftDeleted(ingredientDeities),
+      inArray(ingredientDeities.ingredientId, [...ingredientIds]),
+      existsIn(
+        ingredients,
+        and(
+          eq(ingredients.id, ingredientDeities.ingredientId),
+          or(
+            inCompendium(ingredients),
+            ...memberships.map((membership) => scopedTo(membership, ingredients)),
+          ),
+        ),
+      ),
+    ),
+    {
+      leftJoin: deities,
+      on: and(
+        eq(deities.id, ingredientDeities.deityId),
+        notSoftDeleted(deities),
+        inLiveGroup(deities),
+      ) as SQL,
+    },
   );
 }
 

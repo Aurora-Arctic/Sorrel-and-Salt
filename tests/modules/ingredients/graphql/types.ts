@@ -57,6 +57,12 @@ export interface Answer<T> {
   errors?: WireError[];
 }
 
+/** One `IngredientDeity`, its curated deity selected by id and tradition (MB.167). */
+export interface IngredientDeityNode {
+  name: string;
+  deity: { id: string; tradition?: { name: string } } | null;
+}
+
 /** One `Substitute`, its ingredient selected by id and label. */
 export interface SubstituteNode {
   name: string;
@@ -68,7 +74,7 @@ export interface WorkspaceIngredientNode {
   name: string;
   nomenclature: string;
   elements: string[] | null;
-  deities: string[] | null;
+  deities: IngredientDeityNode[];
   folkNames: string[];
   substitutes: SubstituteNode[];
   isGlobal: boolean;

@@ -391,10 +391,19 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
       });
     });
 
-    it('keeps the order entered, and a repeated entry', () => {
-      expect(Schema.parse({ ...base, [field]: ['Vesta', 'Ceres', 'Vesta'] })).toMatchObject({
-        [field]: ['Vesta', 'Ceres', 'Vesta'],
+    it('keeps the order entered', () => {
+      expect(Schema.parse({ ...base, [field]: ['Vesta', 'Ceres', 'Pallas'] })).toMatchObject({
+        [field]: ['Vesta', 'Ceres', 'Pallas'],
       });
+    });
+
+    // MB.167: as folk names are, case-folded and trimmed, at the row the form
+    // sent it in — blanks counted.
+    it('refuses a repeat but for case and spacing, at the repeat', () => {
+      const result = Schema.safeParse({ ...base, [field]: ['Vesta', ' ', 'Ceres', ' vESTA '] });
+
+      expect(failedPaths(result)).toEqual([[field, 3]]);
+      expect(result.error?.issues[0]?.message).toMatch(/already listed/);
     });
 
     it('takes a list left with no entries as absent', () => {
@@ -429,7 +438,7 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
       elements: ['water', 'earth'],
       planets: ['moon', 'Venus'],
       zodiacSigns: ['cancer'],
-      deities: [' Testara '],
+      deities: [{ name: ' Testara ' }],
       colors: ['green', 'silver'],
       safetyNotes: 'Not for internal use.',
       substitutes: [{ name: 'Mock Root' }],
@@ -438,21 +447,11 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
 
     expect(parsed).toMatchObject({
       elements: ['water', 'earth'],
-      deities: ['Testara'],
+      deities: [{ deityId: null, name: 'Testara' }],
       planets: ['moon', 'Venus'],
       zodiacSigns: ['cancer'],
       colors: ['green', 'silver'],
     });
-  });
-
-  it('drops a blank entry from the other array fields', () => {
-    const parsed = Schema.parse({
-      name: 'Testwort',
-      nomenclature: 'none',
-      deities: ['Testara', '  '],
-    });
-
-    expect(parsed).toMatchObject({ deities: ['Testara'] });
   });
 
   // A list left with no entries is no list: cleared to null, as a blank text
@@ -461,11 +460,111 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
     const parsed = Schema.parse({
       name: 'Testwort',
       nomenclature: 'none',
-      deities: [],
       colors: ['  '],
       folkNames: [],
     });
 
-    expect(parsed).toMatchObject({ deities: null, colors: null, folkNames: null });
+    expect(parsed).toMatchObject({ colors: null, folkNames: null });
+  });
+
+  // MB.167: the form a member picked, recorded beside its text (DESIGN.md §5,
+  // `ingredient_forms`). Whether the id names a curated row is the service's.
+  describe('formId', () => {
+    const base = { name: 'Testwort', nomenclature: 'none' };
+    const PICKED = '00000000-0000-4000-8000-0000000000f1';
+
+    it('takes a picked form beside its text', () => {
+      expect(Schema.parse({ ...base, form: 'Wax', formId: PICKED })).toMatchObject({
+        form: 'Wax',
+        formId: PICKED,
+      });
+    });
+
+    it('treats a blank id as no pick', () => {
+      expect(Schema.parse({ ...base, form: 'Wax', formId: '' })).toMatchObject({ formId: null });
+      expect(Schema.parse({ ...base, form: 'Wax' }).formId ?? null).toBeNull();
+    });
+
+    it('refuses an id that is not one, beside it', () => {
+      expect(failedPaths(Schema.safeParse({ ...base, form: 'Wax', formId: 'wax' }))).toEqual([
+        ['formId'],
+      ]);
+    });
+
+    // `ingredients_form_id_has_form` would refuse it; the text field is where
+    // the member sees why.
+    it('refuses a pick with no form text, beside the text', () => {
+      expect(failedPaths(Schema.safeParse({ ...base, form: ' ', formId: PICKED }))).toEqual([
+        ['form'],
+      ]);
+    });
+  });
+
+  // MB.167: each deity links a curated row or names one (DESIGN.md §5,
+  // `ingredient_deities`), in the order entered, and an ingredient lists each once.
+  describe('deities', () => {
+    const base = { name: 'Testwort', nomenclature: 'none' };
+    const GREEK = '00000000-0000-4000-8000-0000000000d1';
+    const ROMAN = '00000000-0000-4000-8000-0000000000d2';
+
+    it('takes links and typed names together, in the order sent, each as one of the two', () => {
+      const parsed = Schema.parse({
+        ...base,
+        deities: [{ deityId: GREEK }, { name: ' Testara ', deityId: '' }, { deityId: ROMAN }],
+      });
+
+      expect(parsed.deities).toEqual([
+        { deityId: GREEK, name: null },
+        { deityId: null, name: 'Testara' },
+        { deityId: ROMAN, name: null },
+      ]);
+    });
+
+    it.each([
+      ['links and names at once', { deityId: GREEK, name: 'Hecate' }],
+      ['does neither', {}],
+      ['names only a blank', { name: '  ' }],
+      ['links an id that is not one', { deityId: 'hecate' }],
+    ])('refuses an entry that %s, pathed to the entry', (_case, entry) => {
+      const result = Schema.safeParse({ ...base, deities: [{ name: 'Testara' }, entry] });
+
+      expect(failedPaths(result)).toEqual([['deities', 1]]);
+    });
+
+    // The two partial unique indexes would refuse the second copy; saying so
+    // here keeps the index's 23505 from being what a member sees.
+    it('refuses the same deity linked twice, pathed to the repeat', () => {
+      const result = Schema.safeParse({
+        ...base,
+        deities: [{ deityId: GREEK }, { deityId: ROMAN }, { deityId: GREEK }],
+      });
+
+      expect(failedPaths(result)).toEqual([['deities', 2]]);
+    });
+
+    it('refuses the same typed name twice in any case, pathed to the repeat', () => {
+      const result = Schema.safeParse({
+        ...base,
+        deities: [{ name: 'Testara' }, { deityId: GREEK }, { name: ' tESTARA' }],
+      });
+
+      expect(failedPaths(result)).toEqual([['deities', 2]]);
+    });
+
+    // Greek and Roman Hecate are two deities; a typed "Hecate" beside a picked
+    // one is text beside a link. Whether the names agree is not asked here.
+    it('takes two links, and a typed name beside a link, whatever their names', () => {
+      expect(
+        Schema.safeParse({
+          ...base,
+          deities: [{ deityId: GREEK }, { deityId: ROMAN }, { name: 'Hecate' }],
+        }).success,
+      ).toBe(true);
+    });
+
+    it('takes no deities, absent or empty, as none', () => {
+      expect(Schema.parse(base).deities ?? []).toEqual([]);
+      expect(Schema.parse({ ...base, deities: [] }).deities ?? []).toEqual([]);
+    });
   });
 });

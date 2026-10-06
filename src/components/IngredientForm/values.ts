@@ -60,7 +60,8 @@ const WHOLE_LIST: MultiSelectFieldName = 'elements';
  * The values as the mutation takes them: an unanswered closed set is null, the
  * elements go as chosen — `[]` for none, which the update input needs to
  * clear them — a list entry is its text — a substitute its link's id, or else its text as a
- * name — and the boxes are left behind — the resolver has
+ * name, and a deity its text as a name until MB.169 sends a pick's id, as it
+ * will the form's — and the boxes are left behind — the resolver has
  * refused a save while one holds text. Nothing is trimmed or dropped — the
  * schema does that on both sides — so an entry's index in an issue's path is
  * its index here.
@@ -85,7 +86,7 @@ export function toInput(values: IngredientFormValues): IngredientFormInput {
     planets: texts(planets),
     zodiacSigns: texts(zodiacSigns),
     colors: texts(colors),
-    deities: texts(deities),
+    deities: texts(deities).map((name) => ({ name })),
     substitutes: substitutes.map(({ value, link }) =>
       link ? { ingredientId: link.id } : { name: value },
     ),

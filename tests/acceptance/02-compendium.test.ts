@@ -39,6 +39,7 @@ describe('Story 15: Create an ingredient local to my workspace when the compendi
       workspaceId: _tier,
       categories: _categories,
       substitutes: _substitutes,
+      deities: _deities,
       ...fixture
     } = makeIngredient({
       workspaceId: WORKSPACE_W_ID,
@@ -78,6 +79,7 @@ describe('Story 15: Create an ingredient local to my workspace when the compendi
       workspaceId: _tier,
       categories: _categories,
       substitutes: _substitutes,
+      deities: _deities,
       ...input
     } = makeIngredient({
       name: 'Fixture Viewerwort',
@@ -257,6 +259,7 @@ describe("Story 16: See a warning when the name I'm entering resembles something
       workspaceId: _tier,
       categories: _categories,
       substitutes: _substitutes,
+      deities: _deities,
       ...input
     } = makeIngredient({ name: "Cat's Claw", canonicalName: 'Fixtura testalis' });
     // Why this is story 16's case: the name is one the warning names.

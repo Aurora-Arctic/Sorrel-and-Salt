@@ -1,5 +1,6 @@
 import 'server-only';
 import {
+  findDeitiesOfIngredients,
   findManyByIds,
   findManyOfIngredients,
   findSubstitutesIncludingSoftDeleted,
@@ -10,7 +11,7 @@ import { ingredientCategories } from '../schema/ingredient-categories';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import { type Membership, assertMembership } from '@/modules/coven';
-import type { CategoryRow, IngredientKey, SubstituteRow } from '../types';
+import type { CategoryRow, IngredientDeityRow, IngredientKey, SubstituteRow } from '../types';
 
 /**
  * The categories each ingredient is filed under, one answer per ref in the
@@ -85,6 +86,29 @@ export async function substitutesOf(
         ingredient: linked?.deletedAt === null ? linked : null,
       }))
       .sort(byName),
+  );
+}
+
+/**
+ * The live deities of each ingredient, as `Ingredient.deities` reads them
+ * (MB.167) — one answer per ref, in the order entered. A pick shows the name
+ * its row holds and the curated deity behind it; once that deity or its
+ * tradition is retired it shows the name alone, as a typed one does. One read
+ * whatever the batch size, the curated deities joined in, plus one role
+ * lookup per coven named; refused exactly as `categoriesOf` refuses.
+ */
+export async function deitiesOf(
+  session: Session | null,
+  refs: readonly IngredientKey[],
+): Promise<(IngredientDeityRow[] | Forbidden)[]> {
+  const { memberships, ids, answer } = await admit(session, refs);
+  const rows = await findDeitiesOfIngredients(memberships, ids);
+
+  return answer((id) =>
+    rows
+      .filter(({ row }) => row.ingredientId === id)
+      .sort((a, b) => a.row.position - b.row.position)
+      .map(({ row, joined: deity }) => ({ name: row.name, deity })),
   );
 }
 

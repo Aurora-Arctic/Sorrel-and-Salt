@@ -6,7 +6,14 @@ import {
   UNSETTLED_KIND,
 } from '../schema/ingredient-enums';
 import { RowId } from '../../../lib/validation';
-import type { Lists, Parsed, SubstituteEntry, SubstituteFields } from './types';
+import type {
+  DeityEntry,
+  DeityFields,
+  Lists,
+  Parsed,
+  SubstituteEntry,
+  SubstituteFields,
+} from './types';
 
 // One ingredient as IngredientForm submits it and the service parses it: the
 // resolver runs these before a request is sent, and the service runs them
@@ -47,7 +54,6 @@ const dropBlankEntries = <T extends Lists>(value: T): T => ({
   elements: withoutBlanks(value.elements),
   planets: withoutBlanks(value.planets),
   zodiacSigns: withoutBlanks(value.zodiacSigns),
-  deities: withoutBlanks(value.deities),
   colors: withoutBlanks(value.colors),
   folkNames: withoutBlanks(value.folkNames),
 });
@@ -81,14 +87,29 @@ const elementList = z
  */
 const substitute = z.object({ ingredientId: optionalText, name: optionalText });
 
-/** Each entry as the one half it carries, once `substituteRules` has held it to one. */
-function asEntries<T extends { substitutes?: SubstituteFields[] | null }>(
+/**
+ * A deity links the curated one picked or names one (DESIGN.md §5,
+ * `ingredient_deities`), as a substitute does, and is refused rather than
+ * dropped when blank for the same reason: its index is its position.
+ */
+const deity = z.object({ deityId: optionalText, name: optionalText });
+
+/** Each entry as the one half it carries, once `substituteRules` and `deityRules` have held it to one. */
+function asEntries<
+  T extends { substitutes?: SubstituteFields[] | null; deities?: DeityFields[] | null },
+>(
   value: T,
-): Omit<T, 'substitutes'> & { substitutes?: SubstituteEntry[] } {
+): Omit<T, 'substitutes' | 'deities'> & {
+  substitutes?: SubstituteEntry[];
+  deities?: DeityEntry[];
+} {
   return {
     ...value,
     substitutes: value.substitutes?.map(({ ingredientId, name }): SubstituteEntry =>
       ingredientId ? { ingredientId, name: null } : { ingredientId: null, name: name ?? '' },
+    ),
+    deities: value.deities?.map(({ deityId, name }): DeityEntry =>
+      deityId ? { deityId, name: null } : { deityId: null, name: name ?? '' },
     ),
   };
 }
@@ -97,6 +118,9 @@ const fields = {
   name: requiredText('Give the ingredient a name'),
   canonicalName: optionalText,
   form: optionalText,
+  // The curated form picked, beside its text (MB.165): whether it names one,
+  // and the text that row's name, are the service's to read.
+  formId: optionalText,
   description: optionalText,
   elements: elementList,
   // Lists of free text like `form`'s one value (MB.134): the vocabularies
@@ -104,7 +128,7 @@ const fields = {
   // to them against the database (MB.162), and a coven's stay free text.
   planets: textList,
   zodiacSigns: textList,
-  deities: textList,
+  deities: z.array(deity).nullish(),
   colors: textList,
   safetyNotes: optionalText,
   substitutes: z.array(substitute).nullish(),
@@ -120,8 +144,9 @@ const nomenclature = z.enum(NOMENCLATURE_KINDS, {
 
 /**
  * The rules across fields: the database's kind↔name CHECK — `none` takes no
- * formal name, a named kind needs one, `unknown` takes either — and a folk
- * name that is neither the name nor another folk name.
+ * formal name, a named kind needs one, `unknown` takes either — a folk name
+ * that is neither the name nor another folk name, a picked form with its
+ * text, and each list entry once.
  */
 function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
   const kind = value.nomenclature;
@@ -165,7 +190,74 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
     });
   }
 
+  formRules(value, ctx);
+  for (const field of ['planets', 'zodiacSigns', 'colors'] as const) {
+    refuseRepeats(field, value[field] ?? [], ctx);
+  }
   substituteRules(value.substitutes ?? [], ctx);
+  deityRules(value.deities ?? [], ctx);
+}
+
+/**
+ * A picked form is an id, and stands beside its text, as
+ * `ingredients_form_id_has_form` holds it; whether the text is that row's name
+ * is read against the database by the service (MB.167).
+ */
+function formRules({ form, formId }: Parsed, ctx: z.RefinementCtx) {
+  if (formId == null) return;
+  // Not a uuid names nothing, and would be a driver error at the comparison.
+  if (!RowId.safeParse(formId).success) {
+    ctx.addIssue({ code: 'custom', path: ['formId'], message: 'No such form to pick' });
+  } else if (form == null) {
+    ctx.addIssue({ code: 'custom', path: ['form'], message: 'Name the form you picked' });
+  }
+}
+
+/**
+ * Each entry of an ordered list once, folded as folk names are: a repeat but
+ * for case and spacing is refused at the repeat, at the row the form sent it
+ * in, blanks counted (MB.167).
+ */
+function refuseRepeats(field: string, entries: readonly string[], ctx: z.RefinementCtx) {
+  const seen = new Set<string>();
+  entries.forEach((entry, index) => {
+    if (entry === '') return;
+    const key = entry.toLowerCase();
+    if (seen.has(key)) {
+      ctx.addIssue({ code: 'custom', path: [field, index], message: 'This is already listed' });
+    }
+    seen.add(key);
+  });
+}
+
+/**
+ * Each deity is exactly one of a link and a name, and listed once: the same
+ * deity linked twice, or the same name typed twice in any case — the two
+ * partial unique indexes' keys — is refused at the repeat. Links to two
+ * deities sharing a name are two deities, and a typed name equal to a linked
+ * one's is text beside a link, so neither is a repeat (MB.165).
+ */
+function deityRules(entries: DeityFields[], ctx: z.RefinementCtx) {
+  const refuse = (index: number, message: string) =>
+    ctx.addIssue({ code: 'custom', path: ['deities', index], message });
+  const links = new Set<string>();
+  const names = new Set<string>();
+
+  entries.forEach(({ deityId, name }, index) => {
+    if (deityId && name) {
+      refuse(index, 'A deity is picked or typed, not both');
+    } else if (deityId) {
+      if (!RowId.safeParse(deityId).success) refuse(index, 'No such deity to pick');
+      else if (links.has(deityId)) refuse(index, 'This deity is already listed');
+      links.add(deityId);
+    } else if (name) {
+      const key = name.toLowerCase();
+      if (names.has(key)) refuse(index, 'This deity is already listed');
+      names.add(key);
+    } else {
+      refuse(index, 'Name the deity, or pick one');
+    }
+  });
 }
 
 /**

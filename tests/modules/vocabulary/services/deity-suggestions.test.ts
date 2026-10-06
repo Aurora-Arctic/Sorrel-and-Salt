@@ -127,11 +127,23 @@ describe('suggestDeities', () => {
       expect(find(suggestions, 'Hermes')).toMatchObject({ tradition: 'Greek', curated: true });
       expect(find(suggestions, 'Mercury')).toMatchObject({ tradition: 'Roman', curated: true });
       expect(find(suggestions, 'Hermes Trismegistus')).toEqual({
+        id: null,
         value: 'Hermes Trismegistus',
         description: null,
         tradition: null,
         curated: false,
       });
+    });
+
+    // MB.167: what a pick sends — Greek Hecate's own row, never a spelling.
+    it('carries each curated row’s id, and none on a value only in use', async () => {
+      await addIngredient({ workspaceId: WORKSPACE_W_ID, deities: ['Hermes Trismegistus'] });
+      const [hermes] = await sql`select id from deities where name = 'Hermes'`;
+
+      const suggestions = await all(asUser(B), 'hermes');
+
+      expect(find(suggestions, 'Hermes').id).toBe(hermes.id);
+      expect(find(suggestions, 'Hermes Trismegistus').id).toBeNull();
     });
 
     it('ranks a name match above a description match, whatever the alphabet says', async () => {
@@ -189,7 +201,7 @@ describe('suggestDeities', () => {
 
       // The spelling most entries use stands for the group.
       expect(hecates).toEqual([
-        { value: 'Hecate', description: null, tradition: null, curated: false },
+        { id: null, value: 'Hecate', description: null, tradition: null, curated: false },
       ]);
     });
 
@@ -226,6 +238,7 @@ describe('suggestDeities', () => {
 
       expect(suggestions.some((s) => s.tradition === 'Greek')).toBe(false);
       expect(find(suggestions, 'Hecate')).toEqual({
+        id: null,
         value: 'Hecate',
         description: null,
         tradition: null,
@@ -261,13 +274,28 @@ describe('suggestDeities', () => {
 
     it('never offers a deity in use only in another workspace', async () => {
       // Why it could have come back: X holds it, and X's own member is offered it.
-      const [held] = await sql`
-        select deities from ingredients where workspace_id = ${WORKSPACE_X_ID} and deleted_at is null`;
-      expect(held.deities).toEqual(['Belisama']);
+      const held = await sql`
+        select d.name from ingredient_deities d join ingredients i on i.id = d.ingredient_id
+        where i.workspace_id = ${WORKSPACE_X_ID} and i.deleted_at is null and d.deleted_at is null`;
+      expect(held.map((row) => row.name)).toEqual(['Belisama']);
       expect(valuesOf(await all(asUser(D), 'belisama', WORKSPACE_X_ID))).toEqual(['Belisama']);
 
       expect(await all(asUser(B), 'belisama')).toEqual([]);
       expect(valuesOf(await all(asUser(B), ''))).not.toContain('Belisama');
+    });
+
+    // MB.167: the deities in use are the table's live rows.
+    it('drops a deity row soft-deleted from a live ingredient', async () => {
+      await sql`
+        update ingredient_deities set deleted_at = now(), deleted_by = ${A.id}
+        where name = 'Abnoba'`;
+      // Why it could have come back: its ingredient is live and in scope.
+      const [{ count }] = await sql`
+        select count(*)::int as count from ingredients
+        where workspace_id = ${WORKSPACE_W_ID} and deleted_at is null`;
+      expect(count).toBe(1);
+
+      expect(await all(asUser(B), 'abnoba')).toEqual([]);
     });
 
     it('drops a soft-deleted ingredient’s deities', async () => {

@@ -25,6 +25,18 @@ const SubstituteInput = builder.inputType('SubstituteInput', {
   }),
 });
 
+/**
+ * One deity: the curated one picked, or a name typed — exactly one, held by
+ * the shared schema as `SubstituteInput` is (DESIGN.md §5, `ingredient_deities`).
+ */
+const IngredientDeityInput = builder.inputType('IngredientDeityInput', {
+  description: 'A curated deity picked, or a name typed: exactly one of the two.',
+  fields: (t) => ({
+    deityId: t.id(),
+    name: t.string(),
+  }),
+});
+
 /** DESIGN.md §7's `IngredientInput`: only `name` is required, so story 29's stub saves. */
 const IngredientInput = builder.inputType('IngredientInput', {
   fields: (t) => ({
@@ -32,11 +44,12 @@ const IngredientInput = builder.inputType('IngredientInput', {
     canonicalName: t.string(),
     nomenclature: t.field({ type: NomenclatureEnum }),
     form: t.string(),
+    formId: t.id({ description: 'The curated form picked for `form`; none when it was typed.' }),
     description: t.string(),
     elements: t.field({ type: [IngredientElementEnum] }),
     planets: t.stringList(),
     zodiacSigns: t.stringList(),
-    deities: t.stringList(),
+    deities: t.field({ type: [IngredientDeityInput] }),
     colors: t.stringList(),
     safetyNotes: t.string(),
     substitutes: t.field({ type: [SubstituteInput] }),
@@ -56,11 +69,15 @@ const IngredientUpdateInput = builder.inputType('IngredientUpdateInput', {
     canonicalName: t.string({ required: true }),
     nomenclature: t.field({ type: NomenclatureEnum, required: true }),
     form: t.string({ required: true }),
+    formId: t.id({
+      required: true,
+      description: 'The curated form picked for `form`; "" when it was typed.',
+    }),
     description: t.string({ required: true }),
     elements: t.field({ type: [IngredientElementEnum], required: true }),
     planets: t.stringList({ required: true }),
     zodiacSigns: t.stringList({ required: true }),
-    deities: t.stringList({ required: true }),
+    deities: t.field({ type: [IngredientDeityInput], required: true }),
     colors: t.stringList({ required: true }),
     safetyNotes: t.string({ required: true }),
     substitutes: t.field({ type: [SubstituteInput], required: true }),
@@ -100,6 +117,7 @@ builder.mutationField('updateIngredient', (t) =>
       // be this write's.
       loaders.folkNamesByIngredient.clear(row);
       loaders.substitutesByIngredient.clear(row);
+      loaders.deitiesByIngredient.clear(row);
       return row;
     },
   }),

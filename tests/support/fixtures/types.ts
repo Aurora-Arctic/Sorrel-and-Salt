@@ -31,9 +31,9 @@ export interface WorkspaceFixture extends Required<
 export type Nomenclature = typeof ingredients.$inferInsert.nomenclature;
 
 /**
- * An ingredient plus its folk names, substitutes and categories, the latter by §6 name
- * rather than id. `canonicalKey` is absent: GENERATED ALWAYS, so Drizzle omits
- * it from the insert model.
+ * An ingredient plus its folk names, substitutes, deities and categories, the
+ * latter by §6 name rather than id. `canonicalKey` is absent: GENERATED
+ * ALWAYS, so Drizzle omits it from the insert model.
  */
 export interface IngredientFixture extends Required<
   Pick<
@@ -43,11 +43,11 @@ export interface IngredientFixture extends Required<
     | 'canonicalName'
     | 'nomenclature'
     | 'form'
+    | 'formId'
     | 'description'
     | 'elements'
     | 'planets'
     | 'zodiacSigns'
-    | 'deities'
     | 'colors'
     | 'safetyNotes'
   >
@@ -55,6 +55,8 @@ export interface IngredientFixture extends Required<
   folkNames: string[];
   /** Substitutes typed as names; a test links one with `insertSubstituteLink`. */
   substitutes: string[];
+  /** Deities typed as names, in order; a test links one with `insertDeityLink`. */
+  deities: string[];
   categories: string[];
 }
 

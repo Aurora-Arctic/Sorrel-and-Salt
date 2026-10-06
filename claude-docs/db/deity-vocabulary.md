@@ -1,6 +1,7 @@
 ## The deity vocabulary (MB.127; tables MB.128)
 
-`deities` is the vocabulary behind the list `ingredients.deities`, and
+`deities` is the vocabulary behind an ingredient's deities, the rows of
+`ingredient_deities` (MB.165, read and written since MB.167), and
 `deity_traditions` groups it: Hecate under Greek, Brigid under Irish. Both are
 in the `vocabulary` module, in `src/modules/vocabulary/schema/deities.ts`
 (MB.128), seeded by `src/db/seed/deities.ts` (MB.129) from
@@ -25,13 +26,15 @@ curate it.
 A member writes deities, so by MB.35's rule each entry is text over a
 vocabulary rather than a foreign key: a value off the list stays writable on
 a coven's ingredient. A pick records its curated row beside the text, in
-`ingredient_deities`, which replaces the list once MB.168 drops it
+`ingredient_deities`, which every reader and writer uses since MB.167 and
+which replaces the list once MB.168 drops it
 ([`identity-model.md`](identity-model.md); MB.165), so Greek and Roman Hecate
 stay told apart after a save, and the text stays the value. Soft-deleting a
-row rewrites none of a coven's, its value moving into the in-use bucket instead. A compendium entry holds curated
-deities alone, so a deity one holds is not deleted, nor the tradition over
-it, and a rename carries onto it
-([MB.162](../design-decisions/mb.162-compendium-holds-curated-values.md)).
+row rewrites none of a coven's, its value moving into the in-use bucket instead. A compendium entry's
+deities are each a pick of a curated row, so a deity one picks is not
+deleted, nor the tradition over it, and a rename carries onto it
+([MB.162](../design-decisions/mb.162-compendium-holds-curated-values.md); on
+the pick since [MB.167](../design-decisions/mb.167-read-and-write-the-pick.md)).
 `tradition_id` can be a key because only an admin
 writes it, as `ingredient_forms.group_id` is. MB.127 was minted to follow the
 planet and zodiac vocabularies, which are flat; the owner then asked for
@@ -75,14 +78,14 @@ returns a tradition's name, and never searches it.
 
 **Where it differs from the form precedent, and why:**
 
-- **`ingredients.deities` is a list.** The in-use scan unnests the column
-  before it trims and lower-cases, adopting the scan MB.136 built for the
-  planet and zodiac lists, and a value counts once however many lists hold it.
+- **An ingredient's deities are a table of rows.** The in-use scan reads
+  `ingredient_deities`' live rows beside their ingredient (MB.167), where it
+  unnested the `ingredients.deities` list before (MB.130, on MB.136's scan),
+  and a value counts once however many rows hold it.
 - **The list lives outside DESIGN.md.** §5 carries the forms' and the
   planets' values, but 216 deities with their descriptions are data, so §5
   states the model and points at the seed doc, whose two tables MB.129 parses.
-- **`standard` seeds no deity on an ingredient.** Its compendium names none,
-  so every value the autofill offers before a member types one is curated; a
+- **`standard`'s compendium deities are curated picks** (MB.167), so every value the autofill offers before a member types one is curated; a
   test wanting an uncurated value writes its own on a coven's ingredient, as
   MB.94's do for planets, since a compendium entry may not hold one (MB.162).
 - **Curating a value is not one click.** `description` and `tradition_id`
@@ -92,7 +95,7 @@ returns a tradition's name, and never searches it.
 offers curated rows first, each with its tradition, then uncurated values in
 use in the compendium and the current workspace only, and since MB.162 every
 one of those is the workspace's. The admin's read (MB.132) is the compendium
-tier only — the live entries holding a deity, which refuse its delete or its
+tier only — the live entries picking a deity, which refuse its delete or its
 tradition's and take its rename — since an admin reaches no workspace's
 ingredients (M6.6). A value is uncurated when `lower(btrim(value))`
 matches no live row's `lower(name)`, and a deity is curated only while its

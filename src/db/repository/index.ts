@@ -31,6 +31,7 @@ export {
   findCompendiumCount,
   findCompendiumEntryByIdentity,
   findCompendiumPage,
+  findDeitiesOfIngredients,
   findIngredientSuggestions,
   findManyOfIngredients,
   findOneIngredient,
@@ -38,6 +39,7 @@ export {
   findSubstitutesIncludingSoftDeleted,
 } from './ingredients';
 export {
+  findCuratedRowsByIds,
   findCuratedRowsByName,
   findIngredientFormValues,
   findVocabularySuggestions,
