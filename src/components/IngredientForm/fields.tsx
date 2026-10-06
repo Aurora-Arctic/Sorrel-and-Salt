@@ -214,8 +214,8 @@ export function SelectField({
         label={label}
         labelId={shell.labelId}
         value={field.value}
-        // Before the field and its `deps` revalidate: a nameless kind empties
-        // the formal name first, so its error is judged on the empty value.
+        // Before the field and its `deps` revalidate: None empties the formal
+        // name first, so its error is judged on the empty value.
         onChange={(value) => {
           onChange?.(value);
           field.onChange(value);

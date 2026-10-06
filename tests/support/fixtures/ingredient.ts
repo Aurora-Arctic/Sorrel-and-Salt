@@ -23,9 +23,9 @@ export const NOMENCLATURE_KINDS = [
 ] as const satisfies readonly Nomenclature[];
 
 /**
- * The formal name each nomenclature comes with, `null` for the two that must
- * not have one — `ingredients_nomenclature_declares_canonical_name` is a
- * biconditional. Every name is invented (CLAUDE.md, Testing); ingredient.test.ts
+ * The formal name each nomenclature comes with: `null` for `none`, which must
+ * not have one under `ingredients_nomenclature_declares_canonical_name`, and
+ * for `unknown`, which may go either way (MB.161). Every name is invented (CLAUDE.md, Testing); ingredient.test.ts
  * checks them against the seed as a backstop.
  */
 const CANONICAL_NAME_BY_NOMENCLATURE: Record<Nomenclature, string | null> = {

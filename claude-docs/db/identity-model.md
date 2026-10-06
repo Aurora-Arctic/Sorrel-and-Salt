@@ -98,9 +98,9 @@ raises an immutability question a plain `text` column doesn't, so relaxing
 lets _Valeriana officinalis_ root and leaf exist as two separate identities.
 
 **Three CHECKs ship with the table**, named
-`ingredients_nomenclature_declares_canonical_name` (the biconditional above),
+`ingredients_nomenclature_declares_canonical_name` (the kind↔name CHECK above),
 `ingredients_canonical_name_not_blank` and `ingredients_form_not_blank`. The
-two non-blank checks exist because `btrim(x) <> ''` is what the biconditional
+two non-blank checks exist because `btrim(x) <> ''` is what the kind↔name CHECK
 cannot say for itself: `canonical_name = '   '` satisfies "not null" while
 contributing nothing to the identity key. Their expressions, and the
 generated column's, are written as literal SQL rather than interpolated

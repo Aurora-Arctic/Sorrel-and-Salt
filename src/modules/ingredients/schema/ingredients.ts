@@ -81,13 +81,14 @@ export const ingredients = pgTable(
     ...auditColumns,
   },
   (table) => [
-    // A biconditional: `none`/`unknown` carry no formal name, every other
-    // kind must. Enforced in Zod too, so the CHECK is never what a user sees.
+    // Three cases (MB.161): `none` carries no formal name, a named kind must,
+    // and `unknown` takes either, its name unconfirmed. Enforced in Zod too,
+    // so the CHECK is never what a user sees.
     check(
       'ingredients_nomenclature_declares_canonical_name',
-      sql`(nomenclature in ('none', 'unknown')) = (canonical_name is null)`,
+      sql`nomenclature = 'unknown' or (nomenclature = 'none') = (canonical_name is null)`,
     ),
-    // A blank formal name would satisfy the biconditional while keying nothing.
+    // A blank formal name would satisfy the CHECK above while keying nothing.
     check(
       'ingredients_canonical_name_not_blank',
       sql`canonical_name is null or btrim(canonical_name) <> ''`,

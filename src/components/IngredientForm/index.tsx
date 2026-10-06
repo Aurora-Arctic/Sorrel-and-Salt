@@ -7,9 +7,9 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import {
   INGREDIENT_ELEMENTS,
-  NAMELESS_KINDS,
+  NAMELESS_KIND,
   NOMENCLATURE_KINDS,
-  type NomenclatureKind,
+  UNSETTLED_KIND,
 } from '@/modules/ingredients/schema/ingredient-enums';
 import { NameField, useDuplicateWarning } from './duplicates';
 import { ListField, MultiSelectField, SelectField, TextField } from './fields';
@@ -53,9 +53,6 @@ const optionsOf = (values: readonly string[]) =>
 const NOMENCLATURE_OPTIONS = optionsOf(NOMENCLATURE_KINDS);
 const ELEMENT_OPTIONS = optionsOf(INGREDIENT_ELEMENTS);
 
-const isNameless = (kind: string): kind is NomenclatureKind =>
-  NAMELESS_KINDS.includes(kind as NomenclatureKind);
-
 const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactElement => {
   const methods = useForm<IngredientFormValues, unknown, IngredientFormInput>({
     defaultValues: EMPTY_VALUES,
@@ -78,7 +75,6 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
   const duplicates = useDuplicateWarning(workspaceId, useWatch({ control, name: 'name' }));
   const { blocking } = duplicates;
   const kind = useWatch({ control, name: 'nomenclature' });
-  const formalName = useWatch({ control, name: 'canonicalName' });
 
   // A submit's last update carries its count and every error it found, the
   // resolver's or the server's, so this runs once they are all drawn: the
@@ -179,37 +175,31 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
         {/* Warns beneath it of the entries its name resembles (story 16),
             and a save stops on the warning until it is answered. */}
         <NameField warning={duplicates} ref={createAnyway} />
-        {/* Each of the pair decides the other's error, so a change to one
-            revalidates both, and each is marked required while the other
-            makes it so: a named kind needs its formal name, and a formal
-            name needs its kind. A nameless kind takes no formal name at all,
-            so choosing one empties the field and shuts it, with the reason in
-            view rather than in a tip: a shut field that does not say why
-            reads as broken. */}
+        {/* The kind decides the formal name's error, so a change to it
+            revalidates the formal name. A named kind marks it required;
+            Unknown leaves it open and optional, and a formal name with no
+            kind saves as unknown, so nothing marks the kind (MB.161). None
+            takes no formal name at all, so choosing it empties the field and
+            shuts it, with the reason in view rather than in a tip: a shut
+            field that does not say why reads as broken. */}
         <SelectField
           name="nomenclature"
           label="Classification"
-          hint='Botanical for a plant, mineral for a stone, and so on. "Unknown" and "None" take no formal name.'
+          hint='Botanical for a plant, mineral for a stone, and so on. "Unknown" if you are not sure which, with or without a formal name. "None" takes no formal name.'
           placeholder="Choose a classification"
           options={NOMENCLATURE_OPTIONS}
-          required={formalName.trim() !== ''}
           deps={['canonicalName']}
           onChange={(value) => {
-            if (isNameless(value)) setValue('canonicalName', '');
+            if (value === NAMELESS_KIND) setValue('canonicalName', '');
           }}
         />
         <TextField
           name="canonicalName"
           label="Formal Name"
           hint="Its name in the classification's own system: Lavandula angustifolia, Quartz var. amethyst, Sodium chloride."
-          note={
-            isNameless(kind)
-              ? `${kind === 'unknown' ? 'An' : 'A'} "${kind}" entry records no formal name.`
-              : undefined
-          }
-          disabled={isNameless(kind)}
-          required={kind !== '' && !isNameless(kind)}
-          deps={['nomenclature']}
+          note={kind === NAMELESS_KIND ? 'A "none" entry records no formal name.' : undefined}
+          disabled={kind === NAMELESS_KIND}
+          required={kind !== '' && kind !== NAMELESS_KIND && kind !== UNSETTLED_KIND}
         />
         {/* Both suggest from this coven and the compendium (M4.7a): the form
             from the curated vocabulary and the forms in use, the folk names

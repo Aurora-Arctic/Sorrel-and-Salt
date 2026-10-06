@@ -616,9 +616,9 @@ describe('IngredientForm', () => {
       expect(calls).toHaveLength(0);
     });
 
-    // The schema refuses a formal name on a nameless kind; the form never
-    // lets one be sent, so that refusal is the service's alone.
-    it('shuts the formal name for a nameless kind, emptying it and saying why', async () => {
+    // The schema refuses a formal name on none; the form never lets one be
+    // sent, so that refusal is the service's alone.
+    it('shuts the formal name under None, emptying it and saying why', async () => {
       const calls = acceptCreate();
       const onSaved = renderForm();
 
@@ -638,13 +638,37 @@ describe('IngredientForm', () => {
       expect(calls[0].input).toMatchObject({ nomenclature: 'none', canonicalName: '' });
     });
 
+    // An unknown entry takes either (MB.161), so a name typed before the kind
+    // is settled is kept, and nothing is asked of the field.
+    it('keeps the formal name open and optional under Unknown, saving what was typed', async () => {
+      const calls = acceptCreate();
+      const onSaved = renderForm();
+
+      type('Name', 'Testwort');
+      type('Formal Name', 'Fixtura testalis');
+      choose('Classification', 'Unknown');
+
+      const formal = textbox('Formal Name');
+      expect(formal).toBeEnabled();
+      expect(formal).toHaveValue('Fixtura testalis');
+      expect(formal).not.toBeRequired();
+      expect(formal).not.toHaveAccessibleDescription(
+        expect.stringContaining('records no formal name'),
+      );
+      save();
+
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(calls[0].input).toMatchObject({
+        nomenclature: 'unknown',
+        canonicalName: 'Fixtura testalis',
+      });
+    });
+
     it('opens the formal name again for a named kind', () => {
       renderForm();
 
-      choose('Classification', 'Unknown');
-      expect(textbox('Formal Name')).toHaveAccessibleDescription(
-        expect.stringContaining('An "unknown" entry records no formal name.'),
-      );
+      choose('Classification', 'None');
+      expect(textbox('Formal Name')).toBeDisabled();
       choose('Classification', 'Mineral');
 
       expect(textbox('Formal Name')).toBeEnabled();
@@ -653,24 +677,42 @@ describe('IngredientForm', () => {
       );
     });
 
-    it('asks which classification a formal name belongs to, beside the selector', async () => {
-      acceptCreate();
-      renderForm();
+    it('saves a formal name with no classification, which the schema reads as unknown', async () => {
+      const calls = acceptCreate();
+      const onSaved = renderForm();
 
       type('Name', 'Testwort');
       type('Formal Name', 'Fixtura testalis');
       save();
 
-      await waitFor(() =>
-        expectErrorOn(
-          select('Classification'),
-          'Choose the classification this formal name belongs to',
-        ),
-      );
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(select('Classification')).not.toBeInvalid();
+      expect(calls[0].input).toMatchObject({
+        nomenclature: null,
+        canonicalName: 'Fixtura testalis',
+      });
+      expect(LocalIngredientInput.parse(calls[0].input)).toMatchObject({
+        nomenclature: 'unknown',
+        canonicalName: 'Fixtura testalis',
+      });
     });
 
     // Inline: fixing either side clears the error on the other, with no second submit.
-    it('clears the formal-name error when the kind changes to a nameless one', async () => {
+    it('clears the formal-name error when the kind changes to None', async () => {
+      acceptCreate();
+      renderForm();
+
+      type('Name', 'Testwort');
+      choose('Classification', 'Botanical');
+      save();
+      await waitFor(() => expect(textbox('Formal Name')).toBeInvalid());
+      choose('Classification', 'None');
+
+      await waitFor(() => expect(textbox('Formal Name')).not.toBeInvalid());
+      expect(textbox('Formal Name')).toBeDisabled();
+    });
+
+    it('clears the formal-name error when the kind changes to Unknown, leaving it open', async () => {
       acceptCreate();
       renderForm();
 
@@ -681,20 +723,7 @@ describe('IngredientForm', () => {
       choose('Classification', 'Unknown');
 
       await waitFor(() => expect(textbox('Formal Name')).not.toBeInvalid());
-      expect(textbox('Formal Name')).toBeDisabled();
-    });
-
-    it('clears the classification error when the formal name is cleared', async () => {
-      acceptCreate();
-      renderForm();
-
-      type('Name', 'Testwort');
-      type('Formal Name', 'Fixtura testalis');
-      save();
-      await waitFor(() => expect(select('Classification')).toBeInvalid());
-      type('Formal Name', '');
-
-      await waitFor(() => expect(select('Classification')).not.toBeInvalid());
+      expect(textbox('Formal Name')).toBeEnabled();
     });
 
     it('offers every classification behind a placeholder that is not one', () => {
@@ -730,15 +759,16 @@ describe('IngredientForm', () => {
 
       choose('Classification', 'Unknown');
       expect(textbox('Formal Name')).not.toBeRequired();
+
+      choose('Classification', 'None');
+      expect(textbox('Formal Name')).not.toBeRequired();
     });
 
-    it('marks the classification required while a formal name is typed', () => {
+    // A formal name with no kind saves as unknown (MB.161), so it asks for none.
+    it('marks no classification required for a typed formal name', () => {
       renderForm();
 
       type('Formal Name', 'Fixtura testalis');
-      expect(select('Classification')).toBeRequired();
-
-      type('Formal Name', '   ');
       expect(select('Classification')).not.toBeRequired();
     });
 

@@ -18,7 +18,7 @@ function identityOf(entry: {
 const SEEDED_IDENTITIES = new Set(COMPENDIUM_INGREDIENTS.map(identityOf));
 
 // The factory's real work is the `nomenclature`/`canonicalName` pair, bound by
-// a biconditional CHECK with no column default.
+// the kind↔name CHECK, with no column default.
 
 describe('makeIngredient', () => {
   it('builds a whole ingredient with no arguments', () => {

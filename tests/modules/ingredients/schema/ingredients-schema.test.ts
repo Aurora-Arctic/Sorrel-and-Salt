@@ -145,7 +145,7 @@ const WORKSPACE = WORKSPACE_W_ID;
 
 // The shared factory plus this file's author. `makeIngredient` re-derives
 // `canonicalName` when `nomenclature` alone is overridden, so only a test
-// naming both writes a row the biconditional CHECK rejects.
+// naming both writes a row the kind↔name CHECK rejects.
 function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
   return {
     ...ingredientColumns(makeIngredient(overrides)),
@@ -217,16 +217,16 @@ describe('ingredients table', () => {
     expect(rows.map((r) => r.workspace_id)).toEqual([null, WORKSPACE]);
   });
 
-  describe('the nomenclature/canonicalName biconditional', () => {
+  // Three cases (MB.161): none takes no formal name, a named kind takes one,
+  // and unknown takes either.
+  describe('the nomenclature/canonicalName CHECK', () => {
     // Both directions: a one-directional CHECK would let exactly one of these through.
-    it('rejects none or unknown carrying a formal name', async () => {
-      for (const nomenclature of ['none', 'unknown'] as const) {
-        const error = await failureOf(
-          insert({ nomenclature, canonicalName: 'Artemisia vulgaris' }),
-        );
-        expect(error.code).toBe('23514');
-        expect(error.constraint_name).toBe('ingredients_nomenclature_declares_canonical_name');
-      }
+    it('rejects none carrying a formal name', async () => {
+      const error = await failureOf(
+        insert({ nomenclature: 'none', canonicalName: 'Fixtura testalis' }),
+      );
+      expect(error.code).toBe('23514');
+      expect(error.constraint_name).toBe('ingredients_nomenclature_declares_canonical_name');
     });
 
     it('rejects any other kind carrying no formal name', async () => {
@@ -241,6 +241,18 @@ describe('ingredients table', () => {
         expect(error.code).toBe('23514');
         expect(error.constraint_name).toBe('ingredients_nomenclature_declares_canonical_name');
       }
+    });
+
+    // The row the old biconditional refused, beside the one it already took.
+    it('accepts unknown with a formal name and without one', async () => {
+      await insert({ nomenclature: 'unknown', canonicalName: 'Fixtura testalis' });
+      await insert({ nomenclature: 'unknown', canonicalName: null, name: 'Testroot' });
+
+      const rows = await sql`
+        select canonical_name from ingredients
+        where nomenclature = 'unknown' order by canonical_name nulls last
+      `;
+      expect(rows.map((r) => r.canonical_name)).toEqual(['Fixtura testalis', null]);
     });
 
     // Without these, a CHECK that rejected everything would pass the tests above.

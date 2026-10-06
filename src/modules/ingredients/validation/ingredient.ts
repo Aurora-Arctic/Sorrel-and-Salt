@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import {
   INGREDIENT_ELEMENTS,
-  NAMELESS_KINDS,
+  NAMELESS_KIND,
   NOMENCLATURE_KINDS,
+  UNSETTLED_KIND,
 } from '../schema/ingredient-enums';
 import { RowId } from '../../../lib/validation';
 import type { Lists, Parsed, SubstituteEntry, SubstituteFields } from './types';
@@ -117,19 +118,21 @@ const nomenclature = z.enum(NOMENCLATURE_KINDS, {
 });
 
 /**
- * The rules across fields: the database's kind↔name biconditional, in both
- * directions, and a folk name that is neither the name nor another folk name.
+ * The rules across fields: the database's kind↔name CHECK — `none` takes no
+ * formal name, a named kind needs one, `unknown` takes either — and a folk
+ * name that is neither the name nor another folk name.
  */
 function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
-  const nameless = NAMELESS_KINDS.includes(value.nomenclature);
+  const kind = value.nomenclature;
   const named = value.canonicalName != null;
-  if (nameless && named) {
+  // `unknown` is neither branch: a name it carries is unconfirmed, not refused.
+  if (kind === NAMELESS_KIND && named) {
     ctx.addIssue({
       code: 'custom',
       path: ['canonicalName'],
       message: `A "${value.nomenclature}" entry carries no formal name — clear it, or choose the classification it belongs to`,
     });
-  } else if (!nameless && !named) {
+  } else if (kind !== NAMELESS_KIND && kind !== UNSETTLED_KIND && !named) {
     ctx.addIssue({
       code: 'custom',
       path: ['canonicalName'],
@@ -205,22 +208,18 @@ export const CompendiumIngredientInput = z
   .transform(asEntries);
 
 /**
- * The workspace tier: only `name` is required. With no formal name and no
- * kind, absent or null, `nomenclature` is `none`, so story 29's one-field
- * stub saves; a formal name without a kind is asked about rather than guessed.
+ * The workspace tier: only `name` is required. With no kind, absent or null,
+ * `nomenclature` is `none` when there is no formal name either, so story 29's
+ * one-field stub saves, and `unknown` when there is one (MB.161): `none`
+ * would contradict the name and `botanical` would guess its system.
  */
 export const LocalIngredientInput = z
   .object({ ...fields, nomenclature: nomenclature.nullish() })
-  .transform((value, ctx) => {
-    if (value.nomenclature) return { ...value, nomenclature: value.nomenclature };
-    if (value.canonicalName == null) return { ...value, nomenclature: 'none' as const };
-    ctx.addIssue({
-      code: 'custom',
-      path: ['nomenclature'],
-      message: 'Choose the classification this formal name belongs to',
-    });
-    return z.NEVER;
-  })
+  .transform((value) => ({
+    ...value,
+    nomenclature:
+      value.nomenclature ?? (value.canonicalName == null ? NAMELESS_KIND : UNSETTLED_KIND),
+  }))
   .superRefine(crossFieldRules)
   .transform(dropBlankEntries)
   .transform(asEntries);
