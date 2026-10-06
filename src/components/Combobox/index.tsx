@@ -17,6 +17,7 @@ import './index.scss';
 export { ComboboxEntry } from './entry';
 export { ComboboxMultiSelect } from './multi-select';
 export { ComboboxSelect } from './select';
+export { ComboboxSortableEntries } from './sortable';
 
 // A text box that suggests as it is typed in, on Downshift's `useCombobox`:
 // the hook owns the ARIA and the keyboard, and the markup, the rows and the
