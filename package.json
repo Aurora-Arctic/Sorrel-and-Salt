@@ -30,6 +30,7 @@
     "db:seed:forms": "tsx scripts/db-seed.ts forms",
     "db:seed:astrology": "tsx scripts/db-seed.ts astrology",
     "db:seed:deities": "tsx scripts/db-seed.ts deities",
+    "db:seed:sources": "tsx scripts/db-seed.ts sources",
     "db:drop": "tsx scripts/db-seed.ts drop",
     "db:reset": "npm run db:drop && npm run db:migrate && npm run db:seed",
     "db:studio": "drizzle-kit studio --host 0.0.0.0 --port 4983",

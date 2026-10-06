@@ -119,6 +119,10 @@ jobs:
             src/db/seed/forms.ts \
             src/db/seed/astrology.ts \
             src/db/seed/deities.ts \
+            src/db/seed/sources.ts \
+            src/lib/citation.ts \
+            claude-docs/db/deity-vocabulary-seed.md \
+            claude-docs/db/astrology-vocabulary-seed.md \
             src/db/seed/flat-vocabulary.ts \
             src/db/seed/two-tier-vocabulary.ts \
             src/db/seed/bootstrap-admin.ts \

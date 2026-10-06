@@ -209,13 +209,42 @@ drops each missing piece with its punctuation.
   - Cartwright, Mark. "Greek Mythology." World History Encyclopedia. July 29, 2012. Accessed October 6, 2026. https://www.worldhistory.org/Greek_Mythology/.
   - Cartwright, Mark. "Seven Lucky Gods." World History Encyclopedia. June 24, 2013; last modified September 27, 2024. Accessed October 6, 2026. https://www.worldhistory.org/Shichifukujin/.
 
-### What the seed doc needs before MB.156 parses it
+### How the seed reads the docs (MB.156)
 
-The deity doc's citations are Chicago, but not all in one shape. MB.156
-normalises them first: the comma-form `Wikipedia, s.v. "…," last modified …`
-lines become period form; the locators embedded in a citation (Grimm's
-"Vol. 1, chap. 13", Tacitus's "Chap. 40") move onto the links; "Revised"
-becomes "Last modified"; and "Originally published in …" and the
-unparenthesised "Existence confirmed at …" become notes. The astrology doc's
-sources are recast in Chicago form in the same pass, as its task already
-says.
+`src/db/seed/sources.ts` seeds the sources the vocabulary seed docs record
+as compendium-tier rows: the deity doc's "Sources" and the astrology doc's.
+The categories and the forms are the project's own design and cite nothing.
+`SOURCES` is a literal, each entry a reference's fields and the rows it
+supports, and `sources.test.ts` parses both docs and compares them with it
+through the renderer, citation by citation, so a doc edited without the
+literal, or the reverse, fails there. The docs hold one shape the parse reads:
+
+- **The deity doc.** The bullets before the first tradition chose which
+  deities to list and link nothing, the owner's call. Each tradition's own
+  bullets are its sources: each links the tradition and, in the seed, every
+  deity filed under it. Under `Per-deity:`, a bullet's bold is exactly one
+  deity's name and its prose cites nothing; each work it relies on is a
+  nested bullet, one full citation, followed by `·` and a locator where it
+  points into the work (`vol. 1, chap. 13`). A per-deity link takes the
+  place of the tradition's for that deity, since `(deity, reference)` is one
+  live link. A work cited twice is the same fields both times, so it is one
+  row.
+- **The astrology doc.** Each source is a bullet, and its nested
+  `Linked to:` line names the bodies and signs it supports.
+
+Normalising the deity doc into that shape (MB.156) moved the embedded
+locators onto the links, recast the comma-form Wikipedia citations in period
+form, made "Revised" a last-modified date, and turned "Originally published
+in …" and the "Existence confirmed …" tails into notes; a back-reference
+("Atsma, 'Pan' (above)") became the full citation. The astrology doc's
+sources were recast in Chicago form from pages fetched again.
+
+**Keyed by `seed_key`** (MB.171). A reference the seed writes records the
+citation it rendered, so one an admin has since edited is still its own and
+is neither overwritten nor twinned; a soft-deleted one is neither re-inserted
+nor linked anew. A live compendium reference nobody seeded whose citation is
+a source's to the letter is linked rather than duplicated, and never written
+to. Link targets are found by the `seed_key` their own seed gave them, so a
+renamed deity keeps its sources, and a link present in any state is not
+written again. `migrate.yml` runs the target after the vocabularies it
+links, and `standard` seeds it inside its own transaction.
