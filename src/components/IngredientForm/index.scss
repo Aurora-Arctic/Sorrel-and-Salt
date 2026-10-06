@@ -51,3 +51,45 @@
     min-width: 0;
   }
 }
+
+// The duplicate warning beneath the name. The region is always in the page,
+// as a live region must be, so it cancels the field's gap while empty and its
+// notice puts the gap back.
+.ingredient-form__duplicates {
+  display: block;
+  margin-top: calc(-1 * #{space(2)});
+
+  .notice {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: space(2);
+    margin-top: space(2);
+    // A step deeper beneath the button than the notice's own padding, so
+    // the button does not sit on the box's edge.
+    padding-bottom: space(4);
+  }
+}
+
+// Save's busy mark, from the press to the answer: a ring in the button's own
+// ink, open on one side so its turn reads. Slowed rather than stopped where
+// motion is reduced, since a still ring says nothing is happening.
+.ingredient-form__spinner {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: radius('pill');
+  animation: ingredient-form-spin 0.8s linear infinite;
+
+  @include reduced-motion {
+    animation-duration: 2.4s;
+  }
+}
+
+@keyframes ingredient-form-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}

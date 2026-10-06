@@ -11,6 +11,13 @@ export interface Entry {
   categories: { name: string; group: { name: string } }[];
 }
 
+/** A near match, as story 16's warning names it. */
+export interface Duplicate {
+  id: string;
+  name: string;
+  canonicalName: string | null;
+}
+
 /** What a write answers: the row, of which these stories read the id. */
 export interface Row {
   id: string;

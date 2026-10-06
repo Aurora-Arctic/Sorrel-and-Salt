@@ -12,6 +12,7 @@ admin compendium page wrap it rather than containing their own form.
 | `index.tsx`       | The form: the mutation, the fields in order, the root alert, where a server error goes, and focus after a submit                                              |
 | `fields.tsx`      | `TextField`, `SuggestField`, `SelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip` |
 | `suggestions.tsx` | The two lookups (M5.10a): the queries, the hooks that debounce and shape them, and `FormField` and `FolkNamesField`, which wire each to its field             |
+| `duplicates.tsx`  | The duplicate warning (M5.10): its query, `usePossibleDuplicates`, and `NameField`, the name field with the warning beneath it                                |
 | `values.ts`       | The empty values, `toInput`, `addEntry`, `commitDraft`, `fieldNameOf`, the resolver, and `issuesOf`, which reads a failed save                                |
 | `types.ts`        | The props, the form's own values, and the input it sends                                                                                                      |
 
@@ -145,6 +146,69 @@ since no vocabulary of common names exists. Each list opens with "Use what you t
 picking a common name adds it as an entry; neither links anything, and free
 text outside the vocabulary saves with no warning, as M4.5's schema asks.
 
+### The duplicate warning
+
+Story 16's "did you mean" (M5.10), on MB.11's `possibleDuplicates`
+([`graphql/schema.md`](../graphql/schema.md), "possibleDuplicates").
+`useDuplicateWarning` watches the name and asks once it has settled, through
+the same `useDebouncedValue` the lookups wait on, for the three closest
+entries in the compendium and this coven. A blank name asks nothing and drops
+the last warning. The threshold is the server's, M4.7's 0.4, so "no warning
+below threshold" is an empty answer; the form adds no threshold of its own.
+Unlike the lookups it needs no focus gate: an empty form has no name to send.
+The form owns the hook, since its save waits on it, and `NameField` draws it.
+
+The warning sits beneath the field, a plain `.notice`: "Did you mean Cat's
+Claw (Uncaria tomentosa), Cat's Claw (Felis catus) or Mockleaf?", with a
+Create Anyway button. Each match is a link named by its label and its formal
+name, since the label alone can name five plants; one with no formal name
+shows its label. Each links to `/ingredients/[id]`, DESIGN.md §9's signed-in
+page, which reaches compendium and coven entries alike. It is a plain anchor,
+as [`AdminNav`](admin-nav.md)'s are, since typed routes refuse a page the
+build does not contain; M8.19 builds the page, and the link becomes a
+`<Link>`. Nothing refuses the create on the server: the warning is the
+form's alone.
+
+**The warning has to be answered before the form saves**, the owner's call,
+which corrects the issue's "does not block submission". While it is only
+typed against, it is a plain notice and the name is not marked. A save that
+passes validation asks about the very name it is sending, through the query
+client's `fetchQuery`: the cached answer when the typing had settled, asked
+there and then when it had not, so a save inside the debounce cannot slip past
+the warning. If a match not yet set aside comes back, nothing is sent: the
+notice turns to `.notice--error`, the name is marked invalid and described by
+it, and the focus goes to Create Anyway, which the warning describes, so the
+focus says why it moved. A second save stops the same way. A failed check
+holds nothing, as a failed lookup warns of nothing. The check runs after
+validation, so an error elsewhere takes the focus first: it must be fixed
+either way, and the warning is still there when it is.
+
+**The hold belongs to the name it was set for.** Editing the name lifts it:
+the notice goes back to plain and the name unmarked, so a match arriving as
+the name is typed never takes the focus, and the next save asks again. The
+focus goes to the button through a layout effect on the hold, declared after
+the one that focuses the first invalid field, so it wins when both run.
+
+**Create Anyway answers it**, the owner's call over submitting the form: it
+saves nothing, sets the matches it named aside, and lets the next save go.
+The matches are kept by id, so a longer name finding the same entries warns of
+nothing new, and one finding another entry warns of that one alone. The name
+takes the focus before the button goes, through the button's form rather than
+react-hook-form's `setFocus`, which waits a tick with the focus on the body,
+and the name's error goes with the warning.
+
+A screen reader hears it two ways. The warning is inside an `<output>`
+named "Possible duplicates", always in the page, so it is announced as it
+arrives; and the sentence is in the name field's `aria-describedby` while it
+shows, so it is read with the field, as the hint is.
+
+**Save shows it is busy**, from the press to the answer, the duplicate check
+included: disabled, `aria-busy`, and a spinning ring before its label. The
+label stays "Save Ingredient", since a label that changed would change the
+name a screen reader knows the button by. The ring is in the button's own ink,
+and slowed rather than stopped where motion is reduced, since a still ring
+says nothing is happening.
+
 ### The kind↔name coupling, inline
 
 The schema's rule is both ways round: a botanical, fungal, zoological, mineral
@@ -267,7 +331,9 @@ The component's own stylesheet sets the form's width, a column of at most
 the row a list's box shares with Add, draws an entry's tooltip, and puts each
 label and its info tip, or a legend and its tip, on one positioned row, so an
 open tip lies above the label from the column's edge rather than hanging off
-the icon. A list's legend and its box sit a step further apart than a single
+the icon. The duplicate warning's region cancels the field's gap while it is
+empty, since a live region stays in the page, and its notice puts the gap
+back, with a step more padding beneath Create Anyway than the notice's own. A list's legend and its box sit a step further apart than a single
 field's label and control. The box, its entries and its list are the
 [`Combobox`](combobox.md)'s: an entry is a filled, square-cornered chip in
 the muted ink's wash, neutral since a free-text entry has no category group
@@ -299,14 +365,18 @@ length, and no other text field has one either.
 `Blank`, unframed. Nothing is mocked. Save with an empty name shows the
 resolver's errors, and Save with a name fails into the root alert, since the
 workshop has no API. The TanStack Query client comes from the workshop's global
-provider.
+provider. `DuplicateWarning` fills that client ahead with an answer for "Cat's Claw",
+under the key the query uses, so typing that name shows the warning with no
+server. It seeds the one client rather than bringing its own: a second
+provider would split the cache, which `tests/guards/graphql-client.test.ts`
+refuses.
 
 ## Testing
 
 `tests/components/IngredientForm/index.test.tsx` answers
 `CreateWorkspaceIngredient` through MSW: `mockGraphQLMutation` for a saved
 row, and `mockGraphQLError` for a refusal, so the error body is the route's
-own mapping; the two lookups are answered with `mockGraphQLQuery`. Its `save()` focuses the button before clicking it, as a real
+own mapping; the three lookups are answered with `mockGraphQLQuery`. Its `save()` focuses the button before clicking it, as a real
 click does, since `fireEvent` moves no focus and a focus test would otherwise
 pass on whatever an earlier step had focused. It covers:
 
@@ -338,9 +408,23 @@ pass on whatever an earlier step had focused. It covers:
   headings; a pick filling the form field, and a value in no vocabulary taken
   from its own row with no warning; a common name picked by click or by
   keyboard adding an entry, and Enter with nothing picked adding typed text.
-  Both lookups are answered empty by default, so a test about one answers it
-  after rendering, the later handler winning. The debounce runs on fake
-  timers that still advance, so the mocked answers arrive.
+  Every lookup, the duplicate check included, is answered empty by default, so
+  a test about one answers it after rendering, the later handler winning. The
+  debounce runs on fake timers that still advance, so the mocked answers
+  arrive.
+- **The duplicate warning**: a request only once the name settles, with the
+  whole name trimmed, and none for a blank one, which drops the last warning;
+  each match linked and named by its label and formal name, read with the
+  field, and not marking it invalid until a save meets it; nothing for an
+  empty answer or a failed lookup; a save held, and held again, while it shows,
+  the name marked invalid and the focus on Create Anyway, read with the
+  warning; a save inside the debounce asking about the name it sends and
+  holding on what it finds; Save busy while it checks, then sending when
+  nothing is close; the hold lifted by editing the name, the focus left in it;
+  an error elsewhere taking the save first; Create Anyway clearing it and the
+  name's error, focusing the name, and the next save sending; and the matches
+  set aside staying gone while a new one returns. The in-flight save test also
+  asserts Save's `aria-busy`.
 - **A long entry**: a cut-off entry's tooltip shown on hover and while its ×
   has focus, closed on Escape, and absent for an entry that fits, with the
   layout jsdom lacks stubbed through `scrollWidth` and `clientWidth`; its ×

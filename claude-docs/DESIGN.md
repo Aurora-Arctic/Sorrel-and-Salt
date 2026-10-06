@@ -538,7 +538,7 @@ SELECT … WHERE name % $1 ORDER BY similarity(name, $1) DESC;
 
 `%` filters through the index; `similarity()` only ranks what survives, which needs no index. Leaving the threshold to the default and leaving the predicate as a bare `similarity()` comparison are both wrong, in opposite directions — one changes the meaning, the other throws away the index.
 
-Every result carries its formal name: "Did you mean Cat's Claw?" is useless when it could mean five things. Non-blocking — renders as "Did you mean Bay Laurel?" with a link, plus a Create Anyway button. Merge tooling is v2.
+Every result carries its formal name: "Did you mean Cat's Claw?" is useless when it could mean five things. Nothing refuses the create on the server; the form asks for an answer — renders as "Did you mean Bay Laurel?" with a link, plus a Create Anyway button, and a save is checked against the name it sends and held as an error on the name, focusing Create Anyway, until the warning is set aside (M5.10). Merge tooling is v2.
 
 ---
 
@@ -1280,7 +1280,7 @@ The highest-risk tests in the project.
 `tests/components/<Name>/index.test.tsx`, importing the component as `@/components/<Name>`. Mirrored under `tests/` rather than colocated: MB.41 moved the whole suite out of `src/`, so the directory a component test sits in is the component's own path with the tree swapped, and nothing under `src/` is a test. Queries are by role and label (CLAUDE.md, Testing).
 
 - `IngredientSearch` — filtering, chip toggle, grouped chips collapse, clear, debounce via fake timers
-- `IngredientForm` — fuzzy warning renders and names each match's formal name, Create Anyway proceeds, compendium entries read-only for non-admins, the formal-name and form fields suggest in scope and accept free text outside the vocabulary
+- `IngredientForm` — fuzzy warning renders and names each match's formal name, a save holds on it until Create Anyway, compendium entries read-only for non-admins, the formal-name and form fields suggest in scope and accept free text outside the vocabulary
 - `AddIngredientModal` / `EditIngredientModal` — validation, submit payload, Escape, focus trap, focus restore, pre-population, dirty-discard warning
 - `InviteDialog` — link shown once, copy works, warning present, role selector offers viewer and member only (never owner)
 - `MemberList` — role controls hidden from non-owners

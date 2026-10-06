@@ -11,6 +11,7 @@ import {
   NOMENCLATURE_KINDS,
   type NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
+import { NameField, useDuplicateWarning } from './duplicates';
 import { ListField, SelectField, TextField } from './fields';
 import { FolkNamesField, FormField } from './suggestions';
 import type { IngredientFormInput, IngredientFormProps, IngredientFormValues } from './types';
@@ -59,6 +60,9 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
     formState: { errors, isSubmitting, submitCount },
   } = methods;
   const form = useRef<HTMLFormElement>(null);
+  const createAnyway = useRef<HTMLButtonElement>(null);
+  const duplicates = useDuplicateWarning(workspaceId, useWatch({ control, name: 'name' }));
+  const { blocking } = duplicates;
   const kind = useWatch({ control, name: 'nomenclature' });
   const formalName = useWatch({ control, name: 'canonicalName' });
 
@@ -70,6 +74,12 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
   useLayoutEffect(() => {
     if (submitCount > 0) form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
   }, [submitCount]);
+  // A save held on the duplicate warning focuses its button rather than the
+  // name it marks, which needs no change, only an answer. After the effect
+  // above, so it wins when both run, and again on each held save.
+  useLayoutEffect(() => {
+    if (blocking) createAnyway.current?.focus();
+  }, [blocking, submitCount]);
 
   const mutation = useMutation({
     mutationFn: (input: IngredientFormInput) =>
@@ -77,6 +87,10 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
   });
 
   const save = async (input: IngredientFormInput): Promise<void> => {
+    // A near match not yet dismissed holds a save that would otherwise go,
+    // asked about the name being sent rather than waiting out the debounce.
+    // After validation, so an error to fix comes first.
+    if (await duplicates.check(input.name)) return;
     try {
       const { createWorkspaceIngredient } = await mutation.mutateAsync(input);
       onSaved?.(createWorkspaceIngredient);
@@ -97,18 +111,21 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
     <FormProvider {...methods}>
       {/* `noValidate`: every refusal is the schema's, worded and placed like
           the rest, rather than the browser's own bubble. */}
-      <form ref={form} className="form ingredient-form" onSubmit={handleSubmit(save)} noValidate>
+      <form
+        ref={form}
+        className="form ingredient-form"
+        // Built in the event rather than in render: `save` reads a ref.
+        onSubmit={(event) => handleSubmit(save)(event)}
+        noValidate
+      >
         {errors.root && (
           <p className="notice notice--error" role="alert">
             {errors.root.message}
           </p>
         )}
-        <TextField
-          name="name"
-          label="Name"
-          required
-          hint="What this coven calls it. It can differ from the formal name."
-        />
+        {/* Warns beneath it of the entries its name resembles (story 16),
+            and a save stops on the warning until it is answered. */}
+        <NameField warning={duplicates} ref={createAnyway} />
         {/* Each of the pair decides the other's error, so a change to one
             revalidates both, and each is marked required while the other
             makes it so: a named kind needs its formal name, and a formal
@@ -185,7 +202,16 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
           multiline
         />
         <div className="form__actions">
-          <button type="submit" className="btn btn--solid" disabled={isSubmitting}>
+          {/* Busy from the press to the answer, the duplicate check
+              included, under its own name: a label that changed would
+              change the name a screen reader knows it by. */}
+          <button
+            type="submit"
+            className="btn btn--solid"
+            disabled={isSubmitting}
+            aria-busy={isSubmitting || undefined}
+          >
+            {isSubmitting && <span className="ingredient-form__spinner" aria-hidden="true" />}
             Save Ingredient
           </button>
         </div>

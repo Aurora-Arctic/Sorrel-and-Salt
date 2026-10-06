@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import type { z } from 'zod';
-import type { CreateWorkspaceIngredientMutation } from '../../gql/graphql';
+import type { CreateWorkspaceIngredientMutation, PossibleDuplicatesQuery } from '../../gql/graphql';
 import type {
   INGREDIENT_ELEMENTS,
   NomenclatureKind,
@@ -84,6 +84,12 @@ export interface TextFieldProps extends FieldProps {
   disabled?: boolean;
   /** Fields whose errors this one's value decides as well, revalidated when it changes. */
   deps?: (TextFieldName | SelectFieldName)[];
+  /** Another element read with the field while it shows: the name's duplicate warning. */
+  describedBy?: string;
+  /** Marked invalid by something other than its own error: the name's held duplicate warning. */
+  invalid?: boolean;
+  /** Drawn beneath the field, after its error: the name's duplicate warning. */
+  after?: ReactNode;
 }
 
 export interface SelectFieldProps extends FieldProps {
@@ -130,6 +136,27 @@ export interface LookupFieldProps {
   workspaceId: string;
 }
 
+/** The duplicate warning's state, which the form owns and the name field draws. */
+export interface DuplicateWarning {
+  /** The matches named, best first, less those dismissed. */
+  shown: Duplicate[];
+  /** A save is held on them: the warning is an error on the name. */
+  blocking: boolean;
+  /** Asks about the name a save is sending, and holds it, answering true, when a match is not dismissed. */
+  check: (name: string) => Promise<boolean>;
+  /** Sets the matches shown aside and lifts the hold. */
+  dismiss: () => void;
+}
+
+export interface NameFieldProps {
+  warning: DuplicateWarning;
+  /** Create Anyway, while the warning shows, and null otherwise: a held save focuses it. */
+  ref: Ref<HTMLButtonElement>;
+}
+
+/** An entry whose name is close to the one typed, as the duplicate warning names and links it. */
+export type Duplicate = PossibleDuplicatesQuery['possibleDuplicates']['edges'][number]['node'];
+
 /** An in-scope ingredient already holding a suggested value, as a lookup names it. */
 export interface Claimant {
   name: string;
@@ -149,4 +176,6 @@ export interface FieldShellProps extends FieldProps {
   errorId: string;
   error?: string;
   children: ReactNode;
+  /** Beneath the error: what a field adds of its own. */
+  after?: ReactNode;
 }

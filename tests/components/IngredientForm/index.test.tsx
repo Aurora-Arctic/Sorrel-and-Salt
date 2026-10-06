@@ -18,6 +18,8 @@ import type {
   CreateWorkspaceIngredientMutationVariables,
   FormSuggestionsQuery,
   FormSuggestionsQueryVariables,
+  PossibleDuplicatesQuery,
+  PossibleDuplicatesQueryVariables,
 } from '@/gql/graphql';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { makeQueryClient } from '@/lib/graphql-client';
@@ -29,7 +31,7 @@ import {
   mockGraphQLQuery,
 } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
-import type { FormNode, NameNode } from './types';
+import type { DuplicateNode, FormNode, NameNode } from './types';
 
 // The ingredient entry form. The mutation is answered by MSW in the shape
 // /api/graphql answers (tests/support/msw/graphql.ts), so a server error is
@@ -64,11 +66,25 @@ function offerNames(nodes: NameNode[]) {
   return calls;
 }
 
-/** Renders the form with both lookups answered empty; a test about a lookup answers it after rendering, since the later answer wins. */
+/** Answers `PossibleDuplicates` with these rows, recording each ask. */
+function offerDuplicates(nodes: DuplicateNode[]) {
+  const calls: PossibleDuplicatesQueryVariables[] = [];
+  mockGraphQLQuery<PossibleDuplicatesQuery, PossibleDuplicatesQueryVariables>(
+    'PossibleDuplicates',
+    (variables) => {
+      calls.push(variables);
+      return { possibleDuplicates: { edges: nodes.map((node) => ({ node })) } };
+    },
+  );
+  return calls;
+}
+
+/** Renders the form with every lookup answered empty; a test about a lookup answers it after rendering, since the later answer wins. */
 function renderForm() {
   const onSaved = vi.fn();
   offerForms([]);
   offerNames([]);
+  offerDuplicates([]);
   render(
     <QueryClientProvider client={makeQueryClient()}>
       <IngredientForm workspaceId={WORKSPACE_ID} onSaved={onSaved} />
@@ -891,6 +907,269 @@ describe('IngredientForm', () => {
   });
 
   // M5.10a: the form and folk-name boxes suggest from M4.7a's lookups.
+  describe('the duplicate warning', () => {
+    const TOMENTOSA: DuplicateNode = {
+      id: 'claw-1',
+      name: "Cat's Claw",
+      canonicalName: 'Uncaria tomentosa',
+    };
+    const FELIS: DuplicateNode = { id: 'claw-2', name: "Cat's Claw", canonicalName: 'Felis catus' };
+    const MOCKLEAF: DuplicateNode = { id: 'mock-1', name: 'Mockleaf', canonicalName: null };
+
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+    const settle = () => act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+    const warning = () => screen.getByRole('status', { name: 'Possible duplicates' });
+    const createAnyway = () => screen.queryByRole('button', { name: 'Create Anyway' });
+    const SENTENCE = "Did you mean Cat's Claw (Uncaria tomentosa)?";
+
+    it('asks once the name settles, with the whole name, about this coven', async () => {
+      renderForm();
+      const calls = offerDuplicates([]);
+
+      type('Name', 'C');
+      type('Name', 'Ca');
+      type('Name', 'Cats Claw ');
+      act(() => vi.advanceTimersByTime(DEBOUNCE_MS - 1));
+      expect(calls).toHaveLength(0);
+
+      settle();
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0]).toEqual({ workspaceId: WORKSPACE_ID, name: 'Cats Claw', first: 3 });
+    });
+
+    it('asks nothing for a blank name, and drops the warning the last name had', async () => {
+      renderForm();
+      const calls = offerDuplicates([TOMENTOSA]);
+      type('Name', 'Cats Claw');
+      settle();
+      await within(warning()).findByRole('link');
+
+      type('Name', '   ');
+      settle();
+
+      expect(warning()).toBeEmptyDOMElement();
+      await act(() => vi.advanceTimersByTimeAsync(DEBOUNCE_MS));
+      expect(calls).toHaveLength(1);
+    });
+
+    it('names each near match by its label and formal name, linked to the entry', async () => {
+      renderForm();
+      offerDuplicates([TOMENTOSA, FELIS, MOCKLEAF]);
+
+      type('Name', 'Cats Claw');
+      settle();
+
+      const tomentosa = await within(warning()).findByRole('link', {
+        name: "Cat's Claw (Uncaria tomentosa)",
+      });
+      expect(warning()).toHaveTextContent(
+        "Did you mean Cat's Claw (Uncaria tomentosa), Cat's Claw (Felis catus) or Mockleaf?",
+      );
+      expect(tomentosa).toHaveAttribute('href', '/ingredients/claw-1');
+      expect(screen.getByRole('link', { name: "Cat's Claw (Felis catus)" })).toHaveAttribute(
+        'href',
+        '/ingredients/claw-2',
+      );
+      expect(screen.getByRole('link', { name: 'Mockleaf' })).toHaveAttribute(
+        'href',
+        '/ingredients/mock-1',
+      );
+      // Read with the field, as its hint is, and not an error until a save meets it.
+      expect(textbox('Name')).toHaveAccessibleDescription(expect.stringContaining('Did you mean'));
+      expect(textbox('Name')).not.toBeInvalid();
+    });
+
+    it('warns of nothing when nothing is close', async () => {
+      renderForm();
+      const calls = offerDuplicates([]);
+
+      type('Name', 'Fixture Nothingalike');
+      settle();
+      await waitFor(() => expect(calls).toHaveLength(1));
+
+      expect(warning()).toBeEmptyDOMElement();
+      expect(createAnyway()).not.toBeInTheDocument();
+      expect(textbox('Name')).not.toHaveAccessibleDescription(
+        expect.stringContaining('Did you mean'),
+      );
+    });
+
+    it('holds a save until it is dismissed, as an error on the name, the focus on Create Anyway', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      offerDuplicates([TOMENTOSA]);
+
+      type('Name', "Cat's Claw");
+      settle();
+      await within(warning()).findByRole('link');
+      save();
+
+      const button = createAnyway() as HTMLElement;
+      await waitFor(() => expect(button).toHaveFocus());
+      // The warning is read with the button, so the focus says why it moved.
+      expect(button).toHaveAccessibleDescription(SENTENCE);
+      expect(onSaved).not.toHaveBeenCalled();
+      expect(saves).toHaveLength(0);
+      expect(textbox('Name')).toBeInvalid();
+      expect(textbox('Name')).toHaveAccessibleDescription(expect.stringContaining(SENTENCE));
+
+      // Again, and it stops again.
+      save();
+      await waitFor(() => expect(button).toHaveFocus());
+      expect(saves).toHaveLength(0);
+    });
+
+    it('checks a name saved before its typing settles, and holds on what it finds', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      const calls = offerDuplicates([TOMENTOSA]);
+
+      type('Name', "Cat's Claw ");
+      save();
+
+      // No wait for the debounce: the save asks about the name it is sending.
+      await waitFor(() => expect(createAnyway()).toHaveFocus());
+      expect(calls).toEqual([{ workspaceId: WORKSPACE_ID, name: "Cat's Claw", first: 3 }]);
+      expect(warning()).toHaveTextContent(SENTENCE);
+      expect(textbox('Name')).toBeInvalid();
+      expect(onSaved).not.toHaveBeenCalled();
+      expect(saves).toHaveLength(0);
+    });
+
+    it('shows Save busy while it checks, and sends once nothing is close', async () => {
+      let release = () => {};
+      const checking = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      server.use(
+        graphqlLink.query<PossibleDuplicatesQuery, PossibleDuplicatesQueryVariables>(
+          'PossibleDuplicates',
+          async () => {
+            await checking;
+            return HttpResponse.json({ data: { possibleDuplicates: { edges: [] } } });
+          },
+        ),
+      );
+      const submit = screen.getByRole('button', { name: 'Save Ingredient' });
+
+      type('Name', 'Fixture Nothingalike');
+      save();
+
+      await waitFor(() => expect(submit).toHaveAttribute('aria-busy', 'true'));
+      expect(saves).toHaveLength(0);
+      release();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves[0].input.name).toBe('Fixture Nothingalike');
+      expect(warning()).toBeEmptyDOMElement();
+    });
+
+    it('lifts the hold when the name changes, leaving the focus where the typing is', async () => {
+      const saves = acceptCreate();
+      renderForm();
+      offerDuplicates([TOMENTOSA]);
+      type('Name', "Cat's Claw");
+      settle();
+      await within(warning()).findByRole('link');
+      save();
+      await waitFor(() => expect(createAnyway()).toHaveFocus());
+
+      // Back in the name, and a new match arrives as it is typed.
+      offerDuplicates([TOMENTOSA, FELIS]);
+      act(() => textbox('Name').focus());
+      type('Name', "Cat's Claws");
+      settle();
+      await within(warning()).findByRole('link', { name: "Cat's Claw (Felis catus)" });
+
+      expect(textbox('Name')).toHaveFocus();
+      expect(textbox('Name')).not.toBeInvalid();
+      expect(saves).toHaveLength(0);
+    });
+
+    it('lets an error elsewhere take the save first', async () => {
+      const saves = acceptCreate();
+      renderForm();
+      offerDuplicates([TOMENTOSA]);
+
+      type('Name', "Cat's Claw");
+      choose('Classification', 'botanical');
+      settle();
+      await within(warning()).findByRole('link');
+      save();
+
+      await waitFor(() => expect(textbox('Formal Name')).toHaveFocus());
+      expect(createAnyway()).not.toHaveFocus();
+      expect(saves).toHaveLength(0);
+    });
+
+    it('goes on Create Anyway, handing the focus back to the name, and then saves', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      offerDuplicates([TOMENTOSA]);
+
+      type('Name', "Cat's Claw");
+      settle();
+      await within(warning()).findByRole('link');
+      save();
+      await waitFor(() => expect(createAnyway()).toHaveFocus());
+      fireEvent.click(createAnyway() as HTMLElement);
+
+      expect(warning()).toBeEmptyDOMElement();
+      expect(textbox('Name')).toHaveFocus();
+      expect(textbox('Name')).not.toBeInvalid();
+      save();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves[0].input.name).toBe("Cat's Claw");
+    });
+
+    it('stays gone for the matches set aside, and returns for a new one', async () => {
+      renderForm();
+      offerDuplicates([TOMENTOSA]);
+
+      type('Name', "Cat's Claw");
+      settle();
+      await within(warning()).findByRole('link');
+      fireEvent.click(createAnyway() as HTMLElement);
+
+      // A longer name finding the same entry: already answered.
+      const again = offerDuplicates([TOMENTOSA]);
+      type('Name', "Cat's Claws");
+      settle();
+      await waitFor(() => expect(again).toHaveLength(1));
+      expect(warning()).toBeEmptyDOMElement();
+
+      // One it has not been asked about.
+      offerDuplicates([TOMENTOSA, FELIS]);
+      type('Name', "Cat's Clawe");
+      settle();
+      const felis = await within(warning()).findByRole('link', {
+        name: "Cat's Claw (Felis catus)",
+      });
+      expect(felis).toBeInTheDocument();
+      expect(within(warning()).queryByRole('link', { name: /tomentosa/ })).not.toBeInTheDocument();
+    });
+
+    it('shows nothing, and saves, when the lookup fails', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      mockGraphQLError('PossibleDuplicates', { code: 'FORBIDDEN' });
+
+      type('Name', "Cat's Claw");
+      settle();
+      save();
+
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves).toHaveLength(1);
+      expect(warning()).toBeEmptyDOMElement();
+    });
+  });
+
   describe('the form lookup', () => {
     const WAX_ANIMAL: FormNode = {
       value: 'Wax',
@@ -1153,7 +1432,7 @@ describe('IngredientForm', () => {
     });
   });
 
-  it('holds the submit down while a save is in flight', async () => {
+  it('holds the submit down, and shows it busy, while a save is in flight', async () => {
     let release = () => {};
     const held = new Promise<void>((resolve) => {
       release = resolve;
@@ -1176,8 +1455,11 @@ describe('IngredientForm', () => {
     save();
 
     await waitFor(() => expect(submit).toBeDisabled());
+    // Busy, under its own name: the label does not change as it waits.
+    expect(submit).toHaveAttribute('aria-busy', 'true');
     release();
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
     expect(submit).toBeEnabled();
+    expect(submit).not.toHaveAttribute('aria-busy');
   });
 });

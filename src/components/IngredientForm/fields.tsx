@@ -40,14 +40,22 @@ export function FieldError({ id, message }: FieldErrorProps): ReactElement | nul
  * field — the hint too, though its tip is closed — and `aria-invalid` is what
  * draws the error edge, so one cannot ship without the other.
  */
-function useField(name: FieldPath<IngredientFormValues>, hint?: string, note?: string) {
+function useField(
+  name: FieldPath<IngredientFormValues>,
+  hint?: string,
+  note?: string,
+  describedBy?: string,
+  invalid?: boolean,
+) {
   const id = useId();
   const { errors } = useFormState<IngredientFormValues>({ name });
   const error: string | undefined = get(errors, name)?.message;
   const hintId = `${id}-hint`;
   const noteId = `${id}-note`;
   const errorId = `${id}-error`;
-  const describedBy = [hint && hintId, note && noteId, error && errorId].filter(Boolean).join(' ');
+  const description = [hint && hintId, note && noteId, describedBy, error && errorId]
+    .filter(Boolean)
+    .join(' ');
   return {
     controlId: `${id}-control`,
     labelId: `${id}-label`,
@@ -56,8 +64,8 @@ function useField(name: FieldPath<IngredientFormValues>, hint?: string, note?: s
     errorId,
     error,
     aria: {
-      'aria-invalid': error ? true : undefined,
-      'aria-describedby': describedBy || undefined,
+      'aria-invalid': error || invalid ? true : undefined,
+      'aria-describedby': description || undefined,
     },
   };
 }
@@ -74,6 +82,7 @@ function FieldShell({
   errorId,
   error,
   children,
+  after,
 }: FieldShellProps): ReactElement {
   return (
     <div className="field">
@@ -102,6 +111,7 @@ function FieldShell({
       )}
       {children}
       <FieldError id={errorId} message={error} />
+      {after}
     </div>
   );
 }
@@ -115,9 +125,12 @@ export function TextField({
   multiline,
   disabled,
   deps,
+  describedBy,
+  invalid,
+  after,
 }: TextFieldProps): ReactElement {
   const { register } = useFormContext<IngredientFormValues>();
-  const { aria, ...field } = useField(name, hint, note);
+  const { aria, ...field } = useField(name, hint, note, describedBy, invalid);
   // The attribute, not register's `disabled`, which would also drop the value
   // from what is validated and sent: the form decides that itself. And
   // `aria-required` rather than `required`, whose `:invalid` would mark an
@@ -130,7 +143,7 @@ export function TextField({
     ...register(name, { deps }),
   };
   return (
-    <FieldShell label={label} hint={hint} note={note} required={required} {...field}>
+    <FieldShell label={label} hint={hint} note={note} required={required} after={after} {...field}>
       {multiline ? (
         <textarea className="textarea" {...control} />
       ) : (
