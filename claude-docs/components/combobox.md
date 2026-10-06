@@ -5,16 +5,19 @@ Downshift's `useCombobox` (DESIGN.md §14): the hook owns the ARIA and the
 keyboard state, and the markup, the rows and the Sass are ours. M5.10a built
 it for `IngredientForm`'s form and folk-name lookups, and put it on every
 list field's box; MB.131 gave planets, signs, deities and substitutes their
-sources, and M5.10 and M8.10 adopt its debounce.
+sources, and M5.10 and M8.10 adopt its debounce. MB.170 made a list's chips
+movable, on dnd-kit.
 
 | File               | What it holds                                                                     |
 | ------------------ | --------------------------------------------------------------------------------- |
 | `index.tsx`        | The control, the list in its buckets, the typed row, the status, the indicators   |
 | `entry.tsx`        | `ComboboxEntry`, the chip a list draws inside the control, with its × and tooltip |
+| `sortable.tsx`     | `ComboboxSortableEntries`, a list's chips moved by a handle each, on dnd-kit      |
+| `flow.ts`          | Where a sortable list's chips sit in a given order, and where a key moves one     |
 | `tip.ts`           | `useTip`, the open state an entry's tooltip and the qualifier's share             |
 | `select.tsx`       | `ComboboxSelect`, the select-only box for a closed set                            |
 | `multi-select.tsx` | `ComboboxMultiSelect`, the select-only box holding several, its choices as chips  |
-| `icons.tsx`        | The chevron and the clear's ×, which every box draws                              |
+| `icons.tsx`        | The chevron and the clear's ×, which every box draws, and a sortable chip's grip  |
 | `index.scss`       | The control, the list, a row, and the entry chip                                  |
 | `types.ts`         | `ComboboxOption`, `Suggestions`, the props, and the row types                     |
 
@@ -205,6 +208,72 @@ so that every list draws the same one:
   without the tooltip: the reference reads it although the tooltip is
   `aria-hidden` while closed.
 
+## A sortable list
+
+`ComboboxSortableEntries({ entries, onMove })`, a named export, is what a
+list whose order means something passes in `entries` in place of its own
+`ul.combobox__entries` (MB.170). Each of `entries` is a chip's props with an
+`id`, its identity as it moves, which a react-hook-form list takes from its
+field array's `id`; `onMove(from, to)` is told of each entry put down in
+another's place, as indexes into `entries`, and the caller reorders. It is
+on dnd-kit's sortable preset, `@dnd-kit/core` and `@dnd-kit/sortable`, a
+standard package rather than a bespoke one, the task's preference
+(DESIGN.md §14, "A library to move a list's entries?"):
+
+- **Each chip's handle is its grip and its text, one button**, the owner's
+  call: six muted dots ahead of the text, so the chip reads as one and
+  shows it can be moved. It is a real `<button>`, in the tab order before the
+  chip's ×, with the focus ring, named for its entry as the × is, "Move
+  Mars", carrying dnd-kit's `aria-roledescription="sortable"`, and described
+  by the list's error and the entry's detail as the × is, then by how it
+  moves: "Press Space or Enter to pick it up, the arrow keys to move it, and
+  Space or Enter to put it down, or Escape to cancel." Its focus opens the
+  chip's tooltip, as the ×'s does. A list that is not sortable draws its
+  text bare, as before, with nothing to move it by.
+- **By pointer**, the chip is dragged onto another's place, the others
+  sliding aside, and dropped. A drag starts only once the pointer has moved
+  4px, so a press focuses the handle and opens its tooltip rather than
+  starting one. `touch-action: none` on the handle lets a touch drag move the
+  chip rather than the page. A pointer's chip is over whichever place's
+  centre is nearest its own, as dnd-kit's closest-centre collision has it.
+- **The chips making way sit where the row will put them.** dnd-kit's
+  `rectSortingStrategy` moves each chip onto the box of the chip whose place
+  it takes, which suits a grid of equal cells; chips of different widths
+  then overlapped, or left gaps, the owner's report during MB.170. So
+  [`flow.ts`](../../src/components/Combobox/flow.ts) lays the chips out as
+  the wrapping row does: in the order the move would give, each as wide as
+  it is, `columnGap` apart along a row and onto the next row once the list's
+  width is used up. The row's shape, its width and gaps, is measured as a
+  move starts (`shapeOf`), from the stylesheet, or from where the chips sit
+  where there is none, as in jsdom. Each chip making way, and the moved chip
+  under the keyboard, is translated to its place in that layout, never
+  scaled, so what is shown while the chip is held is what the drop leaves.
+- **By keyboard**, Space or Enter lifts the focused chip, and Space or Enter
+  puts it down, or Escape puts it back. Between, Left and Right step it a
+  place along the list, whichever row that place is on; Up and Down jump it
+  a row, to the place on the row above or below whose centre is nearest its
+  own, and stay put from the first row or the last; and Home and End take
+  it to either end. Past either end it stays. The rows are those of the
+  layout the chips have at that moment, `flow.ts`'s, and the key is read by
+  `placeFor`. dnd-kit's own `sortableKeyboardCoordinates` goes by where the
+  chips sit, taking the nearest chip in the arrow's direction, and across
+  wrapped rows of chips of different widths that is not the next one: Left
+  from the second chip on a row landed on the row above, the owner's report
+  during MB.170. So the list's own coordinate getter chooses the place, sets
+  the chip at its place in the layout that makes, and records it as the
+  target, which the list's collision detection returns for a keyboard move
+  in place of the nearest box. A pointer move, which has pointer
+  coordinates, still takes the nearest. The focus stays on the moved chip's
+  handle throughout and after.
+- **Each step is said** in dnd-kit's live region, worded here by the entry's
+  text and place rather than dnd-kit's default, which names the id: "Picked
+  up Mars, at position 1 of 3.", "Mars moved to position 2 of 3.", "Mars put
+  down at position 2 of 3.", and "Move cancelled. Mars is back at position 1
+  of 3." dnd-kit reports a lifted chip over its own place at once, which would
+  talk over the lift, so that one report is left unsaid. The region and the
+  instructions take their ids from `useId`, since dnd-kit's own counter
+  would number a server render and the browser's apart.
+
 ## A qualifier
 
 `qualifier`, `{ text, detail? }`, is what a pick leaves out of the box's
@@ -263,7 +332,21 @@ capitals with a step of space above it, the owner's call during MB.131. A chip i
 rectangle in an 18% wash of the muted ink, react-select's shape, and its ×
 hovers in the warning's wash and ink. A control holding chips takes a step
 more padding above them, `space(2)` for `space(1)`, the owner's call during
-MB.169, so the first row of chips does not sit against the top edge. The
+MB.169, so the first row of chips does not sit against the top edge. Rows
+that wrap sit a step further apart than the items in a row, `space(2)`
+between rows and `space(1)` along one, in the control, the values and the
+chips alike, the owner's call for MB.170, so wrapped chips no longer read as
+one block. A sortable chip's handle is unboxed, so the chip still reads as
+one, with the focus ring and a grab cursor; its grip is the muted ink and
+stands in for the text's left inset. The chip being moved is plain to see
+once picked up, by keyboard or pointer, the owner's call during MB.170: the
+accent's 22% wash that a highlighted row wears, a 2px accent edge, the
+floating shadow, and its grip in the body ink. The accent edge stands in
+for an error's while the chip is held, and the error's comes back on the
+drop; the focus ring around its text is left off meanwhile, since the edge
+already marks it. The chips making way slide on
+dnd-kit's inline transition, which only an important rule outweighs, so
+under reduced motion they step instead. The
 qualifier is the muted ink at the text's size, as a row's note is muted, and its tooltip is the entry's bubble, the
 `tip-bubble` mixin. The × and the indicators fade into
 their hover as `.btn` does, on `theme-transition` and never under reduced
@@ -277,7 +360,8 @@ review.
 [`index.stories.tsx`](../../src/components/Combobox/index.stories.tsx):
 `TwoBuckets`, a form field with the vocabulary and the forms in use;
 `List`, a list's box with its entries inside, an × on each, a pick that adds and Backspace taking the last; and
-`NoSource`, a box that never opens; `Qualifier`, "Wax" picked under
+`Sortable`, seven planets wrapping onto a second row, each moved by its grip
+and text, by pointer or keyboard; `NoSource`, a box that never opens; `Qualifier`, "Wax" picked under
 Substance, the group in the box and its description in a tooltip, dropped by
 an edit; `SelectOnly`, the select-only box; and
 `MultiSelect`, the multi-select box with two elements chosen. The suggestions
@@ -302,8 +386,28 @@ placeholder, chips inside the control in the order chosen, the list
 offering only what is left and staying open, the arrows, Enter, Space and
 Escape, Backspace taking the last, an × and the clear, a press on the
 control opening it, its announcements, and nothing to offer once every
-choice is made. `IngredientForm`'s test drives the select by the keyboard. Role and label queries only,
+choice is made; and a sortable list, each chip's handle named for it
+ahead of its ×, saying how it moves, a move by Space or Enter and the
+arrows said at each step with the focus kept on the moved chip, Escape
+putting it back, a move by pointer, a press or a lift put straight back
+moving nothing, the × still removing, and the handle's focus opening the
+chip's tooltip and reading its error and detail first; a held chip pressed
+and marked as picked up; and, on wrapped rows of chips of different widths,
+Left and Right a place along the list whichever row it is on, Up and Down
+a row to the nearest place, Left from a row's start onto the row above and
+back, Home and End to either end, nothing past either end or row, and the
+chips laid out while one is held as the row would lay them, with no
+overlap or gap; a list that is not
+sortable has no handle. `IngredientForm`'s test drives the select by the keyboard. Role and label queries only,
 in the `dom` project.
+
+jsdom lays nothing out, and dnd-kit finds where a chip may go from each
+chip's box, so `tests/support/sortable.ts` gives every chip one, on one
+line 100px apart, or with `wrapChips` as wide as its text and wrapped onto
+rows as the control wraps them, and drives a move: `moveByKeyboard` waits a task after
+each key, since the keyboard sensor listens a task after the lift, and
+`dragByPointer` waits out the 50ms after a drag in which the sensor
+swallows every click, so that it swallows no later test's.
 
 `tests/lib/debounce.test.tsx` covers the hook with fake timers.
 
