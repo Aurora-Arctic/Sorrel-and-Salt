@@ -471,6 +471,64 @@ describe('Combobox', () => {
       expect(tooltip()).not.toBeInTheDocument();
     });
 
+    // MB.164: what a chip leaves out, such as a linked substitute's form and
+    // tier. The test above is the precondition: the same text, with no
+    // detail, opens nothing.
+    describe('with a detail', () => {
+      const DETAIL = 'Dried leaf · Compendium entry';
+
+      function renderDetailed(errorId?: string) {
+        render(
+          <>
+            <Harness
+              entries={
+                <ul className="combobox__entries">
+                  <ComboboxEntry
+                    value="Hedge Fixture"
+                    detail={DETAIL}
+                    errorId={errorId}
+                    onRemove={() => {}}
+                  />
+                </ul>
+              }
+            />
+            <p id="why">This substitute is already listed</p>
+          </>,
+        );
+      }
+
+      it('shows its text and its detail in a tooltip, though the text fits', async () => {
+        renderDetailed();
+
+        fireEvent.mouseEnter(entryText('Hedge Fixture'));
+        expect(tooltip()).toHaveTextContent('Hedge Fixture');
+        expect(tooltip()).toHaveTextContent(DETAIL);
+        fireEvent.mouseLeave(entryText('Hedge Fixture'));
+        await waitFor(() => expect(tooltip()).not.toBeInTheDocument());
+
+        act(() => screen.getByRole('button', { name: 'Remove Hedge Fixture' }).focus());
+        expect(tooltip()).toHaveTextContent(DETAIL);
+        fireEvent.keyDown(document, { key: 'Escape' });
+        expect(tooltip()).not.toBeInTheDocument();
+      });
+
+      it('is its x’s description, after the error that names it', () => {
+        renderDetailed('why');
+
+        expect(
+          screen.getByRole('button', { name: 'Remove Hedge Fixture' }),
+        ).toHaveAccessibleDescription(`This substitute is already listed ${DETAIL}`);
+      });
+
+      it('is its x’s whole description while no error names it', () => {
+        renderDetailed();
+
+        expect(
+          screen.getByRole('button', { name: 'Remove Hedge Fixture' }),
+        ).toHaveAccessibleDescription(DETAIL);
+      });
+    });
+
     it('is marked by the error that names it, which its x reads as its description', () => {
       render(
         <>

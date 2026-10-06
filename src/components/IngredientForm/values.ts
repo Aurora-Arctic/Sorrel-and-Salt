@@ -101,6 +101,23 @@ export function entryText(entry: ListEntry | SubstituteListEntry): string {
   return formalName ? `${entry.value} (${formalName})` : entry.value;
 }
 
+/** Whose a linked ingredient is, as its lookup row and its pill's tooltip say. */
+export const tierOf = ({ isGlobal }: Pick<SubstituteLink, 'isGlobal'>): string =>
+  isGlobal ? 'Compendium entry' : 'This coven’s entry';
+
+/**
+ * What a linked substitute's pill leaves out, for its tooltip: "Dried leaf ·
+ * Compendium entry — A fixture herb." Its form, which the pill's formal name
+ * needs to tell two ingredients apart (§5), its tier and its description
+ * (MB.164). Undefined for any other entry, which has nothing more to tell.
+ */
+export function entryDetail(entry: ListEntry | SubstituteListEntry): string | undefined {
+  const link = 'link' in entry ? entry.link : undefined;
+  if (!link) return undefined;
+  const facts = [link.form, tierOf(link)].filter(Boolean).join(' · ');
+  return link.description ? `${facts} — ${link.description}` : facts;
+}
+
 /**
  * The field an issue's path names — `['folkNames', 2]` is the third row's text
  * — or undefined for a path naming none the form has, whose message belongs

@@ -120,10 +120,18 @@ notes — every field `IngredientInput` takes. Categories are not an input yet.
   group's name, "Folk Names About Folk Names". `substitutes` is labelled
   "Substitute Ingredients", its box "Substitute Ingredient". A substitute
   entry is typed text, or a link to an ingredient (MB.140): `{ value, link }`,
-  `value` the ingredient's label and `link` its id and formal name. A linked
+  `value` the ingredient's label and `link` its id, formal name, form,
+  description and tier. A linked
   entry's pill reads as the label with its formal name, "Mugwort (Artemisia
   vulgaris)", and so does its × and any error naming it, since two
   ingredients can share a label; one with no formal name reads as its label.
+  What the pill leaves out is its `detail`, from `entryDetail` (MB.164): the
+  form, which with the formal name is the ingredient's identity, so two
+  pills reading alike are told apart; "Compendium entry" or "This coven’s
+  entry", as its lookup row said; and the description, "Dried leaf ·
+  Compendium entry — A fixture herb." It shows in the pill's tooltip and
+  describes its ×, as the combobox's "An entry" sets out; a typed entry has
+  none. The pill itself stays as it reads, the owner's call.
   `toInput` sends a link as `{ ingredientId }` and typed text as `{ name }`
   (DESIGN.md §5, `ingredient_substitutes`). A link is made only by picking an
   ingredient from the substitutes' lookup (MB.131); Add, Enter and the typed
@@ -190,7 +198,10 @@ first, so the tier is a note and not a heading, which would reorder them. Each
 row carries its ingredient's id as its key, since a compendium entry and a
 coven's copy of it read alike until M8.3 suppresses the one shadowed, and as
 its `link`: picking one adds an entry linked to that ingredient, reading as
-the label and formal name, and sent as `{ ingredientId }`. The typed row,
+the label and formal name, its tooltip telling its form, tier and
+description (MB.164), and sent as `{ ingredientId }`. The lookup asks for
+each ingredient's `form` and `description` for that tooltip alone; the row
+shows neither. The typed row,
 Add and Enter add the text as it stands, sent as `{ name }` with no warning.
 A compendium entry's substitutes may link only the compendium, so the admin
 form M5.5 wraps reads `compendium(query)` in their place; this form writes

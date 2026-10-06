@@ -169,7 +169,7 @@ a second way through the chips would be a second tab model for one look.
 
 ## An entry
 
-`ComboboxEntry({ value, errorId?, onRemove })`, a named export beside the
+`ComboboxEntry({ value, errorId?, detail?, onRemove })`, a named export beside the
 default, is the chip a list passes in `entries`, inside a
 `ul.combobox__entries`. It is MB.133's entry moved out of `IngredientForm`
 so that every list draws the same one:
@@ -192,6 +192,16 @@ so that every list draws the same one:
   (WCAG 1.4.13), waits 150ms before closing as the pointer leaves so the
   pointer can cross onto it, and breaks an unbroken text anywhere to stay
   inside the control.
+- **A detail tells what the chip leaves out** (MB.164). `detail`, a string
+  such as a linked substitute's "Dried leaf · Compendium entry — A fixture
+  herb.", sits on its own line beneath the text in the tooltip, at the
+  caption size and in the bubble's own colour, since a muted one is not
+  checked against the bubble's ground. An entry with a detail always has
+  something to show, so its tooltip opens on hover and on its ×'s focus
+  whether the text is cut off or not. The detail also describes the ×, after
+  the list's error when one names the entry, so a screen reader hears it
+  without the tooltip: the reference reads it although the tooltip is
+  `aria-hidden` while closed.
 
 ## The debounce
 

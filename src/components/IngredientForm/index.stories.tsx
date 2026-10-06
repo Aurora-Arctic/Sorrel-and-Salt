@@ -99,11 +99,41 @@ const DEITIES = [
   { value: 'Hedge Mother Fixture', description: null, tradition: null, curated: false },
 ];
 
+// The two Testworts differ only in form and tier, which a picked pill's
+// tooltip tells (MB.164).
 const INGREDIENTS = [
-  { id: 'testwort-c', name: 'Testwort', canonicalName: 'Fixtura testalis', isGlobal: true },
-  { id: 'testwort-w', name: 'Testwort', canonicalName: 'Fixtura testalis', isGlobal: false },
-  { id: 'fixturewort', name: 'Fixturewort', canonicalName: 'Fixtura vulgaris', isGlobal: true },
-  { id: 'mockleaf', name: 'Mockleaf', canonicalName: null, isGlobal: false },
+  {
+    id: 'testwort-c',
+    name: 'Testwort',
+    canonicalName: 'Fixtura testalis',
+    form: 'Dried leaf',
+    description: 'A fixture herb, for the workshop.',
+    isGlobal: true,
+  },
+  {
+    id: 'testwort-w',
+    name: 'Testwort',
+    canonicalName: 'Fixtura testalis',
+    form: 'Tincture',
+    description: 'A fixture herb, for the workshop.',
+    isGlobal: false,
+  },
+  {
+    id: 'fixturewort',
+    name: 'Fixturewort',
+    canonicalName: 'Fixtura vulgaris',
+    form: 'Whole root',
+    description: null,
+    isGlobal: true,
+  },
+  {
+    id: 'mockleaf',
+    name: 'Mockleaf',
+    canonicalName: null,
+    form: null,
+    description: null,
+    isGlobal: false,
+  },
 ];
 
 const CATS_CLAW = [

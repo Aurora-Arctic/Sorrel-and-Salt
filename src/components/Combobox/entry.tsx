@@ -1,28 +1,36 @@
 'use client';
 
-import { type ReactElement, useEffect, useRef, useState } from 'react';
+import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import type { ComboboxEntryProps } from './types';
 
 // An entry a list holds, inside the control: its text, and the x that takes
 // it out. A text too long for the control is cut off with an ellipsis, and
 // shown whole in a tooltip while the entry is hovered or its x has focus —
-// only when it is cut off, and closed by Escape (WCAG 1.4.13). Moved here
-// from IngredientForm (MB.133) so that every list draws the same entry
-// (claude-docs/components/combobox.md, "An entry").
+// only when it is cut off, and closed by Escape (WCAG 1.4.13). An entry with
+// a detail always has something to show, so its tooltip opens whether the
+// text fits or not (MB.164). Moved here from IngredientForm (MB.133) so that
+// every list draws the same entry (claude-docs/components/combobox.md, "An
+// entry").
 
 // Long enough to cross from the chip onto its tooltip.
 const TIP_CLOSE_DELAY_MS = 150;
 
-export function ComboboxEntry({ value, errorId, onRemove }: ComboboxEntryProps): ReactElement {
+export function ComboboxEntry({
+  value,
+  errorId,
+  detail,
+  onRemove,
+}: ComboboxEntryProps): ReactElement {
   const text = useRef<HTMLSpanElement | null>(null);
   const [open, setOpen] = useState(false);
   const closing = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const detailId = useId();
   // Measured as it opens rather than watched: whether the text fits changes
   // with the control's width, and only matters at the moment someone looks.
   const show = () => {
     clearTimeout(closing.current);
     const element = text.current;
-    if (element && element.scrollWidth > element.clientWidth) setOpen(true);
+    if (detail || (element && element.scrollWidth > element.clientWidth)) setOpen(true);
   };
   const hide = () => {
     clearTimeout(closing.current);
@@ -63,16 +71,24 @@ export function ComboboxEntry({ value, errorId, onRemove }: ComboboxEntryProps):
           aria-hidden={!open}
         >
           {value}
+          {/* Referenced by the x below, so read although the tooltip is
+              aria-hidden while closed. */}
+          {detail && (
+            <span id={detailId} className="combobox__entry-detail">
+              {detail}
+            </span>
+          )}
         </span>
       </span>
       {/* Named for its entry: a column of bare "Remove"s is no help to a
-          screen reader. In the tab order, a 24px target, and the list's
-          error as its description when the error names this entry. */}
+          screen reader. In the tab order, a 24px target, and described by
+          the list's error when the error names this entry, then by the
+          entry's detail. */}
       <button
         type="button"
         className="combobox__entry-remove"
         aria-label={`Remove ${value}`}
-        aria-describedby={errorId}
+        aria-describedby={[errorId, detail && detailId].filter(Boolean).join(' ') || undefined}
         onFocus={show}
         onBlur={hide}
         onClick={onRemove}

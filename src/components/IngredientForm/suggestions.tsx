@@ -25,6 +25,7 @@ import type {
   LookupListFieldProps,
   LookupVariables,
 } from './types';
+import { tierOf } from './values';
 
 // The lookups on the form's boxes: the form and folk names M4.7a serves, and
 // the planets, signs, deities and substitutes MB.131 adds. Each waits for the
@@ -119,6 +120,8 @@ const IngredientSuggestionsDocument = graphql(`
           id
           name
           canonicalName
+          form
+          description
           isGlobal
         }
       }
@@ -203,15 +206,23 @@ const deityOptions = (data: DeitySuggestionsQuery): ListOption[] =>
 const substituteOptions = (data: IngredientSuggestionsQuery): ListOption[] =>
   data.ingredientSuggestions.edges.map(({ node }) => {
     const canonicalName = node.canonicalName ?? null;
+    const link = {
+      id: node.id,
+      canonicalName,
+      form: node.form ?? null,
+      description: node.description ?? null,
+      isGlobal: node.isGlobal,
+    };
     return {
-      // The label is what a linked entry reads as; the link is what is saved.
+      // The label is what a linked entry reads as; the link is what is saved,
+      // and what its pill's tooltip tells.
       value: node.name,
       label: qualified(node.name, canonicalName),
       // Kept in the search's ranked order, so the tier is a note rather than
       // a bucket that would reorder the rows.
-      note: node.isGlobal ? 'Compendium entry' : 'This coven’s entry',
+      note: tierOf(link),
       key: node.id,
-      link: { id: node.id, canonicalName },
+      link,
     };
   });
 

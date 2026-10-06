@@ -1691,17 +1691,24 @@ describe('IngredientForm', () => {
       id: COMPENDIUM_ID,
       name: 'Mockwort',
       canonicalName: 'Fixtura vulgaris',
+      form: 'Dried leaf',
+      description: 'A fixture herb.',
       isGlobal: true,
     };
+    // The same label and formal name in another form: only the tooltip tells
+    // the two apart once one is picked (MB.164).
     const MOCKWORT_COVEN: IngredientNode = {
       ...MOCKWORT_COMPENDIUM,
       id: COVEN_ID,
+      form: 'Tincture',
       isGlobal: false,
     };
     const MOCKWORT_TEA: IngredientNode = {
       id: BARE_ID,
       name: 'Mockwort Tea',
       canonicalName: null,
+      form: null,
+      description: null,
       isGlobal: false,
     };
 
@@ -1907,7 +1914,11 @@ describe('IngredientForm', () => {
           name: 'Mockwort (Fixtura vulgaris) This coven’s entry',
         }),
       );
-      expect(removeButton('Mockwort (Fixtura vulgaris)')).toBeInTheDocument();
+      // The chip reads as the compendium's Mockwort would; its detail says
+      // which was picked (MB.164).
+      expect(removeButton('Mockwort (Fixtura vulgaris)')).toHaveAccessibleDescription(
+        'Tincture · This coven’s entry — A fixture herb.',
+      );
       expect(changes('Substitute Ingredients')).toHaveTextContent(
         'Added Mockwort (Fixtura vulgaris)',
       );
@@ -2013,8 +2024,15 @@ describe('IngredientForm', () => {
     const LINKED_ID = '3f6c1d2e-8a4b-4c5d-9e0f-1a2b3c4d5e6f';
     const linked: SubstituteListEntry = {
       value: 'Mockleaf',
-      link: { id: LINKED_ID, canonicalName: 'Fixtura testalis' },
+      link: {
+        id: LINKED_ID,
+        canonicalName: 'Fixtura testalis',
+        form: 'Dried leaf',
+        description: 'A fixture herb.',
+        isGlobal: true,
+      },
     };
+    const bare = { ...linked.link!, canonicalName: null, form: null, description: null };
 
     function renderList(substitutes: SubstituteListEntry[]) {
       const onSubmit = vi.fn();
@@ -2052,9 +2070,38 @@ describe('IngredientForm', () => {
     });
 
     it('reads as its label alone when the ingredient has no formal name', () => {
-      renderList([{ value: 'Mockleaf', link: { id: LINKED_ID, canonicalName: null } }]);
+      renderList([{ value: 'Mockleaf', link: bare }]);
 
       expect(removeButton('Mockleaf')).toBeInTheDocument();
+    });
+
+    // MB.164: what the pill leaves out, in its tooltip and its x's description.
+    it('tells its form, whose entry it is and its description in a tooltip', () => {
+      renderList([linked]);
+      const group = within(screen.getByRole('group', { name: 'Substitute Ingredients' }));
+
+      fireEvent.mouseEnter(
+        group.getByText('Mockleaf (Fixtura testalis)', { ignore: '[role="tooltip"]' }),
+      );
+
+      expect(group.getByRole('tooltip')).toHaveTextContent(
+        'Dried leaf · Compendium entry — A fixture herb.',
+      );
+      expect(removeButton('Mockleaf (Fixtura testalis)')).toHaveAccessibleDescription(
+        'Dried leaf · Compendium entry — A fixture herb.',
+      );
+    });
+
+    it('tells whose entry it is alone when the ingredient has no form or description', () => {
+      renderList([{ value: 'Mockleaf', link: bare }]);
+
+      expect(removeButton('Mockleaf')).toHaveAccessibleDescription('Compendium entry');
+    });
+
+    it('tells nothing more of a typed substitute', () => {
+      renderList([{ value: 'Zest Root' }]);
+
+      expect(removeButton('Zest Root')).not.toHaveAccessibleDescription();
     });
 
     it('is sent as its ingredient’s id, beside a typed one sent as its name', async () => {
