@@ -7,13 +7,15 @@ it for `IngredientForm`'s form and folk-name lookups, and put it on every
 list field's box; MB.131 gave planets, signs, deities and substitutes their
 sources, and M5.10 and M8.10 adopt its debounce.
 
-| File         | What it holds                                                                     |
-| ------------ | --------------------------------------------------------------------------------- |
-| `index.tsx`  | The control, the list in its buckets, the typed row, the status, the indicators   |
-| `entry.tsx`  | `ComboboxEntry`, the chip a list draws inside the control, with its × and tooltip |
-| `select.tsx` | `ComboboxSelect`, the select-only box for a closed set                            |
-| `index.scss` | The control, the list, a row, and the entry chip                                  |
-| `types.ts`   | `ComboboxOption`, `Suggestions`, the props, and the row types                     |
+| File               | What it holds                                                                     |
+| ------------------ | --------------------------------------------------------------------------------- |
+| `index.tsx`        | The control, the list in its buckets, the typed row, the status, the indicators   |
+| `entry.tsx`        | `ComboboxEntry`, the chip a list draws inside the control, with its × and tooltip |
+| `select.tsx`       | `ComboboxSelect`, the select-only box for a closed set                            |
+| `multi-select.tsx` | `ComboboxMultiSelect`, the select-only box holding several, its choices as chips  |
+| `icons.tsx`        | The chevron and the clear's ×, which every box draws                              |
+| `index.scss`       | The control, the list, a row, and the entry chip                                  |
+| `types.ts`         | `ComboboxOption`, `Suggestions`, the props, and the row types                     |
 
 ## The props contract
 
@@ -85,8 +87,9 @@ reader as well as by the eye, and so is who claims a value.
 ## The select-only box
 
 `ComboboxSelect` (`select.tsx`) is a closed set on the same control and
-list, for a field nothing is typed into: `IngredientForm`'s classification
-and element, and every closed enum DESIGN.md §14 names. The owner chose it
+list, for a field nothing is typed into: `IngredientForm`'s classification,
+and every closed enum DESIGN.md §14 names. A closed set holding several
+values is its multi-select sibling, below. The owner chose it
 over the native `<select>` during MB.131, so a form's fields share one look
 ([`design-decisions/mb.131-closed-sets-on-the-combobox.md`](../design-decisions/mb.131-closed-sets-on-the-combobox.md)).
 It is Downshift's `useSelect`, the hook for ARIA 1.2's select-only combobox:
@@ -110,6 +113,57 @@ jumps to the choice it starts.
 The chevron is drawn inside the control and hidden from assistive
 technology, since the whole control is the one target. The control takes the
 focus ring itself, where a suggesting box draws it for its inner text.
+
+## The multi-select box
+
+`ComboboxMultiSelect` (`multi-select.tsx`) is the select-only box for a
+closed set holding several values, in the order chosen: `IngredientForm`'s
+element since MB.159. It looks as a list field does, react-select's
+multi-select, the owner's call: each value chosen is a chip inside the
+control ahead of the box, the same `ComboboxEntry` a list draws with its ×,
+and a clear, "Clear Element", and the chevron sit on the control's right,
+parted by a line. Nothing is typed and nothing is added by a button: the
+list is the only way in, and it offers only the choices not yet made, so
+none is chosen twice.
+
+It is Downshift's `useSelect` with `useMultipleSelection`, the pairing
+Downshift documents for a multi-select, rather than keys handled by hand.
+`useSelect` owns the box and its list as `ComboboxSelect`'s does: a press,
+ArrowDown or ArrowUp opens it, the arrows move, Enter or Space chooses,
+Escape closes, and a letter jumps. `useMultipleSelection` holds the chosen
+list and gives the box Backspace, which takes the last chip. Its own chip
+focus, the arrows moving between chips, is held off (`activeIndex` at -1):
+each chip's × is already a button in the tab order, as every list's is, and
+a second way through the chips would be a second tab model for one look.
+
+- **A choice appends, and the list stays open** for the next, with the row
+  below the chosen one under the highlight, as Downshift's multi-select
+  does. Once every choice is made the list has nothing to offer and does
+  not open.
+- **The control is presentational and the box inside it is the combobox**,
+  as the typed box's is, rather than the whole control as in
+  `ComboboxSelect`: the chips' × and the clear are buttons, and inside the
+  combobox a press or a key on them would be the box's too. The box takes
+  the text's place after the chips. It reads what it holds, "Air, Fire", in
+  visually hidden text, as a select reads its choice, and the placeholder
+  while nothing is chosen. A press on the control's padding or its chevron
+  opens the list as a press on the box does.
+- **An × or the clear leaves the focus in the box**, since the pressed
+  button goes; the box is found by its id, since the caller's ref and
+  Downshift's two already share it.
+- **Each change is announced** in a visually hidden `<output>` named
+  "Element changes", "Added Air", "Removed Air" or "Cleared Element", as a
+  list field's are (WCAG 4.1.3).
+
+| Prop                 | Meaning                                                                                   |
+| -------------------- | ----------------------------------------------------------------------------------------- |
+| `id`, `labelId`      | The box's id and its label element's; without `labelId`, `label` is its `aria-label`.     |
+| `label`              | What the box is called, its list's name, "Element choices", its clear's and its status's. |
+| `values`/`onChange`  | The values chosen, in order, held by the caller; every change comes as the whole list.    |
+| `choices`            | `{ value, label }` in order; the list offers those not in `values`.                       |
+| `placeholder`        | Shown, muted, while nothing is chosen; never in the list.                                 |
+| `required`           | `aria-required`, as the field marks it.                                                   |
+| `inputRef`, `onBlur` | The box's, for react-hook-form, which focuses the box on an error.                        |
 
 ## An entry
 
@@ -152,7 +206,8 @@ Tokens, mixins and the form primitives only. The control is the `.input`
 primitive opened up as a wrapping flex row, its padding a step down so the
 entries sit inside it; the ring and the error edge are drawn on the control
 from the box's own states, `:has(.combobox__input:focus-visible)` and
-`.is-invalid`. The list floats beneath at the control's width on
+`.is-invalid`. The multi-select's box takes the text's place and styles,
+`.combobox__input--select`, so the same ring is drawn for it. The list floats beneath at the control's width on
 `modal-surface($shadow-floating)` with the input's edge; a highlighted row is
 a 22% wash of the accent on the card. A bucket's heading is muted small
 capitals with a step of space above it, the owner's call during MB.131. A chip is a filled, square-cornered
@@ -169,8 +224,9 @@ review.
 [`index.stories.tsx`](../../src/components/Combobox/index.stories.tsx):
 `TwoBuckets`, a form field with the vocabulary and the forms in use;
 `List`, a list's box with its entries inside, an × on each, a pick that adds and Backspace taking the last; and
-`NoSource`, a box that never opens. The suggestions are fixed, so typing
-filters nothing.
+`NoSource`, a box that never opens; `SelectOnly`, the select-only box; and
+`MultiSelect`, the multi-select box with two elements chosen. The suggestions
+are fixed, so typing filters nothing.
 
 ## Testing
 
@@ -183,8 +239,12 @@ closing the list or reaching the form; Backspace and Delete handed to `onRemoveL
 text; a box with no source never opening; the status region; the chevron,
 the clear and the entries inside the control; two rows reading alike told
 apart by their keys; and the select-only box, its name, placeholder, list
-and choices, "None" among them. `IngredientForm`'s test drives the select by
-the keyboard. Role and label queries only,
+and choices, "None" among them; and the multi-select box, its name and
+placeholder, chips inside the control in the order chosen, the list
+offering only what is left and staying open, the arrows, Enter, Space and
+Escape, Backspace taking the last, an × and the clear, a press on the
+control opening it, its announcements, and nothing to offer once every
+choice is made. `IngredientForm`'s test drives the select by the keyboard. Role and label queries only,
 in the `dom` project.
 
 `tests/lib/debounce.test.tsx` covers the hook with fake timers.

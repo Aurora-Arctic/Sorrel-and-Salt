@@ -129,6 +129,15 @@
   one-entry array where one is set. `element-list.test.ts` re-runs that
   `UPDATE` against the seeded rows. See
   ["The ingredient identity model"](identity-model.md).
+- **`0035_refill-element-list.sql`** (MB.159) is 0031 again for MB.157's
+  list: `generate --custom`, so `element`, which MB.159 stops declaring,
+  stays in the copied snapshot and MB.160's `generate` emits its drop. One
+  `UPDATE` rederives `elements` from `element` for every row that
+  disagrees, for anything the live deploy wrote after 0034. Data only, so no
+  sidecar. The seed writes lists since MB.159, so `element-list.test.ts`
+  puts the seeded rows back as a deployed database held them before
+  re-running either fill. See
+  ["The ingredient identity model"](identity-model.md).
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls

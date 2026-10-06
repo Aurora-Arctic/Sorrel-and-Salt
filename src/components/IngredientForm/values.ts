@@ -9,6 +9,7 @@ import type {
   IngredientFormValues,
   ListEntry,
   ListFieldName,
+  MultiSelectFieldName,
   SubstituteLink,
   SubstituteListEntry,
 } from './types';
@@ -34,7 +35,7 @@ export const EMPTY_VALUES: IngredientFormValues = {
   form: '',
   folkNames: [],
   description: '',
-  element: '',
+  elements: [],
   planets: [],
   zodiacSigns: [],
   colors: [],
@@ -50,8 +51,15 @@ const isListField = (field: unknown): field is ListFieldName =>
   LIST_FIELDS.includes(field as ListFieldName);
 
 /**
- * The values as the mutation takes them: an unanswered closed set is null, a
- * list entry is its text — a substitute its link's id, or else its text as a
+ * The elements: a list, but one control with no entry rows, so an issue
+ * pathed to one element — a repeat, `['elements', 1]` — is the field's.
+ */
+const WHOLE_LIST: MultiSelectFieldName = 'elements';
+
+/**
+ * The values as the mutation takes them: an unanswered closed set is null, the
+ * elements go as chosen — `[]` for none, which the update input needs to
+ * clear them — a list entry is its text — a substitute its link's id, or else its text as a
  * name — and the boxes are left behind — the resolver has
  * refused a save while one holds text. Nothing is trimmed or dropped — the
  * schema does that on both sides — so an entry's index in an issue's path is
@@ -60,7 +68,6 @@ const isListField = (field: unknown): field is ListFieldName =>
 export function toInput(values: IngredientFormValues): IngredientFormInput {
   const {
     nomenclature,
-    element,
     folkNames,
     planets,
     zodiacSigns,
@@ -74,7 +81,6 @@ export function toInput(values: IngredientFormValues): IngredientFormInput {
   return {
     ...text,
     nomenclature: nomenclature || null,
-    element: element || null,
     folkNames: texts(folkNames),
     planets: texts(planets),
     zodiacSigns: texts(zodiacSigns),
@@ -109,6 +115,7 @@ export function fieldNameOf(
   if (rest.length > 0 || typeof field !== 'string' || field === 'drafts' || !(field in values)) {
     return undefined;
   }
+  if (field === WHOLE_LIST) return WHOLE_LIST;
   if (isListField(field)) {
     return typeof index === 'number' && index < values[field].length
       ? `${field}.${index}.value`
@@ -160,6 +167,10 @@ export const ingredientResolver: Resolver<
 > = async (values, context, options) => {
   const result = await validate(toInput(values), context, options as never);
   const errors = { ...result.errors } as FieldErrors<IngredientFormValues>;
+  // An element's issue arrives pathed to the element, and moves onto the
+  // control — the first, as the field has one error element.
+  const elements: unknown = result.errors[WHOLE_LIST];
+  if (Array.isArray(elements)) errors[WHOLE_LIST] = elements.find(Boolean);
   for (const list of LIST_FIELDS) {
     const entries: unknown = result.errors[list];
     if (Array.isArray(entries)) errors[list] = entries.map((entry) => entry && { value: entry });

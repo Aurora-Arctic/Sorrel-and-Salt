@@ -16,7 +16,7 @@ export type IngredientInput = {
   colors?: Array<string> | null | undefined;
   deities?: Array<string> | null | undefined;
   description?: string | null | undefined;
-  element?: IngredientElement | null | undefined;
+  elements?: Array<IngredientElement> | null | undefined;
   folkNames?: Array<string> | null | undefined;
   form?: string | null | undefined;
   name: string;

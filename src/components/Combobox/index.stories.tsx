@@ -1,6 +1,6 @@
 import type { Story } from '@ladle/react';
 import { useState } from 'react';
-import Combobox, { ComboboxEntry, ComboboxSelect } from '.';
+import Combobox, { ComboboxEntry, ComboboxMultiSelect, ComboboxSelect } from '.';
 import type { ComboboxOption } from './types';
 
 // Render-only; behaviour is asserted in tests/components/Combobox. The
@@ -120,6 +120,32 @@ export const SelectOnly: Story = () => {
         onChange={setValue}
         choices={KINDS}
         placeholder="Choose a classification"
+      />
+    </>
+  );
+};
+
+const ELEMENTS = ['Earth', 'Air', 'Fire', 'Water', 'Spirit'].map((label) => ({
+  value: label.toLowerCase(),
+  label,
+}));
+
+/** The multi-select box: a closed set holding several, each choice a chip inside the control with its x, a clear and the chevron on the right, the list offering only what is left, and Backspace taking the last. */
+export const MultiSelect: Story = () => {
+  const [values, setValues] = useState(['fire', 'air']);
+  return (
+    <>
+      <label id="element-label" htmlFor="element">
+        Element
+      </label>
+      <ComboboxMultiSelect
+        id="element"
+        label="Element"
+        labelId="element-label"
+        values={values}
+        onChange={setValues}
+        choices={ELEMENTS}
+        placeholder="Choose elements"
       />
     </>
   );

@@ -29,7 +29,7 @@ the second task, and the destructive-DDL check refuses it unacknowledged. A
 data migration may still ride in the first, written with `generate --custom`,
 which copies the last snapshot rather than diffing the schema, so the
 undeclared columns stay in it: MB.136's `0031_refill-ingredient-lists` is
-the worked case.
+the worked case, and MB.159's `0035_refill-element-list` the second.
 
 **A table added while a drop is pending is `generate --custom` too**, with the
 DDL taken from a `generate` run into a scratch copy of `src/db/migrations`

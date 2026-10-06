@@ -48,7 +48,7 @@ IngredientRef.implement({
     nomenclature: t.expose('nomenclature', { type: NomenclatureEnum }),
     form: t.exposeString('form', { nullable: true }),
     description: t.exposeString('description', { nullable: true }),
-    element: t.expose('element', { type: IngredientElementEnum, nullable: true }),
+    elements: t.expose('elements', { type: [IngredientElementEnum], nullable: true }),
     planets: t.exposeStringList('planets', { nullable: true }),
     zodiacSigns: t.exposeStringList('zodiacSigns', { nullable: true }),
     deities: t.exposeStringList('deities', { nullable: true }),

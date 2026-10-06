@@ -2,6 +2,7 @@
 
 import { useSelect } from 'downshift';
 import type { ReactElement } from 'react';
+import { ChevronIcon } from './icons';
 import type { ComboboxChoice, ComboboxSelectProps } from './types';
 
 // The combobox's closed-set sibling: the same control and list, on
@@ -67,16 +68,7 @@ export function ComboboxSelect({
         </div>
         <div className="combobox__indicators">
           <span className="combobox__indicator" aria-hidden="true">
-            <svg viewBox="0 0 16 16" focusable="false">
-              <path
-                d="M3.5 6l4.5 4.5L12.5 6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <ChevronIcon />
           </span>
         </div>
       </div>
