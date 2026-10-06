@@ -304,7 +304,8 @@ type QueryCompendiumConnectionEdge {
   adds a mode); the form under `canonical_key`'s fold. The browser never holds more than a page (rule
   8), so it cannot be the search, which is why M8.4's client-side
   `filterIngredients()` was retired (DESIGN.md §14). `element` (M8.13) and
-  `nomenclature` (M5.5) are those tasks' arguments to add.
+  `nomenclature` (M5.5) are those tasks' arguments to add; `element` matches
+  an entry whose `elements` holds it, among others or alone (MB.157).
 - **A search is ranked, best match first.** It pages
   `(score DESC, name, id)`, and each edge carries `score`: the row's word
   similarity to the query, the best of the label, the formal name and its folk
@@ -388,7 +389,9 @@ signatures DESIGN.md §7's sketch gives them.
   schema takes both as absent, as it takes a blank form field. `element` is the
   one nullable field, because an enum has no empty value to send: `null`
   clears it, and so does leaving it out. The type's SDL description states the
-  rule.
+  rule. MB.159 ends the exception: `elements`, a `[IngredientElement!]!`
+  where `[]` clears, replaces `element` (DESIGN.md §7, MB.157), and the
+  description loses its clause.
 - **A substitute is a `SubstituteInput`**, `{ ingredientId }` to link or
   `{ name }` for one not entered. Both fields are nullable, since GraphQL here
   has no one-of input, and the shared schema holds an entry to exactly one

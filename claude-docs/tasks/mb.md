@@ -3011,11 +3011,13 @@ _Acceptance criteria:_
 
 _Story:_ As a workspace member, I want an ingredient to carry more than one element, so that a herb worked with both fire and air is recorded as it is practised.
 
-Documentation and scoping only, in MB.134's shape: the model is recorded before the table task transcribes it. Minted during MB.131, on the owner's decision. DESIGN.md §5 gives `element` one value of a closed enum; it becomes a list of that enum, still closed — earth, air, fire, water, spirit — so nothing is typed and nothing outside the five is written. This task settles the column's name and type, an array of `ingredient_element` beside the free-text lists, and whether a list keeps the order chosen and refuses a repeat; the GraphQL change, the single field on `Ingredient` and both inputs replaced by a list with no deprecation window, since nothing outside the app reads the API; `updateIngredient`'s "every field but element non-null" rule, which the list ends; `IngredientSearch`'s element filter (§13), which matches any element a list holds; and the sequence rule 10 requires, MB.158 adding and filling the list, MB.159 switching every reader and writer and ceasing to declare the old column, and MB.160 dropping it once MB.159 has deployed. The form's field becomes a list on MB.131's select-only box, its chosen elements chips inside the control as every list's are, its list offering the elements not yet chosen.
+Documentation and scoping only, in MB.134's shape: the model is recorded before the table task transcribes it. Minted during MB.131, on the owner's decision. DESIGN.md §5 gives `element` one value of a closed enum; it becomes a list of that enum, still closed — earth, air, fire, water, spirit — so nothing is typed and nothing outside the five is written. This task settles the column's name and type, an array of `ingredient_element` beside the free-text lists, and whether a list keeps the order chosen and refuses a repeat; the GraphQL change, the single field on `Ingredient` and both inputs replaced by a list with no deprecation window, since nothing outside the app reads the API; `updateIngredient`'s "every field but element non-null" rule, which the list ends; `IngredientSearch`'s element filter (§9), which matches any element a list holds; and the sequence rule 10 requires, MB.158 adding and filling the list, MB.159 switching every reader and writer and ceasing to declare the old column, and MB.160 dropping it once MB.159 has deployed. The form's field becomes a list on MB.131's select-only box, its chosen elements chips inside the control as every list's are, its list offering the elements not yet chosen.
+
+**Decided while building:** the column and field are `elements`, a nullable `ingredient_element[]`; the list keeps the order chosen and refuses a repeat at its position, since the form never offers a chosen element twice; an empty list is null. The filter is §9's `IngredientSearch`, not §13, which is v2. It is built by M8.13, which runs after MB.159, so MB.159 no longer claims it and M8.13 adds the containment match.
 
 _Acceptance criteria:_
 
-- DESIGN.md §5's column list, the `element` values line and correspondence row, §7's sketch and `updateIngredient` comment, §13's filter and §14's form-library row carry the list
+- DESIGN.md §5's column list, the `element` values line and correspondence row, §7's sketch and `updateIngredient` comment, §9's filter and §14's form-library row carry the list
 - The column and field names, the array type, and whether the list keeps the order chosen and refuses a repeat, are recorded
 - db.md and validation.md say how the list is validated
 
@@ -3036,13 +3038,13 @@ _Acceptance criteria:_
 
 _Story:_ As a workspace member, I want to choose several elements for an ingredient, so that it records every element I work it with.
 
-Switches every reader and writer to MB.158's column. The shared Zod schema takes a list of the five values; the workspace and compendium services write it; GraphQL's `Ingredient` and both inputs carry the list; the compendium's element filter matches any element a list holds; the seed and the test fixtures write lists. `IngredientForm`'s Element becomes a multi-select in the same PR, since the form's types follow the schema: the list fields' control, its chosen elements as chips inside it, each with its ×, and a clear and a chevron on its right, on MB.131's select-only box, nothing typed and no Add, its list offering the elements not yet chosen. The Drizzle schema stops declaring the single column, rule 10's first half of a drop, and the migration fills the list again for any row the live deploy wrote to `element` after MB.158.
+Switches every reader and writer to MB.158's column. The shared Zod schema takes a list of the five values; the workspace and compendium services write it; GraphQL's `Ingredient` and both inputs carry the list, and `IngredientUpdateInput` has no nullable field left; the seed and the test fixtures write lists. `IngredientForm`'s Element becomes a multi-select in the same PR, since the form's types follow the schema: the list fields' control, its chosen elements as chips inside it, each with its ×, and a clear and a chevron on its right, on MB.131's select-only box, nothing typed and no Add, its list offering the elements not yet chosen. The Drizzle schema stops declaring the single column, rule 10's first half of a drop, and the migration fills the list again for any row the live deploy wrote to `element` after MB.158.
 
 _Acceptance criteria:_
 
 - A save carries several elements, and an edit replaces the list whole
 - The list keeps the order chosen, refuses a repeat and a value outside the five, and treats an empty list as absent
-- The compendium filtered by an element finds an entry holding it among others
+- Every field of the update input is non-null, and `elements: []` clears the list
 - The seed and fixtures write lists, and the SDL snapshot moves
 - Nothing declares or reads the single column, which still exists
 - The form's Element is a select-only multi-select with chips, keyboard-operable — the arrows move, Enter or Space chooses, Escape closes, Backspace in it removes the last — covered by its tests
