@@ -1,4 +1,4 @@
-# 0034_drop-ingredient-singles — destructive DDL
+# 0036_drop-ingredient-singles — destructive DDL
 
 Destructive DDL acknowledged: this is the contract step of an expand/contract drop. MB.135 added `planets`, `zodiac_signs` and `colors` beside the single `planet`, `zodiac` and `color` columns and filled them (0030), MB.136 moved every reader and writer to the lists, stopped declaring the singles and filled the lists again (0031), and this migration drops the singles once no deploy that meets it declares them.
 

@@ -67,7 +67,7 @@ export interface WorkspaceIngredientNode {
   id: string;
   name: string;
   nomenclature: string;
-  element: string | null;
+  elements: string[] | null;
   deities: string[] | null;
   folkNames: string[];
   substitutes: SubstituteNode[];

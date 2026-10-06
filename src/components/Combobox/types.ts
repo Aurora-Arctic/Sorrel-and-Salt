@@ -105,3 +105,31 @@ export interface ComboboxSelectProps {
   'aria-describedby'?: string;
   'aria-invalid'?: boolean;
 }
+
+/**
+ * The multi-select box: a closed set holding several values, chosen from the
+ * select-only box and drawn as chips inside its control, as a list's entries
+ * are.
+ */
+export interface ComboboxMultiSelectProps {
+  /** The box's id, which a label element's `htmlFor` names. */
+  id: string;
+  /** What the box is called: its `aria-label` unless `labelId` is given, its list's name, its clear's and its status's. */
+  label: string;
+  /** The id of a label element naming the box. */
+  labelId?: string;
+  /** The values chosen, in the order chosen. */
+  values: readonly string[];
+  /** Every change, as the whole list: a choice appended, one taken out, or none. */
+  onChange: (values: string[]) => void;
+  onBlur?: () => void;
+  /** Every choice, in order; the list offers those not yet chosen. */
+  choices: readonly ComboboxChoice[];
+  /** Shown while nothing is chosen, and not itself a choice. */
+  placeholder?: string;
+  required?: boolean;
+  /** The box, which takes the focus: a `div`, since nothing is typed into it. */
+  inputRef?: Ref<HTMLDivElement>;
+  'aria-describedby'?: string;
+  'aria-invalid'?: boolean;
+}

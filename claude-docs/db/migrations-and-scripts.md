@@ -122,7 +122,23 @@
   ["Expand/contract"](expand-contract.md). 0033 adds `deity_traditions` and
   `deities`, with their two `set_updated_at` triggers; see
   ["The deity vocabulary"](deity-vocabulary.md).
-- **`0034_drop-ingredient-singles.sql`** (MB.137) is the contract of MB.134's
+- **`0034_element-list.sql`** (MB.158) is the expand of MB.157's list, made
+  the way 0032 was, because MB.137's and MB.141's drops are still pending.
+  Its `ADD COLUMN` for `elements` came from the scratch `generate`. The fill
+  was added by hand, as 0030's was: one `UPDATE` copying `element` as a
+  one-entry array where one is set. `element-list.test.ts` re-runs that
+  `UPDATE` against the seeded rows. See
+  ["The ingredient identity model"](identity-model.md).
+- **`0035_refill-element-list.sql`** (MB.159) is 0031 again for MB.157's
+  list: `generate --custom`, so `element`, which MB.159 stops declaring,
+  stays in the copied snapshot and MB.160's `generate` emits its drop. One
+  `UPDATE` rederives `elements` from `element` for every row that
+  disagrees, for anything the live deploy wrote after 0034. Data only, so no
+  sidecar. The seed writes lists since MB.159, so `element-list.test.ts`
+  puts the seeded rows back as a deployed database held them before
+  re-running either fill. See
+  ["The ingredient identity model"](identity-model.md).
+- **`0036_drop-ingredient-singles.sql`** (MB.137) is the contract of MB.134's
   lists: `drizzle-kit generate` wrote the three `DROP COLUMN`s for `planet`,
   `zodiac` and `color` and a fourth for `substitutes`, which was cut, its
   column kept in the snapshot, since that drop is MB.141's. It fills nothing

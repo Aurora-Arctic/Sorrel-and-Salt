@@ -58,7 +58,8 @@ export interface ListOption extends ComboboxOption {
 }
 
 /**
- * The form's own state: every field as typed, a closed set unanswered as `''`,
+ * The form's own state: every field as typed, a closed set unanswered as `''`
+ * or, holding several, as none chosen,
  * and what sits in each list's box, not yet added.
  */
 export interface IngredientFormValues {
@@ -68,7 +69,8 @@ export interface IngredientFormValues {
   form: string;
   folkNames: ListEntry[];
   description: string;
-  element: IngredientElement | '';
+  /** In the order chosen; none chosen is the answer "none". */
+  elements: IngredientElement[];
   planets: ListEntry[];
   zodiacSigns: ListEntry[];
   colors: ListEntry[];
@@ -83,7 +85,10 @@ export type IngredientFormInput = z.input<typeof LocalIngredientInput>;
 
 export type TextFieldName = 'name' | 'canonicalName' | 'form' | 'description' | 'safetyNotes';
 
-export type SelectFieldName = 'nomenclature' | 'element';
+export type SelectFieldName = 'nomenclature';
+
+/** A closed set holding several values: an entry's elements. */
+export type MultiSelectFieldName = 'elements';
 
 export type ListFieldName =
   'folkNames' | 'planets' | 'zodiacSigns' | 'colors' | 'deities' | 'substitutes';
@@ -119,12 +124,18 @@ export interface SelectFieldProps extends FieldProps {
   name: SelectFieldName;
   /** Shown until a choice is made, and not itself a choice. */
   placeholder?: string;
-  /** The choice that leaves the field unanswered: "None". Its value is `''`. */
-  none?: string;
   options: readonly SelectOption[];
   deps?: (TextFieldName | SelectFieldName)[];
   /** Runs on a new choice, before the field and its `deps` revalidate. */
   onChange?: (value: string) => void;
+}
+
+/** A closed set holding several values, chosen as chips on the select-only box. */
+export interface MultiSelectFieldProps extends FieldProps {
+  name: MultiSelectFieldName;
+  /** Shown while nothing is chosen, and not itself a choice. */
+  placeholder?: string;
+  options: readonly SelectOption[];
 }
 
 export interface SelectOption {

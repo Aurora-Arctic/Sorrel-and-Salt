@@ -44,7 +44,7 @@ export interface IngredientFixture extends Required<
     | 'nomenclature'
     | 'form'
     | 'description'
-    | 'element'
+    | 'elements'
     | 'planets'
     | 'zodiacSigns'
     | 'deities'

@@ -113,8 +113,22 @@ Rules both variants enforce:
   entry as `{ ingredientId, name: null }` or `{ ingredientId: null, name }`;
   which ingredients a link may reach is the service's rule, since it reads
   other rows (["The workspace ingredient mutations"](graphql/schema.md)).
-- **Closed sets.** `nomenclature` and `element` come from the pgEnums' lists,
-  in `schema/ingredient-enums.ts`.
+- **Closed sets.** `nomenclature` and the entries of `elements` come from
+  the pgEnums' lists, in `schema/ingredient-enums.ts`.
+- **`elements` is a list of that closed set** (DESIGN.md §5, MB.157; built by
+  MB.159, replacing the single `element`): an array of the five, each entry
+  refused at its position (`['elements', i]`) if it is not one of them,
+  with "Choose one of the five elements". A repeat is refused at the
+  repeat's position, the second occurrence, naming the element — "Fire is
+  already chosen" — as a folk name's repeat is refused rather than dropped as
+  a free-text list's is: the form's list offers only the elements not yet
+  chosen, so a repeat comes from another caller, and refusing tells it so.
+  Nothing is trimmed and no entry is blank, since an enum has neither, so a
+  list left with no entries, `[]`, is the only absence, and
+  `dropBlankEntries` turns it into `null` as it does an emptied text list.
+  The list keeps the order chosen and is never reordered. Neither schema
+  keeps `element`, so a caller still sending it has it stripped like any
+  unknown key.
 - **`planets`, `zodiacSigns` and `colors` are lists, validated as `deities`
   is** (DESIGN.md §5, MB.134; built by MB.136, replacing the single `planet`,
   `zodiac` and `color`): free text, each entry trimmed, blank entries dropped

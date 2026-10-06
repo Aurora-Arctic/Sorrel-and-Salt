@@ -46,7 +46,7 @@ const DEFAULTS: IngredientFixture = {
   nomenclature: 'botanical',
   form: 'herb',
   description: null,
-  element: null,
+  elements: null,
   planets: null,
   zodiacSigns: null,
   deities: null,

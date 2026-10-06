@@ -33,7 +33,7 @@ const IngredientInput = builder.inputType('IngredientInput', {
     nomenclature: t.field({ type: NomenclatureEnum }),
     form: t.string(),
     description: t.string(),
-    element: t.field({ type: IngredientElementEnum }),
+    elements: t.field({ type: [IngredientElementEnum] }),
     planets: t.stringList(),
     zodiacSigns: t.stringList(),
     deities: t.stringList(),
@@ -46,18 +46,18 @@ const IngredientInput = builder.inputType('IngredientInput', {
 
 // An update replaces the row, so a field left out would be cleared. Non-null
 // makes leaving one out a schema error; GraphQL has no required-but-nullable
-// field, so a caller clears with an empty value instead of null. `element` is
-// the exception: an enum has no empty value to send.
+// field, so a caller clears with an empty value instead of null — which is
+// why `elements` is a list (MB.157): a single enum had no empty value to send.
 const IngredientUpdateInput = builder.inputType('IngredientUpdateInput', {
   description:
-    'The whole ingredient, replacing the row. Every field is sent, and "" or [] clears one; `element` alone is nullable, and null or leaving it out clears it.',
+    'The whole ingredient, replacing the row. Every field is sent, and "" or [] clears one.',
   fields: (t) => ({
     name: t.string({ required: true }),
     canonicalName: t.string({ required: true }),
     nomenclature: t.field({ type: NomenclatureEnum, required: true }),
     form: t.string({ required: true }),
     description: t.string({ required: true }),
-    element: t.field({ type: IngredientElementEnum }),
+    elements: t.field({ type: [IngredientElementEnum], required: true }),
     planets: t.stringList({ required: true }),
     zodiacSigns: t.stringList({ required: true }),
     deities: t.stringList({ required: true }),

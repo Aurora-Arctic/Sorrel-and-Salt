@@ -7,7 +7,7 @@ import {
   useFormContext,
   useFormState,
 } from 'react-hook-form';
-import Combobox, { ComboboxEntry, ComboboxSelect } from '../Combobox';
+import Combobox, { ComboboxEntry, ComboboxMultiSelect, ComboboxSelect } from '../Combobox';
 import InfoTip from '../InfoTip';
 import type {
   FieldErrorProps,
@@ -15,6 +15,7 @@ import type {
   IngredientFormValues,
   ListFieldProps,
   ListOption,
+  MultiSelectFieldProps,
   SelectFieldProps,
   SuggestFieldProps,
   TextFieldProps,
@@ -198,7 +199,6 @@ export function SelectField({
   label,
   hint,
   placeholder,
-  none,
   options,
   required,
   deps,
@@ -207,9 +207,6 @@ export function SelectField({
   const { control } = useFormContext<IngredientFormValues>();
   const { field } = useController({ control, name, rules: { deps } });
   const { aria, ...shell } = useField(name, hint);
-  // `none` is a choice, the one that clears the field; the placeholder is
-  // shown until a choice is made, and cannot be made itself.
-  const choices = none === undefined ? options : [{ value: '', label: none }, ...options];
   return (
     <FieldShell label={label} hint={hint} required={required} {...shell}>
       <ComboboxSelect
@@ -224,7 +221,43 @@ export function SelectField({
           field.onChange(value);
         }}
         onBlur={field.onBlur}
-        choices={choices}
+        choices={options}
+        placeholder={placeholder}
+        required={required}
+        inputRef={field.ref}
+        {...aria}
+      />
+    </FieldShell>
+  );
+}
+
+/**
+ * A closed set holding several values, on the combobox's multi-select box:
+ * the select-only box, its choices as chips inside the control, as a list's
+ * entries are. Nothing is typed and nothing is added by a button, so it is a
+ * field, labelled and erring as one, rather than a list's fieldset.
+ */
+export function MultiSelectField({
+  name,
+  label,
+  hint,
+  placeholder,
+  options,
+  required,
+}: MultiSelectFieldProps): ReactElement {
+  const { control } = useFormContext<IngredientFormValues>();
+  const { field } = useController({ control, name });
+  const { aria, ...shell } = useField(name, hint);
+  return (
+    <FieldShell label={label} hint={hint} required={required} {...shell}>
+      <ComboboxMultiSelect
+        id={shell.controlId}
+        label={label}
+        labelId={shell.labelId}
+        values={field.value}
+        onChange={field.onChange}
+        onBlur={field.onBlur}
+        choices={options}
         placeholder={placeholder}
         required={required}
         inputRef={field.ref}

@@ -299,18 +299,54 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
       expect([...ingredientElement.enumValues]).toEqual(ELEMENTS);
     });
 
-    it('element accepts every documented value', () => {
-      for (const element of ELEMENTS) {
-        expect(Schema.safeParse({ ...base, element }).success).toBe(true);
-      }
+    it('nomenclature rejects a value outside the enum', () => {
+      expect(failedPaths(Schema.safeParse({ ...base, nomenclature: 'taxonomic' }))).toEqual([
+        ['nomenclature'],
+      ]);
+    });
+  });
+
+  // DESIGN.md §5 (MB.157): a list of the five, in the order chosen, each once.
+  describe('elements', () => {
+    const base = { name: 'Testwort', nomenclature: 'none' };
+
+    it('accepts every documented value, all at once', () => {
+      expect(Schema.parse({ ...base, elements: ELEMENTS })).toMatchObject({ elements: ELEMENTS });
     });
 
-    it.each([
-      ['nomenclature', 'taxonomic'],
-      ['element', 'aether'],
-      ['element', 'Earth'],
-    ])('%s rejects %s', (field, value) => {
-      expect(failedPaths(Schema.safeParse({ ...base, [field]: value }))).toContainEqual([field]);
+    it('keeps the order chosen', () => {
+      expect(Schema.parse({ ...base, elements: ['water', 'fire', 'air'] })).toMatchObject({
+        elements: ['water', 'fire', 'air'],
+      });
+    });
+
+    it.each(['aether', 'Earth', ''])('refuses %j at its position', (value) => {
+      expect(failedPaths(Schema.safeParse({ ...base, elements: ['fire', value] }))).toEqual([
+        ['elements', 1],
+      ]);
+    });
+
+    it('refuses a single value sent where the list belongs', () => {
+      expect(failedPaths(Schema.safeParse({ ...base, elements: 'fire' }))).toEqual([['elements']]);
+    });
+
+    it('refuses a repeat at the repeat, naming the element', () => {
+      const result = Schema.safeParse({ ...base, elements: ['fire', 'air', 'fire'] });
+
+      expect(failedPaths(result)).toEqual([['elements', 2]]);
+      expect(result.error?.issues[0]?.message).toBe('Fire is already chosen');
+    });
+
+    it('takes a list left empty, null or absent as absent', () => {
+      expect(Schema.parse({ ...base, elements: [] })).toMatchObject({ elements: null });
+      expect(Schema.parse({ ...base, elements: null })).toMatchObject({ elements: null });
+      expect(Schema.parse(base).elements ?? null).toBeNull();
+    });
+
+    // The single column is undeclared (MB.159), so a caller still sending
+    // one writes nothing through it.
+    it('carries no single element', () => {
+      expect(Object.keys(Schema.parse({ ...base, element: 'fire' }))).not.toContain('element');
     });
   });
 
@@ -374,7 +410,7 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
       canonicalName: 'Fixtura testalis',
       form: 'root',
       description: 'An invented herb.',
-      element: 'water',
+      elements: ['water', 'earth'],
       planets: ['moon', 'Venus'],
       zodiacSigns: ['cancer'],
       deities: [' Testara '],
@@ -385,6 +421,7 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
     });
 
     expect(parsed).toMatchObject({
+      elements: ['water', 'earth'],
       deities: ['Testara'],
       planets: ['moon', 'Venus'],
       zodiacSigns: ['cancer'],

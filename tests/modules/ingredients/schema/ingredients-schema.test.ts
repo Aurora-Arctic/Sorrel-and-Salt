@@ -40,7 +40,7 @@ const COLUMNS = [
   'canonical_key',
   'form',
   'description',
-  'element',
+  'elements',
   'planets',
   'zodiac_signs',
   'deities',
@@ -84,8 +84,19 @@ describe('ingredients schema', () => {
   });
 
   // A correspondence, not identity: a closed enum, the opposite of `form`.
-  it('declares element as a closed five-value enum', () => {
+  it('declares ingredient_element as a closed five-value enum', () => {
     expect(ingredientElement.enumValues).toEqual(ELEMENT_VALUES);
+  });
+
+  // MB.159: the single is in the database until MB.160 drops it, but nothing
+  // declares it, so nothing reads or writes it.
+  it('no longer declares the single element', () => {
+    expect(Object.keys(byName)).not.toContain('element');
+  });
+
+  // MB.157: the list is of the same enum, not text, so it stays closed.
+  it('stores elements as an array of that enum', () => {
+    expect(byName.elements.getSQLType()).toBe('ingredient_element[]');
   });
 
   // Text, not an FK: an FK makes an uncurated value unwritable and would put a
@@ -164,10 +175,12 @@ beforeEach(async () => {
 
 describe('ingredients table', () => {
   // A column the schema has stopped declaring outlives it in the database for
-  // one deploy: `substitutes`, undeclared by MB.140 and dropped by MB.141, is
-  // the only one.
-  it('carries the columns the schema declares, and the one awaiting its drop', async () => {
-    expect(await catalogue.columnNames('ingredients')).toEqual([...COLUMNS, 'substitutes'].sort());
+  // one deploy: `substitutes`, undeclared by MB.140 and dropped by MB.141, and
+  // `element`, undeclared by MB.159 and dropped by MB.160, are the only ones.
+  it('carries the columns the schema declares, and the two awaiting their drop', async () => {
+    expect(await catalogue.columnNames('ingredients')).toEqual(
+      [...COLUMNS, 'substitutes', 'element'].sort(),
+    );
   });
 
   it('rejects an insert that omits nomenclature, since the column has no default', async () => {
@@ -380,27 +393,19 @@ describe('ingredients table', () => {
     });
   });
 
-  describe('element', () => {
-    it('accepts each of its five documented values', async () => {
-      for (const element of ELEMENT_VALUES) {
-        // Five identities: the factory's one canonical name five times over
-        // would trip `ingredients_workspace_identity_unique`.
-        await insert({
-          element,
-          name: `Mugwort (${element})`,
-          canonicalName: `Fixtura ${element}`,
-          workspaceId: WORKSPACE,
-        });
-      }
+  describe('elements', () => {
+    it('accepts all five documented values in one list, in the order given', async () => {
+      const elements = [...ELEMENT_VALUES].reverse();
+      const id = await insert({ elements, workspaceId: WORKSPACE });
 
-      const [{ count }] =
-        await sql`select count(*)::int as count from ingredients where element is not null`;
-      expect(count).toBe(ELEMENT_VALUES.length);
+      const [row] = await sql`select elements from ingredients where id = ${id}`;
+      expect(row.elements).toEqual(elements);
     });
 
     it('rejects a value outside that set', async () => {
       // Cast: the fixture is typed against the column; the database must refuse it.
-      const error = await failureOf(insert({ element: 'aether' as IngredientFixture['element'] }));
+      const elements = ['fire', 'aether'] as IngredientFixture['elements'];
+      const error = await failureOf(insert({ elements }));
       // 22P02 is invalid_text_representation: the enum cast refusing the value.
       expect(error.code).toBe('22P02');
     });
