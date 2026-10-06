@@ -81,6 +81,14 @@ const TIER_SEAM: string[] = [
   'findIngredientsInSpellsIncludingSoftDeleted',
   // An ingredient's substitutes, and what each links, deleted or not: the compendium and the proofs' covens (MB.140).
   'findSubstitutesIncludingSoftDeleted',
+  // An ingredient's references, each where its readers may look: the compendium and the proofs' covens (MB.153).
+  'findReferencesOfIngredients',
+  // What a row written under the proofs may cite: the compendium's references and the proofs' covens' (MB.153).
+  'findManyReferences',
+  // The reference picker's search: the compendium's sources and this workspace's (MB.153).
+  'findReferenceSuggestions',
+  // The admin's to-do filter: an entry citing no compendium reference (MB.153).
+  'citesNothing',
   // `withAudit`'s writer: the compendium tier's by-id writes, under the SiteAdmin proof (M5.2).
   'writerFor',
 ];

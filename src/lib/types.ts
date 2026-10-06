@@ -99,3 +99,43 @@ export interface GroupColors {
   colorDark: string;
   colorLight: string;
 }
+
+/**
+ * The five kinds of source `references.kind` holds (MB.151), spelled here
+ * because a lib file imports no module; a row's `ReferenceKind` must stay
+ * assignable to it, so a sixth kind fails the type check at the renderer's
+ * callers.
+ */
+export type CitationKind = 'book' | 'chapter' | 'article' | 'entry' | 'web_page';
+
+/**
+ * What `renderCitation` reads: a `references` row's own fields, each text as
+ * Chicago prints it and absent or null when not given, the two days as
+ * `YYYY-MM-DD`.
+ */
+export interface CitationFields {
+  kind: CitationKind;
+  title: string;
+  authors?: string | null;
+  container?: string | null;
+  contributors?: string | null;
+  edition?: string | null;
+  volume?: string | null;
+  issue?: string | null;
+  series?: string | null;
+  place?: string | null;
+  publisher?: string | null;
+  published?: string | null;
+  pages?: string | null;
+  host?: string | null;
+  url?: string | null;
+  modified?: string | null;
+  accessed?: string | null;
+  note?: string | null;
+}
+
+/** One run of a rendered citation, set in italic or roman. */
+export interface CitationPart {
+  text: string;
+  italic: boolean;
+}

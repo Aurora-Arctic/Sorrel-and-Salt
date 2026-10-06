@@ -1,11 +1,12 @@
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS } from '../schema/ingredient-enums';
+import { ReferenceLinkRef } from './references';
 import { CategoryRef } from '@/modules/vocabulary';
 import type { IngredientRow, SubstituteRow } from '../types';
 
 // `Ingredient` as DESIGN.md §7 sketches it, over the row the services return:
-// every correspondence field, the tier as `isGlobal`, and the three children
+// every correspondence field, the tier as `isGlobal`, and the four children
 // through the request's loaders. `canonicalKey` and `workspaceId` stay off
 // the wire: the key is the database's own, and the tier is a flag.
 
@@ -71,6 +72,11 @@ IngredientRef.implement({
     substitutes: t.field({
       type: [SubstituteRef],
       resolve: (row, _args, { loaders }) => loaders.substitutesByIngredient.load(row),
+    }),
+    // Alphabetical by citation, `[]` when there are none.
+    references: t.field({
+      type: [ReferenceLinkRef],
+      resolve: (row, _args, { loaders }) => loaders.referencesByIngredient.load(row),
     }),
     audit: t.field({ type: AuditInfo, resolve: (row) => row }),
   }),

@@ -34,10 +34,21 @@ row written past the service reads as nothing. It is the substitute's
 against through `findManyOfIngredients`, since a write needs no linked
 ingredient.
 
-**Three services and three loaders over them**, in `ingredients`:
-`categoriesOf`, `folkNamesOf` and `substitutesOf` in
+**References have one too, `findReferencesOfIngredients(memberships,
+ingredientIds)`** (MB.153). It reads each live link beside the live
+reference it cites in one statement, through the same left join, and holds
+the reference to the compendium or the parent's own coven inside the
+parent's `EXISTS`, so a link written past the service's tier rule, or one
+to a soft-deleted reference, reads as nothing. It is no hatch: every row it
+answers is live. `replaceReferenceLinks` compares against what it answers,
+so a link the ingredient does not show is left in place for a restore to
+return ([`references.md`](references.md)).
+
+**Four services and four loaders over them**, in `ingredients`:
+`categoriesOf`, `folkNamesOf`, `substitutesOf` and `referencesOf` in
 `services/ingredient-children.ts`, batched as `categoriesByIngredient`,
-`folkNamesByIngredient` and `substitutesByIngredient`
+`folkNamesByIngredient`, `substitutesByIngredient` and
+`referencesByIngredient`
 ([`graphql/loaders.md`](../graphql/loaders.md), "Loaders"). A key is the parent
 row's `{ id, workspaceId }`. The `workspaceId` decides which proof to ask for,
 one `assertMembership(…, { ingredient: ['read'] })` per coven the batch names,

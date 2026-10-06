@@ -30,6 +30,11 @@ export const CompendiumFilter = z.object({
     .nullish()
     .transform((ids) => (ids && ids.length > 0 ? ids : undefined)),
   form: optionalText,
+  // The admin's to-do list: entries citing nothing (MB.153). False is no filter.
+  withoutReferences: z
+    .boolean()
+    .nullish()
+    .transform((only) => (only === true ? true : undefined)),
 });
 
 export type CompendiumFilterInput = z.input<typeof CompendiumFilter>;

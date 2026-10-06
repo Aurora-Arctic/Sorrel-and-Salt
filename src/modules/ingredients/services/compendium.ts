@@ -20,9 +20,11 @@ import { CompendiumFilter, type CompendiumFilterInput } from '../validation/comp
 import { CompendiumIngredientInput } from '../validation/ingredient';
 import {
   addFolkNames,
+  addReferenceLinks,
   addSubstitutes,
   columnsOf,
   replaceFolkNames,
+  replaceReferenceLinks,
   replaceSubstitutes,
 } from './ingredient-rows';
 import { type Membership, assertMembership } from '@/modules/coven';
@@ -103,8 +105,8 @@ export async function getIngredient(
 }
 
 /**
- * Creates a compendium entry, with its folk names and substitutes, in one
- * transaction. Its form, planets, signs and deities are written in their
+ * Creates a compendium entry, with its folk names, substitutes and references,
+ * in one transaction. Its form, planets, signs and deities are written in their
  * curated rows' spelling. The slug is set here from the label, the form and
  * the formal name, and the compendium's lapsed retirements are cleared in the
  * same write.
@@ -114,15 +116,18 @@ export async function getIngredient(
  * @throws {ValidationError} the input breaks `CompendiumIngredientInput` — a
  * missing `nomenclature` included — names a form, planet, sign or deity no
  * live curated row holds, collides with another entry, would end another
- * entry's redirect without `endRedirect`, or links a substitute outside the
- * compendium.
+ * entry's redirect without `endRedirect`, or links a substitute or cites a
+ * reference outside the compendium.
  */
 export async function createCompendiumEntry(
   session: Session,
   input: CompendiumWrite,
 ): Promise<IngredientRow> {
   const admin = assertSiteAdmin(session);
-  const { folkNames, substitutes, ...parsed } = parseInput(CompendiumIngredientInput, input);
+  const { folkNames, substitutes, references, ...parsed } = parseInput(
+    CompendiumIngredientInput,
+    input,
+  );
   const fields = await inCuratedSpellings(input, parsed);
 
   const slug = ingredientSlug(fields.name, fields.form, fields.canonicalName);
@@ -137,14 +142,15 @@ export async function createCompendiumEntry(
     });
     await addFolkNames(write, row.id, folkNames ?? []);
     await addSubstitutes(write, [], row.id, substitutes ?? []);
+    await addReferenceLinks(write, [], row.id, references ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
 }
 
 /**
  * Replaces a compendium entry with `input` — the whole entry as the form
- * submits it, so a field left out is cleared — and its folk names and
- * substitutes with the input's, in one transaction. The slug follows the
+ * submits it, so a field left out is cleared — and its folk names,
+ * substitutes and references with the input's, in one transaction. The slug follows the
  * label, the form and the formal name; when it moves, the old one is retired
  * as this admin's, and redirects to the entry for 180 days. The curated
  * fields are spelled as `createCompendiumEntry` spells them.
@@ -157,7 +163,8 @@ export async function createCompendiumEntry(
  * @throws {ValidationError} the input breaks `CompendiumIngredientInput`,
  * names a form, planet, sign or deity no live curated row holds, collides
  * with another entry, would end another entry's redirect without
- * `endRedirect`, or adds a substitute link outside the compendium.
+ * `endRedirect`, or adds a substitute link or a reference outside the
+ * compendium.
  * @throws {NotFound} no live compendium entry has this id — a coven's
  * ingredient included, and an id that is not one.
  */
@@ -167,7 +174,10 @@ export async function updateCompendiumEntry(
   input: CompendiumWrite,
 ): Promise<IngredientRow> {
   const admin = assertSiteAdmin(session);
-  const { folkNames, substitutes, ...parsed } = parseInput(CompendiumIngredientInput, input);
+  const { folkNames, substitutes, references, ...parsed } = parseInput(
+    CompendiumIngredientInput,
+    input,
+  );
   const fields = await inCuratedSpellings(input, parsed);
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
@@ -195,6 +205,7 @@ export async function updateCompendiumEntry(
     }
     await replaceFolkNames(write, [], id, folkNames ?? []);
     await replaceSubstitutes(write, [], id, substitutes ?? []);
+    await replaceReferenceLinks(write, [], id, references ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
 }

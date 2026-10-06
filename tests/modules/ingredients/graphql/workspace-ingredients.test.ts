@@ -118,6 +118,7 @@ function wholeInput(fixture: IngredientFixture): Record<string, unknown> {
     safetyNotes: fixture.safetyNotes ?? '',
     substitutes: fixture.substitutes.map((name) => ({ name })),
     folkNames: fixture.folkNames,
+    references: [],
   };
 }
 

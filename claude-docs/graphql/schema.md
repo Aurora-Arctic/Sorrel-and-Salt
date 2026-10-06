@@ -31,10 +31,14 @@ stays under `src/graphql/schema/` ([`modules.md`](../modules.md)).
   GraphQL APIs. The exception is `possibleDuplicates(name: String!)`: its text
   is a whole name about to be saved, compared as a whole, not a fragment to
   filter by, and it stays `name` just as far down.
-- **One date scalar, `DateTime`.** It is graphql-scalars' `DateTimeISO` under
-  the plain name. A resolver hands it a `Date`, and the wire carries an ISO 8601
-  string. `DateTimeISO` rather than the package's `DateTime` because the latter
-  serializes to a `Date` and leaves the string to `JSON.stringify`.
+- **Two date scalars, an instant and a day.** `DateTime` is graphql-scalars'
+  `DateTimeISO` under the plain name. A resolver hands it a `Date`, and the
+  wire carries an ISO 8601 string. `DateTimeISO` rather than the package's
+  `DateTime` because the latter serializes to a `Date` and leaves the string
+  to `JSON.stringify`. `LocalDate` (MB.153) is the package's own, for a
+  reference's `modified` and `accessed`, which are days rather than instants:
+  `YYYY-MM-DD` both ways, as a `date` column reads in Drizzle's string mode,
+  and a value that is not a calendar day is refused before any resolver runs.
 - **`AuditInfo` is defined once**, in `src/graphql/schema/audit.ts`. An
   audited type exposes its stamps as `audit: AuditInfo!`, resolved from the row
   itself, and never as flat fields of its own. It carries the four stamps:
@@ -306,6 +310,10 @@ type QueryCompendiumConnectionEdge {
   `filterIngredients()` was retired (DESIGN.md §14). `element` (M8.13) and
   `nomenclature` (M5.5) are those tasks' arguments to add; `element` matches
   an entry whose `elements` holds it, among others or alone (MB.157).
+  `withoutReferences: true` (MB.153) is the admin's to-do list, which M5.5
+  puts on the page: only the entries citing no live compendium reference, so
+  an entry whose one link is unlinked, or cites a soft-deleted reference, is
+  on it, as its bibliography reads empty. `false` or left out is no filter.
 - **A search is ranked, best match first.** It pages
   `(score DESC, name, id)`, and each edge carries `score`: the row's word
   similarity to the query, the best of the label, the formal name and its folk
@@ -331,9 +339,10 @@ type QueryCompendiumConnectionEdge {
   id is a miss, not a driver error.
 - **`Ingredient` is declared over the row** (`typeof ingredients.$inferSelect`)
   and never exposes `canonicalKey` or `workspaceId`. `folkNames`,
-  `categories` and `substitutes` go through the three ingredient loaders,
-  `folkNamesByIngredient`, `categoriesByIngredient` and
-  `substitutesByIngredient`, keyed by the row itself; `Category.group` and
+  `categories`, `substitutes` and `references` go through the four
+  ingredient loaders, `folkNamesByIngredient`, `categoriesByIngredient`,
+  `substitutesByIngredient` and `referencesByIngredient`, keyed by the row
+  itself; `Category.group` and
   `IngredientFormValue.group` through the two id-keyed group loaders,
   `categoryGroupsById` and `ingredientFormGroupsById` (["Loaders"](loaders.md)).
 - **`Substitute` is a link or a typed name** (DESIGN.md §7, MB.138; built by
@@ -345,6 +354,15 @@ type QueryCompendiumConnectionEdge {
   linked ingredients joined in, through the hatch
   ([`db/soft-delete.md`](../db/soft-delete.md)). It carries no `audit`, as
   `folkNames` carries none.
+- **`ReferenceLink` is a reference and the link's locator** (DESIGN.md §7,
+  MB.151; built by MB.153). `Ingredient.references` is non-null, `[]` with
+  none, and filed alphabetically by citation, less a leading quotation mark
+  and an initial _A_, _An_ or _The_. The service sorts, since the citation
+  exists only in TypeScript. A page of ingredients reads its references in one
+  statement, the references joined in, and only a live reference the
+  ingredient's readers may read answers
+  ([`db/references.md`](../db/references.md)). The `Reference` type is
+  ["References"](#references-reference-createreference-updatereference-and-referencesuggestions)'s.
 - **`IngredientFormValue`, not `IngredientForm`**: one row is one permitted
   value of `ingredients.form`, and `IngredientForm` is the entry-form component
   (DESIGN.md §7). Only forms whose group is live are listed, as
@@ -392,6 +410,21 @@ signatures DESIGN.md §7's sketch gives them.
   `elements`, a `[IngredientElement!]!` where `[]` clears (DESIGN.md §7,
   MB.157). `Ingredient.elements` and `IngredientInput.elements` are the
   nullable `[IngredientElement!]`, as `planets` is.
+- **A reference is a `ReferenceLinkInput`**, `{ referenceId, locator }`
+  (MB.153): an existing reference, created a moment before through
+  `createReference` when it is new, and where in it, if anywhere. Optional on
+  `IngredientInput`, required on the update input where `[]` clears, as every
+  list there is. The shared schema refuses the same reference twice at the
+  repeat, whatever its locator, so `reference_links_ingredient_unique`'s 23505
+  is never what a member sees. The service holds a new one to the tier rule —
+  a coven's ingredient cites the compendium's or its own coven's, a compendium
+  entry only the compendium's — and anything else, an id naming nothing or a
+  soft-deleted reference included, is the same `VALIDATION` field error on
+  the entry, `['references', i]`. The list replaces the links as the
+  substitutes are replaced: a link is matched by its reference, keeps its row
+  and takes the locator sent, and a list that changes nothing writes nothing.
+  A link to a soft-deleted reference is not shown, so the form never sends it
+  back, and the save leaves it in place for a restore.
 - **A substitute is a `SubstituteInput`**, `{ ingredientId }` to link or
   `{ name }` for one not entered. Both fields are nullable, since GraphQL here
   has no one-of input, and the shared schema holds an entry to exactly one
@@ -409,10 +442,10 @@ signatures DESIGN.md §7's sketch gives them.
   field, and its `audit` is stamped from the session. `folkNames` and
   `categories` come through the loaders, after the write has committed. A
   client reconciles its cache from the answer without a refetch.
-  `updateIngredient` first clears the entry from `folkNamesByIngredient` and
-  `substitutesByIngredient`. Root mutation fields run in turn within one
-  request, so an earlier field may already have loaded the folk names or
-  substitutes this write replaced.
+  `updateIngredient` first clears the entry from `folkNamesByIngredient`,
+  `substitutesByIngredient` and `referencesByIngredient`. Root mutation fields
+  run in turn within one request, so an earlier field may already have loaded
+  the folk names, substitutes or references this write replaced.
 - **A delete answers the deleted id, not the entity** — the schema's first
   delete, so this is the convention the next one follows. The row is
   soft-deleted, and a list evicts a row by its id; the deleted `Ingredient`
@@ -431,6 +464,47 @@ signatures DESIGN.md §7's sketch gives them.
 `tests/modules/ingredients/graphql/workspace-ingredients.test.ts` runs the three
 mutations through Yoga with the route's `maskedErrors`, so each refusal is
 asserted as the browser receives it.
+
+### References: `Reference`, `createReference`, `updateReference` and `referenceSuggestions`
+
+A source, kept once and linked from every row it supports (DESIGN.md §5,
+"References"; MB.151, built by MB.153), registered by `ingredients` over
+`services/references.ts` ([`db/references.md`](../db/references.md)).
+
+- **`Reference` is declared over the row** and never exposes `workspaceId`;
+  the tier is `isGlobal`, as on `Ingredient`. Its fields are §5's, its
+  `kind` the enum `ReferenceKind` with the database's values, `web_page`
+  included, and its two days `LocalDate`s. `citation` is the one renderer's
+  output joined plain, `renderCitation` in `src/lib/citation.ts`, so a chip,
+  a sort and a screen reader read one string; a surface that shows italics
+  calls the renderer for its parts.
+- **One input, `ReferenceInput`, for both writes.** An update replaces the
+  reference, so a field left out or `null` is cleared: a day has no empty
+  value to send, which is why this input, unlike the ingredient's, is not
+  made all non-null. The shared schema validates it per `kind`, each refusal
+  `VALIDATION` on the field that failed — a web page's `url` and
+  `accessed`, a chapter's, an article's or an entry's `container`, a book's
+  `published` — never a constraint's name ([`validation.md`](../validation.md)).
+- **The tier is the `workspaceId` argument.** Null writes the compendium,
+  under `assertSiteAdmin`; a coven's is written under
+  `assertMembership(…, { ingredient: ['create'] })` or `['update']`, which
+  owners and members hold and viewers, site admins and non-members do not.
+  Both carry `signedIn`. A member citing a compendium reference cannot edit
+  it: under their coven the id names nothing there, `NOT_FOUND`, and without
+  one the admin check is `FORBIDDEN`. `updateReference` reaches every row
+  citing it, so it clears `referencesByIngredient` whole. There is no
+  `deleteReference` in v1. Revalidating the `compendium` tag on a
+  compendium-tier write is M8.7's, with every other admin mutation.
+- **`referenceSuggestions` is the picker's search**, which MB.154's field
+  reads: the compendium's references and the named coven's, never another's,
+  matched at the compendium search's 0.5 word similarity against `authors`,
+  `title` and `container`, accents folded, best match first. It cannot match
+  the rendered citation, which rule 7 would need in SQL. A blank `query`, or
+  one under two characters, lists both tiers by title. The refusals are
+  `ingredientSuggestions`'.
+
+`tests/modules/ingredients/graphql/references.test.ts` runs the writes, the
+search, `Ingredient.references` and the to-do filter through Yoga.
 
 ### Auth scopes: the second check
 

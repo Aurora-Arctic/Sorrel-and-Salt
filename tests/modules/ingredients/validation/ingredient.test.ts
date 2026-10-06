@@ -305,6 +305,64 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
     });
   });
 
+  // DESIGN.md §7: each entry an existing reference's id, with an optional
+  // locator, and an ingredient cites each reference once.
+  describe('references', () => {
+    const base = { name: 'Testwort', nomenclature: 'none' };
+    const SIMEK = '00000000-0000-4000-8000-0000000000b1';
+    const SMITH = '00000000-0000-4000-8000-0000000000b2';
+    const GRIMM = '00000000-0000-4000-8000-0000000000b3';
+
+    it('takes references with and without a locator, a blank one as none', () => {
+      const parsed = Schema.parse({
+        ...base,
+        references: [
+          { referenceId: SIMEK, locator: ' p. 112 ' },
+          { referenceId: SMITH, locator: '  ' },
+          { referenceId: ` ${GRIMM} ` },
+        ],
+      });
+
+      expect(parsed.references).toEqual([
+        { referenceId: SIMEK, locator: 'p. 112' },
+        { referenceId: SMITH, locator: null },
+        { referenceId: GRIMM, locator: null },
+      ]);
+    });
+
+    it.each([
+      ['names no reference', { referenceId: '  ' }],
+      ['names an id that is not one', { referenceId: 'simek-1993' }],
+    ])('refuses an entry that %s, pathed to the entry', (_case, entry) => {
+      const result = Schema.safeParse({
+        ...base,
+        references: [{ referenceId: SIMEK }, entry],
+      });
+
+      expect(failedPaths(result)).toEqual([['references', 1]]);
+    });
+
+    // `reference_links_ingredient_unique` would refuse the second copy;
+    // saying so here keeps its 23505 from being what a user sees.
+    it('refuses the same reference twice, whatever its locator, pathed to the repeat', () => {
+      const result = Schema.safeParse({
+        ...base,
+        references: [
+          { referenceId: SIMEK, locator: 'p. 112' },
+          { referenceId: SMITH },
+          { referenceId: SIMEK, locator: 'p. 40' },
+        ],
+      });
+
+      expect(failedPaths(result)).toEqual([['references', 2]]);
+    });
+
+    it('takes no references, absent or empty', () => {
+      expect(Schema.parse(base).references ?? []).toEqual([]);
+      expect(Schema.parse({ ...base, references: [] }).references ?? []).toEqual([]);
+    });
+  });
+
   describe('enum fields', () => {
     const base = { name: 'Testwort', nomenclature: 'none' };
 

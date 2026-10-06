@@ -2,6 +2,7 @@ import { membershipsByUser } from '@/modules/coven';
 import {
   categoriesByIngredient,
   folkNamesByIngredient,
+  referencesByIngredient,
   substitutesByIngredient,
 } from '@/modules/ingredients';
 import { categoryGroupsById, ingredientFormGroupsById } from '@/modules/vocabulary';
@@ -16,6 +17,7 @@ const LOADERS = {
   categoriesByIngredient,
   folkNamesByIngredient,
   substitutesByIngredient,
+  referencesByIngredient,
   categoryGroupsById,
   ingredientFormGroupsById,
 } satisfies Record<string, LoaderFactory<never, unknown>>;

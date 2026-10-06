@@ -7,6 +7,7 @@ import { canonicalKeyOf, ingredients } from '../../modules/ingredients/schema/in
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
+import { citesNothing } from './references';
 import { existsIn, pageBounds, selectFrom } from './select';
 import type {
   CompendiumScore,
@@ -274,7 +275,11 @@ function compendiumList(filter: IngredientFilter): {
 } {
   const match = searchMatch(filter.query);
   return {
-    arms: and(...categoryArms(filter.categoryIds ?? []), formArm(filter.form)),
+    arms: and(
+      ...categoryArms(filter.categoryIds ?? []),
+      formArm(filter.form),
+      filter.withoutReferences ? citesNothing() : undefined,
+    ),
     order: match
       ? {
           sort: [{ expression: sql`-${match.score}`, type: 'real' }, ingredients.name],

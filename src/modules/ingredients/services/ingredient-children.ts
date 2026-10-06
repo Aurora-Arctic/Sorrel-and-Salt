@@ -2,15 +2,17 @@ import 'server-only';
 import {
   findManyByIds,
   findManyOfIngredients,
+  findReferencesOfIngredients,
   findSubstitutesIncludingSoftDeleted,
 } from '../../../db/repository';
+import { byCitation, citationText } from '../../../lib/citation';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { ingredientCategories } from '../schema/ingredient-categories';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import { type Membership, assertMembership } from '@/modules/coven';
-import type { CategoryRow, IngredientKey, SubstituteRow } from '../types';
+import type { CategoryRow, CitedReference, IngredientKey, SubstituteRow } from '../types';
 
 /**
  * The categories each ingredient is filed under, one answer per ref in the
@@ -85,6 +87,36 @@ export async function substitutesOf(
         ingredient: linked?.deletedAt === null ? linked : null,
       }))
       .sort(byName),
+  );
+}
+
+/**
+ * The references each ingredient cites, as §7's `ReferenceLink` reads them —
+ * one answer per ref, alphabetical by the rendered citation, which exists
+ * only here, so the sort is the service's (DESIGN.md §5, "References read
+ * alphabetically"). Only a live reference the ingredient's readers may read
+ * is answered: the compendium's, or the ingredient's own coven's. One read
+ * whatever the batch size, plus one role lookup per coven named; refused
+ * exactly as `categoriesOf` refuses.
+ */
+export async function referencesOf(
+  session: Session | null,
+  refs: readonly IngredientKey[],
+): Promise<(CitedReference[] | Forbidden)[]> {
+  const { memberships, ids, answer } = await admit(session, refs);
+  const rows = await findReferencesOfIngredients(memberships, ids);
+  const cited = rows.map(({ link, reference }) => ({
+    ingredientId: link.ingredientId,
+    citation: citationText(reference),
+    reference,
+    locator: link.locator,
+  }));
+
+  return answer((id) =>
+    cited
+      .filter((row) => row.ingredientId === id)
+      .sort((a, b) => byCitation(a.citation, b.citation))
+      .map(({ reference, locator }) => ({ reference, locator })),
   );
 }
 

@@ -38,6 +38,11 @@ export {
   findSubstitutesIncludingSoftDeleted,
 } from './ingredients';
 export {
+  findManyReferences,
+  findReferenceSuggestions,
+  findReferencesOfIngredients,
+} from './references';
+export {
   findCuratedRowsByName,
   findIngredientFormValues,
   findVocabularySuggestions,
@@ -49,6 +54,7 @@ export { findUserByEmail } from './users';
 export { deleteProvisionalUsers } from './provisional-users';
 export type {
   AuditWriter,
+  CitingLink,
   Claimant,
   CommonNameSuggestion,
   CompendiumScore,
@@ -58,6 +64,8 @@ export type {
   IngredientIdentity,
   IngredientRow,
   JoinedRow,
+  ReferenceLinkRow,
+  ReferenceRow,
   SimilarityScore,
   SlugRedirect,
   SortPart,

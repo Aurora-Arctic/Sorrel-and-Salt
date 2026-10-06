@@ -6,6 +6,7 @@ import {
   updateWorkspaceIngredient,
 } from '../services/workspace-ingredients';
 import { IngredientElementEnum, IngredientRef, NomenclatureEnum } from './ingredient';
+import { ReferenceLinkInput } from './references';
 
 // A coven's own ingredients, written as IngredientForm submits them. Neither
 // input names a tier or a stamp: the coven is the argument the proof is asked
@@ -40,6 +41,7 @@ const IngredientInput = builder.inputType('IngredientInput', {
     colors: t.stringList(),
     safetyNotes: t.string(),
     substitutes: t.field({ type: [SubstituteInput] }),
+    references: t.field({ type: [ReferenceLinkInput] }),
     folkNames: t.stringList(),
   }),
 });
@@ -64,6 +66,7 @@ const IngredientUpdateInput = builder.inputType('IngredientUpdateInput', {
     colors: t.stringList({ required: true }),
     safetyNotes: t.string({ required: true }),
     substitutes: t.field({ type: [SubstituteInput], required: true }),
+    references: t.field({ type: [ReferenceLinkInput], required: true }),
     folkNames: t.stringList({ required: true }),
   }),
 });
@@ -96,10 +99,11 @@ builder.mutationField('updateIngredient', (t) =>
       if (!session) throw new Forbidden();
       const row = await updateWorkspaceIngredient(session, workspaceId, id, input);
       // Root mutation fields run in turn within one request, so an earlier one
-      // may have read this entry's folk names or substitutes; the answer must
-      // be this write's.
+      // may have read this entry's folk names, substitutes or references; the
+      // answer must be this write's.
       loaders.folkNamesByIngredient.clear(row);
       loaders.substitutesByIngredient.clear(row);
+      loaders.referencesByIngredient.clear(row);
       return row;
     },
   }),

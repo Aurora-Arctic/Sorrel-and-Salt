@@ -22,6 +22,7 @@ export type IngredientInput = {
   name: string;
   nomenclature?: Nomenclature | null | undefined;
   planets?: Array<string> | null | undefined;
+  references?: Array<ReferenceLinkInput> | null | undefined;
   safetyNotes?: string | null | undefined;
   substitutes?: Array<SubstituteInput> | null | undefined;
   zodiacSigns?: Array<string> | null | undefined;
@@ -35,6 +36,11 @@ export type Nomenclature =
   | 'none'
   | 'unknown'
   | 'zoological';
+
+export type ReferenceLinkInput = {
+  locator?: string | null | undefined;
+  referenceId: string | number;
+};
 
 /** An ingredient to link, or the name of one not entered: exactly one of the two. */
 export type SubstituteInput = {
