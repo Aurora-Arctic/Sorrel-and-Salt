@@ -19,7 +19,16 @@ describe('category_groups schema', () => {
 
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
-      ['id', 'name', 'slug', 'color_dark', 'color_light', 'description', ...AUDIT_COLUMNS].sort(),
+      [
+        'id',
+        'name',
+        'slug',
+        'color_dark',
+        'color_light',
+        'description',
+        'seed_key',
+        ...AUDIT_COLUMNS,
+      ].sort(),
     );
   });
 
@@ -62,7 +71,7 @@ describe('categories schema', () => {
   // No `color`: the chip colour is the group's pair, one hex per theme (MB.35).
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
-      ['id', 'name', 'slug', 'description', 'group_id', ...AUDIT_COLUMNS].sort(),
+      ['id', 'name', 'slug', 'description', 'group_id', 'seed_key', ...AUDIT_COLUMNS].sort(),
     );
   });
 

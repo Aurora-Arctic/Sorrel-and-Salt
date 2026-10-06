@@ -36,7 +36,7 @@ describe.each(VOCABULARIES)('$name schema', ({ table, name }) => {
 
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
-      ['id', 'name', 'slug', 'description', ...AUDIT_COLUMNS].sort(),
+      ['id', 'name', 'slug', 'description', 'seed_key', ...AUDIT_COLUMNS].sort(),
     );
   });
 
@@ -73,7 +73,11 @@ describe.each(VOCABULARIES)('$name schema', ({ table, name }) => {
     expect(trigram.config.columns).toHaveLength(2);
     expect(trigram.config.unique).toBe(false);
     expect(trigram.config.where).toBeUndefined();
-    expect(Object.keys(byIndexName).sort()).toEqual([`${name}_slug_unique`, `${name}_trgm`]);
+    expect(Object.keys(byIndexName).sort()).toEqual([
+      `${name}_seed_key_unique`,
+      `${name}_slug_unique`,
+      `${name}_trgm`,
+    ]);
   });
 });
 
@@ -126,7 +130,7 @@ describe.each(VOCABULARIES)('$name table', ({ name, row, rename }) => {
 
   it('carries exactly the §5 columns in the catalogue', async () => {
     expect((await catalogue.columnNames(name)).sort()).toEqual(
-      ['id', 'name', 'slug', 'description', ...AUDIT_COLUMNS].sort(),
+      ['id', 'name', 'slug', 'description', 'seed_key', ...AUDIT_COLUMNS].sort(),
     );
   });
 
@@ -152,8 +156,12 @@ describe.each(VOCABULARIES)('$name table', ({ name, row, rename }) => {
     expect(index?.definition).toContain('USING gin (name gin_trgm_ops, description gin_trgm_ops)');
   });
 
-  it('carries no unique index beyond the primary key and the slug', async () => {
-    expect(await catalogue.uniqueIndexNames(name)).toEqual([`${name}_pkey`, `${name}_slug_unique`]);
+  it('carries no unique index beyond the primary key, the slug and the seed key', async () => {
+    expect(await catalogue.uniqueIndexNames(name)).toEqual([
+      `${name}_pkey`,
+      `${name}_seed_key_unique`,
+      `${name}_slug_unique`,
+    ]);
   });
 
   describe('slug uniqueness', () => {

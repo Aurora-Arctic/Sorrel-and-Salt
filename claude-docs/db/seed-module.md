@@ -67,6 +67,20 @@ items)`, the one-tier counterpart for a vocabulary with no group — each item
 by slug, the same rules — which `seedAstrologyVocabularies` calls once
 for `planets` and once for `zodiac_signs`.
 
+**Seed keys (MB.171).** Every table the reference data writes — the eight
+vocabularies and `references` — carries `seed_key`, the identity the seed
+gave a row when it inserted it: a vocabulary row's slug at insert, a
+reference's rendered citation. It is never changed after, and null on a row
+an admin or a member wrote, under a partial unique index on live keyed rows.
+Keyed by the slug alone, a reseed after an admin renamed a row would not
+recognise it, since the slug follows the name, and would put the original
+back beside it; a reference's citation follows every field the same way.
+`0044_seed-keys` backfilled each row the bootstrap user created with its
+slug, exact because no rename writer had shipped. Nothing outside
+`src/db/seed/` writes the column, and no input, service or GraphQL field
+names it. The two helpers above key on it from MB.172, and the sources seed
+from MB.156 ([`mb.171-seed-keys.md`](../design-decisions/mb.171-seed-keys.md)).
+
 **`minimal`** (`src/db/seed/minimal.ts`): one system user, one user, empty
 compendium. The system user is the bootstrap user under the fixed
 `BOOTSTRAP_USER_ID` (`…0001`, MB.5), inserted as its own

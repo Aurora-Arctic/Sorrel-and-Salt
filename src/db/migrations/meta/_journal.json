@@ -309,6 +309,13 @@
       "when": 1791319560914,
       "tag": "0043_admin-role-changes",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1791324290894,
+      "tag": "0044_seed-keys",
+      "breakpoints": true
     }
   ]
 }
