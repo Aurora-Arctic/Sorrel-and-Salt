@@ -185,10 +185,10 @@ beforeEach(async () => {
 
 describe('ingredients table', () => {
   // A column the schema has stopped declaring outlives it in the database for
-  // one deploy, until its drop: `deities`, undeclared by MB.167 for
-  // `ingredient_deities` and dropped by MB.168, is the one pending.
-  it('carries the columns the schema declares, and the deities list awaiting its drop', async () => {
-    expect(await catalogue.columnNames('ingredients')).toEqual([...COLUMNS, 'deities'].sort());
+  // one deploy, until its drop. None is pending: `deities`, undeclared by
+  // MB.167 for `ingredient_deities`, was the last, and MB.168 dropped it.
+  it('carries the columns the schema declares and no other', async () => {
+    expect(await catalogue.columnNames('ingredients')).toEqual([...COLUMNS].sort());
   });
 
   it('declares no deities column, so nothing can write the list the app no longer reads', () => {

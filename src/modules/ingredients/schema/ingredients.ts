@@ -81,8 +81,7 @@ export const ingredients = pgTable(
     // Substitutes are the child table `ingredient_substitutes`, not the
     // `substitutes text[]` MB.141 dropped: a list of text cannot hold a link
     // (MB.138). Deities are `ingredient_deities` for the same reason: MB.167
-    // stopped declaring `deities text[]`, which stays in the database until
-    // MB.168 drops it, so `db:generate` emits that drop on any branch before it
+    // stopped declaring `deities text[]` and MB.168 dropped it
     // (claude-docs/db/identity-model.md, "The ingredient identity model").
     ...auditColumns,
   },

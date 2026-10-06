@@ -27,7 +27,7 @@ A member writes deities, so by MB.35's rule each entry is text over a
 vocabulary rather than a foreign key: a value off the list stays writable on
 a coven's ingredient. A pick records its curated row beside the text, in
 `ingredient_deities`, which every reader and writer uses since MB.167 and
-which replaces the list once MB.168 drops it
+which replaced the list MB.168 dropped
 ([`identity-model.md`](identity-model.md); MB.165), so Greek and Roman Hecate
 stay told apart after a save, and the text stays the value. Soft-deleting a
 row rewrites none of a coven's, its value moving into the in-use bucket instead. A compendium entry's

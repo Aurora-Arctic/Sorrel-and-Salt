@@ -72,7 +72,9 @@ MB.141's `0039_drop-substitutes-list`, a plain `generate` once nothing else
 was pending, also fills before it drops, for whatever the deploy before the
 switch wrote after the first fill. Unlike `0031`, that refill only adds: by
 the drop the switch has been writing the table, so a row there, live or
-removed, is newer than the list.
+removed, is newer than the list. MB.168's `0048_drop-deities-list` is the
+second, its refill placing each entry after the rows its ingredient holds,
+since that list keeps the order entered.
 
 Renaming a column is the canonical case that goes wrong if done directly —
 `ALTER TABLE ... RENAME COLUMN` is atomic in Postgres, but it isn't atomic
@@ -221,7 +223,7 @@ and goes red on a real omission. It was permanently red before, first because
 the bare command _was_ that full scan (fixed in MB.37) and then because the
 acknowledgements it needed only ever existed in PR bodies.
 
-Nine migrations carry findings today, and each has its sidecar:
+Ten migrations carry findings today, and each has its sidecar:
 
 | Migration                              | Findings                                                                                                                             |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -234,6 +236,7 @@ Nine migrations carry findings today, and each has its sidecar:
 | `0037_drop-element.sql`                | the single `element` column dropped, the contract half of MB.157's list (MB.160)                                                     |
 | `0038_unknown-carries-formal-name.sql` | `ingredients_nomenclature_declares_canonical_name` dropped and re-added wider under the same name (MB.161)                           |
 | `0039_drop-substitutes-list.sql`       | `ingredients.substitutes` dropped, the contract half of MB.140's switch, after a refill into `ingredient_substitutes` (MB.141)       |
+| `0048_drop-deities-list.sql`           | `ingredients.deities` dropped, the contract half of MB.167's switch, after a refill into `ingredient_deities` (MB.168)               |
 
 **`0002`'s sidecar was written retroactively, and says so.** This document
 previously claimed its `DROP CONSTRAINT` and two `NOT NULL` columns "were

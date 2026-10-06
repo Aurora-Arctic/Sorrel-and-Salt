@@ -184,6 +184,16 @@
   the drop `generate` also emitted is left out and the column kept in
   `0044_snapshot.json`: the state ["Expand/contract"](expand-contract.md)'s
   procedure leaves, and a scratch `generate` from it emits that drop alone.
+- **`0048_drop-deities-list.sql`** (MB.168) is the contract of MB.167's
+  switch, a plain `generate` as 0039 was: it emitted the
+  `DROP COLUMN "deities"` alone. Before the drop it copies across, as
+  unlinked names, any list entry the ingredient holds no row for, linked or
+  not, live or removed, in any case, each after the ingredient's live rows in
+  the list's order. Its sidecar acknowledges the drop, and says why production
+  is not its gate: production is not live, the owner's call, so the release
+  carrying MB.167 carries this too, and v0.5.0's reads fail only for that
+  rollout. `ingredient-deities-schema.test.ts` adds the column back in its
+  clone to re-run both fills. See ["Expand/contract"](expand-contract.md).
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
