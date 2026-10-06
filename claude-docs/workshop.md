@@ -88,7 +88,12 @@ without a page routed to it.
   frame the containing block so a `position: fixed` child pins to the story
   rather than Ladle's chrome; `overflow: hidden` so it clips like a viewport;
   `.ladle-main` gutter zeroed and re-added on the frame, 3rem a side, and
-  `space(4)` below 30rem, where 3rem would leave a 375px story 279px. Also carries the
+  `space(4)` below 30rem, where 3rem would leave a 375px story 279px, and 6rem
+  at the bottom from 48rem, where Ladle pins its toolbar over the window's
+  bottom edge and a long story's last line sat beneath it (MB.131). It also
+  holds `.story-guide` and `.story-note`, a story's own "what to try" panel
+  and the line saying what it stands in for, such as where a page would
+  navigate. Also carries the
   `.ladle-story-frame--reduced-motion` rule the `reducedMotion` pin above
   toggles — a `!important` blanket over every transition in the frame, not
   just the ones the app's own `reduced-motion` mixin reaches, since the real
@@ -219,7 +224,12 @@ environment. Production and hotfix previews never carry it.
   Ladle is a single page routed by `?story=`, and Next serves no directory
   index.
 - **No application data is reachable through it.** The build is static — no
-  story calls GraphQL, and `meta.json` is the story index. The workshop's own
+  story reaches GraphQL, and `meta.json` is the story index. A story whose
+  component asks `/api/graphql` answers it in the page: `IngredientForm`'s
+  stands in for `window.fetch` while mounted and answers its lookups from
+  invented rows ([`components/ingredient-form.md`](components/ingredient-form.md), "Stories"),
+  so the request never leaves the page and the policy below has nothing to
+  refuse. The workshop's own
   scripts nonetheless run on the app's origin carrying an admin's cookie, so
   every workshop response carries `connect-src 'none'`: `fetch`, XHR and
   WebSockets from the page are refused by the browser, `/api/graphql`

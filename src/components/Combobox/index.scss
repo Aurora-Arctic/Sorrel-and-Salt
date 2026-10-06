@@ -36,6 +36,34 @@
   }
 }
 
+// The select-only box: the control itself takes the focus and the press,
+// so it draws its own ring, and points rather than shows a caret.
+.combobox__control--select {
+  cursor: pointer;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// A chosen value, or the placeholder, at the text's height and inset. Its
+// line is the input's whole height, so the text sits centred in it as an
+// input centres its own, and a select's text lines up with a typed box's.
+.combobox__value {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 2rem;
+  padding: space(1) 0;
+  overflow: hidden;
+  line-height: 2rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &.is-placeholder {
+    color: $text-placeholder;
+  }
+}
+
 .combobox__values {
   display: flex;
   flex: 1;
@@ -155,8 +183,9 @@
   padding: 0;
 }
 
+// A bucket's heading, set off from the rows above it by a step of space.
 .combobox__heading {
-  padding: space(1) space(3);
+  padding: space(3) space(3) space(1);
   color: $text-muted;
   font-size: type-size('caption');
   font-weight: 500;

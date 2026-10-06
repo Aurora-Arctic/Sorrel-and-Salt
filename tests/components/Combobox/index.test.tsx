@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import Combobox, { ComboboxEntry } from '@/components/Combobox';
+import Combobox, { ComboboxEntry, ComboboxSelect } from '@/components/Combobox';
 import type { ComboboxOption, Suggestions } from '@/components/Combobox/types';
 import type { HarnessProps } from './types';
 
@@ -128,8 +128,8 @@ describe('Combobox', () => {
 
     type('wax');
 
-    const curated = screen.getByRole('group', { name: 'Curated' });
-    const inUse = screen.getByRole('group', { name: 'In use' });
+    const curated = screen.getByRole('group', { name: 'From Compendium' });
+    const inUse = screen.getByRole('group', { name: 'From Coven' });
     expect(within(curated).getAllByRole('option')).toHaveLength(2);
     expect(within(inUse).getAllByRole('option')).toHaveLength(1);
     expect(within(inUse).getByRole('option', { name: /Rhizomes/ })).toBeInTheDocument();
@@ -186,6 +186,26 @@ describe('Combobox', () => {
     expect(box()).toHaveAttribute('aria-expanded', 'false');
     // The text is the caller's to set: it still reads what was typed.
     expect(box()).toHaveValue('wax');
+  });
+
+  // Two ingredients can share a label, a formal name and a tier (MB.131).
+  it('tells apart rows that read alike by their own keys', () => {
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const onPick = vi.fn();
+    const first: ComboboxOption = { value: 'Mockwort', note: 'This coven’s entry', key: 'one' };
+    const second: ComboboxOption = { ...first, key: 'two' };
+    render(<Harness suggestions={{ options: [first, second], pending: false }} onPick={onPick} />);
+
+    type('mock');
+    key('ArrowDown');
+    key('ArrowDown');
+    key('ArrowDown');
+    key('Enter');
+
+    expect(onPick).toHaveBeenCalledWith('Mockwort', second);
+    // React's warning for two rows under one key.
+    expect(errors.mock.calls.flat().join(' ')).not.toContain('same key');
+    errors.mockRestore();
   });
 
   it('picks a suggestion by click', () => {
@@ -465,6 +485,64 @@ describe('Combobox', () => {
         screen.getByRole('button', { name: 'Remove Hedge Fixture' }),
       ).toHaveAccessibleDescription('This folk name is already listed');
       expect(screen.getByRole('listitem')).toHaveClass('is-invalid');
+    });
+  });
+
+  // The closed-set sibling (MB.131): the same control and list, nothing typed.
+  describe('the select-only box', () => {
+    const ELEMENTS = [
+      { value: '', label: 'None' },
+      { value: 'earth', label: 'Earth' },
+      { value: 'air', label: 'Air' },
+    ];
+
+    function SelectHarness({ placeholder }: { placeholder?: string }) {
+      const [value, setValue] = useState('unset');
+      return (
+        <ComboboxSelect
+          id="element"
+          label="Element"
+          value={value}
+          onChange={setValue}
+          choices={ELEMENTS}
+          placeholder={placeholder}
+          required
+          aria-describedby="element-hint"
+        />
+      );
+    }
+    const element = () => screen.getByRole('combobox', { name: 'Element' });
+
+    it('is a select-only combobox named by its label, showing the placeholder until a choice', () => {
+      render(<SelectHarness placeholder="Choose an element" />);
+
+      expect(element()).toHaveAttribute('aria-label', 'Element');
+      expect(element()).not.toHaveAttribute('aria-autocomplete');
+      expect(element()).toBeRequired();
+      expect(element()).toHaveAttribute('aria-describedby', 'element-hint');
+      expect(element()).toHaveTextContent('Choose an element');
+
+      fireEvent.click(element());
+      const list = screen.getByRole('listbox', { name: 'Element choices' });
+      expect(
+        within(list)
+          .getAllByRole('option')
+          .map((option) => option.textContent),
+      ).toEqual(['None', 'Earth', 'Air']);
+      fireEvent.click(within(list).getByRole('option', { name: 'Air' }));
+
+      expect(element()).toHaveTextContent('Air');
+      expect(element()).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('chooses None, the choice whose value is blank, like any other', () => {
+      render(<SelectHarness placeholder="Choose an element" />);
+
+      fireEvent.click(element());
+      fireEvent.click(screen.getByRole('option', { name: 'None' }));
+
+      expect(element()).toHaveTextContent('None');
+      expect(element()).not.toHaveTextContent('Choose an element');
     });
   });
 });

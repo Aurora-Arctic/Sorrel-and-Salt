@@ -75,13 +75,14 @@ It names _which naming system_ a formal name belongs to, not which rank
 within that system — `Quartz var. amethyst` and `Lapis lazuli` are both
 `mineral` even though one is an IMA variety and the other a rock. `unknown`
 and `none` are both answers, not the absence of one: `unknown` means a formal
-name exists in some system but nobody has looked it up yet (§5 says why that
-earns a value of its own); `none` is the
+name exists in some system but which one is not settled — the name may be
+recorded, unconfirmed, or not yet looked up (§5 says why that earns a value
+of its own, and MB.161 why it may carry the name); `none` is the
 positive claim that no naming system names this thing at all (graveyard
-dirt, moon water, black salt). A CHECK ties the two together —
-`(nomenclature IN ('none','unknown')) = (canonical_name IS NULL)`, enforced
-in both directions, so the enum value and the presence of a formal name can
-never disagree.
+dirt, moon water, black salt). A CHECK ties the kind to the name —
+`nomenclature = 'unknown' OR (nomenclature = 'none') = (canonical_name IS NULL)`,
+enforced in both directions, so `none` never carries a formal name and a
+named kind never lacks one, while `unknown` takes either.
 
 **`canonical_key`**, the generated identity column, is DESIGN.md §5's
 `GENERATED ALWAYS AS (…) STORED` expression as written there: the lower-cased

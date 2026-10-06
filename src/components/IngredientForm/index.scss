@@ -88,6 +88,13 @@
   }
 }
 
+// A busy save leads with the spinner, and the button's full side padding,
+// sized for a word, reads as a gap before a small round mark; the left side
+// comes in a step while it shows.
+.ingredient-form .btn[aria-busy='true'] {
+  padding-left: space(3);
+}
+
 @keyframes ingredient-form-spin {
   to {
     transform: rotate(1turn);

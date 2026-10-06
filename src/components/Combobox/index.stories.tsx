@@ -1,6 +1,6 @@
 import type { Story } from '@ladle/react';
 import { useState } from 'react';
-import Combobox, { ComboboxEntry } from '.';
+import Combobox, { ComboboxEntry, ComboboxSelect } from '.';
 import type { ComboboxOption } from './types';
 
 // Render-only; behaviour is asserted in tests/components/Combobox. The
@@ -97,5 +97,30 @@ export const NoSource: Story = () => {
   const [value, setValue] = useState('');
   return (
     <Combobox id="colour" label="Colour" value={value} onChange={setValue} onPick={setValue} />
+  );
+};
+
+const KINDS = ['Botanical', 'Fungal', 'Zoological', 'Mineral', 'Chemical', 'Unknown', 'None'].map(
+  (label) => ({ value: label.toLowerCase(), label }),
+);
+
+/** The select-only box: a closed set on the same control and list, nothing typed, a placeholder until a choice is made. */
+export const SelectOnly: Story = () => {
+  const [value, setValue] = useState('');
+  return (
+    <>
+      <label id="classification-label" htmlFor="classification">
+        Classification
+      </label>
+      <ComboboxSelect
+        id="classification"
+        label="Classification"
+        labelId="classification-label"
+        value={value}
+        onChange={setValue}
+        choices={KINDS}
+        placeholder="Choose a classification"
+      />
+    </>
   );
 };
