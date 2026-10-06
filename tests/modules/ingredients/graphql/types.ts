@@ -57,6 +57,12 @@ export interface Answer<T> {
   errors?: WireError[];
 }
 
+/** One `Substitute`, its ingredient selected by id and label. */
+export interface SubstituteNode {
+  name: string;
+  ingredient: { id: string; name?: string } | null;
+}
+
 export interface WorkspaceIngredientNode {
   id: string;
   name: string;
@@ -64,7 +70,13 @@ export interface WorkspaceIngredientNode {
   element: string | null;
   deities: string[] | null;
   folkNames: string[];
+  substitutes: SubstituteNode[];
   isGlobal: boolean;
   audit: { createdBy: string; updatedBy: string };
   [field: string]: unknown;
+}
+
+export interface IngredientSuggestionConnection {
+  edges: { cursor: string; node: DuplicateNode }[];
+  pageInfo: { hasNextPage: boolean; endCursor: string | null };
 }

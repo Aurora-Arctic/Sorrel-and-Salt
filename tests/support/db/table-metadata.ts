@@ -29,8 +29,11 @@ export const AUDIT_COLUMNS: readonly string[] = [
 export const AUDITED_TABLES = [
   'categories',
   'category_groups',
+  'deities',
+  'deity_traditions',
   'ingredient_categories',
   'ingredient_folk_names',
+  'ingredient_substitutes',
   'ingredient_form_groups',
   'ingredient_forms',
   'ingredients',

@@ -56,10 +56,10 @@ beforeEach(async () => {
   await sql`truncate ingredients cascade`;
 });
 
-/** The fixture as the service's input: everything but the tier and the category names. */
+/** The fixture as the service's input: everything but the tier and the category names, its substitutes typed. */
 function inputOf(fixture: IngredientFixture): CompendiumIngredientInput {
-  const { workspaceId: _tier, categories: _categories, ...input } = fixture;
-  return input;
+  const { workspaceId: _tier, categories: _categories, substitutes, ...input } = fixture;
+  return { ...input, substitutes: substitutes.map((name) => ({ ingredientId: null, name })) };
 }
 
 const entry = (overrides: Overrides<IngredientFixture> = {}) => inputOf(makeIngredient(overrides));
@@ -120,6 +120,24 @@ describe('createCompendiumEntry', () => {
       deletedAt: null,
     });
     expect(created.slug).toBe(ingredientSlug('Testwort', 'herb', 'Fixtura testalis'));
+  });
+
+  it('saves several planets, signs and colours, each in the order entered', async () => {
+    const created = await createCompendiumEntry(admin, {
+      ...entry(),
+      planets: ['Venus', 'Moon'],
+      zodiacSigns: ['Taurus', 'Libra'],
+      colors: ['Green', '', 'Pink'],
+    });
+
+    expect(await rowOf(created.id)).toMatchObject({
+      planets: ['Venus', 'Moon'],
+      zodiac_signs: ['Taurus', 'Libra'],
+      colors: ['Green', 'Pink'],
+      planet: null,
+      zodiac: null,
+      color: null,
+    });
   });
 
   it('writes the folk names with the entry, stamped by the admin', async () => {
@@ -198,6 +216,27 @@ describe('updateCompendiumEntry', () => {
     await updateCompendiumEntry(admin, id, { ...entry(), description: undefined });
 
     expect((await rowOf(id)).description).toBeNull();
+  });
+
+  it('replaces each list whole, an empty one clearing it', async () => {
+    const id = await seed({
+      planets: ['Moon', 'Venus'],
+      zodiacSigns: ['Cancer'],
+      colors: ['Silver'],
+    });
+
+    await updateCompendiumEntry(admin, id, {
+      ...entry(),
+      planets: ['Mars'],
+      zodiacSigns: [],
+      colors: ['White', 'Silver'],
+    });
+
+    expect(await rowOf(id)).toMatchObject({
+      planets: ['Mars'],
+      zodiac_signs: null,
+      colors: ['White', 'Silver'],
+    });
   });
 
   it('brings its folk names to the list given, tombstoning the dropped as the admin', async () => {

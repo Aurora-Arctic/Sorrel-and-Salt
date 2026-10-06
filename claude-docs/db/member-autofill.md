@@ -2,15 +2,17 @@
 
 `findVocabularySuggestions(membership, vocabulary, query, page)` in
 `src/db/repository/vocabularies.ts` is the read behind `planetSuggestions`,
-`zodiacSuggestions` and `formSuggestions`
+`zodiacSuggestions`, `formSuggestions` and `deitySuggestions`
 ([`graphql/schema.md`](../graphql/schema.md)). Its services are
-`suggestPlanets`, `suggestZodiacSigns` and `suggestForms` in `vocabulary`, which
-ask `ingredient: ['read']`: the curated rows are global, and every in-use value
+`suggestPlanets`, `suggestZodiacSigns`, `suggestForms` and `suggestDeities` in
+`vocabulary`, which ask `ingredient: ['read']`: the curated rows are global, and every in-use value
 is one a reader of the workspace could already list. A caller names a table and
 nothing else. The ingredient column each table suggests for is paired in the
-repository, keyed by table name, so a caller cannot hand `planets` the `zodiac`
-column, and a fourth vocabulary does not compile until it names its column.
-`ingredient_forms` is the third, paired with `form` (M4.7a).
+repository's `IN_USE`, keyed by table name, so a caller cannot hand `planets`
+the `zodiac_signs` list, and a fifth vocabulary does not compile until it
+names its column. `planets`, `zodiac_signs` and `deities` are paired with
+the lists of the same names, `ingredient_forms` with the single `form`
+(M4.7a).
 
 One page is one statement: a `UNION ALL` of three tiers, sorted, bounded and
 cut by cursor as a whole.
@@ -35,6 +37,14 @@ cut by cursor as a whole.
   carry the ranking the story asks for — a name match before a description
   match, curated before in use — and a name is an exact cursor key where a
   float score is not.
+- **A list is read entry by entry** (MB.136). An `InUseSource` is a
+  `column` or a `list`, and `inUseRows` turns a list into
+  `ingredients cross join lateral unnest(list) as entry(value)`, one row per
+  entry, before anything trims or folds it. The scope and the soft-delete
+  filter are still the ingredient's, so an entry is in scope exactly when its
+  row is, and the grouping below makes a value held by several lists, or
+  twice by one, a single suggestion. A row with no list unnests to nothing.
+  `deities` is read the same way (MB.130).
 - **An in-use value is folded to `lower(btrim(value))`**, so `Moon`, `moon`
   and `Moon` are one value, offered in the spelling most of those entries
   use (`mode()`, a tie broken by sort order). A blank value is no value. A
@@ -60,8 +70,8 @@ cut by cursor as a whole.
   `findPage`.
 
 **A form suggestion carries two things more** (M4.7a), and only a form's
-does — the finder is overloaded on the table, so a planet or sign suggestion
-has neither:
+carries both — the finder is overloaded on the table, so a planet or sign
+suggestion has neither, and a deity's has the first alone, below:
 
 - **Its group.** `ingredient_forms` is unique on the slug alone, so two live
   rows may share a display name ("Wax", animal and substance), and
@@ -83,6 +93,19 @@ has neither:
   its name. `json_agg`, not `jsonb_agg`, so the order it is built in is the
   order read. Both same-named forms carry the same claimants, since the
   string is all an ingredient holds.
+
+**A deity suggestion carries its tradition** (MB.130), as a form's carries
+its group, and for the same reason: `deities` is unique on the slug alone,
+and a reader choosing among 216 chooses by tradition, "Hecate (Greek)"
+([`deity-vocabulary.md`](deity-vocabulary.md)). The finder treats the two
+alike: `groupingOf` names each two-tier vocabulary's group table and the key
+filing a row under it, and tiers 0 and 1 join through it, so **a deity is
+curated only while its tradition is live too**, both `deleted_at`s filtered
+in all three tiers, and a dead tradition's name is never returned. **It
+carries no claimants.** A form's claimants show which entries already share
+an identity with the one being written, and a deity is no part of an
+ingredient's identity, so `DeitySuggestion` is `FormSuggestion` without
+them, and the claim join is not made.
 
 **The common-name autofill** (M4.7a) is `findCommonNameSuggestions(membership,
 query, page)` in `src/db/repository/common-names.ts`, the read behind
@@ -125,14 +148,16 @@ the way:
   self-join elimination removes, leaving the same plan. It survives there
   only because its `IN` is a union over two tables.
 
-**No planner assertion for the vocabularies.** At nineteen, thirteen and
-seventy-eight rows `planets_trgm`, `zodiac_signs_trgm` and
-`ingredient_forms_trgm` are never chosen over a sequential scan, so
+**No planner assertion for the vocabularies.** At nineteen, thirteen,
+seventy-eight and 216 rows `planets_trgm`, `zodiac_signs_trgm`,
+`ingredient_forms_trgm` and `deities_trgm` are never chosen over a
+sequential scan, so
 `suggestions-query.test.ts` asserts what the service sends instead: both
 thresholds set in the transaction before the match, `%` and `<%` where a
 `similarity()` comparison could have been, the scope and soft-delete
 predicates, and the fold. It captures the statements as
 `duplicates-plan.test.ts` does. `suggestions.test.ts`,
-`form-suggestions.test.ts` and `common-name-suggestions.test.ts` hold the
+`form-suggestions.test.ts`, `deity-suggestions.test.ts` and
+`common-name-suggestions.test.ts` hold the
 behaviour, each refusal and scope case with the precondition that made it
 possible.

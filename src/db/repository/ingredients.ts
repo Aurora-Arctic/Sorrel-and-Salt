@@ -1,7 +1,8 @@
-import { and, eq, inArray, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable, alias } from 'drizzle-orm/pg-core';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
+import { ingredientSubstitutes } from '../../modules/ingredients/schema/ingredient-substitutes';
 import { canonicalKeyOf, ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
@@ -11,7 +12,9 @@ import type {
   CompendiumScore,
   IngredientFilter,
   IngredientIdentity,
+  IngredientRow,
   IngredientScoped,
+  JoinedRow,
   Keyset,
   NotSpellScoped,
   SimilarityScore,
@@ -49,6 +52,50 @@ export function findManyOfIngredients<
       inArray(table.ingredientId, [...ingredientIds]),
       existsIn(ingredients, readableParent),
     ),
+  );
+}
+
+/**
+ * The live substitutes of these ingredients, each beside the ingredient it
+ * links — soft-deleted or not — or null for a typed name. The third escape
+ * hatch (MB.138): a link to a deleted ingredient is kept, and reads as that
+ * ingredient's last name (claude-docs/db/soft-delete.md, "Soft-delete
+ * filtering"). It skips the linked ingredient's filter and no other. The
+ * substitute's own tombstone filters; its parent must be live and readable,
+ * as `findManyOfIngredients` reads it; and the link must point where the
+ * parent's readers may look — the compendium, or the parent's own coven — so a
+ * row written past the service's tier rule shows nothing. One statement for
+ * the whole batch: the linked ingredient is a left join, under an alias, since
+ * the parent's correlated subquery reads `ingredients` itself.
+ */
+export function findSubstitutesIncludingSoftDeleted(
+  memberships: readonly Membership[],
+  ingredientIds: readonly string[],
+): Promise<JoinedRow<typeof ingredientSubstitutes.$inferSelect, IngredientRow>[]> {
+  if (ingredientIds.length === 0) return Promise.resolve([]);
+  const linked = alias(ingredients, 'linked');
+  return selectFrom(
+    ingredientSubstitutes,
+    and(
+      notSoftDeleted(ingredientSubstitutes),
+      inArray(ingredientSubstitutes.ingredientId, [...ingredientIds]),
+      existsIn(
+        ingredients,
+        and(
+          eq(ingredients.id, ingredientSubstitutes.ingredientId),
+          or(
+            inCompendium(ingredients),
+            ...memberships.map((membership) => scopedTo(membership, ingredients)),
+          ),
+          or(
+            isNull(ingredientSubstitutes.substituteId),
+            inCompendium(linked),
+            eq(linked.workspaceId, ingredients.workspaceId),
+          ),
+        ),
+      ),
+    ),
+    { leftJoin: linked, on: eq(linked.id, ingredientSubstitutes.substituteId) },
   );
 }
 
@@ -141,6 +188,33 @@ export function findCompendiumCount(
 }
 
 /**
+ * One page of the live ingredients a coven's substitute may link — the
+ * compendium's and the proof's workspace's (MB.138) — matched and ordered as
+ * the compendium search is, best match first, so a typed prefix finds its
+ * entry where `findSimilarIngredients`' whole-string 0.4 would not. A blank
+ * `query` lists both tiers by name (claude-docs/db/compendium-read.md,
+ * "The ingredient picker's search").
+ */
+export function findIngredientSuggestions(
+  membership: Membership,
+  query: string,
+  page: PageRequest,
+): Promise<PageEntry<typeof ingredients.$inferSelect, CompendiumScore>[]> {
+  const list = compendiumList({ query });
+  const keyset = { ...list.order, request: page };
+  return selectFrom(
+    ingredients,
+    and(
+      or(inCompendium(ingredients), scopedTo(membership, ingredients)),
+      notSoftDeleted(ingredients),
+      list.arms,
+      pageBounds(keyset),
+    ),
+    keyset,
+  );
+}
+
+/**
  * One live ingredient by id, in the compendium or in a coven one of
  * `memberships` proves — `undefined` otherwise, which is also the answer for
  * a coven's row asked for without its proof: a caller holding an id it saw
@@ -190,7 +264,8 @@ export async function findCompendiumEntryByIdentity(
 /**
  * What a compendium page and its count share: the filter's arms, and the key
  * with the search's join — built in one place, so the count reads the rows
- * the pages hold in the order they hold them. A search keys `[-score, name]`,
+ * the pages hold in the order they hold them, and the ingredient picker
+ * matches as the compendium does. A search keys `[-score, name]`,
  * negated so one ascending row comparison bounds it; a browse keys `[name]`.
  */
 function compendiumList(filter: IngredientFilter): {

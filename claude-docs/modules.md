@@ -28,9 +28,11 @@ registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
 `graphql/` path, which is internal. `identity` has `User` and `me`; `coven` has
 `Workspace`, `WorkspaceMember`, the `membershipsByUser` loader and the
 `User.memberships` field; `vocabulary` has `CorrespondenceSuggestion`,
-`FormSuggestion`, `SuggestionClaimant` and the `planetSuggestions`,
-`zodiacSuggestions` and `formSuggestions` connections; `ingredients` has
-`Ingredient`, the `compendium`, `ingredient` and `possibleDuplicates` queries,
+`FormSuggestion`, `DeitySuggestion`, `SuggestionClaimant` and the
+`planetSuggestions`, `zodiacSuggestions`, `formSuggestions` and
+`deitySuggestions` connections; `ingredients` has
+`Ingredient`, the `compendium`, `ingredient`, `possibleDuplicates` and
+`ingredientSuggestions` queries,
 the two workspace ingredient mutations, and `CommonNameSuggestion` and
 `commonNameSuggestions`, whose claimants reuse `vocabulary`'s
 `SuggestionClaimant` — the edge runs that way round — plus the
@@ -60,13 +62,13 @@ What stays outside a module, and why:
 Every table has exactly one owner. The services column is what exists today;
 a service lands in the module that owns the table it writes.
 
-| Module        | Tables                                                                                                                      | Services today                                                                                                                     |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `identity`    | `users`, `sessions`, `accounts`, `verifications`, `rate_limits`; later `admin_invitations`                                  | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                     |
-| `coven`       | `workspaces`, `workspace_members`, `workspace_invitations`                                                                  | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                             |
-| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`                    | `suggestions.ts`                                                                                                                   |
-| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs` | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`; `schema/units.ts` is the unit vocabulary |
-| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                           | `spell-visibility.ts`                                                                                                              |
+| Module        | Tables                                                                                                                                                | Services today                                                                                                                     |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `identity`    | `users`, `sessions`, `accounts`, `verifications`, `rate_limits`; later `admin_invitations`                                                            | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                     |
+| `coven`       | `workspaces`, `workspace_members`, `workspace_invitations`                                                                                            | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                             |
+| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)      | `suggestions.ts`                                                                                                                   |
+| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_substitutes`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs` | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`; `schema/units.ts` is the unit vocabulary |
+| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                                     | `spell-visibility.ts`                                                                                                              |
 
 **The compendium is a tier inside `ingredients`, not a module**: the
 `workspace_id IS NULL` tier of the one table, reached through `ingredients`'
@@ -187,7 +189,7 @@ name rather than credited to whichever export happens to sit above it. It
 fails an unlisted function, and it fails a listed one that no longer exists or
 no longer reads the tier.
 
-It holds the predicate, eleven finders and the writer today: `inCompendium` in
+It holds the predicate, thirteen finders and the writer today: `inCompendium` in
 `predicates.ts`, which is `workspace_id IS NULL` itself; `findSimilarIngredients`
 (M4.7), the fuzzy duplicate match; `findVocabularySuggestions` (MB.94, forms
 M4.7a), the planet, zodiac and form autofill; `findCommonNameSuggestions`
@@ -195,11 +197,13 @@ M4.7a), the planet, zodiac and form autofill; `findCommonNameSuggestions`
 ingredient's folk names and category links; `findCompendiumPage` (M8.5), the
 public list, and `findCompendiumCount` (MB.105), its count;
 `findOneIngredient` (M8.5), one row in the compendium or a proof's coven;
+`findIngredientSuggestions` (MB.138), the substitute picker's search;
 `findCompendiumEntryByIdentity` (M5.2), the entry a colliding compendium
 write names; `findCompendiumEntryBySlug` and `findCompendiumSlugRedirect`
 (MB.82), the entry at an address and the one a retired address redirects to;
 `findIngredientsInSpellsIncludingSoftDeleted` (M5.3), what a readable spell
-holds, deleted or not; and `writerFor` (M5.2), the private builder of `withAudit`'s writer, whose
+holds, deleted or not; `findSubstitutesIncludingSoftDeleted` (MB.140), an
+ingredient's substitutes and the ingredients they link, deleted or not; and `writerFor` (M5.2), the private builder of `withAudit`'s writer, whose
 compendium-tier methods update and soft-delete a row only under
 `workspace_id IS NULL` and clear the tier's lapsed slug retirements. The
 list, its count, the identity lookup, the two address finders and the writer

@@ -47,12 +47,12 @@ const DEFAULTS: IngredientFixture = {
   form: 'herb',
   description: null,
   element: null,
-  planet: null,
-  zodiac: null,
+  planets: null,
+  zodiacSigns: null,
   deities: null,
-  color: null,
+  colors: null,
   safetyNotes: null,
-  substitutes: null,
+  substitutes: [],
   folkNames: [],
   categories: [],
 };
@@ -82,12 +82,17 @@ export function makeIngredient(overrides: Overrides<IngredientFixture> = {}): In
 /**
  * The fixture as an insert into `ingredients`, by column name. The child
  * collections are destructured off by name rather than filtered by shape:
- * `deities` and `substitutes` are `text[]` columns too. The slug is derived
+ * `deities` and the other lists are `text[]` columns too. The slug is derived
  * from the label, the form and the formal name, as the seed derives it, never
  * stated. No audit stamps (rule 3).
  */
 export function ingredientColumns(fixture: IngredientFixture): Record<string, unknown> {
-  const { folkNames: _folkNames, categories: _categories, ...row } = fixture;
+  const {
+    folkNames: _folkNames,
+    substitutes: _substitutes,
+    categories: _categories,
+    ...row
+  } = fixture;
 
   return {
     ...toColumns(row),

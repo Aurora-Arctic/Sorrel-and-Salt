@@ -47,7 +47,7 @@ The `db:*` scripts (generate, migrate, seed, drop, reset, studio), `probe-databa
 
 ## The ingredient identity model (MB.28, table M4.1)
 
-`ingredients` (both tiers in one table), `ingredient_forms` and `ingredient_folk_names`: identity is formal name plus form in the generated `canonical_key`, unique per tier by partial index. [`db/identity-model.md`](db/identity-model.md)
+`ingredients` (both tiers in one table), `ingredient_forms`, `ingredient_folk_names` and `ingredient_substitutes`, each substitute a link or a typed name (MB.138, table MB.139): identity is formal name plus form in the generated `canonical_key`, unique per tier by partial index; planets, zodiac signs and colours are `text[]` lists stored as `deities` is, in the order entered (MB.134, MB.136). [`db/identity-model.md`](db/identity-model.md)
 
 ### Fuzzy matching: one index, and a rule every caller is bound by (M4.6)
 
@@ -63,7 +63,11 @@ The `db:*` scripts (generate, migrate, seed, drop, reset, studio), `probe-databa
 
 ## The astrology vocabularies (MB.91; tables MB.92)
 
-`planets` and `zodiac_signs`, the admin-curated lists behind `ingredients.planet` and `.zodiac`, which stay text as `form` does, and the member's autofill, whose finders suggest planets, signs, forms and common names. [`db/astrology-vocabularies.md`](db/astrology-vocabularies.md)
+`planets` and `zodiac_signs`, the admin-curated vocabularies behind the lists `ingredients.planets` and `.zodiac_signs` (MB.136), whose entries stay free text as `form` does, and the member's autofill, whose finders suggest planets, signs, forms and common names. [`db/astrology-vocabularies.md`](db/astrology-vocabularies.md)
+
+## The deity vocabulary (MB.127; tables MB.128)
+
+`deities`, the admin-curated vocabulary behind the list `ingredients.deities`, whose entries stay free text as `form` does, grouped by `deity_traditions` as the forms are by their groups, with a required description that carries each deity's other spellings. [`db/deity-vocabulary.md`](db/deity-vocabulary.md)
 
 ### The member's autofill (MB.94)
 
@@ -199,7 +203,7 @@ The three services that create, update and delete a compendium entry, each behin
 
 ## Soft-delete filtering and the partial-index convention (M1.20)
 
-`findMany`, `findOne` and every other exported finder filter `deleted_at` through `selectFrom` or `existsIn`, bar three `…IncludingSoftDeleted` hatches a guard test pins; every unique index is partial, so a deleted row reserves nothing. [`db/soft-delete.md`](db/soft-delete.md)
+`findMany`, `findOne` and every other exported finder filter `deleted_at` through `selectFrom` or `existsIn`, bar four `…IncludingSoftDeleted` hatches a guard test pins; every unique index is partial, so a deleted row reserves nothing. [`db/soft-delete.md`](db/soft-delete.md)
 
 ## Keyset pages (M3.6)
 
@@ -233,6 +237,10 @@ Story 48's join of a spell to its assigned categories; the derived ones are read
 
 §5's nineteen `planets` and thirteen `zodiac_signs`, seeded the form seed's way through `seedFlatVocabulary`, with descriptions written as searchable glosses and the sources the lists came from. [`db/astrology-vocabulary-seed.md`](db/astrology-vocabulary-seed.md)
 
+## The deity vocabulary seed (list MB.127; seed MB.129)
+
+Thirty-five traditions and 216 deities, the owner's starting list, with their descriptions, what was left out and why, and the sources the list came from; MB.129 seeds and parses it. [`db/deity-vocabulary-seed.md`](db/deity-vocabulary-seed.md)
+
 ## The standard scenario (M1.22)
 
 Fixture users A to E, workspaces W and X and a compendium awkward on purpose: the fixed cast every authorization test reads against. [`db/standard-scenario.md`](db/standard-scenario.md)
@@ -241,9 +249,9 @@ Fixture users A to E, workspaces W and X and a compendium awkward on purpose: th
 
 In [`db/standard-scenario.md`](db/standard-scenario.md#the-compendium-is-awkward-on-purpose).
 
-### One transaction, three vocabularies
+### One transaction, every vocabulary
 
-In [`db/standard-scenario.md`](db/standard-scenario.md#one-transaction-three-vocabularies).
+In [`db/standard-scenario.md`](db/standard-scenario.md#one-transaction-every-vocabulary).
 
 ## The demo scenario (M1.23)
 

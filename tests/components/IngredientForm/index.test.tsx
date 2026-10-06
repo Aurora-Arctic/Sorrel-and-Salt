@@ -1,16 +1,37 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw';
-import { describe, expect, it, vi } from 'vitest';
+import { FormProvider, useForm } from 'react-hook-form';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
+import { ListField } from '@/components/IngredientForm/fields';
 import type {
+  IngredientFormInput,
+  IngredientFormValues,
+  SubstituteListEntry,
+} from '@/components/IngredientForm/types';
+import { EMPTY_VALUES, ingredientResolver } from '@/components/IngredientForm/values';
+import type {
+  CommonNameSuggestionsQuery,
+  CommonNameSuggestionsQueryVariables,
   CreateWorkspaceIngredientMutation,
   CreateWorkspaceIngredientMutationVariables,
+  FormSuggestionsQuery,
+  FormSuggestionsQueryVariables,
+  PossibleDuplicatesQuery,
+  PossibleDuplicatesQueryVariables,
 } from '@/gql/graphql';
+import { DEBOUNCE_MS } from '@/lib/debounce';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
-import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import {
+  graphqlLink,
+  mockGraphQLError,
+  mockGraphQLMutation,
+  mockGraphQLQuery,
+} from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
+import type { DuplicateNode, FormNode, NameNode } from './types';
 
 // The ingredient entry form. The mutation is answered by MSW in the shape
 // /api/graphql answers (tests/support/msw/graphql.ts), so a server error is
@@ -19,8 +40,51 @@ import { server } from '../../support/msw/server';
 
 const WORKSPACE_ID = '7b0c1c3e-5f4a-4d8e-9a51-3c2f0e6d9b17';
 
+/** Answers `FormSuggestions` with these rows, recording the variables each ask was sent with. */
+function offerForms(nodes: FormNode[]) {
+  const calls: FormSuggestionsQueryVariables[] = [];
+  mockGraphQLQuery<FormSuggestionsQuery, FormSuggestionsQueryVariables>(
+    'FormSuggestions',
+    (variables) => {
+      calls.push(variables);
+      return { formSuggestions: { edges: nodes.map((node) => ({ node })) } };
+    },
+  );
+  return calls;
+}
+
+/** Answers `CommonNameSuggestions` with these rows, recording each ask. */
+function offerNames(nodes: NameNode[]) {
+  const calls: CommonNameSuggestionsQueryVariables[] = [];
+  mockGraphQLQuery<CommonNameSuggestionsQuery, CommonNameSuggestionsQueryVariables>(
+    'CommonNameSuggestions',
+    (variables) => {
+      calls.push(variables);
+      return { commonNameSuggestions: { edges: nodes.map((node) => ({ node })) } };
+    },
+  );
+  return calls;
+}
+
+/** Answers `PossibleDuplicates` with these rows, recording each ask. */
+function offerDuplicates(nodes: DuplicateNode[]) {
+  const calls: PossibleDuplicatesQueryVariables[] = [];
+  mockGraphQLQuery<PossibleDuplicatesQuery, PossibleDuplicatesQueryVariables>(
+    'PossibleDuplicates',
+    (variables) => {
+      calls.push(variables);
+      return { possibleDuplicates: { edges: nodes.map((node) => ({ node })) } };
+    },
+  );
+  return calls;
+}
+
+/** Renders the form with every lookup answered empty; a test about a lookup answers it after rendering, since the later answer wins. */
 function renderForm() {
   const onSaved = vi.fn();
+  offerForms([]);
+  offerNames([]);
+  offerDuplicates([]);
   render(
     <QueryClientProvider client={makeQueryClient()}>
       <IngredientForm workspaceId={WORKSPACE_ID} onSaved={onSaved} />
@@ -30,9 +94,13 @@ function renderForm() {
 }
 
 const textbox = (name: string) => screen.getByRole('textbox', { name });
-const select = (name: string) => screen.getByRole('combobox', { name });
+/** A suggesting box: the form field, or a list's. A native select is a combobox too, under its own name. */
+const box = (name: string) => screen.getByRole('combobox', { name });
+const select = box;
+const control = (name: string) =>
+  screen.queryByRole('textbox', { name }) ?? screen.getByRole('combobox', { name });
 const type = (name: string, value: string) =>
-  fireEvent.change(textbox(name), { target: { value } });
+  fireEvent.change(control(name), { target: { value } });
 const choose = (name: string, value: string) =>
   fireEvent.change(select(name), { target: { value } });
 /** Presses Save, focusing it first as a real click would: fireEvent moves no focus. */
@@ -102,9 +170,10 @@ describe('IngredientForm', () => {
       type('Form', 'dried leaf');
       type('Description', 'A fixture herb.');
       choose('Element', 'air');
-      type('Planet', 'Mercury');
-      type('Zodiac Sign', 'Gemini');
-      type('Colour', 'Silver-green');
+      addEntry('Planet', 'Mercury');
+      addEntry('Planet', 'Venus');
+      addEntry('Zodiac Sign', 'Gemini');
+      addEntry('Colour', 'Silver-green');
       type('Safety Notes', 'None known.');
       save();
 
@@ -116,9 +185,9 @@ describe('IngredientForm', () => {
         form: 'dried leaf',
         description: 'A fixture herb.',
         element: 'air',
-        planet: 'Mercury',
-        zodiac: 'Gemini',
-        color: 'Silver-green',
+        planets: ['Mercury', 'Venus'],
+        zodiacSigns: ['Gemini'],
+        colors: ['Silver-green'],
         safetyNotes: 'None known.',
         deities: [],
         substitutes: [],
@@ -161,9 +230,9 @@ describe('IngredientForm', () => {
       addEntry('Folk Name', 'hedge fixture');
       save();
 
-      const box = textbox('Folk Name');
-      await waitFor(() => expectErrorOn(box, 'This folk name is already listed'));
-      expect(box).toHaveFocus();
+      const folkName = box('Folk Name');
+      await waitFor(() => expectErrorOn(folkName, 'This folk name is already listed'));
+      expect(folkName).toHaveFocus();
       // The entry itself says why, and its twin says nothing.
       expect(removeButton('hedge fixture')).toHaveAccessibleDescription(
         expect.stringContaining('This folk name is already listed'),
@@ -182,10 +251,10 @@ describe('IngredientForm', () => {
       addEntry('Folk Name', 'Hedge Fixture');
       addEntry('Folk Name', 'hedge fixture');
       save();
-      await waitFor(() => expect(textbox('Folk Name')).toBeInvalid());
+      await waitFor(() => expect(box('Folk Name')).toBeInvalid());
       fireEvent.click(removeButton('hedge fixture'));
 
-      await waitFor(() => expect(textbox('Folk Name')).not.toBeInvalid());
+      await waitFor(() => expect(box('Folk Name')).not.toBeInvalid());
       expect(screen.queryByText(/This folk name is already listed/)).not.toBeInTheDocument();
     });
   });
@@ -247,9 +316,9 @@ describe('IngredientForm', () => {
       save();
 
       await waitFor(() =>
-        expectErrorOn(textbox('Folk Name'), 'Another entry here claims Hedge Fixture'),
+        expectErrorOn(box('Folk Name'), 'Another entry here claims Hedge Fixture'),
       );
-      expect(textbox('Folk Name')).toHaveFocus();
+      expect(box('Folk Name')).toHaveFocus();
       expect(removeButton('Hedge Fixture')).toHaveAccessibleDescription(
         expect.stringContaining('Another entry here claims Hedge Fixture'),
       );
@@ -494,16 +563,20 @@ describe('IngredientForm', () => {
       expect(select('Classification')).not.toBeRequired();
     });
 
-    it("shows a field's hint while the field has focus", () => {
+    it("keeps a field's hint shut while the field has focus, still reading it with the field", () => {
       renderForm();
 
       act(() => select('Classification').focus());
-      expect(screen.getByRole('tooltip')).toHaveTextContent(
-        'Botanical for a plant, mineral for a stone',
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      expect(select('Classification')).toHaveAccessibleDescription(
+        expect.stringContaining('Botanical for a plant, mineral for a stone'),
       );
 
-      act(() => textbox('Folk Name').focus());
-      expect(screen.getByRole('tooltip')).toHaveTextContent('Other names it goes by');
+      act(() => box('Folk Name').focus());
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      expect(box('Folk Name')).toHaveAccessibleDescription(
+        expect.stringContaining('Other names it goes by'),
+      );
     });
 
     it("tucks a field's hint behind an info tip by its label, still read with the field", () => {
@@ -533,7 +606,7 @@ describe('IngredientForm', () => {
       const calls = acceptCreate();
       const onSaved = renderForm();
 
-      const form = textbox('Form');
+      const form = box('Form');
       expect(form.tagName).toBe('INPUT');
       type('Name', 'Testwort');
       type('Form', 'moon-dried shavings');
@@ -544,26 +617,56 @@ describe('IngredientForm', () => {
     });
   });
 
+  // Planets, zodiac signs and colours are lists since MB.136, as DESIGN.md §5 gives them.
   describe.each([
-    { legend: 'Folk Names', entry: 'Folk Name', field: 'folkNames' },
-    { legend: 'Deities', entry: 'Deity', field: 'deities' },
+    {
+      legend: 'Folk Names',
+      entry: 'Folk Name',
+      field: 'folkNames',
+      hint: 'Other names it goes by',
+    },
+    {
+      legend: 'Planets',
+      entry: 'Planet',
+      field: 'planets',
+      hint: 'The heavenly bodies it answers to',
+    },
+    {
+      legend: 'Zodiac Signs',
+      entry: 'Zodiac Sign',
+      field: 'zodiacSigns',
+      hint: 'The signs it answers to',
+    },
+    { legend: 'Colours', entry: 'Colour', field: 'colors', hint: 'not the colour it is' },
+    { legend: 'Deities', entry: 'Deity', field: 'deities', hint: 'The gods and spirits' },
     {
       legend: 'Substitute Ingredients',
       entry: 'Substitute Ingredient',
       field: 'substitutes',
+      hint: 'Other ingredients to use in its place',
     },
-  ] as const)('the $legend list', ({ legend, entry, field }) => {
+  ] as const)('the $legend list', ({ legend, entry, field, hint }) => {
     const group = () => screen.getByRole('group', { name: legend });
+    // A typed substitute is sent as a name (DESIGN.md §5, `ingredient_substitutes`).
+    const sent = (values: string[]) =>
+      field === 'substitutes' ? values.map((name) => ({ name })) : values;
     const entries = () =>
       within(group())
         .queryAllByRole('button', { name: /^Remove / })
         .map((button) => button.getAttribute('aria-label'));
 
+    it('tucks its hint behind an info tip by its legend, still read with the box', () => {
+      renderForm();
+
+      expect(screen.getByRole('button', { name: `About ${legend}` })).toBeInTheDocument();
+      expect(box(entry)).toHaveAccessibleDescription(expect.stringContaining(hint));
+    });
+
     it('starts with one empty box and no entries', () => {
       renderForm();
 
-      expect(within(group()).getAllByRole('textbox')).toHaveLength(1);
-      expect(textbox(entry)).toHaveValue('');
+      expect(within(group()).getAllByRole('combobox')).toHaveLength(1);
+      expect(box(entry)).toHaveValue('');
       expect(within(group()).queryByRole('list')).not.toBeInTheDocument();
     });
 
@@ -574,8 +677,8 @@ describe('IngredientForm', () => {
 
       expect(within(group()).getByRole('list')).toBeInTheDocument();
       expect(entries()).toEqual(['Remove First Fixture']);
-      expect(textbox(entry)).toHaveValue('');
-      expect(textbox(entry)).toHaveFocus();
+      expect(box(entry)).toHaveValue('');
+      expect(box(entry)).toHaveFocus();
     });
 
     it('adds on Enter without saving the form', () => {
@@ -584,7 +687,7 @@ describe('IngredientForm', () => {
 
       type('Name', 'Testwort');
       type(entry, 'First Fixture');
-      fireEvent.keyDown(textbox(entry), { key: 'Enter' });
+      fireEvent.keyDown(box(entry), { key: 'Enter' });
 
       expect(entries()).toEqual(['Remove First Fixture']);
       expect(calls).toHaveLength(0);
@@ -594,7 +697,7 @@ describe('IngredientForm', () => {
       renderForm();
 
       addEntry(entry, 'First Fixture');
-      const status = within(group()).getByRole('status');
+      const status = within(group()).getByRole('status', { name: `${legend} changes` });
       expect(status).toHaveTextContent('Added First Fixture');
 
       fireEvent.click(removeButton('First Fixture'));
@@ -617,7 +720,134 @@ describe('IngredientForm', () => {
       fireEvent.click(removeButton('First Fixture'));
 
       expect(entries()).toEqual(['Remove Second Fixture']);
-      expect(textbox(entry)).toHaveFocus();
+      expect(box(entry)).toHaveFocus();
+    });
+
+    it('removes the last entry on Backspace in the empty box, announcing it', () => {
+      renderForm();
+
+      addEntry(entry, 'First Fixture');
+      addEntry(entry, 'Second Fixture');
+      type(entry, 'Thi');
+      fireEvent.keyDown(box(entry), { key: 'Backspace' });
+      expect(entries()).toEqual(['Remove First Fixture', 'Remove Second Fixture']);
+
+      type(entry, '');
+      fireEvent.keyDown(box(entry), { key: 'Backspace' });
+
+      expect(entries()).toEqual(['Remove First Fixture']);
+      expect(within(group()).getByRole('status', { name: `${legend} changes` })).toHaveTextContent(
+        'Removed Second Fixture',
+      );
+      expect(box(entry)).toHaveFocus();
+    });
+
+    it('clears every entry from Clear, announcing it and keeping the box focused', () => {
+      renderForm();
+
+      expect(screen.queryByRole('button', { name: `Clear ${legend}` })).not.toBeInTheDocument();
+      addEntry(entry, 'First Fixture');
+      addEntry(entry, 'Second Fixture');
+      fireEvent.click(screen.getByRole('button', { name: `Clear ${legend}` }));
+
+      expect(entries()).toEqual([]);
+      expect(within(group()).getByRole('status', { name: `${legend} changes` })).toHaveTextContent(
+        `Cleared ${legend}`,
+      );
+      expect(box(entry)).toHaveFocus();
+    });
+
+    // M5.10a: one entry box, the combobox, on every list; only the folk names
+    // have a source yet (MB.131 gives the others theirs).
+    it(`is the combobox, ${field === 'folkNames' ? 'with' : 'without'} a list to open`, () => {
+      renderForm();
+
+      expect(box(entry)).toHaveAttribute('aria-autocomplete', 'list');
+      expect(box(entry).closest('.combobox__control')).toContainElement(box(entry));
+      const chevron = screen.queryByRole('button', { name: `Show ${entry} suggestions` });
+      if (field === 'folkNames') expect(chevron).toBeInTheDocument();
+      else expect(chevron).not.toBeInTheDocument();
+    });
+
+    it('holds its entries inside the box, ahead of the text', () => {
+      renderForm();
+
+      addEntry(entry, 'First Fixture');
+
+      const inside = box(entry).closest('.combobox__control') as HTMLElement;
+      expect(inside).toContainElement(removeButton('First Fixture'));
+      expect(
+        removeButton('First Fixture').compareDocumentPosition(box(entry)) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    describe('a long entry', () => {
+      const long =
+        'Fixturawortiamtestalisfixturawortiamtestalisfixturawortiamtestalisfixturawortiam';
+      const tooltip = () => within(group()).queryByRole('tooltip');
+
+      // jsdom lays nothing out, so an entry's text is cut off when it is
+      // longer than 30 characters: wider than the 240px left to it.
+      beforeEach(() => {
+        vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockImplementation(function (
+          this: HTMLElement,
+        ) {
+          return (this.textContent ?? '').length * 8;
+        });
+        vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(240);
+      });
+      afterEach(() => vi.restoreAllMocks());
+
+      // What a pointer rests on: the entry's words, not the tooltip that
+      // repeats them, which stays in the page while closed.
+      const entryText = (value: string) =>
+        within(within(group()).getByRole('list')).getByText(value, {
+          ignore: '[role="tooltip"]',
+        });
+
+      it('shows its whole text in a tooltip on hover, until the pointer leaves', async () => {
+        renderForm();
+
+        addEntry(entry, long);
+        const text = entryText(long);
+        expect(tooltip()).not.toBeInTheDocument();
+        fireEvent.mouseEnter(text);
+
+        expect(tooltip()).toHaveTextContent(long);
+        fireEvent.mouseLeave(text);
+        await waitFor(() => expect(tooltip()).not.toBeInTheDocument());
+      });
+
+      it('shows it while its x has focus, and closes on Escape', () => {
+        renderForm();
+
+        addEntry(entry, long);
+        act(() => removeButton(long).focus());
+
+        expect(tooltip()).toHaveTextContent(long);
+        fireEvent.keyDown(document, { key: 'Escape' });
+        expect(tooltip()).not.toBeInTheDocument();
+        expect(removeButton(long)).toHaveFocus();
+      });
+
+      it('keeps its x named by the whole text', () => {
+        renderForm();
+
+        addEntry(entry, long);
+
+        expect(removeButton(long)).toBeInTheDocument();
+      });
+
+      it('shows no tooltip on an entry that fits', () => {
+        renderForm();
+
+        addEntry(entry, 'Testwort');
+        fireEvent.mouseEnter(entryText('Testwort'));
+        act(() => removeButton('Testwort').focus());
+
+        expect(tooltip()).not.toBeInTheDocument();
+      });
     });
 
     it('sends the entries in order, less any removed', async () => {
@@ -632,7 +862,7 @@ describe('IngredientForm', () => {
       save();
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
-      expect(calls[0].input[field]).toEqual(['First Fixture', 'Third Fixture']);
+      expect(calls[0].input[field]).toEqual(sent(['First Fixture', 'Third Fixture']));
     });
 
     it('refuses to save with text left in the box, until it is added', async () => {
@@ -644,19 +874,19 @@ describe('IngredientForm', () => {
       type(entry, 'Second Fixture');
       save();
 
-      const box = textbox(entry);
+      const target = box(entry);
       await waitFor(() =>
-        expectErrorOn(box, 'Press Add to keep "Second Fixture", or clear the box'),
+        expectErrorOn(target, 'Press Add to keep "Second Fixture", or clear the box'),
       );
-      expect(box).toHaveFocus();
+      expect(target).toHaveFocus();
       expect(calls).toHaveLength(0);
 
       fireEvent.click(screen.getByRole('button', { name: `Add ${entry}` }));
-      await waitFor(() => expect(box).not.toBeInvalid());
+      await waitFor(() => expect(target).not.toBeInvalid());
       save();
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
-      expect(calls[0].input[field]).toEqual(['First Fixture', 'Second Fixture']);
+      expect(calls[0].input[field]).toEqual(sent(['First Fixture', 'Second Fixture']));
     });
 
     it('lets the save through once text left in the box is cleared', async () => {
@@ -666,17 +896,543 @@ describe('IngredientForm', () => {
       type('Name', 'Testwort');
       type(entry, 'Stray Fixture');
       save();
-      await waitFor(() => expect(textbox(entry)).toBeInvalid());
+      await waitFor(() => expect(box(entry)).toBeInvalid());
       type(entry, '');
 
-      await waitFor(() => expect(textbox(entry)).not.toBeInvalid());
+      await waitFor(() => expect(box(entry)).not.toBeInvalid());
       save();
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(calls[0].input[field]).toEqual([]);
     });
   });
 
-  it('holds the submit down while a save is in flight', async () => {
+  // M5.10a: the form and folk-name boxes suggest from M4.7a's lookups.
+  describe('the duplicate warning', () => {
+    const TOMENTOSA: DuplicateNode = {
+      id: 'claw-1',
+      name: "Cat's Claw",
+      canonicalName: 'Uncaria tomentosa',
+    };
+    const FELIS: DuplicateNode = { id: 'claw-2', name: "Cat's Claw", canonicalName: 'Felis catus' };
+    const MOCKLEAF: DuplicateNode = { id: 'mock-1', name: 'Mockleaf', canonicalName: null };
+
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+    const settle = () => act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+    const warning = () => screen.getByRole('status', { name: 'Possible duplicates' });
+    const createAnyway = () => screen.queryByRole('button', { name: 'Create Anyway' });
+    const SENTENCE = "Did you mean Cat's Claw (Uncaria tomentosa)?";
+
+    it('asks once the name settles, with the whole name, about this coven', async () => {
+      renderForm();
+      const calls = offerDuplicates([]);
+
+      type('Name', 'C');
+      type('Name', 'Ca');
+      type('Name', 'Cats Claw ');
+      act(() => vi.advanceTimersByTime(DEBOUNCE_MS - 1));
+      expect(calls).toHaveLength(0);
+
+      settle();
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0]).toEqual({ workspaceId: WORKSPACE_ID, name: 'Cats Claw', first: 3 });
+    });
+
+    it('asks nothing for a blank name, and drops the warning the last name had', async () => {
+      renderForm();
+      const calls = offerDuplicates([TOMENTOSA]);
+      type('Name', 'Cats Claw');
+      settle();
+      await within(warning()).findByRole('link');
+
+      type('Name', '   ');
+      settle();
+
+      expect(warning()).toBeEmptyDOMElement();
+      await act(() => vi.advanceTimersByTimeAsync(DEBOUNCE_MS));
+      expect(calls).toHaveLength(1);
+    });
+
+    it('names each near match by its label and formal name, linked to the entry', async () => {
+      renderForm();
+      offerDuplicates([TOMENTOSA, FELIS, MOCKLEAF]);
+
+      type('Name', 'Cats Claw');
+      settle();
+
+      const tomentosa = await within(warning()).findByRole('link', {
+        name: "Cat's Claw (Uncaria tomentosa)",
+      });
+      expect(warning()).toHaveTextContent(
+        "Did you mean Cat's Claw (Uncaria tomentosa), Cat's Claw (Felis catus) or Mockleaf?",
+      );
+      expect(tomentosa).toHaveAttribute('href', '/ingredients/claw-1');
+      expect(screen.getByRole('link', { name: "Cat's Claw (Felis catus)" })).toHaveAttribute(
+        'href',
+        '/ingredients/claw-2',
+      );
+      expect(screen.getByRole('link', { name: 'Mockleaf' })).toHaveAttribute(
+        'href',
+        '/ingredients/mock-1',
+      );
+      // Read with the field, as its hint is, and not an error until a save meets it.
+      expect(textbox('Name')).toHaveAccessibleDescription(expect.stringContaining('Did you mean'));
+      expect(textbox('Name')).not.toBeInvalid();
+    });
+
+    it('warns of nothing when nothing is close', async () => {
+      renderForm();
+      const calls = offerDuplicates([]);
+
+      type('Name', 'Fixture Nothingalike');
+      settle();
+      await waitFor(() => expect(calls).toHaveLength(1));
+
+      expect(warning()).toBeEmptyDOMElement();
+      expect(createAnyway()).not.toBeInTheDocument();
+      expect(textbox('Name')).not.toHaveAccessibleDescription(
+        expect.stringContaining('Did you mean'),
+      );
+    });
+
+    it('holds a save until it is dismissed, as an error on the name, the focus on Create Anyway', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      offerDuplicates([TOMENTOSA]);
+
+      type('Name', "Cat's Claw");
+      settle();
+      await within(warning()).findByRole('link');
+      save();
+
+      const button = createAnyway() as HTMLElement;
+      await waitFor(() => expect(button).toHaveFocus());
+      // The warning is read with the button, so the focus says why it moved.
+      expect(button).toHaveAccessibleDescription(SENTENCE);
+      expect(onSaved).not.toHaveBeenCalled();
+      expect(saves).toHaveLength(0);
+      expect(textbox('Name')).toBeInvalid();
+      expect(textbox('Name')).toHaveAccessibleDescription(expect.stringContaining(SENTENCE));
+
+      // Again, and it stops again.
+      save();
+      await waitFor(() => expect(button).toHaveFocus());
+      expect(saves).toHaveLength(0);
+    });
+
+    it('checks a name saved before its typing settles, and holds on what it finds', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      const calls = offerDuplicates([TOMENTOSA]);
+
+      type('Name', "Cat's Claw ");
+      save();
+
+      // No wait for the debounce: the save asks about the name it is sending.
+      await waitFor(() => expect(createAnyway()).toHaveFocus());
+      expect(calls).toEqual([{ workspaceId: WORKSPACE_ID, name: "Cat's Claw", first: 3 }]);
+      expect(warning()).toHaveTextContent(SENTENCE);
+      expect(textbox('Name')).toBeInvalid();
+      expect(onSaved).not.toHaveBeenCalled();
+      expect(saves).toHaveLength(0);
+    });
+
+    it('shows Save busy while it checks, and sends once nothing is close', async () => {
+      let release = () => {};
+      const checking = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      server.use(
+        graphqlLink.query<PossibleDuplicatesQuery, PossibleDuplicatesQueryVariables>(
+          'PossibleDuplicates',
+          async () => {
+            await checking;
+            return HttpResponse.json({ data: { possibleDuplicates: { edges: [] } } });
+          },
+        ),
+      );
+      const submit = screen.getByRole('button', { name: 'Save Ingredient' });
+
+      type('Name', 'Fixture Nothingalike');
+      save();
+
+      await waitFor(() => expect(submit).toHaveAttribute('aria-busy', 'true'));
+      expect(saves).toHaveLength(0);
+      release();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves[0].input.name).toBe('Fixture Nothingalike');
+      expect(warning()).toBeEmptyDOMElement();
+    });
+
+    it('lifts the hold when the name changes, leaving the focus where the typing is', async () => {
+      const saves = acceptCreate();
+      renderForm();
+      offerDuplicates([TOMENTOSA]);
+      type('Name', "Cat's Claw");
+      settle();
+      await within(warning()).findByRole('link');
+      save();
+      await waitFor(() => expect(createAnyway()).toHaveFocus());
+
+      // Back in the name, and a new match arrives as it is typed.
+      offerDuplicates([TOMENTOSA, FELIS]);
+      act(() => textbox('Name').focus());
+      type('Name', "Cat's Claws");
+      settle();
+      await within(warning()).findByRole('link', { name: "Cat's Claw (Felis catus)" });
+
+      expect(textbox('Name')).toHaveFocus();
+      expect(textbox('Name')).not.toBeInvalid();
+      expect(saves).toHaveLength(0);
+    });
+
+    it('lets an error elsewhere take the save first', async () => {
+      const saves = acceptCreate();
+      renderForm();
+      offerDuplicates([TOMENTOSA]);
+
+      type('Name', "Cat's Claw");
+      choose('Classification', 'botanical');
+      settle();
+      await within(warning()).findByRole('link');
+      save();
+
+      await waitFor(() => expect(textbox('Formal Name')).toHaveFocus());
+      expect(createAnyway()).not.toHaveFocus();
+      expect(saves).toHaveLength(0);
+    });
+
+    it('goes on Create Anyway, handing the focus back to the name, and then saves', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      offerDuplicates([TOMENTOSA]);
+
+      type('Name', "Cat's Claw");
+      settle();
+      await within(warning()).findByRole('link');
+      save();
+      await waitFor(() => expect(createAnyway()).toHaveFocus());
+      fireEvent.click(createAnyway() as HTMLElement);
+
+      expect(warning()).toBeEmptyDOMElement();
+      expect(textbox('Name')).toHaveFocus();
+      expect(textbox('Name')).not.toBeInvalid();
+      save();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves[0].input.name).toBe("Cat's Claw");
+    });
+
+    it('stays gone for the matches set aside, and returns for a new one', async () => {
+      renderForm();
+      offerDuplicates([TOMENTOSA]);
+
+      type('Name', "Cat's Claw");
+      settle();
+      await within(warning()).findByRole('link');
+      fireEvent.click(createAnyway() as HTMLElement);
+
+      // A longer name finding the same entry: already answered.
+      const again = offerDuplicates([TOMENTOSA]);
+      type('Name', "Cat's Claws");
+      settle();
+      await waitFor(() => expect(again).toHaveLength(1));
+      expect(warning()).toBeEmptyDOMElement();
+
+      // One it has not been asked about.
+      offerDuplicates([TOMENTOSA, FELIS]);
+      type('Name', "Cat's Clawe");
+      settle();
+      const felis = await within(warning()).findByRole('link', {
+        name: "Cat's Claw (Felis catus)",
+      });
+      expect(felis).toBeInTheDocument();
+      expect(within(warning()).queryByRole('link', { name: /tomentosa/ })).not.toBeInTheDocument();
+    });
+
+    it('shows nothing, and saves, when the lookup fails', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      mockGraphQLError('PossibleDuplicates', { code: 'FORBIDDEN' });
+
+      type('Name', "Cat's Claw");
+      settle();
+      save();
+
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves).toHaveLength(1);
+      expect(warning()).toBeEmptyDOMElement();
+    });
+  });
+
+  describe('the form lookup', () => {
+    const WAX_ANIMAL: FormNode = {
+      value: 'Wax',
+      description: null,
+      group: 'Animal',
+      curated: true,
+      claimants: [{ name: 'Testwort', canonicalName: 'Fixtura testalis' }],
+    };
+    const WAX_SUBSTANCE: FormNode = {
+      value: 'Wax',
+      description: 'Candle and poppet wax.',
+      group: 'Substance',
+      curated: true,
+      claimants: [],
+    };
+    const RHIZOMES: FormNode = {
+      value: 'Rhizomes',
+      description: null,
+      group: null,
+      curated: false,
+      claimants: [{ name: 'Mockleaf', canonicalName: null }],
+    };
+
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+    const settle = () => act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+    /** Focuses the box, which starts its lookup, and waits for that first, empty ask. */
+    const use = async (name: string, calls: unknown[]) => {
+      act(() => box(name).focus());
+      await waitFor(() => expect(calls).toHaveLength(1));
+    };
+
+    it('asks once the typing settles, not on each keystroke, about this coven', async () => {
+      renderForm();
+      const calls = offerForms([WAX_ANIMAL]);
+
+      await use('Form', calls);
+      type('Form', 'w');
+      type('Form', 'wa');
+      type('Form', 'wax');
+      act(() => vi.advanceTimersByTime(DEBOUNCE_MS - 1));
+      expect(calls).toHaveLength(1);
+
+      settle();
+      await waitFor(() => expect(calls).toHaveLength(2));
+      expect(calls[1]).toEqual({ workspaceId: WORKSPACE_ID, query: 'wax', first: 10 });
+    });
+
+    it('asks nothing until the box is used', () => {
+      renderForm();
+      const calls = offerForms([WAX_ANIMAL]);
+
+      settle();
+
+      expect(calls).toHaveLength(0);
+    });
+
+    it('offers the vocabulary first, each with its group and who claims it, then forms in use', async () => {
+      renderForm();
+      const calls = offerForms([WAX_ANIMAL, WAX_SUBSTANCE, RHIZOMES]);
+
+      await use('Form', calls);
+      type('Form', 'wax');
+      settle();
+
+      const curated = await screen.findByRole('group', { name: 'Curated' });
+      // Two same-named forms, told apart by the group in each one's name.
+      expect(within(curated).getByRole('option', { name: /^Wax \(Animal\)/ })).toHaveTextContent(
+        'Used by Testwort (Fixtura testalis)',
+      );
+      expect(within(curated).getByRole('option', { name: /^Wax \(Substance\)/ })).toHaveTextContent(
+        'Candle and poppet wax.',
+      );
+      const inUse = screen.getByRole('group', { name: 'In use' });
+      expect(within(inUse).getByRole('option', { name: /^Rhizomes/ })).toHaveTextContent(
+        'Used by Mockleaf',
+      );
+      // What was typed comes first, the owner's call.
+      const rows = within(screen.getByRole('listbox', { name: 'Form suggestions' }));
+      expect(rows.getAllByRole('option')[0]).toHaveAccessibleName('Use what you typed: wax');
+    });
+
+    it('fills the field from a pick and links nothing', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      const calls = offerForms([WAX_ANIMAL, WAX_SUBSTANCE]);
+
+      await use('Form', calls);
+      type('Form', 'wax');
+      settle();
+      fireEvent.click(await screen.findByRole('option', { name: /^Wax \(Substance\)/ }));
+
+      expect(box('Form')).toHaveValue('Wax');
+      expect(box('Form')).toHaveAttribute('aria-expanded', 'false');
+      type('Name', 'Testwort');
+      save();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves[0].input.form).toBe('Wax');
+    });
+
+    it('takes a value in no vocabulary from its own row, with no warning', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      const calls = offerForms([]);
+
+      await use('Form', calls);
+      type('Form', 'rhizome');
+      settle();
+      fireEvent.click(await screen.findByRole('option', { name: 'Use what you typed: rhizome' }));
+
+      expect(box('Form')).toHaveValue('rhizome');
+      expect(box('Form')).not.toBeInvalid();
+      type('Name', 'Testwort');
+      save();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves[0].input.form).toBe('rhizome');
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('the folk-name lookup', () => {
+    const HEDGE: NameNode = {
+      value: 'Hedge Fixture',
+      claimants: [{ name: 'Testwort', canonicalName: 'Fixtura testalis' }],
+    };
+
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('suggests the names in use, with who claims them, and a pick adds an entry', async () => {
+      renderForm();
+      const calls = offerNames([HEDGE]);
+
+      act(() => box('Folk Name').focus());
+      await waitFor(() => expect(calls).toHaveLength(1));
+      type('Folk Name', 'hedge');
+      act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+      await waitFor(() => expect(calls).toHaveLength(2));
+      expect(calls[1]).toEqual({ workspaceId: WORKSPACE_ID, query: 'hedge', first: 10 });
+
+      const option = await screen.findByRole('option', { name: /^Hedge Fixture/ });
+      expect(option).toHaveTextContent('Used by Testwort (Fixtura testalis)');
+      // One bucket: there is no curated vocabulary of common names.
+      expect(screen.queryByRole('group', { name: 'Curated' })).not.toBeInTheDocument();
+      fireEvent.click(option);
+
+      expect(removeButton('Hedge Fixture')).toBeInTheDocument();
+      expect(box('Folk Name')).toHaveValue('');
+      expect(box('Folk Name')).toHaveFocus();
+      expect(
+        within(screen.getByRole('group', { name: 'Folk Names' })).getByRole('status', {
+          name: 'Folk Names changes',
+        }),
+      ).toHaveTextContent('Added Hedge Fixture');
+    });
+
+    it('picks by the keyboard, then adds typed text on Enter with nothing picked', async () => {
+      renderForm();
+      const calls = offerNames([HEDGE]);
+
+      act(() => box('Folk Name').focus());
+      await waitFor(() => expect(calls).toHaveLength(1));
+      type('Folk Name', 'hedge');
+      act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+      await screen.findByRole('option', { name: /^Hedge Fixture/ });
+      // Past the typed row, which comes first, onto the suggestion.
+      fireEvent.keyDown(box('Folk Name'), { key: 'ArrowDown' });
+      fireEvent.keyDown(box('Folk Name'), { key: 'ArrowDown' });
+      fireEvent.keyDown(box('Folk Name'), { key: 'Enter' });
+      expect(removeButton('Hedge Fixture')).toBeInTheDocument();
+
+      type('Folk Name', 'Fixture Bane');
+      fireEvent.keyDown(box('Folk Name'), { key: 'Enter' });
+      expect(removeButton('Fixture Bane')).toBeInTheDocument();
+      expect(box('Folk Name')).toHaveValue('');
+    });
+  });
+
+  // MB.140: a substitute links an ingredient or names one. Nothing in the
+  // form picks a link until MB.131's lookup, so the list is given one here.
+  describe('a linked substitute', () => {
+    const LINKED_ID = '3f6c1d2e-8a4b-4c5d-9e0f-1a2b3c4d5e6f';
+    const linked: SubstituteListEntry = {
+      value: 'Mockleaf',
+      link: { id: LINKED_ID, canonicalName: 'Fixtura testalis' },
+    };
+
+    function renderList(substitutes: SubstituteListEntry[]) {
+      const onSubmit = vi.fn();
+      const Harness = () => {
+        const methods = useForm<IngredientFormValues, unknown, IngredientFormInput>({
+          defaultValues: { ...EMPTY_VALUES, name: 'Testwort', substitutes },
+          resolver: ingredientResolver,
+        });
+        return (
+          <FormProvider {...methods}>
+            <form onSubmit={methods.handleSubmit(onSubmit)}>
+              <ListField
+                name="substitutes"
+                legend="Substitute Ingredients"
+                entry="Substitute Ingredient"
+              />
+              <button type="submit">Save Ingredient</button>
+            </form>
+          </FormProvider>
+        );
+      };
+      render(<Harness />);
+      return onSubmit;
+    }
+
+    it('reads as its ingredient’s label with its formal name', () => {
+      renderList([linked, { value: 'Zest Root' }]);
+
+      const list = within(screen.getByRole('group', { name: 'Substitute Ingredients' }));
+      expect(
+        list.getByText('Mockleaf (Fixtura testalis)', { ignore: '[role="tooltip"]' }),
+      ).toBeInTheDocument();
+      expect(removeButton('Mockleaf (Fixtura testalis)')).toBeInTheDocument();
+      expect(removeButton('Zest Root')).toBeInTheDocument();
+    });
+
+    it('reads as its label alone when the ingredient has no formal name', () => {
+      renderList([{ value: 'Mockleaf', link: { id: LINKED_ID, canonicalName: null } }]);
+
+      expect(removeButton('Mockleaf')).toBeInTheDocument();
+    });
+
+    it('is sent as its ingredient’s id, beside a typed one sent as its name', async () => {
+      const onSubmit = renderList([linked, { value: 'Zest Root' }]);
+
+      save();
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      expect(onSubmit.mock.calls[0][0].substitutes).toEqual([
+        { ingredientId: LINKED_ID },
+        { name: 'Zest Root' },
+      ]);
+    });
+
+    it('marks a refused link beside its pill, named by its formal name too', async () => {
+      renderList([linked, { value: 'Zest Root' }, { ...linked, value: 'Mockleaf' }]);
+
+      save();
+
+      await waitFor(() =>
+        expectErrorOn(
+          box('Substitute Ingredient'),
+          'Mockleaf (Fixtura testalis): This ingredient is already listed',
+        ),
+      );
+    });
+  });
+
+  it('holds the submit down, and shows it busy, while a save is in flight', async () => {
     let release = () => {};
     const held = new Promise<void>((resolve) => {
       release = resolve;
@@ -699,8 +1455,11 @@ describe('IngredientForm', () => {
     save();
 
     await waitFor(() => expect(submit).toBeDisabled());
+    // Busy, under its own name: the label does not change as it waits.
+    expect(submit).toHaveAttribute('aria-busy', 'true');
     release();
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
     expect(submit).toBeEnabled();
+    expect(submit).not.toHaveAttribute('aria-busy');
   });
 });

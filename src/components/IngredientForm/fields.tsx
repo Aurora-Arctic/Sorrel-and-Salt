@@ -1,16 +1,24 @@
-import { type KeyboardEvent, type ReactElement, useId, useRef, useState } from 'react';
-import { type FieldPath, get, useFieldArray, useFormContext, useFormState } from 'react-hook-form';
+import { type ReactElement, useId, useRef, useState } from 'react';
+import {
+  type FieldPath,
+  get,
+  useController,
+  useFieldArray,
+  useFormContext,
+  useFormState,
+} from 'react-hook-form';
+import Combobox, { ComboboxEntry } from '../Combobox';
 import InfoTip from '../InfoTip';
 import type {
-  EntryChipProps,
   FieldErrorProps,
   FieldShellProps,
   IngredientFormValues,
   ListFieldProps,
   SelectFieldProps,
+  SuggestFieldProps,
   TextFieldProps,
 } from './types';
-import { commitDraft } from './values';
+import { addEntry, commitDraft, entryText } from './values';
 
 // IngredientForm's fields, on the form primitives (claude-docs/styling.md,
 // "Form fields"). Each reads its own error out of the form state, so a field
@@ -32,23 +40,32 @@ export function FieldError({ id, message }: FieldErrorProps): ReactElement | nul
  * field — the hint too, though its tip is closed — and `aria-invalid` is what
  * draws the error edge, so one cannot ship without the other.
  */
-function useField(name: FieldPath<IngredientFormValues>, hint?: string, note?: string) {
+function useField(
+  name: FieldPath<IngredientFormValues>,
+  hint?: string,
+  note?: string,
+  describedBy?: string,
+  invalid?: boolean,
+) {
   const id = useId();
   const { errors } = useFormState<IngredientFormValues>({ name });
   const error: string | undefined = get(errors, name)?.message;
   const hintId = `${id}-hint`;
   const noteId = `${id}-note`;
   const errorId = `${id}-error`;
-  const describedBy = [hint && hintId, note && noteId, error && errorId].filter(Boolean).join(' ');
+  const description = [hint && hintId, note && noteId, describedBy, error && errorId]
+    .filter(Boolean)
+    .join(' ');
   return {
     controlId: `${id}-control`,
+    labelId: `${id}-label`,
     hintId,
     noteId,
     errorId,
     error,
     aria: {
-      'aria-invalid': error ? true : undefined,
-      'aria-describedby': describedBy || undefined,
+      'aria-invalid': error || invalid ? true : undefined,
+      'aria-describedby': description || undefined,
     },
   };
 }
@@ -59,16 +76,18 @@ function FieldShell({
   note,
   required,
   controlId,
+  labelId,
   hintId,
   noteId,
   errorId,
   error,
   children,
+  after,
 }: FieldShellProps): ReactElement {
   return (
     <div className="field">
       <div className="ingredient-form__label-row">
-        <label className="field__label" htmlFor={controlId}>
+        <label className="field__label" id={labelId} htmlFor={controlId}>
           {label}
           {/* For the eye, hard against the label: "Name*". Hidden from the
               field's name, so a screen reader hears "Name" and the control's
@@ -80,7 +99,7 @@ function FieldShell({
           )}
         </label>
         {hint && (
-          <InfoTip id={hintId} label={label} controlId={controlId}>
+          <InfoTip id={hintId} label={label}>
             {hint}
           </InfoTip>
         )}
@@ -92,6 +111,7 @@ function FieldShell({
       )}
       {children}
       <FieldError id={errorId} message={error} />
+      {after}
     </div>
   );
 }
@@ -105,9 +125,12 @@ export function TextField({
   multiline,
   disabled,
   deps,
+  describedBy,
+  invalid,
+  after,
 }: TextFieldProps): ReactElement {
   const { register } = useFormContext<IngredientFormValues>();
-  const { aria, ...field } = useField(name, hint, note);
+  const { aria, ...field } = useField(name, hint, note, describedBy, invalid);
   // The attribute, not register's `disabled`, which would also drop the value
   // from what is validated and sent: the form decides that itself. And
   // `aria-required` rather than `required`, whose `:invalid` would mark an
@@ -120,12 +143,47 @@ export function TextField({
     ...register(name, { deps }),
   };
   return (
-    <FieldShell label={label} hint={hint} note={note} required={required} {...field}>
+    <FieldShell label={label} hint={hint} note={note} required={required} after={after} {...field}>
       {multiline ? (
         <textarea className="textarea" {...control} />
       ) : (
         <input className="input" {...control} />
       )}
+    </FieldShell>
+  );
+}
+
+/**
+ * A text field whose box suggests as it is typed in (DESIGN.md §14): a pick
+ * fills the field with the suggestion's value and links nothing, and free
+ * text stays as typed, with no warning.
+ */
+export function SuggestField({
+  name,
+  label,
+  hint,
+  suggestions,
+  onActivate,
+}: SuggestFieldProps): ReactElement {
+  const { control } = useFormContext<IngredientFormValues>();
+  const { field } = useController({ control, name });
+  const { aria, ...shell } = useField(name, hint);
+  return (
+    <FieldShell label={label} hint={hint} {...shell}>
+      <Combobox
+        id={shell.controlId}
+        label={label}
+        labelId={shell.labelId}
+        value={field.value}
+        onChange={field.onChange}
+        onFocus={onActivate}
+        onBlur={field.onBlur}
+        onPick={(value) => field.onChange(value)}
+        suggestions={suggestions}
+        inputRef={field.ref}
+        name={field.name}
+        {...aria}
+      />
     </FieldShell>
   );
 }
@@ -175,35 +233,25 @@ export function SelectField({
   );
 }
 
-/** An entry added to a list: its text, and the x that takes it out. */
-function EntryChip({ value, errorId, onRemove }: EntryChipProps): ReactElement {
-  return (
-    <li className={errorId ? 'ingredient-form__entry is-invalid' : 'ingredient-form__entry'}>
-      {value}
-      {/* Named for its entry: a column of bare "Remove"s is no help to a screen reader. */}
-      <button
-        type="button"
-        className="ingredient-form__remove"
-        aria-label={`Remove ${value}`}
-        aria-describedby={errorId}
-        onClick={onRemove}
-      >
-        <span aria-hidden="true">×</span>
-      </button>
-    </li>
-  );
-}
-
 /**
- * A list of free-text entries: one box to type in, and each entry added shown
- * above it. An error naming an entry marks that entry and reads out on the
- * box, through the list's one error element.
+ * A list of free-text entries: one combobox to type in, with each entry added
+ * shown inside it ahead of the text. A box with a source suggests, and a pick
+ * adds as Add does. An error naming an entry marks that entry and reads out
+ * on the box, through the list's one error element.
  */
-export function ListField({ name, legend, entry, hint }: ListFieldProps): ReactElement {
+export function ListField({
+  name,
+  legend,
+  entry,
+  hint,
+  suggestions,
+  onActivate,
+}: ListFieldProps): ReactElement {
   const form = useFormContext<IngredientFormValues>();
-  const { control, register, trigger } = form;
+  const { control, trigger } = form;
   const { fields, remove } = useFieldArray({ control, name });
   const box = `drafts.${name}` as const;
+  const { field } = useController({ control, name: box });
   const { errors, isSubmitted } = useFormState({ control, name: [name, box] });
   const id = useId();
   // Its own ref rather than setFocus, which waits a tick: the box never
@@ -216,7 +264,6 @@ export function ListField({ name, legend, entry, hint }: ListFieldProps): ReactE
   const boxId = `${id}-box`;
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
-  const { ref: registerBox, ...boxProps } = register(box);
   const focusBox = () => boxElement.current?.focus();
 
   const entryErrors = fields.map(
@@ -224,8 +271,8 @@ export function ListField({ name, legend, entry, hint }: ListFieldProps): ReactE
   );
   const boxError: string | undefined = get(errors, box)?.message;
   const message = [
-    ...fields.flatMap(({ value }, index) =>
-      entryErrors[index] ? [`${value}: ${entryErrors[index]}`] : [],
+    ...fields.flatMap((row, index) =>
+      entryErrors[index] ? [`${entryText(row)}: ${entryErrors[index]}`] : [],
     ),
     boxError,
   ]
@@ -238,20 +285,50 @@ export function ListField({ name, legend, entry, hint }: ListFieldProps): ReactE
   const revalidate = () => {
     if (isSubmitted) void trigger([name, box]);
   };
-  const add = () => {
-    const added = commitDraft(form, name);
-    if (added !== undefined) {
-      setAnnouncement(`Added ${added}`);
+  const added = (value: string | undefined) => {
+    if (value !== undefined) {
+      setAnnouncement(`Added ${value}`);
       revalidate();
     }
     focusBox();
   };
-  const addOnEnter = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
-    // Enter in a text box would otherwise submit the whole form.
-    event.preventDefault();
-    add();
+  // Add, and Enter with no suggestion picked, add what the box holds; a pick
+  // adds the suggestion's value.
+  const add = () => added(commitDraft(form, name));
+  const pick = (value: string) => added(addEntry(form, name, value));
+  const clear = () => {
+    setAnnouncement(`Cleared ${legend}`);
+    remove();
+    revalidate();
+    focusBox();
   };
+  // Backspace in the empty box: the last entry goes, as its x would take it.
+  const removeLast = () => {
+    const last = fields[fields.length - 1];
+    if (!last) return;
+    setAnnouncement(`Removed ${entryText(last)}`);
+    remove(fields.length - 1);
+    revalidate();
+  };
+
+  const entries = fields.length > 0 && (
+    <ul className="combobox__entries">
+      {fields.map((row, index) => (
+        <ComboboxEntry
+          key={row.id}
+          value={entryText(row)}
+          errorId={entryErrors[index] && errorId}
+          onRemove={() => {
+            setAnnouncement(`Removed ${entryText(row)}`);
+            remove(index);
+            revalidate();
+            // The pressed x is about to go; the box keeps the focus.
+            focusBox();
+          }}
+        />
+      ))}
+    </ul>
+  );
 
   return (
     // Named by the legend's text alone: the tip's button inside the legend
@@ -260,49 +337,42 @@ export function ListField({ name, legend, entry, hint }: ListFieldProps): ReactE
       <legend className="fieldset__legend ingredient-form__label-row">
         <span id={legendId}>{legend}</span>
         {hint && (
-          <InfoTip id={hintId} label={legend} controlId={boxId}>
+          <InfoTip id={hintId} label={legend}>
             {hint}
           </InfoTip>
         )}
       </legend>
-      {fields.length > 0 && (
-        <ul className="ingredient-form__entries">
-          {fields.map((row, index) => (
-            <EntryChip
-              key={row.id}
-              value={row.value}
-              errorId={entryErrors[index] && errorId}
-              onRemove={() => {
-                setAnnouncement(`Removed ${row.value}`);
-                remove(index);
-                revalidate();
-                // The pressed x is about to go; the box keeps the focus.
-                focusBox();
-              }}
-            />
-          ))}
-        </ul>
-      )}
       <div className="ingredient-form__row">
-        <input
+        <Combobox
           id={boxId}
-          className="input"
-          aria-label={entry}
-          aria-invalid={message ? true : undefined}
-          aria-describedby={describedBy || undefined}
-          onKeyDown={addOnEnter}
-          ref={(element) => {
-            registerBox(element);
+          label={entry}
+          value={field.value}
+          onChange={field.onChange}
+          onFocus={onActivate}
+          onBlur={field.onBlur}
+          onPick={pick}
+          onCommit={add}
+          onRemoveLast={removeLast}
+          suggestions={suggestions}
+          entries={entries}
+          clear={fields.length > 0 ? { label: `Clear ${legend}`, onClear: clear } : undefined}
+          inputRef={(element) => {
+            field.ref(element);
             boxElement.current = element;
           }}
-          {...boxProps}
+          name={field.name}
+          aria-invalid={message ? true : undefined}
+          aria-describedby={describedBy || undefined}
         />
         <button type="button" className="btn" aria-label={`Add ${entry}`} onClick={add}>
           Add
         </button>
       </div>
       <FieldError id={errorId} message={message} />
-      <output className="visually-hidden">{announcement}</output>
+      {/* Labelled, so that it is told from the box's own status region. */}
+      <output className="visually-hidden" aria-label={`${legend} changes`}>
+        {announcement}
+      </output>
     </fieldset>
   );
 }

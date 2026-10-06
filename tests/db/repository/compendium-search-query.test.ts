@@ -1,7 +1,13 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
-import { findCompendiumCount, findCompendiumPage } from '@/db/repository';
-import { FIXTURE_USERS } from '@/db/seed/standard';
+import {
+  findCompendiumCount,
+  findCompendiumPage,
+  findIngredientSuggestions,
+} from '@/db/repository';
+import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
+import { assertMembership } from '@/modules/coven';
+import { B, asUser } from '../../support/as-user';
 import { useTestDatabase } from '../../support/db/database';
 import type { PageRequest } from '@/lib/types';
 import type { Logged } from '../../support/db/types';
@@ -10,7 +16,9 @@ import type { Logged } from '../../support/db/types';
 // means "word-similar by pg_trgm.word_similarity_threshold", whose default is
 // 0.6, so the search's 0.5 has to be set in the read's own transaction — and
 // only when there is a `query` to match (claude-docs/db/compendium-read.md, "The compendium read").
-// And the plan the ranked search runs, read off the same log.
+// The substitute picker's search (MB.138) sends the same match over the
+// compendium and the proof's coven, so it is read here too. And the plan the
+// ranked search runs, read off the same log.
 
 const logged = vi.hoisted(() => [] as Logged[]);
 
@@ -49,6 +57,24 @@ describe('the compendium search query', () => {
 
     expect(logged.some(isSetting)).toBe(false);
     expect(logged.some(({ query }) => /^begin/i.test(query))).toBe(false);
+  });
+});
+
+describe('the ingredient suggestion query', () => {
+  it('sets the word threshold to 0.5 before matching, and reads the proof’s coven', async () => {
+    const membership = await assertMembership(asUser(B), WORKSPACE_W_ID, { ingredient: ['read'] });
+    logged.length = 0;
+
+    await findIngredientSuggestions(membership, 'mugwort', PAGE);
+
+    const setting = logged.findIndex(isSetting);
+    expect(logged[setting].params).toEqual(['0.5']);
+    const read = logged.findIndex(isRead);
+    expect(read).toBeGreaterThan(setting);
+    expect(logged[read].query).toMatch(
+      /"ingredients"\."workspace_id" is null or "ingredients"\."workspace_id" = \$\d+/,
+    );
+    expect(logged[read].params).toContain(WORKSPACE_W_ID);
   });
 });
 
@@ -118,6 +144,7 @@ describe('the ranked search plan over ~20,000 rows', () => {
   const FIRST: PageRequest = { limit: 26, inverted: false };
   let pageOne: Logged;
   let pageTwo: Logged;
+  let suggestions: Logged;
 
   beforeAll(async () => {
     // Twenty thousand entries and as many folk names that share no word with
@@ -150,11 +177,14 @@ describe('the ranked search plan over ~20,000 rows', () => {
     pageTwo = await statementFor(() =>
       findCompendiumPage({ query: 'mugwort' }, { ...FIRST, after: first[24].cursor }),
     );
+    const membership = await assertMembership(asUser(B), WORKSPACE_W_ID, { ingredient: ['read'] });
+    suggestions = await statementFor(() => findIngredientSuggestions(membership, 'mugwort', FIRST));
   }, 120_000);
 
   for (const [label, statement] of [
     ['first page', () => pageOne],
     ['page after a cursor', () => pageTwo],
+    ['ingredient suggestion page', () => suggestions],
   ] as const) {
     it(`starts the ${label} from both expression indexes, with no subplan`, async () => {
       const { plan } = await explain(statement(), { seqscan: false });

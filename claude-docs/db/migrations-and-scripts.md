@@ -97,6 +97,31 @@
   own names with `deleted_at IS NULL` added. Its sidecar acknowledges the three
   drops and says why it is one PR rather than rule 10's two: no column is
   dropped, and nothing in `src/` names the constraints.
+- **`0030_ingredient-lists.sql`** (MB.135) is the expand of MB.134's lists:
+  `drizzle-kit generate` wrote the three `ADD COLUMN`s for `planets`,
+  `zodiac_signs` and `colors`, and the fill was added by hand, one `UPDATE`
+  per list copying its single column as a one-entry array where one is set.
+  The template is migrated before it is seeded, so its lists start empty and
+  `ingredient-lists.test.ts` re-runs the migration's own `UPDATE`s against the
+  seeded rows. See
+  ["The ingredient identity model"](identity-model.md).
+- **`0031_refill-ingredient-lists.sql`** (MB.136) is the fifth hand-written
+  one, via `generate --custom`, and fills the lists again from the singles
+  MB.136 stops declaring, for anything the live deploy wrote after 0030. It
+  had to be `--custom`: a plain `generate` diffs the schema, which no longer
+  declares the singles, and would have emitted MB.137's drop, while
+  `--custom` copies the last snapshot whole, so the singles stay in it.
+  Data only, so no sidecar. The seed writes lists since MB.136, so
+  `ingredient-lists.test.ts` puts the seeded rows back as a deployed database
+  held them before re-running either fill. See
+  ["The ingredient identity model"](identity-model.md).
+- **`0032_ingredient-substitutes.sql`** (MB.139) and **`0033_deities.sql`**
+  (MB.128) add tables while drops are pending, so both are `generate --custom`
+  with their DDL taken from a `generate` run in a scratch copy, the pending
+  drops left out and the snapshot extended by hand — the procedure is
+  ["Expand/contract"](expand-contract.md). 0033 adds `deity_traditions` and
+  `deities`, with their two `set_updated_at` triggers; see
+  ["The deity vocabulary"](deity-vocabulary.md).
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls

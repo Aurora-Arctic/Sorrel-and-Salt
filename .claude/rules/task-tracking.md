@@ -14,7 +14,7 @@ paths:
 
 The long form of `CLAUDE.md`'s GitHub task tracking section. claude-docs/task-tracking.md is the board's shape and the mechanics these rules rest on, and claude-docs/design-decisions/mb.89-plan.md why the board moved from Asana. Nothing is written to Asana again: the workspace stays, archived, only so older PR bodies' permalinks resolve (claude-docs/task-tracking.md, "Migration").
 
-The issues and `TASKS.md` are expected to agree. A task minted as an issue gets its entry in `claude-docs/tasks/<milestone>.md` in the same pass, or the docs silently fall behind.
+The issues and `TASKS.md` are expected to agree. A task minted as an issue gets its entry in `claude-docs/tasks/<milestone>.md` in the same pass, or the docs silently fall behind; and **an entry edited afterwards is synced to its issue in the same pass**, `node scripts/task-board.mjs sync <ID> …`, which brings the title, body and `Estimate` to the entry (claude-docs/task-tracking.md, "Sync").
 
 ## Everything goes through `gh`
 

@@ -41,12 +41,11 @@ const COLUMNS = [
   'form',
   'description',
   'element',
-  'planet',
-  'zodiac',
+  'planets',
+  'zodiac_signs',
   'deities',
-  'color',
+  'colors',
   'safety_notes',
-  'substitutes',
   'slug',
   ...AUDIT_COLUMNS,
 ].sort();
@@ -96,9 +95,10 @@ describe('ingredients schema', () => {
     expect(foreignKeys.some((fk) => fk.reference().columns[0].name === 'form')).toBe(false);
   });
 
-  it('stores deities and substitutes as array columns', () => {
-    expect(byName.deities.getSQLType()).toBe('text[]');
-    expect(byName.substitutes.getSQLType()).toBe('text[]');
+  it('stores deities, planets, zodiac signs and colours as array columns', () => {
+    for (const column of ['deities', 'planets', 'zodiac_signs', 'colors']) {
+      expect(byName[column].getSQLType()).toBe('text[]');
+    }
   });
 
   // MB.80: the public address, derived by whoever writes the row, so no default.
@@ -163,10 +163,14 @@ beforeEach(async () => {
 });
 
 describe('ingredients table', () => {
-  // No column the schema has stopped declaring outlives it in the database —
-  // MB.81's pending claims were the last.
-  it('carries exactly the columns the schema declares', async () => {
-    expect(await catalogue.columnNames('ingredients')).toEqual(COLUMNS);
+  // A column the schema has stopped declaring outlives it in the database for
+  // one deploy: `planet`, `zodiac` and `color`, undeclared by MB.136 and
+  // dropped by MB.137, and `substitutes`, undeclared by MB.140 and dropped by
+  // MB.141, are the only ones.
+  it('carries the columns the schema declares, and the four awaiting their drop', async () => {
+    expect(await catalogue.columnNames('ingredients')).toEqual(
+      [...COLUMNS, 'planet', 'zodiac', 'color', 'substitutes'].sort(),
+    );
   });
 
   it('rejects an insert that omits nomenclature, since the column has no default', async () => {

@@ -38,6 +38,13 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTime
 
+type DeitySuggestion {
+  curated: Boolean!
+  description: String
+  tradition: String
+  value: String!
+}
+
 type FormSuggestion {
   claimants: [SuggestionClaimant!]!
   curated: Boolean!
@@ -50,7 +57,7 @@ type Ingredient {
   audit: AuditInfo!
   canonicalName: String
   categories: [Category!]!
-  color: String
+  colors: [String!]
   deities: [String!]
   description: String
   element: IngredientElement
@@ -60,11 +67,11 @@ type Ingredient {
   isGlobal: Boolean!
   name: String!
   nomenclature: Nomenclature!
-  planet: String
+  planets: [String!]
   safetyNotes: String
   slug: String!
-  substitutes: [String!]
-  zodiac: String
+  substitutes: [Substitute!]!
+  zodiacSigns: [String!]
 }
 
 enum IngredientElement {
@@ -92,7 +99,7 @@ type IngredientFormValue {
 
 input IngredientInput {
   canonicalName: String
-  color: String
+  colors: [String!]
   deities: [String!]
   description: String
   element: IngredientElement
@@ -100,10 +107,10 @@ input IngredientInput {
   form: String
   name: String!
   nomenclature: Nomenclature
-  planet: String
+  planets: [String!]
   safetyNotes: String
-  substitutes: [String!]
-  zodiac: String
+  substitutes: [SubstituteInput!]
+  zodiacSigns: [String!]
 }
 
 """
@@ -111,7 +118,7 @@ The whole ingredient, replacing the row. Every field is sent, and "" or [] clear
 """
 input IngredientUpdateInput {
   canonicalName: String!
-  color: String!
+  colors: [String!]!
   deities: [String!]!
   description: String!
   element: IngredientElement
@@ -119,10 +126,10 @@ input IngredientUpdateInput {
   form: String!
   name: String!
   nomenclature: Nomenclature!
-  planet: String!
+  planets: [String!]!
   safetyNotes: String!
-  substitutes: [String!]!
-  zodiac: String!
+  substitutes: [SubstituteInput!]!
+  zodiacSigns: [String!]!
 }
 
 type Mutation {
@@ -152,9 +159,11 @@ type PageInfo {
 type Query {
   commonNameSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryCommonNameSuggestionsConnection!
   compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, query: String): QueryCompendiumConnection!
+  deitySuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryDeitySuggestionsConnection!
   formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryFormSuggestionsConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient!
   ingredientFormValues(after: String, before: String, first: Int, last: Int): QueryIngredientFormValuesConnection!
+  ingredientSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryIngredientSuggestionsConnection!
   me: User!
   ok: Boolean!
   planetSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryPlanetSuggestionsConnection!
@@ -194,6 +203,16 @@ type QueryCompendiumConnectionEdge {
   score: Float
 }
 
+type QueryDeitySuggestionsConnection {
+  edges: [QueryDeitySuggestionsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryDeitySuggestionsConnectionEdge {
+  cursor: String!
+  node: DeitySuggestion!
+}
+
 type QueryFormSuggestionsConnection {
   edges: [QueryFormSuggestionsConnectionEdge!]!
   pageInfo: PageInfo!
@@ -212,6 +231,16 @@ type QueryIngredientFormValuesConnection {
 type QueryIngredientFormValuesConnectionEdge {
   cursor: String!
   node: IngredientFormValue!
+}
+
+type QueryIngredientSuggestionsConnection {
+  edges: [QueryIngredientSuggestionsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryIngredientSuggestionsConnectionEdge {
+  cursor: String!
+  node: Ingredient!
 }
 
 type QueryPlanetSuggestionsConnection {
@@ -247,6 +276,29 @@ type QueryZodiacSuggestionsConnection {
 type QueryZodiacSuggestionsConnectionEdge {
   cursor: String!
   node: CorrespondenceSuggestion!
+}
+
+"""
+Another ingredient to use in its place: a link to one, or the name of one not entered.
+"""
+type Substitute {
+  """
+  The ingredient to follow: null on a typed name, and once the linked ingredient is deleted.
+  """
+  ingredient: Ingredient
+
+  """
+  The linked ingredient's label, its last once deleted; the typed name otherwise.
+  """
+  name: String!
+}
+
+"""
+An ingredient to link, or the name of one not entered: exactly one of the two.
+"""
+input SubstituteInput {
+  ingredientId: ID
+  name: String
 }
 
 type SuggestionClaimant {

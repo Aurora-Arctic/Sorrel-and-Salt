@@ -7,10 +7,10 @@ import { schema } from '@/graphql/schema';
 import { ValidationError } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { A, B, asUser } from '../../../support/as-user';
-import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { insertIngredient, insertSubstituteLink } from '../../../support/db/insert-ingredient';
 import { noSender } from '../../../support/email-verification';
 import { makeIngredient } from '../../../support/fixtures';
-import type { CompendiumConnection } from './types';
+import type { CompendiumConnection, SubstituteNode } from './types';
 
 // The `compendium` query over the standard seed's 26 entries: public (MB.80),
 // filtered in SQL, a page at a time, with folk names and categories batched.
@@ -22,6 +22,7 @@ const repository = vi.hoisted(() => ({
   findCompendiumCount: vi.fn(),
   findManyOfIngredients: vi.fn(),
   findManyByIds: vi.fn(),
+  findSubstitutesIncludingSoftDeleted: vi.fn(),
   findWorkspaceRole: vi.fn(),
 }));
 vi.mock('@/db/repository', async (importOriginal) => {
@@ -213,6 +214,53 @@ describe('compendium', () => {
     });
 
     expect(nodes.map((node) => node.canonicalName)).toEqual(['Uncaria tomentosa']);
+  });
+
+  // MB.140: every entry on the page asks for its substitutes, and one read
+  // answers them all, the linked ingredients joined in.
+  it('resolves the substitutes of a page, linked and typed, in one read', async () => {
+    const [mugwort, wormwood, lavender] = await Promise.all(
+      ['Mugwort', 'Wormwood', 'Lavender'].map(async (name) => {
+        const [row] = await sql`
+          select id from ingredients where name = ${name} and workspace_id is null`;
+        return row.id as string;
+      }),
+    );
+    await insertSubstituteLink(sql, mugwort, wormwood, A.id);
+    await insertSubstituteLink(sql, lavender, mugwort, A.id);
+    await sql`insert into ingredient_substitutes ${sql({
+      ingredient_id: mugwort,
+      name: 'Fixture Root',
+      created_by: A.id,
+      updated_by: A.id,
+    })}`;
+
+    const result = await graphql({
+      schema,
+      source: `query {
+        compendium(first: 50) {
+          edges { node { id substitutes { name ingredient { id name } } } }
+        }
+      }`,
+      contextValue: { session: null, loaders: createLoaders(null), emailVerification: noSender },
+    });
+
+    expect(result.errors).toBeUndefined();
+    type Page = {
+      compendium: { edges: { node: { id: string; substitutes: SubstituteNode[] } }[] };
+    };
+    const nodes = (result.data as Page).compendium.edges.map((edge) => edge.node);
+    // Precondition: the page holds every entry, so each asked.
+    expect(nodes.length).toBeGreaterThan(20);
+    expect(nodes.find((node) => node.id === mugwort)?.substitutes).toEqual([
+      { name: 'Fixture Root', ingredient: null },
+      { name: 'Wormwood', ingredient: { id: wormwood, name: 'Wormwood' } },
+    ]);
+    expect(nodes.find((node) => node.id === lavender)?.substitutes).toEqual([
+      { name: 'Mugwort', ingredient: { id: mugwort, name: 'Mugwort' } },
+    ]);
+    expect(nodes.find((node) => node.id === wormwood)?.substitutes).toEqual([]);
+    expect(repository.findSubstitutesIncludingSoftDeleted).toHaveBeenCalledTimes(1);
   });
 
   it('resolves the categories, their groups and the folk names of a page in a read each', async () => {

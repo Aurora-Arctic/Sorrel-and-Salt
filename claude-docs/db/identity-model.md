@@ -17,16 +17,19 @@ What follows describes all three as built.
 - **`ingredients`** — `id`, `workspaceId` (nullable: `NULL` is the compendium
   tier, non-null is a workspace's own ingredient), `name`, `slug` (MB.81;
   ["Ingredient slugs"](ingredient-slugs.md)), `canonicalName`, `nomenclature`, `form`, the generated `canonicalKey`, the correspondence
-  columns (`description`, `element`, `planet`, `zodiac`, `deities[]`, `color`,
-  `safetyNotes`, `substitutes[]`), + audit. `name` is the display label —
+  columns (`description`, `element`, `planets[]`, `zodiacSigns[]`, `deities[]`,
+  `colors[]`, `safetyNotes`), + audit. `name` is the display label —
   what it's called here — and stays freely relabellable, because identity
   moved off it onto `canonicalName`/`nomenclature`/`form`. Of the
   correspondences only `element` is constrained: an `ingredient_element`
   `pgEnum` of `earth`, `air`, `fire`, `water`, `spirit`, closed and fixed —
   the exact opposite of `form`, and the reason the two are easy to confuse
-  but never interchangeable. `deities` and `substitutes` are native
-  `text[]` columns, one of the things SQLite could not have run (DESIGN.md
-  §14). Seven declared indexes: M4.1a's three partial unique ones (below),
+  but never interchangeable. `planets`, `zodiacSigns`, `deities` and
+  `colors` are native `text[]` columns, one of the things SQLite could not
+  have run (DESIGN.md §14). `planets`, `zodiacSigns` and `colors` replaced
+  single columns in MB.136 (below). Substitutes were a `substitutes[]` column
+  too, until MB.140 moved every reader and writer to `ingredient_substitutes`:
+  the column is undeclared, and stays in the database until MB.141 drops it. Seven declared indexes: M4.1a's three partial unique ones (below),
   MB.81's two on the slug ("Ingredient slugs"), `ingredients_trgm`
   (M4.6), one multicolumn `gin_trgm_ops` index over `name` and
   `canonical_name` — see ["Fuzzy matching"](fuzzy-matching.md) — and its folded twin
@@ -44,6 +47,19 @@ What follows describes all three as built.
   key carries no predicate, and M8.3a's promotion swaps one named row rather
   than reconstructing a pair. No locale or region column — DESIGN.md §5 records
   no regional requirement and nothing renders one.
+- **`ingredient_substitutes`** (MB.139, migration
+  `0032_ingredient-substitutes.sql`; the model is MB.138's, in DESIGN.md §5) —
+  `id`, `ingredientId`, `substituteId` (nullable FK to `ingredients`), `name`
+  (nullable), + audit. One row per substitute, a link or a typed name: three
+  CHECKs hold exactly one of the two, a non-blank name and no link to its own
+  ingredient. Three indexes, all partial on `deleted_at IS NULL`: the
+  parent's, and two unique ones, one link per ingredient and one name per
+  ingredient case-folded, each over its own kind of row. None leads on
+  `substitute_id`, since nothing reads back from a linked ingredient. The
+  migration copies every `substitutes[]` entry across as a name, trimmed, with
+  blanks skipped and an entry repeated in any case kept once, in the spelling
+  it first holds. MB.140 moved every reader and writer to the table and
+  stopped declaring the array, which MB.141 drops.
 - **`ingredient_forms`** — `id`, `name`, `slug`, `groupId`, `description`, +
   audit. Shaped like `categories`: global, admin-curated, no workspace
   scoping. This is the third resource admins curate globally, alongside the
@@ -160,6 +176,45 @@ uniqueness is per ingredient, deliberately not global, since several
 unrelated ingredients claiming the same common name is exactly what's being
 documented, not an error. `lower`, `btrim`, and `similarity`, by contrast,
 are all IMMUTABLE and used freely throughout this model.
+
+**Planet, zodiac sign and colour become lists (MB.134).** DESIGN.md §5 gives
+an ingredient several of each, so `planet`, `zodiac` and `color`, single
+`text` columns as built, give way to `planets`, `zodiac_signs` and `colors`,
+nullable `text[]` with no default, declared in Drizzle as `planets`,
+`zodiacSigns` and `colors`. They are stored as `deities` is: the shared schema
+trims each entry, drops a blank one and turns a list left empty into null
+([`../validation.md`](../validation.md), "The two ingredient variants"), so no row holds `{}`
+or a blank entry, and no CHECK repeats that, since `deities` has none either.
+An array keeps its order, and each list's order is the member's, so nothing
+sorts one on write or read.
+
+- **Arrays, not child tables, unlike folk names.** Folk names moved to a
+  table so a trigram index could reach them. No single column carried one —
+  the planet and zodiac autofill reads the in-use values of the compendium
+  and one workspace with no index behind them — so a list
+  loses no index, and a table per list would buy three joins for nothing.
+- **New names, by rule 10.** A column cannot turn from `text` to `text[]`
+  under a deployed reader, so the lists sit beside the singles for a deploy:
+  MB.135 added them and filled each from its single column where one was
+  set (`0030_ingredient-lists`); MB.136 switched every reader and writer and
+  stopped declaring the singles, which stay in the database undeclared;
+  MB.137 fills a last time and drops them, with its `.ack.md` sidecar, once
+  MB.136 has deployed (["Expand/contract"](expand-contract.md)).
+- **MB.136's migration rederives the lists.** `0031_refill-ingredient-lists`
+  runs before MB.136 promotes, while only 0030 has written a list, so every
+  list is still its single's: each is set to its single as one entry, or to
+  null where the single is, for whatever the live deploy wrote after 0030 — a
+  new row, a changed value, a cleared one. Only a row that disagrees is
+  written, so `updated_at` moves on no other. It is `generate --custom`,
+  which copies the last snapshot rather than diffing the schema, so the
+  snapshot keeps the undeclared singles and MB.137's `db:generate` still
+  emits their drop.
+- **The in-use scan unnests.** Tier 2 of the planet and zodiac autofill
+  reads entries rather than a column: `cross join lateral unnest(…)` gives
+  one row per entry before anything trims or folds it, so a value counts
+  once however many lists hold it, or however often one does
+  (["The member's autofill"](member-autofill.md)). The deity autofill reads
+  `deities` the same way (MB.130).
 
 **Fuzzy matching: one index, and a rule every caller is bound by** has a file of its own: [`fuzzy-matching.md`](fuzzy-matching.md).
 

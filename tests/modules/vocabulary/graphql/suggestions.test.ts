@@ -30,8 +30,8 @@ beforeEach(async () => {
       workspaceId: WORKSPACE_W_ID,
       name: 'Sedna Water',
       nomenclature: 'none',
-      planet: 'Sedna',
-      zodiac: 'Cetus',
+      planets: ['Sedna'],
+      zodiacSigns: ['Cetus'],
     }),
     A.id,
   );
@@ -117,7 +117,7 @@ describe('planetSuggestions', () => {
 });
 
 describe('zodiacSuggestions', () => {
-  it('answers from the zodiac vocabulary and the zodiac column', async () => {
+  it('answers from the zodiac vocabulary and the zodiac signs in use', async () => {
     const result = await run(asUser(B), 'zodiacSuggestions', { query: 'cetus' });
 
     expect(result.errors).toBeUndefined();

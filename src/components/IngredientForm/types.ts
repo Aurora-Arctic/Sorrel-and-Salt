@@ -1,11 +1,12 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import type { z } from 'zod';
-import type { CreateWorkspaceIngredientMutation } from '../../gql/graphql';
+import type { CreateWorkspaceIngredientMutation, PossibleDuplicatesQuery } from '../../gql/graphql';
 import type {
   INGREDIENT_ELEMENTS,
   NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
+import type { Suggestions } from '../Combobox/types';
 
 export interface IngredientFormProps {
   /** The coven the new ingredient is written to. */
@@ -24,6 +25,16 @@ export interface ListEntry {
 }
 
 /**
+ * One substitute: typed text, or a link to an ingredient, whose label is
+ * `value` (DESIGN.md §5, `ingredient_substitutes`). Nothing here picks a
+ * link yet: that is MB.131's lookup.
+ */
+export interface SubstituteListEntry extends ListEntry {
+  /** The ingredient linked, with the formal name its pill reads beside the label. */
+  link?: { id: string; canonicalName: string | null };
+}
+
+/**
  * The form's own state: every field as typed, a closed set unanswered as `''`,
  * and what sits in each list's box, not yet added.
  */
@@ -35,11 +46,11 @@ export interface IngredientFormValues {
   folkNames: ListEntry[];
   description: string;
   element: IngredientElement | '';
-  planet: string;
-  zodiac: string;
-  color: string;
+  planets: ListEntry[];
+  zodiacSigns: ListEntry[];
+  colors: ListEntry[];
   deities: ListEntry[];
-  substitutes: ListEntry[];
+  substitutes: SubstituteListEntry[];
   safetyNotes: string;
   drafts: Record<ListFieldName, string>;
 }
@@ -47,12 +58,12 @@ export interface IngredientFormValues {
 /** What the form sends: its values in the shape the shared schema and the mutation take, unparsed. */
 export type IngredientFormInput = z.input<typeof LocalIngredientInput>;
 
-export type TextFieldName =
-  'name' | 'canonicalName' | 'form' | 'description' | 'planet' | 'zodiac' | 'color' | 'safetyNotes';
+export type TextFieldName = 'name' | 'canonicalName' | 'form' | 'description' | 'safetyNotes';
 
 export type SelectFieldName = 'nomenclature' | 'element';
 
-export type ListFieldName = 'folkNames' | 'deities' | 'substitutes';
+export type ListFieldName =
+  'folkNames' | 'planets' | 'zodiacSigns' | 'colors' | 'deities' | 'substitutes';
 
 /** What every field shares: what it is called, and what it is told about it. */
 interface FieldProps {
@@ -73,6 +84,12 @@ export interface TextFieldProps extends FieldProps {
   disabled?: boolean;
   /** Fields whose errors this one's value decides as well, revalidated when it changes. */
   deps?: (TextFieldName | SelectFieldName)[];
+  /** Another element read with the field while it shows: the name's duplicate warning. */
+  describedBy?: string;
+  /** Marked invalid by something other than its own error: the name's held duplicate warning. */
+  invalid?: boolean;
+  /** Drawn beneath the field, after its error: the name's duplicate warning. */
+  after?: ReactNode;
 }
 
 export interface SelectFieldProps extends FieldProps {
@@ -92,6 +109,14 @@ export interface SelectOption {
   label: string;
 }
 
+/** A text field whose box suggests as it is typed in; picking fills it. */
+export interface SuggestFieldProps extends FieldProps {
+  name: TextFieldName;
+  suggestions: Suggestions;
+  /** The box has been focused: the lookup may start asking. */
+  onActivate: () => void;
+}
+
 export interface ListFieldProps {
   name: ListFieldName;
   /** The group's legend: "Folk Names". */
@@ -100,6 +125,42 @@ export interface ListFieldProps {
   entry: string;
   /** What the list is for, behind an info tip beside the legend. */
   hint?: string;
+  /** What the box suggests; left out for a list with no source yet, whose box never opens. */
+  suggestions?: Suggestions;
+  /** The box has been focused: the lookup may start asking. */
+  onActivate?: () => void;
+}
+
+/** A field whose lookup asks about this coven's ingredients. */
+export interface LookupFieldProps {
+  workspaceId: string;
+}
+
+/** The duplicate warning's state, which the form owns and the name field draws. */
+export interface DuplicateWarning {
+  /** The matches named, best first, less those dismissed. */
+  shown: Duplicate[];
+  /** A save is held on them: the warning is an error on the name. */
+  blocking: boolean;
+  /** Asks about the name a save is sending, and holds it, answering true, when a match is not dismissed. */
+  check: (name: string) => Promise<boolean>;
+  /** Sets the matches shown aside and lifts the hold. */
+  dismiss: () => void;
+}
+
+export interface NameFieldProps {
+  warning: DuplicateWarning;
+  /** Create Anyway, while the warning shows, and null otherwise: a held save focuses it. */
+  ref: Ref<HTMLButtonElement>;
+}
+
+/** An entry whose name is close to the one typed, as the duplicate warning names and links it. */
+export type Duplicate = PossibleDuplicatesQuery['possibleDuplicates']['edges'][number]['node'];
+
+/** An in-scope ingredient already holding a suggested value, as a lookup names it. */
+export interface Claimant {
+  name: string;
+  canonicalName: string | null;
 }
 
 export interface FieldErrorProps {
@@ -109,16 +170,12 @@ export interface FieldErrorProps {
 
 export interface FieldShellProps extends FieldProps {
   controlId: string;
+  labelId: string;
   hintId: string;
   noteId: string;
   errorId: string;
   error?: string;
   children: ReactNode;
-}
-
-export interface EntryChipProps {
-  value: string;
-  /** The list's error element, when this entry is one it names. */
-  errorId?: string;
-  onRemove: () => void;
+  /** Beneath the error: what a field adds of its own. */
+  after?: ReactNode;
 }

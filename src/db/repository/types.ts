@@ -4,6 +4,7 @@ import type { auditColumns } from '../../modules/identity/schema/users';
 import type { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import type { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
+import type { deities } from '../../modules/vocabulary/schema/deities';
 import type { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
 import type { Membership } from '@/modules/coven';
 import type { SiteAdmin } from '@/modules/identity';
@@ -128,6 +129,24 @@ export interface KeysetCount {
 export interface Similarity {
   orderBy: SQL[];
   limit: number;
+}
+
+/**
+ * How `selectFrom` reads a table beside a second one left-joined to it: each
+ * row with the joined row, or null where `on` matched none. Alias the joined
+ * table when the `where` reads the table itself too, in a correlated
+ * subquery. The joined row takes no filter of its own here: what it must
+ * satisfy is the caller's `on` and `where`.
+ */
+export interface LeftJoin<TJoined extends PgTable> {
+  leftJoin: TJoined;
+  on: SQL;
+}
+
+/** A row read under a `LeftJoin`, and the row joined to it. */
+export interface JoinedRow<TRow, TJoined> {
+  row: TRow;
+  joined: TJoined | null;
 }
 
 /**
@@ -299,7 +318,14 @@ export interface IngredientIdentity {
 }
 
 /** A vocabulary a member's autofill suggests from. */
-export type SuggestingVocabulary = typeof planets | typeof zodiacSigns | typeof ingredientForms;
+export type SuggestingVocabulary =
+  typeof planets | typeof zodiacSigns | typeof ingredientForms | typeof deities;
+
+/**
+ * Where a vocabulary's in-use values are written on `ingredients`: one value
+ * to a `column`, or a `list` whose entries are each one (MB.136).
+ */
+export type InUseSource = { column: AnyPgColumn } | { list: AnyPgColumn };
 
 /** A curated row, or a value written on an ingredient that matches none. */
 export interface VocabularySuggestion {
@@ -314,6 +340,15 @@ export interface FormSuggestion extends VocabularySuggestion {
   /** The curated row's group, which tells two same-named forms apart; none in use. */
   group: string | null;
   claimants: Claimant[];
+}
+
+/**
+ * A deity suggestion, which carries its tradition as a form's carries its
+ * group, and no claimants: a deity is no part of an ingredient's identity.
+ */
+export interface DeitySuggestion extends VocabularySuggestion {
+  /** The curated row's tradition, which tells two same-named deities apart; none in use. */
+  tradition: string | null;
 }
 
 /** An in-scope ingredient already holding a suggested value. */

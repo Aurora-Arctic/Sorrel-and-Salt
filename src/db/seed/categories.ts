@@ -442,6 +442,8 @@ export async function seedCategoryVocabulary(tx: SeedTransaction): Promise<void>
     itemTable: categories,
     groups: CATEGORY_GROUPS,
     items: CATEGORIES,
+    groupOf: (category) => category.group,
+    toItemRow: (row, groupId) => ({ ...row, groupId }),
     itemNoun: 'Category',
   });
 }

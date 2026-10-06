@@ -460,10 +460,10 @@ heavier than the reverse; light reverts to the browser default.
   tokens, the `$font-body` / `$font-heading` / `$font-mono` stacks, the
   `$measure`, and the three scales with their accessors — `type-size()`,
   `space()` and `radius()` — a component `@use`s directly.
-- `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `theme-dark` /
-  `theme-light`, `semantic-tokens` (the per-theme category-group and badge
-  custom properties), `focus-ring`, `theme-transition`, `reduced-motion`,
-  `font-smoothing-antialiased`.
+- `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `tip-bubble`,
+  `theme-dark` / `theme-light`, `semantic-tokens` (the per-theme
+  category-group and badge custom properties), `focus-ring`,
+  `theme-transition`, `reduced-motion`, `font-smoothing-antialiased`.
 - **Three `*-base` mixins**, each emitting nothing on its own `@use` and
   `@include`d at exactly one site, `globals.scss`'s `body`:
   - `_typography.scss` → `typography-base` — headings, body copy capped at

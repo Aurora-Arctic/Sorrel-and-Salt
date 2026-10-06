@@ -61,12 +61,20 @@ export const ingredients = pgTable(
     canonicalKey: text('canonical_key').notNull().generatedAlwaysAs(CANONICAL_KEY),
     description: text('description'),
     element: ingredientElement('element'),
-    planet: text('planet'),
-    zodiac: text('zodiac'),
+    // Lists rather than the single `planet`, `zodiac` and `color` they
+    // replaced (MB.134): new names, because a column cannot turn from `text` to
+    // `text[]` under a deployed reader. The singles are undeclared but still in
+    // the database until MB.137 drops them, so `db:generate` emits that drop on
+    // any branch before it (claude-docs/db/identity-model.md, "The ingredient identity model").
+    planets: text('planets').array(),
+    zodiacSigns: text('zodiac_signs').array(),
     deities: text('deities').array(),
-    color: text('color'),
+    colors: text('colors').array(),
     safetyNotes: text('safety_notes'),
-    substitutes: text('substitutes').array(),
+    // `substitutes text[]` is undeclared since MB.140 moved every reader and
+    // writer to `ingredient_substitutes`, and stays in the database until
+    // MB.141 drops it (rule 10), so `db:generate` emits that drop on any
+    // branch before it.
     ...auditColumns,
   },
   (table) => [

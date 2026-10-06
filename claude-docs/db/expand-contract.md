@@ -23,10 +23,26 @@ second PR, with its sidecar (CLAUDE.md rule 10; the procedure is
 before `deploy.yml` promotes, and Drizzle names every declared column in a
 `SELECT`, so dropping a column the live deploy still declares breaks its reads
 for the length of the rollout, and a rollback past the migration for good.
-Between the two, `db:generate` on any branch emits the drop; it belongs to
-the second task, and the destructive-DDL check refuses it unacknowledged.
 MB.82 and MB.107 are the worked case: MB.82 stopped declaring `pending_slug`
-and its date, and MB.107 dropped them.
+and its date, and MB.107 dropped them. Between the two, `db:generate` on any branch emits the drop; it belongs to
+the second task, and the destructive-DDL check refuses it unacknowledged. A
+data migration may still ride in the first, written with `generate --custom`,
+which copies the last snapshot rather than diffing the schema, so the
+undeclared columns stay in it: MB.136's `0031_refill-ingredient-lists` is
+the worked case.
+
+**A table added while a drop is pending is `generate --custom` too**, with the
+DDL taken from a `generate` run into a scratch copy of `src/db/migrations`
+(`--config` naming a copy of `drizzle.config.ts` whose `out` is the copy), and
+the drop it also emits left out. drizzle-kit prefixes `out` with `./`, so the
+copy's path is written relative to the repository: an absolute one resolves
+to nothing. The new snapshot is the copied one plus that run's entries for
+the new tables, so the undeclared columns stay in it and the drop is still
+the second task's to generate; a second scratch `generate` from it should
+emit the pending drops and nothing else. MB.139's
+`0032_ingredient-substitutes` is the worked case, made while MB.137's drop of
+the planet, zodiac and colour singles was pending, and MB.128's
+`0033_deities` the second, made while MB.141's was pending too.
 
 Renaming a column is the canonical case that goes wrong if done directly —
 `ALTER TABLE ... RENAME COLUMN` is atomic in Postgres, but it isn't atomic

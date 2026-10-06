@@ -15,8 +15,9 @@ merely absent:
   the name a resolver reads it by. `createLoaders(session)` calls every factory
   and is called only by `createContext`. Each loader arrives with the schema it
   loads: `membershipsByUser` (`coven`, for `User.memberships`),
-  `categoriesByIngredient` and `folkNamesByIngredient` (`ingredients`, for
-  `Ingredient.categories` and `Ingredient.folkNames`), and
+  `categoriesByIngredient`, `folkNamesByIngredient` and
+  `substitutesByIngredient` (`ingredients`, for `Ingredient.categories`,
+  `Ingredient.folkNames` and `Ingredient.substitutes`), and
   `categoryGroupsById` and `ingredientFormGroupsById` (`vocabulary`, for
   `Category.group` and `IngredientFormValue.group`); M6.11
   `membersByWorkspace`, MB.9 `ingredientsById` and MB.10 `usersById` follow. A test that builds a context
@@ -25,7 +26,7 @@ merely absent:
   through the module's index, and spread into `LOADERS` here
   ([`modules.md`](../modules.md)).
 - **A loader keyed by an object** passes `cacheKeyFn`, and `defineLoader`'s
-  third type parameter names what it returns. The two ingredient loaders are
+  third type parameter names what it returns. The three ingredient loaders are
   keyed by the parent row's `{ id, workspaceId }` and cached by `id`. The
   service needs the `workspaceId` to know which coven to check without a read
   of its own, and it never trusts it as the scope

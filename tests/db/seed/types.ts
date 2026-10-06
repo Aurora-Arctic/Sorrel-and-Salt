@@ -129,8 +129,44 @@ export interface CompendiumEntryRow {
   canonical_name: string | null;
   nomenclature: string;
   form: string | null;
+  planets: string[] | null;
+  /** Undeclared since MB.136, and in the table until MB.137 drops it. */
   planet: string | null;
   canonical_key: string;
   slug: string;
   created_by: string;
+}
+
+/** A tradition as the deity seed doc tables it. */
+export interface DocDeityTradition {
+  name: string;
+  description: string;
+}
+
+/** A deity as the deity seed doc tables it, its tradition by name. */
+export interface DocDeity {
+  name: string;
+  tradition: string;
+  description: string;
+}
+
+export interface DeityTraditionRow {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  created_by: string;
+  updated_by: string;
+  deleted_at: Date | null;
+}
+
+export interface DeityRow {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  tradition_id: string;
+  created_by: string;
+  updated_by: string;
+  deleted_at: Date | null;
 }

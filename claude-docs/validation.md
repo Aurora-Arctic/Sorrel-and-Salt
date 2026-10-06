@@ -93,21 +93,43 @@ Rules both variants enforce:
   per-ingredient `lower(name)` unique index, so that index isn't what a user
   sees either. A blank folk name is dropped, not refused — but only after the
   repeat check, so an issue's position still counts the rows the form sent,
-  blank ones included, and lands beside the right one. `deities` and
-  `substitutes` drop blank entries the same way. A list left with no entries,
+  blank ones included, and lands beside the right one. `deities` drops
+  blank entries the same way. A list left with no entries,
   `[]` or blanks alone, is absent like a blank text field and becomes `null`,
   so a cleared `deities` is stored as NULL rather than `{}`. Two _different_ ingredients sharing a folk name is untouched: §5
   wants it, since several plants claiming "Cat's Claw" is what is being
   documented.
+- **Substitutes, each a link or a name** (DESIGN.md §5,
+  `ingredient_substitutes`; MB.140). An entry is `{ ingredientId }` or
+  `{ name }`, either half trimmed and blank as absent, and the schema holds it
+  to exactly one, as the row's `num_nonnulls` CHECK does: both, or neither — a
+  blank name included — is refused at the entry, and so is an id that is not a
+  uuid. A blank entry is refused rather than dropped, unlike the text lists,
+  so that a refusal the service makes after the parse still counts the
+  entries the caller sent. The same ingredient linked twice, or the same name
+  twice in any case, is refused at the repeat, the two partial unique indexes'
+  keys, so neither index's 23505 is what a member sees. A name equal to a
+  linked ingredient's label is not a repeat. The parse hands the service each
+  entry as `{ ingredientId, name: null }` or `{ ingredientId: null, name }`;
+  which ingredients a link may reach is the service's rule, since it reads
+  other rows (["The workspace ingredient mutations"](graphql/schema.md)).
 - **Closed sets.** `nomenclature` and `element` come from the pgEnums' lists,
   in `schema/ingredient-enums.ts`.
-- **`planet` and `zodiac` are free text, suggested rather than enforced**,
-  like `form`: trimmed, a blank one becomes `null`, and anything else is
-  written. The project serves a wide range of practices, and any closed list
-  refuses some of them. The suggestions are the admin-curated `planets` and
-  `zodiac_signs` vocabularies
+- **`planets`, `zodiacSigns` and `colors` are lists, validated as `deities`
+  is** (DESIGN.md §5, MB.134; built by MB.136, replacing the single `planet`,
+  `zodiac` and `color`): free text, each entry trimmed, blank entries dropped
+  by `dropBlankEntries` after the cross-field rules, and a list left with no
+  entries `null`. A repeated entry is not refused — unlike folk names, no
+  unique index stands behind a list — and an entry is never reordered, since
+  each list keeps the order entered. Neither schema has a single field left,
+  so a caller still sending `planet` has it stripped like any unknown key.
+- **Planets and zodiac signs are suggested rather than enforced**, like
+  `form`: anything trimmed and non-blank is written. The project serves a
+  wide range of practices, and any closed list refuses some of them. The
+  suggestions are the admin-curated `planets` and `zodiac_signs` vocabularies
   ([`db/astrology-vocabularies.md`](db/astrology-vocabularies.md), "The
-  astrology vocabularies"), and a value off them is as valid as one on them.
+  astrology vocabularies"), and an entry off them is as valid as one on them.
+  A colour has no vocabulary and no suggestions.
 
 The schemas describe a whole ingredient, as the form submits it on create and
 on edit. A partial update would need its own schema: the local variant's

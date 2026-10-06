@@ -17,7 +17,32 @@ export interface StockRow {
   acquiredDate?: string | null;
 }
 
+/** One `information_schema.columns` row, as ingredient-lists.test.ts reads it. */
+export interface ColumnRow {
+  column_name: string;
+  data_type: string;
+  udt_name: string;
+  is_nullable: string;
+  column_default: string | null;
+}
+
+/** An ingredient's id beside its single columns and the lists they fill (MB.135). */
+export type ListedIngredientRow = { id: string } & Record<string, string | string[] | null>;
+
 export interface Retired {
   retired_at: string;
   expires_at: string;
 }
+
+/** An `ingredient_substitutes` row as the fill test reads it (MB.139). */
+export interface SubstituteRow {
+  ingredient_id: string;
+  substitute_id: string | null;
+  name: string | null;
+  created_by: string;
+  updated_by: string;
+  deleted_at: Date | null;
+}
+
+/** What a test row of `ingredient_substitutes` links or names; both or neither is the CHECK's case. */
+export type SubstituteEntry = { substituteId?: string | null; name?: string | null };

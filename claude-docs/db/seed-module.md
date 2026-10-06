@@ -46,14 +46,20 @@ where that choice can be read, rather than the helper deciding it once for
 every table. The one insert that needs its rows back, `standard`'s compendium
 entries, stays hand-written around `.returning()`.
 `src/db/seed/two-tier-vocabulary.ts` exports `seedTwoTierVocabulary(tx, {
-groupTable, itemTable, groups, items, itemNoun })` — groups, then the items
-filed under them, each by slug — which `seedCategoryVocabulary` and
-`seedFormVocabulary` call with their own tables and literals. The literals
-(`CATEGORY_GROUPS`, `CATEGORIES`, `FORM_GROUPS`, `FORMS`) stay in
-`categories.ts` and `forms.ts`, where the tests comparing them against
-DESIGN.md import them from. The two table pairs are typed as a union rather
-than a generic: their columns are identical, so the row type survives without
-a cast.
+groupTable, itemTable, groups, items, groupOf, toItemRow, itemNoun })` —
+groups, then the items filed under them, each by slug — which
+`seedCategoryVocabulary`, `seedFormVocabulary` and `seedDeityVocabulary`
+call with their own tables and literals. The literals (`CATEGORY_GROUPS`,
+`CATEGORIES`, `FORM_GROUPS`, `FORMS`, `DEITY_TRADITIONS`, `DEITIES`) stay
+in `categories.ts`, `forms.ts` and `deities.ts`, where the tests comparing
+them against their documents import them from. Each caller also says how an
+item names its group and keys it, since deities differ (MB.129): `groupOf`
+reads the group's name off an item (`category.group`, `deity.tradition`),
+and `toItemRow` sets the found id under the table's own column
+(`{ ...row, groupId }`, `{ ...row, traditionId }`). The item table is
+therefore a generic, so each call's row is checked against its own table; the
+group tables stay a union, since the columns the seed writes are common to
+all three.
 `src/db/seed/flat-vocabulary.ts` exports `seedFlatVocabulary(tx, table,
 items)`, the one-tier counterpart for a vocabulary with no group — each item
 by slug, the same rules — which `seedAstrologyVocabularies` calls once

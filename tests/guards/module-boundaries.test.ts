@@ -69,6 +69,8 @@ const TIER_SEAM: string[] = [
   'findCompendiumCount',
   // One ingredient by id, in the compendium or a proof's coven (M8.5).
   'findOneIngredient',
+  // The substitute picker's search: an ingredient to link, from the compendium or this workspace (MB.138).
+  'findIngredientSuggestions',
   // The entry a colliding compendium write names, found by the key it holds (M5.2).
   'findCompendiumEntryByIdentity',
   // The entry at a compendium address, for the public route (MB.82).
@@ -77,6 +79,8 @@ const TIER_SEAM: string[] = [
   'findCompendiumSlugRedirect',
   // What a readable spell holds, deleted or not: the compendium and the proof's coven (M5.3).
   'findIngredientsInSpellsIncludingSoftDeleted',
+  // An ingredient's substitutes, and what each links, deleted or not: the compendium and the proofs' covens (MB.140).
+  'findSubstitutesIncludingSoftDeleted',
   // `withAudit`'s writer: the compendium tier's by-id writes, under the SiteAdmin proof (M5.2).
   'writerFor',
 ];

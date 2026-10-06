@@ -4,14 +4,27 @@ import type { FieldError, FieldErrors, FieldPath, Resolver, UseFormReturn } from
 import type { ErrorExtensions } from '../../graphql/types';
 import type { ValidationIssue } from '../../lib/types';
 import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
-import type { IngredientFormInput, IngredientFormValues, ListFieldName } from './types';
+import type {
+  IngredientFormInput,
+  IngredientFormValues,
+  ListEntry,
+  ListFieldName,
+  SubstituteListEntry,
+} from './types';
 
 // The form's values against the shape the schema and the mutation take, and
 // the one mapping from an issue's path back to a field, which the resolver's
 // issues and the server's `fieldErrors` both go through
 // (claude-docs/components/ingredient-form.md).
 
-export const LIST_FIELDS: readonly ListFieldName[] = ['folkNames', 'deities', 'substitutes'];
+export const LIST_FIELDS: readonly ListFieldName[] = [
+  'folkNames',
+  'planets',
+  'zodiacSigns',
+  'colors',
+  'deities',
+  'substitutes',
+];
 
 export const EMPTY_VALUES: IngredientFormValues = {
   name: '',
@@ -21,13 +34,13 @@ export const EMPTY_VALUES: IngredientFormValues = {
   folkNames: [],
   description: '',
   element: '',
-  planet: '',
-  zodiac: '',
-  color: '',
+  planets: [],
+  zodiacSigns: [],
+  colors: [],
   deities: [],
   substitutes: [],
   safetyNotes: '',
-  drafts: { folkNames: '', deities: '', substitutes: '' },
+  drafts: { folkNames: '', planets: '', zodiacSigns: '', colors: '', deities: '', substitutes: '' },
 };
 
 export const GENERIC_ERROR = "That didn't work. Please try again.";
@@ -37,22 +50,48 @@ const isListField = (field: unknown): field is ListFieldName =>
 
 /**
  * The values as the mutation takes them: an unanswered closed set is null, a
- * list entry is its text, and the boxes are left behind — the resolver has
+ * list entry is its text — a substitute its link's id, or else its text as a
+ * name — and the boxes are left behind — the resolver has
  * refused a save while one holds text. Nothing is trimmed or dropped — the
  * schema does that on both sides — so an entry's index in an issue's path is
  * its index here.
  */
 export function toInput(values: IngredientFormValues): IngredientFormInput {
-  const { nomenclature, element, folkNames, deities, substitutes, drafts: _, ...text } = values;
+  const {
+    nomenclature,
+    element,
+    folkNames,
+    planets,
+    zodiacSigns,
+    colors,
+    deities,
+    substitutes,
+    drafts: _,
+    ...text
+  } = values;
   const texts = (rows: { value: string }[]) => rows.map(({ value }) => value);
   return {
     ...text,
     nomenclature: nomenclature || null,
     element: element || null,
     folkNames: texts(folkNames),
+    planets: texts(planets),
+    zodiacSigns: texts(zodiacSigns),
+    colors: texts(colors),
     deities: texts(deities),
-    substitutes: texts(substitutes),
+    substitutes: substitutes.map(({ value, link }) =>
+      link ? { ingredientId: link.id } : { name: value },
+    ),
   };
+}
+
+/**
+ * What an entry's pill reads: its text, and a linked substitute's formal name
+ * beside its label, so two ingredients sharing a label are told apart.
+ */
+export function entryText(entry: ListEntry | SubstituteListEntry): string {
+  const formalName = 'link' in entry ? entry.link?.canonicalName : undefined;
+  return formalName ? `${entry.value} (${formalName})` : entry.value;
 }
 
 /**
@@ -78,19 +117,28 @@ export function fieldNameOf(
 }
 
 /**
- * Adds what a list's box holds as the list's last entry, trimmed, and empties
- * the box: its Add button, and Enter. Returns the entry added, or undefined
- * when the box was blank.
+ * Adds `text` as the list's last entry, trimmed, and empties the box: a
+ * suggestion picked from it. Returns the entry added, or undefined when the
+ * text was blank.
  */
-export function commitDraft(
+export function addEntry(
   { getValues, setValue }: Pick<UseFormReturn<IngredientFormValues>, 'getValues' | 'setValue'>,
   list: ListFieldName,
+  text: string,
 ): string | undefined {
-  const value = getValues(`drafts.${list}`).trim();
+  const value = text.trim();
   if (value === '') return undefined;
   setValue(list, [...getValues(list), { value }], { shouldDirty: true });
   setValue(`drafts.${list}`, '');
   return value;
+}
+
+/** Adds what a list's box holds: its Add button, and Enter with nothing picked. */
+export function commitDraft(
+  form: Pick<UseFormReturn<IngredientFormValues>, 'getValues' | 'setValue'>,
+  list: ListFieldName,
+): string | undefined {
+  return addEntry(form, list, form.getValues(`drafts.${list}`));
 }
 
 const validate = zodResolver(LocalIngredientInput, undefined, { raw: true });

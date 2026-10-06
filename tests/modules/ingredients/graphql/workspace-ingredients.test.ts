@@ -52,8 +52,9 @@ async function run<T>(
 }
 
 const FIELDS = `
-  id name slug canonicalName nomenclature form description element planet zodiac
-  deities color safetyNotes substitutes isGlobal folkNames categories { name }
+  id name slug canonicalName nomenclature form description element planets zodiacSigns
+  deities colors safetyNotes substitutes { name ingredient { id } } isGlobal folkNames
+  categories { name }
   audit { createdBy updatedBy }
 `;
 
@@ -110,12 +111,12 @@ function wholeInput(fixture: IngredientFixture): Record<string, unknown> {
     form: fixture.form ?? '',
     description: fixture.description ?? '',
     element: fixture.element,
-    planet: fixture.planet ?? '',
-    zodiac: fixture.zodiac ?? '',
+    planets: fixture.planets ?? [],
+    zodiacSigns: fixture.zodiacSigns ?? [],
     deities: fixture.deities ?? [],
-    color: fixture.color ?? '',
+    colors: fixture.colors ?? [],
     safetyNotes: fixture.safetyNotes ?? '',
-    substitutes: fixture.substitutes ?? [],
+    substitutes: fixture.substitutes.map((name) => ({ name })),
     folkNames: fixture.folkNames,
   };
 }
@@ -152,17 +153,32 @@ describe('createWorkspaceIngredient', () => {
   });
 
   it('answers the entity as a fresh read would, children included, so the client needs no refetch', async () => {
+    const mockleaf = await seed(makeIngredient({ name: 'Mockleaf', nomenclature: 'none' }));
     const result = await create(asUser(B), {
       name: 'Testwort',
       canonicalName: 'Fixtura testalis',
       nomenclature: 'botanical',
       form: 'root',
       element: 'water',
+      planets: ['Venus', 'Moon'],
+      zodiacSigns: ['Taurus', 'Cancer'],
       deities: ['Testara'],
+      colors: ['Green', 'Silver'],
       folkNames: ['Test Root', 'Fixture Herb'],
+      substitutes: [{ name: 'Zest Root' }, { ingredientId: mockleaf }],
     });
 
     const answered = result.data?.createWorkspaceIngredient as WorkspaceIngredientNode;
+    // Alphabetical by the name each shows, a link leading to its ingredient.
+    expect(answered.substitutes).toEqual([
+      { name: 'Mockleaf', ingredient: { id: mockleaf } },
+      { name: 'Zest Root', ingredient: null },
+    ]);
+    expect(answered).toMatchObject({
+      planets: ['Venus', 'Moon'],
+      zodiacSigns: ['Taurus', 'Cancer'],
+      colors: ['Green', 'Silver'],
+    });
     expect([...answered.folkNames].sort()).toEqual(['Fixture Herb', 'Test Root']);
     const fresh = await read(asUser(B), answered.id);
     expect(fresh.errors).toBeUndefined();
@@ -218,6 +234,28 @@ describe('createWorkspaceIngredient', () => {
     expect(await countIngredients()).toBe(0);
   });
 
+  // A repeat is the schema's refusal, and a link outside the compendium and
+  // W the service's; both reach the form as a field error on the entry,
+  // never as the unique index's 23505 or a bare Forbidden.
+  it.each([
+    ['a repeated name', () => [{ name: 'Zest Root' }, { name: 'zest root' }]],
+    [
+      'a link to another coven’s ingredient',
+      (elsewhere: string) => [{ name: 'Zest Root' }, { ingredientId: elsewhere }],
+    ],
+  ])('answers %s as VALIDATION pathed to the entry, writing nothing', async (_case, list) => {
+    const elsewhere = await seed(local({ name: 'Xenoleaf', workspaceId: WORKSPACE_X_ID }));
+
+    const result = await create(asUser(B), { name: 'Testwort', substitutes: list(elsewhere) });
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.extensions).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: [expect.objectContaining({ path: ['substitutes', 1] })],
+    });
+    expect(await countIngredients()).toBe(1);
+  });
+
   it('refuses a viewer, who is a member and reads the coven, writing nothing', async () => {
     // Why it could have succeeded: C holds a live membership of W and reads its entries.
     const id = await seed(local({ name: 'Rootwort' }));
@@ -247,13 +285,26 @@ describe('createWorkspaceIngredient', () => {
 
 describe('updateIngredient', () => {
   it('replaces the row with the input and answers it as a fresh read would', async () => {
-    const id = await seed(local({ description: 'Dug at dusk', folkNames: ['Dropped Root'] }));
+    const id = await seed(
+      local({
+        description: 'Dug at dusk',
+        planets: ['Moon', 'Venus'],
+        folkNames: ['Dropped Root'],
+      }),
+    );
 
     const result = await update(
       asUser(B),
       id,
       wholeInput(
-        local({ name: 'Testroot', form: 'root', element: 'fire', folkNames: ['Added Root'] }),
+        local({
+          name: 'Testroot',
+          form: 'root',
+          element: 'fire',
+          planets: ['Mars'],
+          colors: ['Red', 'Black'],
+          folkNames: ['Added Root'],
+        }),
       ),
     );
 
@@ -265,6 +316,8 @@ describe('updateIngredient', () => {
       form: 'root',
       element: 'fire',
       description: null,
+      planets: ['Mars'],
+      colors: ['Red', 'Black'],
       folkNames: ['Added Root'],
       audit: { createdBy: A.id, updatedBy: B.id },
     });
@@ -289,7 +342,10 @@ describe('updateIngredient', () => {
         form: 'root',
         description: 'Dug at dusk',
         element: 'water',
+        planets: ['Moon'],
+        zodiacSigns: ['Cancer'],
         deities: ['Testara'],
+        colors: ['Silver'],
         substitutes: ['Mock Root'],
         folkNames: ['Test Root'],
       }),
@@ -302,12 +358,24 @@ describe('updateIngredient', () => {
       form: null,
       description: null,
       element: null,
+      planets: null,
+      zodiacSigns: null,
       deities: null,
-      substitutes: null,
+      colors: null,
+      substitutes: [],
       folkNames: [],
     });
     // Cleared to NULL, not to an empty array: "none" has one representation.
-    expect(await rowOf(id)).toMatchObject({ deities: null, substitutes: null });
+    expect(await rowOf(id)).toMatchObject({
+      planets: null,
+      zodiac_signs: null,
+      deities: null,
+      colors: null,
+    });
+    const [{ n }] = await sql`
+      select count(*)::int as n from ingredient_substitutes
+      where ingredient_id = ${id} and deleted_at is null`;
+    expect(n).toBe(0);
   });
 
   // `element` is an enum, which has no empty value to send, so it is the one
@@ -418,11 +486,15 @@ describe('updateIngredient', () => {
 
   // Root mutation fields run one after another in one request, so the second
   // must not answer the folk names the first one read.
-  it('answers its own folk names when one request updates the entry twice', async () => {
+  it('answers its own folk names and substitutes when one request updates the entry twice', async () => {
     const id = await seed(local());
     const twice = `mutation ($workspaceId: ID!, $id: ID!, $first: IngredientUpdateInput!, $second: IngredientUpdateInput!) {
-      first: updateIngredient(workspaceId: $workspaceId, id: $id, input: $first) { folkNames }
-      second: updateIngredient(workspaceId: $workspaceId, id: $id, input: $second) { folkNames }
+      first: updateIngredient(workspaceId: $workspaceId, id: $id, input: $first) {
+        folkNames substitutes { name }
+      }
+      second: updateIngredient(workspaceId: $workspaceId, id: $id, input: $second) {
+        folkNames substitutes { name }
+      }
     }`;
 
     const result = await run<{ first: WorkspaceIngredientNode; second: WorkspaceIngredientNode }>(
@@ -431,14 +503,16 @@ describe('updateIngredient', () => {
       {
         workspaceId: WORKSPACE_W_ID,
         id,
-        first: wholeInput(local({ folkNames: ['First Root'] })),
-        second: wholeInput(local({ folkNames: ['Second Root'] })),
+        first: wholeInput(local({ folkNames: ['First Root'], substitutes: ['First Zest'] })),
+        second: wholeInput(local({ folkNames: ['Second Root'], substitutes: ['Second Zest'] })),
       },
     );
 
     expect(result.errors).toBeUndefined();
     expect(result.data?.first.folkNames).toEqual(['First Root']);
     expect(result.data?.second.folkNames).toEqual(['Second Root']);
+    expect(result.data?.first.substitutes).toEqual([{ name: 'First Zest' }]);
+    expect(result.data?.second.substitutes).toEqual([{ name: 'Second Zest' }]);
   });
 });
 

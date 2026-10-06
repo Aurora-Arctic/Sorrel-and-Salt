@@ -2,8 +2,8 @@
 @use '../../scss/mixins' as *;
 
 // The fields, the notice and the buttons are the form primitives'
-// (_primitives.scss); this is the form's width, a list's entries, and the
-// row its box shares with Add.
+// (_primitives.scss), and a list's box, its entries and its list are the
+// Combobox's; this is the form's width and the row a box shares with Add.
 
 // A column narrower than the measure, as the other forms keep: wide enough
 // for a formal name and a line of description, and no wider, wherever the
@@ -25,72 +25,6 @@
   }
 }
 
-// The entries added to a list, above its box, wrapping as they need, with
-// room above and below on top of the list's own gap, so they read as a row of
-// their own between the legend and the box.
-.ingredient-form__entries {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(3);
-  margin: space(2) 0;
-  padding: 0;
-  list-style: none;
-}
-
-// A pill in the chip's geometry, but neutral: a free-text entry has no
-// category group to take a colour from. The x's own target stands in for
-// the right-hand padding.
-.ingredient-form__entry {
-  display: inline-flex;
-  align-items: center;
-  gap: space(1);
-  // The gap spaces them, not typography-base's margin on a list item.
-  margin: 0;
-  padding: 0.125rem 0.125rem 0.125rem 0.6875rem;
-  border: 1px solid $text-muted;
-  border-radius: radius('pill');
-  color: $text-primary;
-  font-size: type-size('small');
-  font-weight: 400;
-  line-height: 1.4;
-
-  // The field's error edge, a shape as well as a colour, on the entry it names.
-  &.is-invalid {
-    border-color: $secondary;
-    box-shadow: inset 0 0 0 1px $secondary;
-  }
-
-  // No typography-base ◆: the entries are pills, not prose.
-  &::before {
-    content: none;
-  }
-}
-
-// 1.5rem: WCAG 2.2's 24px minimum target, inside a pill too short for 44px.
-.ingredient-form__remove {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  border: 0;
-  border-radius: radius('pill');
-  background-color: transparent;
-  color: $text-muted;
-  font-size: type-size('body');
-  line-height: 1;
-  cursor: pointer;
-
-  &:hover {
-    color: $text-primary;
-  }
-
-  &:focus-visible {
-    @include focus-ring;
-  }
-}
-
 // A label and its info tip on one line. Positioned, so an open tip spans the
 // field beneath it rather than hanging off the icon.
 .ingredient-form__label-row {
@@ -106,13 +40,56 @@
   color: $secondary;
 }
 
-// A list's box and its Add button, one line and one height.
+// A list's box and its Add button, one line; the box grows with its entries.
 .ingredient-form__row {
   display: flex;
+  align-items: flex-start;
   gap: space(2);
 
-  .input {
+  > .combobox {
     flex: 1;
     min-width: 0;
+  }
+}
+
+// The duplicate warning beneath the name. The region is always in the page,
+// as a live region must be, so it cancels the field's gap while empty and its
+// notice puts the gap back.
+.ingredient-form__duplicates {
+  display: block;
+  margin-top: calc(-1 * #{space(2)});
+
+  .notice {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: space(2);
+    margin-top: space(2);
+    // A step deeper beneath the button than the notice's own padding, so
+    // the button does not sit on the box's edge.
+    padding-bottom: space(4);
+  }
+}
+
+// Save's busy mark, from the press to the answer: a ring in the button's own
+// ink, open on one side so its turn reads. Slowed rather than stopped where
+// motion is reduced, since a still ring says nothing is happening.
+.ingredient-form__spinner {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: radius('pill');
+  animation: ingredient-form-spin 0.8s linear infinite;
+
+  @include reduced-motion {
+    animation-duration: 2.4s;
+  }
+}
+
+@keyframes ingredient-form-spin {
+  to {
+    transform: rotate(1turn);
   }
 }

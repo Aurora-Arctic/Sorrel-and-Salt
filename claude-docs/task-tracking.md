@@ -163,6 +163,7 @@ A `gh` failure prints gh's own stderr on one line, never a stack.
 | `status <ID> "<Status>"`        | Moves `Status` forward; a no-op when already there, a refusal for a step back, for `Done`, or for an issue the auto-add has not placed on the Project yet.        |
 | `estimate <ID> <hours>`         | Sets `Estimate`; the same refusal for an issue not yet on the Project.                                                                                            |
 | `comment <ID> "<text>"`         | Posts the comment, after the secret scan.                                                                                                                         |
+| `sync <ID> [<ID> …]`            | Brings each issue's title, body and `Estimate` to its entry (**Sync**), editing only what differs; refused for an entry that looks like it carries a value.       |
 | `list`                          | Every tracked issue, open and closed, as a JSON array.                                                                                                            |
 | `reorder [--apply] [--limit N]` | The moves that put the open waves' items in execution order, as a dry run; `--apply` makes them and prints the recomputed plan; `--limit` caps a run (**Order**). |
 
@@ -188,6 +189,34 @@ with the hourly budget almost untouched. The refusal reads
 `GraphQL: API rate limit exceeded`; when it shows up, the cause is a burst,
 not the budget, and the fix is fewer calls per command rather than waiting an
 hour.
+
+## Sync
+
+**An issue mirrors its entry, and stays mirrored.** Its title is the entry's
+heading, `<ID> — <title>`; its body is the entry's text, from the line after
+the heading to the next task or section heading; its `Estimate` is the
+heading's hours. Minting writes all three, and an entry corrected afterwards —
+a task re-scoped by the one before it, an estimate revised, a criterion
+settled while building — is synced in the same pass, in the turn the entry is
+edited, not when its PR merges:
+
+```sh
+node scripts/task-board.mjs sync MB.128 MB.129
+```
+
+`sync` reads the entries from `scripts/tasks-md.mjs`'s files on disk, so it
+publishes the branch's text: an issue says what the task is now, and the
+merge only makes the breakdown say it too. It edits only what differs, so a
+re-run is a no-op. A relative link in an entry resolves against
+`claude-docs/tasks/`, and an issue page resolves it against nothing, so the
+body points it at the doc on `staging`, as a milestone description's link
+does; a link to a doc the PR adds works once it merges. A retired entry
+carries no hours, so its `Estimate` is left alone. The body passes the
+comment scan first: an issue is as public as a comment.
+
+Issues minted before MB.127 hold the entry as it was then. They are synced
+when their entries are next edited, not swept: an unread issue being stale
+costs nothing, and a sweep of every issue is the burst MB.102 removed.
 
 ## Minting a task
 

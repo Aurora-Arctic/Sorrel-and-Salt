@@ -17,7 +17,7 @@ import type { ConnectionArgs, Page } from '@/lib/types';
 import type { Suggest } from './types';
 
 // DESIGN.md §5, "The two readers are scoped differently": a member's autofill
-// for `planet` or `zodiac` offers the curated vocabulary first, then the
+// for a `planets` or `zodiacSigns` entry offers the curated vocabulary first, then the
 // uncurated values in use in the compendium and the caller's own workspace.
 // The vocabularies are the seed's, revived per test since some tests retire a
 // row; `ingredients` is emptied per test, so every in-use value a result
@@ -91,7 +91,7 @@ describe('suggestPlanets', () => {
       await addIngredient({
         name: 'Dark Moon Salt',
         workspaceId: WORKSPACE_W_ID,
-        planet: 'Dark Moon',
+        planets: ['Dark Moon'],
       });
 
       const suggestions = await all(suggestPlanets, asUser(B), 'moon');
@@ -129,8 +129,8 @@ describe('suggestPlanets', () => {
     });
 
     it('orders each bucket by name, case-folded', async () => {
-      await addIngredient({ name: 'Sedna Water', workspaceId: WORKSPACE_W_ID, planet: 'sedna' });
-      await addIngredient({ name: 'Eris Salt', planet: 'Eris' });
+      await addIngredient({ name: 'Sedna Water', workspaceId: WORKSPACE_W_ID, planets: ['sedna'] });
+      await addIngredient({ name: 'Eris Salt', planets: ['Eris'] });
 
       const suggestions = await all(suggestPlanets, asUser(B), '');
 
@@ -142,9 +142,9 @@ describe('suggestPlanets', () => {
     it('folds case and surrounding whitespace, so Moon and moon are one value', async () => {
       // With the curated row gone, the in-use spellings are the uncurated bucket's.
       await sql`update planets set deleted_at = now(), deleted_by = ${A.id} where name = 'Moon'`;
-      await addIngredient({ name: 'Mugwort', planet: 'Moon' });
-      await addIngredient({ name: 'Moon Water', workspaceId: WORKSPACE_W_ID, planet: 'moon' });
-      await addIngredient({ name: 'Selenite', workspaceId: WORKSPACE_W_ID, planet: ' Moon ' });
+      await addIngredient({ name: 'Mugwort', planets: ['Moon'] });
+      await addIngredient({ name: 'Moon Water', workspaceId: WORKSPACE_W_ID, planets: ['moon'] });
+      await addIngredient({ name: 'Selenite', workspaceId: WORKSPACE_W_ID, planets: [' Moon '] });
 
       const suggestions = await all(suggestPlanets, asUser(B), 'moon');
 
@@ -154,9 +154,39 @@ describe('suggestPlanets', () => {
       ]);
     });
 
+    // MB.136: the scan reads entries, not lists, so a list's second entry is
+    // as much in use as its first.
+    it('reads every entry of a list, not only its first', async () => {
+      await addIngredient({
+        name: 'Mixed Salt',
+        workspaceId: WORKSPACE_W_ID,
+        planets: ['Mars', 'Sedna'],
+      });
+
+      expect(valuesOf(await all(suggestPlanets, asUser(B), 'sedna'))).toEqual(['Sedna']);
+    });
+
+    it('counts a value once however many lists hold it, and however often', async () => {
+      await addIngredient({ name: 'Eris Salt', planets: ['Eris', 'Sedna'] });
+      await addIngredient({
+        name: 'Sedna Water',
+        workspaceId: WORKSPACE_W_ID,
+        planets: ['sedna', 'Sedna'],
+      });
+      await addIngredient({ name: 'Sedna Oil', workspaceId: WORKSPACE_W_ID, planets: ['Sedna'] });
+
+      const uncurated = (await all(suggestPlanets, asUser(B), '')).filter((s) => !s.curated);
+
+      expect(uncurated).toEqual([
+        { value: 'Eris', description: null, curated: false },
+        // The spelling most entries use.
+        { value: 'Sedna', description: null, curated: false },
+      ]);
+    });
+
     it('never offers a value twice when it is curated and in use', async () => {
-      await addIngredient({ name: 'Mugwort', planet: 'Moon' });
-      await addIngredient({ name: 'Moon Water', workspaceId: WORKSPACE_W_ID, planet: 'moon' });
+      await addIngredient({ name: 'Mugwort', planets: ['Moon'] });
+      await addIngredient({ name: 'Moon Water', workspaceId: WORKSPACE_W_ID, planets: ['moon'] });
 
       const suggestions = await all(suggestPlanets, asUser(B), 'moon');
 
@@ -166,7 +196,7 @@ describe('suggestPlanets', () => {
     });
 
     it('drops a soft-deleted curated row, whose in-use spelling then reads as uncurated', async () => {
-      await addIngredient({ name: 'Mugwort', planet: 'Moon' });
+      await addIngredient({ name: 'Mugwort', planets: ['Moon'] });
       expect(await all(suggestPlanets, asUser(B), 'black moon')).toMatchObject([
         { value: 'Moon', curated: true },
         { value: 'Lilith', curated: true },
@@ -183,7 +213,7 @@ describe('suggestPlanets', () => {
       const id = await addIngredient({
         name: 'Eris Salt',
         workspaceId: WORKSPACE_W_ID,
-        planet: 'Eris',
+        planets: ['Eris'],
       });
       expect(valuesOf(await all(suggestPlanets, asUser(B), 'eris'))).toEqual(['Eris']);
 
@@ -193,8 +223,8 @@ describe('suggestPlanets', () => {
     });
 
     it('reads nothing into an entry with no planet', async () => {
-      await addIngredient({ name: 'Graveyard Dirt', workspaceId: WORKSPACE_W_ID, planet: null });
-      await addIngredient({ name: 'Black Salt', workspaceId: WORKSPACE_W_ID, planet: '  ' });
+      await addIngredient({ name: 'Graveyard Dirt', workspaceId: WORKSPACE_W_ID, planets: null });
+      await addIngredient({ name: 'Black Salt', workspaceId: WORKSPACE_W_ID, planets: ['  ', ''] });
 
       const suggestions = await all(suggestPlanets, asUser(B), '');
 
@@ -207,9 +237,9 @@ describe('suggestPlanets', () => {
   // only who holds them.
   describe('scope', () => {
     beforeEach(async () => {
-      await addIngredient({ name: 'Eris Salt', planet: 'Eris' });
-      await addIngredient({ name: 'Sedna Water', workspaceId: WORKSPACE_W_ID, planet: 'Sedna' });
-      await addIngredient({ name: 'Vulcan Ash', workspaceId: WORKSPACE_X_ID, planet: 'Vulcan' });
+      await addIngredient({ name: 'Eris Salt', planets: ['Eris'] });
+      await addIngredient({ name: 'Sedna Water', workspaceId: WORKSPACE_W_ID, planets: ['Sedna'] });
+      await addIngredient({ name: 'Vulcan Ash', workspaceId: WORKSPACE_X_ID, planets: ['Vulcan'] });
     });
 
     it('spans the compendium and the current workspace', async () => {
@@ -221,8 +251,8 @@ describe('suggestPlanets', () => {
     it('never offers a value in use only in another workspace', async () => {
       // Why it could have come back: X holds it, and X's own member is offered it.
       const [held] = await sql`
-        select planet from ingredients where workspace_id = ${WORKSPACE_X_ID} and deleted_at is null`;
-      expect(held.planet).toBe('Vulcan');
+        select planets from ingredients where workspace_id = ${WORKSPACE_X_ID} and deleted_at is null`;
+      expect(held.planets).toEqual(['Vulcan']);
       expect(valuesOf(await all(suggestPlanets, asUser(D), 'vulcan', WORKSPACE_X_ID))).toEqual([
         'Vulcan',
       ]);
@@ -258,8 +288,8 @@ describe('suggestPlanets', () => {
   // CLAUDE.md rule 8: one connection over both buckets, walked by cursor.
   describe('pagination', () => {
     beforeEach(async () => {
-      await addIngredient({ name: 'Eris Salt', planet: 'Eris' });
-      await addIngredient({ name: 'Sedna Water', workspaceId: WORKSPACE_W_ID, planet: 'Sedna' });
+      await addIngredient({ name: 'Eris Salt', planets: ['Eris'] });
+      await addIngredient({ name: 'Sedna Water', workspaceId: WORKSPACE_W_ID, planets: ['Sedna'] });
     });
 
     it('walks every suggestion once, in order, across the bucket boundary', async () => {
@@ -318,7 +348,7 @@ describe('suggestPlanets', () => {
 
   describe('authorization', () => {
     beforeEach(async () => {
-      await addIngredient({ name: 'Sedna Water', workspaceId: WORKSPACE_W_ID, planet: 'Sedna' });
+      await addIngredient({ name: 'Sedna Water', workspaceId: WORKSPACE_W_ID, planets: ['Sedna'] });
     });
 
     // It reveals nothing a reader of the workspace could not already list.
@@ -345,7 +375,7 @@ describe('suggestPlanets', () => {
 });
 
 // The same service over the other table. Two tables rather than a `kind`
-// column, so a sign cannot be offered for `planet` (claude-docs/db/astrology-vocabularies.md, "The
+// column, so a sign cannot be offered for `planets` (claude-docs/db/astrology-vocabularies.md, "The
 // astrology vocabularies") — asserted rather than assumed.
 describe('suggestZodiacSigns', () => {
   it('offers a sign by its description, and never as a planet', async () => {
@@ -358,12 +388,12 @@ describe('suggestZodiacSigns', () => {
     expect(await all(suggestPlanets, asUser(B), 'serpent')).toEqual([]);
   });
 
-  it('reads the zodiac column, not the planet column, for what is in use', async () => {
+  it('reads the zodiac signs, not the planets, for what is in use', async () => {
     await addIngredient({
       name: 'Cetus Salt',
       workspaceId: WORKSPACE_W_ID,
-      planet: 'Cetus',
-      zodiac: 'Eris',
+      planets: ['Cetus'],
+      zodiacSigns: ['Eris'],
     });
 
     expect(valuesOf(await all(suggestZodiacSigns, asUser(B), 'eris'))).toEqual(['Eris']);

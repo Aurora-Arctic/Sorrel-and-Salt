@@ -1,8 +1,8 @@
 ## Ingredient children (M4.8)
 
-`ingredient_folk_names` and `ingredient_categories` hang off an ingredient and
-carry no `workspace_id` of their own, so by column name they look unscoped
-while holding a coven's rows. They take the tier of their parent: a compendium
+`ingredient_folk_names`, `ingredient_categories` and `ingredient_substitutes`
+(MB.139) hang off an ingredient and carry no `workspace_id` of their own, so
+by column name they look unscoped while holding a coven's rows. They take the tier of their parent: a compendium
 entry's children are public (MB.80), and a workspace entry's are its coven's.
 The shape is the one M10.3 gave the spell join tables. `{ ingredientId:
 AnyPgColumn }` is `IngredientScoped`, and the unscoped finders demand `{
@@ -21,9 +21,23 @@ page can hold both tiers and, in principle, several covens. An empty list reads
 the compendium alone, which is how a signed-out request reads it. It reads both
 tiers in one statement, so it is on [the tier seam](../modules.md#the-tier-seam).
 
-**Two services and two loaders over it**, in `ingredients`: `categoriesOf` and
-`folkNamesOf` in `services/ingredient-children.ts`, batched as
-`categoriesByIngredient` and `folkNamesByIngredient`
+**Substitutes have a finder of their own,
+`findSubstitutesIncludingSoftDeleted(memberships, ingredientIds)`** (MB.140).
+It reads the same rows `findManyOfIngredients` would, the parent's `EXISTS`
+and tier included, and left-joins each row's linked ingredient, deleted or
+not, so a link to a deleted ingredient reads under its last name (DESIGN.md
+§5, `ingredient_substitutes`). The `EXISTS` also holds the link to the
+compendium or the parent's own coven, the tier rule a write is held to, so a
+row written past the service reads as nothing. It is the substitute's
+`…IncludingSoftDeleted` hatch, beside M5.3's two for what a spell holds
+([`soft-delete.md`](soft-delete.md)), and on the tier seam too. `replaceSubstitutes` reads the live rows it compares
+against through `findManyOfIngredients`, since a write needs no linked
+ingredient.
+
+**Three services and three loaders over them**, in `ingredients`:
+`categoriesOf`, `folkNamesOf` and `substitutesOf` in
+`services/ingredient-children.ts`, batched as `categoriesByIngredient`,
+`folkNamesByIngredient` and `substitutesByIngredient`
 ([`graphql/loaders.md`](../graphql/loaders.md), "Loaders"). A key is the parent
 row's `{ id, workspaceId }`. The `workspaceId` decides which proof to ask for,
 one `assertMembership(…, { ingredient: ['read'] })` per coven the batch names,
@@ -37,6 +51,8 @@ with its layer removed.
 
 Folk names come back as strings, flattened as §7's `folkNames: [String!]!`
 exposes them; categories come back as rows, with a soft-deleted category
-dropped by `findManyByIds`. Each list is sorted by name. The cost is one read
-for folk names and two for categories, plus one role lookup per coven in the
-batch, whatever the number of ingredients.
+dropped by `findManyByIds`; substitutes come back as §7's `Substitute`, the
+name each shows and the live ingredient it leads to, or null. Each list is
+sorted by name. The cost is one read for folk names, one for substitutes and
+two for categories, plus one role lookup per coven in the batch, whatever the
+number of ingredients.

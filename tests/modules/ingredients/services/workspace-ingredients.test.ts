@@ -49,10 +49,10 @@ function local(overrides: Overrides<IngredientFixture> = {}): IngredientFixture 
   return makeIngredient({ workspaceId: WORKSPACE_W_ID, nomenclature, ...overrides });
 }
 
-/** The fixture as the service's input: everything but the tier and the category names. */
+/** The fixture as the service's input: everything but the tier and the category names, its substitutes typed. */
 function inputOf(fixture: IngredientFixture): LocalIngredientInput {
-  const { workspaceId: _tier, categories: _categories, ...input } = fixture;
-  return input;
+  const { workspaceId: _tier, categories: _categories, substitutes, ...input } = fixture;
+  return { ...input, substitutes: substitutes.map((name) => ({ ingredientId: null, name })) };
 }
 
 /** Seeds a row through the shared inserter, stamped by A — not through the code under test. */
@@ -109,6 +109,31 @@ describe('createWorkspaceIngredient', () => {
       updatedBy: user.id,
     });
     expect(created.slug).toBe(ingredientSlug('Testwort', 'root', null));
+  });
+
+  // DESIGN.md §5 (MB.134): as many of each as the practice gives it, in the
+  // member's order, and never into the single columns the lists replaced.
+  it('saves several planets, signs and colours, each in the order entered', async () => {
+    const created = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
+      ...inputOf(local()),
+      planets: ['Venus', 'Moon'],
+      zodiacSigns: ['Taurus', 'Cancer', 'Libra'],
+      colors: ['Green', ' ', 'Silver'],
+    });
+
+    expect(created).toMatchObject({
+      planets: ['Venus', 'Moon'],
+      zodiacSigns: ['Taurus', 'Cancer', 'Libra'],
+      colors: ['Green', 'Silver'],
+    });
+    expect(await rowOf(created.id)).toMatchObject({
+      planets: ['Venus', 'Moon'],
+      zodiac_signs: ['Taurus', 'Cancer', 'Libra'],
+      colors: ['Green', 'Silver'],
+      planet: null,
+      zodiac: null,
+      color: null,
+    });
   });
 
   it('defaults a stub with only a name to `none`, as story 29 saves it', async () => {
@@ -415,13 +440,37 @@ describe('updateWorkspaceIngredient', () => {
   // The input is the whole ingredient as the form submits it, so a field left
   // out is cleared rather than kept.
   it('replaces the whole row, clearing a field the input leaves out', async () => {
-    const id = await seed(local({ description: 'Dug at dusk', color: 'green' }));
+    const id = await seed(local({ description: 'Dug at dusk', colors: ['Green'] }));
 
     const updated = await updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id, {
       name: 'Testwort',
     } as LocalIngredientInput);
 
-    expect(updated).toMatchObject({ description: null, color: null, form: null });
+    expect(updated).toMatchObject({ description: null, colors: null, form: null });
+  });
+
+  it('replaces each list whole, an empty one clearing it', async () => {
+    const id = await seed(
+      local({ planets: ['Moon', 'Venus'], zodiacSigns: ['Cancer'], colors: ['Silver', 'White'] }),
+    );
+
+    const updated = await updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id, {
+      ...inputOf(local()),
+      planets: ['Mars'],
+      zodiacSigns: [],
+      colors: ['White', 'Silver'],
+    });
+
+    expect(updated).toMatchObject({
+      planets: ['Mars'],
+      zodiacSigns: null,
+      colors: ['White', 'Silver'],
+    });
+    expect(await rowOf(id)).toMatchObject({
+      planets: ['Mars'],
+      zodiac_signs: null,
+      colors: ['White', 'Silver'],
+    });
   });
 
   it('refuses a viewer and leaves the row as it was', async () => {

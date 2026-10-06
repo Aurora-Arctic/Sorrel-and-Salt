@@ -13,11 +13,11 @@ import { useTestDatabase } from '../support/db/database';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { noSender } from '../support/email-verification';
 import { makeIngredient } from '../support/fixtures';
-import type { Entry } from './types';
+import type { Duplicate, Entry } from './types';
 
-// Stories 15 and 14 against the services and queries that answer them, each
-// written with its task (M8.2, M8.5): M8.1's scaffold for story 16 runs later
-// and adds its describe to this file.
+// Stories 15, 14 and 16 against the services and queries that answer them,
+// each written with its task (M8.2, M8.5, M5.10): story 16 is the query the
+// name field's warning sends, and a create the warning does not stop.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -38,6 +38,7 @@ describe('Story 15: Create an ingredient local to my workspace when the compendi
     const {
       workspaceId: _tier,
       categories: _categories,
+      substitutes: _substitutes,
       ...fixture
     } = makeIngredient({
       workspaceId: WORKSPACE_W_ID,
@@ -76,6 +77,7 @@ describe('Story 15: Create an ingredient local to my workspace when the compendi
     const {
       workspaceId: _tier,
       categories: _categories,
+      substitutes: _substitutes,
       ...input
     } = makeIngredient({
       name: 'Fixture Viewerwort',
@@ -200,4 +202,72 @@ describe("Story 14: Browse the compendium and add an entry to my workspace's ing
   });
 
   it.todo("adds a compendium entry to my workspace's ingredients — M9.4's mutation");
+});
+
+const DUPLICATES = `query ($workspaceId: ID!, $name: String!) {
+  possibleDuplicates(workspaceId: $workspaceId, name: $name, first: 10) {
+    edges { node { id name canonicalName } }
+  }
+}`;
+
+async function duplicatesOf(session: Session, name: string): Promise<Duplicate[]> {
+  const result = await query<{ possibleDuplicates: { edges: { node: Duplicate }[] } }>(
+    session,
+    DUPLICATES,
+    { workspaceId: WORKSPACE_W_ID, name },
+  );
+  expect(result.errors).toBeUndefined();
+  return (result.data?.possibleDuplicates.edges ?? []).map((edge) => edge.node);
+}
+
+describe("Story 16: See a warning when the name I'm entering resembles something existing.", () => {
+  it('names each near match by its formal name, and opens the one it links to', async () => {
+    const matches = await duplicatesOf(asUser(B), 'Cats Claw');
+
+    // Five plants and a cat under one label: only the formal name tells them apart.
+    expect(
+      matches
+        .filter((match) => match.name === "Cat's Claw")
+        .map((m) => m.canonicalName)
+        .sort(),
+    ).toEqual([
+      'Dolichandra unguis-cati',
+      'Felis catus',
+      'Senegalia greggii',
+      'Uncaria guianensis',
+      'Uncaria tomentosa',
+    ]);
+    const [first] = matches;
+    const opened = await query<{ ingredient: Entry }>(asUser(B), ENTRY, {
+      id: first.id,
+      workspaceId: WORKSPACE_W_ID,
+    });
+    expect(opened.data?.ingredient).toMatchObject({
+      name: first.name,
+      canonicalName: first.canonicalName,
+    });
+  });
+
+  it('warns of nothing below the threshold', async () => {
+    expect(await duplicatesOf(asUser(B), 'Fixture Nothingalike')).toEqual([]);
+  });
+
+  it('blocks nothing: a near match is created anyway, and warns the next time', async () => {
+    const {
+      workspaceId: _tier,
+      categories: _categories,
+      substitutes: _substitutes,
+      ...input
+    } = makeIngredient({ name: "Cat's Claw", canonicalName: 'Fixtura testalis' });
+    // Why this is story 16's case: the name is one the warning names.
+    expect((await duplicatesOf(asUser(B), input.name)).length).toBeGreaterThan(0);
+
+    const created = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, input);
+
+    expect(await duplicatesOf(asUser(B), input.name)).toContainEqual({
+      id: created.id,
+      name: "Cat's Claw",
+      canonicalName: 'Fixtura testalis',
+    });
+  });
 });

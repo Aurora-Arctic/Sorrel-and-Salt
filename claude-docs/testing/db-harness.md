@@ -50,7 +50,7 @@ run as a test.
   filtered out. `AUDIT_COLUMNS`, `STAMP_COLUMNS` and `DELETE_COLUMNS` are
   **literal string lists, deliberately not derived from `src/db/audit.ts`**:
   a test comparing a table against `Object.keys(auditColumns)` passes for any
-  value of `auditColumns`, an empty one included. `AUDITED_TABLES` (eighteen
+  value of `auditColumns`, an empty one included. `AUDITED_TABLES` (twenty-one
   names, the two hard-deleted join tables among them) and
   `UNAUDITED_TABLES` (Better Auth's `accounts`, `sessions`, `verifications`)
   moved here from `updated-at-trigger.test.ts` so the trigger sweep and the
@@ -72,7 +72,7 @@ run as a test.
 
 - **`tests/db/audit-columns.test.ts` — one sweep instead of a copy per
   file.** It holds two transcribed lists of Drizzle table _objects_ — the
-  sixteen six-column tables and the two four-column join tables — asserts
+  nineteen six-column tables and the two four-column join tables — asserts
   both non-empty and their names equal to `AUDITED_TABLES`, and loops the same
   expectations over each, on **both sides**: the schema (the columns are
   defined, the stamps `NOT NULL`, `deleted_at` nullable or absent, every

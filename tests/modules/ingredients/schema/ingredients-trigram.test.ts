@@ -1,10 +1,8 @@
-import { join } from 'node:path';
-import { readFileSync, readdirSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { useTestDatabase } from '../../../support/db/database';
 import { tableFacts } from '../../../support/db/table-metadata';
-import { MIGRATIONS_DIR } from '../../../support/paths';
+import { statementsOfMigrationContaining } from '../../../support/db/migrations';
 import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS } from '@/db/seed/standard';
@@ -51,23 +49,7 @@ describe('ingredients trigram index declaration', () => {
   });
 });
 
-// The migration reader survives for the idempotency test at the bottom.
-
-function migrationStatementsContaining(marker: string): string[] {
-  const file = readdirSync(MIGRATIONS_DIR)
-    .filter((name) => name.endsWith('.sql'))
-    .sort()
-    .map((name) => join(MIGRATIONS_DIR, name))
-    .find((path) => readFileSync(path, 'utf8').includes(marker));
-
-  if (!file) throw new Error(`No migration in src/db/migrations contains ${marker}`);
-
-  return readFileSync(file, 'utf8')
-    .split('--> statement-breakpoint')
-    .map((statement) => statement.trim())
-    .filter(Boolean);
-}
-
+// What the idempotency test at the bottom finds its migration by.
 const TRIGRAM_MIGRATION = `CREATE INDEX IF NOT EXISTS "${TRIGRAM_INDEX}"`;
 
 const AUTHOR = FIXTURE_USERS.A.id;
@@ -256,7 +238,7 @@ describe('ingredients trigram index', () => {
   // `IF NOT EXISTS`, like 0000's extension: belt to `__drizzle_migrations`' braces.
   describe('the migration is idempotent', () => {
     it('applies a second time without error', async () => {
-      for (const statement of migrationStatementsContaining(TRIGRAM_MIGRATION)) {
+      for (const statement of statementsOfMigrationContaining(TRIGRAM_MIGRATION)) {
         await sql.unsafe(statement);
       }
 

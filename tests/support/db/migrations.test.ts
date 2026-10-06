@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { foreignKeyStatements, shippedMigrationStatements } from './migrations';
+import {
+  foreignKeyStatements,
+  shippedMigrationStatements,
+  statementsOfMigrationContaining,
+} from './migrations';
 
 // The positive cases are what make an empty result from the schema tests mean
 // "no such key shipped" rather than "the pattern cannot match drizzle-kit's SQL".
@@ -40,5 +44,21 @@ describe('foreignKeyStatements', () => {
     expect(statements.filter((statement) => /^\s*--/m.test(statement))).toEqual([]);
     // A real key from 0001, so the reader and the matcher agree on the files as shipped.
     expect(foreignKeyStatements(statements, 'accounts', 'users')).toHaveLength(1);
+  });
+});
+
+describe('statementsOfMigrationContaining', () => {
+  it('reads the first migration holding the marker, as statements without their comments', () => {
+    // 0016 attaches the trigger and carries comments between its statements.
+    const statements = statementsOfMigrationContaining(
+      'CREATE OR REPLACE FUNCTION set_updated_at()',
+    );
+
+    expect(statements[0]).toMatch(/^CREATE OR REPLACE FUNCTION set_updated_at\(\)/);
+    expect(statements.filter((statement) => /^\s*--/m.test(statement))).toEqual([]);
+  });
+
+  it('throws, naming the marker, when no migration holds it', () => {
+    expect(() => statementsOfMigrationContaining('no such statement')).toThrow('no such statement');
   });
 });

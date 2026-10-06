@@ -55,10 +55,10 @@ const WHOLE_INGREDIENT = {
   form: '',
   description: '',
   element: null,
-  planet: '',
-  zodiac: '',
+  planets: [],
+  zodiacSigns: [],
   deities: [],
-  color: '',
+  colors: [],
   safetyNotes: '',
   substitutes: [],
   folkNames: [],
@@ -66,9 +66,15 @@ const WHOLE_INGREDIENT = {
 
 const PROBES: Record<string, WorkspaceIdProbe> = {
   commonNameSuggestions: suggestion('commonNameSuggestions'),
+  deitySuggestions: suggestion('deitySuggestions'),
   formSuggestions: suggestion('formSuggestions'),
   planetSuggestions: suggestion('planetSuggestions'),
   zodiacSuggestions: suggestion('zodiacSuggestions'),
+  ingredientSuggestions: {
+    source: `query ($workspaceId: ID!) {
+      ingredientSuggestions(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
+    }`,
+  },
   possibleDuplicates: {
     source: `query ($workspaceId: ID!) {
       possibleDuplicates(workspaceId: $workspaceId, name: "Testwort", first: 1) { edges { node { id } } }
