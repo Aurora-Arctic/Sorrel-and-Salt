@@ -28,6 +28,7 @@ export interface AstrologySuggestionConnection {
 }
 
 export interface DeitySuggestionNode {
+  id: string | null;
   value: string;
   description: string | null;
   tradition: string | null;

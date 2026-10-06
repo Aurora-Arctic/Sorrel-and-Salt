@@ -7,6 +7,7 @@ import { schema } from '@/graphql/schema';
 import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
+import { curatedDeityId } from '../../../support/db/curated-ids';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import type { DeitySuggestionConnection } from './types';
@@ -42,7 +43,7 @@ function run(
     schema,
     source: `query ($workspaceId: ID!, $query: String, $first: Int, $after: String) {
       deitySuggestions(workspaceId: $workspaceId, query: $query, first: $first, after: $after) {
-        edges { cursor node { value description tradition curated } }
+        edges { cursor node { id value description tradition curated } }
         pageInfo { hasNextPage endCursor }
       }
     }`,
@@ -57,9 +58,22 @@ describe('deitySuggestions', () => {
 
     expect(result.errors).toBeUndefined();
     expect(result.data?.deitySuggestions.edges.map((edge) => edge.node)).toEqual([
-      { value: 'Hermes', description: expect.any(String), tradition: 'Greek', curated: true },
+      {
+        // MB.167: what a pick sends.
+        id: await curatedDeityId(sql, 'Hermes'),
+        value: 'Hermes',
+        description: expect.any(String),
+        tradition: 'Greek',
+        curated: true,
+      },
       expect.objectContaining({ value: 'Mercury', tradition: 'Roman', curated: true }),
-      { value: 'Hermes Trismegistus', description: null, tradition: null, curated: false },
+      {
+        id: null,
+        value: 'Hermes Trismegistus',
+        description: null,
+        tradition: null,
+        curated: false,
+      },
     ]);
   });
 

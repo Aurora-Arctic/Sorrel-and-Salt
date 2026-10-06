@@ -20,6 +20,8 @@ import type { CompendiumConnection, SubstituteNode } from './types';
 // page never makes one, and the count to show it runs only when asked for.
 const repository = vi.hoisted(() => ({
   findCompendiumCount: vi.fn(),
+  findCuratedRowsByIds: vi.fn(),
+  findDeitiesOfIngredients: vi.fn(),
   findManyOfIngredients: vi.fn(),
   findManyByIds: vi.fn(),
   findSubstitutesIncludingSoftDeleted: vi.fn(),
@@ -261,6 +263,43 @@ describe('compendium', () => {
     ]);
     expect(nodes.find((node) => node.id === wormwood)?.substitutes).toEqual([]);
     expect(repository.findSubstitutesIncludingSoftDeleted).toHaveBeenCalledTimes(1);
+  });
+
+  // MB.167: every entry on the page asks for its picked form and its deities,
+  // and one read answers each, the curated deities joined in.
+  it('resolves the picked forms and the deities of a page in one read each', async () => {
+    const result = await graphql({
+      schema,
+      source: `query {
+        compendium(first: 50) {
+          edges { node { name form formChoice { name group { name } } deities { name deity { name tradition { name } } } } }
+        }
+      }`,
+      contextValue: { session: null, loaders: createLoaders(null), emailVerification: noSender },
+    });
+
+    expect(result.errors).toBeUndefined();
+    type Node = {
+      name: string;
+      form: string | null;
+      formChoice: { name: string; group: { name: string } } | null;
+      deities: { name: string; deity: { name: string; tradition: { name: string } } | null }[];
+    };
+    const nodes = (result.data as { compendium: { edges: { node: Node }[] } }).compendium.edges.map(
+      (edge) => edge.node,
+    );
+    // Precondition: the page holds every entry, each picked form among them.
+    expect(nodes.length).toBeGreaterThan(20);
+    expect(nodes.filter((node) => node.form !== null).length).toBeGreaterThan(20);
+    for (const node of nodes) {
+      if (node.form !== null) expect(node.formChoice?.name, node.name).toBe(node.form);
+    }
+    expect(nodes.find((node) => node.name === 'Mugwort')?.deities).toEqual([
+      { name: 'Artemis', deity: { name: 'Artemis', tradition: { name: 'Greek' } } },
+      { name: 'Diana', deity: { name: 'Diana', tradition: { name: 'Roman' } } },
+    ]);
+    expect(repository.findCuratedRowsByIds).toHaveBeenCalledTimes(1);
+    expect(repository.findDeitiesOfIngredients).toHaveBeenCalledTimes(1);
   });
 
   it('resolves the categories, their groups and the folk names of a page in a read each', async () => {

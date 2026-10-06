@@ -52,6 +52,10 @@ export const SuggestionClaimantRef = builder.objectRef<Claimant>('SuggestionClai
 
 const FormSuggestionRef = builder.objectRef<FormSuggestion>('FormSuggestion').implement({
   fields: (t) => ({
+    id: t.exposeID('id', {
+      nullable: true,
+      description: 'The curated row, which a pick sends; null for a value only in use.',
+    }),
     value: t.exposeString('value'),
     description: t.exposeString('description', { nullable: true }),
     group: t.exposeString('group', { nullable: true }),
@@ -79,6 +83,10 @@ builder.queryField('formSuggestions', (t) =>
 // ingredient's identity (claude-docs/graphql/schema.md, "deitySuggestions").
 const DeitySuggestionRef = builder.objectRef<DeitySuggestion>('DeitySuggestion').implement({
   fields: (t) => ({
+    id: t.exposeID('id', {
+      nullable: true,
+      description: 'The curated row, which a pick sends; null for a value only in use.',
+    }),
     value: t.exposeString('value'),
     description: t.exposeString('description', { nullable: true }),
     tradition: t.exposeString('tradition', { nullable: true }),

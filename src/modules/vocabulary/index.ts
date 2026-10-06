@@ -9,9 +9,13 @@ export * from './loaders/groups-by-id';
 export * from './graphql/suggestions';
 export * from './graphql/categories';
 export * from './graphql/ingredient-form-values';
+export * from './graphql/deities';
 export type {
   CategoryGroupRow,
   CuratedField,
+  DeityRow,
+  DeityTraditionRow,
   IngredientFormGroupRow,
   IngredientFormValueRow,
+  PickedField,
 } from './types';

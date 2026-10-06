@@ -7,6 +7,7 @@ import { schema } from '@/graphql/schema';
 import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
+import { curatedFormId } from '../../../support/db/curated-ids';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import type { FormSuggestionConnection } from './types';
@@ -46,7 +47,7 @@ function run(
     schema,
     source: `query ($workspaceId: ID!, $query: String, $first: Int, $after: String) {
       formSuggestions(workspaceId: $workspaceId, query: $query, first: $first, after: $after) {
-        edges { cursor node { value description group curated claimants { name canonicalName } } }
+        edges { cursor node { id value description group curated claimants { name canonicalName } } }
         pageInfo { hasNextPage endCursor }
       }
     }`,
@@ -62,6 +63,8 @@ describe('formSuggestions', () => {
     expect(result.errors).toBeUndefined();
     expect(result.data?.formSuggestions.edges.map((edge) => edge.node)).toEqual([
       {
+        // MB.167: what a pick sends.
+        id: await curatedFormId(sql, 'Root'),
         value: 'Root',
         description: expect.any(String),
         group: 'Botanical',
@@ -70,6 +73,7 @@ describe('formSuggestions', () => {
       },
       expect.objectContaining({ value: 'Bark', group: 'Botanical', claimants: [] }),
       {
+        id: null,
         value: 'root bark',
         description: null,
         group: null,

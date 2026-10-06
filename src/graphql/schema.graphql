@@ -38,11 +38,29 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTime
 
+type Deity {
+  description: String!
+  id: ID!
+  name: String!
+  slug: String!
+  tradition: DeityTradition!
+}
+
 type DeitySuggestion {
   curated: Boolean!
   description: String
+
+  """The curated row, which a pick sends; null for a value only in use."""
+  id: ID
   tradition: String
   value: String!
+}
+
+type DeityTradition {
+  description: String!
+  id: ID!
+  name: String!
+  slug: String!
 }
 
 type FormSuggestion {
@@ -50,6 +68,9 @@ type FormSuggestion {
   curated: Boolean!
   description: String
   group: String
+
+  """The curated row, which a pick sends; null for a value only in use."""
+  id: ID
   value: String!
 }
 
@@ -62,11 +83,16 @@ type Ingredient {
   canonicalName: String
   categories: [Category!]!
   colors: [String!]
-  deities: [String!]
+  deities: [IngredientDeity!]!
   description: String
   elements: [IngredientElement!]
   folkNames: [String!]!
   form: String
+
+  """
+  The curated form picked for `form`: null when the form was typed, and once that form or its group is retired.
+  """
+  formChoice: IngredientFormValue
   id: ID!
   isGlobal: Boolean!
   name: String!
@@ -76,6 +102,27 @@ type Ingredient {
   slug: String!
   substitutes: [Substitute!]!
   zodiacSigns: [String!]
+}
+
+"""
+A deity the ingredient corresponds to: one picked from the curated list, or typed.
+"""
+type IngredientDeity {
+  """
+  The curated deity picked: null on a typed name, and once that deity or its tradition is retired.
+  """
+  deity: Deity
+
+  """
+  The name as saved: a picked deity's curated spelling, or the typed text.
+  """
+  name: String!
+}
+
+"""A curated deity picked, or a name typed: exactly one of the two."""
+input IngredientDeityInput {
+  deityId: ID
+  name: String
 }
 
 enum IngredientElement {
@@ -104,11 +151,14 @@ type IngredientFormValue {
 input IngredientInput {
   canonicalName: String
   colors: [String!]
-  deities: [String!]
+  deities: [IngredientDeityInput!]
   description: String
   elements: [IngredientElement!]
   folkNames: [String!]
   form: String
+
+  """The curated form picked for `form`; none when it was typed."""
+  formId: ID
   name: String!
   nomenclature: Nomenclature
   planets: [String!]
@@ -123,11 +173,14 @@ The whole ingredient, replacing the row. Every field is sent, and "" or [] clear
 input IngredientUpdateInput {
   canonicalName: String!
   colors: [String!]!
-  deities: [String!]!
+  deities: [IngredientDeityInput!]!
   description: String!
   elements: [IngredientElement!]!
   folkNames: [String!]!
   form: String!
+
+  """The curated form picked for `form`; "" when it was typed."""
+  formId: ID!
   name: String!
   nomenclature: Nomenclature!
   planets: [String!]!

@@ -938,9 +938,10 @@ describe('IngredientForm', () => {
     },
   ] as const)('the $legend list', ({ legend, entry, field, hint }) => {
     const group = () => screen.getByRole('group', { name: legend });
-    // A typed substitute is sent as a name (DESIGN.md §5, `ingredient_substitutes`).
+    // A typed substitute or deity is sent as a name (DESIGN.md §5,
+    // `ingredient_substitutes` and `ingredient_deities`).
     const sent = (values: string[]) =>
-      field === 'substitutes' ? values.map((name) => ({ name })) : values;
+      field === 'substitutes' || field === 'deities' ? values.map((name) => ({ name })) : values;
     const entries = () =>
       within(group())
         .queryAllByRole('button', { name: /^Remove / })
@@ -1879,7 +1880,10 @@ describe('IngredientForm', () => {
       type('Name', 'Testwort');
       save();
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
-      expect(saves[0].input.deities).toEqual(['Hecate', 'Fixture of the Hedge']);
+      expect(saves[0].input.deities).toEqual([
+        { name: 'Hecate' },
+        { name: 'Fixture of the Hedge' },
+      ]);
     });
 
     it('offers each ingredient with its formal name and whose entry it is, in the order found', async () => {

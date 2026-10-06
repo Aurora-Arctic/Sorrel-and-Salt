@@ -2,12 +2,14 @@ import 'server-only';
 import { findManyByIds } from '../../../db/repository';
 import { NotFound } from '../../../lib/errors';
 import { categoryGroups } from '../schema/categories';
+import { deityTraditions } from '../schema/deities';
 import { ingredientFormGroups } from '../schema/ingredient-forms';
-import type { CategoryGroupRow, IngredientFormGroupRow } from '../types';
+import type { CategoryGroupRow, DeityTraditionRow, IngredientFormGroupRow } from '../types';
 
-// The two group lookups behind `Category.group` and `IngredientFormValue.group`.
-// Public reference data — a compendium chip wears its group's colours for a
-// signed-out visitor too (MB.80) — so neither takes a session.
+// The group lookups behind `Category.group`, `IngredientFormValue.group` and
+// `Deity.tradition`. Public reference data — a compendium chip wears its
+// group's colours for a signed-out visitor too (MB.80) — so none takes a
+// session.
 
 /**
  * The category groups by id, one answer per id in the order given: the row,
@@ -25,10 +27,20 @@ export function formGroupsOf(
   return groupsOf(ingredientFormGroups, ids);
 }
 
-async function groupsOf<TTable extends typeof categoryGroups | typeof ingredientFormGroups>(
-  table: TTable,
+/**
+ * The deity traditions by id, answered as `categoryGroupsOf` answers. A
+ * deity is read only while its tradition is live, so a `NotFound` here means
+ * one retired between the two reads.
+ */
+export function deityTraditionsOf(
   ids: readonly string[],
-): Promise<(TTable['$inferSelect'] | NotFound)[]> {
+): Promise<(DeityTraditionRow | NotFound)[]> {
+  return groupsOf(deityTraditions, ids);
+}
+
+async function groupsOf<
+  TTable extends typeof categoryGroups | typeof ingredientFormGroups | typeof deityTraditions,
+>(table: TTable, ids: readonly string[]): Promise<(TTable['$inferSelect'] | NotFound)[]> {
   const rows = await findManyByIds(table, [...new Set(ids)]);
   const byId = new Map(rows.map((row) => [row.id, row]));
   return ids.map((id) => byId.get(id) ?? new NotFound('No such group'));
