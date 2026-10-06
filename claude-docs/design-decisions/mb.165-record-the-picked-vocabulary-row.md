@@ -108,7 +108,8 @@ themselves after a save would be the odd one out in the form.
 - _Alphabetical, as substitutes (turned down):_ no stored order, and a save is
   a set comparison, as folk names' is. Simpler, but it would make deities the
   one correspondence list that does not keep what the member wrote.
-- MB.166 copies the array's order into `position`.
+- MB.166 copies the array's order into `position`, counted from 0, the
+  list's own index, and dense: a skipped blank or repeat leaves no gap.
 
 **No repeats.** Today a repeated entry in `deities[]` is not refused. Under the
 table the same deity linked twice, or the same unlinked name typed twice in any
