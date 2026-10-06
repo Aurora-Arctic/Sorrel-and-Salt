@@ -73,6 +73,10 @@ The `db:*` scripts (generate, migrate, seed, drop, reset, studio), `probe-databa
 
 [`db/member-autofill.md`](db/member-autofill.md)
 
+## References (MB.151; tables MB.152)
+
+`references`, one Chicago-form source per row, two-tiered as `ingredients` is, and `reference_links`, one soft-deleted row per sourced ingredient, deity, tradition, planet or sign under `num_nonnulls`, both owned by `ingredients`: the kind decides the rendering and the CHECKs make it total, a link carries a locator and nothing else, nothing deletes a reference in v1, and `src/lib/citation.ts` renders the citation rather than any column storing it. [`db/references.md`](db/references.md)
+
 ## Stock, and the one module that owns the units (M9.2)
 
 `inventory_items`, the unit vocabulary one module owns, the dimension stored beside each unit, and why an unset quantity is not zero. [`db/stock.md`](db/stock.md)
