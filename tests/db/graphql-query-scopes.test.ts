@@ -66,6 +66,7 @@ const PROBES: Record<string, ScopeProbe> = {
     variables: { workspaceId: WORKSPACE_W_ID },
     outcome: 'refuses',
   },
+  deitySuggestions: suggestion('deitySuggestions'),
   formSuggestions: suggestion('formSuggestions'),
   planetSuggestions: suggestion('planetSuggestions'),
   zodiacSuggestions: suggestion('zodiacSuggestions'),

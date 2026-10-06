@@ -48,6 +48,7 @@ export type {
   Claimant,
   CommonNameSuggestion,
   CompendiumScore,
+  DeitySuggestion,
   FormSuggestion,
   IngredientFilter,
   IngredientIdentity,
