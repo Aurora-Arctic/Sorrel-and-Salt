@@ -3053,11 +3053,11 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want the retired single column gone, so that nothing can write a value the app no longer reads.
 
-The contract half of rule 10, a task of its own. Once MB.159 has deployed, the migration fills the list one last time from anything written to `element` since, then drops it, with its `.ack.md` sidecar.
+The contract half of rule 10, a task of its own. Once MB.159 has deployed, the migration drops `element`, with its `.ack.md` sidecar, and fills nothing. MB.159's refill copied everything written before it ran. After MB.159 promotes, members edit the list and nothing rewrites the single, so a row where the two disagree is either a write the old deploy made during MB.159's rollout or a list edited since, and nothing in the row says which. Copying the single in would bring back elements members had removed, so the drop gives up those minutes of writes instead, the owner's call during this task. `db:generate` would also emit MB.141's pending drop, so the migration is `generate --custom`, its snapshot the last one less `element` (claude-docs/db/identity-model.md, "The ingredient identity model").
 
 _Acceptance criteria:_
 
-- The column is gone, and the list holds every value it held
+- The column is gone, its `ingredient_element` type stays, and the migration writes no list
 - The migration carries its acknowledgement sidecar, and the destructive-DDL check passes with it
 - Lands only after MB.159 has deployed to staging
 

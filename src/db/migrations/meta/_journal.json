@@ -260,6 +260,13 @@
       "when": 1791304248429,
       "tag": "0036_drop-ingredient-singles",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1791304618752,
+      "tag": "0037_drop-element",
+      "breakpoints": true
     }
   ]
 }

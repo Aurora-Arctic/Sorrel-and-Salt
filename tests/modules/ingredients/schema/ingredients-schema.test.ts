@@ -88,8 +88,8 @@ describe('ingredients schema', () => {
     expect(ingredientElement.enumValues).toEqual(ELEMENT_VALUES);
   });
 
-  // MB.159: the single is in the database until MB.160 drops it, but nothing
-  // declares it, so nothing reads or writes it.
+  // MB.159 stopped declaring the single, so nothing reads or writes it;
+  // MB.160 then dropped it.
   it('no longer declares the single element', () => {
     expect(Object.keys(byName)).not.toContain('element');
   });
@@ -175,12 +175,10 @@ beforeEach(async () => {
 
 describe('ingredients table', () => {
   // A column the schema has stopped declaring outlives it in the database for
-  // one deploy: `substitutes`, undeclared by MB.140 and dropped by MB.141, and
-  // `element`, undeclared by MB.159 and dropped by MB.160, are the only ones.
-  it('carries the columns the schema declares, and the two awaiting their drop', async () => {
-    expect(await catalogue.columnNames('ingredients')).toEqual(
-      [...COLUMNS, 'substitutes', 'element'].sort(),
-    );
+  // one deploy: `substitutes`, undeclared by MB.140 and dropped by MB.141, is
+  // the only one.
+  it('carries the columns the schema declares, and the one awaiting its drop', async () => {
+    expect(await catalogue.columnNames('ingredients')).toEqual([...COLUMNS, 'substitutes'].sort());
   });
 
   it('rejects an insert that omits nomenclature, since the column has no default', async () => {
