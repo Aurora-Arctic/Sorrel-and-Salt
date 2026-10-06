@@ -28,8 +28,8 @@ What follows describes all three as built.
   `colors` are native `text[]` columns, one of the things SQLite could not
   have run (DESIGN.md §14). `planets`, `zodiacSigns` and `colors` replaced
   single columns in MB.136 (below). Substitutes were a `substitutes[]` column
-  too, until MB.140 moved every reader and writer to `ingredient_substitutes`:
-  the column is undeclared, and stays in the database until MB.141 drops it. Seven declared indexes: M4.1a's three partial unique ones (below),
+  too, until MB.140 moved every reader and writer to `ingredient_substitutes`
+  and MB.141 dropped it. Seven declared indexes: M4.1a's three partial unique ones (below),
   MB.81's two on the slug ("Ingredient slugs"), `ingredients_trgm`
   (M4.6), one multicolumn `gin_trgm_ops` index over `name` and
   `canonical_name` — see ["Fuzzy matching"](fuzzy-matching.md) — and its folded twin
@@ -59,7 +59,9 @@ What follows describes all three as built.
   migration copies every `substitutes[]` entry across as a name, trimmed, with
   blanks skipped and an entry repeated in any case kept once, in the spelling
   it first holds. MB.140 moved every reader and writer to the table and
-  stopped declaring the array, which MB.141 drops.
+  stopped declaring the array. MB.141 dropped it after copying across, the
+  same way, any entry with no row yet in any case, live or removed: by then
+  the table was newer than the list.
 - **`ingredient_forms`** — `id`, `name`, `slug`, `groupId`, `description`, +
   audit. Shaped like `categories`: global, admin-curated, no workspace
   scoping. This is the third resource admins curate globally, alongside the

@@ -23,6 +23,10 @@ second PR, with its sidecar (CLAUDE.md rule 10; the procedure is
 before `deploy.yml` promotes, and Drizzle names every declared column in a
 `SELECT`, so dropping a column the live deploy still declares breaks its reads
 for the length of the rollout, and a rollback past the migration for good.
+That holds on production as on staging, and a drop task waits only for its
+switch to reach staging: the release that carries a drop must follow one that
+carried its switch, unless production never declared the column, as with
+`0028`.
 MB.82 and MB.107 are the worked case: MB.82 stopped declaring `pending_slug`
 and its date, and MB.107 dropped them. Between the two, `db:generate` on any branch emits the drop; it belongs to
 the second task, and the destructive-DDL check refuses it unacknowledged. A
@@ -43,6 +47,16 @@ emit the pending drops and nothing else. MB.139's
 `0032_ingredient-substitutes` is the worked case, made while MB.137's drop of
 the planet, zodiac and colour singles was pending, and MB.128's
 `0033_deities` the second, made while MB.141's was pending too.
+
+**A drop made while another is pending is `generate --custom` as well**, its
+`DROP` taken from the same scratch run and the other task's left out. The
+snapshot is the copied one less the dropped column, so a second scratch
+`generate` still emits the other drop and nothing else. MB.141's
+`0034_drop-substitutes-list` is the worked case, made while MB.137's was
+pending. It also fills before it drops, for whatever the deploy before the
+switch wrote after the first fill. Unlike `0031`, that refill only adds: by
+the drop the switch has been writing the table, so a row there, live or
+removed, is newer than the list.
 
 Renaming a column is the canonical case that goes wrong if done directly —
 `ALTER TABLE ... RENAME COLUMN` is atomic in Postgres, but it isn't atomic
@@ -191,7 +205,7 @@ and goes red on a real omission. It was permanently red before, first because
 the bare command _was_ that full scan (fixed in MB.37) and then because the
 acknowledgements it needed only ever existed in PR bodies.
 
-Four migrations carry findings today, and each has its sidecar:
+Six migrations carry findings today, and each has its sidecar:
 
 | Migration                           | Findings                                                                                                                             |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -199,6 +213,8 @@ Four migrations carry findings today, and each has its sidecar:
 | `0017_custom-spell-ingredients.sql` | the `(spell_id, ingredient_id)` primary key and the `(spell_id, layer_order)` unique index dropped                                   |
 | `0025_ingredient-slugs.sql`         | `ingredients.slug` set `NOT NULL` with no backfill between, the seed standing in for one (["Ingredient slugs"](ingredient-slugs.md)) |
 | `0028_drop-pending-slugs.sql`       | the two pending-slug indexes and columns dropped, the contract half of MB.82's change ("Expand/contract")                            |
+| `0029_spell-layers-soft-delete.sql` | `spell_ingredients`' `(spell_id, layer_order)` primary key and its two unique indexes dropped, each re-created first as partial      |
+| `0034_drop-substitutes-list.sql`    | `ingredients.substitutes` dropped, the contract half of MB.140's switch, after a refill into `ingredient_substitutes`                |
 
 **`0002`'s sidecar was written retroactively, and says so.** This document
 previously claimed its `DROP CONSTRAINT` and two `NOT NULL` columns "were

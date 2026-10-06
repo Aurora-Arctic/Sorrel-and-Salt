@@ -122,6 +122,14 @@
   ["Expand/contract"](expand-contract.md). 0033 adds `deity_traditions` and
   `deities`, with their two `set_updated_at` triggers; see
   ["The deity vocabulary"](deity-vocabulary.md).
+- **`0034_drop-substitutes-list.sql`** (MB.141) drops `ingredients.substitutes`
+  while MB.137's drop is still pending, so it too is `generate --custom`: the
+  `DROP` taken from a scratch run, and the snapshot the last one less the
+  column. Before the drop it copies across, as names, any list entry the table
+  holds no row for, live or removed, in any case. Its sidecar acknowledges the
+  drop and says why it is safe on production: v0.5.0 shipped MB.140 first.
+  `ingredient-substitutes-schema.test.ts` adds the column back in its clone to
+  re-run both fills. See ["Expand/contract"](expand-contract.md).
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
