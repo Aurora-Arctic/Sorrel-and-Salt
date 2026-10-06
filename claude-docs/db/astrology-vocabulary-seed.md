@@ -6,7 +6,7 @@ table: nineteen `planets` and thirteen `zodiac_signs`, in §5's order, as the
 [the form seed](form-vocabulary-seed.md)'s shape —
 reference data rather than a scenario, `npm run db:seed:astrology` as a
 third `scripts/db-seed.ts` target, run by `migrate.yml` in the same step as the
-other two, idempotent by slug and ignoring `deleted_at`, updating nothing
+other two, idempotent by seed key and ignoring `deleted_at` (MB.172), updating nothing
 already present, stamped by the bootstrap user with the GUC published — with
 `seedFlatVocabulary` in place of the two-tier helper, since there is no group
 to insert first. `standard` seeds both inside its own transaction, and every

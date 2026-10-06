@@ -178,3 +178,51 @@ describe('the backfill', () => {
     },
   );
 });
+
+// MB.172's refill: a row the seeds wrote between 0045's deploy and the seeds
+// keying their own rows carries no key. Re-run from the migration's own text.
+describe('the refill', () => {
+  let refill: string[];
+
+  beforeAll(() => {
+    refill = statementsOfMigrationContaining('AND "seed_key" IS NULL').filter((statement) =>
+      /^update\b/i.test(statement),
+    );
+  });
+
+  it('refills each of the eight vocabularies', () => {
+    const tables = refill.map((statement) => /^UPDATE "([a-z_]+)"/.exec(statement)?.[1]);
+
+    expect(tables.sort()).toEqual(VOCABULARIES.map(({ name }) => name).sort());
+  });
+
+  it.each(VOCABULARIES)(
+    'keys an unkeyed bootstrap-made $name row, and leaves a keyed one and another author’s alone',
+    async (seeded) => {
+      const bootstrap = { created_by: BOOTSTRAP_USER_ID, updated_by: BOOTSTRAP_USER_ID };
+      const unkeyedId = await insertRow(seeded, bootstrap);
+      const keyedId = await insertRow(seeded, {
+        ...bootstrap,
+        seed_key: `renamed-${crypto.randomUUID()}`,
+      });
+      const adminId = await insertRow(seeded, {});
+
+      const statement = refill.find((text) => text.startsWith(`UPDATE "${seeded.name}"`));
+      expect(statement, `no refill for ${seeded.name}`).toBeDefined();
+      await sql.unsafe(statement as string);
+
+      const rows = await sql<{ id: string; slug: string; seed_key: string | null }[]>`
+        select id, slug, seed_key from ${sql(seeded.name)}
+        where id in ${sql([unkeyedId, keyedId, adminId])}
+      `;
+      const byId = Object.fromEntries(rows.map((row) => [row.id, row]));
+
+      expect(byId[unkeyedId].seed_key).toBe(byId[unkeyedId].slug);
+      // Precondition: the keyed row's key is not its slug, so a refill that
+      // ignored the key would overwrite it.
+      expect(byId[keyedId].seed_key).not.toBe(byId[keyedId].slug);
+      expect(byId[keyedId].seed_key).toMatch(/^renamed-/);
+      expect(byId[adminId].seed_key).toBeNull();
+    },
+  );
+});

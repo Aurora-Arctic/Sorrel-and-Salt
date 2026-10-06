@@ -47,7 +47,7 @@ every table. The one insert that needs its rows back, `standard`'s compendium
 entries, stays hand-written around `.returning()`.
 `src/db/seed/two-tier-vocabulary.ts` exports `seedTwoTierVocabulary(tx, {
 groupTable, itemTable, groups, items, groupOf, toItemRow, itemNoun })` —
-groups, then the items filed under them, each by slug — which
+groups, then the items filed under them, each by seed key — which
 `seedCategoryVocabulary`, `seedFormVocabulary` and `seedDeityVocabulary`
 call with their own tables and literals. The literals (`CATEGORY_GROUPS`,
 `CATEGORIES`, `FORM_GROUPS`, `FORMS`, `DEITY_TRADITIONS`, `DEITIES`) stay
@@ -64,7 +64,7 @@ group tables stay a union, since the columns the seed writes are common to
 all three.
 `src/db/seed/flat-vocabulary.ts` exports `seedFlatVocabulary(tx, table,
 items)`, the one-tier counterpart for a vocabulary with no group — each item
-by slug, the same rules — which `seedAstrologyVocabularies` calls once
+by seed key, the same rules — which `seedAstrologyVocabularies` calls once
 for `planets` and once for `zodiac_signs`.
 
 **Seed keys (MB.171).** Every table the reference data writes — the eight
@@ -78,8 +78,13 @@ back beside it; a reference's citation follows every field the same way.
 `0045_seed-keys` backfilled each row the bootstrap user created with its
 slug, exact because no rename writer had shipped. Nothing outside
 `src/db/seed/` writes the column, and no input, service or GraphQL field
-names it. The two helpers above key on it from MB.172, and the sources seed
-from MB.156 ([`mb.171-seed-keys.md`](../design-decisions/mb.171-seed-keys.md)).
+names it. The two helpers above key on it from MB.172: `presentKeys` takes a
+row as present by its key, live or soft-deleted, or by a live row's slug, so
+an admin's own row under a seed name is not met by a second the slug index
+would refuse; each row they insert carries its key; and an item finds its
+group by the group's key, so a renamed group still takes it.
+`0047_refill-seed-keys` keys any bootstrap-created row still unkeyed, one
+seeded between the two deploys. The sources seed keys on it from MB.156 ([`mb.171-seed-keys.md`](../design-decisions/mb.171-seed-keys.md)).
 
 **`minimal`** (`src/db/seed/minimal.ts`): one system user, one user, empty
 compendium. The system user is the bootstrap user under the fixed

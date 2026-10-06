@@ -118,6 +118,7 @@ export type ItemTable = typeof categories | typeof ingredientForms | typeof deit
 export interface TwoTierItemRow {
   name: string;
   slug: string;
+  seedKey: string;
   description: string;
 }
 
