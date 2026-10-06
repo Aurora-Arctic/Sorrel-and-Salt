@@ -5,8 +5,20 @@ import Combobox, {
   ComboboxEntry,
   ComboboxMultiSelect,
   ComboboxSelect,
+  ComboboxSortableEntries,
 } from '@/components/Combobox';
-import type { ComboboxOption, Suggestions } from '@/components/Combobox/types';
+import type {
+  ComboboxOption,
+  ComboboxSortableEntry,
+  Suggestions,
+} from '@/components/Combobox/types';
+import {
+  dragByPointer,
+  layOutChips,
+  moveByKeyboard,
+  press,
+  wrapChips,
+} from '../../support/sortable';
 import type { HarnessProps } from './types';
 
 // A text box that suggests as it is typed in, on Downshift's `useCombobox`:
@@ -649,6 +661,281 @@ describe('Combobox', () => {
         screen.getByRole('button', { name: 'Remove Hedge Fixture' }),
       ).toHaveAccessibleDescription('This folk name is already listed');
       expect(screen.getByRole('listitem')).toHaveClass('is-invalid');
+    });
+
+    it('has no handle to move it by', () => {
+      renderEntries(['Hedge Fixture', 'Fixture Bane']);
+
+      // The precondition: the chips are drawn, each with its x.
+      expect(screen.getByRole('button', { name: 'Remove Fixture Bane' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Move / })).not.toBeInTheDocument();
+    });
+  });
+
+  // MB.170: a list whose order means something, its chips moved by a handle
+  // each, on dnd-kit's sortable preset, by keyboard or by pointer.
+  describe('sortable entries', () => {
+    const INSTRUCTIONS =
+      'Press Space or Enter to pick it up, the arrow keys to move it, and Space or Enter to put it down, or Escape to cancel.';
+    const handle = (value: string) => screen.getByRole('button', { name: `Move ${value}` });
+    /** Everything the page's status regions say: dnd-kit's own is one. */
+    const announced = () =>
+      screen
+        .getAllByRole('status')
+        .map((region) => region.textContent)
+        .join(' | ');
+
+    function renderSortable(entries: ComboboxSortableEntry[], onMove = vi.fn()) {
+      render(<Harness entries={<ComboboxSortableEntries entries={entries} onMove={onMove} />} />);
+      return onMove;
+    }
+    const planets = (onRemove = vi.fn()) =>
+      ['Mars', 'Venus', 'Saturn'].map((value) => ({ id: value, value, onRemove }));
+
+    beforeEach(layOutChips);
+    afterEach(() => vi.restoreAllMocks());
+
+    it('gives each entry a handle named for it, ahead of its x, that says how it moves', () => {
+      renderSortable(planets());
+
+      const move = handle('Venus');
+      expect(move).toHaveAttribute('aria-roledescription', 'sortable');
+      expect(move).toHaveAccessibleDescription(INSTRUCTIONS);
+      expect(move).toHaveTextContent('Venus');
+      // In the tab order, before the x beside it.
+      expect(move).not.toHaveAttribute('tabindex', '-1');
+      expect(
+        move.compareDocumentPosition(screen.getByRole('button', { name: 'Remove Venus' })) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it('moves an entry by keyboard, saying each step, the focus kept on the moved entry', async () => {
+      const onMove = renderSortable(planets());
+      const mars = handle('Mars');
+
+      act(() => mars.focus());
+      await press(mars, ' ');
+      expect(announced()).toContain('Picked up Mars, at position 1 of 3.');
+      // Held: pressed, and the chip drawn as picked up.
+      expect(mars).toHaveAttribute('aria-pressed', 'true');
+      expect(mars.closest('li')).toHaveClass('is-dragging');
+      await press(mars, 'ArrowRight');
+      expect(announced()).toContain('Mars moved to position 2 of 3.');
+      await press(mars, ' ');
+
+      expect(announced()).toContain('Mars put down at position 2 of 3.');
+      expect(onMove).toHaveBeenCalledExactlyOnceWith(0, 1);
+      expect(handle('Mars')).toHaveFocus();
+      expect(handle('Mars').closest('li')).not.toHaveClass('is-dragging');
+    });
+
+    // The owner's reports: on wrapped rows the arrows moved a chip by where
+    // the chips sit, so Left from the second chip on row 2 went to a chip on
+    // row 1 whose corners were nearer; and the chips making way overlapped or
+    // left gaps. Left and Right step through the list, Up and Down jump a
+    // row, and the chips making way sit as the row would lay them out.
+    describe('on wrapped rows', () => {
+      const SEVEN = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].map(
+        (value) => ({ id: value, value, onRemove: () => {} }),
+      );
+
+      // Sun, Moon and Mercury on row 1; Venus, Mars and Jupiter on row 2;
+      // Saturn alone on row 3.
+      beforeEach(() => {
+        vi.restoreAllMocks();
+        wrapChips(300);
+      });
+
+      it.each([
+        ['Left', 'ArrowLeft', 3],
+        ['Right', 'ArrowRight', 5],
+      ])('steps one place along the list on %s, whichever row that is on', async (_, key, to) => {
+        const onMove = renderSortable(SEVEN);
+        const mars = handle('Mars');
+
+        act(() => mars.focus());
+        await press(mars, ' ');
+        await press(mars, key);
+        expect(announced()).toContain(`Mars moved to position ${to + 1} of 7.`);
+        await press(mars, ' ');
+
+        expect(onMove).toHaveBeenCalledExactlyOnceWith(4, to);
+      });
+
+      // Mars, centred at 120px, is beneath Moon on row 1 (centred at 104px)
+      // and above Saturn, alone on row 3.
+      it.each([
+        ['Up', 'ArrowUp', 1],
+        ['Down', 'ArrowDown', 6],
+      ])('jumps a row on %s, to the place nearest above or below it', async (_, key, to) => {
+        const onMove = renderSortable(SEVEN);
+        const mars = handle('Mars');
+
+        act(() => mars.focus());
+        await press(mars, ' ');
+        await press(mars, key);
+        expect(announced()).toContain(`Mars moved to position ${to + 1} of 7.`);
+        await press(mars, ' ');
+
+        expect(onMove).toHaveBeenCalledExactlyOnceWith(4, to);
+      });
+
+      it('stays put on Up from the first row, and on Down from the last', async () => {
+        const onMove = renderSortable(SEVEN);
+
+        await moveByKeyboard(handle('Moon'), 'ArrowUp');
+        await moveByKeyboard(handle('Saturn'), 'ArrowDown');
+
+        expect(onMove).not.toHaveBeenCalled();
+      });
+
+      it('lays the chips out as the row would while one is moved, with no overlap or gap', async () => {
+        renderSortable(SEVEN);
+        const saturn = handle('Saturn');
+        /** Where a chip is drawn: its box, moved by its transform. */
+        const drawnAt = (value: string) => {
+          const chip = handle(value).closest('li') as HTMLElement;
+          const { left, top } = chip.getBoundingClientRect();
+          const [, x = '0', y = '0'] =
+            /translate3d\((-?[\d.]+)px, (-?[\d.]+)px/.exec(chip.style.transform) ?? [];
+          return [left + Number(x), top + Number(y)];
+        };
+
+        // Saturn, from row 3, to second place: the screenshot's move.
+        act(() => saturn.focus());
+        await press(saturn, ' ');
+        await press(saturn, 'Home');
+        await press(saturn, 'ArrowRight');
+
+        // Sun 64px wide, Saturn 88, Moon 72, then Mercury, 96, wraps.
+        expect(
+          ['Sun', 'Saturn', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter'].map(drawnAt),
+        ).toEqual([
+          [0, 0],
+          [68, 0],
+          [160, 0],
+          [0, 32],
+          [100, 32],
+          [184, 32],
+          [0, 64],
+        ]);
+      });
+
+      it('steps onto the row above from the start of a row, and back', async () => {
+        const onMove = renderSortable(SEVEN);
+        const venus = handle('Venus');
+
+        await moveByKeyboard(venus, 'ArrowLeft', 'ArrowLeft', 'ArrowRight');
+
+        expect(onMove).toHaveBeenCalledExactlyOnceWith(3, 2);
+      });
+
+      it('goes to the first place on Home and the last on End', async () => {
+        const onMove = renderSortable(SEVEN);
+
+        await moveByKeyboard(handle('Mars'), 'Home');
+        expect(onMove).toHaveBeenLastCalledWith(4, 0);
+        await moveByKeyboard(handle('Moon'), 'End');
+        expect(onMove).toHaveBeenLastCalledWith(1, 6);
+      });
+
+      it('stays put at either end', async () => {
+        const onMove = renderSortable(SEVEN);
+
+        await moveByKeyboard(handle('Sun'), 'ArrowLeft');
+        await moveByKeyboard(handle('Saturn'), 'ArrowRight');
+
+        expect(onMove).not.toHaveBeenCalled();
+      });
+    });
+
+    it('moves an entry by Enter as well as Space', async () => {
+      const onMove = renderSortable(planets());
+      const venus = handle('Venus');
+
+      act(() => venus.focus());
+      await press(venus, 'Enter');
+      await press(venus, 'ArrowLeft');
+      await press(venus, 'Enter');
+
+      expect(onMove).toHaveBeenCalledExactlyOnceWith(1, 0);
+    });
+
+    it('puts an entry back where it was on Escape, moving nothing', async () => {
+      const onMove = renderSortable(planets());
+      const mars = handle('Mars');
+
+      act(() => mars.focus());
+      await press(mars, ' ');
+      await press(mars, 'ArrowRight');
+      await press(mars, 'Escape');
+
+      expect(announced()).toContain('Move cancelled. Mars is back at position 1 of 3.');
+      expect(onMove).not.toHaveBeenCalled();
+      expect(handle('Mars')).toHaveFocus();
+    });
+
+    it('moves an entry by pointer, dragged onto another’s place', async () => {
+      const onMove = renderSortable(planets());
+
+      // Mars from the first chip onto the third, Saturn, at 200–280px.
+      await dragByPointer(handle('Mars'), 245);
+
+      expect(onMove).toHaveBeenCalledExactlyOnceWith(0, 2);
+    });
+
+    it('moves nothing on a press that does not drag, or a lift put straight back down', async () => {
+      const onMove = renderSortable(planets());
+      const mars = handle('Mars');
+
+      fireEvent.pointerDown(mars, { clientX: 40, clientY: 12, isPrimary: true, button: 0 });
+      fireEvent.pointerUp(document, { clientX: 41, clientY: 12, isPrimary: true });
+      await moveByKeyboard(mars);
+
+      expect(onMove).not.toHaveBeenCalled();
+    });
+
+    it('still removes an entry by its x', () => {
+      const onRemove = vi.fn();
+      renderSortable(planets(onRemove));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Remove Saturn' }));
+
+      expect(onRemove).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows an entry’s detail while its handle has focus, and reads it and its error first', () => {
+      render(
+        <>
+          <Harness
+            entries={
+              <ComboboxSortableEntries
+                entries={[
+                  {
+                    id: 'hecate',
+                    value: 'Hecate (Greek)',
+                    detail: 'Of crossroads and the moon.',
+                    errorId: 'why',
+                    onRemove: () => {},
+                  },
+                ]}
+                onMove={() => {}}
+              />
+            }
+          />
+          <p id="why">This deity is already listed</p>
+        </>,
+      );
+
+      const move = handle('Hecate (Greek)');
+      expect(move).toHaveAccessibleDescription(
+        `This deity is already listed Of crossroads and the moon. ${INSTRUCTIONS}`,
+      );
+      act(() => move.focus());
+      expect(screen.getByRole('tooltip')).toHaveTextContent('Of crossroads and the moon.');
+      act(() => move.blur());
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
     });
   });
 

@@ -5,7 +5,8 @@
 // entries ahead of the text, with the indicators on its right and the list
 // beneath it — react-select's multi-select layout, on the tokens and the
 // primitives rather than its own theme (claude-docs/components/combobox.md,
-// "Styling").
+// "Styling"). Rows that wrap sit a step further apart than the items in a
+// row, the owner's call in MB.170: a step of space read as one block.
 
 .combobox {
   position: relative;
@@ -20,7 +21,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: space(1);
+  gap: space(2) space(1);
   padding: space(1) space(2);
   cursor: text;
 
@@ -76,7 +77,7 @@
   flex: 1;
   flex-wrap: wrap;
   align-items: center;
-  gap: space(1);
+  gap: space(2) space(1);
   min-width: 0;
 }
 
@@ -319,7 +320,7 @@
 .combobox__entries {
   display: flex;
   flex-wrap: wrap;
-  gap: space(1);
+  gap: space(2) space(1);
   // Bounded by the control, so that one long chip is cut off inside it
   // rather than pushing past it: a flex item's own minimum is its content.
   min-width: 0;
@@ -352,6 +353,32 @@
   // The field's error edge, a shape as well as a colour, on the entry it names.
   &.is-invalid {
     box-shadow: inset 0 0 0 1px $secondary;
+  }
+
+  // A sortable chip's grip stands in for the text's inset on its left.
+  &:has(.combobox__entry-handle) {
+    padding-left: space(1);
+  }
+
+  // The chip being moved, plain to see once picked up, the owner's call
+  // during MB.170: the accent's wash a highlighted row wears, a 2px accent
+  // edge and the floating shadow, lifted over the chips it passes. The edge
+  // stands in for an error's while it is held; the error's comes back on the
+  // drop, and its handle still reads it meanwhile.
+  &.is-dragging,
+  &.is-dragging.is-invalid {
+    z-index: 1;
+    background-color: color-mix(in srgb, $accent 22%, $surface-card);
+    box-shadow:
+      inset 0 0 0 2px $accent,
+      $shadow-floating;
+  }
+
+  // The chips making way for a moved one slide, through dnd-kit's inline
+  // transition, which only an important rule outweighs; under reduced motion
+  // they step.
+  @include reduced-motion {
+    transition: none !important;
   }
 }
 
@@ -395,6 +422,54 @@
 .combobox__entry-label {
   display: flex;
   min-width: 0;
+}
+
+// A sortable entry's handle (MB.170): its grip and its text, one button the
+// chip moves by, unboxed so that the chip still reads as one. It shrinks with
+// the chip, so the text inside it can still be cut off. `touch-action` is
+// dnd-kit's ask, so that a drag by touch moves the chip rather than the page.
+.combobox__entry-handle {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: radius('sharp');
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  cursor: grab;
+  touch-action: none;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  // Held, the chip's accent edge marks it, so the ring around the text
+  // inside it would only mark it twice.
+  .is-dragging & {
+    cursor: grabbing;
+
+    &:focus-visible {
+      outline: none;
+    }
+  }
+}
+
+// Six dots in the muted ink, the sign that the chip can be moved; in the
+// body ink while it is held.
+.combobox__entry-grip {
+  flex: none;
+  width: 0.5rem;
+  height: 1rem;
+  color: $text-muted;
+
+  .is-dragging & {
+    color: $text-primary;
+  }
 }
 
 // The entry's text, cut off with an ellipsis where the control ends; the

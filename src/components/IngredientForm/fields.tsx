@@ -7,7 +7,12 @@ import {
   useFormContext,
   useFormState,
 } from 'react-hook-form';
-import Combobox, { ComboboxEntry, ComboboxMultiSelect, ComboboxSelect } from '../Combobox';
+import Combobox, {
+  ComboboxEntry,
+  ComboboxMultiSelect,
+  ComboboxSelect,
+  ComboboxSortableEntries,
+} from '../Combobox';
 import type { ComboboxOption } from '../Combobox/types';
 import InfoTip from '../InfoTip';
 import type {
@@ -283,7 +288,8 @@ export function MultiSelectField({
  * A list of free-text entries: one combobox to type in, with each entry added
  * shown inside it ahead of the text. A box with a source suggests, and a pick
  * adds as Add does. An error naming an entry marks that entry and reads out
- * on the box, through the list's one error element.
+ * on the box, through the list's one error element. An ordered list's entries
+ * move, each by its handle.
  */
 export function ListField({
   name,
@@ -292,10 +298,11 @@ export function ListField({
   hint,
   suggestions,
   onActivate,
+  ordered,
 }: ListFieldProps): ReactElement {
   const form = useFormContext<IngredientFormValues>();
   const { control, trigger } = form;
-  const { fields, remove } = useFieldArray({ control, name });
+  const { fields, remove, move } = useFieldArray({ control, name });
   const box = `drafts.${name}` as const;
   const { field } = useController({ control, name: box });
   const { errors, isSubmitted } = useFormState({ control, name: [name, box] });
@@ -358,25 +365,39 @@ export function ListField({
     revalidate();
   };
 
-  const entries = fields.length > 0 && (
-    <ul className="combobox__entries">
-      {fields.map((row, index) => (
-        <ComboboxEntry
-          key={row.id}
-          value={entryText(row)}
-          detail={entryDetail(row)}
-          errorId={entryErrors[index] && errorId}
-          onRemove={() => {
-            setAnnouncement(`Removed ${entryText(row)}`);
-            remove(index);
-            revalidate();
-            // The pressed x is about to go; the box keeps the focus.
-            focusBox();
-          }}
-        />
-      ))}
-    </ul>
-  );
+  // Keyed by the field array's id, which follows an entry through a move.
+  const chips = fields.map((row, index) => ({
+    id: row.id,
+    value: entryText(row),
+    detail: entryDetail(row),
+    errorId: entryErrors[index] && errorId,
+    onRemove: () => {
+      setAnnouncement(`Removed ${entryText(row)}`);
+      remove(index);
+      revalidate();
+      // The pressed x is about to go; the box keeps the focus.
+      focusBox();
+    },
+  }));
+  // A move carries the entry's error with it, as the field array moves its
+  // errors, and is said by the sortable list itself, so it leaves the
+  // list's own announcement alone.
+  const moveEntry = (from: number, to: number) => {
+    move(from, to);
+    revalidate();
+  };
+
+  const entries =
+    fields.length > 0 &&
+    (ordered ? (
+      <ComboboxSortableEntries entries={chips} onMove={moveEntry} />
+    ) : (
+      <ul className="combobox__entries">
+        {chips.map(({ id: key, ...chip }) => (
+          <ComboboxEntry key={key} {...chip} />
+        ))}
+      </ul>
+    ));
 
   return (
     // Named by the legend's text alone: the tip's button inside the legend

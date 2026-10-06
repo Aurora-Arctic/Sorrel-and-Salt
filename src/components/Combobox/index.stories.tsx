@@ -1,6 +1,11 @@
 import type { Story } from '@ladle/react';
 import { useState } from 'react';
-import Combobox, { ComboboxEntry, ComboboxMultiSelect, ComboboxSelect } from '.';
+import Combobox, {
+  ComboboxEntry,
+  ComboboxMultiSelect,
+  ComboboxSelect,
+  ComboboxSortableEntries,
+} from '.';
 import type { ComboboxOption } from './types';
 
 // Render-only; behaviour is asserted in tests/components/Combobox. The
@@ -125,6 +130,56 @@ export const List: Story = () => {
         entries.length > 0
           ? { label: 'Clear Folk Names', onClear: () => setEntries([]) }
           : undefined
+      }
+    />
+  );
+};
+
+/**
+ * A list whose order means something (MB.170): each chip moved by its handle,
+ * the grip and text, dragged by pointer, or lifted with Space, moved with the
+ * arrows and put down with Space. Enough chips to wrap onto a second row.
+ */
+export const Sortable: Story = () => {
+  const [value, setValue] = useState('');
+  const [entries, setEntries] = useState(
+    ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].map((planet) => ({
+      id: planet,
+      value: planet,
+    })),
+  );
+  const add = (text: string) => {
+    const trimmed = text.trim();
+    if (trimmed) setEntries((current) => [...current, { id: trimmed, value: trimmed }]);
+    setValue('');
+  };
+  const removeAt = (index: number) =>
+    setEntries((current) => current.filter((_, at) => at !== index));
+  const move = (from: number, to: number) =>
+    setEntries((current) => {
+      const next = [...current];
+      next.splice(to, 0, ...next.splice(from, 1));
+      return next;
+    });
+  return (
+    <Combobox
+      id="planet"
+      label="Planet"
+      value={value}
+      onChange={setValue}
+      onPick={add}
+      onCommit={add}
+      onRemoveLast={() => removeAt(entries.length - 1)}
+      entries={
+        entries.length > 0 && (
+          <ComboboxSortableEntries
+            entries={entries.map((entry, index) => ({ ...entry, onRemove: () => removeAt(index) }))}
+            onMove={move}
+          />
+        )
+      }
+      clear={
+        entries.length > 0 ? { label: 'Clear Planets', onClear: () => setEntries([]) } : undefined
       }
     />
   );

@@ -156,6 +156,20 @@ notes — every field `IngredientInput` takes. Categories are not an input yet.
   Hedge Fixture", "Removed Hedge Fixture" or "Cleared Folk Names". Otherwise a
   screen reader hears the box empty, or an entry go, and nothing about what
   happened (WCAG 4.1.3).
+- **Planets, zodiac signs, colours and deities move** (MB.170). Each keeps
+  the order entered (DESIGN.md §5), so its `ListField` takes `ordered` and
+  draws its chips as the combobox's sortable list
+  ([`combobox.md`](combobox.md), "A sortable list"): each chip moved by its
+  grip and text, "Move Venus", dragged by pointer, or lifted with Space or
+  Enter, moved a place with Left and Right, a row with Up and Down, or to either
+  end with Home and End, and put down again, each step said and the
+  focus kept on the moved chip. A move is the field array's `move`, keyed by
+  its `id`, so a picked deity's link travels with its pill, and so does an
+  error naming the entry, which the field array moves with it; once a submit
+  has shown errors, the list revalidates, as an add does. The list's own
+  "changes" region is left to adds, removals and clears, since the sortable
+  list says each move itself. Folk names and substitutes read alphabetically
+  (DESIGN.md §5), so their chips have no handle.
 
 ### The lookups
 
@@ -374,7 +388,9 @@ what it validated is exactly what is sent.
 
 An entry's index in an issue's path is its place in the list the form shows.
 Add refuses a blank, and a save is refused while a box holds text, so every
-entry sent is one the user can see, in the order shown.
+entry sent is one the user can see, in the order shown: a moved entry goes
+in its new place, and a deity's place is what MB.167's replace stores as its
+`position`.
 
 The classification shows the as-typed rule too. A stub with only a name goes
 with `nomenclature: null`, and the service's `LocalIngredientInput` reads
@@ -504,7 +520,9 @@ field's label and control. The box, its entries and its list are the
 the muted ink's wash, neutral since a free-text entry has no category group
 to take a colour from, and the entry an error names takes the field's error
 edge. Its × is a 24px target, WCAG 2.2's minimum, inside a chip too short for
-44px.
+44px. An ordered list's chip leads with a muted grip, and chips wrapped onto
+several rows sit a step of space apart, more than along a row (MB.170), the
+combobox's styling both.
 
 **A long entry is cut off, never wrapped or let run** (MB.133). The entry is
 the Combobox's `ComboboxEntry` since M5.10a ([`combobox.md`](combobox.md),
@@ -530,7 +548,7 @@ length, and no other text field has one either.
 `Blank`, unframed, with every lookup answered and the save faked (MB.131),
 under a "What to try" panel saying what to type for each state: the
 suggestions, free text, the duplicate warning, the missing name, the
-classification coupling, a pick of a form or a deity, text left in a box, a
+classification coupling, a pick of a form or a deity, moving an entry, text left in a box, a
 repeated entry, a long entry,
 the two server refusals, and a save. The workshop has no API, and on staging
 its pages may not fetch at all ([`workshop.md`](../workshop.md), "On
@@ -594,7 +612,12 @@ pass on whatever an earlier step had focused. It covers:
   None, several chosen as chips inside the control, the list offering only
   those left, Backspace and the × removing, sent in the order chosen, `[]`
   once cleared, and an element list given its values drawn as chips in that
-  order, as an edit will prefill it.
+  order, as an edit will prefill it; a handle on each planet, sign, colour
+  and deity and none on a folk name or substitute, a move by keyboard said,
+  the focus kept on the moved entry and the new order sent, a move by
+  pointer sent the same, an error kept on the entry it names as another
+  moves past it, and a picked deity and a typed one sent in the order they
+  were moved to.
 - **The lookups**: a request only once the typing settles, with the coven's
   id and the settled text, and none until the box is used; the vocabulary
   first with each form's group and claimants, then forms in use, under their
