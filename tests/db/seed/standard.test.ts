@@ -226,17 +226,6 @@ describe('the compendium', () => {
     expect(inUse.filter((planet) => !curatedNames.has(planet.toLowerCase()))).toEqual([]);
   });
 
-  // MB.136: the list, never the single column it replaced.
-  it('writes its planets as lists, and nothing to the single column', async () => {
-    await seedStandard(db);
-
-    const entries = await compendium();
-    // Precondition: the seed states planets, so a list it failed to write would show.
-    expect(entries.filter((e) => e.planets !== null).length).toBeGreaterThanOrEqual(5);
-
-    expect(entries.filter((e) => e.planet !== null)).toEqual([]);
-  });
-
   it('holds enough entries to exercise search', async () => {
     await seedStandard(db);
 

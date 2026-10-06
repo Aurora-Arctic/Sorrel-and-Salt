@@ -16,7 +16,13 @@ export const NOMENCLATURE_KINDS = [
 
 export type NomenclatureKind = (typeof NOMENCLATURE_KINDS)[number];
 
-/** The two kinds that carry no formal name; every other kind requires one. */
-export const NAMELESS_KINDS: readonly NomenclatureKind[] = ['unknown', 'none'];
+/** The kind that takes no formal name: no naming system names the thing. */
+export const NAMELESS_KIND = 'none' satisfies NomenclatureKind;
+
+/**
+ * The kind whose formal name is optional: one exists, its system unsettled,
+ * so it may be recorded unconfirmed (MB.161). Every other kind requires one.
+ */
+export const UNSETTLED_KIND = 'unknown' satisfies NomenclatureKind;
 
 export const INGREDIENT_ELEMENTS = ['earth', 'air', 'fire', 'water', 'spirit'] as const;

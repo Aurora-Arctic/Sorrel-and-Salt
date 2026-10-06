@@ -39,9 +39,9 @@ mutations").
 **The input is the whole ingredient**, as `IngredientForm` submits it, parsed
 again by the service with `parseInput` because the browser is not the only
 caller. An update therefore replaces the row: every optional column is written,
-`null` where the input has nothing. A merge would break the nomenclature
-biconditional, because a missing `nomenclature` parses to `none`, and `none`
-beside a kept `canonical_name` is the row the CHECK refuses. Categories are not
+`null` where the input has nothing. A merge would break the kind↔name
+CHECK, because a missing `nomenclature` with no formal name parses to `none`,
+and `none` beside a kept `canonical_name` is the row the CHECK refuses. Categories are not
 written here, since `LocalIngredientInput` carries none. The service itself
 clears a field the input leaves out. Its mutation, `updateIngredient`, makes
 leaving one out a schema error and clearing an explicit `""` or `[]`

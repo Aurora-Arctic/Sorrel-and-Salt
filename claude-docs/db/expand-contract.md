@@ -28,12 +28,18 @@ switch to reach staging: the release that carries a drop must follow one that
 carried its switch, unless production never declared the column, as with
 `0028`.
 MB.82 and MB.107 are the worked case: MB.82 stopped declaring `pending_slug`
-and its date, and MB.107 dropped them. Between the two, `db:generate` on any branch emits the drop; it belongs to
+and its date, and MB.107 dropped them. **"Deployed" means production too**
+when production's deploy declares the column: a release runs every pending
+migration before it promotes, so a release carrying both tasks drops the
+column under the deploy it replaces. The second task then merges into
+`staging` only after a release carrying the first has reached production.
+MB.107 escaped this because production never had the columns; MB.137 is the
+worked case, as v0.4.0 declared `planet`, `zodiac` and `color`. Between the two, `db:generate` on any branch emits the drop; it belongs to
 the second task, and the destructive-DDL check refuses it unacknowledged. A
 data migration may still ride in the first, written with `generate --custom`,
 which copies the last snapshot rather than diffing the schema, so the
 undeclared columns stay in it: MB.136's `0031_refill-ingredient-lists` is
-the worked case.
+the worked case, and MB.159's `0035_refill-element-list` the second.
 
 **A table added while a drop is pending is `generate --custom` too**, with the
 DDL taken from a `generate` run into a scratch copy of `src/db/migrations`
@@ -47,13 +53,23 @@ emit the pending drops and nothing else. MB.139's
 `0032_ingredient-substitutes` is the worked case, made while MB.137's drop of
 the planet, zodiac and colour singles was pending, and MB.128's
 `0033_deities` the second, made while MB.141's was pending too.
+A column added to a table with a pending drop works the same way, with one
+more step. drizzle-kit sees a column added beside columns removed and stops
+to ask whether it is a rename, and with no terminal that prompt fails. So the
+pending columns are deleted from the scratch copy's last snapshot first, and
+the scratch run then emits the `ADD COLUMN` alone. MB.158's
+`0034_element-list` is the worked case.
+A changed CHECK follows the same procedure, its snapshot entry's value edited
+rather than a table or column added: MB.161's
+`0038_unknown-carries-formal-name`.
 
 **A drop made while another is pending is `generate --custom` as well**, its
 `DROP` taken from the same scratch run and the other task's left out. The
 snapshot is the copied one less the dropped column, so a second scratch
-`generate` still emits the other drop and nothing else. MB.141's
-`0034_drop-substitutes-list` is the worked case, made while MB.137's was
-pending. It also fills before it drops, for whatever the deploy before the
+`generate` still emits the other drop and nothing else. MB.160's
+`0037_drop-element` is the worked case, made while MB.141's was pending.
+MB.141's `0039_drop-substitutes-list`, a plain `generate` once nothing else
+was pending, also fills before it drops, for whatever the deploy before the
 switch wrote after the first fill. Unlike `0031`, that refill only adds: by
 the drop the switch has been writing the table, so a row there, live or
 removed, is newer than the list.
@@ -205,16 +221,19 @@ and goes red on a real omission. It was permanently red before, first because
 the bare command _was_ that full scan (fixed in MB.37) and then because the
 acknowledgements it needed only ever existed in PR bodies.
 
-Six migrations carry findings today, and each has its sidecar:
+Nine migrations carry findings today, and each has its sidecar:
 
-| Migration                           | Findings                                                                                                                             |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `0002_solid_marauders.sql`          | `DROP CONSTRAINT users_email_unique`, and `created_by` / `updated_by` added `NOT NULL`                                               |
-| `0017_custom-spell-ingredients.sql` | the `(spell_id, ingredient_id)` primary key and the `(spell_id, layer_order)` unique index dropped                                   |
-| `0025_ingredient-slugs.sql`         | `ingredients.slug` set `NOT NULL` with no backfill between, the seed standing in for one (["Ingredient slugs"](ingredient-slugs.md)) |
-| `0028_drop-pending-slugs.sql`       | the two pending-slug indexes and columns dropped, the contract half of MB.82's change ("Expand/contract")                            |
-| `0029_spell-layers-soft-delete.sql` | `spell_ingredients`' `(spell_id, layer_order)` primary key and its two unique indexes dropped, each re-created first as partial      |
-| `0034_drop-substitutes-list.sql`    | `ingredients.substitutes` dropped, the contract half of MB.140's switch, after a refill into `ingredient_substitutes`                |
+| Migration                              | Findings                                                                                                                             |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `0002_solid_marauders.sql`             | `DROP CONSTRAINT users_email_unique`, and `created_by` / `updated_by` added `NOT NULL`                                               |
+| `0017_custom-spell-ingredients.sql`    | the `(spell_id, ingredient_id)` primary key and the `(spell_id, layer_order)` unique index dropped                                   |
+| `0025_ingredient-slugs.sql`            | `ingredients.slug` set `NOT NULL` with no backfill between, the seed standing in for one (["Ingredient slugs"](ingredient-slugs.md)) |
+| `0028_drop-pending-slugs.sql`          | the two pending-slug indexes and columns dropped, the contract half of MB.82's change ("Expand/contract")                            |
+| `0029_spell-layers-soft-delete.sql`    | the `(spell_id, layer_order)` primary key dropped for a surrogate `id`, and two partial unique indexes re-created with the filter    |
+| `0036_drop-ingredient-singles.sql`     | the single `planet`, `zodiac` and `color` columns dropped, the contract half of MB.134's lists (MB.137)                              |
+| `0037_drop-element.sql`                | the single `element` column dropped, the contract half of MB.157's list (MB.160)                                                     |
+| `0038_unknown-carries-formal-name.sql` | `ingredients_nomenclature_declares_canonical_name` dropped and re-added wider under the same name (MB.161)                           |
+| `0039_drop-substitutes-list.sql`       | `ingredients.substitutes` dropped, the contract half of MB.140's switch, after a refill into `ingredient_substitutes` (MB.141)       |
 
 **`0002`'s sidecar was written retroactively, and says so.** This document
 previously claimed its `DROP CONSTRAINT` and two `NOT NULL` columns "were

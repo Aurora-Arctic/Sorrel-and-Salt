@@ -24,7 +24,7 @@ export function columnsOf(fields: IngredientFields) {
     nomenclature: fields.nomenclature,
     form: fields.form ?? null,
     description: fields.description ?? null,
-    element: fields.element ?? null,
+    elements: fields.elements ?? null,
     planets: fields.planets ?? null,
     zodiacSigns: fields.zodiacSigns ?? null,
     deities: fields.deities ?? null,

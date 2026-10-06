@@ -122,14 +122,52 @@
   ["Expand/contract"](expand-contract.md). 0033 adds `deity_traditions` and
   `deities`, with their two `set_updated_at` triggers; see
   ["The deity vocabulary"](deity-vocabulary.md).
-- **`0034_drop-substitutes-list.sql`** (MB.141) drops `ingredients.substitutes`
-  while MB.137's drop is still pending, so it too is `generate --custom`: the
-  `DROP` taken from a scratch run, and the snapshot the last one less the
-  column. Before the drop it copies across, as names, any list entry the table
-  holds no row for, live or removed, in any case. Its sidecar acknowledges the
-  drop and says why it is safe on production: v0.5.0 shipped MB.140 first.
-  `ingredient-substitutes-schema.test.ts` adds the column back in its clone to
-  re-run both fills. See ["Expand/contract"](expand-contract.md).
+- **`0034_element-list.sql`** (MB.158) is the expand of MB.157's list, made
+  the way 0032 was, because MB.137's and MB.141's drops are still pending.
+  Its `ADD COLUMN` for `elements` came from the scratch `generate`. The fill
+  was added by hand, as 0030's was: one `UPDATE` copying `element` as a
+  one-entry array where one is set. `element-list.test.ts` re-runs that
+  `UPDATE` against the seeded rows. See
+  ["The ingredient identity model"](identity-model.md).
+- **`0035_refill-element-list.sql`** (MB.159) is 0031 again for MB.157's
+  list: `generate --custom`, so `element`, which MB.159 stops declaring,
+  stays in the copied snapshot until MB.160 drops it. One
+  `UPDATE` rederives `elements` from `element` for every row that
+  disagrees, for anything the live deploy wrote after 0034. Data only, so no
+  sidecar. The seed writes lists since MB.159, so `element-list.test.ts`
+  put the seeded rows back as a deployed database held them before
+  re-running either fill, until 0037 dropped the column both read. See
+  ["The ingredient identity model"](identity-model.md).
+- **`0036_drop-ingredient-singles.sql`** (MB.137) is the contract of MB.134's
+  lists: `drizzle-kit generate` wrote the three `DROP COLUMN`s for `planet`,
+  `zodiac` and `color` and a fourth for `substitutes`, which was cut, its
+  column kept in the snapshot, since that drop is MB.141's. It fills nothing
+  first, and its sidecar says why and gates it on a production release
+  carrying MB.136. See ["The ingredient identity model"](identity-model.md).
+- **`0037_drop-element.sql`** (MB.160) is the contract of MB.157's list: one
+  `DROP COLUMN "element"`, with its `.ack.md` sidecar, and no last fill.
+  It is `generate --custom`, because a plain `generate` would also emit
+  MB.141's pending drop; its snapshot is 0036's with `element` deleted and
+  nothing else changed. `element-list.test.ts` asserts the column gone, the
+  type kept, and the drop as the file's only statement. See
+  ["The ingredient identity model"](identity-model.md).
+- **`0038_unknown-carries-formal-name.sql`** (MB.161) replaces
+  `ingredients_nomenclature_declares_canonical_name` under the same name,
+  so that an `unknown` entry may carry a formal name; see
+  ["The ingredient identity model"](identity-model.md). `generate --custom`
+  for the reason 0032 to 0034 were, MB.141's drop still pending: the two
+  constraint statements taken from a scratch `generate`, and the snapshot's
+  CHECK value changed by hand.
+  Its sidecar acknowledges the `DROP CONSTRAINT` and says why it is one PR:
+  the new CHECK only widens, and nothing reads a CHECK.
+- **`0039_drop-substitutes-list.sql`** (MB.141) is the contract of MB.140's
+  switch, and the first plain `generate` since 0031: with every other drop
+  landed, it emitted the `DROP COLUMN "substitutes"` alone. Before the drop
+  it copies across, as names, any list entry the table holds no row for, live
+  or removed, in any case. Its sidecar acknowledges the drop and says why it
+  is safe on production: v0.5.0 shipped MB.140 first.
+  `ingredient-substitutes-schema.test.ts` adds the column back in its clone
+  to re-run both fills. See ["Expand/contract"](expand-contract.md).
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls

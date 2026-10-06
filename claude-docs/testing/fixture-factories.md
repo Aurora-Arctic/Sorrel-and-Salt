@@ -96,7 +96,7 @@ into its defaults would hand back a row Postgres refuses — failing a test for
 a reason it was never about.
 
 - **`makeIngredient` derives `canonicalName` from `nomenclature`.**
-  `ingredients_nomenclature_declares_canonical_name` is a biconditional, so
+  `ingredients_nomenclature_declares_canonical_name` ties the two, so
   `{ nomenclature: 'none' }` drops the formal name and `{ nomenclature:
 'mineral' }` supplies one. Every one of §5's seven kinds has an answer.
 - **`makeSpell` derives a layer's shape from whether it names an ingredient.**

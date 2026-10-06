@@ -4,8 +4,9 @@ import { HttpResponse } from 'msw';
 import { FormProvider, useForm } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
-import { ListField } from '@/components/IngredientForm/fields';
+import { ListField, MultiSelectField } from '@/components/IngredientForm/fields';
 import type {
+  IngredientElement,
   IngredientFormInput,
   IngredientFormValues,
   SubstituteListEntry,
@@ -148,6 +149,13 @@ const choose = (name: string, label: string) => {
     }),
   );
 };
+/** Opens a multi-select's box, picks each choice in turn, and closes it: it stays open between picks. */
+const chooseEach = (name: string, ...labels: string[]) => {
+  fireEvent.click(select(name));
+  const list = screen.getByRole('listbox', { name: `${name} choices` });
+  for (const label of labels) fireEvent.click(within(list).getByRole('option', { name: label }));
+  fireEvent.keyDown(select(name), { key: 'Escape' });
+};
 /** Presses Save, focusing it first as a real click would: fireEvent moves no focus. */
 const save = () => {
   const button = screen.getByRole('button', { name: 'Save Ingredient' });
@@ -220,7 +228,7 @@ describe('IngredientForm', () => {
       type('Formal Name', 'Fixtura testalis');
       type('Form', 'dried leaf');
       type('Description', 'A fixture herb.');
-      choose('Element', 'Air');
+      chooseEach('Element', 'Water', 'Air');
       addEntry('Planet', 'Mercury');
       addEntry('Planet', 'Venus');
       addEntry('Zodiac Sign', 'Gemini');
@@ -235,7 +243,8 @@ describe('IngredientForm', () => {
         canonicalName: 'Fixtura testalis',
         form: 'dried leaf',
         description: 'A fixture herb.',
-        element: 'air',
+        // In the order chosen, not the vocabulary's.
+        elements: ['water', 'air'],
         planets: ['Mercury', 'Venus'],
         zodiacSigns: ['Gemini'],
         colors: ['Silver-green'],
@@ -291,7 +300,7 @@ describe('IngredientForm', () => {
       type('Formal Name', 'Fixtura testalis');
       type('Form', 'dried leaf');
       type('Description', 'A fixture herb.');
-      choose('Element', 'Air');
+      chooseEach('Element', 'Air');
       addEntry('Planet', 'Mercury');
       addEntry('Folk Name', 'Hedge Fixture');
       type('Safety Notes', 'None known.');
@@ -307,7 +316,8 @@ describe('IngredientForm', () => {
       expect(textbox('Formal Name')).toBeEnabled();
       expect(box('Form')).toHaveValue('');
       expect(textbox('Description')).toHaveValue('');
-      expect(select('Element')).toHaveTextContent('None');
+      expect(select('Element')).toHaveTextContent('Choose elements');
+      expect(screen.queryByRole('button', { name: 'Remove Air' })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Remove Mercury' })).not.toBeInTheDocument();
       expect(
         screen.queryByRole('button', { name: 'Remove Hedge Fixture' }),
@@ -480,6 +490,25 @@ describe('IngredientForm', () => {
       );
     });
 
+    // An element list's issue is pathed to the entry, but the control is one
+    // box: the whole of it carries the error, rather than the form above it.
+    it('lands an issue pathed to one element on the Element control', async () => {
+      mockGraphQLError('CreateWorkspaceIngredient', {
+        code: 'VALIDATION',
+        fieldErrors: [{ path: ['elements', 1], message: 'Air is already chosen' }],
+      });
+      renderForm();
+
+      type('Name', 'Testwort');
+      chooseEach('Element', 'Earth', 'Air');
+      save();
+
+      const element = select('Element');
+      await waitFor(() => expectErrorOn(element, 'Air is already chosen'));
+      expect(element).toHaveFocus();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
     it('clears once the field is edited', async () => {
       mockGraphQLError('CreateWorkspaceIngredient', {
         code: 'VALIDATION',
@@ -587,9 +616,9 @@ describe('IngredientForm', () => {
       expect(calls).toHaveLength(0);
     });
 
-    // The schema refuses a formal name on a nameless kind; the form never
-    // lets one be sent, so that refusal is the service's alone.
-    it('shuts the formal name for a nameless kind, emptying it and saying why', async () => {
+    // The schema refuses a formal name on none; the form never lets one be
+    // sent, so that refusal is the service's alone.
+    it('shuts the formal name under None, emptying it and saying why', async () => {
       const calls = acceptCreate();
       const onSaved = renderForm();
 
@@ -609,13 +638,37 @@ describe('IngredientForm', () => {
       expect(calls[0].input).toMatchObject({ nomenclature: 'none', canonicalName: '' });
     });
 
+    // An unknown entry takes either (MB.161), so a name typed before the kind
+    // is settled is kept, and nothing is asked of the field.
+    it('keeps the formal name open and optional under Unknown, saving what was typed', async () => {
+      const calls = acceptCreate();
+      const onSaved = renderForm();
+
+      type('Name', 'Testwort');
+      type('Formal Name', 'Fixtura testalis');
+      choose('Classification', 'Unknown');
+
+      const formal = textbox('Formal Name');
+      expect(formal).toBeEnabled();
+      expect(formal).toHaveValue('Fixtura testalis');
+      expect(formal).not.toBeRequired();
+      expect(formal).not.toHaveAccessibleDescription(
+        expect.stringContaining('records no formal name'),
+      );
+      save();
+
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(calls[0].input).toMatchObject({
+        nomenclature: 'unknown',
+        canonicalName: 'Fixtura testalis',
+      });
+    });
+
     it('opens the formal name again for a named kind', () => {
       renderForm();
 
-      choose('Classification', 'Unknown');
-      expect(textbox('Formal Name')).toHaveAccessibleDescription(
-        expect.stringContaining('An "unknown" entry records no formal name.'),
-      );
+      choose('Classification', 'None');
+      expect(textbox('Formal Name')).toBeDisabled();
       choose('Classification', 'Mineral');
 
       expect(textbox('Formal Name')).toBeEnabled();
@@ -624,24 +677,42 @@ describe('IngredientForm', () => {
       );
     });
 
-    it('asks which classification a formal name belongs to, beside the selector', async () => {
-      acceptCreate();
-      renderForm();
+    it('saves a formal name with no classification, which the schema reads as unknown', async () => {
+      const calls = acceptCreate();
+      const onSaved = renderForm();
 
       type('Name', 'Testwort');
       type('Formal Name', 'Fixtura testalis');
       save();
 
-      await waitFor(() =>
-        expectErrorOn(
-          select('Classification'),
-          'Choose the classification this formal name belongs to',
-        ),
-      );
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(select('Classification')).not.toBeInvalid();
+      expect(calls[0].input).toMatchObject({
+        nomenclature: null,
+        canonicalName: 'Fixtura testalis',
+      });
+      expect(LocalIngredientInput.parse(calls[0].input)).toMatchObject({
+        nomenclature: 'unknown',
+        canonicalName: 'Fixtura testalis',
+      });
     });
 
     // Inline: fixing either side clears the error on the other, with no second submit.
-    it('clears the formal-name error when the kind changes to a nameless one', async () => {
+    it('clears the formal-name error when the kind changes to None', async () => {
+      acceptCreate();
+      renderForm();
+
+      type('Name', 'Testwort');
+      choose('Classification', 'Botanical');
+      save();
+      await waitFor(() => expect(textbox('Formal Name')).toBeInvalid());
+      choose('Classification', 'None');
+
+      await waitFor(() => expect(textbox('Formal Name')).not.toBeInvalid());
+      expect(textbox('Formal Name')).toBeDisabled();
+    });
+
+    it('clears the formal-name error when the kind changes to Unknown, leaving it open', async () => {
       acceptCreate();
       renderForm();
 
@@ -652,20 +723,7 @@ describe('IngredientForm', () => {
       choose('Classification', 'Unknown');
 
       await waitFor(() => expect(textbox('Formal Name')).not.toBeInvalid());
-      expect(textbox('Formal Name')).toBeDisabled();
-    });
-
-    it('clears the classification error when the formal name is cleared', async () => {
-      acceptCreate();
-      renderForm();
-
-      type('Name', 'Testwort');
-      type('Formal Name', 'Fixtura testalis');
-      save();
-      await waitFor(() => expect(select('Classification')).toBeInvalid());
-      type('Formal Name', '');
-
-      await waitFor(() => expect(select('Classification')).not.toBeInvalid());
+      expect(textbox('Formal Name')).toBeEnabled();
     });
 
     it('offers every classification behind a placeholder that is not one', () => {
@@ -701,15 +759,16 @@ describe('IngredientForm', () => {
 
       choose('Classification', 'Unknown');
       expect(textbox('Formal Name')).not.toBeRequired();
+
+      choose('Classification', 'None');
+      expect(textbox('Formal Name')).not.toBeRequired();
     });
 
-    it('marks the classification required while a formal name is typed', () => {
+    // A formal name with no kind saves as unknown (MB.161), so it asks for none.
+    it('marks no classification required for a typed formal name', () => {
       renderForm();
 
       type('Formal Name', 'Fixtura testalis');
-      expect(select('Classification')).toBeRequired();
-
-      type('Formal Name', '   ');
       expect(select('Classification')).not.toBeRequired();
     });
 
@@ -739,17 +798,62 @@ describe('IngredientForm', () => {
       );
     });
 
-    it('offers the five elements and None, the choice that clears it, unanswered by default', () => {
+    // MB.159: an ingredient holds several elements, so the closed set is a
+    // list on the select-only box, and an empty list is the answer "none".
+    it('offers the five elements and nothing else, none chosen by default', () => {
       renderForm();
 
-      expect(select('Element')).toHaveTextContent('None');
+      expect(select('Element')).toHaveTextContent('Choose elements');
       fireEvent.click(select('Element'));
       const list = screen.getByRole('listbox', { name: 'Element choices' });
       expect(
         within(list)
           .getAllByRole('option')
           .map((option) => option.textContent),
-      ).toEqual(['None', 'Earth', 'Air', 'Fire', 'Water', 'Spirit']);
+      ).toEqual(['Earth', 'Air', 'Fire', 'Water', 'Spirit']);
+      // Nothing typed and nothing added: no box to type in, and no Add.
+      expect(screen.queryByRole('button', { name: 'Add Element' })).not.toBeInTheDocument();
+    });
+
+    it('chooses several elements as chips inside the control, offering only those left', async () => {
+      const calls = acceptCreate();
+      const onSaved = renderForm();
+
+      type('Name', 'Testwort');
+      fireEvent.click(select('Element'));
+      fireEvent.click(screen.getByRole('option', { name: 'Fire' }));
+      fireEvent.click(screen.getByRole('option', { name: 'Spirit' }));
+      expect(
+        within(screen.getByRole('listbox', { name: 'Element choices' }))
+          .getAllByRole('option')
+          .map((option) => option.textContent),
+      ).toEqual(['Earth', 'Air', 'Water']);
+      fireEvent.keyDown(select('Element'), { key: 'Escape' });
+      const control = select('Element').closest('.combobox__control') as HTMLElement;
+      expect(control).toContainElement(removeButton('Fire'));
+      expect(control).toContainElement(removeButton('Spirit'));
+      // Backspace in the box takes the last, and the x takes its own.
+      fireEvent.keyDown(select('Element'), { key: 'Backspace' });
+      expect(screen.queryByRole('button', { name: 'Remove Spirit' })).not.toBeInTheDocument();
+      chooseEach('Element', 'Earth', 'Water');
+      fireEvent.click(removeButton('Earth'));
+      save();
+
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(calls[0].input.elements).toEqual(['fire', 'water']);
+    });
+
+    it('sends no element as an empty list', async () => {
+      const calls = acceptCreate();
+      const onSaved = renderForm();
+
+      type('Name', 'Testwort');
+      chooseEach('Element', 'Air');
+      fireEvent.click(screen.getByRole('button', { name: 'Clear Element' }));
+      save();
+
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(calls[0].input.elements).toEqual([]);
     });
 
     // The owner's call during MB.131: a closed set wears the suggesting
@@ -1839,6 +1943,67 @@ describe('IngredientForm', () => {
       ]);
       expect(box('Substitute Ingredient')).not.toBeInvalid();
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+  });
+
+  // The field on its own, given its elements as an edit would be: drawn as
+  // chips in the order held, and a repeat refused on the control itself.
+  describe('an element list given its values', () => {
+    function renderElements(elements: IngredientElement[]) {
+      const onSubmit = vi.fn();
+      const Harness = () => {
+        const methods = useForm<IngredientFormValues, unknown, IngredientFormInput>({
+          defaultValues: { ...EMPTY_VALUES, name: 'Testwort', elements },
+          resolver: ingredientResolver,
+        });
+        return (
+          <FormProvider {...methods}>
+            <form onSubmit={methods.handleSubmit(onSubmit)}>
+              <MultiSelectField
+                name="elements"
+                label="Element"
+                placeholder="Choose elements"
+                options={[
+                  { value: 'earth', label: 'Earth' },
+                  { value: 'air', label: 'Air' },
+                  { value: 'fire', label: 'Fire' },
+                  { value: 'water', label: 'Water' },
+                  { value: 'spirit', label: 'Spirit' },
+                ]}
+              />
+              <button type="submit">Save Ingredient</button>
+            </form>
+          </FormProvider>
+        );
+      };
+      render(<Harness />);
+      return onSubmit;
+    }
+
+    it('prefills them as chips, in the order held, and offers only the rest', () => {
+      renderElements(['water', 'earth']);
+
+      const control = select('Element').closest('.combobox__control') as HTMLElement;
+      expect(
+        within(control)
+          .getAllByRole('button', { name: /^Remove/ })
+          .map((button) => button.getAttribute('aria-label')),
+      ).toEqual(['Remove Water', 'Remove Earth']);
+      fireEvent.click(select('Element'));
+      expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+        'Air',
+        'Fire',
+        'Spirit',
+      ]);
+    });
+
+    it('shows a repeat the schema refuses on the Element control', async () => {
+      const onSubmit = renderElements(['fire', 'fire']);
+
+      save();
+
+      await waitFor(() => expectErrorOn(select('Element'), 'already chosen'));
+      expect(onSubmit).not.toHaveBeenCalled();
     });
   });
 

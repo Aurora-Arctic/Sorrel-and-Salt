@@ -60,12 +60,15 @@ export const ingredients = pgTable(
     // omits generated columns from $inferInsert, so TypeScript refuses first.
     canonicalKey: text('canonical_key').notNull().generatedAlwaysAs(CANONICAL_KEY),
     description: text('description'),
-    element: ingredientElement('element'),
+    // A list of the five rather than the single `element` it replaced
+    // (MB.157), a new name for the reason the three lists below have one.
+    // MB.159 stopped declaring the single and MB.160 dropped it
+    // (claude-docs/db/identity-model.md, "The ingredient identity model").
+    elements: ingredientElement('elements').array(),
     // Lists rather than the single `planet`, `zodiac` and `color` they
     // replaced (MB.134): new names, because a column cannot turn from `text` to
-    // `text[]` under a deployed reader. The singles are undeclared but still in
-    // the database until MB.137 drops them, so `db:generate` emits that drop on
-    // any branch before it (claude-docs/db/identity-model.md, "The ingredient identity model").
+    // `text[]` under a deployed reader. MB.136 undeclared the singles and MB.137
+    // dropped them (claude-docs/db/identity-model.md, "The ingredient identity model").
     planets: text('planets').array(),
     zodiacSigns: text('zodiac_signs').array(),
     deities: text('deities').array(),
@@ -77,13 +80,14 @@ export const ingredients = pgTable(
     ...auditColumns,
   },
   (table) => [
-    // A biconditional: `none`/`unknown` carry no formal name, every other
-    // kind must. Enforced in Zod too, so the CHECK is never what a user sees.
+    // Three cases (MB.161): `none` carries no formal name, a named kind must,
+    // and `unknown` takes either, its name unconfirmed. Enforced in Zod too,
+    // so the CHECK is never what a user sees.
     check(
       'ingredients_nomenclature_declares_canonical_name',
-      sql`(nomenclature in ('none', 'unknown')) = (canonical_name is null)`,
+      sql`nomenclature = 'unknown' or (nomenclature = 'none') = (canonical_name is null)`,
     ),
-    // A blank formal name would satisfy the biconditional while keying nothing.
+    // A blank formal name would satisfy the CHECK above while keying nothing.
     check(
       'ingredients_canonical_name_not_blank',
       sql`canonical_name is null or btrim(canonical_name) <> ''`,

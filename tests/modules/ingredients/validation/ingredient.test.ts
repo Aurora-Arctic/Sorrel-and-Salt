@@ -9,7 +9,7 @@ import { PLANETS, ZODIAC_SIGNS } from '@/db/seed/astrology';
 // DESIGN.md §5 transcribed rather than imported, so the schemas are compared
 // against the spec, not against the constants they are built from.
 const NAMING_KINDS = ['botanical', 'fungal', 'zoological', 'mineral', 'chemical'] as const;
-const NAMELESS_KINDS = ['unknown', 'none'] as const;
+const NON_NAMING_KINDS = ['unknown', 'none'] as const;
 const ELEMENTS = ['earth', 'air', 'fire', 'water', 'spirit'];
 const VARIANTS = [
   ['local', LocalIngredientInput],
@@ -55,16 +55,21 @@ describe('the workspace-local ingredient', () => {
     );
   });
 
-  // Defaulting to `none` here would contradict the name it was given, and
-  // guessing `botanical` is the silent guess §5 forbids; so it asks.
-  it('asks for the naming system when a formal name arrives without one', () => {
-    const result = LocalIngredientInput.safeParse({
-      name: 'Testwort',
-      canonicalName: 'Fixtura testalis',
-    });
-
-    expect(failedPaths(result)).toEqual([['nomenclature']]);
-  });
+  // `none` would contradict the name it was given, and `botanical` is the
+  // silent guess §5 forbids; `unknown` admits the name without claiming its
+  // system (MB.161).
+  it.each([undefined, null])(
+    'reads a formal name with the naming system %s as unknown',
+    (nomenclature) => {
+      expect(
+        LocalIngredientInput.parse({
+          name: 'Testwort',
+          canonicalName: 'Fixtura testalis',
+          nomenclature,
+        }),
+      ).toMatchObject({ nomenclature: 'unknown', canonicalName: 'Fixtura testalis' });
+    },
+  );
 
   it('requires a name', () => {
     expect(failedPaths(LocalIngredientInput.safeParse({}))).toEqual([['name']]);
@@ -80,7 +85,7 @@ describe('the compendium ingredient', () => {
   });
 
   it('accepts each answer, none and unknown included', () => {
-    for (const kind of NAMELESS_KINDS) {
+    for (const kind of NON_NAMING_KINDS) {
       expect(
         CompendiumIngredientInput.safeParse({ name: 'Testwort', nomenclature: kind }).success,
       ).toBe(true);
@@ -94,14 +99,25 @@ describe('the compendium ingredient', () => {
 
 describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
   describe('couples nomenclature to canonicalName, as the database CHECK does', () => {
-    it.each(NAMELESS_KINDS)('refuses a formal name on %s', (kind) => {
+    it('refuses a formal name on none', () => {
       const result = Schema.safeParse({
         name: 'Testwort',
-        nomenclature: kind,
+        nomenclature: 'none',
         canonicalName: 'Fixtura testalis',
       });
 
       expect(failedPaths(result)).toEqual([['canonicalName']]);
+    });
+
+    // The one kind the rule leaves open: a formal name exists, its system unsettled.
+    it('takes unknown with a formal name and without one', () => {
+      const base = { name: 'Testwort', nomenclature: 'unknown' };
+
+      expect(Schema.parse({ ...base, canonicalName: 'Fixtura testalis' })).toMatchObject({
+        nomenclature: 'unknown',
+        canonicalName: 'Fixtura testalis',
+      });
+      expect(Schema.parse(base)).toMatchObject({ nomenclature: 'unknown' });
     });
 
     it.each(NAMING_KINDS)('requires a formal name on %s', (kind) => {
@@ -295,22 +311,58 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
     it('matches the database enums exactly', () => {
       // The schema and the pgEnum are built from one list; this pins the list
       // to §5 so a change to it is a change to the spec.
-      expect([...nomenclatureKind.enumValues]).toEqual([...NAMING_KINDS, ...NAMELESS_KINDS]);
+      expect([...nomenclatureKind.enumValues]).toEqual([...NAMING_KINDS, ...NON_NAMING_KINDS]);
       expect([...ingredientElement.enumValues]).toEqual(ELEMENTS);
     });
 
-    it('element accepts every documented value', () => {
-      for (const element of ELEMENTS) {
-        expect(Schema.safeParse({ ...base, element }).success).toBe(true);
-      }
+    it('nomenclature rejects a value outside the enum', () => {
+      expect(failedPaths(Schema.safeParse({ ...base, nomenclature: 'taxonomic' }))).toEqual([
+        ['nomenclature'],
+      ]);
+    });
+  });
+
+  // DESIGN.md §5 (MB.157): a list of the five, in the order chosen, each once.
+  describe('elements', () => {
+    const base = { name: 'Testwort', nomenclature: 'none' };
+
+    it('accepts every documented value, all at once', () => {
+      expect(Schema.parse({ ...base, elements: ELEMENTS })).toMatchObject({ elements: ELEMENTS });
     });
 
-    it.each([
-      ['nomenclature', 'taxonomic'],
-      ['element', 'aether'],
-      ['element', 'Earth'],
-    ])('%s rejects %s', (field, value) => {
-      expect(failedPaths(Schema.safeParse({ ...base, [field]: value }))).toContainEqual([field]);
+    it('keeps the order chosen', () => {
+      expect(Schema.parse({ ...base, elements: ['water', 'fire', 'air'] })).toMatchObject({
+        elements: ['water', 'fire', 'air'],
+      });
+    });
+
+    it.each(['aether', 'Earth', ''])('refuses %j at its position', (value) => {
+      expect(failedPaths(Schema.safeParse({ ...base, elements: ['fire', value] }))).toEqual([
+        ['elements', 1],
+      ]);
+    });
+
+    it('refuses a single value sent where the list belongs', () => {
+      expect(failedPaths(Schema.safeParse({ ...base, elements: 'fire' }))).toEqual([['elements']]);
+    });
+
+    it('refuses a repeat at the repeat, naming the element', () => {
+      const result = Schema.safeParse({ ...base, elements: ['fire', 'air', 'fire'] });
+
+      expect(failedPaths(result)).toEqual([['elements', 2]]);
+      expect(result.error?.issues[0]?.message).toBe('Fire is already chosen');
+    });
+
+    it('takes a list left empty, null or absent as absent', () => {
+      expect(Schema.parse({ ...base, elements: [] })).toMatchObject({ elements: null });
+      expect(Schema.parse({ ...base, elements: null })).toMatchObject({ elements: null });
+      expect(Schema.parse(base).elements ?? null).toBeNull();
+    });
+
+    // The single column is undeclared (MB.159), so a caller still sending
+    // one writes nothing through it.
+    it('carries no single element', () => {
+      expect(Object.keys(Schema.parse({ ...base, element: 'fire' }))).not.toContain('element');
     });
   });
 
@@ -351,8 +403,8 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
     });
   });
 
-  // The single columns are undeclared (MB.136), so a caller still sending one
-  // writes nothing through it.
+  // The single columns are gone (MB.136 undeclared them, MB.137 dropped them),
+  // so a caller still sending one writes nothing through it.
   it('carries no single planet, zodiac sign or colour', () => {
     const parsed = Schema.parse({
       name: 'Testwort',
@@ -374,7 +426,7 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
       canonicalName: 'Fixtura testalis',
       form: 'root',
       description: 'An invented herb.',
-      element: 'water',
+      elements: ['water', 'earth'],
       planets: ['moon', 'Venus'],
       zodiacSigns: ['cancer'],
       deities: [' Testara '],
@@ -385,6 +437,7 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
     });
 
     expect(parsed).toMatchObject({
+      elements: ['water', 'earth'],
       deities: ['Testara'],
       planets: ['moon', 'Venus'],
       zodiacSigns: ['cancer'],

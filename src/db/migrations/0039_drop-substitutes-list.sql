@@ -3,11 +3,7 @@
 -- copied across once more, for whatever the deploy before MB.140 wrote to it
 -- after 0032's fill (DESIGN.md §5, `ingredient_substitutes`).
 --
--- Written with `generate --custom`, its drop taken from a `generate` run in a
--- scratch copy: MB.137's drop of the planet, zodiac and colour singles is still
--- pending, and a plain `generate` here would have emitted it. The snapshot is
--- the last one less `substitutes`, so the singles stay in it and MB.137's
--- `generate` still emits their drop (claude-docs/db/expand-contract.md).
+-- The drop is `generate`'s; the copy before it is added by hand.
 --
 -- Only adds, unlike 0031's rederivation: MB.140 has been writing the table, so
 -- any row it holds for a name, in any case, is newer than the list. A

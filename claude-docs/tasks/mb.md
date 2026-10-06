@@ -2689,7 +2689,7 @@ _Acceptance criteria:_
 
 _Story:_ As a workspace member, I want an ingredient to carry more than one planet, sign or colour, so that a herb ruled by both Venus and the Moon is recorded as it is practised.
 
-Documentation and scoping only, in MB.91's shape: the model is recorded before the table task transcribes it. Minted during M5.9, on the owner's decision. DESIGN.md §5 gives `planet`, `zodiac` and `color` one text value each; they become text arrays beside `deities[]`, and stay free text: the planet and zodiac vocabularies suggest and nothing refuses, and colour has no vocabulary and no suggestions at all, the owner's call. Folk names keep M5.10a's suggestions; colour is the one list without any. This task settles the new column and field names; the GraphQL change, the single fields on `Ingredient` and both inputs replaced by lists with no deprecation window, since nothing outside the app reads the API; the sequence rule 10 requires, MB.135 adding and filling the lists, MB.136 switching every reader and writer and ceasing to declare the old columns, and MB.137 dropping them once MB.136 has deployed; and the in-use scan MB.94 built for a single column, which must unnest an array, as MB.130 needs for deities too. MB.136 lands first by the order, so it builds that scan and MB.130 adopts it. M5.10a's planet and zodiac fields move to MB.131 as list lookups.
+Documentation and scoping only, in MB.91's shape: the model is recorded before the table task transcribes it. Minted during M5.9, on the owner's decision. DESIGN.md §5 gives `planet`, `zodiac` and `color` one text value each; they become text arrays beside `deities[]`, and stay free text: the planet and zodiac vocabularies suggest and nothing refuses, and colour has no vocabulary and no suggestions at all, the owner's call. Folk names keep M5.10a's suggestions; colour is the one list without any. This task settles the new column and field names; the GraphQL change, the single fields on `Ingredient` and both inputs replaced by lists with no deprecation window, since nothing outside the app reads the API; the sequence rule 10 requires, MB.135 adding and filling the lists, MB.136 switching every reader and writer and ceasing to declare the old columns, and MB.137 dropping them once a release carrying MB.136 has reached production; and the in-use scan MB.94 built for a single column, which must unnest an array, as MB.130 needs for deities too. MB.136 lands first by the order, so it builds that scan and MB.130 adopts it. M5.10a's planet and zodiac fields move to MB.131 as list lookups.
 
 _Acceptance criteria:_
 
@@ -2729,13 +2729,13 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want the retired single columns gone, so that nothing can write a value the app no longer reads.
 
-The contract half of rule 10, a task of its own. Once MB.136 has deployed, the migration fills the lists one last time from anything written to the single columns since, then drops `planet`, `zodiac` and `color`, with its `.ack.md` sidecar.
+The contract half of rule 10, a task of its own. Once a release carrying MB.136 has reached production, the migration drops `planet`, `zodiac` and `color`, with its `.ack.md` sidecar. Production is the gate rather than staging because v0.4.0 still declares the singles, and a release carrying MB.136 and this drop together would drop them under it. Scoped first with a last fill from the singles, and dropped on the owner's decision: MB.136's deploy writes the lists, so a single that disagrees with its list may be either's newer write, and a fill would overwrite a member's edit to recover a write from a deploy-length window (claude-docs/db/identity-model.md, "The ingredient identity model").
 
 _Acceptance criteria:_
 
 - The three columns are gone, and the lists hold every value they held
 - The migration carries its acknowledgement sidecar, and the destructive-DDL check passes with it
-- Lands only after MB.136 has deployed to staging
+- Lands only after a release carrying MB.136 has reached production
 
 **MB.138 — Let a substitute link an existing ingredient** · 3h
 
@@ -3011,11 +3011,13 @@ _Acceptance criteria:_
 
 _Story:_ As a workspace member, I want an ingredient to carry more than one element, so that a herb worked with both fire and air is recorded as it is practised.
 
-Documentation and scoping only, in MB.134's shape: the model is recorded before the table task transcribes it. Minted during MB.131, on the owner's decision. DESIGN.md §5 gives `element` one value of a closed enum; it becomes a list of that enum, still closed — earth, air, fire, water, spirit — so nothing is typed and nothing outside the five is written. This task settles the column's name and type, an array of `ingredient_element` beside the free-text lists, and whether a list keeps the order chosen and refuses a repeat; the GraphQL change, the single field on `Ingredient` and both inputs replaced by a list with no deprecation window, since nothing outside the app reads the API; `updateIngredient`'s "every field but element non-null" rule, which the list ends; `IngredientSearch`'s element filter (§13), which matches any element a list holds; and the sequence rule 10 requires, MB.158 adding and filling the list, MB.159 switching every reader and writer and ceasing to declare the old column, and MB.160 dropping it once MB.159 has deployed. The form's field becomes a list on MB.131's select-only box, its chosen elements chips inside the control as every list's are, its list offering the elements not yet chosen.
+Documentation and scoping only, in MB.134's shape: the model is recorded before the table task transcribes it. Minted during MB.131, on the owner's decision. DESIGN.md §5 gives `element` one value of a closed enum; it becomes a list of that enum, still closed — earth, air, fire, water, spirit — so nothing is typed and nothing outside the five is written. This task settles the column's name and type, an array of `ingredient_element` beside the free-text lists, and whether a list keeps the order chosen and refuses a repeat; the GraphQL change, the single field on `Ingredient` and both inputs replaced by a list with no deprecation window, since nothing outside the app reads the API; `updateIngredient`'s "every field but element non-null" rule, which the list ends; `IngredientSearch`'s element filter (§9), which matches any element a list holds; and the sequence rule 10 requires, MB.158 adding and filling the list, MB.159 switching every reader and writer and ceasing to declare the old column, and MB.160 dropping it once MB.159 has deployed. The form's field becomes a list on MB.131's select-only box, its chosen elements chips inside the control as every list's are, its list offering the elements not yet chosen.
+
+**Decided while building:** the column and field are `elements`, a nullable `ingredient_element[]`; the list keeps the order chosen and refuses a repeat at its position, since the form never offers a chosen element twice; an empty list is null. The filter is §9's `IngredientSearch`, not §13, which is v2. It is built by M8.13, which runs after MB.159, so MB.159 no longer claims it and M8.13 adds the containment match.
 
 _Acceptance criteria:_
 
-- DESIGN.md §5's column list, the `element` values line and correspondence row, §7's sketch and `updateIngredient` comment, §13's filter and §14's form-library row carry the list
+- DESIGN.md §5's column list, the `element` values line and correspondence row, §7's sketch and `updateIngredient` comment, §9's filter and §14's form-library row carry the list
 - The column and field names, the array type, and whether the list keeps the order chosen and refuses a repeat, are recorded
 - db.md and validation.md say how the list is validated
 
@@ -3036,13 +3038,13 @@ _Acceptance criteria:_
 
 _Story:_ As a workspace member, I want to choose several elements for an ingredient, so that it records every element I work it with.
 
-Switches every reader and writer to MB.158's column. The shared Zod schema takes a list of the five values; the workspace and compendium services write it; GraphQL's `Ingredient` and both inputs carry the list; the compendium's element filter matches any element a list holds; the seed and the test fixtures write lists. `IngredientForm`'s Element becomes a multi-select in the same PR, since the form's types follow the schema: the list fields' control, its chosen elements as chips inside it, each with its ×, and a clear and a chevron on its right, on MB.131's select-only box, nothing typed and no Add, its list offering the elements not yet chosen. The Drizzle schema stops declaring the single column, rule 10's first half of a drop, and the migration fills the list again for any row the live deploy wrote to `element` after MB.158.
+Switches every reader and writer to MB.158's column. The shared Zod schema takes a list of the five values; the workspace and compendium services write it; GraphQL's `Ingredient` and both inputs carry the list, and `IngredientUpdateInput` has no nullable field left; the seed and the test fixtures write lists. `IngredientForm`'s Element becomes a multi-select in the same PR, since the form's types follow the schema: the list fields' control, its chosen elements as chips inside it, each with its ×, and a clear and a chevron on its right, on MB.131's select-only box, nothing typed and no Add, its list offering the elements not yet chosen. The Drizzle schema stops declaring the single column, rule 10's first half of a drop, and the migration fills the list again for any row the live deploy wrote to `element` after MB.158.
 
 _Acceptance criteria:_
 
 - A save carries several elements, and an edit replaces the list whole
 - The list keeps the order chosen, refuses a repeat and a value outside the five, and treats an empty list as absent
-- The compendium filtered by an element finds an entry holding it among others
+- Every field of the update input is non-null, and `elements: []` clears the list
 - The seed and fixtures write lists, and the SDL snapshot moves
 - Nothing declares or reads the single column, which still exists
 - The form's Element is a select-only multi-select with chips, keyboard-operable — the arrows move, Enter or Space chooses, Escape closes, Backspace in it removes the last — covered by its tests
@@ -3051,11 +3053,11 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want the retired single column gone, so that nothing can write a value the app no longer reads.
 
-The contract half of rule 10, a task of its own. Once MB.159 has deployed, the migration fills the list one last time from anything written to `element` since, then drops it, with its `.ack.md` sidecar.
+The contract half of rule 10, a task of its own. Once MB.159 has deployed, the migration drops `element`, with its `.ack.md` sidecar, and fills nothing. MB.159's refill copied everything written before it ran. After MB.159 promotes, members edit the list and nothing rewrites the single, so a row where the two disagree is either a write the old deploy made during MB.159's rollout or a list edited since, and nothing in the row says which. Copying the single in would bring back elements members had removed, so the drop gives up those minutes of writes instead, the owner's call during this task. `db:generate` would also emit MB.141's pending drop, so the migration is `generate --custom`, its snapshot the last one less `element` (claude-docs/db/identity-model.md, "The ingredient identity model").
 
 _Acceptance criteria:_
 
-- The column is gone, and the list holds every value it held
+- The column is gone, its `ingredient_element` type stays, and the migration writes no list
 - The migration carries its acknowledgement sidecar, and the destructive-DDL check passes with it
 - Lands only after MB.159 has deployed to staging
 

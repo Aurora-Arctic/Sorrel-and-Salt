@@ -1,6 +1,6 @@
 {
-  "id": "d74f76c4-8785-48da-91f7-d33d64767659",
-  "prevId": "263569f7-49e2-4df7-a929-b160ed96f3bf",
+  "id": "64dcd749-b1f3-4c70-8a18-4e40509fd10c",
+  "prevId": "6cc32a4b-baa2-40e1-b483-9768bf72db06",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1503,13 +1503,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "element": {
-          "name": "element",
-          "type": "ingredient_element",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
         "elements": {
           "name": "elements",
           "type": "ingredient_element[]",
@@ -1517,27 +1510,9 @@
           "primaryKey": false,
           "notNull": false
         },
-        "planet": {
-          "name": "planet",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "zodiac": {
-          "name": "zodiac",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "deities": {
           "name": "deities",
           "type": "text[]",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "color": {
-          "name": "color",
-          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -1796,7 +1771,7 @@
       "checkConstraints": {
         "ingredients_nomenclature_declares_canonical_name": {
           "name": "ingredients_nomenclature_declares_canonical_name",
-          "value": "(nomenclature in ('none', 'unknown')) = (canonical_name is null)"
+          "value": "nomenclature = 'unknown' or (nomenclature = 'none') = (canonical_name is null)"
         },
         "ingredients_canonical_name_not_blank": {
           "name": "ingredients_canonical_name_not_blank",

@@ -122,21 +122,20 @@ describe('createCompendiumEntry', () => {
     expect(created.slug).toBe(ingredientSlug('Testwort', 'herb', 'Fixtura testalis'));
   });
 
-  it('saves several planets, signs and colours, each in the order entered', async () => {
+  it('saves several elements, planets, signs and colours, each in the order entered', async () => {
     const created = await createCompendiumEntry(admin, {
       ...entry(),
+      elements: ['spirit', 'air'],
       planets: ['Venus', 'Moon'],
       zodiacSigns: ['Taurus', 'Libra'],
       colors: ['Green', '', 'Pink'],
     });
 
     expect(await rowOf(created.id)).toMatchObject({
+      elements: ['spirit', 'air'],
       planets: ['Venus', 'Moon'],
       zodiac_signs: ['Taurus', 'Libra'],
       colors: ['Green', 'Pink'],
-      planet: null,
-      zodiac: null,
-      color: null,
     });
   });
 
@@ -220,6 +219,7 @@ describe('updateCompendiumEntry', () => {
 
   it('replaces each list whole, an empty one clearing it', async () => {
     const id = await seed({
+      elements: ['water'],
       planets: ['Moon', 'Venus'],
       zodiacSigns: ['Cancer'],
       colors: ['Silver'],
@@ -227,12 +227,14 @@ describe('updateCompendiumEntry', () => {
 
     await updateCompendiumEntry(admin, id, {
       ...entry(),
+      elements: ['fire', 'water'],
       planets: ['Mars'],
       zodiacSigns: [],
       colors: ['White', 'Silver'],
     });
 
     expect(await rowOf(id)).toMatchObject({
+      elements: ['fire', 'water'],
       planets: ['Mars'],
       zodiac_signs: null,
       colors: ['White', 'Silver'],

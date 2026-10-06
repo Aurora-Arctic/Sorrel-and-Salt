@@ -55,12 +55,16 @@ type FormSuggestion {
 
 type Ingredient {
   audit: AuditInfo!
+
+  """
+  The formal name: null for none, set for a named kind, either for unknown.
+  """
   canonicalName: String
   categories: [Category!]!
   colors: [String!]
   deities: [String!]
   description: String
-  element: IngredientElement
+  elements: [IngredientElement!]
   folkNames: [String!]!
   form: String
   id: ID!
@@ -102,7 +106,7 @@ input IngredientInput {
   colors: [String!]
   deities: [String!]
   description: String
-  element: IngredientElement
+  elements: [IngredientElement!]
   folkNames: [String!]
   form: String
   name: String!
@@ -114,14 +118,14 @@ input IngredientInput {
 }
 
 """
-The whole ingredient, replacing the row. Every field is sent, and "" or [] clears one; `element` alone is nullable, and null or leaving it out clears it.
+The whole ingredient, replacing the row. Every field is sent, and "" or [] clears one.
 """
 input IngredientUpdateInput {
   canonicalName: String!
   colors: [String!]!
   deities: [String!]!
   description: String!
-  element: IngredientElement
+  elements: [IngredientElement!]!
   folkNames: [String!]!
   form: String!
   name: String!

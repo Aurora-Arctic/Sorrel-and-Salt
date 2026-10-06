@@ -54,7 +54,7 @@ export type SeedIngredient = Pick<
   | 'nomenclature'
   | 'form'
   | 'description'
-  | 'element'
+  | 'elements'
   | 'planets'
   | 'safetyNotes'
 > & {
@@ -67,7 +67,7 @@ export type SeedIngredient = Pick<
 /** W's own ingredients — the workspace tier, `workspace_id` set rather than null. */
 export type SeedWorkspaceIngredient = Pick<
   typeof ingredients.$inferInsert,
-  'name' | 'canonicalName' | 'nomenclature' | 'form' | 'description' | 'element'
+  'name' | 'canonicalName' | 'nomenclature' | 'form' | 'description' | 'elements'
 >;
 
 /** What a layer points at: an ingredient in either tier, or a custom row carrying its own name and form. */

@@ -1,6 +1,6 @@
 {
-  "id": "d74f76c4-8785-48da-91f7-d33d64767659",
-  "prevId": "263569f7-49e2-4df7-a929-b160ed96f3bf",
+  "id": "f85e17fa-e3d3-4ac6-a87f-78ceb18bb396",
+  "prevId": "fe13fa3e-dfc1-4551-95ea-702e14c46140",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1517,27 +1517,9 @@
           "primaryKey": false,
           "notNull": false
         },
-        "planet": {
-          "name": "planet",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "zodiac": {
-          "name": "zodiac",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "deities": {
           "name": "deities",
           "type": "text[]",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "color": {
-          "name": "color",
-          "type": "text",
           "primaryKey": false,
           "notNull": false
         },

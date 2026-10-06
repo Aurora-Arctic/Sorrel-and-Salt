@@ -1,7 +1,11 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import Combobox, { ComboboxEntry, ComboboxSelect } from '@/components/Combobox';
+import Combobox, {
+  ComboboxEntry,
+  ComboboxMultiSelect,
+  ComboboxSelect,
+} from '@/components/Combobox';
 import type { ComboboxOption, Suggestions } from '@/components/Combobox/types';
 import type { HarnessProps } from './types';
 
@@ -543,6 +547,191 @@ describe('Combobox', () => {
 
       expect(element()).toHaveTextContent('None');
       expect(element()).not.toHaveTextContent('Choose an element');
+    });
+  });
+
+  // A closed set holding several values (MB.159): the select-only box, its
+  // choices drawn as chips inside the control, as a list's entries are.
+  describe('the multi-select box', () => {
+    const FIVE = [
+      { value: 'earth', label: 'Earth' },
+      { value: 'air', label: 'Air' },
+      { value: 'fire', label: 'Fire' },
+      { value: 'water', label: 'Water' },
+      { value: 'spirit', label: 'Spirit' },
+    ];
+
+    function MultiHarness({ initial = [] }: { initial?: string[] }) {
+      const [values, setValues] = useState(initial);
+      return (
+        <>
+          <ComboboxMultiSelect
+            id="elements"
+            label="Element"
+            values={values}
+            onChange={setValues}
+            choices={FIVE}
+            placeholder="Choose elements"
+            required
+            aria-describedby="elements-hint"
+          />
+          <output aria-label="Chosen">{values.join(',')}</output>
+        </>
+      );
+    }
+    const elements = () => screen.getByRole('combobox', { name: 'Element' });
+    const chosen = () => screen.getByRole('status', { name: 'Chosen' }).textContent;
+    const offered = () =>
+      within(screen.getByRole('listbox', { name: 'Element choices' }))
+        .queryAllByRole('option')
+        .map((option) => option.textContent);
+    const pick = (label: string) => fireEvent.click(screen.getByRole('option', { name: label }));
+    const press = (name: string) => fireEvent.keyDown(elements(), { key: name });
+
+    it('is a select-only combobox named by its label, showing the placeholder until a choice', () => {
+      render(<MultiHarness />);
+
+      expect(elements()).toHaveAttribute('aria-label', 'Element');
+      expect(elements()).not.toHaveAttribute('aria-autocomplete');
+      expect(elements()).toBeRequired();
+      expect(elements()).toHaveAttribute('aria-describedby', 'elements-hint');
+      expect(elements()).toHaveTextContent('Choose elements');
+      // Nothing to type, and no Add: the list is the only way in.
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Add/ })).not.toBeInTheDocument();
+
+      fireEvent.click(elements());
+      expect(offered()).toEqual(['Earth', 'Air', 'Fire', 'Water', 'Spirit']);
+    });
+
+    it('adds a choice as a chip inside the control, in the order chosen, offering only what is left', () => {
+      render(<MultiHarness />);
+
+      fireEvent.click(elements());
+      pick('Fire');
+      // Still open, for the next choice, without the one just made.
+      expect(elements()).toHaveAttribute('aria-expanded', 'true');
+      expect(offered()).toEqual(['Earth', 'Air', 'Water', 'Spirit']);
+      pick('Earth');
+
+      expect(chosen()).toBe('fire,earth');
+      expect(offered()).toEqual(['Air', 'Water', 'Spirit']);
+      const control = elements().closest('.combobox__control') as HTMLElement;
+      expect(control).toContainElement(screen.getByRole('button', { name: 'Remove Fire' }));
+      expect(control).toContainElement(screen.getByRole('button', { name: 'Remove Earth' }));
+      expect(
+        within(control)
+          .getAllByRole('listitem')
+          .map((chip) => chip.textContent),
+      ).toEqual([expect.stringContaining('Fire'), expect.stringContaining('Earth')]);
+      // The box reads what it holds, as a select reads its choice.
+      expect(elements()).toHaveTextContent('Fire, Earth');
+      expect(elements()).not.toHaveTextContent('Choose elements');
+    });
+
+    it('chooses by the keyboard: the arrows open and move, Enter or Space chooses, Escape closes', () => {
+      render(<MultiHarness />);
+      act(() => elements().focus());
+      const active = (label: string) =>
+        expect(elements()).toHaveAttribute(
+          'aria-activedescendant',
+          screen.getByRole('option', { name: label }).id,
+        );
+
+      press('ArrowDown');
+      expect(elements()).toHaveAttribute('aria-expanded', 'true');
+      active('Earth');
+      press('ArrowDown');
+      active('Air');
+      press('ArrowDown');
+      active('Fire');
+      press('ArrowUp');
+      active('Air');
+
+      press('Enter');
+      expect(chosen()).toBe('air');
+      // The row below takes the chosen one's place under the highlight.
+      active('Fire');
+      press(' ');
+      expect(chosen()).toBe('air,fire');
+      expect(elements()).toHaveAttribute('aria-expanded', 'true');
+
+      press('Escape');
+      expect(elements()).toHaveAttribute('aria-expanded', 'false');
+      expect(chosen()).toBe('air,fire');
+    });
+
+    it('opens from a press on the control around the box, as from the box itself', () => {
+      render(<MultiHarness initial={['earth']} />);
+      const control = elements().closest('.combobox__control') as HTMLElement;
+
+      fireEvent.mouseDown(control);
+      expect(elements()).toHaveFocus();
+      expect(elements()).toHaveAttribute('aria-expanded', 'true');
+      // An x is its own: pressing it opens nothing.
+      fireEvent.keyDown(elements(), { key: 'Escape' });
+      fireEvent.mouseDown(screen.getByRole('button', { name: 'Remove Earth' }));
+      expect(elements()).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('takes the last chip on Backspace in the box, and nothing once it is empty', () => {
+      render(<MultiHarness initial={['water', 'earth']} />);
+      act(() => elements().focus());
+
+      press('Backspace');
+      expect(chosen()).toBe('water');
+      expect(screen.queryByRole('button', { name: 'Remove Earth' })).not.toBeInTheDocument();
+      press('Backspace');
+      expect(chosen()).toBe('');
+      press('Backspace');
+      expect(chosen()).toBe('');
+      expect(elements()).toHaveTextContent('Choose elements');
+    });
+
+    it('removes one chip by its x, and every chip by the clear, leaving the focus in the box', () => {
+      render(<MultiHarness initial={['earth', 'air', 'fire']} />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Remove Air' }));
+      expect(chosen()).toBe('earth,fire');
+      expect(elements()).toHaveFocus();
+      fireEvent.click(elements());
+      expect(offered()).toEqual(['Air', 'Water', 'Spirit']);
+      press('Escape');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Clear Element' }));
+      expect(chosen()).toBe('');
+      expect(elements()).toHaveFocus();
+      // Nothing left to clear.
+      expect(screen.queryByRole('button', { name: 'Clear Element' })).not.toBeInTheDocument();
+    });
+
+    it('says what each change did, for a screen reader', () => {
+      render(<MultiHarness initial={['earth']} />);
+      const changes = () => screen.getByRole('status', { name: 'Element changes' });
+
+      fireEvent.click(elements());
+      pick('Spirit');
+      expect(changes()).toHaveTextContent('Added Spirit');
+      fireEvent.click(screen.getByRole('button', { name: 'Remove Earth' }));
+      expect(changes()).toHaveTextContent('Removed Earth');
+      fireEvent.click(screen.getByRole('button', { name: 'Clear Element' }));
+      expect(changes()).toHaveTextContent('Cleared Element');
+    });
+
+    it('has nothing to offer once every choice is made, and does not open', () => {
+      render(<MultiHarness initial={['earth', 'air', 'fire', 'water']} />);
+
+      fireEvent.click(elements());
+      expect(offered()).toEqual(['Spirit']);
+      pick('Spirit');
+
+      expect(chosen()).toBe('earth,air,fire,water,spirit');
+      expect(elements()).toHaveAttribute('aria-expanded', 'false');
+      fireEvent.click(elements());
+      expect(elements()).toHaveAttribute('aria-expanded', 'false');
+      press('ArrowDown');
+      expect(elements()).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.queryByRole('option')).not.toBeInTheDocument();
     });
   });
 });
