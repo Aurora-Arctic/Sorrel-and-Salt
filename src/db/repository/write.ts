@@ -1,13 +1,17 @@
-import { and, eq, inArray, isNull, lte, sql, type SQL } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNull, lte, sql, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { applyAudit } from '../audit';
 import type { AuditSession } from '../types';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
+import { adminInvitations } from '../../modules/identity/schema/admin-invitations';
 import { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
+import { users } from '../../modules/identity/schema/users';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
+import { existsIn } from './select';
+import { hashToken } from './tokens';
 import type { Membership } from '@/modules/coven';
 import type { AuditWriter, Identified, TwoTier, WorkspaceScoped } from './types';
 
@@ -45,6 +49,28 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     table: PgTable & WorkspaceScoped & Identified,
     id: string,
   ) => and(scopedTo(membership, table), eq(table.id, id));
+
+  // A pending invitation: neither accepted nor revoked, and not yet expired.
+  // Both stamps match only one, so neither overwrites the other or itself.
+  const pendingInvitation = (...which: SQL[]) =>
+    and(
+      ...which,
+      isNull(adminInvitations.acceptedAt),
+      isNull(adminInvitations.revokedAt),
+      gt(adminInvitations.expiresAt, sql`now()`),
+    );
+
+  // The session's user holds the invited address, verified, on a live row.
+  // Both sides lowered, though `users` holds its addresses lower-cased.
+  const heldVerifiedBySession = () =>
+    existsIn(
+      users,
+      and(
+        eq(users.id, session.userId),
+        eq(users.emailVerified, true),
+        eq(sql`lower(${users.email})`, sql`lower(${adminInvitations.email})`),
+      ),
+    );
 
   const inCompendiumById = (table: PgTable & TwoTier & Identified, id: string) =>
     and(inCompendium(table), eq(table.id, id));
@@ -95,6 +121,27 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
         adminRoleChangePauses,
         { endedAt: sql`now()`, endedBy: session.userId },
         isNull(adminRoleChangePauses.endedAt),
+      ),
+    // The columns named rather than spread, as `workspaceId` is placed last
+    // above: an invitation starts pending even if a cast smuggled a stamp in.
+    insertAdminInvitation: (_admin, { email, token, expiresAt, note }) =>
+      insert(adminInvitations, { email, tokenHash: hashToken(token), expiresAt, note }),
+    // The address match in the statement, not only in MB.70's service: the
+    // service checks first to say why, and this is what holds if it forgot.
+    acceptAdminInvitation: (token) =>
+      update(
+        adminInvitations,
+        { acceptedAt: sql`now()`, acceptedBy: session.userId },
+        pendingInvitation(
+          eq(adminInvitations.tokenHash, hashToken(token)),
+          heldVerifiedBySession(),
+        ),
+      ),
+    revokeAdminInvitation: (_admin, id) =>
+      update(
+        adminInvitations,
+        { revokedAt: sql`now()` },
+        pendingInvitation(eq(adminInvitations.id, id)),
       ),
     delete: (table, where) => tx.delete(table).where(where).returning() as never,
   };

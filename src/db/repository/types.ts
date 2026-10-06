@@ -1,5 +1,6 @@
 import type { SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
+import type { adminInvitations } from '../../modules/identity/schema/admin-invitations';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
 import type { auditColumns } from '../../modules/identity/schema/users';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -70,6 +71,13 @@ export type NotAppendOnly = { change?: never };
 // session. Its `ended_at` column marks it, and `NotPauseLedger` takes it off
 // the generic insert, every update and every delete below.
 export type NotPauseLedger = { endedAt?: never };
+
+// And for the admin invitation (MB.69): `admin_invitations` is what will
+// authorise a grant, so a row is made only by the writer's named insert under
+// the `SiteAdmin` proof, and is stamped accepted or revoked only by its two
+// named writes. Its `token_hash` marks it; `workspace_invitations` carries
+// one too, and is already off every method below as `WorkspaceScoped`.
+export type NotInvitation = { tokenHash?: never };
 
 /** A table with a surrogate key, which is every one but the two hard-deleted join tables. */
 export type Identified = { id: AnyPgColumn };
@@ -181,7 +189,7 @@ export interface Derived<TRow extends Record<string, unknown>> {
 /** What `withAudit` hands its callback: every write, stamped from the session. */
 export interface AuditWriter {
   /** Insert one row, stamping created_* and updated_* from the session. */
-  insert<TTable extends PgTable & Unscoped & NotPauseLedger>(
+  insert<TTable extends PgTable & Unscoped & NotPauseLedger & NotInvitation>(
     table: TTable,
     values: Writable<TTable>,
   ): Promise<TTable['$inferSelect'][]>;
@@ -195,7 +203,7 @@ export interface AuditWriter {
    * Update matching rows, stamping updated_* only — created_* is never touched.
    * A soft-deleted row never matches, here or in any update below.
    */
-  update<TTable extends PgTable & Unscoped & NotAppendOnly & NotPauseLedger>(
+  update<TTable extends PgTable & Unscoped & NotAppendOnly & NotPauseLedger & NotInvitation>(
     table: TTable,
     values: Partial<Writable<TTable>>,
     where: SQL,
@@ -205,7 +213,9 @@ export interface AuditWriter {
    * A service cannot build the `where` above: MB.33 bars it from importing
    * `drizzle-orm` at runtime.
    */
-  updateById<TTable extends PgTable & Unscoped & NotAppendOnly & NotPauseLedger & Identified>(
+  updateById<
+    TTable extends PgTable & Unscoped & NotAppendOnly & NotPauseLedger & NotInvitation & Identified,
+  >(
     table: TTable,
     id: string,
     values: Partial<Writable<TTable>>,
@@ -234,7 +244,14 @@ export interface AuditWriter {
    * (CLAUDE.md rule 4). A row already deleted never matches, here or below, so
    * it keeps the stamps of whoever deleted it.
    */
-  softDelete<TTable extends PgTable & SoftDeletable & Unscoped & NotAppendOnly & NotPauseLedger>(
+  softDelete<
+    TTable extends PgTable &
+      SoftDeletable &
+      Unscoped &
+      NotAppendOnly &
+      NotPauseLedger &
+      NotInvitation,
+  >(
     table: TTable,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
@@ -256,7 +273,13 @@ export interface AuditWriter {
    * nothing without a statement.
    */
   softDeleteByIds<
-    TTable extends PgTable & SoftDeletable & Unscoped & NotAppendOnly & NotPauseLedger & Identified,
+    TTable extends PgTable &
+      SoftDeletable &
+      Unscoped &
+      NotAppendOnly &
+      NotPauseLedger &
+      NotInvitation &
+      Identified,
   >(
     table: TTable,
     ids: readonly string[],
@@ -310,12 +333,43 @@ export interface AuditWriter {
    */
   resumeAdminRoleChanges(admin: SiteAdmin): Promise<(typeof adminRoleChangePauses.$inferSelect)[]>;
   /**
+   * Invite an address to become an admin, stamped from the session (MB.69).
+   * The token is hashed here and only the hash is stored. Only the columns an
+   * invitation starts with are written: it starts pending, whatever a cast
+   * smuggled into `values`.
+   */
+  insertAdminInvitation(
+    admin: SiteAdmin,
+    values: AdminInvitationValues,
+  ): Promise<AdminInvitationRow[]>;
+  /**
+   * Accept the pending invitation a link's token names, as the session's
+   * user, stamping `accepted_at` now and `accepted_by` from the session.
+   * Under no role's proof, since the invitee is not yet an admin: the token
+   * is what admits, and the session's user must hold the invited address,
+   * verified. No row comes back for a token naming no pending invitation, or
+   * for a user whose live row holds another address or holds it unverified.
+   */
+  acceptAdminInvitation(token: string): Promise<AdminInvitationRow[]>;
+  /**
+   * Revoke a pending invitation, stamping `revoked_at` now; `updated_by` is
+   * who revoked. No row comes back for one already accepted, revoked or expired.
+   */
+  revokeAdminInvitation(admin: SiteAdmin, id: string): Promise<AdminInvitationRow[]>;
+  /**
    * Hard-delete, for the join tables that carry no `deleted_at` (MB.34). A
    * table carrying one is rejected by the type, as is one carrying
    * `workspace_id`: no table is both today, and the one that is first adds its
    * proof-scoped counterpart rather than being hard-deleted unscoped.
    */
-  delete<TTable extends PgTable & HardDeletable & Unscoped & NotAppendOnly & NotPauseLedger>(
+  delete<
+    TTable extends PgTable &
+      HardDeletable &
+      Unscoped &
+      NotAppendOnly &
+      NotPauseLedger &
+      NotInvitation,
+  >(
     table: TTable,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
@@ -438,6 +492,18 @@ export interface SlugRedirect {
   entry: IngredientRow;
   expiresAt: Date;
 }
+
+/** An `admin_invitations` row, as a finder or a write returns it. */
+export type AdminInvitationRow = typeof adminInvitations.$inferSelect;
+
+/** What an admin invitation starts with; the expiry defaults to seven days out. */
+export type AdminInvitationValues = Pick<
+  typeof adminInvitations.$inferInsert,
+  'email' | 'expiresAt' | 'note'
+> & {
+  /** The link's token, never stored: the writer stores its hash. */
+  token: string;
+};
 
 /** What the admin user list is narrowed by (MB.52). Each part is optional, and absent means no filter. */
 export interface UserFilter {

@@ -316,6 +316,13 @@
       "when": 1791324406382,
       "tag": "0044_admin-role-change-pauses",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1791326594149,
+      "tag": "0045_admin-invitations",
+      "breakpoints": true
     }
   ]
 }
