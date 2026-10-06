@@ -13,7 +13,7 @@ import { execFileSync } from 'node:child_process';
 import { realpathSync } from 'node:fs';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
-import { ID, expandIds, loadTasksMd } from './tasks-md.mjs';
+import { ID, expandIds, loadTasksMd, loadTasksMdText, readEntry } from './tasks-md.mjs';
 
 export const REPO = 'Aurora-Arctic/Sorrel-and-Salt';
 export const OWNER = 'Aurora-Arctic';
@@ -568,6 +568,68 @@ export function postComment(issue, text) {
 }
 
 // ---------------------------------------------------------------------------
+// Sync — an issue's title and body are its entry's heading and text, and its
+// Estimate the heading's hours. An entry corrected in a PR is synced in the
+// same pass, so the board never says one thing and the breakdown another
+// (claude-docs/task-tracking.md, "Sync").
+
+/** Where an entry's relative links resolve: its own directory, on staging. */
+const ENTRY_BASE = `https://github.com/${REPO}/blob/staging/claude-docs/tasks/`;
+
+/**
+ * The entry's text as an issue body: a relative link points at the doc on
+ * staging, since an issue page resolves it against nothing. Code spans are
+ * left alone, where `](` is text rather than a link.
+ */
+export function issueBodyOf(body) {
+  return body
+    .split(/(`[^`\n]*`)/)
+    .map((part, index) =>
+      index % 2 === 1
+        ? part
+        : part.replace(/\]\(([^)\s]+)\)/g, (link, href) =>
+            /^(?:[a-z][a-z0-9+.-]*:|#)/i.test(href) ? link : `](${new URL(href, ENTRY_BASE)})`,
+          ),
+    )
+    .join('');
+}
+
+/**
+ * The edits that bring `issue` to `entry`: a title and a body, each only
+ * where it differs. GitHub keeps a trailing newline, which is no difference.
+ * A title that would not open with the id is refused: `find` could no longer
+ * reach the issue.
+ */
+export function planSync(issue, entry) {
+  if (!matchesId(entry.title, entry.id)) {
+    throw new BoardError(`${entry.id}'s heading does not open with "${titlePrefix(entry.id)}".`);
+  }
+  const body = issueBodyOf(entry.body);
+  const plan = {};
+  if (issue.title !== entry.title) plan.title = entry.title;
+  if ((issue.body ?? '').trim() !== body) plan.body = body;
+  return plan;
+}
+
+/** Brings one issue to its entry: title, body, then Estimate. */
+export function syncIssue(issue, entry) {
+  const { body: current } = ghJson(['api', `repos/${REPO}/issues/${issue.number}`]);
+  const plan = planSync({ title: issue.title, body: current }, entry);
+  const hit = plan.body === undefined ? null : findSecret(plan.body);
+  if (hit) {
+    throw new BoardError(
+      `Refused: ${entry.id}'s entry looks like it carries a ${hit.name}, and an issue is public.`,
+    );
+  }
+  const args = ['issue', 'edit', String(issue.number), '--repo', REPO];
+  if (plan.title !== undefined) args.push('--title', plan.title);
+  if (plan.body !== undefined) gh([...args, '--body-file', '-'], { input: plan.body });
+  else if (plan.title !== undefined) gh(args);
+  const estimate = entry.hours === undefined ? null : setEstimate(issue, entry.hours);
+  return { ...plan, estimate };
+}
+
+// ---------------------------------------------------------------------------
 // CLI
 
 const USAGE = `usage: node scripts/task-board.mjs <command> …
@@ -576,6 +638,7 @@ const USAGE = `usage: node scripts/task-board.mjs <command> …
   status <ID> "<Status>"     move the Project Status forward (${STATUSES.join(' → ')})
   estimate <ID> <hours>      set the Project Estimate
   comment <ID> "<text>"      comment on the issue; refused if the text looks like a value
+  sync <ID> [<ID> …]         bring each issue's title, body and Estimate to its entry
   list                       every tracked issue, as a JSON array
   reorder [--apply] [--limit N]
                              the moves that put the open waves in execution order; --apply makes them`;
@@ -603,6 +666,25 @@ const COMMANDS = {
     const issue = findIssue(id);
     postComment(issue, text);
     console.log(`${id.toUpperCase()}: commented on #${issue.number}`);
+  },
+  sync(ids) {
+    if (ids.length === 0) throw new BoardError(USAGE);
+    const text = loadTasksMdText();
+    const issues = listTracked();
+    for (const id of ids.map((raw) => raw.toUpperCase())) {
+      const entry = readEntry(text, id);
+      if (!entry)
+        throw new BoardError(`No entry in claude-docs/tasks/ is headed "${titlePrefix(id)}…".`);
+      const issue = findIssue(id, issues);
+      const { title, body, estimate } = syncIssue(issue, entry);
+      const changed = [
+        title && 'title',
+        body && 'body',
+        estimate?.changed && `estimate ${estimate.to}h`,
+      ];
+      const note = changed.filter(Boolean).join(', ') || 'already in sync';
+      console.log(`${id}: #${issue.number} ${note}`);
+    }
   },
   list() {
     console.log(JSON.stringify(listTracked(), null, 2));

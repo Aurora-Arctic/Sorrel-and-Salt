@@ -70,6 +70,22 @@ export function setEstimate(
   options?: { item?: ProjectItem | null },
 ): Change<number>;
 
+/** The edits `sync` makes: only what differs. */
+export interface SyncPlan {
+  title?: string;
+  body?: string;
+}
+
+export function issueBodyOf(body: string): string;
+export function planSync(
+  issue: { title: string; body: string | null },
+  entry: import('./tasks-md.mjs').Entry,
+): SyncPlan;
+export function syncIssue(
+  issue: Pick<TrackedIssue, 'number' | 'title'>,
+  entry: import('./tasks-md.mjs').Entry,
+): SyncPlan & { estimate: Change<number> | null };
+
 export function idOf(title: string): string | null;
 
 export interface Milestone {

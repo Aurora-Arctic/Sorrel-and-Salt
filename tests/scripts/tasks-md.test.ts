@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { expandIds, readTasksMd } from '../../scripts/tasks-md.mjs';
+import { expandIds, readEntry, readTasksMd } from '../../scripts/tasks-md.mjs';
 
 // The pure half of the TASKS.md reader the board and migration scripts share:
 // task headings in file order, and the execution-order table's rows with
@@ -78,5 +78,58 @@ describe('expandIds', () => {
 
   it('answers an empty list for empty text', () => {
     expect(expandIds('', order)).toEqual({ ids: [], unresolved: [] });
+  });
+});
+
+describe('readEntry', () => {
+  const MILESTONE = [
+    '## Wave 8',
+    '',
+    '**MB.127 — Make deities an admin-curated vocabulary** · 2.5h',
+    '',
+    '_Story:_ As an admin, I want the list curated.',
+    '',
+    '_Acceptance criteria:_',
+    '',
+    '- One',
+    '',
+    '**MB.128 — `deities` schema** · 1.5h',
+    '',
+    'Table task.',
+    '',
+    '## Retired',
+    '',
+    '**M6.4 — ~~Row-Level Security policies~~** · **RETIRED 2026-09-17, not done**',
+    '',
+    'Superseded.',
+  ].join('\n');
+
+  // An issue's title is its entry's heading and its body the entry's text,
+  // so `sync` reads both from here (claude-docs/task-tracking.md, "Sync").
+  it("answers the heading's title and hours, and the text up to the next heading", () => {
+    expect(readEntry(MILESTONE, 'MB.127')).toEqual({
+      id: 'MB.127',
+      title: 'MB.127 — Make deities an admin-curated vocabulary',
+      hours: 2.5,
+      body: '_Story:_ As an admin, I want the list curated.\n\n_Acceptance criteria:_\n\n- One',
+    });
+  });
+
+  it('stops at a section heading as well as at the next task', () => {
+    expect(readEntry(MILESTONE, 'MB.128')?.body).toBe('Table task.');
+  });
+
+  it('answers no hours for a retired entry, and the rest of the file for the last', () => {
+    expect(readEntry(MILESTONE, 'M6.4')).toEqual({
+      id: 'M6.4',
+      title: 'M6.4 — ~~Row-Level Security policies~~',
+      hours: undefined,
+      body: 'Superseded.',
+    });
+  });
+
+  // `MB.12` must not read `MB.127`'s entry, as `find` never matches `M2.60` for `M2.6`.
+  it('answers null for an id with no heading, never a prefix match', () => {
+    expect(readEntry(MILESTONE, 'MB.12')).toBeNull();
   });
 });

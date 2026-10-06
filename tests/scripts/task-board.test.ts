@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   BoardError,
   findIssue,
+  issueBodyOf,
   planMoves,
   planReorder,
+  planSync,
   reorderMutationArgs,
   requireItem,
   setStatus,
@@ -436,5 +438,54 @@ describe('planReorder', () => {
     ]);
     // The retired item at the top stays at the top: nothing is moved above it.
     expect(replay(board, plan.moves)[0]).toBe('PVTI_10');
+  });
+});
+
+describe('issueBodyOf', () => {
+  const BLOB = 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/blob/staging/claude-docs';
+
+  // An entry's links are relative to claude-docs/tasks/, where nothing on an
+  // issue page resolves them; staging is where the milestone links point too.
+  it("points a relative link at the doc on staging, from the entry's directory", () => {
+    expect(
+      issueBodyOf('See [the seed](../db/deity-vocabulary-seed.md) and [M5](m5.md#m510).'),
+    ).toBe(
+      `See [the seed](${BLOB}/db/deity-vocabulary-seed.md) and [M5](${BLOB}/tasks/m5.md#m510).`,
+    );
+  });
+
+  // A code span ends just before the `](`, so the link is still found.
+  it('rewrites a link whose text is a code span', () => {
+    expect(issueBodyOf('[`db/seed.md`](../db/seed.md)')).toBe(
+      '[`db/seed.md`](' + BLOB + '/db/seed.md)',
+    );
+  });
+
+  it('leaves an absolute link, an anchor and code spans alone', () => {
+    const body = '[x](https://example.com/a) [y](#here) `a](b)`';
+
+    expect(issueBodyOf(body)).toBe(body);
+  });
+});
+
+describe('planSync', () => {
+  const entry = { id: 'MB.128', title: 'MB.128 — Tables', hours: 1.5, body: 'Two tables.' };
+  const issue = { title: 'MB.128 — Tables', body: 'Two tables.\n' };
+
+  // GitHub keeps a body's trailing newline; a difference only there is no edit.
+  it('plans nothing for an issue that already matches its entry', () => {
+    expect(planSync(issue, entry)).toEqual({});
+  });
+
+  it('plans the title and the body that differ, and only those', () => {
+    expect(planSync({ ...issue, body: 'One table.' }, entry)).toEqual({ body: 'Two tables.' });
+    expect(planSync({ ...issue, title: 'MB.128 — Table' }, entry)).toEqual({
+      title: 'MB.128 — Tables',
+    });
+  });
+
+  // A title that lost its id would fall out of `find`, and every later call with it.
+  it("refuses a title that would not open with the entry's id", () => {
+    expect(() => planSync(issue, { ...entry, title: 'Tables' })).toThrow(BoardError);
   });
 });

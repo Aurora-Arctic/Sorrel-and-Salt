@@ -65,6 +65,10 @@ The `db:*` scripts (generate, migrate, seed, drop, reset, studio), `probe-databa
 
 `planets` and `zodiac_signs`, the admin-curated vocabularies behind the lists `ingredients.planets` and `.zodiac_signs` (MB.136), whose entries stay free text as `form` does, and the member's autofill, whose finders suggest planets, signs, forms and common names. [`db/astrology-vocabularies.md`](db/astrology-vocabularies.md)
 
+## The deity vocabulary (MB.127; tables MB.128)
+
+`deities`, the admin-curated vocabulary behind the list `ingredients.deities`, whose entries stay free text as `form` does, grouped by `deity_traditions` as the forms are by their groups, with a required description that carries each deity's other spellings. [`db/deity-vocabulary.md`](db/deity-vocabulary.md)
+
 ### The member's autofill (MB.94)
 
 [`db/member-autofill.md`](db/member-autofill.md)
@@ -232,6 +236,10 @@ Story 48's join of a spell to its assigned categories; the derived ones are read
 ## The astrology vocabulary seed (MB.93)
 
 §5's nineteen `planets` and thirteen `zodiac_signs`, seeded the form seed's way through `seedFlatVocabulary`, with descriptions written as searchable glosses and the sources the lists came from. [`db/astrology-vocabulary-seed.md`](db/astrology-vocabulary-seed.md)
+
+## The deity vocabulary seed (list MB.127; seed MB.129)
+
+Thirty-five traditions and 216 deities, the owner's starting list, with their descriptions, what was left out and why, and the sources the list came from; MB.129 seeds and parses it. [`db/deity-vocabulary-seed.md`](db/deity-vocabulary-seed.md)
 
 ## The standard scenario (M1.22)
 
