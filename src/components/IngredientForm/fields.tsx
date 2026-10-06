@@ -20,7 +20,7 @@ import type {
   SuggestFieldProps,
   TextFieldProps,
 } from './types';
-import { addEntry, commitDraft, entryText } from './values';
+import { addEntry, commitDraft, entryDetail, entryText } from './values';
 
 // IngredientForm's fields, on the form primitives (claude-docs/styling.md,
 // "Form fields"). Each reads its own error out of the form state, so a field
@@ -352,6 +352,7 @@ export function ListField({
         <ComboboxEntry
           key={row.id}
           value={entryText(row)}
+          detail={entryDetail(row)}
           errorId={entryErrors[index] && errorId}
           onRemove={() => {
             setAnnouncement(`Removed ${entryText(row)}`);

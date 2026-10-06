@@ -37,10 +37,18 @@ export interface ListEntry {
   value: string;
 }
 
-/** The ingredient a substitute links, with the formal name its pill reads beside the label. */
+/**
+ * The ingredient a substitute links, with the formal name its pill reads
+ * beside the label, and what its tooltip adds: its form, its tier and its
+ * description (MB.164). Only the id is sent.
+ */
 export interface SubstituteLink {
   id: string;
   canonicalName: string | null;
+  form: string | null;
+  description: string | null;
+  /** A compendium entry, rather than this coven's own. */
+  isGlobal: boolean;
 }
 
 /**

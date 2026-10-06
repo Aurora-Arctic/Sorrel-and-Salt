@@ -58,6 +58,12 @@ export interface ComboboxEntryProps {
   value: string;
   /** The list's error element, when this entry is one it names: it marks the chip and describes its x. */
   errorId?: string;
+  /**
+   * What the chip leaves out, "Dried leaf · Compendium entry": shown beneath
+   * the text in its tooltip, which then opens whether the text is cut off or
+   * not, and read as its x's description.
+   */
+  detail?: string;
   onRemove: () => void;
 }
 

@@ -355,3 +355,10 @@
 
   @include tip-bubble;
 }
+
+// What the chip leaves out, on its own line beneath the text (MB.164). The
+// bubble's own colour, since a muted one is not checked against its ground.
+.combobox__entry-detail {
+  display: block;
+  font-size: type-size('caption');
+}
