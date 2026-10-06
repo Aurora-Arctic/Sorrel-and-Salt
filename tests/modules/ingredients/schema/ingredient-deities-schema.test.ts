@@ -12,7 +12,8 @@ import type { DeityEntry, DeityRow } from './types';
 // DESIGN.md §5's `ingredient_deities` (MB.165): one row per deity an
 // ingredient names, in the order entered, each a name and, when the member
 // picked a curated deity, a link to it. The table task: nothing reads or
-// writes it until MB.167 but MB.166's fill, re-run at the end of this file.
+// writes it until MB.167 but MB.166's fill and MB.168's refill, both re-run at
+// the end of this file.
 const OWN_COLUMNS = ['id', 'ingredient_id', 'deity_id', 'name', 'position'];
 
 const POSITION_INDEX = 'ingredient_deities_position_unique';
@@ -26,6 +27,8 @@ const CHECK_NAME_NOT_BLANK = 'ingredient_deities_name_not_blank';
 
 // What marks the fill among the shipped migrations: it re-runs here.
 const FILL_MIGRATION = 'INSERT INTO "ingredient_deities"';
+// And the refill MB.168 runs before the drop it marks.
+const DROP_MIGRATION = 'DROP COLUMN "deities"';
 
 describe('ingredient_deities schema', () => {
   const {
@@ -363,11 +366,17 @@ describe('ingredient_deities table', () => {
   });
 });
 
-// The template is migrated before it is seeded, so the migration's fill is
-// re-run here, read off disk, against lists shaped as a deployed database
-// holds them. `ingredients.deities` is still declared until MB.168.
-async function runFill(): Promise<void> {
-  const fill = statementsOfMigrationContaining(FILL_MIGRATION).filter((statement) =>
+// The template is migrated before it is seeded, so each migration's fill is
+// re-run here, read off disk, against lists shaped as a deployed database held
+// them. MB.168 dropped the list both fills read, so this file's clone takes it
+// back first: the template is re-cloned before every file, and no other sees it.
+async function restoreTheList(): Promise<void> {
+  await sql`alter table ingredients add column if not exists deities text[]`;
+}
+
+/** The `INSERT` of the first migration containing `marker`, run here. */
+async function runFillOf(marker: string): Promise<void> {
+  const fill = statementsOfMigrationContaining(marker).filter((statement) =>
     /^insert\b/i.test(statement),
   );
   expect(fill).toHaveLength(1);
@@ -404,6 +413,10 @@ const byParentAndPosition = (rows: DeityRow[]) =>
   );
 
 describe('the fill from ingredients.deities (MB.166)', () => {
+  const runFill = () => runFillOf(FILL_MIGRATION);
+
+  beforeAll(restoreTheList);
+
   beforeEach(async () => {
     await sql`update ingredients set deities = null`;
   });
@@ -495,5 +508,142 @@ describe('the fill from ingredients.deities (MB.166)', () => {
 
     const [row] = await sql`select deities from ingredients where id = ${UNCARIA}`;
     expect(row.deities).toEqual(['Rhizomera', 'rhizomera', '  ']);
+  });
+});
+
+// MB.168's migration copies whatever the deploy before MB.167 wrote to the
+// list after MB.166's fill, then drops it. By then MB.167 owns the table, so
+// the refill only adds: a row the ingredient holds, linked or not, live or
+// removed, is newer than the list, since nothing but MB.167's code wrote one.
+describe('the refill before the list is dropped (MB.168)', () => {
+  const runRefill = () => runFillOf(DROP_MIGRATION);
+
+  beforeAll(restoreTheList);
+
+  beforeEach(async () => {
+    await sql`update ingredients set deities = null`;
+  });
+
+  // The list keeps the order entered (MB.165): what the member listed since
+  // the fill follows what the table already holds, in the array's order.
+  it('copies an entry written since the fill after the rows the ingredient holds, in the array’s order', async () => {
+    await addDeity(UNCARIA, { name: 'Rhizomera', position: 0 });
+    await addDeity(UNCARIA, { deityId: TESTRA_FIXTURAL, name: 'Testra', position: 1 });
+    await listOn(UNCARIA, ['Rhizomera', 'Mossanthe', 'Bulbon'], EDITOR);
+    await listOn(MUGWORT, ['Bulbon'], EDITOR);
+    const held = await everyDeity();
+
+    await runRefill();
+
+    expect(await everyDeity()).toEqual(
+      byParentAndPosition([
+        ...held,
+        nameRow(UNCARIA, 'Mossanthe', 2, EDITOR),
+        nameRow(UNCARIA, 'Bulbon', 3, EDITOR),
+        nameRow(MUGWORT, 'Bulbon', 0, EDITOR),
+      ]),
+    );
+  });
+
+  // The name index would otherwise refuse the refill, and the drop with it.
+  it('leaves a name the ingredient holds in another case as it was', async () => {
+    await addDeity(UNCARIA, { name: 'Rhizomera', position: 0 });
+    await listOn(UNCARIA, ['RHIZOMERA'], EDITOR);
+    // Why it could have been refused: the folded names collide in the index.
+    const error = await failureOf(
+      sql`
+        insert into ingredient_deities (ingredient_id, name, position, created_by, updated_by)
+        values (${UNCARIA}, 'RHIZOMERA', 1, ${EDITOR}, ${EDITOR})`,
+    );
+    expect(error.constraint_name).toBe(NAME_INDEX);
+
+    await runRefill();
+
+    expect(await everyDeity()).toEqual([nameRow(UNCARIA, 'Rhizomera', 0)]);
+  });
+
+  // MB.167 writes a pick's name in the deity's spelling, so the list's entry
+  // is the same deity the link already holds.
+  it('leaves a name a linked row holds as it was', async () => {
+    await addDeity(UNCARIA, { deityId: TESTRA_FIXTURAL, name: 'Testra', position: 0 });
+    await listOn(UNCARIA, ['testra'], EDITOR);
+    // Why it could have been copied: the name index skips a linked row.
+    const twin = await addDeity(UNCARIA, { name: 'testra', position: 1 });
+    await sql`delete from ingredient_deities where id = ${twin}`;
+    const held = await everyDeity();
+
+    await runRefill();
+
+    expect(await everyDeity()).toEqual(held);
+  });
+
+  // A soft-deleted row reserves nothing in the index, so only the refill's own
+  // check keeps the list from undoing a member's removal.
+  it('does not restore a name removed since the switch', async () => {
+    await softDelete(
+      'ingredient_deities',
+      await addDeity(UNCARIA, { name: 'Rhizomera', position: 0 }),
+    );
+    await listOn(UNCARIA, ['rhizomera']);
+
+    await runRefill();
+
+    const live = (await everyDeity()).filter((row) => row.deleted_at === null);
+    expect(live).toEqual([]);
+  });
+
+  // A removed row frees its position, so the next one follows the live rows.
+  it('places an entry after the live rows alone, leaving no gap for a removed one', async () => {
+    await addDeity(UNCARIA, { name: 'Rhizomera', position: 0 });
+    await softDelete(
+      'ingredient_deities',
+      await addDeity(UNCARIA, { name: 'Bulbon', position: 1 }),
+    );
+    await listOn(UNCARIA, ['Mossanthe']);
+
+    await runRefill();
+
+    const live = (await everyDeity()).filter((row) => row.deleted_at === null);
+    expect(live).toEqual([nameRow(UNCARIA, 'Rhizomera', 0), nameRow(UNCARIA, 'Mossanthe', 1)]);
+  });
+
+  it('skips a blank or null entry, trims the rest, and copies a repeat once at its first place', async () => {
+    await listOn(UNCARIA, ['  ', ' Mossanthe ', null, 'Bulbon', 'MOSSANTHE']);
+
+    await runRefill();
+
+    expect(await everyDeity()).toEqual([
+      nameRow(UNCARIA, 'Mossanthe', 0),
+      nameRow(UNCARIA, 'Bulbon', 1),
+    ]);
+  });
+
+  // As MB.166's fill: a deleted row's list is kept for v2's restore.
+  it('refills a soft-deleted ingredient’s list too', async () => {
+    await listOn(UNCARIA, ['Rhizomera']);
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${AUTHOR} where id = ${UNCARIA}`;
+
+    await runRefill();
+
+    expect(await everyDeity()).toEqual([nameRow(UNCARIA, 'Rhizomera', 0)]);
+    await sql`update ingredients set deleted_at = null, deleted_by = null where id = ${UNCARIA}`;
+  });
+
+  it('writes nothing for a null or empty list', async () => {
+    await addDeity(UNCARIA, { name: 'Rhizomera', position: 0 });
+    await listOn(MUGWORT, []);
+    const held = await everyDeity();
+
+    await runRefill();
+
+    expect(await everyDeity()).toEqual(held);
+  });
+
+  it('drops the list once the refill has run, and writes nothing else', () => {
+    const statements = statementsOfMigrationContaining(DROP_MIGRATION);
+
+    expect(statements).toHaveLength(2);
+    expect(statements[0]).toMatch(/^insert into "ingredient_deities"/i);
+    expect(statements[1]).toBe('ALTER TABLE "ingredients" DROP COLUMN "deities";');
   });
 });

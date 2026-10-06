@@ -337,6 +337,13 @@
       "when": 1791329096556,
       "tag": "0047_refill-seed-keys",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1791329454616,
+      "tag": "0048_drop-deities-list",
+      "breakpoints": true
     }
   ]
 }

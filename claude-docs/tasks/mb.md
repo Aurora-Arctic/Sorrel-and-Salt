@@ -176,6 +176,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.170 | Reorder the ordered list fields                                                                | Wave 8  | M5.5                   |
 | MB.171 | `seed_key` on the seeded tables                                                                | Wave 8  | MB.172, MB.156         |
 | MB.172 | The vocabulary seeds key on `seed_key`                                                         | Wave 8  | MB.156                 |
+| MB.173 | Refuse a migration older than its base's newest                                                | Wave 8  | —                      |
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
@@ -3259,3 +3260,16 @@ _Acceptance criteria:_
 - Every inserted row carries its key, and a second run writes nothing
 - The refill, replayed against rows written beforehand, keys an unkeyed bootstrap-created row and leaves a keyed one and another user's alone
 - The vocabulary seed docs and `db/seed-module.md` say "by seed key" where they said "by slug"
+
+**MB.173 — Refuse a migration older than its base's newest** · 2h
+
+_Story:_ As a developer, I want CI to refuse a migration older than one already on its base branch, so that staging never skips a migration without saying so.
+
+Minted during MB.168 on the owner's call. Drizzle's migrator reads the newest `created_at` in `drizzle.__drizzle_migrations` and applies only the journal entries whose `when` is later; it compares no name or hash (`migrate` in `drizzle-orm/pg-core/dialect.js`). Each entry's `when` is stamped when its author runs `generate`, so with several migration branches in flight one can reach staging older than a migration already applied there: `migrate.yml` passes, the migration never runs, and the deploy then meets a schema it expects and does not have. The tests cannot see it, since a test database starts empty and every migration runs. On 2026-10-06 MB.171's 0045, MB.69's 0046, MB.172's 0047 and MB.168's 0048 were in flight together; regenerating 0046 to put it after 0045 left it newer than 0047 and 0048, so merging in number order would have skipped both. A check beside the destructive-DDL scan reads the branch's journal against its Gitflow base's, resolving the base as `check:destructive-ddl` does: each entry the branch adds must follow every base entry in the journal and carry a later `when` than every one of them, and `when` must rise through the journal. A refusal names the entry and says to regenerate it on the current base. A run is only as current as the base it read, so a branch whose base moves after it passed is checked again on its next push, not before.
+
+_Acceptance criteria:_
+
+- An entry the branch adds whose `when` is no later than the base's newest is refused, by name, asserted against fixture journals
+- An entry the branch adds ahead of a base entry in the journal is refused
+- A journal whose `when` does not rise in order is refused, and the journal on `staging` passes
+- It runs as `npm run check:migration-order` and as a `checks.yml` leg, and `db/migrations-and-scripts.md` describes it with the regenerate step

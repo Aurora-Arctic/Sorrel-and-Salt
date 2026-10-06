@@ -8,8 +8,8 @@ import { ingredients } from './ingredients';
 // (MB.165): a name, and beside it a link to the curated deity the member
 // picked, so Greek and Roman Hecate stay told apart after a save. A child
 // table rather than `ingredients.deities text[]`, which a link cannot live in;
-// MB.166 fills it from that list, MB.167 switches to it and MB.168 drops the
-// list. Full `auditColumns`, as substitutes: an entry is content, not a pairing
+// MB.166 filled it from that list, MB.167 switched to it and MB.168 dropped
+// the list. Full `auditColumns`, as substitutes: an entry is content, not a pairing
 // of two curated rows (DESIGN.md §5, `ingredient_deities`).
 export const ingredientDeities = pgTable(
   'ingredient_deities',
