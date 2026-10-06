@@ -17,6 +17,7 @@ export * from './graphql/workspace-ingredients';
 export type {
   CategoryRow,
   CompendiumAddress,
+  IngredientDeityRow,
   IngredientKey,
   IngredientRow,
   SubstituteRow,

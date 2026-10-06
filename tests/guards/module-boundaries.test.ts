@@ -81,6 +81,8 @@ const TIER_SEAM: string[] = [
   'findIngredientsInSpellsIncludingSoftDeleted',
   // An ingredient's substitutes, and what each links, deleted or not: the compendium and the proofs' covens (MB.140).
   'findSubstitutesIncludingSoftDeleted',
+  // An ingredient's deities, and the curated deity each picked: the compendium and the proofs' covens (MB.167).
+  'findDeitiesOfIngredients',
   // `withAudit`'s writer: the compendium tier's by-id writes, under the SiteAdmin proof (M5.2).
   'writerFor',
 ];

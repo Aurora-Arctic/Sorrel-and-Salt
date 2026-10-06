@@ -54,7 +54,7 @@ export async function findCommonNameSuggestions(
 
   // An ingredient whose label and a folk name fold alike claims the name once.
   const source = sql`(
-    select 2 as tier, mode() within group (order by ${spelling}) as value,
+    select 2 as tier, null as id, mode() within group (order by ${spelling}) as value,
       null as description, null as group_name, ${fold}, ${fold} as tiebreak,
       ${claimantList(name, canonicalName, id)} filter (where ${first}) as claimants
     from (

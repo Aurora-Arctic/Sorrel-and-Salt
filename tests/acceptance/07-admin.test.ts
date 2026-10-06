@@ -12,6 +12,7 @@ import type { CompendiumIngredientInput } from '@/modules/ingredients/validation
 import type { CategoryInput } from '@/modules/vocabulary/validation/category';
 import { A, B, C, E, asUser } from '../support/as-user';
 import { useTestDatabase } from '../support/db/database';
+import { curatedFormId } from '../support/db/curated-ids';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { type IngredientFixture, makeIngredient } from '../support/fixtures';
 import type { CategoryWrites, Stamps } from './types';
@@ -47,10 +48,19 @@ function surface<T extends object>(
   return module as T;
 }
 
-/** The fixture as the shared Zod input: everything but the tier and the category names. */
-function inputOf(fixture: IngredientFixture): CompendiumIngredientInput {
-  const { workspaceId: _tier, categories: _categories, substitutes, ...input } = fixture;
-  return { ...input, substitutes: substitutes.map((name) => ({ ingredientId: null, name })) };
+/**
+ * The fixture as the shared Zod input: everything but the tier and the
+ * category names, its form picked from the curated row it names, as the
+ * admin's form picks one (MB.167).
+ */
+async function inputOf(fixture: IngredientFixture): Promise<CompendiumIngredientInput> {
+  const { workspaceId: _tier, categories: _categories, substitutes, deities, ...input } = fixture;
+  return {
+    ...input,
+    formId: input.form == null ? null : await curatedFormId(sql, input.form),
+    substitutes: substitutes.map((name) => ({ ingredientId: null, name })),
+    deities: deities.map((name) => ({ deityId: null, name })),
+  };
 }
 
 async function entryRow(id: string) {
@@ -104,7 +114,7 @@ describe('Story 17: Be prevented from editing compendium entries.', () => {
     for (const user of [A, B, C]) {
       await expect(
         updateCompendiumEntry(asUser(user), id, {
-          ...inputOf(fixture),
+          ...(await inputOf(fixture)),
           name: 'Testwort, relabelled',
         }),
       ).rejects.toBeInstanceOf(Forbidden);
@@ -129,7 +139,7 @@ describe('Story 18: As an admin, add, edit, and soft-delete compendium entries a
     expect(await siteRole(E.id)).toBe('admin');
 
     const fixture = makeIngredient({ name: 'Testcap', nomenclature: 'fungal' });
-    const entry = await createCompendiumEntry(admin, inputOf(fixture));
+    const entry = await createCompendiumEntry(admin, await inputOf(fixture));
     expect(await entryRow(entry.id)).toMatchObject({
       name: 'Testcap',
       workspace_id: null,
@@ -139,7 +149,7 @@ describe('Story 18: As an admin, add, edit, and soft-delete compendium entries a
     });
 
     await updateCompendiumEntry(admin, entry.id, {
-      ...inputOf(fixture),
+      ...(await inputOf(fixture)),
       name: 'Testcap, relabelled',
     });
     expect(await entryRow(entry.id)).toMatchObject({

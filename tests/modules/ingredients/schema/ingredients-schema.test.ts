@@ -45,7 +45,6 @@ const COLUMNS = [
   'elements',
   'planets',
   'zodiac_signs',
-  'deities',
   'colors',
   'safety_notes',
   'slug',
@@ -117,8 +116,8 @@ describe('ingredients schema', () => {
     expect(formFk?.reference().foreignTable).toBe(ingredientForms);
   });
 
-  it('stores deities, planets, zodiac signs and colours as array columns', () => {
-    for (const column of ['deities', 'planets', 'zodiac_signs', 'colors']) {
+  it('stores planets, zodiac signs and colours as array columns', () => {
+    for (const column of ['planets', 'zodiac_signs', 'colors']) {
       expect(byName[column].getSQLType()).toBe('text[]');
     }
   });
@@ -186,10 +185,14 @@ beforeEach(async () => {
 
 describe('ingredients table', () => {
   // A column the schema has stopped declaring outlives it in the database for
-  // one deploy, until its drop. None is pending: MB.141 dropped `substitutes`,
-  // the last, undeclared by MB.140.
-  it('carries exactly the columns the schema declares', async () => {
-    expect(await catalogue.columnNames('ingredients')).toEqual([...COLUMNS].sort());
+  // one deploy, until its drop: `deities`, undeclared by MB.167 for
+  // `ingredient_deities` and dropped by MB.168, is the one pending.
+  it('carries the columns the schema declares, and the deities list awaiting its drop', async () => {
+    expect(await catalogue.columnNames('ingredients')).toEqual([...COLUMNS, 'deities'].sort());
+  });
+
+  it('declares no deities column, so nothing can write the list the app no longer reads', () => {
+    expect(Object.keys(tableFacts(ingredients).byName)).not.toContain('deities');
   });
 
   it('rejects an insert that omits nomenclature, since the column has no default', async () => {

@@ -1,4 +1,5 @@
 import {
+  type SQL,
   type SQLWrapper,
   and,
   eq,
@@ -10,6 +11,7 @@ import {
   sql,
 } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
+import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import { deities, deityTraditions } from '../../modules/vocabulary/schema/deities';
@@ -64,40 +66,80 @@ export function findCuratedRowsByName(
   vocabulary: SuggestingVocabulary,
   folds: readonly string[],
 ): Promise<Pick<typeof ingredientForms.$inferSelect, 'id' | 'name'>[]> {
-  const grouping = groupingOf(vocabulary);
   return selectFrom(
     vocabulary,
     and(
       notSoftDeleted(vocabulary),
-      grouping && existsIn(grouping.groups, eq(grouping.groups.id, grouping.key)),
+      inLiveGroup(vocabulary),
       inArray(sql`lower(${vocabulary.name})`, [...folds]),
     ),
   );
 }
 
 /**
+ * The curated rows of a two-tier vocabulary among `ids`: live, under a live
+ * group or tradition, as `findCuratedRowsByName` reads them. How a pick is
+ * checked before it is written, and how `formChoice` reads one back, so a
+ * pick whose row or group is retired reads as no pick (MB.167). Global
+ * reference data, so no proof.
+ */
+export function findCuratedRowsByIds<TVocabulary extends typeof ingredientForms | typeof deities>(
+  vocabulary: TVocabulary,
+  ids: readonly string[],
+): Promise<TVocabulary['$inferSelect'][]> {
+  if (ids.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    vocabulary,
+    and(notSoftDeleted(vocabulary), inLiveGroup(vocabulary), inArray(vocabulary.id, [...ids])),
+  );
+}
+
+/**
+ * The half of "curated" a two-tier row adds to its own `deleted_at`: a form's
+ * group or a deity's tradition live too, read by the builder's correlated
+ * `EXISTS`. None for a flat vocabulary. Every reader of a curated row ANDs it
+ * beside the row's own filter.
+ */
+export function inLiveGroup(vocabulary: SuggestingVocabulary): SQL | undefined {
+  const grouping = groupingOf(vocabulary);
+  return grouping && existsIn(grouping.groups, eq(grouping.groups.id, grouping.key));
+}
+
+/**
  * Where each vocabulary's in-use values are written, keyed by table name: a
  * vocabulary added to `SuggestingVocabulary` fails to compile until it names
  * its column, and a caller passes a table alone, so it cannot pair one with
- * the other's column. A list is read entry by entry (MB.136).
+ * the other's column. A list is read entry by entry (MB.136); the deities are
+ * their own table's rows (MB.167).
  */
 const IN_USE = {
   planets: { list: ingredients.planets },
   zodiac_signs: { list: ingredients.zodiacSigns },
   ingredient_forms: { column: ingredients.form },
-  deities: { list: ingredients.deities },
+  deities: { child: ingredientDeities },
 } satisfies Record<SuggestingVocabulary['_']['name'], InUseSource>;
 
 const ENTRY = sql.identifier('entry');
 
 /**
  * The rows an in-use scan reads, and the value each holds: the ingredients
- * themselves for a column, or one row per entry for a list, unnested before
+ * themselves for a column; one row per entry for a list, unnested before
  * anything trims or folds it — so an entry counts as a column's value would,
- * and a value held by several lists, or twice by one, is grouped as one.
+ * and a value held by several lists, or twice by one, is grouped as one; or a
+ * child table's live rows beside their ingredient, for the deities.
  */
 function inUseRows(source: InUseSource): { rows: SQLWrapper; value: SQLWrapper } {
   if ('column' in source) return { rows: ingredients, value: source.column };
+  if ('child' in source) {
+    const { child } = source;
+    return {
+      rows: sql`${ingredients} inner join ${child} on ${and(
+        eq(child.ingredientId, ingredients.id),
+        notSoftDeleted(child),
+      )}`,
+      value: child.name,
+    };
+  }
   return {
     rows: sql`${ingredients} cross join lateral unnest(${source.list}) as ${ENTRY}(${sql.identifier('value')})`,
     value: sql`${ENTRY}.${sql.identifier('value')}`,
@@ -184,7 +226,8 @@ export async function findVocabularySuggestions(
   // `case` as text, and the union would refuse to stack it on the integer 2.
   const curated = sql`
     select ${query ? sql`case when ${byName} then 0 else 1 end` : sql`0`} as tier,
-      ${vocabulary.name} as value, ${vocabulary.description} as description,
+      ${vocabulary.id}::text as id, ${vocabulary.name} as value,
+      ${vocabulary.description} as description,
       ${grouping ? grouping.groups.name : sql`null`} as group_name,
       lower(${vocabulary.name}) as fold, ${tiebreak} as tiebreak
     from ${curatedRows}
@@ -193,7 +236,7 @@ export async function findVocabularySuggestions(
   // The spelling most entries use stands for the group; `mode()` breaks a tie
   // by the order it is given, so the choice is stable.
   const uncurated = sql`
-    select 2 as tier, mode() within group (order by btrim(${inUse})) as value,
+    select 2 as tier, null as id, mode() within group (order by btrim(${inUse})) as value,
       null as description, null as group_name, ${fold} as fold, ${fold} as tiebreak
     from ${inUseFrom}
     where ${and(
@@ -215,10 +258,11 @@ export async function findVocabularySuggestions(
     : suggestions;
 
   const rows = await readSuggestionPage(source, page, { claimed });
-  return rows.map(({ cursor, node: { tier, value, description, group, claimants } }) => {
+  return rows.map(({ cursor, node: { tier, id, value, description, group, claimants } }) => {
     const suggestion = { value, description, curated: tier !== 2 };
-    if (claimed) return { cursor, node: { ...suggestion, group, claimants } };
-    if (grouping) return { cursor, node: { ...suggestion, tradition: group } };
+    // A form and a deity record the row a member picks, so theirs carry its id.
+    if (claimed) return { cursor, node: { ...suggestion, id, group, claimants } };
+    if (grouping) return { cursor, node: { ...suggestion, id, tradition: group } };
     return { cursor, node: suggestion };
   });
 }
