@@ -93,6 +93,27 @@ export function readTasksMd(text) {
   return { order, hours, retired, waves, unresolved };
 }
 
+/**
+ * One task's entry: the title its heading carries, which is its issue's
+ * title, the hours, and the text from the heading to the next task or section
+ * heading, which is its issue's body (claude-docs/task-tracking.md, "Sync").
+ * Null when no heading carries the id; `MB.12` never reads `MB.127`'s.
+ */
+export function readEntry(text, id) {
+  const lines = text.split('\n');
+  const start = lines.findIndex((line) => HEADING.exec(line)?.[1] === id);
+  if (start === -1) return null;
+  const rest = lines.slice(start + 1);
+  const end = rest.findIndex((line) => HEADING.test(line) || line.startsWith('#'));
+  const heading = HEADING.exec(lines[start]);
+  return {
+    id,
+    title: /^\*\*(.+?)\*\* · /.exec(lines[start])[1],
+    hours: heading[2] === undefined ? undefined : Number(heading[2]),
+    body: (end === -1 ? rest : rest.slice(0, end)).join('\n').trim(),
+  };
+}
+
 /** Every file in `TASKS_FILES`, in that order, as one text. */
 export const loadTasksMdText = () =>
   TASKS_FILES.map((path) => readFileSync(fromRepo(path), 'utf8')).join('\n');

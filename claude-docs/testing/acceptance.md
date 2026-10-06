@@ -26,7 +26,7 @@ make it hold:
   stories run carries no `--coverage` at all.
 - **The story list is read out of DESIGN.md §10, not copied.**
   `tests/support/stories.ts` parses the numbered list between
-  "## 10. User stories" and the next section — 51 today, 1–34 and 47–63 — so
+  "## 10. User stories" and the next section — 52 today, 1–34 and 47–64 — so
   the spec is the one place a story is written down and a story added to §10
   joins the checklist without a harness edit. `stories.test.ts` pins the
   rules rather than the list: ids unique and ascending, none in 35–46, and the

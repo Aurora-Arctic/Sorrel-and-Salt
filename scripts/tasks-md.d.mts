@@ -24,5 +24,14 @@ export interface TasksMd {
 
 export function expandIds(cell: string, order: string[]): { ids: string[]; unresolved: string[] };
 export function readTasksMd(text: string): TasksMd;
+/** A task's entry: its issue's title, Estimate and body. */
+export interface Entry {
+  id: string;
+  title: string;
+  hours: number | undefined;
+  body: string;
+}
+
+export function readEntry(text: string, id: string): Entry | null;
 export function loadTasksMdText(): string;
 export function loadTasksMd(): TasksMd;
