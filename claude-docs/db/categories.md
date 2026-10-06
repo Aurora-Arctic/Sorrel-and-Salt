@@ -35,17 +35,20 @@ a rule, not an inconsistency**: a member writes `form`, and only admins write
 either side of a group link (§5, §14).
 
 **A group's colour is §5's pair of hexes on the row, not a build-time
-token**, and §14 says why one per theme. M0.7 emits one `--group-<slug>` custom
+token**, and §14 says why one per theme. M0.7 emitted one `--group-<slug>` custom
 property per key of `$category-groups` at Sass compile time, which is
 exactly what a group created at runtime cannot have. So the map becomes the
 **seed source**: M4.3 resolves each group's `dark` and `light` value to a hex
 once and writes both onto the row, carrying
 M0.7's hue rotation and per-theme contrast tuning across into data. From
-then on the chip reads the row (MB.36 changes the mixin to take the pair).
+then on the chip reads the row: MB.36 changed `chip()` to take the pair and
+removed the per-slug properties ([`styling.md`](../styling.md), "Chips, badges
+and the solid-fill rule").
 The validation is M5.6b's, in the service and not a CHECK constraint, because
 the failure needs a readable message and the ground to compare against:
-`colorDark` is checked against the dark ground only, `colorLight` against
-the light, so each floor is exact. What an admin adds is legible in both
+`colorDark` is checked against the dark card only, `colorLight` against
+the light page, the harder of each theme's two surfaces, so each floor is
+exact and holds wherever a chip sits (MB.36). What an admin adds is legible in both
 themes but does not join the rotation — the accepted cost of an open set,
 stated in §6 rather than glossed.
 

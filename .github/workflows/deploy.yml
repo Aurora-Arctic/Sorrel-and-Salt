@@ -115,6 +115,7 @@ jobs:
 
           if git diff --name-only "$BEFORE" "$GITHUB_SHA" -- \
             src/db/seed/categories.ts \
+            src/db/seed/category-groups.ts \
             src/db/seed/forms.ts \
             src/db/seed/astrology.ts \
             src/db/seed/deities.ts \

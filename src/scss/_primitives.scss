@@ -2,8 +2,8 @@
 @use './variables' as *;
 @use './mixins' as *;
 
-// The class layer over _mixins.scss — `.chip--mind` rather than re-deriving
-// chip() — plus the shapes the mixins do not cover. Emitted once, like
+// The class layer over _mixins.scss — `.badge--safety` rather than re-deriving
+// badge() — plus the shapes the mixins do not cover. Emitted once, like
 // typography-base: `body` in the app, `.ladle-story-frame` in the workshop.
 @mixin primitives-base {
   // Not modal-surface(): its shadow and radius would read as a dialog.
@@ -30,13 +30,13 @@
     }
   }
 
-  @each $slug in map.keys($category-groups) {
-    .chip--#{$slug} {
-      @include chip($slug);
+  // One class for every group, the seeded eight and any an admin adds: the
+  // element carries its row's pair, from chipColors() in a component.
+  .chip {
+    @include chip;
 
-      &.is-selected {
-        @include chip($slug, selected);
-      }
+    &.is-selected {
+      @include chip($state: selected);
     }
   }
 

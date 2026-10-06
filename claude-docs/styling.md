@@ -15,8 +15,8 @@ to.
 - **Modern Sass modules only** — `@use '../../scss/variables' as *;`, never
   `@import`. Shared partials in `src/scss/` are `@use`'d directly by whichever
   component needs them, never routed through a parent (§9).
-- **Reach tokens through functions, not bare variables** — `category-group('mind')`,
-  `badge-token('safety', 'fill')`, `$text-on-color`. A typo is then a compile
+- **Reach tokens through functions, not bare variables** — `badge-token('safety', 'fill')`,
+  `space(4)`, `$text-on-color`. A typo is then a compile
   error rather than a silently wrong colour.
 - **WCAG AA 4.5:1 is the floor for every token, in both themes**, and several
   pairings sit close to it (the light `--accent` at 4.68 and `wellbeing` at
@@ -35,9 +35,8 @@ to.
   against the page surface plus 3:1 against both surfaces; tinted needs 4.5:1
   foreground-on-background plus 3:1 on the border.
 - **The group hues sit at odd multiples of 22.5° off `$sorrel`**, so none
-  collides with accent (96°) or secondary (8°). A ninth group is one map entry
-  plus a contrast check, and the seed's `categories.group` values must match the
-  slugs.
+  collides with accent (96°) or secondary (8°). A ninth group is a row an admin
+  adds, outside the rotation, held to M5.6b's contrast check.
 - **`badge()` takes no variant argument, deliberately.** The mixins set colour,
   edge and geometry only — never width, margin, layout or a modal backdrop. A
   component restating a mixin's colour is a bug.
@@ -166,8 +165,12 @@ demands.** Equal HSL lightness is not equal perceived lightness: indigo takes a
 +34% lift to clear 4.5:1 on soot where jade takes +9%. The light-theme trims are
 `0%` or a small negative; the dark-theme trims run +7% to +34%.
 
-A ninth group is one map entry plus a contrast check — and the category seed's
-`group` values must match the slugs, since nothing joins them at runtime.
+**That is now the seed's source and nothing else.** A group's colours are a
+pair of hexes on its `category_groups` row (MB.35): M4.3 resolved each map entry
+to the two hexes it wrote, and a chip reads the row, never the map (MB.36). A
+ninth group is a row an admin adds with M5.6b's two pickers, each checked
+against the harder of its own theme's two surfaces; it is legible in both themes but does not join
+the rotation (§6).
 
 ## Badge palettes
 
@@ -254,6 +257,35 @@ low-opacity wash behind a coloured label — cannot hold 4.5:1: the eight hues w
 tuned to land just above the floor, so washing the ground with the same colour
 closes exactly the gap they were tuned for. A solid fill sidesteps it and needs
 no new arithmetic, per `$text-on-color` above.
+
+**The colour comes from the row, on the element.** `chip($dark, $light, $state)`
+takes the pair rather than a slug, and by default reads it from the element's
+`--chip-dark` and `--chip-light`, which `chipColors(group)` in
+`src/lib/chip-colors.ts` sets inline from the group's `colorDark` and
+`colorLight`. `light-dark()` picks one off the `color-scheme` the theme mixins
+already set, so the per-theme switch `semantic-tokens` once made at build time
+happens at the element, and a theme toggle re-colours a chip without a render.
+It replaced one `--group-<slug>` custom property and one `.chip--<slug>` class
+per key of `$category-groups`, which a group created at runtime cannot have.
+`tests/guards/chip-colour-source.test.ts` fails if either shape returns, in a
+source file or in any stylesheet's compiled CSS, and `chip()` refuses a slug at
+compile time.
+
+`light-dark()` is newer than Next's default browser targets (Safari 16.4), so
+Turbopack's Lightning CSS lowers it: every `color-scheme` declaration also sets
+a pair of `--lightningcss-*` switches, and the chip reads those. Nothing in this
+project writes either.
+
+**The contrast holds for any colour the write check admits.** An unselected
+chip's label is the colour itself on whatever surface holds the chip, a page or
+a card, and a selected chip's label is `$text-on-color`, the page surface, on a
+fill of that colour. So M5.6b checks each colour against the harder of its own
+theme's two surfaces: `colorDark` against the dark card, which is lighter than
+the dark page, and `colorLight` against the light page, which is darker than
+the light card. Clearing that surface clears the other, and the selected label
+with it. Checked against the dark page instead, a dark colour could clear the
+floor and still read under it on a card: the seeded eight measure 5.1–5.3:1 on
+the dark page and 4.6–4.8:1 on the dark card (MB.36).
 
 Badges are square-cornered, which is what keeps a badge from reading as a chip
 now that chips are pills. Both shapes set their label to weight 500, a step over
@@ -456,13 +488,13 @@ heavier than the reverse; light reverts to the browser default.
 
 ## The files
 
-- `src/scss/_variables.scss` — base colour palette, category-group and badge
-  tokens, the `$font-body` / `$font-heading` / `$font-mono` stacks, the
+- `src/scss/_variables.scss` — base colour palette, the category-group seed
+  map, badge tokens, the `$font-body` / `$font-heading` / `$font-mono` stacks, the
   `$measure`, and the three scales with their accessors — `type-size()`,
   `space()` and `radius()` — a component `@use`s directly.
 - `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `tip-bubble`,
   `theme-dark` / `theme-light`, `semantic-tokens` (the per-theme
-  category-group and badge custom properties), `focus-ring`,
+  badge custom properties), `focus-ring`,
   `theme-transition`, `reduced-motion`, `font-smoothing-antialiased`.
 - **Three `*-base` mixins**, each emitting nothing on its own `@use` and
   `@include`d at exactly one site, `globals.scss`'s `body`:
@@ -475,7 +507,7 @@ heavier than the reverse; light reverts to the browser default.
     `.btn` and its `--solid` / `--quiet` / `--secondary` variants, `.notice`,
     the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
     `.checkbox`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
-    the classes over `chip()` / `badge()`, and `.visually-hidden`, for text a
+    `.chip` and `.chip.is-selected` over `chip()`, the `.badge--*` classes over `badge()`, and `.visually-hidden`, for text a
     screen reader reads and nothing draws, such as a live region's news.
 - `src/app/fonts.ts` — Cormorant Unicase (weights 500/600/700) and Lexend,
   self-hosted at build time via `next/font/google`. The CSS variables it defines

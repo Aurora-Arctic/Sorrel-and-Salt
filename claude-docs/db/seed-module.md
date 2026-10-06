@@ -52,7 +52,9 @@ groups, then the items filed under them, each by slug — which
 call with their own tables and literals. The literals (`CATEGORY_GROUPS`,
 `CATEGORIES`, `FORM_GROUPS`, `FORMS`, `DEITY_TRADITIONS`, `DEITIES`) stay
 in `categories.ts`, `forms.ts` and `deities.ts`, where the tests comparing
-them against their documents import them from. Each caller also says how an
+them against their documents import them from — bar `CATEGORY_GROUPS`, in
+`category-groups.ts` beside them so the workshop can import it without the
+seed (MB.36). Each caller also says how an
 item names its group and keys it, since deities differ (MB.129): `groupOf`
 reads the group's name off an item (`category.group`, `deity.tradition`),
 and `toItemRow` sets the found id under the table's own column

@@ -93,3 +93,9 @@ export interface ChainedError {
   code?: unknown;
   constraint_name?: unknown;
 }
+
+/** A category group's two colours, one per theme, as its row stores them (MB.35). */
+export interface GroupColors {
+  colorDark: string;
+  colorLight: string;
+}
