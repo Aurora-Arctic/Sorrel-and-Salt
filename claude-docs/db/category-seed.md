@@ -20,7 +20,9 @@ MB.35 is that the colour is the admin's from here on.
 **The colours are resolved once, here.** MB.35 made a group's colour a pair of
 hexes on the row, so M0.7's `$category-groups` Sass map is a seed source
 rather than a runtime lookup; the sixteen hexes are written out as literals in
-`CATEGORY_GROUPS`. `categories.test.ts` compiles M0.7's own
+`CATEGORY_GROUPS`, in `src/db/seed/category-groups.ts` — a file of its own,
+importing nothing at runtime, so the workshop can render the pairs without
+bundling the seed (MB.36). `categories.test.ts` compiles M0.7's own
 `category-group-color($slug, $theme)` and compares all sixteen, so retuning
 the map without reseeding fails a test instead of drifting silently, and
 recomputes the WCAG ratio for each against its own theme's ground (`$soot`
@@ -56,8 +58,8 @@ rather than fixing this instance of it.
 and the only place they do. It is keyed by group _name_ rather than slug,
 because the slug is derived and a map keyed on a derived value would need
 rewriting every time the rule changed. M0.7's keys stay M0.7's words: renaming
-one moves a token and the `--group-*` custom property generated from it, for
-no gain now that nothing looks a colour up by slug (MB.35).
+one moves a token for no gain, now that nothing looks a colour up by slug
+(MB.35, MB.36).
 
 **It reaches staging and production on its own**, unlike every scenario seed:
 `migrate.yml` runs `npm run db:seed:categories` against the deployed database

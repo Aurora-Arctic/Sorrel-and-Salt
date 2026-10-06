@@ -5,6 +5,7 @@ import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { foreignKeyStatements, shippedMigrationStatements } from '../../../support/db/migrations';
 import { deities, deityTraditions } from '@/modules/vocabulary/schema/deities';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
+import { ingredientDeities } from '@/modules/ingredients/schema/ingredient-deities';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import type { Row } from './types';
 
@@ -111,6 +112,8 @@ describe('deities schema', () => {
 
 // §5: `ingredients.deities` is free text over this vocabulary — an FK would
 // make an uncurated value unwritable (claude-docs/db/deity-vocabulary.md).
+// The deity a member picked is linked from `ingredient_deities` (MB.165),
+// whose name stays text beside the link.
 describe('ingredients.deities is a text list over this vocabulary, not a foreign key to it', () => {
   it('declares deities as a nullable text[] column', () => {
     const declared = tableFacts(ingredients).columns.find((column) => column.name === 'deities');
@@ -133,6 +136,36 @@ describe('ingredients.deities is a text list over this vocabulary, not a foreign
 
     expect(foreignKeyStatements(statements, 'ingredients', 'deities')).toEqual([]);
     expect(foreignKeyStatements(statements, 'ingredients', 'deity_traditions')).toEqual([]);
+  });
+});
+
+describe('ingredient_deities links a picked deity beside its name', () => {
+  const { byName, foreignKeys } = tableFacts(ingredientDeities);
+
+  it('keeps the name as required text', () => {
+    expect(byName.name.getSQLType()).toBe('text');
+    expect(byName.name.notNull).toBe(true);
+  });
+
+  it('points one foreign key at deities, from the nullable deity_id, and none at traditions', () => {
+    const keys = foreignKeys.map((fk) => fk.reference());
+    const atDeities = keys.filter((key) => key.foreignTable === deities);
+
+    expect(atDeities.map((key) => key.columns[0].name)).toEqual(['deity_id']);
+    expect(byName.deity_id.notNull).toBe(false);
+    expect(keys.map((key) => key.foreignTable)).not.toContain(deityTraditions);
+  });
+
+  // Read from disk, as above.
+  it('ships no migration adding a foreign key on the name', () => {
+    const atDeities = foreignKeyStatements(
+      shippedMigrationStatements(),
+      'ingredient_deities',
+      'deities',
+    );
+
+    expect(atDeities).toHaveLength(1);
+    expect(atDeities[0]).toMatch(/FOREIGN KEY \("deity_id"\)/);
   });
 });
 

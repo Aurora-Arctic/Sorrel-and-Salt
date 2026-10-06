@@ -24,8 +24,11 @@ curate it.
 **They are `form`'s pattern, groups and all, and the list stays free text.**
 A member writes deities, so by MB.35's rule each entry is text over a
 vocabulary rather than a foreign key: a value off the list stays writable on
-a coven's ingredient, and soft-deleting a row rewrites none of a coven's, its
-value moving into the in-use bucket instead. A compendium entry holds curated
+a coven's ingredient. A pick records its curated row beside the text, in
+`ingredient_deities`, which replaces the list once MB.168 drops it
+([`identity-model.md`](identity-model.md); MB.165), so Greek and Roman Hecate
+stay told apart after a save, and the text stays the value. Soft-deleting a
+row rewrites none of a coven's, its value moving into the in-use bucket instead. A compendium entry holds curated
 deities alone, so a deity one holds is not deleted, nor the tradition over
 it, and a rename carries onto it
 ([MB.162](../design-decisions/mb.162-compendium-holds-curated-values.md)).

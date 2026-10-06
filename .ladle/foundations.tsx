@@ -1,4 +1,7 @@
 import { type ReactElement, type ReactNode, useId } from 'react';
+import { CATEGORY_GROUPS } from '../src/db/seed/category-groups';
+import { chipColors } from '../src/lib/chip-colors';
+import type { SeedCategoryGroup } from '../src/db/seed/types';
 import './foundations.scss';
 
 // Every shared token and primitive at shipping size, in either theme, with no
@@ -6,18 +9,13 @@ import './foundations.scss';
 // own .scss. A reference for what the sections are built from, not a layout.
 // claude-docs/workshop.md, ".ladle/".
 
-// §6's eight groups, slug → seed name; the hue behind each is derived.
-// See claude-docs/styling.md, "Category-group colours".
-const CATEGORY_GROUPS: readonly (readonly [slug: string, name: string])[] = [
-  ['protection', 'Protection & defense'],
-  ['cleansing', 'Cleansing & release'],
-  ['prosperity', 'Prosperity & work'],
-  ['love', 'Love & connection'],
-  ['mind', 'Mind & spirit'],
-  ['wellbeing', 'Wellbeing'],
-  ['craft', 'Craft & change'],
-  ['practice', 'Practice & place'],
-];
+// A seeded group by name, for the specimen's chips: its colour pair is what
+// the row carries, as a page's chip would read it.
+function seededGroup(name: string): SeedCategoryGroup {
+  const group = CATEGORY_GROUPS.find((g) => g.name === name);
+  if (!group) throw new Error(`No seeded category group is named "${name}".`);
+  return group;
+}
 
 // Compile-time Sass constants, so these do not move with the theme.
 const RAW_PALETTE: readonly (readonly [name: string, purpose: string])[] = [
@@ -378,19 +376,25 @@ export default function Foundations(): ReactElement {
       </section>
 
       <section id="fd-groups">
-        <SectionHead eyebrow="seed defaults · --group-*" title="Category-group colours">
+        <SectionHead eyebrow="seed defaults · chipColors()" title="Category-group colours">
           Not a foundation to sign off: each group’s colour pair lives on its{' '}
           <code>category_groups</code> row, which an admin edits, contrast-checked on write. These
           are the eight the seed writes — one rotation of <code>$sorrel</code> offset by half a
           step, so none lands on the accent or secondary hue — as <code>chip()</code>’s two states,
-          drawn from the Sass tokens until chips read the row.
+          each wearing its pair inline as a page’s chip does, the theme picking one.
         </SectionHead>
         <div className="panel fd-groups">
-          {CATEGORY_GROUPS.map(([slug, name]) => (
-            <div className="fd-group-row" key={slug}>
-              <span className={`chip chip--${slug}`}>{name}</span>
-              <span className={`chip chip--${slug} is-selected`}>{name}</span>
-              <code className="fd-group-slug">--group-{slug}</code>
+          {CATEGORY_GROUPS.map((group) => (
+            <div className="fd-group-row" key={group.name}>
+              <span className="chip" style={chipColors(group)}>
+                {group.name}
+              </span>
+              <span className="chip is-selected" style={chipColors(group)}>
+                {group.name}
+              </span>
+              <code className="fd-group-pair">
+                {group.colorDark} · {group.colorLight}
+              </code>
             </div>
           ))}
         </div>
@@ -448,9 +452,18 @@ export default function Foundations(): ReactElement {
               </div>
             </div>
             <div className="specimen__chips">
-              <span className="chip chip--protection is-selected">Protection &amp; defense</span>
-              <span className="chip chip--mind">Mind &amp; spirit</span>
-              <span className="chip chip--craft">Craft &amp; change</span>
+              <span
+                className="chip is-selected"
+                style={chipColors(seededGroup('Protection & Defense'))}
+              >
+                Protection &amp; defense
+              </span>
+              <span className="chip" style={chipColors(seededGroup('Mind & Spirit'))}>
+                Mind &amp; spirit
+              </span>
+              <span className="chip" style={chipColors(seededGroup('Craft & Change'))}>
+                Craft &amp; change
+              </span>
             </div>
             <p className="specimen__stock">
               <span>Dried leaf · 4&nbsp;g on hand</span>

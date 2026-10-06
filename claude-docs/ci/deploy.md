@@ -237,7 +237,7 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   fails the job `deploy` already depends on.
 - **`deploy.yml`'s `seed-changed` job** diffs
   `github.event.before`..`github.sha` over the seeds' own files
-  (`src/db/seed/categories.ts`, `src/db/seed/forms.ts`,
+  (`src/db/seed/categories.ts` and the `category-groups.ts` data it reads, `src/db/seed/forms.ts`,
   `src/db/seed/astrology.ts`, `src/db/seed/deities.ts`, the two
   `*-vocabulary.ts` helpers they write through, `src/db/seed/bootstrap-admin.ts`,
   `src/lib/slugify.ts`, `scripts/db-seed.ts`) and hands `migrate` the answer

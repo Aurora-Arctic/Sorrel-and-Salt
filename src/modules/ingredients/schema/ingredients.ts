@@ -3,6 +3,7 @@ import { check, index, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-
 import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS } from './ingredient-enums';
 import { auditColumns } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
+import { ingredientForms } from '../../vocabulary/schema/ingredient-forms';
 
 // DESIGN.md §5's seven values. `nomenclature` names the naming system, not a
 // rank within it; `fungal` is split from botanical because curators shelve
@@ -56,6 +57,10 @@ export const ingredients = pgTable(
     // Free text over the curated `ingredient_forms` vocabulary, not a foreign
     // key: an uncurated value must stay writable.
     form: text('form'),
+    // The curated row a member picked, beside the text and never instead of
+    // it (MB.165): two live forms may share a name, and only the link says
+    // which. Identity stays on `form`; typed text links nothing.
+    formId: uuid('form_id').references(() => ingredientForms.id),
     // GENERATED ALWAYS, so Postgres refuses a direct write — and Drizzle
     // omits generated columns from $inferInsert, so TypeScript refuses first.
     canonicalKey: text('canonical_key').notNull().generatedAlwaysAs(CANONICAL_KEY),
@@ -93,6 +98,8 @@ export const ingredients = pgTable(
       sql`canonical_name is null or btrim(canonical_name) <> ''`,
     ),
     check('ingredients_form_not_blank', sql`form is null or btrim(form) <> ''`),
+    // A link names the text it was picked as; one alone would key nothing.
+    check('ingredients_form_id_has_form', sql`form_id is null or form is not null`),
 
     // Partial per CLAUDE.md rule 4, and indexes rather than constraints: a
     // constraint carries no WHERE, and `nullsNotDistinct()` exists only on
