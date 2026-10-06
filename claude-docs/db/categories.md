@@ -80,7 +80,8 @@ identical strings once `canonicalKey` lowercases `form` — and _wax_ is
 legitimately both a part of the bee and a preparation of it, which the index
 would force an admin to rename their way out of. **The disambiguation moved to
 the autofill instead**, as §5 specifies: M4.7a returns each curated
-suggestion's group and M5.10a renders it. The schema test asserts the same-named pair is _accepted_, so
+suggestion's group and M5.10a renders it, and MB.165 keeps a pick, as
+`ingredients.form_id` beside the text. The schema test asserts the same-named pair is _accepted_, so
 the gap stays a recorded decision. Adding the index later is the reversible
 direction — `CREATE UNIQUE INDEX` is expand-direction DDL that only fails if
 duplicates already exist, where dropping one is a `DROP` needing a PR

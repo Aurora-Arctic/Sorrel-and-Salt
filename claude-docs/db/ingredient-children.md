@@ -1,7 +1,7 @@
 ## Ingredient children (M4.8)
 
-`ingredient_folk_names`, `ingredient_categories` and `ingredient_substitutes`
-(MB.139) hang off an ingredient and carry no `workspace_id` of their own, so
+`ingredient_folk_names`, `ingredient_categories`, `ingredient_substitutes`
+(MB.139) and `ingredient_deities` (MB.165, read from MB.167) hang off an ingredient and carry no `workspace_id` of their own, so
 by column name they look unscoped while holding a coven's rows. They take the tier of their parent: a compendium
 entry's children are public (MB.80), and a workspace entry's are its coven's.
 The shape is the one M10.3 gave the spell join tables. `{ ingredientId:

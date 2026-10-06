@@ -8,6 +8,8 @@ import {
   ingredientForms,
 } from '@/modules/vocabulary/schema/ingredient-forms';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
+import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { makeIngredient } from '../../../support/fixtures';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import type { Row } from './types';
 
@@ -123,10 +125,11 @@ describe('ingredient_forms schema', () => {
 });
 
 // §5: `ingredients.form` is text, not a foreign key to this table — an FK would
-// key identity on a surrogate id and make an uncurated value unwritable.
+// key identity on a surrogate id and make an uncurated value unwritable. The
+// curated row a member picked is `form_id`, a key beside the text (MB.165).
 // Asserted from both the Drizzle schema and the shipped SQL —
 // claude-docs/db/identity-model.md, "The ingredient identity model".
-describe('ingredients.form is text over this vocabulary, not a foreign key to it', () => {
+describe('ingredients.form is text over this vocabulary, with the pick linked beside it', () => {
   it('declares form as a nullable text column', () => {
     const form = tableFacts(ingredients).columns.find((column) => column.name === 'form');
 
@@ -135,18 +138,21 @@ describe('ingredients.form is text over this vocabulary, not a foreign key to it
     expect(form?.notNull).toBe(false);
   });
 
-  it('points no ingredients foreign key at ingredient_forms', () => {
-    const referenced = tableFacts(ingredients).foreignKeys.map((fk) => fk.reference().foreignTable);
+  it('points one ingredients foreign key at ingredient_forms, from form_id, and none at groups', () => {
+    const keys = tableFacts(ingredients).foreignKeys.map((fk) => fk.reference());
+    const atForms = keys.filter((key) => key.foreignTable === ingredientForms);
 
-    expect(referenced).not.toContain(ingredientForms);
-    expect(referenced).not.toContain(ingredientFormGroups);
+    expect(atForms.map((key) => key.columns[0].name)).toEqual(['form_id']);
+    expect(keys.map((key) => key.foreignTable)).not.toContain(ingredientFormGroups);
   });
 
   // Read from disk: a hand-edited migration could add a key the schema lacks.
-  it('ships no migration adding such a foreign key', () => {
+  it('ships no migration adding a foreign key on the text', () => {
     const statements = shippedMigrationStatements();
+    const atForms = foreignKeyStatements(statements, 'ingredients', 'ingredient_forms');
 
-    expect(foreignKeyStatements(statements, 'ingredients', 'ingredient_forms')).toEqual([]);
+    expect(atForms).toHaveLength(1);
+    expect(atForms[0]).toMatch(/FOREIGN KEY \("form_id"\)/);
     expect(foreignKeyStatements(statements, 'ingredients', 'ingredient_form_groups')).toEqual([]);
   });
 });
@@ -203,6 +209,8 @@ async function softDelete(
   `;
 }
 
+// Cascades to `ingredients` as well, through `form_id` (MB.165), so each test
+// seeds the ingredients it links.
 beforeEach(async () => {
   await sql`truncate ingredient_forms, ingredient_form_groups cascade`;
 });
@@ -408,5 +416,84 @@ describe('ingredient_forms table', () => {
       expect(error.code).toBe('23514');
       expect(error.constraint_name).toBe('ingredient_forms_description_not_blank');
     }
+  });
+});
+
+// MB.165: `form_id` records the curated row a pick named, and only beside the
+// text it names — a link with no text would key identity on nothing.
+describe('ingredients.form_id', () => {
+  const CHECK_LINK_HAS_TEXT = 'ingredients_form_id_has_form';
+  const FORM_FK = 'ingredients_form_id_ingredient_forms_id_fk';
+
+  async function ingredientNamed(form: string | null): Promise<string> {
+    return insertIngredient(sql, makeIngredient({ form }), AUTHOR);
+  }
+
+  async function link(ingredientId: string, formId: string): Promise<void> {
+    await sql`update ingredients set form_id = ${formId} where id = ${ingredientId}`;
+  }
+
+  it('takes a link beside the text it names', async () => {
+    const root = await insertForm(await insertGroup());
+    const id = await ingredientNamed('Root');
+
+    await link(id, root);
+
+    const [row] = await sql`select form, form_id from ingredients where id = ${id}`;
+    expect(row).toEqual({ form: 'Root', form_id: root });
+  });
+
+  // Typed text links nothing: an uncurated value stays writable.
+  it('leaves typed text unlinked', async () => {
+    const id = await ingredientNamed('rhizome');
+
+    const [row] = await sql`select form_id from ingredients where id = ${id}`;
+    expect(row.form_id).toBeNull();
+  });
+
+  // The link above is why this could have succeeded: the same column takes
+  // the same id beside a form.
+  it('refuses a link with no form beside it', async () => {
+    const root = await insertForm(await insertGroup());
+    const id = await ingredientNamed(null);
+
+    const error = await failureOf(link(id, root));
+
+    // 23514 is check_violation, named: the refusal is this CHECK's.
+    expect(error.code).toBe('23514');
+    expect(error.constraint_name).toBe(CHECK_LINK_HAS_TEXT);
+  });
+
+  it('refuses a link to an id no form holds', async () => {
+    const id = await ingredientNamed('Root');
+
+    const error = await failureOf(link(id, ABSENT_GROUP));
+
+    // 23503 is foreign_key_violation.
+    expect(error.code).toBe('23503');
+    expect(error.constraint_name).toBe(FORM_FK);
+  });
+
+  // Two live forms share "Root" across groups; the link is what tells which.
+  it('links either of two same-named forms', async () => {
+    const botanical = await insertForm(await insertGroup());
+    const substance = await insertForm(
+      await insertGroup({ name: 'Substance', slug: 'substance' }),
+      { slug: 'root-substance' },
+    );
+    const first = await ingredientNamed('Root');
+    const second = await insertIngredient(
+      sql,
+      makeIngredient({ name: 'Mockroot', nomenclature: 'none', form: 'Root' }),
+      AUTHOR,
+    );
+
+    await link(first, botanical);
+    await link(second, substance);
+
+    const rows = await sql`
+      select form_id from ingredients where id in ${sql([first, second])} order by form_id
+    `;
+    expect(rows.map((row) => row.form_id).sort()).toEqual([botanical, substance].sort());
   });
 });
