@@ -57,6 +57,7 @@ const WHOLE_INGREDIENT = {
   canonicalName: '',
   nomenclature: 'none',
   form: '',
+  formId: '',
   description: '',
   elements: [],
   planets: [],

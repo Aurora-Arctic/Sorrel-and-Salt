@@ -23,9 +23,12 @@ import {
   addReferenceLinks,
   addSubstitutes,
   columnsOf,
+  heldDeities,
+  replaceDeities,
   replaceFolkNames,
   replaceReferenceLinks,
   replaceSubstitutes,
+  resolvePicks,
 } from './ingredient-rows';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
@@ -37,7 +40,15 @@ import type {
   PageRequest,
   ValidationIssue,
 } from '../../../lib/types';
-import type { CompendiumAddress, CompendiumWrite, IngredientFields, IngredientRow } from '../types';
+import type {
+  CompendiumAddress,
+  CompendiumWrite,
+  DeityRecord,
+  IngredientFields,
+  IngredientRow,
+  PickedDeity,
+} from '../types';
+import type { DeityEntry } from '../validation/types';
 
 // The compendium: the public surface (MB.80), so the list takes no session at
 // all and an entry answers anyone (claude-docs/db/compendium-read.md, "The compendium read");
@@ -105,30 +116,32 @@ export async function getIngredient(
 }
 
 /**
- * Creates a compendium entry, with its folk names, substitutes and references,
- * in one transaction. Its form, planets, signs and deities are written in their
- * curated rows' spelling. The slug is set here from the label, the form and
- * the formal name, and the compendium's lapsed retirements are cleared in the
- * same write.
+ * Creates a compendium entry, with its folk names, substitutes, deities and
+ * references, in one transaction. Its form and deities are picked from their
+ * curated vocabularies and its planets and signs named from theirs, each
+ * written in its curated row's spelling. The slug is set here from the label,
+ * the form and the formal name, and the compendium's lapsed retirements are
+ * cleared in the same write.
  *
  * @throws {Forbidden} the caller is not a site admin — checked before the
  * input is read.
  * @throws {ValidationError} the input breaks `CompendiumIngredientInput` — a
- * missing `nomenclature` included — names a form, planet, sign or deity no
- * live curated row holds, collides with another entry, would end another
- * entry's redirect without `endRedirect`, or links a substitute or cites a
- * reference outside the compendium.
+ * missing `nomenclature` included — carries a form or deity not picked from a
+ * curated row, a planet or sign no curated row holds, collides with another
+ * entry, would end another entry's redirect without `endRedirect`, or links
+ * a substitute or cites a reference outside the compendium.
  */
 export async function createCompendiumEntry(
   session: Session,
   input: CompendiumWrite,
 ): Promise<IngredientRow> {
   const admin = assertSiteAdmin(session);
-  const { folkNames, substitutes, references, ...parsed } = parseInput(
+  const { folkNames, substitutes, deities, references, ...parsed } = parseInput(
     CompendiumIngredientInput,
     input,
   );
-  const fields = await inCuratedSpellings(input, parsed);
+  const curated = await inCuratedValues(input, parsed, deities ?? [], []);
+  const { fields } = curated;
 
   const slug = ingredientSlug(fields.name, fields.form, fields.canonicalName);
   const at = new Date();
@@ -142,6 +155,7 @@ export async function createCompendiumEntry(
     });
     await addFolkNames(write, row.id, folkNames ?? []);
     await addSubstitutes(write, [], row.id, substitutes ?? []);
+    await replaceDeities(write, row.id, curated.deities, []);
     await addReferenceLinks(write, [], row.id, references ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
@@ -150,10 +164,10 @@ export async function createCompendiumEntry(
 /**
  * Replaces a compendium entry with `input` — the whole entry as the form
  * submits it, so a field left out is cleared — and its folk names,
- * substitutes and references with the input's, in one transaction. The slug follows the
- * label, the form and the formal name; when it moves, the old one is retired
- * as this admin's, and redirects to the entry for 180 days. The curated
- * fields are spelled as `createCompendiumEntry` spells them.
+ * substitutes, deities and references with the input's, in one transaction.
+ * The slug follows the label, the form and the formal name; when it moves, the
+ * old one is retired as this admin's, and redirects to the entry for 180 days.
+ * The curated fields are held as `createCompendiumEntry` holds them.
  *
  * The row is read before the transaction, for the slug it holds; two admins
  * saving one entry at the same instant can retire the older slug rather
@@ -161,9 +175,10 @@ export async function createCompendiumEntry(
  *
  * @throws {Forbidden} the caller is not a site admin.
  * @throws {ValidationError} the input breaks `CompendiumIngredientInput`,
- * names a form, planet, sign or deity no live curated row holds, collides
- * with another entry, would end another entry's redirect without
- * `endRedirect`, or adds a substitute link or a reference outside the
+ * carries a form or deity not picked from a curated row, a planet or sign no
+ * curated row holds, collides with another entry, would end another entry's
+ * redirect without `endRedirect`, or adds a substitute link or a reference
+ * outside the
  * compendium.
  * @throws {NotFound} no live compendium entry has this id — a coven's
  * ingredient included, and an id that is not one.
@@ -174,13 +189,15 @@ export async function updateCompendiumEntry(
   input: CompendiumWrite,
 ): Promise<IngredientRow> {
   const admin = assertSiteAdmin(session);
-  const { folkNames, substitutes, references, ...parsed } = parseInput(
+  const { folkNames, substitutes, deities, references, ...parsed } = parseInput(
     CompendiumIngredientInput,
     input,
   );
-  const fields = await inCuratedSpellings(input, parsed);
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
+  const held = await heldDeities([], id);
+  const curated = await inCuratedValues(input, parsed, deities ?? [], held);
+  const { fields } = curated;
   const current = await findOneIngredient([], id);
   if (!current) throw new NotFound('No such compendium entry');
 
@@ -205,6 +222,7 @@ export async function updateCompendiumEntry(
     }
     await replaceFolkNames(write, [], id, folkNames ?? []);
     await replaceSubstitutes(write, [], id, substitutes ?? []);
+    await replaceDeities(write, id, curated.deities, held);
     await replaceReferenceLinks(write, [], id, references ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
@@ -231,64 +249,65 @@ export async function resolveCompendiumSlug(slug: string): Promise<CompendiumAdd
   throw new NotFound('No such compendium entry');
 }
 
-/** What each curated field is called in a refusal. */
-const NOUN_OF: Record<CuratedField, string> = {
-  form: 'form',
-  planets: 'planet',
-  zodiacSigns: 'zodiac sign',
-  deities: 'deity',
-};
+/** What each field named by spelling is called in a refusal. */
+const NOUN_OF: Record<CuratedField, string> = { planets: 'planet', zodiacSigns: 'zodiac sign' };
 
-const LIST_FIELDS = ['planets', 'zodiacSigns', 'deities'] as const satisfies CuratedField[];
+const SPELLED_FIELDS = ['planets', 'zodiacSigns'] as const satisfies CuratedField[];
 
 /**
- * `fields` with its form, planets, signs and deities each in the spelling of
- * the live curated row it folds to: a compendium entry holds curated values
- * alone, where a coven's ingredient keeps what was typed (MB.162; DESIGN.md
- * §5). A list's refusal is placed at the entry `input` sent, blanks counted,
- * since parsing drops blank entries and the form numbers its rows by what it
- * sent. Read before the write rather than inside it, so an admin retiring a
+ * `fields` and `deities` holding curated values alone, as a compendium entry
+ * does where a coven's ingredient keeps what was typed (MB.162; DESIGN.md
+ * §5): its form and each deity a pick of a curated row (MB.167), and its
+ * planets and signs each in the spelling of the live curated row it folds to.
+ * A list's refusal is placed at the entry `input` sent, blanks counted, since
+ * parsing drops blank planets and signs and the form numbers its rows by what
+ * it sent. Read before the write rather than inside it, so an admin retiring a
  * row while another saves an entry naming it can leave that entry holding it.
  *
- * @throws {ValidationError} beside each value no live curated row holds —
- * every one at once, so the admin sees the whole list to add.
+ * @throws {ValidationError} beside each value not picked or no live curated
+ * row holds — every one at once, in the form's order, so the admin sees the
+ * whole list to add.
  */
-async function inCuratedSpellings(
+async function inCuratedValues(
   input: CompendiumWrite,
-  fields: IngredientFields,
-): Promise<IngredientFields> {
-  const [forms, planets, zodiacSigns, deities] = await Promise.all([
-    curatedSpellings('form', fields.form == null ? [] : [fields.form]),
-    ...LIST_FIELDS.map((field) => curatedSpellings(field, fields[field] ?? [])),
+  parsed: IngredientFields,
+  deities: readonly DeityEntry[],
+  held: readonly DeityRecord[],
+): Promise<{ fields: IngredientFields; deities: PickedDeity[] }> {
+  const [picks, planets, zodiacSigns] = await Promise.all([
+    resolvePicks('compendium', parsed, deities, held),
+    curatedSpellings('planets', parsed.planets ?? []),
+    curatedSpellings('zodiacSigns', parsed.zodiacSigns ?? []),
   ]);
-  const spellingsOf = { form: forms, planets, zodiacSigns, deities };
+  const spellingsOf = { planets, zodiacSigns };
   const spellingOf = (field: CuratedField, value: string) =>
     spellingsOf[field].get(foldVocabularyValue(value));
 
-  const issues: ValidationIssue[] = [];
-  const check = (field: CuratedField, value: string, path: ValidationIssue['path']) => {
-    if (value.trim() === '' || spellingOf(field, value) !== undefined) return;
-    issues.push({
-      path,
-      message: `No curated ${NOUN_OF[field]} is called "${value.trim()}" — add it to the ${NOUN_OF[field]} list first`,
+  const spelled: ValidationIssue[] = [];
+  for (const field of SPELLED_FIELDS) {
+    (input[field] ?? []).forEach((value, index) => {
+      if (value.trim() === '' || spellingOf(field, value) !== undefined) return;
+      spelled.push({
+        path: [field, index],
+        message: `No curated ${NOUN_OF[field]} is called "${value.trim()}" — add it to the ${NOUN_OF[field]} list first`,
+      });
     });
-  };
-  if (fields.form != null) check('form', fields.form, ['form']);
-  for (const field of LIST_FIELDS) {
-    (input[field] ?? []).forEach((value, index) => check(field, value, [field, index]));
   }
+  const issues = [...picks.issues, ...spelled].sort(
+    (a, b) => FIELD_ORDER.indexOf(String(a.path[0])) - FIELD_ORDER.indexOf(String(b.path[0])),
+  );
   if (issues.length > 0) throw new ValidationError(issues);
 
-  const spell = (field: (typeof LIST_FIELDS)[number]) =>
-    fields[field]?.map((value) => spellingOf(field, value) ?? value);
+  const spell = (field: CuratedField) =>
+    picks.fields[field]?.map((value) => spellingOf(field, value) ?? value);
   return {
-    ...fields,
-    form: fields.form == null ? fields.form : spellingOf('form', fields.form),
-    planets: spell('planets'),
-    zodiacSigns: spell('zodiacSigns'),
-    deities: spell('deities'),
+    fields: { ...picks.fields, planets: spell('planets'), zodiacSigns: spell('zodiacSigns') },
+    deities: picks.deities,
   };
 }
+
+/** The curated fields in the order the form shows them, which is the order refusals are listed in. */
+const FIELD_ORDER = ['form', 'formId', 'planets', 'zodiacSigns', 'deities'];
 
 /**
  * Refuses a write whose slug another entry's redirect runs from, unless the

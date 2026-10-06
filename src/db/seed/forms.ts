@@ -13,7 +13,7 @@ import type {
 
 // DESIGN.md §5's form vocabulary: six groups and every form, a starting set an
 // admin may edit. Reference data, not a scenario — migrate.yml seeds it alone,
-// so it inserts the bootstrap admin itself. The groups answer "what are you
+// so it inserts the bootstrap user itself. The groups answer "what are you
 // holding", not "how was it made": three by source (Botanical, Animal, Mineral),
 // three by state (Fluid, Curio, Substance), and no `Other` — an unfitting value
 // stays free text and surfaces for curation. No slug is written down; every one
@@ -351,7 +351,7 @@ export async function seedForms(db: SeedDatabase): Promise<void> {
 /**
  * The same seed inside a transaction the caller opened, since `standard` writes
  * this vocabulary alongside the compendium drawing on it. Assumes the GUC is
- * published and the bootstrap admin exists.
+ * published and the bootstrap user exists.
  */
 export async function seedFormVocabulary(tx: SeedTransaction): Promise<void> {
   await seedTwoTierVocabulary(tx, {

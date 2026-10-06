@@ -20,6 +20,7 @@ export type {
   CategoryRow,
   CitedReference,
   CompendiumAddress,
+  IngredientDeityRow,
   IngredientKey,
   IngredientRow,
   SubstituteRow,

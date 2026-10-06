@@ -199,6 +199,7 @@ describe('Ingredient.references', () => {
     canonicalName: '',
     nomenclature: 'none',
     form: '',
+    formId: '',
     description: '',
     elements: [],
     planets: [],

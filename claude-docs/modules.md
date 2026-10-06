@@ -30,13 +30,15 @@ registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
 `User.memberships` field; `vocabulary` has `CorrespondenceSuggestion`,
 `FormSuggestion`, `DeitySuggestion`, `SuggestionClaimant` and the
 `planetSuggestions`, `zodiacSuggestions`, `formSuggestions` and
-`deitySuggestions` connections; `ingredients` has
-`Ingredient`, the `compendium`, `ingredient`, `possibleDuplicates` and
+`deitySuggestions` connections, and `Deity` and `DeityTradition` with the
+`deityTraditionsById` and `ingredientFormsById` loaders (MB.167); `ingredients` has
+`Ingredient`, `IngredientDeity` and `IngredientDeityInput`, the `compendium`, `ingredient`, `possibleDuplicates` and
 `ingredientSuggestions` queries,
 the two workspace ingredient mutations, and `CommonNameSuggestion` and
 `commonNameSuggestions`, whose claimants reuse `vocabulary`'s
 `SuggestionClaimant` — the edge runs that way round — plus the
-`categoriesByIngredient` and `folkNamesByIngredient` loaders. A field on another module's type is added from the module allowed to
+`categoriesByIngredient`, `folkNamesByIngredient`, `substitutesByIngredient` and
+`deitiesByIngredient` loaders. A field on another module's type is added from the module allowed to
 import it — `memberships` lives in `coven` because `identity` imports
 nothing.
 
@@ -64,7 +66,7 @@ a service lands in the module that owns the table it writes.
 
 | Module        | Tables                                                                                                                                                                                                                | Services today                                                                                                                     |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `identity`    | `users`, `sessions`, `accounts`, `verifications`, `rate_limits`; later `admin_invitations`                                                                                                                            | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                     |
+| `identity`    | `users`, `admin_role_changes`, `sessions`, `accounts`, `verifications`, `rate_limits`; later `admin_invitations`                                                                                                      | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                     |
 | `coven`       | `workspaces`, `workspace_members`, `workspace_invitations`                                                                                                                                                            | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                             |
 | `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)                                                                      | `suggestions.ts`                                                                                                                   |
 | `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_substitutes`, `ingredient_deities`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs`; `references`, `reference_links` (MB.152) | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`; `schema/units.ts` is the unit vocabulary |

@@ -51,19 +51,19 @@ const countOf = async (
 };
 
 describe('insertIngredient', () => {
-  it('writes a compendium entry with its folk names and categories, every row stamped by the author', async () => {
+  it('writes a compendium entry with its folk names, deities and categories, every row stamped by the author', async () => {
     const id = await insertIngredient(
       sql,
       makeIngredient({
         folkNames: ['Fixture Bane', 'Testroot'],
         categories: ['Protection', 'Cleansing'],
-        deities: ['Fixtura'],
+        deities: ['Fixtura', 'Testara'],
       }),
       A.id,
     );
 
     const [row] = await sql`
-      select workspace_id, name, canonical_name, nomenclature, form, deities,
+      select workspace_id, name, canonical_name, nomenclature, form, form_id,
         created_by, updated_by, deleted_at
       from ingredients where id = ${id}`;
     expect(row).toEqual({
@@ -72,7 +72,7 @@ describe('insertIngredient', () => {
       canonical_name: 'Fixtura testalis',
       nomenclature: 'botanical',
       form: 'herb',
-      deities: ['Fixtura'],
+      form_id: null,
       created_by: A.id,
       updated_by: A.id,
       deleted_at: null,
@@ -84,6 +84,29 @@ describe('insertIngredient', () => {
     expect(folkNames).toEqual([
       { name: 'Fixture Bane', created_by: A.id, updated_by: A.id, deleted_at: null },
       { name: 'Testroot', created_by: A.id, updated_by: A.id, deleted_at: null },
+    ]);
+
+    // Typed names, in the order given (MB.167).
+    const deities = await sql`
+      select deity_id, name, position, created_by, updated_by, deleted_at
+      from ingredient_deities where ingredient_id = ${id} order by position`;
+    expect(deities).toEqual([
+      {
+        deity_id: null,
+        name: 'Fixtura',
+        position: 0,
+        created_by: A.id,
+        updated_by: A.id,
+        deleted_at: null,
+      },
+      {
+        deity_id: null,
+        name: 'Testara',
+        position: 1,
+        created_by: A.id,
+        updated_by: A.id,
+        deleted_at: null,
+      },
     ]);
 
     const categories = await sql`

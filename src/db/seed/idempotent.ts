@@ -10,7 +10,7 @@ import type { InsertStamps, SeedDatabase, SeedTransaction } from './types';
 
 /**
  * The seed's transaction: the GUC published exactly as `withAudit` publishes it
- * — parameterised `set_config`, transaction-local — and the bootstrap admin
+ * — parameterised `set_config`, transaction-local — and the bootstrap user
  * present before `body` writes a row that names it as creator.
  */
 export async function beginSeedTransaction<T>(
@@ -26,7 +26,7 @@ export async function beginSeedTransaction<T>(
 
 /**
  * Inserts every `wanted` whose key `existing` did not return, stamped by the
- * bootstrap admin, and touches nothing already present. `existing` is the
+ * bootstrap user, and touches nothing already present. `existing` is the
  * caller's own query: each site scopes it (by id list, by tier, by workspace)
  * and decides for itself whether `deleted_at` is ignored — which it is,
  * everywhere, so a retired row is not resurrected on the next run.

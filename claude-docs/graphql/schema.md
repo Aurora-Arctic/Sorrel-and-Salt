@@ -144,6 +144,7 @@ type Query {
 }
 
 type FormSuggestion {
+  id: ID # the curated row's, which a pick sends; null for a value only in use (MB.167)
   value: String!
   description: String # the curated row's; null for a value only in use
   group: String # the curated row's group; null for a value only in use
@@ -166,6 +167,9 @@ type SuggestionClaimant {
   is unique on the slug alone, so "Wax" may be both an _animal_ part and a
   _substance_, and `ingredients.form` stores the string. The pair comes back as
   two suggestions, in group order, and a client renders "Wax (Substance)".
+- **`id` is what a pick sends** (MB.167): the curated row's, as `formId`, or
+  as a deity entry's `deityId`; null for a value only in use, which is sent
+  as text. A planet or sign records no pick, so its suggestion has no `id`.
 - **`claimants` names who already holds the value**, in the compendium and the
   named workspace only: formal name first, and a claimant with none by its
   label, so a `none` entry is not hidden. A nested list rather than a connection
@@ -186,6 +190,7 @@ over the same finder, taking the same arguments as `formSuggestions`:
 
 ```graphql
 type DeitySuggestion {
+  id: ID # the curated row's, which a pick sends; null for a value only in use (MB.167)
   value: String!
   description: String # the curated row's; null for a value only in use
   tradition: String # the curated row's tradition; null for a value only in use
@@ -201,8 +206,9 @@ type DeitySuggestion {
   the one being written, and a deity is no part of an ingredient's identity
   ([`db/member-autofill.md`](../db/member-autofill.md), "The member's
   autofill").
-- Each entry of an ingredient's `deities` list is one value in use, folded
-  and counted once, from the compendium and the named workspace only.
+- Each live row of an ingredient's deities, in `ingredient_deities`
+  (MB.167), is one value in use, folded and counted once, from the compendium
+  and the named workspace only.
 - The refusals are `planetSuggestions`'.
 
 ### `possibleDuplicates`
@@ -280,7 +286,7 @@ writes a link to it (DESIGN.md §5, `ingredient_substitutes`).
 The compendium's reads (M8.5), registered by `ingredients`, with the
 vocabulary types by `vocabulary`. All three are public (MB.80): no `signedIn`
 scope, and the list and the vocabulary resolvers pass no session at all.
-Their arguments, `Ingredient` and the four vocabulary types are DESIGN.md §7's
+Their arguments, `Ingredient` and the six vocabulary types are DESIGN.md §7's
 sketch, and `src/graphql/schema.graphql` is the SDL as built; what the sketch
 leaves out is the list's connection:
 
@@ -339,12 +345,14 @@ type QueryCompendiumConnectionEdge {
   id is a miss, not a driver error.
 - **`Ingredient` is declared over the row** (`typeof ingredients.$inferSelect`)
   and never exposes `canonicalKey` or `workspaceId`. `folkNames`,
-  `categories`, `substitutes` and `references` go through the four
+  `categories`, `substitutes`, `deities` and `references` go through the five
   ingredient loaders, `folkNamesByIngredient`, `categoriesByIngredient`,
-  `substitutesByIngredient` and `referencesByIngredient`, keyed by the row
-  itself; `Category.group` and
-  `IngredientFormValue.group` through the two id-keyed group loaders,
-  `categoryGroupsById` and `ingredientFormGroupsById` (["Loaders"](loaders.md)).
+  `substitutesByIngredient`, `deitiesByIngredient` and
+  `referencesByIngredient`, keyed by the row itself; `Category.group`,
+  `IngredientFormValue.group` and `Deity.tradition` through the three id-keyed
+  group loaders, `categoryGroupsById`, `ingredientFormGroupsById` and
+  `deityTraditionsById`; and `formChoice` through `ingredientFormsById`
+  (MB.167; ["Loaders"](loaders.md)).
 - **`Substitute` is a link or a typed name** (DESIGN.md §7, MB.138; built by
   MB.140): `name` is what it shows — the linked ingredient's label, its last
   once deleted, or the typed text — and `ingredient` is the one to follow,
@@ -354,6 +362,16 @@ type QueryCompendiumConnectionEdge {
   linked ingredients joined in, through the hatch
   ([`db/soft-delete.md`](../db/soft-delete.md)). It carries no `audit`, as
   `folkNames` carries none.
+- **`IngredientDeity` is a pick or a typed name** (DESIGN.md §7, MB.167),
+  read as `Substitute` is: `name` is as saved — a pick's curated spelling, or
+  the typed text — and `deity` the curated `Deity` picked, null on typed text
+  and once that deity or its tradition is retired. `Ingredient.deities` is
+  non-null, `[]` with none, and in the order entered. `Deity` carries its
+  `tradition`, which tells two "Hecate"s apart, and is registered by
+  `vocabulary` in `graphql/deities.ts` with `DeityTradition`.
+  `Ingredient.formChoice` is the curated `IngredientFormValue` that
+  `formId` records, null when the form was typed and once the form or its
+  group is retired, so the text stands alone.
 - **`ReferenceLink` is a reference and the link's locator** (DESIGN.md §7,
   MB.151; built by MB.153). `Ingredient.references` is non-null, `[]` with
   none, and filed alphabetically by citation, less a leading quotation mark
@@ -438,14 +456,25 @@ signatures DESIGN.md §7's sketch gives them.
   replaces the live rows as folk names are replaced: a link matched by its
   ingredient, a name as written, and a list that changes nothing writes
   nothing.
+- **A form's pick is `formId`, a deity an `IngredientDeityInput`** (MB.167).
+  `formId` sits beside `form`, nullable on the create and non-null on the
+  update, where `""` clears it. It must name a curated form — live, under a
+  live group — and `form` must fold to that form's name, which is written in
+  its spelling; anything else is a `VALIDATION` field error at `['formId']`
+  or `['form']`, never a 23503. A deity entry is `{ deityId }` or `{ name }`,
+  exactly one, as a substitute's is; a deity picked anew must be curated, and
+  one the ingredient already holds is kept once retired, sent back by id or
+  by name. The list replaces the live rows in the order sent
+  ([`db/ingredient-children.md`](../db/ingredient-children.md)).
 - **The answer is the entity as a fresh read gives it.** It carries every
   field, and its `audit` is stamped from the session. `folkNames` and
   `categories` come through the loaders, after the write has committed. A
   client reconciles its cache from the answer without a refetch.
   `updateIngredient` first clears the entry from `folkNamesByIngredient`,
-  `substitutesByIngredient` and `referencesByIngredient`. Root mutation fields
-  run in turn within one request, so an earlier field may already have loaded
-  the folk names, substitutes or references this write replaced.
+  `substitutesByIngredient`, `deitiesByIngredient` and
+  `referencesByIngredient`. Root mutation fields run in turn within one
+  request, so an earlier field may already have loaded the folk names,
+  substitutes, deities or references this write replaced.
 - **A delete answers the deleted id, not the entity** — the schema's first
   delete, so this is the convention the next one follows. The row is
   soft-deleted, and a list evicts a row by its id; the deleted `Ingredient`
@@ -458,8 +487,8 @@ signatures DESIGN.md §7's sketch gives them.
   in the input's own shape, such as `['folkNames', 1]`. A collision is
   `VALIDATION` on the field that caused it, and a substitute link the tier
   rule forbids is `VALIDATION` on its entry, such as `['substitutes', 1]`.
-  Either way `data` is null, and the transaction wrote nothing, folk names and
-  substitutes included.
+  Either way `data` is null, and the transaction wrote nothing, folk names,
+  substitutes and deities included.
 
 `tests/modules/ingredients/graphql/workspace-ingredients.test.ts` runs the three
 mutations through Yoga with the route's `maskedErrors`, so each refusal is

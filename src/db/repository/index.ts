@@ -31,6 +31,7 @@ export {
   findCompendiumCount,
   findCompendiumEntryByIdentity,
   findCompendiumPage,
+  findDeitiesOfIngredients,
   findIngredientSuggestions,
   findManyOfIngredients,
   findOneIngredient,
@@ -43,6 +44,7 @@ export {
   findReferencesOfIngredients,
 } from './references';
 export {
+  findCuratedRowsByIds,
   findCuratedRowsByName,
   findIngredientFormValues,
   findVocabularySuggestions,

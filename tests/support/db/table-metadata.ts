@@ -27,6 +27,7 @@ export const AUDIT_COLUMNS: readonly string[] = [
 // Transcribed so a catalogue sweep cannot pass on two empty sets. The two
 // hard-deleted join tables are in it: they carry the four stamps and the trigger.
 export const AUDITED_TABLES = [
+  'admin_role_changes',
   'categories',
   'category_groups',
   'deities',

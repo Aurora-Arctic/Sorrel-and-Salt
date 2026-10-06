@@ -1,3 +1,8 @@
+import type { SeedDatabase } from '@/db/seed/types';
+
+/** One seed entry point, named for its test: a scenario, or a reference-data seed run alone. */
+export type SeedEntry = [name: string, run: (handle: SeedDatabase) => Promise<void>];
+
 /** A `planets` or `zodiac_signs` row. */
 export interface VocabularyRow {
   id: string;
@@ -131,7 +136,6 @@ export interface CompendiumEntryRow {
   form: string | null;
   planets: string[] | null;
   zodiac_signs: string[] | null;
-  deities: string[] | null;
   canonical_key: string;
   slug: string;
   created_by: string;

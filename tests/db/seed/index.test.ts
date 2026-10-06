@@ -5,7 +5,11 @@ import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { MINIMAL_USER_ID } from '@/db/seed/minimal';
 import { SEED_SCENARIOS, resolveScenario, seed } from '@/db/seed/index';
-import type { UserRow } from './types';
+import { seedAstrology } from '@/db/seed/astrology';
+import { seedCategories } from '@/db/seed/categories';
+import { seedDeities } from '@/db/seed/deities';
+import { seedForms } from '@/db/seed/forms';
+import type { SeedEntry, UserRow } from './types';
 
 // The `minimal` scenario against the real schema, every table emptied first.
 // The handle is this file's own; that the seed writes through it rather than
@@ -71,31 +75,30 @@ afterAll(async () => {
 });
 
 describe('seed(db, { scenario: "minimal" })', () => {
-  it('produces exactly one admin and one user', async () => {
+  // MB.58: the system user is a creator, not an admin, so a bare install has none.
+  it('produces exactly one system user and one user, and no admin', async () => {
     await seed(db, { scenario: 'minimal' });
 
     const users = await allUsers();
-    expect(users).toHaveLength(2);
-    expect(users.filter((u) => u.role === 'admin')).toHaveLength(1);
-    expect(users.filter((u) => u.role === 'user')).toHaveLength(1);
+    expect(users.map((u) => u.id)).toEqual([BOOTSTRAP_USER_ID, MINIMAL_USER_ID]);
+    expect(users.map((u) => u.role)).toEqual(['user', 'user']);
     expect(users.every((u) => u.deleted_at === null)).toBe(true);
   });
 
   // The bootstrap row is its own creator under the fixed id: one self-satisfying insert.
-  it('inserts the admin as the bootstrap user, its own createdBy/updatedBy, under the fixed MB.5 id', async () => {
+  it('inserts the system user as its own createdBy/updatedBy, under the fixed MB.5 id', async () => {
     await seed(db, { scenario: 'minimal' });
 
-    const [admin] = (await allUsers()).filter((u) => u.role === 'admin');
-    expect(admin.id).toBe(BOOTSTRAP_USER_ID);
-    expect(admin.created_by).toBe(BOOTSTRAP_USER_ID);
-    expect(admin.updated_by).toBe(BOOTSTRAP_USER_ID);
+    const [system] = (await allUsers()).filter((u) => u.id === BOOTSTRAP_USER_ID);
+    expect(system.created_by).toBe(BOOTSTRAP_USER_ID);
+    expect(system.updated_by).toBe(BOOTSTRAP_USER_ID);
   });
 
-  it('creates the plain user as the bootstrap admin, under a fixed id of its own', async () => {
+  it('creates the plain user as the bootstrap user, under a fixed id of its own', async () => {
     await seed(db, { scenario: 'minimal' });
 
-    const [user] = (await allUsers()).filter((u) => u.role === 'user');
-    expect(user.id).toBe(MINIMAL_USER_ID);
+    const [user] = (await allUsers()).filter((u) => u.id === MINIMAL_USER_ID);
+    expect(user.role).toBe('user');
     expect(user.created_by).toBe(BOOTSTRAP_USER_ID);
     expect(user.updated_by).toBe(BOOTSTRAP_USER_ID);
   });
@@ -176,6 +179,34 @@ describe('resolveScenario', () => {
 
   it('lists exactly the scenarios seed() switches on', () => {
     expect([...SEED_SCENARIOS]).toEqual(['minimal', 'standard', 'demo']);
+  });
+});
+
+// Every entry point opens with `beginSeedTransaction`, so each inserts the
+// bootstrap row when it is missing — the reference-data seeds alone, on staging
+// and production. From wherever, it is no admin (MB.58): it has no OAuth
+// account and nobody can sign in as it, so as an admin it would only be a
+// revocable row on /admin/users.
+const SEED_ENTRIES: SeedEntry[] = [
+  ...SEED_SCENARIOS.map((scenario): SeedEntry => [
+    `the ${scenario} scenario`,
+    (handle) => seed(handle, { scenario }),
+  ]),
+  ['the category seed', seedCategories],
+  ['the form seed', seedForms],
+  ['the astrology seed', seedAstrology],
+  ['the deity seed', seedDeities],
+];
+
+describe('the bootstrap user, from every seed', () => {
+  it.each(SEED_ENTRIES)('%s inserts it as a plain user', async (_name, run) => {
+    // Precondition: the row is this run's insert, not one left over.
+    expect(await countOf('users')).toBe(0);
+
+    await run(db);
+
+    const [system] = (await allUsers()).filter((u) => u.id === BOOTSTRAP_USER_ID);
+    expect(system).toMatchObject({ email: 'admin@seed.sorrelandsalt.com', role: 'user' });
   });
 });
 

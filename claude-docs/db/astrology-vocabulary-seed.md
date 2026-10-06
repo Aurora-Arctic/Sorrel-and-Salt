@@ -7,7 +7,7 @@ table: nineteen `planets` and thirteen `zodiac_signs`, in §5's order, as the
 reference data rather than a scenario, `npm run db:seed:astrology` as a
 third `scripts/db-seed.ts` target, run by `migrate.yml` in the same step as the
 other two, idempotent by slug and ignoring `deleted_at`, updating nothing
-already present, stamped by the bootstrap admin with the GUC published — with
+already present, stamped by the bootstrap user with the GUC published — with
 `seedFlatVocabulary` in place of the two-tier helper, since there is no group
 to insert first. `standard` seeds both inside its own transaction, and every
 planet its compendium lists is a curated one, as MB.162 requires of every

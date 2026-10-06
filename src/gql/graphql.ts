@@ -4,6 +4,12 @@ type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 /** Internal type. DO NOT USE DIRECTLY. */
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+/** A curated deity picked, or a name typed: exactly one of the two. */
+export type IngredientDeityInput = {
+  deityId?: string | number | null | undefined;
+  name?: string | null | undefined;
+};
+
 export type IngredientElement =
   | 'air'
   | 'earth'
@@ -14,11 +20,13 @@ export type IngredientElement =
 export type IngredientInput = {
   canonicalName?: string | null | undefined;
   colors?: Array<string> | null | undefined;
-  deities?: Array<string> | null | undefined;
+  deities?: Array<IngredientDeityInput> | null | undefined;
   description?: string | null | undefined;
   elements?: Array<IngredientElement> | null | undefined;
   folkNames?: Array<string> | null | undefined;
   form?: string | null | undefined;
+  /** The curated form picked for `form`; none when it was typed. */
+  formId?: string | number | null | undefined;
   name: string;
   nomenclature?: Nomenclature | null | undefined;
   planets?: Array<string> | null | undefined;

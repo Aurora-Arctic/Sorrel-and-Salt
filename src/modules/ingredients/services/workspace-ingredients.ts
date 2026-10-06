@@ -12,9 +12,12 @@ import {
   addReferenceLinks,
   addSubstitutes,
   columnsOf,
+  heldDeities,
+  replaceDeities,
   replaceFolkNames,
   replaceReferenceLinks,
   replaceSubstitutes,
+  resolvePicks,
 } from './ingredient-rows';
 import { assertMembership } from '@/modules/coven';
 import type { IngredientFields, IngredientRow, IngredientValues } from '../types';
@@ -25,14 +28,15 @@ import type { IngredientFields, IngredientRow, IngredientValues } from '../types
 // (claude-docs/db/workspace-ingredients.md, "Workspace ingredients").
 
 /**
- * Creates an ingredient in this coven, with its folk names, substitutes and
- * references, in one transaction. The slug is set here from the label, the
- * form and the formal name.
+ * Creates an ingredient in this coven, with its folk names, substitutes,
+ * deities and references, in one transaction. The slug is set here from the
+ * label, the form and the formal name.
  *
  * @throws {Forbidden} the caller may not write this coven's ingredients.
  * @throws {ValidationError} the input breaks `LocalIngredientInput`,
- * collides with another of the coven's ingredients, or links a substitute
- * or cites a reference outside the compendium and this coven.
+ * collides with another of the coven's ingredients, picks a form or deity no
+ * curated row holds, or links a substitute or cites a reference outside the
+ * compendium and this coven.
  */
 export async function createWorkspaceIngredient(
   session: Session,
@@ -40,7 +44,13 @@ export async function createWorkspaceIngredient(
   input: IngredientValues,
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['create'] });
-  const { folkNames, substitutes, references, ...fields } = parseInput(LocalIngredientInput, input);
+  const { folkNames, substitutes, deities, references, ...parsed } = parseInput(
+    LocalIngredientInput,
+    input,
+  );
+  const picks = await resolvePicks('coven', parsed, deities ?? [], []);
+  if (picks.issues.length > 0) throw new ValidationError(picks.issues);
+  const { fields } = picks;
 
   const slug = ingredientSlug(fields.name, fields.form, fields.canonicalName);
 
@@ -51,6 +61,7 @@ export async function createWorkspaceIngredient(
     });
     await addFolkNames(write, row.id, folkNames ?? []);
     await addSubstitutes(write, [membership], row.id, substitutes ?? []);
+    await replaceDeities(write, row.id, picks.deities, []);
     await addReferenceLinks(write, [membership], row.id, references ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
@@ -59,16 +70,17 @@ export async function createWorkspaceIngredient(
 /**
  * Replaces an ingredient of this coven with `input` — the whole ingredient as
  * the form submits it, so a field left out is cleared — and its folk names,
- * substitutes and references with the input's, in one transaction. A folk
- * name, substitute or reference still listed keeps its row; one dropped is
- * soft-deleted. The slug follows the label, the form and the formal name, and
- * nothing redirects from the old one: no route reads a coven ingredient's
- * slug.
+ * substitutes, deities and references with the input's, in one transaction. A
+ * folk name, substitute, deity or reference still listed keeps its row; one
+ * dropped is soft-deleted. The slug follows the label, the form and the formal
+ * name, and nothing redirects from the old one: no route reads a coven
+ * ingredient's slug.
  *
  * @throws {Forbidden} the caller may not write this coven's ingredients.
  * @throws {ValidationError} the input breaks `LocalIngredientInput`,
- * collides with another of the coven's ingredients, or adds a substitute link
- * or a reference outside the compendium and this coven.
+ * collides with another of the coven's ingredients, picks a form or deity no
+ * curated row holds, or adds a substitute link or a reference outside the
+ * compendium and this coven.
  * @throws {NotFound} no such ingredient in this coven — the compendium's and
  * other covens' included, and an id that is not one.
  */
@@ -79,9 +91,16 @@ export async function updateWorkspaceIngredient(
   input: IngredientValues,
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['update'] });
-  const { folkNames, substitutes, references, ...fields } = parseInput(LocalIngredientInput, input);
+  const { folkNames, substitutes, deities, references, ...parsed } = parseInput(
+    LocalIngredientInput,
+    input,
+  );
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
+  const held = await heldDeities([membership], id);
+  const picks = await resolvePicks('coven', parsed, deities ?? [], held);
+  if (picks.issues.length > 0) throw new ValidationError(picks.issues);
+  const { fields } = picks;
 
   const slug = ingredientSlug(fields.name, fields.form, fields.canonicalName);
 
@@ -93,6 +112,7 @@ export async function updateWorkspaceIngredient(
     if (!row) throw new NotFound('No such ingredient in this coven');
     await replaceFolkNames(write, [membership], id, folkNames ?? []);
     await replaceSubstitutes(write, [membership], id, substitutes ?? []);
+    await replaceDeities(write, id, picks.deities, held);
     await replaceReferenceLinks(write, [membership], id, references ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));

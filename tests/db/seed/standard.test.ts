@@ -48,6 +48,11 @@ async function countOf(table: string): Promise<number> {
   return Number(count);
 }
 
+/** Each compendium entry's deities as the seed literal lists them, entry by entry. */
+const DEITIES_IN_COMPENDIUM = [...COMPENDIUM_INGREDIENTS]
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .flatMap((entry) => (entry.deities ?? []).map((name) => [entry.name, name] as const));
+
 /** A curated vocabulary's names, spelt as the rows spell them. */
 async function curatedNames(table: string): Promise<Set<string>> {
   const rows = await sql<{ name: string }[]>`select name from ${sql(table)}`;
@@ -87,7 +92,7 @@ afterAll(async () => {
 });
 
 describe('the cast: five fixture users, A–E', () => {
-  it('creates all five, under the ids the fixtures name, plus the bootstrap admin', async () => {
+  it('creates all five, under the ids the fixtures name, plus the bootstrap user', async () => {
     // Precondition: the truncated clone really starts empty, so these rows are this seed's.
     expect(await countOf('users')).toBe(0);
 
@@ -108,8 +113,16 @@ describe('the cast: five fixture users, A–E', () => {
     expect(byId.get(FIXTURE_USERS.B.id)?.role).toBe('user');
     expect(byId.get(FIXTURE_USERS.C.id)?.role).toBe('user');
     expect(byId.get(FIXTURE_USERS.D.id)?.role).toBe('user');
-    // E is the only site admin: the bootstrap admin is the seed's identity, not cast.
     expect(byId.get(FIXTURE_USERS.E.id)?.role).toBe('admin');
+  });
+
+  // The bootstrap user is the seed's identity, not cast, and no admin (MB.58).
+  it('makes E the only site admin', async () => {
+    await seedStandard(db);
+
+    const users = await allUsers();
+    expect(users.find((u) => u.id === BOOTSTRAP_USER_ID)?.role).toBe('user');
+    expect(users.filter((u) => u.role === 'admin').map((u) => u.id)).toEqual([FIXTURE_USERS.E.id]);
   });
 
   // Invite-gate: A–D earned the flag by joining a workspace; E is in none and
@@ -125,7 +138,7 @@ describe('the cast: five fixture users, A–E', () => {
     expect(byId.get(FIXTURE_USERS.E.id)?.can_create_workspace).toBe(false);
   });
 
-  it('stamps every user as the bootstrap admin’s', async () => {
+  it('stamps every user as the bootstrap user’s', async () => {
     await seedStandard(db);
 
     const seeded = (await allUsers()).filter((u) => u.id !== BOOTSTRAP_USER_ID);
@@ -217,7 +230,6 @@ describe('the compendium', () => {
   it.each([
     ['planets', PLANETS.length, 5],
     ['zodiac_signs', ZODIAC_SIGNS.length, 2],
-    ['deities', DEITIES.length, 2],
   ] as const)(
     'sets only curated %s, spelt as the curated rows spell them',
     async (list, vocabularySize, minimumInUse) => {
@@ -233,6 +245,32 @@ describe('the compendium', () => {
       expect(inUse.filter((value) => !curated.has(value))).toEqual([]);
     },
   );
+
+  // MB.167: a compendium entry's form and deities are picks, each linked to
+  // the curated row its text spells, the deities in the literal's order.
+  it('picks every compendium form and deity, linked to the row its text spells, in order', async () => {
+    await seedStandard(db);
+
+    const forms = await sql<{ form: string; picked: string | null }[]>`
+      select i.form, f.name as picked from ingredients i
+      left join ingredient_forms f on f.id = i.form_id
+      where i.workspace_id is null and i.form is not null`;
+    const deities = await sql<{ entry: string; name: string; picked: string | null }[]>`
+      select i.name as entry, d.name, t.name as picked from ingredient_deities d
+      join ingredients i on i.id = d.ingredient_id
+      left join deities t on t.id = d.deity_id
+      where i.workspace_id is null and d.deleted_at is null
+      order by i.name, d.position`;
+
+    // Precondition: there are picks of each kind to compare.
+    expect(forms.length).toBe(COMPENDIUM_INGREDIENTS.filter((e) => e.form).length);
+    expect(deities.length).toBe(DEITIES_IN_COMPENDIUM.length);
+
+    expect(forms.filter((row) => row.picked !== row.form)).toEqual([]);
+    expect(deities.map((row) => [row.entry, row.name, row.picked])).toEqual(
+      DEITIES_IN_COMPENDIUM.map(([entry, name]) => [entry, name, name]),
+    );
+  });
 
   it('holds enough entries to exercise search', async () => {
     await seedStandard(db);

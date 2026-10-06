@@ -4,7 +4,7 @@ import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { beginSeedTransaction } from './idempotent';
 import type { SeedDatabase, SeedUser } from './types';
 
-// The `minimal` scenario: one admin, one user, empty compendium. Writes go
+// The `minimal` scenario: one system user, one user, empty compendium. Writes go
 // through the handle `seed()` was given, not `withAudit` — an identity
 // bootstrap (claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md).
 

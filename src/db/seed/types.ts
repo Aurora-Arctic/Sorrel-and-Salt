@@ -46,7 +46,11 @@ export type SeedMembership = Pick<
   'workspaceId' | 'userId' | 'role'
 >;
 
-/** One compendium entry plus its folk names and categories, named rather than keyed. */
+/**
+ * One compendium entry plus its folk names, deities and categories, named
+ * rather than keyed. Its form and each deity are picked by that name from the
+ * curated rows (MB.167), so each must name exactly one.
+ */
 export type SeedIngredient = Pick<
   typeof ingredients.$inferInsert,
   | 'name'
@@ -57,10 +61,10 @@ export type SeedIngredient = Pick<
   | 'elements'
   | 'planets'
   | 'zodiacSigns'
-  | 'deities'
   | 'safetyNotes'
 > & {
   folkNames?: string[];
+  deities?: string[];
   categories: string[];
 };
 

@@ -1,11 +1,18 @@
 import { defineLoader } from '../../../graphql/loaders/define-loader';
 import {
   categoriesOf,
+  deitiesOf,
   folkNamesOf,
   referencesOf,
   substitutesOf,
 } from '../services/ingredient-children';
-import type { CategoryRow, CitedReference, IngredientKey, SubstituteRow } from '../types';
+import type {
+  CategoryRow,
+  CitedReference,
+  IngredientDeityRow,
+  IngredientKey,
+  SubstituteRow,
+} from '../types';
 
 // Keyed by the parent row rather than its id, so the service knows which
 // coven to check without a read of its own; cached by id, since the same
@@ -33,5 +40,11 @@ export const referencesByIngredient = defineLoader<IngredientKey, CitedReference
 /** `Ingredient.substitutes`, batched: the substitutes of each ingredient loaded in one request. */
 export const substitutesByIngredient = defineLoader<IngredientKey, SubstituteRow[], string>(
   substitutesOf,
+  byId,
+);
+
+/** `Ingredient.deities`, batched: the deities of each ingredient loaded in one request. */
+export const deitiesByIngredient = defineLoader<IngredientKey, IngredientDeityRow[], string>(
+  deitiesOf,
   byId,
 );

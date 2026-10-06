@@ -1,10 +1,14 @@
-import { inArray, isNull } from 'drizzle-orm';
+import { eq, inArray, isNull } from 'drizzle-orm';
 import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { users } from '../../modules/identity/schema/users';
+import { adminRoleChanges } from '../../modules/identity/schema/admin-role-changes';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
+import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
+import { deities } from '../../modules/vocabulary/schema/deities';
+import { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
 import { applyAudit } from '../audit';
 import { ingredientSlug, slugify } from '../../lib/slugify';
 import { categoryIdByName, seedCategoryVocabulary } from './categories';
@@ -388,7 +392,7 @@ export async function seedStandard(db: SeedDatabase): Promise<void> {
  * The same scenario inside a transaction the caller already opened: `demo`
  * writes its grimoire alongside these rows, so a half-applied scenario cannot
  * be a grimoire referencing rows that are not there. Assumes the GUC is
- * published and the bootstrap admin exists.
+ * published and the bootstrap user exists.
  */
 export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
   // Reference data first: an ingredient is filed under a category by foreign
@@ -399,12 +403,47 @@ export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
   await seedDeityVocabulary(tx);
 
   await insertMissingUsers(tx);
+  await insertMissingAdminBootstrap(tx);
   await insertMissingWorkspaces(tx);
   await insertMissingMemberships(tx);
 
   const ingredientIds = await insertMissingIngredients(tx);
   await insertMissingFolkNames(tx, ingredientIds);
+  await insertMissingDeities(tx, ingredientIds);
   await insertMissingCategoryAssignments(tx, ingredientIds, await categoryIdByName(tx));
+}
+
+/**
+ * The live rows of a two-tier vocabulary by folded name, for the compendium's
+ * picks (MB.167): every compendium form and deity is a pick of a curated row,
+ * as an admin's would be. A name two live rows share has no one row to pick,
+ * so it is thrown rather than guessed; the literal then names its row.
+ */
+async function pickedIdByName(
+  tx: SeedTransaction,
+  table: typeof ingredientForms | typeof deities,
+): Promise<Map<string, string>> {
+  const rows = await tx
+    .select({ id: table.id, name: table.name })
+    .from(table)
+    .where(isNull(table.deletedAt));
+  const ids = new Map<string, string>();
+  const shared = new Set<string>();
+  for (const row of rows) {
+    const fold = row.name.toLowerCase();
+    if (ids.has(fold)) shared.add(fold);
+    ids.set(fold, row.id);
+  }
+  for (const fold of shared) ids.delete(fold);
+  return ids;
+}
+
+function pickOf(ids: Map<string, string>, name: string, what: string): string {
+  return requireFrom(
+    ids,
+    name.toLowerCase(),
+    () => `The seed picks the ${what} "${name}", which no one live row is called.`,
+  );
 }
 
 // Idempotent the way seedCategories is: inserts what is missing by identity,
@@ -430,6 +469,25 @@ async function insertMissingUsers(tx: SeedTransaction): Promise<void> {
     keyOf: (user) => user.id,
     toRow: (user) => user,
   });
+}
+
+// Fixture E's ledger row, as MB.58's migration writes one for every admin a
+// database already holds: one `bootstrap` row, stamped as E. Not
+// `insertMissing`, which stamps as the bootstrap user.
+async function insertMissingAdminBootstrap(tx: SeedTransaction): Promise<void> {
+  const admin = FIXTURE_USERS.E.id;
+  const [present] = await tx
+    .select({ id: adminRoleChanges.id })
+    .from(adminRoleChanges)
+    .where(eq(adminRoleChanges.userId, admin))
+    .limit(1);
+  if (present) return;
+
+  await tx
+    .insert(adminRoleChanges)
+    .values(
+      applyAudit('insert', { userId: admin, change: 'bootstrap' as const }, { userId: admin }),
+    );
 }
 
 async function insertMissingWorkspaces(tx: SeedTransaction): Promise<void> {
@@ -500,15 +558,21 @@ async function insertMissingIngredients(tx: SeedTransaction): Promise<Map<string
   const missing = COMPENDIUM_INGREDIENTS.filter((entry) => !ids.has(identityOf(entry)));
 
   if (missing.length > 0) {
+    const formIds = await pickedIdByName(tx, ingredientForms);
     const inserted = await tx
       .insert(ingredients)
       .values(
-        missing.map(({ folkNames: _folkNames, categories: _categories, ...entry }) =>
-          applyAudit(
-            'insert',
-            { ...entry, slug: ingredientSlug(entry.name, entry.form, entry.canonicalName) },
-            BOOTSTRAP_SESSION,
-          ),
+        missing.map(
+          ({ folkNames: _folkNames, categories: _categories, deities: _deities, ...entry }) =>
+            applyAudit(
+              'insert',
+              {
+                ...entry,
+                formId: entry.form ? pickOf(formIds, entry.form, 'form') : null,
+                slug: ingredientSlug(entry.name, entry.form, entry.canonicalName),
+              },
+              BOOTSTRAP_SESSION,
+            ),
         ),
       )
       .returning({
@@ -556,6 +620,40 @@ async function insertMissingFolkNames(
       ).map((row) => `${row.ingredientId}|${row.name.toLowerCase()}`),
     keyOf: (folkName) => `${folkName.ingredientId}|${folkName.name.toLowerCase()}`,
     toRow: (folkName) => folkName,
+  });
+}
+
+/**
+ * Each entry's deities, picked in the literal's order, counted from 0 as the
+ * list keeps the order entered. Keyed on the case-folded name the row holds
+ * rather than the pick, over the live rows: a database that ran MB.166's fill
+ * already holds these deities as typed names at these positions, and a pick
+ * beside each would take a position its typed twin holds.
+ */
+async function insertMissingDeities(
+  tx: SeedTransaction,
+  ingredientIds: Map<string, string>,
+): Promise<void> {
+  const deityIds = await pickedIdByName(tx, deities);
+  const wanted = COMPENDIUM_INGREDIENTS.flatMap((entry) =>
+    (entry.deities ?? []).map((name, position) => ({
+      ingredientId: ingredientIdFor(entry, ingredientIds),
+      deityId: pickOf(deityIds, name, 'deity'),
+      name,
+      position,
+    })),
+  );
+
+  await insertMissing(tx, ingredientDeities, wanted, {
+    existing: async (tx) =>
+      (
+        await tx
+          .select({ ingredientId: ingredientDeities.ingredientId, name: ingredientDeities.name })
+          .from(ingredientDeities)
+          .where(isNull(ingredientDeities.deletedAt))
+      ).map((row) => `${row.ingredientId}|${row.name.toLowerCase()}`),
+    keyOf: (deity) => `${deity.ingredientId}|${deity.name.toLowerCase()}`,
+    toRow: (deity) => deity,
   });
 }
 

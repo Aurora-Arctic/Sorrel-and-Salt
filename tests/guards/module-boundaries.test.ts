@@ -81,6 +81,8 @@ const TIER_SEAM: string[] = [
   'findIngredientsInSpellsIncludingSoftDeleted',
   // An ingredient's substitutes, and what each links, deleted or not: the compendium and the proofs' covens (MB.140).
   'findSubstitutesIncludingSoftDeleted',
+  // An ingredient's deities, and the curated deity each picked: the compendium and the proofs' covens (MB.167).
+  'findDeitiesOfIngredients',
   // An ingredient's references, each where its readers may look: the compendium and the proofs' covens (MB.153).
   'findReferencesOfIngredients',
   // What a row written under the proofs may cite: the compendium's references and the proofs' covens' (MB.153).

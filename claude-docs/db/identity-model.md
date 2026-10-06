@@ -17,21 +17,22 @@ What follows describes all three as built.
 - **`ingredients`** — `id`, `workspaceId` (nullable: `NULL` is the compendium
   tier, non-null is a workspace's own ingredient), `name`, `slug` (MB.81;
   ["Ingredient slugs"](ingredient-slugs.md)), `canonicalName`, `nomenclature`, `form`, `formId` (MB.165; below), the generated `canonicalKey`, the correspondence
-  columns (`description`, `elements[]`, `planets[]`, `zodiacSigns[]`, `deities[]`,
+  columns (`description`, `elements[]`, `planets[]`, `zodiacSigns[]`,
   `colors[]`, `safetyNotes`), + audit. `name` is the display label —
   what it's called here — and stays freely relabellable, because identity
   moved off it onto `canonicalName`/`nomenclature`/`form`. Of the
   correspondences only `elements` is constrained: a list of the `ingredient_element`
   `pgEnum` of `earth`, `air`, `fire`, `water`, `spirit`, closed and fixed —
   the exact opposite of `form`, and the reason the two are easy to confuse
-  but never interchangeable. `planets`, `zodiacSigns`, `deities` and
+  but never interchangeable. `planets`, `zodiacSigns` and
   `colors` are native `text[]` columns, one of the things SQLite could not
   have run (DESIGN.md §14). `planets`, `zodiacSigns` and `colors` replaced
   single columns in MB.136, and `elements[]` replaced the single `element`
   in MB.159 (both below); MB.160 dropped `element`. Substitutes were a `substitutes[]` column
   too, until MB.140 moved every reader and writer to `ingredient_substitutes`
-  and MB.141 dropped it; `deities[]` is moving to `ingredient_deities` the
-  same way (MB.165 to MB.168). Seven declared indexes: M4.1a's three partial unique ones (below),
+  and MB.141 dropped it; `deities[]` moved to `ingredient_deities` the
+  same way, MB.167 switching every reader and writer and ceasing to declare
+  it, and MB.168 drops it. Seven declared indexes: M4.1a's three partial unique ones (below),
   MB.81's two on the slug ("Ingredient slugs"), `ingredients_trgm`
   (M4.6), one multicolumn `gin_trgm_ops` index over `name` and
   `canonical_name` — see ["Fuzzy matching"](fuzzy-matching.md) — and its folded twin
@@ -66,19 +67,20 @@ What follows describes all three as built.
   the table was newer than the list.
 - **`ingredient_deities`** (MB.165, migration
   `0040_picked-form-and-deities.sql`; the model is in DESIGN.md §5) — `id`,
-  `ingredientId`, `deityId` (nullable FK to `deities`), `name`, `position`,
-  - audit. One row per deity, in the order entered: a name on every row, and
-    a link beside it when the member picked a curated deity. `name` is held on
-    a linked row too, so a link whose deity is soft-deleted reads as its name
-    under the ordinary filter, and a CHECK holds it non-blank. Three unique
-    indexes, all partial on `deleted_at IS NULL`: one position per ingredient,
-    which is also the parent's index, read in order; one link per ingredient
-    and deity; and one unlinked name per ingredient, case-folded, so links to
-    two same-named deities may sit on one ingredient. The full audit spread,
-    as substitutes. Nothing reads or writes it until MB.167; MB.166's
-    `0041_fill-ingredient-deities` fills it from `deities[]`, unlinked, in the
-    array's order from position 0, and MB.168 drops the list
-    ([`../design-decisions/mb.165-record-the-picked-vocabulary-row.md`](../design-decisions/mb.165-record-the-picked-vocabulary-row.md)).
+  `ingredientId`, `deityId` (nullable FK to `deities`), `name`, `position`, +
+  audit. One row per deity, in the order entered: a name on every row, and
+  a link beside it when the member picked a curated deity. `name` is held on
+  a linked row too, in the curated row's spelling, so a link whose deity is
+  soft-deleted reads as its name under the ordinary filter, and a CHECK holds
+  it non-blank. Three unique indexes, all partial on `deleted_at IS NULL`: one
+  position per ingredient, which is also the parent's index, read in order;
+  one link per ingredient and deity; and one unlinked name per ingredient,
+  case-folded, so links to two same-named deities may sit on one ingredient.
+  The full audit spread, as substitutes. MB.166's
+  `0041_fill-ingredient-deities` filled it from `deities[]`, unlinked, in the
+  array's order from position 0; MB.167 moved every reader and writer onto it
+  (["Ingredient children"](ingredient-children.md)), and MB.168 drops the list
+  ([`../design-decisions/mb.165-record-the-picked-vocabulary-row.md`](../design-decisions/mb.165-record-the-picked-vocabulary-row.md)).
 - **`ingredient_forms`** — `id`, `name`, `slug`, `groupId`, `description`, +
   audit. Shaped like `categories`: global, admin-curated, no workspace
   scoping. This is the third resource admins curate globally, alongside the
@@ -188,23 +190,31 @@ the text** (MB.165): `ingredients.form_id`, a nullable foreign key to
 resolved from typed text, and held to a `form` by
 `ingredients_form_id_has_form`. It is outside `canonicalKey`, so two entries
 with one formal name, one picked as each Wax, are still one identity, and a
-link to a soft-deleted form reads as no link, the text staying. The deities
+link to a soft-deleted form reads as no link, the text staying. A save
+writes a pick only of a curated form, live under a live group, beside text
+folding to its name and written in its spelling; anything else is refused
+beside `formId` or `form`, and a save sending no `formId` clears the column
+and keeps the text (MB.167). The deities
 take the same model in `ingredient_deities`, above, so a vocabulary a member
 writes is text with an optional link to the curated row picked.
 
 **The compendium tier is held to the vocabularies, by the service (MB.162).**
-A compendium entry's `form`, `planets`, `zodiac_signs` and `deities` each
-name a live curated row — a form under a live group, a deity under a live
-tradition — matched as the suggestions fold, `lower(btrim(value)) =
-lower(name)`, and stored in the row's own spelling. `createCompendiumEntry`
-and `updateCompendiumEntry` enforce it after the parse, reading the rows
-through `curatedSpellings` in `vocabulary`, and refuse a value no live row
-holds as a `ValidationError` at `['form']`, or `['planets', i]`,
-`['zodiacSigns', i]` or `['deities', i]` at the entry sent
+A compendium entry's `form` and each of its deities is a pick of a live
+curated row — a form under a live group, a deity under a live tradition —
+held or not, so a curated value typed rather than picked is refused as an
+uncurated one is (MB.167, which moved the rule onto the pick). Its `planets`
+and `zodiac_signs` each name one, matched as the suggestions fold,
+`lower(btrim(value)) = lower(name)`. Every value is stored in its row's own
+spelling. `createCompendiumEntry` and `updateCompendiumEntry` enforce it after
+the parse, the picks through `resolvePicks` and the planets and signs through
+`curatedSpellings` in `vocabulary`, and refuse a value as a `ValidationError`
+at `['form']` or `['formId']`, or `['planets', i]`, `['zodiacSigns', i]` or
+`['deities', i]` at the entry sent
 ([`../validation.md`](../validation.md), "The two ingredient variants"). Not
 Zod, since the check reads the database, and not a key or a CHECK, since the
 columns are shared with the coven tier, which keeps free text. Deleting a
-curated row a live entry holds is refused, and renaming one carries onto the
+curated row a live entry holds — a form or deity it picks, or a planet or
+sign's last live spelling — is refused, and renaming one carries onto the
 entries, so the rule holds after the write as well
 ([`../design-decisions/mb.162-compendium-holds-curated-values.md`](../design-decisions/mb.162-compendium-holds-curated-values.md)).
 A form is identity, so a form rename carried onto an entry re-keys it and
@@ -227,10 +237,12 @@ are all IMMUTABLE and used freely throughout this model.
 an ingredient several of each, so `planet`, `zodiac` and `color`, single
 `text` columns as built, give way to `planets`, `zodiac_signs` and `colors`,
 nullable `text[]` with no default, declared in Drizzle as `planets`,
-`zodiacSigns` and `colors`. They are stored as `deities` is: the shared schema
-trims each entry, drops a blank one and turns a list left empty into null
+`zodiacSigns` and `colors`. They are stored as the retired `deities` list was:
+the shared schema trims each entry, drops a blank one and turns a list left
+empty into null
 ([`../validation.md`](../validation.md), "The two ingredient variants"), so no row holds `{}`
-or a blank entry, and no CHECK repeats that, since `deities` has none either.
+or a blank entry, and no CHECK repeats that. Since MB.167 it also refuses a
+repeat but for case and spacing, at the repeat.
 An array keeps its order, and each list's order is the member's, so nothing
 sorts one on write or read.
 
@@ -267,8 +279,9 @@ sorts one on write or read.
   reads entries rather than a column: `cross join lateral unnest(…)` gives
   one row per entry before anything trims or folds it, so a value counts
   once however many lists hold it, or however often one does
-  (["The member's autofill"](member-autofill.md)). The deity autofill reads
-  `deities` the same way (MB.130).
+  (["The member's autofill"](member-autofill.md)). The deity autofill read
+  `deities` the same way (MB.130) until MB.167 moved it onto
+  `ingredient_deities`' live rows.
 
 **Element becomes a list (MB.157).** DESIGN.md §5 gives an ingredient
 several elements, so `element`, a single nullable `ingredient_element` column
