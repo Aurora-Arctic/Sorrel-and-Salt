@@ -239,6 +239,13 @@
       "when": 1791252953963,
       "tag": "0033_deities",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1791255026406,
+      "tag": "0034_drop-ingredient-singles",
+      "breakpoints": true
     }
   ]
 }

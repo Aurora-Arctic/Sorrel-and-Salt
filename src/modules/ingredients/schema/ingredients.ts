@@ -63,9 +63,8 @@ export const ingredients = pgTable(
     element: ingredientElement('element'),
     // Lists rather than the single `planet`, `zodiac` and `color` they
     // replaced (MB.134): new names, because a column cannot turn from `text` to
-    // `text[]` under a deployed reader. The singles are undeclared but still in
-    // the database until MB.137 drops them, so `db:generate` emits that drop on
-    // any branch before it (claude-docs/db/identity-model.md, "The ingredient identity model").
+    // `text[]` under a deployed reader. MB.136 undeclared the singles and MB.137
+    // dropped them (claude-docs/db/identity-model.md, "The ingredient identity model").
     planets: text('planets').array(),
     zodiacSigns: text('zodiac_signs').array(),
     deities: text('deities').array(),

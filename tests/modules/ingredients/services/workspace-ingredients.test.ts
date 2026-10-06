@@ -112,7 +112,7 @@ describe('createWorkspaceIngredient', () => {
   });
 
   // DESIGN.md §5 (MB.134): as many of each as the practice gives it, in the
-  // member's order, and never into the single columns the lists replaced.
+  // member's order.
   it('saves several planets, signs and colours, each in the order entered', async () => {
     const created = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
       ...inputOf(local()),
@@ -130,9 +130,6 @@ describe('createWorkspaceIngredient', () => {
       planets: ['Venus', 'Moon'],
       zodiac_signs: ['Taurus', 'Cancer', 'Libra'],
       colors: ['Green', 'Silver'],
-      planet: null,
-      zodiac: null,
-      color: null,
     });
   });
 

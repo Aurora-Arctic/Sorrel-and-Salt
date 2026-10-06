@@ -134,9 +134,6 @@ describe('createCompendiumEntry', () => {
       planets: ['Venus', 'Moon'],
       zodiac_signs: ['Taurus', 'Libra'],
       colors: ['Green', 'Pink'],
-      planet: null,
-      zodiac: null,
-      color: null,
     });
   });
 

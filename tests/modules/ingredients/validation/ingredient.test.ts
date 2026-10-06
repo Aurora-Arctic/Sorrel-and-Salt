@@ -351,8 +351,8 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
     });
   });
 
-  // The single columns are undeclared (MB.136), so a caller still sending one
-  // writes nothing through it.
+  // The single columns are gone (MB.136 undeclared them, MB.137 dropped them),
+  // so a caller still sending one writes nothing through it.
   it('carries no single planet, zodiac sign or colour', () => {
     const parsed = Schema.parse({
       name: 'Testwort',

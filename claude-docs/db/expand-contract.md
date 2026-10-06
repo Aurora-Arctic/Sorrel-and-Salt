@@ -24,7 +24,13 @@ before `deploy.yml` promotes, and Drizzle names every declared column in a
 `SELECT`, so dropping a column the live deploy still declares breaks its reads
 for the length of the rollout, and a rollback past the migration for good.
 MB.82 and MB.107 are the worked case: MB.82 stopped declaring `pending_slug`
-and its date, and MB.107 dropped them. Between the two, `db:generate` on any branch emits the drop; it belongs to
+and its date, and MB.107 dropped them. **"Deployed" means production too**
+when production's deploy declares the column: a release runs every pending
+migration before it promotes, so a release carrying both tasks drops the
+column under the deploy it replaces. The second task then merges into
+`staging` only after a release carrying the first has reached production.
+MB.107 escaped this because production never had the columns; MB.137 is the
+worked case, as v0.4.0 declared `planet`, `zodiac` and `color`. Between the two, `db:generate` on any branch emits the drop; it belongs to
 the second task, and the destructive-DDL check refuses it unacknowledged. A
 data migration may still ride in the first, written with `generate --custom`,
 which copies the last snapshot rather than diffing the schema, so the
