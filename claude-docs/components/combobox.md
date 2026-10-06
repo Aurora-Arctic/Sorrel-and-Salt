@@ -57,7 +57,9 @@ reader as well as by the eye, and so is who claims a value.
 - **Two buckets, told apart by structure.** Rows with `curated` set are
   grouped under "From Compendium" and "From Coven" headings (renamed from
   "Curated" and "In use" during MB.131, on the owner's call), `role="group"` inside the
-  listbox, each named by its heading; a source whose rows carry no `curated`
+  listbox, each named by its heading. The headings say where a value comes
+  from, and are true because a compendium entry holds curated values alone
+  (MB.162), so every value in use outside the lists is the coven's; a source whose rows carry no `curated`
   lists them flat. The distinction is text, never colour alone. Two same-named rows, "Wax (Animal)" and "Wax (Substance)", are told apart in the list by the group in each label, and by nothing after a pick: both write "Wax", since `ingredients.form` stores the string and the group is the vocabulary's alone (DESIGN.md §5).
 - **It opens as text is typed, on ArrowDown, and from its chevron**, and only
   once there are rows: a list wanted while the lookup is pending opens as

@@ -21,7 +21,7 @@ import type { CompendiumEntryRow, MemberRow, UserRow } from './types';
 // The `standard` scenario against the real schema, every table emptied first:
 // membership is two real foreign keys and the compendium's identity a
 // generated column. It is awkward on purpose — five "Cat's Claw"s, a mineral
-// variety, a `none`, an `unknown`, an uncurated form —
+// variety, a `none`, an `unknown` —
 // claude-docs/db/standard-scenario.md, "The standard scenario".
 
 const PROBE = 'standard_probe_acting_user';
@@ -48,10 +48,10 @@ async function countOf(table: string): Promise<number> {
   return Number(count);
 }
 
-/** The curated vocabulary, lowercased the way `canonical_key` normalises a form. */
-async function curatedFormNames(): Promise<Set<string>> {
-  const rows = await sql<{ name: string }[]>`select name from ingredient_forms`;
-  return new Set(rows.map((row) => row.name.toLowerCase()));
+/** A curated vocabulary's names, spelt as the rows spell them. */
+async function curatedNames(table: string): Promise<Set<string>> {
+  const rows = await sql<{ name: string }[]>`select name from ${sql(table)}`;
+  return new Set(rows.map((row) => row.name));
 }
 
 beforeAll(async () => {
@@ -210,21 +210,29 @@ describe('the compendium', () => {
     expect(await countOf('deities')).toBe(DEITIES.length);
   });
 
-  // Unlike `form`, no uncurated planet is seeded: the admin's to-do list is
-  // exercised by the tests that write one.
-  it('sets only curated planets, compared case-insensitively', async () => {
-    await seedStandard(db);
+  // MB.162: the compendium holds only curated values, in the row's own
+  // spelling, so the comparison is exact. A coven's uncurated value is
+  // `demo`'s to seed.
+  // Each list column shares its vocabulary table's name.
+  it.each([
+    ['planets', PLANETS.length, 5],
+    ['zodiac_signs', ZODIAC_SIGNS.length, 2],
+    ['deities', DEITIES.length, 2],
+  ] as const)(
+    'sets only curated %s, spelt as the curated rows spell them',
+    async (list, vocabularySize, minimumInUse) => {
+      await seedStandard(db);
 
-    const curated = await sql<{ name: string }[]>`select name from planets`;
-    const curatedNames = new Set(curated.map((row) => row.name.toLowerCase()));
-    const inUse = [...new Set((await compendium()).flatMap((e) => e.planets ?? []))];
+      const curated = await curatedNames(list);
+      const inUse = [...new Set((await compendium()).flatMap((e) => e[list] ?? []))];
 
-    // Precondition: there are planets on both sides to compare.
-    expect(curatedNames.size).toBe(PLANETS.length);
-    expect(inUse.length).toBeGreaterThanOrEqual(5);
+      // Precondition: there are values on both sides to compare.
+      expect(curated.size).toBe(vocabularySize);
+      expect(inUse.length).toBeGreaterThanOrEqual(minimumInUse);
 
-    expect(inUse.filter((planet) => !curatedNames.has(planet.toLowerCase()))).toEqual([]);
-  });
+      expect(inUse.filter((value) => !curated.has(value))).toEqual([]);
+    },
+  );
 
   it('holds enough entries to exercise search', async () => {
     await seedStandard(db);
@@ -279,7 +287,7 @@ describe('the compendium', () => {
 
     const cat = catsClaws.find((e) => e.canonical_name === 'Felis catus');
     expect(cat?.nomenclature).toBe('zoological');
-    expect(cat?.form).toBe('claw');
+    expect(cat?.form).toBe('Claw');
 
     // Five rows under one label is legal because each has its own generated key.
     expect(new Set(catsClaws.map((e) => e.canonical_key)).size).toBe(5);
@@ -299,7 +307,7 @@ describe('the compendium', () => {
     expect(new Set(entries.map((e) => e.slug)).size).toBe(entries.length);
 
     // The pair that put the formal name in the slug: one label, one form, two plants.
-    const barks = entries.filter((e) => e.name === "Cat's Claw" && e.form === 'bark');
+    const barks = entries.filter((e) => e.name === "Cat's Claw" && e.form === 'Bark');
     expect(barks.map((e) => e.canonical_name).sort()).toEqual([
       'Uncaria guianensis',
       'Uncaria tomentosa',
@@ -307,19 +315,20 @@ describe('the compendium', () => {
     expect(new Set(barks.map((e) => e.slug)).size).toBe(2);
   });
 
-  it('puts an in-use form outside the curated vocabulary, and most inside it', async () => {
+  // MB.162: an uncurated form is a coven's to write, never the compendium's —
+  // `rhizome` moved to `demo`'s W.
+  it('draws every in-use form from the curated vocabulary, spelt as it is there', async () => {
     await seedStandard(db);
 
-    const curated = await curatedFormNames();
+    const curated = await curatedNames('ingredient_forms');
     // Precondition: the vocabulary is there to be outside of.
     expect(curated.size).toBe(FORMS.length);
 
     const inUse = [...new Set((await compendium()).map((e) => e.form).filter(Boolean))] as string[];
-    const outside = inUse.filter((form) => !curated.has(form.toLowerCase()));
 
-    expect(outside.length).toBeGreaterThanOrEqual(1);
-    // …and the rest are curated, so the autofill has both halves of its list.
-    expect(inUse.length - outside.length).toBeGreaterThanOrEqual(10);
+    expect(inUse.filter((form) => !curated.has(form))).toEqual([]);
+    // Enough of it in use that the autofill's claimants have something to show.
+    expect(inUse.length).toBeGreaterThanOrEqual(10);
   });
 
   it('files entries under categories, and gives some of them folk names', async () => {
@@ -379,6 +388,23 @@ describe('re-running the scenario', () => {
       zodiacSigns: await countOf('zodiac_signs'),
       deities: await countOf('deities'),
     }).toEqual(before);
+  });
+
+  // A database seeded before MB.162 holds the forms lower-cased. Keyed on the
+  // spelling, a reseed would insert the title-cased entry beside its own
+  // identity and fail the whole scenario on the canonical-key index.
+  it('adds nothing over an earlier run that spelt the forms in another case', async () => {
+    await seedStandard(db);
+    const recased = await sql`
+      update ingredients set form = lower(form)
+      where workspace_id is null and form <> lower(form)
+    `;
+    // Precondition: the earlier spelling really differs from the seed's.
+    expect(recased.count).toBeGreaterThan(0);
+
+    await expect(seedStandard(db)).resolves.toBeUndefined();
+
+    expect(await countOf('ingredients')).toBe(COMPENDIUM_INGREDIENTS.length);
   });
 
   // Keyed on identity, ignoring `deleted_at`: the partial indexes stop only a second live row.

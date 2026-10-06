@@ -22,9 +22,10 @@ import type {
 
 // The `demo` scenario: `standard` plus spells with ingredients and layer order,
 // written as a member would write them since screenshots are taken against it.
-// It adds W's own ingredients, so the jars mix both tiers, and one custom
-// one-off layer with no `ingredient_id` (claude-docs/db/demo-scenario.md, "The demo
-// scenario"). Writes go through the handle `seed()` was given — see minimal.ts.
+// It adds W's own ingredients, so the jars mix both tiers and W holds the
+// uncurated form the compendium may not, and one custom one-off layer with no
+// `ingredient_id` (claude-docs/db/demo-scenario.md, "The demo scenario").
+// Writes go through the handle `seed()` was given — see minimal.ts.
 
 /**
  * Rosemary the coven grows, beside the compendium's entry for the same species
@@ -58,11 +59,27 @@ const HOUSE_CHAMOMILE: SeedWorkspaceIngredient = {
   elements: ['water'],
 };
 
+/**
+ * §5's uncurated form: `rhizome` is nowhere in the curated vocabulary, and a
+ * coven's `form` is free text so this row can exist before it is. The
+ * compendium may hold only curated forms (MB.162), so its Ginger is `Root` —
+ * a different identity, which is why both rows stand.
+ */
+const FRESH_GINGER: SeedWorkspaceIngredient = {
+  name: 'Fresh Ginger',
+  canonicalName: 'Zingiber officinale',
+  nomenclature: 'botanical',
+  form: 'rhizome',
+  description: 'Knobbed rhizome bought fresh at the market, sliced and dried on the rack.',
+  elements: ['fire'],
+};
+
 /** Everything W keeps of its own. Seeded into W, and invisible from X. */
 export const WORKSPACE_W_INGREDIENTS: SeedWorkspaceIngredient[] = [
   GARDEN_ROSEMARY,
   HEARTH_ASH,
   HOUSE_CHAMOMILE,
+  FRESH_GINGER,
 ];
 
 /**

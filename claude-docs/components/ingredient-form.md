@@ -178,6 +178,10 @@ outside it is this coven's. A deity row is
 "Hecate (Greek)", the tradition beside the value as a form's group is
 (MB.130), so two same-named deities are told apart; one in use has no
 tradition. Picking any of the three adds its value, "Hecate", as an entry.
+On M5.5's compendium form the form, planet, sign and deity boxes are
+choose-only, offering the curated rows alone with no typed row, since the
+compendium services refuse any other value beside its field (MB.162;
+[`validation.md`](../validation.md), "The two ingredient variants").
 
 A substitute row is the ingredient's label and formal name, "Mockwort
 (Fixtura vulgaris)", and a second line saying whose it is, "Compendium entry"

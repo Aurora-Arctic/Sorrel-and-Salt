@@ -78,4 +78,41 @@ describe('the seeded template every db worker clones', () => {
     );
     expect(await countOf('ingredients', 'where workspace_id is not null')).toBe(0);
   });
+
+  // MB.162: a compendium entry holds only live curated values, in the curated
+  // row's own spelling — a form under a live group, a deity under a live
+  // tradition. `demo` lays this compendium down too, so the template answers
+  // for every scenario that writes one.
+  it('holds every compendium form, planet, zodiac sign and deity to a live curated row, spelt as it is', async () => {
+    const rows = await sql<{ field: string; value: string; curated: boolean }[]>`
+      with compendium as (
+        select * from ingredients where workspace_id is null
+      ),
+      in_use as (
+        select 'form' as field, form as value from compendium where form is not null
+        union all select 'planets', unnest(planets) from compendium
+        union all select 'zodiacSigns', unnest(zodiac_signs) from compendium
+        union all select 'deities', unnest(deities) from compendium
+      ),
+      curated as (
+        select 'form' as field, f.name from ingredient_forms f
+          join ingredient_form_groups g on g.id = f.group_id
+          where f.deleted_at is null and g.deleted_at is null
+        union all select 'planets', name from planets where deleted_at is null
+        union all select 'zodiacSigns', name from zodiac_signs where deleted_at is null
+        union all select 'deities', d.name from deities d
+          join deity_traditions t on t.id = d.tradition_id
+          where d.deleted_at is null and t.deleted_at is null
+      )
+      select u.field, u.value,
+        exists (select 1 from curated c where c.field = u.field and c.name = u.value) as curated
+      from in_use u
+    `;
+
+    // Precondition: every field is in use, so an empty refusal list is not vacuous.
+    expect(new Set(rows.map((row) => row.field))).toEqual(
+      new Set(['form', 'planets', 'zodiacSigns', 'deities']),
+    );
+    expect(rows.filter((row) => !row.curated)).toEqual([]);
+  });
 });

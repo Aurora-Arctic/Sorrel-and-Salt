@@ -31,6 +31,7 @@ describe('repository public API', () => {
         'findCompendiumEntryBySlug',
         'findCompendiumPage',
         'findCompendiumSlugRedirect',
+        'findCuratedRowsByName',
         'findIngredientFormValues',
         'findIngredientSuggestions',
         'findIngredientsInSpellsIncludingSoftDeleted',

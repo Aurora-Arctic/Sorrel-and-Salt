@@ -130,6 +130,25 @@ describe('demo is standard plus spells', () => {
       expect(row.slug).toBe(ingredientSlug(row.name, row.form, row.canonical_name));
     }
   });
+
+  // MB.162: the compendium holds only curated forms, so the uncurated value a
+  // member writes before an admin curates it — §5's `rhizome` — lives here.
+  it('gives W an entry with the uncurated form `rhizome`, which no compendium entry holds', async () => {
+    await seedDemo(db);
+
+    const rhizomes = await sql<{ workspace_id: string | null }[]>`
+      select workspace_id from ingredients where lower(btrim(form)) = 'rhizome'
+    `;
+    expect(rhizomes.map((row) => row.workspace_id)).toEqual([WORKSPACE_W_ID]);
+
+    // Uncurated: no form row, live or retired, folds to it.
+    const curated = await sql`
+      select 1 from ingredient_forms where lower(btrim(name)) = 'rhizome'
+    `;
+    expect(curated).toEqual([]);
+    // Precondition: the vocabulary is there to be outside of.
+    expect(await countOf('ingredient_forms')).toBeGreaterThan(0);
+  });
 });
 
 describe('the grimoire', () => {

@@ -4,8 +4,14 @@
 export * from './services/suggestions';
 export * from './services/groups';
 export * from './services/ingredient-form-values';
+export * from './services/curated-values';
 export * from './loaders/groups-by-id';
 export * from './graphql/suggestions';
 export * from './graphql/categories';
 export * from './graphql/ingredient-form-values';
-export type { CategoryGroupRow, IngredientFormGroupRow, IngredientFormValueRow } from './types';
+export type {
+  CategoryGroupRow,
+  CuratedField,
+  IngredientFormGroupRow,
+  IngredientFormValueRow,
+} from './types';

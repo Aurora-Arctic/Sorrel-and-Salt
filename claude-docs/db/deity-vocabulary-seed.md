@@ -310,8 +310,9 @@ distinct within each table, and so are names.
 
 ### What is left out, and why
 
-The list is a start, not a canon: anything off it is typed as free text and
-reaches the admin's to-do list (§5). These were left out on purpose, and each
+The list is a start, not a canon: anything off it is typed as free text on a
+coven's ingredient, and added to the list before a compendium entry may name
+it (§5, MB.162). These were left out on purpose, and each
 is the owner's to revisit:
 
 - **Figures their own traditions do not call deities**: Jesus, the Virgin

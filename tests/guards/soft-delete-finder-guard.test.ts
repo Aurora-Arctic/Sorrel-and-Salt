@@ -34,6 +34,7 @@ const EXPORTED_FUNCTIONS = [
   'findCompendiumEntryBySlug',
   'findCompendiumPage',
   'findCompendiumSlugRedirect',
+  'findCuratedRowsByName',
   'findIngredientFormValues',
   'findIngredientSuggestions',
   'findIngredientsInSpellsIncludingSoftDeleted',

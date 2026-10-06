@@ -33,11 +33,13 @@ part, preparation, matter — which named a group after a verb and put 21 of its
 29 rows in one section; `forms.test.ts` now asserts no group holds more than
 half the list, so that failure cannot come back quietly.
 
-**There is no `Other`.** A value that fits no form is typed as free text —
-`ingredients.form` is text, not a foreign key — and surfaces in the autofill's
-second bucket and on `/admin/forms` as the curation to-do list. A curated
-catch-all would swallow exactly the values that list exists to show, and two
-unrelated oddities would collapse onto one key. `curio` is not that: it is the
+**There is no `Other`.** A value that fits no form is typed as free text on a
+coven's ingredient — `ingredients.form` is text, not a foreign key — and
+surfaces in the autofill's in-use bucket; a compendium entry may hold it only
+once an admin has added it to the vocabulary (MB.162). A curated catch-all
+would swallow exactly the values that bucket exists to show, give the
+compendium a way round naming its forms, and collapse two unrelated oddities
+onto one key. `curio` is not that: it is the
 catch-all _within_ Curio, for an object where the name is all there is to say.
 M5.10a carries the other half — the suggestion list ends in an explicit "use
 what you typed" row, so the escape hatch is visible rather than discovered.

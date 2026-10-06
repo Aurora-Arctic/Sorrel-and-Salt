@@ -24,8 +24,8 @@ import type {
 // The `standard` scenario: five fixture users, workspaces W and X, and a
 // populated compendium. The cast is fixed, not generated, so `asUser(A)` is the
 // same person in every suite. The compendium is deliberately awkward — five
-// "Cat's Claw" rows, mineral varieties, `none` and `unknown`, an uncurated
-// form — because tidy data exercises nothing the identity model exists for
+// "Cat's Claw" rows, mineral varieties, `none` and `unknown` — because tidy
+// data exercises nothing the identity model exists for
 // (claude-docs/db/standard-scenario.md, "The compendium is awkward on purpose"). Writes go through
 // the handle `seed()` was given, not `withAudit` — see minimal.ts.
 
@@ -97,19 +97,22 @@ const MEMBERSHIPS: SeedMembership[] = [
 /**
  * Every entry declares a `nomenclature`. The awkward ones are the point: five
  * "Cat's Claw" rows told apart only by `canonicalKey`, two mineral varieties,
- * three `none` and one `unknown`, one uncurated form (`rhizome`), two entries
- * worked with more than one element, and comfrey beside foxglove, one carrying
- * a safety note that matters.
+ * three `none` and one `unknown`, two entries worked with more than one
+ * element, and comfrey beside foxglove, one carrying a safety note that
+ * matters. Every form, planet, zodiac sign and deity names a curated row in
+ * that row's own spelling (MB.162); the uncurated `rhizome` is a coven's, in
+ * demo.ts.
  */
 export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
   {
     name: 'Mugwort',
     canonicalName: 'Artemisia vulgaris',
     nomenclature: 'botanical',
-    form: 'herb',
+    form: 'Herb',
     description: 'Silver-backed leaves cut with the flowering stem, dried for smoke and tea.',
     elements: ['air', 'earth'],
     planets: ['Moon'],
+    deities: ['Artemis', 'Diana'],
     categories: ['Dream Work', 'Divination', 'Psychic Work'],
     folkNames: ['Cronewort', "Sailor's Tobacco", 'Felon Herb'],
   },
@@ -117,7 +120,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Wormwood',
     canonicalName: 'Artemisia absinthium',
     nomenclature: 'botanical',
-    form: 'herb',
+    form: 'Herb',
     description: 'Bitter grey-green herb, the other Artemisia — and not interchangeable.',
     elements: ['fire'],
     planets: ['Mars'],
@@ -129,10 +132,12 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Bay Laurel',
     canonicalName: 'Laurus nobilis',
     nomenclature: 'botanical',
-    form: 'leaf',
+    form: 'Leaf',
     description: 'Whole leaves, written on and burned for a wish.',
     elements: ['fire'],
     planets: ['Sun'],
+    zodiacSigns: ['Leo'],
+    deities: ['Apollo'],
     categories: ['Success', 'Protection', 'Clarity'],
     folkNames: ['Sweet Bay', 'Bay'],
   },
@@ -140,7 +145,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Rosemary',
     canonicalName: 'Salvia rosmarinus',
     nomenclature: 'botanical',
-    form: 'herb',
+    form: 'Herb',
     description: 'Needled sprigs. Renamed out of Rosmarinus in 2017, which is why the label moves.',
     elements: ['fire'],
     planets: ['Sun'],
@@ -151,10 +156,11 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Lavender',
     canonicalName: 'Lavandula angustifolia',
     nomenclature: 'botanical',
-    form: 'flower',
+    form: 'Flower',
     description: 'Buds stripped from the stem.',
     elements: ['air'],
     planets: ['Mercury'],
+    zodiacSigns: ['Gemini', 'Virgo'],
     categories: ['Peace', 'Sleep', 'Harmony'],
     folkNames: ['English Lavender', 'Elf Leaf'],
   },
@@ -164,7 +170,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Hidcote Lavender',
     canonicalName: "Lavandula angustifolia 'Hidcote'",
     nomenclature: 'botanical',
-    form: 'flower',
+    form: 'Flower',
     description: 'A dark-flowered cultivar, kept separate from the species it belongs to.',
     elements: ['air'],
     planets: ['Mercury'],
@@ -174,7 +180,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Comfrey',
     canonicalName: 'Symphytum officinale',
     nomenclature: 'botanical',
-    form: 'leaf',
+    form: 'Leaf',
     description: 'Broad hairy leaves, dried flat.',
     elements: ['water'],
     planets: ['Saturn'],
@@ -187,7 +193,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Foxglove',
     canonicalName: 'Digitalis purpurea',
     nomenclature: 'botanical',
-    form: 'leaf',
+    form: 'Leaf',
     description: 'The other broad hairy leaf, and the reason the compendium demands a formal name.',
     elements: ['water'],
     planets: ['Venus'],
@@ -199,7 +205,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: "Cat's Claw",
     canonicalName: 'Uncaria tomentosa',
     nomenclature: 'botanical',
-    form: 'bark',
+    form: 'Bark',
     description: 'Inner bark of the Amazonian vine.',
     elements: ['earth'],
     categories: ['Healing', 'Strength'],
@@ -209,7 +215,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: "Cat's Claw",
     canonicalName: 'Uncaria guianensis',
     nomenclature: 'botanical',
-    form: 'bark',
+    form: 'Bark',
     description: 'The other Uncaria sold under the same name, and not the same plant.',
     elements: ['earth'],
     categories: ['Healing'],
@@ -219,7 +225,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: "Cat's Claw",
     canonicalName: 'Senegalia greggii',
     nomenclature: 'botanical',
-    form: 'thorn',
+    form: 'Thorn',
     description: 'Hooked thorns off the desert acacia. Renamed out of Acacia, like two of its kin.',
     elements: ['earth'],
     categories: ['Binding', 'Protection'],
@@ -229,7 +235,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: "Cat's Claw",
     canonicalName: 'Dolichandra unguis-cati',
     nomenclature: 'botanical',
-    form: 'leaf',
+    form: 'Leaf',
     description: 'A climbing vine whose tendrils hook like claws.',
     elements: ['earth'],
     categories: ['Binding'],
@@ -239,7 +245,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: "Cat's Claw",
     canonicalName: 'Felis catus',
     nomenclature: 'zoological',
-    form: 'claw',
+    form: 'Claw',
     description: 'A claw, shed or clipped, kept from a household cat.',
     elements: ['spirit'],
     categories: ['Familiar Work', 'Protection'],
@@ -248,7 +254,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Beeswax',
     canonicalName: 'Apis mellifera',
     nomenclature: 'zoological',
-    form: 'wax',
+    form: 'Wax',
     description: 'Comb rendered and strained, still smelling of the hive.',
     elements: ['earth'],
     planets: ['Venus'],
@@ -258,7 +264,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Reishi',
     canonicalName: 'Ganoderma lingzhi',
     nomenclature: 'fungal',
-    form: 'mushroom',
+    form: 'Mushroom',
     description: 'Lacquered shelf fungus, sliced and dried.',
     elements: ['earth'],
     categories: ['Longevity', 'Wisdom'],
@@ -268,7 +274,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Fly Agaric',
     canonicalName: 'Amanita muscaria',
     nomenclature: 'fungal',
-    form: 'mushroom',
+    form: 'Mushroom',
     description: 'Red cap, white flecks. Kept as a curio rather than a preparation.',
     elements: ['air'],
     safetyNotes: 'Ibotenic acid and muscimol. Not a food, and not a tea.',
@@ -279,7 +285,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Amethyst',
     canonicalName: 'Quartz var. amethyst',
     nomenclature: 'mineral',
-    form: 'crystal',
+    form: 'Crystal',
     description: 'Purple quartz, a variety rather than a species of its own.',
     elements: ['water'],
     categories: ['Intuition', 'Sleep', 'Clarity'],
@@ -288,7 +294,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Selenite',
     canonicalName: 'Gypsum var. selenite',
     nomenclature: 'mineral',
-    form: 'crystal',
+    form: 'Crystal',
     description: 'Clear bladed gypsum. Dissolves in water, so it is never charged in it.',
     elements: ['spirit'],
     categories: ['Cleansing', 'Purification'],
@@ -299,7 +305,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Lapis Lazuli',
     canonicalName: 'Lapis lazuli',
     nomenclature: 'mineral',
-    form: 'stone',
+    form: 'Stone',
     description: 'Lazurite-bearing rock flecked with pyrite.',
     elements: ['air'],
     categories: ['Truth', 'Wisdom'],
@@ -308,7 +314,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Sea Salt',
     canonicalName: 'Sodium chloride',
     nomenclature: 'chemical',
-    form: 'salt',
+    form: 'Salt',
     description: 'Coarse grey salt, evaporated rather than mined.',
     elements: ['water', 'earth'],
     categories: ['Cleansing', 'Warding'],
@@ -317,7 +323,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Saltpetre',
     canonicalName: 'Potassium nitrate',
     nomenclature: 'chemical',
-    form: 'powder',
+    form: 'Powder',
     description: 'White crystalline powder, ground fine.',
     elements: ['fire'],
     safetyNotes: 'An oxidiser. Kept away from anything that burns.',
@@ -327,7 +333,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     // `none` is a positive claim: no naming system names this thing.
     name: 'Graveyard Dirt',
     nomenclature: 'none',
-    form: 'earth',
+    form: 'Earth',
     description: 'Dirt taken from a grave, paid for at the gate.',
     elements: ['earth'],
     categories: ['Ancestor Work', 'Spirit Work'],
@@ -335,7 +341,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
   {
     name: 'Moon Water',
     nomenclature: 'none',
-    form: 'water',
+    form: 'Water',
     description: 'Water left out under a full moon.',
     elements: ['water'],
     categories: ['Psychic Work', 'Divination'],
@@ -344,7 +350,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     // A preparation rather than a substance, which is why no system names it.
     name: 'Black Salt',
     nomenclature: 'none',
-    form: 'salt',
+    form: 'Salt',
     description: 'Salt blackened with ash, scraped soot or ground charcoal.',
     elements: ['earth'],
     categories: ['Banishing', 'Warding'],
@@ -354,20 +360,20 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     // looked it up — the curation to-do row.
     name: "Devil's Shoestring",
     nomenclature: 'unknown',
-    form: 'root',
+    form: 'Root',
     description: 'Wiry root cut into lengths, tied and carried.',
     elements: ['earth'],
     categories: ['Protection', 'Gambling'],
     folkNames: ['Devil Shoestrings'],
   },
   {
-    // The uncurated form: `rhizome` is nowhere in the curated 78, and `form` is
-    // free text so this row can exist before it is.
+    // Sold as ginger root, and filed under the curated `Root`: the uncurated
+    // `rhizome` is a coven's to write (demo.ts), never the compendium's.
     name: 'Ginger',
     canonicalName: 'Zingiber officinale',
     nomenclature: 'botanical',
-    form: 'rhizome',
-    description: 'Fresh knobbed rhizome, sliced and dried.',
+    form: 'Root',
+    description: 'Knobbed root, sliced and dried.',
     elements: ['fire'],
     planets: ['Mars'],
     categories: ['Success', 'Lust', 'Strength'],
@@ -460,15 +466,18 @@ async function insertMissingMemberships(tx: SeedTransaction): Promise<void> {
 
 /**
  * Keys on the three columns `canonical_key` reads rather than recomputing the
- * expression in TypeScript. It says nothing about the tier, so a caller builds
- * its map from one tier's rows.
+ * expression in TypeScript. The form alone is folded as the key folds it: a
+ * database seeded before MB.162 spelt the compendium's forms lower-case, and
+ * keyed on the spelling a reseed would insert each entry beside itself and fail
+ * on the canonical-key index. It says nothing about the tier, so a caller
+ * builds its map from one tier's rows.
  */
 export function identityOf(entry: {
   name: string;
   canonicalName?: string | null;
   form?: string | null;
 }): string {
-  return `${entry.name}|${entry.canonicalName ?? ''}|${entry.form ?? ''}`;
+  return `${entry.name}|${entry.canonicalName ?? ''}|${entry.form?.trim().toLowerCase() ?? ''}`;
 }
 
 /**

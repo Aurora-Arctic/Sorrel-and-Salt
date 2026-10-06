@@ -10,9 +10,9 @@ other two, idempotent by slug and ignoring `deleted_at`, updating nothing
 already present, stamped by the bootstrap admin with the GUC published — with
 `seedFlatVocabulary` in place of the two-tier helper, since there is no group
 to insert first. `standard` seeds both inside its own transaction, and every
-planet its compendium lists is a curated one; unlike `form`, no uncurated
-planet is seeded, so the admin's to-do list is exercised by tests that write
-one. §5's table is lower-case; the seed writes each name in title case
+planet its compendium lists is a curated one, as MB.162 requires of every
+compendium entry; no uncurated planet is seeded on a coven's entry either, so
+the autofill's in-use bucket is exercised by tests that write one. §5's table is lower-case; the seed writes each name in title case
 (`North Node`), and `astrology.test.ts` compares case-insensitively and
 then checks every word's capital separately.
 

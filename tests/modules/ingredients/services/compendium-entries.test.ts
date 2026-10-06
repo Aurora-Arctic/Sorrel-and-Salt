@@ -7,6 +7,7 @@ import { ingredientSlug } from '@/lib/slugify';
 import {
   categoriesOf,
   countCompendium,
+  createWorkspaceIngredient,
   createCompendiumEntry,
   deleteCompendiumEntry,
   findPossibleDuplicates,
@@ -114,7 +115,8 @@ describe('createCompendiumEntry', () => {
       name: 'Testwort',
       canonicalName: 'Fixtura testalis',
       nomenclature: 'botanical',
-      form: 'herb',
+      // The fixture's `herb`, in the curated row's spelling (MB.162).
+      form: 'Herb',
       createdBy: E.id,
       updatedBy: E.id,
       deletedAt: null,
@@ -473,7 +475,7 @@ describe('a deleted entry', () => {
     expect(created).toMatchObject({
       name: 'Fixture Leaf',
       canonicalName: 'Fixtura testalis',
-      form: 'herb',
+      form: 'Herb',
     });
     const keys = await sql`
       select distinct canonical_key from ingredients where id in ${sql([id, created.id])}`;
@@ -543,7 +545,7 @@ describe('a deleted entry', () => {
       issues: [
         {
           path: ['canonicalName'],
-          message: 'Already in the compendium as "Fixture Leaf" (Fixtura testalis, herb)',
+          message: 'Already in the compendium as "Fixture Leaf" (Fixtura testalis, Herb)',
         },
       ],
     });
@@ -760,7 +762,7 @@ describe('the slug', () => {
         {
           path: ['endRedirect'],
           message:
-            '"testdirt-earth" redirects to "Testsoil" (earth) until 28 August 2026, 00:00 UTC — confirm to end that redirect',
+            '"testdirt-earth" redirects to "Testsoil" (Earth) until 28 August 2026, 00:00 UTC — confirm to end that redirect',
         },
       ]);
       expect(await countIngredients()).toBe(1);
@@ -885,5 +887,194 @@ describe('resolveCompendiumSlug', () => {
 
     await expect(resolveCompendiumSlug('testwort-herb-fixtura-testalis')).rejects.toThrow(NotFound);
     await expect(resolveCompendiumSlug('nothing-here')).rejects.toThrow(NotFound);
+  });
+});
+
+// MB.162: the compendium is held to the curated vocabularies, where a coven's
+// ingredients keep free text (claude-docs/db/compendium-writes.md). Retired
+// and test-made vocabulary rows are put back after each test, since the clone
+// is shared by the file and the seed retires nothing.
+describe('the curated vocabularies a compendium entry is held to', () => {
+  afterEach(async () => {
+    for (const table of [
+      'ingredient_forms',
+      'ingredient_form_groups',
+      'planets',
+      'zodiac_signs',
+      'deities',
+      'deity_traditions',
+    ]) {
+      await sql`update ${sql(table)} set deleted_at = null, deleted_by = null where deleted_at is not null`;
+    }
+  });
+
+  async function issuesOf(attempt: Promise<unknown>) {
+    const error = await attempt.then(
+      () => expect.fail('the write was not refused'),
+      (thrown: unknown) => thrown,
+    );
+    expect(error).toBeInstanceOf(ValidationError);
+    return (error as ValidationError).issues;
+  }
+
+  async function retire(table: string, name: string) {
+    const rows = await sql`
+      update ${sql(table)} set deleted_at = now(), deleted_by = ${E.id}
+      where name = ${name} returning id`;
+    // Why the value could have saved: it names a curated row, retired here.
+    expect(rows).toHaveLength(1);
+  }
+
+  /** Saves `overrides` on a coven's ingredient: the precondition that only the tier refuses it. */
+  async function savesInACoven(overrides: Overrides<IngredientFixture>) {
+    const saved = await createWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      inputOf(makeIngredient({ ...overrides, name: 'Testwort, kept' })),
+    );
+    expect(saved.workspaceId).toBe(WORKSPACE_W_ID);
+    return saved;
+  }
+
+  const compendiumCount = async () => {
+    const [row] = await sql`select count(*)::int as n from ingredients where workspace_id is null`;
+    return row.n as number;
+  };
+
+  // A curated value before the stranger in each list, so the refusal is
+  // placed at the entry rather than the field.
+  const UNCURATED: [string, Overrides<IngredientFixture>, (string | number)[], string][] = [
+    ['form', { form: 'Testform' }, ['form'], 'Testform'],
+    ['planets', { planets: ['Venus', 'Testplanet'] }, ['planets', 1], 'Testplanet'],
+    ['zodiacSigns', { zodiacSigns: ['Taurus', 'Testsign'] }, ['zodiacSigns', 1], 'Testsign'],
+    ['deities', { deities: ['Thor', 'Testgod'] }, ['deities', 1], 'Testgod'],
+  ];
+
+  it.each(UNCURATED)(
+    'refuses an uncurated %s on create, beside it, that a coven saves',
+    async (_field, overrides, path, value) => {
+      await savesInACoven(overrides);
+
+      const issues = await issuesOf(createCompendiumEntry(admin, entry(overrides)));
+
+      expect(issues).toEqual([{ path, message: expect.stringContaining(`"${value}"`) }]);
+      expect(await compendiumCount()).toBe(0);
+    },
+  );
+
+  it.each(UNCURATED)(
+    'refuses an uncurated %s on update, beside it, and leaves the entry as it was',
+    async (_field, overrides, path, value) => {
+      await savesInACoven(overrides);
+      const id = await seed({ name: 'Testwort' });
+
+      const issues = await issuesOf(
+        updateCompendiumEntry(admin, id, entry({ name: 'Testwort, relabelled', ...overrides })),
+      );
+
+      expect(issues).toEqual([{ path, message: expect.stringContaining(`"${value}"`) }]);
+      expect((await rowOf(id)).name).toBe('Testwort');
+    },
+  );
+
+  // A two-tier row is curated only while its group or tradition is live too.
+  const RETIRED: [string, string, string, Overrides<IngredientFixture>, (string | number)[]][] = [
+    ['a retired form', 'ingredient_forms', 'Leaf', { form: 'Leaf' }, ['form']],
+    [
+      'a form of a retired group',
+      'ingredient_form_groups',
+      'Botanical',
+      { form: 'Leaf' },
+      ['form'],
+    ],
+    ['a retired planet', 'planets', 'Mars', { planets: ['Venus', 'Mars'] }, ['planets', 1]],
+    ['a retired sign', 'zodiac_signs', 'Aries', { zodiacSigns: ['Aries'] }, ['zodiacSigns', 0]],
+    ['a retired deity', 'deities', 'Thor', { deities: ['Thor'] }, ['deities', 0]],
+    [
+      'a deity of a retired tradition',
+      'deity_traditions',
+      'Norse',
+      { deities: ['Thor'] },
+      ['deities', 0],
+    ],
+  ];
+
+  it.each(RETIRED)(
+    'refuses %s on create and on update, that a coven saves',
+    async (_case, table, retired, overrides, path) => {
+      const id = await seed({ name: 'Testwort' });
+      // Why the write could have saved: the value is curated until retired.
+      await expect(
+        updateCompendiumEntry(admin, id, entry({ name: 'Testwort', ...overrides })),
+      ).resolves.toBeDefined();
+
+      await retire(table, retired);
+      await savesInACoven(overrides);
+
+      expect(
+        await issuesOf(
+          createCompendiumEntry(
+            admin,
+            entry({ name: 'Testbloom', canonicalName: 'Fixtura floris', ...overrides }),
+          ),
+        ),
+      ).toEqual([{ path, message: expect.any(String) }]);
+      expect(
+        await issuesOf(updateCompendiumEntry(admin, id, entry({ name: 'Testwort', ...overrides }))),
+      ).toEqual([{ path, message: expect.any(String) }]);
+    },
+  );
+
+  it('places a list refusal at the entry the input sent, blanks counted', async () => {
+    const issues = await issuesOf(
+      createCompendiumEntry(admin, entry({ planets: ['', 'Venus', ' ', 'Testplanet'] })),
+    );
+
+    expect(issues).toEqual([{ path: ['planets', 3], message: expect.any(String) }]);
+  });
+
+  it('refuses every uncurated value at once, each beside its own field', async () => {
+    const issues = await issuesOf(
+      createCompendiumEntry(
+        admin,
+        entry({ form: 'Testform', planets: ['Testplanet'], deities: ['Testgod', 'Testgoddess'] }),
+      ),
+    );
+
+    expect(issues.map((issue) => issue.path)).toEqual([
+      ['form'],
+      ['planets', 0],
+      ['deities', 0],
+      ['deities', 1],
+    ]);
+  });
+
+  it("stores a value matching a curated row but for case and spacing in the row's spelling", async () => {
+    const created = await createCompendiumEntry(
+      admin,
+      entry({
+        form: '  hERB ',
+        planets: [' venus', 'MOON '],
+        zodiacSigns: ['taurus'],
+        deities: ['  thor  '],
+      }),
+    );
+
+    expect(await rowOf(created.id)).toMatchObject({
+      form: 'Herb',
+      planets: ['Venus', 'Moon'],
+      zodiac_signs: ['Taurus'],
+      deities: ['Thor'],
+    });
+  });
+
+  it("stores the row's spelling on update too, and keeps the coven's own as typed", async () => {
+    const id = await seed({ name: 'Testwort' });
+    const local = await savesInACoven({ form: 'hERB', planets: ['venus'] });
+
+    await updateCompendiumEntry(admin, id, entry({ form: 'hERB', planets: ['venus'] }));
+
+    expect(await rowOf(id)).toMatchObject({ form: 'Herb', planets: ['Venus'] });
+    expect(await rowOf(local.id)).toMatchObject({ form: 'hERB', planets: ['venus'] });
   });
 });

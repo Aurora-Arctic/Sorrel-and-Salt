@@ -19,12 +19,17 @@ badge (M10.20) has to have both to show, and one layer carries no quantity at
 all — a sprig laid on top is not a measurement, and `quantity`/`unit` are
 nullable precisely so it does not have to be one.
 
-**Three things in it are fixtures rather than decoration:**
+**Four things in it are fixtures rather than decoration:**
 
 - **W's own ingredients**, the workspace tier of §5's one table: `Garden
-Rosemary`, `Hearth Ash` and `House Chamomile`. A grimoire that only ever
-  reached the compendium would exercise half of §5, and the jars mix the two
-  the way a real one does.
+Rosemary`, `Hearth Ash`, `House Chamomile` and `Fresh Ginger`. A grimoire
+  that only ever reached the compendium would exercise half of §5, and the
+  jars mix the two the way a real one does.
+- **Fresh Ginger carries the uncurated form**, `rhizome` — §5's example of a
+  value a member writes before an admin curates it, and the second bucket of
+  M4.7a's suggestion list. Since MB.162 the compendium holds only curated
+  values, so it lives on a coven's entry; the compendium's Ginger is `Root`, a
+  different identity, so both rows stand.
 - **Garden Rosemary shadows the compendium's Rosemary** — same formal name,
   same form, different tier, which the two partial unique indexes permit. That
   pair is exactly what M8.3's local-beats-compendium resolution collapses, and

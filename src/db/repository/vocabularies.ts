@@ -1,4 +1,14 @@
-import { type SQLWrapper, and, eq, getTableName, ne, notInArray, or, sql } from 'drizzle-orm';
+import {
+  type SQLWrapper,
+  and,
+  eq,
+  getTableName,
+  inArray,
+  ne,
+  notInArray,
+  or,
+  sql,
+} from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
@@ -39,6 +49,29 @@ export function findIngredientFormValues(
       pageBounds(keyset),
     ),
     keyset,
+  );
+}
+
+/**
+ * The live rows of `vocabulary` whose lower-cased name is one of `folds` —
+ * values trimmed and lower-cased as the suggestions fold one — which is how
+ * the compendium is held to the curated spellings (MB.162). A form or a deity
+ * counts only while its group or tradition is live, as in
+ * `findVocabularySuggestions`. Global reference data, so no proof. Two live
+ * rows may share a name, a form's "Wax" under two groups, and both come back.
+ */
+export function findCuratedRowsByName(
+  vocabulary: SuggestingVocabulary,
+  folds: readonly string[],
+): Promise<Pick<typeof ingredientForms.$inferSelect, 'id' | 'name'>[]> {
+  const grouping = groupingOf(vocabulary);
+  return selectFrom(
+    vocabulary,
+    and(
+      notSoftDeleted(vocabulary),
+      grouping && existsIn(grouping.groups, eq(grouping.groups.id, grouping.key)),
+      inArray(sql`lower(${vocabulary.name})`, [...folds]),
+    ),
   );
 }
 
