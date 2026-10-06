@@ -28,9 +28,10 @@ export const ingredientFormGroups = pgTable(
 );
 
 // The vocabulary behind `ingredients.form`, and deliberately not a foreign key
-// target for it (ingredient-forms-schema.test.ts asserts so): `groupId` can be
-// a key because only an admin writes it, `ingredients.form` stays text because
-// a member must write `rhizome` before anyone curates it.
+// target for that text (ingredient-forms-schema.test.ts asserts so): `groupId`
+// can be a key because only an admin writes it, `ingredients.form` stays text
+// because a member must write `rhizome` before anyone curates it. A pick is
+// keyed beside the text, as `ingredients.form_id` (MB.165).
 export const ingredientForms = pgTable(
   'ingredient_forms',
   {

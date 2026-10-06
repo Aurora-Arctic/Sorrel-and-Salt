@@ -16,7 +16,7 @@ What follows describes all three as built.
 
 - **`ingredients`** — `id`, `workspaceId` (nullable: `NULL` is the compendium
   tier, non-null is a workspace's own ingredient), `name`, `slug` (MB.81;
-  ["Ingredient slugs"](ingredient-slugs.md)), `canonicalName`, `nomenclature`, `form`, the generated `canonicalKey`, the correspondence
+  ["Ingredient slugs"](ingredient-slugs.md)), `canonicalName`, `nomenclature`, `form`, `formId` (MB.165; below), the generated `canonicalKey`, the correspondence
   columns (`description`, `elements[]`, `planets[]`, `zodiacSigns[]`, `deities[]`,
   `colors[]`, `safetyNotes`), + audit. `name` is the display label —
   what it's called here — and stays freely relabellable, because identity
@@ -30,7 +30,8 @@ What follows describes all three as built.
   single columns in MB.136, and `elements[]` replaced the single `element`
   in MB.159 (both below); MB.160 dropped `element`. Substitutes were a `substitutes[]` column
   too, until MB.140 moved every reader and writer to `ingredient_substitutes`
-  and MB.141 dropped it. Seven declared indexes: M4.1a's three partial unique ones (below),
+  and MB.141 dropped it; `deities[]` is moving to `ingredient_deities` the
+  same way (MB.165 to MB.168). Seven declared indexes: M4.1a's three partial unique ones (below),
   MB.81's two on the slug ("Ingredient slugs"), `ingredients_trgm`
   (M4.6), one multicolumn `gin_trgm_ops` index over `name` and
   `canonical_name` — see ["Fuzzy matching"](fuzzy-matching.md) — and its folded twin
@@ -63,6 +64,20 @@ What follows describes all three as built.
   stopped declaring the array. MB.141 dropped it after copying across, the
   same way, any entry with no row yet in any case, live or removed: by then
   the table was newer than the list.
+- **`ingredient_deities`** (MB.165, migration
+  `0040_picked-form-and-deities.sql`; the model is in DESIGN.md §5) — `id`,
+  `ingredientId`, `deityId` (nullable FK to `deities`), `name`, `position`,
+  - audit. One row per deity, in the order entered: a name on every row, and
+    a link beside it when the member picked a curated deity. `name` is held on
+    a linked row too, so a link whose deity is soft-deleted reads as its name
+    under the ordinary filter, and a CHECK holds it non-blank. Three unique
+    indexes, all partial on `deleted_at IS NULL`: one position per ingredient,
+    which is also the parent's index, read in order; one link per ingredient
+    and deity; and one unlinked name per ingredient, case-folded, so links to
+    two same-named deities may sit on one ingredient. The full audit spread,
+    as substitutes. Nothing reads or writes it until MB.167; MB.166 fills it
+    from `deities[]`, and MB.168 drops the list
+    ([`../design-decisions/mb.165-record-the-picked-vocabulary-row.md`](../design-decisions/mb.165-record-the-picked-vocabulary-row.md)).
 - **`ingredient_forms`** — `id`, `name`, `slug`, `groupId`, `description`, +
   audit. Shaped like `categories`: global, admin-curated, no workspace
   scoping. This is the third resource admins curate globally, alongside the
@@ -166,7 +181,15 @@ compendium on `lower(name)` instead of `canonical_key` four.
 not a constraint: a foreign key would force identity to key on a surrogate id
 and make an uncurated value like `rhizome` unwritable until an admin curates
 it first. M4.2a asserts the absence of that foreign key by test, since it's
-the property the whole free-text design rests on.
+the property the whole free-text design rests on. **A pick is recorded beside
+the text** (MB.165): `ingredients.form_id`, a nullable foreign key to
+`ingredient_forms`, set only when a member picked a curated row, never
+resolved from typed text, and held to a `form` by
+`ingredients_form_id_has_form`. It is outside `canonicalKey`, so two entries
+with one formal name, one picked as each Wax, are still one identity, and a
+link to a soft-deleted form reads as no link, the text staying. The deities
+take the same model in `ingredient_deities`, above, so a vocabulary a member
+writes is text with an optional link to the curated row picked.
 
 **The compendium tier is held to the vocabularies, by the service (MB.162).**
 A compendium entry's `form`, `planets`, `zodiac_signs` and `deities` each
