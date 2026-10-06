@@ -26,6 +26,21 @@ export interface SubstituteFields {
 export type SubstituteEntry =
   { ingredientId: string; name: null } | { ingredientId: null; name: string };
 
+/** One reference as the schema reads it: the id may be blank until the rules have run. */
+export interface ReferenceLinkFields {
+  referenceId: string;
+  locator?: string | null;
+}
+
+/**
+ * One reference an ingredient cites (DESIGN.md §7): an existing reference's
+ * id, and the locator the link carries — "p. 112" — or null.
+ */
+export interface ReferenceLinkEntry {
+  referenceId: string;
+  locator: string | null;
+}
+
 /** One deity as the schema reads it: either half may be blank or missing until the rules have run. */
 export interface DeityFields {
   deityId?: string | null;
@@ -52,4 +67,5 @@ export interface Parsed {
   folkNames?: string[] | null;
   substitutes?: SubstituteFields[] | null;
   deities?: DeityFields[] | null;
+  references?: ReferenceLinkFields[] | null;
 }

@@ -32,7 +32,8 @@ const OkQuery = graphql(`
   its own. The same file proves that a document gets typed, that an unknown field
   fails, and that an unmapped scalar fails.
 - **Custom scalars map to their wire type** in `codegen.ts`: `DateTime` is a
-  `string`, because graphql-scalars serialises it to ISO 8601. With
+  `string`, because graphql-scalars serialises it to ISO 8601, and so is
+  `LocalDate`, a `YYYY-MM-DD` day. With
   `strictScalars` on, a new scalar without a mapping fails the run instead of
   typing as `any`.
 - **No generated hooks.** `client-preset` generates documents, not hooks.

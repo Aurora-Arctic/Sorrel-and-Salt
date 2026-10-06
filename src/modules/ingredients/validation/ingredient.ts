@@ -11,6 +11,8 @@ import type {
   DeityFields,
   Lists,
   Parsed,
+  ReferenceLinkEntry,
+  ReferenceLinkFields,
   SubstituteEntry,
   SubstituteFields,
 } from './types';
@@ -94,14 +96,35 @@ const substitute = z.object({ ingredientId: optionalText, name: optionalText });
  */
 const deity = z.object({ deityId: optionalText, name: optionalText });
 
-/** Each entry as the one half it carries, once `substituteRules` and `deityRules` have held it to one. */
+/**
+ * A reference the ingredient cites (DESIGN.md §7): an existing reference's id,
+ * trimmed, and its locator, blank as none. The id is required, as
+ * `ReferenceLinkInput`'s `ID!` is; a blank one is refused by `referenceRules`
+ * rather than dropped, as a blank substitute is, so a service's refusal counts
+ * the entries the caller sent.
+ */
+const referenceLink = z.object({
+  referenceId: z.string({ error: 'Choose a source' }).trim(),
+  locator: optionalText,
+});
+
+/**
+ * Each substitute and deity as the one half it carries, once
+ * `substituteRules` and `deityRules` have held it to one, and each reference
+ * as its id and locator, once `referenceRules` has held it to an id.
+ */
 function asEntries<
-  T extends { substitutes?: SubstituteFields[] | null; deities?: DeityFields[] | null },
+  T extends {
+    substitutes?: SubstituteFields[] | null;
+    deities?: DeityFields[] | null;
+    references?: ReferenceLinkFields[] | null;
+  },
 >(
   value: T,
-): Omit<T, 'substitutes' | 'deities'> & {
+): Omit<T, 'substitutes' | 'deities' | 'references'> & {
   substitutes?: SubstituteEntry[];
   deities?: DeityEntry[];
+  references?: ReferenceLinkEntry[];
 } {
   return {
     ...value,
@@ -111,6 +134,10 @@ function asEntries<
     deities: value.deities?.map(({ deityId, name }): DeityEntry =>
       deityId ? { deityId, name: null } : { deityId: null, name: name ?? '' },
     ),
+    references: value.references?.map(({ referenceId, locator }): ReferenceLinkEntry => ({
+      referenceId,
+      locator: locator ?? null,
+    })),
   };
 }
 
@@ -132,6 +159,7 @@ const fields = {
   colors: textList,
   safetyNotes: optionalText,
   substitutes: z.array(substitute).nullish(),
+  references: z.array(referenceLink).nullish(),
   folkNames: textList,
 };
 
@@ -196,6 +224,7 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
   }
   substituteRules(value.substitutes ?? [], ctx);
   deityRules(value.deities ?? [], ctx);
+  referenceRules(value.references ?? [], ctx);
 }
 
 /**
@@ -287,6 +316,24 @@ function substituteRules(entries: SubstituteFields[], ctx: z.RefinementCtx) {
     } else {
       refuse(index, 'Name the substitute, or choose an ingredient');
     }
+  });
+}
+
+/**
+ * Each reference names one by its id, and is listed once whatever its locator:
+ * `reference_links_ingredient_unique`'s key, refused at the repeat.
+ */
+function referenceRules(entries: ReferenceLinkFields[], ctx: z.RefinementCtx) {
+  const refuse = (index: number, message: string) =>
+    ctx.addIssue({ code: 'custom', path: ['references', index], message });
+  const listed = new Set<string>();
+
+  entries.forEach(({ referenceId }, index) => {
+    if (!referenceId) refuse(index, 'Choose a source');
+    // Not a uuid names nothing, and would be a driver error at the comparison.
+    else if (!RowId.safeParse(referenceId).success) refuse(index, 'No such source');
+    else if (listed.has(referenceId)) refuse(index, 'This source is already listed');
+    else listed.add(referenceId);
   });
 }
 

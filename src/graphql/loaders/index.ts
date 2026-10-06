@@ -3,6 +3,7 @@ import {
   categoriesByIngredient,
   deitiesByIngredient,
   folkNamesByIngredient,
+  referencesByIngredient,
   substitutesByIngredient,
 } from '@/modules/ingredients';
 import {
@@ -23,6 +24,7 @@ const LOADERS = {
   folkNamesByIngredient,
   substitutesByIngredient,
   deitiesByIngredient,
+  referencesByIngredient,
   categoryGroupsById,
   ingredientFormGroupsById,
   ingredientFormsById,

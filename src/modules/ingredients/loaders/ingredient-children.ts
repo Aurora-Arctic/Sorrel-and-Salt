@@ -3,9 +3,16 @@ import {
   categoriesOf,
   deitiesOf,
   folkNamesOf,
+  referencesOf,
   substitutesOf,
 } from '../services/ingredient-children';
-import type { CategoryRow, IngredientDeityRow, IngredientKey, SubstituteRow } from '../types';
+import type {
+  CategoryRow,
+  CitedReference,
+  IngredientDeityRow,
+  IngredientKey,
+  SubstituteRow,
+} from '../types';
 
 // Keyed by the parent row rather than its id, so the service knows which
 // coven to check without a read of its own; cached by id, since the same
@@ -21,6 +28,12 @@ export const categoriesByIngredient = defineLoader<IngredientKey, CategoryRow[],
 /** `Ingredient.folkNames`, batched: the folk names of each ingredient loaded in one request. */
 export const folkNamesByIngredient = defineLoader<IngredientKey, string[], string>(
   folkNamesOf,
+  byId,
+);
+
+/** `Ingredient.references`, batched: the references each ingredient loaded in one request cites. */
+export const referencesByIngredient = defineLoader<IngredientKey, CitedReference[], string>(
+  referencesOf,
   byId,
 );
 

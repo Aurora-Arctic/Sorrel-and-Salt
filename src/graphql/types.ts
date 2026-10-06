@@ -38,6 +38,8 @@ export interface SchemaTypes {
     // `DateTimeISO` rather than graphql-scalars' `DateTime`, which hands the
     // serializer's caller a Date and leaves the string to JSON.stringify.
     DateTime: { Input: Date; Output: Date };
+    // `YYYY-MM-DD` both ways, as a `date` column reads in Drizzle's string mode.
+    LocalDate: { Input: string; Output: string };
     ID: { Input: string; Output: string };
   };
 }

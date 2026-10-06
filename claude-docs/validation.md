@@ -128,6 +128,15 @@ Rules both variants enforce:
   a pick names a curated deity, and which held pick a typed name keeps, read
   the database, so they are the service's
   (["Ingredient children"](db/ingredient-children.md)).
+- **References, each an existing one** (DESIGN.md §7; MB.153). An entry is
+  `{ referenceId, locator }`, the id required as `ReferenceLinkInput`'s `ID!`
+  is and trimmed, the locator optional text, blank as none. A blank id, or one
+  that is not a uuid, is refused at the entry rather than dropped, for the
+  substitutes' reason, and the same reference twice is refused at the repeat
+  whatever its locator, `reference_links_ingredient_unique`'s key. Which
+  references an ingredient may cite is the service's rule, since it reads
+  other rows. A new reference is not written through this field: the form
+  creates it first, through `ReferenceInput` below, and sends its id.
 - **Closed sets.** `nomenclature` and the entries of `elements` come from
   the pgEnums' lists, in `schema/ingredient-enums.ts`.
 - **`elements` is a list of that closed set** (DESIGN.md §5, MB.157; built by
@@ -200,6 +209,23 @@ computed from `schema/quantities.ts`, the same
 precision and scale the two columns are built from, so the two cannot drift. `unit` is validated against `UNITS` from `schema/units.ts`, never
 a second list. `unitDimension` is not input: the service derives it with
 `dimensionOf`. `acquiredDate` is a calendar date, `YYYY-MM-DD`.
+
+## References
+
+`ReferenceInput` (MB.153; `validation/reference.ts`) is a reference as the
+form submits it and the service parses it, mirroring the CHECKs MB.152 put on
+`references` with a message on the field each is about, so no refusal surfaces
+as a constraint name (DESIGN.md §5, "References"). `kind` is one of
+`REFERENCE_KINDS`; `title` is required and non-blank; every other text field
+is trimmed and blank as absent, as the table's non-blank CHECKs need. `url`
+is an absolute http(s) address a browser can follow, and `modified` and
+`accessed` are calendar days, `YYYY-MM-DD`. Per `kind`: a chapter, an
+article and an entry each need their `container`, named as the kind names it
+— "Name the journal this article is in"; a web page needs its `url` and its
+`accessed` day; any other kind's `accessed` needs a `url`. One rule is the
+form's rather than the table's, as MB.151 decided: a book needs the year it
+was published. Each issue is pathed to its field, so a web page sent bare is
+refused at `url` and `accessed` both.
 
 ## Categories
 

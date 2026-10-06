@@ -59,10 +59,21 @@ deity is retired is kept, link and name, on a coven's ingredient, whether the
 save sends back its id or its name
 ([`../design-decisions/mb.167-read-and-write-the-pick.md`](../design-decisions/mb.167-read-and-write-the-pick.md)).
 
-**Four services and four loaders over them**, in `ingredients`:
-`categoriesOf`, `folkNamesOf`, `substitutesOf` and `deitiesOf` (MB.167) in
-`services/ingredient-children.ts`, batched as `categoriesByIngredient`,
-`folkNamesByIngredient`, `substitutesByIngredient` and `deitiesByIngredient`
+**References have one too, `findReferencesOfIngredients(memberships,
+ingredientIds)`** (MB.153). It reads each live link beside the live
+reference it cites in one statement, through the same left join, and holds
+the reference to the compendium or the parent's own coven inside the
+parent's `EXISTS`, so a link written past the service's tier rule, or one
+to a soft-deleted reference, reads as nothing. It is no hatch: every row it
+answers is live. `replaceReferenceLinks` compares against what it answers,
+so a link the ingredient does not show is left in place for a restore to
+return ([`references.md`](references.md)).
+
+**Five services and five loaders over them**, in `ingredients`:
+`categoriesOf`, `folkNamesOf`, `substitutesOf`, `deitiesOf` (MB.167) and
+`referencesOf` (MB.153) in `services/ingredient-children.ts`, batched as
+`categoriesByIngredient`, `folkNamesByIngredient`, `substitutesByIngredient`,
+`deitiesByIngredient` and `referencesByIngredient`
 ([`graphql/loaders.md`](../graphql/loaders.md), "Loaders"). A key is the parent
 row's `{ id, workspaceId }`. The `workspaceId` decides which proof to ask for,
 one `assertMembership(…, { ingredient: ['read'] })` per coven the batch names,

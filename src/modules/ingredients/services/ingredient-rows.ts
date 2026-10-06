@@ -1,19 +1,28 @@
 import 'server-only';
-import { type AuditWriter, findManyOfIngredients, findOneIngredient } from '../../../db/repository';
+import {
+  type AuditWriter,
+  type ReferenceLinkRow,
+  findManyOfIngredients,
+  findManyReferences,
+  findOneIngredient,
+  findReferencesOfIngredients,
+} from '../../../db/repository';
 import { ValidationError } from '../../../lib/errors';
 import { ingredientDeities } from '../schema/ingredient-deities';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
 import { ingredientSubstitutes } from '../schema/ingredient-substitutes';
+import { referenceLinks } from '../schema/reference-links';
 import type { Membership } from '@/modules/coven';
 import { curatedNames, foldVocabularyValue } from '@/modules/vocabulary';
 import type { ValidationIssue } from '../../../lib/types';
 import type { DeityRecord, IngredientFields, PickedDeity, Tier } from '../types';
-import type { DeityEntry, SubstituteEntry } from '../validation/types';
+import type { DeityEntry, ReferenceLinkEntry, SubstituteEntry } from '../validation/types';
 
 // What an ingredient write does the same way in either tier: the parsed
 // input as columns, the picks it records checked against the vocabularies,
-// and the folk names, substitutes and deities written beside the row.
-// Internal to the module — the two services import it, and the index does not.
+// and the folk names, substitutes, deities and references written beside the
+// row. Internal to the module — the two services import it, and the index
+// does not.
 
 /**
  * The parsed input as columns, every optional one written — `null` where the
@@ -337,5 +346,105 @@ async function refuseUnlinkable(
     return target ? undefined : { path, message: unlinkable };
   });
   const issues = (await Promise.all(checks)).filter((issue) => issue !== undefined);
+  if (issues.length > 0) throw new ValidationError(issues);
+}
+
+/**
+ * Writes a new ingredient's references, each held to `refuseUncitable`.
+ * `memberships` is the tier the ingredient is written in: none for a
+ * compendium entry.
+ *
+ * @throws {ValidationError} a reference the tier rule forbids, pathed to its entry.
+ */
+export async function addReferenceLinks(
+  write: AuditWriter,
+  memberships: readonly Membership[],
+  ingredientId: string,
+  entries: readonly ReferenceLinkEntry[],
+) {
+  await bringReferencesTo(write, memberships, ingredientId, entries, []);
+}
+
+/**
+ * Brings the ingredient's references to exactly `entries`, as
+ * `replaceSubstitutes` brings substitutes (DESIGN.md §5, `reference_links`):
+ * a link is matched by the reference it cites, so one still listed keeps its
+ * row and takes the locator sent, one dropped is soft-deleted, a new one is
+ * inserted, and a list that changes nothing writes nothing. The links compared
+ * are the ones the ingredient shows, so a link to a soft-deleted reference is
+ * left in place for a restore to return. A new one is held to
+ * `refuseUncitable`; one already held is not checked again.
+ *
+ * @throws {ValidationError} a new reference the tier rule forbids, pathed to its entry.
+ */
+export async function replaceReferenceLinks(
+  write: AuditWriter,
+  memberships: readonly Membership[],
+  ingredientId: string,
+  entries: readonly ReferenceLinkEntry[],
+) {
+  const current = await findReferencesOfIngredients(memberships, [ingredientId]);
+  await bringReferencesTo(
+    write,
+    memberships,
+    ingredientId,
+    entries,
+    current.map(({ link }) => link),
+  );
+}
+
+/** The diff both writes share. */
+async function bringReferencesTo(
+  write: AuditWriter,
+  memberships: readonly Membership[],
+  ingredientId: string,
+  entries: readonly ReferenceLinkEntry[],
+  current: readonly ReferenceLinkRow[],
+) {
+  const held = new Map(current.map((link) => [link.referenceId, link]));
+  const listed = new Set(entries.map((entry) => entry.referenceId));
+
+  await refuseUncitable(memberships, entries, held);
+  await write.softDeleteByIds(
+    referenceLinks,
+    current.filter((link) => !listed.has(link.referenceId)).map((link) => link.id),
+  );
+  for (const { referenceId, locator } of entries) {
+    const link = held.get(referenceId);
+    if (!link) await write.insert(referenceLinks, { referenceId, ingredientId, locator });
+    else if (link.locator !== locator) await write.updateById(referenceLinks, link.id, { locator });
+  }
+}
+
+/**
+ * Refuses each new reference the tier rule forbids (DESIGN.md §5, "A link
+ * names only what its row's readers may read"): the id must be a live
+ * reference the writer's own scope reads — the compendium's, and the proof's
+ * coven's for a coven write. An id naming nothing reads as one in another
+ * coven does, since that coven's contents are private. One read for the list.
+ *
+ * @throws {ValidationError} one issue per refused entry, pathed to it.
+ */
+async function refuseUncitable(
+  memberships: readonly Membership[],
+  entries: readonly ReferenceLinkEntry[],
+  held: ReadonlyMap<string, ReferenceLinkRow>,
+): Promise<void> {
+  const unchecked = entries.filter((entry) => !held.has(entry.referenceId));
+  const found = await findManyReferences(
+    memberships,
+    unchecked.map((entry) => entry.referenceId),
+  );
+  const citable = new Set(found.map((reference) => reference.id));
+  const message =
+    memberships.length === 0
+      ? 'No compendium source to cite — a compendium entry cites only the compendium’s sources'
+      : 'No source to cite — choose one from the compendium or this coven';
+
+  const issues = entries.flatMap((entry, index): ValidationIssue[] =>
+    held.has(entry.referenceId) || citable.has(entry.referenceId)
+      ? []
+      : [{ path: ['references', index], message }],
+  );
   if (issues.length > 0) throw new ValidationError(issues);
 }
