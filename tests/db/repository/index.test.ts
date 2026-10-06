@@ -18,6 +18,7 @@ describe('repository public API', () => {
         'findManyInWorkspace',
         'findManySpells',
         'findMembershipsOfUsers',
+        'findOpenAdminRoleChangePause',
         'findOne',
         'findOneById',
         'findOneByIdInWorkspace',

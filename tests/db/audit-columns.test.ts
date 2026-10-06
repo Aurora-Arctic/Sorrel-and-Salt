@@ -11,6 +11,7 @@ import {
   UNAUDITED_TABLES,
   tableFacts,
 } from '../support/db/table-metadata';
+import { adminRoleChangePauses } from '@/modules/identity/schema/admin-role-change-pauses';
 import { adminRoleChanges } from '@/modules/identity/schema/admin-role-changes';
 import { users } from '@/modules/identity/schema/users';
 import { categories, categoryGroups } from '@/modules/vocabulary/schema/categories';
@@ -44,6 +45,7 @@ import type { Reference } from './types';
 
 // Table objects, transcribed: an empty list is a failing test, not a vacuous pass.
 const AUDITED: PgTable[] = [
+  adminRoleChangePauses,
   adminRoleChanges,
   categoryGroups,
   categories,
@@ -105,8 +107,8 @@ async function byReferencesOf(table: string): Promise<Record<string, Reference>>
 const USERS_ID = { foreign_table: 'users', foreign_column: 'id' };
 
 describe('the audited tables', () => {
-  it('are the twenty-five the updated_at sweep names: twenty-three audited, two stamped', () => {
-    expect(AUDITED).toHaveLength(23);
+  it('are the twenty-six the updated_at sweep names: twenty-four audited, two stamped', () => {
+    expect(AUDITED).toHaveLength(24);
     expect(STAMPED).toHaveLength(2);
     expect([...named(AUDITED), ...named(STAMPED)].map(([name]) => name).sort()).toEqual(
       AUDITED_TABLES,
