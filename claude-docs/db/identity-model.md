@@ -75,8 +75,9 @@ What follows describes all three as built.
     which is also the parent's index, read in order; one link per ingredient
     and deity; and one unlinked name per ingredient, case-folded, so links to
     two same-named deities may sit on one ingredient. The full audit spread,
-    as substitutes. Nothing reads or writes it until MB.167; MB.166 fills it
-    from `deities[]`, and MB.168 drops the list
+    as substitutes. Nothing reads or writes it until MB.167; MB.166's
+    `0041_fill-ingredient-deities` fills it from `deities[]`, unlinked, in the
+    array's order from position 0, and MB.168 drops the list
     ([`../design-decisions/mb.165-record-the-picked-vocabulary-row.md`](../design-decisions/mb.165-record-the-picked-vocabulary-row.md)).
 - **`ingredient_forms`** — `id`, `name`, `slug`, `groupId`, `description`, +
   audit. Shaped like `categories`: global, admin-curated, no workspace

@@ -47,5 +47,16 @@ export interface SubstituteRow {
 /** What a test row of `ingredient_substitutes` links or names; both or neither is the CHECK's case. */
 export type SubstituteEntry = { substituteId?: string | null; name?: string | null };
 
+/** A row of `ingredient_deities` as the fill tests read it back (MB.166). */
+export interface DeityRow {
+  ingredient_id: string;
+  deity_id: string | null;
+  name: string;
+  position: number;
+  created_by: string;
+  updated_by: string;
+  deleted_at: Date | null;
+}
+
 /** A test row of `ingredient_deities`: always a name, and a link when picked (MB.165). */
 export type DeityEntry = { deityId?: string | null; name: string; position: number };
