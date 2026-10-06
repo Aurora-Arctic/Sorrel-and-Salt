@@ -200,9 +200,10 @@ sorts one on write or read.
   under a deployed reader, so the lists sit beside the singles for a deploy:
   MB.135 added them and filled each from its single column where one was
   set (`0030_ingredient-lists`); MB.136 switched every reader and writer and
-  stopped declaring the singles, which stay in the database undeclared;
-  MB.137 fills a last time and drops them, with its `.ack.md` sidecar, once
-  MB.136 has deployed (["Expand/contract"](expand-contract.md)).
+  stopped declaring the singles, which stayed in the database undeclared;
+  MB.137 dropped them, with its `.ack.md` sidecar, once a release carrying
+  MB.136 had reached production (`0036_drop-ingredient-singles`;
+  ["Expand/contract"](expand-contract.md)).
 - **MB.136's migration rederives the lists.** `0031_refill-ingredient-lists`
   runs before MB.136 promotes, while only 0030 has written a list, so every
   list is still its single's: each is set to its single as one entry, or to
@@ -212,6 +213,13 @@ sorts one on write or read.
   which copies the last snapshot rather than diffing the schema, so the
   snapshot keeps the undeclared singles and MB.137's `db:generate` still
   emits their drop.
+- **MB.137's drop fills nothing first.** Once MB.136 promotes it writes the
+  lists, so a single that disagrees with its list may hold the previous
+  deploy's write between 0031 and the promotion, or the stale value of a list
+  a member has edited since — and the row cannot say which. A fill would
+  overwrite that member's edit to recover a write from a deploy-length
+  window, one the app has not read since MB.136 went live, so the drop takes
+  it (`0036_drop-ingredient-singles.ack.md`, "What is lost").
 - **The in-use scan unnests.** Tier 2 of the planet and zodiac autofill
   reads entries rather than a column: `cross join lateral unnest(…)` gives
   one row per entry before anything trims or folds it, so a value counts

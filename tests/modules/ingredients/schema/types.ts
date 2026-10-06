@@ -26,7 +26,7 @@ export interface ColumnRow {
   column_default: string | null;
 }
 
-/** An ingredient's id beside its single columns and the lists they fill (MB.135). */
+/** An ingredient's id beside its single `element` and the list it fills (MB.158). */
 export type ListedIngredientRow = { id: string } & Record<string, string | string[] | null>;
 
 export interface Retired {

@@ -253,6 +253,13 @@
       "when": 1791303253068,
       "tag": "0035_refill-element-list",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791304248429,
+      "tag": "0036_drop-ingredient-singles",
+      "breakpoints": true
     }
   ]
 }

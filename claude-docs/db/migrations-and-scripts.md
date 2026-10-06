@@ -138,6 +138,12 @@
   puts the seeded rows back as a deployed database held them before
   re-running either fill. See
   ["The ingredient identity model"](identity-model.md).
+- **`0036_drop-ingredient-singles.sql`** (MB.137) is the contract of MB.134's
+  lists: `drizzle-kit generate` wrote the three `DROP COLUMN`s for `planet`,
+  `zodiac` and `color` and a fourth for `substitutes`, which was cut, its
+  column kept in the snapshot, since that drop is MB.141's. It fills nothing
+  first, and its sidecar says why and gates it on a production release
+  carrying MB.136. See ["The ingredient identity model"](identity-model.md).
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls

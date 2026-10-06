@@ -2689,7 +2689,7 @@ _Acceptance criteria:_
 
 _Story:_ As a workspace member, I want an ingredient to carry more than one planet, sign or colour, so that a herb ruled by both Venus and the Moon is recorded as it is practised.
 
-Documentation and scoping only, in MB.91's shape: the model is recorded before the table task transcribes it. Minted during M5.9, on the owner's decision. DESIGN.md §5 gives `planet`, `zodiac` and `color` one text value each; they become text arrays beside `deities[]`, and stay free text: the planet and zodiac vocabularies suggest and nothing refuses, and colour has no vocabulary and no suggestions at all, the owner's call. Folk names keep M5.10a's suggestions; colour is the one list without any. This task settles the new column and field names; the GraphQL change, the single fields on `Ingredient` and both inputs replaced by lists with no deprecation window, since nothing outside the app reads the API; the sequence rule 10 requires, MB.135 adding and filling the lists, MB.136 switching every reader and writer and ceasing to declare the old columns, and MB.137 dropping them once MB.136 has deployed; and the in-use scan MB.94 built for a single column, which must unnest an array, as MB.130 needs for deities too. MB.136 lands first by the order, so it builds that scan and MB.130 adopts it. M5.10a's planet and zodiac fields move to MB.131 as list lookups.
+Documentation and scoping only, in MB.91's shape: the model is recorded before the table task transcribes it. Minted during M5.9, on the owner's decision. DESIGN.md §5 gives `planet`, `zodiac` and `color` one text value each; they become text arrays beside `deities[]`, and stay free text: the planet and zodiac vocabularies suggest and nothing refuses, and colour has no vocabulary and no suggestions at all, the owner's call. Folk names keep M5.10a's suggestions; colour is the one list without any. This task settles the new column and field names; the GraphQL change, the single fields on `Ingredient` and both inputs replaced by lists with no deprecation window, since nothing outside the app reads the API; the sequence rule 10 requires, MB.135 adding and filling the lists, MB.136 switching every reader and writer and ceasing to declare the old columns, and MB.137 dropping them once a release carrying MB.136 has reached production; and the in-use scan MB.94 built for a single column, which must unnest an array, as MB.130 needs for deities too. MB.136 lands first by the order, so it builds that scan and MB.130 adopts it. M5.10a's planet and zodiac fields move to MB.131 as list lookups.
 
 _Acceptance criteria:_
 
@@ -2729,13 +2729,13 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want the retired single columns gone, so that nothing can write a value the app no longer reads.
 
-The contract half of rule 10, a task of its own. Once MB.136 has deployed, the migration fills the lists one last time from anything written to the single columns since, then drops `planet`, `zodiac` and `color`, with its `.ack.md` sidecar.
+The contract half of rule 10, a task of its own. Once a release carrying MB.136 has reached production, the migration drops `planet`, `zodiac` and `color`, with its `.ack.md` sidecar. Production is the gate rather than staging because v0.4.0 still declares the singles, and a release carrying MB.136 and this drop together would drop them under it. Scoped first with a last fill from the singles, and dropped on the owner's decision: MB.136's deploy writes the lists, so a single that disagrees with its list may be either's newer write, and a fill would overwrite a member's edit to recover a write from a deploy-length window (claude-docs/db/identity-model.md, "The ingredient identity model").
 
 _Acceptance criteria:_
 
 - The three columns are gone, and the lists hold every value they held
 - The migration carries its acknowledgement sidecar, and the destructive-DDL check passes with it
-- Lands only after MB.136 has deployed to staging
+- Lands only after a release carrying MB.136 has reached production
 
 **MB.138 — Let a substitute link an existing ingredient** · 3h
 
