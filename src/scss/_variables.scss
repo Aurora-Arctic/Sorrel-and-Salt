@@ -63,18 +63,20 @@ $shadow-light: rgba(35, 32, 26, 0.18);
 // ---------------------------------------------------------------------------
 // Category groups
 // ---------------------------------------------------------------------------
-// One rotation of $sorrel in 22.5deg steps, odd multiples only, so no group
-// lands on the accent (96deg) or secondary (8deg) hue. Saturation lifted once
-// per theme, lightness trimmed per group to the 4.5:1 floor.
-// claude-docs/styling.md, "Category-group colours".
+// The seed source M4.3 reads, and now its only job: a group's colours are a
+// pair of hexes on its row (MB.35), which a chip reads (MB.36), so nothing
+// renders from this map. One rotation of $sorrel in 22.5deg steps, odd
+// multiples only, so no group lands on the accent (96deg) or secondary (8deg)
+// hue. Saturation lifted once per theme, lightness trimmed per group to the
+// 4.5:1 floor. claude-docs/styling.md, "Category-group colours".
 $category-group-step: 22.5deg;
 $category-group-saturation: (
   dark: 14%,
   light: 50%,
 );
 
-// `step` is an odd multiple of $category-group-step. The category seed's
-// `group` field must match these slugs.
+// `step` is an odd multiple of $category-group-step. Keyed by M0.7's own
+// words; the seed's SASS_TOKEN_BY_GROUP_NAME maps each group's name onto one.
 $category-groups: (
   // 208.5deg — steel blue
   'protection': (
@@ -135,7 +137,7 @@ $category-groups: (
   @return $theme;
 }
 
-// Theme mixins only; components use category-group() below.
+// The seed test's only: it resolves each group's pair to the hexes M4.3 wrote.
 @function category-group-color($slug, $theme) {
   $theme: _assert-theme($theme);
   $spec: map.get($category-groups, $slug);
@@ -275,16 +277,8 @@ $text-on-color: var(--surface-page);
 // placeholder as it does any text.
 $text-placeholder: color-mix(in srgb, $text-muted 85%, $surface-card);
 
-// Functions rather than variables: a typo fails at compile time where
-// `var(--group-protectoin)` fails silently in the browser.
-@function category-group($slug) {
-  @if not map.has-key($category-groups, $slug) {
-    @error 'Unknown category group "#{$slug}". The eight groups are: #{map.keys($category-groups)}.';
-  }
-
-  @return var(--group-#{$slug});
-}
-
+// A function rather than variables: a typo fails at compile time where
+// `var(--badge-saftey-fill)` fails silently in the browser.
 @function badge-token($palette, $part) {
   $parts: badge-parts($palette);
 

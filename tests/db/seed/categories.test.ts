@@ -6,12 +6,8 @@ import * as sassCompiler from 'sass';
 import { fromRoot } from '../../support/paths';
 import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
-import {
-  CATEGORIES,
-  CATEGORY_GROUPS,
-  SASS_TOKEN_BY_GROUP_NAME,
-  seedCategories,
-} from '@/db/seed/categories';
+import { CATEGORIES, seedCategories } from '@/db/seed/categories';
+import { CATEGORY_GROUPS, SASS_TOKEN_BY_GROUP_NAME } from '@/db/seed/category-groups';
 import { slugify } from '@/lib/slugify';
 import type { CategoryGroupRow, CategoryRow, DesignCategoryGroup } from './types';
 

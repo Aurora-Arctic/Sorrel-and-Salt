@@ -1,5 +1,7 @@
 @use 'sass:list';
 @use 'sass:map';
+@use 'sass:meta';
+@use 'sass:string';
 @use './variables' as *;
 
 // One duration/easing pair for every colour fade, so everything reacting to
@@ -60,9 +62,19 @@
 
 // A pill edged in its group's colour; `selected` fills solid and inverts the
 // label, since a wash cannot hold 4.5:1. Both states share edge and padding.
-// claude-docs/styling.md, "Chips, badges and the solid-fill rule".
-@mixin chip($group, $state: unselected) {
-  $color: category-group($group);
+// The pair is the group row's `colorDark` and `colorLight`, by default read
+// from the element, where chipColors() sets them; `light-dark()` picks one off
+// the theme's `color-scheme`, since a group an admin adds has no build-time
+// token. claude-docs/styling.md, "Chips, badges and the solid-fill rule".
+@mixin chip($dark: var(--chip-dark), $light: var(--chip-light), $state: unselected) {
+  @each $color in ($dark, $light) {
+    @if meta.type-of($color) != color and string.index('#{$color}', 'var(') != 1 {
+      @error 'chip() takes a colour pair, dark then light, not "#{$color}": a group\'s ' +
+        'colour lives on its row, not in a token named by slug.';
+    }
+  }
+
+  $color: light-dark($light, $dark);
 
   display: inline-flex;
   align-items: center;
@@ -170,12 +182,9 @@
   }
 }
 
-// Generated from the _variables.scss maps; both theme mixins call this.
+// Generated from the badge palettes; both theme mixins call this. No group
+// colours: a chip reads its own pair from the row (MB.36).
 @mixin semantic-tokens($theme) {
-  @each $slug in map.keys($category-groups) {
-    --group-#{$slug}: #{category-group-color($slug, $theme)};
-  }
-
   @each $palette in map.keys($badge-palettes) {
     @each $part in badge-parts($palette) {
       --badge-#{$palette}-#{$part}: #{badge-palette-color($palette, $theme, $part)};
