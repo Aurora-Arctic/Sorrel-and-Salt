@@ -8,6 +8,7 @@ export interface VocabularyRow {
   id: string;
   name: string;
   slug: string;
+  seed_key: string | null;
   description: string;
   created_by: string;
   updated_by: string;
@@ -158,6 +159,7 @@ export interface DeityTraditionRow {
   id: string;
   name: string;
   slug: string;
+  seed_key: string | null;
   description: string;
   created_by: string;
   updated_by: string;
@@ -168,6 +170,7 @@ export interface DeityRow {
   id: string;
   name: string;
   slug: string;
+  seed_key: string | null;
   description: string;
   tradition_id: string;
   created_by: string;

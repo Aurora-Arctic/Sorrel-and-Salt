@@ -16,7 +16,7 @@ Everything structural is [the category seed](category-seed.md)'s, and since
 MB.51 literally so — both call [`seedTwoTierVocabulary`](seed-module.md) with
 their own tables and literals:
 groups first (`ingredient_forms.group_id` is a NOT NULL foreign key),
-idempotency keyed on the slug and **ignoring `deleted_at`**, no update to
+idempotency keyed on the seed key and **ignoring `deleted_at`** (MB.172), no update to
 anything already present, every slug derived by `slugify(name)` rather than
 written down, and the whole run inside one transaction that publishes
 `app.current_user_id` and stamps through `applyAudit`. What it does not share is a colour: form groups section

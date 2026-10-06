@@ -3,7 +3,14 @@ import type { PgInsertValue, PgTable } from 'drizzle-orm/pg-core';
 import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
 import { applyAudit } from '../audit';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
-import type { InsertStamps, SeedDatabase, SeedTransaction } from './types';
+import type {
+  FlatTable,
+  GroupTable,
+  InsertStamps,
+  ItemTable,
+  SeedDatabase,
+  SeedTransaction,
+} from './types';
 
 // The three moves every seed makes. Writes go through the handle the caller
 // gives, not `withAudit` (claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md).
@@ -70,4 +77,26 @@ export function requireFrom<K, V>(map: Map<K, V>, key: K, describe: () => string
   if (value === undefined) throw new Error(describe());
 
   return value;
+}
+
+/**
+ * What a vocabulary seed takes as present (MB.172): every row's `seed_key`,
+ * live or soft-deleted, so a row the seed wrote is its own whatever an admin
+ * has since renamed it or whether they retired it; and every live row's slug,
+ * so a row an admin wrote under a seed name is not met by a second one the
+ * slug index would refuse. Typed on the union, which Drizzle's `from()`
+ * accepts where it cannot narrow a generic.
+ */
+export async function presentKeys(
+  tx: SeedTransaction,
+  table: FlatTable | GroupTable | ItemTable,
+): Promise<string[]> {
+  const rows = await tx
+    .select({ slug: table.slug, seedKey: table.seedKey, deletedAt: table.deletedAt })
+    .from(table);
+
+  return rows.flatMap(({ slug, seedKey, deletedAt }) => [
+    ...(seedKey === null ? [] : [seedKey]),
+    ...(deletedAt === null ? [slug] : []),
+  ]);
 }
