@@ -13,6 +13,7 @@ import type { Bucket, ComboboxOption, ComboboxProps, Item, Suggestions, TypedRow
 import './index.scss';
 
 export { ComboboxEntry } from './entry';
+export { ComboboxSelect } from './select';
 
 // A text box that suggests as it is typed in, on Downshift's `useCombobox`:
 // the hook owns the ARIA and the keyboard, and the markup, the rows and the
@@ -24,11 +25,19 @@ export { ComboboxEntry } from './entry';
 
 const isTyped = <O extends ComboboxOption>(item: Item<O>): item is TypedRow => 'typed' in item;
 
+/** A row's identity, for React and Downshift: its own key, or else what it reads. */
+const keyOf = <O extends ComboboxOption>(item: Item<O>): string => {
+  if (isTyped(item)) return 'typed';
+  return item.key ?? `${item.curated}:${item.label ?? ''}:${item.value}`;
+};
+
 /**
  * The rows in the order the list shows them — what was typed first, the
  * owner's call, then curated, then in use — flat for Downshift, which numbers
  * them, and bucketed for the headings. A source with one bucket shows no
- * headings.
+ * headings. The headings say where a value comes from, the owner's call
+ * (MB.131): a curated value is the compendium's, since its entries hold
+ * nothing else, and one only in use is this coven's own.
  */
 function arrange<O extends ComboboxOption>(
   options: O[],
@@ -37,8 +46,12 @@ function arrange<O extends ComboboxOption>(
   const bucketed = options.some((option) => option.curated !== undefined);
   const buckets: Bucket<O>[] = bucketed
     ? [
-        { heading: 'Curated', key: 'curated', rows: options.filter((option) => option.curated) },
-        { heading: 'In use', key: 'in-use', rows: options.filter((option) => !option.curated) },
+        {
+          heading: 'From Compendium',
+          key: 'compendium',
+          rows: options.filter((option) => option.curated),
+        },
+        { heading: 'From Coven', key: 'coven', rows: options.filter((option) => !option.curated) },
       ].filter((bucket) => bucket.rows.length > 0)
     : [{ heading: null, key: 'all', rows: options }];
   const typedRow: TypedRow | null = typed === '' ? null : { value: typed, typed: true };
@@ -117,10 +130,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
       selectedItem: null,
       isOpen,
       itemToString: (item) => item?.value ?? '',
-      itemToKey: (item) => {
-        if (item === null) return null;
-        return isTyped(item) ? 'typed' : `${item.curated}:${item.label ?? ''}:${item.value}`;
-      },
+      itemToKey: (item) => (item === null ? null : keyOf(item)),
       stateReducer: keepText,
       onInputValueChange: ({ inputValue }) => onChange(inputValue ?? ''),
       onIsOpenChange: ({ isOpen: open }) => setWantsOpen(open),
@@ -165,7 +175,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     const highlighted = at === highlightedIndex;
     return (
       <li
-        key={isTyped(item) ? 'typed' : `${item.curated}:${item.label ?? ''}:${item.value}`}
+        key={keyOf(item)}
         className={[
           'combobox__option',
           isTyped(item) && 'combobox__option--typed',

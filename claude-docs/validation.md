@@ -69,17 +69,17 @@ refused, and that is "required", not "blank". They differ only in
 
 - **`LocalIngredientInput`**, for the workspace tier. Only `name` is required.
   With no formal name and no kind, `nomenclature` becomes `none`, so story 29's
-  one-field stub saves. A `null` kind counts as no kind. A formal name with no kind is asked about, pathed to
-  `nomenclature`, rather than guessed: `none` would contradict the name, and
-  guessing `botanical` is the silent guess §5 forbids.
+  one-field stub saves. A `null` kind counts as no kind. A formal name with no kind becomes `unknown` (MB.161):
+  the one kind that admits a name without claiming its system, where `none`
+  would contradict the name and `botanical` is the silent guess §5 forbids.
 - **`CompendiumIngredientInput`**, for the compendium tier. The admin must answer
   `nomenclature`, and `none` and `unknown` are answers.
 
 Rules both variants enforce:
 
 - **The kind↔name coupling**, in both directions, as the database CHECK does:
-  `none`/`unknown` with a formal name is refused, and any other kind without
-  one is refused. Both are pathed to `canonicalName`, so the CHECK is never
+  `none` with a formal name is refused, any of the five named kinds without
+  one is refused, and `unknown` takes either (MB.161). Both are pathed to `canonicalName`, so the CHECK is never
   what a user sees.
 - **`canonicalName` and `form`** are optional and trimmed, and a blank one
   becomes `null` — which the database CHECKs on both columns accept, so a

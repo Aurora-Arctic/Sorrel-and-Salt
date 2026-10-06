@@ -4,13 +4,14 @@
 Downshift's `useCombobox` (DESIGN.md §14): the hook owns the ARIA and the
 keyboard state, and the markup, the rows and the Sass are ours. M5.10a built
 it for `IngredientForm`'s form and folk-name lookups, and put it on every
-list field's box; MB.131 gives the other lists their sources, and M5.10 and
-M8.10 adopt its debounce.
+list field's box; MB.131 gave planets, signs, deities and substitutes their
+sources, and M5.10 and M8.10 adopt its debounce.
 
 | File         | What it holds                                                                     |
 | ------------ | --------------------------------------------------------------------------------- |
 | `index.tsx`  | The control, the list in its buckets, the typed row, the status, the indicators   |
 | `entry.tsx`  | `ComboboxEntry`, the chip a list draws inside the control, with its × and tooltip |
+| `select.tsx` | `ComboboxSelect`, the select-only box for a closed set                            |
 | `index.scss` | The control, the list, a row, and the entry chip                                  |
 | `types.ts`   | `ComboboxOption`, `Suggestions`, the props, and the row types                     |
 
@@ -31,9 +32,13 @@ M8.10 adopt its debounce.
 | `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                               |
 | `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                            |
 
-A `ComboboxOption` is `{ value, label?, note?, curated? }`: the text a pick
-writes, the row's text when it is more than the value ("Wax (Animal)"), a
-second line, and which bucket it is in. The row's accessible name is its
+A `ComboboxOption` is `{ value, label?, note?, curated?, key? }`: the text a
+pick writes, the row's text when it is more than the value ("Wax (Animal)"), a
+second line, which bucket it is in, and what tells it from a row that reads
+the same. A row is keyed, for React and for Downshift, by `key` when it has
+one and by its bucket, label and value otherwise: two substitute suggestions
+can share all three, a compendium entry and the coven's own copy of it, and
+only the ingredient's id tells them apart (MB.131). The row's accessible name is its
 label and its note, so two same-named forms are told apart by a screen
 reader as well as by the eye, and so is who claims a value.
 
@@ -48,7 +53,8 @@ reader as well as by the eye, and so is who claims a value.
   picked by Enter or a click. Typing past the vocabulary is therefore never
   hijacked, and the list still opens with an explicit row, "Use what you typed: rhizome", so going past it is a visible choice rather than a discovered behaviour (M4.3a's argument: the vocabulary carries no `Other`). The row is first rather than last, the owner's call: it is the choice a typist most often wants, and one ArrowDown away.
 - **Two buckets, told apart by structure.** Rows with `curated` set are
-  grouped under "Curated" and "In use" headings, `role="group"` inside the
+  grouped under "From Compendium" and "From Coven" headings (renamed from
+  "Curated" and "In use" during MB.131, on the owner's call), `role="group"` inside the
   listbox, each named by its heading; a source whose rows carry no `curated`
   lists them flat. The distinction is text, never colour alone. Two same-named rows, "Wax (Animal)" and "Wax (Substance)", are told apart in the list by the group in each label, and by nothing after a pick: both write "Wax", since `ingredients.form` stores the string and the group is the vocabulary's alone (DESIGN.md §5).
 - **It opens as text is typed, on ArrowDown, and from its chevron**, and only
@@ -75,6 +81,35 @@ reader as well as by the eye, and so is who claims a value.
   clear and the chevron on the control's right, parted by a line. Backspace or Delete in an empty box takes the last entry through `onRemoveLast`. The chip's
   classes, `combobox__entry` and `combobox__entry-remove`, are drawn here so
   that any list reuses them; `IngredientForm`'s entry adds its tooltip.
+
+## The select-only box
+
+`ComboboxSelect` (`select.tsx`) is a closed set on the same control and
+list, for a field nothing is typed into: `IngredientForm`'s classification
+and element, and every closed enum DESIGN.md §14 names. The owner chose it
+over the native `<select>` during MB.131, so a form's fields share one look
+([`design-decisions/mb.131-closed-sets-on-the-combobox.md`](../design-decisions/mb.131-closed-sets-on-the-combobox.md)).
+It is Downshift's `useSelect`, the hook for ARIA 1.2's select-only combobox:
+the control itself is the `role="combobox"` element, a `div` in the tab
+order, labelled by the field's label through `aria-labelledby`, with the
+field's hint and error, `aria-invalid` and `aria-required` on it. A press,
+ArrowDown or ArrowUp opens the list on the current choice; the arrows move,
+Enter or Space chooses, Escape closes and keeps the choice, and a letter
+jumps to the choice it starts.
+
+| Prop                 | Meaning                                                                                         |
+| -------------------- | ----------------------------------------------------------------------------------------------- |
+| `id`, `labelId`      | The box's id and its label element's; without `labelId`, `label` is its `aria-label`.           |
+| `label`              | What the box is called, and its list's name, "Classification choices".                          |
+| `value`/`onChange`   | The chosen value, held by the caller.                                                           |
+| `choices`            | `{ value, label }` in order. One whose value is `''` is the choice that clears the set: "None". |
+| `placeholder`        | Shown, muted, while the value is none of the choices; never in the list.                        |
+| `required`           | `aria-required`, as the field marks it.                                                         |
+| `inputRef`, `onBlur` | The box's, for react-hook-form, which focuses the box on an error.                              |
+
+The chevron is drawn inside the control and hidden from assistive
+technology, since the whole control is the one target. The control takes the
+focus ring itself, where a suggesting box draws it for its inner text.
 
 ## An entry
 
@@ -119,7 +154,8 @@ entries sit inside it; the ring and the error edge are drawn on the control
 from the box's own states, `:has(.combobox__input:focus-visible)` and
 `.is-invalid`. The list floats beneath at the control's width on
 `modal-surface($shadow-floating)` with the input's edge; a highlighted row is
-a 22% wash of the accent on the card. A chip is a filled, square-cornered
+a 22% wash of the accent on the card. A bucket's heading is muted small
+capitals with a step of space above it, the owner's call during MB.131. A chip is a filled, square-cornered
 rectangle in an 18% wash of the muted ink, react-select's shape, and its ×
 hovers in the warning's wash and ink. The × and the indicators fade into
 their hover as `.btn` does, on `theme-transition` and never under reduced
@@ -145,7 +181,10 @@ and note; picking by keyboard and by click, and the typed row as `null`;
 the entry's ×, its tooltip on a cut-off text only, and its error; Enter handed to `onCommit` with the list open or closed, and otherwise
 closing the list or reaching the form; Backspace and Delete handed to `onRemoveLast` only from an empty box; Escape, blur and a pick keeping the
 text; a box with no source never opening; the status region; the chevron,
-the clear and the entries inside the control. Role and label queries only,
+the clear and the entries inside the control; two rows reading alike told
+apart by their keys; and the select-only box, its name, placeholder, list
+and choices, "None" among them. `IngredientForm`'s test drives the select by
+the keyboard. Role and label queries only,
 in the `dom` project.
 
 `tests/lib/debounce.test.tsx` covers the hook with fake timers.

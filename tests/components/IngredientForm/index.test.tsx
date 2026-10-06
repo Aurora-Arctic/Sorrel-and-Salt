@@ -18,6 +18,7 @@ import type {
   CreateWorkspaceIngredientMutationVariables,
   FormSuggestionsQuery,
   FormSuggestionsQueryVariables,
+  PlanetSuggestionsQueryVariables,
   PossibleDuplicatesQuery,
   PossibleDuplicatesQueryVariables,
 } from '@/gql/graphql';
@@ -31,7 +32,14 @@ import {
   mockGraphQLQuery,
 } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
-import type { DuplicateNode, FormNode, NameNode } from './types';
+import type {
+  CorrespondenceNode,
+  DeityNode,
+  DuplicateNode,
+  FormNode,
+  IngredientNode,
+  NameNode,
+} from './types';
 
 // The ingredient entry form. The mutation is answered by MSW in the shape
 // /api/graphql answers (tests/support/msw/graphql.ts), so a server error is
@@ -79,11 +87,41 @@ function offerDuplicates(nodes: DuplicateNode[]) {
   return calls;
 }
 
+/**
+ * Answers one of the list boxes' lookups — `PlanetSuggestions` answering
+ * `planetSuggestions`, and so on — with these rows, recording each ask. All
+ * four take the same variables.
+ */
+function offerList<N>(operation: string, field: string, nodes: N[]) {
+  const calls: PlanetSuggestionsQueryVariables[] = [];
+  mockGraphQLQuery<Record<string, unknown>, PlanetSuggestionsQueryVariables>(
+    operation,
+    (variables) => {
+      calls.push(variables);
+      return { [field]: { edges: nodes.map((node) => ({ node })) } };
+    },
+  );
+  return calls;
+}
+
+const offerPlanets = (nodes: CorrespondenceNode[]) =>
+  offerList('PlanetSuggestions', 'planetSuggestions', nodes);
+const offerSigns = (nodes: CorrespondenceNode[]) =>
+  offerList('ZodiacSuggestions', 'zodiacSuggestions', nodes);
+const offerDeities = (nodes: DeityNode[]) =>
+  offerList('DeitySuggestions', 'deitySuggestions', nodes);
+const offerIngredients = (nodes: IngredientNode[]) =>
+  offerList('IngredientSuggestions', 'ingredientSuggestions', nodes);
+
 /** Renders the form with every lookup answered empty; a test about a lookup answers it after rendering, since the later answer wins. */
 function renderForm() {
   const onSaved = vi.fn();
   offerForms([]);
   offerNames([]);
+  offerPlanets([]);
+  offerSigns([]);
+  offerDeities([]);
+  offerIngredients([]);
   offerDuplicates([]);
   render(
     <QueryClientProvider client={makeQueryClient()}>
@@ -94,18 +132,31 @@ function renderForm() {
 }
 
 const textbox = (name: string) => screen.getByRole('textbox', { name });
-/** A suggesting box: the form field, or a list's. A native select is a combobox too, under its own name. */
+/** A suggesting box: the form field, or a list's. A closed set's box is a combobox too, select-only. */
 const box = (name: string) => screen.getByRole('combobox', { name });
 const select = box;
 const control = (name: string) =>
   screen.queryByRole('textbox', { name }) ?? screen.getByRole('combobox', { name });
 const type = (name: string, value: string) =>
   fireEvent.change(control(name), { target: { value } });
-const choose = (name: string, value: string) =>
-  fireEvent.change(select(name), { target: { value } });
+/** Opens a closed set's box and picks the choice reading `label`. */
+const choose = (name: string, label: string) => {
+  fireEvent.click(select(name));
+  fireEvent.click(
+    within(screen.getByRole('listbox', { name: `${name} choices` })).getByRole('option', {
+      name: label,
+    }),
+  );
+};
 /** Presses Save, focusing it first as a real click would: fireEvent moves no focus. */
 const save = () => {
   const button = screen.getByRole('button', { name: 'Save Ingredient' });
+  button.focus();
+  fireEvent.click(button);
+};
+/** Presses Save & Add Another, the secondary save, focusing it first as `save` does. */
+const saveAnother = () => {
+  const button = screen.getByRole('button', { name: 'Save & Add Another' });
   button.focus();
   fireEvent.click(button);
 };
@@ -145,7 +196,7 @@ describe('IngredientForm', () => {
       save();
 
       await waitFor(() =>
-        expect(onSaved).toHaveBeenCalledWith({ id: 'saved-1', name: 'Testwort' }),
+        expect(onSaved).toHaveBeenCalledWith({ id: 'saved-1', name: 'Testwort' }, 'open'),
       );
       expect(calls).toHaveLength(1);
       expect(calls[0].workspaceId).toBe(WORKSPACE_ID);
@@ -165,11 +216,11 @@ describe('IngredientForm', () => {
       const onSaved = renderForm();
 
       type('Name', 'Testwort');
-      choose('Classification', 'botanical');
+      choose('Classification', 'Botanical');
       type('Formal Name', 'Fixtura testalis');
       type('Form', 'dried leaf');
       type('Description', 'A fixture herb.');
-      choose('Element', 'air');
+      choose('Element', 'Air');
       addEntry('Planet', 'Mercury');
       addEntry('Planet', 'Venus');
       addEntry('Zodiac Sign', 'Gemini');
@@ -193,6 +244,108 @@ describe('IngredientForm', () => {
         substitutes: [],
         folkNames: [],
       });
+    });
+
+    // The owner's call during MB.131: Save Ingredient opens what it made,
+    // and Save & Add Another leaves the form ready for the next ingredient.
+    it('asks the page to open what Save Ingredient made, leaving the form as it is', async () => {
+      acceptCreate();
+      const onSaved = renderForm();
+
+      type('Name', 'Testwort');
+      addEntry('Planet', 'Mercury');
+      save();
+
+      await waitFor(() =>
+        expect(onSaved).toHaveBeenCalledWith({ id: 'saved-1', name: 'Testwort' }, 'open'),
+      );
+      // The page it is on navigates; the form is about to go, so it keeps its values.
+      expect(textbox('Name')).toHaveValue('Testwort');
+      expect(removeButton('Mercury')).toBeInTheDocument();
+    });
+
+    it('makes Save Ingredient the default, which Enter in a field presses', async () => {
+      acceptCreate();
+      const onSaved = renderForm();
+
+      const submits = screen
+        .getAllByRole('button')
+        .filter((button) => button.getAttribute('type') === 'submit');
+      expect(submits.map((button) => button.textContent)).toEqual([
+        'Save Ingredient',
+        'Save & Add Another',
+      ]);
+      type('Name', 'Testwort');
+      // A submit with no button pressed, as implicit submission from a field is in jsdom.
+      fireEvent.submit(textbox('Name').closest('form') as HTMLFormElement);
+
+      await waitFor(() => expect(onSaved).toHaveBeenCalledWith(expect.anything(), 'open'));
+    });
+
+    it('clears every field and list once saved by Save & Add Another, and puts the focus in Name', async () => {
+      acceptCreate();
+      const onSaved = renderForm();
+
+      type('Name', 'Testwort');
+      choose('Classification', 'Botanical');
+      type('Formal Name', 'Fixtura testalis');
+      type('Form', 'dried leaf');
+      type('Description', 'A fixture herb.');
+      choose('Element', 'Air');
+      addEntry('Planet', 'Mercury');
+      addEntry('Folk Name', 'Hedge Fixture');
+      type('Safety Notes', 'None known.');
+      saveAnother();
+
+      await waitFor(() =>
+        expect(onSaved).toHaveBeenCalledWith({ id: 'saved-1', name: 'Testwort' }, 'another'),
+      );
+      await waitFor(() => expect(textbox('Name')).toHaveValue(''));
+      expect(textbox('Name')).toHaveFocus();
+      expect(select('Classification')).toHaveTextContent('Choose a classification');
+      expect(textbox('Formal Name')).toHaveValue('');
+      expect(textbox('Formal Name')).toBeEnabled();
+      expect(box('Form')).toHaveValue('');
+      expect(textbox('Description')).toHaveValue('');
+      expect(select('Element')).toHaveTextContent('None');
+      expect(screen.queryByRole('button', { name: 'Remove Mercury' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Remove Hedge Fixture' }),
+      ).not.toBeInTheDocument();
+      expect(textbox('Safety Notes')).toHaveValue('');
+      // Cleared, not refused: nothing is marked invalid.
+      expect(textbox('Name')).not.toBeInvalid();
+    });
+
+    it('says what it saved above the fields, until the next save', async () => {
+      acceptCreate();
+      const onSaved = renderForm();
+
+      type('Name', 'Testwort');
+      saveAnother();
+
+      // A status, polite, inside the form where its error alert would be.
+      const saved = await screen.findByText('Saved Testwort.');
+      expect(saved).toHaveRole('status');
+      expect(saved.closest('form')).not.toBeNull();
+      await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+
+      // A save refused by the resolver is a new answer, and the old one goes.
+      save();
+      await waitFor(() => expect(screen.queryByText('Saved Testwort.')).not.toBeInTheDocument());
+    });
+
+    it('keeps what was typed when the save is refused', async () => {
+      mockGraphQLError('CreateWorkspaceIngredient', { code: 'FORBIDDEN', message: 'Not yours.' });
+      renderForm();
+
+      type('Name', 'Testwort');
+      addEntry('Planet', 'Mercury');
+      save();
+
+      await screen.findByRole('alert');
+      expect(textbox('Name')).toHaveValue('Testwort');
+      expect(removeButton('Mercury')).toBeInTheDocument();
     });
   });
 
@@ -270,7 +423,7 @@ describe('IngredientForm', () => {
       renderForm();
 
       type('Name', 'Testwort');
-      choose('Classification', 'botanical');
+      choose('Classification', 'Botanical');
       type('Formal Name', 'Fixtura testalis');
       save();
 
@@ -425,7 +578,7 @@ describe('IngredientForm', () => {
       renderForm();
 
       type('Name', 'Testwort');
-      choose('Classification', 'botanical');
+      choose('Classification', 'Botanical');
       save();
 
       await waitFor(() =>
@@ -442,7 +595,7 @@ describe('IngredientForm', () => {
 
       type('Name', 'Testwort');
       type('Formal Name', 'Fixtura testalis');
-      choose('Classification', 'none');
+      choose('Classification', 'None');
 
       const formal = textbox('Formal Name');
       expect(formal).toBeDisabled();
@@ -459,11 +612,11 @@ describe('IngredientForm', () => {
     it('opens the formal name again for a named kind', () => {
       renderForm();
 
-      choose('Classification', 'unknown');
+      choose('Classification', 'Unknown');
       expect(textbox('Formal Name')).toHaveAccessibleDescription(
         expect.stringContaining('An "unknown" entry records no formal name.'),
       );
-      choose('Classification', 'mineral');
+      choose('Classification', 'Mineral');
 
       expect(textbox('Formal Name')).toBeEnabled();
       expect(textbox('Formal Name')).not.toHaveAccessibleDescription(
@@ -493,10 +646,10 @@ describe('IngredientForm', () => {
       renderForm();
 
       type('Name', 'Testwort');
-      choose('Classification', 'botanical');
+      choose('Classification', 'Botanical');
       save();
       await waitFor(() => expect(textbox('Formal Name')).toBeInvalid());
-      choose('Classification', 'unknown');
+      choose('Classification', 'Unknown');
 
       await waitFor(() => expect(textbox('Formal Name')).not.toBeInvalid());
       expect(textbox('Formal Name')).toBeDisabled();
@@ -518,19 +671,16 @@ describe('IngredientForm', () => {
     it('offers every classification behind a placeholder that is not one', () => {
       renderForm();
 
-      // The placeholder is hidden from the list, so only the kinds are offered.
-      const options = within(select('Classification')).getAllByRole('option');
-      expect(options.map((option) => option.getAttribute('value'))).toEqual([
-        'botanical',
-        'fungal',
-        'zoological',
-        'mineral',
-        'chemical',
-        'unknown',
-        'none',
-      ]);
-      expect(select('Classification')).toHaveValue('');
-      expect(select('Classification')).toHaveDisplayValue('Choose a classification');
+      expect(select('Classification')).toHaveTextContent('Choose a classification');
+      fireEvent.click(select('Classification'));
+
+      // The placeholder is not in the list, so only the kinds are offered.
+      const list = screen.getByRole('listbox', { name: 'Classification choices' });
+      expect(
+        within(list)
+          .getAllByRole('option')
+          .map((option) => option.textContent),
+      ).toEqual(['Botanical', 'Fungal', 'Zoological', 'Mineral', 'Chemical', 'Unknown', 'None']);
     });
   });
 
@@ -546,10 +696,10 @@ describe('IngredientForm', () => {
     it('marks the formal name required while a named classification is chosen', () => {
       renderForm();
 
-      choose('Classification', 'mineral');
+      choose('Classification', 'Mineral');
       expect(textbox('Formal Name')).toBeRequired();
 
-      choose('Classification', 'unknown');
+      choose('Classification', 'Unknown');
       expect(textbox('Formal Name')).not.toBeRequired();
     });
 
@@ -589,17 +739,54 @@ describe('IngredientForm', () => {
       );
     });
 
-    it('offers the five elements from a native select, unanswered by default', () => {
+    it('offers the five elements and None, the choice that clears it, unanswered by default', () => {
       renderForm();
 
-      const element = select('Element');
-      expect(element.tagName).toBe('SELECT');
+      expect(select('Element')).toHaveTextContent('None');
+      fireEvent.click(select('Element'));
+      const list = screen.getByRole('listbox', { name: 'Element choices' });
       expect(
-        within(element)
+        within(list)
           .getAllByRole('option')
-          .map((o) => o.getAttribute('value')),
-      ).toEqual(['', 'earth', 'air', 'fire', 'water', 'spirit']);
-      expect(element).toHaveValue('');
+          .map((option) => option.textContent),
+      ).toEqual(['None', 'Earth', 'Air', 'Fire', 'Water', 'Spirit']);
+    });
+
+    // The owner's call during MB.131: a closed set wears the suggesting
+    // fields' control and list, with nothing to type.
+    it("draws a closed set as the combobox's control, select-only, with its chevron", () => {
+      renderForm();
+
+      const classification = select('Classification');
+      expect(classification.tagName).not.toBe('SELECT');
+      expect(classification).not.toHaveAttribute('aria-autocomplete');
+      expect(classification).toHaveClass('combobox__control');
+      expect(classification).toHaveAttribute('aria-expanded', 'false');
+      expect(classification).toHaveAttribute('tabindex', '0');
+      expect(classification.querySelector('svg')).toBeInTheDocument();
+    });
+
+    it('chooses by the keyboard: the arrows open and move, Enter chooses, Escape closes', () => {
+      renderForm();
+      const classification = select('Classification');
+      act(() => classification.focus());
+
+      fireEvent.keyDown(classification, { key: 'ArrowDown' });
+      expect(classification).toHaveAttribute('aria-expanded', 'true');
+      fireEvent.keyDown(classification, { key: 'ArrowDown' });
+      expect(classification).toHaveAttribute(
+        'aria-activedescendant',
+        screen.getByRole('option', { name: 'Fungal' }).id,
+      );
+      fireEvent.keyDown(classification, { key: 'Enter' });
+      expect(classification).toHaveAttribute('aria-expanded', 'false');
+      expect(classification).toHaveTextContent('Fungal');
+
+      fireEvent.keyDown(classification, { key: 'ArrowDown' });
+      fireEvent.keyDown(classification, { key: 'ArrowDown' });
+      fireEvent.keyDown(classification, { key: 'Escape' });
+      expect(classification).toHaveAttribute('aria-expanded', 'false');
+      expect(classification).toHaveTextContent('Fungal');
     });
 
     it('takes form as free text rather than a fixed choice', async () => {
@@ -757,16 +944,16 @@ describe('IngredientForm', () => {
       expect(box(entry)).toHaveFocus();
     });
 
-    // M5.10a: one entry box, the combobox, on every list; only the folk names
-    // have a source yet (MB.131 gives the others theirs).
-    it(`is the combobox, ${field === 'folkNames' ? 'with' : 'without'} a list to open`, () => {
+    // M5.10a: one entry box, the combobox, on every list. Every list but the
+    // colours has a source (MB.131), the owner's call.
+    it(`is the combobox, ${field === 'colors' ? 'without' : 'with'} a list to open`, () => {
       renderForm();
 
       expect(box(entry)).toHaveAttribute('aria-autocomplete', 'list');
       expect(box(entry).closest('.combobox__control')).toContainElement(box(entry));
       const chevron = screen.queryByRole('button', { name: `Show ${entry} suggestions` });
-      if (field === 'folkNames') expect(chevron).toBeInTheDocument();
-      else expect(chevron).not.toBeInTheDocument();
+      if (field === 'colors') expect(chevron).not.toBeInTheDocument();
+      else expect(chevron).toBeInTheDocument();
     });
 
     it('holds its entries inside the box, ahead of the text', () => {
@@ -1098,7 +1285,7 @@ describe('IngredientForm', () => {
       offerDuplicates([TOMENTOSA]);
 
       type('Name', "Cat's Claw");
-      choose('Classification', 'botanical');
+      choose('Classification', 'Botanical');
       settle();
       await within(warning()).findByRole('link');
       save();
@@ -1239,7 +1426,7 @@ describe('IngredientForm', () => {
       type('Form', 'wax');
       settle();
 
-      const curated = await screen.findByRole('group', { name: 'Curated' });
+      const curated = await screen.findByRole('group', { name: 'From Compendium' });
       // Two same-named forms, told apart by the group in each one's name.
       expect(within(curated).getByRole('option', { name: /^Wax \(Animal\)/ })).toHaveTextContent(
         'Used by Testwort (Fixtura testalis)',
@@ -1247,7 +1434,7 @@ describe('IngredientForm', () => {
       expect(within(curated).getByRole('option', { name: /^Wax \(Substance\)/ })).toHaveTextContent(
         'Candle and poppet wax.',
       );
-      const inUse = screen.getByRole('group', { name: 'In use' });
+      const inUse = screen.getByRole('group', { name: 'From Coven' });
       expect(within(inUse).getByRole('option', { name: /^Rhizomes/ })).toHaveTextContent(
         'Used by Mockleaf',
       );
@@ -1321,7 +1508,7 @@ describe('IngredientForm', () => {
       const option = await screen.findByRole('option', { name: /^Hedge Fixture/ });
       expect(option).toHaveTextContent('Used by Testwort (Fixtura testalis)');
       // One bucket: there is no curated vocabulary of common names.
-      expect(screen.queryByRole('group', { name: 'Curated' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('group', { name: 'From Compendium' })).not.toBeInTheDocument();
       fireEvent.click(option);
 
       expect(removeButton('Hedge Fixture')).toBeInTheDocument();
@@ -1356,8 +1543,307 @@ describe('IngredientForm', () => {
     });
   });
 
-  // MB.140: a substitute links an ingredient or names one. Nothing in the
-  // form picks a link until MB.131's lookup, so the list is given one here.
+  // MB.131: the planets, signs, deities and substitutes suggest, each from its
+  // own source, and a pick adds an entry as Add does.
+  describe('the list lookups', () => {
+    const MOON: CorrespondenceNode = {
+      value: 'Moon',
+      description: 'Rules the night and the tides.',
+      curated: true,
+    };
+    const MOONFIXTURE: CorrespondenceNode = {
+      value: 'Moonfixture',
+      description: null,
+      curated: false,
+    };
+    const CANCER: CorrespondenceNode = { value: 'Cancer', description: 'The crab.', curated: true };
+    const CANCERFIXTURE: CorrespondenceNode = {
+      value: 'Cancerfixture',
+      description: null,
+      curated: false,
+    };
+    const HECATE_GREEK: DeityNode = {
+      value: 'Hecate',
+      description: 'Of crossroads and the moon.',
+      tradition: 'Greek',
+      curated: true,
+    };
+    const HECATE_ROMAN: DeityNode = {
+      value: 'Hecate',
+      description: null,
+      tradition: 'Roman',
+      curated: true,
+    };
+    const HECATE_FIXTURE: DeityNode = {
+      value: 'Hecate Fixturia',
+      description: null,
+      tradition: null,
+      curated: false,
+    };
+    const COMPENDIUM_ID = '0d4f2c1a-6b3e-4a5d-8c7f-9e0a1b2c3d4e';
+    const COVEN_ID = '5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d';
+    const BARE_ID = '9f8e7d6c-5b4a-4c3d-8e2f-1a0b9c8d7e6f';
+    const MOCKWORT_COMPENDIUM: IngredientNode = {
+      id: COMPENDIUM_ID,
+      name: 'Mockwort',
+      canonicalName: 'Fixtura vulgaris',
+      isGlobal: true,
+    };
+    const MOCKWORT_COVEN: IngredientNode = {
+      ...MOCKWORT_COMPENDIUM,
+      id: COVEN_ID,
+      isGlobal: false,
+    };
+    const MOCKWORT_TEA: IngredientNode = {
+      id: BARE_ID,
+      name: 'Mockwort Tea',
+      canonicalName: null,
+      isGlobal: false,
+    };
+
+    const LOOKUPS = [
+      {
+        legend: 'Planets',
+        entry: 'Planet',
+        offer: () => offerPlanets([MOON, MOONFIXTURE]),
+        option: /^Moon Rules/,
+        value: 'Moon',
+      },
+      {
+        legend: 'Zodiac Signs',
+        entry: 'Zodiac Sign',
+        offer: () => offerSigns([CANCER, CANCERFIXTURE]),
+        option: /^Cancer The crab/,
+        value: 'Cancer',
+      },
+      {
+        legend: 'Deities',
+        entry: 'Deity',
+        offer: () => offerDeities([HECATE_GREEK, HECATE_FIXTURE]),
+        // The value, never the label: "Hecate", not "Hecate (Greek)".
+        option: /^Hecate \(Greek\)/,
+        value: 'Hecate',
+      },
+      {
+        legend: 'Substitute Ingredients',
+        entry: 'Substitute Ingredient',
+        offer: () => offerIngredients([MOCKWORT_COVEN]),
+        option: /^Mockwort/,
+        value: 'Mockwort',
+      },
+    ];
+
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+    const settle = () => act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+    /** Focuses the box, waits for its first, empty ask, then types `text` and lets it settle. */
+    const lookUp = async (entry: string, calls: unknown[], text: string) => {
+      act(() => box(entry).focus());
+      await waitFor(() => expect(calls).toHaveLength(1));
+      type(entry, text);
+      settle();
+      await waitFor(() => expect(calls).toHaveLength(2));
+    };
+    const changes = (legend: string) =>
+      within(screen.getByRole('group', { name: legend })).getByRole('status', {
+        name: `${legend} changes`,
+      });
+
+    it.each(LOOKUPS)(
+      'asks about $legend for this coven once the typing settles, and not before the box is used',
+      async ({ entry, offer }) => {
+        renderForm();
+        const calls = offer();
+
+        settle();
+        expect(calls).toHaveLength(0);
+
+        act(() => box(entry).focus());
+        await waitFor(() => expect(calls).toHaveLength(1));
+        type(entry, 'm');
+        type(entry, 'mo');
+        act(() => vi.advanceTimersByTime(DEBOUNCE_MS - 1));
+        expect(calls).toHaveLength(1);
+
+        settle();
+        await waitFor(() => expect(calls).toHaveLength(2));
+        expect(calls[1]).toEqual({ workspaceId: WORKSPACE_ID, query: 'mo', first: 10 });
+      },
+    );
+
+    it.each([
+      { legend: 'Planets', entry: 'Planet', offer: offerPlanets, rows: [MOON, MOONFIXTURE] },
+      {
+        legend: 'Zodiac Signs',
+        entry: 'Zodiac Sign',
+        offer: offerSigns,
+        rows: [CANCER, CANCERFIXTURE],
+      },
+    ])(
+      'offers the curated $legend apart from those in use, with their descriptions',
+      async ({ entry, offer, rows: [curated, inUse] }) => {
+        renderForm();
+        const calls = offer([curated, inUse]);
+
+        await lookUp(entry, calls, curated.value.slice(0, 3));
+
+        const group = await screen.findByRole('group', { name: 'From Compendium' });
+        expect(
+          within(group).getByRole('option', { name: new RegExp(`^${curated.value}`) }),
+        ).toHaveTextContent(curated.description as string);
+        expect(
+          within(screen.getByRole('group', { name: 'From Coven' })).getByRole('option', {
+            name: inUse.value,
+          }),
+        ).toBeInTheDocument();
+      },
+    );
+
+    it('offers a curated deity with its tradition, telling two of one name apart, and one in use without', async () => {
+      renderForm();
+      const calls = offerDeities([HECATE_GREEK, HECATE_ROMAN, HECATE_FIXTURE]);
+
+      await lookUp('Deity', calls, 'hecate');
+
+      const curated = await screen.findByRole('group', { name: 'From Compendium' });
+      expect(within(curated).getByRole('option', { name: /^Hecate \(Greek\)/ })).toHaveTextContent(
+        'Of crossroads and the moon.',
+      );
+      expect(within(curated).getByRole('option', { name: 'Hecate (Roman)' })).toBeInTheDocument();
+      expect(
+        within(screen.getByRole('group', { name: 'From Coven' })).getByRole('option', {
+          name: 'Hecate Fixturia',
+        }),
+      ).toBeInTheDocument();
+    });
+
+    it.each(LOOKUPS.slice(0, 3))(
+      'adds a picked $legend entry as its value, empties the box and keeps the focus',
+      async ({ legend, entry, offer, option, value }) => {
+        renderForm();
+        const calls = offer();
+
+        await lookUp(entry, calls, 'mo');
+        fireEvent.click(await screen.findByRole('option', { name: option }));
+
+        expect(removeButton(value)).toBeInTheDocument();
+        expect(box(entry)).toHaveValue('');
+        expect(box(entry)).toHaveFocus();
+        expect(changes(legend)).toHaveTextContent(`Added ${value}`);
+      },
+    );
+
+    it('picks a deity by the keyboard, closes on Escape, and adds typed text on Enter with none open', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      const calls = offerDeities([HECATE_GREEK, HECATE_FIXTURE]);
+
+      await lookUp('Deity', calls, 'hecate');
+      await screen.findByRole('option', { name: /^Hecate \(Greek\)/ });
+      // Past the typed row, which comes first, onto the suggestion.
+      fireEvent.keyDown(box('Deity'), { key: 'ArrowDown' });
+      fireEvent.keyDown(box('Deity'), { key: 'ArrowDown' });
+      expect(box('Deity')).toHaveAttribute(
+        'aria-activedescendant',
+        screen.getByRole('option', { name: /^Hecate \(Greek\)/ }).id,
+      );
+      fireEvent.keyDown(box('Deity'), { key: 'Enter' });
+      expect(removeButton('Hecate')).toBeInTheDocument();
+
+      type('Deity', 'Fixture of the Hedge');
+      settle();
+      await waitFor(() => expect(box('Deity')).toHaveAttribute('aria-expanded', 'true'));
+      fireEvent.keyDown(box('Deity'), { key: 'Escape' });
+      expect(box('Deity')).toHaveAttribute('aria-expanded', 'false');
+      expect(box('Deity')).toHaveValue('Fixture of the Hedge');
+
+      fireEvent.keyDown(box('Deity'), { key: 'Enter' });
+      expect(removeButton('Fixture of the Hedge')).toBeInTheDocument();
+      expect(box('Deity')).toHaveValue('');
+
+      type('Name', 'Testwort');
+      save();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves[0].input.deities).toEqual(['Hecate', 'Fixture of the Hedge']);
+    });
+
+    it('offers each ingredient with its formal name and whose entry it is, in the order found', async () => {
+      renderForm();
+      const calls = offerIngredients([MOCKWORT_COMPENDIUM, MOCKWORT_COVEN, MOCKWORT_TEA]);
+
+      await lookUp('Substitute Ingredient', calls, 'mockwort');
+
+      await screen.findByRole('option', { name: /^Mockwort Tea/ });
+      const rows = within(
+        screen.getByRole('listbox', { name: 'Substitute Ingredient suggestions' }),
+      )
+        .getAllByRole('option')
+        .slice(1);
+      expect(rows.map((row) => row.textContent)).toEqual([
+        'Mockwort (Fixtura vulgaris)Compendium entry',
+        'Mockwort (Fixtura vulgaris)This coven’s entry',
+        'Mockwort TeaThis coven’s entry',
+      ]);
+      // One ranked list: a tier is a note, never a heading that reorders it.
+      expect(screen.queryByRole('group', { name: 'From Compendium' })).not.toBeInTheDocument();
+    });
+
+    it('saves a picked ingredient as a link, its entry reading as that ingredient', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      const calls = offerIngredients([MOCKWORT_COMPENDIUM, MOCKWORT_COVEN, MOCKWORT_TEA]);
+
+      await lookUp('Substitute Ingredient', calls, 'mockwort');
+      fireEvent.click(
+        await screen.findByRole('option', {
+          name: 'Mockwort (Fixtura vulgaris) This coven’s entry',
+        }),
+      );
+      expect(removeButton('Mockwort (Fixtura vulgaris)')).toBeInTheDocument();
+      expect(changes('Substitute Ingredients')).toHaveTextContent(
+        'Added Mockwort (Fixtura vulgaris)',
+      );
+
+      type('Name', 'Testwort');
+      save();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves[0].input.substitutes).toEqual([{ ingredientId: COVEN_ID }]);
+    });
+
+    it('saves a substitute typed without a pick as text, added or taken from its own row, with no warning', async () => {
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      const calls = offerIngredients([MOCKWORT_COVEN]);
+
+      await lookUp('Substitute Ingredient', calls, 'Zest Root');
+      await screen.findByRole('option', { name: /^Mockwort/ });
+      fireEvent.keyDown(box('Substitute Ingredient'), { key: 'Enter' });
+      type('Substitute Ingredient', 'Mockwort Rind');
+      settle();
+      fireEvent.click(
+        await screen.findByRole('option', { name: 'Use what you typed: Mockwort Rind' }),
+      );
+
+      expect(removeButton('Zest Root')).toBeInTheDocument();
+      expect(removeButton('Mockwort Rind')).toBeInTheDocument();
+      type('Name', 'Testwort');
+      save();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves[0].input.substitutes).toEqual([
+        { name: 'Zest Root' },
+        { name: 'Mockwort Rind' },
+      ]);
+      expect(box('Substitute Ingredient')).not.toBeInvalid();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+  });
+
+  // MB.140: a substitute links an ingredient or names one. The lookup above
+  // picks a link; here the list is given one, to show and send it alone.
   describe('a linked substitute', () => {
     const LINKED_ID = '3f6c1d2e-8a4b-4c5d-9e0f-1a2b3c4d5e6f';
     const linked: SubstituteListEntry = {
@@ -1432,34 +1918,49 @@ describe('IngredientForm', () => {
     });
   });
 
-  it('holds the submit down, and shows it busy, while a save is in flight', async () => {
-    let release = () => {};
-    const held = new Promise<void>((resolve) => {
-      release = resolve;
-    });
-    server.use(
-      graphqlLink.mutation<
-        CreateWorkspaceIngredientMutation,
-        CreateWorkspaceIngredientMutationVariables
-      >('CreateWorkspaceIngredient', async ({ variables }) => {
-        await held;
-        return HttpResponse.json({
-          data: { createWorkspaceIngredient: { id: 'saved-1', name: variables.input.name } },
-        });
-      }),
-    );
-    const onSaved = renderForm();
-    const submit = screen.getByRole('button', { name: 'Save Ingredient' });
+  it.each([
+    { pressed: 'Save Ingredient', other: 'Save & Add Another' },
+    { pressed: 'Save & Add Another', other: 'Save Ingredient' },
+  ])(
+    'holds both saves down while one is in flight, $pressed busy and saying so',
+    async ({ pressed, other }) => {
+      let release = () => {};
+      const held = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      server.use(
+        graphqlLink.mutation<
+          CreateWorkspaceIngredientMutation,
+          CreateWorkspaceIngredientMutationVariables
+        >('CreateWorkspaceIngredient', async ({ variables }) => {
+          await held;
+          return HttpResponse.json({
+            data: { createWorkspaceIngredient: { id: 'saved-1', name: variables.input.name } },
+          });
+        }),
+      );
+      const onSaved = renderForm();
+      const submit = screen.getByRole('button', { name: pressed });
+      const rest = screen.getByRole('button', { name: other });
 
-    type('Name', 'Testwort');
-    save();
+      type('Name', 'Testwort');
+      submit.focus();
+      fireEvent.click(submit);
 
-    await waitFor(() => expect(submit).toBeDisabled());
-    // Busy, under its own name: the label does not change as it waits.
-    expect(submit).toHaveAttribute('aria-busy', 'true');
-    release();
-    await waitFor(() => expect(onSaved).toHaveBeenCalled());
-    expect(submit).toBeEnabled();
-    expect(submit).not.toHaveAttribute('aria-busy');
-  });
+      await waitFor(() => expect(submit).toBeDisabled());
+      // Busy, and saying so, the owner's call during MB.131; the other is
+      // held down beside it under its own name.
+      expect(submit).toHaveAttribute('aria-busy', 'true');
+      expect(submit).toHaveAccessibleName('Saving Ingredient');
+      expect(rest).toBeDisabled();
+      expect(rest).not.toHaveAttribute('aria-busy');
+      expect(rest).toHaveAccessibleName(other);
+      release();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(submit).toBeEnabled();
+      expect(rest).toBeEnabled();
+      expect(submit).not.toHaveAttribute('aria-busy');
+      expect(submit).toHaveAccessibleName(pressed);
+    },
+  );
 });
