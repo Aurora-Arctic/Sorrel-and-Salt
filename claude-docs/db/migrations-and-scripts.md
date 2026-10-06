@@ -115,6 +115,13 @@
   `ingredient-lists.test.ts` puts the seeded rows back as a deployed database
   held them before re-running either fill. See
   ["The ingredient identity model"](identity-model.md).
+- **`0032_ingredient-substitutes.sql`** (MB.139) and **`0033_deities.sql`**
+  (MB.128) add tables while drops are pending, so both are `generate --custom`
+  with their DDL taken from a `generate` run in a scratch copy, the pending
+  drops left out and the snapshot extended by hand — the procedure is
+  ["Expand/contract"](expand-contract.md). 0033 adds `deity_traditions` and
+  `deities`, with their two `set_updated_at` triggers; see
+  ["The deity vocabulary"](deity-vocabulary.md).
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
