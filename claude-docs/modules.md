@@ -62,13 +62,13 @@ What stays outside a module, and why:
 Every table has exactly one owner. The services column is what exists today;
 a service lands in the module that owns the table it writes.
 
-| Module        | Tables                                                                                                                                                                      | Services today                                                                                                                     |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `identity`    | `users`, `sessions`, `accounts`, `verifications`, `rate_limits`; later `admin_invitations`                                                                                  | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                     |
-| `coven`       | `workspaces`, `workspace_members`, `workspace_invitations`                                                                                                                  | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                             |
-| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)                            | `suggestions.ts`                                                                                                                   |
-| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_substitutes`, `ingredient_deities`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs` | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`; `schema/units.ts` is the unit vocabulary |
-| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                                                           | `spell-visibility.ts`                                                                                                              |
+| Module        | Tables                                                                                                                                                                                                                | Services today                                                                                                                     |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `identity`    | `users`, `sessions`, `accounts`, `verifications`, `rate_limits`; later `admin_invitations`                                                                                                                            | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                     |
+| `coven`       | `workspaces`, `workspace_members`, `workspace_invitations`                                                                                                                                                            | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                             |
+| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)                                                                      | `suggestions.ts`                                                                                                                   |
+| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_substitutes`, `ingredient_deities`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs`; `references`, `reference_links` (MB.152) | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`; `schema/units.ts` is the unit vocabulary |
+| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                                                                                                     | `spell-visibility.ts`                                                                                                              |
 
 **The compendium is a tier inside `ingredients`, not a module**: the
 `workspace_id IS NULL` tier of the one table, reached through `ingredients`'
@@ -77,6 +77,16 @@ everything `ingredients` owns
 ([`design-decisions/mb.86-modular-monolith.md`](design-decisions/mb.86-modular-monolith.md),
 "The five modules"; splitting the table is under its "What it rules out").
 The reads that cross the tiers are the seam below.
+
+**`references` and `reference_links` are `ingredients`' too** (MB.151), though
+the links reach vocabulary rows as well as ingredients. The link table keys
+into `ingredients`, which `vocabulary` may not import, and an ingredient's
+links are written inside the ingredient's own `withAudit` transaction, which
+a module above `ingredients` could not be called from without a cycle. So a
+vocabulary row's references are read from `ingredients`, as `User.memberships`
+is added from `coven`, and the compendium-tier rows belong to the tier seam's
+extraction unit
+([`design-decisions/mb.151-references.md`](design-decisions/mb.151-references.md)).
 
 ## The public surface
 
@@ -209,7 +219,7 @@ compendium-tier methods update and soft-delete a row only under
 list, its count, the identity lookup, the two address finders and the writer
 touch the compendium tier alone; each of the rest reads the compendium and the
 proofs' workspaces in a single statement. A later task that adds such a finder
-— M8.3's local-beats-compendium resolution — adds the finder's name to
+— M8.3's local-beats-compendium resolution, MB.153's reference finders — adds the finder's name to
 `TIER_SEAM` in its own PR, with a one-line reason beside it.
 The list is then the scope of the extraction task, read from one file.
 
