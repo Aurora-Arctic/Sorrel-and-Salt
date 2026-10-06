@@ -381,6 +381,12 @@ function WhatToTry() {
           then Save.
         </li>
         <li>
+          <strong>Moving an entry:</strong> add a few Planets, Zodiac Signs, Colours or Deities,
+          enough to wrap onto a second row, and drag one by its grip; or Tab to it, press Space,
+          move it with the arrow keys and press Space again. Folk Names and Substitute Ingredients
+          have no grip.
+        </li>
+        <li>
           <strong>Repeated entry:</strong> add the same Folk Name twice, then Save.
         </li>
         <li>

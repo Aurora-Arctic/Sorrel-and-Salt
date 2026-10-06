@@ -1,3 +1,4 @@
+import type { useSortable } from '@dnd-kit/sortable';
 import type { ReactNode, Ref } from 'react';
 
 /** One suggestion: the text picking it writes, and what its row shows. */
@@ -79,6 +80,55 @@ export interface ComboboxEntryProps {
    */
   detail?: string;
   onRemove: () => void;
+  /**
+   * The chip's place in a sortable list, from dnd-kit's `useSortable`: it
+   * draws a handle to move the chip by. Set by `ComboboxSortableEntries`,
+   * never by a list itself.
+   */
+  sortable?: ReturnType<typeof useSortable>;
+}
+
+/** A sortable list's wrapping row, measured as a move starts. */
+export interface FlowShape {
+  /** How wide the row may run before a chip wraps. */
+  width: number;
+  /** Between two chips on a row. */
+  columnGap: number;
+  /** From one row's top to the next's: a chip's height and the gap between rows. */
+  rowPitch: number;
+}
+
+/** Where a chip sits in the row, as client coordinates. */
+export interface FlowSlot {
+  left: number;
+  top: number;
+  width: number;
+}
+
+/** A sortable chip's handle: what it moves, and what it is read with. */
+export interface EntryHandleProps {
+  /** The entry's text, which names the handle, "Move Mars". */
+  value: string;
+  sortable: ReturnType<typeof useSortable>;
+  /** The list's error and the entry's detail, read before how it moves. */
+  describedBy?: string;
+  onFocus: () => void;
+  onBlur: () => void;
+  /** The text, cut off as the chip's is. */
+  children: ReactNode;
+}
+
+/** An entry a sortable list holds: a chip, and the id that is its identity as it moves. */
+export interface ComboboxSortableEntry extends Omit<ComboboxEntryProps, 'sortable'> {
+  /** Stable across a move, as react-hook-form's field id is: the list's key. */
+  id: string;
+}
+
+/** A list whose order means something, its chips moved by a handle each (MB.170). */
+export interface ComboboxSortableEntriesProps {
+  entries: ComboboxSortableEntry[];
+  /** An entry put down at another place, by keyboard or by pointer: indexes into `entries`. */
+  onMove: (from: number, to: number) => void;
 }
 
 /** The last row of an open list: what was typed, offered as itself. */

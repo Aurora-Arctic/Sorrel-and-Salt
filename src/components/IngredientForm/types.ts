@@ -218,6 +218,8 @@ export interface ListFieldProps {
   suggestions?: Suggestions<ListOption>;
   /** The box has been focused: the lookup may start asking. */
   onActivate?: () => void;
+  /** The list keeps the order entered, so its entries can be moved (MB.170). */
+  ordered?: boolean;
 }
 
 /** A field whose lookup asks about this coven's ingredients. */

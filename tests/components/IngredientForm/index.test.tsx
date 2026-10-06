@@ -2,7 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { FormProvider, useForm } from 'react-hook-form';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
 import { ListField, MultiSelectField } from '@/components/IngredientForm/fields';
 import type {
@@ -33,6 +33,7 @@ import {
   mockGraphQLQuery,
 } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
+import { dragByPointer, layOutChips, moveByKeyboard } from '../../support/sortable';
 import type {
   CorrespondenceNode,
   DeityNode,
@@ -193,6 +194,52 @@ function expectErrorOn(control: HTMLElement, message: string) {
   expect(control).toBeInvalid();
   expect(control).toHaveAccessibleDescription(expect.stringContaining(message));
 }
+
+/** The six list fields; the four that keep the order entered move their entries (MB.170). */
+const LISTS = [
+  {
+    legend: 'Folk Names',
+    entry: 'Folk Name',
+    field: 'folkNames',
+    hint: 'Other names it goes by',
+    ordered: false,
+  },
+  {
+    legend: 'Planets',
+    entry: 'Planet',
+    field: 'planets',
+    hint: 'The heavenly bodies it answers to',
+    ordered: true,
+  },
+  {
+    legend: 'Zodiac Signs',
+    entry: 'Zodiac Sign',
+    field: 'zodiacSigns',
+    hint: 'The signs it answers to',
+    ordered: true,
+  },
+  {
+    legend: 'Colours',
+    entry: 'Colour',
+    field: 'colors',
+    hint: 'not the colour it is',
+    ordered: true,
+  },
+  {
+    legend: 'Deities',
+    entry: 'Deity',
+    field: 'deities',
+    hint: 'The gods and spirits',
+    ordered: true,
+  },
+  {
+    legend: 'Substitute Ingredients',
+    entry: 'Substitute Ingredient',
+    field: 'substitutes',
+    hint: 'Other ingredients to use in its place',
+    ordered: false,
+  },
+] as const;
 
 describe('IngredientForm', () => {
   describe('saving a stub', () => {
@@ -947,34 +994,7 @@ describe('IngredientForm', () => {
   });
 
   // Planets, zodiac signs and colours are lists since MB.136, as DESIGN.md §5 gives them.
-  describe.each([
-    {
-      legend: 'Folk Names',
-      entry: 'Folk Name',
-      field: 'folkNames',
-      hint: 'Other names it goes by',
-    },
-    {
-      legend: 'Planets',
-      entry: 'Planet',
-      field: 'planets',
-      hint: 'The heavenly bodies it answers to',
-    },
-    {
-      legend: 'Zodiac Signs',
-      entry: 'Zodiac Sign',
-      field: 'zodiacSigns',
-      hint: 'The signs it answers to',
-    },
-    { legend: 'Colours', entry: 'Colour', field: 'colors', hint: 'not the colour it is' },
-    { legend: 'Deities', entry: 'Deity', field: 'deities', hint: 'The gods and spirits' },
-    {
-      legend: 'Substitute Ingredients',
-      entry: 'Substitute Ingredient',
-      field: 'substitutes',
-      hint: 'Other ingredients to use in its place',
-    },
-  ] as const)('the $legend list', ({ legend, entry, field, hint }) => {
+  describe.each(LISTS)('the $legend list', ({ legend, entry, field, hint, ordered }) => {
     const group = () => screen.getByRole('group', { name: legend });
     // A typed substitute or deity is sent as a name (DESIGN.md §5,
     // `ingredient_substitutes` and `ingredient_deities`).
@@ -1195,6 +1215,23 @@ describe('IngredientForm', () => {
       expect(calls[0].input[field]).toEqual(sent(['First Fixture', 'Third Fixture']));
     });
 
+    // MB.170: the four lists that keep the order entered move their entries;
+    // folk names and substitutes read alphabetically, so they have nothing to
+    // move.
+    it(`${ordered ? 'offers a' : 'offers no'} handle to move an entry by`, () => {
+      renderForm();
+
+      addEntry(entry, 'First Fixture');
+      addEntry(entry, 'Second Fixture');
+
+      // The precondition: both entries are drawn, each with its x.
+      expect(entries()).toEqual(['Remove First Fixture', 'Remove Second Fixture']);
+      const handles = within(group()).queryAllByRole('button', { name: /^Move / });
+      expect(handles.map((handle) => handle.getAttribute('aria-label'))).toEqual(
+        ordered ? ['Move First Fixture', 'Move Second Fixture'] : [],
+      );
+    });
+
     it('refuses to save with text left in the box, until it is added', async () => {
       const calls = acceptCreate();
       const onSaved = renderForm();
@@ -1235,6 +1272,103 @@ describe('IngredientForm', () => {
       expect(calls[0].input[field]).toEqual([]);
     });
   });
+
+  describe.each(LISTS.filter((list) => list.ordered))(
+    'moving an entry in the $legend list',
+    ({ legend, entry, field }) => {
+      const group = () => screen.getByRole('group', { name: legend });
+      const sent = (values: string[]) =>
+        field === 'deities' ? values.map((name) => ({ name })) : values;
+      const entries = () =>
+        within(group())
+          .queryAllByRole('button', { name: /^Remove / })
+          .map((button) => button.getAttribute('aria-label'));
+      const handle = (value: string) =>
+        within(group()).getByRole('button', { name: `Move ${value}` });
+      const announced = () =>
+        within(group())
+          .getAllByRole('status')
+          .map((region) => region.textContent)
+          .join(' | ');
+
+      beforeEach(layOutChips);
+      afterEach(() => vi.restoreAllMocks());
+
+      it('moves one by keyboard, says so, keeps the focus on it, and sends the new order', async () => {
+        const calls = acceptCreate();
+        const onSaved = renderForm();
+
+        type('Name', 'Testwort');
+        for (const value of ['First Fixture', 'Second Fixture', 'Third Fixture']) {
+          addEntry(entry, value);
+        }
+        await moveByKeyboard(handle('Third Fixture'), 'ArrowLeft', 'ArrowLeft');
+
+        expect(entries()).toEqual([
+          'Remove Third Fixture',
+          'Remove First Fixture',
+          'Remove Second Fixture',
+        ]);
+        expect(announced()).toContain('Third Fixture put down at position 1 of 3.');
+        expect(handle('Third Fixture')).toHaveFocus();
+        save();
+
+        await waitFor(() => expect(onSaved).toHaveBeenCalled());
+        expect(calls[0].input[field]).toEqual(
+          sent(['Third Fixture', 'First Fixture', 'Second Fixture']),
+        );
+      });
+
+      it('moves one by pointer, and sends the new order', async () => {
+        const calls = acceptCreate();
+        const onSaved = renderForm();
+
+        type('Name', 'Testwort');
+        for (const value of ['First Fixture', 'Second Fixture', 'Third Fixture']) {
+          addEntry(entry, value);
+        }
+        // The first chip dragged onto the third's place, at 200–280px.
+        await dragByPointer(handle('First Fixture'), 245);
+        save();
+
+        await waitFor(() => expect(onSaved).toHaveBeenCalled());
+        expect(calls[0].input[field]).toEqual(
+          sent(['Second Fixture', 'Third Fixture', 'First Fixture']),
+        );
+      });
+
+      // An error names an entry by its index, so a move that shifts the
+      // entry it names must carry the error with it.
+      it('keeps an error on the entry it names when another entry moves past it', async () => {
+        acceptCreate();
+        renderForm();
+
+        type('Name', 'Testwort');
+        for (const value of ['First Fixture', 'Second Fixture', 'first fixture']) {
+          addEntry(entry, value);
+        }
+        save();
+        await waitFor(() =>
+          expect(removeButton('first fixture')).toHaveAccessibleDescription(
+            expect.stringContaining('already listed'),
+          ),
+        );
+        await moveByKeyboard(handle('Second Fixture'), 'ArrowRight');
+
+        expect(entries()).toEqual([
+          'Remove First Fixture',
+          'Remove first fixture',
+          'Remove Second Fixture',
+        ]);
+        await waitFor(() =>
+          expect(removeButton('first fixture')).toHaveAccessibleDescription(
+            expect.stringContaining('already listed'),
+          ),
+        );
+        expect(removeButton('Second Fixture')).not.toHaveAccessibleDescription();
+      });
+    },
+  );
 
   // M5.10a: the form and folk-name boxes suggest from M4.7a's lookups.
   describe('the duplicate warning', () => {
@@ -2076,6 +2210,37 @@ describe('IngredientForm', () => {
       expect(saves[0].input.deities).toEqual([
         { deityId: GREEK_HECATE_ID },
         { deityId: ROMAN_HECATE_ID },
+      ]);
+    });
+
+    // MB.170: a move carries a pick's link with it, so the order sent is of
+    // links and names alike, and MB.167's replace stores it as positions.
+    it('sends a picked deity and a typed one in the order they were moved to', async () => {
+      layOutChips();
+      onTestFinished(() => {
+        vi.restoreAllMocks();
+      });
+      const saves = acceptCreate();
+      const onSaved = renderForm();
+      const calls = offerDeities([HECATE_GREEK]);
+
+      await lookUp('Deity', calls, 'hecate');
+      fireEvent.click(await screen.findByRole('option', { name: /^Hecate \(Greek\)/ }));
+      addEntry('Deity', 'Fixture of the Hedge');
+      await moveByKeyboard(
+        screen.getByRole('button', { name: 'Move Fixture of the Hedge' }),
+        'ArrowLeft',
+      );
+
+      expect(removeButton('Hecate (Greek)')).toHaveAccessibleDescription(
+        'Of crossroads and the moon.',
+      );
+      type('Name', 'Testwort');
+      save();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(saves[0].input.deities).toEqual([
+        { name: 'Fixture of the Hedge' },
+        { deityId: GREEK_HECATE_ID },
       ]);
     });
 
