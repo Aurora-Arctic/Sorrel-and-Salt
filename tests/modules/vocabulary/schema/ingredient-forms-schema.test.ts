@@ -26,7 +26,7 @@ describe('ingredient_form_groups schema', () => {
 
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
-      ['id', 'name', 'slug', 'description', ...AUDIT_COLUMNS].sort(),
+      ['id', 'name', 'slug', 'description', 'seed_key', ...AUDIT_COLUMNS].sort(),
     );
   });
 
@@ -66,7 +66,7 @@ describe('ingredient_forms schema', () => {
 
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
-      ['id', 'name', 'slug', 'description', 'group_id', ...AUDIT_COLUMNS].sort(),
+      ['id', 'name', 'slug', 'description', 'group_id', 'seed_key', ...AUDIT_COLUMNS].sort(),
     );
   });
 
@@ -113,6 +113,7 @@ describe('ingredient_forms schema', () => {
     expect(trigram?.config.unique).toBe(false);
     expect(trigram?.config.where).toBeUndefined();
     expect(indexes.map((index) => index.config.name).sort()).toEqual([
+      'ingredient_forms_seed_key_unique',
       FORMS_SLUG_UNIQUE,
       FORMS_TRGM,
     ]);

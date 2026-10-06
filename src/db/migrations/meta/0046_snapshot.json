@@ -1,6 +1,6 @@
 {
-  "id": "f56649af-58d8-4937-b3c9-9bffe990534e",
-  "prevId": "823277e9-4499-4d55-92c5-347a7376e632",
+  "id": "d381aa4b-144c-42de-83ee-49507af68773",
+  "prevId": "f56649af-58d8-4937-b3c9-9bffe990534e",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -921,6 +921,161 @@
         "spells_deleted_by_users_id_fk": {
           "name": "spells_deleted_by_users_id_fk",
           "tableFrom": "spells",
+          "tableTo": "users",
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.admin_invitations": {
+      "name": "admin_invitations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "pg_catalog.gen_random_uuid()"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now() + interval '7 days'"
+        },
+        "accepted_at": {
+          "name": "accepted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "accepted_by": {
+          "name": "accepted_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "admin_invitations_token_hash_unique": {
+          "name": "admin_invitations_token_hash_unique",
+          "columns": [
+            {
+              "expression": "token_hash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"admin_invitations\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "admin_invitations_accepted_by_users_id_fk": {
+          "name": "admin_invitations_accepted_by_users_id_fk",
+          "tableFrom": "admin_invitations",
+          "tableTo": "users",
+          "columnsFrom": ["accepted_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "admin_invitations_created_by_users_id_fk": {
+          "name": "admin_invitations_created_by_users_id_fk",
+          "tableFrom": "admin_invitations",
+          "tableTo": "users",
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "admin_invitations_updated_by_users_id_fk": {
+          "name": "admin_invitations_updated_by_users_id_fk",
+          "tableFrom": "admin_invitations",
+          "tableTo": "users",
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "admin_invitations_deleted_by_users_id_fk": {
+          "name": "admin_invitations_deleted_by_users_id_fk",
+          "tableFrom": "admin_invitations",
           "tableTo": "users",
           "columnsFrom": ["deleted_by"],
           "columnsTo": ["id"],

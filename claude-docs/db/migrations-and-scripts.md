@@ -184,11 +184,11 @@
   the drop `generate` also emitted is left out and the column kept in
   `0044_snapshot.json`: the state ["Expand/contract"](expand-contract.md)'s
   procedure leaves, and a scratch `generate` from it emits that drop alone.
-- **`0045_admin-invitations.sql`** (MB.69) creates `admin_invitations` and
+- **`0046_admin-invitations.sql`** (MB.69) creates `admin_invitations` and
   its partial unique index on `token_hash`, with the `set_updated_at` trigger
   added by hand (["Admin invitations"](invitations.md)). Made while MB.168's
   drop was still pending, it leaves that drop out and keeps the column in
-  `0045_snapshot.json`, as 0044 does.
+  `0046_snapshot.json`, as 0044 does.
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls

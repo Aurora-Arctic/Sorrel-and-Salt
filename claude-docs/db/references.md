@@ -30,8 +30,9 @@ journal, the reference work; `web_page` requires `url` and `accessed`;
 `accessed` needs a `url`; `url` is absolute http(s). Every row the table
 admits therefore renders without a branch for a missing required field.
 There is no unique index: two rows may be the same book, since nothing short
-of a librarian identifies a source, and the seed is idempotent by the rendered
-citation instead.
+of a librarian identifies a source; the one index is the seed's, on
+`seed_key`, which records the citation it rendered at insert, so a reference
+an admin has since edited is still its own (MB.171).
 
 ```sql
 CHECK (url IS NULL OR url ~ '^https?://');

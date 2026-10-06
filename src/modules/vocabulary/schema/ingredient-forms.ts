@@ -15,9 +15,15 @@ export const ingredientFormGroups = pgTable(
     name: text('name').notNull(),
     slug: text('slug').notNull(),
     description: text('description').notNull(),
+    // The identity the reference seed gave the row, null on any other; never
+    // changed after, so a reseed knows a row an admin has since edited (MB.171).
+    seedKey: text('seed_key'),
     ...auditColumns,
   },
   (table) => [
+    uniqueIndex('ingredient_form_groups_seed_key_unique')
+      .on(table.seedKey)
+      .where(sql`${table.seedKey} is not null and ${table.deletedAt} is null`),
     // Partial per CLAUDE.md rule 4, and on the slug alone, never the display name.
     uniqueIndex('ingredient_form_groups_slug_unique')
       .on(table.slug)
@@ -44,9 +50,15 @@ export const ingredientForms = pgTable(
     groupId: uuid('group_id')
       .notNull()
       .references(() => ingredientFormGroups.id),
+    // The identity the reference seed gave the row, null on any other; never
+    // changed after, so a reseed knows a row an admin has since edited (MB.171).
+    seedKey: text('seed_key'),
     ...auditColumns,
   },
   (table) => [
+    uniqueIndex('ingredient_forms_seed_key_unique')
+      .on(table.seedKey)
+      .where(sql`${table.seedKey} is not null and ${table.deletedAt} is null`),
     // Partial per rule 4, global rather than per group. The display name is
     // deliberately unindexed: two live forms may both be "Wax", and the
     // autofill tells them apart by group

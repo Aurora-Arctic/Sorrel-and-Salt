@@ -55,7 +55,7 @@ table, reusing the `workspace_role` enum declared beside `workspaces`.
 ## Admin invitations (MB.69)
 
 `src/modules/identity/schema/admin-invitations.ts` holds story 62's table,
-`0045_admin-invitations.sql` its migration. It is inert until MB.70's
+`0046_admin-invitations.sql` its migration. It is inert until MB.70's
 `createAdminInvitation` and `/admin-invite/[token]` write and read it
 ([MB.61's record](../design-decisions/mb.61-email-verification-and-delivery.md),
 "The admin invitation (story 62)").
