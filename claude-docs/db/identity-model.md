@@ -32,7 +32,7 @@ What follows describes all three as built.
   too, until MB.140 moved every reader and writer to `ingredient_substitutes`
   and MB.141 dropped it; `deities[]` moved to `ingredient_deities` the
   same way, MB.167 switching every reader and writer and ceasing to declare
-  it, and MB.168 drops it. Seven declared indexes: M4.1a's three partial unique ones (below),
+  it, and MB.168 dropping it. Seven declared indexes: M4.1a's three partial unique ones (below),
   MB.81's two on the slug ("Ingredient slugs"), `ingredients_trgm`
   (M4.6), one multicolumn `gin_trgm_ops` index over `name` and
   `canonical_name` — see ["Fuzzy matching"](fuzzy-matching.md) — and its folded twin
@@ -79,7 +79,9 @@ What follows describes all three as built.
   The full audit spread, as substitutes. MB.166's
   `0041_fill-ingredient-deities` filled it from `deities[]`, unlinked, in the
   array's order from position 0; MB.167 moved every reader and writer onto it
-  (["Ingredient children"](ingredient-children.md)), and MB.168 drops the list
+  (["Ingredient children"](ingredient-children.md)), and MB.168's
+  `0048_drop-deities-list` copied across what the deploy before MB.167 had
+  written to the list since, after each ingredient's rows, then dropped it
   ([`../design-decisions/mb.165-record-the-picked-vocabulary-row.md`](../design-decisions/mb.165-record-the-picked-vocabulary-row.md)).
 - **`ingredient_forms`** — `id`, `name`, `slug`, `groupId`, `description`, +
   audit. Shaped like `categories`: global, admin-curated, no workspace
