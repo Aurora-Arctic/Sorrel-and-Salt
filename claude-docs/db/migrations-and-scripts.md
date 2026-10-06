@@ -176,6 +176,14 @@
   stamped as that admin. Both data statements re-run in
   `admin-role-changes-schema.test.ts`. See [M2.9's record](../design-decisions/m2.9-granting-admin.md),
   "What the audit trail records".
+- **`0044_admin-role-change-pauses.sql`** (MB.62) creates
+  `admin_role_change_pauses`, its pair CHECK and its one-open index, with the
+  `set_updated_at` trigger added by hand. It writes no row: nothing is paused
+  until someone pauses ([`mb.62-pause-ledger.md`](../design-decisions/mb.62-pause-ledger.md)).
+  It was made while MB.168's drop of `ingredients.deities` was pending, so
+  the drop `generate` also emitted is left out and the column kept in
+  `0044_snapshot.json`: the state ["Expand/contract"](expand-contract.md)'s
+  procedure leaves, and a scratch `generate` from it emits that drop alone.
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls

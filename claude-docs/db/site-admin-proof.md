@@ -7,7 +7,9 @@ returns, `{ userId }` under a brand the file does not export, is the proof.
 Its refusal says "Only a site admin may do this" unless the caller passes a
 more particular reason, as the user list does (MB.52). The writer's three
 compendium-tier methods demand the proof, and so do the admin user list's two
-reads ([`auth/admin-users.md`](../auth/admin-users.md), "The user list"):
+reads ([`auth/admin-users.md`](../auth/admin-users.md), "The user list") and
+the admin-role-change pause's read and its pause and resume (MB.62;
+[`mb.62-pause-ledger.md`](../design-decisions/mb.62-pause-ledger.md)):
 
 ```ts
 const admin = assertSiteAdmin(session);
