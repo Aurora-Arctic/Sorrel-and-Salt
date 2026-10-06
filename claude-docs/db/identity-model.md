@@ -213,8 +213,8 @@ sorts one on write or read.
   reads entries rather than a column: `cross join lateral unnest(…)` gives
   one row per entry before anything trims or folds it, so a value counts
   once however many lists hold it, or however often one does
-  (["The member's autofill"](member-autofill.md)). MB.130 adopts that scan
-  for `deities`.
+  (["The member's autofill"](member-autofill.md)). The deity autofill reads
+  `deities` the same way (MB.130).
 
 **Fuzzy matching: one index, and a rule every caller is bound by** has a file of its own: [`fuzzy-matching.md`](fuzzy-matching.md).
 
