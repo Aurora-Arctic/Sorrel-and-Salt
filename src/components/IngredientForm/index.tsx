@@ -227,11 +227,14 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
             deities from their curated vocabularies and the values in use, a
             pick adding the text, and a curated deity's a link to it as well
             (MB.169); substitutes from the compendium and this coven, a pick
-            adding a link to the ingredient. */}
+            adding a link to the ingredient. Planets, signs, colours and
+            deities keep the order entered, so their entries move (MB.170);
+            folk names and substitutes read alphabetically, so theirs do not. */}
         <LookupListField
           workspaceId={workspaceId}
           useSuggestions={usePlanetSuggestions}
           name="planets"
+          ordered
           legend="Planets"
           entry="Planet"
           hint="The heavenly bodies it answers to: the planets, the Sun and the Moon."
@@ -240,12 +243,14 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
           workspaceId={workspaceId}
           useSuggestions={useZodiacSuggestions}
           name="zodiacSigns"
+          ordered
           legend="Zodiac Signs"
           entry="Zodiac Sign"
           hint="The signs it answers to."
         />
         <ListField
           name="colors"
+          ordered
           legend="Colours"
           entry="Colour"
           hint="The colours it corresponds to in a working, not the colour it is."
@@ -254,6 +259,7 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
           workspaceId={workspaceId}
           useSuggestions={useDeitySuggestions}
           name="deities"
+          ordered
           legend="Deities"
           entry="Deity"
           hint="The gods and spirits it is sacred to."
