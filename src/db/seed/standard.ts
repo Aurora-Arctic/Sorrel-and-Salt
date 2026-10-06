@@ -14,6 +14,7 @@ import { ingredientSlug, slugify } from '../../lib/slugify';
 import { categoryIdByName, seedCategoryVocabulary } from './categories';
 import { seedAstrologyVocabularies } from './astrology';
 import { seedDeityVocabulary } from './deities';
+import { seedVocabularySources } from './sources';
 import { seedFormVocabulary } from './forms';
 import { beginSeedTransaction, insertMissing, requireFrom } from './idempotent';
 import type {
@@ -401,6 +402,7 @@ export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
   await seedCategoryVocabulary(tx);
   await seedAstrologyVocabularies(tx);
   await seedDeityVocabulary(tx);
+  await seedVocabularySources(tx);
 
   await insertMissingUsers(tx);
   await insertMissingAdminBootstrap(tx);
