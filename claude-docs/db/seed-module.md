@@ -75,7 +75,7 @@ an admin or a member wrote, under a partial unique index on live keyed rows.
 Keyed by the slug alone, a reseed after an admin renamed a row would not
 recognise it, since the slug follows the name, and would put the original
 back beside it; a reference's citation follows every field the same way.
-`0044_seed-keys` backfilled each row the bootstrap user created with its
+`0045_seed-keys` backfilled each row the bootstrap user created with its
 slug, exact because no rename writer had shipped. Nothing outside
 `src/db/seed/` writes the column, and no input, service or GraphQL field
 names it. The two helpers above key on it from MB.172, and the sources seed

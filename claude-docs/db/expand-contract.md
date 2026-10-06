@@ -61,7 +61,7 @@ the scratch run then emits the `ADD COLUMN` alone. MB.158's
 `0034_element-list` is the worked case. A column added to tables with no
 pending drop, while another table has one, needs no prompt: the run emits
 the new DDL and the drop, and the drop is cut from the SQL and its column put
-back in the new snapshot from the last one — MB.171's `0044_seed-keys`, made
+back in the new snapshot from the last one — MB.171's `0045_seed-keys`, made
 while MB.168's drop of `ingredients.deities` was pending.
 A changed CHECK follows the same procedure, its snapshot entry's value edited
 rather than a table or column added: MB.161's

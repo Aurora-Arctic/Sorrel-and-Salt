@@ -1,10 +1,11 @@
-import { and, eq, inArray, lte, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, isNull, lte, sql, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { applyAudit } from '../audit';
 import type { AuditSession } from '../types';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
+import { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
 import type { Membership } from '@/modules/coven';
@@ -80,6 +81,21 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
         .delete(retiredIngredientSlugs)
         .where(and(inCompendium(retiredIngredientSlugs), lte(retiredIngredientSlugs.expiresAt, at)))
         .returning(),
+    // No conflict target: the one-open index is an expression index, and the
+    // generated primary key is the only other unique.
+    pauseAdminRoleChanges: () =>
+      tx
+        .insert(adminRoleChangePauses)
+        .values(applyAudit('insert', {}, session) as never)
+        .onConflictDoNothing()
+        .returning(),
+    // `now()` beside the trigger's `updated_at`, so the two read alike.
+    resumeAdminRoleChanges: () =>
+      update(
+        adminRoleChangePauses,
+        { endedAt: sql`now()`, endedBy: session.userId },
+        isNull(adminRoleChangePauses.endedAt),
+      ),
     delete: (table, where) => tx.delete(table).where(where).returning() as never,
   };
 }

@@ -65,7 +65,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.59  | Grant and revoke admin                                                                         | Wave 8  | —                      |
 | MB.60  | Promote the primary admin at sign-in, from Google or Discord only                              | Wave 6  | MB.12, MB.59           |
 | MB.61  | Scope first-party email verification and email invitations                                     | Wave 6  | MB.65, M7.3            |
-| MB.62  | `site_settings` schema, with the admin-role-changes pause (schema)                             | Wave 8  | MB.63                  |
+| MB.62  | The admin-role-change pause ledger (schema)                                                    | Wave 8  | MB.63                  |
 | MB.63  | Pause admin role changes                                                                       | Wave 8  | MB.70                  |
 | MB.64  | Reduce root-folder clutter                                                                     | Wave 6  | —                      |
 | MB.65  | Mail transport: Resend, the Mailtrap Sandbox and Mailpit over HTTP                             | Wave 6  | MB.66, M7.3            |
@@ -1541,25 +1541,26 @@ _Acceptance criteria:_
 - Ends with written follow-up tasks ready to schedule, sized like every other task here
 - No implementation in this PR
 
-**MB.62 — `site_settings` schema, with the admin-role-changes pause (schema)** · 1h
+**MB.62 — The admin-role-change pause ledger (schema)** · 1h
 
-_Story:_ As the site owner, I want a place for a site-wide setting to live, so that a switch the primary admin flips does not need a redeploy or a column on somebody's user row.
+_Story:_ As the site owner, I want the primary admin's pause on admin changes kept in the database, one row per pause, so that flipping it needs no redeploy and each pause says who began and ended it.
 
-M2.9's pause switch, table half ([`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)). One row, fixed id, `adminRoleChangesPaused boolean not null default false`, plus the full `...auditColumns` spread, so `updated_by` and `updated_at` say who last flipped it and when. Not a variable, because flipping one is a redeploy; not a column on the primary admin's row, because the primary admin moves with `ADMIN_BOOTSTRAP_EMAIL` and the switch must not. Inert until MB.63 reads it. A single-row table is enforced by a check on the fixed id, not by convention, so a second row is a constraint error rather than an ambiguity about which row is the setting.
+M2.9's pause switch, table half ([`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)). Not a variable, because flipping one is a redeploy; not a column on the primary admin's row, because the primary admin moves with `ADMIN_BOOTSTRAP_EMAIL` and the switch must not. Written as a one-row `site_settings` table seeded by its migration, which on building could not be done: the row's audit stamps are foreign keys to `users`, and a fresh database is migrated before any user exists. The owner's call was one row per pause instead ([`design-decisions/mb.62-pause-ledger.md`](../design-decisions/mb.62-pause-ledger.md)): `admin_role_change_pauses`, `id`, a nullable `ended_at` and `ended_by`, and the full `...auditColumns` spread, so `created_by` and `created_at` say who paused and when and the ended pair who resumed and when. Paused means a live row with no `ended_at`. A unique index on a constant, partial on that, allows one open pause at most, so a second is a constraint error rather than an ambiguity about which is the pause; a CHECK keeps the ended pair together. Nothing is seeded. Inert until MB.63 reads it.
 
 _Acceptance criteria:_
 
-- Migration creates the table, seeds its one row, and adds the `CREATE OR REPLACE TRIGGER` line for `set_updated_at`, so `updated-at-trigger.test.ts` stays green
-- A second row is refused by a constraint, asserted by inserting one
-- The schema test asserts the column, its default and the audit spread
-- The repository exposes a read and an update for the row and no insert or delete, asserted at the type level
+- Migration creates the table, its CHECK and its one-open index, writes no row, and adds the `CREATE OR REPLACE TRIGGER` line for `set_updated_at`, so `updated-at-trigger.test.ts` stays green
+- A second open pause is refused by the index, asserted by inserting one, while ended pauses beside it are not; a half-ended row is refused by the CHECK
+- The schema test asserts the columns, their nullability, the CHECK, the index and the audit spread
+- The repository exposes the open pause's read and the writer's named pause and resume, each under the `SiteAdmin` proof, the ended pair stamped from the session; the generic insert, updates and deletes refuse the table, asserted at the type level
 - Additive only, so no acknowledgement sidecar
+- DESIGN.md §5 and M2.9's record name the ledger, and §5 states the primary admin's exemption from the pause, as M2.9's record and MB.63 have it
 
 **MB.63 — Pause admin role changes** · 2h
 
 _Story 60 — As the primary admin, I want to switch admin grants and revokes off for every other admin, so that an admin account that has gone rogue cannot make more admins or remove the good ones while I sort it out._
 
-M2.9's pause switch, behaviour half, on MB.62's row and MB.59's service ([`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)). Only the primary admin may flip it, and only the primary admin is exempt from it: while paused, `setUserRole` refuses a grant or a revoke from any other admin with an explaining `Forbidden` that says admin changes are paused and names nobody, and the primary admin can still do both, so it can clean up without first unpausing. The exemption costs nothing, because the primary admin is the one account a rogue admin cannot become: it is set by `ADMIN_BOOTSTRAP_EMAIL` and cannot be revoked (MB.59). Revokes are paused as well as grants because a rogue admin removing the good admins is the same attack from the other side. The control sits on `/admin/users`, visible to every admin and active only for the primary admin, with the current state stated in words beside it. The flip is written through `withAudit`, so the row's stamps record who and when; a history of flips is v2 edit history and is not kept.
+M2.9's pause switch, behaviour half, on MB.62's ledger and MB.59's service ([`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)). Only the primary admin may pause or resume, and only the primary admin is exempt from it: while paused, `setUserRole` refuses a grant or a revoke from any other admin with an explaining `Forbidden` that says admin changes are paused and names nobody, and the primary admin can still do both, so it can clean up without first unpausing. The exemption costs nothing, because the primary admin is the one account a rogue admin cannot become: it is set by `ADMIN_BOOTSTRAP_EMAIL` and cannot be revoked (MB.59). Revokes are paused as well as grants because a rogue admin removing the good admins is the same attack from the other side. The control sits on `/admin/users`, visible to every admin and active only for the primary admin, with the current state stated in words beside it. Pausing and resuming go through `withAudit` and the writer's named pause and resume, so each pause records who began it and who ended it, and when; MB.62 keeps those rows as a ledger, and nothing in v1 lists them.
 
 _Acceptance criteria:_
 
@@ -1567,7 +1568,7 @@ _Acceptance criteria:_
 - A non-primary admin sees the control, cannot activate it, and is refused at the service with an explaining `Forbidden`; the test asserts the caller is a live admin who can otherwise grant
 - While paused, a grant or a revoke by any other admin is refused with an explaining `Forbidden` and writes no ledger row; the test asserts the same call succeeds once resumed, so it is the pause that refuses
 - While paused, the primary admin can still grant and revoke, each writing its ledger row as usual
-- The flip stamps `updated_by` and `updated_at` through `withAudit`, and a request body cannot set either
+- A pause stamps `created_by` and a resume `ended_by` from the session through `withAudit`, and a request body can set neither
 - The mutation carries M5.7's Pothos admin scope as well as the service check
 - `auth.md` documents the switch beside granting and revoking
 

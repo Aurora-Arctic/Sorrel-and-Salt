@@ -1,6 +1,6 @@
 {
-  "id": "823277e9-4499-4d55-92c5-347a7376e632",
-  "prevId": "80852c75-480b-459c-8c67-62768125b9fe",
+  "id": "f56649af-58d8-4937-b3c9-9bffe990534e",
+  "prevId": "823277e9-4499-4d55-92c5-347a7376e632",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3328,6 +3328,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "seed_key": {
+          "name": "seed_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -3367,7 +3373,24 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "references_seed_key_unique": {
+          "name": "references_seed_key_unique",
+          "columns": [
+            {
+              "expression": "seed_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"references\".\"seed_key\" is not null and \"references\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "references_workspace_id_workspaces_id_fk": {
           "name": "references_workspace_id_workspaces_id_fk",
@@ -3669,6 +3692,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "seed_key": {
+          "name": "seed_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -3709,6 +3738,22 @@
         }
       },
       "indexes": {
+        "planets_seed_key_unique": {
+          "name": "planets_seed_key_unique",
+          "columns": [
+            {
+              "expression": "seed_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"planets\".\"seed_key\" is not null and \"planets\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "planets_slug_unique": {
           "name": "planets_slug_unique",
           "columns": [
@@ -3816,6 +3861,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "seed_key": {
+          "name": "seed_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -3856,6 +3907,22 @@
         }
       },
       "indexes": {
+        "zodiac_signs_seed_key_unique": {
+          "name": "zodiac_signs_seed_key_unique",
+          "columns": [
+            {
+              "expression": "seed_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"zodiac_signs\".\"seed_key\" is not null and \"zodiac_signs\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "zodiac_signs_slug_unique": {
           "name": "zodiac_signs_slug_unique",
           "columns": [
@@ -3969,6 +4036,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "seed_key": {
+          "name": "seed_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -4009,6 +4082,22 @@
         }
       },
       "indexes": {
+        "categories_seed_key_unique": {
+          "name": "categories_seed_key_unique",
+          "columns": [
+            {
+              "expression": "seed_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"categories\".\"seed_key\" is not null and \"categories\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "categories_slug_unique": {
           "name": "categories_slug_unique",
           "columns": [
@@ -4111,6 +4200,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "seed_key": {
+          "name": "seed_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -4151,6 +4246,22 @@
         }
       },
       "indexes": {
+        "category_groups_seed_key_unique": {
+          "name": "category_groups_seed_key_unique",
+          "columns": [
+            {
+              "expression": "seed_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"category_groups\".\"seed_key\" is not null and \"category_groups\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "category_groups_slug_unique": {
           "name": "category_groups_slug_unique",
           "columns": [
@@ -4238,6 +4349,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "seed_key": {
+          "name": "seed_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -4278,6 +4395,22 @@
         }
       },
       "indexes": {
+        "deities_seed_key_unique": {
+          "name": "deities_seed_key_unique",
+          "columns": [
+            {
+              "expression": "seed_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"deities\".\"seed_key\" is not null and \"deities\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "deities_slug_unique": {
           "name": "deities_slug_unique",
           "columns": [
@@ -4394,6 +4527,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "seed_key": {
+          "name": "seed_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -4434,6 +4573,22 @@
         }
       },
       "indexes": {
+        "deity_traditions_seed_key_unique": {
+          "name": "deity_traditions_seed_key_unique",
+          "columns": [
+            {
+              "expression": "seed_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"deity_traditions\".\"seed_key\" is not null and \"deity_traditions\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "deity_traditions_slug_unique": {
           "name": "deity_traditions_slug_unique",
           "columns": [
@@ -4520,6 +4675,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "seed_key": {
+          "name": "seed_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -4560,6 +4721,22 @@
         }
       },
       "indexes": {
+        "ingredient_form_groups_seed_key_unique": {
+          "name": "ingredient_form_groups_seed_key_unique",
+          "columns": [
+            {
+              "expression": "seed_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"ingredient_form_groups\".\"seed_key\" is not null and \"ingredient_form_groups\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "ingredient_form_groups_slug_unique": {
           "name": "ingredient_form_groups_slug_unique",
           "columns": [
@@ -4652,6 +4829,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "seed_key": {
+          "name": "seed_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -4692,6 +4875,22 @@
         }
       },
       "indexes": {
+        "ingredient_forms_seed_key_unique": {
+          "name": "ingredient_forms_seed_key_unique",
+          "columns": [
+            {
+              "expression": "seed_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"ingredient_forms\".\"seed_key\" is not null and \"ingredient_forms\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "ingredient_forms_slug_unique": {
           "name": "ingredient_forms_slug_unique",
           "columns": [

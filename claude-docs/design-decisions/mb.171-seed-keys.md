@@ -56,7 +56,7 @@ own and travels with the row.
   databases only, and key by fixed id.
 - `reference_links` is keyed by its two ids, which no edit changes.
 
-**The backfill is exact.** `0044_seed-keys` keys every row the bootstrap user
+**The backfill is exact.** `0045_seed-keys` keys every row the bootstrap user
 created by its slug. No rename writer had shipped, so every such row still
 carries the slug the seed gave it. `references` holds no seeded row yet.
 
@@ -70,5 +70,5 @@ row an admin created under a seed name does not trip the slug index.
   question. `db/seed-module.md` gains "Seed keys".
 - MB.171 and MB.172 were minted. MB.156 is amended to key on the column, and
   re-estimated to 6h for the doc normalisation it also carries.
-- `db/expand-contract.md` records `0044_seed-keys` as a column added while
+- `db/expand-contract.md` records `0045_seed-keys` as a column added while
   MB.168's drop was pending.

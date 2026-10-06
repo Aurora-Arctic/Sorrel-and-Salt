@@ -53,6 +53,7 @@ export { findCommonNameSuggestions } from './common-names';
 export { findCompendiumEntryBySlug, findCompendiumSlugRedirect } from './slugs';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';
 export { findProvidersOfUsers, findUserByEmail, findUserPage } from './users';
+export { findOpenAdminRoleChangePause } from './admin-roles';
 export { deleteProvisionalUsers } from './provisional-users';
 export type {
   AuditWriter,

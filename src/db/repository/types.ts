@@ -1,5 +1,6 @@
 import type { SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
+import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
 import type { auditColumns } from '../../modules/identity/schema/users';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import type { ingredients } from '../../modules/ingredients/schema/ingredients';
@@ -62,6 +63,13 @@ export type NotIngredientScoped = { ingredientId?: never };
 // marks `spells`, and `NotAppendOnly` takes it off every update and delete
 // below, leaving it the insert and the finders.
 export type NotAppendOnly = { change?: never };
+
+// And for the pause ledger (MB.62): `admin_role_change_pauses` is opened and
+// ended by the writer's two named calls alone, so a pause cannot be inserted
+// already ended, reopened or deleted, and its ended pair comes from the
+// session. Its `ended_at` column marks it, and `NotPauseLedger` takes it off
+// the generic insert, every update and every delete below.
+export type NotPauseLedger = { endedAt?: never };
 
 /** A table with a surrogate key, which is every one but the two hard-deleted join tables. */
 export type Identified = { id: AnyPgColumn };
@@ -173,7 +181,7 @@ export interface Derived<TRow extends Record<string, unknown>> {
 /** What `withAudit` hands its callback: every write, stamped from the session. */
 export interface AuditWriter {
   /** Insert one row, stamping created_* and updated_* from the session. */
-  insert<TTable extends PgTable & Unscoped>(
+  insert<TTable extends PgTable & Unscoped & NotPauseLedger>(
     table: TTable,
     values: Writable<TTable>,
   ): Promise<TTable['$inferSelect'][]>;
@@ -187,7 +195,7 @@ export interface AuditWriter {
    * Update matching rows, stamping updated_* only — created_* is never touched.
    * A soft-deleted row never matches, here or in any update below.
    */
-  update<TTable extends PgTable & Unscoped & NotAppendOnly>(
+  update<TTable extends PgTable & Unscoped & NotAppendOnly & NotPauseLedger>(
     table: TTable,
     values: Partial<Writable<TTable>>,
     where: SQL,
@@ -197,7 +205,7 @@ export interface AuditWriter {
    * A service cannot build the `where` above: MB.33 bars it from importing
    * `drizzle-orm` at runtime.
    */
-  updateById<TTable extends PgTable & Unscoped & NotAppendOnly & Identified>(
+  updateById<TTable extends PgTable & Unscoped & NotAppendOnly & NotPauseLedger & Identified>(
     table: TTable,
     id: string,
     values: Partial<Writable<TTable>>,
@@ -226,7 +234,7 @@ export interface AuditWriter {
    * (CLAUDE.md rule 4). A row already deleted never matches, here or below, so
    * it keeps the stamps of whoever deleted it.
    */
-  softDelete<TTable extends PgTable & SoftDeletable & Unscoped & NotAppendOnly>(
+  softDelete<TTable extends PgTable & SoftDeletable & Unscoped & NotAppendOnly & NotPauseLedger>(
     table: TTable,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
@@ -247,7 +255,9 @@ export interface AuditWriter {
    * `findManyByIds`, for the reason `updateById` gives. An empty list deletes
    * nothing without a statement.
    */
-  softDeleteByIds<TTable extends PgTable & SoftDeletable & Unscoped & NotAppendOnly & Identified>(
+  softDeleteByIds<
+    TTable extends PgTable & SoftDeletable & Unscoped & NotAppendOnly & NotPauseLedger & Identified,
+  >(
     table: TTable,
     ids: readonly string[],
   ): Promise<TTable['$inferSelect'][]>;
@@ -289,12 +299,23 @@ export interface AuditWriter {
     at: Date,
   ): Promise<(typeof retiredIngredientSlugs.$inferSelect)[]>;
   /**
+   * Open a pause on admin role changes, stamped from the session (MB.62). No
+   * row comes back while one is already open: the one-open index refuses a
+   * second, and the call writes nothing rather than failing the transaction.
+   */
+  pauseAdminRoleChanges(admin: SiteAdmin): Promise<(typeof adminRoleChangePauses.$inferSelect)[]>;
+  /**
+   * End the open pause, stamping `ended_at` now and `ended_by` from the
+   * session. No row comes back when none is open.
+   */
+  resumeAdminRoleChanges(admin: SiteAdmin): Promise<(typeof adminRoleChangePauses.$inferSelect)[]>;
+  /**
    * Hard-delete, for the join tables that carry no `deleted_at` (MB.34). A
    * table carrying one is rejected by the type, as is one carrying
    * `workspace_id`: no table is both today, and the one that is first adds its
    * proof-scoped counterpart rather than being hard-deleted unscoped.
    */
-  delete<TTable extends PgTable & HardDeletable & Unscoped & NotAppendOnly>(
+  delete<TTable extends PgTable & HardDeletable & Unscoped & NotAppendOnly & NotPauseLedger>(
     table: TTable,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
