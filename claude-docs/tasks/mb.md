@@ -2388,7 +2388,7 @@ _Acceptance criteria:_
 
 _Story:_ As a site admin, I want the admin area to look finished and read clearly, so that curating the compendium is quick and hard to get wrong.
 
-Minted during M5.4. Reviews the admin area once its last page lands: M5.4's layout and `AdminNav`, including the current-page marker it leaves to the design; `IngredientForm` in editable mode (M5.9, M5.10, M5.10a) inside M5.5's compendium page; the category, form, planet and zodiac pages (M5.6, M5.6a, MB.95); the group pages and their colour pickers (M5.6b); the user list (MB.52) with its approval, grant and pause controls (M5.8, MB.59, MB.63); and admin invitations (MB.70). The admin layout is wider than the reading measure for its tables. `IngredientForm` is reviewed again read-only and inside the add and edit modals, with the compendium (MB.120).
+Minted during M5.4. Reviews the admin area once its last page lands: M5.4's layout and `AdminNav`, including the current-page marker it leaves to the design; `IngredientForm` in editable mode (M5.9, M5.10, M5.10a) inside M5.5's compendium page; the category, form, planet and zodiac pages (M5.6, M5.6a, MB.95); the group pages and their colour pickers (M5.6b); the user list (MB.52) with its approval, grant and pause controls (M5.8, MB.59, MB.63); and admin invitations (MB.70). The admin layout is wider than the reading measure for its tables. `IngredientForm` is reviewed again read-only and inside the add and edit modals, with the compendium (MB.120). MB.169 left one call here, on the owner's word: a picked form's description opens in a tooltip while the Form box has focus, so the keyboard reaches it without a tab stop of its own, and the bubble then covers the Form label above the box. Whether it stays on focus, moves, or closes at the first keystroke is this review's to settle; hover-only is not an option, since the keyboard would then never reach it (WCAG 2.1.1).
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
@@ -2400,6 +2400,7 @@ _Acceptance criteria:_
 - Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
 - Each component's doc updates its Styling section, and its stories show the reviewed design
 - `AdminNav` marks the current page, with `aria-current` as well as visually
+- The picked form's tooltip on the Form box's focus is settled, the keyboard still reaching it (MB.169)
 - Admin lists and tables read at desktop width and stay usable at phone width
 - A destructive admin action looks destructive, and its confirmation says what will happen
 
