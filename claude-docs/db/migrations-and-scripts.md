@@ -168,6 +168,14 @@
   is safe on production: v0.5.0 shipped MB.140 first.
   `ingredient-substitutes-schema.test.ts` adds the column back in its clone
   to re-run both fills. See ["Expand/contract"](expand-contract.md).
+- **`0043_admin-role-changes.sql`** (MB.58) is a plain `generate` of
+  `admin_role_changes` and its enum, with three statements added by hand: the
+  table's `set_updated_at` trigger; the demotion of the seed's bootstrap user,
+  which a database seeded before MB.58 holds as an admin and the seed never
+  rewrites; and the backfill, one `bootstrap` row for every live admin,
+  stamped as that admin. Both data statements re-run in
+  `admin-role-changes-schema.test.ts`. See [M2.9's record](../design-decisions/m2.9-granting-admin.md),
+  "What the audit trail records".
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
@@ -185,7 +193,7 @@
   back to `minimal`.** Both readers of `SEED_SCENARIO` — the CLI and the
   `db-init` compose service through it — go through that one parse, so they
   cannot disagree about what `demo` means. A silent fallback would hand
-  someone who mistyped `demo` one admin and one user, and they would then
+  someone who mistyped `demo` one system user and one user, and they would then
   debug the app rather than the variable. Unset or blank is still `minimal`.
 - **`npm run db:drop` and `npm run db:reset`** (M1.24). `db:drop` calls
   `dropSchema` from `src/db/seed/reset.ts`; `db:reset` is `db:drop &&

@@ -1,6 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
+import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import {
   LINK_LANDING,
   ORIGIN,
@@ -276,4 +277,44 @@ describe('Story 1: removing a linked provider', () => {
     expect(await response.json()).toMatchObject({ code: 'ACCOUNT_NOT_FOUND' });
     expect(await accountsOf(owner.row.id)).toEqual([ownersDiscord]);
   });
+});
+
+// MB.58: the seed's creator row is a plain user, and this is why it can stay
+// one — no provider's sign-in lands in it. Better Auth links a sign-in to an
+// existing row by address only if that row is verified, and the bootstrap row
+// never is; nor has it an `accounts` row to sign in through.
+describe("the seed's bootstrap user", () => {
+  it.each<ProviderId>(['google', 'discord', 'facebook', 'microsoft'])(
+    'refuses a %s sign-in vouching for its address, and attaches nothing to it',
+    async (provider) => {
+      const [before] = await sql`
+        select email, email_verified, role from users where id = ${BOOTSTRAP_USER_ID}
+      `;
+      // Preconditions: the address finds the row, and the provider vouches for
+      // it, as it would for an owner signing in over their own row.
+      expect(before).toMatchObject({ email_verified: false, role: 'user' });
+      expect(await accountsOf(BOOTSTRAP_USER_ID)).toEqual([]);
+      const response = await signIn(provider, {
+        // Numeric, as Discord's snowflake ids are; the others take any string.
+        sub: '9001',
+        email: before.email as string,
+        verified: true,
+      });
+
+      expect(response.status).toBe(302);
+      expect(new URL(landingOf(response), ORIGIN).searchParams.get('error')).toBe(
+        'account_not_linked',
+      );
+      expect(cookieHeader(response)).not.toMatch(/session_token=/);
+      expect(await accountsOf(BOOTSTRAP_USER_ID)).toEqual([]);
+      const [sessions] = await sql`
+        select count(*)::int as count from sessions where user_id = ${BOOTSTRAP_USER_ID}
+      `;
+      expect(sessions.count).toBe(0);
+      const [after] = await sql`
+        select email, email_verified, role from users where id = ${BOOTSTRAP_USER_ID}
+      `;
+      expect(after).toEqual(before);
+    },
+  );
 });

@@ -53,6 +53,13 @@ export type NotSpellScoped = { spellId?: never };
 export type IngredientScoped = { ingredientId: AnyPgColumn };
 export type NotIngredientScoped = { ingredientId?: never };
 
+// And for the admin ledger (MB.58): `admin_role_changes` is append-only by
+// the repository rather than by grant, since `sorrel` owns its tables and a
+// REVOKE would not bind it. Its `change` column marks it, as `visibility`
+// marks `spells`, and `NotAppendOnly` takes it off every update and delete
+// below, leaving it the insert and the finders.
+export type NotAppendOnly = { change?: never };
+
 /** A table with a surrogate key, which is every one but the two hard-deleted join tables. */
 export type Identified = { id: AnyPgColumn };
 
@@ -177,7 +184,7 @@ export interface AuditWriter {
    * Update matching rows, stamping updated_* only — created_* is never touched.
    * A soft-deleted row never matches, here or in any update below.
    */
-  update<TTable extends PgTable & Unscoped>(
+  update<TTable extends PgTable & Unscoped & NotAppendOnly>(
     table: TTable,
     values: Partial<Writable<TTable>>,
     where: SQL,
@@ -187,7 +194,7 @@ export interface AuditWriter {
    * A service cannot build the `where` above: MB.33 bars it from importing
    * `drizzle-orm` at runtime.
    */
-  updateById<TTable extends PgTable & Unscoped & Identified>(
+  updateById<TTable extends PgTable & Unscoped & NotAppendOnly & Identified>(
     table: TTable,
     id: string,
     values: Partial<Writable<TTable>>,
@@ -216,7 +223,7 @@ export interface AuditWriter {
    * (CLAUDE.md rule 4). A row already deleted never matches, here or below, so
    * it keeps the stamps of whoever deleted it.
    */
-  softDelete<TTable extends PgTable & SoftDeletable & Unscoped>(
+  softDelete<TTable extends PgTable & SoftDeletable & Unscoped & NotAppendOnly>(
     table: TTable,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
@@ -237,7 +244,7 @@ export interface AuditWriter {
    * `findManyByIds`, for the reason `updateById` gives. An empty list deletes
    * nothing without a statement.
    */
-  softDeleteByIds<TTable extends PgTable & SoftDeletable & Unscoped & Identified>(
+  softDeleteByIds<TTable extends PgTable & SoftDeletable & Unscoped & NotAppendOnly & Identified>(
     table: TTable,
     ids: readonly string[],
   ): Promise<TTable['$inferSelect'][]>;
@@ -284,7 +291,7 @@ export interface AuditWriter {
    * `workspace_id`: no table is both today, and the one that is first adds its
    * proof-scoped counterpart rather than being hard-deleted unscoped.
    */
-  delete<TTable extends PgTable & HardDeletable & Unscoped>(
+  delete<TTable extends PgTable & HardDeletable & Unscoped & NotAppendOnly>(
     table: TTable,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;

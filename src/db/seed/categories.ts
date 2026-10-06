@@ -7,7 +7,7 @@ import type { SeedCategory, SeedDatabase, SeedTransaction } from './types';
 
 // DESIGN.md §6's vocabulary: eight groups and every category, a starting set
 // an admin may edit. Not a scenario — migrate.yml seeds it on its own after
-// migrating, so it inserts the bootstrap admin itself. No slug is written down:
+// migrating, so it inserts the bootstrap user itself. No slug is written down:
 // every one is `slugify(name)`, which expands `&` to `and`
 // (claude-docs/db/category-seed.md, "The category seed").
 
@@ -355,7 +355,7 @@ export async function seedCategories(db: SeedDatabase): Promise<void> {
 
 /**
  * The same seed inside a transaction the caller opened, so `standard` is never
- * half-applied. Assumes the GUC is published and the bootstrap admin exists.
+ * half-applied. Assumes the GUC is published and the bootstrap user exists.
  */
 export async function seedCategoryVocabulary(tx: SeedTransaction): Promise<void> {
   await seedTwoTierVocabulary(tx, {

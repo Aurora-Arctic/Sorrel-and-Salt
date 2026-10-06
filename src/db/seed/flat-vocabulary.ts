@@ -9,7 +9,7 @@ import type { FlatTable, SeedTransaction } from './types';
  * Inserts each item only where its slug is absent. Idempotent on the slug and
  * ignoring `deleted_at`, so a slug an admin soft-deleted is not re-inserted on
  * the next deploy; nothing present is updated, so a rewritten description
- * survives. Assumes the GUC is published and the bootstrap admin exists.
+ * survives. Assumes the GUC is published and the bootstrap user exists.
  */
 export async function seedFlatVocabulary(
   tx: SeedTransaction,

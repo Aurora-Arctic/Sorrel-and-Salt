@@ -32,11 +32,11 @@ So a seed module, the repository and drizzle-kit — which globs
 **Two helper modules carry what every seed repeats** (MB.51).
 `src/db/seed/idempotent.ts` exports three functions. `beginSeedTransaction(db,
 body)` opens the one transaction, publishes the GUC in `withAudit`'s
-parameterised `set_config` form, inserts the bootstrap admin and then runs
+parameterised `set_config` form, inserts the bootstrap user and then runs
 `body(tx)`; every entry point — `seedMinimal`, `seedStandard`, `seedDemo`,
 `seedCategories`, `seedForms` — is that call. `insertMissing(tx, table, wanted,
 { existing, keyOf, toRow })` inserts each `wanted` whose key `existing` did not
-return, stamped by the bootstrap admin through `applyAudit`, and updates
+return, stamped by the bootstrap user through `applyAudit`, and updates
 nothing. `requireFrom(map, key, describe)` is a `Map` lookup that throws
 `describe()`'s message rather than handing `undefined` to a NOT NULL column.
 `existing` is the caller's own query on purpose: each site scopes it — fixture
@@ -67,13 +67,19 @@ items)`, the one-tier counterpart for a vocabulary with no group — each item
 by slug, the same rules — which `seedAstrologyVocabularies` calls once
 for `planets` and once for `zodiac_signs`.
 
-**`minimal`** (`src/db/seed/minimal.ts`): one admin, one user, empty
-compendium. The admin is the bootstrap user under the fixed
+**`minimal`** (`src/db/seed/minimal.ts`): one system user, one user, empty
+compendium. The system user is the bootstrap user under the fixed
 `BOOTSTRAP_USER_ID` (`…0001`, MB.5), inserted as its own
 `created_by`/`updated_by` in a single self-satisfying statement — that insert
 lives in `src/db/seed/bootstrap-admin.ts` since M4.3, because every seeded row
 needs a creator and the category seed runs without `minimal` having gone
-first; the plain
+first. It is `role: 'user'`, not an admin, since MB.58: it has no OAuth
+account and is unverified, so Better Auth refuses to link a sign-in to it and
+nobody can sign in as it, and as an admin it would only be a revocable row on
+`/admin/users` (`tests/db/account-linking.test.ts` pins the refusal;
+[`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)). The
+file and its exports keep their old names, since `deploy.yml` lists the file.
+The plain
 user is `MINIMAL_USER_ID` (`…0002`), created by the bootstrap user. Both
 keep `canCreateWorkspace` false — a bare install has granted nothing. It is
 **idempotent by fixed id** (`ON CONFLICT (id) DO NOTHING`), not by

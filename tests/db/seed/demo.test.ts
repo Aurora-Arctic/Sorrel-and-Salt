@@ -178,7 +178,7 @@ describe('the grimoire', () => {
 
   // The seed names no visibility, so what these rows carry is the column's own
   // default (M10.3). A demo coven whose jars were invisible to everyone but
-  // the bootstrap admin would be a demo of nothing.
+  // the bootstrap user would be a demo of nothing.
   it('shares every seeded spell with the coven', async () => {
     await seedDemo(db);
 
@@ -283,7 +283,7 @@ describe('layers: ingredients, and the order they go into the jar', () => {
     expect(named).toEqual([]);
   });
 
-  it('stamps every layer as the bootstrap admin’s and publishes it as the acting user', async () => {
+  it('stamps every layer as the bootstrap user’s and publishes it as the acting user', async () => {
     await seedDemo(db);
 
     const layers = await sql<LayerRow[]>`select * from spell_ingredients`;
