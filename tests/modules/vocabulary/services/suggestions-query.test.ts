@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { suggestForms, suggestPlanets } from '@/modules/vocabulary';
+import { suggestDeities, suggestForms, suggestPlanets } from '@/modules/vocabulary';
 import { B, asUser } from '../../../support/as-user';
 import type { Logged } from '../../../support/db/types';
 
@@ -167,5 +167,62 @@ describe('the form suggestion query', () => {
     expect(query.match(/"ingredients"\."deleted_at" is null/g)).toHaveLength(2);
     expect(query).toMatch(/"ingredient_forms"\."deleted_at" is null/);
     expect(query).toMatch(/"ingredient_form_groups"\."deleted_at" is null/);
+  });
+});
+
+// 216 deities is still a sequential scan for every query measured, so the
+// shape is asserted here rather than a probe of `deities_trgm`.
+describe('the deity suggestion query', () => {
+  async function deityStatement(query: string): Promise<Logged> {
+    await suggestDeities(asUser(B), WORKSPACE_W_ID, query, { limit: 26, inverted: false });
+    const reads = logged.filter(({ query }) => /from "deities"/.test(query));
+    expect(reads).toHaveLength(1);
+    return reads[0];
+  }
+
+  it('sets both thresholds before matching', async () => {
+    const statement = await deityStatement('hekate');
+    const setting = logged.findIndex(({ query }) =>
+      query.includes(`set_config('pg_trgm.similarity_threshold'`),
+    );
+
+    expect(setting).toBeGreaterThanOrEqual(0);
+    expect(logged[setting].params).toEqual(['0.4', '0.6']);
+    expect(logged.indexOf(statement)).toBeGreaterThan(setting);
+  });
+
+  it('matches a name with % and <%, a description with <% alone, never a similarity() comparison', async () => {
+    const { query } = await deityStatement('hekate');
+
+    expect(query).toMatch(/"deities"\."name" % \$\d+/);
+    expect(query).toMatch(/\$\d+ <% "deities"\."name"/);
+    expect(query).toMatch(/\$\d+ <% "deities"\."description"/);
+    expect(query).not.toMatch(/"deities"\."description" %/);
+    expect(query).toMatch(/"entry"\."value" % \$\d+/);
+    expect(query).not.toMatch(/similarity\([^)]*\)\s*[<>]=?/);
+  });
+
+  it('reads each entry of the deities list, unnested, scoped and live', async () => {
+    const { query, params } = await deityStatement('hekate');
+
+    expect(query).toMatch(
+      /from "ingredients" cross join lateral unnest\("ingredients"\."deities"\) as "entry"\("value"\)/,
+    );
+    expect(query).toMatch(
+      /"ingredients"\."workspace_id" is null or "ingredients"\."workspace_id" = \$\d+/,
+    );
+    expect(params).toContain(WORKSPACE_W_ID);
+    expect(query).toMatch(/"ingredients"\."deleted_at" is null/);
+  });
+
+  // A deity is curated only while its tradition is live (MB.127).
+  it('reads a deity as curated only while its tradition is live too', async () => {
+    const { query } = await deityStatement('hekate');
+
+    expect(query).toMatch(/"deities"\."deleted_at" is null/);
+    expect(query).toMatch(/"deity_traditions"\."deleted_at" is null/);
+    expect(query).toMatch(
+      /lower\(btrim\("entry"\."value"\)\) not in \(select lower\("deities"\."name"\)/,
+    );
   });
 });

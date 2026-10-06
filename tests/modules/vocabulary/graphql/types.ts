@@ -26,3 +26,15 @@ export interface AstrologySuggestionConnection {
   edges: { cursor: string; node: AstrologySuggestion }[];
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
 }
+
+export interface DeitySuggestionNode {
+  value: string;
+  description: string | null;
+  tradition: string | null;
+  curated: boolean;
+}
+
+export interface DeitySuggestionConnection {
+  edges: { cursor: string; node: DeitySuggestionNode }[];
+  pageInfo: { hasNextPage: boolean; endCursor: string | null };
+}

@@ -43,6 +43,10 @@ In [`graphql/schema.md`](graphql/schema.md#planetsuggestions-and-zodiacsuggestio
 
 In [`graphql/schema.md`](graphql/schema.md#formsuggestions-and-commonnamesuggestions).
 
+### `deitySuggestions`
+
+In [`graphql/schema.md`](graphql/schema.md#deitysuggestions).
+
 ### `possibleDuplicates`
 
 In [`graphql/schema.md`](graphql/schema.md#possibleduplicates).

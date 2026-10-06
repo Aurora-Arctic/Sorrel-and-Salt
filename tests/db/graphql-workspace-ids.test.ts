@@ -66,6 +66,7 @@ const WHOLE_INGREDIENT = {
 
 const PROBES: Record<string, WorkspaceIdProbe> = {
   commonNameSuggestions: suggestion('commonNameSuggestions'),
+  deitySuggestions: suggestion('deitySuggestions'),
   formSuggestions: suggestion('formSuggestions'),
   planetSuggestions: suggestion('planetSuggestions'),
   zodiacSuggestions: suggestion('zodiacSuggestions'),

@@ -28,8 +28,9 @@ registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
 `graphql/` path, which is internal. `identity` has `User` and `me`; `coven` has
 `Workspace`, `WorkspaceMember`, the `membershipsByUser` loader and the
 `User.memberships` field; `vocabulary` has `CorrespondenceSuggestion`,
-`FormSuggestion`, `SuggestionClaimant` and the `planetSuggestions`,
-`zodiacSuggestions` and `formSuggestions` connections; `ingredients` has
+`FormSuggestion`, `DeitySuggestion`, `SuggestionClaimant` and the
+`planetSuggestions`, `zodiacSuggestions`, `formSuggestions` and
+`deitySuggestions` connections; `ingredients` has
 `Ingredient`, the `compendium`, `ingredient`, `possibleDuplicates` and
 `ingredientSuggestions` queries,
 the two workspace ingredient mutations, and `CommonNameSuggestion` and
