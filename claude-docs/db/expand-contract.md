@@ -23,6 +23,10 @@ second PR, with its sidecar (CLAUDE.md rule 10; the procedure is
 before `deploy.yml` promotes, and Drizzle names every declared column in a
 `SELECT`, so dropping a column the live deploy still declares breaks its reads
 for the length of the rollout, and a rollback past the migration for good.
+That holds on production as on staging, and a drop task waits only for its
+switch to reach staging: the release that carries a drop must follow one that
+carried its switch, unless production never declared the column, as with
+`0028`.
 MB.82 and MB.107 are the worked case: MB.82 stopped declaring `pending_slug`
 and its date, and MB.107 dropped them. **"Deployed" means production too**
 when production's deploy declares the column: a release runs every pending
@@ -58,6 +62,17 @@ the scratch run then emits the `ADD COLUMN` alone. MB.158's
 A changed CHECK follows the same procedure, its snapshot entry's value edited
 rather than a table or column added: MB.161's
 `0038_unknown-carries-formal-name`.
+
+**A drop made while another is pending is `generate --custom` as well**, its
+`DROP` taken from the same scratch run and the other task's left out. The
+snapshot is the copied one less the dropped column, so a second scratch
+`generate` still emits the other drop and nothing else. MB.160's
+`0037_drop-element` is the worked case, made while MB.141's was pending.
+MB.141's `0039_drop-substitutes-list`, a plain `generate` once nothing else
+was pending, also fills before it drops, for whatever the deploy before the
+switch wrote after the first fill. Unlike `0031`, that refill only adds: by
+the drop the switch has been writing the table, so a row there, live or
+removed, is newer than the list.
 
 Renaming a column is the canonical case that goes wrong if done directly —
 `ALTER TABLE ... RENAME COLUMN` is atomic in Postgres, but it isn't atomic
@@ -206,7 +221,7 @@ and goes red on a real omission. It was permanently red before, first because
 the bare command _was_ that full scan (fixed in MB.37) and then because the
 acknowledgements it needed only ever existed in PR bodies.
 
-Eight migrations carry findings today, and each has its sidecar:
+Nine migrations carry findings today, and each has its sidecar:
 
 | Migration                              | Findings                                                                                                                             |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -218,6 +233,7 @@ Eight migrations carry findings today, and each has its sidecar:
 | `0036_drop-ingredient-singles.sql`     | the single `planet`, `zodiac` and `color` columns dropped, the contract half of MB.134's lists (MB.137)                              |
 | `0037_drop-element.sql`                | the single `element` column dropped, the contract half of MB.157's list (MB.160)                                                     |
 | `0038_unknown-carries-formal-name.sql` | `ingredients_nomenclature_declares_canonical_name` dropped and re-added wider under the same name (MB.161)                           |
+| `0039_drop-substitutes-list.sql`       | `ingredients.substitutes` dropped, the contract half of MB.140's switch, after a refill into `ingredient_substitutes` (MB.141)       |
 
 **`0002`'s sidecar was written retroactively, and says so.** This document
 previously claimed its `DROP CONSTRAINT` and two `NOT NULL` columns "were
