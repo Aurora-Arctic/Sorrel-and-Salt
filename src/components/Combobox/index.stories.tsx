@@ -48,6 +48,44 @@ export const TwoBuckets: Story = () => {
   );
 };
 
+/**
+ * A pick's qualifier: "Wax" picked under Substance, reading "Wax (Substance)"
+ * with the group muted, its description in a tooltip on hover or focus. An edit away from
+ * the picked value drops it, as the form's field does (MB.169).
+ */
+export const Qualifier: Story = () => {
+  const [value, setValue] = useState('Wax');
+  const [picked, setPicked] = useState<{ value: string; text: string; detail?: string } | null>({
+    value: 'Wax',
+    text: 'Substance',
+    detail: 'Candle and poppet wax.',
+  });
+  return (
+    <>
+      <label id="picked-label" htmlFor="picked">
+        Form
+      </label>
+      <Combobox
+        id="picked"
+        label="Form"
+        labelId="picked-label"
+        value={value}
+        onChange={(text) => {
+          setValue(text);
+          if (text !== picked?.value) setPicked(null);
+        }}
+        onPick={(text, option) => {
+          setValue(text);
+          const group = option?.label?.match(/\((.+)\)$/)?.[1];
+          setPicked(group ? { value: text, text: group, detail: option?.note } : null);
+        }}
+        suggestions={{ options: FORMS, pending: false }}
+        qualifier={picked ? { text: picked.text, detail: picked.detail } : undefined}
+      />
+    </>
+  );
+};
+
 /** A list's box: its entries inside the control with an x each, one cut off with a tooltip, a pick that adds rather than fills, and Backspace in the empty box taking the last. */
 export const List: Story = () => {
   const [value, setValue] = useState('');

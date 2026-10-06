@@ -47,10 +47,24 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   entries?: ReactNode;
   /** A control that empties the list, shown while it holds entries. */
   clear?: { label: string; onClear: () => void };
+  /** What a pick leaves out of the text, drawn muted in brackets after it: a picked form's group. */
+  qualifier?: ComboboxQualifier;
   inputRef?: Ref<HTMLInputElement>;
   name?: string;
   'aria-describedby'?: string;
   'aria-invalid'?: boolean;
+}
+
+/**
+ * What a pick leaves out of the box's text, "Substance" for a picked "Wax"
+ * (MB.169): drawn after the text, muted and in brackets, "Wax (Substance)",
+ * and read as the box's description.
+ */
+export interface ComboboxQualifier {
+  /** Unbracketed: the box adds the brackets. */
+  text: string;
+  /** Shown in a tooltip while the qualifier is hovered or the box has focus, and read after the text. */
+  detail?: string;
 }
 
 /** An entry a list holds, drawn inside the control: its text, and the x that takes it out. */

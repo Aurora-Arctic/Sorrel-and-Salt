@@ -11,7 +11,7 @@ import type {
   NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
-import type { ComboboxOption, Suggestions } from '../Combobox/types';
+import type { ComboboxQualifier, ComboboxOption, Suggestions } from '../Combobox/types';
 
 export interface IngredientFormProps {
   /** The coven the new ingredient is written to. */
@@ -60,9 +60,48 @@ export interface SubstituteListEntry extends ListEntry {
   link?: SubstituteLink;
 }
 
-/** A list box's suggestion: a substitute's carries the ingredient a pick links. */
+/**
+ * The curated deity a pick links, with the tradition its pill reads beside
+ * the name, "Hecate (Greek)", and the description its tooltip carries
+ * (MB.169). Only the id is sent.
+ */
+export interface DeityLink {
+  id: string;
+  tradition: string | null;
+  description: string | null;
+}
+
+/** One deity: typed text, or a link to the curated deity picked, whose name is `value` (MB.167). */
+export interface DeityListEntry extends ListEntry {
+  link?: DeityLink;
+}
+
+/** Any list's entry: typed text, or a substitute's or a deity's link beside it. */
+export type AnyListEntry = ListEntry | SubstituteListEntry | DeityListEntry;
+
+/**
+ * A list box's suggestion: a substitute's carries the ingredient a pick
+ * links, and a curated deity's the deity.
+ */
 export interface ListOption extends ComboboxOption {
-  link?: SubstituteLink;
+  link?: SubstituteLink | DeityLink;
+}
+
+/**
+ * The curated form a pick links (MB.169): its id, which is sent, the name it
+ * was picked as, which the text must stay for the pick to hold, and the group
+ * and description the box shows beside the text.
+ */
+export interface FormLink {
+  id: string;
+  name: string;
+  group: string | null;
+  description: string | null;
+}
+
+/** A form suggestion: a curated row's carries the form a pick links. */
+export interface FormOption extends ComboboxOption {
+  link?: FormLink;
 }
 
 /**
@@ -75,6 +114,8 @@ export interface IngredientFormValues {
   nomenclature: NomenclatureKind | '';
   canonicalName: string;
   form: string;
+  /** The curated form picked, while the text is still its name; null for typed text. */
+  formLink: FormLink | null;
   folkNames: ListEntry[];
   description: string;
   /** In the order chosen; none chosen is the answer "none". */
@@ -82,7 +123,7 @@ export interface IngredientFormValues {
   planets: ListEntry[];
   zodiacSigns: ListEntry[];
   colors: ListEntry[];
-  deities: ListEntry[];
+  deities: DeityListEntry[];
   substitutes: SubstituteListEntry[];
   safetyNotes: string;
   drafts: Record<ListFieldName, string>;
@@ -152,11 +193,17 @@ export interface SelectOption {
 }
 
 /** A text field whose box suggests as it is typed in; picking fills it. */
-export interface SuggestFieldProps extends FieldProps {
+export interface SuggestFieldProps<O extends ComboboxOption = ComboboxOption> extends FieldProps {
   name: TextFieldName;
-  suggestions: Suggestions;
+  suggestions: Suggestions<O>;
   /** The box has been focused: the lookup may start asking. */
   onActivate: () => void;
+  /** A suggestion picked, after the text is filled from it, or the typed row, with `null`. */
+  onPick?: (option: O | null) => void;
+  /** The text typed, after the field takes it. */
+  onEdit?: (text: string) => void;
+  /** What a pick leaves out of the text, drawn in the box: a picked form's group. */
+  qualifier?: ComboboxQualifier;
 }
 
 export interface ListFieldProps {

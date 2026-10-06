@@ -402,6 +402,108 @@ describe('Combobox', () => {
     expect(onBlur).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('status', { name: '' })).toHaveTextContent('wa');
   });
+
+  // MB.169: what a pick leaves out of the text, a picked form's group, muted
+  // inside the control before the indicators, its detail in a tooltip.
+  describe('a qualifier', () => {
+    const DETAIL = 'Candle and poppet wax.';
+    const tooltip = () => screen.queryByRole('tooltip');
+    const qualifier = () =>
+      within(screen.getByRole('presentation')).getByText('(Substance)', {
+        ignore: '[role="tooltip"]',
+      });
+
+    it('is drawn inside the control and read as the box’s description, after the field’s own', () => {
+      render(
+        <>
+          <Harness
+            initial="Wax"
+            suggestions={TWO_BUCKETS}
+            qualifier={{ text: 'Substance', detail: DETAIL }}
+            aria-describedby="why"
+          />
+          <p id="why">How it comes</p>
+        </>,
+      );
+
+      expect(qualifier()).toBeInTheDocument();
+      expect(box()).toHaveAccessibleDescription(`How it comes (Substance) ${DETAIL}`);
+    });
+
+    it('shows its detail in a tooltip on hover and while the box has focus, closing on Escape', async () => {
+      const onFocus = vi.fn();
+      render(
+        <Harness
+          initial="Wax"
+          suggestions={TWO_BUCKETS}
+          qualifier={{ text: 'Substance', detail: DETAIL }}
+          onFocus={onFocus}
+        />,
+      );
+
+      expect(tooltip()).not.toBeInTheDocument();
+      fireEvent.mouseEnter(qualifier());
+      expect(tooltip()).toHaveTextContent(DETAIL);
+      fireEvent.mouseLeave(qualifier());
+      await waitFor(() => expect(tooltip()).not.toBeInTheDocument());
+
+      act(() => box().focus());
+      expect(tooltip()).toHaveTextContent(DETAIL);
+      expect(onFocus).toHaveBeenCalledTimes(1);
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(tooltip()).not.toBeInTheDocument();
+      expect(box()).toHaveFocus();
+
+      act(() => box().blur());
+      act(() => box().focus());
+      expect(tooltip()).toHaveTextContent(DETAIL);
+      act(() => box().blur());
+      expect(tooltip()).not.toBeInTheDocument();
+    });
+
+    it('opens no tooltip without a detail, and is still the box’s description', () => {
+      render(<Harness initial="Wax" suggestions={TWO_BUCKETS} qualifier={{ text: 'Substance' }} />);
+
+      fireEvent.mouseEnter(qualifier());
+      act(() => box().focus());
+
+      expect(tooltip()).not.toBeInTheDocument();
+      expect(box()).toHaveAccessibleDescription('(Substance)');
+    });
+
+    it('follows the text, in brackets, before the clear and the chevron', () => {
+      render(
+        <Harness
+          initial="Wax"
+          suggestions={TWO_BUCKETS}
+          qualifier={{ text: 'Substance' }}
+          clear={{ label: 'Clear Form', onClear: () => {} }}
+        />,
+      );
+
+      const clear = screen.getByRole('button', { name: 'Clear Form' });
+      expect(
+        box().compareDocumentPosition(qualifier()) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(
+        qualifier().compareDocumentPosition(clear) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it('puts the caret in the text when pressed, reading as part of it', () => {
+      render(<Harness initial="Wax" suggestions={TWO_BUCKETS} qualifier={{ text: 'Substance' }} />);
+
+      fireEvent.mouseDown(qualifier());
+
+      expect(box()).toHaveFocus();
+    });
+
+    it('is not drawn, nor read, without one', () => {
+      render(<Harness initial="Wax" suggestions={TWO_BUCKETS} />);
+
+      expect(box()).not.toHaveAccessibleDescription();
+    });
+  });
   // The entry a list draws inside the control: moved here from IngredientForm
   // (MB.133), whose tests still cover it in the form.
   describe('an entry', () => {

@@ -34,6 +34,13 @@
     border-color: $secondary;
     box-shadow: inset 0 0 0 1px $secondary;
   }
+
+  // A step more room above the chips than the bare box has, the owner's call
+  // during MB.169: at the box's own padding the first row of chips sat
+  // against the top edge.
+  &:has(.combobox__entry) {
+    padding-top: space(2);
+  }
 }
 
 // The select-only box: the control itself takes the focus and the press,
@@ -110,6 +117,68 @@
   align-items: center;
   align-self: stretch;
   gap: space(1);
+}
+
+// The text's slot in the row, a one-cell grid: the box takes the rest of the
+// row, as it always has. With a qualifier it is as wide as the text instead,
+// the cell sized by a hidden copy of the value in the box's own font and
+// padding, so the qualifier follows the text (MB.169). The track can shrink
+// below its content, so a long text gives way inside the control.
+.combobox__text {
+  display: grid;
+  flex: 1 1 6rem;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 6rem;
+
+  > .combobox__input {
+    grid-area: 1 / 1;
+    width: 100%;
+    min-width: 0;
+  }
+
+  &.is-qualified {
+    flex: 0 1 auto;
+    min-width: 1ch;
+
+    &::after {
+      content: attr(data-value) ' ';
+      grid-area: 1 / 1;
+      min-height: 2rem;
+      padding: space(1) 0;
+      overflow: hidden;
+      visibility: hidden;
+      white-space: pre;
+    }
+  }
+}
+
+// What a pick leaves out of the text, a picked form's group (MB.169):
+// straight after the text, "Wax (Animal)", in the muted ink a row's note
+// reads in, and never cut off, since it is a word or two and the text beside
+// it gives way first. A press on it is a press on the text.
+.combobox__qualifier {
+  flex: none;
+  color: $text-muted;
+  white-space: nowrap;
+  cursor: text;
+}
+
+// The qualifier's detail, in InfoTip's bubble and its fade, above the control
+// from its left edge, as an entry's is: positioned on `.combobox`, so its
+// 100% is the control's width.
+.combobox__qualifier-tip {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  z-index: 1;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 100%;
+  margin-bottom: space(1);
+  white-space: normal;
+  overflow-wrap: anywhere;
+
+  @include tip-bubble;
 }
 
 // Between the clear and the chevron, as react-select draws it.

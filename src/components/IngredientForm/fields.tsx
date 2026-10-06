@@ -8,6 +8,7 @@ import {
   useFormState,
 } from 'react-hook-form';
 import Combobox, { ComboboxEntry, ComboboxMultiSelect, ComboboxSelect } from '../Combobox';
+import type { ComboboxOption } from '../Combobox/types';
 import InfoTip from '../InfoTip';
 import type {
   FieldErrorProps,
@@ -157,16 +158,20 @@ export function TextField({
 
 /**
  * A text field whose box suggests as it is typed in (DESIGN.md §14): a pick
- * fills the field with the suggestion's value and links nothing, and free
- * text stays as typed, with no warning.
+ * fills the field with the suggestion's value, and free text stays as typed,
+ * with no warning. What a pick links is the caller's, told of each pick
+ * and each edit, and what it adds to the box is its qualifier.
  */
-export function SuggestField({
+export function SuggestField<O extends ComboboxOption = ComboboxOption>({
   name,
   label,
   hint,
   suggestions,
   onActivate,
-}: SuggestFieldProps): ReactElement {
+  onPick,
+  onEdit,
+  qualifier,
+}: SuggestFieldProps<O>): ReactElement {
   const { control } = useFormContext<IngredientFormValues>();
   const { field } = useController({ control, name });
   const { aria, ...shell } = useField(name, hint);
@@ -177,11 +182,18 @@ export function SuggestField({
         label={label}
         labelId={shell.labelId}
         value={field.value}
-        onChange={field.onChange}
+        onChange={(text) => {
+          field.onChange(text);
+          onEdit?.(text);
+        }}
         onFocus={onActivate}
         onBlur={field.onBlur}
-        onPick={(value) => field.onChange(value)}
+        onPick={(value, option) => {
+          field.onChange(value);
+          onPick?.(option);
+        }}
         suggestions={suggestions}
+        qualifier={qualifier}
         inputRef={field.ref}
         name={field.name}
         {...aria}

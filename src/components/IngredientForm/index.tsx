@@ -203,7 +203,8 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
         />
         {/* Both suggest from this coven and the compendium (M4.7a): the form
             from the curated vocabulary and the forms in use, the folk names
-            from the names in use. A pick writes the text and links nothing. */}
+            from the names in use. A pick writes the text; a curated form's
+            also links its row, the group shown in the box (MB.169). */}
         <FormField workspaceId={workspaceId} />
         <LookupListField
           workspaceId={workspaceId}
@@ -224,8 +225,9 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
         />
         {/* Each list but the colours suggests (MB.131): planets, signs and
             deities from their curated vocabularies and the values in use, a
-            pick adding the text; substitutes from the compendium and this
-            coven, a pick adding a link to the ingredient. */}
+            pick adding the text, and a curated deity's a link to it as well
+            (MB.169); substitutes from the compendium and this coven, a pick
+            adding a link to the ingredient. */}
         <LookupListField
           workspaceId={workspaceId}
           useSuggestions={usePlanetSuggestions}

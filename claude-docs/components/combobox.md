@@ -11,6 +11,7 @@ sources, and M5.10 and M8.10 adopt its debounce.
 | ------------------ | --------------------------------------------------------------------------------- |
 | `index.tsx`        | The control, the list in its buckets, the typed row, the status, the indicators   |
 | `entry.tsx`        | `ComboboxEntry`, the chip a list draws inside the control, with its × and tooltip |
+| `tip.ts`           | `useTip`, the open state an entry's tooltip and the qualifier's share             |
 | `select.tsx`       | `ComboboxSelect`, the select-only box for a closed set                            |
 | `multi-select.tsx` | `ComboboxMultiSelect`, the select-only box holding several, its choices as chips  |
 | `icons.tsx`        | The chevron and the clear's ×, which every box draws                              |
@@ -30,6 +31,7 @@ sources, and M5.10 and M8.10 adopt its debounce.
 | `onRemoveLast`     | Backspace or Delete in an empty box: a list takes its last entry, as react-select does. With text in the box the keys edit it as usual.                                       |
 | `suggestions`      | `{ options, pending }` for the text as it stands. Left out for a box with no source, which never opens, has no chevron and no status region.                                  |
 | `entries`          | What a list holds, drawn inside the control ahead of the text.                                                                                                                |
+| `qualifier`        | `{ text, detail? }`: what a pick leaves out of the text, a picked form's group, in brackets after the text, muted, its detail in a tooltip. See "A qualifier".                |
 | `clear`            | `{ label, onClear }`: a control that empties the list, shown while it holds entries, named "Clear Folk Names".                                                                |
 | `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                               |
 | `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                            |
@@ -60,7 +62,7 @@ reader as well as by the eye, and so is who claims a value.
   listbox, each named by its heading. The headings say where a value comes
   from, and are true because a compendium entry holds curated values alone
   (MB.162), so every value in use outside the lists is the coven's; a source whose rows carry no `curated`
-  lists them flat. The distinction is text, never colour alone. Two same-named rows, "Wax (Animal)" and "Wax (Substance)", are told apart in the list by the group in each label, and by nothing after a pick: both write "Wax", since `ingredients.form` stores the string and the group is the vocabulary's alone (DESIGN.md §5).
+  lists them flat. The distinction is text, never colour alone. Two same-named rows, "Wax (Animal)" and "Wax (Substance)", are told apart in the list by the group in each label. Both write "Wax", since `ingredients.form` stores the string, so after a pick the box tells them apart by its qualifier, the group a caller passes for the row it picked (MB.169; DESIGN.md §5).
 - **It opens as text is typed, on ArrowDown, and from its chevron**, and only
   once there are rows: a list wanted while the lookup is pending opens as
   the rows arrive, the typed row counting as one. A box with no source never
@@ -203,6 +205,41 @@ so that every list draws the same one:
   without the tooltip: the reference reads it although the tooltip is
   `aria-hidden` while closed.
 
+## A qualifier
+
+`qualifier`, `{ text, detail? }`, is what a pick leaves out of the box's
+text (MB.169). `IngredientForm`'s Form box passes a picked form's group,
+"Substance" for a picked "Wax", and its description as the detail. The box only
+draws it. Whether a pick holds, and when an edit drops it, is the caller's
+call.
+
+- **It follows the text, in brackets and muted**, so the box reads as the
+  row picked did, "Wax (Substance)", the owner's call. The muted ink is the
+  row's note's. The text's slot is as wide as the text while a qualifier
+  shows, sized by a hidden copy of the value in a one-cell grid, so the
+  qualifier sits straight after it; the slot is always in the page, so a pick
+  never remounts the box and takes its focus. The qualifier never shrinks: it
+  is a word or two, and a long text gives way first. A press on it puts the
+  caret in the text, as a press on the control's padding does.
+- **It is the box's description.** The input's `aria-describedby` lists the
+  caller's description first, a field's hint and error, then the qualifier's
+  text and its detail. A screen reader hears "(Substance)" without the
+  tooltip, and the reference reads the detail although its tooltip is
+  `aria-hidden` while closed.
+- **The detail is a tooltip**, `role="tooltip"`, in the entry tooltip's
+  bubble and fade, above the control from its left edge, no wider than the
+  control. It opens while the qualifier is hovered and while the box has
+  focus: the qualifier is not a tab stop of its own, and the box is what the
+  keyboard reaches. Escape closes it (WCAG 1.4.13), as do a blur and the
+  pointer leaving, after the same 150ms the entry's waits. With no detail
+  there is no tooltip. Open on focus, the bubble covers what sits above the
+  control, a field's label; the owner left that to the admin area's design
+  review (MB.115), the keyboard still to reach it.
+- **The open state is `useTip`** (`tip.ts`), shared with `ComboboxEntry`:
+  open while `canOpen` says there is something to show, closed at once on
+  blur and on Escape anywhere in the document, and after 150ms when the
+  pointer leaves.
+
 ## The debounce
 
 `src/lib/debounce.ts` holds the one debounce a typed lookup waits on:
@@ -224,7 +261,11 @@ from the box's own states, `:has(.combobox__input:focus-visible)` and
 a 22% wash of the accent on the card. A bucket's heading is muted small
 capitals with a step of space above it, the owner's call during MB.131. A chip is a filled, square-cornered
 rectangle in an 18% wash of the muted ink, react-select's shape, and its ×
-hovers in the warning's wash and ink. The × and the indicators fade into
+hovers in the warning's wash and ink. A control holding chips takes a step
+more padding above them, `space(2)` for `space(1)`, the owner's call during
+MB.169, so the first row of chips does not sit against the top edge. The
+qualifier is the muted ink at the text's size, as a row's note is muted, and its tooltip is the entry's bubble, the
+`tip-bubble` mixin. The × and the indicators fade into
 their hover as `.btn` does, on `theme-transition` and never under reduced
 motion, and draw it on `:focus-visible` as well as `:hover`, so Tab shows
 which one it has reached (MB.150). Every × and indicator is a 24px target,
@@ -236,7 +277,9 @@ review.
 [`index.stories.tsx`](../../src/components/Combobox/index.stories.tsx):
 `TwoBuckets`, a form field with the vocabulary and the forms in use;
 `List`, a list's box with its entries inside, an × on each, a pick that adds and Backspace taking the last; and
-`NoSource`, a box that never opens; `SelectOnly`, the select-only box; and
+`NoSource`, a box that never opens; `Qualifier`, "Wax" picked under
+Substance, the group in the box and its description in a tooltip, dropped by
+an edit; `SelectOnly`, the select-only box; and
 `MultiSelect`, the multi-select box with two elements chosen. The suggestions
 are fixed, so typing filters nothing.
 
@@ -246,7 +289,10 @@ are fixed, so typing filters nothing.
 suggestions and asserts: the name from a label or a label element; the rows,
 their buckets and the typed row; a row's accessible name carrying its label
 and note; picking by keyboard and by click, and the typed row as `null`;
-the entry's ×, its tooltip on a cut-off text only, and its error; Enter handed to `onCommit` with the list open or closed, and otherwise
+the entry's ×, its tooltip on a cut-off text only, and its error; the
+qualifier drawn inside the control before the clear, read as the box's
+description after the field's own, its detail's tooltip on hover and on the
+box's focus, closed by Escape and blur, and none without a detail; Enter handed to `onCommit` with the list open or closed, and otherwise
 closing the list or reaching the form; Backspace and Delete handed to `onRemoveLast` only from an empty box; Escape, blur and a pick keeping the
 text; a box with no source never opening; the status region; the chevron,
 the clear and the entries inside the control; two rows reading alike told
