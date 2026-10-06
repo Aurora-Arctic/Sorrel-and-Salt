@@ -1,0 +1,47 @@
+@use '../../scss/variables' as *;
+
+// Layout only, until the admin area's design review (MB.115).
+
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: space(5);
+}
+
+.user-list__search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: space(3) space(5);
+}
+
+// A table is as wide as its columns: on a narrow screen it scrolls inside its
+// frame rather than widening the page.
+.user-list__frame {
+  overflow-x: auto;
+}
+
+.user-list__table {
+  border-collapse: collapse;
+  width: 100%;
+
+  th,
+  td {
+    padding: space(2) space(4) space(2) 0;
+    text-align: start;
+    vertical-align: top;
+  }
+}
+
+.user-list__pages ul {
+  display: flex;
+  gap: space(5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  // A row of links, as AdminNav's: no typography-base marker.
+  li::before {
+    content: none;
+  }
+}

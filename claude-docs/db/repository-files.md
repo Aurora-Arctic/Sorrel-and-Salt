@@ -18,7 +18,7 @@
 | `finders.ts`           | The generic finders, scoped and unscoped, and the escape hatch                                                                                                                                                                        |
 | `spells.ts`            | The three spell finders, the `readableSpells` predicate they share, and the two hatches that read what a spell holds past a tombstone                                                                                                 |
 | `memberships.ts`       | Two of the three reads that take no proof                                                                                                                                                                                             |
-| `users.ts`             | The third: the live row holding an address                                                                                                                                                                                            |
+| `users.ts`             | The third: the live row holding an address; and the admin user list's page and providers, under the `SiteAdmin` proof (MB.52)                                                                                                         |
 | `provisional-users.ts` | The provisional-account delete                                                                                                                                                                                                        |
 
 **The rest of the folder is internal, and that is enforced rather than

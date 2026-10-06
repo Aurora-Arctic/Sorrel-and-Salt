@@ -1303,7 +1303,7 @@ _Acceptance criteria:_
 
 _Story:_ As a site admin, I want a list of everyone who has signed in, so that I can act on a person without being sent their id.
 
-**Nothing tasks this page and two tasks already assume it.** M5.8's "users awaiting approval are findable" is written as a criterion of the approval control rather than of a surface that exists, and MB.53 needs somewhere to pick an impersonation target. `/admin/users` joins `/admin/compendium`, `/admin/categories` and `/admin/forms` in M5.4's nav, which gains a fourth entry here.
+**Nothing tasks this page and two tasks already assume it.** M5.8's "users awaiting approval are findable" is written as a criterion of the approval control rather than of a surface that exists, and MB.53 needs somewhere to pick an impersonation target. `/admin/users` joins `/admin/compendium`, `/admin/categories`, `/admin/forms`, `/admin/planets` and `/admin/zodiac-signs` in M5.4's nav, which gains a sixth entry here.
 
 **It is a read, so M5.7's sweep does not reach it.** That task gates every admin _mutation_ at the service and again at the Pothos layer; a list query is neither, so this page carries its own service-level admin assertion and its own non-admin rejection test. The list is not a fifth admin capability either — CLAUDE.md's invariant says an admin curates the compendium, the categories and the two vocabularies "and nothing else", which governs what an admin may _change_. Reading who has an account is what the role already implies, and the page offers no control over any workspace.
 
@@ -1317,7 +1317,7 @@ _Acceptance criteria:_
 - Soft-deleted users do not appear, and the finder does not filter at the call site (rule 4)
 - A non-admin is refused at the service, by direct query and not merely by the page being unreachable; the test asserts why the read could have succeeded — the users exist, the fixture is populated, and the same call as E returns them
 - `User.email` resolves through its existing auth scope rather than a second path around it
-- M5.4's nav and layout list `/admin/users` as a fourth admin resource
+- M5.4's nav and layout list `/admin/users` beside the admin resources
 - `auth.md` documents the page and states that it confers no workspace access
 
 **MB.53 — Impersonate a user outside production** · 3h

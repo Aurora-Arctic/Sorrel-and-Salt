@@ -83,6 +83,11 @@ service's decision — `setEmail` refuses an address a verified row holds and le
 a provisional one be claimed over, and the `/verify-email` gate refuses one any
 other live row holds (`auth/admin-bootstrap.md`, "The email page").
 
+The admin user list's two reads, `findUserPage` and `findProvidersOfUsers`
+(MB.52), are not among them: they span no workspace either, but they take the
+`SiteAdmin` proof instead ([`auth/admin-users.md`](../auth/admin-users.md),
+"The user list").
+
 `tests/db/repository/index.test.ts` and `soft-delete-finder-guard.test.ts`
 both pin the repository's export list, so a fourth exception is a decision
 rather than an addition.

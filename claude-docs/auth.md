@@ -76,6 +76,10 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 `requireAdminSession()`, called by the `/admin` layout and every page under it, is `requireSession()` then `assertSiteAdmin()`, so a signed-out visitor goes to sign-in and a non-admin gets a styled 403 through Next's `forbidden()`, not a 404. [`auth/admin-guard.md`](auth/admin-guard.md)
 
+## The user list (MB.52)
+
+`/admin/users` lists every live account, with its providers and whether its address is verified, through `listUsers` and `providersOf`, which refuse anyone but a site admin by direct call, paged by the M3.6 helper and filtered in SQL; it confers no workspace access. [`auth/admin-users.md`](auth/admin-users.md)
+
 ## Plugins (MB.74)
 
 One Better Auth plugin is registered, `lastLoginMethod`, whose cookie marks the browser's last provider with no database write, and a table rules on every other plugin and option, with `oAuthProxy` and `admin` scheduled and `organization` never. [`auth/plugins.md`](auth/plugins.md)

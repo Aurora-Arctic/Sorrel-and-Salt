@@ -20,12 +20,18 @@ export type SiteAdmin = {
 };
 
 /**
- * The site-role check, for every compendium write. Reads the session's role
- * and nothing else, which the request read off the user's row.
+ * The site-role check, for everything only a site admin may do: the
+ * compendium-tier writes, the admin-curated vocabularies and the admin reads.
+ * Reads the session's role and nothing else, which the request read off the
+ * user's row. `reason` is what the refusal says, when the caller has a more
+ * particular one than the default.
  *
  * @throws {Forbidden} the session's role is not `admin`.
  */
-export function assertSiteAdmin(session: Session): SiteAdmin {
-  if (session.role !== 'admin') throw new Forbidden('Only a site admin may curate the compendium');
+export function assertSiteAdmin(
+  session: Session,
+  reason = 'Only a site admin may do this',
+): SiteAdmin {
+  if (session.role !== 'admin') throw new Forbidden(reason);
   return { userId: session.userId } as SiteAdmin;
 }

@@ -1,5 +1,7 @@
 import type { users } from './schema/users';
 
+export type { UserFilter } from '../../db/repository';
+
 export type UserRow = typeof users.$inferSelect;
 
 /** What the provider said at this callback — never the stored row, which a later feature may set. */
