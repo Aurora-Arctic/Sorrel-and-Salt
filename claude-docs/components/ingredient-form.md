@@ -279,9 +279,11 @@ sees it.
 The first case stays a message. A named kind with no formal name gets "A
 botanical entry needs its formal name" beside the formal name; a formal name
 with no kind is no error, since it saves as `unknown`. The kind decides the
-formal name's error, so each is registered with the other as a `deps`. Once
-a submit has shown the error, changing either field revalidates both, and
-the error clears as soon as the pair agrees, with no second submit. The classification's info tip
+formal name's error, so the classification registers the formal name as a
+`deps`, and nothing registers the other way, since the formal name no longer
+decides the classification's. Once a submit has shown the error, changing
+either field revalidates the formal name, and the error clears as soon as the
+pair agrees, with no second submit. The classification's info tip
 states the rule before anyone breaks it.
 
 ## What it sends

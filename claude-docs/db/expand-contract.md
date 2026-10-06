@@ -55,6 +55,9 @@ to ask whether it is a rename, and with no terminal that prompt fails. So the
 pending columns are deleted from the scratch copy's last snapshot first, and
 the scratch run then emits the `ADD COLUMN` alone. MB.158's
 `0034_element-list` is the worked case.
+A changed CHECK follows the same procedure, its snapshot entry's value edited
+rather than a table or column added: MB.161's
+`0038_unknown-carries-formal-name`.
 
 Renaming a column is the canonical case that goes wrong if done directly —
 `ALTER TABLE ... RENAME COLUMN` is atomic in Postgres, but it isn't atomic
@@ -203,14 +206,18 @@ and goes red on a real omission. It was permanently red before, first because
 the bare command _was_ that full scan (fixed in MB.37) and then because the
 acknowledgements it needed only ever existed in PR bodies.
 
-Four migrations carry findings today, and each has its sidecar:
+Eight migrations carry findings today, and each has its sidecar:
 
-| Migration                           | Findings                                                                                                                             |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `0002_solid_marauders.sql`          | `DROP CONSTRAINT users_email_unique`, and `created_by` / `updated_by` added `NOT NULL`                                               |
-| `0017_custom-spell-ingredients.sql` | the `(spell_id, ingredient_id)` primary key and the `(spell_id, layer_order)` unique index dropped                                   |
-| `0025_ingredient-slugs.sql`         | `ingredients.slug` set `NOT NULL` with no backfill between, the seed standing in for one (["Ingredient slugs"](ingredient-slugs.md)) |
-| `0028_drop-pending-slugs.sql`       | the two pending-slug indexes and columns dropped, the contract half of MB.82's change ("Expand/contract")                            |
+| Migration                              | Findings                                                                                                                             |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `0002_solid_marauders.sql`             | `DROP CONSTRAINT users_email_unique`, and `created_by` / `updated_by` added `NOT NULL`                                               |
+| `0017_custom-spell-ingredients.sql`    | the `(spell_id, ingredient_id)` primary key and the `(spell_id, layer_order)` unique index dropped                                   |
+| `0025_ingredient-slugs.sql`            | `ingredients.slug` set `NOT NULL` with no backfill between, the seed standing in for one (["Ingredient slugs"](ingredient-slugs.md)) |
+| `0028_drop-pending-slugs.sql`          | the two pending-slug indexes and columns dropped, the contract half of MB.82's change ("Expand/contract")                            |
+| `0029_spell-layers-soft-delete.sql`    | the `(spell_id, layer_order)` primary key dropped for a surrogate `id`, and two partial unique indexes re-created with the filter    |
+| `0036_drop-ingredient-singles.sql`     | the single `planet`, `zodiac` and `color` columns dropped, the contract half of MB.134's lists (MB.137)                              |
+| `0037_drop-element.sql`                | the single `element` column dropped, the contract half of MB.157's list (MB.160)                                                     |
+| `0038_unknown-carries-formal-name.sql` | `ingredients_nomenclature_declares_canonical_name` dropped and re-added wider under the same name (MB.161)                           |
 
 **`0002`'s sidecar was written retroactively, and says so.** This document
 previously claimed its `DROP CONSTRAINT` and two `NOT NULL` columns "were

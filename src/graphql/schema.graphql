@@ -55,6 +55,10 @@ type FormSuggestion {
 
 type Ingredient {
   audit: AuditInfo!
+
+  """
+  The formal name: null for none, set for a named kind, either for unknown.
+  """
   canonicalName: String
   categories: [Category!]!
   colors: [String!]

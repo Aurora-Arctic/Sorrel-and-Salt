@@ -151,6 +151,15 @@
   nothing else changed. `element-list.test.ts` asserts the column gone, the
   type kept, and the drop as the file's only statement. See
   ["The ingredient identity model"](identity-model.md).
+- **`0038_unknown-carries-formal-name.sql`** (MB.161) replaces
+  `ingredients_nomenclature_declares_canonical_name` under the same name,
+  so that an `unknown` entry may carry a formal name; see
+  ["The ingredient identity model"](identity-model.md). `generate --custom`
+  for the reason 0032 to 0034 were, MB.141's drop still pending: the two
+  constraint statements taken from a scratch `generate`, and the snapshot's
+  CHECK value changed by hand.
+  Its sidecar acknowledges the `DROP CONSTRAINT` and says why it is one PR:
+  the new CHECK only widens, and nothing reads a CHECK.
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls

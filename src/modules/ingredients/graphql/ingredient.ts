@@ -44,7 +44,10 @@ IngredientRef.implement({
     id: t.exposeID('id'),
     name: t.exposeString('name'),
     slug: t.exposeString('slug'),
-    canonicalName: t.exposeString('canonicalName', { nullable: true }),
+    canonicalName: t.exposeString('canonicalName', {
+      nullable: true,
+      description: 'The formal name: null for none, set for a named kind, either for unknown.',
+    }),
     nomenclature: t.expose('nomenclature', { type: NomenclatureEnum }),
     form: t.exposeString('form', { nullable: true }),
     description: t.exposeString('description', { nullable: true }),
