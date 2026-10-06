@@ -11,22 +11,21 @@ admin compendium page wrap it rather than containing their own form.
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `index.tsx`       | The form: the mutation, the fields in order, the root alert, where a server error goes, and focus after a submit                                              |
 | `fields.tsx`      | `TextField`, `SuggestField`, `SelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip` |
-| `suggestions.tsx` | The two lookups (M5.10a): the queries, the hooks that debounce and shape them, and `FormField` and `FolkNamesField`, which wire each to its field             |
+| `suggestions.tsx` | The lookups (M5.10a, MB.131): the queries, `useLookup`, which debounces each, the shapes, and `FormField` and `LookupListField`, which wire one to its field  |
 | `duplicates.tsx`  | The duplicate warning (M5.10): its query, `usePossibleDuplicates`, and `NameField`, the name field with the warning beneath it                                |
 | `values.ts`       | The empty values, `toInput`, `addEntry`, `commitDraft`, `fieldNameOf`, the resolver, and `issuesOf`, which reads a failed save                                |
 | `types.ts`        | The props, the form's own values, and the input it sends                                                                                                      |
 
 ## The props contract
 
-| Prop          | Meaning                                                                                              |
-| ------------- | ---------------------------------------------------------------------------------------------------- |
-| `workspaceId` | The coven the new ingredient is written to. It goes to `createWorkspaceIngredient` as its argument.  |
-| `onSaved`     | Called with the saved row (`id`, `name`) once the server has accepted it. The form keeps its values. |
+| Prop          | Meaning                                                                                                                                                                                                                                             |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workspaceId` | The coven the new ingredient is written to. It goes to `createWorkspaceIngredient` as its argument.                                                                                                                                                 |
+| `onSaved`     | Called with the saved row (`id`, `name`) once the server has accepted it, and which save was pressed: `'open'`, Save Ingredient, for the page to open the new ingredient, or `'another'`, Save & Add Another, after which the form clears (MB.131). |
 
 Only the workspace create is wired. A compendium entry takes
 `CompendiumIngredientInput`, whose `nomenclature` has no default, so M5.5's
-form marks the classification required always, not only while a formal name
-is typed. An edit takes the whole row through `updateIngredient`. Each
+form marks the classification required always, where this one never does. An edit takes the whole row through `updateIngredient`. Each
 arrives with the task that wraps the form for it.
 
 ## The fields
@@ -42,11 +41,12 @@ notes — every field `IngredientInput` takes. Categories are not an input yet.
   rather than "Name star" and the requirement is not heard twice.
   `aria-required` rather than `required`, whose `:invalid` would mark the
   empty field before anyone had tried to save.
-- **The classification and formal name are marked required while each makes
-  the other so**, the coupling's first half shown before a save rather than
-  after it: the formal name while a named kind is chosen, and the
-  classification while a formal name is typed. The marks come and go with the
-  values, and the schema's messages still refuse a save that ignores them.
+- **The formal name is marked required while a named kind is chosen**, the
+  coupling's first half shown before a save rather than after it. The
+  classification is not marked by a typed formal name, since a name with no
+  kind saves as `unknown` (MB.161), and under Unknown the formal name is
+  optional. The mark comes and goes with the value, and the schema's message
+  still refuses a save that ignores it.
 
 - **A field's hint is an info tip beside its label**, [`InfoTip`](info-tip.md),
   not a line beneath it, on every field whose meaning is not plain from its
@@ -59,14 +59,20 @@ notes — every field `IngredientInput` takes. Categories are not an input yet.
   not. A field's `note` is the one line kept beneath a label, for a state
   that must stay in view: only the formal name's reason for being shut uses
   it.
-- **Closed sets are native `<select>`s**: the classification over
+- **Closed sets are the combobox's select-only box**, `ComboboxSelect`
+  ([`combobox.md`](combobox.md), "The select-only box"), the owner's call
+  during MB.131: the same control, chevron and list as the form field, with
+  nothing to type. `SelectField` holds it through `useController`, its
+  `deps` in the controller's rules. The classification is over
   `NOMENCLATURE_KINDS` and the element over `INGREDIENT_ELEMENTS`, both read
   from `schema/ingredient-enums.ts`, so the options cannot drift from the
   schema. Both start with the value `''`, drawn two ways. The classification
-  shows a placeholder, "Choose a classification": a hidden, disabled first
-  option, so it cannot be chosen back once a kind is picked. It has no need
-  to be, since "None" is itself a kind. The element's blank is a real choice,
-  "None", the one that clears it.
+  shows a placeholder, "Choose a classification", which is not in its list,
+  so it cannot be chosen back once a kind is picked. It has no need to be,
+  since "None" is itself a kind. The element's blank is a real choice,
+  "None", first in its list, the one that clears it. A choice is made
+  before the field revalidates, so choosing None empties the formal name
+  first.
 - **"Classification" is the label for `nomenclature`**, which DESIGN.md §5
   calls the naming system the formal name belongs to. The label is the one a
   practitioner reads (amethyst is mineral, lavender botanical), and the
@@ -79,7 +85,8 @@ notes — every field `IngredientInput` takes. Categories are not an input yet.
   §5 gives an ingredient several of each, labelled "Planets", "Zodiac Signs"
   and "Colours" with boxes "Planet", "Zodiac Sign" and "Colour". Every list
   field's box is the `Combobox` (M5.10a); folk names have their lookup, MB.131
-  gives planets, signs, deities and substitutes theirs, and colours take none.
+  gave planets, signs, deities and substitutes theirs, and colours take none,
+  the owner's call.
 - **The six lists are one combobox each, with the entries inside it.** Typing
   and pressing Add, or Enter with no suggestion highlighted, adds the text as
   an entry, trimmed, and empties the box, as does picking a suggestion. The
@@ -106,9 +113,9 @@ notes — every field `IngredientInput` takes. Categories are not an input yet.
   vulgaris)", and so does its × and any error naming it, since two
   ingredients can share a label; one with no formal name reads as its label.
   `toInput` sends a link as `{ ingredientId }` and typed text as `{ name }`
-  (DESIGN.md §5, `ingredient_substitutes`). Nothing in the form makes a link
-  yet: MB.131 picks one from MB.138's `ingredientSuggestions`, and until then
-  Add and Enter add typed text, as in every list.
+  (DESIGN.md §5, `ingredient_substitutes`). A link is made only by picking an
+  ingredient from the substitutes' lookup (MB.131); Add, Enter and the typed
+  row add typed text, as in every list.
 - **Text left in a box stops the save.** The form's resolver adds an error to
   any box still holding text, 'Press Add to keep "Hedge Fixture", or clear
   the box', on the list's error element, so a save never sends a list the
@@ -123,10 +130,13 @@ notes — every field `IngredientInput` takes. Categories are not an input yet.
 
 ### The lookups
 
-The form and folk-name boxes suggest from M4.7a's `formSuggestions` and
-`commonNameSuggestions`, through `/api/graphql` with TanStack Query
-([`graphql/client.md`](../graphql/client.md)), the form's first queries.
-`suggestions.tsx` holds both: each hook debounces the box's text through
+Six boxes suggest, through `/api/graphql` with TanStack Query
+([`graphql/client.md`](../graphql/client.md)): the form and folk names from
+M4.7a's `formSuggestions` and `commonNameSuggestions` (M5.10a), and the
+planets, zodiac signs, deities and substitutes from `planetSuggestions`,
+`zodiacSuggestions`, `deitySuggestions` and `ingredientSuggestions`
+(MB.131). Colours take none. `suggestions.tsx` holds them all, on one hook,
+`useLookup`, and a shape per source: each debounces the box's text through
 `useDebouncedValue` (300ms, `src/lib/debounce.ts`), asks for ten rows with
 the form's `workspaceId`, keeps the last answer on screen while the next is
 fetched, and never throws: a lookup that fails offers nothing. Neither asks
@@ -134,17 +144,41 @@ until its box has been focused, so opening the form sends no request; the
 first ask is for a blank query, the vocabulary and the names in use, which the
 chevron then opens. `FormField` and `FolkNamesField` watch their box's text
 with `useWatch` and hand each field its `Suggestions`, so the fields in
-`fields.tsx` know nothing of the network.
+`fields.tsx` know nothing of the network. `LookupListField` is every
+suggesting list, given its lookup hook as `useSuggestions`; the colours are
+a plain `ListField`.
 
 A form suggestion's row is "Wax (Animal)", the group beside the value so two
 same-named forms are told apart (M4.2a), with a second line of the curated
 row's description and "Used by Testwort (Fixtura testalis), Mockleaf", the
 claimants by label and formal name; a claimant with no formal name shows by
-its label. Curated rows and rows in use sit under "Curated" and "In use"
+its label. Curated rows and rows in use sit under "From Compendium" and "From Coven"
 headings. A common-name row is the value and its claimants, in one bucket,
 since no vocabulary of common names exists. Each list opens with "Use what you typed: rhizome", the owner's call over the issue's "ends in". Picking a form row writes its value into the field, and
 picking a common name adds it as an entry; neither links anything, and free
 text outside the vocabulary saves with no warning, as M4.5's schema asks.
+
+A planet or sign row is the value, with the curated row's description as its
+second line, under "From Compendium" and "From Coven" as a form's are. The headings
+say where a value comes from, the owner's call: a curated value is the
+admin's list, which compendium entries are held to, and a value only in use
+outside it is this coven's. A deity row is
+"Hecate (Greek)", the tradition beside the value as a form's group is
+(MB.130), so two same-named deities are told apart; one in use has no
+tradition. Picking any of the three adds its value, "Hecate", as an entry.
+
+A substitute row is the ingredient's label and formal name, "Mockwort
+(Fixtura vulgaris)", and a second line saying whose it is, "Compendium entry"
+or "This coven’s entry". The rows keep the search's ranking, best match
+first, so the tier is a note and not a heading, which would reorder them. Each
+row carries its ingredient's id as its key, since a compendium entry and a
+coven's copy of it read alike until M8.3 suppresses the one shadowed, and as
+its `link`: picking one adds an entry linked to that ingredient, reading as
+the label and formal name, and sent as `{ ingredientId }`. The typed row,
+Add and Enter add the text as it stands, sent as `{ name }` with no warning.
+A compendium entry's substitutes may link only the compendium, so the admin
+form M5.5 wraps reads `compendium(query)` in their place; this form writes
+only a coven's ingredient.
 
 ### The duplicate warning
 
@@ -202,36 +236,40 @@ named "Possible duplicates", always in the page, so it is announced as it
 arrives; and the sentence is in the name field's `aria-describedby` while it
 shows, so it is read with the field, as the hint is.
 
-**Save shows it is busy**, from the press to the answer, the duplicate check
-included: disabled, `aria-busy`, and a spinning ring before its label. The
-label stays "Save Ingredient", since a label that changed would change the
-name a screen reader knows the button by. The ring is in the button's own ink,
+**A save shows it is busy**, from the press to the answer, the duplicate
+check included: both saves disabled, and the one pressed marked `aria-busy`
+with a spinning ring before its label, which reads "Saving Ingredient" until
+the answer and then its own label again. The owner
+chose the changing label during MB.131 over M5.10's fixed one, which kept the
+name a screen reader knows the button by; `aria-busy` still says it is
+working. The ring is in the button's own ink,
 and slowed rather than stopped where motion is reduced, since a still ring
 says nothing is happening.
 
 ### The kind↔name coupling, inline
 
-The schema's rule is both ways round: a botanical, fungal, zoological, mineral
-or chemical entry needs a formal name, and an `unknown` or `none` entry takes
-none ([`validation.md`](../validation.md), "The two ingredient variants").
+The schema's rule has three cases: a botanical, fungal, zoological, mineral
+or chemical entry needs a formal name, a `none` entry takes none, and an
+`unknown` entry takes either (MB.161;
+[`validation.md`](../validation.md), "The two ingredient variants").
 
-The form enforces the second half by construction. Choosing "Unknown" or
-"None" empties the formal name and disables it, with a note beneath its label
-that says why: 'A "none" entry records no formal name.' A note rather than a
+The form enforces the second case by construction. Choosing "None" empties
+the formal name and disables it, with a note beneath its label that says
+why: 'A "none" entry records no formal name.' Choosing "Unknown" leaves it
+open and optional, so a name typed before the kind is settled is kept. A note rather than a
 tip, since a shut field that does not say why reads as broken. The field is
 shut with the HTML attribute, not react-hook-form's `disabled` option, which
 would also drop the value from what is validated and sent. Emptying it is what
-keeps the value out. The schema's refusal of a formal name on a nameless kind
+keeps the value out. The schema's refusal of a formal name on `none`
 is still the service's, for any other caller, and a user of this form never
 sees it.
 
-The first half stays a message. A named kind with no formal name gets "A
-botanical entry needs its formal name" beside the formal name, and a formal
-name with no kind gets "Choose the classification this formal name belongs
-to" beside the selector. Either field's value decides the other's error, so
-each is registered with the other as a `deps`. Once a submit has shown the
-error, changing either field revalidates both, and the error clears as soon
-as the pair agrees, with no second submit. The classification's info tip
+The first case stays a message. A named kind with no formal name gets "A
+botanical entry needs its formal name" beside the formal name; a formal name
+with no kind is no error, since it saves as `unknown`. The kind decides the
+formal name's error, so each is registered with the other as a `deps`. Once
+a submit has shown the error, changing either field revalidates both, and
+the error clears as soon as the pair agrees, with no second submit. The classification's info tip
 states the rule before anyone breaks it.
 
 ## What it sends
@@ -251,6 +289,37 @@ The classification shows the as-typed rule too. A stub with only a name goes
 with `nomenclature: null`, and the service's `LocalIngredientInput` reads
 that as `none`, so story 29's one-field entry is whole. The component test
 parses the sent input with that schema to show it.
+
+## After a save
+
+**Two saves**, the owner's call during MB.131. **Save Ingredient** is the
+primary, a `.btn--solid`, and first, so it is the form's default: Enter in a
+field presses it. It saves and asks the page to open what it made, passing
+`'open'` to `onSaved`. The form navigates nowhere itself: the page that
+holds it does, M5.5's admin page and M8.16's modal, so the form never leads
+to a page that does not exist yet (`/ingredients/[id]` is M8.19's), and the
+workshop needs no router. Its form is about to go, so it keeps its values.
+**Save & Add Another** is the secondary, a plain `.btn` beside it: it saves,
+passes `'another'`, and leaves the form blank for the next ingredient. Which
+was pressed is the submit event's `submitter`, read by its `value`; a submit
+with none is Save Ingredient's.
+
+After either, the form says what it saved, "Saved Testwort.", in a
+`.notice--success` `<output>` above the fields where a refusal's alert goes,
+and so at the form's width; the next submit drops it. The message is the
+form's own rather than the wrapper's: the form is the one place that knows a
+save just landed, and a wrapper is still told through `onSaved`.
+
+After Save & Add Another the form resets to its empty values — every field,
+every list and every box — and Name takes the focus. Nothing is marked
+invalid, since a reset clears the submit with the values. A refused save
+keeps everything as typed, so the user corrects rather than retypes. The
+reset is an effect on a count of landed saves rather than on
+`isSubmitSuccessful`, which a save held on the duplicate warning sets too,
+and it comes after react-hook-form's own end-of-submit update. The focus
+finds Name in the page, as the error focus does: `setFocus` reads a ref the
+reset has just dropped. Only the create is wired; what an edit does after its
+save is settled by the task that wires it.
 
 ## One error element, two sources
 
@@ -320,11 +389,11 @@ so no refusal is the browser's own bubble.
 
 Built on the form primitives in `_primitives.scss` ([`styling.md`](../styling.md),
 "Form fields"): `.form` and `.form__actions`, `.field` with its label, hint,
-control and `.field__error`, `.input`, `.textarea` and `.select`, and
+control and `.field__error`, `.input` and `.textarea`, and
 `.fieldset` with its legend for each list. The alert is `.notice--error`, and
-Save Ingredient is the view's one `.btn--solid`. The select's muted
-placeholder and a disabled field's dashed edge and dimmed label are the
-primitives' too.
+Save Ingredient is the view's one `.btn--solid`. A disabled field's dashed
+edge and dimmed label are the primitives' too; a closed set's box and its
+muted placeholder are the combobox's.
 
 The component's own stylesheet sets the form's width, a column of at most
 `32rem`, narrower than the measure as the other forms keep. It also lays out
@@ -362,27 +431,47 @@ length, and no other text field has one either.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/IngredientForm/index.stories.tsx):
-`Blank`, unframed. Nothing is mocked. Save with an empty name shows the
-resolver's errors, and Save with a name fails into the root alert, since the
-workshop has no API. The TanStack Query client comes from the workshop's global
-provider. `DuplicateWarning` fills that client ahead with an answer for "Cat's Claw",
-under the key the query uses, so typing that name shows the warning with no
-server. It seeds the one client rather than bringing its own: a second
-provider would split the cache, which `tests/guards/graphql-client.test.ts`
-refuses.
+`Blank`, unframed, with every lookup answered and the save faked (MB.131),
+under a "What to try" panel saying what to type for each state: the
+suggestions, free text, the duplicate warning, the missing name, the
+classification coupling, text left in a box, a repeated entry, a long entry,
+the two server refusals, and a save. The workshop has no API, and on staging
+its pages may not fetch at all ([`workshop.md`](../workshop.md), "On
+staging"), so the story answers the form itself: while it is mounted it
+stands in for `window.fetch`, which graphql-request looks up on every
+request, and answers a request to `/api/graphql` naming one of the seven
+lookups, or the save, from invented rows filtered by what was typed. Each
+answer is checked against its query's generated type with `satisfies`, so a
+fixture that drifts from the schema stops compiling. A name holding "cat"
+shows the duplicate warning. A save is answered after two seconds
+(`SAVE_DELAY_MS`), so Save can be watched busy and shut with its spinner: a
+name holding "taken" is refused as a `VALIDATION` error on the name, one
+holding "refuse" as a `FORBIDDEN` above the fields, and any other is saved,
+under a fresh id. The workshop has no page to open, so after Save Ingredient
+the story says beneath the buttons where its page would go,
+"/ingredients/<id>", in a `.story-note` from `.ladle/story-frame.scss`;
+Save & Add Another clears it.
+The original `fetch` is put back on unmount. The TanStack Query client is the
+workshop's global provider's: a second provider would split the cache, which
+`tests/guards/graphql-client.test.ts` refuses. This replaces M5.10's
+`DuplicateWarning` story, which filled that cache ahead for one exact name.
 
 ## Testing
 
 `tests/components/IngredientForm/index.test.tsx` answers
 `CreateWorkspaceIngredient` through MSW: `mockGraphQLMutation` for a saved
 row, and `mockGraphQLError` for a refusal, so the error body is the route's
-own mapping; the three lookups are answered with `mockGraphQLQuery`. Its `save()` focuses the button before clicking it, as a real
+own mapping; the seven lookups are answered with `mockGraphQLQuery`. Its `save()` focuses the button before clicking it, as a real
 click does, since `fireEvent` moves no focus and a focus test would otherwise
 pass on whatever an earlier step had focused. It covers:
 
 - **Saving**: a name-only stub, sent with `nomenclature: null` and parsed by
   `LocalIngredientInput` as `none`; every field sent as typed; `onSaved`
-  called with the returned row; the submit held down while in flight.
+  called with the returned row and `'open'` or `'another'`, Save Ingredient
+  the default and keeping the form; the submit held down while in flight; every
+  field and list cleared once saved, with nothing marked invalid and the
+  focus in Name; "Saved Testwort." said inside the form until the next
+  save; and a refused save keeping what was typed.
 - **Resolver errors**: beside the field, focused, invalid and described, with
   no request sent; on the list entry it names, focusing the list's box;
   cleared by an edit, or by removing the entry.
@@ -392,9 +481,9 @@ pass on whatever an earlier step had focused. It covers:
 - **Root errors**: an empty path, a path naming no field, a `FORBIDDEN`'s
   message and a failed fetch, each as an alert above the fields, cleared on
   the next submit.
-- **The coupling**: the formal name shut and emptied for a nameless kind,
-  with its reason, and opened again for a named one; the two issues that
-  remain, and each cleared inline by changing the other field.
+- **The coupling**: the formal name shut and emptied for None, with its
+  reason, open and optional under Unknown, and opened again for a named
+  kind; the issue that remains, cleared inline by changing either field.
 - **Fields**: Name alone marked required; each hint behind an info tip yet
   still read with its field, and kept shut while its field, or a list's box,
   has focus; the classification's placeholder and the element's "None", `form`
@@ -408,6 +497,15 @@ pass on whatever an earlier step had focused. It covers:
   headings; a pick filling the form field, and a value in no vocabulary taken
   from its own row with no warning; a common name picked by click or by
   keyboard adding an entry, and Enter with nothing picked adding typed text.
+  For each of the planets, signs, deities and substitutes: a request only once
+  the typing settles, and none until the box is used; the planets and signs
+  curated apart from those in use, with descriptions; a curated deity with its
+  tradition, two of one name told apart; a pick adding the value, emptying the
+  box and announcing it; a deity picked by the arrow keys and Enter, Escape
+  closing the list and keeping the text, and Enter with it closed adding the
+  text; each ingredient with its formal name and tier in the order found; a
+  picked ingredient saved as a link, its entry reading as it; and a
+  substitute added or picked as typed saved as text, with no warning.
   Every lookup, the duplicate check included, is answered empty by default, so
   a test about one answers it after rendering, the later handler winning. The
   debounce runs on fake timers that still advance, so the mocked answers
@@ -423,8 +521,9 @@ pass on whatever an earlier step had focused. It covers:
   nothing is close; the hold lifted by editing the name, the focus left in it;
   an error elsewhere taking the save first; Create Anyway clearing it and the
   name's error, focusing the name, and the next save sending; and the matches
-  set aside staying gone while a new one returns. The in-flight save test also
-  asserts Save's `aria-busy`.
+  set aside staying gone while a new one returns. The in-flight save tests,
+  one per button, assert both held down, the pressed one's `aria-busy` and
+  its "Saving Ingredient" label until the answer, and the other's own label.
 - **A long entry**: a cut-off entry's tooltip shown on hover and while its ×
   has focus, closed on Escape, and absent for an entry that fits, with the
   layout jsdom lacks stubbed through `scrollWidth` and `clientWidth`; its ×

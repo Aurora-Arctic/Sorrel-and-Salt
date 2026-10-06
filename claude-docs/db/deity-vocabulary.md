@@ -7,9 +7,10 @@ in the `vocabulary` module, in `src/modules/vocabulary/schema/deities.ts`
 ["The deity vocabulary seed"](deity-vocabulary-seed.md), read by a member's
 autofill, `deitySuggestions` (MB.130, on
 [the member's autofill](member-autofill.md)), and curated at `/admin/deities`
-and `/admin/deity-traditions` (MB.132). Until MB.131 puts that autofill on
-the form, the deities field suggests nothing, and each member spells a
-practice's gods their own way: one spelling needs someone to curate it.
+and `/admin/deity-traditions` (MB.132). MB.131 puts that autofill on
+the form's Deities box, so a member picks a curated spelling rather than
+typing their own; a spelling the vocabulary lacks still needs someone to
+curate it.
 
 - **`deity_traditions`** — `id`, `name`, `slug`, `description` (NOT NULL, with
   a non-blank CHECK), + audit. Global, admin-curated, `ingredient_form_groups`

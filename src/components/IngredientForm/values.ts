@@ -9,6 +9,7 @@ import type {
   IngredientFormValues,
   ListEntry,
   ListFieldName,
+  SubstituteLink,
   SubstituteListEntry,
 } from './types';
 
@@ -118,19 +119,22 @@ export function fieldNameOf(
 
 /**
  * Adds `text` as the list's last entry, trimmed, and empties the box: a
- * suggestion picked from it. Returns the entry added, or undefined when the
- * text was blank.
+ * suggestion picked from it, with the ingredient it links when it is a
+ * substitute's. Returns what the entry reads as, or undefined when the text
+ * was blank.
  */
 export function addEntry(
   { getValues, setValue }: Pick<UseFormReturn<IngredientFormValues>, 'getValues' | 'setValue'>,
   list: ListFieldName,
   text: string,
+  link?: SubstituteLink,
 ): string | undefined {
   const value = text.trim();
   if (value === '') return undefined;
-  setValue(list, [...getValues(list), { value }], { shouldDirty: true });
+  const entry: SubstituteListEntry = link ? { value, link } : { value };
+  setValue(list, [...getValues(list), entry], { shouldDirty: true });
   setValue(`drafts.${list}`, '');
-  return value;
+  return entryText(entry);
 }
 
 /** Adds what a list's box holds: its Add button, and Enter with nothing picked. */

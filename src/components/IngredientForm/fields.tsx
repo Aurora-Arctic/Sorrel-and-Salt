@@ -7,13 +7,14 @@ import {
   useFormContext,
   useFormState,
 } from 'react-hook-form';
-import Combobox, { ComboboxEntry } from '../Combobox';
+import Combobox, { ComboboxEntry, ComboboxSelect } from '../Combobox';
 import InfoTip from '../InfoTip';
 import type {
   FieldErrorProps,
   FieldShellProps,
   IngredientFormValues,
   ListFieldProps,
+  ListOption,
   SelectFieldProps,
   SuggestFieldProps,
   TextFieldProps,
@@ -188,7 +189,10 @@ export function SuggestField({
   );
 }
 
-/** A closed set, as a native `<select>` (DESIGN.md §14). */
+/**
+ * A closed set, on the combobox's select-only box (DESIGN.md §14): the same
+ * control and list as a suggesting field, with nothing to type.
+ */
 export function SelectField({
   name,
   label,
@@ -200,35 +204,32 @@ export function SelectField({
   deps,
   onChange,
 }: SelectFieldProps): ReactElement {
-  const { register } = useFormContext<IngredientFormValues>();
-  const { aria, ...field } = useField(name, hint);
-  const control = register(name, {
-    deps,
-    onChange: onChange && ((event: { target: { value: string } }) => onChange(event.target.value)),
-  });
+  const { control } = useFormContext<IngredientFormValues>();
+  const { field } = useController({ control, name, rules: { deps } });
+  const { aria, ...shell } = useField(name, hint);
+  // `none` is a choice, the one that clears the field; the placeholder is
+  // shown until a choice is made, and cannot be made itself.
+  const choices = none === undefined ? options : [{ value: '', label: none }, ...options];
   return (
-    <FieldShell label={label} hint={hint} required={required} {...field}>
-      <select
-        className="select"
-        id={field.controlId}
-        aria-required={required || undefined}
+    <FieldShell label={label} hint={hint} required={required} {...shell}>
+      <ComboboxSelect
+        id={shell.controlId}
+        label={label}
+        labelId={shell.labelId}
+        value={field.value}
+        // Before the field and its `deps` revalidate: a nameless kind empties
+        // the formal name first, so its error is judged on the empty value.
+        onChange={(value) => {
+          onChange?.(value);
+          field.onChange(value);
+        }}
+        onBlur={field.onBlur}
+        choices={choices}
+        placeholder={placeholder}
+        required={required}
+        inputRef={field.ref}
         {...aria}
-        {...control}
-      >
-        {/* A placeholder is shown until a choice is made, and cannot be made
-            itself; `none` is a choice, the one that clears the field. */}
-        {placeholder !== undefined && (
-          <option value="" disabled hidden>
-            {placeholder}
-          </option>
-        )}
-        {none !== undefined && <option value="">{none}</option>}
-        {options.map(({ value, label: text }) => (
-          <option key={value} value={value}>
-            {text}
-          </option>
-        ))}
-      </select>
+      />
     </FieldShell>
   );
 }
@@ -293,9 +294,10 @@ export function ListField({
     focusBox();
   };
   // Add, and Enter with no suggestion picked, add what the box holds; a pick
-  // adds the suggestion's value.
+  // adds the suggestion's value, linked when the suggestion is an ingredient.
   const add = () => added(commitDraft(form, name));
-  const pick = (value: string) => added(addEntry(form, name, value));
+  const pick = (value: string, option: ListOption | null) =>
+    added(addEntry(form, name, value, option?.link));
   const clear = () => {
     setAnnouncement(`Cleared ${legend}`);
     remove();

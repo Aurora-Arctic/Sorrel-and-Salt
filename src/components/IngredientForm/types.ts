@@ -1,19 +1,32 @@
 import type { ReactNode, Ref } from 'react';
 import type { z } from 'zod';
-import type { CreateWorkspaceIngredientMutation, PossibleDuplicatesQuery } from '../../gql/graphql';
+import type {
+  CreateWorkspaceIngredientMutation,
+  FormSuggestionsQueryVariables,
+  PlanetSuggestionsQuery,
+  PossibleDuplicatesQuery,
+} from '../../gql/graphql';
 import type {
   INGREDIENT_ELEMENTS,
   NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
-import type { Suggestions } from '../Combobox/types';
+import type { ComboboxOption, Suggestions } from '../Combobox/types';
 
 export interface IngredientFormProps {
   /** The coven the new ingredient is written to. */
   workspaceId: string;
   /** Called with the saved row once the server has accepted it. */
-  onSaved?: (ingredient: SavedIngredient) => void;
+  /**
+   * Called with the saved row once the server has accepted it, and which save
+   * was pressed: 'open', Save Ingredient, for the page to open the new
+   * ingredient; 'another', Save & Add Another, after which the form clears.
+   */
+  onSaved?: (ingredient: SavedIngredient, next: AfterSave) => void;
 }
+
+/** What follows a save: the new ingredient opened, or the form cleared for another. */
+export type AfterSave = 'open' | 'another';
 
 export type SavedIngredient = CreateWorkspaceIngredientMutation['createWorkspaceIngredient'];
 
@@ -24,14 +37,24 @@ export interface ListEntry {
   value: string;
 }
 
+/** The ingredient a substitute links, with the formal name its pill reads beside the label. */
+export interface SubstituteLink {
+  id: string;
+  canonicalName: string | null;
+}
+
 /**
  * One substitute: typed text, or a link to an ingredient, whose label is
- * `value` (DESIGN.md §5, `ingredient_substitutes`). Nothing here picks a
- * link yet: that is MB.131's lookup.
+ * `value` (DESIGN.md §5, `ingredient_substitutes`), picked from the
+ * substitutes' lookup (MB.131).
  */
 export interface SubstituteListEntry extends ListEntry {
-  /** The ingredient linked, with the formal name its pill reads beside the label. */
-  link?: { id: string; canonicalName: string | null };
+  link?: SubstituteLink;
+}
+
+/** A list box's suggestion: a substitute's carries the ingredient a pick links. */
+export interface ListOption extends ComboboxOption {
+  link?: SubstituteLink;
 }
 
 /**
@@ -125,8 +148,8 @@ export interface ListFieldProps {
   entry: string;
   /** What the list is for, behind an info tip beside the legend. */
   hint?: string;
-  /** What the box suggests; left out for a list with no source yet, whose box never opens. */
-  suggestions?: Suggestions;
+  /** What the box suggests; left out for a list with no source, whose box never opens. */
+  suggestions?: Suggestions<ListOption>;
   /** The box has been focused: the lookup may start asking. */
   onActivate?: () => void;
 }
@@ -135,6 +158,19 @@ export interface ListFieldProps {
 export interface LookupFieldProps {
   workspaceId: string;
 }
+
+/** What every lookup is asked: the coven, the settled text, and how many rows. */
+export type LookupVariables = FormSuggestionsQueryVariables;
+
+/** A list field and the lookup its box suggests from. */
+export interface LookupListFieldProps
+  extends LookupFieldProps, Omit<ListFieldProps, 'suggestions' | 'onActivate'> {
+  useSuggestions: (workspaceId: string, text: string, active: boolean) => Suggestions<ListOption>;
+}
+
+/** A planet or sign suggestion, as the lookup asks for it; a deity's adds its tradition. */
+export type CorrespondenceNode =
+  PlanetSuggestionsQuery['planetSuggestions']['edges'][number]['node'];
 
 /** The duplicate warning's state, which the form owns and the name field draws. */
 export interface DuplicateWarning {
