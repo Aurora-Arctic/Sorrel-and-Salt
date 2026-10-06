@@ -16,7 +16,7 @@ Nothing else is in the migration. `substitutes`, which MB.140 stopped declaring,
 
 Drizzle names every declared column in a `SELECT`, and `migrate.yml` runs before `deploy.yml` promotes, so the risk in a column drop is the deploy still serving while the migration runs. On staging that deploy is MB.136's or later, and none of them declares the singles: MB.136 removed them from `src/modules/ingredients/schema/ingredients.ts`, and no file under `src/` names them outside migrations 0030 and 0031.
 
-Production is different. v0.4.0 stops at migration 0029, and its deploy still declares all three. A release carrying both MB.136 and this migration would drop the columns while v0.4.0 is serving, so its ingredient reads would fail until the promotion finished, and a rollback to v0.4.0 would fail for good. **This migration therefore merges into `staging` only after a release carrying MB.136 has reached production.** That release runs 0030 and 0031, and the release after it runs this migration against an MB.136 deploy, just as staging does.
+Production needed a release in between. v0.4.0 stopped at migration 0029 and still declared all three, so a release carrying both MB.136 and this migration would have dropped the columns while v0.4.0 was serving: its ingredient reads would fail until the promotion finished, and a rollback to v0.4.0 would fail for good. **This migration therefore merges into `staging` only after a release carrying MB.136 has reached production.** v0.5.0 is that release: it ran 0030 to 0033 and serves MB.136's code, so the release carrying this migration runs it against an MB.136 deploy, just as staging does.
 
 ## What is lost
 
