@@ -56,6 +56,7 @@ const EXPORTED_FUNCTIONS = [
   'findOneIngredient',
   'findOneInWorkspace',
   'findOneSpell',
+  'findOpenAdminRoleChangePause',
   'findPage',
   'findPageInWorkspace',
   'findProvidersOfUsers',

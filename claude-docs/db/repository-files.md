@@ -8,7 +8,7 @@
 | `index.ts`             | Named re-exports only — the pinned surface below — and nothing declared                                                                                                                                                               |
 | `types.ts`             | The table shapes a finder or writer admits, the options `selectFrom` reads, the `AuditWriter`, and what a finder takes and returns; the index re-exports the last two                                                                 |
 | `predicates.ts`        | The `scopedTo`, `inCompendium` and `notSoftDeleted` predicates, each decided by the table's shape                                                                                                                                     |
-| `write.ts`             | `withAudit` and the writer it builds                                                                                                                                                                                                  |
+| `write.ts`             | `withAudit` and the writer it builds, the pause ledger's named pause and resume among its methods (MB.62)                                                                                                                             |
 | `select.ts`            | `selectFrom` and `existsIn`, the two places a read query is built; the keyset bounds a page is cut by; the two similarity thresholds                                                                                                  |
 | `ingredients.ts`       | The ingredient finders: the fuzzy-duplicate match, the compendium list and its count, one entry, an entry by identity, an ingredient's children, and the hatch reading its substitutes with the ingredients they link, deleted or not |
 | `slugs.ts`             | The compendium entry at a slug, and the redirect from a retired one                                                                                                                                                                   |
@@ -20,6 +20,7 @@
 | `memberships.ts`       | Two of the three reads that take no proof                                                                                                                                                                                             |
 | `users.ts`             | The third: the live row holding an address; and the admin user list's page and providers, under the `SiteAdmin` proof (MB.52)                                                                                                         |
 | `provisional-users.ts` | The provisional-account delete                                                                                                                                                                                                        |
+| `admin-roles.ts`       | The open admin-role-change pause, under the `SiteAdmin` proof (MB.62)                                                                                                                                                                 |
 
 **The rest of the folder is internal, and that is enforced rather than
 conventional.** `selectFrom` and `existsIn` are exported from `select.ts`

@@ -217,8 +217,12 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
   // redirect that has ended answers nothing, and `delete` is typed to refuse
   // such a table, so the one delete is named for it. Fifteen since M5.3, whose
   // coven delete names its ingredient by id, for `updateByIdInWorkspace`'s
-  // reason. A sixteenth is the next such decision.
-  it('offers exactly fifteen writer methods — a sixteenth is a decision, not a convenience', async () => {
+  // reason. Seventeen since MB.62, whose pause ledger is opened and ended by
+  // name: the generic insert would take a pause already ended and the generic
+  // update would reopen one, so both are refused the table and its two writes
+  // are named for it, the ended pair stamped from the session. An eighteenth
+  // is the next such decision.
+  it('offers exactly seventeen writer methods — an eighteenth is a decision, not a convenience', async () => {
     const methods = await withAudit(session, async (write) => Object.keys(write).sort());
 
     expect(methods).toEqual(
@@ -228,6 +232,8 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
         'insert',
         'insertInCompendium',
         'insertInWorkspace',
+        'pauseAdminRoleChanges',
+        'resumeAdminRoleChanges',
         'softDelete',
         'softDeleteByIdInCompendium',
         'softDeleteByIdInWorkspace',

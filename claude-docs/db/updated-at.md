@@ -67,6 +67,6 @@ clone — which tables the sweep reached is the thing under test, so unlike the
 per-table schema tests it stubs nothing — and then compares two catalogue
 queries: the tables carrying all four audit stamps, and the tables carrying a
 `set_updated_at` trigger. A new audited table reddens it without that
-file being edited. The list of twenty-five is transcribed as well, as
+file being edited. The list of twenty-six is transcribed as well, as
 `AUDITED_TABLES` in `tests/support/db/table-metadata.ts`, because
 two empty sets are equal and something has to say they aren't.
