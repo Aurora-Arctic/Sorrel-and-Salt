@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, date, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { check, date, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { REFERENCE_KINDS } from './ingredient-enums';
 import { auditColumns } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
@@ -60,9 +60,15 @@ export const references = pgTable(
     modified: date('modified'),
     accessed: date('accessed'),
     note: text('note'),
+    // The identity the reference seed gave the row, null on any other; never
+    // changed after, so a reseed knows a row an admin has since edited (MB.171).
+    seedKey: text('seed_key'),
     ...auditColumns,
   },
-  () => [
+  (table) => [
+    uniqueIndex('references_seed_key_unique')
+      .on(table.seedKey)
+      .where(sql`${table.seedKey} is not null and ${table.deletedAt} is null`),
     // Required *and non-empty*: NOT NULL alone accepts ''. One CHECK per
     // column, so MB.153 paths the refusal to its field.
     check('references_title_not_blank', sql`btrim(title) <> ''`),
