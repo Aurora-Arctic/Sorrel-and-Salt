@@ -30,13 +30,15 @@ registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
 `User.memberships` field; `vocabulary` has `CorrespondenceSuggestion`,
 `FormSuggestion`, `DeitySuggestion`, `SuggestionClaimant` and the
 `planetSuggestions`, `zodiacSuggestions`, `formSuggestions` and
-`deitySuggestions` connections; `ingredients` has
-`Ingredient`, the `compendium`, `ingredient`, `possibleDuplicates` and
+`deitySuggestions` connections, and `Deity` and `DeityTradition` with the
+`deityTraditionsById` and `ingredientFormsById` loaders (MB.167); `ingredients` has
+`Ingredient`, `IngredientDeity` and `IngredientDeityInput`, the `compendium`, `ingredient`, `possibleDuplicates` and
 `ingredientSuggestions` queries,
 the two workspace ingredient mutations, and `CommonNameSuggestion` and
 `commonNameSuggestions`, whose claimants reuse `vocabulary`'s
 `SuggestionClaimant` — the edge runs that way round — plus the
-`categoriesByIngredient` and `folkNamesByIngredient` loaders. A field on another module's type is added from the module allowed to
+`categoriesByIngredient`, `folkNamesByIngredient`, `substitutesByIngredient` and
+`deitiesByIngredient` loaders. A field on another module's type is added from the module allowed to
 import it — `memberships` lives in `coven` because `identity` imports
 nothing.
 

@@ -67,7 +67,7 @@ The `db:*` scripts (generate, migrate, seed, drop, reset, studio), `probe-databa
 
 ## The deity vocabulary (MB.127; tables MB.128)
 
-`deities`, the admin-curated vocabulary behind the list `ingredients.deities`, whose entries stay free text as `form` does, grouped by `deity_traditions` as the forms are by their groups, with a required description that carries each deity's other spellings. [`db/deity-vocabulary.md`](db/deity-vocabulary.md)
+`deities`, the admin-curated vocabulary behind an ingredient's deities, the rows of `ingredient_deities` since MB.167, whose names stay free text with the curated row picked beside them as `form` does, grouped by `deity_traditions` as the forms are by their groups, with a required description that carries each deity's other spellings. [`db/deity-vocabulary.md`](db/deity-vocabulary.md)
 
 ### The member's autofill (MB.94)
 

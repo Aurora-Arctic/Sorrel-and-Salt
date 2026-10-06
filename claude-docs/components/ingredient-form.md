@@ -305,7 +305,9 @@ states the rule before anyone breaks it.
 
 The values **as typed**, reshaped by `toInput` into the input the mutation
 and the schema take: an unanswered select becomes `null`, a list entry
-becomes its text, and the boxes are left behind. The elements go as chosen,
+becomes its text, a deity its text as `{ name }` (MB.167), and the boxes are
+left behind. It sends no pick yet, neither a deity's `deityId` nor a
+`formId`: recording a picked row is MB.169's. The elements go as chosen,
 `[]` when none is, which `IngredientUpdateInput` needs to clear them and the
 schema reads as absent. Nothing else is trimmed or
 parsed: a blank field goes as `''`, and the service's run of the same schema
