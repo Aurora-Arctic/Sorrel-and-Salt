@@ -160,6 +160,14 @@
   CHECK value changed by hand.
   Its sidecar acknowledges the `DROP CONSTRAINT` and says why it is one PR:
   the new CHECK only widens, and nothing reads a CHECK.
+- **`0039_drop-substitutes-list.sql`** (MB.141) is the contract of MB.140's
+  switch, and the first plain `generate` since 0031: with every other drop
+  landed, it emitted the `DROP COLUMN "substitutes"` alone. Before the drop
+  it copies across, as names, any list entry the table holds no row for, live
+  or removed, in any case. Its sidecar acknowledges the drop and says why it
+  is safe on production: v0.5.0 shipped MB.140 first.
+  `ingredient-substitutes-schema.test.ts` adds the column back in its clone
+  to re-run both fills. See ["Expand/contract"](expand-contract.md).
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
