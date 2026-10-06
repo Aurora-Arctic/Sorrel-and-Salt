@@ -58,6 +58,12 @@ describe('the seeded template every db worker clones', () => {
     expect(rows.map((r) => r.id)).toEqual(expected);
   });
 
+  // The bootstrap user is the seed's creator and no admin (MB.58).
+  it('holds one site admin, E', async () => {
+    const rows = await sql<{ id: string }[]>`select id from users where role = 'admin'`;
+    expect(rows.map((r) => r.id)).toEqual([FIXTURE_USERS.E.id]);
+  });
+
   it('holds workspaces W and X', async () => {
     const rows = await sql<{ id: string }[]>`select id from workspaces order by id`;
     expect(rows.map((r) => r.id)).toEqual([WORKSPACE_W_ID, WORKSPACE_X_ID].sort());

@@ -244,6 +244,8 @@ Code, schema, and prose use _workspace_. Only the URL segment says _coven_.
 
 `canCreateWorkspace` defaults to `false`. Signing in with any registered provider earns an account and nothing more. The flag turns `true` by one of two routes — accepting a workspace invitation or an admin granting it — and once `true` it stays `true`, so an established user can create as many workspaces as they like. Admins can always create workspaces regardless of the flag, and nothing in the OAuth flow sets it. Being made admin sets it `true` all the same (MB.59), so the row states what the person may do without a reader knowing the admin rule, and revoking admin leaves it.
 
+**`admin_role_changes`** — `id`, `userId`, `change` (`bootstrap` | `grant` | `revoke`, a closed enum), `note` (nullable), + audit. The ledger of who is an admin: one row per change to `role`, because the next update to a user's row overwrites its `updated_by`. `created_by` is who made the change and `created_at` when. `bootstrap` is a promotion by `ADMIN_BOOTSTRAP_EMAIL`, or a row the ledger started with: its migration wrote one for every live admin, stamped as that admin. Append-only by the repository rather than by grant, since `sorrel` owns its tables and a `REVOKE` would not bind it: the writer's update and delete methods refuse the table at compile time, and only the insert and the finders reach it. One privilege's account, not §13's edit history (MB.58; [`m2.9-granting-admin.md`](design-decisions/m2.9-granting-admin.md), "What the audit trail records").
+
 **`workspaces`** — `id`, `name`, `slug`, + audit.
 
 There is no `kind` column and no automatically created workspace. Every workspace behaves identically: it can take members and be deleted by an owner. A newly signed-in user has no workspace until they accept an invitation or, holding creation rights, make one.
@@ -1168,7 +1170,7 @@ Every story becomes a failing test first: **write test → watch it fail → min
 
 The Docker side is a Node container rather than a Postgres init script, corrected at M1.24 from "Docker Postgres runs it on first boot": the seed is TypeScript and the Postgres image has no Node, and `Docker/postgres-init/` does not run at container start in any case, since `Dockerfile.postgres` populates PGDATA at image build time and the entrypoint then skips `/docker-entrypoint-initdb.d/`. The outcome the line described — a clean volume comes up seeded — is unchanged.
 
-Scenarios: `minimal` (one admin, one user, empty compendium), `standard` (five users, workspaces W and X, populated compendium), `demo` (standard plus spells with ingredients and layer order).
+Scenarios: `minimal` (one system user, one user, empty compendium), `standard` (five users, workspaces W and X, populated compendium), `demo` (standard plus spells with ingredients and layer order).
 
 **Fixture users:**
 

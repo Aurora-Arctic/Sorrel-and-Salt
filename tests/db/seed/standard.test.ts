@@ -87,7 +87,7 @@ afterAll(async () => {
 });
 
 describe('the cast: five fixture users, A–E', () => {
-  it('creates all five, under the ids the fixtures name, plus the bootstrap admin', async () => {
+  it('creates all five, under the ids the fixtures name, plus the bootstrap user', async () => {
     // Precondition: the truncated clone really starts empty, so these rows are this seed's.
     expect(await countOf('users')).toBe(0);
 
@@ -108,8 +108,16 @@ describe('the cast: five fixture users, A–E', () => {
     expect(byId.get(FIXTURE_USERS.B.id)?.role).toBe('user');
     expect(byId.get(FIXTURE_USERS.C.id)?.role).toBe('user');
     expect(byId.get(FIXTURE_USERS.D.id)?.role).toBe('user');
-    // E is the only site admin: the bootstrap admin is the seed's identity, not cast.
     expect(byId.get(FIXTURE_USERS.E.id)?.role).toBe('admin');
+  });
+
+  // The bootstrap user is the seed's identity, not cast, and no admin (MB.58).
+  it('makes E the only site admin', async () => {
+    await seedStandard(db);
+
+    const users = await allUsers();
+    expect(users.find((u) => u.id === BOOTSTRAP_USER_ID)?.role).toBe('user');
+    expect(users.filter((u) => u.role === 'admin').map((u) => u.id)).toEqual([FIXTURE_USERS.E.id]);
   });
 
   // Invite-gate: A–D earned the flag by joining a workspace; E is in none and
@@ -125,7 +133,7 @@ describe('the cast: five fixture users, A–E', () => {
     expect(byId.get(FIXTURE_USERS.E.id)?.can_create_workspace).toBe(false);
   });
 
-  it('stamps every user as the bootstrap admin’s', async () => {
+  it('stamps every user as the bootstrap user’s', async () => {
     await seedStandard(db);
 
     const seeded = (await allUsers()).filter((u) => u.id !== BOOTSTRAP_USER_ID);

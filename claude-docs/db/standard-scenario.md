@@ -15,7 +15,7 @@ every suite, and an id a test can name beats one this run happened to produce.
 | D    | `…0006` | `user`  | member of unrelated X |
 | E    | `…0007` | `admin` | no workspace at all   |
 
-The ids continue the series `…0001` (the bootstrap admin, MB.5) and `…0002`
+The ids continue the series `…0001` (the bootstrap user, MB.5) and `…0002`
 (`minimal`'s plain user) opened; W and X take `…0001-…0001` and `…0001-…0002`,
 a block of their own so a stray id is never ambiguous about what it names.
 Their slugs are not written down — `slugify(name)`, through the one shared
@@ -31,6 +31,13 @@ are seeded `true` because each is in a workspace, and under §5 that is how the
 flag comes to be true — an invitation was accepted. E is seeded `false`: E has
 never been invited, and creates workspaces by being an admin instead. Seeding E
 `true` would erase exactly the distinction M6.7's gate turns on.
+
+**E has one `bootstrap` row in `admin_role_changes`**, stamped as E, as MB.58's
+migration writes one for every admin a database already holds: the template is
+migrated before it is seeded, so the migration finds no admin and the seed
+writes the row instead. Every seeded admin then has its one ledger row, as a
+deployed database's do ([`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md),
+"What the audit trail records").
 
 ### The compendium is awkward on purpose
 
@@ -86,11 +93,11 @@ It seeds them **inside its own transaction** rather than calling
 more each. Each of
 those now splits into a public `seedX(db)` that opens a transaction and a
 `seedXVocabulary(tx)` that assumes one — the GUC published and the bootstrap
-admin present. A half-applied scenario (categories seeded, users not) is worse
+user present. A half-applied scenario (categories seeded, users not) is worse
 than one that never ran, and every extra transaction is another chance at one.
 
 `standard` itself takes that same shape since M1.23: `seedStandard(db)` opens
-the transaction, publishes the GUC and inserts the bootstrap admin (the three
+the transaction, publishes the GUC and inserts the bootstrap user (the three
 moves `beginSeedTransaction` makes), then hands over to
 **`seedStandardContent(tx)`** — which is what `demo` calls, one level
 up and for the same reason. Two of its internals are shared rather than copied

@@ -1,6 +1,7 @@
-import { inArray, isNull } from 'drizzle-orm';
+import { eq, inArray, isNull } from 'drizzle-orm';
 import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { users } from '../../modules/identity/schema/users';
+import { adminRoleChanges } from '../../modules/identity/schema/admin-role-changes';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
@@ -388,7 +389,7 @@ export async function seedStandard(db: SeedDatabase): Promise<void> {
  * The same scenario inside a transaction the caller already opened: `demo`
  * writes its grimoire alongside these rows, so a half-applied scenario cannot
  * be a grimoire referencing rows that are not there. Assumes the GUC is
- * published and the bootstrap admin exists.
+ * published and the bootstrap user exists.
  */
 export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
   // Reference data first: an ingredient is filed under a category by foreign
@@ -399,6 +400,7 @@ export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
   await seedDeityVocabulary(tx);
 
   await insertMissingUsers(tx);
+  await insertMissingAdminBootstrap(tx);
   await insertMissingWorkspaces(tx);
   await insertMissingMemberships(tx);
 
@@ -430,6 +432,25 @@ async function insertMissingUsers(tx: SeedTransaction): Promise<void> {
     keyOf: (user) => user.id,
     toRow: (user) => user,
   });
+}
+
+// Fixture E's ledger row, as MB.58's migration writes one for every admin a
+// database already holds: one `bootstrap` row, stamped as E. Not
+// `insertMissing`, which stamps as the bootstrap user.
+async function insertMissingAdminBootstrap(tx: SeedTransaction): Promise<void> {
+  const admin = FIXTURE_USERS.E.id;
+  const [present] = await tx
+    .select({ id: adminRoleChanges.id })
+    .from(adminRoleChanges)
+    .where(eq(adminRoleChanges.userId, admin))
+    .limit(1);
+  if (present) return;
+
+  await tx
+    .insert(adminRoleChanges)
+    .values(
+      applyAudit('insert', { userId: admin, change: 'bootstrap' as const }, { userId: admin }),
+    );
 }
 
 async function insertMissingWorkspaces(tx: SeedTransaction): Promise<void> {
