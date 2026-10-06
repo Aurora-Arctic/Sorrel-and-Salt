@@ -46,3 +46,6 @@ export interface SubstituteRow {
 
 /** What a test row of `ingredient_substitutes` links or names; both or neither is the CHECK's case. */
 export type SubstituteEntry = { substituteId?: string | null; name?: string | null };
+
+/** A test row of `ingredient_deities`: always a name, and a link when picked (MB.165). */
+export type DeityEntry = { deityId?: string | null; name: string; position: number };

@@ -30,9 +30,10 @@ export const deityTraditions = pgTable(
 );
 
 // The vocabulary behind `ingredients.deities`, and deliberately not a foreign
-// key target for it (deities-schema.test.ts asserts so): `traditionId` can be
-// a key because only an admin writes it, as `ingredient_forms.group_id` is,
-// while a member must be able to write a god before anyone curates one.
+// key target for that text (deities-schema.test.ts asserts so): `traditionId`
+// can be a key because only an admin writes it, as `ingredient_forms.group_id`
+// is, while a member must be able to write a god before anyone curates one. A
+// pick is keyed beside its name, as `ingredient_deities.deity_id` (MB.165).
 export const deities = pgTable(
   'deities',
   {

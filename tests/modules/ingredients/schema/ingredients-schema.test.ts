@@ -14,6 +14,7 @@ import {
 } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import { workspaces } from '@/modules/coven/schema/workspaces';
+import { ingredientForms } from '@/modules/vocabulary/schema/ingredient-forms';
 import type { IngredientOverrides } from './types';
 
 // DESIGN.md §5's seven values, in the order the design doc's table lists them.
@@ -39,6 +40,7 @@ const COLUMNS = [
   'nomenclature',
   'canonical_key',
   'form',
+  'form_id',
   'description',
   'elements',
   'planets',
@@ -104,6 +106,15 @@ describe('ingredients schema', () => {
   it('keeps form as free text rather than an enum or a foreign key', () => {
     expect(byName.form.getSQLType()).toBe('text');
     expect(foreignKeys.some((fk) => fk.reference().columns[0].name === 'form')).toBe(false);
+  });
+
+  // MB.165: the curated row a member picked, beside the text and never
+  // instead of it, so optional — typed text links nothing.
+  it('records a picked form as a nullable key beside the text', () => {
+    expect(byName.form_id.getSQLType()).toBe('uuid');
+    expect(byName.form_id.notNull).toBe(false);
+    const formFk = foreignKeys.find((fk) => fk.reference().columns[0].name === 'form_id');
+    expect(formFk?.reference().foreignTable).toBe(ingredientForms);
   });
 
   it('stores deities, planets, zodiac signs and colours as array columns', () => {
