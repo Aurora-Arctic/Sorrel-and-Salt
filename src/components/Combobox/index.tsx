@@ -10,6 +10,7 @@ import {
   useState,
 } from 'react';
 import { ChevronIcon, ClearIcon } from './icons';
+import { useTip } from './tip';
 import type { Bucket, ComboboxOption, ComboboxProps, Item, Suggestions, TypedRow } from './types';
 import './index.scss';
 
@@ -104,12 +105,18 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   suggestions,
   entries,
   clear,
+  qualifier,
   inputRef,
   name,
   'aria-describedby': describedBy,
   'aria-invalid': invalid,
 }: ComboboxProps<O>): ReactElement {
   const headingId = useId();
+  const qualifierId = useId();
+  const detail = qualifier?.detail;
+  // Opened on the box's focus as well as the qualifier's hover: the
+  // qualifier is no stop of its own, and the box is what the keyboard reaches.
+  const tip = useTip(() => Boolean(detail));
   // Whether the list would be open had it rows: it opens as they arrive.
   const [wantsOpen, setWantsOpen] = useState(false);
   const hasSource = suggestions !== undefined;
@@ -165,7 +172,12 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   // puts the caret in the text, as pressing a plain input would.
   const focusText = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
-    if (target === event.currentTarget || target.classList.contains('combobox__values')) {
+    // The qualifier reads as part of the text, so a press on it does too.
+    if (
+      target === event.currentTarget ||
+      target.classList.contains('combobox__values') ||
+      target.closest('.combobox__qualifier')
+    ) {
       event.preventDefault();
       event.currentTarget.querySelector<HTMLInputElement>('.combobox__input')?.focus();
     }
@@ -210,19 +222,71 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
       >
         <div className="combobox__values">
           {entries}
-          <input
-            className="combobox__input"
-            {...getInputProps({
-              ref: inputRef,
-              name,
-              'aria-label': labelId ? undefined : label,
-              'aria-describedby': describedBy,
-              'aria-invalid': invalid,
-              onKeyDown,
-              onFocus,
-              onBlur,
-            })}
-          />
+          {/* The text's slot. With a qualifier it is as wide as the text,
+              sized by a hidden copy of it, so the qualifier reads straight
+              after: "Wax (Animal)". Always in the page, so that a pick
+              adding the qualifier never remounts the box and takes its focus. */}
+          <span
+            className={qualifier ? 'combobox__text is-qualified' : 'combobox__text'}
+            data-value={value}
+          >
+            <input
+              className="combobox__input"
+              {...getInputProps({
+                ref: inputRef,
+                name,
+                // One character wide of its own, so that the slot, not the
+                // browser's default of twenty, decides how wide the text is.
+                size: 1,
+                'aria-label': labelId ? undefined : label,
+                // The field's own description first, then the qualifier's, so a
+                // reader hears the hint before what the pick adds.
+                'aria-describedby':
+                  [
+                    describedBy,
+                    qualifier && `${qualifierId}-text`,
+                    detail && `${qualifierId}-detail`,
+                  ]
+                    .filter(Boolean)
+                    .join(' ') || undefined,
+                'aria-invalid': invalid,
+                onKeyDown,
+                onFocus: () => {
+                  tip.show();
+                  onFocus?.();
+                },
+                onBlur: () => {
+                  tip.hide();
+                  onBlur?.();
+                },
+              })}
+            />
+          </span>
+          {qualifier && (
+            // Hover on a wrapper holding the tooltip as well as the text, so
+            // the pointer can move onto the tooltip without closing it.
+            <span
+              className="combobox__qualifier"
+              onMouseEnter={tip.show}
+              onMouseLeave={tip.hideSoon}
+            >
+              {/* In brackets, as the row picked read: "Wax (Animal)". */}
+              <span id={`${qualifierId}-text`}>({qualifier.text})</span>
+              {/* In the page while closed, faded out and aria-hidden, as an
+                  entry's is, and read through the box's description. */}
+              {detail && (
+                <span
+                  role="tooltip"
+                  className={
+                    tip.open ? 'combobox__qualifier-tip is-open' : 'combobox__qualifier-tip'
+                  }
+                  aria-hidden={!tip.open}
+                >
+                  <span id={`${qualifierId}-detail`}>{detail}</span>
+                </span>
+              )}
+            </span>
+          )}
         </div>
         {(clear || hasSource) && (
           <div className="combobox__indicators">
