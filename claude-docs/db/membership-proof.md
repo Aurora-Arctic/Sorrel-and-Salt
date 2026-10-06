@@ -60,7 +60,7 @@ two transports").
 
 **The finder convention** has a file of its own: [`finder-convention.md`](finder-convention.md).
 
-### The three reads that take no proof
+### The four reads that take no proof
 
 `findWorkspaceRole(userId, workspaceId)` is what mints a proof, so it cannot
 demand one. It is narrow on purpose — it answers with a role, not with rows —
@@ -83,13 +83,22 @@ service's decision — `setEmail` refuses an address a verified row holds and le
 a provisional one be claimed over, and the `/verify-email` gate refuses one any
 other live row holds (`auth/admin-bootstrap.md`, "The email page").
 
+`findAdminInvitationByToken(token)` is the fourth (MB.69), for a different
+reason: no workspace is involved, but the one asking is an invitee who is not
+yet an admin, so there is no `SiteAdmin` proof to hold either. What admits is
+holding the token, which the read hashes itself, so a hash out of a dumped row
+finds nothing. It answers the live invitation the token names, whatever its
+state; the accept beside it matches only the session's user holding the
+invited address, verified
+([`invitations.md`](invitations.md), "Admin invitations").
+
 The admin user list's two reads, `findUserPage` and `findProvidersOfUsers`
 (MB.52), are not among them: they span no workspace either, but they take the
 `SiteAdmin` proof instead ([`auth/admin-users.md`](../auth/admin-users.md),
 "The user list").
 
 `tests/db/repository/index.test.ts` and `soft-delete-finder-guard.test.ts`
-both pin the repository's export list, so a fourth exception is a decision
+both pin the repository's export list, so a fifth exception is a decision
 rather than an addition.
 
 ### Where the proof is weaker than a policy

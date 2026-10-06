@@ -5,7 +5,7 @@ import * as repository from '@/db/repository';
 describe('repository public API', () => {
   // The provisional-account delete is the one `users` delete
   // (claude-docs/db/provisional-account-delete.md).
-  it('exports exactly withAudit, the finders, the three reads that take no proof, the two that take the admin proof, and the provisional-account delete', () => {
+  it('exports exactly withAudit, the finders, the four reads that take no proof, the three that take the admin proof, and the provisional-account delete', () => {
     expect(Object.keys(repository).sort()).toEqual(
       [
         'deleteProvisionalUsers',
@@ -18,6 +18,7 @@ describe('repository public API', () => {
         'findManyInWorkspace',
         'findManySpells',
         'findMembershipsOfUsers',
+        'findAdminInvitationByToken',
         'findOpenAdminRoleChangePause',
         'findOne',
         'findOneById',

@@ -325,6 +325,13 @@
       "breakpoints": true
     },
     {
+      "idx": 46,
+      "version": "7",
+      "when": 1791328303254,
+      "tag": "0046_admin-invitations",
+      "breakpoints": true
+    },
+    {
       "idx": 47,
       "version": "7",
       "when": 1791329096556,
