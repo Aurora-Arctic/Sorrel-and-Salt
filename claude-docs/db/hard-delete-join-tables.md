@@ -7,12 +7,26 @@ the third until MB.110 — see "Why not `spell_ingredients`" at the end of this
 section.
 
 **Why these two** is DESIGN.md §5's argument ("Audit columns — on every table,
-and the join-table exception"): what decided it is the `deleted_at IS NULL`
-every service joining _through_ a soft-deleted join table would have to
-remember by hand — CLAUDE.md rule 4's mistake, in the one place the repository
-cannot prevent it, since `findMany` filters the table it selects **from**. The
-four stamp columns stay, and `workspace_members` and `ingredient_folk_names`
-keep the full six (§5).
+and the join-table exception"): a pair is a pairing, not content. It holds
+nothing of its own — no locator, no position, no typed text — so a pair
+removed is restored by toggling the chip again, and a tombstone would keep
+nothing a restore could return. The four stamp columns stay, and
+`workspace_members` and `ingredient_folk_names` keep the full six (§5).
+
+**What MB.34 first argued, and why it no longer decides it** (MB.125). MB.34
+rested on the `deleted_at IS NULL` every service joining _through_ a
+soft-deleted join table would have to remember by hand — CLAUDE.md rule 4's
+mistake, in the one place the repository could not then prevent it, since
+`findMany` filters the table it selects **from**. `existsIn` (MB.100) has
+since closed that place: every read through a child table ANDs the child's
+filter by construction, which is what let MB.110 soft-delete
+`spell_ingredients` (below). The same is true of these two today, so the
+argument that remains is the one above. Soft-deleting them would buy a
+`deleted_by` on the row and one idiom across an ingredient's child writes,
+and cost a surrogate key, partial indexes, the delete columns and a
+destructive migration, for a row whose restore is a click; the v2 history
+trigger sees a `DELETE` with `app.current_user_id` beside it, so the actor
+is not lost.
 
 **No `deleted_at` also means no partial unique index**, on either.
 Rule 4's convention exists so a tombstone cannot reserve a name forever, and a
@@ -30,6 +44,15 @@ not `vitest`, if either constraint is ever loosened):
 - `write.softDelete` takes `PgTable & { deletedAt: AnyPgColumn }` — so it cannot
   be pointed at a hard-deleted join table, where it would emit an `UPDATE`
   that sets nothing.
+
+**How a service names the rows** (MB.125). `write.delete(table, match)` takes
+column values — `{ ingredientId, categoryId: [...] }`, a list matching by
+`IN` — rather than an `SQL` predicate, which a service may not build
+(MB.33): until MB.125 its only callers were tests. A list left empty deletes
+nothing without a statement, as `softDeleteByIds` does for an empty id list,
+and a match naming no column throws rather than emptying the table. The
+stamps are not columns to match on, and a join table keyed on its pair needs
+no comparison but equality.
 
 `findMany`/`findOne` read both shapes: the private `notSoftDeleted(table)`
 returns the predicate when the table has a `deleted_at` and `undefined` when it
