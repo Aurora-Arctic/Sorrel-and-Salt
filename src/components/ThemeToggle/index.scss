@@ -29,6 +29,10 @@ $theme-toggle-corner-radius: 3.9rem;
   background-color: $accent;
   color: $text-on-color;
   cursor: pointer;
+  // The parked facet sits past the window's right edge. The clip hides it but
+  // still lets it count as overflow, which Chrome's device emulator pans to;
+  // the button's own box, which holds the visible quarter, contains it.
+  overflow: hidden;
   // Hover grows from the pinned corner: on dark $accent and $accent-hover are a
   // shade apart, so colour alone cannot carry it.
   transform-origin: 100% 0;
