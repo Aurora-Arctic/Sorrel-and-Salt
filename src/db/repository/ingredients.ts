@@ -8,7 +8,7 @@ import { canonicalKeyOf, ingredients } from '../../modules/ingredients/schema/in
 import { deities } from '../../modules/vocabulary/schema/deities';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
-import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
+import { inCompendium, listFolds, notSoftDeleted, scopedTo } from './predicates';
 import { citesNothing } from './references';
 import { existsIn, pageBounds, selectFrom } from './select';
 import { inLiveGroup } from './vocabularies';
@@ -327,6 +327,8 @@ function compendiumList(filter: IngredientFilter): {
       ...categoryArms(filter.categoryIds ?? []),
       formArm(filter.form),
       filter.formId ? eq(ingredients.formId, filter.formId) : undefined,
+      listArm(ingredients.planets, filter.planet),
+      listArm(ingredients.zodiacSigns, filter.zodiacSign),
       filter.withoutReferences ? citesNothing() : undefined,
       filter.nomenclature ? eq(ingredients.nomenclature, filter.nomenclature) : undefined,
     ),
@@ -401,6 +403,15 @@ function categoryArms(categoryIds: readonly string[]): SQL[] {
       ),
     ),
   );
+}
+
+/**
+ * `list` holds an entry folding to `value`, both trimmed and lower-cased as
+ * the suggestions fold one (MB.162). Blank means no filter.
+ */
+function listArm(list: AnyPgColumn, value: string | undefined): SQL | undefined {
+  if (!value?.trim()) return undefined;
+  return inArray(sql`lower(btrim(${value}))`, listFolds(list));
 }
 
 /** The form compared under the fold `canonical_key` uses, on both sides. Blank means no filter. */

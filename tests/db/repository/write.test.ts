@@ -252,14 +252,18 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
   // Twenty-one since M5.6a, whose form rename rewrites the compendium entries
   // picking the form: the vocabulary module may not name `ingredients`, so
   // the rewrite and the slugs it retires are named for it, below the boundary,
-  // matching only an entry that still picks the form. A twenty-second is the
+  // matching only an entry that still picks the form. Twenty-two since MB.95,
+  // whose planet and sign renames rewrite the compendium entries listing them,
+  // for the same reason: the list is rewritten below the boundary, matching
+  // only an entry that still holds the old spelling. A twenty-third is the
   // next such decision.
-  it('offers exactly twenty-one writer methods — a twenty-second is a decision, not a convenience', async () => {
+  it('offers exactly twenty-two writer methods — a twenty-third is a decision, not a convenience', async () => {
     const methods = await withAudit(session, async (write) => Object.keys(write).sort());
 
     expect(methods).toEqual(
       [
         'acceptAdminInvitation',
+        'carryAstrologyRename',
         'carryFormRename',
         'delete',
         'deleteLapsedSlugRetirements',

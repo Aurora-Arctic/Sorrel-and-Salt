@@ -29,6 +29,8 @@ describe('repository public API', () => {
         'findPage',
         'findPageInWorkspace',
         'findProvidersOfUsers',
+        'findAstrologyValueCount',
+        'findAstrologyValues',
         'findCategoryCount',
         'findCategoryPage',
         'findCommonNameSuggestions',

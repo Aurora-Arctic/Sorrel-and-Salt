@@ -1,9 +1,20 @@
+import type { planets } from './schema/astrology';
 import type { categories, categoryGroups } from './schema/categories';
 import type { deities, deityTraditions } from './schema/deities';
 import type { ingredientFormGroups, ingredientForms } from './schema/ingredient-forms';
 import type { IngredientRow } from '../../db/repository';
 
-export type { CategoryFilter, IngredientFormValueFilter } from '../../db/repository';
+export type {
+  AstrologyValueFilter,
+  CategoryFilter,
+  IngredientFormValueFilter,
+} from '../../db/repository';
+
+/**
+ * A planet or a zodiac sign: the two tables share one shape, so the planets'
+ * row type stands for both (MB.95).
+ */
+export type AstrologyValueRow = typeof planets.$inferSelect;
 
 export type CategoryRow = typeof categories.$inferSelect;
 

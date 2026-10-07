@@ -2084,7 +2084,9 @@ _Acceptance criteria:_
 
 _Story 18 — As a site admin, I want to add, edit and soft-delete planets and signs, so that the vocabularies can grow without a deploy._
 
-`/admin/planets` and `/admin/zodiac-signs`, reusing M5.6a's page shape without the group control. `PlanetInput` and `ZodiacSignInput` (name, description; no slug) in `vocabulary/validation/`; create, update and soft-delete mutations per table, admin-gated in the service and firing the `compendium` cache tag. A value is curated through the create form, which asks for the required description (DESIGN.md §5). Lands after M5.6a, before M5.7, which gates it.
+`/admin/planets` and `/admin/zodiac-signs`, reusing M5.6a's page shape without the group control. `PlanetInput` and `ZodiacSignInput` (name, description; no slug) in `vocabulary/validation/`; create, update and soft-delete mutations per table, admin-gated in the service. A value is curated through the create form, which asks for the required description (DESIGN.md §5). Lands after M5.6a, before M5.7, which gates it.
+
+**Corrected while building, on the owner's calls.** Firing the `compendium` tag is M8.7's, as it is for M5.6's and M5.6a's writes: nothing calls `revalidateTag` until M8.6's caching exists, and M8.7 wants one shared tag constant, so M8.7's entry names these writes. The list keeps M5.6a's name search (`?query=`), since "M5.6a's page shape" now holds MB.178's filter; only the group control goes. The two pages share one list and one form component, `VocabularyValueList` and `VocabularyValueForm`, keyed by the vocabulary.
 
 **The compendium holds curated planets and signs alone (MB.162), and these pages keep it so after the write**, as M5.6a's does for forms (amended by MB.162, [`design-decisions/mb.162-compendium-holds-curated-values.md`](../design-decisions/mb.162-compendium-holds-curated-values.md)). Soft-deleting a planet or sign a live compendium entry's list holds is refused, with an error naming the entries — the first few and how many more — and the admin edits them first. Renaming one carries the new spelling onto every such entry's list, in the same transaction; a planet or sign is no part of an entry's identity or slug, so the rewrite touches the list alone. Both apply only while the row is the last live spelling of its value. A coven's ingredients never block a delete and are never rewritten; their value moves into the autofill's in-use bucket. MB.163 later moves the rename's rewrite to a background job. The pages carry no to-do list of in-use values outside the vocabulary, as first scoped: under MB.162 the compendium holds none, and an admin reads no workspace's ingredients.
 
@@ -2095,7 +2097,8 @@ _Acceptance criteria:_
 - Soft-deleting a planet or sign a live compendium entry holds is refused, naming the entries, and the row stays live; it passes once no live entry holds it (amended by MB.162)
 - Renaming a planet or sign rewrites the entry in every live compendium entry's list holding it, in place and in the same transaction, asserted by row; a soft-deleted entry keeps the old spelling (amended by MB.162)
 - A coven's ingredient never blocks a delete and is never rewritten by a rename, asserted by row with the precondition that it holds the value (amended by MB.162)
-- Non-admins reach neither page nor any mutation; every mutation fires the tag
+- Non-admins reach neither page nor any mutation (firing the tag is M8.7's, corrected while building)
+- The list narrows by a name search, read literally, and every link keeps it (corrected while building)
 
 **MB.97 — A node Vitest project for the unit files that need no DOM** · 3h
 

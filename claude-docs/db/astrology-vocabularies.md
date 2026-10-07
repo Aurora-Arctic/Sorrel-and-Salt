@@ -79,3 +79,46 @@ autofill's does. A value is uncurated when `lower(btrim(value))` matches no
 live row's `lower(name)`.
 
 **The member's autofill** has a file of its own: [`member-autofill.md`](member-autofill.md).
+
+### The admin writes (MB.95)
+
+`src/modules/vocabulary/services/astrology.ts`, in the form writes' shape
+([`categories.md`](categories.md), "Form writes") without the group, for
+`/admin/planets` and `/admin/zodiac-signs`. One code path for both, keyed by
+the ingredient list each curates (`CuratedField`, `'planets' | 'zodiacSigns'`).
+A compendium entry's planets and signs are curated spellings (MB.162), and
+these writes keep them so after the write.
+
+- **The reads.** `listAstrologyValues(field, filter, page)` pages the live
+  rows by `(name, id)` through `findAstrologyValues`, and
+  `countAstrologyValues` counts them through `findAstrologyValueCount` on the
+  page's own filter and key. The filter's `query` narrows both to a name
+  holding it through `containsText`, read literally; the service trims it, so
+  a blank one is no query. `getAstrologyValueBySlug` reads one row for the
+  page's `?edit=`, `NotFound` for none.
+- **The slug is `slugify(name)`** and follows a rename; `seedKey` stays as it
+  was (MB.171). A collision is `VALIDATION` on `name`, naming the row at the
+  address.
+- **A delete is refused while a live compendium entry's list holds the
+  value**: `Forbidden`, naming the first three entries and how many more,
+  through the compendium's own filter (`IngredientFilter.planet` or
+  `zodiacSign`) and the shared `heldBy`. A coven's ingredient never blocks
+  it; its value moves into that coven's in-use bucket.
+- **A rename carries the new name onto every live compendium entry holding
+  the old, in the same transaction**, through `write.carryAstrologyRename`:
+  each entry folding to the old spelling is replaced in its place, and
+  nothing else in the row moves, since a planet or a sign is no part of an
+  entry's identity or slug. A case-only rename carries too. A soft-deleted
+  entry keeps the old spelling, and a coven's ingredient is never written
+  (M6.6). The writer is the twenty-second, named below the module boundary
+  for `carryFormRename`'s reason: the vocabulary module may not name
+  `ingredients`.
+- **"While the row is the last live spelling of its value"** is always true.
+  MB.95's entry conditions both rules on it, and a value folds as its slug
+  does — trimmed and lower-cased — so two live rows of one fold would share a
+  slug, which the partial unique index refuses.
+- **The entries are read before the transaction**, as the form delete's are:
+  an entry saved with the value in the instant between keeps a retired
+  spelling.
+
+Revalidating the `compendium` tag after each write is M8.7's.
