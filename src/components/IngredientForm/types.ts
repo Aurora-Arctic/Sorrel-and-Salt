@@ -1,4 +1,5 @@
-import type { ReactNode, Ref } from 'react';
+import type { HTMLInputTypeAttribute, ReactNode, Ref } from 'react';
+import type { FieldPath, FieldValues } from 'react-hook-form';
 import type { z } from 'zod';
 import type {
   CreateWorkspaceIngredientMutation,
@@ -134,8 +135,6 @@ export type IngredientFormInput = z.input<typeof LocalIngredientInput>;
 
 export type TextFieldName = 'name' | 'canonicalName' | 'form' | 'description' | 'safetyNotes';
 
-export type SelectFieldName = 'nomenclature';
-
 /** A closed set holding several values: an entry's elements. */
 export type MultiSelectFieldName = 'elements';
 
@@ -153,28 +152,37 @@ interface FieldProps {
   required?: boolean;
 }
 
-export interface TextFieldProps extends FieldProps {
-  name: TextFieldName;
+/**
+ * A text field, in the ingredient form or another one providing it: the
+ * reference panel's (MB.154). Its name is one of that form's paths.
+ */
+export interface TextFieldProps<V extends FieldValues = IngredientFormValues> extends FieldProps {
+  name: FieldPath<V>;
   /** A textarea, for prose. */
   multiline?: boolean;
+  /** The input's type, for a single line: a reference's days are `date`s. */
+  type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url'>;
   /** Shut, for a field the rest of the form has ruled out; its hint says why. */
   disabled?: boolean;
   /** Fields whose errors this one's value decides as well, revalidated when it changes. */
-  deps?: (TextFieldName | SelectFieldName)[];
+  deps?: FieldPath<V>[];
   /** Another element read with the field while it shows: the name's duplicate warning. */
   describedBy?: string;
   /** Marked invalid by something other than its own error: the name's held duplicate warning. */
   invalid?: boolean;
   /** Drawn beneath the field, after its error: the name's duplicate warning. */
   after?: ReactNode;
+  /** How the text is tidied as the field is left: a reference's fields, as the server will store them. */
+  format?: (text: string) => string;
 }
 
-export interface SelectFieldProps extends FieldProps {
-  name: SelectFieldName;
+/** A closed set, in the ingredient form or the reference panel's, whose kind is one. */
+export interface SelectFieldProps<V extends FieldValues = IngredientFormValues> extends FieldProps {
+  name: FieldPath<V>;
   /** Shown until a choice is made, and not itself a choice. */
   placeholder?: string;
   options: readonly SelectOption[];
-  deps?: (TextFieldName | SelectFieldName)[];
+  deps?: FieldPath<V>[];
   /** Runs on a new choice, before the field and its `deps` revalidate. */
   onChange?: (value: string) => void;
 }
