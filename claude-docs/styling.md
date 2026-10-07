@@ -404,9 +404,9 @@ included. Four variants:
 - **`.btn--secondary`**, what destroys something: Delete, Remove. The wax.
 
 **One size modifier, `.btn--small`**, which composes with any variant: half
-the padding (`space(1) space(3)`), a 1px edge in place of `.btn`'s 1.6px,
-which reads heavy at this size, the `caption` type size, and a `space(2)`
-gap. It is for a compact strip that the full button would make taller, such
+the padding (`space(1) space(3)`), no `$control-height` minimum, a 1px edge
+in place of `.btn`'s 1.6px, which reads heavy at this size, the `caption`
+type size, and a `space(2)` gap. It is for a compact strip that the full button would make taller, such
 as a banner or a table row. The impersonation banner's Stop is the first
 (MB.53).
 

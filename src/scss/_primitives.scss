@@ -116,6 +116,9 @@
   // strip — a banner, a table row — that the full button would make taller.
   .btn--small {
     gap: space(2);
+    // Off the field's height: a small button sits in a strip, not beside a
+    // field, and the control height would make it a full one again.
+    min-height: 0;
     padding: space(1) space(3);
     // A field's hairline rather than `.btn`'s 1.6px, which reads heavy at
     // this size.
