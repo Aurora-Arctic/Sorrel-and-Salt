@@ -1,9 +1,23 @@
-import type { ColorPickerRootProps } from '@ark-ui/react';
+import type { Color, ColorPickerRootProps } from '@ark-ui/react';
 import type { Ref } from 'react';
 import type { GroupColorColumn } from '../../lib/types';
 
 /** The picker's channel layouts: hue, saturation and brightness; hue, saturation and lightness; or red, green and blue. */
 export type PickerFormat = NonNullable<ColorPickerRootProps['format']>;
+
+/** The colour the picker holds, which the hex box is written from. */
+export type PickerColor = Color;
+
+/** A channel the admin types into: the three of whichever format is chosen. */
+export type PickerChannel =
+  'hue' | 'saturation' | 'brightness' | 'lightness' | 'red' | 'green' | 'blue';
+
+/** A format the admin can choose, its name, and the channels it is typed in. */
+export interface FormatOption {
+  format: PickerFormat;
+  name: string;
+  channels: { channel: PickerChannel; name: string }[];
+}
 
 /** Another group's colour in the same theme, which this one is warned against standing too close to. */
 export interface NearbyColor {

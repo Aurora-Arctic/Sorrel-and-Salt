@@ -8,10 +8,10 @@ import {
   contrastBoundary,
   failingLabelPoint,
   failingRegion,
-  nearColor,
   pairedColor,
 } from '../../lib/group-colors';
-import type { ChipColorFieldProps, PickerFormat } from './types';
+import { nearColor } from '../../lib/near-color';
+import type { ChipColorFieldProps, FormatOption, PickerColor, PickerFormat } from './types';
 import './index.scss';
 
 // One of a category group's two chip colours (M5.6b): Ark's colour picker —
@@ -25,8 +25,6 @@ import './index.scss';
 // colour in this theme is too close to tell apart. The checks themselves are
 // the schema's; this shows them while the admin chooses rather than after a
 // save (claude-docs/components/chip-color-field.md).
-
-type PickerColor = ReturnType<typeof parseColor>;
 
 const WHOLE = /^#[0-9a-f]{6}$/i;
 
@@ -69,11 +67,7 @@ const ContrastIcon = (): ReactElement => (
 );
 
 /** Each format the admin can choose, its name, and the channels it is typed in. */
-const FORMATS: {
-  format: PickerFormat;
-  name: string;
-  channels: { channel: Channel; name: string }[];
-}[] = [
+const FORMATS: FormatOption[] = [
   {
     format: 'hsba',
     name: 'HSB',
@@ -102,8 +96,6 @@ const FORMATS: {
     ],
   },
 ];
-
-type Channel = 'hue' | 'saturation' | 'brightness' | 'lightness' | 'red' | 'green' | 'blue';
 
 const hexOf = (color: PickerColor) => color.toString('hex').toLowerCase();
 

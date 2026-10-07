@@ -1,4 +1,3 @@
-import { colordx } from '@colordx/core';
 import { MIN_CHIP_CONTRAST, chipContrast } from './contrast';
 import type { AreaSpace, GroupColorColumn } from './types';
 
@@ -92,40 +91,6 @@ export function pairedColor(hex: string, column: GroupColorColumn): string {
     if (chipContrast(column, candidate) >= PAIRED_CONTRAST) return candidate;
   }
   return column === 'colorDark' ? '#ffffff' : '#000000';
-}
-
-/**
- * How far apart two colours look: the distance between them in OKLab, where a
- * step of the same size reads as the same change anywhere in the gamut. A
- * nudge of a few hex steps moves a colour about 0.01–0.03, and the seeded
- * groups sit further apart than NEAR_COLOR_DELTA within each theme.
- */
-export function colorDistance(a: string, b: string): number {
-  const x = colordx(a).toOklab();
-  const y = colordx(b).toOklab();
-  return Math.hypot(x.l - y.l, x.a - y.a, x.b - y.b);
-}
-
-/**
- * The distance under which a group's colour is warned as too close to
- * another group's, in the same theme: inside every seeded neighbour, outside
- * any nudge of one.
- */
-export const NEAR_COLOR_DELTA = 0.05;
-
-/** The nearest of `others` to `hex` that lies within NEAR_COLOR_DELTA, or none. */
-export function nearColor<T extends { hex: string }>(
-  hex: string,
-  others: readonly T[],
-): T | undefined {
-  let nearest: { other: T; distance: number } | undefined;
-  for (const other of others) {
-    const distance = colorDistance(hex, other.hex);
-    if (distance < NEAR_COLOR_DELTA && (!nearest || distance < nearest.distance)) {
-      nearest = { other, distance };
-    }
-  }
-  return nearest?.other;
 }
 
 /** A colour of `space` at `hue`, `x` saturation and `y` brightness or lightness, all 0–100, as a hex. */
