@@ -89,6 +89,17 @@ a row below says otherwise.
 | `RESEND_API_KEY`                  | from the Resend Marketplace integration; **Sensitive**                     | unset                                                                                                                                                                                                                                                                                               | `src/lib/mail.ts`'s `resend` transport, at send time                                                                                                                                                                          |
 | `MAILTRAP_SANDBOX_TOKEN`          | unset                                                                      | a Mailtrap API token with access to the sandbox; **Sensitive**                                                                                                                                                                                                                                      | `src/lib/mail.ts`'s `mailtrap-sandbox` transport, at send time                                                                                                                                                                |
 | `MAILTRAP_SANDBOX_ID`             | unset                                                                      | the sandbox's numeric id; **Sensitive**                                                                                                                                                                                                                                                             | same                                                                                                                                                                                                                          |
+| `ENABLE_IMPERSONATION`            | **never set**                                                              | unset; `true` turns impersonation on for staging and every hotfix preview                                                                                                                                                                                                                           | `src/lib/impersonation.ts`'s `impersonationEnabled()`: `true` and a `VERCEL_ENV` other than `production`, both required (`claude-docs/auth/impersonation.md`)                                                                 |
+
+**`ENABLE_IMPERSONATION` must never be set on Production** (MB.53). It is one
+of two conditions, the other being Vercel's own `VERCEL_ENV`, so setting it
+there by mistake still registers nothing. Even so, a mis-scoped variable must not be the
+only thing standing between an admin and any user's session on the live site.
+On Preview it is unset until an admin needs it, and setting it turns
+impersonation on for staging and every hotfix preview at once, since they
+share the scope. Locally, `ENABLE_IMPERSONATION=true` in `.env.local` turns it
+on, because `VERCEL_ENV` is unset off Vercel
+([`auth/impersonation.md`](auth/impersonation.md)).
 
 **`BETTER_AUTH_SECRET` is one value across both environments** (MB.47), which
 reverses what this table used to say. The old advice — a separate Preview value,
