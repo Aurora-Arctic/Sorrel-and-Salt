@@ -54,6 +54,12 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
    * for a list whose entries can only be picked (MB.154).
    */
   create?: { label: string; onCreate: () => void };
+  /**
+   * Whether the typed row is offered: false for text the caller would
+   * refuse, a list's repeat (MB.174). Enter still reaches `onCommit`, which
+   * says why. Offered unless said otherwise.
+   */
+  offerTyped?: boolean;
   /** What a pick leaves out of the text, drawn muted in brackets after it: a picked form's group. */
   qualifier?: ComboboxQualifier;
   /**

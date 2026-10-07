@@ -463,7 +463,9 @@ function WhatToTry() {
           have no grip.
         </li>
         <li>
-          <strong>Repeated entry:</strong> add the same Folk Name twice, then Save.
+          <strong>Repeated entry:</strong> add Mars to Planets, then type &ldquo;mars&rdquo; and
+          press Add: nothing is added, and the box says why. Mars is no longer suggested, nor is the
+          Name among Folk Names. Pick Greek Hecate, and Roman Hecate is still offered.
         </li>
         <li>
           <strong>Long entry:</strong> add a Folk Name too long for the box, then hover it.

@@ -1,4 +1,4 @@
-import { type FocusEvent, type ReactElement, useId, useRef, useState } from 'react';
+import { type FocusEvent, type ReactElement, useId, useMemo, useRef, useState } from 'react';
 import {
   type FieldPath,
   type FieldValues,
@@ -8,6 +8,7 @@ import {
   useFieldArray,
   useFormContext,
   useFormState,
+  useWatch,
 } from 'react-hook-form';
 import Combobox, {
   ComboboxEntry,
@@ -18,6 +19,7 @@ import Combobox, {
 import type { ComboboxOption } from '../Combobox/types';
 import InfoTip from '../InfoTip';
 import type {
+  AnyListEntry,
   FieldErrorProps,
   FieldShellProps,
   IngredientFormValues,
@@ -28,7 +30,7 @@ import type {
   SuggestFieldProps,
   TextFieldProps,
 } from './types';
-import { addEntry, commitDraft, entryDetail, entryText } from './values';
+import { addEntry, commitDraft, entryDetail, entryText, repeatOf } from './values';
 
 // IngredientForm's fields, on the form primitives (claude-docs/styling.md,
 // "Form fields"). Each reads its own error out of the form state, so a field
@@ -306,7 +308,8 @@ export function MultiSelectField({
  * shown inside it ahead of the text. A box with a source suggests, and a pick
  * adds as Add does. An error naming an entry marks that entry and reads out
  * on the box, through the list's one error element. An ordered list's entries
- * move, each by its handle.
+ * move, each by its handle. A repeat is refused at the box, as the save
+ * would refuse it, and never suggested (MB.174).
  */
 export function ListField({
   name,
@@ -318,7 +321,7 @@ export function ListField({
   ordered,
 }: ListFieldProps): ReactElement {
   const form = useFormContext<IngredientFormValues>();
-  const { control, trigger } = form;
+  const { control, trigger, setError, clearErrors, getFieldState, getValues } = form;
   const { fields, remove, move } = useFieldArray({ control, name });
   const box = `drafts.${name}` as const;
   const { field } = useController({ control, name: box });
@@ -339,6 +342,24 @@ export function ListField({
   const errorId = `${id}-error`;
   const focusBox = () => boxElement.current?.focus();
 
+  // What the list holds, and for folk names the name, which a repeat is
+  // judged against: watched only there, so Name's typing redraws no other list.
+  const listed: AnyListEntry[] = useWatch({ control, name });
+  const ingredientName = useWatch({ control, name: 'name', disabled: name !== 'folkNames' });
+  const nameToRefuse = name === 'folkNames' ? ingredientName : undefined;
+  const repeat = (text: string) => repeatOf(listed, text, undefined, nameToRefuse);
+  // The lookup leaves out what the list holds, as the References search does.
+  const offered = useMemo(
+    () =>
+      suggestions && {
+        ...suggestions,
+        options: suggestions.options.filter(
+          (option) => !repeatOf(listed, option.value, option.link, nameToRefuse),
+        ),
+      },
+    [suggestions, listed, nameToRefuse],
+  );
+
   const entryErrors = fields.map(
     (_, index): string | undefined => get(errors, `${name}.${index}.value`)?.message,
   );
@@ -358,8 +379,23 @@ export function ListField({
   const revalidate = () => {
     if (isSubmitted) void trigger([name, box]);
   };
+  // A repeat refused at the box: its text stays, to be put right, and the
+  // list's error element says why, where the save's refusal would read.
+  const refused = (text: string) => {
+    const why = repeat(text);
+    if (!why) return false;
+    setError(box, { type: 'repeat', message: why });
+    setAnnouncement(why);
+    focusBox();
+    return true;
+  };
+  // Gone once the text it judged is changed, or something is added.
+  const clearRefusal = () => {
+    if (getFieldState(box).error?.type === 'repeat') clearErrors(box);
+  };
   const added = (value: string | undefined) => {
     if (value !== undefined) {
+      clearRefusal();
       setAnnouncement(`Added ${value}`);
       revalidate();
     }
@@ -367,7 +403,11 @@ export function ListField({
   };
   // Add, and Enter with no suggestion picked, add what the box holds; a pick
   // adds the suggestion's value, linked when the suggestion is an ingredient.
-  const add = () => added(commitDraft(form, name));
+  // Add refuses a repeat; a pick never is one, since the lookup leaves out
+  // what the list holds and withholds the typed row for a repeat.
+  const add = () => {
+    if (!refused(getValues(box))) added(commitDraft(form, name));
+  };
   const pick = (value: string, option: ListOption | null) =>
     added(addEntry(form, name, value, option?.link));
   const clear = () => {
@@ -436,13 +476,17 @@ export function ListField({
           id={boxId}
           label={entry}
           value={field.value}
-          onChange={field.onChange}
+          onChange={(text) => {
+            clearRefusal();
+            field.onChange(text);
+          }}
           onFocus={onActivate}
           onBlur={field.onBlur}
           onPick={pick}
           onCommit={add}
           onRemoveLast={removeLast}
-          suggestions={suggestions}
+          suggestions={offered}
+          offerTyped={!repeat(field.value)}
           listAnchor={boxRow}
           entries={entries}
           clear={fields.length > 0 ? { label: `Clear ${legend}`, onClear: clear } : undefined}

@@ -157,6 +157,23 @@ not an input yet.
   the box', on the list's error element, so a save never sends a list the
   user thinks holds an entry it does not. The schema never sees a box, so the
   rule is the form's own. Adding the text or clearing the box clears it.
+- **A repeat is refused at the box** (MB.174), the owner's call: the schema
+  refuses one only at save, so the form refuses it as it is added. Add, or
+  Enter with nothing highlighted, on text repeating a listed entry adds
+  nothing: the box keeps the text, to be put right, and the list's one
+  error element reads `"Mars" is already listed` — a folk name repeating
+  the name reads `"Testwort" is already the name` — where the save's
+  refusal would read, the owner's call over an announcement alone. The
+  box takes `aria-invalid` and the message as its description, the changes
+  region announces it, and the focus stays in the box. The error is the
+  box's, `drafts.<list>` with type `repeat`, set by `setError`; changing
+  the text, or adding anything, clears it. What is a repeat is
+  `repeatOf` in `values.ts`, on the schema's keys: text trimmed and
+  case-folded, for every list; a deity or substitute link by its id; and a
+  typed deity or substitute among the typed entries alone, so "Hecate"
+  typed beside a linked Greek Hecate is added, as at save. Colours, with no
+  lookup, refuse a repeat the same way. The schema stays the backstop for an
+  API caller, its refusals and their tests unchanged.
 - **Each add, removal and clear is announced.** A list keeps a visually hidden
   `<output>`, a status region by its role, named "Folk Names changes" to tell
   it from the box's own "Folk Name suggestions" region, which reads "Added
@@ -239,6 +256,18 @@ description (MB.164), and sent as `{ ingredientId }`. The lookup asks for
 each ingredient's `form` and `description` for that tooltip alone; the row
 shows neither. The typed row,
 Add and Enter add the text as it stands, sent as `{ name }` with no warning.
+**A lookup leaves out what its list holds** (MB.174), as the Element
+multi-select and the References search do, through the same `repeatOf`:
+a planet, sign or folk name by its text folded, a folk-name lookup leaving
+out the ingredient's name too; a curated deity by its id, so Greek Hecate
+listed still offers Roman, and a deity only in use by its text against the
+typed deities; and an ingredient by its id, so the compendium's Mockwort is
+still offered beside the coven's copy. The filter is `ListField`'s, over
+whatever `suggestions` it is given, so every lookup shares it, and "Use
+what you typed" is not offered for text the list would refuse (the
+combobox's `offerTyped`). A pick is therefore never a repeat, and only Add
+and Enter refuse one.
+
 A compendium entry's substitutes may link only the compendium, so the admin
 form M5.5 wraps reads `compendium(query)` in their place; this form writes
 only a coven's ingredient.
@@ -572,7 +601,8 @@ the form's field name:
 The resolver returns an entry's issue at the entry (`folkNames.2`). The
 form's resolver wraps `zodResolver` and moves it onto the entry's `value`,
 which is where `fieldNameOf` puts the server's. An element's issue — a
-repeat, which the form cannot make but a caller can — arrives at the
+repeat, which the form cannot make but a caller can, as a list's repeat
+since MB.174 — arrives at the
 element too (`elements.1`), and the resolver moves the first onto the field,
 as `fieldNameOf` does.
 
@@ -712,8 +742,9 @@ pass on whatever an earlier step had focused. It covers:
   focus in Name; "Saved Testwort." said inside the form until the next
   save; and a refused save keeping what was typed.
 - **Resolver errors**: beside the field, focused, invalid and described, with
-  no request sent; on the list entry it names, focusing the list's box;
-  cleared by an edit, or by removing the entry; an element list given a
+  no request sent; on the list entry it names, cleared by an edit, or by
+  removing the entry, each in a list given the repeat, as an edit would hold
+  it, since the box now refuses one (MB.174); an element list given a
   repeat, refused on the Element control; an issue with the form's pick, or
   with its text, on the Form field.
 - **Server errors**: beside the field and on the list entry their path names;
@@ -762,7 +793,7 @@ pass on whatever an earlier step had focused. It covers:
   closing the list and keeping the text, and Enter with it closed adding the
   text, sent as its id and the typed one as its name; Greek and Roman Hecate
   picked as two pills, each with its tradition and its description, sent as
-  two ids; the same deity picked twice refused beside the repeat; a deity
+  two ids; the same deity listed twice, given, refused beside the repeat; a deity
   only in use added and sent as its name; each ingredient with its formal name and tier in the order found; a
   picked ingredient saved as a link, its entry reading as it; and a
   substitute added or picked as typed saved as text, with no warning.
@@ -784,6 +815,18 @@ pass on whatever an earlier step had focused. It covers:
   set aside staying gone while a new one returns. The in-flight save tests,
   one per button, assert both held down, the pressed one's `aria-busy` and
   its "Saving Ingredient" label until the answer, and the other's own label.
+- **A repeat** (MB.174): for each of the six lists, Add and Enter on text
+  repeating an entry but for case and spacing adding nothing, keeping the
+  text, the message on the list's error element, read with the box and
+  announced, the focus kept in the box, and an edit clearing it so a
+  different entry adds; a folk name repeating the name refused; the
+  folk-name lookup leaving out a listed name and the name; the planet and
+  sign lookups leaving out a listed value whatever its case, with the typed
+  row offered for other text and withheld for a repeat; Greek Hecate listed
+  leaving Roman offered, and "hecate" typed beside it added; a deity only in
+  use left out once typed, and its typed row withheld; and a linked
+  substitute left out by its id, its name added as typed text beside it, and
+  a second typed one refused.
 - **A long entry**: a cut-off entry's tooltip shown on hover and while its ×
   has focus, closed on Escape, and absent for an entry that fits, with the
   layout jsdom lacks stubbed through `scrollWidth` and `clientWidth`; its ×
