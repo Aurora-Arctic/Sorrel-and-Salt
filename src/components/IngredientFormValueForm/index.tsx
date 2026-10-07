@@ -294,6 +294,8 @@ const IngredientFormValueForm = ({
         <input
           id={ids('name').control}
           className="input"
+          // Off: Chrome takes a field named "name" for a person's and offers the user's own.
+          autoComplete="off"
           aria-required
           {...fieldAria('name')}
           {...register('name')}
