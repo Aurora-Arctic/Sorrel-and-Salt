@@ -327,7 +327,8 @@ export default function Foundations(): ReactElement {
           is for what destroys something. Disabled from either attribute: <code>disabled</code> for
           a submit with nothing to send, <code>aria-disabled</code> for one that must stay in the
           tab order. Tab through them for the focus ring, which every interactive element shares:
-          2px of the body ink, offset 2px, so it re-colours with the theme.
+          2px of the body ink, offset 2px, so it re-colours with the theme. Small is a size, not a
+          colour, so it composes with every variant.
         </SectionHead>
         <div className="panel fd-buttons">
           <button type="button" className="btn">
@@ -347,6 +348,20 @@ export default function Foundations(): ReactElement {
           </button>
           <button type="button" className="btn" aria-disabled="true">
             Aria-disabled
+          </button>
+        </div>
+        <div className="panel fd-buttons">
+          <button type="button" className="btn btn--small">
+            Small
+          </button>
+          <button type="button" className="btn btn--solid btn--small">
+            Small Solid
+          </button>
+          <button type="button" className="btn btn--quiet btn--small">
+            Small Quiet
+          </button>
+          <button type="button" className="btn btn--secondary btn--small">
+            Small Destructive
           </button>
         </div>
       </section>

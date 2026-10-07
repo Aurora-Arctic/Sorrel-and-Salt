@@ -182,6 +182,31 @@ describe('app.current_user_id (M1.19)', () => {
     expect(value ?? null).toBeNull();
   });
 
+  it('publishes the impersonating admin as app.impersonated_by, stamping the user acted as (MB.53)', async () => {
+    const acting = { userId: session.userId, impersonatedBy: impostor.userId };
+
+    const [row] = await withAudit(acting, (write) => write.insert(herbs, { name: 'Mugwort' }));
+
+    expect(row.createdBy).toBe(session.userId);
+    expect(row.updatedBy).toBe(session.userId);
+    expect(row.actingUser).toBe(session.userId);
+    expect(row.impersonatingAdmin).toBe(impostor.userId);
+  });
+
+  it('publishes app.impersonated_by empty on every other write, so none inherits a pooled value (MB.53)', async () => {
+    await withAudit({ ...session, impersonatedBy: impostor.userId }, (write) =>
+      write.insert(herbs, { name: 'Tansy' }),
+    );
+
+    const rows = await Promise.all(
+      Array.from({ length: 12 }, (_, index) =>
+        withAudit(session, (write) => write.insert(herbs, { name: `Plain ${index}` })),
+      ),
+    );
+
+    for (const [row] of rows) expect(row.impersonatingAdmin).toBe('');
+  });
+
   it('never opens a transaction at all when there is no acting user', async () => {
     await expect(
       withAudit({ userId: '' }, (write) => write.insert(herbs, { name: 'Hemlock' })),

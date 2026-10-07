@@ -1,5 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 
@@ -90,11 +90,26 @@ describe('the /admin/users page', () => {
   });
 
   it('turns the search parameters into the filter', async () => {
-    await renderPage({ query: 'fixture', awaiting: '1' });
+    // `?awaiting` arrives as an empty string.
+    await renderPage({ query: 'fixture', awaiting: '' });
 
     expect(listUsers.mock.calls[0]?.[1]).toEqual({ query: 'fixture', awaitingApproval: true });
     expect(screen.getByLabelText('Name or email')).toHaveValue('fixture');
     expect(screen.getByLabelText('Awaiting approval only')).toBeChecked();
+  });
+
+  // A flag by presence: a native submit's `awaiting=` and an older link's
+  // `awaiting=1` read the same as the bare one.
+  it.each([[''], ['1'], ['on']])('reads awaiting=%s as awaiting', async (value) => {
+    await renderPage({ awaiting: value });
+
+    expect(listUsers.mock.calls[0]?.[1]).toEqual({ query: undefined, awaitingApproval: true });
+  });
+
+  it('reads no awaiting as the whole list', async () => {
+    await renderPage({ query: 'fixture' });
+
+    expect(listUsers.mock.calls[0]?.[1]).toEqual({ query: 'fixture', awaitingApproval: false });
   });
 
   it('reads on after a cursor, and back before one', async () => {
@@ -117,16 +132,13 @@ describe('the /admin/users page', () => {
   it('links the next page, keeping the filter, when there is one', async () => {
     listUsers.mockResolvedValue(Array.from({ length: 26 }, (_, index) => entry(index + 1)));
 
-    await renderPage({ query: 'listed', awaiting: '1' });
+    await renderPage({ query: 'listed', awaiting: '' });
 
     const next = screen.getByRole('link', { name: 'Next' });
-    const url = new URL(next.getAttribute('href') as string, 'http://localhost');
-    expect(url.pathname).toBe('/admin/users');
-    expect(Object.fromEntries(url.searchParams)).toEqual({
-      query: 'listed',
-      awaiting: '1',
-      after: encodeCursor(entry(25).cursor),
-    });
+    const href = next.getAttribute('href') as string;
+    expect(href).toBe(
+      `/admin/users?query=listed&awaiting&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,
+    );
     expect(screen.queryByRole('link', { name: 'Previous' })).not.toBeInTheDocument();
   });
 
@@ -138,5 +150,31 @@ describe('the /admin/users page', () => {
     expect(Object.fromEntries(url.searchParams)).toEqual({
       before: encodeCursor(entry(1).cursor),
     });
+  });
+});
+
+// MB.53: the page offers impersonation where the plugin is registered, and
+// only there; the gate itself is tests/lib/impersonation.test.ts's.
+describe('the /admin/users page, impersonation', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('offers it on each row where impersonation is on', async () => {
+    vi.stubEnv('ENABLE_IMPERSONATION', 'true');
+    vi.stubEnv('VERCEL_ENV', 'preview');
+    await renderPage();
+
+    expect(
+      screen.getByRole('button', { name: 'Impersonate Listed Fixture 01' }),
+    ).toBeInTheDocument();
+  });
+
+  it('offers it nowhere at production, the flag set or not', async () => {
+    vi.stubEnv('ENABLE_IMPERSONATION', 'true');
+    vi.stubEnv('VERCEL_ENV', 'production');
+    await renderPage();
+
+    expect(screen.queryByRole('button', { name: /Impersonate/ })).not.toBeInTheDocument();
   });
 });

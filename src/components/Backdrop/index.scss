@@ -47,7 +47,7 @@
 // box matching them. The sorrel runs at three quarters of the
 // shared width: its subject fills more of its frame than the salt does.
 .backdrop--sorrel {
-  top: 0;
+  top: $top-inset;
   left: 0;
   --backdrop-scale: 0.75;
   aspect-ratio: 4 / 3;

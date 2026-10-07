@@ -1,5 +1,7 @@
 import type { ReactElement } from 'react';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
+import UserListFilter from './filter';
+import ImpersonateButton from './impersonate-button';
 import type { UserListEntry, UserListProps } from './types';
 import './index.scss';
 
@@ -17,7 +19,13 @@ function providerLabel(id: string): string {
 
 const yesNo = (value: boolean): string => (value ? 'Yes' : 'No');
 
-const UserRow = ({ user }: { user: UserListEntry }): ReactElement => (
+const UserRow = ({
+  user,
+  canImpersonate,
+}: {
+  user: UserListEntry;
+  canImpersonate: boolean;
+}): ReactElement => (
   <tr>
     <td>{user.name}</td>
     <td>{user.email}</td>
@@ -30,6 +38,12 @@ const UserRow = ({ user }: { user: UserListEntry }): ReactElement => (
     </td>
     <td>{user.providers.length ? user.providers.map(providerLabel).join(', ') : 'None'}</td>
     <td>{yesNo(user.emailVerified)}</td>
+    {/* Not on an admin's row: the endpoint refuses one (MB.53). */}
+    {canImpersonate && (
+      <td>
+        {user.role === 'admin' ? null : <ImpersonateButton userId={user.id} name={user.name} />}
+      </td>
+    )}
   </tr>
 );
 
@@ -39,36 +53,10 @@ const UserList = ({
   awaitingApproval,
   previousHref,
   nextHref,
+  canImpersonate = false,
 }: UserListProps): ReactElement => (
   <div className="user-list">
-    <search>
-      <form
-        className="user-list__search"
-        method="get"
-        action="/admin/users"
-        aria-label="Filter users"
-      >
-        <div className="field">
-          <label className="field__label" htmlFor="user-list-query">
-            Name or email
-          </label>
-          <input
-            id="user-list-query"
-            className="input"
-            type="search"
-            name="query"
-            defaultValue={query}
-          />
-        </div>
-        <label className="checkbox">
-          <input type="checkbox" name="awaiting" value="1" defaultChecked={awaitingApproval} />
-          Awaiting approval only
-        </label>
-        <button className="btn btn--solid" type="submit">
-          Filter
-        </button>
-      </form>
-    </search>
+    <UserListFilter query={query} awaitingApproval={awaitingApproval} />
 
     {users.length ? (
       <div className="user-list__frame">
@@ -82,11 +70,12 @@ const UserList = ({
               <th scope="col">Signed up</th>
               <th scope="col">Sign-in methods</th>
               <th scope="col">Email verified</th>
+              {canImpersonate && <th scope="col">Impersonate</th>}
             </tr>
           </thead>
           <tbody>
             {users.map((user) => (
-              <UserRow key={user.id} user={user} />
+              <UserRow key={user.id} user={user} canImpersonate={canImpersonate} />
             ))}
           </tbody>
         </table>

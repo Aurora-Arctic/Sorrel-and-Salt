@@ -112,6 +112,20 @@
     }
   }
 
+  // A size, not a colour, so it composes with every variant: for a compact
+  // strip — a banner, a table row — that the full button would make taller.
+  .btn--small {
+    gap: space(2);
+    // Off the field's height: a small button sits in a strip, not beside a
+    // field, and the control height would make it a full one again.
+    min-height: 0;
+    padding: space(1) space(3);
+    // A field's hairline rather than `.btn`'s 1.6px, which reads heavy at
+    // this size.
+    border-width: 1px;
+    font-size: type-size('caption');
+  }
+
   // A state rather than a modifier class, from either attribute: `disabled`
   // for a submit with nothing to send, which may leave the tab order, and
   // `aria-disabled` for a button that must stay in it, as SignInPanel's
