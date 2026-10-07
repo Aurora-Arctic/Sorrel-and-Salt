@@ -1,6 +1,6 @@
-import type { Route } from 'next';
-import Link from 'next/link';
 import type { ReactElement } from 'react';
+import PagerEndContent from './end-content';
+import { PlainPagerLink, SoftPagerLink } from './pager-link';
 import type { PagerEndProps, PagerProps } from './types';
 import './index.scss';
 
@@ -10,23 +10,6 @@ import './index.scss';
 // page to the next. A list of one page has no pager at all.
 
 const PagerEnd = ({ href, soft, label }: PagerEndProps): ReactElement => {
-  const mark = (
-    <span className="pager__mark" aria-hidden="true">
-      {label === 'Prev' ? '‹' : '›'}
-    </span>
-  );
-  const content =
-    label === 'Prev' ? (
-      <>
-        {mark}
-        {label}
-      </>
-    ) : (
-      <>
-        {label}
-        {mark}
-      </>
-    );
   // An anchor cannot be `disabled`: a link with no address and
   // `aria-disabled`, which `.btn` draws as off and nothing can follow. The
   // role is not redundant: an `<a>` without `href` is no link to assistive
@@ -35,18 +18,14 @@ const PagerEnd = ({ href, soft, label }: PagerEndProps): ReactElement => {
     return (
       // oxlint-disable-next-line jsx-a11y/anchor-is-valid, jsx-a11y/no-redundant-roles
       <a className="btn btn--quiet" role="link" aria-disabled="true">
-        {content}
+        <PagerEndContent label={label} />
       </a>
     );
   }
   return soft ? (
-    <Link className="btn btn--quiet" href={href as Route}>
-      {content}
-    </Link>
+    <SoftPagerLink href={href} label={label} />
   ) : (
-    <a className="btn btn--quiet" href={href}>
-      {content}
-    </a>
+    <PlainPagerLink href={href} label={label} />
   );
 };
 
