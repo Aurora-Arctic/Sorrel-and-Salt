@@ -421,6 +421,36 @@ describe('Combobox', () => {
     });
   });
 
+  // MB.174: a list withholds the typed row for text it would refuse.
+  describe('the typed row withheld', () => {
+    it('offers the suggestions without it', () => {
+      render(<Harness suggestions={ONE_BUCKET} offerTyped={false} />);
+
+      type('fix');
+
+      expect(options()).toEqual(['Hedge FixtureUsed by Testwort', 'Fixture Bane']);
+      expect(screen.queryByRole('option', { name: /Use what you typed/ })).not.toBeInTheDocument();
+    });
+
+    it('still hands Enter with nothing highlighted to the caller', () => {
+      const onCommit = vi.fn();
+      render(<Harness suggestions={ONE_BUCKET} offerTyped={false} onCommit={onCommit} />);
+
+      type('fix');
+      key('Enter');
+
+      expect(onCommit).toHaveBeenCalledWith('fix');
+    });
+
+    it('stays closed when it would have been the only row', () => {
+      render(<Harness suggestions={{ options: [], pending: false }} offerTyped={false} />);
+
+      type('fix');
+
+      expect(box()).toHaveAttribute('aria-expanded', 'false');
+    });
+  });
+
   it('hands Enter with nothing highlighted to the caller, closing the list', () => {
     const onCommit = vi.fn();
     const onPick = vi.fn();

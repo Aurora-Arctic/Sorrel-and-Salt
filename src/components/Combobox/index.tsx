@@ -52,7 +52,8 @@ const keyOf = <O extends ComboboxOption>(item: Item<O>): string => {
  * them, and bucketed for the headings. A source with one bucket shows no
  * headings. A caller that can make something new has its create row first
  * instead of the typed row, blank box or not, since what it lists can only be
- * picked (MB.154). The headings say where a value comes from, the owner's call
+ * picked (MB.154). A caller refusing what was typed has no typed row
+ * (MB.174). The headings say where a value comes from, the owner's call
  * (MB.131): a curated value is the compendium's, since its entries hold
  * nothing else, and one only in use is this coven's own.
  */
@@ -60,6 +61,7 @@ function arrange<O extends ComboboxOption>(
   options: O[],
   typed: string,
   create: string | undefined,
+  offerTyped: boolean,
 ): { items: Item<O>[]; buckets: Bucket<O>[]; firstRow: TypedRow | CreateRow | null } {
   const bucketed = options.some((option) => option.curated !== undefined);
   const buckets: Bucket<O>[] = bucketed
@@ -74,7 +76,7 @@ function arrange<O extends ComboboxOption>(
     : [{ heading: null, key: 'all', rows: options }];
   let firstRow: TypedRow | CreateRow | null = null;
   if (create !== undefined) firstRow = { value: create, create: true };
-  else if (typed !== '') firstRow = { value: typed, typed: true };
+  else if (typed !== '' && offerTyped) firstRow = { value: typed, typed: true };
   const items: Item<O>[] = firstRow ? [firstRow] : [];
   items.push(...buckets.flatMap((bucket) => bucket.rows));
   return { items, buckets, firstRow };
@@ -127,6 +129,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   entries,
   clear,
   create,
+  offerTyped = true,
   qualifier,
   listAnchor,
   inputRef,
@@ -145,8 +148,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   const hasSource = suggestions !== undefined;
   const createLabel = create?.label;
   const { items, buckets, firstRow } = useMemo(
-    () => arrange(suggestions?.options ?? [], value.trim(), createLabel),
-    [suggestions, value, createLabel],
+    () => arrange(suggestions?.options ?? [], value.trim(), createLabel, offerTyped),
+    [suggestions, value, createLabel, offerTyped],
   );
   const isOpen = hasSource && wantsOpen && items.length > 0;
   const { setControl, setList, listStyle, placement } = useListPosition(isOpen, listAnchor);
