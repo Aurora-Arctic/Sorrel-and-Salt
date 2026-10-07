@@ -24,6 +24,8 @@ A `CategoryListEntry` is the category's id, name, slug and description, plus
 
 ## Contracts
 
+- **The group is drawn in its own chip**, the owner's call: `groupColors`, the group's pair from the page's read of the groups, through `chipColors`, as the category picker draws it; an entry without one shows the name plain. The rows take more room than the table primitive gives and centre their contents, as the group list's do, since a chip stands taller than a line of text.
+
 - **The filter is a GET form to `/admin/categories`** (MB.178), as the user
   list's is ([`user-list.md`](user-list.md)): named "Filter categories"
   inside a `<search>` landmark, a search box labelled "Name" (`query`), a
