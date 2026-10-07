@@ -6,9 +6,9 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 
-// The `/admin/categories` page (M5.6): the guard, one page of the vocabulary
-// and the groups, and the modal its address opens — `?new` empty, `?edit=`
-// a category by slug. The guard and the services are mocked: what they
+// The `/admin/categories` page (M5.6, MB.178): the guard, one page of the
+// vocabulary under the address's filter and the groups, and the modal its
+// address opens — `?new` empty, `?edit=` a category by slug. The guard and the services are mocked: what they
 // decide is tests/lib/request-session.test.ts's and
 // tests/modules/vocabulary/services/categories.test.ts's.
 
@@ -42,8 +42,12 @@ const { default: AdminCategoriesPage } = await import('@/app/admin/categories/pa
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
 
 const GROUPS = [
-  { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixture Healing' },
-  { id: '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10', name: 'Fixture Protection' },
+  { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixture Healing', slug: 'fixture-healing' },
+  {
+    id: '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10',
+    name: 'Fixture Protection',
+    slug: 'fixture-protection',
+  },
 ];
 
 const TESTCRAFT = {
@@ -64,7 +68,16 @@ async function renderPage(params: Record<string, string> = {}) {
   render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
 }
 
-const lastRequest = (): PageRequest => listCategories.mock.lastCall?.[0] as PageRequest;
+const lastRequest = (): PageRequest => listCategories.mock.lastCall?.[1] as PageRequest;
+
+/** The filter the list and its count were last read under, which must agree. */
+function lastFilter(): unknown {
+  const listed: unknown = listCategories.mock.lastCall?.[0];
+  expect(countCategories.mock.lastCall?.[0]).toEqual(listed);
+  return listed;
+}
+
+const NO_FILTER = { query: undefined, groupId: undefined };
 
 beforeEach(() => {
   requireAdminSession.mockReset();
@@ -92,6 +105,7 @@ describe('the /admin/categories page', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: 'Categories' })).toBeInTheDocument();
     expect(lastRequest()).toEqual({ limit: 26, inverted: false });
+    expect(lastFilter()).toEqual(NO_FILTER);
     const row = within(screen.getByRole('table')).getAllByRole('row')[1];
     expect(within(row).getByRole('cell', { name: 'Fixture Protection' })).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -131,7 +145,10 @@ describe('the /admin/categories page', () => {
 
     await renderPage({ after: encodeCursor({ key: ['Testcraft'], id: TESTCRAFT.id }) });
 
-    expect(countCategories).toHaveBeenCalledWith({ key: ['Testcraft 0'], id: expect.any(String) });
+    expect(countCategories).toHaveBeenCalledWith(NO_FILTER, {
+      key: ['Testcraft 0'],
+      id: expect.any(String),
+    });
     expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 3');
   });
 
@@ -173,5 +190,103 @@ describe('the /admin/categories page', () => {
     expect(router.replace).toHaveBeenCalledWith(
       `/admin/categories?after=${encodeURIComponent(after)}`,
     );
+  });
+
+  it('closes the modal back to the filtered page it opened over', async () => {
+    await renderPage({ query: 'test', group: 'fixture-healing', edit: 'testcraft' });
+
+    within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }).click();
+
+    expect(router.replace).toHaveBeenCalledWith(
+      '/admin/categories?query=test&group=fixture-healing',
+    );
+  });
+});
+
+// MB.178: `?query=` and `?group=<slug>` narrow the list, as the user list's
+// filter does (MB.52), and every link the page builds keeps them.
+describe('the /admin/categories filter', () => {
+  /** A full page and one more, so the pager links both ways. */
+  const fullPage = () =>
+    Array.from({ length: 26 }, (_, index) =>
+      entry({
+        ...TESTCRAFT,
+        id: `${TESTCRAFT.id.slice(0, -2)}${String(index).padStart(2, '0')}`,
+        name: `Testcraft ${index}`,
+        slug: `testcraft-${index}`,
+      }),
+    );
+
+  it('reads ?query=, trimmed, into the filter of the list and its count', async () => {
+    await renderPage({ query: '  test craft ' });
+
+    expect(lastFilter()).toEqual({ query: 'test craft', groupId: undefined });
+    expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('test craft');
+  });
+
+  // A native submit sends both fields, blank or not.
+  it('reads a blank ?query= and ?group= as no filter', async () => {
+    await renderPage({ query: '   ', group: '' });
+
+    expect(lastFilter()).toEqual(NO_FILTER);
+    expect(screen.getByRole('combobox', { name: 'Group' })).toHaveValue('');
+  });
+
+  it('reads ?group= as the id of the group at that slug', async () => {
+    await renderPage({ group: 'fixture-protection' });
+
+    expect(lastFilter()).toEqual({ query: undefined, groupId: GROUPS[1].id });
+    expect(screen.getByRole('combobox', { name: 'Group' })).toHaveValue('fixture-protection');
+  });
+
+  // As a hand-edited cursor gets the first page.
+  it('ignores a ?group= no group holds, and drops it from every link', async () => {
+    listCategories.mockResolvedValue(fullPage());
+
+    await renderPage({ query: 'test', group: 'no-such-group' });
+
+    expect(lastFilter()).toEqual({ query: 'test', groupId: undefined });
+    expect(screen.getByRole('combobox', { name: 'Group' })).toHaveValue('');
+    expect(screen.getByRole('link', { name: 'Add Category' })).toHaveAttribute(
+      'href',
+      '/admin/categories?query=test&new',
+    );
+    expect(screen.getByRole('link', { name: 'Next' }).getAttribute('href')).toMatch(
+      /^\/admin\/categories\?query=test&after=[^&]+$/,
+    );
+  });
+
+  it('keeps the filter on the pager, each Edit and Add Category', async () => {
+    const after = encodeCursor({ key: ['Testcraft'], id: TESTCRAFT.id });
+    listCategories.mockResolvedValue(fullPage());
+    countCategories.mockResolvedValue({ totalCount: 63, countBefore: 25 });
+
+    await renderPage({ query: 'test', group: 'fixture-healing', after });
+
+    const here = `/admin/categories?query=test&group=fixture-healing&after=${encodeURIComponent(after)}`;
+    expect(screen.getByRole('link', { name: 'Add Category' })).toHaveAttribute(
+      'href',
+      `${here}&new`,
+    );
+    expect(screen.getByRole('link', { name: 'Edit Testcraft 0' })).toHaveAttribute(
+      'href',
+      `${here}&edit=testcraft-0`,
+    );
+    const pages = screen.getByRole('navigation', { name: 'Pages' });
+    expect(within(pages).getByRole('link', { name: 'Prev' }).getAttribute('href')).toMatch(
+      /^\/admin\/categories\?query=test&group=fixture-healing&before=[^&]+$/,
+    );
+    expect(within(pages).getByRole('link', { name: 'Next' }).getAttribute('href')).toMatch(
+      /^\/admin\/categories\?query=test&group=fixture-healing&after=[^&]+$/,
+    );
+  });
+
+  it('says no category matches when the filter finds none', async () => {
+    listCategories.mockResolvedValue([]);
+    countCategories.mockResolvedValue({ totalCount: 0, countBefore: undefined });
+
+    await renderPage({ query: 'nothing' });
+
+    expect(screen.getByText('No category matches.')).toBeInTheDocument();
   });
 });
