@@ -129,13 +129,17 @@ describe('UserList', () => {
     );
   });
 
-  it('links the pages either side, and only those that exist', () => {
+  it('links the pages either side, and disables an end that has none', () => {
     const { rerender } = render(<UserList {...props()} />);
     expect(screen.queryByRole('navigation', { name: 'Pages' })).not.toBeInTheDocument();
 
     rerender(<UserList {...props({ nextHref: '/admin/users?after=next' })} />);
     let pages = screen.getByRole('navigation', { name: 'Pages' });
-    expect(within(pages).queryByRole('link', { name: 'Previous' })).not.toBeInTheDocument();
+    expect(within(pages).getByRole('link', { name: 'Prev' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    expect(within(pages).getByRole('link', { name: 'Prev' })).not.toHaveAttribute('href');
     expect(within(pages).getByRole('link', { name: 'Next' })).toHaveAttribute(
       'href',
       '/admin/users?after=next',
@@ -143,11 +147,15 @@ describe('UserList', () => {
 
     rerender(<UserList {...props({ previousHref: '/admin/users?before=previous' })} />);
     pages = screen.getByRole('navigation', { name: 'Pages' });
-    expect(within(pages).getByRole('link', { name: 'Previous' })).toHaveAttribute(
+    expect(within(pages).getByRole('link', { name: 'Prev' })).toHaveAttribute(
       'href',
       '/admin/users?before=previous',
     );
-    expect(within(pages).queryByRole('link', { name: 'Next' })).not.toBeInTheDocument();
+    expect(within(pages).getByRole('link', { name: 'Next' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    expect(within(pages).getByRole('link', { name: 'Next' })).not.toHaveAttribute('href');
   });
 });
 

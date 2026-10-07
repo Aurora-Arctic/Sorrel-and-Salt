@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import UserListFilter from './filter';
 import ImpersonateButton from './impersonate-button';
+import Pager from '../Pager';
 import type { UserListEntry, UserListProps } from './types';
 import './index.scss';
 
@@ -84,23 +85,7 @@ const UserList = ({
       <p>No users match.</p>
     )}
 
-    {(previousHref || nextHref) && (
-      <nav className="user-list__pages" aria-label="Pages">
-        <ul>
-          {/* Plain anchors, as AdminNav's: a full load re-runs the page's guard. */}
-          {previousHref && (
-            <li>
-              <a href={previousHref}>Previous</a>
-            </li>
-          )}
-          {nextHref && (
-            <li>
-              <a href={nextHref}>Next</a>
-            </li>
-          )}
-        </ul>
-      </nav>
-    )}
+    <Pager previousHref={previousHref} nextHref={nextHref} />
   </div>
 );
 

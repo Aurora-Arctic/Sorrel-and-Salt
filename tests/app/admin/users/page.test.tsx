@@ -139,13 +139,13 @@ describe('the /admin/users page', () => {
     expect(href).toBe(
       `/admin/users?query=listed&awaiting&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,
     );
-    expect(screen.queryByRole('link', { name: 'Previous' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Prev' })).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('links the previous page from a later one', async () => {
     await renderPage({ after: encodeCursor(entry(0).cursor) });
 
-    const previous = screen.getByRole('link', { name: 'Previous' });
+    const previous = screen.getByRole('link', { name: 'Prev' });
     const url = new URL(previous.getAttribute('href') as string, 'http://localhost');
     expect(Object.fromEntries(url.searchParams)).toEqual({
       before: encodeCursor(entry(1).cursor),

@@ -1,6 +1,7 @@
 @use '../../scss/variables' as *;
 
-// Layout only, until the admin area's design review (MB.115).
+// Layout only, until the admin area's design review (MB.115), bar the header
+// hairline and the shared `.pager` primitive, which match the category list's.
 
 .user-list {
   display: flex;
@@ -27,21 +28,21 @@
 
   th,
   td {
-    padding: space(2) space(4) space(2) 0;
+    // Inset on both sides now the rows are banded, so no text meets a band's edge.
+    padding: space(2) space(3);
     text-align: start;
-    vertical-align: top;
+    // The baseline, so a row's small button reads on its text's line.
+    vertical-align: baseline;
   }
-}
 
-.user-list__pages ul {
-  display: flex;
-  gap: space(5);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  // The muted ink, as the category list's and every other hairline here.
+  thead th {
+    border-bottom: 1px solid $text-muted;
+  }
 
-  // A row of links, as AdminNav's: no typography-base marker.
-  li::before {
-    content: none;
+  // Banded on the card surface a modal wears, so a wide row stays readable
+  // across (the owner's call, M5.6).
+  tbody tr:nth-child(even) {
+    background-color: $surface-card;
   }
 }

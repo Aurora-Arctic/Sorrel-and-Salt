@@ -50,9 +50,9 @@ read beside it.
   account linked by a provider since removed still says so; an account with
   none says None.
 - **No match is a sentence, not an empty table**: "No users match."
-- **The pager is a `<nav>` named "Pages"**, holding Previous and Next as plain
-  anchors, each only when that page exists, and nothing at all on a list of one
-  page. A plain anchor is a full load, so the page's guard runs again, as with
+- **The pager is `Pager`** ([`pager.md`](pager.md)), with plain anchors:
+  Prev and Next, an end with no page disabled, and nothing at all on a list of
+  one page. A plain anchor is a full load, so the page's guard runs again, as with
   `AdminNav`.
 - **Impersonate is an eighth column, only where impersonation is registered**
   (MB.53, [`auth/impersonation.md`](../auth/impersonation.md)). The page
@@ -72,8 +72,7 @@ Layout only, until the admin area's design review (MB.115). The filter is a
 wrapping row of the field, the checkbox and the button, built on the
 `.field`, `.input`, `.checkbox` and `.btn` primitives. The table fills the
 layout's width and scrolls inside its own frame on a narrow screen, rather
-than widening the page. The pager is a row of links with no ◆ marker, as
-`AdminNav`'s is. No tokens beyond `space()`.
+than widening the page. Its rows are banded and its header carries a hairline, as the category list's table does, and its pager is the shared `.pager` primitive: Prev and Next, centred ([`styling.md`](../styling.md), "Buttons"). Tokens: `space()`, `$text-muted` and `$surface-card`.
 
 ## Stories
 
