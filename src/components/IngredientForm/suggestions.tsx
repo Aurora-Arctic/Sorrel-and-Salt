@@ -154,7 +154,7 @@ const qualified = (value: string, by: string | null | undefined): string =>
  * `active`: the last answer stays on screen while the next is fetched, and a
  * lookup that fails offers nothing rather than taking the form down.
  */
-function useLookup<TResult, O extends ComboboxOption>(
+export function useLookup<TResult, O extends ComboboxOption>(
   document: TypedDocumentNode<TResult, LookupVariables>,
   workspaceId: string,
   text: string,

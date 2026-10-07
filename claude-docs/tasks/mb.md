@@ -2991,18 +2991,20 @@ _Acceptance criteria:_
 - `compendium(withoutReferences: true)` lists exactly the live compendium entries with no live link
 - Each `kind` renders to its MB.151 example, italics and all, from one function
 
-**MB.154 — IngredientForm — References field** · 2h
+**MB.154 — IngredientForm — References field** · 9h
 
 _Story 64 — As a reader of the compendium, I want to see where an entry's information came from, so that I can judge a claim and read further._
 
-Adopts MB.153 in the form. A References list field on M5.10a's `Combobox`, in the shape the substitute field takes: typing searches `referenceSuggestions`, debounced, each suggestion its rendered citation and whether it is the compendium's or this coven's; picking one adds it as a chip reading the citation — the plain `citation`, since a chip carries no italics (MB.151) — with an optional locator beside it; and an "Add a reference" row, where the substitute field has "use what you typed", opens a citation sub-form — `kind` first, then the fields that kind needs, validated inline through the one error element — whose save adds the new reference to the list without leaving the ingredient form. Lands after MB.153 and before M5.5, whose compendium page is the first to write the field; a coven's form writes it the same way.
+Adopts MB.153 in the form. A References list field on M5.10a's `Combobox`, in the shape the substitute field takes: typing searches `referenceSuggestions`, debounced, each suggestion its rendered citation and whether it is the compendium's or this coven's; picking one adds it as a row beneath the box reading the citation — the plain `citation`, as MB.151 gave a chip, the italics left to MB.155 — with an optional locator beside it; and an "Add a reference" row, where the substitute field has "use what you typed", and a New Reference button where a list has Add, open a citation sub-form inline beneath the field — `kind` first, then the fields that kind needs, validated inline through the one error element — whose save adds the new reference to the list without leaving the ingredient form. **Amended in its scoping, the owner's calls** ([`design-decisions/mb.154-plan.md`](../design-decisions/mb.154-plan.md)): the references are full-width rows beneath the box rather than chips inside it, so a citation reads whole, as a bibliography does; the sub-form is an inline panel rather than a dialog, since M8.16 puts the form in a modal; and the estimate went from 2h to 5h. **Widened in the build, the owner's calls:** every form control and button stands at one height, `$control-height`; a Locator carries an info tip, and a source cited at several places is one row whose locator names them all, "pp. 12–19, 40; chap. 3", rather than a repeated pick, which would have dropped the five one-link-per-source indexes; and the reference fields are tidied and checked in the shared schema, so the server stores and refuses what the form shows — spacing, a title's wrapping quotes, a range's en dash, an address's missing scheme and an edition's form, and a date with no year, a page that is not a number, an address with no named host and a day not yet come refused beside their fields ([`db/references.md`](../db/references.md), "Formatting and checks") — which took the estimate to 8h; and every suggestion list spans its field and stays on the screen, on Floating UI (DESIGN.md §14), which took it to 9h. Lands after MB.153 and before M5.5, whose compendium page is the first to write the field; a coven's form writes it the same way.
 
 _Acceptance criteria:_
 
-- Typing suggests, debounced; picking adds a chip reading the citation; the chip's × removes it and Backspace in an empty box takes the last, as every list field does
+- Typing suggests, debounced; picking adds a row reading the citation; the row's × removes it and Backspace in an empty box takes the last, as every list field does
 - The sub-form shows only the fields its `kind` needs, marks the required ones, and a server field error lands beside the field it names through `FieldError`
 - A reference added through the sub-form is in the list sent, by id, and the form sends no citation text of its own
 - Keyboard operable end to end, announced as the other list fields are, axe clean, usable at 375px
+- Each reference field is tidied as it is left and stored the same, whoever sends it, and the schema's checks land beside their fields; every source the seed writes passes them unchanged
+- A Locator's tip says what a locator is and that several places go in one
 - The field's story and `claude-docs/components/ingredient-form.md` cover it
 
 **MB.155 — References section on the ingredient page** · 1.5h

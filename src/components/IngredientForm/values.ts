@@ -7,10 +7,12 @@ import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredien
 import type {
   AnyListEntry,
   DeityLink,
+  DraftName,
   IngredientFormInput,
   IngredientFormValues,
   ListFieldName,
   MultiSelectFieldName,
+  ReferenceLink,
   SubstituteLink,
 } from './types';
 
@@ -43,7 +45,17 @@ export const EMPTY_VALUES: IngredientFormValues = {
   deities: [],
   substitutes: [],
   safetyNotes: '',
-  drafts: { folkNames: '', planets: '', zodiacSigns: '', colors: '', deities: '', substitutes: '' },
+  references: [],
+  referencePanelOpen: false,
+  drafts: {
+    folkNames: '',
+    planets: '',
+    zodiacSigns: '',
+    colors: '',
+    deities: '',
+    substitutes: '',
+    references: '',
+  },
 };
 
 export const GENERIC_ERROR = "That didn't work. Please try again.";
@@ -65,8 +77,9 @@ const PICKED_FORM = 'formId';
  * elements go as chosen — `[]` for none, which the update input needs to
  * clear them — a list entry is its text — a substitute or a deity its link's
  * id, or else its text as a name — the form its text and its pick's id, null
- * for typed text (MB.169) — and the boxes are left behind — the resolver has
- * refused a save while one holds text. Nothing is trimmed or dropped — the
+ * for typed text (MB.169) — a reference its source's id and its locator as
+ * typed, never its citation (MB.154) — and the boxes are left behind — the
+ * resolver has refused a save while one holds text. Nothing is trimmed or dropped — the
  * schema does that on both sides — so an entry's index in an issue's path is
  * its index here.
  */
@@ -80,6 +93,8 @@ export function toInput(values: IngredientFormValues): IngredientFormInput {
     deities,
     substitutes,
     formLink,
+    references,
+    referencePanelOpen: _open,
     drafts: _,
     ...text
   } = values;
@@ -96,8 +111,13 @@ export function toInput(values: IngredientFormValues): IngredientFormInput {
     substitutes: substitutes.map(({ value, link }) =>
       link ? { ingredientId: link.id } : { name: value },
     ),
+    references: references.map(({ link, locator }) => ({ referenceId: link.id, locator })),
   };
 }
+
+/** Whose a source is, as its search row and its reference row say. */
+export const sourceTierOf = ({ isGlobal }: Pick<ReferenceLink, 'isGlobal'>): string =>
+  isGlobal ? 'Compendium source' : 'This coven’s source';
 
 const linkOf = (entry: AnyListEntry): SubstituteLink | DeityLink | undefined =>
   'link' in entry ? entry.link : undefined;
@@ -147,6 +167,15 @@ export function fieldNameOf(
   const [field, index, ...rest] = path;
   // The pick is the Form field's: its box is what made it (MB.169).
   if (field === PICKED_FORM && index === undefined && rest.length === 0) return 'form';
+  // A reference's source is its row's, and so is its id; its locator is the
+  // row's locator (MB.154).
+  if (field === 'references') {
+    if (typeof index !== 'number' || index >= values.references.length) return undefined;
+    const [part, ...beyond] = rest;
+    if (beyond.length > 0) return undefined;
+    if (part === undefined || part === 'referenceId') return `references.${index}.value`;
+    return part === 'locator' ? `references.${index}.locator` : undefined;
+  }
   // The boxes are the form's own, not the input's.
   if (rest.length > 0 || typeof field !== 'string' || field === 'drafts' || !(field in values)) {
     return undefined;
@@ -218,14 +247,37 @@ export const ingredientResolver: Resolver<
     const entries: unknown = result.errors[list];
     if (Array.isArray(entries)) errors[list] = entries.map((entry) => entry && { value: entry });
   }
+  // A reference's issue arrives at the entry, or at its id or locator; the
+  // first two move onto the row's `value`, as `fieldNameOf` puts a server's.
+  const cited: unknown = result.errors.references;
+  if (Array.isArray(cited)) {
+    errors.references = cited.map(
+      (entry?: FieldError & { referenceId?: FieldError; locator?: FieldError }) =>
+        entry && {
+          value: entry.message === undefined ? entry.referenceId : entry,
+          locator: entry.locator,
+        },
+    ) as FieldErrors<IngredientFormValues>['references'];
+  }
   // A box still holding text: the schema never sees a box, so the form
   // refuses it here rather than send a list the user thinks holds it.
-  const drafts: Partial<Record<ListFieldName, FieldError>> = {};
+  const drafts: Partial<Record<DraftName, FieldError>> = {};
   for (const list of LIST_FIELDS) {
     const text = values.drafts[list].trim();
     if (text !== '') {
       drafts[list] = { type: 'unadded', message: `Press Add to keep "${text}", or clear the box` };
     }
+  }
+  // The references' box is a search, so what it holds is never an entry;
+  // and a source half written in the panel is not one yet either (MB.154).
+  const search = values.drafts.references.trim();
+  if (values.referencePanelOpen) {
+    drafts.references = { type: 'unsaved', message: 'Save the new reference, or cancel it' };
+  } else if (search !== '') {
+    drafts.references = {
+      type: 'unadded',
+      message: `Pick a source for "${search}", or clear the box`,
+    };
   }
   if (Object.keys(drafts).length > 0)
     errors.drafts = drafts as FieldErrors<IngredientFormValues>['drafts'];

@@ -124,6 +124,7 @@ function renderForm() {
   offerSigns([]);
   offerDeities([]);
   offerIngredients([]);
+  offerList('ReferenceSuggestions', 'referenceSuggestions', []);
   offerDuplicates([]);
   render(
     <QueryClientProvider client={makeQueryClient()}>
@@ -301,6 +302,7 @@ describe('IngredientForm', () => {
         deities: [],
         substitutes: [],
         folkNames: [],
+        references: [],
       });
     });
 
