@@ -421,7 +421,7 @@ describe('the repository', () => {
         write.softDeleteByIds(adminInvitations, [id]),
       (write: AuditWriter) =>
         // @ts-expect-error — and no hard delete, which deleted_at alone refuses too.
-        write.delete(adminInvitations, where),
+        write.delete(adminInvitations, { id }),
       (write: AuditWriter) =>
         // @ts-expect-error — the insert takes the proof first.
         write.insertAdminInvitation({ email: INVITED, token: TOKEN }),

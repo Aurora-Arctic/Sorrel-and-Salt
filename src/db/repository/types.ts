@@ -360,7 +360,10 @@ export interface AuditWriter {
    * Hard-delete, for the join tables that carry no `deleted_at` (MB.34). A
    * table carrying one is rejected by the type, as is one carrying
    * `workspace_id`: no table is both today, and the one that is first adds its
-   * proof-scoped counterpart rather than being hard-deleted unscoped.
+   * proof-scoped counterpart rather than being hard-deleted unscoped. The rows
+   * are named by `match`, every column of which they must hold; a list
+   * matching nothing deletes nothing without a statement, and a match naming
+   * no column is refused rather than emptying the table.
    */
   delete<
     TTable extends PgTable &
@@ -371,9 +374,20 @@ export interface AuditWriter {
       NotInvitation,
   >(
     table: TTable,
-    where: SQL,
+    match: ColumnMatch<TTable>,
   ): Promise<TTable['$inferSelect'][]>;
 }
+
+/**
+ * What `delete` names its rows by: a value per column, or a list the column
+ * is in. Values rather than an `SQL` predicate, since a service may not
+ * build one (MB.33), and a join table keyed on its pair needs no other
+ * comparison (MB.125). The stamps are not columns to match on.
+ */
+export type ColumnMatch<TTable extends PgTable> = {
+  [K in keyof Writable<TTable>]?:
+    NonNullable<Writable<TTable>[K]> | readonly NonNullable<Writable<TTable>[K]>[];
+};
 
 /** What a possible duplicate carries onto its edge: its trigram similarity to the name. */
 export interface SimilarityScore {

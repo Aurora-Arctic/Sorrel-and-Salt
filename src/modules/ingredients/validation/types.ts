@@ -68,6 +68,7 @@ export interface Parsed {
   substitutes?: SubstituteFields[] | null;
   deities?: DeityFields[] | null;
   references?: ReferenceLinkFields[] | null;
+  categoryIds?: string[] | null;
 }
 
 /** A reference's text fields, every one but the kind: what `FORMAT_OF` formats (MB.154). */

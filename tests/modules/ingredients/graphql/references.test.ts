@@ -210,6 +210,7 @@ describe('Ingredient.references', () => {
     substitutes: [],
     folkNames: [],
     references,
+    categoryIds: [],
   });
 
   it('saves and reads a coven ingredient’s references, alphabetical by citation', async () => {

@@ -56,6 +56,7 @@ const IngredientInput = builder.inputType('IngredientInput', {
     substitutes: t.field({ type: [SubstituteInput] }),
     references: t.field({ type: [ReferenceLinkInput] }),
     folkNames: t.stringList(),
+    categoryIds: t.idList({ description: 'The categories it is filed under.' }),
   }),
 });
 
@@ -85,6 +86,10 @@ const IngredientUpdateInput = builder.inputType('IngredientUpdateInput', {
     substitutes: t.field({ type: [SubstituteInput], required: true }),
     references: t.field({ type: [ReferenceLinkInput], required: true }),
     folkNames: t.stringList({ required: true }),
+    categoryIds: t.idList({
+      required: true,
+      description: 'The categories it is filed under; [] when none.',
+    }),
   }),
 });
 
@@ -116,8 +121,9 @@ builder.mutationField('updateIngredient', (t) =>
       if (!session) throw new Forbidden();
       const row = await updateWorkspaceIngredient(session, workspaceId, id, input);
       // Root mutation fields run in turn within one request, so an earlier one
-      // may have read this entry's folk names, substitutes or references; the
-      // answer must be this write's.
+      // may have read this entry's folk names, substitutes, deities, references
+      // or categories; the answer must be this write's.
+      loaders.categoriesByIngredient.clear(row);
       loaders.folkNamesByIngredient.clear(row);
       loaders.substitutesByIngredient.clear(row);
       loaders.deitiesByIngredient.clear(row);

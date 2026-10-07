@@ -68,6 +68,7 @@ const WHOLE_INGREDIENT = {
   substitutes: [],
   folkNames: [],
   references: [],
+  categoryIds: [],
 };
 
 const REFERENCE = { kind: 'book', title: 'A Herbal of Fixture Covens', published: '1988' };

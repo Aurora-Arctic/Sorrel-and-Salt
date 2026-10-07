@@ -376,6 +376,42 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
     });
   });
 
+  // MB.125: the categories an ingredient is filed under, by id. Whether an id
+  // names a live category is the service's, which reads the database.
+  describe('categoryIds', () => {
+    const base = { name: 'Testwort', nomenclature: 'none' };
+    const PROTECTION = '00000000-0000-4000-8000-0000000000c1';
+    const CLEANSING = '00000000-0000-4000-8000-0000000000c2';
+
+    it('takes the ids picked, trimmed, in the order sent', () => {
+      expect(
+        Schema.parse({ ...base, categoryIds: [CLEANSING, ` ${PROTECTION} `] }).categoryIds,
+      ).toEqual([CLEANSING, PROTECTION]);
+    });
+
+    // A chip toggled twice is one category: the service writes it once, so
+    // the parse keeps the repeat at its index rather than refusing it.
+    it('keeps a repeated id rather than refusing it', () => {
+      expect(Schema.safeParse({ ...base, categoryIds: [PROTECTION, PROTECTION] }).success).toBe(
+        true,
+      );
+    });
+
+    it.each([
+      ['is blank', '  '],
+      ['is not an id', 'protection'],
+    ])('refuses an entry that %s, pathed to the entry', (_case, entry) => {
+      const result = Schema.safeParse({ ...base, categoryIds: [PROTECTION, entry] });
+
+      expect(failedPaths(result)).toEqual([['categoryIds', 1]]);
+    });
+
+    it('takes no categories, absent or empty', () => {
+      expect(Schema.parse(base).categoryIds ?? []).toEqual([]);
+      expect(Schema.parse({ ...base, categoryIds: [] }).categoryIds ?? []).toEqual([]);
+    });
+  });
+
   describe('enum fields', () => {
     const base = { name: 'Testwort', nomenclature: 'none' };
 

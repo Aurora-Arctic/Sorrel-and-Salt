@@ -8,11 +8,13 @@ import { RowId, parseInput } from '../../../lib/validation';
 import { ingredients } from '../schema/ingredients';
 import { LocalIngredientInput } from '../validation/ingredient';
 import {
+  addCategories,
   addFolkNames,
   addReferenceLinks,
   addSubstitutes,
   columnsOf,
   heldDeities,
+  replaceCategories,
   replaceDeities,
   replaceFolkNames,
   replaceReferenceLinks,
@@ -29,14 +31,14 @@ import type { IngredientFields, IngredientRow, IngredientValues } from '../types
 
 /**
  * Creates an ingredient in this coven, with its folk names, substitutes,
- * deities and references, in one transaction. The slug is set here from the
+ * deities, references and categories, in one transaction. The slug is set here from the
  * label, the form and the formal name.
  *
  * @throws {Forbidden} the caller may not write this coven's ingredients.
  * @throws {ValidationError} the input breaks `LocalIngredientInput`,
  * collides with another of the coven's ingredients, picks a form or deity no
- * curated row holds, or links a substitute or cites a reference outside the
- * compendium and this coven.
+ * curated row holds, files it under no live category, or links a substitute
+ * or cites a reference outside the compendium and this coven.
  */
 export async function createWorkspaceIngredient(
   session: Session,
@@ -63,6 +65,7 @@ export async function createWorkspaceIngredient(
     await addSubstitutes(write, [membership], row.id, substitutes ?? []);
     await replaceDeities(write, row.id, picks.deities, []);
     await addReferenceLinks(write, [membership], row.id, references ?? []);
+    await addCategories(write, row.id, fields.categoryIds ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
 }
@@ -70,17 +73,18 @@ export async function createWorkspaceIngredient(
 /**
  * Replaces an ingredient of this coven with `input` — the whole ingredient as
  * the form submits it, so a field left out is cleared — and its folk names,
- * substitutes, deities and references with the input's, in one transaction. A
- * folk name, substitute, deity or reference still listed keeps its row; one
- * dropped is soft-deleted. The slug follows the label, the form and the formal
+ * substitutes, deities, references and categories with the input's, in one
+ * transaction. A folk name, substitute, deity, reference or category still
+ * listed keeps its row; one dropped is soft-deleted, and a category's
+ * hard-deleted (MB.34). The slug follows the label, the form and the formal
  * name, and nothing redirects from the old one: no route reads a coven
  * ingredient's slug.
  *
  * @throws {Forbidden} the caller may not write this coven's ingredients.
  * @throws {ValidationError} the input breaks `LocalIngredientInput`,
  * collides with another of the coven's ingredients, picks a form or deity no
- * curated row holds, or adds a substitute link or a reference outside the
- * compendium and this coven.
+ * curated row holds, files it under no live category, or adds a substitute
+ * link or a reference outside the compendium and this coven.
  * @throws {NotFound} no such ingredient in this coven — the compendium's and
  * other covens' included, and an id that is not one.
  */
@@ -114,6 +118,7 @@ export async function updateWorkspaceIngredient(
     await replaceSubstitutes(write, [membership], id, substitutes ?? []);
     await replaceDeities(write, id, picks.deities, held);
     await replaceReferenceLinks(write, [membership], id, references ?? []);
+    await replaceCategories(write, [membership], id, fields.categoryIds ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
 }

@@ -1,5 +1,5 @@
-import { and, eq, gt, inArray, isNull, lte, sql, type SQL } from 'drizzle-orm';
-import type { PgTable } from 'drizzle-orm/pg-core';
+import { and, eq, getTableColumns, gt, inArray, isNull, lte, sql, type SQL } from 'drizzle-orm';
+import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { applyAudit } from '../audit';
 import type { AuditSession } from '../types';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
@@ -13,7 +13,7 @@ import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
 import { existsIn } from './select';
 import { hashToken } from './tokens';
 import type { Membership } from '@/modules/coven';
-import type { AuditWriter, Identified, TwoTier, WorkspaceScoped } from './types';
+import type { AuditWriter, ColumnMatch, Identified, TwoTier, WorkspaceScoped } from './types';
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -143,8 +143,38 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
         { revokedAt: sql`now()` },
         pendingInvitation(eq(adminInvitations.id, id)),
       ),
-    delete: (table, where) => tx.delete(table).where(where).returning() as never,
+    delete: (table, match) => {
+      const where = matching(table, match);
+      return where ? (tx.delete(table).where(where).returning() as never) : Promise.resolve([]);
+    },
   };
+}
+
+/**
+ * `delete`'s predicate: each column of `match` equal to its value, or in its
+ * list; `undefined` when a list is empty, since the delete then matches
+ * nothing. A match naming no column, or a key that is not one of the table's
+ * columns, throws: either would otherwise delete more than was asked.
+ */
+function matching<TTable extends PgTable>(
+  table: TTable,
+  match: ColumnMatch<TTable>,
+): SQL | undefined {
+  const columns: Record<string, AnyPgColumn> = getTableColumns(table);
+  const entries = Object.entries(match as Record<string, unknown>);
+  if (entries.length === 0) throw new Error('write.delete needs a column to match on');
+
+  const conditions: SQL[] = [];
+  for (const [key, value] of entries) {
+    const column = columns[key];
+    if (!column || value === undefined) {
+      throw new Error(`write.delete cannot match on "${key}"`);
+    }
+    if (!Array.isArray(value)) conditions.push(eq(column, value));
+    else if (value.length === 0) return undefined;
+    else conditions.push(inArray(column, value));
+  }
+  return and(...conditions);
 }
 
 /**

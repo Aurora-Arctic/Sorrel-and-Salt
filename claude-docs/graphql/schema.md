@@ -477,15 +477,24 @@ signatures DESIGN.md §7's sketch gives them.
   one the ingredient already holds is kept once retired, sent back by id or
   by name. The list replaces the live rows in the order sent
   ([`db/ingredient-children.md`](../db/ingredient-children.md)).
+- **The categories are `categoryIds`** (MB.125, story 30): `[ID!]` on the
+  create, `[ID!]!` on the update where `[]` clears, as every list there is.
+  Each must name a live category — an id naming none, or a soft-deleted one,
+  is a `VALIDATION` field error at `['categoryIds', i]` — and a repeat is
+  written once rather than refused, since a chip is on or off. The set
+  replaces the ingredient's pairs in its own transaction: a pair kept keeps
+  its stamps, one dropped is hard-deleted (MB.34) and one added is stamped
+  from the session. A pair whose category is soft-deleted is not shown, so
+  the form never sends it back, and the save leaves it in place for a restore.
 - **The answer is the entity as a fresh read gives it.** It carries every
   field, and its `audit` is stamped from the session. `folkNames` and
   `categories` come through the loaders, after the write has committed. A
   client reconciles its cache from the answer without a refetch.
-  `updateIngredient` first clears the entry from `folkNamesByIngredient`,
-  `substitutesByIngredient`, `deitiesByIngredient` and
-  `referencesByIngredient`. Root mutation fields run in turn within one
-  request, so an earlier field may already have loaded the folk names,
-  substitutes, deities or references this write replaced.
+  `updateIngredient` first clears the entry from `categoriesByIngredient`,
+  `folkNamesByIngredient`, `substitutesByIngredient`, `deitiesByIngredient`
+  and `referencesByIngredient`. Root mutation fields run in turn within one
+  request, so an earlier field may already have loaded the categories, folk
+  names, substitutes, deities or references this write replaced.
 - **A delete answers the deleted id, not the entity** — the schema's first
   delete, so this is the convention the next one follows. The row is
   soft-deleted, and a list evicts a row by its id; the deleted `Ingredient`

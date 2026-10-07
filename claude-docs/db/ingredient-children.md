@@ -69,6 +69,18 @@ answers is live. `replaceReferenceLinks` compares against what it answers,
 so a link the ingredient does not show is left in place for a restore to
 return ([`references.md`](references.md)).
 
+**A save brings the category pairs to the set sent, through
+`replaceCategories`** (MB.125), beside `replaceDeities` and called the same
+way. `resolvePicks` first holds each id to a live category — an id naming
+none, or a soft-deleted one, is a field error at `['categoryIds', i]`, in
+either tier — and files a repeat once. The pairs it compares are the ones
+`categoriesOf` shows, so a pair whose category is soft-deleted is left in
+place for a restore to return, as a reference link is. A pair still listed is
+not written, and keeps the stamps of whoever filed it; one dropped is
+hard-deleted through `write.delete`, the table carrying no tombstone
+([`hard-delete-join-tables.md`](hard-delete-join-tables.md)); one new is
+inserted, stamped from the session.
+
 **Five services and five loaders over them**, in `ingredients`:
 `categoriesOf`, `folkNamesOf`, `substitutesOf`, `deitiesOf` (MB.167) and
 `referencesOf` (MB.153) in `services/ingredient-children.ts`, batched as

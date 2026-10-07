@@ -122,6 +122,7 @@ function wholeInput(fixture: IngredientFixture): Record<string, unknown> {
     substitutes: fixture.substitutes.map((name) => ({ name })),
     folkNames: fixture.folkNames,
     references: [],
+    categoryIds: [],
   };
 }
 
@@ -602,6 +603,85 @@ describe('updateIngredient', () => {
     expect(result.data?.second.substitutes).toEqual([{ name: 'Second Zest' }]);
     expect(result.data?.first.deities).toEqual([{ name: 'Testara' }]);
     expect(result.data?.second.deities).toEqual([{ name: 'Testoros' }]);
+  });
+});
+
+// Story 30 over the wire (MB.125): `categoryIds` on both inputs, required on
+// the update's where `[]` clears, answered back as the categories written.
+// The service's own rules are services/ingredient-categories.test.ts's.
+describe('categoryIds', () => {
+  const categoryId = async (name: string) => {
+    const [row] = await sql`select id from categories where name = ${name} and deleted_at is null`;
+    return row.id as string;
+  };
+
+  it('files a new ingredient, answering the categories just written', async () => {
+    const protection = await categoryId('Protection');
+    const cleansing = await categoryId('Cleansing');
+
+    const result = await create(asUser(B), {
+      name: 'Testwort',
+      categoryIds: [protection, cleansing],
+    });
+
+    expect(result.errors).toBeUndefined();
+    const created = result.data?.createWorkspaceIngredient as WorkspaceIngredientNode;
+    expect(created.categories).toEqual([{ name: 'Cleansing' }, { name: 'Protection' }]);
+    expect((await read(asUser(B), created.id)).data?.ingredient.categories).toEqual(
+      created.categories,
+    );
+  });
+
+  it('replaces the set on update, and clears it on []', async () => {
+    const id = await seed(local({ categories: ['Protection'] }));
+    const love = await categoryId('Love');
+
+    const replaced = await update(asUser(B), id, { ...wholeInput(local()), categoryIds: [love] });
+    expect(replaced.errors).toBeUndefined();
+    expect(replaced.data?.updateIngredient.categories).toEqual([{ name: 'Love' }]);
+
+    const cleared = await update(asUser(B), id, { ...wholeInput(local()), categoryIds: [] });
+    expect(cleared.data?.updateIngredient.categories).toEqual([]);
+  });
+
+  // Root mutation fields run one after another in one request, so the second
+  // must not answer the categories the first one read.
+  it('answers its own categories when one request updates the entry twice', async () => {
+    const id = await seed(local());
+    const twice = `mutation ($workspaceId: ID!, $id: ID!, $first: IngredientUpdateInput!, $second: IngredientUpdateInput!) {
+      first: updateIngredient(workspaceId: $workspaceId, id: $id, input: $first) { categories { name } }
+      second: updateIngredient(workspaceId: $workspaceId, id: $id, input: $second) { categories { name } }
+    }`;
+
+    const result = await run<{ first: WorkspaceIngredientNode; second: WorkspaceIngredientNode }>(
+      asUser(B),
+      twice,
+      {
+        workspaceId: WORKSPACE_W_ID,
+        id,
+        first: { ...wholeInput(local()), categoryIds: [await categoryId('Protection')] },
+        second: { ...wholeInput(local()), categoryIds: [await categoryId('Love')] },
+      },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.first.categories).toEqual([{ name: 'Protection' }]);
+    expect(result.data?.second.categories).toEqual([{ name: 'Love' }]);
+  });
+
+  it('refuses an id naming no live category as VALIDATION, beside the entry', async () => {
+    const protection = await categoryId('Protection');
+
+    const result = await create(asUser(B), {
+      name: 'Testwort',
+      categoryIds: [protection, '00000000-0000-4000-8000-0000000000c9'],
+    });
+
+    expect(result.errors?.[0]?.extensions).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['categoryIds', 1], message: expect.any(String) }],
+    });
+    expect(await countIngredients()).toBe(0);
   });
 });
 

@@ -19,6 +19,8 @@ export type IngredientElement =
 
 export type IngredientInput = {
   canonicalName?: string | null | undefined;
+  /** The categories it is filed under. */
+  categoryIds?: Array<string | number> | null | undefined;
   colors?: Array<string> | null | undefined;
   deities?: Array<IngredientDeityInput> | null | undefined;
   description?: string | null | undefined;

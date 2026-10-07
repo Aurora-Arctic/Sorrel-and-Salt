@@ -19,11 +19,13 @@ import { retiredIngredientSlugs } from '../schema/retired-ingredient-slugs';
 import { CompendiumFilter, type CompendiumFilterInput } from '../validation/compendium-filter';
 import { CompendiumIngredientInput } from '../validation/ingredient';
 import {
+  addCategories,
   addFolkNames,
   addReferenceLinks,
   addSubstitutes,
   columnsOf,
   heldDeities,
+  replaceCategories,
   replaceDeities,
   replaceFolkNames,
   replaceReferenceLinks,
@@ -116,8 +118,8 @@ export async function getIngredient(
 }
 
 /**
- * Creates a compendium entry, with its folk names, substitutes, deities and
- * references, in one transaction. Its form and deities are picked from their
+ * Creates a compendium entry, with its folk names, substitutes, deities,
+ * references and categories, in one transaction. Its form and deities are picked from their
  * curated vocabularies and its planets and signs named from theirs, each
  * written in its curated row's spelling. The slug is set here from the label,
  * the form and the formal name, and the compendium's lapsed retirements are
@@ -128,8 +130,9 @@ export async function getIngredient(
  * @throws {ValidationError} the input breaks `CompendiumIngredientInput` — a
  * missing `nomenclature` included — carries a form or deity not picked from a
  * curated row, a planet or sign no curated row holds, collides with another
- * entry, would end another entry's redirect without `endRedirect`, or links
- * a substitute or cites a reference outside the compendium.
+ * entry, would end another entry's redirect without `endRedirect`, files it
+ * under no live category, or links a substitute or cites a reference outside
+ * the compendium.
  */
 export async function createCompendiumEntry(
   session: Session,
@@ -157,6 +160,7 @@ export async function createCompendiumEntry(
     await addSubstitutes(write, [], row.id, substitutes ?? []);
     await replaceDeities(write, row.id, curated.deities, []);
     await addReferenceLinks(write, [], row.id, references ?? []);
+    await addCategories(write, row.id, fields.categoryIds ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
 }
@@ -164,7 +168,8 @@ export async function createCompendiumEntry(
 /**
  * Replaces a compendium entry with `input` — the whole entry as the form
  * submits it, so a field left out is cleared — and its folk names,
- * substitutes, deities and references with the input's, in one transaction.
+ * substitutes, deities, references and categories with the input's, in one
+ * transaction.
  * The slug follows the label, the form and the formal name; when it moves, the
  * old one is retired as this admin's, and redirects to the entry for 180 days.
  * The curated fields are held as `createCompendiumEntry` holds them.
@@ -177,9 +182,8 @@ export async function createCompendiumEntry(
  * @throws {ValidationError} the input breaks `CompendiumIngredientInput`,
  * carries a form or deity not picked from a curated row, a planet or sign no
  * curated row holds, collides with another entry, would end another entry's
- * redirect without `endRedirect`, or adds a substitute link or a reference
- * outside the
- * compendium.
+ * redirect without `endRedirect`, files it under no live category, or adds
+ * a substitute link or a reference outside the compendium.
  * @throws {NotFound} no live compendium entry has this id — a coven's
  * ingredient included, and an id that is not one.
  */
@@ -224,6 +228,7 @@ export async function updateCompendiumEntry(
     await replaceSubstitutes(write, [], id, substitutes ?? []);
     await replaceDeities(write, id, curated.deities, held);
     await replaceReferenceLinks(write, [], id, references ?? []);
+    await replaceCategories(write, [], id, fields.categoryIds ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
 }
@@ -307,7 +312,7 @@ async function inCuratedValues(
 }
 
 /** The curated fields in the order the form shows them, which is the order refusals are listed in. */
-const FIELD_ORDER = ['form', 'formId', 'planets', 'zodiacSigns', 'deities'];
+const FIELD_ORDER = ['form', 'formId', 'planets', 'zodiacSigns', 'deities', 'categoryIds'];
 
 /**
  * Refuses a write whose slug another entry's redirect runs from, unless the

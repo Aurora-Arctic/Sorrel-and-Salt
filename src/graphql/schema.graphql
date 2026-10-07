@@ -151,6 +151,9 @@ type IngredientFormValue {
 
 input IngredientInput {
   canonicalName: String
+
+  """The categories it is filed under."""
+  categoryIds: [ID!]
   colors: [String!]
   deities: [IngredientDeityInput!]
   description: String
@@ -174,6 +177,9 @@ The whole ingredient, replacing the row. Every field is sent, and "" or [] clear
 """
 input IngredientUpdateInput {
   canonicalName: String!
+
+  """The categories it is filed under; [] when none."""
+  categoryIds: [ID!]!
   colors: [String!]!
   deities: [IngredientDeityInput!]!
   description: String!
