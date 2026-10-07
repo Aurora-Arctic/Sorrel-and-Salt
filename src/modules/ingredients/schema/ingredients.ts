@@ -128,6 +128,15 @@ export const ingredients = pgTable(
       .on(table.workspaceId, table.slug)
       .where(sql`${table.deletedAt} is null`),
 
+    // The pick read backwards (M5.6a): the live compendium entries picking a
+    // form, which hold its delete and follow its rename (MB.167). Partial on
+    // the compendium's live rows, the only ones either reads — a coven's pick
+    // never blocks a delete or follows a rename, and a form is soft-deleted,
+    // so the foreign key's own check never runs.
+    index('ingredients_compendium_form_id_idx')
+      .on(table.formId)
+      .where(sql`${table.workspaceId} is null and ${table.deletedAt} is null`),
+
     // One multicolumn `gin_trgm_ops` index serves a predicate on either column
     // alone (asserted by EXPLAIN in ingredients-trigram.test.ts). Not partial:
     // it reserves nothing. A match must be written `name % $1` under a

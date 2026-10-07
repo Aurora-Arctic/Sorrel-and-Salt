@@ -28,13 +28,18 @@ const DECLARED = [
 // ingredients-unaccent.test.ts its folded twin.
 const TRIGRAM = 'ingredients_trgm';
 const UNACCENT_TRIGRAM = 'ingredients_unaccent_trgm';
+// M5.6a's reverse index on the pick, for the form delete's and rename's reads
+// of the live compendium entries picking a form (MB.167).
+const COMPENDIUM_FORM_PICKS = 'ingredients_compendium_form_id_idx';
 
 describe('ingredients index declarations', () => {
   const { byIndexName: byName } = tableFacts(ingredients);
 
   // "Exactly", not "at least": a sixth unique index is what this list exists to catch.
-  it('declares exactly §5’s five unique indexes and the two trigram ones', () => {
-    expect(Object.keys(byName).sort()).toEqual([...DECLARED, TRIGRAM, UNACCENT_TRIGRAM].sort());
+  it('declares exactly §5’s five unique indexes, the two trigram ones and the pick index', () => {
+    expect(Object.keys(byName).sort()).toEqual(
+      [...DECLARED, TRIGRAM, UNACCENT_TRIGRAM, COMPENDIUM_FORM_PICKS].sort(),
+    );
   });
 
   it('makes all five unique and all five partial', () => {
@@ -131,6 +136,17 @@ describe('ingredients unique indexes', () => {
       expect(index?.unique).toBe(true);
       expect(index?.predicate).toBe('(deleted_at IS NULL)');
       expect(index?.definition).toContain('USING btree (workspace_id, slug)');
+    });
+
+    // Not unique: many entries pick one form. Partial on the compendium's live
+    // rows, the only ones the form writes read, since a coven's pick never
+    // blocks a delete or follows a rename.
+    it('indexes form_id over live compendium rows only, not uniquely', async () => {
+      const index = await catalogue.indexRow('ingredients', COMPENDIUM_FORM_PICKS);
+
+      expect(index?.unique).toBe(false);
+      expect(index?.predicate).toBe('((workspace_id IS NULL) AND (deleted_at IS NULL))');
+      expect(index?.definition).toContain('USING btree (form_id)');
     });
 
     // A sixth unique index — most likely a label index over the compendium —

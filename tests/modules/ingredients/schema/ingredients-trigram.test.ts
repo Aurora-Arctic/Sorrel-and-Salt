@@ -17,6 +17,9 @@ const FOLK_NAMES_TRIGRAM_INDEX = 'ingredient_folk_names_trgm';
 // The folded twin, owned by ingredients-unaccent.test.ts; named here so the
 // declaration pin stays exact.
 const UNACCENT_INDEX = 'ingredients_unaccent_trgm';
+// M5.6a's reverse index on the pick, owned by ingredients-indexes.test.ts;
+// named here for the same reason.
+const FORM_PICKS_INDEX = 'ingredients_compendium_form_id_idx';
 
 // Named so the declaration test says the trigram index joined them, not replaced one.
 const UNIQUE_INDEXES = [
@@ -30,9 +33,9 @@ const UNIQUE_INDEXES = [
 describe('ingredients trigram index declaration', () => {
   const { byIndexName: byName } = tableFacts(ingredients);
 
-  it('declares the trigram index beside the five unique ones and its folded twin', () => {
+  it('declares the trigram index beside the five unique ones, its folded twin and the pick index', () => {
     expect(Object.keys(byName).sort()).toEqual(
-      [...UNIQUE_INDEXES, TRIGRAM_INDEX, UNACCENT_INDEX].sort(),
+      [...UNIQUE_INDEXES, TRIGRAM_INDEX, UNACCENT_INDEX, FORM_PICKS_INDEX].sort(),
     );
   });
 
