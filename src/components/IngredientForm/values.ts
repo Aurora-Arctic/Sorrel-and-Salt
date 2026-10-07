@@ -189,6 +189,34 @@ export function fieldNameOf(
   return index === undefined ? (field as FieldPath<IngredientFormValues>) : undefined;
 }
 
+/** An entry's key, as the schema folds a list's text: trimmed, its case set aside. */
+const fold = (text: string): string => text.trim().toLowerCase();
+
+/**
+ * Why `text` cannot be a list's next entry, or undefined when it can: a
+ * suggestion's, with what it links, or what the box holds. On the schema's
+ * keys, so the box refuses what a save would (MB.174): a link by its id, and
+ * text folded, among the typed entries alone — a name beside a link is no
+ * repeat, as at save. `name` is the ingredient's, which a folk name may not
+ * repeat either.
+ */
+export function repeatOf(
+  listed: readonly AnyListEntry[],
+  text: string,
+  link?: SubstituteLink | DeityLink,
+  name?: string,
+): string | undefined {
+  const key = fold(text);
+  if (key === '') return undefined;
+  const said = `"${text.trim()}"`;
+  const repeated = link
+    ? listed.some((entry) => linkOf(entry)?.id === link.id)
+    : listed.some((entry) => !linkOf(entry) && fold(entry.value) === key);
+  if (repeated) return `${said} is already listed`;
+  if (!link && name !== undefined && key === fold(name)) return `${said} is already the name`;
+  return undefined;
+}
+
 /**
  * Adds `text` as the list's last entry, trimmed, and empties the box: a
  * suggestion picked from it, with the ingredient or the curated deity it

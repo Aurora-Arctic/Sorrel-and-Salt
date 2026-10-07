@@ -242,6 +242,38 @@ const LISTS = [
   },
 ] as const;
 
+/**
+ * One list field on its own, given its entries as an edit would be: the way
+ * to hold a repeat the schema refuses at save, since the box refuses one at
+ * Add and the lookup never offers one (MB.174).
+ */
+function renderGivenList(
+  { legend, entry, field, ordered }: (typeof LISTS)[number],
+  values: Partial<IngredientFormValues>,
+) {
+  const onSubmit = vi.fn();
+  const Harness = () => {
+    const methods = useForm<IngredientFormValues, unknown, IngredientFormInput>({
+      defaultValues: { ...EMPTY_VALUES, name: 'Testwort', ...values },
+      resolver: ingredientResolver,
+    });
+    return (
+      <FormProvider {...methods}>
+        <form onSubmit={methods.handleSubmit(onSubmit)}>
+          <ListField name={field} legend={legend} entry={entry} ordered={ordered} />
+          <button type="submit">Save Ingredient</button>
+        </form>
+      </FormProvider>
+    );
+  };
+  render(<Harness />);
+  return onSubmit;
+}
+
+/** The list of LISTS with this field. */
+const listOf = (field: (typeof LISTS)[number]['field']) =>
+  LISTS.find((list) => list.field === field)!;
+
 describe('IngredientForm', () => {
   describe('saving a stub', () => {
     it('saves with only a name, leaving the classification to the local default of "none"', async () => {
@@ -455,18 +487,17 @@ describe('IngredientForm', () => {
       expect(screen.queryByText('Give the ingredient a name')).not.toBeInTheDocument();
     });
 
-    it('lands on the list entry it names, focusing the list', async () => {
-      const calls = acceptCreate();
-      renderForm();
+    // Given the repeat, since the box refuses one at Add (MB.174); a server
+    // error's test shows an entry's error taking the focus.
+    it('lands on the list entry it names', async () => {
+      const onSubmit = renderGivenList(listOf('folkNames'), {
+        folkNames: [{ value: 'Hedge Fixture' }, { value: 'hedge fixture' }],
+      });
 
-      type('Name', 'Testwort');
-      addEntry('Folk Name', 'Hedge Fixture');
-      addEntry('Folk Name', 'hedge fixture');
       save();
 
       const folkName = box('Folk Name');
       await waitFor(() => expectErrorOn(folkName, 'This folk name is already listed'));
-      expect(folkName).toHaveFocus();
       // The entry itself says why, and its twin says nothing.
       expect(removeButton('hedge fixture')).toHaveAccessibleDescription(
         expect.stringContaining('This folk name is already listed'),
@@ -474,16 +505,14 @@ describe('IngredientForm', () => {
       expect(removeButton('Hedge Fixture')).not.toHaveAccessibleDescription(
         expect.stringContaining('This folk name is already listed'),
       );
-      expect(calls).toHaveLength(0);
+      expect(onSubmit).not.toHaveBeenCalled();
     });
 
     it('clears from a list once the entry it names is removed', async () => {
-      acceptCreate();
-      renderForm();
+      renderGivenList(listOf('folkNames'), {
+        folkNames: [{ value: 'Hedge Fixture' }, { value: 'hedge fixture' }],
+      });
 
-      type('Name', 'Testwort');
-      addEntry('Folk Name', 'Hedge Fixture');
-      addEntry('Folk Name', 'hedge fixture');
       save();
       await waitFor(() => expect(box('Folk Name')).toBeInvalid());
       fireEvent.click(removeButton('hedge fixture'));
@@ -1342,13 +1371,12 @@ describe('IngredientForm', () => {
       // An error names an entry by its index, so a move that shifts the
       // entry it names must carry the error with it.
       it('keeps an error on the entry it names when another entry moves past it', async () => {
-        acceptCreate();
-        renderForm();
+        renderGivenList(listOf(field), {
+          [field]: ['First Fixture', 'Second Fixture', 'first fixture'].map((value) => ({
+            value,
+          })),
+        });
 
-        type('Name', 'Testwort');
-        for (const value of ['First Fixture', 'Second Fixture', 'first fixture']) {
-          addEntry(entry, value);
-        }
         save();
         await waitFor(() =>
           expect(removeButton('first fixture')).toHaveAccessibleDescription(
@@ -1371,6 +1399,71 @@ describe('IngredientForm', () => {
       });
     },
   );
+
+  // MB.174: a list refuses a repeat at the box, as the schema would at save,
+  // and says why in its one error element.
+  describe.each(LISTS)('a repeat at the $legend box', ({ legend, entry }) => {
+    const group = () => screen.getByRole('group', { name: legend });
+    const listed = () => within(group()).queryAllByRole('button', { name: /^Remove / });
+    const changes = () => within(group()).getByRole('status', { name: `${legend} changes` });
+
+    it('adds nothing at Add, keeps the text, and says why at the box', () => {
+      renderForm();
+
+      addEntry(entry, 'First Fixture');
+      addEntry(entry, '  first FIXTURE ');
+
+      expect(listed()).toHaveLength(1);
+      expect(box(entry)).toHaveValue('  first FIXTURE ');
+      expectErrorOn(box(entry), '"first FIXTURE" is already listed');
+      expect(
+        within(group()).getByText('"first FIXTURE" is already listed', { ignore: 'output' }),
+      ).toBeInTheDocument();
+      expect(changes()).toHaveTextContent('"first FIXTURE" is already listed');
+      expect(box(entry)).toHaveFocus();
+    });
+
+    it('adds nothing on Enter, the same way', () => {
+      renderForm();
+
+      addEntry(entry, 'First Fixture');
+      type(entry, 'first fixture');
+      fireEvent.keyDown(box(entry), { key: 'Enter' });
+
+      expect(listed()).toHaveLength(1);
+      expect(box(entry)).toHaveValue('first fixture');
+      expectErrorOn(box(entry), '"first fixture" is already listed');
+    });
+
+    it('clears the refusal once the text is edited, and adds what is no repeat', () => {
+      renderForm();
+
+      addEntry(entry, 'First Fixture');
+      addEntry(entry, 'first fixture');
+      type(entry, 'first fixtures');
+
+      expect(box(entry)).not.toBeInvalid();
+      // The announcement has been made; the error element no longer says it.
+      expect(within(group()).queryByText(/is already listed/, { ignore: 'output' })).toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: `Add ${entry}` }));
+      expect(listed()).toHaveLength(2);
+      expect(changes()).toHaveTextContent('Added first fixtures');
+    });
+  });
+
+  it('refuses a folk name repeating the name, at the box', () => {
+    renderForm();
+
+    type('Name', 'Testwort');
+    addEntry('Folk Name', ' testwort');
+
+    expect(
+      within(screen.getByRole('group', { name: 'Folk Names' })).queryAllByRole('button', {
+        name: /^Remove /,
+      }),
+    ).toHaveLength(0);
+    expectErrorOn(box('Folk Name'), '"testwort" is already the name');
+  });
 
   // M5.10a: the form and folk-name boxes suggest from M4.7a's lookups.
   describe('the duplicate warning', () => {
@@ -1940,6 +2033,27 @@ describe('IngredientForm', () => {
       expect(removeButton('Fixture Bane')).toBeInTheDocument();
       expect(box('Folk Name')).toHaveValue('');
     });
+
+    it('leaves out a name already listed, and the ingredient’s name', async () => {
+      renderForm();
+      const calls = offerNames([
+        HEDGE,
+        { value: 'Testwort', claimants: [] },
+        { value: 'Fixture Bane', claimants: [] },
+      ]);
+
+      type('Name', 'Testwort');
+      addEntry('Folk Name', 'hedge fixture');
+      act(() => box('Folk Name').focus());
+      await waitFor(() => expect(calls).toHaveLength(1));
+      type('Folk Name', 'e');
+      act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+      await waitFor(() => expect(calls).toHaveLength(2));
+
+      await screen.findByRole('option', { name: 'Fixture Bane' });
+      expect(screen.queryByRole('option', { name: /^Hedge Fixture/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: 'Testwort' })).not.toBeInTheDocument();
+    });
   });
 
   // MB.131: the planets, signs, deities and substitutes suggest, each from its
@@ -2246,16 +2360,14 @@ describe('IngredientForm', () => {
       ]);
     });
 
+    // Given the repeat, since the lookup never offers a listed deity (MB.174).
     it('refuses the same deity picked twice, beside the repeat, named with its tradition', async () => {
-      renderForm();
-      const calls = offerDeities([HECATE_GREEK, HECATE_ROMAN]);
+      const greek = {
+        value: 'Hecate',
+        link: { id: GREEK_HECATE_ID, tradition: 'Greek', description: null },
+      };
+      renderGivenList(listOf('deities'), { deities: [greek, greek] });
 
-      await lookUp('Deity', calls, 'hecate');
-      fireEvent.click(await screen.findByRole('option', { name: /^Hecate \(Greek\)/ }));
-      type('Deity', 'hecate');
-      settle();
-      fireEvent.click(await screen.findByRole('option', { name: /^Hecate \(Greek\)/ }));
-      type('Name', 'Testwort');
       save();
 
       await waitFor(() =>
@@ -2350,6 +2462,161 @@ describe('IngredientForm', () => {
       ]);
       expect(box('Substitute Ingredient')).not.toBeInvalid();
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+  });
+
+  // MB.174: each lookup leaves out what its list holds, by the schema's key,
+  // and the typed row is withheld for text the list would refuse.
+  describe('a lookup beside its listed entries', () => {
+    const MOON: CorrespondenceNode = { value: 'Moon', description: null, curated: true };
+    const MOONFIXTURE: CorrespondenceNode = {
+      value: 'Moonfixture',
+      description: null,
+      curated: false,
+    };
+    const CANCER: CorrespondenceNode = { value: 'Cancer', description: null, curated: true };
+    const CANCERFIXTURE: CorrespondenceNode = {
+      value: 'Cancerfixture',
+      description: null,
+      curated: false,
+    };
+    const HECATE_GREEK: DeityNode = {
+      id: '4b2a6c8e-1d3f-4a5b-9c7d-8e0f1a2b3c4d',
+      value: 'Hecate',
+      description: null,
+      tradition: 'Greek',
+      curated: true,
+    };
+    const HECATE_ROMAN: DeityNode = {
+      ...HECATE_GREEK,
+      id: 'c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e7f',
+      tradition: 'Roman',
+    };
+    const HECATE_FIXTURE: DeityNode = {
+      id: null,
+      value: 'Hecate Fixturia',
+      description: null,
+      tradition: null,
+      curated: false,
+    };
+    const MOCKWORT: IngredientNode = {
+      id: '0d4f2c1a-6b3e-4a5d-8c7f-9e0a1b2c3d4e',
+      name: 'Mockwort',
+      canonicalName: null,
+      form: 'Dried leaf',
+      description: null,
+      isGlobal: true,
+    };
+    const MOCKWORT_COVEN: IngredientNode = {
+      ...MOCKWORT,
+      id: '5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d',
+      form: 'Tincture',
+      isGlobal: false,
+    };
+
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+    const settle = () => act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+    const lookUp = async (entry: string, calls: unknown[], text: string) => {
+      act(() => box(entry).focus());
+      await waitFor(() => expect(calls).toHaveLength(1));
+      type(entry, text);
+      settle();
+      await waitFor(() => expect(calls).toHaveLength(2));
+    };
+    /** Types `text` into a box whose lookup has answered before, and waits for its rows. */
+    const retype = async (entry: string, text: string, row: RegExp | string) => {
+      type(entry, text);
+      settle();
+      await screen.findByRole('option', { name: row });
+    };
+    const typedRow = (text: string) =>
+      screen.queryByRole('option', { name: `Use what you typed: ${text}` });
+
+    it.each([
+      {
+        entry: 'Planet',
+        offer: () => offerPlanets([MOON, MOONFIXTURE]),
+        listed: 'Moon',
+        other: 'Moonfixture',
+      },
+      {
+        entry: 'Zodiac Sign',
+        offer: () => offerSigns([CANCER, CANCERFIXTURE]),
+        listed: 'Cancer',
+        other: 'Cancerfixture',
+      },
+    ])(
+      'leaves a listed $entry out whatever its case, and offers what was typed only when it is no repeat',
+      async ({ entry, offer, listed, other }) => {
+        renderForm();
+        const calls = offer();
+
+        addEntry(entry, listed.toLowerCase());
+        await lookUp(entry, calls, listed.slice(0, 2));
+
+        await screen.findByRole('option', { name: other });
+        expect(screen.queryByRole('option', { name: listed })).not.toBeInTheDocument();
+        expect(typedRow(listed.slice(0, 2))).toBeInTheDocument();
+
+        await retype(entry, ` ${listed.toUpperCase()} `, other);
+        expect(typedRow(listed.toUpperCase())).not.toBeInTheDocument();
+      },
+    );
+
+    it('leaves out a listed deity by its id, so Roman Hecate is offered beside a listed Greek one', async () => {
+      renderForm();
+      const calls = offerDeities([HECATE_GREEK, HECATE_ROMAN, HECATE_FIXTURE]);
+
+      await lookUp('Deity', calls, 'hecate');
+      fireEvent.click(await screen.findByRole('option', { name: 'Hecate (Greek)' }));
+      await retype('Deity', 'hecate', 'Hecate (Roman)');
+
+      expect(screen.queryByRole('option', { name: 'Hecate (Greek)' })).not.toBeInTheDocument();
+      // Text beside a link is no repeat, as at save: what was typed is offered, and added.
+      expect(typedRow('hecate')).toBeInTheDocument();
+      fireEvent.keyDown(box('Deity'), { key: 'Enter' });
+      expect(removeButton('hecate')).toBeInTheDocument();
+      expect(removeButton('Hecate (Greek)')).toBeInTheDocument();
+    });
+
+    it('leaves out a deity only in use once its name is listed, among the typed ones', async () => {
+      renderForm();
+      const calls = offerDeities([HECATE_GREEK, HECATE_FIXTURE]);
+
+      addEntry('Deity', 'hecate fixturia');
+      await lookUp('Deity', calls, 'hecate');
+
+      await screen.findByRole('option', { name: 'Hecate (Greek)' });
+      expect(screen.queryByRole('option', { name: 'Hecate Fixturia' })).not.toBeInTheDocument();
+      await retype('Deity', 'Hecate Fixturia', 'Hecate (Greek)');
+      expect(typedRow('Hecate Fixturia')).not.toBeInTheDocument();
+    });
+
+    it('leaves out a listed substitute by its ingredient’s id, and takes its name as typed text', async () => {
+      renderForm();
+      const calls = offerIngredients([MOCKWORT, MOCKWORT_COVEN]);
+
+      await lookUp('Substitute Ingredient', calls, 'mockwort');
+      fireEvent.click(await screen.findByRole('option', { name: 'Mockwort This coven’s entry' }));
+      await retype('Substitute Ingredient', 'mockwort', 'Mockwort Compendium entry');
+
+      expect(
+        screen.queryByRole('option', { name: 'Mockwort This coven’s entry' }),
+      ).not.toBeInTheDocument();
+      expect(typedRow('mockwort')).toBeInTheDocument();
+      fireEvent.keyDown(box('Substitute Ingredient'), { key: 'Enter' });
+      expect(screen.getAllByRole('button', { name: 'Remove mockwort' })).toHaveLength(1);
+
+      // A second typed one is a repeat of the first, not of the link.
+      await retype('Substitute Ingredient', 'MOCKWORT', 'Mockwort Compendium entry');
+      expect(typedRow('MOCKWORT')).not.toBeInTheDocument();
+      fireEvent.keyDown(box('Substitute Ingredient'), { key: 'Enter' });
+      expectErrorOn(box('Substitute Ingredient'), '"MOCKWORT" is already listed');
     });
   });
 
