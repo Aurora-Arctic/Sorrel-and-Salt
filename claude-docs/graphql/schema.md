@@ -593,6 +593,39 @@ sketch, as the chips read them (MB.36).
 `tests/modules/vocabulary/graphql/categories.test.ts` runs the list and the
 writes through Yoga.
 
+### Forms: `ingredientFormGroups` and the three form writes
+
+The form vocabulary's writes (M5.6a), registered by `vocabulary` over
+`services/ingredient-form-values.ts` ([`db/categories.md`](../db/categories.md),
+"Form writes"), in the categories' shape. The type is `IngredientFormValue`,
+not `IngredientForm`, which is the entry-form component (DESIGN.md §7).
+
+- **`ingredientFormValues` counts its pages** (M5.6a): `totalCount` and
+  `countBefore`, from `countIngredientFormValues`, for the admin page's "Page X
+  of Y". `query` and `groupId`, both optional, narrow it as they narrow
+  `categories` (MB.178): a name holding the query, a group's forms, and a
+  `groupId` that is not a uuid an empty page rather than an error.
+  **`ingredientFormGroups`** is public too, the live groups by name, a form's
+  group picked from them; six are seeded, so it carries no count.
+- **One input, `IngredientFormValueInput`, for both writes**: `name`,
+  `description` and `groupId`, required, and `endRedirect`, the admin's
+  answer to a rename that would end another entry's redirect (MB.82). No
+  slug: a form's is its name and its group, `formSlug`, and follows either.
+- **The writes carry `admin`**, and `assertSiteAdmin` refuses again in the
+  service. A slug collision is `VALIDATION` on `name`, naming the form holding
+  the address; a retired or unknown group is `VALIDATION` on `groupId`; a
+  rename that would make a compendium entry another's identity or address is
+  `VALIDATION` on `name`, naming both; one that would end a redirect is
+  `VALIDATION` on `endRedirect`; an unknown, deleted or malformed id is
+  `NOT_FOUND`.
+- **`deleteIngredientFormValue` answers the deleted id**, and is `FORBIDDEN`
+  while a live compendium entry picked the form, naming the entries and how
+  many more. Update and delete clear `ingredientFormsById`, which an earlier
+  root field may have filled reading a `formChoice`.
+
+`tests/modules/vocabulary/graphql/ingredient-form-values.test.ts` runs the
+list, the groups and the writes through Yoga.
+
 ### Auth scopes: the second check
 
 `@pothos/plugin-scope-auth` gives the schema three scopes, all read off the

@@ -245,3 +245,130 @@ test('an admin is told which compendium entries hold a category before it can go
   );
   await expect(editing).toBeVisible();
 });
+
+test('a signed-in non-admin is refused at /admin/forms with the 403 page', async ({ page }) => {
+  await signInAs(page, 'not-an-admin@admin-forms.test');
+
+  const response = await page.goto('/admin/forms?new');
+
+  expect(response?.status()).toBe(403);
+  await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+// M5.6a: the curated form vocabulary in M5.6's page shape — the list, and its
+// modal opened by the address, added to, renamed and retired from.
+test('an admin adds, renames and deletes a form in the modal over the list', async ({ page }) => {
+  await signInAs(page, 'an-admin@admin-forms.test', ['discord'], 'admin');
+
+  const response = await page.goto('/admin/forms');
+  expect(response?.status()).toBe(200);
+  await expect(page).toHaveTitle('Forms — Admin — Sorrel & Salt');
+  await expect(page.getByRole('heading', { level: 1, name: 'Forms' })).toBeVisible();
+  // The seeded vocabulary pages 25 at a time, alphabetically.
+  await expect(page.getByRole('table').getByRole('row')).toHaveCount(26);
+  await expect(page.getByRole('navigation', { name: 'Pages' })).toContainText(/Page 1 of \d+/);
+
+  await page.getByRole('link', { name: 'Add Form' }).click();
+  const adding = page.getByRole('dialog', { name: 'Add Form' });
+  await expect(adding).toBeVisible();
+  await expect(page).toHaveURL(/\/admin\/forms\?new$/);
+  await assertNoAccessibilityViolations(page);
+
+  // Escape asks the page to close it: the address loses `?new`.
+  await page.keyboard.press('Escape');
+  await expect(adding).toHaveCount(0);
+  await expect(page).toHaveURL(/\/admin\/forms$/);
+
+  await page.getByRole('link', { name: 'Add Form' }).click();
+  await expect(adding.getByRole('button', { name: 'Save Form' })).toBeDisabled();
+  await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testwort Shard');
+  await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the e2e spec');
+  await adding.getByRole('combobox', { name: 'Group' }).click();
+  await adding.getByRole('option', { name: 'Mineral', exact: true }).click();
+  await adding.getByRole('button', { name: 'Save Form' }).click();
+  await expect(adding).toHaveCount(0);
+  // First by name, so on the first page, with its group beside it.
+  const row = page.getByRole('row', { name: /Aaa Testwort Shard/ });
+  await expect(row.getByRole('cell', { name: 'Mineral', exact: true })).toBeVisible();
+
+  await row.getByRole('link', { name: 'Edit Aaa Testwort Shard' }).click();
+  const editing = page.getByRole('dialog', { name: 'Edit Form' });
+  await expect(editing).toBeVisible();
+  await expect(page).toHaveURL(/\/admin\/forms\?edit=aaa-testwort-shard[a-z-]*$/);
+  // A rename carries onto the compendium, and says so before it is saved.
+  const note = editing.getByText(/^Saving renames it on every compendium entry that picked it/);
+  await expect(note).toHaveCount(0);
+  await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testwort Sliver');
+  await expect(note).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+  await editing.getByRole('button', { name: 'Save Form' }).click();
+  await expect(editing).toHaveCount(0);
+  await expect(page.getByRole('row', { name: /Aaa Testwort Shard/ })).toHaveCount(0);
+  const renamed = page.getByRole('row', { name: /Aaa Testwort Sliver/ });
+  await expect(renamed).toBeVisible();
+
+  // A renamed form answers at its new address, which its Edit links to.
+  await renamed.getByRole('link', { name: 'Edit Aaa Testwort Sliver' }).click();
+  await expect(page).toHaveURL(/\/admin\/forms\?edit=aaa-testwort-sliver[a-z-]*$/);
+  await editing.getByRole('button', { name: 'Delete Form' }).click();
+  await expect(editing.getByText(/^Delete "Aaa Testwort Sliver"\?/)).toBeVisible();
+  await editing.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(editing).toHaveCount(0);
+  await expect(page.getByRole('row', { name: /Aaa Testwort/ })).toHaveCount(0);
+});
+
+// The list narrows by part of a name and by a group, as the categories' does
+// (MB.178): a filtered page is an address, and the links on it keep the filter.
+test('an admin filters the forms by part of a name and by a group', async ({ page }) => {
+  await signInAs(page, 'filter-admin@admin-forms.test', ['discord'], 'admin');
+  await page.goto('/admin/forms');
+  const search = page.getByRole('search');
+  const filter = search.getByRole('button', { name: 'Filter' });
+  const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
+  await expect(filter).toBeDisabled();
+
+  // Five seeded forms hold "ea", Earth's matched whatever the case.
+  await search.getByRole('searchbox', { name: 'Name' }).fill('ea');
+  await filter.click();
+  await expect(page).toHaveURL(/\/admin\/forms\?query=ea$/);
+  await expect(rows).toHaveCount(5);
+  await expect(page.getByRole('row', { name: /Earth/ })).toBeVisible();
+  await expect(filter).toBeDisabled();
+
+  // Two of them are filed under Animal.
+  await search.getByRole('combobox', { name: 'Group' }).selectOption({ label: 'Animal' });
+  await filter.click();
+  await expect(page).toHaveURL(/\/admin\/forms\?query=ea&group=animal$/);
+  await expect(rows).toHaveCount(2);
+  await expect(page.getByRole('row', { name: /Feather/ })).toBeVisible();
+  await expect(page.getByRole('row', { name: /Pearl/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Edit Feather' })).toHaveAttribute(
+    'href',
+    '/admin/forms?query=ea&group=animal&edit=feather-animal',
+  );
+  await assertNoAccessibilityViolations(page);
+
+  await search.getByRole('searchbox', { name: 'Name' }).fill('no such form');
+  await filter.click();
+  await expect(page.getByText('No form matches.')).toBeVisible();
+});
+
+test('an admin is told which compendium entries pick a form before it can go', async ({ page }) => {
+  await signInAs(page, 'held-admin@admin-forms.test', ['discord'], 'admin');
+  // The standard seed's Ginger and Devil's Shoestring pick the curated Root, filed under Botanical.
+  await page.goto('/admin/forms?edit=root-botanical');
+  const editing = page.getByRole('dialog', { name: 'Edit Form' });
+  await expect(editing.getByRole('textbox', { name: 'Name' })).toHaveValue('Root');
+
+  await editing.getByRole('button', { name: 'Delete Form' }).click();
+  await editing.getByRole('button', { name: 'Delete', exact: true }).click();
+
+  await expect(editing.getByRole('alert')).toContainText(
+    /^"Root" is the form of \d+ compendium entries — .+\. Change their form first\.$/,
+  );
+  await expect(editing).toBeVisible();
+  // Still live: its address still opens it.
+  await page.goto('/admin/forms?edit=root-botanical');
+  await expect(editing).toBeVisible();
+});

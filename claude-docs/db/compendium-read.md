@@ -62,6 +62,10 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   per id, so an entry must carry every one. OR is M8.12's argument to add.
 - **`form`** compares `lower(btrim(…))` on both sides, the fold
   `canonical_key` uses.
+- **`formId`** matches the curated form an entry picked, `form_id` (MB.167):
+  how a form's delete and rename find the entries holding it (M5.6a), read
+  through `ingredients_compendium_form_id_idx`. The repository's filter alone:
+  the public `compendium` query takes no such argument.
 
 Names order under the database's own collation (`en_US.utf8` in the image).
 M8.14's `(lower(name), canonical_key, id)` declares its parts on the same
@@ -93,10 +97,13 @@ proofs reads the compendium alone, which is how a signed-out request reads it,
 and a coven's row asked for without its proof is `undefined`, the same answer
 as an id that names nothing.
 
-**`findIngredientFormValues(page)`** is one keyset page of the curated form
-vocabulary in `(name, id)` order: the live forms whose group is live too, which
-is what curated means to `findVocabularySuggestions` as well, with the group's
-`deleted_at` read by `existsIn`. **`findCategoryPage(filter, page)`** (M5.6) reads the
+**`findIngredientFormValues(filter, page)`** is one keyset page of the curated
+form vocabulary in `(name, id)` order: the live forms whose group is live too,
+which is what curated means to `findVocabularySuggestions` as well, with the
+group's `deleted_at` read by `existsIn`, narrowed by an
+`IngredientFormValueFilter` as the categories are by theirs, and
+**`findIngredientFormValueCount(filter, start)`** counts them under the same
+filter and key. **`findCategoryPage(filter, page)`** (M5.6) reads the
 categories the same way, a live category under a live group, behind the
 public `categories` query, narrowed by MB.178's `CategoryFilter`, and
 **`findCategoryCount(filter, start)`** counts them under the same filter and

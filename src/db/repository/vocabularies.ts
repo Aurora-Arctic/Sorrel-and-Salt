@@ -29,6 +29,7 @@ import type {
   CategoryFilter,
   DeitySuggestion,
   FormSuggestion,
+  IngredientFormValueFilter,
   InUseSource,
   KeyOrder,
   SuggestingVocabulary,
@@ -36,26 +37,56 @@ import type {
 } from './types';
 
 /**
- * One page of the curated form vocabulary in `(name, id)` order, for
- * `ingredientFormValues`: the live forms whose group is live too, which is
- * what "curated" means to `findVocabularySuggestions` as well, with the
- * group's `deleted_at` read by the builder's correlated `EXISTS`. Public
- * reference data, so no proof (claude-docs/db/compendium-read.md, "The compendium read").
+ * One page of the curated form vocabulary under `filter` in `(name, id)`
+ * order, for `ingredientFormValues` and the admin list: the live forms whose
+ * group is live too, which is what "curated" means to
+ * `findVocabularySuggestions` as well, with the group's `deleted_at` read by
+ * the builder's correlated `EXISTS`. Public reference data, so no proof
+ * (claude-docs/db/compendium-read.md, "The compendium read").
  */
 export function findIngredientFormValues(
+  filter: IngredientFormValueFilter,
   page: PageRequest,
 ): Promise<PageEntry<typeof ingredientForms.$inferSelect>[]> {
-  const keyset = { sort: [ingredientForms.name], id: ingredientForms.id, request: page };
+  const keyset = { ...FORM_ORDER, request: page };
   return selectFrom(
     ingredientForms,
-    and(
-      notSoftDeleted(ingredientForms),
-      existsIn(ingredientFormGroups, eq(ingredientFormGroups.id, ingredientForms.groupId)),
-      pageBounds(keyset),
-    ),
+    and(notSoftDeleted(ingredientForms), ...formArms(filter), pageBounds(keyset)),
     keyset,
   );
 }
+
+/**
+ * How many forms `findIngredientFormValues` pages under `filter`, and how
+ * many come before `start` in its order — "Page X of Y" on the admin page
+ * (M5.6a) and `ingredientFormValues`' `totalCount`, as `findCategoryCount`
+ * counts the categories: one statement, over the page's own filter and key.
+ */
+export function findIngredientFormValueCount(
+  filter: IngredientFormValueFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return selectFrom(ingredientForms, and(notSoftDeleted(ingredientForms), ...formArms(filter)), {
+    count: FORM_ORDER,
+    start,
+  });
+}
+
+/**
+ * What a form page and its count both read beside the row's own filter: its
+ * group live, and the filter's arms, each `undefined` when its part is
+ * absent, as `categoryArms` reads a category's.
+ */
+function formArms({ query, groupId }: IngredientFormValueFilter): (SQL | undefined)[] {
+  return [
+    inLiveGroup(ingredientForms),
+    query ? containsText(ingredientForms.name, query) : undefined,
+    groupId ? eq(ingredientForms.groupId, groupId) : undefined,
+  ];
+}
+
+/** The form vocabulary's key: by name, then id. A page and its count share it. */
+const FORM_ORDER = { sort: [ingredientForms.name], id: ingredientForms.id };
 
 /**
  * One page of the category vocabulary under `filter`, by its group's name,

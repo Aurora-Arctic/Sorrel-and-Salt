@@ -70,9 +70,10 @@ read beside it.
 
 Layout only, until the admin area's design review (MB.115). The filter is a
 wrapping row of the field, the checkbox and the button, built on the
-`.field`, `.input`, `.checkbox` and `.btn` primitives. The table fills the
-layout's width and scrolls inside its own frame on a narrow screen, rather
-than widening the page. Its rows are banded and its header carries a hairline, as the category list's table does, and its pager is the shared `.pager` primitive: Prev and Next, centred ([`styling.md`](../styling.md), "Buttons"). Tokens: `space()`, `$text-muted` and `$surface-card`.
+`.field`, `.input`, `.checkbox` and `.btn` primitives. The table is the
+`.data-table` primitive, filling the layout's width and scrolling inside its
+`.data-table-frame` on a narrow screen rather than widening the page: its rows
+are banded and its header carries a hairline, as every admin list's does, and its pager is the shared `.pager` primitive: Prev and Next, centred ([`styling.md`](../styling.md), "Buttons"). Tokens: `space()`, `$text-muted` and `$surface-card`.
 
 ## Stories
 

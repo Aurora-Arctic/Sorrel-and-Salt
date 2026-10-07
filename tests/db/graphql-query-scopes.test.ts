@@ -56,6 +56,10 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ ingredientFormValues(first: 1) { edges { node { id } } } }',
     outcome: 'answers',
   },
+  ingredientFormGroups: {
+    source: '{ ingredientFormGroups(first: 1) { edges { node { id } } } }',
+    outcome: 'answers',
+  },
   commonNameSuggestions: suggestion('commonNameSuggestions'),
   ingredientSuggestions: {
     source: `query ($workspaceId: ID!) {

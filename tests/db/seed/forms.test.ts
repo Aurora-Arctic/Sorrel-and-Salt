@@ -6,7 +6,7 @@ import { fromRoot } from '../../support/paths';
 import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { FORM_GROUPS, FORMS, seedForms } from '@/db/seed/forms';
-import { slugify } from '@/lib/slugify';
+import { formSlug, slugify } from '@/lib/slugify';
 import type { DesignFormGroup, FormGroupRow, FormRow } from './types';
 
 // §5's six form groups and every form under them, asserted against §5's own
@@ -219,15 +219,28 @@ describe('seedForms(db)', () => {
 
     const groupSlugById = new Map((await allGroups()).map((group) => [group.id, group.slug]));
     const seeded = (await allForms()).map((form) => ({
-      slug: form.slug,
+      key: form.seed_key,
       group: groupSlugById.get(form.group_id),
     }));
 
-    expect(seeded).toEqual(
-      FORMS.map((form) => ({ slug: slugify(form.name), group: slugify(form.group) })).sort((a, b) =>
-        a.slug.localeCompare(b.slug),
+    expect(seeded.sort((a, b) => String(a.key).localeCompare(String(b.key)))).toEqual(
+      FORMS.map((form) => ({ key: slugify(form.name), group: slugify(form.group) })).sort((a, b) =>
+        a.key.localeCompare(b.key),
       ),
     );
+  });
+
+  // M5.6a: two live forms may share a name under two groups (DESIGN.md §5),
+  // so the address carries the group. The key stays the name, as every
+  // database seeded before holds it, and never changes after.
+  it('slugs each form by its name and its group, and keys it by its name', async () => {
+    await seedForms(db);
+
+    const byKey = new Map((await allForms()).map((form) => [form.seed_key, form]));
+    for (const form of FORMS) {
+      expect(byKey.get(slugify(form.name))?.slug, form.name).toBe(formSlug(form.name, form.group));
+    }
+    expect(byKey.get('bark')?.slug).toBe('bark-botanical');
   });
 
   it('stamps every row as the bootstrap user, with no tombstone', async () => {
@@ -257,12 +270,12 @@ describe('seedForms(db)', () => {
     await seedForms(db);
     await sql`
       update ingredient_forms set description = 'The bark of the root, not the stem.'
-      where slug = 'bark'
+      where seed_key = 'bark'
     `;
 
     await seedForms(db);
 
-    const [bark] = (await allForms()).filter((form) => form.slug === 'bark');
+    const [bark] = (await allForms()).filter((form) => form.seed_key === 'bark');
     expect(bark.description).toBe('The bark of the root, not the stem.');
   });
 
@@ -271,14 +284,85 @@ describe('seedForms(db)', () => {
     await seedForms(db);
     await sql`
       update ingredient_forms set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
-      where slug = 'curio'
+      where seed_key = 'curio'
     `;
 
     await seedForms(db);
 
-    const curio = (await allForms()).filter((form) => form.slug === 'curio');
+    const curio = (await allForms()).filter((form) => form.seed_key === 'curio');
     expect(curio).toHaveLength(1);
     expect(curio[0].deleted_at).not.toBeNull();
+  });
+
+  // An admin's own row under a seed name and group holds the address the
+  // seed's would, and the slug index would refuse a second.
+  it('does not insert a form an admin wrote under its name and group', async () => {
+    await seedForms(db);
+    await sql`delete from ingredient_forms where seed_key = 'herb'`;
+    const [botanical] =
+      await sql`select id from ingredient_form_groups where seed_key = 'botanical'`;
+    await sql`
+      insert into ingredient_forms (name, slug, description, group_id, created_by, updated_by)
+      values ('Herb', 'herb-botanical', 'Written by an admin.', ${botanical.id},
+        ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+    `;
+
+    await expect(seedForms(db)).resolves.toBeUndefined();
+
+    const herbs = (await allForms()).filter((form) => form.name === 'Herb');
+    expect(herbs).toHaveLength(1);
+    expect(herbs[0]).toMatchObject({ seed_key: null, description: 'Written by an admin.' });
+  });
+
+  // The seed is the backfill (claude-docs/db/ingredient-slugs.md's precedent): a
+  // database seeded before M5.6a holds `slugify(name)`, and a SQL rewrite
+  // would be a second slug rule.
+  describe('the slugs a database seeded before M5.6a holds', () => {
+    it('re-derives every live form’s slug from its name and its group’s, as the bootstrap user', async () => {
+      await seedForms(db);
+      await sql`update ingredient_forms set slug = seed_key`;
+      // The precondition: every slug is the old rule's.
+      expect((await allForms()).filter((form) => form.slug !== form.seed_key)).toEqual([]);
+
+      await seedForms(db);
+
+      const forms = await allForms();
+      const groupNameById = new Map((await allGroups()).map((group) => [group.id, group.name]));
+      for (const form of forms) {
+        expect(form.slug, form.name).toBe(
+          formSlug(form.name, groupNameById.get(form.group_id) as string),
+        );
+        expect(form.updated_by, form.name).toBe(BOOTSTRAP_USER_ID);
+      }
+    });
+
+    it('writes only the rows whose slug differs', async () => {
+      await seedForms(db);
+      await sql`update ingredient_forms set slug = 'bark' where seed_key = 'bark'`;
+      const others = (await allForms()).filter((form) => form.seed_key !== 'bark');
+
+      await seedForms(db);
+
+      const forms = await allForms();
+      expect(forms.find((form) => form.seed_key === 'bark')?.slug).toBe('bark-botanical');
+      expect(forms.filter((form) => form.seed_key !== 'bark')).toEqual(others);
+    });
+
+    it('follows a group renamed since, and leaves a deleted form as it was', async () => {
+      await seedForms(db);
+      await sql`update ingredient_form_groups set name = 'Oddment' where seed_key = 'curio'`;
+      await sql`
+        update ingredient_forms set slug = 'egg', deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
+        where seed_key = 'egg'
+      `;
+      const [deleted] = (await allForms()).filter((form) => form.seed_key === 'egg');
+
+      await seedForms(db);
+
+      const forms = await allForms();
+      expect(forms.find((form) => form.seed_key === 'curio')?.slug).toBe('curio-oddment');
+      expect(forms.find((form) => form.seed_key === 'egg')).toEqual(deleted);
+    });
   });
 
   it('publishes the bootstrap user as app.current_user_id, as withAudit would', async () => {

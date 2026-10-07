@@ -60,8 +60,8 @@ const UserList = ({
     <UserListFilter query={query} awaitingApproval={awaitingApproval} />
 
     {users.length ? (
-      <div className="user-list__frame">
-        <table className="user-list__table">
+      <div className="data-table-frame">
+        <table className="data-table">
           <thead>
             <tr>
               <th scope="col">Name</th>

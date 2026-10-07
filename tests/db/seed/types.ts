@@ -65,6 +65,7 @@ export interface FormRow {
   id: string;
   name: string;
   slug: string;
+  seed_key: string | null;
   description: string;
   group_id: string;
   created_by: string;

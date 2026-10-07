@@ -388,6 +388,49 @@ describe('findCompendiumPage', () => {
     });
   });
 
+  // The pick, not the text (MB.167): what a form's delete and rename read, so
+  // only the entries that picked this row answer, not every entry spelling it.
+  describe('formId', () => {
+    let herb: string;
+    let root: string;
+
+    beforeAll(async () => {
+      const rows = await sql`
+        select id, name from ingredient_forms where name in ('Herb', 'Root') and deleted_at is null`;
+      const byName = new Map(rows.map((row) => [row.name as string, row.id as string]));
+      herb = byName.get('Herb') as string;
+      root = byName.get('Root') as string;
+    });
+
+    beforeEach(async () => {
+      await add('Fixture Picked', { form: 'Herb', formId: herb });
+      await add('Fixture Also Picked', { form: 'Herb', formId: herb });
+      await add('Fixture Typed', { form: 'Herb' });
+      await add('Fixture Root', { form: 'Root', formId: root });
+      await add('Fixture Coven', { form: 'Herb', formId: herb, workspaceId: WORKSPACE_W_ID });
+      const gone = await add('Fixture Gone', { form: 'Herb', formId: herb });
+      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
+    });
+
+    it('lists the live compendium entries that picked the form, by name, and no other', async () => {
+      // Why the others could have been listed: each holds the form's text, and three its id.
+      const [{ count }] = await sql`
+        select count(*)::int as count from ingredients where form = 'Herb'`;
+      expect(count).toBe(5);
+
+      expect(await namesOf({ formId: herb })).toEqual(['Fixture Also Picked', 'Fixture Picked']);
+      await expect(findCompendiumCount({ formId: herb }, undefined)).resolves.toEqual({
+        totalCount: 2,
+        countBefore: null,
+      });
+    });
+
+    it('combines with the form text it was picked as', async () => {
+      expect(await namesOf({ formId: herb, form: 'root' })).toEqual([]);
+      expect(await namesOf({ formId: root, form: 'root' })).toEqual(['Fixture Root']);
+    });
+  });
+
   describe('paging', () => {
     it('walks every live row once, in order, and never a soft-deleted one', async () => {
       for (let n = 1; n <= 30; n += 1) {

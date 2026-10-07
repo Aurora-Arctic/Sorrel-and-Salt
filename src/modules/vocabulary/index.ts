@@ -19,6 +19,7 @@ export type {
   DeityRow,
   DeityTraditionRow,
   IngredientFormGroupRow,
+  IngredientFormValueFilter,
   IngredientFormValueRow,
   PickedField,
 } from './types';

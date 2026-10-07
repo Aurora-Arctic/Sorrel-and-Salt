@@ -82,7 +82,9 @@ would force an admin to rename their way out of. **The disambiguation moved to
 the autofill instead**, as §5 specifies: M4.7a returns each curated
 suggestion's group and M5.10a renders it, and MB.165 keeps a pick, as
 `ingredients.form_id` beside the text. The schema test asserts the same-named pair is _accepted_, so
-the gap stays a recorded decision. Adding the index later is the reversible
+the gap stays a recorded decision. A form's slug names its group,
+`formSlug(name, group)`, so the pair can be written through the admin's page
+and not only by a test (M5.6a). Adding the index later is the reversible
 direction — `CREATE UNIQUE INDEX` is expand-direction DDL that only fails if
 duplicates already exist, where dropping one is a `DROP` needing a PR
 acknowledgement (rule 10).
@@ -166,3 +168,62 @@ first.` The entries are read through the compendium's own category filter,
 The owner chose the delete rule over two others, and
 [`design-decisions/m5.6-admin-categories.md`](../design-decisions/m5.6-admin-categories.md)
 records them. Revalidating the `compendium` tag after each write is M8.7's.
+
+## Form writes (M5.6a)
+
+`src/modules/vocabulary/services/ingredient-form-values.ts`, in the shape of
+the category writes above, for `/admin/forms`. A compendium entry's form is a
+pick of a curated row (MB.162, on the pick since MB.167), and these writes
+keep it one after the write.
+
+- **The reads.** `listIngredientFormValues(filter, page)` pages the live forms
+  under a live group by `(name, id)`, and
+  `countIngredientFormValues(filter, start)` counts them through
+  `findIngredientFormValueCount`, on the page's own filter and key. The
+  `IngredientFormValueFilter` narrows both in SQL as `CategoryFilter` narrows
+  the categories: `query` to a name holding it, case-insensitively, through
+  `containsText`, which reads `%`, `_` and `\` literally; `groupId` to that
+  group's forms. The service trims the query, so a blank one is no query, and
+  answers a group id that is not a uuid with an empty page and a zero count
+  without reading. `listIngredientFormGroups(page)` pages the live groups by
+  name, and `getIngredientFormValueBySlug` reads one form by its address for
+  the page's `?edit=`, `NotFound` for none.
+- **A form's slug is `formSlug(name, group)`**, its name and its group's,
+  `wax-substance`, so two live forms may share a name under two groups (§5).
+  It follows a rename and a regrouping, and keeps `seedKey` as it was
+  (MB.171). The group is checked live first, as a category's is, and a slug
+  collision is `VALIDATION` on `name`, naming the form at the address.
+- **A delete is refused while a live compendium entry picks the form**, by
+  `form_id`: `Forbidden`, naming the first three entries and how many more,
+  through the compendium's own filter on the pick (`IngredientFilter.formId`)
+  and the shared `heldBy` the category delete now uses too. A same-named form
+  no entry picked deletes. A coven's pick never blocks it.
+- **A rename carries the new name onto every live compendium entry picking
+  the form, in the same transaction**, through `write.carryFormRename`: each
+  entry's `form` text, so its `canonical_key`, and its slug,
+  `ingredientSlug(name, newForm, canonicalName)`, the old slug retired to
+  redirect for 180 days as `updateCompendiumEntry` retires one, and the
+  tier's lapsed retirements cleared in the same write. A case-only rename
+  rewrites the text and moves no slug. A change of group alone rewrites no
+  entry, which holds the form's name, not its group.
+- **The rename is refused rather than half-carried.** Before the write it
+  refuses, on `name` and naming both entries, a rewrite that would give an
+  entry another live entry's identity or address. A collision an index finds
+  inside the transaction, from a race, is read again and named the same way.
+  A rewrite onto an address another entry's redirect runs from is refused on
+  `endRedirect`, naming each entry and when its window closes, until the
+  admin confirms (MB.82).
+- **A coven's ingredient is never written.** One that picked the form keeps
+  its `form_id`, its text and its slug through a rename, and through a delete
+  reads its form as no pick, its text moving into that coven's in-use values.
+  An admin writes nothing of a coven's (M6.6). A pick whose row was renamed
+  since is the member's to settle, on M8.17's modal.
+- **The entries are read before the transaction**, as the category delete's
+  are. An entry picking the form in the instant between keeps the old
+  spelling through a rename, or holds a deleted form through a delete. The
+  writer matches `form_id` again, so an entry that picked another form since
+  is not rewritten.
+
+The owner's calls on the slug, the redirect and the stale pick are
+[`design-decisions/m5.6a-admin-forms.md`](../design-decisions/m5.6a-admin-forms.md).
+Revalidating the `compendium` tag after each write is M8.7's.

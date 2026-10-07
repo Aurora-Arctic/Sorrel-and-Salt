@@ -2,8 +2,6 @@ import 'server-only';
 import {
   findCategoryCount,
   findCategoryPage,
-  findCompendiumCount,
-  findCompendiumPage,
   findOneById,
   findOneBySlug,
   findPage,
@@ -18,6 +16,7 @@ import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
 import { categories, categoryGroups } from '../schema/categories';
 import { CategoryInput } from '../validation/category';
+import { heldBy } from './held-entries';
 import type { CategoryFilter, CategoryGroupRow, CategoryRow } from '../types';
 
 // The category vocabulary: its reads, public reference data like every
@@ -25,9 +24,6 @@ import type { CategoryFilter, CategoryGroupRow, CategoryRow } from '../types';
 // A delete leaves every link in place and every read drops a deleted
 // category; it is refused only while a live compendium entry is filed under
 // it (claude-docs/db/categories.md, "Category writes").
-
-/** How many entries a refused delete names before it counts the rest. */
-const ENTRIES_NAMED = 3;
 
 /**
  * One page of the live categories under `filter`, by group then name, each under a live
@@ -164,42 +160,17 @@ async function parseCategory(input: CategoryInput): Promise<CategoryInput> {
 /**
  * The refusal of a delete while live compendium entries are filed under the
  * category: the first few by name, each told apart from a namesake, and how
- * many more. Read through the
- * compendium's own category filter, so "filed under" means what the
- * compendium's list means by it.
+ * many more, read through the compendium's own category filter.
  */
 async function refuseWhileFiled(category: CategoryRow): Promise<void> {
-  const filter = { categoryIds: [category.id] };
-  const { totalCount } = await findCompendiumCount(filter, undefined);
-  if (totalCount === 0) return;
-  const named = await findCompendiumPage(filter, { limit: ENTRIES_NAMED, inverted: false });
-  const names = named.map(({ node }) => describeEntry(node));
-  const rest = totalCount - names.length;
-  const list =
-    rest > 0
-      ? `${names.join(', ')} and ${rest} more`
-      : names.length === 1
-        ? names[0]
-        : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+  const held = await heldBy({ categoryIds: [category.id] });
+  if (!held) return;
+  const { totalCount, list } = held;
   const entries = totalCount === 1 ? 'entry' : 'entries';
   const them = totalCount === 1 ? 'it' : 'them';
   throw new Forbidden(
     `"${category.name}" is filed on ${totalCount} compendium ${entries} — ${list}. Take it off ${them} first.`,
   );
-}
-
-/**
- * An entry as a person tells it apart, as the compendium's own refusals name
- * one: its label, then its formal name and form — two entries may share a
- * label.
- */
-function describeEntry(entry: {
-  name: string;
-  canonicalName: string | null;
-  form: string | null;
-}): string {
-  const identity = [entry.canonicalName, entry.form].filter(Boolean).join(', ');
-  return identity ? `${entry.name} (${identity})` : entry.name;
 }
 
 /**
