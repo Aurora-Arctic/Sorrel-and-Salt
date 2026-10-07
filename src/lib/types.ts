@@ -100,6 +100,15 @@ export interface GroupColors {
   colorLight: string;
 }
 
+/** Which of a group's two colours: the one the dark theme wears, or the light (MB.36). */
+export type GroupColorColumn = keyof GroupColors;
+
+/**
+ * The two axes of a colour picker's area, as it lays them out for a format
+ * (M5.6b): saturation across, and brightness or lightness up, 100 at the top.
+ */
+export type AreaSpace = 'hsb' | 'hsl';
+
 /**
  * The five kinds of source `references.kind` holds (MB.151), spelled here
  * because a lib file imports no module; a row's `ReferenceKind` must stay
