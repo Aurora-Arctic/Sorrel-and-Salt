@@ -458,7 +458,8 @@ the tests [`tests.md`](tests.md).
 Specified in DESIGN.md §5 and argued in
 [`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md);
 none of it is built yet. Until MB.58 and MB.59 land, a second admin is an
-`UPDATE` in `psql`. The tasks that build it:
+`UPDATE` in `psql`, setting `can_create_workspace` with `role`: MB.177's CHECK
+refuses an admin without the flag. The tasks that build it:
 
 - **MB.58 and MB.59**: the `admin_role_changes` ledger, and granting and
   revoking any other admin from `/admin/users`. The primary admin can be

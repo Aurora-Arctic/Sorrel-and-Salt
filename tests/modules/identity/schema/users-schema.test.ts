@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { statementsOfMigrationContaining } from '../../../support/db/migrations';
 import { tableFacts } from '../../../support/db/table-metadata';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { users } from '@/modules/identity/schema/users';
@@ -103,5 +104,93 @@ describe('users email case', () => {
 
   it('accepts a lower-case address, so the check is the case and not the insert', async () => {
     await expect(insert('someone@case-check.test')).resolves.toBeDefined();
+  });
+});
+
+// MB.177: the flag is what lets anyone create a workspace, admins included, so
+// a CHECK holds every admin to it rather than the gate reading `role` beside
+// it (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
+describe('users admin creation flag', () => {
+  let sql: postgres.Sql;
+  useTestDatabase((client) => {
+    sql = client;
+  });
+
+  const CONSTRAINT = 'users_admin_can_create_workspace';
+
+  const insert = (email: string, role: 'user' | 'admin', canCreateWorkspace: boolean) => sql<
+    { id: string }[]
+  >`
+    insert into users (name, email, role, can_create_workspace, created_by, updated_by)
+    values ('Fixture Person', ${email}, ${role}, ${canCreateWorkspace},
+            ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+    returning id
+  `;
+
+  it('refuses an admin row without the flag', async () => {
+    const error = await failureOf(insert('flagless-admin@admin-flag.test', 'admin', false));
+
+    // 23514 is check_violation.
+    expect(error.code).toBe('23514');
+    expect(error.constraint_name).toBe(CONSTRAINT);
+  });
+
+  // Why the refusal is the check and not the insert: the same row with the
+  // flag goes in, and a user needs no flag at all.
+  it('accepts an admin holding the flag, and a user without it', async () => {
+    await expect(insert('flagged-admin@admin-flag.test', 'admin', true)).resolves.toHaveLength(1);
+    await expect(insert('flagless-user@admin-flag.test', 'user', false)).resolves.toHaveLength(1);
+  });
+
+  it('refuses making a user admin without the flag, and accepts both together', async () => {
+    const [{ id }] = await insert('promoted@admin-flag.test', 'user', false);
+
+    const error = await failureOf(sql`update users set role = 'admin' where id = ${id}`);
+
+    expect(error.code).toBe('23514');
+    expect(error.constraint_name).toBe(CONSTRAINT);
+    await sql`update users set role = 'admin', can_create_workspace = true where id = ${id}`;
+    const [row] =
+      await sql`select role::text as role, can_create_workspace from users where id = ${id}`;
+    expect(row).toEqual({ role: 'admin', can_create_workspace: true });
+  });
+
+  // The migration's own SQL re-runs against rows a database deployed before it
+  // could hold: the constraint dropped first, as it was not there then.
+  it('backfills every admin, soft-deleted included, stamped as that admin, before the check', async () => {
+    await sql.unsafe(`alter table users drop constraint ${CONSTRAINT}`);
+    const liveAdmin = '00000000-0000-0000-0000-0000000000fa';
+    const deletedAdmin = '00000000-0000-0000-0000-0000000000fb';
+    const user = '00000000-0000-0000-0000-0000000000fc';
+    await sql`
+      insert into users (id, name, email, role, can_create_workspace, created_by, updated_by, deleted_at, deleted_by)
+      values
+        (${liveAdmin}, 'Live Admin', 'live@admin-flag.test', 'admin', false,
+         ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID}, null, null),
+        (${deletedAdmin}, 'Lapsed Admin', 'lapsed@admin-flag.test', 'admin', false,
+         ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID}, now(), ${BOOTSTRAP_USER_ID}),
+        (${user}, 'Plain User', 'plain@admin-flag.test', 'user', false,
+         ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID}, null, null)
+    `;
+
+    const statements = statementsOfMigrationContaining(`ADD CONSTRAINT "${CONSTRAINT}"`);
+    // The backfill, then the check it makes room for.
+    expect(statements).toHaveLength(2);
+    for (const statement of statements) await sql.unsafe(statement);
+
+    const rows = await sql`
+      select id, can_create_workspace, updated_by from users
+      where id in (${liveAdmin}, ${deletedAdmin}, ${user}) order by id
+    `;
+    expect(rows).toEqual([
+      { id: liveAdmin, can_create_workspace: true, updated_by: liveAdmin },
+      { id: deletedAdmin, can_create_workspace: true, updated_by: deletedAdmin },
+      { id: user, can_create_workspace: false, updated_by: BOOTSTRAP_USER_ID },
+    ]);
+    const [constraint] = await sql`
+      select convalidated from pg_constraint
+      where conrelid = 'users'::regclass and conname = ${CONSTRAINT}
+    `;
+    expect(constraint).toEqual({ convalidated: true });
   });
 });
