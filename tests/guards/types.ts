@@ -97,3 +97,9 @@ export interface ImportEdge {
   from: string;
   to: string;
 }
+
+/** The little of a Vitest project's config the connection-budget guard reads. */
+export interface Project {
+  test?: { name?: unknown };
+  plugins?: unknown;
+}

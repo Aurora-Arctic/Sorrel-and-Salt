@@ -1,4 +1,5 @@
 import type { PgTable } from 'drizzle-orm/pg-core';
+import type postgres from 'postgres';
 
 export interface IndexRow {
   unique: boolean;
@@ -47,3 +48,6 @@ export interface ReferenceSeed {
   url?: string | null;
   accessed?: string | null;
 }
+
+/** What `postgres()` takes beside a URL, as bounded-postgres.ts passes it on. */
+export type ClientOptions = postgres.Options<Record<string, postgres.PostgresType>> | undefined;
