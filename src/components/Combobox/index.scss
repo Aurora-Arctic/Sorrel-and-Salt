@@ -22,8 +22,11 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 
 // `.input`'s edge, fill and states, as a flex row that wraps: the entries,
 // then the text, then the indicators. The padding comes down a step so the
-// entries sit inside it at the control's height.
-.combobox__control {
+// entries sit inside it at the control's height. Compounded with `.input`,
+// whose primitive is `body .input` in the app: a lone class loses to it, and
+// every box stood 8px over $control-height there, while the workshop's
+// unweighted frame scope hid it (M5.5).
+.input.combobox__control {
   display: flex;
   flex-wrap: wrap;
   align-items: center;

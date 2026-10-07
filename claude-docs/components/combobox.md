@@ -23,24 +23,24 @@ movable, on dnd-kit.
 
 ## The props contract
 
-| Prop               | Meaning                                                                                                                                                                           |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`               | The box's id, which a label element's `htmlFor` names.                                                                                                                            |
-| `label`            | What the box is called. Its `aria-label` unless `labelId` is given, and the name of its list, "Form suggestions", its status region and its chevron, "Show Form suggestions".     |
-| `labelId`          | The id of a label element naming the box, which then carries no `aria-label`.                                                                                                     |
-| `value`/`onChange` | The text, held by the caller: a form field's value, or a list's box.                                                                                                              |
-| `onPick`           | `(value, option)`: a suggestion chosen, or the typed row, which comes with `null`. The text is the caller's to change, so a field fills itself and a list empties its box.        |
-| `onCommit`         | Enter with no suggestion highlighted: a list's add. Without it, Enter closes an open list and otherwise reaches the form, as a text box's does.                                   |
-| `onRemoveLast`     | Backspace or Delete in an empty box: a list takes its last entry, as react-select does. With text in the box the keys edit it as usual.                                           |
-| `suggestions`      | `{ options, pending }` for the text as it stands. Left out for a box with no source, which never opens, has no chevron and no status region.                                      |
-| `entries`          | What a list holds, drawn inside the control ahead of the text.                                                                                                                    |
-| `qualifier`        | `{ text, detail? }`: what a pick leaves out of the text, a picked form's group, in brackets after the text, muted, its detail in a tooltip. See "A qualifier".                    |
-| `clear`            | `{ label, onClear }`: a control that empties the list, shown while it holds entries, named "Clear Folk Names".                                                                    |
-| `listAnchor`       | The element the open list spans and opens beside: a list field's row, its box and its Add together. The control when left out. See "Where the list opens".                        |
-| `create`           | `{ label, onCreate }`: a first row that makes something new, "Add a reference", in place of the typed row, there with a blank box too. See "The create row".                      |
-| `offerTyped`       | Whether the typed row is offered; `true` unless said. A list passes `false` for text it would refuse, a repeat (MB.174). Enter with nothing highlighted still reaches `onCommit`. |
-| `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                                   |
-| `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                                |
+| Prop               | Meaning                                                                                                                                                                                                                                                                                        |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`               | The box's id, which a label element's `htmlFor` names.                                                                                                                                                                                                                                         |
+| `label`            | What the box is called. The text of a visually hidden `<label>` of its own unless `labelId` is given, not an `aria-label`: Chrome's Issues panel flags an input no `<label>` names. Also the name of its list, "Form suggestions", its status region and its chevron, "Show Form suggestions". |
+| `labelId`          | The id of a label element naming the box, which then renders no label of its own.                                                                                                                                                                                                              |
+| `value`/`onChange` | The text, held by the caller: a form field's value, or a list's box.                                                                                                                                                                                                                           |
+| `onPick`           | `(value, option)`: a suggestion chosen, or the typed row, which comes with `null`. The text is the caller's to change, so a field fills itself and a list empties its box.                                                                                                                     |
+| `onCommit`         | Enter with no suggestion highlighted: a list's add. Without it, Enter closes an open list and otherwise reaches the form, as a text box's does.                                                                                                                                                |
+| `onRemoveLast`     | Backspace or Delete in an empty box: a list takes its last entry, as react-select does. With text in the box the keys edit it as usual.                                                                                                                                                        |
+| `suggestions`      | `{ options, pending }` for the text as it stands. Left out for a box with no source, which never opens, has no chevron and no status region.                                                                                                                                                   |
+| `entries`          | What a list holds, drawn inside the control ahead of the text.                                                                                                                                                                                                                                 |
+| `qualifier`        | `{ text, detail? }`: what a pick leaves out of the text, a picked form's group, in brackets after the text, muted, its detail in a tooltip. See "A qualifier".                                                                                                                                 |
+| `clear`            | `{ label, onClear }`: a control that empties the list, shown while it holds entries, named "Clear Folk Names".                                                                                                                                                                                 |
+| `listAnchor`       | The element the open list spans and opens beside: a list field's row, its box and its Add together. The control when left out. See "Where the list opens".                                                                                                                                     |
+| `create`           | `{ label, onCreate }`: a first row that makes something new, "Add a reference", in place of the typed row, there with a blank box too. See "The create row".                                                                                                                                   |
+| `offerTyped`       | Whether the typed row is offered; `true` unless said. A list passes `false` for text it would refuse, a repeat (MB.174). Enter with nothing highlighted still reaches `onCommit`.                                                                                                              |
+| `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                                                                                                                                                |
+| `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                                                                                                                                             |
 
 A `ComboboxOption` is `{ value, label?, note?, curated?, heading?, key? }`: the text a
 pick writes, the row's text when it is more than the value ("Wax (Animal)"), a
@@ -67,7 +67,10 @@ reader as well as by the eye, and so is who claims a value.
 - **Two buckets, told apart by structure.** Rows with `curated` set are
   grouped under "From Compendium" and "From Coven" headings (renamed from
   "Curated" and "In use" during MB.131, on the owner's call), `role="group"` inside the
-  listbox, each named by its heading. The headings say where a value comes
+  listbox, each named by its heading. The group is a `div` inside a
+  presentational `li`, which the accessibility tree leaves out: ARIA allows
+  no `group` role on an `li`, which M5.5's scan caught (axe's
+  `aria-allowed-role`). The headings say where a value comes
   from, and are true because a compendium entry holds curated values alone
   (MB.162), so every value in use outside the lists is the coven's; a source whose rows carry no `curated`
   lists them flat. The distinction is text, never colour alone. Two same-named rows, "Wax (Animal)" and "Wax (Substance)", are told apart in the list by the group in each label. Both write "Wax", since `ingredients.form` stores the string, so after a pick the box tells them apart by its qualifier, the group a caller passes for the row it picked (MB.169; DESIGN.md §5).
@@ -415,7 +418,12 @@ than a second one.
 
 Tokens, mixins and the form primitives only. The control is the `.input`
 primitive opened up as a wrapping flex row, its padding a step down so the
-entries sit inside it; the ring and the error edge are drawn on the control
+entries sit inside it. The rule is `.input.combobox__control`, compounded:
+the app emits the primitive as `body .input`, which a lone class loses to, so
+every box stood 8px over `$control-height` beside its button there (found in
+M5.5). The workshop scopes the primitives in `:where()`, which weighs
+nothing, so it never showed; a height check in
+`tests/e2e/admin-compendium.spec.ts` holds the app to it; the ring and the error edge are drawn on the control
 from the box's own states, `:has(.combobox__input:focus-visible)` and
 `.is-invalid`. The multi-select's box takes the text's place and styles,
 `.combobox__input--select`, so the same ring is drawn for it. The list floats beneath at the control's width on
@@ -523,5 +531,7 @@ swallows every click, so that it swallows no later test's.
 `tests/lib/debounce.test.tsx` covers the hook with fake timers.
 
 Accessibility is asserted in Playwright once a page holds the form, as
-[`ingredient-form.md`](ingredient-form.md) says; M5.5's admin page carries the
-first scan.
+[`ingredient-form.md`](ingredient-form.md) says; M5.5's
+`tests/e2e/admin-compendium.spec.ts` carries the first scan, with a lookup's
+list open in the compendium form's modal. It found the group role on an
+`li`, since fixed, and passes.

@@ -33,7 +33,7 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   id: string;
   /** What the box is called: its accessible name, and the list's and its status's. */
   label: string;
-  /** The id of a label element naming the box, which then carries no `aria-label` of its own. */
+  /** The id of a label element naming the box, which then renders no hidden label of its own. */
   labelId?: string;
   value: string;
   onChange: (value: string) => void;
