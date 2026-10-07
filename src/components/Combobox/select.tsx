@@ -3,6 +3,7 @@
 import { useSelect } from 'downshift';
 import type { ReactElement } from 'react';
 import { ChevronIcon } from './icons';
+import { useListPosition } from './position';
 import type { ComboboxChoice, ComboboxSelectProps } from './types';
 
 // The combobox's closed-set sibling: the same control and list, on
@@ -41,9 +42,11 @@ export function ComboboxSelect({
         if (selectedItem) onChange(selectedItem.value);
       },
     });
+  // Floated as the suggesting box's is, so a modal holding it does not stretch (M5.6).
+  const { setControl, setList, listStyle, placement } = useListPosition(isOpen);
 
   return (
-    <div className="combobox">
+    <div className="combobox" ref={setControl}>
       {/* The control is the box itself: nothing is typed, so the whole of it
           is the one target, and it takes the focus. */}
       <div
@@ -75,7 +78,10 @@ export function ComboboxSelect({
       {/* Always in the page, as Downshift asks; empty and hidden while closed. */}
       <ul
         className={isOpen ? 'combobox__list is-open' : 'combobox__list'}
-        {...getMenuProps({ 'aria-label': `${label} choices` })}
+        // Placed beneath or above the box, as there is room (useListPosition).
+        style={listStyle}
+        data-placement={placement}
+        {...getMenuProps({ ref: setList, 'aria-label': `${label} choices` })}
       >
         {isOpen &&
           choices.map((choice, index) => (
