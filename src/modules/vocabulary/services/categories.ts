@@ -4,7 +4,6 @@ import {
   findCategoryPage,
   findOneById,
   findOneBySlug,
-  findPage,
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
@@ -17,7 +16,7 @@ import { assertSiteAdmin } from '@/modules/identity';
 import { categories, categoryGroups } from '../schema/categories';
 import { CategoryInput } from '../validation/category';
 import { heldBy } from './held-entries';
-import type { CategoryFilter, CategoryGroupRow, CategoryRow } from '../types';
+import type { CategoryFilter, CategoryRow } from '../types';
 
 // The category vocabulary: its reads, public reference data like every
 // curated vocabulary (MB.80), and its writes, the site admin's alone (M5.6).
@@ -49,11 +48,6 @@ export async function countCategories(
 ): Promise<PageCount> {
   const read = readable(filter);
   return read ? findCategoryCount(read, start) : { totalCount: 0, countBefore: null };
-}
-
-/** One page of the live category groups, alphabetical by name (MB.35): the group a category is filed under is picked from these. */
-export function listCategoryGroups(page: PageRequest): Promise<PageEntry<CategoryGroupRow>[]> {
-  return findPage(categoryGroups, [categoryGroups.name], page);
 }
 
 /**

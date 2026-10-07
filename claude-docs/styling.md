@@ -24,8 +24,9 @@ to.
   colour; do not assume headroom.
 - **Only `_variables.scss` and the theme mixins may name a raw hue.** Needing a
   colour that is not a token means adding a token, not inlining one.
-- **The per-theme saturation lifts (+14% dark, +50% light) stay separate.**
-  Collapsing them to one number re-muds the light theme.
+- **The seeded group colours live only in `src/db/seed/category-groups.ts`.**
+  No Sass token restates them, and retuning one takes a data migration as well
+  as the seed edit, because the seed never overwrites a row it finds (M5.6b).
 - **Never wash a chip or badge ground with its own group colour.** The eight
   group hues are tuned to sit just above 4.5:1, so a visible wash drops them
   under; solid is the only treatment that holds.
@@ -36,7 +37,8 @@ to.
   foreground-on-background plus 3:1 on the border.
 - **The group hues sit at odd multiples of 22.5° off `$sorrel`**, so none
   collides with accent (96°) or secondary (8°). A ninth group is a row an admin
-  adds, outside the rotation, held to M5.6b's contrast check.
+  adds at `/admin/category-groups`, outside the rotation, its two colours
+  refused on write below 4.5:1 on their own grounds (M5.6b, below).
 - **`badge()` takes no variant argument, deliberately.** The mixins set colour,
   edge and geometry only — never width, margin, layout or a modal backdrop. A
   component restating a mixin's colour is a bug.
@@ -142,41 +144,46 @@ lands on the accent hue (96°) or the secondary hue (8°), both already claimed 
 the UI chrome — a category chip wearing the accent colour would read as selected
 when it is not.
 
-| Slug         | Step | Hue    | Reads as     |
-| ------------ | ---- | ------ | ------------ |
-| `wellbeing`  | 1    | 118.5° | jade         |
-| `cleansing`  | 3    | 163.5° | teal         |
-| `protection` | 5    | 208.5° | steel blue   |
-| `mind`       | 7    | 253.5° | indigo       |
-| `craft`      | 9    | 298.5° | violet       |
-| `love`       | 11   | 343.5° | rose         |
-| `practice`   | 13   | 28.5°  | hearth amber |
-| `prosperity` | 15   | 73.5°  | gold         |
+| Group                | Step | Hue    | Reads as     |
+| -------------------- | ---- | ------ | ------------ |
+| Wellbeing            | 1    | 118.5° | jade         |
+| Cleansing & Release  | 3    | 163.5° | teal         |
+| Protection & Defense | 5    | 208.5° | steel blue   |
+| Mind & Spirit        | 7    | 253.5° | indigo       |
+| Craft & Change       | 9    | 298.5° | violet       |
+| Love & Connection    | 11   | 343.5° | rose         |
+| Practice & Place     | 13   | 28.5°  | hearth amber |
+| Prosperity & Work    | 15   | 73.5°  | gold         |
 
-**Saturation is lifted off `$sorrel` by one amount per theme** — the same lift
-for all eight, which is what keeps them reading as one family while letting each
-theme set its own intensity. Light needs by far the bigger lift (+50% against
-dark's +14%): to clear 4.5:1 on parchment a colour has to stay dark, and a dark
-colour at moderate saturation reads as mud rather than as colour. Dark lightens
-its colours instead, where moderate saturation already reads clearly.
+**The rotation is the rule; saturation and lightness are the owner's
+hand-tuning.** Each seeded pair is two hexes in `src/db/seed/category-groups.ts`,
+that file is their only source, and `tests/db/seed/categories.test.ts` holds
+both hexes of every pair within 2° of its step (every hue is in fact within
+1.04°) and to 4.5:1 on its own theme's page, `$soot` or `$parchment`. Every
+dark hex also clears the dark card, the harder dark surface, at 4.64:1 or
+better; the closest light hex is Mind & Spirit's, at 4.52:1 on the page. Within a group, the two
+hexes keep one hue to within 0.51°. Across groups they no longer share a
+saturation: dark-theme saturations run 30–50%, light-theme 37–75%, because
+equal HSL lightness and saturation are not equal perceived colour, and each
+pair was tuned by hand against the contrast floor rather than by formula. The
+light theme still runs the more saturated of the two: to clear 4.5:1 on
+parchment a colour has to stay dark, and a dark colour at moderate saturation
+reads as mud rather than as colour.
 
-**Lightness is then trimmed per group, and only as far as the contrast floor
-demands.** Equal HSL lightness is not equal perceived lightness: indigo takes a
-+34% lift to clear 4.5:1 on soot where jade takes +9%. The light-theme trims are
-`0%` or a small negative; the dark-theme trims run +7% to +34%.
-
-**That is now the seed's source and nothing else.** A group's colours are a
-pair of hexes on its `category_groups` row (MB.35): M4.3 resolved each map entry
-to the two hexes it wrote, and a chip reads the row, never the map (MB.36). A
-ninth group is a row an admin adds with M5.6b's two pickers, each checked
-against the harder of its own theme's two surfaces; it is legible in both themes but does not join
-the rotation (§6).
+**M0.7's `$category-groups` map is retired** (M5.6b). It lifted every group by
+one saturation per theme and trimmed lightness per group, which the hand-tuned
+pairs no longer follow, and it had been nothing but the seed's source since
+MB.35 put a group's colours on its `category_groups` row as a pair of hexes; a
+chip reads the row (MB.36). A ninth group is a row an admin adds with M5.6b's two pickers, each previewing
+its chip and ratio on its own ground and each refused on write below 4.5:1
+against the harder of its own theme's two surfaces; it is legible in both
+themes but does not join the rotation (§6).
 
 ## Badge palettes
 
 Three palettes, deliberately not equals. Two appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
-saturation alongside the groups. **Low stock** is an inventory state, not an
+saturation. **Low stock** is an inventory state, not an
 alarm (story 54), so it takes the muted ink and is left unsaturated. That keeps
 exactly one alarming badge in the app and spends no hue, which matters because every
 hue not already reserved belongs to one of the eight groups. **Last used** marks
@@ -266,7 +273,8 @@ takes the pair rather than a slug, and by default reads it from the element's
 already set, so the per-theme switch `semantic-tokens` once made at build time
 happens at the element, and a theme toggle re-colours a chip without a render.
 It replaced one `--group-<slug>` custom property and one `.chip--<slug>` class
-per key of `$category-groups`, which a group created at runtime cannot have.
+per key of M0.7's `$category-groups` map (since retired), which a group created
+at runtime cannot have.
 `tests/guards/chip-colour-source.test.ts` fails if either shape returns, in a
 source file or in any stylesheet's compiled CSS, and `chip()` refuses a slug at
 compile time.
@@ -279,13 +287,18 @@ project writes either.
 **The contrast holds for any colour the write check admits.** An unselected
 chip's label is the colour itself on whatever surface holds the chip, a page or
 a card, and a selected chip's label is `$text-on-color`, the page surface, on a
-fill of that colour. So M5.6b checks each colour against the harder of its own
-theme's two surfaces: `colorDark` against the dark card, which is lighter than
+fill of that colour. So M5.6b's `CategoryGroupInput` refuses a colour under
+4.5:1 against the harder of its own theme's two surfaces: `colorDark` against the dark card, which is lighter than
 the dark page, and `colorLight` against the light page, which is darker than
 the light card. Clearing that surface clears the other, and the selected label
 with it. Checked against the dark page instead, a dark colour could clear the
 floor and still read under it on a card: the seeded eight measure 5.1–5.3:1 on
-the dark page and 4.6–4.8:1 on the dark card (MB.36).
+the dark page and 4.6–4.8:1 on the dark card (MB.36). The arithmetic is
+`src/lib/contrast.ts`: WCAG 2.1's ratio, and the two grounds as hexes,
+`#1f1c16` and `#efe9da`, written out because nothing at runtime can import a
+Sass value, so `tests/lib/contrast.test.ts` pins them to `$soot-raised` and
+`$parchment` in `_variables.scss`. A change to either token fails that test
+until the check follows it.
 
 Badges are square-cornered, which is what keeps a badge from reading as a chip
 now that chips are pills. Both shapes set their label to weight 500, a step over
@@ -330,7 +343,7 @@ the three the scale uses (500/600/700) are requested.
 
 Every margin, padding and gap takes a step from `space()`, eight steps on a
 0.25rem base: 0.25, 0.5, 0.75, 1, 1.5, 2, 3 and 4rem. `space(4)` is 1rem. An
-unknown step fails to compile, as a mistyped group does. The steps are the
+unknown step fails to compile, as a mistyped theme does. The steps are the
 values the components had already converged on; the few between them (0.375,
 0.625, 1.25rem) fold into a neighbour when their section is designed.
 
@@ -469,15 +482,15 @@ CompendiumList (M5.5) and VocabularyValueList (MB.95) are on it too.
 
 The class layer every form is built from, in `_primitives.scss`:
 
-| Class                                            | What it is                                                                                                                                                                                                                    |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.form`, `.form__actions`                        | The column of fields, a `space(5)` apart, and the row of buttons after it, `space(2)` further off and as far again from what follows: 2rem either side in a modal (M5.5). A `.modal__actions` row in a `.form` takes the same |
-| `.field`                                         | One field: label, optional hint, control and error, `space(2)` apart                                                                                                                                                          |
-| `.field__label`, `.field__hint`, `.field__error` | The parts around the control                                                                                                                                                                                                  |
-| `.input`, `.textarea`, `.select`                 | The control, one box for all three                                                                                                                                                                                            |
-| `.checkbox`                                      | A `<label>` wrapping its box, so the whole line is the target                                                                                                                                                                 |
-| `.fieldset`, `.fieldset__legend`                 | Rows under one name: checkboxes, or a list of entries                                                                                                                                                                         |
-| `.notice`, `--error`, `--success`                | A sentence about the whole view rather than one field                                                                                                                                                                         |
+| Class                                            | What it is                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.form`, `.form__actions`                        | The column of fields, a `space(5)` apart, and the row of buttons after it, `space(2)` further off and as far again from what follows: 2rem either side in a modal (M5.5). A `.modal__actions` row in a `.form` takes the same                                                                                                            |
+| `.field`                                         | One field: label, optional hint, control and error, `space(2)` apart                                                                                                                                                                                                                                                                     |
+| `.field__label`, `.field__hint`, `.field__error` | The parts around the control                                                                                                                                                                                                                                                                                                             |
+| `.input`, `.textarea`, `.select`                 | The control, one box for all three                                                                                                                                                                                                                                                                                                       |
+| `.checkbox`                                      | A `<label>` wrapping its box, so the whole line is the target                                                                                                                                                                                                                                                                            |
+| `.fieldset`, `.fieldset__legend`                 | Rows under one name: checkboxes, or a list of entries                                                                                                                                                                                                                                                                                    |
+| `.notice`, `--error`, `--warn`, `--success`      | A sentence about the whole view rather than one field `--error` and `--warn` lead with a warning triangle, drawn by mask in the box's padding so a link in the text stays inline: in the error's red on an error, and in the error red on a warning's plain box and ink, for what needs attention but does not block (the owner's call). |
 
 - **A field's hint is an info tip beside its label** (`InfoTip`,
   [`components/info-tip.md`](components/info-tip.md)), not a line beneath it:
@@ -524,6 +537,8 @@ The class layer every form is built from, in `_primitives.scss`:
   one on a dim screen. The label dims for a disabled control only, not any
   disabled descendant, since a select's placeholder is a disabled option. A
   component never restates it.
+
+**A narrow form stacks its buttons.** A `.form` is a size container, and under 28rem of its own width its `.form__actions` or `.modal__actions` row turns to a column: each button full width, in order, any `margin-inline` pushing a Delete aside reset. Above that, every form's row fits one line. It keys off the form's width rather than the screen's, so a form in a narrow modal stacks too (the owner's call).
 
 ## Designing a section
 
@@ -573,8 +588,7 @@ heavier than the reverse; light reverts to the browser default.
 
 ## The files
 
-- `src/scss/_variables.scss` — base colour palette, the category-group seed
-  map, badge tokens, the `$font-body` / `$font-heading` / `$font-mono` stacks, the
+- `src/scss/_variables.scss` — base colour palette, badge tokens, the `$font-body` / `$font-heading` / `$font-mono` stacks, the
   `$measure`, and the three scales with their accessors — `type-size()`,
   `space()` and `radius()` — a component `@use`s directly.
 - `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `tip-bubble`,

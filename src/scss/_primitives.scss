@@ -372,6 +372,36 @@
     color: $secondary;
   }
 
+  // The warning triangle before an error or a warning, the owner's call: in
+  // the notice's padding rather than in a flex row, so a link in the
+  // notice's text stays inline. Drawn by mask, so it takes the notice's ink,
+  // or the error red on a warning.
+  .notice--error,
+  .notice--warn {
+    position: relative;
+    padding-inline-start: calc(#{space(4)} + 1.0125rem + #{space(2)});
+
+    &::before {
+      content: '';
+      position: absolute;
+      // On the first line of text (the owner's call).
+      inset-block-start: 0.8rem;
+      inset-inline-start: space(4);
+      inline-size: 1.0125rem;
+      block-size: 1.0125rem;
+      background-color: currentColor;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.75 15 14.25H1Z' fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M8 6.25v4' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E%3Ccircle cx='8' cy='12.1' r='0.85'/%3E%3C/svg%3E")
+        center / contain no-repeat;
+    }
+  }
+
+  // A warning: the plain notice's box and ink, its triangle in the error red,
+  // for what deserves attention but does not block, such as a colour too near
+  // another group's (the owner's call).
+  .notice--warn::before {
+    background-color: $secondary;
+  }
+
   .notice--success {
     border-color: $accent;
     color: $accent;
@@ -391,6 +421,24 @@
     flex-direction: column;
     // Wider than a field's own gap, so each field reads as one group.
     gap: space(5);
+    // Its own width is what its buttons fit in, so they stack by it below.
+    container-type: inline-size;
+  }
+
+  // A phone-width form stacks its buttons, full width and in order, rather
+  // than wrapping them unevenly with a Delete pushed off to one side (the
+  // owner's call): every form's row of three fits on one line above 28rem.
+  @container (max-width: 28rem) {
+    .form .form__actions,
+    .form .modal__actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .form .form__actions > *,
+    .form .modal__actions > * {
+      margin-inline: 0;
+    }
   }
 
   .form__actions {

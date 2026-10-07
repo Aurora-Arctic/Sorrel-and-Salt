@@ -25,3 +25,12 @@
 .category-list__description {
   max-width: $measure;
 }
+
+// More room in a row than the primitive gives, and its contents centred, as
+// the group list's: a chip and a small button stand taller than a line of
+// text (the owner's call). Under the list's class, which outranks the
+// primitive's `body` scope.
+.category-list .data-table td {
+  padding-block: space(3);
+  vertical-align: middle;
+}

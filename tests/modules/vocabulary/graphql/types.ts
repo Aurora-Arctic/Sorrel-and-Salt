@@ -99,3 +99,21 @@ export interface AstrologyValueConnection {
   edges: { cursor: string; node: AstrologyValueNode }[];
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
 }
+
+/** A category group as M5.6b's writes answer it. */
+export interface CategoryGroupNode {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  colorDark: string;
+  colorLight: string;
+}
+
+/** A form group as M5.6b's writes answer it. */
+export interface FormGroupNode {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+}

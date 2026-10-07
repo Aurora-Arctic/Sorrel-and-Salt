@@ -33,6 +33,15 @@ export interface FormRewrite {
   slug: string;
 }
 
+/**
+ * A live form a form group's rename or delete moves (M5.6b), and the slug its
+ * name and its new group's name give it: the same slug when neither changed.
+ */
+export interface FormMove {
+  form: IngredientFormValueRow;
+  slug: string;
+}
+
 export type DeityRow = typeof deities.$inferSelect;
 
 export type DeityTraditionRow = typeof deityTraditions.$inferSelect;

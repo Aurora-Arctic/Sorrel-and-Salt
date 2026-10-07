@@ -22,6 +22,13 @@ type CategoryGroup {
   slug: String!
 }
 
+input CategoryGroupInput {
+  colorDark: String!
+  colorLight: String!
+  description: String!
+  name: String!
+}
+
 input CategoryInput {
   description: String!
   groupId: ID!
@@ -196,6 +203,11 @@ type IngredientFormGroup {
   slug: String!
 }
 
+input IngredientFormGroupInput {
+  description: String!
+  name: String!
+}
+
 type IngredientFormValue {
   description: String!
   group: IngredientFormGroup!
@@ -267,6 +279,7 @@ scalar LocalDate
 
 type Mutation {
   createCategory(input: CategoryInput!): Category!
+  createCategoryGroup(input: CategoryGroupInput!): CategoryGroup!
   createCompendiumIngredient(
     """
     Confirms ending another entry's redirect from the address this write takes (MB.82).
@@ -274,6 +287,7 @@ type Mutation {
     endRedirect: Boolean
     input: CompendiumIngredientInput!
   ): Ingredient!
+  createIngredientFormGroup(input: IngredientFormGroupInput!): IngredientFormGroup!
   createIngredientFormValue(input: IngredientFormValueInput!): IngredientFormValue!
   createPlanet(input: PlanetInput!): Planet!
 
@@ -287,9 +301,19 @@ type Mutation {
   """
   deleteCategory(id: ID!): ID!
 
+  """
+  A soft delete; the live categories under it move to `moveTo` first, which they need when there are any.
+  """
+  deleteCategoryGroup(id: ID!, moveTo: ID): ID!
+
   """A soft delete; a spell holding the entry still reaches it."""
   deleteCompendiumIngredient(id: ID!): ID!
   deleteIngredient(id: ID!, workspaceId: ID!): ID!
+
+  """
+  A soft delete; the live forms under it move to `moveTo` first, re-slugged there, which they need when there are any.
+  """
+  deleteIngredientFormGroup(id: ID!, moveTo: ID): ID!
 
   """
   A soft delete, refused while a live compendium entry picked the form; a coven keeps its pick.
@@ -310,6 +334,11 @@ type Mutation {
   """Replaces the category; the slug follows the name."""
   updateCategory(id: ID!, input: CategoryInput!): Category!
 
+  """
+  Replaces the group; the slug follows the name. Each colour must clear 4.5:1 on its own theme.
+  """
+  updateCategoryGroup(id: ID!, input: CategoryGroupInput!): CategoryGroup!
+
   """Replaces the entry; the slug follows the name."""
   updateCompendiumIngredient(
     """
@@ -320,6 +349,11 @@ type Mutation {
     input: CompendiumIngredientUpdateInput!
   ): Ingredient!
   updateIngredient(id: ID!, input: IngredientUpdateInput!, workspaceId: ID!): Ingredient!
+
+  """
+  Replaces the group; the slug follows the name, and so does the slug of every form under it.
+  """
+  updateIngredientFormGroup(id: ID!, input: IngredientFormGroupInput!): IngredientFormGroup!
 
   """
   Replaces the form; the slug follows the name and the group. A rename is carried onto every live compendium entry that picked the form.

@@ -9,6 +9,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { chipColors } from '../../lib/chip-colors';
 import { ChevronIcon, ClearIcon } from './icons';
 import { useListPosition } from './position';
 import { useTip } from './tip';
@@ -252,6 +253,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   const row = (item: Item<O>) => {
     const at = index++;
     const highlighted = at === highlightedIndex;
+    const colors = isTyped(item) || isCreate(item) ? undefined : item.colors;
     return (
       <li
         key={keyOf(item)}
@@ -259,10 +261,12 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           'combobox__option',
           // The create row is no suggestion either, and reads as the typed row does.
           (isTyped(item) || isCreate(item)) && 'combobox__option--typed',
+          colors && 'is-coloured',
           highlighted && 'is-highlighted',
         ]
           .filter(Boolean)
           .join(' ')}
+        style={colors && chipColors(colors)}
         {...getItemProps({ item, index: at })}
       >
         {isCreate(item) && item.value}

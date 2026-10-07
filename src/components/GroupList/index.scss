@@ -1,0 +1,30 @@
+@use '../../scss/variables' as *;
+
+// Layout only, until the admin area's design review (MB.115): CategoryList's
+// shape without the filter. The table, the chip, Edit and the pager are
+// primitives (`.data-table`, `.chip`, `.btn--small`, `.pager`).
+
+.group-list {
+  display: flex;
+  flex-direction: column;
+  gap: space(5);
+
+  > p {
+    margin: 0;
+  }
+}
+
+// Running text that is not a `<p>`, so it takes the measure itself.
+.group-list__description {
+  max-width: $measure;
+}
+
+// More room in a row than the primitive gives, and its contents centred: a
+// chip and a small button stand taller than a line of text, so on the
+// primitive's baseline they sat hard against the band's top edge while the
+// text sat on its bottom (the owner's call). Under the list's class, which
+// outranks the primitive's `body` scope.
+.group-list .data-table td {
+  padding-block: space(3);
+  vertical-align: middle;
+}

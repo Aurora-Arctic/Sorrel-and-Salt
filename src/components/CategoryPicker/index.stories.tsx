@@ -14,10 +14,10 @@ export default {
 const INVENTED = ['Testward', 'Fixture Mending', 'Testcraft'];
 
 const GROUPS = [
-  { name: 'Protection & Defense', colorDark: '#4e8bc2', colorLight: '#0c5393' },
-  { name: 'Love & Connection', colorDark: '#cb6883', colorLight: '#930c31' },
-  { name: 'Mind & Spirit', colorDark: '#8e7bd1', colorLight: '#2b0c93' },
-  { name: 'Craft & Change', colorDark: '#c45dc7', colorLight: '#8f0c93' },
+  { name: 'Protection & Defense', colorDark: '#5d8ab1', colorLight: '#286ba6' },
+  { name: 'Love & Connection', colorDark: '#cf6e87', colorLight: '#a44c63' },
+  { name: 'Mind & Spirit', colorDark: '#8e7bd1', colorLight: '#6e4ce6' },
+  { name: 'Craft & Change', colorDark: '#c371c6', colorLight: '#a13ba5' },
 ];
 
 const CATEGORIES: PickerCategory[] = GROUPS.flatMap((seed, index) => {

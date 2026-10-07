@@ -302,6 +302,34 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   &.is-highlighted {
     background-color: color-mix(in srgb, $accent 22%, $surface-card);
   }
+
+  // A category's row marked in its group's colour on the theme's side, as its
+  // entry is filled: a bar set in from the row's edges, so each row's reads as
+  // its own, drawn as a background so its widening on hover moves nothing and
+  // the highlight's wash still shows.
+  &.is-coloured {
+    $bar: light-dark(var(--chip-light), var(--chip-dark));
+
+    background-image: linear-gradient($bar, $bar);
+    // Its left edge level with the group heading's text.
+    background-position: space(3) center;
+    background-repeat: no-repeat;
+    background-size: 3px calc(100% - #{space(2)});
+    // The text a step clear of the bar at its widest, so the hover pushes nothing.
+    padding-inline-start: calc(#{space(3)} + 5px + #{space(2)});
+    // Quicker than the theme's 400ms fade: it answers the pointer.
+    transition: background-size 150ms ease-out;
+
+    // Wider on the row the pointer or the arrow keys mark, moving nothing.
+    &.is-highlighted,
+    &:hover {
+      background-size: 5px calc(100% - #{space(2)});
+    }
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
 }
 
 .combobox__option--typed {

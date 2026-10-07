@@ -122,7 +122,10 @@ are M5.6a's, M5.6b's and MB.132's. "Following the link" is therefore a
 correction to those tasks, made here:
 
 - A delete is refused while a live compendium entry **links** the row, and so
-  is deleting a group or tradition with a row under it so linked.
+  is deleting a group or tradition with a row under it so linked. Amended by
+  M5.6b for form groups, whose delete moves its forms to another live group
+  instead, so no link is orphaned
+  ([`m5.6b-admin-groups.md`](m5.6b-admin-groups.md)).
 - A rename rewrites the text of the entries **linking** the row. A form's
   rename re-keys and re-slugs each.
 - The "last live spelling" clause goes for forms and deities: a link names one
