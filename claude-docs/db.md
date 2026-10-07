@@ -63,7 +63,7 @@ The `db:*` scripts (generate, migrate, seed, drop, reset, studio), `probe-databa
 
 ## Categories, and the two group vocabularies (MB.35; tables M4.2, M4.2a)
 
-`categories`, `category_groups`, `ingredient_forms` and `ingredient_form_groups`: groups are admin-curated rows rather than enums, a category group carries a colour for each theme, and a vocabulary only admins write is a foreign key. [`db/categories.md`](db/categories.md)
+`categories`, `category_groups`, `ingredient_forms` and `ingredient_form_groups`: groups are admin-curated rows rather than enums, a category group carries a colour for each theme, and a vocabulary only admins write is a foreign key; then the admin's writes to each, a deleted group's rows moving to a group the admin picks. [`db/categories.md`](db/categories.md)
 
 ## The astrology vocabularies (MB.91; tables MB.92)
 
@@ -235,7 +235,7 @@ Story 48's join of a spell to its assigned categories; the derived ones are read
 
 ## The category seed (M4.3)
 
-§6's eight `category_groups` and 63 `categories`, seeded as reference data rather than a scenario: idempotent by seed key (MB.172), with each group's colours resolved once from M0.7's Sass map, and run by `migrate.yml` after it migrates. [`db/category-seed.md`](db/category-seed.md)
+§6's eight `category_groups` and 63 `categories`, seeded as reference data rather than a scenario: idempotent by seed key (MB.172), with each group's colour pair written from the owner's hand-tuned hexes in `src/db/seed/category-groups.ts`, and run by `migrate.yml` after it migrates. [`db/category-seed.md`](db/category-seed.md)
 
 ## The form vocabulary seed (M4.3a)
 

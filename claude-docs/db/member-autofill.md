@@ -96,10 +96,12 @@ suggestion has neither, and a deity's has the first alone, below:
   group is live too**: the join filters both `deleted_at`s, in tiers 0 and 1
   and in tier 2's "folds to no live curated name", so a form under a
   soft-deleted group is offered as an in-use value with no group, and a dead
-  group's name is never returned. A group is not deleted while a live compendium entry
-  picks a form under it (MB.162, on the pick since MB.167), so only
-  a coven's values reach tier 2 this way; what else deleting a group does to
-  its forms is M5.6b's.
+  group's name is never returned. Deleting a group first moves its live forms
+  to another live group the admin picks, each re-slugged there, in the same
+  transaction (M5.6b), so no compendium entry's pick and no coven's is left
+  under a dead group by it. A form reaches tier 2 this way only through the
+  race the delete names: one added under the group in the instant between
+  the delete's read of its forms and its write.
 - **Its claimants** — every live ingredient in the compendium or a proof's
   workspace whose `lower(btrim(form))` equals the suggestion's fold, as
   `{ name, canonicalName }`, formal names first (`nulls last`), then label,
