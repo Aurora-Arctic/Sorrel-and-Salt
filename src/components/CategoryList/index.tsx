@@ -1,0 +1,58 @@
+import Link from 'next/link';
+import type { ReactElement } from 'react';
+import Pager from '../Pager';
+import type { CategoryListProps } from './types';
+import './index.scss';
+
+// `/admin/categories`' table and pager (M5.6). Render-only: the page reads one
+// page of the vocabulary through the service and hands it here. Each Edit is
+// an address — the page opens its modal from the URL, as it does for the Add
+// Category beside its heading — so a modal can be linked to and Back closes it
+// (claude-docs/components/category-list.md).
+
+const CategoryList = ({
+  categories,
+  previousHref,
+  nextHref,
+  position,
+}: CategoryListProps): ReactElement => (
+  <div className="category-list">
+    {categories.length ? (
+      <div className="category-list__frame">
+        <table className="category-list__table">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Group</th>
+              <th scope="col">Description</th>
+              <th scope="col">
+                <span className="visually-hidden">Edit</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {categories.map((category) => (
+              <tr key={category.id}>
+                <td>{category.name}</td>
+                <td>{category.groupName}</td>
+                <td className="category-list__description">{category.description}</td>
+                <td>
+                  {/* Soft navigation: the page renders again with the modal open. */}
+                  <Link className="btn btn--small btn--quiet" href={category.editHref}>
+                    Edit <span className="visually-hidden">{category.name}</span>
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <p>No categories yet.</p>
+    )}
+
+    <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
+  </div>
+);
+
+export default CategoryList;

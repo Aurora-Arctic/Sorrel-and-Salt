@@ -1,0 +1,21 @@
+@use '../../scss/variables' as *;
+
+// Layout only, on the form primitives; no styling past the tokens before the
+// admin section's design review (MB.115).
+.category-form__actions {
+  flex-wrap: wrap;
+}
+
+// Apart from Save and Cancel, at the far end, so it is not pressed for either.
+.category-form__delete {
+  margin-left: auto;
+}
+
+.category-form__confirm {
+  margin-top: space(4);
+}
+
+// Hard against the label, in the error red: it marks what a save will ask for.
+.category-form__required {
+  color: $secondary;
+}

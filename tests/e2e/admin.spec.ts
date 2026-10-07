@@ -128,3 +128,84 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
   ]);
   await assertNoAccessibilityViolations(page);
 });
+
+test('a signed-in non-admin is refused at /admin/categories with the 403 page', async ({
+  page,
+}) => {
+  await signInAs(page, 'not-an-admin@admin-categories.test');
+
+  const response = await page.goto('/admin/categories?new');
+
+  expect(response?.status()).toBe(403);
+  await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+// M5.6: the vocabulary's list, and its modal opened by the address — added
+// to, edited and retired from, the list re-read after each.
+test('an admin adds, edits and deletes a category in the modal over the list', async ({ page }) => {
+  await signInAs(page, 'an-admin@admin-categories.test', ['discord'], 'admin');
+
+  const response = await page.goto('/admin/categories');
+  expect(response?.status()).toBe(200);
+  await expect(page).toHaveTitle('Categories — Admin — Sorrel & Salt');
+  await expect(page.getByRole('heading', { level: 1, name: 'Categories' })).toBeVisible();
+  // The seeded vocabulary pages 25 at a time, alphabetically.
+  await expect(page.getByRole('table').getByRole('row')).toHaveCount(26);
+
+  await page.getByRole('link', { name: 'Add Category' }).click();
+  const adding = page.getByRole('dialog', { name: 'Add Category' });
+  await expect(adding).toBeVisible();
+  await expect(page).toHaveURL(/\/admin\/categories\?new$/);
+  await assertNoAccessibilityViolations(page);
+
+  // Escape asks the page to close it: the address loses `?new`.
+  await page.keyboard.press('Escape');
+  await expect(adding).toHaveCount(0);
+  await expect(page).toHaveURL(/\/admin\/categories$/);
+
+  await page.getByRole('link', { name: 'Add Category' }).click();
+  await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft');
+  await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the e2e spec');
+  await adding.getByRole('combobox', { name: 'Group' }).click();
+  await page.getByRole('option').first().click();
+  await adding.getByRole('button', { name: 'Save Category' }).click();
+  await expect(adding).toHaveCount(0);
+  // First by name, so on the first page.
+  const row = page.getByRole('row', { name: /Aaa Testcraft/ });
+  await expect(row).toBeVisible();
+
+  await row.getByRole('link', { name: 'Edit Aaa Testcraft' }).click();
+  const editing = page.getByRole('dialog', { name: 'Edit Category' });
+  await expect(page).toHaveURL(/\?edit=aaa-testcraft$/);
+  await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft Renamed');
+  await editing.getByRole('button', { name: 'Save Category' }).click();
+  await expect(editing).toHaveCount(0);
+  await expect(page.getByRole('row', { name: /Aaa Testcraft Renamed/ })).toBeVisible();
+
+  // A renamed category answers at its new address.
+  await page.goto('/admin/categories?edit=aaa-testcraft-renamed');
+  await expect(editing).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+  await editing.getByRole('button', { name: 'Delete Category' }).click();
+  await editing.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(editing).toHaveCount(0);
+  await expect(page.getByRole('row', { name: /Aaa Testcraft/ })).toHaveCount(0);
+});
+
+test('an admin is told which compendium entries hold a category before it can go', async ({
+  page,
+}) => {
+  await signInAs(page, 'held-admin@admin-categories.test', ['discord'], 'admin');
+  // The standard seed files several compendium entries under Protection, Bay Laurel first.
+  await page.goto('/admin/categories?edit=protection');
+  const editing = page.getByRole('dialog', { name: 'Edit Category' });
+
+  await editing.getByRole('button', { name: 'Delete Category' }).click();
+  await editing.getByRole('button', { name: 'Delete', exact: true }).click();
+
+  await expect(editing.getByRole('alert')).toContainText(
+    /^"Protection" is filed on \d+ compendium entries — Bay Laurel \(.+\), .+\. Take it off them first\.$/,
+  );
+  await expect(editing).toBeVisible();
+});
