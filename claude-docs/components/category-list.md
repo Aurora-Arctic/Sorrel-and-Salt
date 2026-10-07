@@ -45,8 +45,15 @@ A `CategoryListEntry` is the category's id, name, slug and description, plus
 - **Filter is offered only when there is a new filter to apply**, as the user
   list's is: `disabled` while the trimmed query and the group match the
   filter the page shows, enabled once either differs. With JavaScript, a
-  submit builds the address with `categoriesHref({ query, group })` and opens
-  it as a full load.
+  submit builds the address with `categoriesHref({ query, group })` and
+  pushes it as a soft navigation, as the pager's links are, inside a
+  transition: Filter wears the shared `.spinner`, `aria-busy` and the label
+  "Filtering" until the filtered list arrives, the owner's rule for a submit
+  (the user list's full load shows nothing until the page goes). The list
+  keys the form by the filter shown, so a page showing another — Back to an
+  older filter, say — starts it again from that one rather than keeping a
+  stale draft. In the workshop, `next/navigation` is stubbed
+  ([`workshop.md`](../workshop.md), "`.ladle/`").
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
   page's Add Category, on the heading's line in `.page-header` and so the
   page's rather than this component's, is `?new`. `href.ts`'s

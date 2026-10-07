@@ -1,24 +1,32 @@
 'use client';
 
-import { type FormEvent, type ReactElement, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { type FormEvent, type ReactElement, useState, useTransition } from 'react';
 import { categoriesHref } from './href';
 import type { CategoryListFilterProps } from './types';
 
 // The filter, a GET form to the page itself (MB.178), as the user list's
 // (MB.52). Filter is offered only when the form differs from the filter the
-// page shows, and opens the new filter as a full load from the first page.
+// page shows, and opens the new filter from the first page as a soft
+// navigation, as the pager's links are: inside a transition, so Filter shows
+// the spinner until the filtered list arrives, which a full load could not.
 // The group is a native `<select>`, not `ComboboxSelect`, so before hydration
 // the form still submits natively, as `query=&group=`, which the page reads
-// as no filter.
+// as no filter. The list keys this by the filter shown, so a page showing
+// another — Back, say — starts it again from that one.
 const CategoryListFilter = ({ filter, groups }: CategoryListFilterProps): ReactElement => {
   const [draftQuery, setDraftQuery] = useState(filter.query);
   const [draftGroup, setDraftGroup] = useState(filter.group);
+  const [filtering, startFiltering] = useTransition();
+  const router = useRouter();
   const changed = draftQuery.trim() !== filter.query || draftGroup !== filter.group;
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!changed) return;
-    window.location.assign(categoriesHref({ query: draftQuery.trim(), group: draftGroup }));
+    if (!changed || filtering) return;
+    startFiltering(() => {
+      router.push(categoriesHref({ query: draftQuery.trim(), group: draftGroup }));
+    });
   }
 
   return (
@@ -63,8 +71,14 @@ const CategoryListFilter = ({ filter, groups }: CategoryListFilterProps): ReactE
           </select>
         </div>
         {/* `disabled`, not `aria-disabled`: a submit with nothing to send. */}
-        <button className="btn btn--solid" type="submit" disabled={!changed}>
-          Filter
+        <button
+          className="btn btn--solid"
+          type="submit"
+          disabled={!changed || filtering}
+          aria-busy={filtering || undefined}
+        >
+          {filtering && <span className="spinner" aria-hidden="true" />}
+          {filtering ? 'Filtering' : 'Filter'}
         </button>
       </form>
     </search>

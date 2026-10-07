@@ -1,8 +1,13 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CategoryList from '@/components/CategoryList';
 import { categoriesHref } from '@/components/CategoryList/href';
 import type { CategoryListEntry, CategoryListProps } from '@/components/CategoryList/types';
+import { Navigating } from '../../support/navigating';
+
+// The filter navigates through the App Router; Vitest hoists the mock above the imports.
+const router = vi.hoisted(() => ({ push: vi.fn() }));
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // `/admin/categories`' filter, table and pager (M5.6, MB.178): each category
 // with its group, an Edit link opening it in the page's modal, the filter
@@ -148,11 +153,8 @@ describe('categoriesHref', () => {
 // MB.178: a GET form to the page itself, as the user list's (MB.52), with
 // Filter offered only when there is a new filter to apply.
 describe('CategoryList filter', () => {
-  const assignMock = vi.fn();
-
-  afterEach(() => {
-    assignMock.mockReset();
-    vi.unstubAllGlobals();
+  beforeEach(() => {
+    router.push.mockReset();
   });
 
   const filterButton = () => screen.getByRole('button', { name: 'Filter' });
@@ -214,7 +216,6 @@ describe('CategoryList filter', () => {
   });
 
   it('opens the filtered list from its first page', () => {
-    vi.stubGlobal('location', { ...window.location, assign: assignMock });
     render(<CategoryList {...props({ previousHref: categoriesHref({ before: 'b' }) })} />);
 
     fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), {
@@ -225,19 +226,52 @@ describe('CategoryList filter', () => {
     });
     fireEvent.click(filterButton());
 
-    expect(assignMock).toHaveBeenCalledWith(
+    expect(router.push).toHaveBeenCalledWith(
       '/admin/categories?query=Test+craft&group=fixture-protection',
     );
   });
 
   it('opens the unfiltered list when the filter is cleared', () => {
-    vi.stubGlobal('location', { ...window.location, assign: assignMock });
     render(<CategoryList {...props({ filter: { query: 'test', group: 'fixture-healing' } })} />);
 
     fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), { target: { value: '' } });
     fireEvent.change(screen.getByRole('combobox', { name: 'Group' }), { target: { value: '' } });
     fireEvent.click(filterButton());
 
-    expect(assignMock).toHaveBeenCalledWith('/admin/categories');
+    expect(router.push).toHaveBeenCalledWith('/admin/categories');
+  });
+
+  it('shows it is filtering until the filtered list arrives', async () => {
+    render(
+      <Navigating push={router.push}>
+        <CategoryList {...props()} />
+      </Navigating>,
+    );
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), {
+      target: { value: 'test' },
+    });
+    await act(async () => {
+      fireEvent.click(filterButton());
+    });
+
+    const busy = screen.getByRole('button', { name: 'Filtering' });
+    expect(busy).toBeDisabled();
+    expect(busy).toHaveAttribute('aria-busy', 'true');
+    expect(router.push).toHaveBeenCalledWith('/admin/categories?query=test');
+  });
+
+  it('starts again from the filter shown when the page shows another', () => {
+    const { rerender } = render(<CategoryList {...props()} />);
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), {
+      target: { value: 'draft' },
+    });
+
+    // Back to an older filter is a soft navigation: the page renders again with it.
+    rerender(<CategoryList {...props({ filter: { query: 'test', group: 'fixture-healing' } })} />);
+
+    expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('test');
+    expect(screen.getByRole('combobox', { name: 'Group' })).toHaveValue('fixture-healing');
+    expect(filterButton()).toBeDisabled();
   });
 });

@@ -22,7 +22,8 @@ const CategoryList = ({
   position,
 }: CategoryListProps): ReactElement => (
   <div className="category-list">
-    <CategoryListFilter filter={filter} groups={groups} />
+    {/* Keyed by the filter shown, so another one starts the form again from it. */}
+    <CategoryListFilter key={`${filter.query}\n${filter.group}`} filter={filter} groups={groups} />
 
     {categories.length ? (
       <div className="category-list__frame">

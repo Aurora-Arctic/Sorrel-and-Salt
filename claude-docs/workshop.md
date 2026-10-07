@@ -121,6 +121,10 @@ without a page routed to it.
   also when `vite.config.ts` turned out never to have been loaded: Ladle passes
   `viteConfig` to Vite's loader as given and Vite otherwise looks in the
   project root, so `config.mjs` now names the file explicitly.
+- **`navigation.ts`** — what `next/navigation` resolves to here, by the same
+  alias: a `useRouter` whose every method goes nowhere. Next's own throws with
+  no App Router mounted, and the first component to navigate on its own,
+  CategoryList's filter (MB.178), would render no story without it.
 - **`head.html`** — injected into `<head>`; loads Cormorant Unicase + Lexend by
   name from Google Fonts so the workshop's type matches the app's (the app
   self-hosts them via `next/font`, which the workshop has no equivalent of).
