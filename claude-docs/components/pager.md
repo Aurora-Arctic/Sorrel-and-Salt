@@ -2,7 +2,8 @@
 
 `src/components/Pager/` — a paged list's Prev and Next (M5.6), on the
 `.pager` primitive ([`styling.md`](../styling.md), "Buttons"). CategoryList
-and UserList are its first two owners, and IngredientFormValueList its third. Every list pages through the M3.6
+and UserList are its first two owners, IngredientFormValueList its third and
+VocabularyValueList its fourth. Every list pages through the M3.6
 cursor helper (rule 8), so every list that shows its pages shows them here.
 
 ## Props
@@ -30,7 +31,7 @@ cursor helper (rule 8), so every list that shows its pages shows them here.
   muted ink, as text rather than a control. The owner reads it as DESIGN.md §7
   computes it for the compendium: page `floor(countBefore / size) + 1` of
   `max(1, ceil(totalCount / size))`, counted from the page's first row.
-  CategoryList and IngredientFormValueList pass it, and UserList does not
+  CategoryList, IngredientFormValueList and VocabularyValueList pass it, and UserList does not
   count its rows yet.
 - **Named "Prev" and "Next"**, the chevrons `aria-hidden` beside them in
   `.pager__mark` spans.

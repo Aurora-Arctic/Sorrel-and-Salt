@@ -1,0 +1,28 @@
+@use '../../scss/variables' as *;
+
+// Layout only, until the admin area's design review (MB.115):
+// IngredientFormValueList's shape. The table, Edit and the pager are
+// primitives (`.data-table`, `.btn--small`, `.pager`).
+
+.vocabulary-value-list {
+  display: flex;
+  flex-direction: column;
+  gap: space(5);
+
+  > p {
+    margin: 0;
+  }
+}
+
+// The filter row: the field and the button, wrapping.
+.vocabulary-value-list__search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: space(3) space(5);
+}
+
+// Running text that is not a `<p>`, so it takes the measure itself.
+.vocabulary-value-list__description {
+  max-width: $measure;
+}
