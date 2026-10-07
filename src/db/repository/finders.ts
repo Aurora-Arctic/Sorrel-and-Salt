@@ -9,6 +9,7 @@ import type {
   NotIngredientScoped,
   NotSpellScoped,
   NotVisibilityScoped,
+  Slugged,
   SortPart,
   Unscoped,
   WorkspaceScoped,
@@ -40,6 +41,18 @@ export async function findOneById<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
 >(table: TTable, id: string): Promise<TTable['$inferSelect'] | undefined> {
   const [row] = await findMany(table, eq(table.id, id));
+  return row;
+}
+
+/**
+ * The live row holding this slug, or `undefined` — the read an admin page
+ * opens a row by, for a table no proof scopes. Every slug index is partial on
+ * `deleted_at IS NULL`, so at most one live row answers.
+ */
+export async function findOneBySlug<
+  TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Slugged,
+>(table: TTable, slug: string): Promise<TTable['$inferSelect'] | undefined> {
+  const [row] = await findMany(table, eq(table.slug, slug));
   return row;
 }
 

@@ -20,7 +20,7 @@ const AdminNav = (): ReactElement => (
       {RESOURCES.map(({ href, label }) => (
         <li key={href}>
           {/* A plain anchor rather than <Link>: typed routes refuse a route
-              that is not built yet, and only the user list is. */}
+              that is not built yet, and most are not. */}
           <a href={href}>{label}</a>
         </li>
       ))}

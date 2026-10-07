@@ -106,7 +106,8 @@ open list on Floating UI's `useFloating` (DESIGN.md §14):
 - **Never off the screen.** It opens beneath the box and flips above when
   there is more room there (`flip`), 8px from the screen's edge, and is no
   taller than the room it has: `size` sets `--combobox-list-room`, and the
-  stylesheet caps the list at `min(18rem, that)`. Its side is
+  stylesheet caps the list at `min(20rem, that)`, which holds the eight
+  seeded category groups without a scroll (M5.6, the owner's call). Its side is
   `data-placement`, "bottom-start" or "top-start".
 - **Followed while open, and only then.** `autoUpdate` re-places it on a
   scroll or a resize; a closed list, which Downshift keeps in the page, is

@@ -14,13 +14,14 @@ import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
+import { categories, categoryGroups } from '../../modules/vocabulary/schema/categories';
 import { deities, deityTraditions } from '../../modules/vocabulary/schema/deities';
 import {
   ingredientFormGroups,
   ingredientForms,
 } from '../../modules/vocabulary/schema/ingredient-forms';
 import type { Membership } from '@/modules/coven';
-import type { PageEntry, PageRequest } from '../../lib/types';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, pageBounds, selectFrom } from './select';
 import { claimantList, readSuggestionPage } from './suggestion-page';
@@ -52,6 +53,44 @@ export function findIngredientFormValues(
     ),
     keyset,
   );
+}
+
+/**
+ * One page of the category vocabulary in `(name, id)` order, for
+ * `categories`: the live categories whose group is live too, read as
+ * `findIngredientFormValues` reads the forms. Public reference data, so no
+ * proof.
+ */
+export function findCategoryPage(
+  page: PageRequest,
+): Promise<PageEntry<typeof categories.$inferSelect>[]> {
+  const keyset = { ...CATEGORY_ORDER, request: page };
+  return selectFrom(
+    categories,
+    and(notSoftDeleted(categories), inLiveCategoryGroup(), pageBounds(keyset)),
+    keyset,
+  );
+}
+
+/**
+ * How many categories `findCategoryPage` pages, and how many come before
+ * `start` in its order — the position of the page whose first row `start`
+ * is, null with none: "Page X of Y" on the admin page and `categories`'
+ * `totalCount`. One statement, over the page's own filter and key.
+ */
+export function findCategoryCount(start: Cursor | undefined): Promise<PageCount> {
+  return selectFrom(categories, and(notSoftDeleted(categories), inLiveCategoryGroup()), {
+    count: CATEGORY_ORDER,
+    start,
+  });
+}
+
+/** The category vocabulary's key: by name, then id. A page and its count share it. */
+const CATEGORY_ORDER = { sort: [categories.name], id: categories.id };
+
+/** A category's group is live, read by the builder's correlated `EXISTS`: a page and its count both read it. */
+function inLiveCategoryGroup(): SQL {
+  return existsIn(categoryGroups, eq(categoryGroups.id, categories.groupId));
 }
 
 /**

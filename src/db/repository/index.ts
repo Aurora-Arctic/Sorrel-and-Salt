@@ -15,6 +15,7 @@ export {
   findManyInWorkspace,
   findOne,
   findOneById,
+  findOneBySlug,
   findOneByIdInWorkspace,
   findOneInWorkspace,
   findPage,
@@ -44,6 +45,8 @@ export {
   findReferencesOfIngredients,
 } from './references';
 export {
+  findCategoryCount,
+  findCategoryPage,
   findCuratedRowsByIds,
   findCuratedRowsByName,
   findIngredientFormValues,

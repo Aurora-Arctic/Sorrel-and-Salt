@@ -45,11 +45,9 @@ Layout only — a `.welcome-page` frame that centers the page without an
 AppShell, the same reason `.sign-in-page` exists, and the reading measure, `$measure`.
 The heading and paragraphs take `_typography.scss`'s global rules; the link
 takes `.btn .btn--solid` (`_primitives.scss`), since it is the page's one
-action. This is the first `.btn` on an anchor, so the component restates the
-solid's label colour, `$text-on-color`, for `:visited` and on hover
-(`_typography.scss`'s `a:visited` outranks `.btn--solid` and would put the body
-ink on the fill) and drops the underline. Tokens used: `$text-on-color`,
-`$measure`.
+action. It is a `.btn` on an anchor, which needs nothing of its own: `.btn`
+drops the underline and outranks the visited ink ([`styling.md`](../styling.md),
+"Buttons"). Token used: `$measure`.
 
 ## Stories
 

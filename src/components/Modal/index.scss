@@ -1,0 +1,50 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// Only what the native element needs beyond the `.modal` primitive: its
+// default border and padding gone, a width that fits a phone, and a backdrop.
+// No styling past the tokens before the section's design review.
+.modal-dialog {
+  width: min(32rem, calc(100vw - #{space(4)} * 2));
+  max-height: calc(100dvh - #{space(4)} * 2);
+  overflow: auto;
+  border: 0;
+
+  &::backdrop {
+    background-color: color-mix(in srgb, $surface-page 75%, transparent);
+  }
+}
+
+.modal-dialog__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: space(3);
+  margin-bottom: space(4);
+}
+
+.modal-dialog__title {
+  margin: 0;
+}
+
+// 1.5rem: WCAG 2.2's 24px minimum target, as InfoTip's button.
+.modal-dialog__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: radius('pill');
+  background-color: transparent;
+  color: $text-muted;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: $text-primary;
+  }
+}

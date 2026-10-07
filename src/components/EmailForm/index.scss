@@ -54,15 +54,3 @@
 .email-form__continue {
   margin: 0;
 }
-
-// `.btn` on an anchor, as in Welcome: `_typography.scss`'s `a:visited`
-// outranks `.btn` alone and an anchor underlines by default.
-.email-form__continue .btn {
-  text-decoration: none;
-
-  &:visited,
-  &:hover,
-  &:focus-visible {
-    color: $text-on-color;
-  }
-}

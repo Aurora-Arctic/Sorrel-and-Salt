@@ -3,10 +3,10 @@ import { cache } from 'react';
 import UserList from '../../../components/UserList';
 import { userListHref } from '../../../components/UserList/href';
 import type { UserListEntry } from '../../../components/UserList/types';
-import { InvalidCursor } from '../../../lib/errors';
 import { impersonationEnabled } from '../../../lib/impersonation';
-import { DEFAULT_PAGE_SIZE, decodeCursor, resolvePage } from '../../../lib/pagination';
+import { DEFAULT_PAGE_SIZE, resolvePage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
+import { readableCursor, single } from '../../../lib/search-params';
 import type { Session } from '../../../lib/session';
 import type { ConnectionArgs } from '../../../lib/types';
 import { listUsers, providersOf } from '@/modules/identity';
@@ -15,22 +15,6 @@ import type { AdminUsersPageProps, UsersSearchParams } from './types';
 export const metadata: Metadata = {
   title: 'Users — Admin — Sorrel & Salt',
 };
-
-function single(value: string | string[] | undefined): string | undefined {
-  return Array.isArray(value) ? value[0] : value;
-}
-
-/** A cursor the codec reads, or none: a hand-edited address gets the first page, not an error. */
-function readableCursor(value: string | undefined): string | undefined {
-  if (!value) return undefined;
-  try {
-    decodeCursor(value);
-    return value;
-  } catch (error) {
-    if (error instanceof InvalidCursor) return undefined;
-    throw error;
-  }
-}
 
 // The page and GraphQL's `users` end at the same service, paged by the same
 // helper (CLAUDE.md rule 1, rule 8); cached so a second render in the request

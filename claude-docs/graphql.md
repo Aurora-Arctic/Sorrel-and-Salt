@@ -67,6 +67,10 @@ In [`graphql/schema.md`](graphql/schema.md#the-workspace-ingredient-mutations).
 
 In [`graphql/schema.md`](graphql/schema.md#references-reference-createreference-updatereference-and-referencesuggestions).
 
+### Categories: `categories`, `createCategory`, `updateCategory` and `deleteCategory`
+
+In [`graphql/schema.md`](graphql/schema.md#categories-categories-createcategory-updatecategory-and-deletecategory).
+
 ### Auth scopes: the second check
 
 In [`graphql/schema.md`](graphql/schema.md#auth-scopes-the-second-check).

@@ -27,6 +27,7 @@ so one mis-scoped Vercel variable is not the whole defence.
 - The variable's row, and the rule that it is never set on Production, are in
   [`secrets.md`](../secrets.md).
 - A hotfix preview cannot finish an OAuth sign-in until MB.78's proxy lands,
+  which is post-launch work ([`waves/wave-15.md`](../waves/wave-15.md)),
   so an admin cannot yet sign in there to impersonate anyone.
 
 ### Only the two impersonation endpoints are mounted

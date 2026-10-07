@@ -71,36 +71,6 @@
   }
 }
 
-// Save's busy mark, from the press to the answer: a ring in the button's own
-// ink, open on one side so its turn reads. Slowed rather than stopped where
-// motion is reduced, since a still ring says nothing is happening.
-.ingredient-form__spinner {
-  width: 1em;
-  height: 1em;
-  flex-shrink: 0;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  border-radius: radius('pill');
-  animation: ingredient-form-spin 0.8s linear infinite;
-
-  @include reduced-motion {
-    animation-duration: 2.4s;
-  }
-}
-
-// A busy save leads with the spinner, and the button's full side padding,
-// sized for a word, reads as a gap before a small round mark; the left side
-// comes in a step while it shows.
-.ingredient-form .btn[aria-busy='true'] {
-  padding-left: space(3);
-}
-
-@keyframes ingredient-form-spin {
-  to {
-    transform: rotate(1turn);
-  }
-}
-
 // The references (MB.154): rows beneath the search box rather than chips
 // inside it, so a citation reads whole, as a bibliography does. Each row is
 // its source and its × on one line, the locator beneath the source, so the

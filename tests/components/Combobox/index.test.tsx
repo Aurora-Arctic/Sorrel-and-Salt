@@ -1192,6 +1192,18 @@ describe('Combobox', () => {
       expect(element()).toHaveTextContent('None');
       expect(element()).not.toHaveTextContent('Choose an element');
     });
+
+    // A regression (M5.6): the list sat in the flow, so opening it in a
+    // modal stretched the modal rather than floating over it.
+    it('floats its open list, fixed, rather than laying it in the flow', async () => {
+      render(<SelectHarness placeholder="Choose an element" />);
+
+      fireEvent.click(element());
+
+      const list = screen.getByRole('listbox', { name: 'Element choices' });
+      await waitFor(() => expect(list).toHaveStyle({ position: 'fixed' }));
+      expect(list).toHaveAttribute('data-placement', 'bottom-start');
+    });
   });
 
   // A closed set holding several values (MB.159): the select-only box, its
@@ -1246,6 +1258,16 @@ describe('Combobox', () => {
 
       fireEvent.click(elements());
       expect(offered()).toEqual(['Earth', 'Air', 'Fire', 'Water', 'Spirit']);
+    });
+
+    it('floats its open list, fixed, as the select-only box does', async () => {
+      render(<MultiHarness />);
+
+      fireEvent.click(elements());
+
+      const list = screen.getByRole('listbox', { name: 'Element choices' });
+      await waitFor(() => expect(list).toHaveStyle({ position: 'fixed' }));
+      expect(list).toHaveAttribute('data-placement', 'bottom-start');
     });
 
     it('adds a choice as a chip inside the control, in the order chosen, offering only what is left', () => {

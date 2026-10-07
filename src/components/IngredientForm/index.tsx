@@ -69,7 +69,7 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
     setError,
     setValue,
     reset,
-    formState: { errors, isSubmitting, submitCount },
+    formState: { errors, isSubmitting, isDirty, submitCount },
   } = methods;
   const form = useRef<HTMLFormElement>(null);
   const createAnyway = useRef<HTMLButtonElement>(null);
@@ -288,25 +288,26 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
               default Enter presses, opens what it made; Save & Add Another
               clears the form for the next. The one pressed says so, "Saving
               Ingredient" with a spinner and `aria-busy`, the owner's call
-              during MB.131. */}
+              during MB.131. Both are off until something is entered, the
+              owner's rule for every form (M5.6). */}
           <button
             type="submit"
             value="open"
             className="btn btn--solid"
-            disabled={isSubmitting}
+            disabled={!isDirty || isSubmitting}
             aria-busy={busy('open')}
           >
-            {busy('open') && <span className="ingredient-form__spinner" aria-hidden="true" />}
+            {busy('open') && <span className="spinner" aria-hidden="true" />}
             {busy('open') ? 'Saving Ingredient' : 'Save Ingredient'}
           </button>
           <button
             type="submit"
             value="another"
             className="btn"
-            disabled={isSubmitting}
+            disabled={!isDirty || isSubmitting}
             aria-busy={busy('another')}
           >
-            {busy('another') && <span className="ingredient-form__spinner" aria-hidden="true" />}
+            {busy('another') && <span className="spinner" aria-hidden="true" />}
             {busy('another') ? 'Saving Ingredient' : 'Save & Add Another'}
           </button>
         </div>

@@ -82,6 +82,9 @@ export type NotInvitation = { tokenHash?: never };
 /** A table with a surrogate key, which is every one but the two hard-deleted join tables. */
 export type Identified = { id: AnyPgColumn };
 
+// A table addressed by a slug of its own: the curated vocabularies and their groups.
+export type Slugged = { slug: AnyPgColumn };
+
 /** A table's own columns, with every audit column removed — they come from the session. */
 export type Writable<TTable extends PgTable> = Omit<TTable['$inferInsert'], AuditColumnName>;
 

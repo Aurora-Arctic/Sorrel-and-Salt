@@ -41,17 +41,3 @@
 .welcome__way-in {
   margin: 0.5rem 0 0;
 }
-
-// The first `.btn` on an anchor. `_typography.scss`'s `a:visited` outranks
-// `.btn--solid` and would put the body ink on the fill once followed, and an
-// anchor underlines by default; a button has neither, so restate the solid's
-// label colour for every state.
-.welcome__way-in .btn {
-  text-decoration: none;
-
-  &:visited,
-  &:hover,
-  &:focus-visible {
-    color: $text-on-color;
-  }
-}

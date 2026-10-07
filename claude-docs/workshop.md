@@ -16,6 +16,12 @@ without a page routed to it.
   `tests/components/<Name>/index.test.tsx`. The story stays in the component
   directory because Ladle discovers components by that file, which is the one
   thing the move could not relocate.
+- **A story that opens a modal sets `meta = { iframed: true }`** (M5.6, the
+  owner's call). `Modal` opens with `showModal()`, which puts the dialog in the
+  document's top layer: in the workshop's own document that covers Ladle's
+  sidebar too. In its own iframe, carrying the global provider and styles, the
+  dialog covers the story's frame and nothing else. `Modal` and `CategoryForm`
+  are the first.
 - `*.stories.tsx` is excluded from `tsc` while `@ladle/react`'s bundled types
   don't pass `strict`; `ladle build` still compiles stories through esbuild.
   Test files are not excluded — `tests/` is in tsconfig's `include` and `tsc`

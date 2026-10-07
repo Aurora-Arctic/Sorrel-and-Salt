@@ -270,7 +270,7 @@ export default function ReferencePanel({
     control,
     handleSubmit,
     setError,
-    formState: { errors, isSubmitting, submitCount },
+    formState: { errors, isSubmitting, isDirty, submitCount },
   } = methods;
   const panel = useRef<HTMLFieldSetElement>(null);
   const legendId = useId();
@@ -361,19 +361,26 @@ export default function ReferencePanel({
         ))}
         {/* Held down from the press to the answer, as the ingredient's saves
             are: Save Reference says so with the same spinner, and Cancel
-            waits, so a source being written is never left half-added. */}
+            waits, so a source being written is never left half-added. Save
+            Reference is off until something is entered, and Cancel is quiet,
+            the owner's rules for every form (M5.6). */}
         <div className="form__actions">
           <button
             type="button"
             className="btn btn--solid"
             onClick={submit}
-            disabled={isSubmitting}
+            disabled={!isDirty || isSubmitting}
             aria-busy={isSubmitting || undefined}
           >
-            {isSubmitting && <span className="ingredient-form__spinner" aria-hidden="true" />}
+            {isSubmitting && <span className="spinner" aria-hidden="true" />}
             {isSubmitting ? 'Saving Reference' : 'Save Reference'}
           </button>
-          <button type="button" className="btn" onClick={onCancel} disabled={isSubmitting}>
+          <button
+            type="button"
+            className="btn btn--quiet"
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
             Cancel
           </button>
         </div>

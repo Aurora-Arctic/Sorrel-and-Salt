@@ -4,6 +4,7 @@ import { useMultipleSelection, useSelect, type UseSelectStateChangeOptions } fro
 import { type MouseEvent, type ReactElement, useState } from 'react';
 import { ComboboxEntry } from './entry';
 import { ChevronIcon, ClearIcon } from './icons';
+import { useListPosition } from './position';
 import type { ComboboxChoice, ComboboxMultiSelectProps } from './types';
 
 // A closed set holding several values: the select-only box, on Downshift's
@@ -110,8 +111,11 @@ export function ComboboxMultiSelect({
     toggleMenu();
   };
 
+  // Floated as the suggesting box's is, so a modal holding it does not stretch (M5.6).
+  const { setControl, setList, listStyle, placement } = useListPosition(isOpen);
+
   return (
-    <div className="combobox">
+    <div className="combobox" ref={setControl}>
       {/* Presentational, as the typed box's control is: the box inside is
           what a reader and the keyboard reach, and the chips' x and the
           clear sit beside it rather than inside it, so that a press or a key
@@ -188,7 +192,10 @@ export function ComboboxMultiSelect({
       {/* Always in the page, as Downshift asks; empty and hidden while closed. */}
       <ul
         className={isOpen ? 'combobox__list is-open' : 'combobox__list'}
-        {...getMenuProps({ 'aria-label': `${label} choices` })}
+        // Placed beneath or above the box, as there is room (useListPosition).
+        style={listStyle}
+        data-placement={placement}
+        {...getMenuProps({ ref: setList, 'aria-label': `${label} choices` })}
       >
         {isOpen &&
           left.map((choice, index) => (
