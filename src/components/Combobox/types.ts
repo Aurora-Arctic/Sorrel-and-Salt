@@ -56,6 +56,11 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   create?: { label: string; onCreate: () => void };
   /** What a pick leaves out of the text, drawn muted in brackets after it: a picked form's group. */
   qualifier?: ComboboxQualifier;
+  /**
+   * What the open list spans and opens beside: a list field's row, its box
+   * and its Add together. The control when left out (MB.154).
+   */
+  listAnchor?: HTMLElement | null;
   inputRef?: Ref<HTMLInputElement>;
   name?: string;
   'aria-describedby'?: string;

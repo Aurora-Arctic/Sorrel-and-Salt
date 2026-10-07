@@ -310,6 +310,9 @@ export function ListField({
   // Its own ref rather than setFocus, which waits a tick: the box never
   // unmounts, so it can take the focus at once.
   const boxElement = useRef<HTMLInputElement | null>(null);
+  // The box and its button together, which an open list spans (MB.154).
+  // Held as state, through its callback ref, so the box is told once it exists.
+  const [boxRow, setBoxRow] = useState<HTMLDivElement | null>(null);
   // What the last add or removal did, for a screen reader: the box empties
   // and an entry appears or goes, and neither is otherwise announced.
   const [announcement, setAnnouncement] = useState('');
@@ -411,7 +414,7 @@ export function ListField({
           </InfoTip>
         )}
       </legend>
-      <div className="ingredient-form__row">
+      <div ref={setBoxRow} className="ingredient-form__row">
         <Combobox
           id={boxId}
           label={entry}
@@ -423,6 +426,7 @@ export function ListField({
           onCommit={add}
           onRemoveLast={removeLast}
           suggestions={suggestions}
+          listAnchor={boxRow}
           entries={entries}
           clear={fields.length > 0 ? { label: `Clear ${legend}`, onClear: clear } : undefined}
           inputRef={(element) => {

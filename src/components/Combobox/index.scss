@@ -228,17 +228,18 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 // The list, floating beneath the control at its width, on the card surface
 // with the floating shadow. Hidden rather than unmounted while closed, since
 // Downshift keeps its ref.
+// Placed by `useListPosition` (position.ts), its position, width and side
+// set inline as there is room; here, its look, and no taller than 18rem or
+// the room it has, `--combobox-list-room`. A row never scrolls it sideways:
+// an unbroken text — an address — breaks anywhere instead (MB.154).
 .combobox__list {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  left: 0;
   z-index: 1;
   display: none;
   box-sizing: border-box;
-  max-height: 18rem;
-  margin: space(1) 0 0;
+  max-height: min(18rem, var(--combobox-list-room, 18rem));
+  margin: 0;
   padding: space(1) 0;
+  overflow-x: hidden;
   overflow-y: auto;
   list-style: none;
   border: 1px solid $text-muted;
@@ -286,6 +287,9 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   display: flex;
   flex-direction: column;
   padding: space(2) space(3);
+  // A word too long for the list — an address in a citation — breaks
+  // anywhere rather than scroll the list sideways.
+  overflow-wrap: anywhere;
   color: $text-primary;
   font-size: type-size('body');
   font-weight: 400;

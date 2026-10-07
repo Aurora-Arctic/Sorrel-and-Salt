@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import Combobox, {
   ComboboxEntry,
   ComboboxMultiSelect,
@@ -267,6 +267,109 @@ describe('Combobox', () => {
     expect(box()).toHaveAttribute('aria-expanded', 'true');
     expect(options()).toHaveLength(3);
     expect(screen.queryByRole('option', { name: /typed/ })).not.toBeInTheDocument();
+  });
+
+  // MB.154, the owner's calls: the open list spans what it is anchored to,
+  // and never runs off the screen. jsdom lays nothing out, so each test gives
+  // the viewport, the box, the anchor and the list the sizes Floating UI reads.
+  describe('where the list opens', () => {
+    const rect = (left: number, top: number, width: number, height: number) =>
+      ({
+        x: left,
+        y: top,
+        left,
+        top,
+        width,
+        height,
+        right: left + width,
+        bottom: top + height,
+      }) as DOMRect;
+
+    function layOut({
+      control,
+      list,
+    }: {
+      control: DOMRect;
+      list: { width: number; height: number };
+    }) {
+      const html = document.documentElement;
+      const restore = [
+        vi.spyOn(html, 'clientWidth', 'get').mockReturnValue(400),
+        vi.spyOn(html, 'clientHeight', 'get').mockReturnValue(600),
+        vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (
+          this: HTMLElement,
+        ) {
+          return this.getAttribute('role') === 'listbox' ? list.width : 0;
+        }),
+        vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (
+          this: HTMLElement,
+        ) {
+          return this.getAttribute('role') === 'listbox' ? list.height : 0;
+        }),
+        vi
+          .spyOn(
+            screen.getByRole('combobox').closest('[role="presentation"]')!,
+            'getBoundingClientRect',
+          )
+          .mockReturnValue(control),
+      ];
+      return () => restore.forEach((spy) => spy.mockRestore());
+    }
+    const list = () => screen.getByRole('listbox', { name: 'Form suggestions' });
+
+    it('spans the anchor it is given, a list field’s whole row', async () => {
+      const anchor = document.body.appendChild(document.createElement('div'));
+      vi.spyOn(anchor, 'getBoundingClientRect').mockReturnValue(rect(16, 100, 360, 44));
+      render(<Harness suggestions={TWO_BUCKETS} listAnchor={anchor} />);
+      onTestFinished(
+        layOut({ control: rect(16, 100, 270, 44), list: { width: 360, height: 200 } }),
+      );
+      onTestFinished(() => anchor.remove());
+
+      type('wax');
+
+      await waitFor(() => expect(list()).toHaveStyle({ width: '360px' }));
+      expect(list()).toHaveAttribute('data-placement', 'bottom-start');
+    });
+
+    it('spans the box itself when it has no anchor', async () => {
+      render(<Harness suggestions={TWO_BUCKETS} />);
+      onTestFinished(
+        layOut({ control: rect(16, 100, 270, 44), list: { width: 270, height: 200 } }),
+      );
+
+      type('wax');
+
+      await waitFor(() => expect(list()).toHaveStyle({ width: '270px' }));
+    });
+
+    it('opens above the box when there is no room beneath it, and no taller than the room above', async () => {
+      render(<Harness suggestions={TWO_BUCKETS} />);
+      onTestFinished(
+        layOut({ control: rect(16, 500, 270, 44), list: { width: 270, height: 288 } }),
+      );
+
+      type('wax');
+
+      await waitFor(() => expect(list()).toHaveAttribute('data-placement', 'top-start'));
+      // The room above: the box's top, less the gap and the screen's edge.
+      expect(list().style.getPropertyValue('--combobox-list-room')).toBe('488px');
+    });
+
+    it('stays beneath, its height held to the room there, when that is the larger', async () => {
+      render(<Harness suggestions={TWO_BUCKETS} />);
+      onTestFinished(
+        layOut({ control: rect(16, 200, 270, 44), list: { width: 270, height: 400 } }),
+      );
+
+      type('wax');
+
+      await waitFor(() =>
+        expect(list().style.getPropertyValue('--combobox-list-room')).not.toBe(''),
+      );
+      expect(list()).toHaveAttribute('data-placement', 'bottom-start');
+      expect(list().style.getPropertyValue('--combobox-list-room')).toBe('344px');
+    });
   });
 
   describe('a create row', () => {

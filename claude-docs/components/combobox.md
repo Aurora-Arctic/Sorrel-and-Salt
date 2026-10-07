@@ -36,6 +36,7 @@ movable, on dnd-kit.
 | `entries`          | What a list holds, drawn inside the control ahead of the text.                                                                                                                |
 | `qualifier`        | `{ text, detail? }`: what a pick leaves out of the text, a picked form's group, in brackets after the text, muted, its detail in a tooltip. See "A qualifier".                |
 | `clear`            | `{ label, onClear }`: a control that empties the list, shown while it holds entries, named "Clear Folk Names".                                                                |
+| `listAnchor`       | The element the open list spans and opens beside: a list field's row, its box and its Add together. The control when left out. See "Where the list opens".                    |
 | `create`           | `{ label, onCreate }`: a first row that makes something new, "Add a reference", in place of the typed row, there with a blank box too. See "The create row".                  |
 | `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                               |
 | `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                            |
@@ -91,6 +92,33 @@ reader as well as by the eye, and so is who claims a value.
   clear and the chevron on the control's right, parted by a line. Backspace or Delete in an empty box takes the last entry through `onRemoveLast`. The chip's
   classes, `combobox__entry` and `combobox__entry-remove`, are drawn here so
   that any list reuses them; `IngredientForm`'s entry adds its tooltip.
+
+## Where the list opens
+
+The owner's calls in MB.154. `useListPosition` (`position.ts`) places the
+open list on Floating UI's `useFloating` (DESIGN.md §14):
+
+- **As wide as its anchor.** A list field passes its row as `listAnchor`,
+  so its list spans the box and its Add together, the field's whole width;
+  a box with no anchor, the form field, spans itself. The field holds the
+  row in state through a callback ref, so the box is told once it exists.
+- **Never off the screen.** It opens beneath the box and flips above when
+  there is more room there (`flip`), 8px from the screen's edge, and is no
+  taller than the room it has: `size` sets `--combobox-list-room`, and the
+  stylesheet caps the list at `min(18rem, that)`. Its side is
+  `data-placement`, "bottom-start" or "top-start".
+- **Followed while open, and only then.** `autoUpdate` re-places it on a
+  scroll or a resize; a closed list, which Downshift keeps in the page, is
+  not followed.
+- **Fixed, not absolute**, so a scrolling ancestor — M8.16's modal — cannot
+  clip it.
+- **A row never scrolls it sideways**: a word too long for the list, an
+  address in a citation, breaks anywhere (`overflow-wrap: anywhere` on the
+  row, `overflow-x: hidden` on the list).
+
+jsdom lays nothing out, so the tests give the viewport, the box, the anchor
+and the list the sizes Floating UI reads, as the sortable tests give the
+chips theirs.
 
 ## The create row
 
@@ -410,7 +438,9 @@ nothing.
 suggestions and asserts: the name from a label or a label element; the rows,
 their buckets and the typed row; a row's accessible name carrying its label
 and note; picking by keyboard and by click, and the typed row as `null`;
-the text kept through a second pick; the create row first in the typed
+the list as wide as its anchor, or the box with none, and opening above
+the box with no room beneath it, its height held to the room on the side it
+opens; the text kept through a second pick; the create row first in the typed
 row's place, there with a blank box and with no suggestions, calling
 `onCreate` by click or keyboard and never `onPick`;
 the entry's ×, its tooltip on a cut-off text only, and its error; the

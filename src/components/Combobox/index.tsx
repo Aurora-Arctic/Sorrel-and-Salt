@@ -10,6 +10,7 @@ import {
   useState,
 } from 'react';
 import { ChevronIcon, ClearIcon } from './icons';
+import { useListPosition } from './position';
 import { useTip } from './tip';
 import type {
   Bucket,
@@ -127,6 +128,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   clear,
   create,
   qualifier,
+  listAnchor,
   inputRef,
   name,
   'aria-describedby': describedBy,
@@ -147,6 +149,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     [suggestions, value, createLabel],
   );
   const isOpen = hasSource && wantsOpen && items.length > 0;
+  const { setControl, setList, listStyle, placement } = useListPosition(isOpen, listAnchor);
 
   const { getInputProps, getMenuProps, getItemProps, getToggleButtonProps, highlightedIndex } =
     useCombobox<Item<O>>({
@@ -240,6 +243,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
       {/* Presentational: the press is a convenience for the pointer, and the
           box inside is the control a reader and the keyboard reach. */}
       <div
+        ref={setControl}
         role="presentation"
         className={invalid ? 'input combobox__control is-invalid' : 'input combobox__control'}
         onMouseDown={focusText}
@@ -340,7 +344,10 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
       {/* Always in the page, as Downshift asks; empty and hidden while closed. */}
       <ul
         className={isOpen ? 'combobox__list is-open' : 'combobox__list'}
-        {...getMenuProps({ 'aria-label': `${label} suggestions` })}
+        // Placed beneath or above the box, as there is room (useListPosition).
+        style={listStyle}
+        data-placement={placement}
+        {...getMenuProps({ ref: setList, 'aria-label': `${label} suggestions` })}
       >
         {isOpen && firstRow && row(firstRow)}
         {isOpen &&
