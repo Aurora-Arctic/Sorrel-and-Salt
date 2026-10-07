@@ -61,6 +61,10 @@ Accessibility is asserted in Playwright, not `vitest-axe`: `tests/e2e/axe.ts`'s 
 
 Playwright's e2e coverage is JS only, collected per test by `tests/e2e/fixtures.ts` into monocart-coverage-reports under `.reports/coverage-e2e/`, and mapped back to `src/**` through `productionBrowserSourceMaps` and an order-sensitive `sourceFilter` that excludes `node_modules` first. [`testing/coverage.md`](testing/coverage.md)
 
+## Test-layer ownership, and the file budget (MB.180)
+
+Each kind of assertion has one owning layer — a zod rule in `tests/modules/*/validation/`, a service rule in `tests/modules/*/services/`, the transport's half in `tests/modules/*/graphql/`, the `Membership` mechanism in `tests/db/repository/`, a table's shape in its module schema test, a component behaviour in the smallest component that has it, seed content in `seeded-template.test.ts` — and a test elsewhere proves only what that layer adds; `.github/scripts/summarize-vitest.mjs` names the ten slowest files in the PR comment and marks any over the 10 s budget, a warning that is answered by splitting the file along its owner, never by raising the budget. [`testing/layer-ownership.md`](testing/layer-ownership.md)
+
 ## Debugging tests (MB.22)
 
 `npm run test:debug` halts single-worker Vitest under `--inspect-brk` on 9230, `test:ui` opens `@vitest/ui`, `e2e:ui` and `e2e:trace` debug Playwright, and an e2e run inside the devcontainer needs the remote browser `PLAYWRIGHT_WS_ENDPOINT` names. [`testing/debugging-tests.md`](testing/debugging-tests.md)

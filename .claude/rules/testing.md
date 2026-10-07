@@ -44,4 +44,5 @@ One seed module (`src/db/seed/index.ts`), three consumers (Docker, Vitest, Playw
 ## What a test asserts
 
 - **A story-named acceptance test** points a failure at a requirement. It measures something other than the 80% line, so `npm run test:stories` runs `tests/acceptance/` alone and prints one line per v1 story, and `npm run test:coverage` never runs that directory. Every top-level `describe` there must cite a v1 story — `tests/guards/story-naming.test.ts` fails on one that names none, or names a v2 number (M1.28).
+- **Each assertion kind has one owning layer** (MB.180), and a test at another layer proves only what that layer adds; a file over the 10 s budget is named in the PR comment, a warning, and is split along its owner rather than the budget raised (claude-docs/testing/layer-ownership.md, "The owning layer").
 - **Why an authorization test asserts its preconditions:** "No rows came back" has several causes and only one of them is the guard working — the fixture was empty, the finder was never reached, the id was wrong. The same holds for a guard: an empty scan satisfies every `toEqual([])`, so a guard first asserts it found what it scans.

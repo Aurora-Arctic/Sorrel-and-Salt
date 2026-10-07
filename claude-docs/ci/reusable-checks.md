@@ -166,7 +166,13 @@
   `summarize-playwright.mjs` and shared `lib/coverage-table.mjs` — this repo
   had no `.github/scripts/` before that task; MB.32 added the four `checks.yml`
   scripts beside them) for the PR comment's stat line
-  and coverage table. `should-run` path-filters the same way `lint`/
+  and coverage table. Since MB.180 the script also appends a "Slowest files"
+  block — the ten slowest files from the JSON reporter's per-file times, a ⚠
+  on any over the 10 s budget and the count of them in the stat line — as a
+  warning only; it never fails the job, and the file is split along its
+  owning layer rather than the budget raised
+  ([`testing/layer-ownership.md`](../testing/layer-ownership.md)).
+  `should-run` path-filters the same way `lint`/
   `typecheck` do.
 - **`vitest.yml`'s second step (M1.28)** — `npm run test:stories`, the
   acceptance suite on `vitest.stories.config.mts`, run after the coverage step

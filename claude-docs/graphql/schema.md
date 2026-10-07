@@ -529,6 +529,12 @@ signatures DESIGN.md §7's sketch gives them.
 mutations through Yoga with the route's `maskedErrors`, so each refusal is
 asserted as the browser receives it.
 
+Since MB.180 the GraphQL file holds the transport's half alone — one refusal per
+error code per field, with its precondition, beside what only the transport can
+show — and the service test owns the rule; MB.185 and MB.186 bring each file and
+the sentences below to that shape
+([`design-decisions/mb.180-graphql-transport-half.md`](../design-decisions/mb.180-graphql-transport-half.md)).
+
 ### The compendium mutations
 
 Story 18's writes (M5.5), registered by `ingredients` in
