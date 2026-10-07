@@ -10,8 +10,8 @@ workflows pin — `ubuntu-26.04` and `blacksmith-8vcpu-ubuntu-2404` — and
 - **One target covers every `checks.yml` leg** (MB.32), where there was one per
   check workflow before the collapse: `make act-check` runs lint,
   `make act-check CHECK=typecheck` runs typecheck, and so on through `format`,
-  `build`, `audit` and `destructive-ddl` (MB.37). `--matrix name:<leg>` is what
-  keeps `act` from running all six, and `make act-test` chains lint, format,
+  `build`, `audit`, `destructive-ddl` (MB.37) and `migration-order` (MB.173).
+  `--matrix name:<leg>` is what keeps `act` from running all seven, and `make act-test` chains lint, format,
   typecheck and destructive-ddl. `act-image` builds the `testing` target
   locally under the exact tag the job's required `image` input names, so
   `docker run` never reaches GHCR and the container `credentials:` block is a

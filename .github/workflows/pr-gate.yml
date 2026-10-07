@@ -72,6 +72,7 @@ jobs:
       build: ${{ steps.filter.outputs.build }}
       destructive_ddl: ${{ steps.filter.outputs.destructive_ddl }}
       destructive_ddl_migrations_files: ${{ steps.filter.outputs.destructive_ddl_migrations_files }}
+      migration_order: ${{ steps.filter.outputs.migration_order }}
       vitest: ${{ steps.filter.outputs.vitest }}
       playwright: ${{ steps.filter.outputs.playwright }}
     steps:
@@ -142,6 +143,14 @@ jobs:
               - '.github/workflows/checks.yml'
               - 'scripts/check-destructive-ddl.ts'
               - 'src/db/migrations/**'
+            # Only the journal orders migrations; the destructive-DDL script
+            # is here because this one imports its base resolution.
+            migration_order:
+              - *shared
+              - '.github/workflows/checks.yml'
+              - 'scripts/check-migration-order.ts'
+              - 'scripts/check-destructive-ddl.ts'
+              - 'src/db/migrations/meta/_journal.json'
             # Narrower than destructive_ddl: `_files` lists every changed file
             # matching ANY pattern, so its list would hand pr-gate.yml to the
             # script as SQL. `*.sql` keeps Drizzle's meta/*.json out too.
@@ -212,6 +221,8 @@ jobs:
       run-destructive-ddl: ${{ needs.changes.outputs.destructive_ddl == 'true' }}
       # A called workflow sees no `pull_request`; only the caller can list these.
       destructive-ddl-files: ${{ needs.changes.outputs.destructive_ddl_migrations_files }}
+      run-migration-order: ${{ needs.changes.outputs.migration_order == 'true' }}
+      migration-order-base: ${{ github.base_ref }}
 
   # Built once for vitest and playwright.
   build-db-image:

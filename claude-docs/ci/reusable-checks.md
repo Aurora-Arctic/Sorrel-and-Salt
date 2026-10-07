@@ -19,10 +19,10 @@
     cancelled check, which required-status-check protection treats as
     unsatisfied — so one failing leg would otherwise block the PR on four
     checks that never got to run.
-  - **`run-lint` / `run-typecheck` / `run-build` / `run-destructive-ddl` are
-    the path-filter inputs**, one per filtered leg. `format` has none and always runs,
+  - **`run-lint` / `run-typecheck` / `run-build` / `run-destructive-ddl` /
+    `run-migration-order` are the path-filter inputs**, one per filtered leg. `format` has none and always runs,
     since Prettier covers non-code files; `audit` has none because it is
-    non-blocking and PR-only. The first step resolves the four down to one flag
+    non-blocking and PR-only. The first step resolves the five down to one flag
     for the leg it is running, and treats an empty flag as true — so `act`,
     which applies no `workflow_call` input defaults, cannot report a check it
     never ran.
@@ -112,6 +112,31 @@
     reason as `gitflow`'s `should-run` — `merge_group` has no diffable source
     ref, so it can only trust that `pr-gate.yml` already gated the PR before it
     reached the queue). None exists until M7.A.1 restores `merge-queue.yml`.
+
+- **`checks / migration-order`** (MB.173) — refuses a migration journal
+  Drizzle's migrator would apply out of order, via
+  `scripts/check-migration-order.ts`: an entry the PR adds that sits ahead of
+  one its base has, or is dated no later than the base's newest, or a journal
+  whose `when` fails to rise. Why it matters, and the regenerate step a
+  refusal asks for, are [`db/migrations-and-scripts.md`](../db/migrations-and-scripts.md),
+  "Migration order". Blocking, like `destructive-ddl`.
+  - **It needs the base's journal, which the checkout lacks.** The checkout is
+    the PR's merge commit at depth 1, so the leg fetches the base branch at
+    depth 1 itself and passes `--base origin/<base>`. Which branch is the base
+    is the caller's to say, as `destructive-ddl`'s file list is:
+    `pr-gate.yml` passes `github.base_ref` as `migration-order-base`, put
+    into the job `env` as `MIGRATION_ORDER_BASE`, and empty means `staging`,
+    which is what `act` gets. Its fetch passes `-c safe.directory=*` for
+    the reason the git-reading guards do
+    ([`container-jobs.md`](container-jobs.md)).
+    ⚠️ The command is CI's alone: its `--depth=1` fetch in a full clone marks
+    the base's commit shallow, and `git merge` then refuses the base as
+    unrelated history until `git fetch --unshallow`. Locally the check is
+    `npm run check:migration-order`, against the base as last fetched.
+  - **Its filter is the journal**, `src/db/migrations/meta/_journal.json`,
+    plus what runs the check; a PR that adds no entry cannot misorder one.
+    The base's own moves are not a trigger: a branch whose base moved after it
+    passed is checked again on its next push.
 
 - **`build-image.yml`** — builds the shared `testing` image once and exposes its
   ref as an `image` output. A checkout, then the `build-image` action with
