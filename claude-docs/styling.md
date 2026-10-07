@@ -335,8 +335,15 @@ values the components had already converged on; the few between them (0.375,
 **Two things stay off the scale.** A chip's or badge's inner padding is its
 own geometry: it is trimmed by the 1px edge so the label sits optically
 centred, and rounding it to a step moves the label. A control's height is a
-target size rather than a gap — `.input` sets `min-height: 2.75rem`, 44px at
-body size, whatever the platform's line height.
+target size rather than a gap: `$control-height`, 2.78125rem, 44.5px, the
+owner's call during MB.154, so a text field, a select or suggesting box and
+a button stand level in a row whatever the font's line height. `.input`,
+`.textarea` and `.select` take it as their `min-height`; `.btn` takes it as
+its `min-height`, its vertical padding a step short of it so the minimum
+decides; and the combobox's text line is the control's height less its edge
+and padding. It is a minimum, so a list's box still grows with its rows of
+entries. 44.5 rather than 44 is what a button measured at its own padding,
+and both clear WCAG 2.5.5's 44px.
 
 Below body copy, type takes one of four sizes by role from `type-size()`:
 `small` (0.875rem) for what a person acts on — labels, buttons, notices,

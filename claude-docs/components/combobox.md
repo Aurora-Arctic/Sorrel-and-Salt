@@ -360,9 +360,14 @@ from the box's own states, `:has(.combobox__input:focus-visible)` and
 a 22% wash of the accent on the card. A bucket's heading is muted small
 capitals with a step of space above it, the owner's call during MB.131. A chip is a filled, square-cornered
 rectangle in an 18% wash of the muted ink, react-select's shape, and its ×
-hovers in the warning's wash and ink. A control holding chips takes a step
-more padding above them, `space(2)` for `space(1)`, the owner's call during
-MB.169, so the first row of chips does not sit against the top edge. Rows
+hovers in the warning's wash and ink. A box stands at `$control-height`, level with a text field and a button
+(MB.154): its text line, `$text-height`, is the control's height less its
+1px edge and its `space(1)` padding, and a typed box, a select's value and
+the qualifier's hidden copy all take it. The chip list carries `space(1)`
+above and below, so the first of several rows of chips does not sit against
+the top edge, the owner's call during MB.169; on the list rather than the
+control, as it was, so one row still fits the text's line and a box with
+chips stays at the control's height. Rows
 that wrap sit a step further apart than the items in a row, `space(2)`
 between rows and `space(1)` along one, in the control, the values and the
 chips alike, the owner's call for MB.170, so wrapped chips no longer read as
