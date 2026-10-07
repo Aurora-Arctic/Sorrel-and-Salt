@@ -1,11 +1,11 @@
 ## Aggregating workflows
 
-- **`pr-gate.yml`** — path-filters `lint`/`typecheck`/`build`/`destructive-ddl`
-  (passed to `checks.yml` as its four `run-*` inputs), `vitest` and
+- **`pr-gate.yml`** — path-filters `lint`/`typecheck`/`build`/`destructive-ddl`/`migration-order`
+  (passed to `checks.yml` as its five `run-*` inputs), `vitest` and
   `playwright` via `dorny/paths-filter`; `format`, `audit` and `gitflow` always
   run. It calls `checks.yml` **once**, as the `checks` job, so a change to
-  `checks.yml` flips the lint, typecheck, build and destructive-ddl filters
-  together, which is what sharing one workflow costs. `vitest`/`playwright`
+  `checks.yml` flips the lint, typecheck, build, destructive-ddl and migration-order
+  filters together, which is what sharing one workflow costs. `vitest`/`playwright`
   (M1.14) are `workflow_call` jobs under the job names the M0-era stubs used,
   so no required-status-check rename was ever needed.
 - **One concurrency group per PR, and every job in it cancellable.**
