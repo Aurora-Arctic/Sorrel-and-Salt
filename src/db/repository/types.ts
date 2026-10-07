@@ -325,6 +325,23 @@ export interface AuditWriter {
     at: Date,
   ): Promise<(typeof retiredIngredientSlugs.$inferSelect)[]>;
   /**
+   * Carry a curated form's new name onto the compendium entries picking it
+   * (M5.6a): each entry's `form` becomes `form`, re-keying it, and its slug
+   * the one the caller derived, the slug it held retired at `at` when the two
+   * differ (MB.82). An entry is reached only while it is a live compendium
+   * row whose `form_id` is `formId`, so a coven's ingredient, a deleted
+   * entry or one that has since picked another form is left alone and not
+   * returned. Named for its tables, since the vocabulary module that renames a
+   * form may not name `ingredients`.
+   */
+  carryFormRename(
+    admin: SiteAdmin,
+    formId: string,
+    form: string,
+    entries: readonly FormRenameEntry[],
+    at: Date,
+  ): Promise<IngredientRow[]>;
+  /**
    * Open a pause on admin role changes, stamped from the session (MB.62). No
    * row comes back while one is already open: the one-open index refuses a
    * second, and the call writes nothing rather than failing the transaction.
@@ -397,6 +414,13 @@ export interface SimilarityScore {
   score: number;
 }
 
+/** One compendium entry a form's rename rewrites: the slug it moves to, and the slug it held. */
+export interface FormRenameEntry {
+  id: string;
+  slug: string;
+  previousSlug: string;
+}
+
 /** What a list of ingredients is narrowed by. Each part is optional, and absent means no filter. */
 export interface IngredientFilter {
   /** Word-similar (`<%`, at 0.5) to the label, the formal name or a live folk name, case- and accent-folded. */
@@ -405,6 +429,12 @@ export interface IngredientFilter {
   categoryIds?: readonly string[];
   /** The form, folded as `canonical_key` folds it. */
   form?: string;
+  /**
+   * The curated form an entry picked, by `form_id` (MB.167): how a form's
+   * delete and rename find the entries holding it (M5.6a). A uuid; the caller
+   * checks one first.
+   */
+  formId?: string;
   /** Only entries citing no live compendium reference: the admin's to-do list (MB.153). */
   withoutReferences?: boolean;
 }
@@ -535,6 +565,14 @@ export interface CategoryFilter {
   /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
   query?: string;
   /** Only the categories filed under this group. */
+  groupId?: string;
+}
+
+/** What the admin form list is narrowed by, as `CategoryFilter` narrows the categories. Each part is optional, and absent means no filter. */
+export interface IngredientFormValueFilter {
+  /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
+  query?: string;
+  /** Only the forms filed under this group. */
   groupId?: string;
 }
 

@@ -322,6 +322,7 @@ function compendiumList(filter: IngredientFilter): {
     arms: and(
       ...categoryArms(filter.categoryIds ?? []),
       formArm(filter.form),
+      filter.formId ? eq(ingredients.formId, filter.formId) : undefined,
       filter.withoutReferences ? citesNothing() : undefined,
     ),
     order: match

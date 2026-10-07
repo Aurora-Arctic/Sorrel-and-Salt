@@ -8,12 +8,20 @@ import { db } from '../connection';
 import { adminInvitations } from '../../modules/identity/schema/admin-invitations';
 import { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
 import { users } from '../../modules/identity/schema/users';
+import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
 import { existsIn } from './select';
 import { hashToken } from './tokens';
 import type { Membership } from '@/modules/coven';
-import type { AuditWriter, ColumnMatch, Identified, TwoTier, WorkspaceScoped } from './types';
+import type {
+  AuditWriter,
+  ColumnMatch,
+  Identified,
+  IngredientRow,
+  TwoTier,
+  WorkspaceScoped,
+} from './types';
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -107,6 +115,30 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
         .delete(retiredIngredientSlugs)
         .where(and(inCompendium(retiredIngredientSlugs), lte(retiredIngredientSlugs.expiresAt, at)))
         .returning(),
+    // One entry at a time: each takes its own slug, derived by the service from
+    // the one slug rule. `form_id` is matched here as well as read there, so
+    // an entry that picked another form since is not rewritten onto this one.
+    carryFormRename: async (_admin, formId, form, entries, at) => {
+      const rewritten: IngredientRow[] = [];
+      for (const { id, slug, previousSlug } of entries) {
+        const [row]: IngredientRow[] = await update(
+          ingredients,
+          { form, slug },
+          and(inCompendiumById(ingredients, id), eq(ingredients.formId, formId)),
+        );
+        if (!row) continue;
+        rewritten.push(row);
+        if (slug !== previousSlug) {
+          await insert(retiredIngredientSlugs, {
+            ingredientId: id,
+            slug: previousSlug,
+            retiredAt: at,
+            workspaceId: null,
+          });
+        }
+      }
+      return rewritten;
+    },
     // No conflict target: the one-open index is an expression index, and the
     // generated primary key is the only other unique.
     pauseAdminRoleChanges: () =>
