@@ -1,11 +1,11 @@
-import { and, eq, ilike, inArray, ne, or, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, ne, or, type SQL } from 'drizzle-orm';
 import { accounts } from '../../modules/identity/schema/auth';
 import { users } from '../../modules/identity/schema/users';
 import type { SiteAdmin } from '@/modules/identity';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import { findMany } from './finders';
-import { notSoftDeleted } from './predicates';
+import { containsText, notSoftDeleted } from './predicates';
 import { pageBounds, selectFrom } from './select';
 import type { LinkedProvider, UserFilter } from './types';
 
@@ -70,13 +70,10 @@ export async function findProvidersOfUsers(
   return rows.map(({ userId, providerId }) => ({ userId, providerId }));
 }
 
-// `ilike` rather than a trigram match: an admin looks a person up by part of
-// an address, which similarity scores poorly. Postgres' default LIKE escape
-// is the backslash.
+/** The filter's arms, each `undefined` when its part is absent. */
 function userArms({ query, awaitingApproval }: UserFilter): (SQL | undefined)[] {
-  const pattern = query ? `%${query.replace(/[\\%_]/g, '\\$&')}%` : undefined;
   return [
-    pattern ? or(ilike(users.name, pattern), ilike(users.email, pattern)) : undefined,
+    query ? or(containsText(users.name, query), containsText(users.email, query)) : undefined,
     awaitingApproval ? eq(users.canCreateWorkspace, false) : undefined,
   ];
 }
