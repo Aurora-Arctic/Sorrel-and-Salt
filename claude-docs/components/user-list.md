@@ -10,13 +10,14 @@ the hrefs of the pages either side
 
 `UserListProps` (`types.ts`):
 
-| Prop               | What it is                                                   |
-| ------------------ | ------------------------------------------------------------ |
-| `users`            | This page's `UserListEntry` rows, in the list's order        |
-| `query`            | The name-or-email filter as asked, blank for none            |
-| `awaitingApproval` | Whether the list is narrowed to `canCreateWorkspace = false` |
-| `previousHref`     | The page before this one, absent on the first                |
-| `nextHref`         | The page after this one, absent on the last                  |
+| Prop               | What it is                                                       |
+| ------------------ | ---------------------------------------------------------------- |
+| `users`            | This page's `UserListEntry` rows, in the list's order            |
+| `query`            | The name-or-email filter as asked, blank for none                |
+| `awaitingApproval` | Whether the list is narrowed to `canCreateWorkspace = false`     |
+| `previousHref`     | The page before this one, absent on the first                    |
+| `nextHref`         | The page after this one, absent on the last                      |
+| `canImpersonate`   | Whether impersonation is registered here (MB.53); off by default |
 
 A `UserListEntry` is the user row's name, email, role, `canCreateWorkspace`,
 `createdAt` and `emailVerified`, plus `providers`, the provider ids the service
@@ -42,6 +43,15 @@ read beside it.
   anchors, each only when that page exists, and nothing at all on a list of one
   page. A plain anchor is a full load, so the page's guard runs again, as with
   `AdminNav`.
+- **Impersonate is an eighth column, only where impersonation is registered**
+  (MB.53, [`auth/impersonation.md`](../auth/impersonation.md)). The page
+  passes `canImpersonate` from `impersonationEnabled()`, so at production the
+  column does not exist. Each non-admin row holds an Impersonate button named
+  "Impersonate <name>", from `impersonate-button.tsx`, the one client file
+  here. An admin's row holds none, because the endpoint refuses to
+  impersonate an admin. A success is a full load of `/` as the user. A refusal
+  says "<name> could not be impersonated." in the row, and the page stays.
+  The endpoint is the guard: the button only puts it where an admin looks.
 - **The controls M5.8 and MB.59 add sit on these rows.** Neither exists yet;
   each adds its own column in its own PR.
 
@@ -57,12 +67,17 @@ than widening the page. The pager is a row of links with no ◆ marker, as
 ## Stories
 
 [`index.stories.tsx`](../../src/components/UserList/index.stories.tsx) —
-`Default`, `Filtered` and `NoMatch`, inside the admin layout's frame.
+`Default`, `Filtered`, `NoMatch` and `WithImpersonation`, inside the admin
+layout's frame. In the workshop an Impersonate reaches no server, so a click
+shows the refusal.
 Render-only, no test ids, no snapshots.
 
 ## Testing
 
 `tests/components/UserList/index.test.tsx` covers the column headers, each
 row's cells, the `<time>`, a provider outside the roster, the empty list, the
-form's action, method, names and kept values, and the pager's links.
-`tests/app/admin/users/page.test.tsx` covers what the page hands it.
+form's action, method, names and kept values, the pager's links, and the
+Impersonate column: absent when off, on non-admin rows only, the call and
+the landing, and the refusal.
+`tests/app/admin/users/page.test.tsx` covers what the page hands it, the
+impersonation gate included.

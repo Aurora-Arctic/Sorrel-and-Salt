@@ -1,7 +1,15 @@
-import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import UserList from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
+
+// Mocked wholesale: a real call would reach /api/auth, and its success
+// navigates, which jsdom cannot follow.
+const impersonateUserMock = vi.fn();
+vi.mock('@/lib/auth-client', () => ({
+  impersonateUser: (...args: unknown[]) => impersonateUserMock(...args),
+}));
+const assignMock = vi.fn();
 
 // `/admin/users`' table, filter and pager (MB.52): render-only, so the page
 // owns the read and this owns what an admin sees of it
@@ -136,5 +144,60 @@ describe('UserList', () => {
       '/admin/users?before=previous',
     );
     expect(within(pages).queryByRole('link', { name: 'Next' })).not.toBeInTheDocument();
+  });
+});
+
+// MB.53: where impersonation is registered, each non-admin row carries the
+// control; the endpoint is the guard, and these only put it where an admin looks.
+describe('UserList impersonation', () => {
+  afterEach(() => {
+    impersonateUserMock.mockReset();
+    assignMock.mockReset();
+    vi.unstubAllGlobals();
+  });
+
+  it('offers no control where impersonation is off', () => {
+    render(<UserList {...props()} />);
+
+    expect(screen.queryByRole('button', { name: /Impersonate/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Impersonate' })).not.toBeInTheDocument();
+  });
+
+  it('offers it on each non-admin row, naming the user, and on no admin row', () => {
+    render(<UserList {...props({ canImpersonate: true })} />);
+
+    expect(screen.getByRole('columnheader', { name: 'Impersonate' })).toBeInTheDocument();
+    const bo = screen.getByRole('row', { name: /Bo Fixturewort/ });
+    expect(within(bo).getByRole('button', { name: 'Impersonate Bo Fixturewort' })).toBeEnabled();
+    const ada = screen.getByRole('row', { name: /Ada Fixturewort/ });
+    expect(within(ada).queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('impersonates the row’s user and opens the site as them', async () => {
+    impersonateUserMock.mockResolvedValue({ data: {}, error: null });
+    vi.stubGlobal('location', { ...window.location, assign: assignMock });
+    render(<UserList {...props({ canImpersonate: true })} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' }));
+
+    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/'));
+    expect(impersonateUserMock).toHaveBeenCalledWith({ userId: BO.id });
+  });
+
+  it('says so in the row when the endpoint refuses, and stays on the page', async () => {
+    impersonateUserMock.mockResolvedValue({
+      data: null,
+      error: { status: 403, message: 'You cannot impersonate admins' },
+    });
+    vi.stubGlobal('location', { ...window.location, assign: assignMock });
+    render(<UserList {...props({ canImpersonate: true })} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' }));
+
+    const bo = screen.getByRole('row', { name: /Bo Fixturewort/ });
+    expect(await within(bo).findByRole('alert')).toHaveTextContent(
+      'Bo Fixturewort could not be impersonated.',
+    );
+    expect(assignMock).not.toHaveBeenCalled();
   });
 });

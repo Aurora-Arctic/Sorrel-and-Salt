@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
+import ImpersonateButton from './impersonate-button';
 import type { UserListEntry, UserListProps } from './types';
 import './index.scss';
 
@@ -17,7 +18,13 @@ function providerLabel(id: string): string {
 
 const yesNo = (value: boolean): string => (value ? 'Yes' : 'No');
 
-const UserRow = ({ user }: { user: UserListEntry }): ReactElement => (
+const UserRow = ({
+  user,
+  canImpersonate,
+}: {
+  user: UserListEntry;
+  canImpersonate: boolean;
+}): ReactElement => (
   <tr>
     <td>{user.name}</td>
     <td>{user.email}</td>
@@ -30,6 +37,12 @@ const UserRow = ({ user }: { user: UserListEntry }): ReactElement => (
     </td>
     <td>{user.providers.length ? user.providers.map(providerLabel).join(', ') : 'None'}</td>
     <td>{yesNo(user.emailVerified)}</td>
+    {/* Not on an admin's row: the endpoint refuses one (MB.53). */}
+    {canImpersonate && (
+      <td>
+        {user.role === 'admin' ? null : <ImpersonateButton userId={user.id} name={user.name} />}
+      </td>
+    )}
   </tr>
 );
 
@@ -39,6 +52,7 @@ const UserList = ({
   awaitingApproval,
   previousHref,
   nextHref,
+  canImpersonate = false,
 }: UserListProps): ReactElement => (
   <div className="user-list">
     <search>
@@ -82,11 +96,12 @@ const UserList = ({
               <th scope="col">Signed up</th>
               <th scope="col">Sign-in methods</th>
               <th scope="col">Email verified</th>
+              {canImpersonate && <th scope="col">Impersonate</th>}
             </tr>
           </thead>
           <tbody>
             {users.map((user) => (
-              <UserRow key={user.id} user={user} />
+              <UserRow key={user.id} user={user} canImpersonate={canImpersonate} />
             ))}
           </tbody>
         </table>

@@ -1,5 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 
@@ -138,5 +138,31 @@ describe('the /admin/users page', () => {
     expect(Object.fromEntries(url.searchParams)).toEqual({
       before: encodeCursor(entry(1).cursor),
     });
+  });
+});
+
+// MB.53: the page offers impersonation where the plugin is registered, and
+// only there; the gate itself is tests/lib/impersonation.test.ts's.
+describe('the /admin/users page, impersonation', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('offers it on each row where impersonation is on', async () => {
+    vi.stubEnv('ENABLE_IMPERSONATION', 'true');
+    vi.stubEnv('VERCEL_ENV', 'preview');
+    await renderPage();
+
+    expect(
+      screen.getByRole('button', { name: 'Impersonate Listed Fixture 01' }),
+    ).toBeInTheDocument();
+  });
+
+  it('offers it nowhere at production, the flag set or not', async () => {
+    vi.stubEnv('ENABLE_IMPERSONATION', 'true');
+    vi.stubEnv('VERCEL_ENV', 'production');
+    await renderPage();
+
+    expect(screen.queryByRole('button', { name: /Impersonate/ })).not.toBeInTheDocument();
   });
 });

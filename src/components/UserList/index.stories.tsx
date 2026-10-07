@@ -61,3 +61,11 @@ export const NoMatch: Story = () => (
     <UserList users={[]} query="nobody" awaitingApproval={false} />
   </Frame>
 );
+
+// Where impersonation is registered (MB.53): an Impersonate on each non-admin
+// row. In the workshop the call reaches no server, so a click shows the refusal.
+export const WithImpersonation: Story = () => (
+  <Frame>
+    <UserList users={USERS} query="" awaitingApproval={false} canImpersonate />
+  </Frame>
+);

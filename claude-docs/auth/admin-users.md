@@ -55,6 +55,10 @@ may _change_.
   resolves through the `providersByUser` loader. A user's own providers come
   from Better Auth, on `/account`, whose table it is.
 - **The bootstrap user is left out.** The seed's system user,
+- **Impersonate sits on each non-admin row** where impersonation is
+  registered (MB.53). The control is the page's, but the guard is Better
+  Auth's endpoint, which refuses a non-admin caller and an admin target
+  ([`impersonation.md`](impersonation.md)).
   `BOOTSTRAP_USER_ID`, named Seed System User, is a live `users` row in every
   database, production included, because it stamps the seeded rows. Nobody can
   sign in as it ([`db/seed-module.md`](../db/seed-module.md), "The seed module"), so nothing

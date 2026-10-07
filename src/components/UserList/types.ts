@@ -24,4 +24,12 @@ export interface UserListProps {
   previousHref?: string;
   /** The page after this one, absent on the last. */
   nextHref?: string;
+  /** Whether impersonation is registered here, so each non-admin row offers it (MB.53). */
+  canImpersonate?: boolean;
+}
+
+export interface ImpersonateButtonProps {
+  userId: string;
+  /** The user's name, completing the button's accessible name. */
+  name: string;
 }

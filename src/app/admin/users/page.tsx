@@ -3,6 +3,7 @@ import { cache } from 'react';
 import UserList from '../../../components/UserList';
 import type { UserListEntry } from '../../../components/UserList/types';
 import { InvalidCursor } from '../../../lib/errors';
+import { impersonationEnabled } from '../../../lib/impersonation';
 import { DEFAULT_PAGE_SIZE, decodeCursor, resolvePage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
 import type { Session } from '../../../lib/session';
@@ -94,6 +95,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         users={users}
         query={query}
         awaitingApproval={awaitingApproval}
+        canImpersonate={impersonationEnabled()}
         previousHref={
           pageInfo.hasPreviousPage && pageInfo.startCursor
             ? pageHref(query, awaitingApproval, { before: pageInfo.startCursor })
