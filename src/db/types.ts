@@ -7,6 +7,12 @@ export type AuditOperation = 'insert' | 'update' | 'delete';
 
 export interface AuditSession {
   userId: string;
+  /**
+   * The admin acting as `userId`, on an impersonation session alone (MB.53).
+   * `userId` is still who the stamps name: impersonation reproduces what that
+   * user would see and do.
+   */
+  impersonatedBy?: string;
 }
 
 export type AuditFields = {

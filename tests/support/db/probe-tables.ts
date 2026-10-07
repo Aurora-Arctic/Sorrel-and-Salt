@@ -17,6 +17,8 @@ export const herbs = pgTable('repository_probe_herbs', {
   // inside the inserting transaction — the only way a narrow `AuditWriter`
   // lets a test observe it. `current_setting(.., true)` is missing_ok.
   actingUser: text('acting_user'),
+  // The same for `app.impersonated_by` (MB.53).
+  impersonatingAdmin: text('impersonating_admin'),
   ...auditColumns,
 });
 
@@ -90,6 +92,7 @@ export function useProbeTables() {
         id uuid primary key default gen_random_uuid(),
         name text not null,
         acting_user text default current_setting('app.current_user_id', true),
+        impersonating_admin text default current_setting('app.impersonated_by', true),
         created_at timestamp not null default now(),
         created_by uuid not null,
         updated_at timestamp not null default now(),
