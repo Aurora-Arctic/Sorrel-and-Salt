@@ -125,7 +125,7 @@ The issues of `Aurora-Arctic/Sorrel-and-Salt`, under the org Project **Sorrel & 
 
 ## Out of scope for v1
 
-Do not build, and do not leave hooks for beyond what the design doc names: the **entire notes subsystem** (stories 35–46; §13), edit history, viewer spell approval, compendium/category suggestions, duplicate merge tooling, bulk add from the compendium, GraphQL response caching, passkeys and every other first-party credential (email/password sign-in included), note moderation, subscription billing.
+Do not build, and do not leave hooks for beyond what the design doc names: the **entire notes subsystem** (stories 35–46; §13), edit history, viewer spell approval, compendium/category suggestions, duplicate merge tooling, bulk add from the compendium, GraphQL response caching, passkeys and every other first-party credential (email/password sign-in included), note moderation, subscription billing, help and FAQ articles (§13; MB.175).
 
 Story numbers 35–46 are **not reused** — v1 is 52 stories, numbered 1–34 and 47–64.
 

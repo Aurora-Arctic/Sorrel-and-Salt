@@ -1694,6 +1694,10 @@ The staging component workshop is admin-only in v1 (M2.10): reviewers who should
 
 Better Auth's `anonymous` plugin mints a `users` row and a session for a visitor so work done before signing up can be kept — a visitor drafting a spell against the public compendium, then keeping it by accepting an invitation. Declined for v1 by MB.80, where it was weighed against the public compendium, whose read needs no identity ([`mb.80-public-compendium.md`](design-decisions/mb.80-public-compendium.md), "What it rules out"). If the feature is wanted, the plugin is the mechanism, and its rows would need the same provisional-account expiry MB.67 gives unverified sign-ups. The mb.74 record moved it from "never" to here.
 
+### Help and FAQ articles
+
+Wanted, and shaped at minting so it is not re-derived (MB.175): an FAQ and a set of help articles on how the site is used, **rows a site admin edits rather than files in the repo**, so an article changes without a deploy — `help_articles`, with a `kind` of `faq` or `article`, a `title`, a `slug`, a `summary`, a Markdown `body` and a `position` for the FAQ's order, the audit spread and a `seedKey` — managed at `/admin/help` and **read without an account** at `/help` and `/help/[slug]`, public and indexable on the compendium's frame (MB.83), the Markdown rendered through a sanitising renderer. Two v1 invariants widen when it is built, each recorded as a design decision then: admins curate the help articles beside the compendium and its vocabularies, and `/help` joins `/compendium` as a public surface, carrying no workspace data. The articles ship as a seed keyed on `seed_key` (MB.171). Nothing in v1 builds, seeds or links it.
+
 ### Subscription billing
 
 The owner means to charge for the site eventually. What is wanted, written down so it is not re-derived: **the workspace is what pays**, and its owner is the one who subscribes; the price scales with the workspace's member count; a new workspace can get free months; an admin can make a workspace free until they say otherwise; and someone who belongs to several workspaces pays less. Nothing in v1 bills, stores a Stripe id, or gates anything on payment.
