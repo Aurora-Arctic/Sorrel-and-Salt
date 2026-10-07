@@ -1,7 +1,7 @@
 @use '../../scss/variables' as *;
 
-// Layout only, until the admin area's design review (MB.115), bar the header
-// hairline and the shared `.pager` primitive, which match the category list's.
+// Layout only, until the admin area's design review (MB.115). The table and
+// the pager are primitives (`.data-table`, `.pager`).
 
 .user-list {
   display: flex;
@@ -14,35 +14,4 @@
   flex-wrap: wrap;
   align-items: end;
   gap: space(3) space(5);
-}
-
-// A table is as wide as its columns: on a narrow screen it scrolls inside its
-// frame rather than widening the page.
-.user-list__frame {
-  overflow-x: auto;
-}
-
-.user-list__table {
-  border-collapse: collapse;
-  width: 100%;
-
-  th,
-  td {
-    // Inset on both sides now the rows are banded, so no text meets a band's edge.
-    padding: space(2) space(3);
-    text-align: start;
-    // The baseline, so a row's small button reads on its text's line.
-    vertical-align: baseline;
-  }
-
-  // The muted ink, as the category list's and every other hairline here.
-  thead th {
-    border-bottom: 1px solid $text-muted;
-  }
-
-  // Banded on the card surface a modal wears, so a wide row stays readable
-  // across (the owner's call, M5.6).
-  tbody tr:nth-child(even) {
-    background-color: $surface-card;
-  }
 }
