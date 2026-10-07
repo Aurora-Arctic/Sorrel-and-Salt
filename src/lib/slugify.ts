@@ -28,3 +28,13 @@ export function ingredientSlug(
 ): string {
   return slugify([name, form, canonicalName].filter(Boolean).join(' '));
 }
+
+/**
+ * A curated form's slug: its name, then its group's (M5.6a), so two live
+ * forms sharing a name under two groups hold two addresses — Wax under
+ * Substance is `wax-substance`, under Animal `wax-animal`. It follows a change
+ * to either.
+ */
+export function formSlug(name: string, groupName: string): string {
+  return slugify(`${name} ${groupName}`);
+}

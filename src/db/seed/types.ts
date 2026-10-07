@@ -138,6 +138,12 @@ export interface TwoTierVocabulary<
   toItemRow: (row: TwoTierItemRow, groupId: string) => Omit<PgInsertValue<T>, InsertStamps>;
   /** Capitalised, for the error naming an item whose group is missing: `Category`, `Form`, `Deity`. */
   itemNoun: string;
+  /**
+   * The item's slug, given the name of the group it is filed under now:
+   * `slugify(item.name)` when absent. A form's carries its group (M5.6a),
+   * so two forms of one name under two groups hold two addresses.
+   */
+  slugOf?: (item: I, groupName: string) => string;
 }
 
 export interface SeedCategoryGroup {
