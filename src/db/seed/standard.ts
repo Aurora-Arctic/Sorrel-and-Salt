@@ -37,8 +37,9 @@ import type {
 /**
  * A owns W, B is a member of W, C a viewer in W, D a member of unrelated X, E a
  * site admin in no workspace. `canCreateWorkspace` follows the invite gate: A–D
- * earned it by membership, E was never invited and creates workspaces as an
- * admin instead. `…0003`–`…0007` continue the bootstrap's series.
+ * earned it by membership, and E, never invited, holds it as an admin, since the
+ * users CHECK requires it of every admin (MB.177). `…0003`–`…0007` continue the
+ * bootstrap's series.
  */
 export const FIXTURE_USERS = {
   A: {
@@ -74,7 +75,7 @@ export const FIXTURE_USERS = {
     name: 'Fixture E',
     email: 'e@seed.sorrelandsalt.com',
     role: 'admin',
-    canCreateWorkspace: false,
+    canCreateWorkspace: true,
   },
 } satisfies Record<'A' | 'B' | 'C' | 'D' | 'E', FixtureUser>;
 

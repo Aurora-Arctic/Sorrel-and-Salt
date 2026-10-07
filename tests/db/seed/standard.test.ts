@@ -126,8 +126,9 @@ describe('the cast: five fixture users, A–E', () => {
   });
 
   // Invite-gate: A–D earned the flag by joining a workspace; E is in none and
-  // never invited, so E's rights come from being an admin, not from the flag.
-  it('grants canCreateWorkspace to the four who joined a workspace, and to no one else', async () => {
+  // never invited, and holds it by being an admin, as the users CHECK makes
+  // every admin hold it (MB.177).
+  it('grants canCreateWorkspace to the four who joined a workspace, and to the admin', async () => {
     await seedStandard(db);
 
     const byId = new Map((await allUsers()).map((u) => [u.id, u]));
@@ -135,7 +136,7 @@ describe('the cast: five fixture users, A–E', () => {
     expect(byId.get(FIXTURE_USERS.B.id)?.can_create_workspace).toBe(true);
     expect(byId.get(FIXTURE_USERS.C.id)?.can_create_workspace).toBe(true);
     expect(byId.get(FIXTURE_USERS.D.id)?.can_create_workspace).toBe(true);
-    expect(byId.get(FIXTURE_USERS.E.id)?.can_create_workspace).toBe(false);
+    expect(byId.get(FIXTURE_USERS.E.id)?.can_create_workspace).toBe(true);
   });
 
   it('stamps every user as the bootstrap user’s', async () => {

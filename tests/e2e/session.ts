@@ -42,8 +42,8 @@ export async function signInAs(
     await sql.begin(async (tx) => {
       // Stamped as its own creator, as the sign-up hook stamps one.
       await tx`
-        insert into users (id, name, email, email_verified, role, created_by, updated_by)
-        values (${userId}, 'Fixture Person', ${email}, true, ${role}, ${userId}, ${userId})
+        insert into users (id, name, email, email_verified, role, can_create_workspace, created_by, updated_by)
+        values (${userId}, 'Fixture Person', ${email}, true, ${role}, ${role === 'admin'}, ${userId}, ${userId})
       `;
       for (const [index, providerId] of providers.entries()) {
         await tx`

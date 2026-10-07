@@ -94,7 +94,8 @@ describe('impersonating a user', () => {
     const target = await insertUser('user');
     expect((await impersonate(asE, target)).status).toBe(200);
 
-    await sql`update users set role = 'admin' where id = ${target}`;
+    // An admin holds the creation flag, which the users CHECK requires (MB.177).
+    await sql`update users set role = 'admin', can_create_workspace = true where id = ${target}`;
 
     expect((await impersonate(asE, target)).status).toBe(403);
   });

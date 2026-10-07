@@ -155,8 +155,8 @@ describe('the backfill', () => {
   it('writes nothing for a user, or for an admin since soft-deleted', async () => {
     const deletedAdmin = '00000000-0000-0000-0000-0000000000fe';
     await sql`
-      insert into users (id, name, email, role, created_by, updated_by, deleted_at, deleted_by)
-      values (${deletedAdmin}, 'Lapsed Admin', 'lapsed@example.test', 'admin',
+      insert into users (id, name, email, role, can_create_workspace, created_by, updated_by, deleted_at, deleted_by)
+      values (${deletedAdmin}, 'Lapsed Admin', 'lapsed@example.test', 'admin', true,
               ${deletedAdmin}, ${deletedAdmin}, now(), ${deletedAdmin})
     `;
 
@@ -173,7 +173,8 @@ describe('the backfill', () => {
   // before the backfill, so that it gets no ledger row either.
   it('demotes a bootstrap user seeded as an admin, and writes it no row', async () => {
     await sql`
-      update users set role = 'admin', name = 'Bootstrap Admin' where id = ${BOOTSTRAP_USER_ID}
+      update users set role = 'admin', can_create_workspace = true, name = 'Bootstrap Admin'
+      where id = ${BOOTSTRAP_USER_ID}
     `;
 
     await backfill();

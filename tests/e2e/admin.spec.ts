@@ -120,7 +120,8 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
     'Fixture Person',
     'an-admin@admin-users.test',
     'Admin',
-    'No',
+    // Every admin may create a workspace, and the users CHECK says so (MB.177).
+    'Yes',
     /^\d{4}-\d{2}-\d{2}$/,
     'Discord, Google',
     'Yes',
