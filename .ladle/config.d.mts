@@ -4,6 +4,8 @@
 // Declares only what the guard reads.
 declare const config: {
   stories?: string[];
+  hmrHost?: string;
+  hmrPort?: number;
   addons?: {
     theme?: {
       enabled?: boolean;

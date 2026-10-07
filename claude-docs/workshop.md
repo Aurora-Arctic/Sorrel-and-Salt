@@ -30,14 +30,23 @@ without a page routed to it.
 ## `.ladle/`
 
 - **`config.mjs`** — `stories` glob, `port` 61000, `previewPort` 61001
-  (`ladle preview`), `outDir` `.reports/workshop`, pinned `hmrPort` 61002. `storyOrder`
+  (`ladle preview`), `outDir` `.reports/workshop`, pinned `hmrPort` 61002,
+  empty `hmrHost`. `storyOrder`
   forces each component's `Default` story first and leaves the rest in Ladle's
   own order; it is a global-config hook only (no per-story-file equivalent) and
   must stay a self-contained function, since Ladle serializes it with
-  `.toString()`. `hmrPort` is pinned only so the HMR socket lands on a known
-  port rather than a random free one — it stays reachable when the workshop is
-  opened over the LAN instead of at `localhost`, and it does not move between
-  restarts.
+  `.toString()`. `hmrPort` is pinned so the HMR socket lands on a known port
+  that compose can publish, rather than a random free one, and it does not
+  move between restarts.
+  - **`hmrHost: ''`** is what makes that socket reachable. Ladle runs Vite in
+    middleware mode, so the HMR socket is a standalone server bound to
+    `hmrHost ?? 'localhost'`; left unset, it listens on loopback only (`::1`),
+    and in the `workshop` container the published 61002 never reaches it, so
+    the page loads and never hot-reloads. The empty string survives the `??`,
+    Vite binds every interface, and the browser connects back to the page's own
+    hostname. `'0.0.0.0'` would bind the same but is also sent to the browser
+    as the address to connect to. `tests/guards/workshop-guards.test.ts` pins
+    it.
   - **`addons.theme.defaultState: 'dark'`** matches the app's dark-first default
     in `globals.scss` (`:root { @include theme-dark }`), so the workshop opens
     the same way a viewer who has never touched the toggle sees the app.
