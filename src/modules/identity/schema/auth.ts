@@ -4,8 +4,9 @@ import { users } from './users';
 
 // Better Auth's own adapter tables, generated with `usePlural: true` and
 // `generateId: 'uuid'` (src/lib/auth.ts); `users` lives in ./users.ts.
-// No `*_by` columns and nothing writes them through `withAudit`, so the
-// `updated_at` trigger skips them.
+// No audit columns and nothing writes them through `withAudit`, so the
+// `updated_at` trigger skips them. `sessions.impersonated_by` is the `admin`
+// plugin's column, not an audit id.
 
 export const sessions = pgTable(
   'sessions',
@@ -24,6 +25,9 @@ export const sessions = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    // The admin acting as `user_id`, on an impersonation session alone; the
+    // `admin` plugin's column, registered outside production only (MB.53).
+    impersonatedBy: uuid('impersonated_by').references(() => users.id),
   },
   (table) => [index('sessions_userId_idx').on(table.userId)],
 );

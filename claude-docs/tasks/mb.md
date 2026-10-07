@@ -2390,11 +2390,11 @@ _Acceptance criteria:_
 - The workshop has a foundations page showing the palette, type scale, spacing and every primitive in both themes
 - Every token still clears 4.5:1 in both themes, and the existing pages' e2e specs, axe scans and stories pass
 
-**MB.115 — Design review: the admin area** · 3h
+**MB.115 — Design review: the admin area** · 4h
 
 _Story:_ As a site admin, I want the admin area to look finished and read clearly, so that curating the compendium is quick and hard to get wrong.
 
-Minted during M5.4. Reviews the admin area once its last page lands: M5.4's layout and `AdminNav`, including the current-page marker it leaves to the design; `IngredientForm` in editable mode (M5.9, M5.10, M5.10a) inside M5.5's compendium page; the category, form, planet and zodiac pages (M5.6, M5.6a, MB.95); the group pages and their colour pickers (M5.6b); the user list (MB.52) with its approval, grant and pause controls (M5.8, MB.59, MB.63); and admin invitations (MB.70). The admin layout is wider than the reading measure for its tables. `IngredientForm` is reviewed again read-only and inside the add and edit modals, with the compendium (MB.120). MB.169 left one call here, on the owner's word: a picked form's description opens in a tooltip while the Form box has focus, so the keyboard reaches it without a tab stop of its own, and the bubble then covers the Form label above the box. Whether it stays on focus, moves, or closes at the first keystroke is this review's to settle; hover-only is not an option, since the keyboard would then never reach it (WCAG 2.1.1).
+Minted during M5.4. Reviews the admin area once its last page lands: M5.4's layout and `AdminNav`, including the current-page marker it leaves to the design; `IngredientForm` in editable mode (M5.9, M5.10, M5.10a) inside M5.5's compendium page; the category, form, planet and zodiac pages (M5.6, M5.6a, MB.95); the group pages and their colour pickers (M5.6b); the user list (MB.52) with its impersonation, approval, grant and pause controls (MB.53, M5.8, MB.59, MB.63); the impersonation banner (MB.53), whose tucked-away motion, full width, 3px rule and small Stop button the owner already set; and admin invitations (MB.70). **The user list gets a design of its own, not only tokens on a table** (amended during MB.53, re-estimated from 3h): the owner found it too basic as built. At phone width it currently scrolls sideways inside its frame with the last columns, Impersonate among them, out of sight. **The phone design is reviewed as a design of its own** (amended during MB.53, on the owner's word), not only checked for not breaking: phone layouts are proposed and signed off separately from desktop, on a touch screen at 375px and at 412px, the width the owner tests at, including the impersonation banner's touch layout (in the page's flow at the very top, with everything else offset by the top inset, `styling.md`). The admin layout is wider than the reading measure for its tables. `IngredientForm` is reviewed again read-only and inside the add and edit modals, with the compendium (MB.120). MB.169 left one call here, on the owner's word: a picked form's description opens in a tooltip while the Form box has focus, so the keyboard reaches it without a tab stop of its own, and the bubble then covers the Form label above the box. Whether it stays on focus, moves, or closes at the first keystroke is this review's to settle; hover-only is not an option, since the keyboard would then never reach it (WCAG 2.1.1).
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
@@ -2408,6 +2408,8 @@ _Acceptance criteria:_
 - `AdminNav` marks the current page, with `aria-current` as well as visually
 - The picked form's tooltip on the Form box's focus is settled, the keyboard still reaching it (MB.169)
 - Admin lists and tables read at desktop width and stay usable at phone width
+- The phone design is signed off on its own, as screenshots on a touch screen at 375px and 412px, every admin page and the impersonation banner among them (amended during MB.53)
+- The user list is designed, not a bare table: at phone width every user's facts and controls are reachable without a hidden sideways scroll (amended during MB.53)
 - A destructive admin action looks destructive, and its confirmation says what will happen
 
 **MB.116 — Design review: the sign-in and account pages** · 2h
@@ -2455,7 +2457,7 @@ Minted during M5.4. Reviews the mail the site sends, once the last of it exists:
 
 _Acceptance criteria:_
 
-- The owner signs off each mail's design, in a light and a dark client, recorded as a comment on this issue
+- The owner signs off each mail's design, in a light and a dark client and in a phone-width client (375px), recorded as a comment on this issue (phone width amended during MB.53, on the owner's word)
 - Each mail reads correctly in Gmail, Outlook and Apple Mail, light and dark, and with images blocked
 - Each mail carries a plain-text part that says everything its HTML does
 - The link is the obvious action, and its address is also readable as text

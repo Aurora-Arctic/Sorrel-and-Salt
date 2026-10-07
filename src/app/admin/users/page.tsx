@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import { cache } from 'react';
 import UserList from '../../../components/UserList';
+import { userListHref } from '../../../components/UserList/href';
 import type { UserListEntry } from '../../../components/UserList/types';
 import { InvalidCursor } from '../../../lib/errors';
+import { impersonationEnabled } from '../../../lib/impersonation';
 import { DEFAULT_PAGE_SIZE, decodeCursor, resolvePage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
 import type { Session } from '../../../lib/session';
@@ -13,8 +15,6 @@ import type { AdminUsersPageProps, UsersSearchParams } from './types';
 export const metadata: Metadata = {
   title: 'Users — Admin — Sorrel & Salt',
 };
-
-const PATH = '/admin/users';
 
 function single(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -30,16 +30,6 @@ function readableCursor(value: string | undefined): string | undefined {
     if (error instanceof InvalidCursor) return undefined;
     throw error;
   }
-}
-
-/** The page's own address under this filter, at a cursor. */
-function pageHref(query: string, awaitingApproval: boolean, cursor: Record<string, string>) {
-  const params = new URLSearchParams({
-    ...(query && { query }),
-    ...(awaitingApproval && { awaiting: '1' }),
-    ...cursor,
-  });
-  return `${PATH}?${params}`;
 }
 
 // The page and GraphQL's `users` end at the same service, paged by the same
@@ -81,7 +71,9 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   const session = await requireAdminSession();
   const params: UsersSearchParams = await searchParams;
   const query = single(params.query)?.trim() ?? '';
-  const awaitingApproval = single(params.awaiting) === '1';
+  // A flag by presence: `?awaiting`, a native submit's `awaiting=`, or an
+  // older link's `awaiting=1`.
+  const awaitingApproval = params.awaiting !== undefined;
   const after = readableCursor(single(params.after));
   const before = after ? undefined : readableCursor(single(params.before));
 
@@ -94,14 +86,15 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         users={users}
         query={query}
         awaitingApproval={awaitingApproval}
+        canImpersonate={impersonationEnabled()}
         previousHref={
           pageInfo.hasPreviousPage && pageInfo.startCursor
-            ? pageHref(query, awaitingApproval, { before: pageInfo.startCursor })
+            ? userListHref(query, awaitingApproval, { before: pageInfo.startCursor })
             : undefined
         }
         nextHref={
           pageInfo.hasNextPage && pageInfo.endCursor
-            ? pageHref(query, awaitingApproval, { after: pageInfo.endCursor })
+            ? userListHref(query, awaitingApproval, { after: pageInfo.endCursor })
             : undefined
         }
       />

@@ -86,7 +86,9 @@ sets the front-door size, so the layout needs no route awareness and the page
 no prop. Each modifier pins its corner and its photograph's own aspect ratio,
 which `mask-size: 100% 100%` relies on; the sorrel also sets
 `--backdrop-scale: 0.75`, since its subject fills more of its frame than the
-salt does.
+salt does. The sorrel's top is `$top-inset` rather than 0, so it starts below
+the impersonation banner on a touch screen ([`styling.md`](../styling.md),
+"The top inset").
 
 ## Stacking
 

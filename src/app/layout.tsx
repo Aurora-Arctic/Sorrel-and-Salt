@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Backdrop from '../components/Backdrop';
 import ThemeToggle from '../components/ThemeToggle';
+import { impersonationEnabled } from '../lib/impersonation';
 import { body, display } from './fonts';
+import ImpersonationBannerSlot from './impersonation-banner';
 import PrePaintScripts from './pre-paint-scripts';
 import Providers from './providers';
 import './globals.scss';
@@ -21,6 +23,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <PrePaintScripts />
       </head>
       <body>
+        {/* First, above what it describes; mounted only where impersonation is
+            registered, so production pays nothing for it (MB.53). */}
+        {impersonationEnabled() && <ImpersonationBannerSlot />}
         {/* Every page gets it, signed in or not — M2.6 moved it here from the
             home page, which was the only page that existed yet. */}
         <ThemeToggle />

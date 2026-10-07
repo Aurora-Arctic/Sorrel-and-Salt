@@ -4,7 +4,7 @@ import type { BetterAuthOptions } from 'better-auth';
 import type { DBAdapter } from '@better-auth/core/db/adapter';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
-import { rateLimits } from '@/modules/identity/schema/auth';
+import { rateLimits, sessions } from '@/modules/identity/schema/auth';
 
 // Better Auth's `rateLimit` model for `storage: 'database'`: `key` unique,
 // `count`, and `lastRequest` a bigint of epoch milliseconds, which outgrows an
@@ -132,5 +132,41 @@ describe("rate_limits through Better Auth's adapter", () => {
       where: [{ field: 'key', value: key }],
     });
     expect(found).toMatchObject({ key, count: 1, lastRequest });
+  });
+});
+
+// MB.53: the admin acting as `user_id`, on an impersonation session alone —
+// the `admin` plugin's one column, null on every other session.
+describe('sessions.impersonated_by', () => {
+  const { byName } = tableFacts(sessions);
+  let sql: postgres.Sql;
+  useTestDatabase((client) => {
+    sql = client;
+  });
+
+  it('is a nullable uuid', () => {
+    expect(byName.impersonated_by.columnType).toBe('PgUUID');
+    expect(byName.impersonated_by.notNull).toBe(false);
+  });
+
+  it('references users.id in the migrated database', async () => {
+    const rows = await sql<{ definition: string }[]>`
+      select pg_get_constraintdef(oid) as definition from pg_constraint
+      where conrelid = 'sessions'::regclass and conname = 'sessions_impersonated_by_users_id_fk'
+    `;
+
+    expect(rows).toEqual([{ definition: 'FOREIGN KEY (impersonated_by) REFERENCES users(id)' }]);
+  });
+
+  it('refuses an admin id naming no user', async () => {
+    const [user] = await sql<{ id: string }[]>`select id from users limit 1`;
+
+    const error = await failureOf(sql`
+      insert into sessions (token, user_id, expires_at, updated_at, impersonated_by)
+      values ('impersonated-by-nobody', ${user.id}, now(), now(), '00000000-0000-0000-0000-0000000000ff')
+    `);
+
+    expect(error.code).toBe('23503');
+    expect(error.constraint_name).toBe('sessions_impersonated_by_users_id_fk');
   });
 });

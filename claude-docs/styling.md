@@ -351,6 +351,26 @@ field errors; `caption` (0.8125rem) for hints, metadata, chips and badges; and
 `overline` (0.75rem) for the `.eyebrow`. The headings' scale is
 `typography-base`'s, above.
 
+### The top inset
+
+`$top-inset` (`var(--top-inset, 0px)`) is how much of the top of the window
+is taken by chrome in the page's flow above everything else. Today that is
+the impersonation banner on a touch screen alone (MB.53), and 0 everywhere
+else. The banner publishes its measured height as
+`--impersonation-banner-height`, and its own stylesheet maps it to
+`--top-inset` under `@media (hover: none)`.
+
+What pins itself to the top of the window or sizes itself to it offsets by
+the inset, so it starts below the banner and the page does not scroll by the
+banner's height:
+
+- `ThemeToggle` and the sorrel corner of `Backdrop` take `top: $top-inset`.
+- The five pages a full screen high (`Welcome`, `NotAuthorized`,
+  `SignInPanel`, `SignInMethods` and `EmailForm`) take
+  `min-height: calc(100dvh - #{$top-inset})`.
+
+A new full-height page, or anything new fixed to the top, does the same.
+
 ## Corner radius
 
 Four radii by role, from `radius()`:
@@ -382,6 +402,13 @@ included. Four variants:
   The body ink on an edge, so it neither competes with the primary nor reads as
   destructive — and, unlike the muted ink, not as disabled either.
 - **`.btn--secondary`**, what destroys something: Delete, Remove. The wax.
+
+**One size modifier, `.btn--small`**, which composes with any variant: half
+the padding (`space(1) space(3)`), no `$control-height` minimum, a 1px edge
+in place of `.btn`'s 1.6px, which reads heavy at this size, the `caption`
+type size, and a `space(2)` gap. It is for a compact strip that the full button would make taller, such
+as a banner or a table row. The impersonation banner's Stop is the first
+(MB.53).
 
 **Disabled is dashed and faded**, from `disabled` or `aria-disabled`: the
 edge dashes, the fill clears, and the whole button drops to 55%. Neither
@@ -511,7 +538,8 @@ heavier than the reverse; light reverts to the browser default.
   - `_layout.scss` → `layout-base` — bare `section` / `header` structure, plus
     `.header` / `.footer`.
   - `_primitives.scss` → `primitives-base` — the class layer: `.panel`,
-    `.btn` and its `--solid` / `--quiet` / `--secondary` variants, `.notice`,
+    `.btn` and its `--solid` / `--quiet` / `--secondary` variants and
+    `--small` size, `.notice`,
     the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
     `.checkbox`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
     `.chip` and `.chip.is-selected` over `chip()`, the `.badge--*` classes over `badge()`, and `.visually-hidden`, for text a

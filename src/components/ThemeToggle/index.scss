@@ -13,8 +13,12 @@ $theme-toggle-corner-radius: 3.9rem;
 
 .theme-toggle {
   position: fixed;
-  top: 0;
+  // Beneath anything in the page's flow above it: the impersonation banner
+  // on a touch screen (MB.53).
+  top: $top-inset;
   right: 0;
+  // Above the impersonation banner, which runs beneath this corner (MB.53).
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -25,6 +29,10 @@ $theme-toggle-corner-radius: 3.9rem;
   border: none;
   // Centred on the pinned top-right corner, so only the quarter in the viewport paints.
   clip-path: circle($theme-toggle-corner-radius at 100% 0%);
+  // The parked facet sits past the window's right edge. The clip hides it but
+  // still lets it count as overflow, which Chrome's device emulator pans to;
+  // the button's own box, which holds the visible quarter, contains it.
+  overflow: hidden;
   // $text-on-color: the contrast-checked label for a solid fill.
   background-color: $accent;
   color: $text-on-color;

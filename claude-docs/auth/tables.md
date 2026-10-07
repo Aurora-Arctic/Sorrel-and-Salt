@@ -21,6 +21,11 @@ convention) and split across two schema files:
   carries a `password` column that stays `null` in v1 (OAuth only) —
   DESIGN.md §2 notes the tables already accommodate email+password without
   a migration, so this column is that accommodation, not dead schema.
+  `sessions.impersonated_by` (MB.53, migration `0049`) is the `admin` plugin's
+  one column: a nullable `uuid` referencing `users.id`, naming the admin on an
+  impersonation session and null on every other. Only the narrowed plugin
+  reads or writes it, and only outside production
+  ([`impersonation.md`](impersonation.md)).
 - **`rate_limits`**, in the same file (MB.75) — the model Better Auth's
   limiter asks for under `rateLimit.storage: 'database'`: `id`, `key` text
   unique (the client IP and the path), `count` integer, and `last_request` a

@@ -81,8 +81,8 @@ run as a test.
   `referential_constraints` shows each `*_by` referencing `users(id)`). Both
   sides because they can disagree: a spread deleted from a schema file leaves
   the migrated database's columns standing, and a catalogue-only sweep would
-  stay green. The `UNAUDITED_TABLES` are asserted to exist and carry no `*_by`
-  column, which is what stops the catalogue half being satisfied by a table
+  stay green. The `UNAUDITED_TABLES` are asserted to exist and carry none of the
+  three audit ids by name (`sessions.impersonated_by` is no audit id, MB.53), which is what stops the catalogue half being satisfied by a table
   with nothing to check. The per-file `spreads the shared audit columns` /
   `references users.id from every audit id` tests are gone; a schema test now
   asserts the table's _own_ columns, constraints and behaviour. A new

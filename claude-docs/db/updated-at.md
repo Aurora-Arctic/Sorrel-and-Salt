@@ -44,8 +44,9 @@ disambiguate.
   year.
 
 **Better Auth's three adapter tables are deliberately excluded.** `accounts`,
-`sessions` and `verifications` carry an `updated_at` and no `*_by` columns at
-all: nothing writes them through `withAudit`, they are not part of the audit
+`sessions` and `verifications` carry an `updated_at` and no audit columns at
+all (`sessions.impersonated_by` is the `admin` plugin's, MB.53, not an audit
+id): nothing writes them through `withAudit`, they are not part of the audit
 trail, and Better Auth's own `$onUpdate` stamps them (`src/modules/identity/schema/auth.ts`).
 Its fourth, `rate_limits` (MB.75), carries no `updated_at` at all — Better
 Auth's model declares none — so it is not a counter-example the sweep could

@@ -1,6 +1,8 @@
 ## Plugins (MB.74)
 
-One Better Auth plugin is registered, `lastLoginMethod` (below). Every plugin
+Two Better Auth plugins are registered: `lastLoginMethod` (below) everywhere,
+and `admin`, narrowed to impersonation, outside production only
+([`impersonation.md`](impersonation.md)). Every plugin
 can mount routes under `/api/auth/*`, the one path outside `/api/graphql`,
 and write through the adapter, outside `withAudit`, so each has to earn its
 place. MB.74 weighed the whole roster against an OAuth-only, invite-gated site
@@ -12,7 +14,7 @@ place. MB.74 weighed the whole roster against an OAuth-only, invite-gated site
 | `account.encryptOAuthTokens`                                                                                                                                                        | In use (MB.76)               | Access and refresh tokens unreadable without the secret; older plaintext rows keep reading (["Config"](config.md))                      |
 | `lastLoginMethod`, cookie only                                                                                                                                                      | In use (MB.77)               | The browser remembers its own last provider, so the sign-in page can point at it without the server revealing anything about an address |
 | `oAuthProxy`, previews only                                                                                                                                                         | Scheduled (MB.78)            | Lets a hotfix preview finish a sign-in through staging's registered callback                                                            |
-| `admin`, impersonation endpoints only                                                                                                                                               | Scheduled (MB.53)            | Every other endpoint would grant admin or delete users outside `withAudit` (M2.9)                                                       |
+| `admin`, impersonation endpoints only                                                                                                                                               | In use (MB.53)               | Every other endpoint would grant admin or delete users outside `withAudit` (M2.9)                                                       |
 | `createAccessControl`                                                                                                                                                               | In use (M6.3)                | A helper, not a plugin: workspace permission statements                                                                                 |
 | Passkeys                                                                                                                                                                            | v2                           | The first-party credential DESIGN.md §13 names, in place of email and password                                                          |
 | Magic link, email OTP                                                                                                                                                               | v2, after passkeys           | Sign-in for someone with none of the four providers                                                                                     |

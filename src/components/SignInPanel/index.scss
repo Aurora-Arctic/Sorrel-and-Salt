@@ -13,7 +13,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100dvh;
+  // Less the top inset, or a page a full screen high scrolls by it.
+  min-height: calc(100dvh - #{$top-inset});
   padding: 2rem 1rem;
   max-width: 32rem;
   margin-inline: auto;

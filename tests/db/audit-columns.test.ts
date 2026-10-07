@@ -209,13 +209,16 @@ describe.each(named(STAMPED))('%s', (name, table) => {
 });
 
 // Why the catalogue half could pass wrongly: it reads whatever the migrations
-// built, so its discriminator is proved on real tables that carry no `*_by`.
+// built, so its discriminator is proved on real tables that carry no audit
+// id. By name rather than every `*_by`: `sessions.impersonated_by` is the
+// `admin` plugin's column (MB.53), and no audit id.
 describe.each(UNAUDITED_TABLES)('%s, unaudited', (name) => {
-  it('exists, and carries no *_by column and no such reference', async () => {
+  it('exists, and carries no audit id and no such reference', async () => {
     const columns = await catalogue.columnNames(name);
 
     expect(columns.length).toBeGreaterThan(0);
-    expect(columns.filter((column) => column.endsWith('_by'))).toEqual([]);
-    expect(await byReferencesOf(name)).toEqual({});
+    expect(columns.filter((column) => AUDIT_IDS.includes(column))).toEqual([]);
+    const references = await byReferencesOf(name);
+    expect(AUDIT_IDS.filter((column) => column in references)).toEqual([]);
   });
 });
