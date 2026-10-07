@@ -337,6 +337,12 @@ $theme-transition-easing: ease-in-out;
 // The only width-based breakpoint; everything else keys off media preferences.
 $breakpoint-desktop: 1024px;
 
+// The height every one-line control shares, so a field, a select or
+// suggesting box and a button stand level in a row: 44.5px, the owner's call
+// (MB.154), what a button measured at its own padding, and over WCAG 2.5.5's
+// 44px target. A minimum, so a list's box still grows with its entries.
+$control-height: 2.78125rem;
+
 // ---------------------------------------------------------------------------
 // Spacing and radius
 // ---------------------------------------------------------------------------

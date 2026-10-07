@@ -69,3 +69,26 @@ export interface Parsed {
   deities?: DeityFields[] | null;
   references?: ReferenceLinkFields[] | null;
 }
+
+/** A reference's text fields, every one but the kind: what `FORMAT_OF` formats (MB.154). */
+export type ReferenceTextField =
+  | 'title'
+  | 'authors'
+  | 'container'
+  | 'contributors'
+  | 'edition'
+  | 'volume'
+  | 'issue'
+  | 'series'
+  | 'place'
+  | 'publisher'
+  | 'published'
+  | 'pages'
+  | 'host'
+  | 'url'
+  | 'modified'
+  | 'accessed'
+  | 'note';
+
+/** How one text field is tidied, the same on the form as it is left and in the schema. */
+export type FieldFormat = (text: string) => string;

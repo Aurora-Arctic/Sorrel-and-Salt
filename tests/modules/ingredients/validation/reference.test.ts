@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReferenceInput } from '@/modules/ingredients/validation/reference';
 
 // DESIGN.md §5, "References": a reference's fields as the form sends them,
@@ -136,7 +136,7 @@ describe('ReferenceInput', () => {
   });
 
   describe('the address and the days', () => {
-    it.each(['ftp://example.org/a', 'www.example.org', 'javascript:alert(1)', 'https://'])(
+    it.each(['ftp://example.org/a', 'javascript:alert(1)', 'https://', 'testwort'])(
       'refuses %s as not a full http(s) address, at the url',
       (url) => {
         expect(failures({ ...MINIMAL.book, url, accessed: '2026-10-06' })).toEqual([
@@ -144,6 +144,24 @@ describe('ReferenceInput', () => {
         ]);
       },
     );
+
+    // MB.154: an address typed without its scheme is taken as https.
+    it('takes an address with no scheme as https', () => {
+      expect(
+        ReferenceInput.parse({ ...MINIMAL.web_page, url: 'www.example.org/testwort' }).url,
+      ).toBe('https://www.example.org/testwort');
+    });
+
+    it('refuses an address with a space, or a host with no dot, at the url', () => {
+      for (const url of ['https://example.org/a b', 'https://fixture/testwort']) {
+        expect(failures({ ...MINIMAL.web_page, url }), url).toEqual([
+          {
+            path: ['url'],
+            message: 'That is not a web address: check it for spaces and a full site name',
+          },
+        ]);
+      }
+    });
 
     it('takes an http or https address', () => {
       for (const url of ['http://example.org/a', 'https://example.org/Greek_Mythology/']) {
@@ -165,6 +183,118 @@ describe('ReferenceInput', () => {
 
       expect(failedPaths(input)).toEqual([[field]]);
       expect(failedPaths({ ...MINIMAL.web_page, [field]: '2026-02-30' })).toEqual([[field]]);
+    });
+  });
+
+  // MB.154, the owner's calls: what is typed is tidied the way the citation
+  // prints it, on the server as on the form (reference-format.ts).
+  describe('formatting', () => {
+    it('tidies spacing, drops quotes around a title, and dashes ranges', () => {
+      expect(
+        ReferenceInput.parse({
+          kind: 'article',
+          title: ' "Notes  on   Mockleaf" ',
+          container: '“Journal of Fixtures”',
+          authors: 'Placeholder,   Bram',
+          volume: '3',
+          issue: '1-2',
+          published: '1950-51',
+          pages: '12 - 19',
+        }),
+      ).toEqual({
+        kind: 'article',
+        title: 'Notes on Mockleaf',
+        container: 'Journal of Fixtures',
+        authors: 'Placeholder, Bram',
+        volume: '3',
+        issue: '1–2',
+        published: '1950–51',
+        pages: '12–19',
+      });
+    });
+
+    it('writes an edition given as a number or a word as Chicago does', () => {
+      expect(ReferenceInput.parse({ ...MINIMAL.book, edition: 'second edition' }).edition).toBe(
+        '2nd ed.',
+      );
+      expect(ReferenceInput.parse({ ...MINIMAL.book, edition: 'Rev. ed.' }).edition).toBe(
+        'Rev. ed.',
+      );
+    });
+
+    it('refuses a title that is only quotation marks, at the title', () => {
+      expect(failedPaths({ ...MINIMAL.book, title: '""' })).toEqual([['title']]);
+    });
+  });
+
+  // MB.154: the extra checks, each beside its field.
+  describe('checks', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ now: new Date('2026-10-07T12:00:00Z'), toFake: ['Date'] });
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('refuses a day read or modified after tomorrow, at the day', () => {
+      expect(failures({ ...MINIMAL.web_page, accessed: '2026-10-09' })).toEqual([
+        { path: ['accessed'], message: 'That day is in the future' },
+      ]);
+      expect(failures({ ...MINIMAL.web_page, modified: '2026-11-01' })).toEqual([
+        { path: ['modified'], message: 'That day is in the future' },
+      ]);
+      // Tomorrow is already today east of Greenwich.
+      expect(
+        ReferenceInput.safeParse({ ...MINIMAL.web_page, accessed: '2026-10-08' }).success,
+      ).toBe(true);
+    });
+
+    it('refuses a last modified day after the day it was read, at the modified day', () => {
+      expect(
+        failures({ ...MINIMAL.web_page, modified: '2026-10-06', accessed: '2026-10-01' }),
+      ).toEqual([
+        { path: ['modified'], message: 'It cannot have been modified after the day it was read' },
+      ]);
+      expect(
+        ReferenceInput.safeParse({
+          ...MINIMAL.web_page,
+          modified: '2026-10-01',
+          accessed: '2026-10-01',
+        }).success,
+      ).toBe(true);
+    });
+
+    it('refuses a published date with no year, at the date', () => {
+      expect(failures({ ...MINIMAL.book, published: 'soon' })).toEqual([
+        {
+          path: ['published'],
+          message: 'Give the year it was published — 1985, November 1950 — or n.d. for none',
+        },
+      ]);
+      for (const published of ['November 1950', 'Summer/Autumn 2013', 'n.d.', 'forthcoming']) {
+        expect(ReferenceInput.safeParse({ ...MINIMAL.book, published }).success, published).toBe(
+          true,
+        );
+      }
+    });
+
+    it('refuses pages that are not numbers, on any kind, at the pages', () => {
+      expect(failures({ ...MINIMAL.chapter, pages: 'the middle' })).toEqual([
+        { path: ['pages'], message: 'Give the pages as numbers: 112, or 399–412' },
+      ]);
+      expect(ReferenceInput.parse({ ...MINIMAL.chapter, pages: 'xii-xv' }).pages).toBe('xii–xv');
+    });
+
+    it("refuses an article's volume or issue that is not a number, at each", () => {
+      expect(failures({ ...MINIMAL.article, volume: 'vol. 3', issue: 'Summer' })).toEqual([
+        { path: ['volume'], message: 'Give the volume as a number: 51' },
+        { path: ['issue'], message: 'Give the issue as a number: 2' },
+      ]);
+    });
+
+    // Why the refusal above is the article's: a book's volume is a statement.
+    it("takes a book's volume as Chicago words it", () => {
+      expect(ReferenceInput.safeParse({ ...MINIMAL.book, volume: '4 vols.' }).success).toBe(true);
     });
   });
 });

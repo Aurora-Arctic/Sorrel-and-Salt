@@ -1,6 +1,8 @@
-import type { ReactNode, Ref } from 'react';
+import type { HTMLInputTypeAttribute, ReactNode, Ref } from 'react';
+import type { FieldPath, FieldValues } from 'react-hook-form';
 import type { z } from 'zod';
 import type {
+  CreateReferenceMutation,
   CreateWorkspaceIngredientMutation,
   FormSuggestionsQueryVariables,
   PlanetSuggestionsQuery,
@@ -9,8 +11,10 @@ import type {
 import type {
   INGREDIENT_ELEMENTS,
   NomenclatureKind,
+  ReferenceKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
+import type { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import type { ComboboxQualifier, ComboboxOption, Suggestions } from '../Combobox/types';
 
 export interface IngredientFormProps {
@@ -76,6 +80,30 @@ export interface DeityListEntry extends ListEntry {
   link?: DeityLink;
 }
 
+/** A source a reference row links: its id, which is sent, and its tier, which the row says. */
+export interface ReferenceLink {
+  id: string;
+  /** The compendium's, rather than this coven's own. */
+  isGlobal: boolean;
+}
+
+/**
+ * One reference (MB.154): the source's citation, which the row reads and is
+ * never sent, the source it links, and the locator typed beside it, "p. 112".
+ */
+export interface ReferenceListEntry extends ListEntry {
+  link: ReferenceLink;
+  locator: string;
+}
+
+/** A source the references' search offers: its citation, and the source a pick links. */
+export interface ReferenceOption extends ComboboxOption {
+  link: ReferenceLink;
+}
+
+/** A source saved by the panel, as `createReference` answers it. */
+export type SavedReference = CreateReferenceMutation['createReference'];
+
 /** Any list's entry: typed text, or a substitute's or a deity's link beside it. */
 export type AnyListEntry = ListEntry | SubstituteListEntry | DeityListEntry;
 
@@ -126,15 +154,20 @@ export interface IngredientFormValues {
   deities: DeityListEntry[];
   substitutes: SubstituteListEntry[];
   safetyNotes: string;
-  drafts: Record<ListFieldName, string>;
+  /** Picked from the search, never typed, so not one of the lists (MB.154). */
+  references: ReferenceListEntry[];
+  /** The new reference panel is open: a save waits until it is saved or cancelled. */
+  referencePanelOpen: boolean;
+  drafts: Record<DraftName, string>;
 }
+
+/** A box whose text is not yet an entry: a list's, or the references' search. */
+export type DraftName = ListFieldName | 'references';
 
 /** What the form sends: its values in the shape the shared schema and the mutation take, unparsed. */
 export type IngredientFormInput = z.input<typeof LocalIngredientInput>;
 
 export type TextFieldName = 'name' | 'canonicalName' | 'form' | 'description' | 'safetyNotes';
-
-export type SelectFieldName = 'nomenclature';
 
 /** A closed set holding several values: an entry's elements. */
 export type MultiSelectFieldName = 'elements';
@@ -153,28 +186,37 @@ interface FieldProps {
   required?: boolean;
 }
 
-export interface TextFieldProps extends FieldProps {
-  name: TextFieldName;
+/**
+ * A text field, in the ingredient form or another one providing it: the
+ * reference panel's (MB.154). Its name is one of that form's paths.
+ */
+export interface TextFieldProps<V extends FieldValues = IngredientFormValues> extends FieldProps {
+  name: FieldPath<V>;
   /** A textarea, for prose. */
   multiline?: boolean;
+  /** The input's type, for a single line: a reference's days are `date`s. */
+  type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url'>;
   /** Shut, for a field the rest of the form has ruled out; its hint says why. */
   disabled?: boolean;
   /** Fields whose errors this one's value decides as well, revalidated when it changes. */
-  deps?: (TextFieldName | SelectFieldName)[];
+  deps?: FieldPath<V>[];
   /** Another element read with the field while it shows: the name's duplicate warning. */
   describedBy?: string;
   /** Marked invalid by something other than its own error: the name's held duplicate warning. */
   invalid?: boolean;
   /** Drawn beneath the field, after its error: the name's duplicate warning. */
   after?: ReactNode;
+  /** How the text is tidied as the field is left: a reference's fields, as the server will store them. */
+  format?: (text: string) => string;
 }
 
-export interface SelectFieldProps extends FieldProps {
-  name: SelectFieldName;
+/** A closed set, in the ingredient form or the reference panel's, whose kind is one. */
+export interface SelectFieldProps<V extends FieldValues = IngredientFormValues> extends FieldProps {
+  name: FieldPath<V>;
   /** Shown until a choice is made, and not itself a choice. */
   placeholder?: string;
   options: readonly SelectOption[];
-  deps?: (TextFieldName | SelectFieldName)[];
+  deps?: FieldPath<V>[];
   /** Runs on a new choice, before the field and its `deps` revalidate. */
   onChange?: (value: string) => void;
 }
@@ -220,6 +262,56 @@ export interface ListFieldProps {
   onActivate?: () => void;
   /** The list keeps the order entered, so its entries can be moved (MB.170). */
   ordered?: boolean;
+}
+
+/**
+ * The new reference panel's own values: each text field as typed, a day as
+ * `YYYY-MM-DD` or blank, and the kind `''` until one is chosen.
+ */
+export interface ReferenceFormValues {
+  kind: ReferenceKind | '';
+  title: string;
+  authors: string;
+  container: string;
+  contributors: string;
+  edition: string;
+  volume: string;
+  issue: string;
+  series: string;
+  place: string;
+  publisher: string;
+  published: string;
+  pages: string;
+  host: string;
+  url: string;
+  modified: string;
+  accessed: string;
+  note: string;
+}
+
+/** What the panel sends: its values as the shared schema and the mutation take them, unparsed. */
+export type ReferenceSendInput = z.input<typeof ReferenceInput>;
+
+/** A panel field other than the kind. */
+export type ReferenceFieldName = Exclude<keyof ReferenceFormValues, 'kind'>;
+
+/** One field a kind shows: what it writes, what it is called there, and what it is told. */
+export interface ReferenceFieldSpec {
+  name: ReferenceFieldName;
+  label: string;
+  hint?: string;
+  required?: boolean;
+  type?: 'date' | 'url';
+}
+
+export interface ReferencePanelProps {
+  /** The coven the new source is written to. */
+  workspaceId: string;
+  /** How many times the panel has been asked for: each takes the focus back to Kind. */
+  summons: number;
+  /** Called with the source once the server has saved it. */
+  onSaved: (reference: SavedReference) => void;
+  onCancel: () => void;
 }
 
 /** A field whose lookup asks about this coven's ingredients. */

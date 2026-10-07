@@ -5,6 +5,7 @@ import type {
   IngredientSuggestionsQuery,
   PlanetSuggestionsQuery,
   PossibleDuplicatesQuery,
+  ReferenceSuggestionsQuery,
 } from '@/gql/graphql';
 
 /** One row of a `FormSuggestions` answer, as the test offers it. */
@@ -26,3 +27,7 @@ export type IngredientNode =
 
 /** One row of a `PossibleDuplicates` answer. */
 export type DuplicateNode = PossibleDuplicatesQuery['possibleDuplicates']['edges'][number]['node'];
+
+/** One row of a `ReferenceSuggestions` answer. */
+export type ReferenceNode =
+  ReferenceSuggestionsQuery['referenceSuggestions']['edges'][number]['node'];

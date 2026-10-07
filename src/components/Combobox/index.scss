@@ -8,6 +8,12 @@
 // "Styling"). Rows that wrap sit a step further apart than the items in a
 // row, the owner's call in MB.170: a step of space read as one block.
 
+// The text's line inside the control: the control's height less its 1px
+// edge and its padding, so a bare box stands at $control-height, level with a
+// text field and a button. A typed box, a select's value and the qualifier's
+// hidden copy all take it.
+$text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
+
 .combobox {
   position: relative;
   width: 100%;
@@ -35,13 +41,6 @@
     border-color: $secondary;
     box-shadow: inset 0 0 0 1px $secondary;
   }
-
-  // A step more room above the chips than the bare box has, the owner's call
-  // during MB.169: at the box's own padding the first row of chips sat
-  // against the top edge.
-  &:has(.combobox__entry) {
-    padding-top: space(2);
-  }
 }
 
 // The select-only box: the control itself takes the focus and the press,
@@ -60,10 +59,10 @@
 .combobox__value {
   flex: 1 1 auto;
   min-width: 0;
-  min-height: 2rem;
-  padding: space(1) 0;
+  min-height: $text-height;
+  padding: 0;
   overflow: hidden;
-  line-height: 2rem;
+  line-height: $text-height;
   text-overflow: ellipsis;
   white-space: nowrap;
 
@@ -85,9 +84,9 @@
 .combobox__input {
   flex: 1 1 6rem;
   min-width: 6rem;
-  min-height: 2rem;
+  min-height: $text-height;
   margin: 0;
-  padding: space(1) 0;
+  padding: 0;
   border: 0;
   background-color: transparent;
   color: inherit;
@@ -144,8 +143,8 @@
     &::after {
       content: attr(data-value) ' ';
       grid-area: 1 / 1;
-      min-height: 2rem;
-      padding: space(1) 0;
+      min-height: $text-height;
+      padding: 0;
       overflow: hidden;
       visibility: hidden;
       white-space: pre;
@@ -229,17 +228,18 @@
 // The list, floating beneath the control at its width, on the card surface
 // with the floating shadow. Hidden rather than unmounted while closed, since
 // Downshift keeps its ref.
+// Placed by `useListPosition` (position.ts), its position, width and side
+// set inline as there is room; here, its look, and no taller than 18rem or
+// the room it has, `--combobox-list-room`. A row never scrolls it sideways:
+// an unbroken text — an address — breaks anywhere instead (MB.154).
 .combobox__list {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  left: 0;
   z-index: 1;
   display: none;
   box-sizing: border-box;
-  max-height: 18rem;
-  margin: space(1) 0 0;
+  max-height: min(18rem, var(--combobox-list-room, 18rem));
+  margin: 0;
   padding: space(1) 0;
+  overflow-x: hidden;
   overflow-y: auto;
   list-style: none;
   border: 1px solid $text-muted;
@@ -287,6 +287,9 @@
   display: flex;
   flex-direction: column;
   padding: space(2) space(3);
+  // A word too long for the list — an address in a citation — breaks
+  // anywhere rather than scroll the list sideways.
+  overflow-wrap: anywhere;
   color: $text-primary;
   font-size: type-size('body');
   font-weight: 400;
@@ -326,7 +329,11 @@
   min-width: 0;
   max-width: 100%;
   margin: 0;
-  padding: 0;
+  // A step more room above the chips than the box's own padding, the owner's
+  // call during MB.169: without it the first of several rows sat against the
+  // top edge. On the list rather than the control, so one row still fits the
+  // text's line and the box stays at $control-height (MB.154).
+  padding: space(1) 0;
   list-style: none;
 }
 

@@ -12,6 +12,7 @@ import {
   UNSETTLED_KIND,
 } from '@/modules/ingredients/schema/ingredient-enums';
 import { NameField, useDuplicateWarning } from './duplicates';
+import { ReferencesField } from './references';
 import { ListField, MultiSelectField, SelectField, TextField } from './fields';
 import {
   FormField,
@@ -278,6 +279,9 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
           hint="Toxicity, allergies, and anything to take care over when handling or burning it."
           multiline
         />
+        {/* Last, as a bibliography is (MB.154): the sources picked, each
+            with its locator, and a panel for a new one. */}
+        <ReferencesField workspaceId={workspaceId} />
         <div className="form__actions">
           {/* Two saves, both held down from the press to the answer, the
               duplicate check included: Save Ingredient, first and so the

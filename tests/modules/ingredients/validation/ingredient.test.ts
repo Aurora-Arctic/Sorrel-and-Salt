@@ -330,6 +330,19 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
       ]);
     });
 
+    // MB.154: one locator holds every place a source is cited at, tidied and
+    // with its ranges dashed, as the form shows it once the box is left.
+    it('tidies a locator and dashes its ranges, keeping several places in one', () => {
+      const parsed = Schema.parse({
+        ...base,
+        references: [{ referenceId: SIMEK, locator: ' pp. 12-19,  40;  chap. 3 ' }],
+      });
+
+      expect(parsed.references).toEqual([
+        { referenceId: SIMEK, locator: 'pp. 12–19, 40; chap. 3' },
+      ]);
+    });
+
     it.each([
       ['names no reference', { referenceId: '  ' }],
       ['names an id that is not one', { referenceId: 'simek-1993' }],

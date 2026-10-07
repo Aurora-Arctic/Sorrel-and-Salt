@@ -7,14 +7,16 @@ sends `createWorkspaceIngredient`, and puts an error from either side beside
 the field it names. It is built standalone: the add and edit modals and the
 admin compendium page wrap it rather than containing their own form.
 
-| File              | What it holds                                                                                                                                                                     |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.tsx`       | The form: the mutation, the fields in order, the root alert, where a server error goes, and focus after a submit                                                                  |
-| `fields.tsx`      | `TextField`, `SuggestField`, `SelectField`, `MultiSelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip` |
-| `suggestions.tsx` | The lookups (M5.10a, MB.131): the queries, `useLookup`, which debounces each, the shapes, and `FormField` and `LookupListField`, which wire one to its field                      |
-| `duplicates.tsx`  | The duplicate warning (M5.10): its query, `usePossibleDuplicates`, and `NameField`, the name field with the warning beneath it                                                    |
-| `values.ts`       | The empty values, `toInput`, `addEntry`, `commitDraft`, `fieldNameOf`, the resolver, and `issuesOf`, which reads a failed save                                                    |
-| `types.ts`        | The props, the form's own values, and the input it sends                                                                                                                          |
+| File                  | What it holds                                                                                                                                                                     |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.tsx`           | The form: the mutation, the fields in order, the root alert, where a server error goes, and focus after a submit                                                                  |
+| `fields.tsx`          | `TextField`, `SuggestField`, `SelectField`, `MultiSelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip` |
+| `suggestions.tsx`     | The lookups (M5.10a, MB.131): the queries, `useLookup`, which debounces each, the shapes, and `FormField` and `LookupListField`, which wire one to its field                      |
+| `duplicates.tsx`      | The duplicate warning (M5.10): its query, `usePossibleDuplicates`, and `NameField`, the name field with the warning beneath it                                                    |
+| `references.tsx`      | The References field (MB.154): its search's query, and `ReferencesField`, the box, New Reference, the rows beneath and their locators                                             |
+| `reference-panel.tsx` | The new reference panel (MB.154): `createReference`, each kind's fields, `toReferenceInput`, and its own react-hook-form                                                          |
+| `values.ts`           | The empty values, `toInput`, `addEntry`, `commitDraft`, `fieldNameOf`, the resolver, and `issuesOf`, which reads a failed save                                                    |
+| `types.ts`            | The props, the form's own values, and the input it sends                                                                                                                          |
 
 ## The props contract
 
@@ -31,8 +33,9 @@ arrives with the task that wraps the form for it.
 ## The fields
 
 Name, classification, formal name, form, folk names, description, element,
-planets, zodiac signs, colours, deities, substitute ingredients and safety
-notes — every field `IngredientInput` takes. Categories are not an input yet.
+planets, zodiac signs, colours, deities, substitute ingredients, safety
+notes and references — every field `IngredientInput` takes. Categories are
+not an input yet.
 
 - **Name is the one field always required**, as story 29's stub needs, and
   says so twice: `aria-required` on the control for a screen reader, and a
@@ -145,6 +148,10 @@ notes — every field `IngredientInput` takes. Categories are not an input yet.
   differently; its `detail` is its description. `toInput` sends a link as
   `{ deityId }` and typed text as `{ name }`, the two halves of MB.167's
   `IngredientDeityInput`.
+- **A list's suggestions span the field**, its box and its Add together, as
+  the combobox's `listAnchor`, and never run off the screen: they open above
+  the box when there is more room there (MB.154; [`combobox.md`](combobox.md),
+  "Where the list opens").
 - **Text left in a box stops the save.** The form's resolver adds an error to
   any box still holding text, 'Press Add to keep "Hedge Fixture", or clear
   the box', on the list's error element, so a save never sends a list the
@@ -235,6 +242,115 @@ Add and Enter add the text as it stands, sent as `{ name }` with no warning.
 A compendium entry's substitutes may link only the compendium, so the admin
 form M5.5 wraps reads `compendium(query)` in their place; this form writes
 only a coven's ingredient.
+
+### The references
+
+The last field, as a bibliography is (MB.154; DESIGN.md §5, "References"):
+the sources what the entry says comes from, each picked from the ones
+already recorded or written new in the panel beneath. `ReferencesField` in
+`references.tsx` is a fieldset named "References", with its info tip in the
+legend as a list's is.
+
+- **The box searches, and never adds what was typed.** It is the
+  [`Combobox`](combobox.md), labelled "Reference", over
+  `referenceSuggestions` through `useLookup`, debounced and asking nothing
+  until the box is focused, as every lookup. A row is the source's plain
+  `citation`, with "Compendium source" or "This coven’s source" as its
+  note, in the search's ranked order, so the tier is a note rather than a
+  heading. A source already listed is not offered again. Typed text is a
+  search and never a source, so the list has no "Use what you typed" row:
+  its first row is "Add a reference", the combobox's create row
+  ([`combobox.md`](combobox.md), "The create row"), which opens the panel.
+  Enter with nothing highlighted does nothing but close the list, and never
+  reaches the form.
+- **New Reference stands where a list has Add**, opening the panel as the
+  create row does, `aria-expanded` while it is open. Add has nothing to add
+  here.
+- **Each source picked is a row beneath the box, not a chip inside it**, the
+  owner's call: a citation is long, and a row reads it whole, as a
+  bibliography does. A row is the citation, wrapping and broken anywhere
+  so an address never runs the page sideways at 320px; its tier beneath; a
+  "Locator" box, "p. 112", described by the citation so a column of them is
+  told apart, with an info tip beside its label saying what a locator is and
+  that every place the source is cited at goes in the one box, "pp. 12–19,
+  40; chap. 3" — a source is listed once, the owner's call — and tidied as
+  it is left, `formatLocator`, its ranges dashed; and an × named "Remove"
+  and the citation, after which the box keeps the focus. Backspace in the empty box takes the last row, as in every
+  list, and each add and removal is announced in a "References changes"
+  region. The rows keep the order picked: the service reads them back
+  alphabetical by citation (MB.153), so nothing here moves them.
+- **Entries are a `useFieldArray` of `{ value, link, locator }`**: `value`
+  the citation, which is shown and never sent, `link` the source's id and
+  tier, and `locator` as typed. They are not one of `LIST_FIELDS`, which are
+  free text. The box's text is `drafts.references`, and whether the panel is
+  open is `referencePanelOpen`, both the form's own.
+- **A search left in the box stops the save**, as text left in any list's
+  box does: 'Pick a source for "grimm", or clear the box'. **So does an open
+  panel**: "Save the new reference, or cancel it". Both are the resolver's,
+  on the field's one error element, through the box.
+
+### The new reference panel
+
+A source not yet recorded is written without leaving the ingredient:
+`ReferencePanel`, in `reference-panel.tsx`, opens inline beneath the field,
+the owner's call over a dialog, since M8.16 puts the whole form in a modal
+and a dialog there would stack two. It is a fieldset named "New Reference",
+not a `<form>`, which cannot nest in the ingredient's, running a
+react-hook-form of its own under its own `FormProvider`, so its fields are
+the form's own `TextField` and `SelectField`, which take whichever form
+provides them, and its errors render through `FieldError`.
+
+- **Kind first**, a `SelectField` over `REFERENCE_KINDS` read as Book,
+  Chapter in a Book, Journal Article, Reference-Work Entry and Web Page,
+  and focused as the panel opens. No other field shows until a kind is
+  chosen.
+- **Then only the fields that kind needs**, in the order its citation
+  prints them: `FIELDS_OF`, read off what `renderCitation` prints for each
+  kind (`src/lib/citation.ts`), so the panel offers nothing the citation
+  would drop. The title and the container take each kind's own label —
+  "Chapter Title" and "Book", "Article Title" and "Journal", "Entry" and
+  "Reference Work", "Page Title" and "Site" — as MB.151 asked. The required
+  ones are marked as Name is, an asterisk and `aria-required`: the title
+  always, a book's date, a chapter's, article's or entry's container, and a
+  web page's address and day read. A printed work's online fields follow
+  its publication: Read Through (`host`), Address, Last Modified, Accessed
+  and Note. The two days are `<input type="date">`. A title, a container
+  and a note say in their tip that underscores italicise a title inside
+  them (MB.151).
+- **A kind change keeps what was typed** in every field, but only the
+  chosen kind's are sent: `toReferenceInput` sends the rest as null, and a
+  blank day as null, since `LocalDate` takes no empty text. The resolver
+  is the shared `ReferenceInput` schema over that input, so its refusals,
+  "Name the book this chapter is in", land beside their fields, and so do
+  MB.154's checks: a date with no year, pages or an article's volume that
+  are not numbers, an address with no named host, a day not yet come
+  ([`db/references.md`](../db/references.md), "Formatting and checks").
+- **Each field is tidied as it is left**, the way the server will store it:
+  `TextField`'s `format`, the field's `FORMAT_OF` entry from the same
+  module the schema formats with — spacing collapsed, a title's wrapping
+  quotes dropped, ranges en-dashed, `https://` added to a bare address,
+  "second edition" written "2nd ed." An error the field was showing is
+  judged again on the tidied text.
+- **Save Reference sends `createReference` for this coven.** A
+  `VALIDATION` error's field errors land beside the fields they name, if
+  the kind shows them, through the element a resolver error uses; anything
+  else is an alert at the top of the panel. A failed save focuses the first
+  field marked invalid in the panel. Saved, the source is added as a row by
+  its id, announced, the panel closes, the box takes the focus, and the
+  cached searches are dropped so the new source is found next time.
+- **Enter in one of its fields saves the source**, not the ingredient, as
+  Enter in a form of its own would. Cancel closes it, the box taking the
+  focus. Save & Add Another closes it with the rest, since `EMPTY_VALUES`
+  holds `referencePanelOpen: false`.
+- **Asked for again while open, it takes you back**, the owner's call: New
+  Reference or "Add a reference" scrolls the panel's top into view, its
+  legend clear of the edge, and focuses Kind again, keeping everything
+  typed. The field counts each request and the panel focuses on each new
+  count, as it does when it opens.
+
+Only the coven's form is wired. M5.5's compendium page writes the
+compendium's sources, with `createReference` and a null `workspaceId`, and
+searches the compendium's alone; nothing edits a saved source yet.
 
 ### The form's pick
 
@@ -378,6 +494,8 @@ becomes its text, and the boxes are left behind. A pick goes as its row's id
   `{ name }` when typed.
 - A substitute goes as `{ ingredientId }` when linked, and as `{ name }`
   when typed.
+- A reference goes as `{ referenceId, locator }`, the locator as typed, and
+  never with its citation (MB.154). None goes as `[]`.
 
 The elements go as chosen,
 `[]` when none is, which `IngredientUpdateInput` needs to clear them and the
@@ -440,14 +558,16 @@ the same element, not just the same text.
 Both sources go through **`fieldNameOf`**, which turns an issue's path into
 the form's field name:
 
-| Path                    | Field                                                                 |
-| ----------------------- | --------------------------------------------------------------------- |
-| `['name']`              | `name`                                                                |
-| `['folkNames', 2]`      | `folkNames.2.value`, the third entry                                  |
-| `['elements', 1]`       | `elements`, the whole control: its chips are not rows                 |
-| `['formId']`            | `form`, whose box made the pick (MB.169)                              |
-| `[]`                    | none: the root alert                                                  |
-| any path it cannot name | none: the root alert, rather than an unseen error (`drafts` included) |
+| Path                           | Field                                                                 |
+| ------------------------------ | --------------------------------------------------------------------- |
+| `['name']`                     | `name`                                                                |
+| `['folkNames', 2]`             | `folkNames.2.value`, the third entry                                  |
+| `['elements', 1]`              | `elements`, the whole control: its chips are not rows                 |
+| `['formId']`                   | `form`, whose box made the pick (MB.169)                              |
+| `['references', 1]`            | `references.1.value`, the second reference's row (MB.154)             |
+| `['references', 1, 'locator']` | `references.1.locator`, its locator                                   |
+| `[]`                           | none: the root alert                                                  |
+| any path it cannot name        | none: the root alert, rather than an unseen error (`drafts` included) |
 
 The resolver returns an entry's issue at the entry (`folkNames.2`). The
 form's resolver wraps `zodResolver` and moves it onto the entry's `value`,
@@ -550,19 +670,23 @@ under a "What to try" panel saying what to type for each state: the
 suggestions, free text, the duplicate warning, the missing name, the
 classification coupling, a pick of a form or a deity, moving an entry, text left in a box, a
 repeated entry, a long entry,
-the two server refusals, and a save. The workshop has no API, and on staging
+the two server refusals, a save, and the references: picking sources,
+a locator, the panel per kind and its refusals. The workshop has no API, and on staging
 its pages may not fetch at all ([`workshop.md`](../workshop.md), "On
 staging"), so the story answers the form itself: while it is mounted it
 stands in for `window.fetch`, which graphql-request looks up on every
-request, and answers a request to `/api/graphql` naming one of the seven
-lookups, or the save, from invented rows filtered by what was typed. Each
+request, and answers a request to `/api/graphql` naming one of the eight
+lookups, or either save, from invented rows filtered by what was typed. Each
 answer is checked against its query's generated type with `satisfies`, so a
 fixture that drifts from the schema stops compiling. A name holding "cat"
 shows the duplicate warning. A save is answered after two seconds
 (`SAVE_DELAY_MS`), so Save can be watched busy and shut with its spinner: a
 name holding "taken" is refused as a `VALIDATION` error on the name, one
 holding "refuse" as a `FORBIDDEN` above the fields, and any other is saved,
-under a fresh id. The workshop has no page to open, so after Save Ingredient
+under a fresh id. Its three sources are invented, in both tiers, one a web
+page with a long address, and each citation is rendered by `citationText`
+as the server renders it; a new source is answered the same way, after the
+same pause, and refused by its title as an ingredient is by its name. The workshop has no page to open, so after Save Ingredient
 the story says beneath the buttons where its page would go,
 "/ingredients/<id>", in a `.story-note` from `.ladle/story-frame.scss`;
 Save & Add Another clears it.
@@ -667,12 +791,45 @@ pass on whatever an earlier step had focused. It covers:
   by their text, the closed tooltip that repeats them ignored: the wrapper
   that listens has no role to query by.
 
+**The references** are `tests/components/IngredientForm/references.test.tsx`
+(MB.154): the search asking only once the box is used and the typing
+settles, each source by its citation and tier after "Add a reference", and
+none already listed; a pick by click and by keyboard adding a row beneath
+the box, announced, the box emptied and focused; each row's locator
+labelled and read with its citation; the × and Backspace removing a row;
+Enter with nothing picked submitting nothing; each source sent by its id
+with its locator as typed and no citation, `[]` for none, and parsed by
+`LocalIngredientInput`; a server error naming a source on its row alone;
+Save & Add Another clearing them; a search left in the box, and an open
+panel, each stopping the save. The panel: opened by New Reference and by
+the create row, Kind focused and nothing else shown; each of the five
+kinds showing exactly its fields in order, the required ones marked; a
+chapter with no book and a web page with no address or day refused beside
+the fields, the first focused; a server field error on the element a
+resolver error uses; a refusal naming no field as an alert inside it; a
+save adding the new source by id and closing, the box focused; only the
+chosen kind's fields sent; Enter in a field saving the source and not the
+ingredient; Cancel; and, asked for again while open, Kind focused again
+with what was typed kept. And MB.154's formatting and checks: the
+Locator's tip read with its box; a locator, a title, an edition, a date
+range and a bare address each tidied as it is left; and a date with no year
+refused beside Published. The formats and checks themselves are tested
+where the schema is, `tests/modules/ingredients/validation/`
+(`reference-format.test.ts` and `reference.test.ts`), with the server's
+storing of them in `services/references.test.ts`.
+
 Role and label queries only. It runs in the `dom` (jsdom) Vitest project —
 `npm run test:coverage`.
 
 **Accessibility is asserted in Playwright** (CLAUDE.md, Testing), once a page
 holds the form: M5.5's admin page and M8.16's modal each carry an axe scan.
-Until then the form was scanned by hand in M5.9, against the workshop story
+MB.154's References field was driven in a browser — Ladle's story through
+the `playwright-server` service, at 375px in both themes — and scanned
+with `@axe-core/playwright` at each state: the suggestions open, three
+rows, the panel refusing a chapter, a web page's fields. No WCAG 2.2 AA or
+best-practice violations from the field, and no sideways scroll; the
+frame's page-level rules (a `main`, an `h1`, landmarks) were left out, as
+the story is a fragment. Until then the form was scanned by hand in M5.9, against the workshop story
 in both themes, blank, after a failed save, with a tip open and with the
 formal name shut: no WCAG 2.2 AA or best-practice violations. M5.10a's
 combobox was not scanned in a browser, the devcontainer having none; its

@@ -1,6 +1,8 @@
-import { type ReactElement, useId, useRef, useState } from 'react';
+import { type FocusEvent, type ReactElement, useId, useRef, useState } from 'react';
 import {
   type FieldPath,
+  type FieldValues,
+  type PathValue,
   get,
   useController,
   useFieldArray,
@@ -30,7 +32,9 @@ import { addEntry, commitDraft, entryDetail, entryText } from './values';
 
 // IngredientForm's fields, on the form primitives (claude-docs/styling.md,
 // "Form fields"). Each reads its own error out of the form state, so a field
-// re-renders for its own error and not for every other field's.
+// re-renders for its own error and not for every other field's. The text and
+// select fields read whichever form provides them, so the reference panel's
+// own form draws its fields and errors through the same ones (MB.154).
 
 /** The one element a field's error renders through, whether the resolver found it or the server did. */
 export function FieldError({ id, message }: FieldErrorProps): ReactElement | null {
@@ -48,15 +52,15 @@ export function FieldError({ id, message }: FieldErrorProps): ReactElement | nul
  * field — the hint too, though its tip is closed — and `aria-invalid` is what
  * draws the error edge, so one cannot ship without the other.
  */
-function useField(
-  name: FieldPath<IngredientFormValues>,
+function useField<V extends FieldValues>(
+  name: FieldPath<V>,
   hint?: string,
   note?: string,
   describedBy?: string,
   invalid?: boolean,
 ) {
   const id = useId();
-  const { errors } = useFormState<IngredientFormValues>({ name });
+  const { errors } = useFormState<V>({ name });
   const error: string | undefined = get(errors, name)?.message;
   const hintId = `${id}-hint`;
   const noteId = `${id}-note`;
@@ -124,21 +128,34 @@ function FieldShell({
   );
 }
 
-export function TextField({
+export function TextField<V extends FieldValues = IngredientFormValues>({
   name,
   label,
   hint,
   note,
   required,
   multiline,
+  type,
   disabled,
   deps,
   describedBy,
   invalid,
   after,
-}: TextFieldProps): ReactElement {
-  const { register } = useFormContext<IngredientFormValues>();
-  const { aria, ...field } = useField(name, hint, note, describedBy, invalid);
+  format,
+}: TextFieldProps<V>): ReactElement {
+  const { register, setValue, getFieldState } = useFormContext<V>();
+  const { aria, ...field } = useField<V>(name, hint, note, describedBy, invalid);
+  // Tidied as it is left, the way the server will store it (MB.154); an
+  // error it was showing is judged again on the tidied text.
+  const tidy = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const text = event.target.value;
+    const formatted = format?.(text) ?? text;
+    if (formatted === text) return;
+    setValue(name, formatted as PathValue<V, FieldPath<V>>, {
+      shouldDirty: true,
+      shouldValidate: getFieldState(name).invalid,
+    });
+  };
   // The attribute, not register's `disabled`, which would also drop the value
   // from what is validated and sent: the form decides that itself. And
   // `aria-required` rather than `required`, whose `:invalid` would mark an
@@ -148,14 +165,14 @@ export function TextField({
     disabled,
     'aria-required': required || undefined,
     ...aria,
-    ...register(name, { deps }),
+    ...register(name, { deps, onBlur: format ? tidy : undefined }),
   };
   return (
     <FieldShell label={label} hint={hint} note={note} required={required} after={after} {...field}>
       {multiline ? (
         <textarea className="textarea" {...control} />
       ) : (
-        <input className="input" {...control} />
+        <input className="input" type={type} {...control} />
       )}
     </FieldShell>
   );
@@ -179,7 +196,7 @@ export function SuggestField<O extends ComboboxOption = ComboboxOption>({
 }: SuggestFieldProps<O>): ReactElement {
   const { control } = useFormContext<IngredientFormValues>();
   const { field } = useController({ control, name });
-  const { aria, ...shell } = useField(name, hint);
+  const { aria, ...shell } = useField<IngredientFormValues>(name, hint);
   return (
     <FieldShell label={label} hint={hint} {...shell}>
       <Combobox
@@ -211,7 +228,7 @@ export function SuggestField<O extends ComboboxOption = ComboboxOption>({
  * A closed set, on the combobox's select-only box (DESIGN.md §14): the same
  * control and list as a suggesting field, with nothing to type.
  */
-export function SelectField({
+export function SelectField<V extends FieldValues = IngredientFormValues>({
   name,
   label,
   hint,
@@ -220,10 +237,10 @@ export function SelectField({
   required,
   deps,
   onChange,
-}: SelectFieldProps): ReactElement {
-  const { control } = useFormContext<IngredientFormValues>();
+}: SelectFieldProps<V>): ReactElement {
+  const { control } = useFormContext<V>();
   const { field } = useController({ control, name, rules: { deps } });
-  const { aria, ...shell } = useField(name, hint);
+  const { aria, ...shell } = useField<V>(name, hint);
   return (
     <FieldShell label={label} hint={hint} required={required} {...shell}>
       <ComboboxSelect
@@ -264,7 +281,7 @@ export function MultiSelectField({
 }: MultiSelectFieldProps): ReactElement {
   const { control } = useFormContext<IngredientFormValues>();
   const { field } = useController({ control, name });
-  const { aria, ...shell } = useField(name, hint);
+  const { aria, ...shell } = useField<IngredientFormValues>(name, hint);
   return (
     <FieldShell label={label} hint={hint} required={required} {...shell}>
       <ComboboxMultiSelect
@@ -310,6 +327,9 @@ export function ListField({
   // Its own ref rather than setFocus, which waits a tick: the box never
   // unmounts, so it can take the focus at once.
   const boxElement = useRef<HTMLInputElement | null>(null);
+  // The box and its button together, which an open list spans (MB.154).
+  // Held as state, through its callback ref, so the box is told once it exists.
+  const [boxRow, setBoxRow] = useState<HTMLDivElement | null>(null);
   // What the last add or removal did, for a screen reader: the box empties
   // and an entry appears or goes, and neither is otherwise announced.
   const [announcement, setAnnouncement] = useState('');
@@ -411,7 +431,7 @@ export function ListField({
           </InfoTip>
         )}
       </legend>
-      <div className="ingredient-form__row">
+      <div ref={setBoxRow} className="ingredient-form__row">
         <Combobox
           id={boxId}
           label={entry}
@@ -423,6 +443,7 @@ export function ListField({
           onCommit={add}
           onRemoveLast={removeLast}
           suggestions={suggestions}
+          listAnchor={boxRow}
           entries={entries}
           clear={fields.length > 0 ? { label: `Clear ${legend}`, onClear: clear } : undefined}
           inputRef={(element) => {

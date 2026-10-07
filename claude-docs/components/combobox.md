@@ -36,6 +36,8 @@ movable, on dnd-kit.
 | `entries`          | What a list holds, drawn inside the control ahead of the text.                                                                                                                |
 | `qualifier`        | `{ text, detail? }`: what a pick leaves out of the text, a picked form's group, in brackets after the text, muted, its detail in a tooltip. See "A qualifier".                |
 | `clear`            | `{ label, onClear }`: a control that empties the list, shown while it holds entries, named "Clear Folk Names".                                                                |
+| `listAnchor`       | The element the open list spans and opens beside: a list field's row, its box and its Add together. The control when left out. See "Where the list opens".                    |
+| `create`           | `{ label, onCreate }`: a first row that makes something new, "Add a reference", in place of the typed row, there with a blank box too. See "The create row".                  |
 | `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                               |
 | `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                            |
 
@@ -90,6 +92,62 @@ reader as well as by the eye, and so is who claims a value.
   clear and the chevron on the control's right, parted by a line. Backspace or Delete in an empty box takes the last entry through `onRemoveLast`. The chip's
   classes, `combobox__entry` and `combobox__entry-remove`, are drawn here so
   that any list reuses them; `IngredientForm`'s entry adds its tooltip.
+
+## Where the list opens
+
+The owner's calls in MB.154. `useListPosition` (`position.ts`) places the
+open list on Floating UI's `useFloating` (DESIGN.md §14):
+
+- **As wide as its anchor.** A list field passes its row as `listAnchor`,
+  so its list spans the box and its Add together, the field's whole width;
+  a box with no anchor, the form field, spans itself. The field holds the
+  row in state through a callback ref, so the box is told once it exists.
+- **Never off the screen.** It opens beneath the box and flips above when
+  there is more room there (`flip`), 8px from the screen's edge, and is no
+  taller than the room it has: `size` sets `--combobox-list-room`, and the
+  stylesheet caps the list at `min(18rem, that)`. Its side is
+  `data-placement`, "bottom-start" or "top-start".
+- **Followed while open, and only then.** `autoUpdate` re-places it on a
+  scroll or a resize; a closed list, which Downshift keeps in the page, is
+  not followed.
+- **Fixed, not absolute**, so a scrolling ancestor — M8.16's modal — cannot
+  clip it.
+- **A row never scrolls it sideways**: a word too long for the list, an
+  address in a citation, breaks anywhere (`overflow-wrap: anywhere` on the
+  row, `overflow-x: hidden` on the list).
+
+jsdom lays nothing out, so the tests give the viewport, the box, the anchor
+and the list the sizes Floating UI reads, as the sortable tests give the
+chips theirs.
+
+## The create row
+
+A list whose entries can only be picked, the references' (MB.154), has
+nothing to do with what was typed: a search is not a source. Its caller
+passes `create`, and the list's first row reads its label, "Add a
+reference", in the typed row's place and italic as that row is. It is there
+whatever the box holds, a blank box included, so ArrowDown or the chevron
+opens the list on it even before any suggestion has arrived. Picking it, by
+click or by Enter, calls `onCreate` and never `onPick`, and leaves the text
+as typed. The caller still passes an `onCommit`, a no-op for the
+references, so that Enter with nothing highlighted never reaches the form.
+
+**A second pick keeps the text** (a regression MB.154 found and fixed).
+Downshift remembers the last row picked, and with `selectedItem` held at
+`null` the next pick read as that prop changing, so Downshift wrote the null
+item's text, `''`, into the box. A list empties its box on a pick anyway, so
+nothing showed it until the create row, picked twice, emptied a search. The
+state reducer keeps the text on `ControlledPropUpdatedSelectedItem` as it
+does on a click or Enter.
+
+**A browser script must wait a frame between a click and a key.** Downshift
+reports a click's close through an effect, so a key pressed before React
+commits it is handled by the last render, which still has the list open:
+ArrowDown then moves the highlight rather than opening the list. Playwright's
+`locator.press` straight after a pick does this; a person moving from the
+mouse to the keys never does, and with half a second between them the list
+opens every time (traced during MB.154's browser pass). It is not a defect,
+and there is nothing to fix.
 
 ## The select-only box
 
@@ -330,9 +388,14 @@ from the box's own states, `:has(.combobox__input:focus-visible)` and
 a 22% wash of the accent on the card. A bucket's heading is muted small
 capitals with a step of space above it, the owner's call during MB.131. A chip is a filled, square-cornered
 rectangle in an 18% wash of the muted ink, react-select's shape, and its ×
-hovers in the warning's wash and ink. A control holding chips takes a step
-more padding above them, `space(2)` for `space(1)`, the owner's call during
-MB.169, so the first row of chips does not sit against the top edge. Rows
+hovers in the warning's wash and ink. A box stands at `$control-height`, level with a text field and a button
+(MB.154): its text line, `$text-height`, is the control's height less its
+1px edge and its `space(1)` padding, and a typed box, a select's value and
+the qualifier's hidden copy all take it. The chip list carries `space(1)`
+above and below, so the first of several rows of chips does not sit against
+the top edge, the owner's call during MB.169; on the list rather than the
+control, as it was, so one row still fits the text's line and a box with
+chips stays at the control's height. Rows
 that wrap sit a step further apart than the items in a row, `space(2)`
 between rows and `space(1)` along one, in the control, the values and the
 chips alike, the owner's call for MB.170, so wrapped chips no longer read as
@@ -364,8 +427,10 @@ review.
 and text, by pointer or keyboard; `NoSource`, a box that never opens; `Qualifier`, "Wax" picked under
 Substance, the group in the box and its description in a tooltip, dropped by
 an edit; `SelectOnly`, the select-only box; and
-`MultiSelect`, the multi-select box with two elements chosen. The suggestions
-are fixed, so typing filters nothing.
+`MultiSelect`, the multi-select box with two elements chosen; and
+`CreateRow`, "Add a reference" first whatever is typed, saying beneath the
+box each time it is picked. The suggestions are fixed, so typing filters
+nothing.
 
 ## Testing
 
@@ -373,6 +438,11 @@ are fixed, so typing filters nothing.
 suggestions and asserts: the name from a label or a label element; the rows,
 their buckets and the typed row; a row's accessible name carrying its label
 and note; picking by keyboard and by click, and the typed row as `null`;
+the list as wide as its anchor, or the box with none, and opening above
+the box with no room beneath it, its height held to the room on the side it
+opens; the text kept through a second pick; the create row first in the typed
+row's place, there with a blank box and with no suggestions, calling
+`onCreate` by click or keyboard and never `onPick`;
 the entry's ×, its tooltip on a cut-off text only, and its error; the
 qualifier drawn inside the control before the clear, read as the box's
 description after the field's own, its detail's tooltip on hover and on the

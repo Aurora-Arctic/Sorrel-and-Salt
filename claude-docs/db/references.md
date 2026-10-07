@@ -153,6 +153,59 @@ link was unlinked, or cites a retracted source, is listed.
 Every finder here is on the tier seam, named in `TIER_SEAM`
 ([`modules.md`](../modules.md#the-tier-seam)).
 
+### Formatting and checks (MB.154)
+
+The owner's calls while building the form's field. Each is in the shared
+schema, so the service stores and refuses what the form does, whoever sends
+the input; the formats and the shapes the checks accept are one pure,
+client-safe module, `validation/reference-format.ts`, which the form also
+applies as each field is left, so what is seen is what is saved.
+
+**What is tidied** (`FORMAT_OF`), only where it can be read with certainty:
+
+| Field                      | Format                                                                                                                              |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| every text field           | trimmed, each run of whitespace one space (`tidy`)                                                                                  |
+| `title`, `container`       | and the quotation marks wrapping the whole dropped, since the citation adds its own (`unquote`); marks inside it stay               |
+| `pages`, `volume`, `issue` | and a range set with an en dash, "399-412" → "399–412", roman numerals too (`dashNumbers`)                                          |
+| `published`                | and a range between numbers dashed, "1882-88" → "1882–88", a day written as a date left alone (`dashRanges`)                        |
+| `edition`                  | and one given as a number or a word written as Chicago does, "2", "second edition" → "2nd ed."; anything else, "Rev. ed.", as typed |
+| `url`                      | trimmed, and one with no scheme but a host, "example.org/x", taken as `https://` (`withScheme`)                                     |
+| a link's `locator`         | tidied and its ranges dashed (`formatLocator`); its words, "s.v. Hecate", "chap. 3", as typed                                       |
+
+Locator shorthand — "112" to "p. 112" — was offered and not chosen: a
+locator's words vary too much by the kind of work to guess.
+
+**One link per source, every place in its locator.** A source cited at
+several places in one ingredient is one link whose locator names them all,
+"pp. 12–19, 40; chap. 3", the owner's call over a link per place, which
+would have dropped the five one-link-per-source indexes, or a list of
+locators, which would have changed the column's type. Chicago lists a work
+once, with its places beside it; the Locator's tip says so.
+
+**What is refused, beside its field**, on top of MB.153's CHECK mirrors:
+
+- `published` with no four-digit year, unless it reads "n.d." or
+  "forthcoming" — "1985", "November 1950", "Summer/Autumn 2013" and
+  "1882–88" all pass (`holdsYear`).
+- `pages` on any kind, and an article's `volume` and `issue`, that are not
+  numbers, numerals, or ranges and lists of them (`isNumberList`). A book's
+  volume is a statement, "4 vols.", and is not held to it.
+- A `url` with a space, or whose host has no dot (`addressProblem`), beside
+  the http(s) check.
+- A `modified` or `accessed` day after tomorrow in UTC (`latestDay`): a
+  day east of Greenwich can already be tomorrow there, and the form and the
+  server need not share a zone. A `modified` day after the `accessed` one
+  is refused at `modified`; a day refused as not yet come is not refused
+  again for its order, and a malformed day only as malformed.
+
+**Measured against the seed.** Every one of the 278 sources MB.156 seeds
+passed these checks, and none was changed by a format, its locators
+included, when MB.154 ran them all through the schema: the rules hold
+Chicago's real variety, and no seeded citation, and so no `seed_key`, moves.
+The seed writes through its own path and is not parsed by the schema; an
+admin's later edit of a seeded source is.
+
 ### The renderer
 
 `renderCitation(ref): CitationPart[]` in `src/lib/citation.ts` (MB.153), pure
