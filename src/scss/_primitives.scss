@@ -399,6 +399,16 @@
     gap: space(3);
   }
 
+  // A form's buttons stand a little further from its last field than the
+  // fields from each other, 2rem in all, and as far again from what follows
+  // them — a modal's edge, with its padding — the owner's call during M5.5:
+  // every form reads its actions as their own group, whichever row carries
+  // them. A `.modal__actions` row's own margin gives way to it here.
+  .form > .form__actions,
+  .form > .modal__actions {
+    margin-block: space(2);
+  }
+
   .field {
     display: flex;
     flex-direction: column;
