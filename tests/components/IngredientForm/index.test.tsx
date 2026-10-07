@@ -275,6 +275,22 @@ const listOf = (field: (typeof LISTS)[number]['field']) =>
   LISTS.find((list) => list.field === field)!;
 
 describe('IngredientForm', () => {
+  // The owner's rule for every form (M5.6): a save is offered only when there
+  // is something to save.
+  it('keeps both saves off until something is entered, and off again once it is cleared', () => {
+    renderForm();
+    const saves = () => [
+      screen.getByRole('button', { name: 'Save Ingredient' }),
+      screen.getByRole('button', { name: 'Save & Add Another' }),
+    ];
+
+    for (const button of saves()) expect(button).toBeDisabled();
+    type('Name', 'T');
+    for (const button of saves()) expect(button).toBeEnabled();
+    type('Name', '');
+    for (const button of saves()) expect(button).toBeDisabled();
+  });
+
   describe('saving a stub', () => {
     it('saves with only a name, leaving the classification to the local default of "none"', async () => {
       const calls = acceptCreate();
@@ -423,7 +439,9 @@ describe('IngredientForm', () => {
       expect(saved.closest('form')).not.toBeNull();
       await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
 
-      // A save refused by the resolver is a new answer, and the old one goes.
+      // A save refused by the resolver is a new answer, and the old one goes:
+      // something entered, since a cleared form offers no save, but no name.
+      type('Description', 'An entry with no name.');
       save();
       await waitFor(() => expect(screen.queryByText('Saved Testwort.')).not.toBeInTheDocument());
     });
@@ -467,6 +485,7 @@ describe('IngredientForm', () => {
       const calls = acceptCreate();
       renderForm();
 
+      type('Description', 'An entry with no name.');
       save();
 
       const name = textbox('Name');
@@ -479,6 +498,7 @@ describe('IngredientForm', () => {
       acceptCreate();
       renderForm();
 
+      type('Description', 'An entry with no name.');
       save();
       await waitFor(() => expect(textbox('Name')).toBeInvalid());
       type('Name', 'Testwort');
@@ -565,6 +585,7 @@ describe('IngredientForm', () => {
       });
       renderForm();
 
+      type('Description', 'An entry with no name.');
       save();
       const fromResolver = await screen.findByText('Give the ingredient a name');
       type('Name', 'Testwort');
@@ -2832,8 +2853,11 @@ describe('IngredientForm', () => {
       expect(rest).toHaveAccessibleName(other);
       release();
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
-      expect(submit).toBeEnabled();
-      expect(rest).toBeEnabled();
+      // Back up once answered; Save & Add Another has cleared the form, which
+      // then has nothing to save, so both stay off until the next is entered.
+      const cleared = pressed === 'Save & Add Another';
+      expect(submit).toHaveProperty('disabled', cleared);
+      expect(rest).toHaveProperty('disabled', cleared);
       expect(submit).not.toHaveAttribute('aria-busy');
       expect(submit).toHaveAccessibleName(pressed);
     },

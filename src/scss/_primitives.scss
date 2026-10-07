@@ -84,6 +84,11 @@
     border: 1.6px solid $accent;
     background-color: transparent;
     color: $accent;
+    // Many `.btn`s are anchors (Add Category, Continue), and an anchor
+    // underlines by default; a button never does, in any state. The colour
+    // half of the same problem is `_typography.scss`'s `:visited`, which
+    // carries no specificity for this rule to beat.
+    text-decoration: none;
     cursor: pointer;
     box-shadow: $shadow-floating;
     @include theme-transition(background-color, border-color, color, box-shadow);
@@ -103,7 +108,9 @@
     }
   }
 
-  .btn--secondary {
+  // What destroys something: Delete, Remove. Named for what it does rather
+  // than for its colour token, `$secondary`, which every error wears too.
+  .btn--destructive {
     border-color: $secondary;
     color: $secondary;
 
@@ -124,6 +131,36 @@
     // this size.
     border-width: 1px;
     font-size: type-size('caption');
+  }
+
+  // A save in flight, the owner's call for every Save button (M5.6): a ring
+  // in the button's ink, open on one side so its turn reads, ahead of the
+  // label, the button `aria-busy`. Slowed rather than stopped where motion is
+  // reduced, since a still ring says nothing is happening.
+  .spinner {
+    width: 1em;
+    height: 1em;
+    flex-shrink: 0;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: radius('pill');
+    animation: spinner-turn 0.8s linear infinite;
+
+    @include reduced-motion {
+      animation-duration: 2.4s;
+    }
+  }
+
+  @keyframes spinner-turn {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  // The side padding is sized for a word, and reads as a gap before a small
+  // round mark, so the left side comes in a step while the spinner shows.
+  .btn[aria-busy='true'] {
+    padding-left: space(3);
   }
 
   // A state rather than a modifier class, from either attribute: `disabled`
@@ -185,6 +222,73 @@
     &:hover,
     &:focus-visible {
       background-color: $text-primary;
+    }
+  }
+
+  // A paged list's Prev and Next, centred under its table (the owner's
+  // calls, M5.6): a `nav` holding a list of full-size `.btn--quiet` anchors,
+  // quiet because paging changes nothing. The ‹ and › marks are
+  // `aria-hidden` spans, leaving each link named "Prev" or "Next".
+  .pager > ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: space(3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    // Two controls, not a bulleted list: no typography-base ◆ marker.
+    > li {
+      margin: 0;
+
+      &::before {
+        content: none;
+      }
+    }
+  }
+
+  // Twice the label, so the direction reads at a glance; a line height of 1
+  // so the mark does not make the button taller.
+  .pager__mark {
+    font-size: 2em;
+    line-height: 1;
+    // The guillemet sits on the text's line, below the middle of the button,
+    // so it is brought up to the label's centre (the owner's call).
+    translate: 0 -0.08em;
+  }
+
+  // "Page 2 of 3" between the ends, in the muted ink at the body size: it
+  // says where the list stands, and is not a control.
+  .pager__position {
+    align-self: center;
+    // Room either side, so it reads as standing between the ends rather than
+    // as a caption on either (the owner's call).
+    padding-inline: space(4);
+    color: $text-muted;
+    font-size: type-size('body');
+  }
+
+  // A page's heading with its one primary action on the same line, at the
+  // end (the owner's call, M5.6): Add Category beside "Categories". Centred,
+  // then the action brought down 0.25rem, the owner's measure: the heading's box
+  // carries room below its letters, so a centred button reads high and one on
+  // the baseline low. It wraps beneath on a narrow screen rather than
+  // squeezing the heading.
+  .page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: space(3) space(5);
+    margin-bottom: space(5);
+
+    > h1 {
+      margin: 0;
+    }
+
+    > :not(h1) {
+      translate: 0 0.25rem;
     }
   }
 

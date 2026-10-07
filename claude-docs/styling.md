@@ -314,6 +314,8 @@ the three the scale uses (500/600/700) are requested.
 - **Links get an underline under `prefers-contrast: more`**, on the body ink
   rather than a further-pushed sorrel: WCAG's "don't rely on colour alone", for
   users who have explicitly asked for more contrast than the baseline gives.
+- **A followed link takes the body ink**, from a `:visited` inside `:where()`,
+  so any class-level link colour still wins ("Buttons", below).
 - **A heading gathers four text roles**, all in `typography-base`: the
   `.eyebrow` above it, naming the section it sits in; `.meta`, a
   caption-size muted line tight under it — a formal name and form, a date, a
@@ -401,7 +403,9 @@ included. Four variants:
 - **`.btn--quiet`**, an action that changes nothing: Cancel, Keep It, Back.
   The body ink on an edge, so it neither competes with the primary nor reads as
   destructive — and, unlike the muted ink, not as disabled either.
-- **`.btn--secondary`**, what destroys something: Delete, Remove. The wax.
+- **`.btn--destructive`**, what destroys something: Delete, Remove. The wax,
+  `$secondary`, which every error wears too. It was `.btn--secondary`, named
+  for the token rather than the job, until M5.6, the owner's call.
 
 **One size modifier, `.btn--small`**, which composes with any variant: half
 the padding (`space(1) space(3)`), no `$control-height` minimum, a 1px edge
@@ -410,9 +414,53 @@ type size, and a `space(2)` gap. It is for a compact strip that the full button 
 as a banner or a table row. The impersonation banner's Stop is the first
 (MB.53).
 
+**A save in flight is `aria-busy` with a `.spinner`** (M5.6, the owner's call
+for every Save button). The spinner is a 1em ring in the button's own ink,
+open on one side so its turn reads, slowed rather than stopped where motion is
+reduced. It sits ahead of the label, which says what is happening ("Saving
+Category"). A `.btn[aria-busy='true']` brings its left padding in a step,
+since padding sized for a word reads as a gap before a small round mark.
+IngredientForm's two saves and its reference panel use the same one.
+
 **Disabled is dashed and faded**, from `disabled` or `aria-disabled`: the
 edge dashes, the fill clears, and the whole button drops to 55%. Neither
 state needs a component to restate it.
+
+**A `.btn` on an anchor is a button in every state**, Add Category and
+Continue among them. `.btn` sets `text-decoration: none`, and
+`_typography.scss`'s visited ink sits inside `:where()`, so it adds nothing to
+`a`'s specificity and every variant's own colour outranks it. As a plain
+`:visited` it outranked any class-level link colour, and Welcome and EmailForm
+each restated their label colour to keep a followed `.btn--solid` off the body
+ink. No component needs to now.
+
+**`.pager` is a paged list's Prev and Next** (the owner's calls in M5.6): a
+`nav` with `class="pager"` and `aria-label="Pages"`, holding a bare `ul` of
+two `li`s, each a full-size `.btn.btn--quiet` anchor. They are quiet because
+paging changes nothing. The list is a wrapping flex row, centred under the
+table, with a `space(3)` gap and no ◆ marker. The ‹ and › marks are
+`.pager__mark` spans at 2em with a line height of 1, raised 0.08em to the
+label's centre, so they read at a glance without making the button taller. They are `aria-hidden`, so the links
+are named "Prev" and "Next". `.pager__position`, "Page 2 of 3" between them,
+is muted text at the body size with `space(4)` either side, since it is not
+a control. An end with no page is disabled rather than
+hidden, so neither moves. The markup is the `Pager` component's
+([`components/pager.md`](components/pager.md)), which CategoryList and
+UserList render.
+
+**`.page-header` puts a page's heading and its one primary action on one
+line**, the action at the end (the owner's call, M5.6): `/admin/categories`'
+Add Category beside its H1. The row is centred and the action brought down
+0.25rem, the owner's measure: a heading's box carries room below its letters,
+so a centred button reads high and one on the baseline low. The row wraps on
+a narrow screen rather than squeezing the heading.
+
+**The admin tables are banded**: every even body row on `$surface-card`, the
+surface a modal wears, so a wide row stays readable across. Each cell is
+inset `space(3)` on both sides so no text meets a band's edge, and aligned on
+the baseline so a row's small button reads on its text's line. A 1px
+`$text-muted` hairline runs under the header row. CategoryList and UserList
+each carry the rules; a third table is the moment to make them a primitive.
 
 ## Form fields
 

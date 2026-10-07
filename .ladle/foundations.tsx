@@ -340,7 +340,7 @@ export default function Foundations(): ReactElement {
           <button type="button" className="btn btn--quiet">
             Quiet
           </button>
-          <button type="button" className="btn btn--secondary">
+          <button type="button" className="btn btn--destructive">
             Destructive
           </button>
           <button type="button" className="btn" disabled>
@@ -360,7 +360,7 @@ export default function Foundations(): ReactElement {
           <button type="button" className="btn btn--quiet btn--small">
             Small Quiet
           </button>
-          <button type="button" className="btn btn--secondary btn--small">
+          <button type="button" className="btn btn--destructive btn--small">
             Small Destructive
           </button>
         </div>
@@ -438,7 +438,7 @@ export default function Foundations(): ReactElement {
             <h4>Delete this spell?</h4>
             <p>The Hearth Warding Jar and its six ingredients will be removed from the grimoire.</p>
             <div className="modal__actions">
-              <button type="button" className="btn btn--secondary">
+              <button type="button" className="btn btn--destructive">
                 Delete
               </button>
               <button type="button" className="btn btn--quiet">
