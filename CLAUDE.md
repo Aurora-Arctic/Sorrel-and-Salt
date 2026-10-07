@@ -133,18 +133,7 @@ The one v1 concession to v2: the ingredient detail page (M8.19) is built so a no
 
 ## Skills
 
-Skills live in `.claude/skills/<name>/SKILL.md` and are invoked as `/<name>`; claude-docs/agent-skills.md holds their shape.
-
-| Skill              | Trigger                                                                                  |
-| ------------------ | ---------------------------------------------------------------------------------------- |
-| `start-task`       | "start M0.31", `/start-task` — finds the issue, then `create-feature` or `create-hotfix` |
-| `create-feature`   | "start a feature branch" — `feature/<slug>` off `origin/staging`, task In Progress       |
-| `create-hotfix`    | "start a hotfix" — `hotfix/<slug>` off `origin/main`, task In Progress                   |
-| `create-pr`        | "open a PR" — commits after asking, pushes, opens against the Gitflow target, In Review  |
-| `create-release`   | "cut a release" — `release/<version>` off `staging`, tag `v<version>`, PR into `main`    |
-| `create-main-sync` | "sync main into staging" — `main-sync/<timestamp>` off `main`, PR into `staging`         |
-| `prune-branches`   | "clean up my branches" — deletes merged and gone local branches, asks about the rest     |
-| `project-progress` | "project progress", "how many hours are left" — tallies from local data, no `gh`         |
+Skills live in `.claude/skills/<name>/SKILL.md` and are invoked as `/<name>`. Each one's trigger is its own description, which every session lists; claude-docs/agent-skills.md tables them all with what each does.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
