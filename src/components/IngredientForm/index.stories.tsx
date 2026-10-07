@@ -2,14 +2,18 @@ import type { Story } from '@ladle/react';
 import { useLayoutEffect, useState } from 'react';
 import type {
   CommonNameSuggestionsQuery,
+  CreateReferenceMutation,
   CreateWorkspaceIngredientMutation,
   DeitySuggestionsQuery,
   FormSuggestionsQuery,
   IngredientSuggestionsQuery,
   PlanetSuggestionsQuery,
   PossibleDuplicatesQuery,
+  ReferenceSuggestionsQuery,
   ZodiacSuggestionsQuery,
 } from '../../gql/graphql';
+import { citationText } from '../../lib/citation';
+import type { CitationFields } from '../../lib/types';
 import IngredientForm from '.';
 import type { AfterSave, SavedIngredient } from './types';
 
@@ -190,6 +194,50 @@ const INGREDIENTS = [
   },
 ];
 
+// Invented sources in both tiers, one long enough to wrap and one carrying
+// an address, rendered by the one renderer as the server renders them.
+const SOURCES = [
+  {
+    id: 'source-herbal',
+    isGlobal: true,
+    citation: citationText({
+      kind: 'book',
+      authors: 'Fixture, Ada',
+      title: 'The Testwort Herbal',
+      contributors: 'Edited by Bram Placeholder',
+      place: 'Mockford',
+      publisher: 'Fixture Press',
+      published: '1901',
+    }),
+  },
+  {
+    id: 'source-notes',
+    isGlobal: false,
+    citation: citationText({
+      kind: 'article',
+      authors: 'Placeholder, Bram',
+      title: 'Notes on Mockleaf',
+      container: 'Journal of Fixtures',
+      volume: '3',
+      issue: '2',
+      published: '1950',
+      pages: '12–19',
+    }),
+  },
+  {
+    id: 'source-wiki',
+    isGlobal: true,
+    citation: citationText({
+      kind: 'web_page',
+      title: 'Testwort',
+      container: 'Fixture Wiki',
+      url: 'https://fixture-wiki.example/wiki/Testwort_(herb)_and_its_many_fixture_relatives',
+      modified: '2026-09-27',
+      accessed: '2026-10-06',
+    }),
+  },
+];
+
 const CATS_CLAW = [
   { id: 'claw-1', name: "Cat's Claw", canonicalName: 'Uncaria tomentosa' },
   { id: 'claw-2', name: "Cat's Claw", canonicalName: 'Felis catus' },
@@ -254,6 +302,23 @@ function answer(operation: string, variables: Record<string, unknown>): object |
           first,
         ),
       } satisfies IngredientSuggestionsQuery;
+    case 'ReferenceSuggestions':
+      return {
+        referenceSuggestions: page(
+          SOURCES.filter((row) => matches(query, row.citation)),
+          first,
+        ),
+      } satisfies ReferenceSuggestionsQuery;
+    case 'CreateReference': {
+      const input = variables.input as CitationFields;
+      return {
+        createReference: {
+          id: crypto.randomUUID(),
+          citation: citationText(input),
+          isGlobal: false,
+        },
+      } satisfies CreateReferenceMutation;
+    }
     case 'PossibleDuplicates':
       // Only a name close to "Cat's Claw" is near anything.
       return {
@@ -270,13 +335,19 @@ function answer(operation: string, variables: Record<string, unknown>): object |
   }
 }
 
+/** The two writes, each answered after `SAVE_DELAY_MS`. */
+const SAVES = new Set(['CreateWorkspaceIngredient', 'CreateReference']);
+
 /**
  * The refusal a save meets, in the body /api/graphql sends one in, or
  * undefined for a save that lands: a name holding "taken" is refused on the
  * name, one holding "refuse" as a whole, so the two server errors can be seen.
+ * A new reference is refused the same way by its title.
  */
-function refusal(variables: Record<string, unknown>): object | undefined {
-  const name = String((variables.input as { name?: string } | undefined)?.name ?? '');
+function refusal(operation: string, variables: Record<string, unknown>): object | undefined {
+  const input = variables.input as { name?: string; title?: string } | undefined;
+  const field = operation === 'CreateReference' ? 'title' : 'name';
+  const name = String(input?.[field] ?? '');
   if (/taken/i.test(name)) {
     return {
       data: null,
@@ -286,7 +357,9 @@ function refusal(variables: Record<string, unknown>): object | undefined {
           extensions: {
             code: 'VALIDATION',
             fieldErrors: [
-              { path: ['name'], message: 'This coven already has an ingredient by that name' },
+              field === 'title'
+                ? { path: ['title'], message: 'This coven already has a source by that title' }
+                : { path: ['name'], message: 'This coven already has an ingredient by that name' },
             ],
           },
         },
@@ -297,7 +370,10 @@ function refusal(variables: Record<string, unknown>): object | undefined {
     return {
       data: null,
       errors: [
-        { message: "You can't add ingredients to this coven", extensions: { code: 'FORBIDDEN' } },
+        {
+          message: `You can't add ${field === 'title' ? 'sources' : 'ingredients'} to this coven`,
+          extensions: { code: 'FORBIDDEN' },
+        },
       ],
     };
   }
@@ -323,9 +399,9 @@ function useCannedApi(): void {
         const data = operationName ? answer(operationName, variables) : undefined;
         if (data) {
           let body: object = { data };
-          if (operationName === 'CreateWorkspaceIngredient') {
+          if (operationName && SAVES.has(operationName)) {
             await new Promise((resolve) => setTimeout(resolve, SAVE_DELAY_MS));
-            body = refusal(variables) ?? body;
+            body = refusal(operationName, variables) ?? body;
           }
           return new Response(JSON.stringify(body), {
             headers: { 'content-type': 'application/json' },
@@ -391,6 +467,29 @@ function WhatToTry() {
         </li>
         <li>
           <strong>Long entry:</strong> add a Folk Name too long for the box, then hover it.
+        </li>
+        <li>
+          <strong>References:</strong> focus Reference to list three sources, or type
+          &ldquo;fixture&rdquo;; pick one and it becomes a row beneath the box, with a Locator to
+          fill in. The web page&rsquo;s long address wraps inside its row. A picked source is not
+          offered again.
+        </li>
+        <li>
+          <strong>A new reference:</strong> press New Reference, or pick &ldquo;Add a
+          reference&rdquo; from the list, and choose a Kind: each shows only its own fields, the
+          required ones starred. Save Reference with a Chapter&rsquo;s Book empty, or a Web
+          Page&rsquo;s Address, to see them refused; a Title with &ldquo;taken&rdquo; in it is
+          refused by the server beside Title, and one with &ldquo;refuse&rdquo; in it above the
+          panel&rsquo;s fields. Enter in a field saves the reference, not the ingredient. Save the
+          ingredient with the panel open to see it held.
+        </li>
+        <li>
+          <strong>Tidied as you go:</strong> in a new reference, type a Title in quotation marks, an
+          Edition of &ldquo;2&rdquo;, Published &ldquo;1882-88&rdquo; or an Address with no
+          https://, then Tab away; each is written as it will be saved. A picked source&rsquo;s
+          Locator dashes its ranges the same way, and holds every place it is cited at: &ldquo;pp.
+          12-19, 40; chap. 3&rdquo;. Published &ldquo;soon&rdquo;, Pages &ldquo;the middle&rdquo; or
+          an Accessed day next month are refused beside the field.
         </li>
         <li>
           <strong>Refused by the server:</strong> a Name with &ldquo;taken&rdquo; in it is refused

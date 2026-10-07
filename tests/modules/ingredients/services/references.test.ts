@@ -71,6 +71,19 @@ describe('createReference', () => {
     });
   });
 
+  // MB.154: the server stores what the form shows once a field is left,
+  // whoever sent the input.
+  it('stores the fields tidied and formatted, not as sent', async () => {
+    const created = await createReference(asUser(B), WORKSPACE_W_ID, {
+      ...BOOK,
+      title: ' "A Herbal  of Fixture Covens" ',
+      edition: '2',
+    });
+
+    const [row] = await sql`select title, edition from "references" where id = ${created.id}`;
+    expect(row).toEqual({ title: 'A Herbal of Fixture Covens', edition: '2nd ed.' });
+  });
+
   // The same input the admin's write above saves: the proof is what refuses,
   // checked before the input is read.
   it('refuses a compendium reference to anyone but a site admin, before reading the input', async () => {
@@ -100,7 +113,9 @@ describe('createReference', () => {
     ['an article with no journal', { kind: 'article', title: 'On Testwort' }, ['container']],
     ['an entry with no reference work', { kind: 'entry', title: 'Testwort' }, ['container']],
     ['a book with no date', { kind: 'book', title: 'Fixtures' }, ['published']],
-    ['a relative address', { ...BOOK, url: 'example.org/a' }, ['url']],
+    // An address with a host but no scheme is taken as https (MB.154); one
+    // with no host to read is still refused.
+    ['a relative address', { ...BOOK, url: 'fixtures/a' }, ['url']],
     ['a day read with no address', { ...BOOK, accessed: '2026-10-06' }, ['accessed']],
     ['a blank title', { ...BOOK, title: '  ' }, ['title']],
   ])('refuses %s, pathed to the field', async (_case, input, fields) => {

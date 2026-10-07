@@ -100,3 +100,90 @@
     transform: rotate(1turn);
   }
 }
+
+// The references (MB.154): rows beneath the search box rather than chips
+// inside it, so a citation reads whole, as a bibliography does. Each row is
+// its source and its × on one line, the locator beneath the source, so the
+// row holds at 320px with no line run sideways.
+.ingredient-form__references {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ingredient-form__reference {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: space(2);
+  align-items: start;
+  padding: space(2) space(3);
+  border-left: 2px solid $text-muted;
+  background-color: $surface-card;
+  // A row, not a bulleted item: no margin or ◆ of typography-base's.
+  margin: 0;
+
+  &::before {
+    content: none;
+  }
+
+  // The row an error names takes the field's error edge, as a chip does.
+  &.is-invalid {
+    border-left-color: $secondary;
+  }
+
+  > .ingredient-form__remove {
+    grid-row: 1;
+    grid-column: 2;
+    border-radius: radius('sharp');
+  }
+}
+
+.ingredient-form__source {
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+  min-width: 0;
+}
+
+// A citation carries an address, which has no break of its own.
+.ingredient-form__citation {
+  overflow-wrap: anywhere;
+}
+
+.ingredient-form__tier {
+  color: $text-muted;
+  font-size: type-size('caption');
+}
+
+// "Locator" and its box on one line, a page reference's width.
+.ingredient-form__locator {
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  gap: space(2);
+
+  > .input {
+    width: 10rem;
+    max-width: 100%;
+  }
+}
+
+// The new reference panel: a group set off from the field it opens beneath,
+// its own fields at the form's spacing.
+.ingredient-form .ingredient-form__panel {
+  gap: space(4);
+  margin-top: space(2);
+  padding: space(4);
+  border: 1px solid $text-muted;
+  border-radius: radius('surface');
+  // Scrolled to when asked for again, with its legend, which sits across
+  // the top edge, still in view.
+  scroll-margin-top: space(5);
+
+  .fieldset__legend {
+    padding: 0 space(1);
+  }
+}

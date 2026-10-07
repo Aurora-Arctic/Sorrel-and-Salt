@@ -71,7 +71,12 @@
     font-family: $font-body;
     font-size: type-size('small');
     font-weight: 500;
-    padding: space(3) space(5);
+    // Level with a field ($control-height), whatever the font's line height:
+    // the padding leaves the label short of it, and the minimum makes up the
+    // rest, centred by the flex box.
+    box-sizing: border-box;
+    min-height: $control-height;
+    padding: space(2) space(5);
     border-radius: radius('control');
     // Heavier than a field's 1px: a hairline in the accent barely reads as a
     // colour. A border width rounds down to whole device pixels, so this
@@ -274,8 +279,9 @@
   .select {
     box-sizing: border-box;
     width: 100%;
-    // A 44px target at body size, whatever the platform's line height.
-    min-height: 2.75rem;
+    // Level with a button and a suggesting box, whatever the platform's line
+    // height ($control-height).
+    min-height: $control-height;
     margin: 0;
     padding: space(2) space(3);
     border: 1px solid $text-muted;
