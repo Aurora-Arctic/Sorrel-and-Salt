@@ -103,7 +103,7 @@ const fileUnder = (
   );
 
 describe('listCategories', () => {
-  it('pages the live categories under live groups by name, a deleted one and an orphaned one left out', async () => {
+  it('pages the live categories under live groups by group then name, a deleted one and an orphaned one left out', async () => {
     const deleted = await seed('Testcraft Deleted');
     await sql`update categories set deleted_at = now(), deleted_by = ${E.id} where id = ${deleted}`;
     const [retiredGroup] = await sql<{ id: string }[]>`
@@ -115,11 +115,12 @@ describe('listCategories', () => {
     // Why either could have been listed: both rows are there, the orphan live.
     expect((await rowOf(orphan)).deleted_at).toBeNull();
 
+    // The picker's order (MB.126): the group's name, then the category's.
     const expected = await sql<{ id: string }[]>`
       select c.id from categories c
-      where c.deleted_at is null
-        and exists (select 1 from category_groups g where g.id = c.group_id and g.deleted_at is null)
-      order by c.name, c.id`;
+      join category_groups g on g.id = c.group_id
+      where c.deleted_at is null and g.deleted_at is null
+      order by g.name, c.name, c.id`;
     const first = await resolvePage({ first: 25 }, (page) => listCategories({}, page));
     const second = await resolvePage(
       { first: 25, after: first.pageInfo.endCursor ?? undefined },

@@ -1,5 +1,6 @@
 import type { useSortable } from '@dnd-kit/sortable';
 import type { ReactNode, Ref } from 'react';
+import type { GroupColors } from '../../lib/types';
 
 /** One suggestion: the text picking it writes, and what its row shows. */
 export interface ComboboxOption {
@@ -11,6 +12,11 @@ export interface ComboboxOption {
   note?: string;
   /** Which bucket it is in, curated or in use; left out by a source with one bucket. */
   curated?: boolean;
+  /**
+   * The heading of the bucket it is listed under, a category's group
+   * (MB.126): a source naming its own buckets, in place of `curated`'s two.
+   */
+  heading?: string;
   /** What tells it from a row that reads the same — an ingredient's id — where its text cannot. */
   key?: string;
 }
@@ -96,6 +102,19 @@ export interface ComboboxEntryProps {
    * not, and read as its x's description.
    */
   detail?: string;
+  /**
+   * What tells the entry from a namesake, a category's group (MB.126): read
+   * after the text on the tooltip's first line, "Testward (Wards & Fixtures)",
+   * as a picked deity's pill reads its tradition, and as the x's description
+   * before the detail. The tooltip then opens whether the text is cut off or
+   * not, as it does for a detail.
+   */
+  qualifier?: string;
+  /**
+   * Its group's colour pair, from the row (MB.126): the chip is filled solid
+   * with it, its text and x inverted, as the solid-fill rule asks.
+   */
+  colors?: GroupColors;
   onRemove: () => void;
   /**
    * The chip's place in a sortable list, from dnd-kit's `useSortable`: it

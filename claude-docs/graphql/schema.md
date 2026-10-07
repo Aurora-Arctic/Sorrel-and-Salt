@@ -563,7 +563,8 @@ The category vocabulary (M5.6), registered by `vocabulary` over
 sketch, as the chips read them (MB.36).
 
 - **`categories` is public** (MB.80): no scope, and no session reaches the
-  service. It pages the live categories under live groups by `(name, id)`,
+  service. It pages the live categories under live groups by their group's name,
+  then their own, then id (MB.126, the owner's call: the picker's order),
   each group through `categoryGroupsById`, one read for a whole page.
   `query` and `groupId`, both optional, narrow it as `users(query:)` narrows
   the user list (MB.178): a name holding the query, a group's categories, and

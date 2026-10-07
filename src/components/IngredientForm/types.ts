@@ -153,6 +153,8 @@ export interface IngredientFormValues {
   colors: ListEntry[];
   deities: DeityListEntry[];
   substitutes: SubstituteListEntry[];
+  /** The ids of the categories picked, in the order picked (MB.126). */
+  categoryIds: string[];
   safetyNotes: string;
   /** Picked from the search, never typed, so not one of the lists (MB.154). */
   references: ReferenceListEntry[];

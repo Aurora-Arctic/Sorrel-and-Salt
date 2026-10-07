@@ -42,11 +42,13 @@ movable, on dnd-kit.
 | `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                                   |
 | `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                                |
 
-A `ComboboxOption` is `{ value, label?, note?, curated?, key? }`: the text a
+A `ComboboxOption` is `{ value, label?, note?, curated?, heading?, key? }`: the text a
 pick writes, the row's text when it is more than the value ("Wax (Animal)"), a
-second line, which bucket it is in, and what tells it from a row that reads
+second line, which bucket it is in — `curated` for the two source buckets, or
+`heading` for a bucket the source names itself, a category's group (MB.126) —
+and what tells it from a row that reads
 the same. A row is keyed, for React and for Downshift, by `key` when it has
-one and by its bucket, label and value otherwise: two substitute suggestions
+one and by its bucket, heading, label and value otherwise: two substitute suggestions
 can share all three, a compendium entry and the coven's own copy of it, and
 only the ingredient's id tells them apart (MB.131). The row's accessible name is its
 label and its note, so two same-named forms are told apart by a screen
@@ -69,6 +71,15 @@ reader as well as by the eye, and so is who claims a value.
   from, and are true because a compendium entry holds curated values alone
   (MB.162), so every value in use outside the lists is the coven's; a source whose rows carry no `curated`
   lists them flat. The distinction is text, never colour alone. Two same-named rows, "Wax (Animal)" and "Wax (Substance)", are told apart in the list by the group in each label. Both write "Wax", since `ingredients.form` stores the string, so after a pick the box tells them apart by its qualifier, the group a caller passes for the row it picked (MB.169; DESIGN.md §5).
+- **Or the source's own buckets** (MB.126). A row carrying a `heading` is
+  grouped under it, a category under its group's name, with the same
+  `role="group"` and heading as the curated buckets; once any row carries
+  one, `curated` is not read. The buckets stand in the order the headings
+  first appear in `options`, since the caller has sorted them, and a row
+  without a heading goes in a trailing unheaded bucket, outside every group
+  and after them. Each group's heading is keyed by its place, `heading-0`,
+  rather than its text, which may hold a space and would split the
+  `aria-labelledby` reference. The status region counts the rows as before.
 - **It opens as text is typed, on ArrowDown, and from its chevron**, and only
   once there are rows: a list wanted while the lookup is pending opens as
   the rows arrive, the typed row counting as one. A box with no source never
@@ -234,7 +245,7 @@ a second way through the chips would be a second tab model for one look.
 
 ## An entry
 
-`ComboboxEntry({ value, errorId?, detail?, onRemove })`, a named export beside the
+`ComboboxEntry({ value, errorId?, detail?, colors?, onRemove })`, a named export beside the
 default, is the chip a list passes in `entries`, inside a
 `ul.combobox__entries`. It is MB.133's entry moved out of `IngredientForm`
 so that every list draws the same one:
@@ -256,7 +267,11 @@ so that every list draws the same one:
   only on an entry that is cut off, measured as it opens, closes on Escape
   (WCAG 1.4.13), waits 150ms before closing as the pointer leaves so the
   pointer can cross onto it, and breaks an unbroken text anywhere to stay
-  inside the control.
+  inside its measure. It runs from the chip's left edge as wide as its
+  words, up to InfoTip's measure (18rem, or the screen less its gutters),
+  past the chip and the control alike, the owner's call during MB.126: only
+  being cut off is wrong. The entry shifts it left as it opens, through
+  `--entry-tip-shift`, by however far it would run off the screen.
 - **A detail tells what the chip leaves out** (MB.164). `detail`, a string
   such as a linked substitute's "Dried leaf · Compendium entry — A fixture
   herb.", sits on its own line beneath the text in the tooltip, at the
@@ -267,6 +282,24 @@ so that every list draws the same one:
   the list's error when one names the entry, so a screen reader hears it
   without the tooltip: the reference reads it although the tooltip is
   `aria-hidden` while closed.
+- **A coloured chip wears its group's pair** (MB.126). `colors`, a group
+  row's `{ colorDark, colorLight }`, sets both on the chip inline through
+  `chipColors()` and marks it `is-coloured`, and the stylesheet fills it
+  solid with the theme's one, `light-dark()`, its text and × in
+  `$text-on-color` — the solid-fill rule, since a wash of the colour cannot
+  hold 4.5:1 (`styling.md`, "Chips, badges and the solid-fill rule"). It is
+  the fill `chip()` draws selected, not the mixin, which draws a pill: the
+  chip keeps its shape, padding and 24px ×, so a row mixes coloured and
+  plain chips without a jump. The ×'s and a sortable handle's focus rings
+  are drawn in the same inverted ink on the fill, and the grip in it too;
+  the ×'s hover keeps its own wash and ink, the error edge stays, and a
+  held chip takes the body ink back with the accent's wash. A sortable
+  entry passes `colors` the same way.
+- **A qualifier reads after the text on the tooltip's first line**, in
+  brackets — "Testward (Wards & Fixtures)", a category's group (MB.126), as a
+  picked deity's pill reads its tradition — and as the x's description
+  before the detail, the brackets left out. With one the tooltip opens
+  whether the text is cut off or not, as it does with a detail.
 
 ## A sortable list
 
@@ -438,7 +471,9 @@ nothing.
 
 `tests/components/Combobox/index.test.tsx` renders the box with fixed
 suggestions and asserts: the name from a label or a label element; the rows,
-their buckets and the typed row; a row's accessible name carrying its label
+their buckets and the typed row; headed rows grouped under their headings
+in first-seen order, an unheaded row last and outside every group, and two
+same-named rows under different headings told apart; a row's accessible name carrying its label
 and note; picking by keyboard and by click, and the typed row as `null`;
 the list as wide as its anchor, or the box with none, and opening above
 the box with no room beneath it, its height held to the room on the side it
@@ -447,7 +482,9 @@ row's place, there with a blank box and with no suggestions, calling
 `onCreate` by click or keyboard and never `onPick`; the typed row withheld
 under `offerTyped={false}`, the suggestions still shown, Enter still handed
 to `onCommit`, and the list shut when it would have been the only row;
-the entry's ×, its tooltip on a cut-off text only, and its error; the
+the entry's ×, its tooltip on a cut-off text only, its error, and the
+colour pair and `is-coloured` class a coloured one carries and a plain one
+does not; the
 qualifier drawn inside the control before the clear, read as the box's
 description after the field's own, its detail's tooltip on hover and on the
 box's focus, closed by Escape and blur, and none without a detail; Enter handed to `onCommit` with the list open or closed, and otherwise

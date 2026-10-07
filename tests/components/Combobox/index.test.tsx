@@ -169,6 +169,86 @@ describe('Combobox', () => {
     ]);
   });
 
+  // MB.126: a source that names its own buckets, a category under its group.
+  describe('headed suggestions', () => {
+    const HEADED: Suggestions = {
+      options: [
+        { value: 'Hedge Fixture', heading: 'Mind' },
+        { value: 'Fixture Bane', heading: 'Body' },
+        { value: 'Mockleaf', heading: 'Mind' },
+      ],
+      pending: false,
+    };
+
+    it('lists them under their headings, in the order the headings first appear', () => {
+      render(<Harness suggestions={HEADED} />);
+
+      type('fix');
+
+      const groups = screen.getAllByRole('group');
+      expect(groups).toHaveLength(2);
+      expect(screen.getByRole('group', { name: 'Mind' })).toBe(groups[0]);
+      expect(screen.getByRole('group', { name: 'Body' })).toBe(groups[1]);
+      expect(
+        within(groups[0]!)
+          .getAllByRole('option')
+          .map((option) => option.textContent),
+      ).toEqual(['Hedge Fixture', 'Mockleaf']);
+      expect(options()).toEqual([
+        'Use what you typed: fix',
+        'Hedge Fixture',
+        'Mockleaf',
+        'Fixture Bane',
+      ]);
+      expect(screen.queryByRole('group', { name: /From/ })).not.toBeInTheDocument();
+    });
+
+    it('lists a row without a heading last, outside every group', () => {
+      render(
+        <Harness
+          suggestions={{
+            options: [{ value: 'Fixture Bane' }, ...HEADED.options],
+            pending: false,
+          }}
+        />,
+      );
+
+      type('fix');
+
+      expect(screen.getAllByRole('group')).toHaveLength(2);
+      expect(options()).toEqual([
+        'Use what you typed: fix',
+        'Hedge Fixture',
+        'Mockleaf',
+        'Fixture Bane',
+        'Fixture Bane',
+      ]);
+      const rows = screen.getAllByRole('option');
+      expect(rows[rows.length - 1]!.closest('[role="group"]')).toBeNull();
+    });
+
+    it('tells apart same-named rows under different headings, and announces the count', () => {
+      render(
+        <Harness
+          suggestions={{
+            options: [
+              { value: 'Fixture Bane', heading: 'Mind' },
+              { value: 'Fixture Bane', heading: 'Body' },
+            ],
+            pending: false,
+          }}
+        />,
+      );
+
+      type('fix');
+
+      expect(screen.getAllByRole('option', { name: 'Fixture Bane' })).toHaveLength(2);
+      expect(screen.getByRole('status', { name: 'Form suggestions' })).toHaveTextContent(
+        '2 suggestions',
+      );
+    });
+  });
+
   it("makes a suggestion's label and note part of its name, so same-named ones are told apart", () => {
     render(<Harness suggestions={TWO_BUCKETS} />);
 
@@ -782,6 +862,33 @@ describe('Combobox', () => {
       expect(tooltip()).not.toBeInTheDocument();
     });
 
+    // MB.126: what tells the entry from a namesake, a category's group, after
+    // the text on the tooltip's first line, and read before the detail.
+    it('reads a qualifier after the text in the tooltip, and as the x’s description before the detail', () => {
+      render(
+        <Harness
+          entries={
+            <ul className="combobox__entries">
+              <ComboboxEntry
+                value="Testward"
+                qualifier="Fixture Wards"
+                detail="Guards nothing."
+                onRemove={vi.fn()}
+              />
+            </ul>
+          }
+        />,
+      );
+
+      fireEvent.mouseEnter(entryText('Testward'));
+
+      expect(tooltip()).toHaveTextContent(/^Testward \(Fixture Wards\)/);
+      expect(tooltip()).toHaveTextContent('Guards nothing.');
+      expect(screen.getByRole('button', { name: 'Remove Testward' })).toHaveAccessibleDescription(
+        'Fixture Wards Guards nothing.',
+      );
+    });
+
     // MB.164: what a chip leaves out, such as a linked substitute's form and
     // tier. The test above is the precondition: the same text, with no
     // detail, opens nothing.
@@ -858,6 +965,32 @@ describe('Combobox', () => {
         screen.getByRole('button', { name: 'Remove Hedge Fixture' }),
       ).toHaveAccessibleDescription('This folk name is already listed');
       expect(screen.getByRole('listitem')).toHaveClass('is-invalid');
+    });
+
+    // MB.126: a chip in its group's colours, a solid fill from the row.
+    it('wears the colours it is given, and none otherwise', () => {
+      render(
+        <Harness
+          entries={
+            <ul className="combobox__entries">
+              <ComboboxEntry
+                value="Hedge Fixture"
+                colors={{ colorDark: '#abcdef', colorLight: '#123456' }}
+                onRemove={() => {}}
+              />
+              <ComboboxEntry value="Fixture Bane" onRemove={() => {}} />
+            </ul>
+          }
+        />,
+      );
+
+      const [coloured, plain] = screen.getAllByRole('listitem');
+      expect(coloured).toHaveClass('is-coloured');
+      expect(coloured!.style.getPropertyValue('--chip-dark')).toBe('#abcdef');
+      expect(coloured!.style.getPropertyValue('--chip-light')).toBe('#123456');
+      expect(plain).not.toHaveClass('is-coloured');
+      expect(plain!.style.getPropertyValue('--chip-dark')).toBe('');
+      expect(plain!.style.getPropertyValue('--chip-light')).toBe('');
     });
 
     it('has no handle to move it by', () => {

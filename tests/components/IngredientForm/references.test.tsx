@@ -56,6 +56,7 @@ function answerLookupsEmpty() {
     ['IngredientSuggestions', 'ingredientSuggestions'],
     ['PossibleDuplicates', 'possibleDuplicates'],
     ['ReferenceSuggestions', 'referenceSuggestions'],
+    ['PickerCategories', 'categories'],
   ]) {
     mockGraphQLQuery<Record<string, unknown>>(operation, () => ({ [field]: { edges: [] } }));
   }

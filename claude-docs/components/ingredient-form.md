@@ -14,6 +14,7 @@ admin compendium page wrap it rather than containing their own form.
 | `suggestions.tsx`     | The lookups (M5.10a, MB.131): the queries, `useLookup`, which debounces each, the shapes, and `FormField` and `LookupListField`, which wire one to its field                      |
 | `duplicates.tsx`      | The duplicate warning (M5.10): its query, `usePossibleDuplicates`, and `NameField`, the name field with the warning beneath it                                                    |
 | `references.tsx`      | The References field (MB.154): its search's query, and `ReferencesField`, the box, New Reference, the rows beneath and their locators                                             |
+| `categories.tsx`      | The Categories field (MB.126): its query, and `CategoryField`, which holds [`CategoryPicker`](category-picker.md) on `categoryIds` and names a pick's error by its chip           |
 | `reference-panel.tsx` | The new reference panel (MB.154): `createReference`, each kind's fields, `toReferenceInput`, and its own react-hook-form                                                          |
 | `values.ts`           | The empty values, `toInput`, `addEntry`, `commitDraft`, `fieldNameOf`, the resolver, and `issuesOf`, which reads a failed save                                                    |
 | `types.ts`            | The props, the form's own values, and the input it sends                                                                                                                          |
@@ -33,9 +34,8 @@ arrives with the task that wraps the form for it.
 ## The fields
 
 Name, classification, formal name, form, folk names, description, element,
-planets, zodiac signs, colours, deities, substitute ingredients, safety
-notes and references — every field `IngredientInput` takes. Categories are
-not an input yet.
+planets, zodiac signs, colours, deities, substitute ingredients, categories,
+safety notes and references — every field `IngredientInput` takes.
 
 - **Name is the one field always required**, as story 29's stub needs, and
   says so twice: `aria-required` on the control for a screen reader, and a
@@ -54,7 +54,8 @@ not an input yet.
 - **A field's hint is an info tip beside its label**, [`InfoTip`](info-tip.md),
   not a line beneath it, on every field whose meaning is not plain from its
   label: name, classification, formal name, form, folk names, planets,
-  zodiac signs, colours, deities, substitute ingredients and safety notes.
+  zodiac signs, colours, deities, substitute ingredients, categories and
+  safety notes.
   The colours tip says each is a correspondence, not the colour the thing is. A tip opens on its ⓘ, by
   hover, tap or focus, and never on the field's own focus (MB.133), above
   the label so it never covers the field. Its text stays in the control's
@@ -271,6 +272,44 @@ and Enter refuse one.
 A compendium entry's substitutes may link only the compendium, so the admin
 form M5.5 wraps reads `compendium(query)` in their place; this form writes
 only a coven's ingredient.
+
+### The categories
+
+After the lists (MB.126; story 30): every live category, picked from one
+box as a deity is, the rows under their groups and each pick a chip inside
+the control in its group's colour — the owner's call, over a wall of grouped
+chips ([`design-decisions/mb.126-categories-on-the-combobox.md`](../design-decisions/mb.126-categories-on-the-combobox.md)).
+The box is [`CategoryPicker`](category-picker.md), which M8.11 reuses as
+its filter and so knows nothing of this form. `CategoryField` in
+`categories.tsx` is what ties it here: it reads the public `categories`
+query, `PickerCategories`, as the form opens, and holds the picker on
+`categoryIds` through `useController`.
+
+- **One page holds them all.** The query asks for `first: 100`, the hard
+  maximum, written out because `lib/pagination.ts` is the server's; rule 8's
+  cursor still pages it, and some sixty categories fit one page. Each comes
+  with its group's id, name and colour pair, so a group an admin adds is a
+  heading and a colour without a deploy. The box narrows them itself: with
+  every category in hand there is nothing to ask the server as the text
+  changes, so unlike the lookups it waits on no debounce.
+- **Read once, not as typed.** Unlike the lookups it asks without waiting
+  for a focus: the picks are the field, and an edit's arrive before anyone
+  types. While it loads the box says it is looking, and a read that fails
+  says "The categories could not be loaded." beneath the box and takes
+  nothing else down: the form still saves, with no categories.
+- **Nothing typed is a category.** There is no Add and no "Use what you
+  typed" row; Enter with nothing highlighted adds only the one category the
+  text names whole. A category is a pick, on or off, so a repeat cannot be
+  sent, and the schema refuses none.
+- **A pick's error names it**, as a list entry's does. An issue at
+  `['categoryIds', i]` is `fieldNameOf`'s `categoryIds.i`, the i-th id
+  picked, and the picker's one `FieldError` reads it after the category's
+  name: "Fixture Shield: No such category". The box takes `aria-invalid`
+  and the message as its description, so the submit's focus lands on it,
+  and the entry named is edged, its x reading the message.
+- **Changing the picks revalidates**, as an edit to a field does:
+  react-hook-form's `reValidateMode`, since the controller's change is the
+  field's. Save & Add Another's reset empties them with the rest.
 
 ### The references
 
@@ -523,6 +562,9 @@ becomes its text, and the boxes are left behind. A pick goes as its row's id
   `{ name }` when typed.
 - A substitute goes as `{ ingredientId }` when linked, and as `{ name }`
   when typed.
+- The categories go as `categoryIds`, their ids in the order picked, `[]`
+  when none is, which an update needs to clear them (MB.126). A repeat is
+  not refused: a chip is on or off, so the form cannot send one.
 - A reference goes as `{ referenceId, locator }`, the locator as typed, and
   never with its citation (MB.154). None goes as `[]`.
 
@@ -593,6 +635,7 @@ the form's field name:
 | `['folkNames', 2]`             | `folkNames.2.value`, the third entry                                  |
 | `['elements', 1]`              | `elements`, the whole control: its chips are not rows                 |
 | `['formId']`                   | `form`, whose box made the pick (MB.169)                              |
+| `['categoryIds', 1]`           | `categoryIds.1`, the second category picked: the picker's (MB.126)    |
 | `['references', 1]`            | `references.1.value`, the second reference's row (MB.154)             |
 | `['references', 1, 'locator']` | `references.1.locator`, its locator                                   |
 | `[]`                           | none: the root alert                                                  |
@@ -611,7 +654,9 @@ cannot sit beneath one. The list has one `FieldError`, beneath its box,
 reading each entry's message after the entry: "hedge fixture: This folk name
 is already listed". The entry named takes the error edge, and its × lists
 the message as its description. The box takes `aria-invalid` and the same
-description, so it is what a failed submit focuses.
+description, so it is what a failed submit focuses. **The categories'
+errors are the picker's** the same way: its box takes `aria-invalid`, and
+the pick named is edged ("The categories", above).
 
 `issuesOf` reads the rejection:
 
@@ -706,14 +751,18 @@ its pages may not fetch at all ([`workshop.md`](../workshop.md), "On
 staging"), so the story answers the form itself: while it is mounted it
 stands in for `window.fetch`, which graphql-request looks up on every
 request, and answers a request to `/api/graphql` naming one of the eight
-lookups, or either save, from invented rows filtered by what was typed. Each
+lookups, the categories, or either save, from invented rows filtered by what was typed. Each
 answer is checked against its query's generated type with `satisfies`, so a
 fixture that drifts from the schema stops compiling. A name holding "cat"
 shows the duplicate warning. A save is answered after two seconds
 (`SAVE_DELAY_MS`), so Save can be watched busy and shut with its spinner: a
 name holding "taken" is refused as a `VALIDATION` error on the name, one
-holding "refuse" as a `FORBIDDEN` above the fields, and any other is saved,
-under a fresh id. Its three sources are invented, in both tiers, one a web
+holding "refuse" as a `FORBIDDEN` above the fields, one holding "retired"
+with a category picked as a `VALIDATION` error on the first category, and
+any other is saved,
+under a fresh id. The categories are two invented ones under each of the
+seed's eight groups, in the seed's colours, copied from `src/db/seed/category-groups.ts`, which a component may not
+import. Its three sources are invented, in both tiers, one a web
 page with a long address, and each citation is rendered by `citationText`
 as the server renders it; a new source is answered the same way, after the
 same pause, and refused by its title as an ingredient is by its name. The workshop has no page to open, so after Save Ingredient
@@ -730,7 +779,7 @@ workshop's global provider's: a second provider would split the cache, which
 `tests/components/IngredientForm/index.test.tsx` answers
 `CreateWorkspaceIngredient` through MSW: `mockGraphQLMutation` for a saved
 row, and `mockGraphQLError` for a refusal, so the error body is the route's
-own mapping; the seven lookups are answered with `mockGraphQLQuery`. Its `save()` focuses the button before clicking it, as a real
+own mapping; the seven lookups, and the categories, are answered with `mockGraphQLQuery`. Its `save()` focuses the button before clicking it, as a real
 click does, since `fireEvent` moves no focus and a focus test would otherwise
 pass on whatever an earlier step had focused. It covers:
 
@@ -751,6 +800,15 @@ pass on whatever an earlier step had focused. It covers:
   rendered through the same element as a resolver error on that field; an
   issue pathed to one element on the Element control, focused; one pathed
   to `formId` on the Form field; cleared by an edit.
+- **The categories** (MB.126): every category listed under its group, the
+  groups alphabetical, from invented groups the code does not name; the
+  picks sent as `categoryIds` by id in the order picked, and `[]` with
+  none; a pick alone enabling Save; an issue at `['categoryIds', i]` on the
+  picker's `.field__error`, naming the pick, the box invalid, described and
+  focused and the pick's x described, with no alert; cleared by taking the
+  pick out; an index past the picks as the root alert; the picks cleared by
+  Save & Add Another; and a refused read said beneath the box, with the
+  rest of the form still saving.
 - **Root errors**: an empty path, a path naming no field, a `FORBIDDEN`'s
   message and a failed fetch, each as an alert above the fields, cleared on
   the next submit.

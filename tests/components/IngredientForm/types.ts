@@ -4,9 +4,13 @@ import type {
   FormSuggestionsQuery,
   IngredientSuggestionsQuery,
   PlanetSuggestionsQuery,
+  PickerCategoriesQuery,
   PossibleDuplicatesQuery,
   ReferenceSuggestionsQuery,
 } from '@/gql/graphql';
+
+/** One row of a `PickerCategories` answer. */
+export type CategoryNode = PickerCategoriesQuery['categories']['edges'][number]['node'];
 
 /** One row of a `FormSuggestions` answer, as the test offers it. */
 export type FormNode = FormSuggestionsQuery['formSuggestions']['edges'][number]['node'];

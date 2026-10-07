@@ -35,6 +35,7 @@ import {
 import { server } from '../../support/msw/server';
 import { dragByPointer, layOutChips, moveByKeyboard } from '../../support/sortable';
 import type {
+  CategoryNode,
   CorrespondenceNode,
   DeityNode,
   DuplicateNode,
@@ -115,9 +116,22 @@ const offerDeities = (nodes: DeityNode[]) =>
 const offerIngredients = (nodes: IngredientNode[]) =>
   offerList('IngredientSuggestions', 'ingredientSuggestions', nodes);
 
-/** Renders the form with every lookup answered empty; a test about a lookup answers it after rendering, since the later answer wins. */
-function renderForm() {
+/** Answers `PickerCategories` with these rows, as the one page the picker reads, or refuses it. */
+function offerCategories(nodes: CategoryNode[] | 'refused') {
+  if (nodes === 'refused') return mockGraphQLError('PickerCategories', { code: 'FORBIDDEN' });
+  mockGraphQLQuery<Record<string, unknown>>('PickerCategories', () => ({
+    categories: { edges: nodes.map((node) => ({ node })) },
+  }));
+}
+
+/**
+ * Renders the form with every lookup answered empty; a test about a lookup
+ * answers it after rendering, since the later answer wins. The categories are
+ * read as the form opens, so a test about them passes them in.
+ */
+function renderForm({ categories = [] }: { categories?: CategoryNode[] | 'refused' } = {}) {
   const onSaved = vi.fn();
+  offerCategories(categories);
   offerForms([]);
   offerNames([]);
   offerPlanets([]);
@@ -350,6 +364,8 @@ describe('IngredientForm', () => {
         deities: [],
         substitutes: [],
         folkNames: [],
+        // None picked is sent as none, which an update needs to clear them.
+        categoryIds: [],
         references: [],
       });
     });
@@ -735,6 +751,167 @@ describe('IngredientForm', () => {
       save();
 
       await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+    });
+  });
+
+  describe('the categories', () => {
+    // Invented groups (M1.25), given out of order: the picker sorts them, and
+    // knows none of them by name, as it knows no group an admin adds.
+    const WARDS = { id: 'a3e1c9b2-0d4f-4a8e-9c71-5b2f6e8d0a11', name: 'Wards & Fixtures' };
+    const CRAFT = { id: 'b7f2d0c3-1e5a-4b9f-8d82-6c3a7f9e1b22', name: 'Craft of Tests' };
+    const colours = { colorDark: '#8fb8de', colorLight: '#2f5d86' };
+    const CATEGORIES: CategoryNode[] = [
+      {
+        id: 'c1d3e5f7-2a4b-4c6d-8e9f-0a1b2c3d4e51',
+        name: 'Testward',
+        description: 'Keeps a fixture from harm.',
+        group: { ...WARDS, ...colours },
+      },
+      {
+        id: 'c1d3e5f7-2a4b-4c6d-8e9f-0a1b2c3d4e52',
+        name: 'Fixture Shield',
+        description: 'Turns a failing test aside.',
+        group: { ...WARDS, ...colours },
+      },
+      {
+        id: 'c1d3e5f7-2a4b-4c6d-8e9f-0a1b2c3d4e53',
+        name: 'Trialcraft',
+        description: 'Works a change by trial.',
+        group: { ...CRAFT, ...colours },
+      },
+    ];
+    const [testward, , trialcraft] = CATEGORIES;
+    const picker = () => screen.getByRole('group', { name: 'Categories' });
+    const open = () =>
+      fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
+    /** Opens the list and picks the category, once the categories have been read. */
+    const pick = async (name: string) => {
+      open();
+      fireEvent.click(await screen.findByRole('option', { name: new RegExp(`^${name}`) }));
+    };
+
+    it('offers every category under its group, the groups alphabetical by name', async () => {
+      renderForm({ categories: CATEGORIES });
+
+      open();
+      const craft = await screen.findByRole('group', { name: CRAFT.name });
+      const wards = screen.getByRole('group', { name: WARDS.name });
+      expect(craft.compareDocumentPosition(wards) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(
+        within(wards)
+          .getAllByRole('option')
+          .map((row) => row.textContent),
+      ).toEqual([expect.stringMatching(/^Fixture Shield/), expect.stringMatching(/^Testward/)]);
+    });
+
+    it('sends the picked categories as categoryIds, by id, in the order picked', async () => {
+      const calls = acceptCreate();
+      const onSaved = renderForm({ categories: CATEGORIES });
+
+      type('Name', 'Testwort');
+      await pick('Trialcraft');
+      await pick('Testward');
+      expect(removeButton('Trialcraft')).toBeInTheDocument();
+      save();
+
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(calls[0].input.categoryIds).toEqual([trialcraft.id, testward.id]);
+    });
+
+    it('is something to save on its own', async () => {
+      renderForm({ categories: CATEGORIES });
+
+      await pick('Trialcraft');
+
+      expect(screen.getByRole('button', { name: 'Save Ingredient' })).toBeEnabled();
+    });
+
+    it('lands an issue on one pick on the picker’s error element, naming the pick', async () => {
+      mockGraphQLError('CreateWorkspaceIngredient', {
+        code: 'VALIDATION',
+        fieldErrors: [{ path: ['categoryIds', 1], message: 'No such category' }],
+      });
+      renderForm({ categories: CATEGORIES });
+
+      type('Name', 'Testwort');
+      await pick('Testward');
+      await pick('Fixture Shield');
+      save();
+
+      const message = 'Fixture Shield: No such category';
+      const error = await screen.findByText(message);
+      await waitFor(() => expectErrorOn(box('Category'), message));
+      expect(box('Category')).toHaveFocus();
+      expect(removeButton('Fixture Shield')).toHaveAccessibleDescription(
+        expect.stringContaining(message),
+      );
+      expect(removeButton('Testward')).not.toHaveAccessibleDescription(
+        expect.stringContaining(message),
+      );
+      // The form's one error element, as every other field's.
+      expect(error).toHaveClass('field__error');
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
+    it('clears an issue on a pick once the pick it names is taken out', async () => {
+      mockGraphQLError('CreateWorkspaceIngredient', {
+        code: 'VALIDATION',
+        fieldErrors: [{ path: ['categoryIds', 0], message: 'No such category' }],
+      });
+      renderForm({ categories: CATEGORIES });
+
+      type('Name', 'Testwort');
+      await pick('Fixture Shield');
+      save();
+      await screen.findByText('Fixture Shield: No such category');
+      fireEvent.click(removeButton('Fixture Shield'));
+
+      await waitFor(() =>
+        expect(screen.queryByText('Fixture Shield: No such category')).not.toBeInTheDocument(),
+      );
+      expect(box('Category')).not.toBeInvalid();
+    });
+
+    // An index past the picks names none of them: the form has no field for
+    // it, so it is said above the fields rather than lost.
+    it('says an issue naming no pick above the fields', async () => {
+      mockGraphQLError('CreateWorkspaceIngredient', {
+        code: 'VALIDATION',
+        fieldErrors: [{ path: ['categoryIds', 4], message: 'No such category' }],
+      });
+      renderForm({ categories: CATEGORIES });
+
+      type('Name', 'Testwort');
+      save();
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('No such category');
+    });
+
+    it('clears the picks once saved by Save & Add Another', async () => {
+      acceptCreate();
+      const onSaved = renderForm({ categories: CATEGORIES });
+
+      type('Name', 'Testwort');
+      await pick('Trialcraft');
+      saveAnother();
+
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      await waitFor(() =>
+        expect(screen.queryByRole('button', { name: 'Remove Trialcraft' })).not.toBeInTheDocument(),
+      );
+    });
+
+    it('says so when the categories cannot be read, and the rest of the form still saves', async () => {
+      const calls = acceptCreate();
+      const onSaved = renderForm({ categories: 'refused' });
+
+      expect(
+        await within(picker()).findByText('The categories could not be loaded.'),
+      ).toBeVisible();
+      type('Name', 'Testwort');
+      save();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(calls[0].input.categoryIds).toEqual([]);
     });
   });
 
