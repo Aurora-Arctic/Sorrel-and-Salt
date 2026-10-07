@@ -325,6 +325,8 @@ MB.75 through MB.78, written into `TASKS.md` with their acceptance criteria.
   the table-then-behaviour rule. MB.77 follows MB.71 because its mark answers
   the sentence MB.71 writes.
 - **MB.78 lands in Wave 8 immediately before MB.53**, whose impersonation it
-  makes usable on hotfix previews.
+  makes usable on hotfix previews. _Since moved to Wave 15, post-launch, on the
+  owner's call: hotfixes are not needed before launch, and the hotfix path
+  needs infrastructure fixes before its branches work properly._
 - **DESIGN.md §13** names passkeys as the v2 first-party credential, and §14
   records this decision.
