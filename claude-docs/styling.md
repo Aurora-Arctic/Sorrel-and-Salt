@@ -446,7 +446,7 @@ is muted text at the body size with `space(4)` either side, since it is not
 a control. An end with no page is disabled rather than
 hidden, so neither moves. The markup is the `Pager` component's
 ([`components/pager.md`](components/pager.md)), which CategoryList,
-IngredientFormValueList and UserList render.
+IngredientFormValueList, VocabularyValueList and UserList render.
 
 **`.page-header` puts a page's heading and its one primary action on one
 line**, the action at the end (the owner's call, M5.6): `/admin/categories`'
@@ -463,7 +463,7 @@ the baseline so a row's small button reads on its text's line. A 1px
 `.data-table` primitive, inside a `.data-table-frame` that scrolls a wide
 table sideways rather than widening the page: CategoryList and UserList each
 carried them until IngredientFormValueList made a third (M5.6a), and
-CompendiumList (M5.5) is on it too.
+CompendiumList (M5.5) and VocabularyValueList (MB.95) are on it too.
 
 ## Form fields
 

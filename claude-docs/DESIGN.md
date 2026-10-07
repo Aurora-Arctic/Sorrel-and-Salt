@@ -769,6 +769,8 @@ type Query {
   ingredient(id: ID!, workspaceId: ID): Ingredient! # NOT_FOUND on a miss; workspaceId opens a coven's own entry to its members
   ingredientFormValues(first: Int, after: String): QueryIngredientFormValuesConnection! # the admin-curated form vocabulary
   categories(query: String, groupId: ID, first: Int, after: String): QueryCategoriesConnection! # the live categories by name, each with its group (M5.6); query and groupId narrow them (MB.178)
+  planets(query: String, first: Int, after: String): QueryPlanetsConnection! # the curated planets by name; query narrows them (MB.95)
+  zodiacSigns(query: String, first: Int, after: String): QueryZodiacSignsConnection! # the curated signs, likewise
   # §5's fuzzy duplicate warning: compendium and this workspace, best match first
   possibleDuplicates(
     workspaceId: ID # null reads the compendium alone, for the admin's compendium form (M5.5)
@@ -849,6 +851,12 @@ type Mutation {
     endRedirect: Boolean
   ): Ingredient! # replaces the entry as updateIngredient does; endRedirect confirms MB.82's refusal
   deleteCompendiumIngredient(id: ID!): ID! # a soft delete; a spell holding the entry keeps it
+  createPlanet(input: PlanetInput!): Planet! # PlanetInput: name, description; the slug follows the name (MB.95)
+  updatePlanet(id: ID!, input: PlanetInput!): Planet! # a rename carries onto the compendium entries listing it
+  deletePlanet(id: ID!): ID! # refused while a live compendium entry lists it; a coven keeps what it wrote
+  createZodiacSign(input: ZodiacSignInput!): ZodiacSign! # the planets' three, for the signs
+  updateZodiacSign(id: ID!, input: ZodiacSignInput!): ZodiacSign!
+  deleteZodiacSign(id: ID!): ID!
 }
 
 type Ingredient {
@@ -951,6 +959,14 @@ type IngredientFormValue {
   slug: String!
   description: String!
   group: IngredientFormGroup! # what tells two same-named forms apart
+}
+
+type Planet {
+  # ZodiacSign has the same four fields
+  id: ID!
+  name: String!
+  slug: String!
+  description: String!
 }
 
 type IngredientFormGroup {

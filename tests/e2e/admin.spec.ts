@@ -372,3 +372,112 @@ test('an admin is told which compendium entries pick a form before it can go', a
   await page.goto('/admin/forms?edit=root-botanical');
   await expect(editing).toBeVisible();
 });
+
+test('a signed-in non-admin is refused at /admin/planets and /admin/zodiac-signs with the 403 page', async ({
+  page,
+}) => {
+  await signInAs(page, 'not-an-admin@admin-astrology.test');
+
+  for (const path of ['/admin/planets?new', '/admin/zodiac-signs?new']) {
+    const response = await page.goto(path);
+
+    expect(response?.status()).toBe(403);
+    await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  }
+});
+
+// MB.95: the planets in M5.6a's page shape without the group — the list, and
+// its modal opened by the address, added to, renamed and retired from.
+test('an admin adds, renames and deletes a planet in the modal over the list', async ({ page }) => {
+  await signInAs(page, 'an-admin@admin-astrology.test', ['discord'], 'admin');
+
+  const response = await page.goto('/admin/planets');
+  expect(response?.status()).toBe(200);
+  await expect(page).toHaveTitle('Planets — Admin — Sorrel & Salt');
+  await expect(page.getByRole('heading', { level: 1, name: 'Planets' })).toBeVisible();
+  // The seeded nineteen bodies, on one page.
+  await expect(page.getByRole('row').filter({ has: page.getByRole('cell') })).toHaveCount(19);
+
+  await page.getByRole('link', { name: 'Add Planet' }).click();
+  const adding = page.getByRole('dialog', { name: 'Add Planet' });
+  await expect(adding).toBeVisible();
+  await expect(page).toHaveURL(/\/admin\/planets\?new$/);
+  await assertNoAccessibilityViolations(page);
+  await expect(adding.getByRole('button', { name: 'Save Planet' })).toBeDisabled();
+  await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testwort Star');
+  await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the e2e spec');
+  await adding.getByRole('button', { name: 'Save Planet' }).click();
+  await expect(adding).toHaveCount(0);
+  const row = page.getByRole('row', { name: /Aaa Testwort Star/ });
+  await expect(row.getByRole('cell', { name: 'Made by the e2e spec' })).toBeVisible();
+
+  await row.getByRole('link', { name: 'Edit Aaa Testwort Star' }).click();
+  const editing = page.getByRole('dialog', { name: 'Edit Planet' });
+  await expect(page).toHaveURL(/\/admin\/planets\?edit=aaa-testwort-star$/);
+  // A rename carries onto the compendium, and says so before it is saved.
+  const note = editing.getByText('Saving renames it on every compendium entry that lists it.');
+  await expect(note).toHaveCount(0);
+  await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testwort Comet');
+  await expect(note).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+  await editing.getByRole('button', { name: 'Save Planet' }).click();
+  await expect(editing).toHaveCount(0);
+  const renamed = page.getByRole('row', { name: /Aaa Testwort Comet/ });
+  await expect(renamed).toBeVisible();
+
+  await renamed.getByRole('link', { name: 'Edit Aaa Testwort Comet' }).click();
+  await editing.getByRole('button', { name: 'Delete Planet' }).click();
+  await expect(editing.getByText(/^Delete "Aaa Testwort Comet"\?/)).toBeVisible();
+  await editing.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(editing).toHaveCount(0);
+  await expect(page.getByRole('row', { name: /Aaa Testwort/ })).toHaveCount(0);
+});
+
+test('an admin filters the zodiac signs by part of a name', async ({ page }) => {
+  await signInAs(page, 'filter-admin@admin-astrology.test', ['discord'], 'admin');
+  const response = await page.goto('/admin/zodiac-signs');
+  expect(response?.status()).toBe(200);
+  await expect(page).toHaveTitle('Zodiac signs — Admin — Sorrel & Salt');
+  const search = page.getByRole('search');
+  const filter = search.getByRole('button', { name: 'Filter' });
+  const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
+  await expect(rows).toHaveCount(13);
+  await expect(search.getByRole('combobox')).toHaveCount(0);
+
+  // Aries, Sagittarius and Aquarius hold "ar".
+  await search.getByRole('searchbox', { name: 'Name' }).fill('AR');
+  await filter.click();
+  await expect(page).toHaveURL(/\/admin\/zodiac-signs\?query=AR$/);
+  await expect(rows).toHaveCount(3);
+  await expect(page.getByRole('link', { name: 'Edit Aries' })).toHaveAttribute(
+    'href',
+    '/admin/zodiac-signs?query=AR&edit=aries',
+  );
+  await assertNoAccessibilityViolations(page);
+
+  await search.getByRole('searchbox', { name: 'Name' }).fill('no such sign');
+  await filter.click();
+  await expect(page.getByText('No sign matches.')).toBeVisible();
+});
+
+test('an admin is told which compendium entries list a planet before it can go', async ({
+  page,
+}) => {
+  await signInAs(page, 'held-admin@admin-astrology.test', ['discord'], 'admin');
+  // The standard seed's Bay Laurel and Rosemary list the Sun among their planets.
+  await page.goto('/admin/planets?edit=sun');
+  const editing = page.getByRole('dialog', { name: 'Edit Planet' });
+  await expect(editing.getByRole('textbox', { name: 'Name' })).toHaveValue('Sun');
+
+  await editing.getByRole('button', { name: 'Delete Planet' }).click();
+  await editing.getByRole('button', { name: 'Delete', exact: true }).click();
+
+  await expect(editing.getByRole('alert')).toContainText(
+    /^"Sun" is among the planets of \d+ compendium entries — .+\. Take it off their planets first\.$/,
+  );
+  await expect(editing).toBeVisible();
+  // Still live: its address still opens it.
+  await page.goto('/admin/planets?edit=sun');
+  await expect(editing).toBeVisible();
+});

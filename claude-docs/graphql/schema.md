@@ -681,6 +681,33 @@ not `IngredientForm`, which is the entry-form component (DESIGN.md §7).
 `tests/modules/vocabulary/graphql/ingredient-form-values.test.ts` runs the
 list, the groups and the writes through Yoga.
 
+### Planets and signs: `planets`, `zodiacSigns` and the six writes
+
+The two flat astrology vocabularies' reads and writes (MB.95), registered by
+`vocabulary` over `services/astrology.ts`
+([`db/astrology-vocabularies.md`](../db/astrology-vocabularies.md), "The
+admin writes"), in the forms' shape without the group. One type per
+vocabulary, `Planet` and `ZodiacSign`, though the rows share a shape, so a
+client never asks which table a value came from; the module registers both
+from one table of names, so the two cannot drift.
+
+- **`planets` and `zodiacSigns` are public** (MB.80) and count their pages,
+  `totalCount` and `countBefore`, for the admin pages' "Page X of Y". An
+  optional `query` narrows them to the names holding it, read literally.
+- **One input per vocabulary, `PlanetInput` and `ZodiacSignInput`**: `name`
+  and `description`, required. No slug: it follows the name.
+- **The writes carry `admin`**, and `assertSiteAdmin` refuses again in the
+  service. A slug collision is `VALIDATION` on `name`, naming the row
+  holding the address; an unknown, deleted or malformed id is `NOT_FOUND`.
+  A rename carries onto every live compendium entry listing the value.
+- **`deletePlanet` and `deleteZodiacSign` answer the deleted id**, and are
+  `FORBIDDEN` while a live compendium entry lists the value, naming the
+  entries and how many more. No loader holds a planet or a sign, so neither
+  write clears one.
+
+`tests/modules/vocabulary/graphql/astrology.test.ts` runs both lists and the
+six writes through Yoga.
+
 ### Auth scopes: the second check
 
 `@pothos/plugin-scope-auth` gives the schema three scopes, all read off the
