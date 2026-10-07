@@ -275,10 +275,12 @@ type Mutation {
     input: CompendiumIngredientInput!
   ): Ingredient!
   createIngredientFormValue(input: IngredientFormValueInput!): IngredientFormValue!
+  createPlanet(input: PlanetInput!): Planet!
 
   """A null workspaceId writes the compendium's, under the admin proof."""
   createReference(input: ReferenceInput!, workspaceId: ID): Reference!
   createWorkspaceIngredient(input: IngredientInput!, workspaceId: ID!): Ingredient!
+  createZodiacSign(input: ZodiacSignInput!): ZodiacSign!
 
   """
   A soft delete, refused while a live compendium entry is filed under it; a coven keeps its links.
@@ -293,6 +295,16 @@ type Mutation {
   A soft delete, refused while a live compendium entry picked the form; a coven keeps its pick.
   """
   deleteIngredientFormValue(id: ID!): ID!
+
+  """
+  A soft delete, refused while a live compendium entry lists the planet; a coven keeps what it wrote.
+  """
+  deletePlanet(id: ID!): ID!
+
+  """
+  A soft delete, refused while a live compendium entry lists the sign; a coven keeps what it wrote.
+  """
+  deleteZodiacSign(id: ID!): ID!
   setEmail(email: String!, next: String): User!
 
   """Replaces the category; the slug follows the name."""
@@ -314,8 +326,18 @@ type Mutation {
   """
   updateIngredientFormValue(id: ID!, input: IngredientFormValueInput!): IngredientFormValue!
 
+  """
+  Replaces the planet; the slug follows the name. A rename is carried onto every live compendium entry listing it.
+  """
+  updatePlanet(id: ID!, input: PlanetInput!): Planet!
+
   """Reaches every row citing it; nothing deletes a reference in v1."""
   updateReference(id: ID!, input: ReferenceInput!, workspaceId: ID): Reference!
+
+  """
+  Replaces the sign; the slug follows the name. A rename is carried onto every live compendium entry listing it.
+  """
+  updateZodiacSign(id: ID!, input: ZodiacSignInput!): ZodiacSign!
 }
 
 enum Nomenclature {
@@ -333,6 +355,18 @@ type PageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
+}
+
+type Planet {
+  description: String!
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+input PlanetInput {
+  description: String!
+  name: String!
 }
 
 type Query {
@@ -359,9 +393,19 @@ type Query {
   me: User!
   ok: Boolean!
   planetSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryPlanetSuggestionsConnection!
+
+  """
+  The curated planets by name: those whose name holds `query`, case-insensitively, when given.
+  """
+  planets(after: String, before: String, first: Int, last: Int, query: String): QueryPlanetsConnection!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String): QueryUsersConnection!
+
+  """
+  The curated zodiac signs by name: those whose name holds `query`, case-insensitively, when given.
+  """
+  zodiacSigns(after: String, before: String, first: Int, last: Int, query: String): QueryZodiacSignsConnection!
   zodiacSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryZodiacSuggestionsConnection!
 }
 
@@ -481,6 +525,23 @@ type QueryPlanetSuggestionsConnectionEdge {
   node: CorrespondenceSuggestion!
 }
 
+type QueryPlanetsConnection {
+  """
+  How many of the list's rows come before this page's first edge: 0 on the first page, so the page is floor(countBefore / size) + 1. Null on an empty page.
+  """
+  countBefore: Int
+  edges: [QueryPlanetsConnectionEdge!]!
+  pageInfo: PageInfo!
+
+  """How many rows the list holds under its arguments."""
+  totalCount: Int!
+}
+
+type QueryPlanetsConnectionEdge {
+  cursor: String!
+  node: Planet!
+}
+
 type QueryPossibleDuplicatesConnection {
   edges: [QueryPossibleDuplicatesConnectionEdge!]!
   pageInfo: PageInfo!
@@ -514,6 +575,23 @@ type QueryUsersConnection {
 type QueryUsersConnectionEdge {
   cursor: String!
   node: User!
+}
+
+type QueryZodiacSignsConnection {
+  """
+  How many of the list's rows come before this page's first edge: 0 on the first page, so the page is floor(countBefore / size) + 1. Null on an empty page.
+  """
+  countBefore: Int
+  edges: [QueryZodiacSignsConnectionEdge!]!
+  pageInfo: PageInfo!
+
+  """How many rows the list holds under its arguments."""
+  totalCount: Int!
+}
+
+type QueryZodiacSignsConnectionEdge {
+  cursor: String!
+  node: ZodiacSign!
 }
 
 type QueryZodiacSuggestionsConnection {
@@ -670,4 +748,16 @@ enum WorkspaceRole {
   member
   owner
   viewer
+}
+
+type ZodiacSign {
+  description: String!
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+input ZodiacSignInput {
+  description: String!
+  name: String!
 }

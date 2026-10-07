@@ -231,6 +231,10 @@ refused at `url` and `accessed` both.
 
 `CategoryInput` takes a trimmed, non-blank `name` and `description`, and a
 `groupId` uuid. It takes no slug, which is derived from the name and dropped if
-sent. The group and form vocabularies (M5.6a, M5.6b) and the planet and zodiac
-vocabularies (MB.95) add their own schemas
-beside it when those tasks land. So does the spell (MB.8).
+sent. The group and form vocabularies (M5.6a, M5.6b) add their own schemas
+beside it when those tasks land, and so does the spell (MB.8).
+
+The planet and zodiac vocabularies (MB.95) share one shape:
+`vocabulary/validation/astrology-value.ts` builds `PlanetInput` and
+`ZodiacSignInput` from one factory, a trimmed, non-blank `name` and
+`description`, each saying its own noun — "Give the sign a name". No slug.
