@@ -18,7 +18,7 @@ import { ReferenceLinkInput } from './references';
  * exactly one, which the shared schema holds rather than the type, as GraphQL
  * has no one-of input here (DESIGN.md §5, `ingredient_substitutes`).
  */
-const SubstituteInput = builder.inputType('SubstituteInput', {
+export const SubstituteInput = builder.inputType('SubstituteInput', {
   description: 'An ingredient to link, or the name of one not entered: exactly one of the two.',
   fields: (t) => ({
     ingredientId: t.id(),
@@ -30,7 +30,7 @@ const SubstituteInput = builder.inputType('SubstituteInput', {
  * One deity: the curated one picked, or a name typed — exactly one, held by
  * the shared schema as `SubstituteInput` is (DESIGN.md §5, `ingredient_deities`).
  */
-const IngredientDeityInput = builder.inputType('IngredientDeityInput', {
+export const IngredientDeityInput = builder.inputType('IngredientDeityInput', {
   description: 'A curated deity picked, or a name typed: exactly one of the two.',
   fields: (t) => ({
     deityId: t.id(),

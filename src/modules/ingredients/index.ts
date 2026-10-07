@@ -14,6 +14,7 @@ export * from './graphql/duplicates';
 export * from './graphql/ingredient-suggestions';
 export * from './graphql/ingredient';
 export * from './graphql/compendium';
+export * from './graphql/compendium-entries';
 export * from './graphql/references';
 export * from './graphql/workspace-ingredients';
 export type {

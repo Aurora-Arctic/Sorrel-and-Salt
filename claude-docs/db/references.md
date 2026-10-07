@@ -136,8 +136,9 @@ the parent's own coven's. `referencesOf` renders each citation and files the
 batch's answers alphabetically, `byCitation` in `src/lib/citation.ts`;
 `referencesByIngredient` batches it behind `Ingredient.references`.
 
-**The picker's search** is `findReferenceSuggestions(membership, query,
-page)`: the live references of the compendium and the proof's coven whose
+**The picker's search** is `findReferenceSuggestions(memberships, query,
+page)`: the live references of the compendium and a proof's coven — no
+proof, for a compendium entry, reads the compendium's alone (M5.5) — whose
 `authors`, `title` or `container` the query is word-similar to (`<%` at the
 compendium search's 0.5), each side through `unaccent_immutable`, keyed
 `[-score, title]`; a blank query pages both tiers by title. No trigram index

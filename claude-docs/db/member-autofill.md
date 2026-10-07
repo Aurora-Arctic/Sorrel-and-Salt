@@ -1,12 +1,15 @@
 ## The member's autofill (MB.94)
 
-`findVocabularySuggestions(membership, vocabulary, query, page)` in
+`findVocabularySuggestions(memberships, vocabulary, query, page)` in
 `src/db/repository/vocabularies.ts` is the read behind `planetSuggestions`,
 `zodiacSuggestions`, `formSuggestions` and `deitySuggestions`
 ([`graphql/schema.md`](../graphql/schema.md)). Its services are
 `suggestPlanets`, `suggestZodiacSigns`, `suggestForms` and `suggestDeities` in
 `vocabulary`, which ask `ingredient: ['read']`: the curated rows are global, and every in-use value
-is one a reader of the workspace could already list. A caller names a table and
+is one a reader of the workspace could already list. **The proofs are a list**
+(M5.5), as `findManyOfIngredients` takes them: a coven's lookup passes its
+one, and the admin's compendium form none, which reads the compendium alone.
+A caller names a table and
 nothing else. The ingredient column each table suggests for is paired in the
 repository's `IN_USE`, keyed by table name, so a caller cannot hand `planets`
 the `zodiac_signs` list, and a fifth vocabulary does not compile until it
@@ -17,11 +20,11 @@ the same names, `ingredient_forms` with the single `form` (M4.7a), and
 One page is one statement: a `UNION ALL` of three tiers, sorted, bounded and
 cut by cursor as a whole.
 
-| Tier | Rows                                                                                                                  | Matched by                          |
-| ---- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| 0    | live curated rows whose name matches                                                                                  | `name % query` or `query <% name`   |
-| 1    | live curated rows whose description alone matches                                                                     | `query <% description`              |
-| 2    | values on live ingredients in the compendium or the proof's workspace, folding to no live curated row's `lower(name)` | `value % query` or `query <% value` |
+| Tier | Rows                                                                                                                | Matched by                          |
+| ---- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| 0    | live curated rows whose name matches                                                                                | `name % query` or `query <% name`   |
+| 1    | live curated rows whose description alone matches                                                                   | `query <% description`              |
+| 2    | values on live ingredients in the compendium or a proof's workspace, folding to no live curated row's `lower(name)` | `value % query` or `query <% value` |
 
 - **A description matches by `<%`, never `%`.** `%` compares whole
   strings, and a query is a word or two against a sentence: `serpent` is 0.12
@@ -57,7 +60,7 @@ cut by cursor as a whole.
   into tier 2. A compendium entry's never arrive there, since a row a live
   entry holds is not deleted (MB.162).
 - **Tier 2 reads both tiers of `ingredients`**, the compendium and the proof's
-  workspace and never another, so the finder is on
+  workspace and never another — the compendium alone with no proof — so the finder is on
   [the tier seam](../modules.md#the-tier-seam). The scope is in the statement,
   so a value that only unrelated workspace X holds never reaches the service.
   The compendium half finds nothing since MB.162, which holds every
@@ -97,7 +100,7 @@ suggestion has neither, and a deity's has the first alone, below:
   picks a form under it (MB.162, on the pick since MB.167), so only
   a coven's values reach tier 2 this way; what else deleting a group does to
   its forms is M5.6b's.
-- **Its claimants** — every live ingredient in the compendium or the proof's
+- **Its claimants** — every live ingredient in the compendium or a proof's
   workspace whose `lower(btrim(form))` equals the suggestion's fold, as
   `{ name, canonicalName }`, formal names first (`nulls last`), then label,
   then id. A second, scoped read of `ingredients`, aggregated once by fold
@@ -120,7 +123,7 @@ an identity with the one being written, and a deity is no part of an
 ingredient's identity, so `DeitySuggestion` is `FormSuggestion` without
 them, and the claim join is not made.
 
-**The common-name autofill** (M4.7a) is `findCommonNameSuggestions(membership,
+**The common-name autofill** (M4.7a) is `findCommonNameSuggestions(memberships,
 query, page)` in `src/db/repository/common-names.ts`, the read behind
 `commonNameSuggestions`, whose service is `suggestCommonNames` in
 `ingredients`. There is no curated vocabulary of common names, so it is

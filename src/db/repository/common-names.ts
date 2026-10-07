@@ -9,26 +9,30 @@ import { claimantList, readSuggestionPage } from './suggestion-page';
 import type { CommonNameSuggestion } from './types';
 
 /**
- * One page of what a member's common-name field offers: the display names
- * and live folk names of live ingredients in the compendium or the proof's
- * workspace that match `query`, folded to `lower(btrim(name))` and offered
- * once each, alphabetically. Each names the in-scope ingredients answering to
- * it, formal names first. A formal name is not a common name and is not read.
- * A blank `query` matches everything.
+ * One page of what a common-name field offers: the display names and live
+ * folk names of live ingredients in the compendium or a coven one of
+ * `memberships` proves that match `query`, folded to `lower(btrim(name))` and
+ * offered once each, alphabetically. No proofs reads the compendium alone,
+ * which is the admin's compendium form (M5.5). Each names the in-scope
+ * ingredients answering to it, formal names first. A formal name is not a
+ * common name and is not read. A blank `query` matches everything.
  *
  * Each arm matches its own column by `%` or `<%`, so each can reach its own
  * trigram index; the fold happens after (claude-docs/db/member-autofill.md,
  * "The member's autofill").
  */
 export async function findCommonNameSuggestions(
-  membership: Membership,
+  memberships: readonly Membership[],
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<CommonNameSuggestion>[]> {
   const matches = (text: AnyPgColumn) =>
     query ? sql`(${text} % ${query} or ${query} <% ${text})` : undefined;
   const inScope = and(
-    or(inCompendium(ingredients), scopedTo(membership, ingredients)),
+    or(
+      inCompendium(ingredients),
+      ...memberships.map((membership) => scopedTo(membership, ingredients)),
+    ),
     notSoftDeleted(ingredients),
   );
   const claim = (spelling: AnyPgColumn) => sql`

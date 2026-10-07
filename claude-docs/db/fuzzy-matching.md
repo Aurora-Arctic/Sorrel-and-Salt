@@ -50,7 +50,8 @@ so they are not the read-side `withAudit` that MB.29 declined to build.
 
 **`findSimilarIngredients` (M4.7) is the first finder bound by both halves.**
 It answers story 16's "did you mean": live ingredients in the compendium or
-the proof's workspace whose display name, formal name or a live folk name is
+the workspace of one of its proofs — none, for the admin's compendium form,
+reads the compendium alone (M5.5) — whose display name, formal name or a live folk name is
 `%`-similar to the name, best first by the greatest of the three
 similarities. It reads one keyset page at a time, keyed `[-score, name]` and
 marked `similarityMatch`, and carries each row's score, because

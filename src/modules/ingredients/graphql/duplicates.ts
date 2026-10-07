@@ -11,7 +11,8 @@ builder.queryField('possibleDuplicates', (t) =>
   t.pagedConnection({
     type: IngredientRef,
     args: {
-      workspaceId: t.arg.id({ required: true }),
+      // Null reads the compendium alone: the admin's compendium form names no coven (M5.5).
+      workspaceId: t.arg.id({ required: false }),
       name: t.arg.string({ required: true }),
     },
     resolve: (_query, { workspaceId, name }, page, { session }) => {

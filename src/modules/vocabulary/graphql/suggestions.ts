@@ -31,7 +31,8 @@ for (const [name, suggest] of Object.entries(FIELDS)) {
     t.pagedConnection({
       type: CorrespondenceSuggestionRef,
       args: {
-        workspaceId: t.arg.id({ required: true }),
+        // Null reads the compendium alone: the admin's compendium form names no coven (M5.5).
+        workspaceId: t.arg.id({ required: false }),
         query: t.arg.string({ required: false }),
       },
       resolve: (_root, { workspaceId, query }, page, { session }) => {
@@ -68,7 +69,8 @@ builder.queryField('formSuggestions', (t) =>
   t.pagedConnection({
     type: FormSuggestionRef,
     args: {
-      workspaceId: t.arg.id({ required: true }),
+      // Null reads the compendium alone: the admin's compendium form names no coven (M5.5).
+      workspaceId: t.arg.id({ required: false }),
       query: t.arg.string({ required: false }),
     },
     resolve: (_root, { workspaceId, query }, page, { session }) => {
@@ -98,7 +100,8 @@ builder.queryField('deitySuggestions', (t) =>
   t.pagedConnection({
     type: DeitySuggestionRef,
     args: {
-      workspaceId: t.arg.id({ required: true }),
+      // Null reads the compendium alone: the admin's compendium form names no coven (M5.5).
+      workspaceId: t.arg.id({ required: false }),
       query: t.arg.string({ required: false }),
     },
     resolve: (_root, { workspaceId, query }, page, { session }) => {

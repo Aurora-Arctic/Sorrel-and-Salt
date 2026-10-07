@@ -119,20 +119,25 @@ export async function updateReference(
  * ingredient in this coven may cite — the compendium's and its own, never
  * another coven's — matched on authors, title and container, best match
  * first. A blank query, or one under the compendium search's
- * `MIN_QUERY_LENGTH`, offers all by title.
+ * `MIN_QUERY_LENGTH`, offers all by title. Without a coven, the compendium's
+ * alone, which is all a compendium entry may cite (M5.5).
  *
  * Asks only `ingredient: ['read']`: every row it can return is one a reader of
  * this coven could already see cited.
  *
- * @throws {Forbidden} the caller may not read this coven's ingredients.
+ * @throws {Forbidden} a coven is named and the caller may not read its
+ * ingredients.
  */
 export async function suggestReferences(
   session: Session,
-  workspaceId: string,
+  workspaceId: string | null | undefined,
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<ReferenceRow, CompendiumScore>[]> {
-  const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
+  const memberships: Membership[] = [];
+  if (workspaceId != null) {
+    memberships.push(await assertMembership(session, workspaceId, { ingredient: ['read'] }));
+  }
   const filter = parseInput(CompendiumFilter, { query });
-  return findReferenceSuggestions(membership, filter.query ?? '', page);
+  return findReferenceSuggestions(memberships, filter.query ?? '', page);
 }

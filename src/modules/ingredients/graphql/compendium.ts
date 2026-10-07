@@ -1,6 +1,6 @@
 import { builder } from '../../../graphql/builder';
 import { countCompendium, getIngredient, listCompendium } from '../services/compendium';
-import { IngredientRef } from './ingredient';
+import { IngredientRef, NomenclatureEnum } from './ingredient';
 
 // The compendium's two queries. Public, so neither carries the `signedIn`
 // scope (MB.80); tests/db/graphql-query-scopes.test.ts holds every other
@@ -17,12 +17,14 @@ builder.queryField('compendium', (t) =>
       form: t.arg.string({ required: false }),
       // The admin's to-do list: live entries citing no live reference (M5.5).
       withoutReferences: t.arg.boolean({ required: false }),
+      // The formal names still to look up are the `unknown` entries (M5.5).
+      nomenclature: t.arg({ type: NomenclatureEnum, required: false }),
     },
-    resolve: (_root, { query, categoryIds, form, withoutReferences }, page) =>
-      listCompendium({ query, categoryIds, form, withoutReferences }, page),
+    resolve: (_root, { query, categoryIds, form, withoutReferences, nomenclature }, page) =>
+      listCompendium({ query, categoryIds, form, withoutReferences, nomenclature }, page),
     // "Page X of Y" (claude-docs/graphql/pagination.md, "Pagination").
-    count: (_root, { query, categoryIds, form, withoutReferences }, start) =>
-      countCompendium({ query, categoryIds, form, withoutReferences }, start),
+    count: (_root, { query, categoryIds, form, withoutReferences, nomenclature }, start) =>
+      countCompendium({ query, categoryIds, form, withoutReferences, nomenclature }, start),
     edgeFields: (t) => ({
       score: t.float({
         nullable: true,

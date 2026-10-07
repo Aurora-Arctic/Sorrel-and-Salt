@@ -260,3 +260,43 @@ describe('possibleDuplicates', () => {
     });
   });
 });
+
+// M5.5: the admin's compendium form has no coven to name, so a null
+// workspaceId warns of the compendium's entries alone.
+describe('possibleDuplicates without a coven', () => {
+  const runInCompendium = (session: Session | null, name: string) =>
+    graphql({
+      schema,
+      source: `query ($workspaceId: ID, $name: String!) {
+        possibleDuplicates(workspaceId: $workspaceId, name: $name, first: 100) {
+          edges { node { name isGlobal } }
+        }
+      }`,
+      variableValues: { workspaceId: null, name },
+      contextValue: { session, loaders: createLoaders(session) },
+    }) as Promise<Result>;
+
+  it("warns of the compendium's entry and not the coven's", async () => {
+    await addIngredient({ name: 'Testwort', canonicalName: 'Fixtura testalis' });
+    await addIngredient({ name: 'Testwart', workspaceId: WORKSPACE_W_ID });
+    // Why its absence is the scope's: under W, the coven's entry is warned of first.
+    expect((await nodesFor(asUser(B), { name: 'Testwart' })).map((node) => node.name)).toEqual([
+      'Testwart',
+      'Testwort',
+    ]);
+
+    const result = await runInCompendium(asUser(E), 'Testwart');
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.possibleDuplicates.edges.map((edge) => edge.node)).toEqual([
+      { name: 'Testwort', isGlobal: true },
+    ]);
+  });
+
+  it('is refused signed out', async () => {
+    const result = await runInCompendium(null, 'Testwort');
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);
+  });
+});

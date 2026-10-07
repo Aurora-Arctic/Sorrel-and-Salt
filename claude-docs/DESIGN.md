@@ -560,7 +560,7 @@ In the compendium four rows may display "Cat's Claw", told apart by their formal
 
 **Relabelling is safe, with one narrow exception worth stating:** identity is stable under relabelling only for rows that _carry_ a formal name. A `none` row's key **is** its label, so relabelling such a row does change its key.
 
-One consequence of the `COALESCE` merging two namespaces into one key: a `none` entry whose _label_ equals another entry's _formal name_ collides, and the raw error names a column the admin never filled in. Rare, arguably correct, and M5.2/M5.5 must translate it into a readable message naming the colliding entry.
+One consequence of the `COALESCE` merging two namespaces into one key: a `none` entry whose _label_ equals another entry's _formal name_ collides, and the raw error names a column the admin never filled in. Rare, arguably correct, and M5.2's writes translate it into a readable message naming the colliding entry, on `name`, which M5.5's form shows beside that field.
 
 **Display name: no new column.** `name` remains the display label in both tiers. Choosing a folk name as the display name is a **swap** between `ingredients.name` and one `ingredient_folk_names` row — a two-value exchange in one transaction, which rows make cleaner than array juggling. Absent a selection, `name` is prefilled from `canonicalName` at write time, matching `lowStockThreshold`'s idiom of writing the default onto the row rather than defaulting at read time. A swap on a compendium row is **global**: a workspace cannot hold its own display preference for a shared entry without another table, which is out of scope for v1, and the UI says so before the swap.
 
@@ -762,6 +762,7 @@ type Query {
     categoryIds: [ID!]
     form: String
     withoutReferences: Boolean # the admin's to-do list: live entries with no live link (§5, M5.5)
+    nomenclature: Nomenclature # the other to-do list: unknown is the formal names still to look up (M5.5)
     first: Int
     after: String
   ): QueryCompendiumConnection!
@@ -770,7 +771,7 @@ type Query {
   categories(query: String, groupId: ID, first: Int, after: String): QueryCategoriesConnection! # the live categories by name, each with its group (M5.6); query and groupId narrow them (MB.178)
   # §5's fuzzy duplicate warning: compendium and this workspace, best match first
   possibleDuplicates(
-    workspaceId: ID!
+    workspaceId: ID # null reads the compendium alone, for the admin's compendium form (M5.5)
     name: String!
     first: Int
     after: String
@@ -784,20 +785,20 @@ type Query {
   ): QueryIngredientSuggestionsConnection!
   # The reference picker: the compendium's and this workspace's references, matched on authors, title and container (§5)
   referenceSuggestions(
-    workspaceId: ID!
+    workspaceId: ID # null reads the compendium alone (M5.5)
     query: String
     first: Int
     after: String
   ): QueryReferenceSuggestionsConnection!
   # Curated bodies or signs first, then values in use in the compendium and this workspace (§5)
   planetSuggestions(
-    workspaceId: ID!
+    workspaceId: ID # null reads the compendium alone (M5.5)
     query: String
     first: Int
     after: String
   ): QueryPlanetSuggestionsConnection!
   zodiacSuggestions(
-    workspaceId: ID!
+    workspaceId: ID # null reads the compendium alone (M5.5)
     query: String
     first: Int
     after: String
@@ -841,6 +842,13 @@ type Mutation {
   createIngredientFormValue(input: IngredientFormValueInput!): IngredientFormValue! # name, description, groupId, endRedirect; the slug is the name and the group
   updateIngredientFormValue(id: ID!, input: IngredientFormValueInput!): IngredientFormValue! # a rename carries onto the compendium entries picking it (M5.6a)
   deleteIngredientFormValue(id: ID!): ID! # refused while a live compendium entry picks it; a coven keeps its text and its pick
+  createCompendiumIngredient(input: CompendiumIngredientInput!, endRedirect: Boolean): Ingredient! # IngredientInput's fields, nomenclature required (M5.5)
+  updateCompendiumIngredient(
+    id: ID!
+    input: CompendiumIngredientUpdateInput!
+    endRedirect: Boolean
+  ): Ingredient! # replaces the entry as updateIngredient does; endRedirect confirms MB.82's refusal
+  deleteCompendiumIngredient(id: ID!): ID! # a soft delete; a spell holding the entry keeps it
 }
 
 type Ingredient {

@@ -342,6 +342,45 @@ describe('referenceSuggestions', () => {
     expect(signedOut.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
     expect(outsider.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
   });
+
+  // M5.5: the admin's compendium form has no coven to name, and a compendium
+  // entry cites the compendium's alone, so a null workspaceId reads that tier.
+  describe('without a coven', () => {
+    const IN_COMPENDIUM = `query ($workspaceId: ID, $query: String) {
+      referenceSuggestions(workspaceId: $workspaceId, query: $query) {
+        edges { node { title isGlobal } }
+      }
+    }`;
+
+    it('offers the compendium’s and not a coven’s', async () => {
+      await insertReference(sql, { title: 'Testwort Compendium' }, E.id);
+      await insertReference(sql, { workspace_id: WORKSPACE_W_ID, title: 'Testwort Notes' }, A.id);
+      // Why its absence is the scope's: under W, the coven's reference is offered.
+      const underW = await run<Suggestions>(asUser(B), SUGGEST, {
+        workspaceId: WORKSPACE_W_ID,
+        query: 'testwort',
+      });
+      expect(underW.data?.referenceSuggestions.edges.map((edge) => edge.node.title)).toContain(
+        'Testwort Notes',
+      );
+
+      const result = await run<Suggestions>(asUser(E), IN_COMPENDIUM, {
+        workspaceId: null,
+        query: 'testwort',
+      });
+
+      expect(result.errors).toBeUndefined();
+      expect(result.data?.referenceSuggestions.edges.map((edge) => edge.node)).toEqual([
+        { title: 'Testwort Compendium', isGlobal: true },
+      ]);
+    });
+
+    it('refuses a signed-out request, as FORBIDDEN', async () => {
+      const result = await run(null, IN_COMPENDIUM, { workspaceId: null });
+
+      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+    });
+  });
 });
 
 describe('compendium(withoutReferences)', () => {

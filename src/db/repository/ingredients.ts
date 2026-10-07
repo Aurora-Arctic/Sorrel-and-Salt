@@ -145,10 +145,11 @@ export function findSubstitutesIncludingSoftDeleted(
 }
 
 /**
- * One page of the live ingredients, in the compendium or the proof's
- * workspace, whose display name, formal name or a live folk name is
- * trigram-similar to `name` — best match first, keyed `[-score, name]`, each
- * carrying its score. Reads both tiers in one statement.
+ * One page of the live ingredients, in the compendium or a coven one of
+ * `memberships` proves, whose display name, formal name or a live folk name
+ * is trigram-similar to `name` — best match first, keyed `[-score, name]`,
+ * each carrying its score. Reads both tiers in one statement; no proofs reads
+ * the compendium alone, which is the admin's compendium form (M5.5).
  *
  * The three matches are a `UNION ALL` under `id IN (…)`, not an `OR` beside
  * the scope: Postgres cannot turn a subquery inside an `OR` into a join, so
@@ -157,7 +158,7 @@ export function findSubstitutesIncludingSoftDeleted(
  * "Fuzzy matching").
  */
 export function findSimilarIngredients(
-  membership: Membership,
+  memberships: readonly Membership[],
   name: string,
   page: PageRequest,
 ): Promise<PageEntry<typeof ingredients.$inferSelect, SimilarityScore>[]> {
@@ -189,7 +190,10 @@ export function findSimilarIngredients(
   return selectFrom(
     ingredients,
     and(
-      or(inCompendium(ingredients), scopedTo(membership, ingredients)),
+      or(
+        inCompendium(ingredients),
+        ...memberships.map((membership) => scopedTo(membership, ingredients)),
+      ),
       notSoftDeleted(ingredients),
       inArray(ingredients.id, matched),
       pageBounds(keyset),
@@ -324,6 +328,7 @@ function compendiumList(filter: IngredientFilter): {
       formArm(filter.form),
       filter.formId ? eq(ingredients.formId, filter.formId) : undefined,
       filter.withoutReferences ? citesNothing() : undefined,
+      filter.nomenclature ? eq(ingredients.nomenclature, filter.nomenclature) : undefined,
     ),
     order: match
       ? {

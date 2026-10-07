@@ -6,7 +6,7 @@ import { createLoaders } from '@/graphql/loaders';
 import { schema } from '@/graphql/schema';
 import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
-import { A, B, D, asUser } from '../../../support/as-user';
+import { A, B, D, E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import type { AstrologySuggestionConnection } from './types';
@@ -129,5 +129,67 @@ describe('zodiacSuggestions', () => {
     expect(sign.data?.zodiacSuggestions.edges.map((edge) => edge.node.value)).toEqual([
       'Ophiuchus',
     ]);
+  });
+});
+
+// M5.5: the admin's compendium form has no coven to name, so a null
+// workspaceId reads the compendium tier alone — the curated rows, and the
+// values written in the compendium, never a coven's.
+describe.each([
+  ['planetSuggestions', 'sedna', 'Sedna', 'Sedna Fixture'],
+  ['zodiacSuggestions', 'cetus', 'Cetus', 'Cetus Fixture'],
+] as const)('%s without a coven', (field, query, covens, compendiums) => {
+  beforeEach(async () => {
+    await insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Fixture Starwort',
+        nomenclature: 'none',
+        planets: ['Sedna Fixture'],
+        zodiacSigns: ['Cetus Fixture'],
+      }),
+      A.id,
+    );
+  });
+
+  const runInCompendium = (session: Session | null, variables: Record<string, unknown>) =>
+    graphql({
+      schema,
+      source: `query ($workspaceId: ID, $query: String) {
+        ${field}(workspaceId: $workspaceId, query: $query, first: 100) ${PAGE}
+      }`,
+      variableValues: { workspaceId: null, ...variables },
+      contextValue: { session, loaders: createLoaders(session) },
+    }) as Promise<ExecutionResult<Record<string, AstrologySuggestionConnection>>>;
+
+  it("offers the compendium's value and not the coven's", async () => {
+    // Why its absence is the scope's: under W, the coven's value is offered beside it.
+    const underW = await run(asUser(B), field, { query });
+    expect(underW.data?.[field].edges.map((edge) => edge.node.value)).toEqual([
+      covens,
+      compendiums,
+    ]);
+
+    const result = await runInCompendium(asUser(E), { query });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.[field].edges.map((edge) => edge.node)).toEqual([
+      { value: compendiums, description: null, curated: false },
+    ]);
+  });
+
+  it('offers the curated rows', async () => {
+    const result = await runInCompendium(asUser(E), {});
+
+    expect(result.errors).toBeUndefined();
+    const nodes = result.data?.[field].edges.map((edge) => edge.node) ?? [];
+    expect(nodes.filter((node) => node.curated).length).toBeGreaterThan(10);
+  });
+
+  it('is refused signed out', async () => {
+    const result = await runInCompendium(null, { query });
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);
   });
 });

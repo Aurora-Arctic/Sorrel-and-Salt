@@ -60,8 +60,22 @@ function run(
 ): Promise<ExecutionResult<{ compendium: CompendiumConnection }>> {
   return graphql({
     schema,
-    source: `query ($query: String, $categoryIds: [ID!], $form: String, $first: Int, $after: String) {
-      compendium(query: $query, categoryIds: $categoryIds, form: $form, first: $first, after: $after) {
+    source: `query (
+      $query: String
+      $categoryIds: [ID!]
+      $form: String
+      $nomenclature: Nomenclature
+      $first: Int
+      $after: String
+    ) {
+      compendium(
+        query: $query
+        categoryIds: $categoryIds
+        form: $form
+        nomenclature: $nomenclature
+        first: $first
+        after: $after
+      ) {
         edges {
           cursor
           score
@@ -208,6 +222,18 @@ describe('compendium', () => {
     ]);
   });
 
+  // M5.5: the admin's formal names still to look up are the `unknown` entries.
+  it("narrows by nomenclature, leaving a coven's row of that kind out", async () => {
+    const unknown = await nodesOf({ nomenclature: 'unknown' });
+    const none = await nodesOf({ nomenclature: 'none' }, asUser(B));
+
+    expect(unknown.map((node) => node.name)).toEqual(["Devil's Shoestring"]);
+    expect(none.map((node) => node.name)).toEqual(['Black Salt', 'Graveyard Dirt', 'Moon Water']);
+    expect(none.every((node) => node.nomenclature === 'none')).toBe(true);
+    // Fixture Wroot is a `none` too, read by B, and still not the compendium's.
+    expect(none.map((node) => node.name)).not.toContain('Fixture Wroot');
+  });
+
   it('combines the three', async () => {
     const nodes = await nodesOf({
       query: 'cat',
@@ -326,8 +352,8 @@ describe('compendium', () => {
     async function counted(variables: Record<string, unknown>): Promise<Counted> {
       const result = await graphql({
         schema,
-        source: `query ($query: String, $first: Int, $after: String, $last: Int) {
-          compendium(query: $query, first: $first, after: $after, last: $last) {
+        source: `query ($query: String, $nomenclature: Nomenclature, $first: Int, $after: String, $last: Int) {
+          compendium(query: $query, nomenclature: $nomenclature, first: $first, after: $after, last: $last) {
             totalCount countBefore edges { node { id } } pageInfo { endCursor }
           }
         }`,
@@ -359,6 +385,14 @@ describe('compendium', () => {
       expect(page.totalCount).toBe(6);
       expect(page.countBefore).toBe(0);
       expect(empty).toMatchObject({ totalCount: 0, countBefore: null, edges: [] });
+    });
+
+    it('counts what a nomenclature narrows to', async () => {
+      const page = await counted({ nomenclature: 'none', first: 2 });
+
+      expect(page.totalCount).toBe(3);
+      expect(page.edges).toHaveLength(2);
+      expect(page.countBefore).toBe(0);
     });
 
     it('counts only when a count field is selected, and once for both', async () => {

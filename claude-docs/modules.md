@@ -35,7 +35,7 @@ registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
 `deityTraditionsById` and `ingredientFormsById` loaders (MB.167); `ingredients` has
 `Ingredient`, `IngredientDeity` and `IngredientDeityInput`, the `compendium`, `ingredient`, `possibleDuplicates` and
 `ingredientSuggestions` queries,
-the two workspace ingredient mutations, and `CommonNameSuggestion` and
+the workspace ingredient mutations, the compendium's three (M5.5), and `CommonNameSuggestion` and
 `commonNameSuggestions`, whose claimants reuse `vocabulary`'s
 `SuggestionClaimant` — the edge runs that way round — plus the
 `categoriesByIngredient`, `folkNamesByIngredient`, `substitutesByIngredient` and
