@@ -38,8 +38,13 @@ export default {
   previewPort: 61001,
   // With the other generated output rather than Ladle's default `build/`.
   outDir: '.reports/workshop',
-  // Pinned so the HMR socket is reachable over the LAN and unmoved between restarts.
+  // Pinned so compose can publish the HMR socket, and unmoved between restarts.
   hmrPort: 61002,
+  // Empty, not unset: Ladle's `hmrHost ?? 'localhost'` would bind the socket to
+  // the workshop container's loopback, where the published port never arrives.
+  // An empty host binds every interface, and the browser connects back to the
+  // page's own hostname — `'0.0.0.0'` would be sent to it as the address.
+  hmrHost: '',
   addons: {
     // The toolbar's theme control, read by the decorator (./components.tsx).
     // `defaultState` stays `'dark'` — the app's dark-first default — and

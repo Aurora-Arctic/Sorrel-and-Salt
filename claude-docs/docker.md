@@ -96,7 +96,9 @@ no Neon connection and no host Node-version juggling.
     `make docker-up` does not start it. Same build stage; runs
     `npm run workshop -- --host 0.0.0.0` (`ladle serve` binds `localhost`
     otherwise) and publishes **61000** (serve) and **61002** (pinned HMR socket).
-    Does not depend on `postgres`.
+    `--host` reaches the page server only; the HMR socket binds every interface
+    because `.ladle/config.mjs` sets `hmrHost: ''` (`claude-docs/workshop.md`,
+    "`.ladle/`"). Does not depend on `postgres`.
   - **`studio`** (MB.21) — behind the **`studio` compose profile**, same
     build stage; runs `npm run db:studio` (`drizzle-kit studio --host
 0.0.0.0 --port 4983`, reading `drizzle.config.ts`) and publishes
