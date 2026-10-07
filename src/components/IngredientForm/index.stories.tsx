@@ -2,21 +2,26 @@ import type { Story } from '@ladle/react';
 import { useLayoutEffect, useState } from 'react';
 import type {
   CommonNameSuggestionsQuery,
+  CompendiumSubstitutesQuery,
+  CreateCompendiumIngredientMutation,
   CreateReferenceMutation,
   CreateWorkspaceIngredientMutation,
   DeitySuggestionsQuery,
+  DeleteCompendiumIngredientMutation,
   FormSuggestionsQuery,
   IngredientSuggestionsQuery,
   PickerCategoriesQuery,
   PlanetSuggestionsQuery,
   PossibleDuplicatesQuery,
   ReferenceSuggestionsQuery,
+  UpdateCompendiumIngredientMutation,
   ZodiacSuggestionsQuery,
 } from '../../gql/graphql';
 import { citationText } from '../../lib/citation';
 import type { CitationFields } from '../../lib/types';
 import IngredientForm from '.';
-import type { AfterSave, SavedIngredient } from './types';
+import type { AfterSave, IngredientFormValues, SavedIngredient } from './types';
+import { EMPTY_VALUES } from './values';
 
 // Render-only; behaviour is asserted in tests/components/IngredientForm. The
 // workshop has no API, and on staging its pages may not fetch at all
@@ -240,9 +245,19 @@ const SOURCES = [
 ];
 
 const CATS_CLAW = [
-  { id: 'claw-1', name: "Cat's Claw", canonicalName: 'Uncaria tomentosa' },
-  { id: 'claw-2', name: "Cat's Claw", canonicalName: 'Felis catus' },
-  { id: 'claw-3', name: "Cat's Claw", canonicalName: null },
+  {
+    id: 'claw-1',
+    name: "Cat's Claw",
+    canonicalName: 'Uncaria tomentosa',
+    slug: 'cats-claw-uncaria-tomentosa',
+  },
+  {
+    id: 'claw-2',
+    name: "Cat's Claw",
+    canonicalName: 'Felis catus',
+    slug: 'cats-claw-felis-catus',
+  },
+  { id: 'claw-3', name: "Cat's Claw", canonicalName: null, slug: 'cats-claw' },
 ];
 
 /** How long a save takes to be accepted: long enough to see Save busy and shut. */
@@ -328,6 +343,14 @@ function answer(operation: string, variables: Record<string, unknown>): object |
           first,
         ),
       } satisfies IngredientSuggestionsQuery;
+    case 'CompendiumSubstitutes':
+      // The compendium's own entries alone, as `compendium(query)` answers.
+      return {
+        compendium: page(
+          INGREDIENTS.filter((row) => row.isGlobal && matches(query, row.name, row.canonicalName)),
+          first,
+        ),
+      } satisfies CompendiumSubstitutesQuery;
     case 'ReferenceSuggestions':
       return {
         referenceSuggestions: page(
@@ -355,16 +378,46 @@ function answer(operation: string, variables: Record<string, unknown>): object |
     case 'CreateWorkspaceIngredient': {
       const input = variables.input as { name?: string } | undefined;
       return {
-        createWorkspaceIngredient: { id: crypto.randomUUID(), name: input?.name ?? '' },
+        createWorkspaceIngredient: {
+          id: crypto.randomUUID(),
+          name: input?.name ?? '',
+          slug: 'new',
+        },
       } satisfies CreateWorkspaceIngredientMutation;
     }
+    case 'CreateCompendiumIngredient': {
+      const input = variables.input as { name?: string } | undefined;
+      return {
+        createCompendiumIngredient: {
+          id: crypto.randomUUID(),
+          name: input?.name ?? '',
+          slug: 'new',
+        },
+      } satisfies CreateCompendiumIngredientMutation;
+    }
+    case 'UpdateCompendiumIngredient': {
+      const input = variables.input as { name?: string } | undefined;
+      return {
+        updateCompendiumIngredient: { id: ENTRY.id, name: input?.name ?? '', slug: 'saved' },
+      } satisfies UpdateCompendiumIngredientMutation;
+    }
+    case 'DeleteCompendiumIngredient':
+      return {
+        deleteCompendiumIngredient: ENTRY.id,
+      } satisfies DeleteCompendiumIngredientMutation;
     default:
       return undefined;
   }
 }
 
 /** The two writes, each answered after `SAVE_DELAY_MS`. */
-const SAVES = new Set(['CreateWorkspaceIngredient', 'CreateReference']);
+const SAVES = new Set([
+  'CreateWorkspaceIngredient',
+  'CreateCompendiumIngredient',
+  'UpdateCompendiumIngredient',
+  'DeleteCompendiumIngredient',
+  'CreateReference',
+]);
 
 /**
  * The refusal a save meets, in the body /api/graphql sends one in, or
@@ -378,6 +431,32 @@ function refusal(operation: string, variables: Record<string, unknown>): object 
     { name?: string; title?: string; categoryIds?: string[] } | undefined;
   const field = operation === 'CreateReference' ? 'title' : 'name';
   const name = String(input?.[field] ?? '');
+  // A compendium save whose name holds "redirect" would take another entry's
+  // old address (MB.82), until it is sent again confirmed.
+  if (
+    /redirect/i.test(name) &&
+    operation.endsWith('CompendiumIngredient') &&
+    !variables.endRedirect
+  ) {
+    return {
+      data: null,
+      errors: [
+        {
+          message: 'Validation failed',
+          extensions: {
+            code: 'VALIDATION',
+            fieldErrors: [
+              {
+                path: ['endRedirect'],
+                message:
+                  '"fixturewort-fixtura-vulgaris" redirects to "Fixturewort" (Fixtura vulgaris, whole root) until 4 April 2027, 00:00 UTC — confirm to end that redirect',
+              },
+            ],
+          },
+        },
+      ],
+    };
+  }
   if (/taken/i.test(name)) {
     return {
       data: null,
@@ -583,6 +662,81 @@ export const Blank: Story = () => {
           Save Ingredient would now open <code>{opens}</code>, the new ingredient&rsquo;s page.
         </output>
       )}
+    </>
+  );
+};
+
+// The entry the edit story opens: a planet listed and a category picked (MB.126).
+const ENTRY = {
+  id: '00000000-0000-4000-8000-000000000301',
+  values: {
+    ...EMPTY_VALUES,
+    name: 'Testwort',
+    nomenclature: 'botanical',
+    canonicalName: 'Fixtura testalis',
+    form: 'Dried leaf',
+    formLink: {
+      id: '00000000-0000-4000-8000-000000000103',
+      name: 'Dried leaf',
+      group: 'Plant part',
+      description: null,
+    },
+    description: 'A fixture herb, for the workshop.',
+    planets: [{ value: 'Mercury' }],
+    // Testward, one of the categories the stand-in answers the picker with.
+    categoryIds: [CATEGORIES[0].id],
+  } satisfies IngredientFormValues,
+};
+
+/** What the compendium form adds to the coven's, beside it in the workshop. */
+function WhatToTryOnTheCompendium({ editing }: { editing: boolean }) {
+  return (
+    <details open className="story-guide">
+      <summary>What to try</summary>
+      <ul>
+        <li>
+          <strong>Classification:</strong> required here: Save with none chosen to see it refused.
+        </li>
+        <li>
+          <strong>Picks only:</strong> Form, Planet, Zodiac Sign and Deity offer the curated rows
+          alone, with no &ldquo;Use what you typed&rdquo; and no Add; type into one and Save, or
+          press Enter, to see the text refused. Substitute Ingredient offers the compendium&rsquo;s
+          entries alone{editing ? ', never this one' : ''}.
+        </li>
+        <li>
+          <strong>Another entry&rsquo;s redirect:</strong> a Name with &ldquo;redirect&rdquo; in it
+          is asked about in place of the saves; End Redirect &amp; Save sends it again, Keep It
+          drops the question.
+        </li>
+        {editing && (
+          <li>
+            <strong>Edit and delete:</strong> Save Ingredient is off until something changes; Delete
+            Ingredient asks first.
+          </li>
+        )}
+      </ul>
+    </details>
+  );
+}
+
+/** The admin's form for a new compendium entry (M5.5): no coven, so every lookup asks the compendium alone. */
+export const Compendium: Story = () => {
+  useCannedApi();
+  return (
+    <>
+      <WhatToTryOnTheCompendium editing={false} />
+      <IngredientForm workspaceId={null} onCancel={() => undefined} />
+    </>
+  );
+};
+
+/** The admin's form over an existing compendium entry: one save, and a delete. */
+export const CompendiumEntry: Story = () => {
+  useCannedApi();
+  return (
+    <>
+      <WhatToTryOnTheCompendium editing />
+      <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />
     </>
   );
 };

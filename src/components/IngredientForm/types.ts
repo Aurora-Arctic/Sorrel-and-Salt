@@ -17,16 +17,34 @@ import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingr
 import type { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import type { ComboboxQualifier, ComboboxOption, Suggestions } from '../Combobox/types';
 
-export interface IngredientFormProps {
-  /** The coven the new ingredient is written to. */
-  workspaceId: string;
-  /** Called with the saved row once the server has accepted it. */
+interface IngredientFormCallbacks {
   /**
    * Called with the saved row once the server has accepted it, and which save
-   * was pressed: 'open', Save Ingredient, for the page to open the new
+   * was pressed: 'open', Save Ingredient, for the page to open the
    * ingredient; 'another', Save & Add Another, after which the form clears.
    */
   onSaved?: (ingredient: SavedIngredient, next: AfterSave) => void;
+  /** Called once the entry given has been deleted. */
+  onDeleted?: () => void;
+  /** Cancel, offered beside the saves when given: the page the form sits in closes it. */
+  onCancel?: () => void;
+  /** Where a near match the duplicate warning names links, when not a coven's ingredient page. */
+  duplicateHref?: (match: Duplicate) => string;
+}
+
+/**
+ * Where the form writes. A coven's new ingredient, to the coven named; or,
+ * with a null `workspaceId`, a compendium entry (M5.5) — a new one, or the
+ * `entry` given, which it saves over and can delete. A coven's edit is
+ * M8.16's, so the props cannot say one yet.
+ */
+export type IngredientFormProps = IngredientFormCallbacks &
+  ({ workspaceId: string; entry?: never } | { workspaceId: null; entry?: EditedIngredient });
+
+/** The ingredient an edit opens: its id, which the writes name, and its values as the form shows them. */
+export interface EditedIngredient {
+  id: string;
+  values: IngredientFormValues;
 }
 
 /** What follows a save: the new ingredient opened, or the form cleared for another. */
@@ -166,6 +184,12 @@ export interface IngredientFormValues {
 /** A box whose text is not yet an entry: a list's, or the references' search. */
 export type DraftName = ListFieldName | 'references';
 
+/** A save the server asked to confirm (MB.82): what it said, and the input to send again. */
+export interface RedirectQuestion {
+  message: string;
+  input: IngredientFormInput;
+}
+
 /** What the form sends: its values in the shape the shared schema and the mutation take, unparsed. */
 export type IngredientFormInput = z.input<typeof LocalIngredientInput>;
 
@@ -210,6 +234,8 @@ export interface TextFieldProps<V extends FieldValues = IngredientFormValues> ex
   after?: ReactNode;
   /** How the text is tidied as the field is left: a reference's fields, as the server will store them. */
   format?: (text: string) => string;
+  /** The browser's autofill: `off` for the name, which Chrome otherwise takes for a person's. */
+  autoComplete?: 'off';
 }
 
 /** A closed set, in the ingredient form or the reference panel's, whose kind is one. */
@@ -248,6 +274,8 @@ export interface SuggestFieldProps<O extends ComboboxOption = ComboboxOption> ex
   onEdit?: (text: string) => void;
   /** What a pick leaves out of the text, drawn in the box: a picked form's group. */
   qualifier?: ComboboxQualifier;
+  /** Whether the typed row is offered: false for a box whose text must be a pick. */
+  offerTyped?: boolean;
 }
 
 export interface ListFieldProps {
@@ -264,6 +292,12 @@ export interface ListFieldProps {
   onActivate?: () => void;
   /** The list keeps the order entered, so its entries can be moved (MB.170). */
   ordered?: boolean;
+  /**
+   * An entry is only ever a curated suggestion picked: the box offers the
+   * curated rows alone, no typed row and no Add — a compendium entry's
+   * planets, signs and deities (MB.162).
+   */
+  pickOnly?: boolean;
 }
 
 /**
@@ -307,8 +341,8 @@ export interface ReferenceFieldSpec {
 }
 
 export interface ReferencePanelProps {
-  /** The coven the new source is written to. */
-  workspaceId: string;
+  /** The coven the new source is written to, or null for the compendium's. */
+  workspaceId: string | null;
   /** How many times the panel has been asked for: each takes the focus back to Kind. */
   summons: number;
   /** Called with the source once the server has saved it. */
@@ -316,18 +350,35 @@ export interface ReferencePanelProps {
   onCancel: () => void;
 }
 
-/** A field whose lookup asks about this coven's ingredients. */
+/**
+ * A field whose lookup asks about this coven's ingredients, or, with a null
+ * coven, the compendium's alone.
+ */
 export interface LookupFieldProps {
-  workspaceId: string;
+  workspaceId: string | null;
 }
 
-/** What every lookup is asked: the coven, the settled text, and how many rows. */
-export type LookupVariables = FormSuggestionsQueryVariables;
+/** The form field's lookup, whose text must be a curated pick on the compendium (MB.162). */
+export interface FormFieldProps extends LookupFieldProps {
+  pickOnly?: boolean;
+}
+
+/** What every lookup asks besides its scope: the settled text, and how many rows. */
+export type LookupText = Pick<FormSuggestionsQueryVariables, 'query' | 'first'>;
+
+/** A lookup's hook: the suggestions for the text, once settled, while the box is active. */
+export type UseSuggestions<O extends ComboboxOption = ListOption> = (
+  workspaceId: string | null,
+  text: string,
+  active: boolean,
+) => Suggestions<O>;
 
 /** A list field and the lookup its box suggests from. */
 export interface LookupListFieldProps
   extends LookupFieldProps, Omit<ListFieldProps, 'suggestions' | 'onActivate'> {
-  useSuggestions: (workspaceId: string, text: string, active: boolean) => Suggestions<ListOption>;
+  useSuggestions: UseSuggestions;
+  /** An ingredient the box never offers: the compendium entry being edited, as its own substitute. */
+  omit?: string;
 }
 
 /** A planet or sign suggestion, as the lookup asks for it; a deity's adds its tradition. */
@@ -348,6 +399,8 @@ export interface DuplicateWarning {
 
 export interface NameFieldProps {
   warning: DuplicateWarning;
+  /** Where a match links: by default a coven's ingredient page; the admin's compendium page opens its own modal. */
+  hrefOf?: (match: Duplicate) => string;
   /** Create Anyway, while the warning shows, and null otherwise: a held save focuses it. */
   ref: Ref<HTMLButtonElement>;
 }

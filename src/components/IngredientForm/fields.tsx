@@ -144,6 +144,7 @@ export function TextField<V extends FieldValues = IngredientFormValues>({
   invalid,
   after,
   format,
+  autoComplete,
 }: TextFieldProps<V>): ReactElement {
   const { register, setValue, getFieldState } = useFormContext<V>();
   const { aria, ...field } = useField<V>(name, hint, note, describedBy, invalid);
@@ -165,6 +166,7 @@ export function TextField<V extends FieldValues = IngredientFormValues>({
   const control = {
     id: field.controlId,
     disabled,
+    autoComplete,
     'aria-required': required || undefined,
     ...aria,
     ...register(name, { deps, onBlur: format ? tidy : undefined }),
@@ -195,6 +197,7 @@ export function SuggestField<O extends ComboboxOption = ComboboxOption>({
   onPick,
   onEdit,
   qualifier,
+  offerTyped,
 }: SuggestFieldProps<O>): ReactElement {
   const { control } = useFormContext<IngredientFormValues>();
   const { field } = useController({ control, name });
@@ -218,6 +221,7 @@ export function SuggestField<O extends ComboboxOption = ComboboxOption>({
         }}
         suggestions={suggestions}
         qualifier={qualifier}
+        offerTyped={offerTyped}
         inputRef={field.ref}
         name={field.name}
         {...aria}
@@ -319,6 +323,7 @@ export function ListField({
   suggestions,
   onActivate,
   ordered,
+  pickOnly,
 }: ListFieldProps): ReactElement {
   const form = useFormContext<IngredientFormValues>();
   const { control, trigger, setError, clearErrors, getFieldState, getValues } = form;
@@ -353,11 +358,19 @@ export function ListField({
     () =>
       suggestions && {
         ...suggestions,
-        options: suggestions.options.filter(
-          (option) => !repeatOf(listed, option.value, option.link, nameToRefuse),
-        ),
+        options: suggestions.options
+          .filter(
+            (option) =>
+              // A pick-only list offers the curated rows alone: a value only in
+              // use is one the compendium refuses (MB.162).
+              !(pickOnly && option.curated === false) &&
+              !repeatOf(listed, option.value, option.link, nameToRefuse),
+          )
+          // And lists them flat: with every row the compendium's, a From
+          // Compendium heading over them would tell the admin nothing.
+          .map((option) => (pickOnly ? { ...option, curated: undefined } : option)),
       },
-    [suggestions, listed, nameToRefuse],
+    [suggestions, listed, nameToRefuse, pickOnly],
   );
 
   const entryErrors = fields.map(
@@ -389,9 +402,19 @@ export function ListField({
     focusBox();
     return true;
   };
+  // A pick-only list's Enter on text it has not picked from: refused at the
+  // box as a repeat is, the text kept to search on.
+  const unpicked = (text: string) => {
+    if (text.trim() === '') return;
+    const why = `Pick "${text.trim()}" from the list`;
+    setError(box, { type: 'unpicked', message: why });
+    setAnnouncement(why);
+    focusBox();
+  };
   // Gone once the text it judged is changed, or something is added.
   const clearRefusal = () => {
-    if (getFieldState(box).error?.type === 'repeat') clearErrors(box);
+    const type = getFieldState(box).error?.type;
+    if (type === 'repeat' || type === 'unpicked') clearErrors(box);
   };
   const added = (value: string | undefined) => {
     if (value !== undefined) {
@@ -483,10 +506,10 @@ export function ListField({
           onFocus={onActivate}
           onBlur={field.onBlur}
           onPick={pick}
-          onCommit={add}
+          onCommit={pickOnly ? () => unpicked(getValues(box)) : add}
           onRemoveLast={removeLast}
           suggestions={offered}
-          offerTyped={!repeat(field.value)}
+          offerTyped={!pickOnly && !repeat(field.value)}
           listAnchor={boxRow}
           entries={entries}
           clear={fields.length > 0 ? { label: `Clear ${legend}`, onClear: clear } : undefined}
@@ -498,9 +521,11 @@ export function ListField({
           aria-invalid={message ? true : undefined}
           aria-describedby={describedBy || undefined}
         />
-        <button type="button" className="btn" aria-label={`Add ${entry}`} onClick={add}>
-          Add
-        </button>
+        {!pickOnly && (
+          <button type="button" className="btn" aria-label={`Add ${entry}`} onClick={add}>
+            Add
+          </button>
+        )}
       </div>
       <FieldError id={errorId} message={message} />
       {/* Labelled, so that it is told from the box's own status region. */}

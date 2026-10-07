@@ -199,7 +199,9 @@ function acceptCreate() {
     CreateWorkspaceIngredientMutationVariables
   >('CreateWorkspaceIngredient', (variables) => {
     calls.push(variables);
-    return { createWorkspaceIngredient: { id: 'saved-1', name: variables.input.name } };
+    return {
+      createWorkspaceIngredient: { id: 'saved-1', name: variables.input.name, slug: 'saved' },
+    };
   });
   return calls;
 }
@@ -289,6 +291,14 @@ const listOf = (field: (typeof LISTS)[number]['field']) =>
   LISTS.find((list) => list.field === field)!;
 
 describe('IngredientForm', () => {
+  // A field named "name" reads to Chrome as a person's name: it flags it in
+  // the Issues panel and offers the user's own name to fill it.
+  it('turns autofill off on the name, which names no person', () => {
+    renderForm();
+
+    expect(textbox('Name')).toHaveAttribute('autocomplete', 'off');
+  });
+
   // The owner's rule for every form (M5.6): a save is offered only when there
   // is something to save.
   it('keeps both saves off until something is entered, and off again once it is cleared', () => {
@@ -314,7 +324,10 @@ describe('IngredientForm', () => {
       save();
 
       await waitFor(() =>
-        expect(onSaved).toHaveBeenCalledWith({ id: 'saved-1', name: 'Testwort' }, 'open'),
+        expect(onSaved).toHaveBeenCalledWith(
+          { id: 'saved-1', name: 'Testwort', slug: 'saved' },
+          'open',
+        ),
       );
       expect(calls).toHaveLength(1);
       expect(calls[0].workspaceId).toBe(WORKSPACE_ID);
@@ -381,7 +394,10 @@ describe('IngredientForm', () => {
       save();
 
       await waitFor(() =>
-        expect(onSaved).toHaveBeenCalledWith({ id: 'saved-1', name: 'Testwort' }, 'open'),
+        expect(onSaved).toHaveBeenCalledWith(
+          { id: 'saved-1', name: 'Testwort', slug: 'saved' },
+          'open',
+        ),
       );
       // The page it is on navigates; the form is about to go, so it keeps its values.
       expect(textbox('Name')).toHaveValue('Testwort');
@@ -422,7 +438,10 @@ describe('IngredientForm', () => {
       saveAnother();
 
       await waitFor(() =>
-        expect(onSaved).toHaveBeenCalledWith({ id: 'saved-1', name: 'Testwort' }, 'another'),
+        expect(onSaved).toHaveBeenCalledWith(
+          { id: 'saved-1', name: 'Testwort', slug: 'saved' },
+          'another',
+        ),
       );
       await waitFor(() => expect(textbox('Name')).toHaveValue(''));
       expect(textbox('Name')).toHaveFocus();
@@ -1669,9 +1688,20 @@ describe('IngredientForm', () => {
       id: 'claw-1',
       name: "Cat's Claw",
       canonicalName: 'Uncaria tomentosa',
+      slug: 'cats-claw-uncaria-tomentosa',
     };
-    const FELIS: DuplicateNode = { id: 'claw-2', name: "Cat's Claw", canonicalName: 'Felis catus' };
-    const MOCKLEAF: DuplicateNode = { id: 'mock-1', name: 'Mockleaf', canonicalName: null };
+    const FELIS: DuplicateNode = {
+      id: 'claw-2',
+      name: "Cat's Claw",
+      canonicalName: 'Felis catus',
+      slug: 'cats-claw-felis-catus',
+    };
+    const MOCKLEAF: DuplicateNode = {
+      id: 'mock-1',
+      name: 'Mockleaf',
+      canonicalName: null,
+      slug: 'mockleaf',
+    };
 
     beforeEach(() => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
@@ -3008,7 +3038,13 @@ describe('IngredientForm', () => {
         >('CreateWorkspaceIngredient', async ({ variables }) => {
           await held;
           return HttpResponse.json({
-            data: { createWorkspaceIngredient: { id: 'saved-1', name: variables.input.name } },
+            data: {
+              createWorkspaceIngredient: {
+                id: 'saved-1',
+                name: variables.input.name,
+                slug: 'saved',
+              },
+            },
           });
         }),
       );

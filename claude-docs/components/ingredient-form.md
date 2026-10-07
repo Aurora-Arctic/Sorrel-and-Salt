@@ -1,35 +1,42 @@
 # IngredientForm
 
-`src/components/IngredientForm/` — every property of a coven's own
-ingredient, on react-hook-form with the Zod resolver (DESIGN.md §14). It
-validates with the shared `LocalIngredientInput` before the mutation is sent,
-sends `createWorkspaceIngredient`, and puts an error from either side beside
-the field it names. It is built standalone: the add and edit modals and the
-admin compendium page wrap it rather than containing their own form.
+`src/components/IngredientForm/` — every property of an ingredient, on
+react-hook-form with the Zod resolver (DESIGN.md §14): a coven's new one, or a
+compendium entry, new or edited (M5.5). It validates with the shared
+`LocalIngredientInput`, or `CompendiumIngredientInput` on the compendium,
+before the mutation is sent, sends `createWorkspaceIngredient` or the
+compendium mutations, and puts an error from either side beside the field it
+names. It is built standalone: the add and edit modals and the admin
+compendium page wrap it rather than containing their own form.
 
 | File                  | What it holds                                                                                                                                                                     |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.tsx`           | The form: the mutation, the fields in order, the root alert, where a server error goes, and focus after a submit                                                                  |
+| `index.tsx`           | The form: the mutations, the fields in order, the root alert, where a server error goes, focus after a submit, and an edit's delete and MB.82's question                          |
 | `fields.tsx`          | `TextField`, `SuggestField`, `SelectField`, `MultiSelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip` |
 | `suggestions.tsx`     | The lookups (M5.10a, MB.131): the queries, `useLookup`, which debounces each, the shapes, and `FormField` and `LookupListField`, which wire one to its field                      |
-| `duplicates.tsx`      | The duplicate warning (M5.10): its query, `usePossibleDuplicates`, and `NameField`, the name field with the warning beneath it                                                    |
+| `duplicates.tsx`      | The duplicate warning (M5.10): its query, `useDuplicateWarning`, and `NameField`, the name field with the warning beneath it                                                      |
 | `references.tsx`      | The References field (MB.154): its search's query, and `ReferencesField`, the box, New Reference, the rows beneath and their locators                                             |
 | `categories.tsx`      | The Categories field (MB.126): its query, and `CategoryField`, which holds [`CategoryPicker`](category-picker.md) on `categoryIds` and names a pick's error by its chip           |
 | `reference-panel.tsx` | The new reference panel (MB.154): `createReference`, each kind's fields, `toReferenceInput`, and its own react-hook-form                                                          |
-| `values.ts`           | The empty values, `toInput`, `addEntry`, `commitDraft`, `fieldNameOf`, the resolver, and `issuesOf`, which reads a failed save                                                    |
+| `values.ts`           | The empty values, `toInput`, `addEntry`, `commitDraft`, `fieldNameOf`, the two resolvers, a coven's and the compendium's, and `issuesOf`, which reads a failed save               |
+| `options.ts`          | The closed sets' choices, `NOMENCLATURE_OPTIONS` and `ELEMENT_OPTIONS`, which the admin compendium filter shares                                                                  |
 | `types.ts`            | The props, the form's own values, and the input it sends                                                                                                                          |
 
 ## The props contract
 
-| Prop          | Meaning                                                                                                                                                                                                                                             |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `workspaceId` | The coven the new ingredient is written to. It goes to `createWorkspaceIngredient` as its argument.                                                                                                                                                 |
-| `onSaved`     | Called with the saved row (`id`, `name`) once the server has accepted it, and which save was pressed: `'open'`, Save Ingredient, for the page to open the new ingredient, or `'another'`, Save & Add Another, after which the form clears (MB.131). |
+The props are a union on `workspaceId` (`IngredientFormProps`, `types.ts`):
+a coven's id writes that coven's new ingredient, and `null` writes the
+compendium — a new entry, or the `entry` given. A coven's edit is M8.16's,
+so the union cannot say one yet.
 
-Only the workspace create is wired. A compendium entry takes
-`CompendiumIngredientInput`, whose `nomenclature` has no default, so M5.5's
-form marks the classification required always, where this one never does. An edit takes the whole row through `updateIngredient`. Each
-arrives with the task that wraps the form for it.
+| Prop            | Meaning                                                                                                                                                                                                                                                                                 |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workspaceId`   | The coven the new ingredient is written to, as `createWorkspaceIngredient`'s argument; or `null` for the compendium, which every lookup then asks about alone (["On the compendium"](#on-the-compendium)).                                                                              |
+| `entry`         | With a null `workspaceId` only: the compendium entry to edit, `{ id, values }`, its values in the form's own shape, `IngredientFormValues`. Left out, the form creates.                                                                                                                 |
+| `onSaved`       | Called with the saved row (`id`, `name`, `slug`) once the server has accepted it, and which save was pressed: `'open'`, Save Ingredient, for the page to open the ingredient, or `'another'`, Save & Add Another, after which the form clears (MB.131). An edit's one save is `'open'`. |
+| `onDeleted`     | Called once the `entry` given has been deleted.                                                                                                                                                                                                                                         |
+| `onCancel`      | Given, a quiet Cancel follows the saves, and calls it: the page holding the form closes it.                                                                                                                                                                                             |
+| `duplicateHref` | Where the duplicate warning links a near match. Left out, a coven's ingredient page, `/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                                           |
 
 ## The fields
 
@@ -205,8 +212,9 @@ planets, zodiac signs, deities and substitutes from `planetSuggestions`,
 `zodiacSuggestions`, `deitySuggestions` and `ingredientSuggestions`
 (MB.131). Colours take none. `suggestions.tsx` holds them all, on one hook,
 `useLookup`, and a shape per source: each debounces the box's text through
-`useDebouncedValue` (300ms, `src/lib/debounce.ts`), asks for ten rows with
-the form's `workspaceId`, keeps the last answer on screen while the next is
+`useDebouncedValue` (300ms, `src/lib/debounce.ts`), asks for ten rows under
+its scope — the form's `workspaceId`, null on the compendium, or nothing for
+the compendium's own search — keeps the last answer on screen while the next is
 fetched, and never throws: a lookup that fails offers nothing. Neither asks
 until its box has been focused, so opening the form sends no request; the
 first ask is for a blank query, the vocabulary and the names in use, which the
@@ -240,10 +248,10 @@ tradition. Picking a planet or a sign adds its value as an entry. Picking a
 curated deity adds its value linked to the deity through the row's `id`,
 reading "Hecate (Greek)" (MB.169). A deity only in use has no row, so it adds
 its value as typed text.
-On M5.5's compendium form the form, planet, sign and deity boxes are
-choose-only, offering the curated rows alone with no typed row, since the
-compendium services refuse any other value beside its field (MB.162;
-[`validation.md`](../validation.md), "The two ingredient variants").
+On the compendium the form, planet, sign and deity boxes are pick-only,
+since the compendium services refuse any other value beside its field
+(MB.162; [`validation.md`](../validation.md), "The two ingredient
+variants"); ["On the compendium"](#on-the-compendium) says how.
 
 A substitute row is the ingredient's label and formal name, "Mockwort
 (Fixtura vulgaris)", and a second line saying whose it is, "Compendium entry"
@@ -269,9 +277,11 @@ what you typed" is not offered for text the list would refuse (the
 combobox's `offerTyped`). A pick is therefore never a repeat, and only Add
 and Enter refuse one.
 
-A compendium entry's substitutes may link only the compendium, so the admin
-form M5.5 wraps reads `compendium(query)` in their place; this form writes
-only a coven's ingredient.
+A compendium entry's substitutes may link only the compendium, so on the
+compendium the box reads `compendium(query)` in their place,
+`useCompendiumSubstitutes`, each row a compendium entry with its form as its
+note, and leaves out the entry being edited, since nothing is its own
+substitute.
 
 ### The categories
 
@@ -416,9 +426,10 @@ provides them, and its errors render through `FieldError`.
   typed. The field counts each request and the panel focuses on each new
   count, as it does when it opens.
 
-Only the coven's form is wired. M5.5's compendium page writes the
-compendium's sources, with `createReference` and a null `workspaceId`, and
-searches the compendium's alone; nothing edits a saved source yet.
+On the compendium the search and the panel ask with a null `workspaceId`:
+the search offers the compendium's sources alone, and Save Reference writes
+one to the compendium, under the admin proof. Nothing edits a saved source
+yet.
 
 ### The form's pick
 
@@ -449,11 +460,11 @@ the row's id, the name picked, its group and its description (MB.169).
 - **Save & Add Another clears it** with the rest, since `EMPTY_VALUES` holds
   `formLink: null`.
 
-The form only creates, so nothing yet reads a pick back into it. An edit
-form would prefill the link from `Ingredient.formChoice`, the curated form
-with its group, and each deity's from `IngredientDeity.deity` with its
-tradition (MB.167). A pick retired since then reads as `null`, so it shows
-as typed text.
+An edit is given its picks back in its values: the compendium page reads
+the curated form with its group, and each picked deity with its tradition,
+as `Ingredient.formChoice` and `IngredientDeity.deity` resolve them
+(MB.167; ["On the compendium"](#on-the-compendium)). A pick retired since
+then reads as typed text.
 
 ### The duplicate warning
 
@@ -461,7 +472,9 @@ Story 16's "did you mean" (M5.10), on MB.11's `possibleDuplicates`
 ([`graphql/schema.md`](../graphql/schema.md), "possibleDuplicates").
 `useDuplicateWarning` watches the name and asks once it has settled, through
 the same `useDebouncedValue` the lookups wait on, for the three closest
-entries in the compendium and this coven. A blank name asks nothing and drops
+entries in the compendium and this coven — on the compendium, the
+compendium's alone, less the entry being edited, which its own name always
+matches. A blank name asks nothing and drops
 the last warning. The threshold is the server's, M4.7's 0.4, so "no warning
 below threshold" is an empty answer; the form adds no threshold of its own.
 Unlike the lookups it needs no focus gate: an empty form has no name to send.
@@ -471,8 +484,10 @@ The warning sits beneath the field, a plain `.notice`: "Did you mean Cat's
 Claw (Uncaria tomentosa), Cat's Claw (Felis catus) or Mockleaf?", with a
 Create Anyway button. Each match is a link named by its label and its formal
 name, since the label alone can name five plants; one with no formal name
-shows its label. Each links to `/ingredients/[id]`, DESIGN.md §9's signed-in
-page, which reaches compendium and coven entries alike. It is a plain anchor,
+shows its label. Each links where `duplicateHref` says — the admin's
+compendium page opens the match's own modal, `?edit=<slug>` — and by
+default to `/ingredients/[id]`, DESIGN.md §9's signed-in page, which
+reaches compendium and coven entries alike. It is a plain anchor,
 as [`AdminNav`](admin-nav.md)'s are, since typed routes refuse a page the
 build does not contain; M8.19 builds the page, and the link becomes a
 `<Link>`. Nothing refuses the create on the server: the warning is the
@@ -588,7 +603,8 @@ parses the sent input with that schema to show it.
 
 ## After a save
 
-**Two saves**, the owner's call during MB.131. **Save Ingredient** is the
+**Two saves** on a new ingredient, the owner's call during MB.131; an edit
+has the first alone. **Save Ingredient** is the
 primary, a `.btn--solid`, and first, so it is the form's default: Enter in a
 field presses it. It saves and asks the page to open what it made, passing
 `'open'` to `onSaved`. The form navigates nowhere itself: the page that
@@ -614,8 +630,79 @@ reset is an effect on a count of landed saves rather than on
 `isSubmitSuccessful`, which a save held on the duplicate warning sets too,
 and it comes after react-hook-form's own end-of-submit update. The focus
 finds Name in the page, as the error focus does: `setFocus` reads a ref the
-reset has just dropped. Only the create is wired; what an edit does after its
-save is settled by the task that wires it.
+reset has just dropped. An edit's save is
+["On the compendium"](#on-the-compendium)'s.
+
+## On the compendium
+
+With a null `workspaceId` the form writes a compendium entry (M5.5), the
+site admin's, through the compendium mutations
+([`graphql/schema.md`](../graphql/schema.md), "The compendium mutations").
+
+- **The classification is required.** `compendiumResolver` validates with
+  `CompendiumIngredientInput`, whose `nomenclature` has no default, since
+  every compendium entry declares one (DESIGN.md §5), and the select is
+  marked required, where a coven's never is.
+- **The form, planet, sign and deity boxes are pick-only** (MB.162). Each
+  offers the curated rows alone, since a value only in use is one the
+  services refuse, and lists them flat, under no From Compendium heading,
+  since every row is the compendium's (`curated` dropped, so the combobox
+  draws one bucket), with no typed row (the combobox's `offerTyped`) and, on
+  a list, no Add (`ListField`'s `pickOnly`). Enter on text not picked adds
+  nothing and says `Pick "Moon-ish" from the list` at the box, keeping the
+  text to search on. A save is refused while such a box holds text, `Pick
+"Moon-ish" from the list, or clear the box`, and while the form is typed
+  rather than picked, "Pick a form from the list" — the resolver's, beside
+  the box, before the service would. Folk names and colours stay free text,
+  having no curated list.
+- **Every lookup reads the compendium alone.** The folk names, the
+  references and their panel, and the duplicate warning ask with a null
+  `workspaceId`; the substitutes search `compendium(query)`
+  (["The lookups"](#the-lookups)).
+- **A new entry** has both saves, and sends `createCompendiumIngredient`.
+- **An edit is the `entry` given.** The form opens on its values and has one
+  save, Save Ingredient, off until something changes. It sends
+  `updateCompendiumIngredient` with the whole entry, every field present and
+  `formId: ""` for no pick, as the update input takes it (MB.159). Saved, it
+  says "Saved Testwort." and resets to what it saved, so Save is off again
+  until the next change.
+- **The categories are MB.126's field, here as on a coven's form.** An
+  edit opens with the entry's picked, and the update, which replaces the
+  whole entry, sends them all, so categories left alone stay
+  ([`design-decisions/m5.5-admin-compendium.md`](../design-decisions/m5.5-admin-compendium.md)).
+- **Delete Ingredient** stands apart at the far end of an edit's actions,
+  `.btn--destructive`. Pressed, it asks in place of the actions, `Delete
+"Testwort"? It leaves the compendium; a spell holding it keeps it.`, with
+  Delete, destructive, and Keep It, quiet, as
+  [`CategoryForm`](category-form.md) asks. Delete sends
+  `deleteCompendiumIngredient`, busy until the answer, and calls
+  `onDeleted`; a refusal drops the question and shows the server's message
+  as an alert above the fields.
+- **MB.82's question.** A save taking an address another entry still
+  redirects from is refused at `['endRedirect']`
+  ([`db/ingredient-slugs.md`](../db/ingredient-slugs.md), "Ingredient
+  slugs"). That issue is no field's, so the form asks in place of the
+  actions: the server's message, then **End Redirect & Save**, which sends
+  the same input again with `endRedirect: true`, and **Keep It**, which
+  drops the question and sends nothing, the entry left as typed.
+
+**On the admin page.** `/admin/compendium` opens the form in `Modal`'s wide
+size from its address, as `/admin/categories` opens CategoryForm: `?new` an
+empty form, `?edit=<slug>` the entry at that slug, through
+`resolveCompendiumSlug`. An old address redirects to the entry's current
+`?edit=`, and one naming nothing opens nothing and says so in an alert above
+the list. The edit's values are built on the navigation by
+`src/app/admin/compendium/entry-values.ts`, `server-only`, from the services
+`Ingredient`'s fields resolve through — folk names, categories, substitutes,
+deities with their traditions, references with their citations, and the
+form's pick with its group — so opening the modal sends no browser read
+(CLAUDE.md rule 1). `compendium-dialog.tsx` is the client glue: Save
+Ingredient replaces the address with the saved entry's `?edit=`, at the
+slug its name now spells; Save & Add Another stays on `?new`; a delete,
+Cancel and the modal's close replace it with the list's, filter and cursor
+kept; and each refreshes, so the list re-reads. A near match opens its own
+modal over the same list. Why a wide modal, and `?edit=` after a save:
+[`design-decisions/m5.5-admin-compendium.md`](../design-decisions/m5.5-admin-compendium.md).
 
 ## One error element, two sources
 
@@ -666,7 +753,9 @@ the pick named is edged ("The categories", above).
 | any other GraphQL error                   | one empty-path issue, carrying the error's own message      |
 | no GraphQL answer at all (a failed fetch) | one empty-path issue: "That didn't work. Please try again." |
 
-Each placeable issue goes in through `setError`. Every other issue joins one
+Each placeable issue goes in through `setError`, bar
+`['endRedirect']`, which is a question rather than an error
+(["On the compendium"](#on-the-compendium)). Every other issue joins one
 root error. DESIGN.md §7 leaves a `FORBIDDEN` or `NOT_FOUND` to the page.
 Until something wrapping the form does more with one, it shows as the root
 alert with the service's message rather than failing silently.
@@ -707,7 +796,10 @@ The component's own stylesheet sets the form's width, a column of at most
 the row a list's box shares with Add, draws an entry's tooltip, and puts each
 label and its info tip, or a legend and its tip, on one positioned row, so an
 open tip lies above the label from the column's edge rather than hanging off
-the icon. The duplicate warning's region cancels the field's gap while it is
+the icon. The actions wrap on a narrow screen, an edit's Delete Ingredient
+pushed to the far end, away from the saves, as CategoryForm's Delete
+Category is, and a question asked in their place sits a step below the
+fields. The duplicate warning's region cancels the field's gap while it is
 empty, since a live region stays in the page, and its notice puts the gap
 back, with a step more padding beneath Create Anyway than the notice's own. A list's legend and its box sit a step further apart than a single
 field's label and control. The box, its entries and its list are the
@@ -769,6 +861,10 @@ same pause, and refused by its title as an ingredient is by its name. The worksh
 the story says beneath the buttons where its page would go,
 "/ingredients/<id>", in a `.story-note` from `.ladle/story-frame.scss`;
 Save & Add Another clears it.
+`Compendium` and `CompendiumEntry` (M5.5) are the form on the compendium,
+new and given an entry to edit, on the same stand-in, which also answers the
+compendium's substitute search and its three writes: a name holding
+"redirect" meets MB.82's question until it is sent again confirmed.
 The original `fetch` is put back on unmount. The TanStack Query client is the
 workshop's global provider's: a second provider would split the cache, which
 `tests/guards/graphql-client.test.ts` refuses. This replaces M5.10's
@@ -919,11 +1015,29 @@ where the schema is, `tests/modules/ingredients/validation/`
 (`reference-format.test.ts` and `reference.test.ts`), with the server's
 storing of them in `services/references.test.ts`.
 
+**On the compendium** is `tests/components/IngredientForm/compendium.test.tsx`
+(M5.5), with the compendium mutations answered by MSW. A new entry: the
+classification marked required and a save refused without one; a create
+sent with `categoryIds: []` and `'open'`; Save & Add Another kept; Cancel
+offered when given; a near match linked where `duplicateHref` says. The
+lookups: every one asked with a null `workspaceId`; the vocabulary boxes
+offering the curated rows alone, flat, and no typed row; no Add on a planet, sign
+or deity; Enter on text not picked refused, the text kept; a save held while
+a pick-only box holds text, and on a typed form; substitutes from
+`compendium`, less the entry itself. An entry given: its values shown, one
+save, off until something changes; the update sent whole, its categories
+carried through, and shown picked with a new pick saved beside them; the duplicate warning leaving the entry out; MB.82's
+question, End Redirect & Save sending again with `endRedirect: true`, and
+Keep It sending nothing; a delete confirmed and `onDeleted` called; Keep It,
+and a refused delete's alert.
+
 Role and label queries only. It runs in the `dom` (jsdom) Vitest project —
 `npm run test:coverage`.
 
 **Accessibility is asserted in Playwright** (CLAUDE.md, Testing), once a page
-holds the form: M5.5's admin page and M8.16's modal each carry an axe scan.
+holds the form: `tests/e2e/admin-compendium.spec.ts` scans M5.5's admin page
+with the list, the empty form in its modal, a lookup open inside it, and an
+edit just saved, and M8.16's modal will carry its own.
 MB.154's References field was driven in a browser — Ladle's story through
 the `playwright-server` service, at 375px in both themes — and scanned
 with `@axe-core/playwright` at each state: the suggestions open, three
@@ -934,7 +1048,8 @@ the story is a fragment. Until then the form was scanned by hand in M5.9, agains
 in both themes, blank, after a failed save, with a tip open and with the
 formal name shut: no WCAG 2.2 AA or best-practice violations. M5.10a's
 combobox was not scanned in a browser, the devcontainer having none; its
-ARIA is Downshift's, and M5.5's scan is the first over it. Axe could not
+ARIA is Downshift's, and M5.5's spec is the first scan over it: it found
+the buckets' `group` role on an `li`, fixed in the Combobox, and passes. Axe could not
 decide the contrast of the selects, whose chevron is a gradient, or of a
 field an open tip overlaps. Those were measured instead: the placeholder
 4.70:1 light and 6.69:1 dark, and an open tip 5.6:1 and 6.59:1.

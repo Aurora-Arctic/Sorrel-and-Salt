@@ -156,4 +156,26 @@
   .fieldset__legend {
     padding: 0 space(1);
   }
+
+  // Its buttons a little further from its fields than they are from each
+  // other, and as far again from its edge, as a form's are (M5.5).
+  > .form__actions {
+    margin-block: space(2);
+  }
+}
+
+// An edit's Delete, apart from the saves at the far end, so it is not
+// pressed for one; and the actions wrap on a phone rather than overflow.
+.ingredient-form__actions {
+  flex-wrap: wrap;
+}
+
+.ingredient-form__delete {
+  margin-left: auto;
+}
+
+// A question in place of the actions — MB.82's redirect, or a delete.
+.ingredient-form__confirm {
+  // Where the buttons it stands in for would be (M5.5).
+  margin-block: space(2);
 }

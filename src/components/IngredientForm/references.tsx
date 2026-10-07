@@ -36,7 +36,7 @@ import { sourceTierOf } from './values';
 // are sent (claude-docs/components/ingredient-form.md, "The references").
 
 export const ReferenceSuggestionsDocument = graphql(`
-  query ReferenceSuggestions($workspaceId: ID!, $query: String, $first: Int) {
+  query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {
     referenceSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
       edges {
         node {
@@ -57,8 +57,8 @@ const referenceOptions = (data: ReferenceSuggestionsQuery): ReferenceOption[] =>
   });
 
 /** The sources the search offers for `text`, once it has settled, while `active`. */
-const useReferenceSuggestions = (workspaceId: string, text: string, active: boolean) =>
-  useLookup(ReferenceSuggestionsDocument, workspaceId, text, active, referenceOptions);
+const useReferenceSuggestions = (workspaceId: string | null, text: string, active: boolean) =>
+  useLookup(ReferenceSuggestionsDocument, { workspaceId }, text, active, referenceOptions);
 
 /** What a locator is, behind the tip beside each row's Locator. */
 const LOCATOR_HINT =
