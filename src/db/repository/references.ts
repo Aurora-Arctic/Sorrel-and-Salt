@@ -89,22 +89,26 @@ export function findManyReferences(
 }
 
 /**
- * One page of the live references a coven's ingredient may cite — the
- * compendium's and the proof's coven's (MB.151) — whose authors, title or
- * container is word-similar to `query`, each side accent-folded as the
- * compendium search folds names, best match first and keyed `[-score,
- * title]`. A blank `query` lists both tiers by title. The rendered citation
- * exists only in TypeScript, so this matches the fields it is rendered from
- * (claude-docs/db/references.md).
+ * One page of the live references an ingredient may cite — the compendium's
+ * and those of a coven one of `memberships` proves (MB.151) — whose authors,
+ * title or container is word-similar to `query`, each side accent-folded as
+ * the compendium search folds names, best match first and keyed `[-score,
+ * title]`. No proofs reads the compendium's alone, which is what a compendium
+ * entry may cite (M5.5). A blank `query` lists the tiers read by title. The
+ * rendered citation exists only in TypeScript, so this matches the fields it
+ * is rendered from (claude-docs/db/references.md).
  */
 export function findReferenceSuggestions(
-  membership: Membership,
+  memberships: readonly Membership[],
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<ReferenceRow, CompendiumScore>[]> {
   const trimmed = query.trim();
   const scope = and(
-    or(inCompendium(references), scopedTo(membership, references)),
+    or(
+      inCompendium(references),
+      ...memberships.map((membership) => scopedTo(membership, references)),
+    ),
     notSoftDeleted(references),
   );
   if (!trimmed) {

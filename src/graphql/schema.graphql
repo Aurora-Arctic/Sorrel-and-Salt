@@ -33,6 +33,55 @@ type CommonNameSuggestion {
   value: String!
 }
 
+input CompendiumIngredientInput {
+  canonicalName: String
+
+  """The categories it is filed under."""
+  categoryIds: [ID!]
+  colors: [String!]
+  deities: [IngredientDeityInput!]
+  description: String
+  elements: [IngredientElement!]
+  folkNames: [String!]
+  form: String
+
+  """The curated form picked for `form`."""
+  formId: ID
+  name: String!
+  nomenclature: Nomenclature!
+  planets: [String!]
+  references: [ReferenceLinkInput!]
+  safetyNotes: String
+  substitutes: [SubstituteInput!]
+  zodiacSigns: [String!]
+}
+
+"""
+The whole entry, replacing the row. Every field is sent, and "" or [] clears one.
+"""
+input CompendiumIngredientUpdateInput {
+  canonicalName: String!
+
+  """The categories it is filed under; [] when none."""
+  categoryIds: [ID!]!
+  colors: [String!]!
+  deities: [IngredientDeityInput!]!
+  description: String!
+  elements: [IngredientElement!]!
+  folkNames: [String!]!
+  form: String!
+
+  """The curated form picked for `form`; "" when there is none."""
+  formId: ID!
+  name: String!
+  nomenclature: Nomenclature!
+  planets: [String!]!
+  references: [ReferenceLinkInput!]!
+  safetyNotes: String!
+  substitutes: [SubstituteInput!]!
+  zodiacSigns: [String!]!
+}
+
 type CorrespondenceSuggestion {
   curated: Boolean!
   description: String
@@ -218,6 +267,13 @@ scalar LocalDate
 
 type Mutation {
   createCategory(input: CategoryInput!): Category!
+  createCompendiumIngredient(
+    """
+    Confirms ending another entry's redirect from the address this write takes (MB.82).
+    """
+    endRedirect: Boolean
+    input: CompendiumIngredientInput!
+  ): Ingredient!
   createIngredientFormValue(input: IngredientFormValueInput!): IngredientFormValue!
 
   """A null workspaceId writes the compendium's, under the admin proof."""
@@ -228,6 +284,9 @@ type Mutation {
   A soft delete, refused while a live compendium entry is filed under it; a coven keeps its links.
   """
   deleteCategory(id: ID!): ID!
+
+  """A soft delete; a spell holding the entry still reaches it."""
+  deleteCompendiumIngredient(id: ID!): ID!
   deleteIngredient(id: ID!, workspaceId: ID!): ID!
 
   """
@@ -238,6 +297,16 @@ type Mutation {
 
   """Replaces the category; the slug follows the name."""
   updateCategory(id: ID!, input: CategoryInput!): Category!
+
+  """Replaces the entry; the slug follows the name."""
+  updateCompendiumIngredient(
+    """
+    Confirms ending another entry's redirect from the address this write takes (MB.82).
+    """
+    endRedirect: Boolean
+    id: ID!
+    input: CompendiumIngredientUpdateInput!
+  ): Ingredient!
   updateIngredient(id: ID!, input: IngredientUpdateInput!, workspaceId: ID!): Ingredient!
 
   """
@@ -271,10 +340,10 @@ type Query {
   The live categories by name, each under a live group: those whose name holds `query`, case-insensitively, and those filed under `groupId`, when given.
   """
   categories(after: String, before: String, first: Int, groupId: ID, last: Int, query: String): QueryCategoriesConnection!
-  commonNameSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryCommonNameSuggestionsConnection!
-  compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, query: String, withoutReferences: Boolean): QueryCompendiumConnection!
-  deitySuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryDeitySuggestionsConnection!
-  formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryFormSuggestionsConnection!
+  commonNameSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryCommonNameSuggestionsConnection!
+  compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, nomenclature: Nomenclature, query: String, withoutReferences: Boolean): QueryCompendiumConnection!
+  deitySuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryDeitySuggestionsConnection!
+  formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryFormSuggestionsConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient!
 
   """
@@ -289,11 +358,11 @@ type Query {
   ingredientSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryIngredientSuggestionsConnection!
   me: User!
   ok: Boolean!
-  planetSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryPlanetSuggestionsConnection!
-  possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID!): QueryPossibleDuplicatesConnection!
-  referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryReferenceSuggestionsConnection!
+  planetSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryPlanetSuggestionsConnection!
+  possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!
+  referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String): QueryUsersConnection!
-  zodiacSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryZodiacSuggestionsConnection!
+  zodiacSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryZodiacSuggestionsConnection!
 }
 
 type QueryCategoriesConnection {

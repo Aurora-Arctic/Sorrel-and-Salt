@@ -131,6 +131,14 @@ type CorrespondenceSuggestion {
   `Forbidden`, a site admin included. The field carries no scope, because
   `pagedConnection` takes none and the resolver's null check is the same
   early refusal.
+- **A null `workspaceId` reads the compendium alone** (M5.5): the curated
+  rows, then the values in use in the compendium, under no proof, so no
+  membership is asked and any signed-in caller is answered. It is the admin's
+  compendium form, which names no coven; signed out is still refused, because
+  MB.80's public line is drawn field by field and no public page reads these.
+  The form, not the field, keeps a compendium entry to the curated rows
+  (MB.162; [`components/ingredient-form.md`](../components/ingredient-form.md),
+  "On the compendium").
 
 ### `formSuggestions` and `commonNameSuggestions`
 
@@ -141,13 +149,13 @@ is registered by `vocabulary`, over the same finder as the two above;
 ```graphql
 type Query {
   formSuggestions(
-    workspaceId: ID!
+    workspaceId: ID # null reads the compendium alone (M5.5)
     query: String
     first: Int
     after: String
   ): QueryFormSuggestionsConnection!
   commonNameSuggestions(
-    workspaceId: ID!
+    workspaceId: ID
     query: String
     first: Int
     after: String
@@ -192,7 +200,8 @@ type SuggestionClaimant {
   display name of five seeded rows, and the story's own example.
 - The refusals are `planetSuggestions`': `Forbidden` from the resolver when
   signed out, from `assertMembership` when signed in elsewhere, a site admin
-  included.
+  included. So is a null `workspaceId`, which reads the compendium alone
+  (M5.5), its claimants included.
 
 ### `deitySuggestions`
 
@@ -220,7 +229,7 @@ type DeitySuggestion {
 - Each live row of an ingredient's deities, in `ingredient_deities`
   (MB.167), is one value in use, folded and counted once, from the compendium
   and the named workspace only.
-- The refusals are `planetSuggestions`'.
+- The refusals, and a null `workspaceId`, are `planetSuggestions`'.
 
 ### `possibleDuplicates`
 
@@ -263,6 +272,9 @@ type QueryPossibleDuplicatesConnectionEdge {
   `assertMembership` for `ingredient: ['read']`, which refuses a coven the
   caller is not in, a site admin included. A viewer is answered, because every
   row the field returns is one a reader of the coven could already list.
+- **A null `workspaceId` matches the compendium alone** (M5.5), asking no
+  membership, as `planetSuggestions` does: the admin's compendium form,
+  which drops the entry being edited from what it shows.
 
 ### `ingredientSuggestions`
 
@@ -324,13 +336,16 @@ type QueryCompendiumConnectionEdge {
   transposed pair both find their entry; every listed category (AND; M8.12
   adds a mode); the form under `canonical_key`'s fold. The browser never holds more than a page (rule
   8), so it cannot be the search, which is why M8.4's client-side
-  `filterIngredients()` was retired (DESIGN.md §14). `element` (M8.13) and
-  `nomenclature` (M5.5) are those tasks' arguments to add; `element` matches
-  an entry whose `elements` holds it, among others or alone (MB.157).
-  `withoutReferences: true` (MB.153) is the admin's to-do list, which M5.5
-  puts on the page: only the entries citing no live compendium reference, so
-  an entry whose one link is unlinked, or cites a soft-deleted reference, is
-  on it, as its bibliography reads empty. `false` or left out is no filter.
+  `filterIngredients()` was retired (DESIGN.md §14). `element` (M8.13) is
+  that task's argument to add, and matches an entry whose `elements` holds
+  it, among others or alone (MB.157). The admin's two to-do lists, which M5.5
+  puts on `/admin/compendium`: `withoutReferences: true` (MB.153), only the
+  entries citing no live compendium reference, so an entry whose one link is
+  unlinked, or cites a soft-deleted reference, is on it, as its bibliography
+  reads empty; and `nomenclature` (M5.5), only the entries so classified, so
+  `unknown` is the formal names still to look up. Either left out, or
+  `withoutReferences: false`, is no filter, and `totalCount` counts under
+  the same filter.
 - **A search is ranked, best match first.** It pages
   `(score DESC, name, id)`, and each edge carries `score`: the row's word
   similarity to the query, the best of the label, the formal name and its folk
@@ -514,6 +529,44 @@ signatures DESIGN.md §7's sketch gives them.
 mutations through Yoga with the route's `maskedErrors`, so each refusal is
 asserted as the browser receives it.
 
+### The compendium mutations
+
+Story 18's writes (M5.5), registered by `ingredients` in
+`graphql/compendium-entries.ts` over M5.2's services
+([`db/compendium-writes.md`](../db/compendium-writes.md), "Compendium
+writes"): `createCompendiumIngredient`, `updateCompendiumIngredient` and
+`deleteCompendiumIngredient`, with the signatures DESIGN.md §7's sketch
+gives them. Everything the workspace mutations above say of the inputs'
+lists, the answer and a refusal holds here, bar the tier and MB.162's
+curated values.
+
+- **The site admin's alone, twice.** Each carries `authScopes: { admin: true }`,
+  and the service's `assertSiteAdmin` refuses again; a coven's owner is
+  refused as its viewer is. No coven is an argument, and neither input
+  declares a tier or a stamp.
+- **`CompendiumIngredientInput` is the create's**: `IngredientInput`'s
+  fields with `nomenclature` required, since every compendium entry declares
+  one (DESIGN.md §5). Leaving it out is a schema error before any resolver
+  runs.
+- **`CompendiumIngredientUpdateInput` is the whole entry**, every field
+  non-null, `""` or `[]` clearing one and `formId: ""` for no pick, as
+  `IngredientUpdateInput` is (MB.159). `categoryIds` is among them, so an
+  update that left it out cannot silently unfile the entry. The update clears
+  the entry from the five child loaders first, as `updateIngredient` does.
+- **`endRedirect` answers MB.82's question.** A write taking an address
+  another entry still redirects from is `VALIDATION` with one `fieldErrors`
+  entry at `['endRedirect']`, naming that entry and when its window
+  closes; the same call with `endRedirect: true` goes through
+  ([`db/ingredient-slugs.md`](../db/ingredient-slugs.md), "Ingredient
+  slugs").
+- **A delete is soft and answers the deleted id**, as `deleteIngredient`
+  does; a spell holding the entry still reaches it. A coven's ingredient, a
+  deleted entry and an id that names nothing are `NOT_FOUND`, so the admin
+  reaches no coven's row by id.
+
+`tests/modules/ingredients/graphql/compendium-entries.test.ts` runs the
+three through Yoga with the route's `maskedErrors`.
+
 ### References: `Reference`, `createReference`, `updateReference` and `referenceSuggestions`
 
 A source, kept once and linked from every row it supports (DESIGN.md §5,
@@ -550,7 +603,9 @@ A source, kept once and linked from every row it supports (DESIGN.md §5,
   `title` and `container`, accents folded, best match first. It cannot match
   the rendered citation, which rule 7 would need in SQL. A blank `query`, or
   one under two characters, lists both tiers by title. The refusals are
-  `ingredientSuggestions`'.
+  `ingredientSuggestions`'. A null `workspaceId` reads the compendium's
+  alone, asking no membership, which is all a compendium entry may cite
+  (M5.5; `planetSuggestions`' bullet says why it stays signed-in).
 
 `tests/modules/ingredients/graphql/references.test.ts` runs the writes, the
 search, `Ingredient.references` and the to-do filter through Yoga.
@@ -642,7 +697,7 @@ gate (CLAUDE.md rule 1), and a scope on a field is a cheap early refusal in
 front of it: `me` carries `signedIn`; `User.email`, `role` and
 `canCreateWorkspace` carry `{ self: user.id, admin: true }`, which holds if
 either does; M5.7 puts `admin` on every admin mutation, and M5.6's three
-category writes carry it from the first. `ok` and the
+category writes and M5.5's three compendium writes carry it from the first. `ok` and the
 compendium's queries, `categories` among them, carry no scope at all, and the sweep above names
 them so. The private fields'
 test hands `me` another user's row, standing in for a service that chose the

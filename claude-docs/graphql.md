@@ -29,7 +29,7 @@ The endpoint sets `cors: false` and sends no `Access-Control-*` headers, because
 
 ## The schema
 
-Code-first Pothos with no ORM plugin and fields non-null by default: the `DateTime` scalar, `AuditInfo`, every field from `me` to the workspace ingredient mutations, the `signedIn`, `admin` and `self` scopes as the second check, and the committed `schema.graphql` snapshot. [`graphql/schema.md`](graphql/schema.md)
+Code-first Pothos with no ORM plugin and fields non-null by default: the `DateTime` scalar, `AuditInfo`, every field from `me` to the workspace and compendium ingredient mutations, the `signedIn`, `admin` and `self` scopes as the second check, and the committed `schema.graphql` snapshot. [`graphql/schema.md`](graphql/schema.md)
 
 ### `me`, `User` and the first module types
 
@@ -62,6 +62,10 @@ In [`graphql/schema.md`](graphql/schema.md#compendium-ingredient-and-ingredientf
 ### The workspace ingredient mutations
 
 In [`graphql/schema.md`](graphql/schema.md#the-workspace-ingredient-mutations).
+
+### The compendium mutations
+
+In [`graphql/schema.md`](graphql/schema.md#the-compendium-mutations).
 
 ### References: `Reference`, `createReference`, `updateReference` and `referenceSuggestions`
 

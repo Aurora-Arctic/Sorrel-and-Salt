@@ -3,7 +3,10 @@ import { ClientError } from 'graphql-request';
 import type { FieldError, FieldErrors, FieldPath, Resolver, UseFormReturn } from 'react-hook-form';
 import type { ErrorExtensions } from '../../graphql/types';
 import type { ValidationIssue } from '../../lib/types';
-import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
+import {
+  CompendiumIngredientInput,
+  LocalIngredientInput,
+} from '@/modules/ingredients/validation/ingredient';
 import type {
   AnyListEntry,
   DeityLink,
@@ -254,73 +257,95 @@ export function commitDraft(
   return addEntry(form, list, form.getValues(`drafts.${list}`));
 }
 
-const validate = zodResolver(LocalIngredientInput, undefined, { raw: true });
+/**
+ * The lists whose entries a compendium entry may only pick from the curated
+ * rows (MB.162): folk names and colours have no curated list, and a
+ * substitute is picked from the compendium already.
+ */
+export const PICK_ONLY_LISTS: readonly ListFieldName[] = ['planets', 'zodiacSigns', 'deities'];
 
 /**
- * The shared schema as the form's resolver. It validates the values as
+ * A tier's schema as the form's resolver. It validates the values as
  * `toInput` sends them and hands back that input unparsed, so the service
  * parses what the resolver did. A list entry's issue arrives pathed to the
  * entry, and moves onto its `value` — where `fieldNameOf` puts a server's.
+ * On the compendium, where the form and the vocabulary lists are picks, text
+ * left typed is refused here, beside its box, before the service would.
  */
-export const ingredientResolver: Resolver<
-  IngredientFormValues,
-  unknown,
-  IngredientFormInput
-> = async (values, context, options) => {
-  const result = await validate(toInput(values), context, options as never);
-  const errors = { ...result.errors } as FieldErrors<IngredientFormValues>;
-  // An element's issue arrives pathed to the element, and moves onto the
-  // control — the first, as the field has one error element.
-  const elements: unknown = result.errors[WHOLE_LIST];
-  if (Array.isArray(elements)) errors[WHOLE_LIST] = elements.find(Boolean);
-  // The pick's issue moves onto the Form field, whose box made the pick. The
-  // schema raises it or one with the text, never both.
-  const picked = (result.errors as Record<string, FieldError | undefined>)[PICKED_FORM];
-  if (picked) {
-    delete (errors as Record<string, unknown>)[PICKED_FORM];
-    errors.form = picked;
-  }
-  for (const list of LIST_FIELDS) {
-    const entries: unknown = result.errors[list];
-    if (Array.isArray(entries)) errors[list] = entries.map((entry) => entry && { value: entry });
-  }
-  // A reference's issue arrives at the entry, or at its id or locator; the
-  // first two move onto the row's `value`, as `fieldNameOf` puts a server's.
-  const cited: unknown = result.errors.references;
-  if (Array.isArray(cited)) {
-    errors.references = cited.map(
-      (entry?: FieldError & { referenceId?: FieldError; locator?: FieldError }) =>
-        entry && {
-          value: entry.message === undefined ? entry.referenceId : entry,
-          locator: entry.locator,
-        },
-    ) as FieldErrors<IngredientFormValues>['references'];
-  }
-  // A box still holding text: the schema never sees a box, so the form
-  // refuses it here rather than send a list the user thinks holds it.
-  const drafts: Partial<Record<DraftName, FieldError>> = {};
-  for (const list of LIST_FIELDS) {
-    const text = values.drafts[list].trim();
-    if (text !== '') {
-      drafts[list] = { type: 'unadded', message: `Press Add to keep "${text}", or clear the box` };
+function resolverFor(
+  schema: typeof LocalIngredientInput | typeof CompendiumIngredientInput,
+  tier: 'coven' | 'compendium',
+): Resolver<IngredientFormValues, unknown, IngredientFormInput> {
+  const validate = zodResolver(schema as typeof LocalIngredientInput, undefined, { raw: true });
+  const pickOnly = tier === 'compendium';
+  return async (values, context, options) => {
+    const result = await validate(toInput(values), context, options as never);
+    const errors = { ...result.errors } as FieldErrors<IngredientFormValues>;
+    // An element's issue arrives pathed to the element, and moves onto the
+    // control — the first, as the field has one error element.
+    const elements: unknown = result.errors[WHOLE_LIST];
+    if (Array.isArray(elements)) errors[WHOLE_LIST] = elements.find(Boolean);
+    // The pick's issue moves onto the Form field, whose box made the pick. The
+    // schema raises it or one with the text, never both.
+    const picked = (result.errors as Record<string, FieldError | undefined>)[PICKED_FORM];
+    if (picked) {
+      delete (errors as Record<string, unknown>)[PICKED_FORM];
+      errors.form = picked;
     }
-  }
-  // The references' box is a search, so what it holds is never an entry;
-  // and a source half written in the panel is not one yet either (MB.154).
-  const search = values.drafts.references.trim();
-  if (values.referencePanelOpen) {
-    drafts.references = { type: 'unsaved', message: 'Save the new reference, or cancel it' };
-  } else if (search !== '') {
-    drafts.references = {
-      type: 'unadded',
-      message: `Pick a source for "${search}", or clear the box`,
-    };
-  }
-  if (Object.keys(drafts).length > 0)
-    errors.drafts = drafts as FieldErrors<IngredientFormValues>['drafts'];
-  if (Object.keys(errors).length === 0) return result;
-  return { values: {}, errors };
-};
+    for (const list of LIST_FIELDS) {
+      const entries: unknown = result.errors[list];
+      if (Array.isArray(entries)) errors[list] = entries.map((entry) => entry && { value: entry });
+    }
+    // A reference's issue arrives at the entry, or at its id or locator; the
+    // first two move onto the row's `value`, as `fieldNameOf` puts a server's.
+    const cited: unknown = result.errors.references;
+    if (Array.isArray(cited)) {
+      errors.references = cited.map(
+        (entry?: FieldError & { referenceId?: FieldError; locator?: FieldError }) =>
+          entry && {
+            value: entry.message === undefined ? entry.referenceId : entry,
+            locator: entry.locator,
+          },
+      ) as FieldErrors<IngredientFormValues>['references'];
+    }
+    // A box still holding text: the schema never sees a box, so the form
+    // refuses it here rather than send a list the user thinks holds it.
+    const drafts: Partial<Record<DraftName, FieldError>> = {};
+    for (const list of LIST_FIELDS) {
+      const text = values.drafts[list].trim();
+      if (text === '') continue;
+      drafts[list] =
+        pickOnly && PICK_ONLY_LISTS.includes(list)
+          ? { type: 'unpicked', message: `Pick "${text}" from the list, or clear the box` }
+          : { type: 'unadded', message: `Press Add to keep "${text}", or clear the box` };
+    }
+    // A form typed rather than picked: the compendium holds a curated pick alone.
+    if (pickOnly && !errors.form && values.form.trim() !== '' && values.formLink === null) {
+      errors.form = { type: 'unpicked', message: 'Pick a form from the list' };
+    }
+    // The references' box is a search, so what it holds is never an entry;
+    // and a source half written in the panel is not one yet either (MB.154).
+    const search = values.drafts.references.trim();
+    if (values.referencePanelOpen) {
+      drafts.references = { type: 'unsaved', message: 'Save the new reference, or cancel it' };
+    } else if (search !== '') {
+      drafts.references = {
+        type: 'unadded',
+        message: `Pick a source for "${search}", or clear the box`,
+      };
+    }
+    if (Object.keys(drafts).length > 0)
+      errors.drafts = drafts as FieldErrors<IngredientFormValues>['drafts'];
+    if (Object.keys(errors).length === 0) return result;
+    return { values: {}, errors };
+  };
+}
+
+/** A coven's ingredient: the classification is optional, and every box takes text. */
+export const ingredientResolver = resolverFor(LocalIngredientInput, 'coven');
+
+/** A compendium entry: the classification is required, and the vocabulary boxes take picks. */
+export const compendiumResolver = resolverFor(CompendiumIngredientInput, 'compendium');
 
 /**
  * What a failed save says, as issues pathed to the input. A `VALIDATION`

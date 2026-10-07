@@ -24,7 +24,10 @@ export default function FormDialog({
   };
   return (
     <Modal title={title} onClose={close}>
-      <IngredientFormValueForm formValue={formValue} groups={groups} onDone={close} />
+      {/* The modal's own close, so a save or a delete fades it out as Close does (M5.5). */}
+      {(fadeOut) => (
+        <IngredientFormValueForm formValue={formValue} groups={groups} onDone={fadeOut} />
+      )}
     </Modal>
   );
 }

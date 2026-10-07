@@ -4,6 +4,7 @@ import type { adminInvitations } from '../../modules/identity/schema/admin-invit
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
 import type { auditColumns } from '../../modules/identity/schema/users';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
+import type { NomenclatureKind } from '../../modules/ingredients/schema/ingredient-enums';
 import type { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { referenceLinks } from '../../modules/ingredients/schema/reference-links';
 import type { references } from '../../modules/ingredients/schema/references';
@@ -437,6 +438,8 @@ export interface IngredientFilter {
   formId?: string;
   /** Only entries citing no live compendium reference: the admin's to-do list (MB.153). */
   withoutReferences?: boolean;
+  /** Only entries declaring this nomenclature (M5.5). */
+  nomenclature?: NomenclatureKind;
 }
 
 /** What a compendium entry carries onto its edge: its word similarity to the query, on a search. */

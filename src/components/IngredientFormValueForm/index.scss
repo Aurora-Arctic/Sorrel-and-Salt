@@ -12,7 +12,8 @@
 }
 
 .ingredient-form-value-form__confirm {
-  margin-top: space(4);
+  // Where the buttons it stands in for would be (M5.5).
+  margin-block: space(2);
 }
 
 // The rename note, a `.field__hint`, sits by the buttons it describes:

@@ -72,6 +72,14 @@ describe('CategoryForm', () => {
       expect(screen.queryByRole('button', { name: 'Delete Category' })).not.toBeInTheDocument();
     });
 
+    // A field named "name" reads to Chrome as a person's name: it flags it in
+    // the Issues panel and offers the user's own name to fill it.
+    it('turns autofill off on the name, which names no person', () => {
+      renderForm();
+
+      expect(name()).toHaveAttribute('autocomplete', 'off');
+    });
+
     it('creates the category from what was entered, then is done', async () => {
       const calls: CreateCategoryMutationVariables[] = [];
       mockGraphQLMutation<CreateCategoryMutation, CreateCategoryMutationVariables>(

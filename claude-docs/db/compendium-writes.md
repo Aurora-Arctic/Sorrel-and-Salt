@@ -17,8 +17,8 @@ alone. The slug follows the label, the form and the formal name, and the one
 an update leaves is retired and redirects for 180 days
 (["Ingredient slugs"](ingredient-slugs.md)).
 The row mapping and the folk-name diff live in one internal file,
-`services/ingredient-rows.ts`, which both services import. Categories are not
-written here, since `CompendiumIngredientInput` carries none.
+`services/ingredient-rows.ts`, which both services import. The categories
+are `categoryIds`, written in the same transaction as a coven's are (MB.125).
 
 **`nomenclature` is required.** `CompendiumIngredientInput` gives it no
 default, because every compendium entry declares a naming system, `none` and
@@ -106,4 +106,6 @@ surfacing the raw error.
 
 Firing `revalidateTag` after each write is M8.7's, once M8.6 has put the
 compendium behind the cache (CLAUDE.md rule 6). The GraphQL mutations over
-these services are M5.5's.
+these services are M5.5's: `createCompendiumIngredient`,
+`updateCompendiumIngredient` and `deleteCompendiumIngredient`
+([`graphql/schema.md`](../graphql/schema.md), "The compendium mutations").

@@ -1,4 +1,5 @@
 import type { PgTable } from 'drizzle-orm/pg-core';
+import type { updateCompendiumEntry } from '@/modules/ingredients';
 
 /** A `*_by` foreign key as `information_schema` reports it. */
 export interface Reference {
@@ -49,3 +50,6 @@ export interface SeededTable {
   name: string;
   row: () => Promise<Record<string, string>>;
 }
+
+/** What the compendium writes take, which the module keeps to itself. */
+export type CompendiumWrite = Parameters<typeof updateCompendiumEntry>[2];

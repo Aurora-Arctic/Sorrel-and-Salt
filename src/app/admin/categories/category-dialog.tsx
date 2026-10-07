@@ -22,7 +22,8 @@ export default function CategoryDialog({
   };
   return (
     <Modal title={title} onClose={close}>
-      <CategoryForm category={category} groups={groups} onDone={close} />
+      {/* The modal's own close, so a save or a delete fades it out as Close does (M5.5). */}
+      {(fadeOut) => <CategoryForm category={category} groups={groups} onDone={fadeOut} />}
     </Modal>
   );
 }

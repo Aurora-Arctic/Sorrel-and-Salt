@@ -74,6 +74,18 @@ describe('Combobox', () => {
     expect(screen.queryByRole('option')).not.toBeInTheDocument();
   });
 
+  // Chrome's Issues panel flags a field no <label> names, an aria-label
+  // notwithstanding; a hidden one names it the same.
+  it('is named by a label element of its own, hidden, rather than an aria-label', () => {
+    render(<Harness suggestions={TWO_BUCKETS} />);
+
+    expect(box()).not.toHaveAttribute('aria-label');
+    const labels = (box() as HTMLInputElement).labels!;
+    expect(labels).toHaveLength(1);
+    expect(labels[0]).toHaveTextContent('Form');
+    expect(labels[0]).toHaveClass('visually-hidden');
+  });
+
   it('can be named by a label element instead, its list and status by the label text', () => {
     render(
       <>
@@ -86,6 +98,8 @@ describe('Combobox', () => {
 
     expect(box()).not.toHaveAttribute('aria-label');
     expect(box()).toHaveAttribute('aria-labelledby', 'box-label');
+    // The caller's label alone: the box adds no hidden one beside it.
+    expect((box() as HTMLInputElement).labels).toHaveLength(1);
     expect(screen.getByRole('listbox', { name: 'Form suggestions' })).toBeInTheDocument();
     expect(screen.getByRole('status', { name: 'Form suggestions' })).toBeInTheDocument();
   });

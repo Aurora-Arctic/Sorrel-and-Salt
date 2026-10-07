@@ -7,6 +7,7 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import type {
   CommonNameSuggestionsQuery,
+  CompendiumSubstitutesQuery,
   DeitySuggestionsQuery,
   FormSuggestionsQuery,
   IngredientSuggestionsQuery,
@@ -15,6 +16,7 @@ import type {
 } from '../../gql/graphql';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
+import type { VariablesArg } from '../../lib/types';
 import type { ComboboxOption, Suggestions } from '../Combobox/types';
 import { ListField, SuggestField } from './fields';
 import type {
@@ -23,9 +25,10 @@ import type {
   FormOption,
   IngredientFormValues,
   ListOption,
-  LookupFieldProps,
+  FormFieldProps,
   LookupListFieldProps,
-  LookupVariables,
+  LookupText,
+  UseSuggestions,
 } from './types';
 import { tierOf } from './values';
 
@@ -37,7 +40,7 @@ import { tierOf } from './values';
 // lookups").
 
 const FormSuggestionsDocument = graphql(`
-  query FormSuggestions($workspaceId: ID!, $query: String, $first: Int) {
+  query FormSuggestions($workspaceId: ID, $query: String, $first: Int) {
     formSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
       edges {
         node {
@@ -57,7 +60,7 @@ const FormSuggestionsDocument = graphql(`
 `);
 
 const CommonNameSuggestionsDocument = graphql(`
-  query CommonNameSuggestions($workspaceId: ID!, $query: String, $first: Int) {
+  query CommonNameSuggestions($workspaceId: ID, $query: String, $first: Int) {
     commonNameSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
       edges {
         node {
@@ -73,7 +76,7 @@ const CommonNameSuggestionsDocument = graphql(`
 `);
 
 const PlanetSuggestionsDocument = graphql(`
-  query PlanetSuggestions($workspaceId: ID!, $query: String, $first: Int) {
+  query PlanetSuggestions($workspaceId: ID, $query: String, $first: Int) {
     planetSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
       edges {
         node {
@@ -87,7 +90,7 @@ const PlanetSuggestionsDocument = graphql(`
 `);
 
 const ZodiacSuggestionsDocument = graphql(`
-  query ZodiacSuggestions($workspaceId: ID!, $query: String, $first: Int) {
+  query ZodiacSuggestions($workspaceId: ID, $query: String, $first: Int) {
     zodiacSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
       edges {
         node {
@@ -101,7 +104,7 @@ const ZodiacSuggestionsDocument = graphql(`
 `);
 
 const DeitySuggestionsDocument = graphql(`
-  query DeitySuggestions($workspaceId: ID!, $query: String, $first: Int) {
+  query DeitySuggestions($workspaceId: ID, $query: String, $first: Int) {
     deitySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
       edges {
         node {
@@ -119,6 +122,23 @@ const DeitySuggestionsDocument = graphql(`
 const IngredientSuggestionsDocument = graphql(`
   query IngredientSuggestions($workspaceId: ID!, $query: String, $first: Int) {
     ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
+      edges {
+        node {
+          id
+          name
+          canonicalName
+          form
+          description
+          isGlobal
+        }
+      }
+    }
+  }
+`);
+
+const CompendiumSubstitutesDocument = graphql(`
+  query CompendiumSubstitutes($query: String, $first: Int) {
+    compendium(query: $query, first: $first) {
       edges {
         node {
           id
@@ -152,18 +172,25 @@ const qualified = (value: string, by: string | null | undefined): string =>
 /**
  * The rows `document` answers for `text`, once it has settled, while
  * `active`: the last answer stays on screen while the next is fetched, and a
- * lookup that fails offers nothing rather than taking the form down.
+ * lookup that fails offers nothing rather than taking the form down. `scope`
+ * is what it asks besides the text — the coven, or a null one for the
+ * compendium's alone — and nothing for the compendium's own search.
  */
-export function useLookup<TResult, O extends ComboboxOption>(
-  document: TypedDocumentNode<TResult, LookupVariables>,
-  workspaceId: string,
+export function useLookup<TResult, TScope extends object, O extends ComboboxOption>(
+  document: TypedDocumentNode<TResult, TScope & LookupText>,
+  scope: TScope,
   text: string,
   active: boolean,
   shape: (data: TResult) => O[],
 ): Suggestions<O> {
   const query = useDebouncedValue(text.trim());
   const { data, isFetching } = useQuery({
-    ...graphqlQuery(document, { workspaceId, query, first: SUGGESTION_ROWS }),
+    // Spread as the tuple `graphqlQuery` takes: its conditional type over the
+    // variables cannot resolve while the scope is generic.
+    ...graphqlQuery(
+      document,
+      ...([{ ...scope, query, first: SUGGESTION_ROWS }] as VariablesArg<TScope & LookupText>),
+    ),
     enabled: active,
     placeholderData: keepPreviousData,
     throwOnError: false,
@@ -240,29 +267,66 @@ const substituteOptions = (data: IngredientSuggestionsQuery): ListOption[] =>
     };
   });
 
+/** A compendium entry's row: what tells it from another is its form, since every row is the compendium's. */
+const compendiumOptions = (data: CompendiumSubstitutesQuery): ListOption[] =>
+  data.compendium.edges.map(({ node }) => {
+    const canonicalName = node.canonicalName ?? null;
+    return {
+      value: node.name,
+      label: qualified(node.name, canonicalName),
+      note: node.form ?? undefined,
+      key: node.id,
+      link: {
+        id: node.id,
+        canonicalName,
+        form: node.form ?? null,
+        description: node.description ?? null,
+        isGlobal: node.isGlobal,
+      },
+    };
+  });
+
 /** The form suggestions for `text`, once it has settled, while `active`. */
-export const useFormSuggestions = (workspaceId: string, text: string, active: boolean) =>
-  useLookup(FormSuggestionsDocument, workspaceId, text, active, formOptions);
+export const useFormSuggestions: UseSuggestions<FormOption> = (workspaceId, text, active) =>
+  useLookup(FormSuggestionsDocument, { workspaceId }, text, active, formOptions);
 
 /** The common names in use. */
-export const useCommonNameSuggestions = (workspaceId: string, text: string, active: boolean) =>
-  useLookup(CommonNameSuggestionsDocument, workspaceId, text, active, commonNameOptions);
+export const useCommonNameSuggestions: UseSuggestions = (workspaceId, text, active) =>
+  useLookup(CommonNameSuggestionsDocument, { workspaceId }, text, active, commonNameOptions);
 
 /** The planets, curated and in use. */
-export const usePlanetSuggestions = (workspaceId: string, text: string, active: boolean) =>
-  useLookup(PlanetSuggestionsDocument, workspaceId, text, active, planetOptions);
+export const usePlanetSuggestions: UseSuggestions = (workspaceId, text, active) =>
+  useLookup(PlanetSuggestionsDocument, { workspaceId }, text, active, planetOptions);
 
 /** The zodiac signs, curated and in use. */
-export const useZodiacSuggestions = (workspaceId: string, text: string, active: boolean) =>
-  useLookup(ZodiacSuggestionsDocument, workspaceId, text, active, zodiacOptions);
+export const useZodiacSuggestions: UseSuggestions = (workspaceId, text, active) =>
+  useLookup(ZodiacSuggestionsDocument, { workspaceId }, text, active, zodiacOptions);
 
 /** The deities, curated under their traditions, and in use. */
-export const useDeitySuggestions = (workspaceId: string, text: string, active: boolean) =>
-  useLookup(DeitySuggestionsDocument, workspaceId, text, active, deityOptions);
+export const useDeitySuggestions: UseSuggestions = (workspaceId, text, active) =>
+  useLookup(DeitySuggestionsDocument, { workspaceId }, text, active, deityOptions);
 
-/** The ingredients a coven's substitute may link: the compendium's and its own (MB.138). */
-export const useSubstituteSuggestions = (workspaceId: string, text: string, active: boolean) =>
-  useLookup(IngredientSuggestionsDocument, workspaceId, text, active, substituteOptions);
+/**
+ * The ingredients a coven's substitute may link: the compendium's and its
+ * own (MB.138). Asked only by a coven's form; the compendium's asks
+ * `useCompendiumSubstitutes`.
+ */
+export const useSubstituteSuggestions: UseSuggestions = (workspaceId, text, active) =>
+  useLookup(
+    IngredientSuggestionsDocument,
+    { workspaceId: workspaceId ?? '' },
+    text,
+    active,
+    substituteOptions,
+  );
+
+/**
+ * The entries a compendium entry's substitute may link: the compendium's
+ * alone, searched as its list is (M5.5), since a compendium substitute links
+ * only the compendium (MB.138).
+ */
+export const useCompendiumSubstitutes: UseSuggestions = (_workspaceId, text, active) =>
+  useLookup(CompendiumSubstitutesDocument, {}, text, active, compendiumOptions);
 
 /**
  * The form field, suggesting from the curated vocabulary and the forms in
@@ -270,13 +334,15 @@ export const useSubstituteSuggestions = (workspaceId: string, text: string, acti
  * the text alone cannot: Wax under _Animal_ and under _Substance_ both read
  * "Wax" (MB.169). The text stays the member's to edit, and an edit away from
  * the picked name drops the link, the owner's call: what is left is typed.
+ * On the compendium the form must be a pick (MB.162), so the box offers the
+ * curated rows alone and no typed row.
  */
-export function FormField({ workspaceId }: LookupFieldProps): ReactElement {
+export function FormField({ workspaceId, pickOnly }: FormFieldProps): ReactElement {
   const { control, getValues, setValue } = useFormContext<IngredientFormValues>();
   const text = useWatch({ control, name: 'form' });
   const link = useWatch({ control, name: 'formLink' });
   const [active, setActive] = useState(false);
-  const suggestions = useFormSuggestions(workspaceId, text, active);
+  const suggestions = curatedOnly(useFormSuggestions(workspaceId, text, active), pickOnly);
   return (
     <SuggestField
       name="form"
@@ -291,19 +357,48 @@ export function FormField({ workspaceId }: LookupFieldProps): ReactElement {
       qualifier={
         link?.group ? { text: link.group, detail: link.description ?? undefined } : undefined
       }
+      offerTyped={!pickOnly}
     />
   );
 }
 
-/** A list whose box suggests from `useSuggestions`, from the first time the box is used. */
+/**
+ * The suggestions less the rows in use alone, when `only`: what a pick-only
+ * box offers, since a value only in use is one the compendium refuses. Listed
+ * flat, `curated` dropped: every row left is the compendium's, so a From
+ * Compendium heading over them would tell the admin nothing.
+ */
+function curatedOnly<O extends ComboboxOption>(
+  found: Suggestions<O>,
+  only = false,
+): Suggestions<O> {
+  if (!only) return found;
+  const options = found.options
+    .filter((option) => option.curated !== false)
+    .map((option) => ({ ...option, curated: undefined }));
+  return { ...found, options };
+}
+
+/**
+ * A list whose box suggests from `useSuggestions`, from the first time the box
+ * is used, less `omit`: an entry is never its own substitute.
+ */
 export function LookupListField({
   workspaceId,
   useSuggestions,
+  omit,
   ...list
 }: LookupListFieldProps): ReactElement {
   const { control } = useFormContext();
   const text: string = useWatch({ control, name: `drafts.${list.name}` });
   const [active, setActive] = useState(false);
-  const suggestions = useSuggestions(workspaceId, text, active);
+  const found = useSuggestions(workspaceId, text, active);
+  const suggestions = useMemo(
+    () =>
+      omit === undefined
+        ? found
+        : { ...found, options: found.options.filter((option) => option.link?.id !== omit) },
+    [found, omit],
+  );
   return <ListField {...list} suggestions={suggestions} onActivate={() => setActive(true)} />;
 }

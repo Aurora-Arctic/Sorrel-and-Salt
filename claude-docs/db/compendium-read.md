@@ -66,6 +66,9 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   how a form's delete and rename find the entries holding it (M5.6a), read
   through `ingredients_compendium_form_id_idx`. The repository's filter alone:
   the public `compendium` query takes no such argument.
+- **`nomenclature`** (M5.5) is equality on the column, so `unknown` lists the
+  formal names still to look up: the admin's to-do list beside
+  `withoutReferences`' (["References"](references.md)).
 
 Names order under the database's own collation (`en_US.utf8` in the image).
 M8.14's `(lower(name), canonical_key, id)` declares its parts on the same

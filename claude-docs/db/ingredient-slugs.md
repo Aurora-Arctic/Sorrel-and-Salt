@@ -88,7 +88,9 @@ name: both services recompute it on every update, not only on create.
 - **Taking a slug another entry redirects from asks first.** A create or a
   rename whose slug such a redirect runs from is refused as a
   `ValidationError` on `endRedirect`, naming the entry and the instant its
-  window closes, unless the input carries `endRedirect: true`. The check is
+  window closes, unless the input carries `endRedirect: true` — over GraphQL
+  the compendium mutations' `endRedirect` argument, which M5.5's form sends
+  once the admin confirms. The check is
   read before the write, as the collision naming is after it; two admins
   saving at once can both pass it. Confirmed, the write takes the slug, and
   the retirement stays, so the page at the address can link to the entry

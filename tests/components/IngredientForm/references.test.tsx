@@ -96,7 +96,9 @@ function acceptCreate() {
     CreateWorkspaceIngredientMutationVariables
   >('CreateWorkspaceIngredient', (variables) => {
     calls.push(variables);
-    return { createWorkspaceIngredient: { id: 'saved-1', name: variables.input.name } };
+    return {
+      createWorkspaceIngredient: { id: 'saved-1', name: variables.input.name, slug: 'saved' },
+    };
   });
   return calls;
 }

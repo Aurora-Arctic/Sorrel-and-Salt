@@ -1,23 +1,97 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
+// The page kept in view on every side of a dialog, the owner's call during
+// M5.5: a step of space at a phone's edge, rising with the screen to three,
+// so even the compendium's long form sits over the list it opened from.
+$modal-gap: clamp(#{space(4)}, 5vmin, #{space(7)});
+
+// The `.modal` primitive's padding, on both sides: border-box counts it in the
+// width, so a column keeps the content width it had.
+$modal-padding: space(5) * 2;
+
 // Only what the native element needs beyond the `.modal` primitive: its
 // default border and padding gone, a width that fits a phone, and a backdrop.
-// No styling past the tokens before the section's design review.
+// Border-box, so the primitive's padding sits inside the limits rather than
+// past them: the long form overran the screen by it. No styling past the
+// tokens before the section's design review.
 .modal-dialog {
-  width: min(32rem, calc(100vw - #{space(4)} * 2));
-  max-height: calc(100dvh - #{space(4)} * 2);
+  box-sizing: border-box;
+  width: min(calc(32rem + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
+  max-height: calc(100dvh - #{$modal-gap} * 2);
   overflow: auto;
   border: 0;
 
   &::backdrop {
     background-color: color-mix(in srgb, $surface-page 75%, transparent);
   }
+
+  // Its own scroll ends at its edge rather than handing on to the page.
+  overscroll-behavior: contain;
 }
 
+// It fades in and out, dialog and backdrop together, the owner's call during
+// M5.5. In is CSS alone, from `@starting-style` as `showModal()` shows it; out
+// is `.is-closing`, which the component sets and waits on before asking its
+// owner to close it (FADE_LIMIT_MS there outlasts this). Compounded with
+// `.modal`, whose primitive sets its own `transition` as `body .modal`: the
+// theme's colour transitions are restated beside the fade so both run.
+$modal-fade: 150ms ease-out;
+
+.modal.modal-dialog {
+  opacity: 1;
+  transition:
+    opacity $modal-fade,
+    background-color $theme-transition-duration $theme-transition-easing,
+    color $theme-transition-duration $theme-transition-easing;
+
+  @starting-style {
+    opacity: 0;
+  }
+
+  &::backdrop {
+    opacity: 1;
+    transition: opacity $modal-fade;
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
+  &.is-closing,
+  &.is-closing::backdrop {
+    opacity: 0;
+  }
+
+  @include reduced-motion {
+    transition: none;
+
+    &::backdrop {
+      transition: none;
+    }
+  }
+}
+
+// While a dialog is open the page behind it holds still, the owner's call
+// during M5.5: `showModal()` makes the page inert, but a wheel over the
+// backdrop still scrolled it. CSS alone, so no listener can leave it locked;
+// the gutter stays, so nothing shifts sideways as the scrollbar goes. The
+// dialog keeps its own scroll, so nothing in it is out of reach.
+:root:has(.modal-dialog:modal) {
+  overflow: hidden;
+  scrollbar-gutter: stable;
+}
+
+// A long form's width (M5.5), the compendium entry's first: its list fields
+// and nested References panel are cramped in the 32rem column.
+.modal-dialog--wide {
+  width: min(calc(48rem + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
+}
+
+// The × centred on the title, at its larger size (M5.5).
 .modal-dialog__header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: space(3);
   margin-bottom: space(4);
@@ -27,19 +101,20 @@
   margin: 0;
 }
 
-// 1.5rem: WCAG 2.2's 24px minimum target, as InfoTip's button.
+// A 2rem × in a 2.5rem square, the owner's call during M5.5, in the
+// proportion it began at: well past WCAG 2.2's 24px minimum target.
 .modal-dialog__close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
   padding: 0;
   border: 0;
   border-radius: radius('pill');
   background-color: transparent;
   color: $text-muted;
-  font-size: 1.25rem;
+  font-size: 2rem;
   line-height: 1;
   cursor: pointer;
 

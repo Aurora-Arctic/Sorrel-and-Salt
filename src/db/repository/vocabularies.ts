@@ -264,8 +264,10 @@ function groupingOf(
  * One page of what a member's autofill offers for `vocabulary`'s column:
  * the live curated rows matching `query`, name matches before description
  * matches, then the values written on live ingredients in the compendium or
- * the proof's workspace that match it and fold to no live row's name. Each
- * tier is alphabetical, case-folded. A blank `query` matches everything.
+ * a coven one of `memberships` proves that match it and fold to no live
+ * row's name. No proofs reads the compendium alone, which is the admin's
+ * compendium form (M5.5). Each tier is alphabetical, case-folded. A blank
+ * `query` matches everything.
  *
  * A name or value matches by `%` or `<%` and a description by `<%` alone, so
  * a query finds a word inside a description and completes a typed prefix
@@ -276,25 +278,25 @@ function groupingOf(
  * is curated only while its group or tradition is live too.
  */
 export function findVocabularySuggestions(
-  membership: Membership,
+  memberships: readonly Membership[],
   vocabulary: typeof ingredientForms,
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<FormSuggestion>[]>;
 export function findVocabularySuggestions(
-  membership: Membership,
+  memberships: readonly Membership[],
   vocabulary: typeof deities,
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<DeitySuggestion>[]>;
 export function findVocabularySuggestions(
-  membership: Membership,
+  memberships: readonly Membership[],
   vocabulary: typeof planets | typeof zodiacSigns,
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<VocabularySuggestion>[]>;
 export async function findVocabularySuggestions(
-  membership: Membership,
+  memberships: readonly Membership[],
   vocabulary: SuggestingVocabulary,
   query: string,
   page: PageRequest,
@@ -304,7 +306,10 @@ export async function findVocabularySuggestions(
   const byName = matches(vocabulary.name);
   const fold = sql`lower(btrim(${inUse}))`;
   const inScope = and(
-    or(inCompendium(ingredients), scopedTo(membership, ingredients)),
+    or(
+      inCompendium(ingredients),
+      ...memberships.map((membership) => scopedTo(membership, ingredients)),
+    ),
     notSoftDeleted(ingredients),
     ne(sql`btrim(${inUse})`, ''),
   );

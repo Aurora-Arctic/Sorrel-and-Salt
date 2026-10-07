@@ -6,7 +6,7 @@ import { createLoaders } from '@/graphql/loaders';
 import { schema } from '@/graphql/schema';
 import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
-import { A, B, D, asUser } from '../../../support/as-user';
+import { A, B, D, E, asUser } from '../../../support/as-user';
 import { curatedDeityId } from '../../../support/db/curated-ids';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
@@ -117,6 +117,55 @@ describe('deitySuggestions', () => {
     expect(asUser(D).userId).toBe(D.id);
 
     const result = await run(asUser(D), { query: 'hermes' });
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);
+  });
+});
+
+// M5.5: the admin's compendium form has no coven to name, so a null
+// workspaceId reads the compendium tier alone.
+describe('deitySuggestions without a coven', () => {
+  const runInCompendium = (session: Session | null, variables: Record<string, unknown>) =>
+    graphql({
+      schema,
+      source: `query ($workspaceId: ID, $query: String) {
+        deitySuggestions(workspaceId: $workspaceId, query: $query, first: 100) {
+          edges { node { value tradition curated } }
+        }
+      }`,
+      variableValues: { workspaceId: null, ...variables },
+      contextValue: { session, loaders: createLoaders(session) },
+    }) as Promise<ExecutionResult<{ deitySuggestions: DeitySuggestionConnection }>>;
+
+  it("offers the curated deities and the compendium's value, and not the coven's", async () => {
+    await insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Fixture Wingwort',
+        nomenclature: 'none',
+        deities: ['Hermes Fixture'],
+      }),
+      A.id,
+    );
+    // Why its absence is the scope's: under W, the coven's value is offered.
+    const underW = await run(asUser(B), { query: 'hermes', first: 100 });
+    expect(underW.data?.deitySuggestions.edges.map((edge) => edge.node.value)).toContain(
+      'Hermes Trismegistus',
+    );
+
+    const result = await runInCompendium(asUser(E), { query: 'hermes' });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.deitySuggestions.edges.map((edge) => edge.node)).toEqual([
+      { value: 'Hermes', tradition: 'Greek', curated: true },
+      { value: 'Mercury', tradition: 'Roman', curated: true },
+      { value: 'Hermes Fixture', tradition: null, curated: false },
+    ]);
+  });
+
+  it('is refused signed out', async () => {
+    const result = await runInCompendium(null, { query: 'hermes' });
 
     expect(result.data).toBeNull();
     expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);

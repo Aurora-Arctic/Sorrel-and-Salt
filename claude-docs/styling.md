@@ -462,21 +462,22 @@ the baseline so a row's small button reads on its text's line. A 1px
 `$text-muted` hairline runs under the header row. The rules are the
 `.data-table` primitive, inside a `.data-table-frame` that scrolls a wide
 table sideways rather than widening the page: CategoryList and UserList each
-carried them until IngredientFormValueList made a third (M5.6a).
+carried them until IngredientFormValueList made a third (M5.6a), and
+CompendiumList (M5.5) is on it too.
 
 ## Form fields
 
 The class layer every form is built from, in `_primitives.scss`:
 
-| Class                                            | What it is                                                                |
-| ------------------------------------------------ | ------------------------------------------------------------------------- |
-| `.form`, `.form__actions`                        | The column of fields, a `space(5)` apart, and the row of buttons after it |
-| `.field`                                         | One field: label, optional hint, control and error, `space(2)` apart      |
-| `.field__label`, `.field__hint`, `.field__error` | The parts around the control                                              |
-| `.input`, `.textarea`, `.select`                 | The control, one box for all three                                        |
-| `.checkbox`                                      | A `<label>` wrapping its box, so the whole line is the target             |
-| `.fieldset`, `.fieldset__legend`                 | Rows under one name: checkboxes, or a list of entries                     |
-| `.notice`, `--error`, `--success`                | A sentence about the whole view rather than one field                     |
+| Class                                            | What it is                                                                                                                                                                                                                    |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.form`, `.form__actions`                        | The column of fields, a `space(5)` apart, and the row of buttons after it, `space(2)` further off and as far again from what follows: 2rem either side in a modal (M5.5). A `.modal__actions` row in a `.form` takes the same |
+| `.field`                                         | One field: label, optional hint, control and error, `space(2)` apart                                                                                                                                                          |
+| `.field__label`, `.field__hint`, `.field__error` | The parts around the control                                                                                                                                                                                                  |
+| `.input`, `.textarea`, `.select`                 | The control, one box for all three                                                                                                                                                                                            |
+| `.checkbox`                                      | A `<label>` wrapping its box, so the whole line is the target                                                                                                                                                                 |
+| `.fieldset`, `.fieldset__legend`                 | Rows under one name: checkboxes, or a list of entries                                                                                                                                                                         |
+| `.notice`, `--error`, `--success`                | A sentence about the whole view rather than one field                                                                                                                                                                         |
 
 - **A field's hint is an info tip beside its label** (`InfoTip`,
   [`components/info-tip.md`](components/info-tip.md)), not a line beneath it:

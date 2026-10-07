@@ -184,30 +184,36 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   const isOpen = hasSource && wantsOpen && items.length > 0;
   const { setControl, setList, listStyle, placement } = useListPosition(isOpen, listAnchor);
 
-  const { getInputProps, getMenuProps, getItemProps, getToggleButtonProps, highlightedIndex } =
-    useCombobox<Item<O>>({
-      items,
-      inputId: id,
-      labelId,
-      menuId: `${id}-list`,
-      getItemId: (index) => `${id}-row-${index}`,
-      inputValue: value,
-      // Held at null so that the same row can be picked twice over: a list
-      // adds an entry on each pick.
-      selectedItem: null,
-      isOpen,
-      itemToString: (item) => item?.value ?? '',
-      itemToKey: (item) => (item === null ? null : keyOf(item)),
-      stateReducer: keepText,
-      onInputValueChange: ({ inputValue }) => onChange(inputValue ?? ''),
-      onIsOpenChange: ({ isOpen: open }) => setWantsOpen(open),
-      onSelectedItemChange: ({ selectedItem }) => {
-        if (!selectedItem) return;
-        if (isCreate(selectedItem)) create?.onCreate();
-        else if (isTyped(selectedItem)) onPick(selectedItem.value, null);
-        else onPick(selectedItem.value, selectedItem);
-      },
-    });
+  const {
+    getInputProps,
+    getLabelProps,
+    getMenuProps,
+    getItemProps,
+    getToggleButtonProps,
+    highlightedIndex,
+  } = useCombobox<Item<O>>({
+    items,
+    inputId: id,
+    labelId,
+    menuId: `${id}-list`,
+    getItemId: (index) => `${id}-row-${index}`,
+    inputValue: value,
+    // Held at null so that the same row can be picked twice over: a list
+    // adds an entry on each pick.
+    selectedItem: null,
+    isOpen,
+    itemToString: (item) => item?.value ?? '',
+    itemToKey: (item) => (item === null ? null : keyOf(item)),
+    stateReducer: keepText,
+    onInputValueChange: ({ inputValue }) => onChange(inputValue ?? ''),
+    onIsOpenChange: ({ isOpen: open }) => setWantsOpen(open),
+    onSelectedItemChange: ({ selectedItem }) => {
+      if (!selectedItem) return;
+      if (isCreate(selectedItem)) create?.onCreate();
+      else if (isTyped(selectedItem)) onPick(selectedItem.value, null);
+      else onPick(selectedItem.value, selectedItem);
+    },
+  });
 
   // Enter with nothing highlighted is the caller's — a list's add — and never
   // the form's submit. With no caller for it, Downshift closes an open list,
@@ -273,6 +279,10 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
 
   return (
     <div className="combobox">
+      {/* Named by a <label> of its own, hidden, where the caller names none:
+          Chrome flags a field no label names, an aria-label notwithstanding.
+          Downshift ties the two by id. */}
+      {!labelId && <label {...getLabelProps({ className: 'visually-hidden' })}>{label}</label>}
       {/* Presentational: the press is a convenience for the pointer, and the
           box inside is the control a reader and the keyboard reach. */}
       <div
@@ -299,7 +309,6 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 // One character wide of its own, so that the slot, not the
                 // browser's default of twenty, decides how wide the text is.
                 size: 1,
-                'aria-label': labelId ? undefined : label,
                 // The field's own description first, then the qualifier's, so a
                 // reader hears the hint before what the pick adds.
                 'aria-describedby':
@@ -389,19 +398,19 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
               bucket.rows.map(row)
             ) : (
               // A listbox's group is ARIA's own; optgroup belongs to a select.
+              // On a div inside a presentational li, which the tree leaves
+              // out, since ARIA allows no `group` role on an li (axe's
+              // aria-allowed-role, first caught by M5.5's scan in a browser).
               // oxlint-disable jsx-a11y/prefer-tag-over-role
-              <li
-                key={bucket.key}
-                role="group"
-                className="combobox__group"
-                aria-labelledby={`${headingId}-${bucket.key}`}
-              >
-                <div id={`${headingId}-${bucket.key}`} className="combobox__heading">
-                  {bucket.heading}
+              <li key={bucket.key} role="presentation" className="combobox__group">
+                <div role="group" aria-labelledby={`${headingId}-${bucket.key}`}>
+                  <div id={`${headingId}-${bucket.key}`} className="combobox__heading">
+                    {bucket.heading}
+                  </div>
+                  <ul role="presentation" className="combobox__rows">
+                    {bucket.rows.map(row)}
+                  </ul>
                 </div>
-                <ul role="presentation" className="combobox__rows">
-                  {bucket.rows.map(row)}
-                </ul>
               </li>
               // oxlint-enable jsx-a11y/prefer-tag-over-role
             ),

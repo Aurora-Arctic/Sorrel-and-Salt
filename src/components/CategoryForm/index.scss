@@ -12,7 +12,8 @@
 }
 
 .category-form__confirm {
-  margin-top: space(4);
+  // Where the buttons it stands in for would be (M5.5).
+  margin-block: space(2);
 }
 
 // Hard against the label, in the error red: it marks what a save will ask for.
