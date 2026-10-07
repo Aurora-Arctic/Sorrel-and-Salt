@@ -26,6 +26,8 @@ import { containsText, inCompendium, notSoftDeleted, scopedTo } from './predicat
 import { existsIn, pageBounds, selectFrom } from './select';
 import { claimantList, readSuggestionPage } from './suggestion-page';
 import type {
+  AstrologyValueFilter,
+  AstrologyVocabulary,
   CategoryFilter,
   DeitySuggestion,
   FormSuggestion,
@@ -87,6 +89,54 @@ function formArms({ query, groupId }: IngredientFormValueFilter): (SQL | undefin
 
 /** The form vocabulary's key: by name, then id. A page and its count share it. */
 const FORM_ORDER = { sort: [ingredientForms.name], id: ingredientForms.id };
+
+/**
+ * One page of a curated astrology vocabulary under `filter` in `(name, id)`
+ * order, for `planets`, `zodiacSigns` and their admin lists (MB.95): its
+ * live rows, since a flat vocabulary has no group to be curated under.
+ * Public reference data, so no proof.
+ */
+export function findAstrologyValues<TVocabulary extends AstrologyVocabulary>(
+  vocabulary: TVocabulary,
+  filter: AstrologyValueFilter,
+  page: PageRequest,
+): Promise<PageEntry<TVocabulary['$inferSelect']>[]> {
+  const keyset = { ...astrologyOrder(vocabulary), request: page };
+  return selectFrom(
+    vocabulary,
+    and(notSoftDeleted(vocabulary), astrologyArm(vocabulary, filter), pageBounds(keyset)),
+    keyset,
+  );
+}
+
+/**
+ * How many rows `findAstrologyValues` pages under `filter`, and how many come
+ * before `start` in its order: "Page X of Y", as `findIngredientFormValueCount`
+ * counts the forms.
+ */
+export function findAstrologyValueCount(
+  vocabulary: AstrologyVocabulary,
+  filter: AstrologyValueFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return selectFrom(vocabulary, and(notSoftDeleted(vocabulary), astrologyArm(vocabulary, filter)), {
+    count: astrologyOrder(vocabulary),
+    start,
+  });
+}
+
+/** The name fragment an astrology list is narrowed by, `undefined` when there is none. */
+function astrologyArm(
+  vocabulary: AstrologyVocabulary,
+  { query }: AstrologyValueFilter,
+): SQL | undefined {
+  return query ? containsText(vocabulary.name, query) : undefined;
+}
+
+/** An astrology vocabulary's key: by name, then id. A page and its count share it. */
+function astrologyOrder(vocabulary: AstrologyVocabulary) {
+  return { sort: [vocabulary.name], id: vocabulary.id };
+}
 
 /**
  * One page of the category vocabulary under `filter`, by its group's name,

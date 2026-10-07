@@ -10,7 +10,7 @@ import { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-
 import { users } from '../../modules/identity/schema/users';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
-import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
+import { inCompendium, listFolds, notSoftDeleted, scopedTo } from './predicates';
 import { existsIn } from './select';
 import { hashToken } from './tokens';
 import type { Membership } from '@/modules/coven';
@@ -115,6 +115,25 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
         .delete(retiredIngredientSlugs)
         .where(and(inCompendium(retiredIngredientSlugs), lte(retiredIngredientSlugs.expiresAt, at)))
         .returning(),
+    // One statement: no slug moves, so every holding entry takes the same
+    // rewrite. The list is rebuilt in its own order, each entry folding to
+    // `from` replaced and every other kept as written.
+    carryAstrologyRename: (_admin, list, from, to) => {
+      const column = ingredients[list];
+      const fold = sql`lower(btrim(${from}))`;
+      const entry = sql.identifier('entry');
+      const at = sql.identifier('at');
+      return update(
+        ingredients,
+        {
+          [list]: sql`array(
+            select case when lower(btrim(${entry})) = ${fold} then ${to}::text else ${entry} end
+            from unnest(${column}) with ordinality as listed(${entry}, ${at})
+            order by ${at})`,
+        },
+        and(inCompendium(ingredients), inArray(fold, listFolds(column))),
+      );
+    },
     // One entry at a time: each takes its own slug, derived by the service from
     // the one slug rule. `form_id` is matched here as well as read there, so
     // an entry that picked another form since is not rewritten onto this one.
