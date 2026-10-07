@@ -44,6 +44,7 @@ export const EMPTY_VALUES: IngredientFormValues = {
   colors: [],
   deities: [],
   substitutes: [],
+  categoryIds: [],
   safetyNotes: '',
   references: [],
   referencePanelOpen: false,
@@ -69,6 +70,9 @@ const isListField = (field: unknown): field is ListFieldName =>
  */
 const WHOLE_LIST: MultiSelectFieldName = 'elements';
 
+/** The categories picked: ids, not entries, so an issue names one by its index alone (MB.126). */
+const PICKED_CATEGORIES = 'categoryIds';
+
 /** The form's pick, which the input carries beside its text and the form draws in the Form box. */
 const PICKED_FORM = 'formId';
 
@@ -76,8 +80,8 @@ const PICKED_FORM = 'formId';
  * The values as the mutation takes them: an unanswered closed set is null, the
  * elements go as chosen — `[]` for none, which the update input needs to
  * clear them — a list entry is its text — a substitute or a deity its link's
- * id, or else its text as a name — the form its text and its pick's id, null
- * for typed text (MB.169) — a reference its source's id and its locator as
+ * id, or else its text as a name — the categories their ids, `[]` for none
+ * (MB.126) — the form its text and its pick's id, null for typed text (MB.169) — a reference its source's id and its locator as
  * typed, never its citation (MB.154) — and the boxes are left behind — the
  * resolver has refused a save while one holds text. Nothing is trimmed or dropped — the
  * schema does that on both sides — so an entry's index in an issue's path is
@@ -181,6 +185,11 @@ export function fieldNameOf(
     return undefined;
   }
   if (field === WHOLE_LIST) return WHOLE_LIST;
+  if (field === PICKED_CATEGORIES && index !== undefined) {
+    return typeof index === 'number' && index < values.categoryIds.length
+      ? `${PICKED_CATEGORIES}.${index}`
+      : undefined;
+  }
   if (isListField(field)) {
     return typeof index === 'number' && index < values[field].length
       ? `${field}.${index}.value`

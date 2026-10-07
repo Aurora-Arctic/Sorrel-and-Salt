@@ -11,6 +11,7 @@ import {
   NOMENCLATURE_KINDS,
   UNSETTLED_KIND,
 } from '@/modules/ingredients/schema/ingredient-enums';
+import { CategoryField } from './categories';
 import { NameField, useDuplicateWarning } from './duplicates';
 import { ReferencesField } from './references';
 import { ListField, MultiSelectField, SelectField, TextField } from './fields';
@@ -273,6 +274,9 @@ const IngredientForm = ({ workspaceId, onSaved }: IngredientFormProps): ReactEle
           entry="Substitute Ingredient"
           hint="Other ingredients to use in its place when this one is not to hand."
         />
+        {/* After the lists (MB.126): every live category, picked from chips
+            grouped by category group. */}
+        <CategoryField />
         <TextField
           name="safetyNotes"
           label="Safety Notes"

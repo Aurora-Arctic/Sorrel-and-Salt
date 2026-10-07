@@ -7,6 +7,7 @@ import type {
   DeitySuggestionsQuery,
   FormSuggestionsQuery,
   IngredientSuggestionsQuery,
+  PickerCategoriesQuery,
   PlanetSuggestionsQuery,
   PossibleDuplicatesQuery,
   ReferenceSuggestionsQuery,
@@ -247,6 +248,31 @@ const CATS_CLAW = [
 /** How long a save takes to be accepted: long enough to see Save busy and shut. */
 const SAVE_DELAY_MS = 2000;
 
+/**
+ * The seed's eight groups and their colour pairs, copied from
+ * src/db/seed/category-groups.ts, which a component may not import (CLAUDE.md
+ * rule 1), each with two invented categories (MB.126): the picker reads them
+ * all, as one page.
+ */
+const CATEGORY_GROUPS = [
+  ['Protection & Defense', '#4e8bc2', '#0c5393', ['Testward', 'Fixture Shield']],
+  ['Cleansing & Release', '#35987d', '#097255', ['Rinse Trial', 'Mock Release']],
+  ['Prosperity & Work', '#7b9132', '#576d09', ['Stub Fortune', 'Test Trade']],
+  ['Love & Connection', '#cb6883', '#930c31', ['Mock Bond', 'Fixture Mending']],
+  ['Mind & Spirit', '#8e7bd1', '#2b0c93', ['Test Sight', 'Stub Dream']],
+  ['Wellbeing', '#379835', '#0d770a', ['Fixture Rest', 'Test Ease']],
+  ['Craft & Change', '#c45dc7', '#8f0c93', ['Mock Change', 'Stub Making']],
+  ['Practice & Place', '#b7783f', '#934c0c', ['Test Hearth', 'Fixture Ground']],
+] as const;
+const CATEGORIES = CATEGORY_GROUPS.flatMap(([name, colorDark, colorLight, categories], group) =>
+  categories.map((category, index) => ({
+    id: `00000000-0000-4000-8000-0000000006${group}${index}`,
+    name: category,
+    description: `An invented category under ${name}.`,
+    group: { id: `00000000-0000-4000-8000-00000000050${group}`, name, colorDark, colorLight },
+  })),
+);
+
 const page = <N,>(nodes: N[], first: number) => ({
   edges: nodes.slice(0, first).map((node) => ({ node })),
 });
@@ -319,6 +345,8 @@ function answer(operation: string, variables: Record<string, unknown>): object |
         },
       } satisfies CreateReferenceMutation;
     }
+    case 'PickerCategories':
+      return { categories: page(CATEGORIES, CATEGORIES.length) } satisfies PickerCategoriesQuery;
     case 'PossibleDuplicates':
       // Only a name close to "Cat's Claw" is near anything.
       return {
@@ -341,11 +369,13 @@ const SAVES = new Set(['CreateWorkspaceIngredient', 'CreateReference']);
 /**
  * The refusal a save meets, in the body /api/graphql sends one in, or
  * undefined for a save that lands: a name holding "taken" is refused on the
- * name, one holding "refuse" as a whole, so the two server errors can be seen.
+ * name, one holding "refuse" as a whole, and one holding "retired" on its first
+ * category picked, so each server error can be seen.
  * A new reference is refused the same way by its title.
  */
 function refusal(operation: string, variables: Record<string, unknown>): object | undefined {
-  const input = variables.input as { name?: string; title?: string } | undefined;
+  const input = variables.input as
+    { name?: string; title?: string; categoryIds?: string[] } | undefined;
   const field = operation === 'CreateReference' ? 'title' : 'name';
   const name = String(input?.[field] ?? '');
   if (/taken/i.test(name)) {
@@ -361,6 +391,21 @@ function refusal(operation: string, variables: Record<string, unknown>): object 
                 ? { path: ['title'], message: 'This coven already has a source by that title' }
                 : { path: ['name'], message: 'This coven already has an ingredient by that name' },
             ],
+          },
+        },
+      ],
+    };
+  }
+  // A retired category, picked before an admin deleted it: the first pick's.
+  if (/retired/i.test(name) && input?.categoryIds?.length) {
+    return {
+      data: null,
+      errors: [
+        {
+          message: 'Validation failed',
+          extensions: {
+            code: 'VALIDATION',
+            fieldErrors: [{ path: ['categoryIds', 0], message: 'No such category' }],
           },
         },
       ],
@@ -494,8 +539,16 @@ function WhatToTry() {
           an Accessed day next month are refused beside the field.
         </li>
         <li>
+          <strong>Categories:</strong> focus Category, or press its chevron, to list every category
+          under its group, and type to narrow them; a pick is a chip in its group&rsquo;s colour
+          inside the box, as a Deity is. Nothing typed is a category, so there is no Add and no
+          &ldquo;Use what you typed&rdquo;.
+        </li>
+        <li>
           <strong>Refused by the server:</strong> a Name with &ldquo;taken&rdquo; in it is refused
-          beside Name; one with &ldquo;refuse&rdquo; in it is refused above the form.
+          beside Name; one with &ldquo;refuse&rdquo; in it is refused above the form; one with
+          &ldquo;retired&rdquo; in it, with a category picked, refuses the first category picked,
+          named beneath the box.
         </li>
         <li>
           <strong>Saved:</strong> any other Name. The button pressed reads &ldquo;Saving
