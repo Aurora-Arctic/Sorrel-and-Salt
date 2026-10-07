@@ -16,20 +16,23 @@ What follows describes all three as built.
 
 - **`ingredients`** — `id`, `workspaceId` (nullable: `NULL` is the compendium
   tier, non-null is a workspace's own ingredient), `name`, `slug` (MB.81;
-  ["Ingredient slugs"](ingredient-slugs.md)), `canonicalName`, `nomenclature`, `form`, the generated `canonicalKey`, the correspondence
-  columns (`description`, `element`, `planets[]`, `zodiacSigns[]`, `deities[]`,
+  ["Ingredient slugs"](ingredient-slugs.md)), `canonicalName`, `nomenclature`, `form`, `formId` (MB.165; below), the generated `canonicalKey`, the correspondence
+  columns (`description`, `elements[]`, `planets[]`, `zodiacSigns[]`,
   `colors[]`, `safetyNotes`), + audit. `name` is the display label —
   what it's called here — and stays freely relabellable, because identity
   moved off it onto `canonicalName`/`nomenclature`/`form`. Of the
-  correspondences only `element` is constrained: an `ingredient_element`
+  correspondences only `elements` is constrained: a list of the `ingredient_element`
   `pgEnum` of `earth`, `air`, `fire`, `water`, `spirit`, closed and fixed —
   the exact opposite of `form`, and the reason the two are easy to confuse
-  but never interchangeable. `planets`, `zodiacSigns`, `deities` and
+  but never interchangeable. `planets`, `zodiacSigns` and
   `colors` are native `text[]` columns, one of the things SQLite could not
   have run (DESIGN.md §14). `planets`, `zodiacSigns` and `colors` replaced
-  single columns in MB.136 (below). Substitutes were a `substitutes[]` column
-  too, until MB.140 moved every reader and writer to `ingredient_substitutes`:
-  the column is undeclared, and stays in the database until MB.141 drops it. Seven declared indexes: M4.1a's three partial unique ones (below),
+  single columns in MB.136, and `elements[]` replaced the single `element`
+  in MB.159 (both below); MB.160 dropped `element`. Substitutes were a `substitutes[]` column
+  too, until MB.140 moved every reader and writer to `ingredient_substitutes`
+  and MB.141 dropped it; `deities[]` moved to `ingredient_deities` the
+  same way, MB.167 switching every reader and writer and ceasing to declare
+  it, and MB.168 dropping it. Seven declared indexes: M4.1a's three partial unique ones (below),
   MB.81's two on the slug ("Ingredient slugs"), `ingredients_trgm`
   (M4.6), one multicolumn `gin_trgm_ops` index over `name` and
   `canonical_name` — see ["Fuzzy matching"](fuzzy-matching.md) — and its folded twin
@@ -59,7 +62,27 @@ What follows describes all three as built.
   migration copies every `substitutes[]` entry across as a name, trimmed, with
   blanks skipped and an entry repeated in any case kept once, in the spelling
   it first holds. MB.140 moved every reader and writer to the table and
-  stopped declaring the array, which MB.141 drops.
+  stopped declaring the array. MB.141 dropped it after copying across, the
+  same way, any entry with no row yet in any case, live or removed: by then
+  the table was newer than the list.
+- **`ingredient_deities`** (MB.165, migration
+  `0040_picked-form-and-deities.sql`; the model is in DESIGN.md §5) — `id`,
+  `ingredientId`, `deityId` (nullable FK to `deities`), `name`, `position`, +
+  audit. One row per deity, in the order entered: a name on every row, and
+  a link beside it when the member picked a curated deity. `name` is held on
+  a linked row too, in the curated row's spelling, so a link whose deity is
+  soft-deleted reads as its name under the ordinary filter, and a CHECK holds
+  it non-blank. Three unique indexes, all partial on `deleted_at IS NULL`: one
+  position per ingredient, which is also the parent's index, read in order;
+  one link per ingredient and deity; and one unlinked name per ingredient,
+  case-folded, so links to two same-named deities may sit on one ingredient.
+  The full audit spread, as substitutes. MB.166's
+  `0041_fill-ingredient-deities` filled it from `deities[]`, unlinked, in the
+  array's order from position 0; MB.167 moved every reader and writer onto it
+  (["Ingredient children"](ingredient-children.md)), and MB.168's
+  `0048_drop-deities-list` copied across what the deploy before MB.167 had
+  written to the list since, after each ingredient's rows, then dropped it
+  ([`../design-decisions/mb.165-record-the-picked-vocabulary-row.md`](../design-decisions/mb.165-record-the-picked-vocabulary-row.md)).
 - **`ingredient_forms`** — `id`, `name`, `slug`, `groupId`, `description`, +
   audit. Shaped like `categories`: global, admin-curated, no workspace
   scoping. This is the third resource admins curate globally, alongside the
@@ -73,13 +96,14 @@ It names _which naming system_ a formal name belongs to, not which rank
 within that system — `Quartz var. amethyst` and `Lapis lazuli` are both
 `mineral` even though one is an IMA variety and the other a rock. `unknown`
 and `none` are both answers, not the absence of one: `unknown` means a formal
-name exists in some system but nobody has looked it up yet (§5 says why that
-earns a value of its own); `none` is the
+name exists in some system but which one is not settled — the name may be
+recorded, unconfirmed, or not yet looked up (§5 says why that earns a value
+of its own, and MB.161 why it may carry the name); `none` is the
 positive claim that no naming system names this thing at all (graveyard
-dirt, moon water, black salt). A CHECK ties the two together —
-`(nomenclature IN ('none','unknown')) = (canonical_name IS NULL)`, enforced
-in both directions, so the enum value and the presence of a formal name can
-never disagree.
+dirt, moon water, black salt). A CHECK ties the kind to the name —
+`nomenclature = 'unknown' OR (nomenclature = 'none') = (canonical_name IS NULL)`,
+enforced in both directions, so `none` never carries a formal name and a
+named kind never lacks one, while `unknown` takes either.
 
 **`canonical_key`**, the generated identity column, is DESIGN.md §5's
 `GENERATED ALWAYS AS (…) STORED` expression as written there: the lower-cased
@@ -96,9 +120,9 @@ raises an immutability question a plain `text` column doesn't, so relaxing
 lets _Valeriana officinalis_ root and leaf exist as two separate identities.
 
 **Three CHECKs ship with the table**, named
-`ingredients_nomenclature_declares_canonical_name` (the biconditional above),
+`ingredients_nomenclature_declares_canonical_name` (the kind↔name CHECK above),
 `ingredients_canonical_name_not_blank` and `ingredients_form_not_blank`. The
-two non-blank checks exist because `btrim(x) <> ''` is what the biconditional
+two non-blank checks exist because `btrim(x) <> ''` is what the kind↔name CHECK
 cannot say for itself: `canonical_name = '   '` satisfies "not null" while
 contributing nothing to the identity key. Their expressions, and the
 generated column's, are written as literal SQL rather than interpolated
@@ -158,11 +182,45 @@ predicate reddens six tests, dropping the label index five, and keying the
 compendium on `lower(name)` instead of `canonical_key` four.
 
 **`ingredients.form` is `text`, and deliberately not a foreign key to
-`ingredient_forms`.** The curated table is an autofill vocabulary, not a
-constraint: a foreign key would force identity to key on a surrogate id and
-make an uncurated value like `rhizome` unwritable until an admin curates it
-first. M4.2a asserts the absence of that foreign key by test, since it's the
-property the whole free-text design rests on.
+`ingredient_forms`.** To a coven the curated table is an autofill vocabulary,
+not a constraint: a foreign key would force identity to key on a surrogate id
+and make an uncurated value like `rhizome` unwritable until an admin curates
+it first. M4.2a asserts the absence of that foreign key by test, since it's
+the property the whole free-text design rests on. **A pick is recorded beside
+the text** (MB.165): `ingredients.form_id`, a nullable foreign key to
+`ingredient_forms`, set only when a member picked a curated row, never
+resolved from typed text, and held to a `form` by
+`ingredients_form_id_has_form`. It is outside `canonicalKey`, so two entries
+with one formal name, one picked as each Wax, are still one identity, and a
+link to a soft-deleted form reads as no link, the text staying. A save
+writes a pick only of a curated form, live under a live group, beside text
+folding to its name and written in its spelling; anything else is refused
+beside `formId` or `form`, and a save sending no `formId` clears the column
+and keeps the text (MB.167). The deities
+take the same model in `ingredient_deities`, above, so a vocabulary a member
+writes is text with an optional link to the curated row picked.
+
+**The compendium tier is held to the vocabularies, by the service (MB.162).**
+A compendium entry's `form` and each of its deities is a pick of a live
+curated row — a form under a live group, a deity under a live tradition —
+held or not, so a curated value typed rather than picked is refused as an
+uncurated one is (MB.167, which moved the rule onto the pick). Its `planets`
+and `zodiac_signs` each name one, matched as the suggestions fold,
+`lower(btrim(value)) = lower(name)`. Every value is stored in its row's own
+spelling. `createCompendiumEntry` and `updateCompendiumEntry` enforce it after
+the parse, the picks through `resolvePicks` and the planets and signs through
+`curatedSpellings` in `vocabulary`, and refuse a value as a `ValidationError`
+at `['form']` or `['formId']`, or `['planets', i]`, `['zodiacSigns', i]` or
+`['deities', i]` at the entry sent
+([`../validation.md`](../validation.md), "The two ingredient variants"). Not
+Zod, since the check reads the database, and not a key or a CHECK, since the
+columns are shared with the coven tier, which keeps free text. Deleting a
+curated row a live entry holds — a form or deity it picks, or a planet or
+sign's last live spelling — is refused, and renaming one carries onto the
+entries, so the rule holds after the write as well
+([`../design-decisions/mb.162-compendium-holds-curated-values.md`](../design-decisions/mb.162-compendium-holds-curated-values.md)).
+A form is identity, so a form rename carried onto an entry re-keys it and
+moves its slug.
 
 **Folk names got their own table instead of staying `folkNames text[]`
 because of one verified fact.** On this repo's live PostgreSQL 18.6,
@@ -181,10 +239,12 @@ are all IMMUTABLE and used freely throughout this model.
 an ingredient several of each, so `planet`, `zodiac` and `color`, single
 `text` columns as built, give way to `planets`, `zodiac_signs` and `colors`,
 nullable `text[]` with no default, declared in Drizzle as `planets`,
-`zodiacSigns` and `colors`. They are stored as `deities` is: the shared schema
-trims each entry, drops a blank one and turns a list left empty into null
+`zodiacSigns` and `colors`. They are stored as the retired `deities` list was:
+the shared schema trims each entry, drops a blank one and turns a list left
+empty into null
 ([`../validation.md`](../validation.md), "The two ingredient variants"), so no row holds `{}`
-or a blank entry, and no CHECK repeats that, since `deities` has none either.
+or a blank entry, and no CHECK repeats that. Since MB.167 it also refuses a
+repeat but for case and spacing, at the repeat.
 An array keeps its order, and each list's order is the member's, so nothing
 sorts one on write or read.
 
@@ -197,9 +257,10 @@ sorts one on write or read.
   under a deployed reader, so the lists sit beside the singles for a deploy:
   MB.135 added them and filled each from its single column where one was
   set (`0030_ingredient-lists`); MB.136 switched every reader and writer and
-  stopped declaring the singles, which stay in the database undeclared;
-  MB.137 fills a last time and drops them, with its `.ack.md` sidecar, once
-  MB.136 has deployed (["Expand/contract"](expand-contract.md)).
+  stopped declaring the singles, which stayed in the database undeclared;
+  MB.137 dropped them, with its `.ack.md` sidecar, once a release carrying
+  MB.136 had reached production (`0036_drop-ingredient-singles`;
+  ["Expand/contract"](expand-contract.md)).
 - **MB.136's migration rederives the lists.** `0031_refill-ingredient-lists`
   runs before MB.136 promotes, while only 0030 has written a list, so every
   list is still its single's: each is set to its single as one entry, or to
@@ -209,12 +270,54 @@ sorts one on write or read.
   which copies the last snapshot rather than diffing the schema, so the
   snapshot keeps the undeclared singles and MB.137's `db:generate` still
   emits their drop.
+- **MB.137's drop fills nothing first.** Once MB.136 promotes it writes the
+  lists, so a single that disagrees with its list may hold the previous
+  deploy's write between 0031 and the promotion, or the stale value of a list
+  a member has edited since — and the row cannot say which. A fill would
+  overwrite that member's edit to recover a write from a deploy-length
+  window, one the app has not read since MB.136 went live, so the drop takes
+  it (`0036_drop-ingredient-singles.ack.md`, "What is lost").
 - **The in-use scan unnests.** Tier 2 of the planet and zodiac autofill
   reads entries rather than a column: `cross join lateral unnest(…)` gives
   one row per entry before anything trims or folds it, so a value counts
   once however many lists hold it, or however often one does
-  (["The member's autofill"](member-autofill.md)). The deity autofill reads
-  `deities` the same way (MB.130).
+  (["The member's autofill"](member-autofill.md)). The deity autofill read
+  `deities` the same way (MB.130) until MB.167 moved it onto
+  `ingredient_deities`' live rows.
+
+**Element becomes a list (MB.157).** DESIGN.md §5 gives an ingredient
+several elements, so `element`, a single nullable `ingredient_element` column
+as built, gives way to `elements`, a nullable `ingredient_element[]` with no
+default, declared in Drizzle as `ingredientElement('elements').array()`. The
+set stays the `pgEnum`'s five, so the array's type refuses anything else and
+no CHECK says it again. The shared schema refuses a repeat and turns a list
+left empty into null ([`../validation.md`](../validation.md), "The two
+ingredient variants"), so no row holds `{}` or one element twice. No CHECK
+repeats either: comparing an array's entries with each other needs a subquery
+or a hand-written function, and the free-text lists carry no CHECK. The array
+keeps the order chosen, and nothing sorts it.
+
+- **A new name, by rule 10**, as MB.134's lists took one. MB.158 added
+  `elements` and filled it from `element` where one was set, as a one-entry
+  list (`0034_element-list`). MB.159 switched every reader and writer and
+  stopped declaring `element`, and its migration, `0035_refill-element-list`,
+  rederives the list from `element` for whatever the live deploy wrote after
+  MB.158 — a new row, a changed value, a cleared one — as
+  `0031_refill-ingredient-lists` did, writing only a row that disagrees.
+  The seed writes lists since, two of its compendium entries more than one
+  element. MB.160 drops `element` once MB.159 has deployed
+  (`0037_drop-element`, with its `.ack.md` sidecar). The
+  `ingredient_element` type stays, since the list is of it.
+- **MB.160's drop fills nothing either**, for MB.137's reason: once MB.159
+  promotes, a single that disagrees with its list may hold the old deploy's
+  write between 0035 and the promotion, or the stale value of a list a
+  member has edited since, and copying it in would bring back an element
+  that member removed (`0037_drop-element.ack.md`, "What is lost").
+- **The filter reads containment.** M8.13's element filter matches a row
+  whose list holds the element chosen, among others or alone: Drizzle's
+  `arrayContains`, `@>`, rather than an equality. No index stands behind it,
+  as none stands behind any list; it ANDs onto the compendium read's other
+  predicates over one tier.
 
 **Fuzzy matching: one index, and a rule every caller is bound by** has a file of its own: [`fuzzy-matching.md`](fuzzy-matching.md).
 

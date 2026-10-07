@@ -5,6 +5,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { fromRoot } from '../../support/paths';
 import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
+import { seedAstrology } from '@/db/seed/astrology';
 import { DEITIES, DEITY_TRADITIONS, seedDeities } from '@/db/seed/deities';
 import { slugify } from '@/lib/slugify';
 import type { DeityRow, DeityTraditionRow, DocDeity, DocDeityTradition } from './types';
@@ -251,6 +252,69 @@ describe('seedDeities(db)', () => {
     expect(aradia[0].deleted_at).not.toBeNull();
     expect(wicca).toHaveLength(1);
     expect(wicca[0].deleted_at).not.toBeNull();
+  });
+
+  // MB.172: a row is the seed's by the key it gave it (MB.171), not by the
+  // slug, which follows the name an admin may change.
+  it('keys every row it writes by its slug at insert', async () => {
+    await seedDeities(db);
+
+    for (const row of [...(await allTraditions()), ...(await allDeities())]) {
+      expect(row.seed_key, row.slug).toBe(row.slug);
+    }
+  });
+
+  it('leaves a deity and tradition an admin has since renamed alone, and adds nothing', async () => {
+    await seedDeities(db);
+    await sql`update deities set name = 'Phoebus', slug = 'phoebus' where slug = 'apollo'`;
+    await sql`update deity_traditions set name = 'Hellenic', slug = 'hellenic' where slug = 'greek'`;
+    const [traditions, deities] = [await allTraditions(), await allDeities()];
+    // Precondition: neither slug is its key any more, so slug keying would twin both.
+    const renamed = [...traditions, ...deities].filter(({ slug }) =>
+      ['phoebus', 'hellenic'].includes(slug),
+    );
+    expect(renamed.map(({ slug, seed_key }) => [slug, seed_key])).toEqual(
+      expect.arrayContaining([
+        ['phoebus', 'apollo'],
+        ['hellenic', 'greek'],
+      ]),
+    );
+
+    await seedDeities(db);
+
+    expect(await allTraditions()).toEqual(traditions);
+    expect(await allDeities()).toEqual(deities);
+  });
+
+  it('files a missing deity under its renamed tradition, found by the tradition’s key', async () => {
+    await seedDeities(db);
+    await sql`update deity_traditions set name = 'Hellenic', slug = 'hellenic' where slug = 'greek'`;
+    await sql`delete from deities where slug = 'apollo'`;
+
+    await seedDeities(db);
+
+    const [hellenic] = (await allTraditions()).filter(({ slug }) => slug === 'hellenic');
+    const [apollo] = (await allDeities()).filter(({ slug }) => slug === 'apollo');
+    expect(await countOf('deity_traditions')).toBe(DOC_TRADITIONS.length);
+    expect(apollo.tradition_id).toBe(hellenic.id);
+  });
+
+  // Unkeyed is what marks it as not the seed's; the author does not matter to
+  // the seed, so it is the one user an emptied database holds once a seed ran.
+  it('takes a live row an admin wrote under a seed name as present, without an error', async () => {
+    await seedAstrology(db);
+    const [admin] = await sql<{ id: string }[]>`
+      insert into deity_traditions (name, slug, description, created_by, updated_by)
+      values ('Greek', 'greek', 'Written by an admin first.', ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+      returning id
+    `;
+
+    await expect(seedDeities(db)).resolves.toBeUndefined();
+
+    const greek = (await allTraditions()).filter(({ slug }) => slug === 'greek');
+    expect(greek.map(({ id, seed_key }) => [id, seed_key])).toEqual([[admin.id, null]]);
+    const [apollo] = (await allDeities()).filter(({ slug }) => slug === 'apollo');
+    expect(apollo.tradition_id).toBe(admin.id);
   });
 
   it('publishes the bootstrap user as app.current_user_id, as withAudit would', async () => {

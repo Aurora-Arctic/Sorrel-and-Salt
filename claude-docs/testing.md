@@ -21,6 +21,10 @@ Every Vitest file sits under `tests/` mirroring `src/`, a path glob assigns it t
 
 `tests/support/db/` is the one part of `tests/support/` allowed a runtime `drizzle-orm` import, and holds `useTestDatabase`'s per-file client and catalogue reads, `tableFacts` and the audit lists, and the `insertIngredient` and `insertSpell` setup inserters. [`testing/db-harness.md`](testing/db-harness.md)
 
+### Connections per run (MB.179)
+
+A full run holds at most 97 connections — twelve workers at most, each an app client and a test-file client capped at four by `tests/support/db/bounded-postgres.ts`, plus global setup's one — against the image's `max_connections=200`, so the limit holds with half left for a second run or the e2e servers; measured, a run peaks at 28 where it held 59 before, and `tests/guards/db-connection-budget.test.ts` fails a change to any of the three numbers that breaks the arithmetic. [`testing/db-harness.md`](testing/db-harness.md#connections-per-run-mb179)
+
 ## Acceptance — `make test-stories` (M1.28)
 
 `npm run test:stories` runs `tests/acceptance/` on its own `vitest.stories.config.mts`, outside coverage, and prints a checklist of the v1 stories read from DESIGN.md §10, each status folded from every suite whose `describe` names the story. [`testing/acceptance.md`](testing/acceptance.md)
@@ -60,6 +64,10 @@ Accessibility is asserted in Playwright, not `vitest-axe`: `tests/e2e/axe.ts`'s 
 ## Coverage — monocart-coverage-reports (M1.13)
 
 Playwright's e2e coverage is JS only, collected per test by `tests/e2e/fixtures.ts` into monocart-coverage-reports under `.reports/coverage-e2e/`, and mapped back to `src/**` through `productionBrowserSourceMaps` and an order-sensitive `sourceFilter` that excludes `node_modules` first. [`testing/coverage.md`](testing/coverage.md)
+
+## Test-layer ownership, and the file budget (MB.180)
+
+Each kind of assertion has one owning layer — a zod rule in `tests/modules/*/validation/`, a service rule in `tests/modules/*/services/`, the transport's half in `tests/modules/*/graphql/`, the `Membership` mechanism in `tests/db/repository/`, a table's shape in its module schema test, a component behaviour in the smallest component that has it, seed content in `seeded-template.test.ts` — and a test elsewhere proves only what that layer adds; `.github/scripts/summarize-vitest.mjs` names the ten slowest files in the PR comment and marks any over the 10 s budget, a warning that is answered by splitting the file along its owner, never by raising the budget. [`testing/layer-ownership.md`](testing/layer-ownership.md)
 
 ## Debugging tests (MB.22)
 

@@ -1,8 +1,14 @@
+import type { SeedDatabase } from '@/db/seed/types';
+
+/** One seed entry point, named for its test: a scenario, or a reference-data seed run alone. */
+export type SeedEntry = [name: string, run: (handle: SeedDatabase) => Promise<void>];
+
 /** A `planets` or `zodiac_signs` row. */
 export interface VocabularyRow {
   id: string;
   name: string;
   slug: string;
+  seed_key: string | null;
   description: string;
   created_by: string;
   updated_by: string;
@@ -59,6 +65,7 @@ export interface FormRow {
   id: string;
   name: string;
   slug: string;
+  seed_key: string | null;
   description: string;
   group_id: string;
   created_by: string;
@@ -130,8 +137,7 @@ export interface CompendiumEntryRow {
   nomenclature: string;
   form: string | null;
   planets: string[] | null;
-  /** Undeclared since MB.136, and in the table until MB.137 drops it. */
-  planet: string | null;
+  zodiac_signs: string[] | null;
   canonical_key: string;
   slug: string;
   created_by: string;
@@ -154,6 +160,7 @@ export interface DeityTraditionRow {
   id: string;
   name: string;
   slug: string;
+  seed_key: string | null;
   description: string;
   created_by: string;
   updated_by: string;
@@ -164,8 +171,62 @@ export interface DeityRow {
   id: string;
   name: string;
   slug: string;
+  seed_key: string | null;
   description: string;
   tradition_id: string;
+  created_by: string;
+  updated_by: string;
+  deleted_at: Date | null;
+}
+
+/** What a seeded source links, as the seed docs name it. */
+export type DocLinkKind = 'tradition' | 'deity' | 'planet' | 'zodiacSign';
+
+/** One link a source's place in the seed docs gives it. */
+export interface DocLink {
+  kind: DocLinkKind;
+  name: string;
+  locator: string | null;
+}
+
+/** A `references` row as the sources seed writes it; its fields render as a citation. */
+export interface ReferenceRow {
+  id: string;
+  workspace_id: string | null;
+  kind: 'book' | 'chapter' | 'article' | 'entry' | 'web_page';
+  title: string;
+  authors: string | null;
+  container: string | null;
+  contributors: string | null;
+  edition: string | null;
+  volume: string | null;
+  issue: string | null;
+  series: string | null;
+  place: string | null;
+  publisher: string | null;
+  published: string | null;
+  pages: string | null;
+  host: string | null;
+  url: string | null;
+  modified: string | null;
+  accessed: string | null;
+  note: string | null;
+  seed_key: string | null;
+  created_by: string;
+  updated_by: string;
+  updated_at: Date;
+  deleted_at: Date | null;
+}
+
+/** A `reference_links` row. */
+export interface ReferenceLinkRow {
+  id: string;
+  reference_id: string;
+  deity_id: string | null;
+  deity_tradition_id: string | null;
+  planet_id: string | null;
+  zodiac_sign_id: string | null;
+  locator: string | null;
   created_by: string;
   updated_by: string;
   deleted_at: Date | null;

@@ -51,10 +51,11 @@ it tests exists, and `npm run typecheck` runs over `tests/` too, so an import
 of a page or a service that is not there yet would fail `tsc` rather than the
 story. `01-accounts.test.ts` (M2.1) therefore reads an unbuilt page's source
 with `existsSync` and `readFileSync` instead of rendering it, and
-`07-admin.test.ts` (M5.1) looks each unbuilt service up on its module's
+`07-admin.test.ts` (M5.1) looked each unbuilt service up on its module's
 surface at runtime — `await import('@/modules/ingredients')` cast to an
 interface stating the signature the story expects, each name checked with
-`toBeTypeOf('function')` so the failure names the task it waits on. The task
+`toBeTypeOf('function')` so the failure named the task it waited on, until
+M5.6 imported the last of them. The task
 that builds the page or the service replaces the workaround with the import
 and drops the stated signature; the story's `describe` and its assertions
 stay.

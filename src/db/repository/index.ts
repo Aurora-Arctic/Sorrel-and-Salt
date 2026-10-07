@@ -15,6 +15,7 @@ export {
   findManyInWorkspace,
   findOne,
   findOneById,
+  findOneBySlug,
   findOneByIdInWorkspace,
   findOneInWorkspace,
   findPage,
@@ -31,32 +32,63 @@ export {
   findCompendiumCount,
   findCompendiumEntryByIdentity,
   findCompendiumPage,
+  findDeitiesOfIngredients,
   findIngredientSuggestions,
   findManyOfIngredients,
   findOneIngredient,
   findSimilarIngredients,
   findSubstitutesIncludingSoftDeleted,
 } from './ingredients';
-export { findIngredientFormValues, findVocabularySuggestions } from './vocabularies';
+export {
+  findManyReferences,
+  findReferenceSuggestions,
+  findReferencesOfIngredients,
+} from './references';
+export {
+  findAstrologyValueCount,
+  findAstrologyValues,
+  findCategoryCount,
+  findCategoryPage,
+  findCuratedRowsByIds,
+  findCuratedRowsByName,
+  findIngredientFormValueCount,
+  findIngredientFormValues,
+  findVocabularySuggestions,
+} from './vocabularies';
 export { findCommonNameSuggestions } from './common-names';
 export { findCompendiumEntryBySlug, findCompendiumSlugRedirect } from './slugs';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';
-export { findUserByEmail } from './users';
+export { findProvidersOfUsers, findUserByEmail, findUserPage } from './users';
+export { findAdminInvitationByToken } from './admin-invitations';
+export { findOpenAdminRoleChangePause } from './admin-roles';
 export { deleteProvisionalUsers } from './provisional-users';
 export type {
+  AdminInvitationRow,
+  AdminInvitationValues,
+  AstrologyList,
+  AstrologyValueFilter,
+  AstrologyVocabulary,
   AuditWriter,
+  CategoryFilter,
+  CitingLink,
   Claimant,
   CommonNameSuggestion,
   CompendiumScore,
   DeitySuggestion,
+  FormRenameEntry,
   FormSuggestion,
   IngredientFilter,
+  IngredientFormValueFilter,
   IngredientIdentity,
   IngredientRow,
   JoinedRow,
+  LinkedProvider,
+  ReferenceLinkRow,
+  ReferenceRow,
   SimilarityScore,
   SlugRedirect,
   SortPart,
   SuggestingVocabulary,
+  UserFilter,
   VocabularySuggestion,
 } from './types';

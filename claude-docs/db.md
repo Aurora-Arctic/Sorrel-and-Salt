@@ -4,7 +4,11 @@
 It exports `db`, a Drizzle client, built with `drizzle-orm/postgres-js` over
 the `postgres` package (pure JS, no native binary). `db` reads `DATABASE_URL`
 from the environment at module load and throws if it is unset — no default,
-no silent fallback.
+no silent fallback. The client is one per process per URL, held on
+`globalThis` so a module evaluated twice in one process — `vi.resetModules()`
+in a test, a hot reload under `next dev` — reuses the pool rather than
+opening another that nothing ends (MB.179;
+[`testing/db-harness.md`](testing/db-harness.md#connections-per-run-mb179)).
 
 - **One driver call site.** Nothing outside `connection.ts` calls `postgres(...)`.
   `src/db/repository/` (M1.16) is the only _application_ code that imports
@@ -47,7 +51,7 @@ The `db:*` scripts (generate, migrate, seed, drop, reset, studio), `probe-databa
 
 ## The ingredient identity model (MB.28, table M4.1)
 
-`ingredients` (both tiers in one table), `ingredient_forms`, `ingredient_folk_names` and `ingredient_substitutes`, each substitute a link or a typed name (MB.138, table MB.139): identity is formal name plus form in the generated `canonical_key`, unique per tier by partial index; planets, zodiac signs and colours are `text[]` lists stored as `deities` is, in the order entered (MB.134, MB.136). [`db/identity-model.md`](db/identity-model.md)
+`ingredients` (both tiers in one table), `ingredient_forms`, `ingredient_folk_names` and `ingredient_substitutes`, each substitute a link or a typed name (MB.138, table MB.139), and `ingredient_deities`, each deity a name with the curated row picked beside it, in the order entered (MB.165): identity is formal name plus form in the generated `canonical_key`, unique per tier by partial index, and `form_id` records a picked form beside the text, outside the key; planets, zodiac signs and colours are `text[]` lists stored as `deities` is, in the order entered (MB.134, MB.136); elements an `ingredient_element[]` list in the order chosen, a repeat refused (MB.157, built by MB.158 and MB.159). [`db/identity-model.md`](db/identity-model.md)
 
 ### Fuzzy matching: one index, and a rule every caller is bound by (M4.6)
 
@@ -59,7 +63,7 @@ The `db:*` scripts (generate, migrate, seed, drop, reset, studio), `probe-databa
 
 ## Categories, and the two group vocabularies (MB.35; tables M4.2, M4.2a)
 
-`categories`, `category_groups`, `ingredient_forms` and `ingredient_form_groups`: groups are admin-curated rows rather than enums, a category group carries a colour for each theme, and a vocabulary only admins write is a foreign key. [`db/categories.md`](db/categories.md)
+`categories`, `category_groups`, `ingredient_forms` and `ingredient_form_groups`: groups are admin-curated rows rather than enums, a category group carries a colour for each theme, and a vocabulary only admins write is a foreign key; then the admin's writes to each, a deleted group's rows moving to a group the admin picks. [`db/categories.md`](db/categories.md)
 
 ## The astrology vocabularies (MB.91; tables MB.92)
 
@@ -67,11 +71,15 @@ The `db:*` scripts (generate, migrate, seed, drop, reset, studio), `probe-databa
 
 ## The deity vocabulary (MB.127; tables MB.128)
 
-`deities`, the admin-curated vocabulary behind the list `ingredients.deities`, whose entries stay free text as `form` does, grouped by `deity_traditions` as the forms are by their groups, with a required description that carries each deity's other spellings. [`db/deity-vocabulary.md`](db/deity-vocabulary.md)
+`deities`, the admin-curated vocabulary behind an ingredient's deities, the rows of `ingredient_deities` since MB.167, whose names stay free text with the curated row picked beside them as `form` does, grouped by `deity_traditions` as the forms are by their groups, with a required description that carries each deity's other spellings. [`db/deity-vocabulary.md`](db/deity-vocabulary.md)
 
 ### The member's autofill (MB.94)
 
 [`db/member-autofill.md`](db/member-autofill.md)
+
+## References (MB.151; tables MB.152)
+
+`references`, one Chicago-form source per row, two-tiered as `ingredients` is, and `reference_links`, one soft-deleted row per sourced ingredient, deity, tradition, planet or sign under `num_nonnulls`, both owned by `ingredients`: the kind decides the rendering and the CHECKs make it total, a link carries a locator and nothing else, nothing deletes a reference in v1, and `src/lib/citation.ts` renders the citation rather than any column storing it. [`db/references.md`](db/references.md)
 
 ## Stock, and the one module that owns the units (M9.2)
 
@@ -139,7 +147,7 @@ In [`db/write-path.md`](db/write-path.md#appcurrent_user_id-published-per-transa
 
 ## The Membership proof (M6.3)
 
-`assertMembership` returns the branded `Membership` every workspace-scoped finder and writer takes first: what the check asks, the finder convention, the three reads that take no proof, and where it is weaker than a policy. [`db/membership-proof.md`](db/membership-proof.md)
+`assertMembership` returns the branded `Membership` every workspace-scoped finder and writer takes first: what the check asks, the finder convention, the four reads that take no proof, and where it is weaker than a policy. [`db/membership-proof.md`](db/membership-proof.md)
 
 ### What the check asks
 
@@ -153,9 +161,9 @@ In [`db/membership-proof.md`](db/membership-proof.md#one-lookup-per-render).
 
 [`db/finder-convention.md`](db/finder-convention.md)
 
-### The three reads that take no proof
+### The four reads that take no proof
 
-In [`db/membership-proof.md`](db/membership-proof.md#the-three-reads-that-take-no-proof).
+In [`db/membership-proof.md`](db/membership-proof.md#the-four-reads-that-take-no-proof).
 
 ### Where the proof is weaker than a policy
 
@@ -227,7 +235,7 @@ Story 48's join of a spell to its assigned categories; the derived ones are read
 
 ## The category seed (M4.3)
 
-§6's eight `category_groups` and 63 `categories`, seeded as reference data rather than a scenario: idempotent by slug, with each group's colours resolved once from M0.7's Sass map, and run by `migrate.yml` after it migrates. [`db/category-seed.md`](db/category-seed.md)
+§6's eight `category_groups` and 63 `categories`, seeded as reference data rather than a scenario: idempotent by seed key (MB.172), with each group's colour pair written from the owner's hand-tuned hexes in `src/db/seed/category-groups.ts`, and run by `migrate.yml` after it migrates. [`db/category-seed.md`](db/category-seed.md)
 
 ## The form vocabulary seed (M4.3a)
 

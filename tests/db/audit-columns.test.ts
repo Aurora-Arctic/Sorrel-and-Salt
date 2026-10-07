@@ -11,10 +11,14 @@ import {
   UNAUDITED_TABLES,
   tableFacts,
 } from '../support/db/table-metadata';
+import { adminInvitations } from '@/modules/identity/schema/admin-invitations';
+import { adminRoleChangePauses } from '@/modules/identity/schema/admin-role-change-pauses';
+import { adminRoleChanges } from '@/modules/identity/schema/admin-role-changes';
 import { users } from '@/modules/identity/schema/users';
 import { categories, categoryGroups } from '@/modules/vocabulary/schema/categories';
 import { deities, deityTraditions } from '@/modules/vocabulary/schema/deities';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
+import { ingredientDeities } from '@/modules/ingredients/schema/ingredient-deities';
 import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
 import { ingredientSubstitutes } from '@/modules/ingredients/schema/ingredient-substitutes';
 import {
@@ -23,6 +27,8 @@ import {
 } from '@/modules/vocabulary/schema/ingredient-forms';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { inventoryItems } from '@/modules/ingredients/schema/inventory-items';
+import { referenceLinks } from '@/modules/ingredients/schema/reference-links';
+import { references } from '@/modules/ingredients/schema/references';
 import { retiredIngredientSlugs } from '@/modules/ingredients/schema/retired-ingredient-slugs';
 import { planets, zodiacSigns } from '@/modules/vocabulary/schema/astrology';
 import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
@@ -40,10 +46,14 @@ import type { Reference } from './types';
 
 // Table objects, transcribed: an empty list is a failing test, not a vacuous pass.
 const AUDITED: PgTable[] = [
+  adminInvitations,
+  adminRoleChangePauses,
+  adminRoleChanges,
   categoryGroups,
   categories,
   deities,
   deityTraditions,
+  ingredientDeities,
   ingredientFolkNames,
   ingredientSubstitutes,
   ingredientFormGroups,
@@ -51,6 +61,8 @@ const AUDITED: PgTable[] = [
   ingredients,
   inventoryItems,
   planets,
+  referenceLinks,
+  references,
   retiredIngredientSlugs,
   spellIngredients,
   spells,
@@ -97,8 +109,8 @@ async function byReferencesOf(table: string): Promise<Record<string, Reference>>
 const USERS_ID = { foreign_table: 'users', foreign_column: 'id' };
 
 describe('the audited tables', () => {
-  it('are the twenty-one the updated_at sweep names: nineteen audited, two stamped', () => {
-    expect(AUDITED).toHaveLength(19);
+  it('are the twenty-seven the updated_at sweep names: twenty-five audited, two stamped', () => {
+    expect(AUDITED).toHaveLength(25);
     expect(STAMPED).toHaveLength(2);
     expect([...named(AUDITED), ...named(STAMPED)].map(([name]) => name).sort()).toEqual(
       AUDITED_TABLES,
@@ -197,13 +209,16 @@ describe.each(named(STAMPED))('%s', (name, table) => {
 });
 
 // Why the catalogue half could pass wrongly: it reads whatever the migrations
-// built, so its discriminator is proved on real tables that carry no `*_by`.
+// built, so its discriminator is proved on real tables that carry no audit
+// id. By name rather than every `*_by`: `sessions.impersonated_by` is the
+// `admin` plugin's column (MB.53), and no audit id.
 describe.each(UNAUDITED_TABLES)('%s, unaudited', (name) => {
-  it('exists, and carries no *_by column and no such reference', async () => {
+  it('exists, and carries no audit id and no such reference', async () => {
     const columns = await catalogue.columnNames(name);
 
     expect(columns.length).toBeGreaterThan(0);
-    expect(columns.filter((column) => column.endsWith('_by'))).toEqual([]);
-    expect(await byReferencesOf(name)).toEqual({});
+    expect(columns.filter((column) => AUDIT_IDS.includes(column))).toEqual([]);
+    const references = await byReferencesOf(name);
+    expect(AUDIT_IDS.filter((column) => column in references)).toEqual([]);
   });
 });

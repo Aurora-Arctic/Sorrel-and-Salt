@@ -109,8 +109,9 @@ Built on the form primitives in `_primitives.scss` ([`styling.md`](../styling.md
 `.field__label`, `.input` and `.field__error`, and `.notice--error` /
 `.notice--success` for the alert and the sent message. The status line is a
 `.lede`. Send Confirmation and Continue are each the view's one primary action,
-so both are `.btn--solid`; Continue is `.btn` on an anchor and restates the
-label colour the way Welcome does, since `a:visited` outranks `.btn`. The
+so both are `.btn--solid`; Continue is `.btn` on an anchor, which `.btn`
+itself keeps from underlining or taking the visited ink
+([`styling.md`](../styling.md), "Buttons"). The
 component's own stylesheet is the page frame and the column's layout.
 
 ## Stories

@@ -23,9 +23,9 @@ export const NOMENCLATURE_KINDS = [
 ] as const satisfies readonly Nomenclature[];
 
 /**
- * The formal name each nomenclature comes with, `null` for the two that must
- * not have one — `ingredients_nomenclature_declares_canonical_name` is a
- * biconditional. Every name is invented (CLAUDE.md, Testing); ingredient.test.ts
+ * The formal name each nomenclature comes with: `null` for `none`, which must
+ * not have one under `ingredients_nomenclature_declares_canonical_name`, and
+ * for `unknown`, which may go either way (MB.161). Every name is invented (CLAUDE.md, Testing); ingredient.test.ts
  * checks them against the seed as a backstop.
  */
 const CANONICAL_NAME_BY_NOMENCLATURE: Record<Nomenclature, string | null> = {
@@ -45,14 +45,15 @@ const DEFAULTS: IngredientFixture = {
   canonicalName: CANONICAL_NAME_BY_NOMENCLATURE.botanical,
   nomenclature: 'botanical',
   form: 'herb',
+  formId: null,
   description: null,
-  element: null,
+  elements: null,
   planets: null,
   zodiacSigns: null,
-  deities: null,
   colors: null,
   safetyNotes: null,
   substitutes: [],
+  deities: [],
   folkNames: [],
   categories: [],
 };
@@ -82,7 +83,7 @@ export function makeIngredient(overrides: Overrides<IngredientFixture> = {}): In
 /**
  * The fixture as an insert into `ingredients`, by column name. The child
  * collections are destructured off by name rather than filtered by shape:
- * `deities` and the other lists are `text[]` columns too. The slug is derived
+ * `planets` and the other lists are `text[]` columns too. The slug is derived
  * from the label, the form and the formal name, as the seed derives it, never
  * stated. No audit stamps (rule 3).
  */
@@ -90,6 +91,7 @@ export function ingredientColumns(fixture: IngredientFixture): Record<string, un
   const {
     folkNames: _folkNames,
     substitutes: _substitutes,
+    deities: _deities,
     categories: _categories,
     ...row
   } = fixture;

@@ -31,7 +31,8 @@ for (const [name, suggest] of Object.entries(FIELDS)) {
     t.pagedConnection({
       type: CorrespondenceSuggestionRef,
       args: {
-        workspaceId: t.arg.id({ required: true }),
+        // Null reads the compendium alone: the admin's compendium form names no coven (M5.5).
+        workspaceId: t.arg.id({ required: false }),
         query: t.arg.string({ required: false }),
       },
       resolve: (_root, { workspaceId, query }, page, { session }) => {
@@ -52,6 +53,10 @@ export const SuggestionClaimantRef = builder.objectRef<Claimant>('SuggestionClai
 
 const FormSuggestionRef = builder.objectRef<FormSuggestion>('FormSuggestion').implement({
   fields: (t) => ({
+    id: t.exposeID('id', {
+      nullable: true,
+      description: 'The curated row, which a pick sends; null for a value only in use.',
+    }),
     value: t.exposeString('value'),
     description: t.exposeString('description', { nullable: true }),
     group: t.exposeString('group', { nullable: true }),
@@ -64,7 +69,8 @@ builder.queryField('formSuggestions', (t) =>
   t.pagedConnection({
     type: FormSuggestionRef,
     args: {
-      workspaceId: t.arg.id({ required: true }),
+      // Null reads the compendium alone: the admin's compendium form names no coven (M5.5).
+      workspaceId: t.arg.id({ required: false }),
       query: t.arg.string({ required: false }),
     },
     resolve: (_root, { workspaceId, query }, page, { session }) => {
@@ -79,6 +85,10 @@ builder.queryField('formSuggestions', (t) =>
 // ingredient's identity (claude-docs/graphql/schema.md, "deitySuggestions").
 const DeitySuggestionRef = builder.objectRef<DeitySuggestion>('DeitySuggestion').implement({
   fields: (t) => ({
+    id: t.exposeID('id', {
+      nullable: true,
+      description: 'The curated row, which a pick sends; null for a value only in use.',
+    }),
     value: t.exposeString('value'),
     description: t.exposeString('description', { nullable: true }),
     tradition: t.exposeString('tradition', { nullable: true }),
@@ -90,7 +100,8 @@ builder.queryField('deitySuggestions', (t) =>
   t.pagedConnection({
     type: DeitySuggestionRef,
     args: {
-      workspaceId: t.arg.id({ required: true }),
+      // Null reads the compendium alone: the admin's compendium form names no coven (M5.5).
+      workspaceId: t.arg.id({ required: false }),
       query: t.arg.string({ required: false }),
     },
     resolve: (_root, { workspaceId, query }, page, { session }) => {

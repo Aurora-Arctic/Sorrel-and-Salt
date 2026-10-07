@@ -1,6 +1,3 @@
-import type { Session } from '@/lib/session';
-import type { CategoryInput } from '@/modules/vocabulary/validation/category';
-
 /** A compendium entry, as story 14's queries select it. */
 export interface Entry {
   id: string;
@@ -16,18 +13,6 @@ export interface Duplicate {
   id: string;
   name: string;
   canonicalName: string | null;
-}
-
-/** What a write answers: the row, of which these stories read the id. */
-export interface Row {
-  id: string;
-}
-
-/** The global category vocabulary's writes — admin only, every one. */
-export interface CategoryWrites {
-  createCategory(session: Session, input: CategoryInput): Promise<Row>;
-  updateCategory(session: Session, id: string, input: CategoryInput): Promise<Row>;
-  deleteCategory(session: Session, id: string): Promise<void>;
 }
 
 /** The audit stamps these stories read back off a row, as raw SQL names them. */

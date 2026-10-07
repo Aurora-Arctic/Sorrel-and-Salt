@@ -5,7 +5,14 @@
 // entries ahead of the text, with the indicators on its right and the list
 // beneath it — react-select's multi-select layout, on the tokens and the
 // primitives rather than its own theme (claude-docs/components/combobox.md,
-// "Styling").
+// "Styling"). Rows that wrap sit a step further apart than the items in a
+// row, the owner's call in MB.170: a step of space read as one block.
+
+// The text's line inside the control: the control's height less its 1px
+// edge and its padding, so a bare box stands at $control-height, level with a
+// text field and a button. A typed box, a select's value and the qualifier's
+// hidden copy all take it.
+$text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 
 .combobox {
   position: relative;
@@ -15,12 +22,15 @@
 
 // `.input`'s edge, fill and states, as a flex row that wraps: the entries,
 // then the text, then the indicators. The padding comes down a step so the
-// entries sit inside it at the control's height.
-.combobox__control {
+// entries sit inside it at the control's height. Compounded with `.input`,
+// whose primitive is `body .input` in the app: a lone class loses to it, and
+// every box stood 8px over $control-height there, while the workshop's
+// unweighted frame scope hid it (M5.5).
+.input.combobox__control {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: space(1);
+  gap: space(2) space(1);
   padding: space(1) space(2);
   cursor: text;
 
@@ -36,12 +46,40 @@
   }
 }
 
+// The select-only box: the control itself takes the focus and the press,
+// so it draws its own ring, and points rather than shows a caret.
+.combobox__control--select {
+  cursor: pointer;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// A chosen value, or the placeholder, at the text's height and inset. Its
+// line is the input's whole height, so the text sits centred in it as an
+// input centres its own, and a select's text lines up with a typed box's.
+.combobox__value {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: $text-height;
+  padding: 0;
+  overflow: hidden;
+  line-height: $text-height;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &.is-placeholder {
+    color: $text-placeholder;
+  }
+}
+
 .combobox__values {
   display: flex;
   flex: 1;
   flex-wrap: wrap;
   align-items: center;
-  gap: space(1);
+  gap: space(2) space(1);
   min-width: 0;
 }
 
@@ -49,9 +87,9 @@
 .combobox__input {
   flex: 1 1 6rem;
   min-width: 6rem;
-  min-height: 2rem;
+  min-height: $text-height;
   margin: 0;
-  padding: space(1) 0;
+  padding: 0;
   border: 0;
   background-color: transparent;
   color: inherit;
@@ -64,12 +102,86 @@
   }
 }
 
+// The multi-select's box, in the text's place after the chips: a `div` that
+// is pressed rather than typed in, its placeholder muted as the input's is.
+.combobox__input--select {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+
+  .is-placeholder {
+    color: $text-placeholder;
+  }
+}
+
 .combobox__indicators {
   display: flex;
   flex: none;
   align-items: center;
   align-self: stretch;
   gap: space(1);
+}
+
+// The text's slot in the row, a one-cell grid: the box takes the rest of the
+// row, as it always has. With a qualifier it is as wide as the text instead,
+// the cell sized by a hidden copy of the value in the box's own font and
+// padding, so the qualifier follows the text (MB.169). The track can shrink
+// below its content, so a long text gives way inside the control.
+.combobox__text {
+  display: grid;
+  flex: 1 1 6rem;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 6rem;
+
+  > .combobox__input {
+    grid-area: 1 / 1;
+    width: 100%;
+    min-width: 0;
+  }
+
+  &.is-qualified {
+    flex: 0 1 auto;
+    min-width: 1ch;
+
+    &::after {
+      content: attr(data-value) ' ';
+      grid-area: 1 / 1;
+      min-height: $text-height;
+      padding: 0;
+      overflow: hidden;
+      visibility: hidden;
+      white-space: pre;
+    }
+  }
+}
+
+// What a pick leaves out of the text, a picked form's group (MB.169):
+// straight after the text, "Wax (Animal)", in the muted ink a row's note
+// reads in, and never cut off, since it is a word or two and the text beside
+// it gives way first. A press on it is a press on the text.
+.combobox__qualifier {
+  flex: none;
+  color: $text-muted;
+  white-space: nowrap;
+  cursor: text;
+}
+
+// The qualifier's detail, in InfoTip's bubble and its fade, above the control
+// from its left edge, as an entry's is: positioned on `.combobox`, so its
+// 100% is the control's width.
+.combobox__qualifier-tip {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  z-index: 1;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 100%;
+  margin-bottom: space(1);
+  white-space: normal;
+  overflow-wrap: anywhere;
+
+  @include tip-bubble;
 }
 
 // Between the clear and the chevron, as react-select draws it.
@@ -119,17 +231,19 @@
 // The list, floating beneath the control at its width, on the card surface
 // with the floating shadow. Hidden rather than unmounted while closed, since
 // Downshift keeps its ref.
+// Placed by `useListPosition` (position.ts), its position, width and side
+// set inline as there is room; here, its look, and no taller than 20rem —
+// the eight seeded category groups without a scroll (M5.6, the owner's call) — or
+// the room it has, `--combobox-list-room`. A row never scrolls it sideways:
+// an unbroken text — an address — breaks anywhere instead (MB.154).
 .combobox__list {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  left: 0;
   z-index: 1;
   display: none;
   box-sizing: border-box;
-  max-height: 18rem;
-  margin: space(1) 0 0;
+  max-height: min(20rem, var(--combobox-list-room, 20rem));
+  margin: 0;
   padding: space(1) 0;
+  overflow-x: hidden;
   overflow-y: auto;
   list-style: none;
   border: 1px solid $text-muted;
@@ -155,8 +269,9 @@
   padding: 0;
 }
 
+// A bucket's heading, set off from the rows above it by a step of space.
 .combobox__heading {
-  padding: space(1) space(3);
+  padding: space(3) space(3) space(1);
   color: $text-muted;
   font-size: type-size('caption');
   font-weight: 500;
@@ -176,6 +291,9 @@
   display: flex;
   flex-direction: column;
   padding: space(2) space(3);
+  // A word too long for the list — an address in a citation — breaks
+  // anywhere rather than scroll the list sideways.
+  overflow-wrap: anywhere;
   color: $text-primary;
   font-size: type-size('body');
   font-weight: 400;
@@ -183,6 +301,34 @@
 
   &.is-highlighted {
     background-color: color-mix(in srgb, $accent 22%, $surface-card);
+  }
+
+  // A category's row marked in its group's colour on the theme's side, as its
+  // entry is filled: a bar set in from the row's edges, so each row's reads as
+  // its own, drawn as a background so its widening on hover moves nothing and
+  // the highlight's wash still shows.
+  &.is-coloured {
+    $bar: light-dark(var(--chip-light), var(--chip-dark));
+
+    background-image: linear-gradient($bar, $bar);
+    // Its left edge level with the group heading's text.
+    background-position: space(3) center;
+    background-repeat: no-repeat;
+    background-size: 3px calc(100% - #{space(2)});
+    // The text a step clear of the bar at its widest, so the hover pushes nothing.
+    padding-inline-start: calc(#{space(3)} + 5px + #{space(2)});
+    // Quicker than the theme's 400ms fade: it answers the pointer.
+    transition: background-size 150ms ease-out;
+
+    // Wider on the row the pointer or the arrow keys mark, moving nothing.
+    &.is-highlighted,
+    &:hover {
+      background-size: 5px calc(100% - #{space(2)});
+    }
+
+    @include reduced-motion {
+      transition: none;
+    }
   }
 }
 
@@ -209,13 +355,17 @@
 .combobox__entries {
   display: flex;
   flex-wrap: wrap;
-  gap: space(1);
+  gap: space(2) space(1);
   // Bounded by the control, so that one long chip is cut off inside it
   // rather than pushing past it: a flex item's own minimum is its content.
   min-width: 0;
   max-width: 100%;
   margin: 0;
-  padding: 0;
+  // A step more room above the chips than the box's own padding, the owner's
+  // call during MB.169: without it the first of several rows sat against the
+  // top edge. On the list rather than the control, so one row still fits the
+  // text's line and the box stays at $control-height (MB.154).
+  padding: space(1) 0;
   list-style: none;
 }
 
@@ -239,9 +389,49 @@
     content: none;
   }
 
+  // In its group's colours (MB.126): the solid fill `chip()` draws selected,
+  // the pair read from the element where chipColors() sets it, since a wash
+  // of the colour cannot hold 4.5:1 (claude-docs/styling.md, "Chips, badges
+  // and the solid-fill rule"). Not the mixin itself, which draws a pill: the
+  // shape, padding and x stay the plain chip's, so a row mixes the two
+  // without a jump, and only the inks change.
+  &.is-coloured {
+    background-color: light-dark(var(--chip-light), var(--chip-dark));
+    color: $text-on-color;
+  }
+
   // The field's error edge, a shape as well as a colour, on the entry it names.
   &.is-invalid {
     box-shadow: inset 0 0 0 1px $secondary;
+  }
+
+  // A sortable chip's grip stands in for the text's inset on its left.
+  &:has(.combobox__entry-handle) {
+    padding-left: space(1);
+  }
+
+  // The chip being moved, plain to see once picked up, the owner's call
+  // during MB.170: the accent's wash a highlighted row wears, a 2px accent
+  // edge and the floating shadow, lifted over the chips it passes. The edge
+  // stands in for an error's while it is held; the error's comes back on the
+  // drop, and its handle still reads it meanwhile.
+  &.is-dragging,
+  &.is-dragging.is-invalid {
+    z-index: 1;
+    background-color: color-mix(in srgb, $accent 22%, $surface-card);
+    // The body ink again for a coloured chip, whose inverted ink is checked
+    // against its own fill and not the wash.
+    color: $text-primary;
+    box-shadow:
+      inset 0 0 0 2px $accent,
+      $shadow-floating;
+  }
+
+  // The chips making way for a moved one slide, through dnd-kit's inline
+  // transition, which only an important rule outweighs; under reduced motion
+  // they step.
+  @include reduced-motion {
+    transition: none !important;
   }
 }
 
@@ -275,6 +465,17 @@
     @include focus-ring;
   }
 
+  // On a coloured chip's fill, the muted ink is not checked, and nor is the
+  // body ink the ring is drawn in; the inverted ink is. `:where` keeps the
+  // hover's and focus's own inks above these.
+  :where(.is-coloured) & {
+    color: inherit;
+
+    &:focus-visible {
+      outline-color: $text-on-color;
+    }
+  }
+
   @include reduced-motion {
     transition: none;
   }
@@ -287,6 +488,66 @@
   min-width: 0;
 }
 
+// A sortable entry's handle (MB.170): its grip and its text, one button the
+// chip moves by, unboxed so that the chip still reads as one. It shrinks with
+// the chip, so the text inside it can still be cut off. `touch-action` is
+// dnd-kit's ask, so that a drag by touch moves the chip rather than the page.
+.combobox__entry-handle {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: radius('sharp');
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  cursor: grab;
+  touch-action: none;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  // The ring sits on a coloured chip's fill, where only the inverted ink is
+  // checked; `:where` keeps the held chip's rule above it.
+  :where(.is-coloured) &:focus-visible {
+    outline-color: $text-on-color;
+  }
+
+  // Held, the chip's accent edge marks it, so the ring around the text
+  // inside it would only mark it twice.
+  .is-dragging & {
+    cursor: grabbing;
+
+    &:focus-visible {
+      outline: none;
+    }
+  }
+}
+
+// Six dots in the muted ink, the sign that the chip can be moved; in the
+// body ink while it is held.
+.combobox__entry-grip {
+  flex: none;
+  width: 0.5rem;
+  height: 1rem;
+  color: $text-muted;
+
+  // The chip's own inverted ink on a coloured fill; `:where` keeps the held
+  // chip's ink, on the accent's wash, above it.
+  :where(.is-coloured) & {
+    color: inherit;
+  }
+
+  .is-dragging & {
+    color: $text-primary;
+  }
+}
+
 // The entry's text, cut off with an ellipsis where the control ends; the
 // tooltip shows the rest (MB.133).
 .combobox__entry-text {
@@ -297,20 +558,29 @@
 }
 
 // A cut-off entry's whole text, in InfoTip's bubble and its fade, above the
-// chip from its left edge. A cut-off chip spans the control, so the tip's
-// 100% is the control too, and an unbroken text breaks anywhere to stay
-// inside it.
+// chip from its left edge, as wide as its words up to InfoTip's own measure,
+// past the chip and the control alike, the owner's call during MB.126: only
+// being cut off is wrong. The entry shifts it left as it opens by however far
+// it would run off the screen. An unbroken text breaks anywhere to stay
+// inside the measure.
 .combobox__entry-tip {
   position: absolute;
   bottom: 100%;
-  left: 0;
+  left: var(--entry-tip-shift, 0);
   z-index: 1;
-  // Border-box, so the padding sits inside the 100% rather than past it.
+  // Border-box, so the padding sits inside the measure rather than past it.
   box-sizing: border-box;
   width: max-content;
-  max-width: 100%;
+  max-width: min(18rem, calc(100vw - #{space(6)}));
   margin-bottom: space(1);
   overflow-wrap: anywhere;
 
   @include tip-bubble;
+}
+
+// What the chip leaves out, on its own line beneath the text (MB.164). The
+// bubble's own colour, since a muted one is not checked against its ground.
+.combobox__entry-detail {
+  display: block;
+  font-size: type-size('caption');
 }

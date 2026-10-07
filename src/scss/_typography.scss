@@ -70,7 +70,10 @@
     color: $accent;
     transition: color 200ms $theme-transition-easing;
 
-    &:visited {
+    // Inside `:where()`, so it adds nothing to `a`'s specificity: as a plain
+    // `:visited` it outranked every class-level link colour, and a followed
+    // `.btn--solid` anchor put the body ink on its own fill.
+    &:where(:visited) {
       color: $text-primary;
     }
 

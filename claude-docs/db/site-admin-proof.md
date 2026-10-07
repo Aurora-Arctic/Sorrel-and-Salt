@@ -4,7 +4,15 @@ Rule 5's two layers, on the site role rather than a workspace role.
 `assertSiteAdmin(session)` in `identity`'s `services/site-admin.ts` is the
 check — `session.role === 'admin'`, or `Forbidden` — and the `SiteAdmin` it
 returns, `{ userId }` under a brand the file does not export, is the proof.
-The writer's three compendium-tier methods demand it:
+Its refusal says "Only a site admin may do this" unless the caller passes a
+more particular reason, as the user list does (MB.52). The writer's three
+compendium-tier methods demand the proof, and so do the admin user list's two
+reads ([`auth/admin-users.md`](../auth/admin-users.md), "The user list") and
+the admin-role-change pause's read and its pause and resume (MB.62;
+[`mb.62-pause-ledger.md`](../design-decisions/mb.62-pause-ledger.md)), and
+the admin invitation's insert and revoke, though not its accept or its read,
+which the invitee makes before it is an admin (MB.69;
+[`invitations.md`](invitations.md), "Admin invitations"):
 
 ```ts
 const admin = assertSiteAdmin(session);

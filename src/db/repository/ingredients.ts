@@ -1,13 +1,17 @@
 import { and, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable, alias } from 'drizzle-orm/pg-core';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
+import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredientSubstitutes } from '../../modules/ingredients/schema/ingredient-substitutes';
 import { canonicalKeyOf, ingredients } from '../../modules/ingredients/schema/ingredients';
+import { deities } from '../../modules/vocabulary/schema/deities';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
-import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
+import { inCompendium, listFolds, notSoftDeleted, scopedTo } from './predicates';
+import { citesNothing } from './references';
 import { existsIn, pageBounds, selectFrom } from './select';
+import { inLiveGroup } from './vocabularies';
 import type {
   CompendiumScore,
   IngredientFilter,
@@ -56,6 +60,47 @@ export function findManyOfIngredients<
 }
 
 /**
+ * The live deities of these ingredients (MB.167), each beside the curated
+ * deity it links while that deity is curated — live, under a live tradition —
+ * and null for a typed name or a deity since retired, which reads as the name
+ * the row holds. Not an escape hatch: the retired deity is filtered, as
+ * any finder filters it, and the row kept. Readable exactly when the parent
+ * is, as `findManyOfIngredients` reads it. Unordered; a caller sorts by
+ * `position`.
+ */
+export function findDeitiesOfIngredients(
+  memberships: readonly Membership[],
+  ingredientIds: readonly string[],
+): Promise<JoinedRow<typeof ingredientDeities.$inferSelect, typeof deities.$inferSelect>[]> {
+  if (ingredientIds.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    ingredientDeities,
+    and(
+      notSoftDeleted(ingredientDeities),
+      inArray(ingredientDeities.ingredientId, [...ingredientIds]),
+      existsIn(
+        ingredients,
+        and(
+          eq(ingredients.id, ingredientDeities.ingredientId),
+          or(
+            inCompendium(ingredients),
+            ...memberships.map((membership) => scopedTo(membership, ingredients)),
+          ),
+        ),
+      ),
+    ),
+    {
+      leftJoin: deities,
+      on: and(
+        eq(deities.id, ingredientDeities.deityId),
+        notSoftDeleted(deities),
+        inLiveGroup(deities),
+      ) as SQL,
+    },
+  );
+}
+
+/**
  * The live substitutes of these ingredients, each beside the ingredient it
  * links — soft-deleted or not — or null for a typed name. The third escape
  * hatch (MB.138): a link to a deleted ingredient is kept, and reads as that
@@ -100,10 +145,11 @@ export function findSubstitutesIncludingSoftDeleted(
 }
 
 /**
- * One page of the live ingredients, in the compendium or the proof's
- * workspace, whose display name, formal name or a live folk name is
- * trigram-similar to `name` — best match first, keyed `[-score, name]`, each
- * carrying its score. Reads both tiers in one statement.
+ * One page of the live ingredients, in the compendium or a coven one of
+ * `memberships` proves, whose display name, formal name or a live folk name
+ * is trigram-similar to `name` — best match first, keyed `[-score, name]`,
+ * each carrying its score. Reads both tiers in one statement; no proofs reads
+ * the compendium alone, which is the admin's compendium form (M5.5).
  *
  * The three matches are a `UNION ALL` under `id IN (…)`, not an `OR` beside
  * the scope: Postgres cannot turn a subquery inside an `OR` into a join, so
@@ -112,7 +158,7 @@ export function findSubstitutesIncludingSoftDeleted(
  * "Fuzzy matching").
  */
 export function findSimilarIngredients(
-  membership: Membership,
+  memberships: readonly Membership[],
   name: string,
   page: PageRequest,
 ): Promise<PageEntry<typeof ingredients.$inferSelect, SimilarityScore>[]> {
@@ -144,7 +190,10 @@ export function findSimilarIngredients(
   return selectFrom(
     ingredients,
     and(
-      or(inCompendium(ingredients), scopedTo(membership, ingredients)),
+      or(
+        inCompendium(ingredients),
+        ...memberships.map((membership) => scopedTo(membership, ingredients)),
+      ),
       notSoftDeleted(ingredients),
       inArray(ingredients.id, matched),
       pageBounds(keyset),
@@ -274,7 +323,15 @@ function compendiumList(filter: IngredientFilter): {
 } {
   const match = searchMatch(filter.query);
   return {
-    arms: and(...categoryArms(filter.categoryIds ?? []), formArm(filter.form)),
+    arms: and(
+      ...categoryArms(filter.categoryIds ?? []),
+      formArm(filter.form),
+      filter.formId ? eq(ingredients.formId, filter.formId) : undefined,
+      listArm(ingredients.planets, filter.planet),
+      listArm(ingredients.zodiacSigns, filter.zodiacSign),
+      filter.withoutReferences ? citesNothing() : undefined,
+      filter.nomenclature ? eq(ingredients.nomenclature, filter.nomenclature) : undefined,
+    ),
     order: match
       ? {
           sort: [{ expression: sql`-${match.score}`, type: 'real' }, ingredients.name],
@@ -346,6 +403,15 @@ function categoryArms(categoryIds: readonly string[]): SQL[] {
       ),
     ),
   );
+}
+
+/**
+ * `list` holds an entry folding to `value`, both trimmed and lower-cased as
+ * the suggestions fold one (MB.162). Blank means no filter.
+ */
+function listArm(list: AnyPgColumn, value: string | undefined): SQL | undefined {
+  if (!value?.trim()) return undefined;
+  return inArray(sql`lower(btrim(${value}))`, listFolds(list));
 }
 
 /** The form compared under the fold `canonical_key` uses, on both sides. Blank means no filter. */

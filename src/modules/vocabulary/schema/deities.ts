@@ -17,9 +17,15 @@ export const deityTraditions = pgTable(
     name: text('name').notNull(),
     slug: text('slug').notNull(),
     description: text('description').notNull(),
+    // The identity the reference seed gave the row, null on any other; never
+    // changed after, so a reseed knows a row an admin has since edited (MB.171).
+    seedKey: text('seed_key'),
     ...auditColumns,
   },
   (table) => [
+    uniqueIndex('deity_traditions_seed_key_unique')
+      .on(table.seedKey)
+      .where(sql`${table.seedKey} is not null and ${table.deletedAt} is null`),
     // Partial per CLAUDE.md rule 4, and on the slug alone, never the display name.
     uniqueIndex('deity_traditions_slug_unique')
       .on(table.slug)
@@ -29,10 +35,11 @@ export const deityTraditions = pgTable(
   ],
 );
 
-// The vocabulary behind `ingredients.deities`, and deliberately not a foreign
-// key target for it (deities-schema.test.ts asserts so): `traditionId` can be
-// a key because only an admin writes it, as `ingredient_forms.group_id` is,
-// while a member must be able to write a god before anyone curates one.
+// The vocabulary behind an ingredient's deities, and deliberately not a foreign
+// key target for their text (deities-schema.test.ts asserts so): `traditionId`
+// can be a key because only an admin writes it, as `ingredient_forms.group_id`
+// is, while a member must be able to write a god before anyone curates one. A
+// pick is keyed beside its name, as `ingredient_deities.deity_id` (MB.165).
 export const deities = pgTable(
   'deities',
   {
@@ -45,9 +52,15 @@ export const deities = pgTable(
     traditionId: uuid('tradition_id')
       .notNull()
       .references(() => deityTraditions.id),
+    // The identity the reference seed gave the row, null on any other; never
+    // changed after, so a reseed knows a row an admin has since edited (MB.171).
+    seedKey: text('seed_key'),
     ...auditColumns,
   },
   (table) => [
+    uniqueIndex('deities_seed_key_unique')
+      .on(table.seedKey)
+      .where(sql`${table.seedKey} is not null and ${table.deletedAt} is null`),
     // Partial per rule 4, global rather than per tradition. The display name
     // is deliberately unindexed: one god honoured under two traditions is two
     // rows, and the autofill tells them apart by tradition.

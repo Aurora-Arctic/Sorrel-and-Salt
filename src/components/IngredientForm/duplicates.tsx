@@ -18,13 +18,14 @@ import type { Duplicate, DuplicateWarning, NameFieldProps } from './types';
 // (claude-docs/components/ingredient-form.md, "The duplicate warning").
 
 const PossibleDuplicatesDocument = graphql(`
-  query PossibleDuplicates($workspaceId: ID!, $name: String!, $first: Int) {
+  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {
     possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {
       edges {
         node {
           id
           name
           canonicalName
+          slug
         }
       }
     }
@@ -32,17 +33,23 @@ const PossibleDuplicatesDocument = graphql(`
 `);
 
 /** Matches a warning names: the closest few, best first, as a sentence can hold them. */
-export const DUPLICATE_ROWS = 3;
+const DUPLICATE_ROWS = 3;
 
-const lookup = (workspaceId: string, name: string) =>
+const lookup = (workspaceId: string | null, name: string) =>
   graphqlQuery(PossibleDuplicatesDocument, { workspaceId, name, first: DUPLICATE_ROWS });
 
 /**
  * The warning for the name as typed: the matches it shows, whether a save is
  * held on them, and the two things that move it on — a save's `check`, and
  * `dismiss`. The form owns it, since its save waits on it; `NameField` draws it.
+ * A null coven asks about the compendium alone, and `omit` is the entry being
+ * edited, which its own name always matches.
  */
-export function useDuplicateWarning(workspaceId: string, text: string): DuplicateWarning {
+export function useDuplicateWarning(
+  workspaceId: string | null,
+  text: string,
+  omit?: string,
+): DuplicateWarning {
   const client = useQueryClient();
   const typed = text.trim();
   const name = useDebouncedValue(typed);
@@ -60,7 +67,11 @@ export function useDuplicateWarning(workspaceId: string, text: string): Duplicat
   // The name a save was held on. Another name lifts the hold, so a match
   // arriving as it is typed never takes the focus; its save asks again.
   const [heldFor, setHeldFor] = useState<string | null>(null);
-  const matches = name === '' ? [] : (data?.possibleDuplicates.edges.map(({ node }) => node) ?? []);
+  const matches =
+    name === ''
+      ? []
+      : (data?.possibleDuplicates.edges.flatMap(({ node }) => (node.id === omit ? [] : node)) ??
+        []);
   const shown = matches.filter((match) => !dismissed.has(match.id));
 
   const check = async (value: string): Promise<boolean> => {
@@ -71,7 +82,7 @@ export function useDuplicateWarning(workspaceId: string, text: string): Duplicat
       // The cached answer when the typing had settled; asked now when not, and
       // the field shows it once the debounce catches up, from the cache.
       const answer = await client.fetchQuery(lookup(workspaceId, sending));
-      found = answer.possibleDuplicates.edges.map(({ node }) => node);
+      found = answer.possibleDuplicates.edges.flatMap(({ node }) => (node.id === omit ? [] : node));
     } catch {
       // As the field's own lookup: a failure warns of nothing, and holds nothing.
       return false;
@@ -99,8 +110,11 @@ const joinerAt = (index: number, count: number) => {
   return index === count - 1 ? ' or ' : ', ';
 };
 
+/** A match's page, as a coven's form links it: the ingredient by id, M8.19's. */
+const covenHref = ({ id }: Duplicate) => `/ingredients/${id}`;
+
 /** The name field, with the duplicate warning beneath it. */
-export function NameField({ warning, ref }: NameFieldProps): ReactElement {
+export function NameField({ warning, hrefOf = covenHref, ref }: NameFieldProps): ReactElement {
   const { shown, blocking } = warning;
   const warningId = useId();
 
@@ -116,6 +130,7 @@ export function NameField({ warning, ref }: NameFieldProps): ReactElement {
     <TextField
       name="name"
       label="Name"
+      autoComplete="off"
       required
       hint="What this coven calls it. It can differ from the formal name."
       describedBy={shown.length > 0 ? warningId : undefined}
@@ -125,7 +140,7 @@ export function NameField({ warning, ref }: NameFieldProps): ReactElement {
         // warning arrives after the typing, and nothing else says so.
         <output className="ingredient-form__duplicates" aria-label="Possible duplicates">
           {shown.length > 0 && (
-            <div className={blocking ? 'notice notice--error' : 'notice'}>
+            <div className={blocking ? 'notice notice--error' : 'notice notice--warn'}>
               {/* Plain anchors rather than <Link>: typed routes refuse a page
                   not built yet, and /ingredients/[id] is M8.19's. */}
               <p id={warningId}>
@@ -133,7 +148,7 @@ export function NameField({ warning, ref }: NameFieldProps): ReactElement {
                 {shown.map((match, index) => (
                   <Fragment key={match.id}>
                     {joinerAt(index, shown.length)}
-                    <a href={`/ingredients/${match.id}`}>{titleOf(match)}</a>
+                    <a href={hrefOf(match)}>{titleOf(match)}</a>
                   </Fragment>
                 ))}
                 ?

@@ -60,96 +60,13 @@ $ink-muted: color.adjust($iron-gall, $lightness: 20%);
 $shadow-dark: rgba(6, 5, 3, 0.8);
 $shadow-light: rgba(35, 32, 26, 0.18);
 
-// ---------------------------------------------------------------------------
-// Category groups
-// ---------------------------------------------------------------------------
-// One rotation of $sorrel in 22.5deg steps, odd multiples only, so no group
-// lands on the accent (96deg) or secondary (8deg) hue. Saturation lifted once
-// per theme, lightness trimmed per group to the 4.5:1 floor.
-// claude-docs/styling.md, "Category-group colours".
-$category-group-step: 22.5deg;
-$category-group-saturation: (
-  dark: 14%,
-  light: 50%,
-);
-
-// `step` is an odd multiple of $category-group-step. The category seed's
-// `group` field must match these slugs.
-$category-groups: (
-  // 208.5deg — steel blue
-  'protection': (
-      step: 5,
-      dark: 22%,
-      light: 0%,
-    ),
-  // 163.5deg — teal
-  'cleansing': (
-      step: 3,
-      dark: 9%,
-      light: -7%,
-    ),
-  // 73.5deg — gold
-  'prosperity': (
-      step: 15,
-      dark: 7%,
-      light: -8%,
-    ),
-  // 343.5deg — rose
-  'love': (
-      step: 11,
-      dark: 29%,
-      light: 0%,
-    ),
-  // 253.5deg — indigo
-  'mind': (
-      step: 7,
-      dark: 34%,
-      light: 0%,
-    ),
-  // 118.5deg — jade
-  'wellbeing': (
-      step: 1,
-      dark: 9%,
-      light: -6%,
-    ),
-  // 298.5deg — violet
-  'craft': (
-      step: 9,
-      dark: 26%,
-      light: 0%,
-    ),
-  // 28.5deg — hearth amber
-  'practice': (
-      step: 13,
-      dark: 17%,
-      light: 0%,
-    )
-);
-
-// Otherwise a mistyped theme surfaces as `null is not a number` inside color.adjust().
+// Otherwise a mistyped theme surfaces as a null ink rather than an error naming it.
 @function _assert-theme($theme) {
   @if not list.index((dark, light), $theme) {
     @error 'Unknown theme "#{$theme}". Expected dark or light.';
   }
 
   @return $theme;
-}
-
-// Theme mixins only; components use category-group() below.
-@function category-group-color($slug, $theme) {
-  $theme: _assert-theme($theme);
-  $spec: map.get($category-groups, $slug);
-
-  @if $spec == null {
-    @error 'Unknown category group "#{$slug}". The eight groups are: #{map.keys($category-groups)}.';
-  }
-
-  @return color.adjust(
-    $sorrel,
-    $hue: map.get($spec, step) * $category-group-step,
-    $saturation: map.get($category-group-saturation, $theme),
-    $lightness: map.get($spec, $theme)
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -275,16 +192,8 @@ $text-on-color: var(--surface-page);
 // placeholder as it does any text.
 $text-placeholder: color-mix(in srgb, $text-muted 85%, $surface-card);
 
-// Functions rather than variables: a typo fails at compile time where
-// `var(--group-protectoin)` fails silently in the browser.
-@function category-group($slug) {
-  @if not map.has-key($category-groups, $slug) {
-    @error 'Unknown category group "#{$slug}". The eight groups are: #{map.keys($category-groups)}.';
-  }
-
-  @return var(--group-#{$slug});
-}
-
+// A function rather than variables: a typo fails at compile time where
+// `var(--badge-saftey-fill)` fails silently in the browser.
 @function badge-token($palette, $part) {
   $parts: badge-parts($palette);
 
@@ -334,6 +243,12 @@ $type-sizes: (
 // table, a grid — still sets its prose readably.
 $measure: 66ch;
 
+// How far the top of the window is taken by chrome in the page's flow above
+// everything else: the impersonation banner on a touch screen (MB.53), and 0
+// otherwise. What pins itself to the top of the window, or sizes itself to it,
+// offsets by it (claude-docs/styling.md, "The top inset").
+$top-inset: var(--top-inset, 0px);
+
 // ---------------------------------------------------------------------------
 // Motion and layout
 // ---------------------------------------------------------------------------
@@ -342,6 +257,12 @@ $theme-transition-easing: ease-in-out;
 
 // The only width-based breakpoint; everything else keys off media preferences.
 $breakpoint-desktop: 1024px;
+
+// The height every one-line control shares, so a field, a select or
+// suggesting box and a button stand level in a row: 44.5px, the owner's call
+// (MB.154), what a button measured at its own padding, and over WCAG 2.5.5's
+// 44px target. A minimum, so a list's box still grows with its entries.
+$control-height: 2.78125rem;
 
 // ---------------------------------------------------------------------------
 // Spacing and radius

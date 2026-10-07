@@ -141,4 +141,12 @@ describe('.ladle/config.mjs', () => {
   it("opens the workshop dark — addons.theme.defaultState is 'dark'", () => {
     expect(ladleConfig.addons?.theme?.defaultState).toBe('dark');
   });
+
+  // Ladle hands Vite `hmrHost ?? 'localhost'`, which binds the HMR socket to
+  // the workshop container's loopback, where its published port never reaches.
+  // An empty string survives the `??` and binds every interface instead.
+  it("binds the HMR socket on every interface — hmrHost is '', not Ladle's localhost", () => {
+    expect(ladleConfig.hmrPort).toBe(61002);
+    expect(ladleConfig.hmrHost).toBe('');
+  });
 });

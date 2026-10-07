@@ -130,6 +130,25 @@ describe('demo is standard plus spells', () => {
       expect(row.slug).toBe(ingredientSlug(row.name, row.form, row.canonical_name));
     }
   });
+
+  // MB.162: the compendium holds only curated forms, so the uncurated value a
+  // member writes before an admin curates it — §5's `rhizome` — lives here.
+  it('gives W an entry with the uncurated form `rhizome`, which no compendium entry holds', async () => {
+    await seedDemo(db);
+
+    const rhizomes = await sql<{ workspace_id: string | null }[]>`
+      select workspace_id from ingredients where lower(btrim(form)) = 'rhizome'
+    `;
+    expect(rhizomes.map((row) => row.workspace_id)).toEqual([WORKSPACE_W_ID]);
+
+    // Uncurated: no form row, live or retired, folds to it.
+    const curated = await sql`
+      select 1 from ingredient_forms where lower(btrim(name)) = 'rhizome'
+    `;
+    expect(curated).toEqual([]);
+    // Precondition: the vocabulary is there to be outside of.
+    expect(await countOf('ingredient_forms')).toBeGreaterThan(0);
+  });
 });
 
 describe('the grimoire', () => {
@@ -159,7 +178,7 @@ describe('the grimoire', () => {
 
   // The seed names no visibility, so what these rows carry is the column's own
   // default (M10.3). A demo coven whose jars were invisible to everyone but
-  // the bootstrap admin would be a demo of nothing.
+  // the bootstrap user would be a demo of nothing.
   it('shares every seeded spell with the coven', async () => {
     await seedDemo(db);
 
@@ -264,7 +283,7 @@ describe('layers: ingredients, and the order they go into the jar', () => {
     expect(named).toEqual([]);
   });
 
-  it('stamps every layer as the bootstrap admin’s and publishes it as the acting user', async () => {
+  it('stamps every layer as the bootstrap user’s and publishes it as the acting user', async () => {
     await seedDemo(db);
 
     const layers = await sql<LayerRow[]>`select * from spell_ingredients`;

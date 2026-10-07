@@ -9,7 +9,7 @@ import { PLANETS, ZODIAC_SIGNS } from '@/db/seed/astrology';
 // DESIGN.md §5 transcribed rather than imported, so the schemas are compared
 // against the spec, not against the constants they are built from.
 const NAMING_KINDS = ['botanical', 'fungal', 'zoological', 'mineral', 'chemical'] as const;
-const NAMELESS_KINDS = ['unknown', 'none'] as const;
+const NON_NAMING_KINDS = ['unknown', 'none'] as const;
 const ELEMENTS = ['earth', 'air', 'fire', 'water', 'spirit'];
 const VARIANTS = [
   ['local', LocalIngredientInput],
@@ -55,16 +55,21 @@ describe('the workspace-local ingredient', () => {
     );
   });
 
-  // Defaulting to `none` here would contradict the name it was given, and
-  // guessing `botanical` is the silent guess §5 forbids; so it asks.
-  it('asks for the naming system when a formal name arrives without one', () => {
-    const result = LocalIngredientInput.safeParse({
-      name: 'Testwort',
-      canonicalName: 'Fixtura testalis',
-    });
-
-    expect(failedPaths(result)).toEqual([['nomenclature']]);
-  });
+  // `none` would contradict the name it was given, and `botanical` is the
+  // silent guess §5 forbids; `unknown` admits the name without claiming its
+  // system (MB.161).
+  it.each([undefined, null])(
+    'reads a formal name with the naming system %s as unknown',
+    (nomenclature) => {
+      expect(
+        LocalIngredientInput.parse({
+          name: 'Testwort',
+          canonicalName: 'Fixtura testalis',
+          nomenclature,
+        }),
+      ).toMatchObject({ nomenclature: 'unknown', canonicalName: 'Fixtura testalis' });
+    },
+  );
 
   it('requires a name', () => {
     expect(failedPaths(LocalIngredientInput.safeParse({}))).toEqual([['name']]);
@@ -80,7 +85,7 @@ describe('the compendium ingredient', () => {
   });
 
   it('accepts each answer, none and unknown included', () => {
-    for (const kind of NAMELESS_KINDS) {
+    for (const kind of NON_NAMING_KINDS) {
       expect(
         CompendiumIngredientInput.safeParse({ name: 'Testwort', nomenclature: kind }).success,
       ).toBe(true);
@@ -94,14 +99,25 @@ describe('the compendium ingredient', () => {
 
 describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
   describe('couples nomenclature to canonicalName, as the database CHECK does', () => {
-    it.each(NAMELESS_KINDS)('refuses a formal name on %s', (kind) => {
+    it('refuses a formal name on none', () => {
       const result = Schema.safeParse({
         name: 'Testwort',
-        nomenclature: kind,
+        nomenclature: 'none',
         canonicalName: 'Fixtura testalis',
       });
 
       expect(failedPaths(result)).toEqual([['canonicalName']]);
+    });
+
+    // The one kind the rule leaves open: a formal name exists, its system unsettled.
+    it('takes unknown with a formal name and without one', () => {
+      const base = { name: 'Testwort', nomenclature: 'unknown' };
+
+      expect(Schema.parse({ ...base, canonicalName: 'Fixtura testalis' })).toMatchObject({
+        nomenclature: 'unknown',
+        canonicalName: 'Fixtura testalis',
+      });
+      expect(Schema.parse(base)).toMatchObject({ nomenclature: 'unknown' });
     });
 
     it.each(NAMING_KINDS)('requires a formal name on %s', (kind) => {
@@ -289,28 +305,171 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
     });
   });
 
+  // DESIGN.md §7: each entry an existing reference's id, with an optional
+  // locator, and an ingredient cites each reference once.
+  describe('references', () => {
+    const base = { name: 'Testwort', nomenclature: 'none' };
+    const SIMEK = '00000000-0000-4000-8000-0000000000b1';
+    const SMITH = '00000000-0000-4000-8000-0000000000b2';
+    const GRIMM = '00000000-0000-4000-8000-0000000000b3';
+
+    it('takes references with and without a locator, a blank one as none', () => {
+      const parsed = Schema.parse({
+        ...base,
+        references: [
+          { referenceId: SIMEK, locator: ' p. 112 ' },
+          { referenceId: SMITH, locator: '  ' },
+          { referenceId: ` ${GRIMM} ` },
+        ],
+      });
+
+      expect(parsed.references).toEqual([
+        { referenceId: SIMEK, locator: 'p. 112' },
+        { referenceId: SMITH, locator: null },
+        { referenceId: GRIMM, locator: null },
+      ]);
+    });
+
+    // MB.154: one locator holds every place a source is cited at, tidied and
+    // with its ranges dashed, as the form shows it once the box is left.
+    it('tidies a locator and dashes its ranges, keeping several places in one', () => {
+      const parsed = Schema.parse({
+        ...base,
+        references: [{ referenceId: SIMEK, locator: ' pp. 12-19,  40;  chap. 3 ' }],
+      });
+
+      expect(parsed.references).toEqual([
+        { referenceId: SIMEK, locator: 'pp. 12–19, 40; chap. 3' },
+      ]);
+    });
+
+    it.each([
+      ['names no reference', { referenceId: '  ' }],
+      ['names an id that is not one', { referenceId: 'simek-1993' }],
+    ])('refuses an entry that %s, pathed to the entry', (_case, entry) => {
+      const result = Schema.safeParse({
+        ...base,
+        references: [{ referenceId: SIMEK }, entry],
+      });
+
+      expect(failedPaths(result)).toEqual([['references', 1]]);
+    });
+
+    // `reference_links_ingredient_unique` would refuse the second copy;
+    // saying so here keeps its 23505 from being what a user sees.
+    it('refuses the same reference twice, whatever its locator, pathed to the repeat', () => {
+      const result = Schema.safeParse({
+        ...base,
+        references: [
+          { referenceId: SIMEK, locator: 'p. 112' },
+          { referenceId: SMITH },
+          { referenceId: SIMEK, locator: 'p. 40' },
+        ],
+      });
+
+      expect(failedPaths(result)).toEqual([['references', 2]]);
+    });
+
+    it('takes no references, absent or empty', () => {
+      expect(Schema.parse(base).references ?? []).toEqual([]);
+      expect(Schema.parse({ ...base, references: [] }).references ?? []).toEqual([]);
+    });
+  });
+
+  // MB.125: the categories an ingredient is filed under, by id. Whether an id
+  // names a live category is the service's, which reads the database.
+  describe('categoryIds', () => {
+    const base = { name: 'Testwort', nomenclature: 'none' };
+    const PROTECTION = '00000000-0000-4000-8000-0000000000c1';
+    const CLEANSING = '00000000-0000-4000-8000-0000000000c2';
+
+    it('takes the ids picked, trimmed, in the order sent', () => {
+      expect(
+        Schema.parse({ ...base, categoryIds: [CLEANSING, ` ${PROTECTION} `] }).categoryIds,
+      ).toEqual([CLEANSING, PROTECTION]);
+    });
+
+    // A chip toggled twice is one category: the service writes it once, so
+    // the parse keeps the repeat at its index rather than refusing it.
+    it('keeps a repeated id rather than refusing it', () => {
+      expect(Schema.safeParse({ ...base, categoryIds: [PROTECTION, PROTECTION] }).success).toBe(
+        true,
+      );
+    });
+
+    it.each([
+      ['is blank', '  '],
+      ['is not an id', 'protection'],
+    ])('refuses an entry that %s, pathed to the entry', (_case, entry) => {
+      const result = Schema.safeParse({ ...base, categoryIds: [PROTECTION, entry] });
+
+      expect(failedPaths(result)).toEqual([['categoryIds', 1]]);
+    });
+
+    it('takes no categories, absent or empty', () => {
+      expect(Schema.parse(base).categoryIds ?? []).toEqual([]);
+      expect(Schema.parse({ ...base, categoryIds: [] }).categoryIds ?? []).toEqual([]);
+    });
+  });
+
   describe('enum fields', () => {
     const base = { name: 'Testwort', nomenclature: 'none' };
 
     it('matches the database enums exactly', () => {
       // The schema and the pgEnum are built from one list; this pins the list
       // to §5 so a change to it is a change to the spec.
-      expect([...nomenclatureKind.enumValues]).toEqual([...NAMING_KINDS, ...NAMELESS_KINDS]);
+      expect([...nomenclatureKind.enumValues]).toEqual([...NAMING_KINDS, ...NON_NAMING_KINDS]);
       expect([...ingredientElement.enumValues]).toEqual(ELEMENTS);
     });
 
-    it('element accepts every documented value', () => {
-      for (const element of ELEMENTS) {
-        expect(Schema.safeParse({ ...base, element }).success).toBe(true);
-      }
+    it('nomenclature rejects a value outside the enum', () => {
+      expect(failedPaths(Schema.safeParse({ ...base, nomenclature: 'taxonomic' }))).toEqual([
+        ['nomenclature'],
+      ]);
+    });
+  });
+
+  // DESIGN.md §5 (MB.157): a list of the five, in the order chosen, each once.
+  describe('elements', () => {
+    const base = { name: 'Testwort', nomenclature: 'none' };
+
+    it('accepts every documented value, all at once', () => {
+      expect(Schema.parse({ ...base, elements: ELEMENTS })).toMatchObject({ elements: ELEMENTS });
     });
 
-    it.each([
-      ['nomenclature', 'taxonomic'],
-      ['element', 'aether'],
-      ['element', 'Earth'],
-    ])('%s rejects %s', (field, value) => {
-      expect(failedPaths(Schema.safeParse({ ...base, [field]: value }))).toContainEqual([field]);
+    it('keeps the order chosen', () => {
+      expect(Schema.parse({ ...base, elements: ['water', 'fire', 'air'] })).toMatchObject({
+        elements: ['water', 'fire', 'air'],
+      });
+    });
+
+    it.each(['aether', 'Earth', ''])('refuses %j at its position', (value) => {
+      expect(failedPaths(Schema.safeParse({ ...base, elements: ['fire', value] }))).toEqual([
+        ['elements', 1],
+      ]);
+    });
+
+    it('refuses a single value sent where the list belongs', () => {
+      expect(failedPaths(Schema.safeParse({ ...base, elements: 'fire' }))).toEqual([['elements']]);
+    });
+
+    it('refuses a repeat at the repeat, naming the element', () => {
+      const result = Schema.safeParse({ ...base, elements: ['fire', 'air', 'fire'] });
+
+      expect(failedPaths(result)).toEqual([['elements', 2]]);
+      expect(result.error?.issues[0]?.message).toBe('Fire is already chosen');
+    });
+
+    it('takes a list left empty, null or absent as absent', () => {
+      expect(Schema.parse({ ...base, elements: [] })).toMatchObject({ elements: null });
+      expect(Schema.parse({ ...base, elements: null })).toMatchObject({ elements: null });
+      expect(Schema.parse(base).elements ?? null).toBeNull();
+    });
+
+    // The single column is undeclared (MB.159), so a caller still sending
+    // one writes nothing through it.
+    it('carries no single element', () => {
+      expect(Object.keys(Schema.parse({ ...base, element: 'fire' }))).not.toContain('element');
     });
   });
 
@@ -339,10 +498,19 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
       });
     });
 
-    it('keeps the order entered, and a repeated entry', () => {
-      expect(Schema.parse({ ...base, [field]: ['Vesta', 'Ceres', 'Vesta'] })).toMatchObject({
-        [field]: ['Vesta', 'Ceres', 'Vesta'],
+    it('keeps the order entered', () => {
+      expect(Schema.parse({ ...base, [field]: ['Vesta', 'Ceres', 'Pallas'] })).toMatchObject({
+        [field]: ['Vesta', 'Ceres', 'Pallas'],
       });
+    });
+
+    // MB.167: as folk names are, case-folded and trimmed, at the row the form
+    // sent it in — blanks counted.
+    it('refuses a repeat but for case and spacing, at the repeat', () => {
+      const result = Schema.safeParse({ ...base, [field]: ['Vesta', ' ', 'Ceres', ' vESTA '] });
+
+      expect(failedPaths(result)).toEqual([[field, 3]]);
+      expect(result.error?.issues[0]?.message).toMatch(/already listed/);
     });
 
     it('takes a list left with no entries as absent', () => {
@@ -351,8 +519,8 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
     });
   });
 
-  // The single columns are undeclared (MB.136), so a caller still sending one
-  // writes nothing through it.
+  // The single columns are gone (MB.136 undeclared them, MB.137 dropped them),
+  // so a caller still sending one writes nothing through it.
   it('carries no single planet, zodiac sign or colour', () => {
     const parsed = Schema.parse({
       name: 'Testwort',
@@ -374,10 +542,10 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
       canonicalName: 'Fixtura testalis',
       form: 'root',
       description: 'An invented herb.',
-      element: 'water',
+      elements: ['water', 'earth'],
       planets: ['moon', 'Venus'],
       zodiacSigns: ['cancer'],
-      deities: [' Testara '],
+      deities: [{ name: ' Testara ' }],
       colors: ['green', 'silver'],
       safetyNotes: 'Not for internal use.',
       substitutes: [{ name: 'Mock Root' }],
@@ -385,21 +553,12 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
     });
 
     expect(parsed).toMatchObject({
-      deities: ['Testara'],
+      elements: ['water', 'earth'],
+      deities: [{ deityId: null, name: 'Testara' }],
       planets: ['moon', 'Venus'],
       zodiacSigns: ['cancer'],
       colors: ['green', 'silver'],
     });
-  });
-
-  it('drops a blank entry from the other array fields', () => {
-    const parsed = Schema.parse({
-      name: 'Testwort',
-      nomenclature: 'none',
-      deities: ['Testara', '  '],
-    });
-
-    expect(parsed).toMatchObject({ deities: ['Testara'] });
   });
 
   // A list left with no entries is no list: cleared to null, as a blank text
@@ -408,11 +567,111 @@ describe.each(VARIANTS)('the %s ingredient', (_, Schema) => {
     const parsed = Schema.parse({
       name: 'Testwort',
       nomenclature: 'none',
-      deities: [],
       colors: ['  '],
       folkNames: [],
     });
 
-    expect(parsed).toMatchObject({ deities: null, colors: null, folkNames: null });
+    expect(parsed).toMatchObject({ colors: null, folkNames: null });
+  });
+
+  // MB.167: the form a member picked, recorded beside its text (DESIGN.md §5,
+  // `ingredient_forms`). Whether the id names a curated row is the service's.
+  describe('formId', () => {
+    const base = { name: 'Testwort', nomenclature: 'none' };
+    const PICKED = '00000000-0000-4000-8000-0000000000f1';
+
+    it('takes a picked form beside its text', () => {
+      expect(Schema.parse({ ...base, form: 'Wax', formId: PICKED })).toMatchObject({
+        form: 'Wax',
+        formId: PICKED,
+      });
+    });
+
+    it('treats a blank id as no pick', () => {
+      expect(Schema.parse({ ...base, form: 'Wax', formId: '' })).toMatchObject({ formId: null });
+      expect(Schema.parse({ ...base, form: 'Wax' }).formId ?? null).toBeNull();
+    });
+
+    it('refuses an id that is not one, beside it', () => {
+      expect(failedPaths(Schema.safeParse({ ...base, form: 'Wax', formId: 'wax' }))).toEqual([
+        ['formId'],
+      ]);
+    });
+
+    // `ingredients_form_id_has_form` would refuse it; the text field is where
+    // the member sees why.
+    it('refuses a pick with no form text, beside the text', () => {
+      expect(failedPaths(Schema.safeParse({ ...base, form: ' ', formId: PICKED }))).toEqual([
+        ['form'],
+      ]);
+    });
+  });
+
+  // MB.167: each deity links a curated row or names one (DESIGN.md §5,
+  // `ingredient_deities`), in the order entered, and an ingredient lists each once.
+  describe('deities', () => {
+    const base = { name: 'Testwort', nomenclature: 'none' };
+    const GREEK = '00000000-0000-4000-8000-0000000000d1';
+    const ROMAN = '00000000-0000-4000-8000-0000000000d2';
+
+    it('takes links and typed names together, in the order sent, each as one of the two', () => {
+      const parsed = Schema.parse({
+        ...base,
+        deities: [{ deityId: GREEK }, { name: ' Testara ', deityId: '' }, { deityId: ROMAN }],
+      });
+
+      expect(parsed.deities).toEqual([
+        { deityId: GREEK, name: null },
+        { deityId: null, name: 'Testara' },
+        { deityId: ROMAN, name: null },
+      ]);
+    });
+
+    it.each([
+      ['links and names at once', { deityId: GREEK, name: 'Hecate' }],
+      ['does neither', {}],
+      ['names only a blank', { name: '  ' }],
+      ['links an id that is not one', { deityId: 'hecate' }],
+    ])('refuses an entry that %s, pathed to the entry', (_case, entry) => {
+      const result = Schema.safeParse({ ...base, deities: [{ name: 'Testara' }, entry] });
+
+      expect(failedPaths(result)).toEqual([['deities', 1]]);
+    });
+
+    // The two partial unique indexes would refuse the second copy; saying so
+    // here keeps the index's 23505 from being what a member sees.
+    it('refuses the same deity linked twice, pathed to the repeat', () => {
+      const result = Schema.safeParse({
+        ...base,
+        deities: [{ deityId: GREEK }, { deityId: ROMAN }, { deityId: GREEK }],
+      });
+
+      expect(failedPaths(result)).toEqual([['deities', 2]]);
+    });
+
+    it('refuses the same typed name twice in any case, pathed to the repeat', () => {
+      const result = Schema.safeParse({
+        ...base,
+        deities: [{ name: 'Testara' }, { deityId: GREEK }, { name: ' tESTARA' }],
+      });
+
+      expect(failedPaths(result)).toEqual([['deities', 2]]);
+    });
+
+    // Greek and Roman Hecate are two deities; a typed "Hecate" beside a picked
+    // one is text beside a link. Whether the names agree is not asked here.
+    it('takes two links, and a typed name beside a link, whatever their names', () => {
+      expect(
+        Schema.safeParse({
+          ...base,
+          deities: [{ deityId: GREEK }, { deityId: ROMAN }, { name: 'Hecate' }],
+        }).success,
+      ).toBe(true);
+    });
+
+    it('takes no deities, absent or empty, as none', () => {
+      expect(Schema.parse(base).deities ?? []).toEqual([]);
+      expect(Schema.parse({ ...base, deities: [] }).deities ?? []).toEqual([]);
+    });
   });
 });

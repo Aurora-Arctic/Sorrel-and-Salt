@@ -2,7 +2,6 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { STAMP_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
-import { and, eq } from 'drizzle-orm';
 import { makeSpell, spellColumns } from '../../../support/fixtures';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
@@ -274,19 +273,13 @@ describe('spell_categories table', () => {
 describe('an assignment removed through write.delete', () => {
   const session = { userId: AUTHOR };
 
-  const isPair = (spellId: string, categoryId: string) =>
-    and(
-      eq(spellCategories.spellId, spellId),
-      eq(spellCategories.categoryId, categoryId),
-    ) as ReturnType<typeof eq>;
-
   const add = (spellId: string, categoryId: string, author = AUTHOR) =>
     withAudit({ userId: author }, (write) =>
       write.insert(spellCategories, { spellId, categoryId }),
     );
 
   const remove = (spellId: string, categoryId: string) =>
-    withAudit(session, (write) => write.delete(spellCategories, isPair(spellId, categoryId)));
+    withAudit(session, (write) => write.delete(spellCategories, { spellId, categoryId }));
 
   it('is deleted outright, leaving no row to filter out', async () => {
     await add(HEARTH_GUARD, PROTECTION);

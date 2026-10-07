@@ -8,10 +8,13 @@ import { defineConfig } from 'vite';
 // `next/link` is aliased to a plain anchor, as Ladle's Next.js guide prescribes:
 // Next's client modules expect the router and `process.env` that `next dev`
 // provides and Vite does not, and a story only needs the link to render.
+// `next/navigation` is stubbed for the same reason: its `useRouter` throws
+// with no App Router mounted.
 export default defineConfig({
   resolve: {
     alias: {
       'next/link': fileURLToPath(new URL('./UnoptimizedLink.tsx', import.meta.url)),
+      'next/navigation': fileURLToPath(new URL('./navigation.ts', import.meta.url)),
     },
   },
   css: {

@@ -2,7 +2,7 @@ import SchemaBuilder from '@pothos/core';
 import ComplexityPlugin from '@pothos/plugin-complexity';
 import RelayPlugin from '@pothos/plugin-relay';
 import ScopeAuthPlugin from '@pothos/plugin-scope-auth';
-import { DateTimeISOResolver } from 'graphql-scalars';
+import { DateTimeISOResolver, LocalDateResolver } from 'graphql-scalars';
 import { Forbidden } from '../lib/errors';
 import { pageSize } from '../lib/pagination';
 // For its side effect: `t.pagedConnection` on every field builder.
@@ -64,6 +64,8 @@ export function createBuilder() {
     },
   });
   created.addScalarType('DateTime', DateTimeISOResolver);
+  // A day, not an instant: a reference's `modified` and `accessed` (MB.153).
+  created.addScalarType('LocalDate', LocalDateResolver);
   return created;
 }
 

@@ -5,7 +5,7 @@ import type { SeedDatabase, SeedDeity, SeedDeityTradition, SeedTransaction } fro
 
 // MB.127's deity vocabulary: thirty-five traditions and the deities filed
 // under them, a starting set an admin may edit. Reference data, not a
-// scenario — migrate.yml seeds it alone, so it inserts the bootstrap admin
+// scenario — migrate.yml seeds it alone, so it inserts the bootstrap user
 // itself. Transcribed from the seed doc's two tables, which deities.test.ts
 // parses and compares row by row; the doc, not this file, is where a row is
 // argued and sourced. Names are copied as written, never title-cased
@@ -1499,7 +1499,7 @@ export async function seedDeities(db: SeedDatabase): Promise<void> {
 /**
  * The same seed inside a transaction the caller opened, since `standard`
  * writes every reference vocabulary in its own. Assumes the GUC is published
- * and the bootstrap admin exists.
+ * and the bootstrap user exists.
  */
 export async function seedDeityVocabulary(tx: SeedTransaction): Promise<void> {
   await seedTwoTierVocabulary(tx, {

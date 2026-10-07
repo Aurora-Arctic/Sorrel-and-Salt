@@ -15,7 +15,7 @@ every suite, and an id a test can name beats one this run happened to produce.
 | D    | `…0006` | `user`  | member of unrelated X |
 | E    | `…0007` | `admin` | no workspace at all   |
 
-The ids continue the series `…0001` (the bootstrap admin, MB.5) and `…0002`
+The ids continue the series `…0001` (the bootstrap user, MB.5) and `…0002`
 (`minimal`'s plain user) opened; W and X take `…0001-…0001` and `…0001-…0002`,
 a block of their own so a stray id is never ambiguous about what it names.
 Their slugs are not written down — `slugify(name)`, through the one shared
@@ -28,9 +28,17 @@ X sharing no member is what makes a cross-workspace denial test say something.
 
 **`canCreateWorkspace` follows the invite gate rather than convenience.** A–D
 are seeded `true` because each is in a workspace, and under §5 that is how the
-flag comes to be true — an invitation was accepted. E is seeded `false`: E has
-never been invited, and creates workspaces by being an admin instead. Seeding E
-`true` would erase exactly the distinction M6.7's gate turns on.
+flag comes to be true — an invitation was accepted. E has never been invited,
+and holds the flag by being an admin: E is seeded `true`, since MB.177's CHECK
+refuses an admin without the flag and M6.7's gate reads the flag alone
+([`mb.177-admins-hold-workspace-creation.md`](../design-decisions/mb.177-admins-hold-workspace-creation.md)).
+
+**E has one `bootstrap` row in `admin_role_changes`**, stamped as E, as MB.58's
+migration writes one for every admin a database already holds: the template is
+migrated before it is seeded, so the migration finds no admin and the seed
+writes the row instead. Every seeded admin then has its one ledger row, as a
+deployed database's do ([`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md),
+"What the audit trail records").
 
 ### The compendium is awkward on purpose
 
@@ -50,10 +58,17 @@ the 26 entries carry §5's own hard cases:
   moon water or black salt; one does name Devil's Shoestring and nobody has
   looked it up, which is the row `where nomenclature = 'unknown'` returns as a
   curation to-do.
-- **One uncurated form**, `rhizome` on Ginger — §5's own example of a value a
-  member writes before an admin curates it, and the second bucket of M4.7a's
-  suggestion list. The other fifteen in-use forms come from M4.3a's vocabulary.
-- **Comfrey beside foxglove**, both `leaf`, both carrying safety notes: §5's
+- **Only curated values** in the four curated fields (MB.162): the fifteen
+  in-use forms come from M4.3a's vocabulary, and every planet, zodiac sign and
+  deity from MB.93's and MB.129's, each spelt as its curated row spells it
+  (`Herb`, not `herb`), since the compendium may hold nothing else. A few
+  entries carry signs and deities — Bay Laurel's `Leo` and `Apollo`,
+  Lavender's `Gemini` and `Virgo`, Mugwort's `Artemis` and `Diana` — so
+  each list is in use. §5's uncurated `rhizome`, a value a member writes
+  before an admin curates it and the second bucket of M4.7a's suggestion list,
+  is a coven's: `demo` seeds it on W's Fresh Ginger, and Ginger here is
+  `Root`. `seeded-template.test.ts` holds the template to it.
+- **Comfrey beside foxglove**, both `Leaf`, both carrying safety notes: §5's
   argument for demanding a formal name in the curated tier is that those two
   are confused in the field.
 
@@ -79,11 +94,11 @@ It seeds them **inside its own transaction** rather than calling
 more each. Each of
 those now splits into a public `seedX(db)` that opens a transaction and a
 `seedXVocabulary(tx)` that assumes one — the GUC published and the bootstrap
-admin present. A half-applied scenario (categories seeded, users not) is worse
+user present. A half-applied scenario (categories seeded, users not) is worse
 than one that never ran, and every extra transaction is another chance at one.
 
 `standard` itself takes that same shape since M1.23: `seedStandard(db)` opens
-the transaction, publishes the GUC and inserts the bootstrap admin (the three
+the transaction, publishes the GUC and inserts the bootstrap user (the three
 moves `beginSeedTransaction` makes), then hands over to
 **`seedStandardContent(tx)`** — which is what `demo` calls, one level
 up and for the same reason. Two of its internals are shared rather than copied
@@ -105,4 +120,11 @@ only a second _live_ row and would let it through.
 The entry key is `(name, canonicalName, form)` rather than `canonicalKey`
 deliberately: those are the three columns §5's generated expression reads, and
 recomputing that normalisation in TypeScript would be a second implementation
-to keep in step — the one that lies is the one nobody runs.
+to keep in step — the one that lies is the one nobody runs. The form alone is
+folded, trimmed and lower-cased as the key folds it: a database seeded before
+MB.162 holds the compendium's forms lower-case, and compose's `db-init`
+reseeds it on every start, so a key on the spelling would insert each entry
+beside itself and fail the scenario on the canonical-key index. A test
+re-cases the forms and reseeds to hold it. Ginger is the exception it cannot
+cover: its form changed rather than its case, so such a database keeps its
+old `rhizome` row beside the new `Root` one until a `db:reset`.

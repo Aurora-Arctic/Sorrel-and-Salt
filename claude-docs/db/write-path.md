@@ -34,9 +34,13 @@ overwrite who made the first. The way back to a deleted row is v2's restore,
 a named method per tier, with an edit after it rather than in place
 (DESIGN.md §13, "Edit history").
 
-- **`write.delete(table, where)`** — removes the rows outright, for the two
+- **`write.delete(table, match)`** — removes the rows outright, for the two
   hard-deleted join tables only (MB.34). Typed to reject any table carrying `deletedAt`, so
-  it can never become the way a soft-deletable row is quietly destroyed.
+  it can never become the way a soft-deletable row is quietly destroyed. The
+  rows are named by column value — `{ ingredientId, categoryId: [...] }`, a
+  list matching by `IN` — since a service may not build an `SQL` predicate
+  (MB.33; MB.125). A list left empty deletes nothing without a statement, and
+  a match naming no column throws rather than emptying the table.
 
 `values` is typed as the table's insert model **minus** the audit columns, so a call site can't even name `createdBy` without a cast — and if
 one casts anyway, `applyAudit` strips it: audit ids come from the session,
@@ -58,8 +62,19 @@ Before it calls `fn`, `withAudit` publishes the session's acting user to
 the database itself:
 
 ```sql
-select set_config('app.current_user_id', $1, true)
+select set_config('app.current_user_id', $1, true),
+       set_config('app.impersonated_by', $2, true)
 ```
+
+**`app.impersonated_by` rides beside it** (MB.53): the admin acting as the
+session's user on an impersonation session, from the session's
+`impersonatedBy` and never a request body, and empty on every other write.
+The stamps still name the user acted as, since impersonation reproduces what
+that user would do ([`auth/impersonation.md`](../auth/impersonation.md)). It
+is set on every transaction, empty included, so a reader never sees the
+placeholder an earlier transaction left on a pooled connection. One statement
+holds both, so it costs no second round trip. It has no reader either, for
+the same reasons as the user id.
 
 **Nothing reads this back, and that is expected.** It is published for two
 readers that do not exist yet: the v2 history trigger's `changed_by`
@@ -107,7 +122,8 @@ six columns exercised are the ones every real table will carry.
 
 That table carries one extra column no real table will:
 `acting_user text default current_setting('app.current_user_id', true)`.
-It records what the GUC held _inside_ the transaction that inserted the row,
+`impersonating_admin` does the same for `app.impersonated_by`.
+Each records what its GUC held _inside_ the transaction that inserted the row,
 which is how the M1.19 tests observe a setting the narrow `AuditWriter`
 gives them no other way to read — without widening the write API for the
 benefit of a test. The `missing_ok` second argument is what makes it null,

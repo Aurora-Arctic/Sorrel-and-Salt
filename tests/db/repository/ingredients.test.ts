@@ -8,12 +8,14 @@ import {
   type CompendiumScore,
   type IngredientFilter,
   type IngredientRow,
+  withAudit,
 } from '@/db/repository';
 import { InvalidCursor } from '@/lib/errors';
 import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
-import { A, B, D, asUser } from '../../support/as-user';
+import { assertSiteAdmin } from '@/modules/identity';
+import { A, B, D, E, asUser } from '../../support/as-user';
 import { insertIngredient } from '../../support/db/insert-ingredient';
 import { makeIngredient } from '../../support/fixtures';
 import type { ConnectionArgs, Page, PageCount } from '@/lib/types';
@@ -388,6 +390,88 @@ describe('findCompendiumPage', () => {
     });
   });
 
+  // The pick, not the text (MB.167): what a form's delete and rename read, so
+  // only the entries that picked this row answer, not every entry spelling it.
+  describe('formId', () => {
+    let herb: string;
+    let root: string;
+
+    beforeAll(async () => {
+      const rows = await sql`
+        select id, name from ingredient_forms where name in ('Herb', 'Root') and deleted_at is null`;
+      const byName = new Map(rows.map((row) => [row.name as string, row.id as string]));
+      herb = byName.get('Herb') as string;
+      root = byName.get('Root') as string;
+    });
+
+    beforeEach(async () => {
+      await add('Fixture Picked', { form: 'Herb', formId: herb });
+      await add('Fixture Also Picked', { form: 'Herb', formId: herb });
+      await add('Fixture Typed', { form: 'Herb' });
+      await add('Fixture Root', { form: 'Root', formId: root });
+      await add('Fixture Coven', { form: 'Herb', formId: herb, workspaceId: WORKSPACE_W_ID });
+      const gone = await add('Fixture Gone', { form: 'Herb', formId: herb });
+      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
+    });
+
+    it('lists the live compendium entries that picked the form, by name, and no other', async () => {
+      // Why the others could have been listed: each holds the form's text, and three its id.
+      const [{ count }] = await sql`
+        select count(*)::int as count from ingredients where form = 'Herb'`;
+      expect(count).toBe(5);
+
+      expect(await namesOf({ formId: herb })).toEqual(['Fixture Also Picked', 'Fixture Picked']);
+      await expect(findCompendiumCount({ formId: herb }, undefined)).resolves.toEqual({
+        totalCount: 2,
+        countBefore: null,
+      });
+    });
+
+    it('combines with the form text it was picked as', async () => {
+      expect(await namesOf({ formId: herb, form: 'root' })).toEqual([]);
+      expect(await namesOf({ formId: root, form: 'root' })).toEqual(['Fixture Root']);
+    });
+  });
+
+  // The lists hold spellings, not picks (MB.162): what a planet's or a sign's
+  // delete and rename read (MB.95), matched entry by entry under the
+  // suggestions' fold.
+  describe('planet and zodiacSign', () => {
+    beforeEach(async () => {
+      await add('Fixture Held', { planets: ['Venus', 'Mars'] });
+      await add('Fixture Folded', { planets: [' mars '] });
+      await add('Fixture Other', { planets: ['Venus'], zodiacSigns: ['Aries'] });
+      await add('Fixture Coven', { planets: ['Mars'], workspaceId: WORKSPACE_W_ID });
+      const gone = await add('Fixture Gone', { planets: ['Mars'] });
+      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
+    });
+
+    it('lists the live compendium entries whose list holds the value, folded, and no other', async () => {
+      // Why the others could have been listed: each holds Mars in its planets.
+      const [{ count }] = await sql`
+        select count(*)::int as count from ingredients
+        where exists (select 1 from unnest(planets) as p(v) where lower(btrim(v)) = 'mars')`;
+      expect(count).toBe(4);
+
+      expect(await namesOf({ planet: 'Mars' })).toEqual(['Fixture Folded', 'Fixture Held']);
+      expect(await namesOf({ planet: 'MARS ' })).toEqual(['Fixture Folded', 'Fixture Held']);
+      await expect(findCompendiumCount({ planet: 'Mars' }, undefined)).resolves.toEqual({
+        totalCount: 2,
+        countBefore: null,
+      });
+    });
+
+    it('reads the list it names, a sign from the signs alone', async () => {
+      expect(await namesOf({ zodiacSign: 'Aries' })).toEqual(['Fixture Other']);
+      expect(await namesOf({ zodiacSign: 'Mars' })).toEqual([]);
+      expect(await namesOf({ planet: 'Aries' })).toEqual([]);
+    });
+
+    it('treats a blank value as no filter, as the form text does', async () => {
+      expect(await namesOf({ planet: ' ' })).toHaveLength(3);
+    });
+  });
+
   describe('paging', () => {
     it('walks every live row once, in order, and never a soft-deleted one', async () => {
       for (let n = 1; n <= 30; n += 1) {
@@ -609,5 +693,59 @@ describe('findCompendiumEntryByIdentity', () => {
     await expect(findCompendiumEntryByIdentity(identity)).resolves.toBeUndefined();
     const [local] = await sql`select canonical_key from ingredients where id = ${localId}`;
     expect(local.canonical_key).toBe('testleaf');
+  });
+});
+
+// A planet's or a sign's rename carried onto the compendium's lists (MB.95):
+// each entry folding to the old spelling becomes the new one, in place, and
+// nothing else in the list or the row moves — a planet or sign is no part of
+// an entry's identity or slug.
+describe('write.carryAstrologyRename', () => {
+  const rowOf = async (id: string) => (await sql`select * from ingredients where id = ${id}`)[0];
+  const rename = (field: 'planets' | 'zodiacSigns', from: string, to: string) =>
+    withAudit(asUser(E), (write) =>
+      write.carryAstrologyRename(assertSiteAdmin(asUser(E)), field, from, to),
+    );
+
+  it('rewrites each holding entry’s list in place, by the fold, stamped by the session', async () => {
+    const held = await add('Testwort', { planets: ['Venus', 'Mars', 'Moon'] });
+    const folded = await add('Testleaf', { planets: [' mars '], zodiacSigns: ['Mars'] });
+    const before = await rowOf(held);
+
+    const rows = await rename('planets', 'Mars', 'Ares');
+
+    expect(rows.map((row) => row.id).sort()).toEqual([held, folded].sort());
+    expect(await rowOf(held)).toMatchObject({
+      planets: ['Venus', 'Ares', 'Moon'],
+      slug: before.slug,
+      canonical_key: before.canonical_key,
+      created_by: A.id,
+      updated_by: E.id,
+    });
+    // The other list holds a "Mars" too, and is not the one renamed.
+    expect(await rowOf(folded)).toMatchObject({ planets: ['Ares'], zodiac_signs: ['Mars'] });
+  });
+
+  // Why each could have been written: each holds the old spelling in the list renamed.
+  it('leaves a coven’s ingredient and a deleted entry as they were', async () => {
+    const coven = await add('Testwort', { planets: ['Mars'], workspaceId: WORKSPACE_W_ID });
+    const gone = await add('Testgone', { planets: ['Mars'] });
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
+    const kept = await add('Testleaf', { planets: ['Venus'] });
+    const before = await Promise.all([coven, gone, kept].map(rowOf));
+    expect(before.map((row) => row.planets)).toEqual([['Mars'], ['Mars'], ['Venus']]);
+
+    const rows = await rename('planets', 'Mars', 'Ares');
+
+    expect(rows).toEqual([]);
+    expect(await Promise.all([coven, gone, kept].map(rowOf))).toEqual(before);
+  });
+
+  it('renames a sign in the signs alone', async () => {
+    const id = await add('Testwort', { planets: ['Aries'], zodiacSigns: ['Aries', 'Leo'] });
+
+    await rename('zodiacSigns', 'Aries', 'The Ram');
+
+    expect(await rowOf(id)).toMatchObject({ planets: ['Aries'], zodiac_signs: ['The Ram', 'Leo'] });
   });
 });

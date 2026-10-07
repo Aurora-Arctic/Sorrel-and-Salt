@@ -165,3 +165,95 @@ describe('write.deleteLapsedSlugRetirements', () => {
     expect(left.map((row) => row.slug)).toEqual(['testleaf', 'testwort-later']);
   });
 });
+
+// A form's rename carried onto the compendium entries picking it (M5.6a): the
+// text and the slug the service derived, the old slug retired as any
+// compendium update retires it (MB.82), and nothing that no longer picks the
+// form in the compendium touched.
+describe('write.carryFormRename', () => {
+  const AT = new Date('2026-03-01T12:00:00.000Z');
+  let herb: string;
+  let root: string;
+
+  beforeAll(async () => {
+    const rows = await sql`
+      select id, name from ingredient_forms where name in ('Herb', 'Root') and deleted_at is null`;
+    const byName = new Map(rows.map((row) => [row.name as string, row.id as string]));
+    herb = byName.get('Herb') as string;
+    root = byName.get('Root') as string;
+  });
+
+  const rowOf = async (id: string) => (await sql`select * from ingredients where id = ${id}`)[0];
+  const retirements = () =>
+    sql`select ingredient_id, workspace_id, slug, retired_at, created_by from retired_ingredient_slugs`;
+
+  it('rewrites each entry’s form and slug, stamped by the session, retiring a slug that moves at the instant given', async () => {
+    const moving = await add('Testwort', { form: 'Herb', formId: herb });
+    const staying = await add('Testleaf', { form: 'Herb', formId: herb });
+    const admin = assertSiteAdmin(asUser(E));
+
+    const rows = await withAudit(asUser(E), (write) =>
+      write.carryFormRename(
+        admin,
+        herb,
+        'Herba',
+        [
+          { id: moving, slug: 'testwort-herba', previousSlug: 'testwort-herb' },
+          { id: staying, slug: 'testleaf-herb', previousSlug: 'testleaf-herb' },
+        ],
+        AT,
+      ),
+    );
+
+    expect(rows.map((row) => row.id).sort()).toEqual([moving, staying].sort());
+    expect(await rowOf(moving)).toMatchObject({
+      form: 'Herba',
+      form_id: herb,
+      slug: 'testwort-herba',
+      canonical_key: 'testwort :: herba',
+      created_by: A.id,
+      updated_by: E.id,
+    });
+    expect(await rowOf(staying)).toMatchObject({ form: 'Herba', slug: 'testleaf-herb' });
+    expect(await retirements()).toEqual([
+      {
+        ingredient_id: moving,
+        workspace_id: null,
+        slug: 'testwort-herb',
+        retired_at: AT,
+        created_by: E.id,
+      },
+    ]);
+  });
+
+  // Why each could have been written: the call names it by id, as it names the
+  // entry it does rewrite.
+  it('leaves a coven’s ingredient, an entry picking another form and a deleted entry as they were', async () => {
+    const coven = await add('Testwort', {
+      form: 'Herb',
+      formId: herb,
+      workspaceId: WORKSPACE_W_ID,
+    });
+    const other = await add('Testroot', { form: 'Root', formId: root });
+    const gone = await add('Testgone', { form: 'Herb', formId: herb });
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
+    const picked = await add('Testleaf', { form: 'Herb', formId: herb });
+    const before = await Promise.all([coven, other, gone].map(rowOf));
+    expect(before.map((row) => row.form_id)).toEqual([herb, root, herb]);
+    const admin = assertSiteAdmin(asUser(E));
+
+    const rows = await withAudit(asUser(E), (write) =>
+      write.carryFormRename(
+        admin,
+        herb,
+        'Herba',
+        [coven, other, gone, picked].map((id) => ({ id, slug: `moved-${id}`, previousSlug: 'x' })),
+        AT,
+      ),
+    );
+
+    expect(rows.map((row) => row.id)).toEqual([picked]);
+    expect(await Promise.all([coven, other, gone].map(rowOf))).toEqual(before);
+    expect((await retirements()).map((row) => row.ingredient_id)).toEqual([picked]);
+  });
+});

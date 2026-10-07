@@ -14,6 +14,7 @@ import {
 } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import { workspaces } from '@/modules/coven/schema/workspaces';
+import { ingredientForms } from '@/modules/vocabulary/schema/ingredient-forms';
 import type { IngredientOverrides } from './types';
 
 // DESIGN.md §5's seven values, in the order the design doc's table lists them.
@@ -39,11 +40,11 @@ const COLUMNS = [
   'nomenclature',
   'canonical_key',
   'form',
+  'form_id',
   'description',
-  'element',
+  'elements',
   'planets',
   'zodiac_signs',
-  'deities',
   'colors',
   'safety_notes',
   'slug',
@@ -84,8 +85,19 @@ describe('ingredients schema', () => {
   });
 
   // A correspondence, not identity: a closed enum, the opposite of `form`.
-  it('declares element as a closed five-value enum', () => {
+  it('declares ingredient_element as a closed five-value enum', () => {
     expect(ingredientElement.enumValues).toEqual(ELEMENT_VALUES);
+  });
+
+  // MB.159 stopped declaring the single, so nothing reads or writes it;
+  // MB.160 then dropped it.
+  it('no longer declares the single element', () => {
+    expect(Object.keys(byName)).not.toContain('element');
+  });
+
+  // MB.157: the list is of the same enum, not text, so it stays closed.
+  it('stores elements as an array of that enum', () => {
+    expect(byName.elements.getSQLType()).toBe('ingredient_element[]');
   });
 
   // Text, not an FK: an FK makes an uncurated value unwritable and would put a
@@ -95,8 +107,17 @@ describe('ingredients schema', () => {
     expect(foreignKeys.some((fk) => fk.reference().columns[0].name === 'form')).toBe(false);
   });
 
-  it('stores deities, planets, zodiac signs and colours as array columns', () => {
-    for (const column of ['deities', 'planets', 'zodiac_signs', 'colors']) {
+  // MB.165: the curated row a member picked, beside the text and never
+  // instead of it, so optional — typed text links nothing.
+  it('records a picked form as a nullable key beside the text', () => {
+    expect(byName.form_id.getSQLType()).toBe('uuid');
+    expect(byName.form_id.notNull).toBe(false);
+    const formFk = foreignKeys.find((fk) => fk.reference().columns[0].name === 'form_id');
+    expect(formFk?.reference().foreignTable).toBe(ingredientForms);
+  });
+
+  it('stores planets, zodiac signs and colours as array columns', () => {
+    for (const column of ['planets', 'zodiac_signs', 'colors']) {
       expect(byName[column].getSQLType()).toBe('text[]');
     }
   });
@@ -134,7 +155,7 @@ const WORKSPACE = WORKSPACE_W_ID;
 
 // The shared factory plus this file's author. `makeIngredient` re-derives
 // `canonicalName` when `nomenclature` alone is overridden, so only a test
-// naming both writes a row the biconditional CHECK rejects.
+// naming both writes a row the kind↔name CHECK rejects.
 function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
   return {
     ...ingredientColumns(makeIngredient(overrides)),
@@ -164,13 +185,14 @@ beforeEach(async () => {
 
 describe('ingredients table', () => {
   // A column the schema has stopped declaring outlives it in the database for
-  // one deploy: `planet`, `zodiac` and `color`, undeclared by MB.136 and
-  // dropped by MB.137, and `substitutes`, undeclared by MB.140 and dropped by
-  // MB.141, are the only ones.
-  it('carries the columns the schema declares, and the four awaiting their drop', async () => {
-    expect(await catalogue.columnNames('ingredients')).toEqual(
-      [...COLUMNS, 'planet', 'zodiac', 'color', 'substitutes'].sort(),
-    );
+  // one deploy, until its drop. None is pending: `deities`, undeclared by
+  // MB.167 for `ingredient_deities`, was the last, and MB.168 dropped it.
+  it('carries the columns the schema declares and no other', async () => {
+    expect(await catalogue.columnNames('ingredients')).toEqual([...COLUMNS].sort());
+  });
+
+  it('declares no deities column, so nothing can write the list the app no longer reads', () => {
+    expect(Object.keys(tableFacts(ingredients).byName)).not.toContain('deities');
   });
 
   it('rejects an insert that omits nomenclature, since the column has no default', async () => {
@@ -209,16 +231,16 @@ describe('ingredients table', () => {
     expect(rows.map((r) => r.workspace_id)).toEqual([null, WORKSPACE]);
   });
 
-  describe('the nomenclature/canonicalName biconditional', () => {
+  // Three cases (MB.161): none takes no formal name, a named kind takes one,
+  // and unknown takes either.
+  describe('the nomenclature/canonicalName CHECK', () => {
     // Both directions: a one-directional CHECK would let exactly one of these through.
-    it('rejects none or unknown carrying a formal name', async () => {
-      for (const nomenclature of ['none', 'unknown'] as const) {
-        const error = await failureOf(
-          insert({ nomenclature, canonicalName: 'Artemisia vulgaris' }),
-        );
-        expect(error.code).toBe('23514');
-        expect(error.constraint_name).toBe('ingredients_nomenclature_declares_canonical_name');
-      }
+    it('rejects none carrying a formal name', async () => {
+      const error = await failureOf(
+        insert({ nomenclature: 'none', canonicalName: 'Fixtura testalis' }),
+      );
+      expect(error.code).toBe('23514');
+      expect(error.constraint_name).toBe('ingredients_nomenclature_declares_canonical_name');
     });
 
     it('rejects any other kind carrying no formal name', async () => {
@@ -233,6 +255,18 @@ describe('ingredients table', () => {
         expect(error.code).toBe('23514');
         expect(error.constraint_name).toBe('ingredients_nomenclature_declares_canonical_name');
       }
+    });
+
+    // The row the old biconditional refused, beside the one it already took.
+    it('accepts unknown with a formal name and without one', async () => {
+      await insert({ nomenclature: 'unknown', canonicalName: 'Fixtura testalis' });
+      await insert({ nomenclature: 'unknown', canonicalName: null, name: 'Testroot' });
+
+      const rows = await sql`
+        select canonical_name from ingredients
+        where nomenclature = 'unknown' order by canonical_name nulls last
+      `;
+      expect(rows.map((r) => r.canonical_name)).toEqual(['Fixtura testalis', null]);
     });
 
     // Without these, a CHECK that rejected everything would pass the tests above.
@@ -383,27 +417,19 @@ describe('ingredients table', () => {
     });
   });
 
-  describe('element', () => {
-    it('accepts each of its five documented values', async () => {
-      for (const element of ELEMENT_VALUES) {
-        // Five identities: the factory's one canonical name five times over
-        // would trip `ingredients_workspace_identity_unique`.
-        await insert({
-          element,
-          name: `Mugwort (${element})`,
-          canonicalName: `Fixtura ${element}`,
-          workspaceId: WORKSPACE,
-        });
-      }
+  describe('elements', () => {
+    it('accepts all five documented values in one list, in the order given', async () => {
+      const elements = [...ELEMENT_VALUES].reverse();
+      const id = await insert({ elements, workspaceId: WORKSPACE });
 
-      const [{ count }] =
-        await sql`select count(*)::int as count from ingredients where element is not null`;
-      expect(count).toBe(ELEMENT_VALUES.length);
+      const [row] = await sql`select elements from ingredients where id = ${id}`;
+      expect(row.elements).toEqual(elements);
     });
 
     it('rejects a value outside that set', async () => {
       // Cast: the fixture is typed against the column; the database must refuse it.
-      const error = await failureOf(insert({ element: 'aether' as IngredientFixture['element'] }));
+      const elements = ['fire', 'aether'] as IngredientFixture['elements'];
+      const error = await failureOf(insert({ elements }));
       // 22P02 is invalid_text_representation: the enum cast refusing the value.
       expect(error.code).toBe('22P02');
     });

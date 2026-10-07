@@ -20,6 +20,8 @@ import type { CompendiumConnection, SubstituteNode } from './types';
 // page never makes one, and the count to show it runs only when asked for.
 const repository = vi.hoisted(() => ({
   findCompendiumCount: vi.fn(),
+  findCuratedRowsByIds: vi.fn(),
+  findDeitiesOfIngredients: vi.fn(),
   findManyOfIngredients: vi.fn(),
   findManyByIds: vi.fn(),
   findSubstitutesIncludingSoftDeleted: vi.fn(),
@@ -58,8 +60,22 @@ function run(
 ): Promise<ExecutionResult<{ compendium: CompendiumConnection }>> {
   return graphql({
     schema,
-    source: `query ($query: String, $categoryIds: [ID!], $form: String, $first: Int, $after: String) {
-      compendium(query: $query, categoryIds: $categoryIds, form: $form, first: $first, after: $after) {
+    source: `query (
+      $query: String
+      $categoryIds: [ID!]
+      $form: String
+      $nomenclature: Nomenclature
+      $first: Int
+      $after: String
+    ) {
+      compendium(
+        query: $query
+        categoryIds: $categoryIds
+        form: $form
+        nomenclature: $nomenclature
+        first: $first
+        after: $after
+      ) {
         edges {
           cursor
           score
@@ -206,6 +222,18 @@ describe('compendium', () => {
     ]);
   });
 
+  // M5.5: the admin's formal names still to look up are the `unknown` entries.
+  it("narrows by nomenclature, leaving a coven's row of that kind out", async () => {
+    const unknown = await nodesOf({ nomenclature: 'unknown' });
+    const none = await nodesOf({ nomenclature: 'none' }, asUser(B));
+
+    expect(unknown.map((node) => node.name)).toEqual(["Devil's Shoestring"]);
+    expect(none.map((node) => node.name)).toEqual(['Black Salt', 'Graveyard Dirt', 'Moon Water']);
+    expect(none.every((node) => node.nomenclature === 'none')).toBe(true);
+    // Fixture Wroot is a `none` too, read by B, and still not the compendium's.
+    expect(none.map((node) => node.name)).not.toContain('Fixture Wroot');
+  });
+
   it('combines the three', async () => {
     const nodes = await nodesOf({
       query: 'cat',
@@ -263,6 +291,43 @@ describe('compendium', () => {
     expect(repository.findSubstitutesIncludingSoftDeleted).toHaveBeenCalledTimes(1);
   });
 
+  // MB.167: every entry on the page asks for its picked form and its deities,
+  // and one read answers each, the curated deities joined in.
+  it('resolves the picked forms and the deities of a page in one read each', async () => {
+    const result = await graphql({
+      schema,
+      source: `query {
+        compendium(first: 50) {
+          edges { node { name form formChoice { name group { name } } deities { name deity { name tradition { name } } } } }
+        }
+      }`,
+      contextValue: { session: null, loaders: createLoaders(null), emailVerification: noSender },
+    });
+
+    expect(result.errors).toBeUndefined();
+    type Node = {
+      name: string;
+      form: string | null;
+      formChoice: { name: string; group: { name: string } } | null;
+      deities: { name: string; deity: { name: string; tradition: { name: string } } | null }[];
+    };
+    const nodes = (result.data as { compendium: { edges: { node: Node }[] } }).compendium.edges.map(
+      (edge) => edge.node,
+    );
+    // Precondition: the page holds every entry, each picked form among them.
+    expect(nodes.length).toBeGreaterThan(20);
+    expect(nodes.filter((node) => node.form !== null).length).toBeGreaterThan(20);
+    for (const node of nodes) {
+      if (node.form !== null) expect(node.formChoice?.name, node.name).toBe(node.form);
+    }
+    expect(nodes.find((node) => node.name === 'Mugwort')?.deities).toEqual([
+      { name: 'Artemis', deity: { name: 'Artemis', tradition: { name: 'Greek' } } },
+      { name: 'Diana', deity: { name: 'Diana', tradition: { name: 'Roman' } } },
+    ]);
+    expect(repository.findCuratedRowsByIds).toHaveBeenCalledTimes(1);
+    expect(repository.findDeitiesOfIngredients).toHaveBeenCalledTimes(1);
+  });
+
   it('resolves the categories, their groups and the folk names of a page in a read each', async () => {
     const result = await run(null);
 
@@ -287,8 +352,8 @@ describe('compendium', () => {
     async function counted(variables: Record<string, unknown>): Promise<Counted> {
       const result = await graphql({
         schema,
-        source: `query ($query: String, $first: Int, $after: String, $last: Int) {
-          compendium(query: $query, first: $first, after: $after, last: $last) {
+        source: `query ($query: String, $nomenclature: Nomenclature, $first: Int, $after: String, $last: Int) {
+          compendium(query: $query, nomenclature: $nomenclature, first: $first, after: $after, last: $last) {
             totalCount countBefore edges { node { id } } pageInfo { endCursor }
           }
         }`,
@@ -320,6 +385,14 @@ describe('compendium', () => {
       expect(page.totalCount).toBe(6);
       expect(page.countBefore).toBe(0);
       expect(empty).toMatchObject({ totalCount: 0, countBefore: null, edges: [] });
+    });
+
+    it('counts what a nomenclature narrows to', async () => {
+      const page = await counted({ nomenclature: 'none', first: 2 });
+
+      expect(page.totalCount).toBe(3);
+      expect(page.edges).toHaveLength(2);
+      expect(page.countBefore).toBe(0);
     });
 
     it('counts only when a count field is selected, and once for both', async () => {

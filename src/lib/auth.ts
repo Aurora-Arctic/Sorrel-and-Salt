@@ -22,6 +22,7 @@ import type { UserRole, HookContext } from './session';
 import { send } from './mail';
 import { emailPagePath, returnPathOf, verifiedLanding } from './account-email';
 import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH, postSignInLanding } from './sign-in';
+import { impersonation, impersonationEnabled } from './impersonation';
 import { verifyEmailMessage } from '../emails/verify-email';
 import {
   promotePrimaryAdmin,
@@ -320,7 +321,12 @@ export const auth = betterAuth({
   // Cookie only: `storeInDatabase` would add a users column nothing reads.
   // The sign-in page marks the provider this browser last used, and the
   // server says nothing about an address (claude-docs/auth/plugins.md, "Plugins").
-  plugins: [lastLoginMethod({ cookieName: LAST_USED_PROVIDER_COOKIE })],
+  // Impersonation is never constructed at production, nor anywhere the flag
+  // is unset, so its endpoints are absent rather than refusing (MB.53).
+  plugins: [
+    lastLoginMethod({ cookieName: LAST_USED_PROVIDER_COOKIE }),
+    ...(impersonationEnabled() ? [impersonation()] : []),
+  ],
   advanced: {
     // Matches users.id's uuid type so every FK lines up without a cast.
     database: {

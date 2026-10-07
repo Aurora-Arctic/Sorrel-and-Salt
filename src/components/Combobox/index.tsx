@@ -9,10 +9,25 @@ import {
   useMemo,
   useState,
 } from 'react';
-import type { Bucket, ComboboxOption, ComboboxProps, Item, Suggestions, TypedRow } from './types';
+import { chipColors } from '../../lib/chip-colors';
+import { ChevronIcon, ClearIcon } from './icons';
+import { useListPosition } from './position';
+import { useTip } from './tip';
+import type {
+  Bucket,
+  ComboboxOption,
+  ComboboxProps,
+  CreateRow,
+  Item,
+  Suggestions,
+  TypedRow,
+} from './types';
 import './index.scss';
 
 export { ComboboxEntry } from './entry';
+export { ComboboxMultiSelect } from './multi-select';
+export { ComboboxSelect } from './select';
+export { ComboboxSortableEntries } from './sortable';
 
 // A text box that suggests as it is typed in, on Downshift's `useCombobox`:
 // the hook owns the ARIA and the keyboard, and the markup, the rows and the
@@ -23,28 +38,79 @@ export { ComboboxEntry } from './entry';
 // was typed. See claude-docs/components/combobox.md.
 
 const isTyped = <O extends ComboboxOption>(item: Item<O>): item is TypedRow => 'typed' in item;
+const isCreate = <O extends ComboboxOption>(item: Item<O>): item is CreateRow => 'create' in item;
+
+/** A row's identity, for React and Downshift: its own key, or else its bucket and what it reads. */
+const keyOf = <O extends ComboboxOption>(item: Item<O>): string => {
+  if (isTyped(item)) return 'typed';
+  if (isCreate(item)) return 'create';
+  return item.key ?? `${item.curated}:${item.heading ?? ''}:${item.label ?? ''}:${item.value}`;
+};
+
+/**
+ * The buckets a source names itself, by each row's `heading` (MB.126): one
+ * per heading in the order the headings first appear, since the caller has
+ * sorted them, and the rows with none in a trailing unheaded bucket. Keyed
+ * by the heading's place rather than its text, which may hold a space.
+ */
+function bucketByHeading<O extends ComboboxOption>(options: O[]): Bucket<O>[] {
+  const headed = new Map<string, O[]>();
+  const unheaded: O[] = [];
+  for (const option of options) {
+    if (option.heading === undefined) unheaded.push(option);
+    else headed.set(option.heading, [...(headed.get(option.heading) ?? []), option]);
+  }
+  const buckets: Bucket<O>[] = [...headed].map(([heading, rows], at) => ({
+    heading,
+    key: `heading-${at}`,
+    rows,
+  }));
+  if (unheaded.length > 0) buckets.push({ heading: null, key: 'unheaded', rows: unheaded });
+  return buckets;
+}
 
 /**
  * The rows in the order the list shows them — what was typed first, the
  * owner's call, then curated, then in use — flat for Downshift, which numbers
  * them, and bucketed for the headings. A source with one bucket shows no
- * headings.
+ * headings; one whose rows carry a `heading` names its own buckets
+ * (bucketByHeading). A caller that can make something new has its create row
+ * first instead of the typed row, blank box or not, since what it lists can
+ * only be picked (MB.154). A caller refusing what was typed has no typed row
+ * (MB.174). The curated headings say where a value comes from, the owner's
+ * call (MB.131): a curated value is the compendium's, since its entries hold
+ * nothing else, and one only in use is this coven's own.
  */
 function arrange<O extends ComboboxOption>(
   options: O[],
   typed: string,
-): { items: Item<O>[]; buckets: Bucket<O>[]; typedRow: TypedRow | null } {
+  create: string | undefined,
+  offerTyped: boolean,
+): { items: Item<O>[]; buckets: Bucket<O>[]; firstRow: TypedRow | CreateRow | null } {
+  const headed = options.some((option) => option.heading !== undefined);
   const bucketed = options.some((option) => option.curated !== undefined);
-  const buckets: Bucket<O>[] = bucketed
-    ? [
-        { heading: 'Curated', key: 'curated', rows: options.filter((option) => option.curated) },
-        { heading: 'In use', key: 'in-use', rows: options.filter((option) => !option.curated) },
-      ].filter((bucket) => bucket.rows.length > 0)
-    : [{ heading: null, key: 'all', rows: options }];
-  const typedRow: TypedRow | null = typed === '' ? null : { value: typed, typed: true };
-  const items: Item<O>[] = typedRow ? [typedRow] : [];
+  const buckets: Bucket<O>[] = headed
+    ? bucketByHeading(options)
+    : bucketed
+      ? [
+          {
+            heading: 'From Compendium',
+            key: 'compendium',
+            rows: options.filter((option) => option.curated),
+          },
+          {
+            heading: 'From Coven',
+            key: 'coven',
+            rows: options.filter((option) => !option.curated),
+          },
+        ].filter((bucket) => bucket.rows.length > 0)
+      : [{ heading: null, key: 'all', rows: options }];
+  let firstRow: TypedRow | CreateRow | null = null;
+  if (create !== undefined) firstRow = { value: create, create: true };
+  else if (typed !== '' && offerTyped) firstRow = { value: typed, typed: true };
+  const items: Item<O>[] = firstRow ? [firstRow] : [];
   items.push(...buckets.flatMap((bucket) => bucket.rows));
-  return { items, buckets, typedRow };
+  return { items, buckets, firstRow };
 }
 
 /**
@@ -62,6 +128,10 @@ function keepText<O extends ComboboxOption>(
       return { ...changes, inputValue: state.inputValue, selectedItem: state.selectedItem };
     case useCombobox.stateChangeTypes.ItemClick:
     case useCombobox.stateChangeTypes.InputKeyDownEnter:
+    // Downshift remembers the last row picked, so with `selectedItem` held at
+    // null the next pick reads as the prop changing, and it would write
+    // the null item's text, '', into the box.
+    case useCombobox.stateChangeTypes.ControlledPropUpdatedSelectedItem:
       return { ...changes, inputValue: state.inputValue };
     default:
       return changes;
@@ -89,47 +159,62 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   suggestions,
   entries,
   clear,
+  create,
+  offerTyped = true,
+  qualifier,
+  listAnchor,
   inputRef,
   name,
   'aria-describedby': describedBy,
   'aria-invalid': invalid,
 }: ComboboxProps<O>): ReactElement {
   const headingId = useId();
+  const qualifierId = useId();
+  const detail = qualifier?.detail;
+  // Opened on the box's focus as well as the qualifier's hover: the
+  // qualifier is no stop of its own, and the box is what the keyboard reaches.
+  const tip = useTip(() => Boolean(detail));
   // Whether the list would be open had it rows: it opens as they arrive.
   const [wantsOpen, setWantsOpen] = useState(false);
   const hasSource = suggestions !== undefined;
-  const { items, buckets, typedRow } = useMemo(
-    () => arrange(suggestions?.options ?? [], value.trim()),
-    [suggestions, value],
+  const createLabel = create?.label;
+  const { items, buckets, firstRow } = useMemo(
+    () => arrange(suggestions?.options ?? [], value.trim(), createLabel, offerTyped),
+    [suggestions, value, createLabel, offerTyped],
   );
   const isOpen = hasSource && wantsOpen && items.length > 0;
+  const { setControl, setList, listStyle, placement } = useListPosition(isOpen, listAnchor);
 
-  const { getInputProps, getMenuProps, getItemProps, getToggleButtonProps, highlightedIndex } =
-    useCombobox<Item<O>>({
-      items,
-      inputId: id,
-      labelId,
-      menuId: `${id}-list`,
-      getItemId: (index) => `${id}-row-${index}`,
-      inputValue: value,
-      // Held at null so that the same row can be picked twice over: a list
-      // adds an entry on each pick.
-      selectedItem: null,
-      isOpen,
-      itemToString: (item) => item?.value ?? '',
-      itemToKey: (item) => {
-        if (item === null) return null;
-        return isTyped(item) ? 'typed' : `${item.curated}:${item.label ?? ''}:${item.value}`;
-      },
-      stateReducer: keepText,
-      onInputValueChange: ({ inputValue }) => onChange(inputValue ?? ''),
-      onIsOpenChange: ({ isOpen: open }) => setWantsOpen(open),
-      onSelectedItemChange: ({ selectedItem }) => {
-        if (!selectedItem) return;
-        if (isTyped(selectedItem)) onPick(selectedItem.value, null);
-        else onPick(selectedItem.value, selectedItem);
-      },
-    });
+  const {
+    getInputProps,
+    getLabelProps,
+    getMenuProps,
+    getItemProps,
+    getToggleButtonProps,
+    highlightedIndex,
+  } = useCombobox<Item<O>>({
+    items,
+    inputId: id,
+    labelId,
+    menuId: `${id}-list`,
+    getItemId: (index) => `${id}-row-${index}`,
+    inputValue: value,
+    // Held at null so that the same row can be picked twice over: a list
+    // adds an entry on each pick.
+    selectedItem: null,
+    isOpen,
+    itemToString: (item) => item?.value ?? '',
+    itemToKey: (item) => (item === null ? null : keyOf(item)),
+    stateReducer: keepText,
+    onInputValueChange: ({ inputValue }) => onChange(inputValue ?? ''),
+    onIsOpenChange: ({ isOpen: open }) => setWantsOpen(open),
+    onSelectedItemChange: ({ selectedItem }) => {
+      if (!selectedItem) return;
+      if (isCreate(selectedItem)) create?.onCreate();
+      else if (isTyped(selectedItem)) onPick(selectedItem.value, null);
+      else onPick(selectedItem.value, selectedItem);
+    },
+  });
 
   // Enter with nothing highlighted is the caller's — a list's add — and never
   // the form's submit. With no caller for it, Downshift closes an open list,
@@ -153,7 +238,12 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   // puts the caret in the text, as pressing a plain input would.
   const focusText = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
-    if (target === event.currentTarget || target.classList.contains('combobox__values')) {
+    // The qualifier reads as part of the text, so a press on it does too.
+    if (
+      target === event.currentTarget ||
+      target.classList.contains('combobox__values') ||
+      target.closest('.combobox__qualifier')
+    ) {
       event.preventDefault();
       event.currentTarget.querySelector<HTMLInputElement>('.combobox__input')?.focus();
     }
@@ -163,21 +253,25 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   const row = (item: Item<O>) => {
     const at = index++;
     const highlighted = at === highlightedIndex;
+    const colors = isTyped(item) || isCreate(item) ? undefined : item.colors;
     return (
       <li
-        key={isTyped(item) ? 'typed' : `${item.curated}:${item.label ?? ''}:${item.value}`}
+        key={keyOf(item)}
         className={[
           'combobox__option',
-          isTyped(item) && 'combobox__option--typed',
+          // The create row is no suggestion either, and reads as the typed row does.
+          (isTyped(item) || isCreate(item)) && 'combobox__option--typed',
+          colors && 'is-coloured',
           highlighted && 'is-highlighted',
         ]
           .filter(Boolean)
           .join(' ')}
+        style={colors && chipColors(colors)}
         {...getItemProps({ item, index: at })}
       >
-        {isTyped(item) ? (
-          `Use what you typed: ${item.value}`
-        ) : (
+        {isCreate(item) && item.value}
+        {isTyped(item) && `Use what you typed: ${item.value}`}
+        {!isCreate(item) && !isTyped(item) && (
           <>
             <span className="combobox__label">{item.label ?? item.value}</span>
             {item.note && <div className="combobox__note">{item.note}</div>}
@@ -189,28 +283,84 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
 
   return (
     <div className="combobox">
+      {/* Named by a <label> of its own, hidden, where the caller names none:
+          Chrome flags a field no label names, an aria-label notwithstanding.
+          Downshift ties the two by id. */}
+      {!labelId && <label {...getLabelProps({ className: 'visually-hidden' })}>{label}</label>}
       {/* Presentational: the press is a convenience for the pointer, and the
           box inside is the control a reader and the keyboard reach. */}
       <div
+        ref={setControl}
         role="presentation"
         className={invalid ? 'input combobox__control is-invalid' : 'input combobox__control'}
         onMouseDown={focusText}
       >
         <div className="combobox__values">
           {entries}
-          <input
-            className="combobox__input"
-            {...getInputProps({
-              ref: inputRef,
-              name,
-              'aria-label': labelId ? undefined : label,
-              'aria-describedby': describedBy,
-              'aria-invalid': invalid,
-              onKeyDown,
-              onFocus,
-              onBlur,
-            })}
-          />
+          {/* The text's slot. With a qualifier it is as wide as the text,
+              sized by a hidden copy of it, so the qualifier reads straight
+              after: "Wax (Animal)". Always in the page, so that a pick
+              adding the qualifier never remounts the box and takes its focus. */}
+          <span
+            className={qualifier ? 'combobox__text is-qualified' : 'combobox__text'}
+            data-value={value}
+          >
+            <input
+              className="combobox__input"
+              {...getInputProps({
+                ref: inputRef,
+                name,
+                // One character wide of its own, so that the slot, not the
+                // browser's default of twenty, decides how wide the text is.
+                size: 1,
+                // The field's own description first, then the qualifier's, so a
+                // reader hears the hint before what the pick adds.
+                'aria-describedby':
+                  [
+                    describedBy,
+                    qualifier && `${qualifierId}-text`,
+                    detail && `${qualifierId}-detail`,
+                  ]
+                    .filter(Boolean)
+                    .join(' ') || undefined,
+                'aria-invalid': invalid,
+                onKeyDown,
+                onFocus: () => {
+                  tip.show();
+                  onFocus?.();
+                },
+                onBlur: () => {
+                  tip.hide();
+                  onBlur?.();
+                },
+              })}
+            />
+          </span>
+          {qualifier && (
+            // Hover on a wrapper holding the tooltip as well as the text, so
+            // the pointer can move onto the tooltip without closing it.
+            <span
+              className="combobox__qualifier"
+              onMouseEnter={tip.show}
+              onMouseLeave={tip.hideSoon}
+            >
+              {/* In brackets, as the row picked read: "Wax (Animal)". */}
+              <span id={`${qualifierId}-text`}>({qualifier.text})</span>
+              {/* In the page while closed, faded out and aria-hidden, as an
+                  entry's is, and read through the box's description. */}
+              {detail && (
+                <span
+                  role="tooltip"
+                  className={
+                    tip.open ? 'combobox__qualifier-tip is-open' : 'combobox__qualifier-tip'
+                  }
+                  aria-hidden={!tip.open}
+                >
+                  <span id={`${qualifierId}-detail`}>{detail}</span>
+                </span>
+              )}
+            </span>
+          )}
         </div>
         {(clear || hasSource) && (
           <div className="combobox__indicators">
@@ -221,14 +371,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 aria-label={clear.label}
                 onClick={clear.onClear}
               >
-                <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-                  <path
-                    d="M4 4l8 8M12 4l-8 8"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
+                <ClearIcon />
               </button>
             )}
             {clear && hasSource && <span className="combobox__separator" aria-hidden="true" />}
@@ -238,16 +381,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 className="combobox__indicator"
                 {...getToggleButtonProps({ 'aria-label': `Show ${label} suggestions` })}
               >
-                <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-                  <path
-                    d="M3.5 6l4.5 4.5L12.5 6"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <ChevronIcon />
               </button>
             )}
           </div>
@@ -256,28 +390,31 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
       {/* Always in the page, as Downshift asks; empty and hidden while closed. */}
       <ul
         className={isOpen ? 'combobox__list is-open' : 'combobox__list'}
-        {...getMenuProps({ 'aria-label': `${label} suggestions` })}
+        // Placed beneath or above the box, as there is room (useListPosition).
+        style={listStyle}
+        data-placement={placement}
+        {...getMenuProps({ ref: setList, 'aria-label': `${label} suggestions` })}
       >
-        {isOpen && typedRow && row(typedRow)}
+        {isOpen && firstRow && row(firstRow)}
         {isOpen &&
           buckets.map((bucket) =>
             bucket.heading === null ? (
               bucket.rows.map(row)
             ) : (
               // A listbox's group is ARIA's own; optgroup belongs to a select.
+              // On a div inside a presentational li, which the tree leaves
+              // out, since ARIA allows no `group` role on an li (axe's
+              // aria-allowed-role, first caught by M5.5's scan in a browser).
               // oxlint-disable jsx-a11y/prefer-tag-over-role
-              <li
-                key={bucket.key}
-                role="group"
-                className="combobox__group"
-                aria-labelledby={`${headingId}-${bucket.key}`}
-              >
-                <div id={`${headingId}-${bucket.key}`} className="combobox__heading">
-                  {bucket.heading}
+              <li key={bucket.key} role="presentation" className="combobox__group">
+                <div role="group" aria-labelledby={`${headingId}-${bucket.key}`}>
+                  <div id={`${headingId}-${bucket.key}`} className="combobox__heading">
+                    {bucket.heading}
+                  </div>
+                  <ul role="presentation" className="combobox__rows">
+                    {bucket.rows.map(row)}
+                  </ul>
                 </div>
-                <ul role="presentation" className="combobox__rows">
-                  {bucket.rows.map(row)}
-                </ul>
               </li>
               // oxlint-enable jsx-a11y/prefer-tag-over-role
             ),

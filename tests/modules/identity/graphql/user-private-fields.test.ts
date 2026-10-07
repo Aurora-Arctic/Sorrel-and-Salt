@@ -7,10 +7,11 @@ import type { Session } from '@/lib/session';
 import type { getMe as GetMe } from '@/modules/identity';
 import { A, B, E, asUser } from '../../../support/as-user';
 
-// The schema's second check on `User.email`, `role` and `canCreateWorkspace`
-// (DESIGN.md §7). `getMe` takes no id, so no real query reaches another
-// user's row yet; this test hands `me` B's row whoever asks — a service that
-// answered the wrong row, which is exactly the bug the scope stands behind.
+// The schema's second check on `User.email`, `emailVerified`, `role` and
+// `canCreateWorkspace` (DESIGN.md §7). `getMe` takes no id, and `users`
+// answers an admin alone (MB.52), so no query a non-admin can make reaches
+// another user's row; this test hands `me` B's row whoever asks — a service
+// that answered the wrong row, which is exactly the bug the scope stands behind.
 // The mock names the service's file because the index re-exports it: mocking
 // the index would leave the resolver's own import untouched.
 
@@ -33,7 +34,7 @@ async function meAs(session: Session, field: string) {
   });
 }
 
-describe.each(['email', 'role', 'canCreateWorkspace'])('User.%s', (field) => {
+describe.each(['email', 'emailVerified', 'role', 'canCreateWorkspace'])('User.%s', (field) => {
   it('resolves on the user’s own row', async () => {
     const result = await meAs(asUser(B), field);
 

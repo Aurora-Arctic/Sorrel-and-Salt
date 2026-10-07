@@ -76,13 +76,49 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 `requireAdminSession()`, called by the `/admin` layout and every page under it, is `requireSession()` then `assertSiteAdmin()`, so a signed-out visitor goes to sign-in and a non-admin gets a styled 403 through Next's `forbidden()`, not a 404. [`auth/admin-guard.md`](auth/admin-guard.md)
 
+## The user list (MB.52)
+
+`/admin/users` lists every live account, with its providers and whether its address is verified, through `listUsers` and `providersOf`, which refuse anyone but a site admin by direct call, paged by the M3.6 helper and filtered in SQL; it confers no workspace access. [`auth/admin-users.md`](auth/admin-users.md)
+
 ## Plugins (MB.74)
 
-One Better Auth plugin is registered, `lastLoginMethod`, whose cookie marks the browser's last provider with no database write, and a table rules on every other plugin and option, with `oAuthProxy` and `admin` scheduled and `organization` never. [`auth/plugins.md`](auth/plugins.md)
+`lastLoginMethod` is registered everywhere, its cookie marking the browser's last provider with no database write, and `admin` outside production for impersonation alone; a table rules on every other plugin and option, with `oAuthProxy` scheduled and `organization` never. [`auth/plugins.md`](auth/plugins.md)
 
 ### The last-used provider (MB.77)
 
 In [`auth/plugins.md`](auth/plugins.md#the-last-used-provider-mb77).
+
+## Impersonation (MB.53)
+
+An admin signs in as a non-admin user wherever `ENABLE_IMPERSONATION` is set and `VERCEL_ENV` is not `production`, through the `admin` plugin narrowed to its two impersonation endpoints. Writes stamp the user, `app.impersonated_by` names the admin, and a banner on every page carries Stop. [`auth/impersonation.md`](auth/impersonation.md)
+
+### The gate: `VERCEL_ENV`, and both conditions
+
+In [`auth/impersonation.md`](auth/impersonation.md#the-gate-vercel_env-and-both-conditions).
+
+### Only the two impersonation endpoints are mounted
+
+In [`auth/impersonation.md`](auth/impersonation.md#only-the-two-impersonation-endpoints-are-mounted).
+
+### Who may impersonate whom
+
+In [`auth/impersonation.md`](auth/impersonation.md#who-may-impersonate-whom).
+
+### The audit follows the impersonated user
+
+In [`auth/impersonation.md`](auth/impersonation.md#the-audit-follows-the-impersonated-user).
+
+### Not a third access path
+
+In [`auth/impersonation.md`](auth/impersonation.md#not-a-third-access-path).
+
+### The way out: a banner on every page
+
+In [`auth/impersonation.md`](auth/impersonation.md#the-way-out-a-banner-on-every-page).
+
+### Tests
+
+In [`auth/impersonation.md`](auth/impersonation.md#tests).
 
 ## The organization plugin is not used (MB.30)
 

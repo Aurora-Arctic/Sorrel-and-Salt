@@ -2,8 +2,8 @@
 @use './variables' as *;
 @use './mixins' as *;
 
-// The class layer over _mixins.scss — `.chip--mind` rather than re-deriving
-// chip() — plus the shapes the mixins do not cover. Emitted once, like
+// The class layer over _mixins.scss — `.badge--safety` rather than re-deriving
+// badge() — plus the shapes the mixins do not cover. Emitted once, like
 // typography-base: `body` in the app, `.ladle-story-frame` in the workshop.
 @mixin primitives-base {
   // Not modal-surface(): its shadow and radius would read as a dialog.
@@ -30,13 +30,13 @@
     }
   }
 
-  @each $slug in map.keys($category-groups) {
-    .chip--#{$slug} {
-      @include chip($slug);
+  // One class for every group, the seeded eight and any an admin adds: the
+  // element carries its row's pair, from chipColors() in a component.
+  .chip {
+    @include chip;
 
-      &.is-selected {
-        @include chip($slug, selected);
-      }
+    &.is-selected {
+      @include chip($state: selected);
     }
   }
 
@@ -71,7 +71,12 @@
     font-family: $font-body;
     font-size: type-size('small');
     font-weight: 500;
-    padding: space(3) space(5);
+    // Level with a field ($control-height), whatever the font's line height:
+    // the padding leaves the label short of it, and the minimum makes up the
+    // rest, centred by the flex box.
+    box-sizing: border-box;
+    min-height: $control-height;
+    padding: space(2) space(5);
     border-radius: radius('control');
     // Heavier than a field's 1px: a hairline in the accent barely reads as a
     // colour. A border width rounds down to whole device pixels, so this
@@ -79,6 +84,11 @@
     border: 1.6px solid $accent;
     background-color: transparent;
     color: $accent;
+    // Many `.btn`s are anchors (Add Category, Continue), and an anchor
+    // underlines by default; a button never does, in any state. The colour
+    // half of the same problem is `_typography.scss`'s `:visited`, which
+    // carries no specificity for this rule to beat.
+    text-decoration: none;
     cursor: pointer;
     box-shadow: $shadow-floating;
     @include theme-transition(background-color, border-color, color, box-shadow);
@@ -98,13 +108,59 @@
     }
   }
 
-  .btn--secondary {
+  // What destroys something: Delete, Remove. Named for what it does rather
+  // than for its colour token, `$secondary`, which every error wears too.
+  .btn--destructive {
     border-color: $secondary;
     color: $secondary;
 
     &:hover {
       background-color: $secondary;
     }
+  }
+
+  // A size, not a colour, so it composes with every variant: for a compact
+  // strip — a banner, a table row — that the full button would make taller.
+  .btn--small {
+    gap: space(2);
+    // Off the field's height: a small button sits in a strip, not beside a
+    // field, and the control height would make it a full one again.
+    min-height: 0;
+    padding: space(1) space(3);
+    // A field's hairline rather than `.btn`'s 1.6px, which reads heavy at
+    // this size.
+    border-width: 1px;
+    font-size: type-size('caption');
+  }
+
+  // A save in flight, the owner's call for every Save button (M5.6): a ring
+  // in the button's ink, open on one side so its turn reads, ahead of the
+  // label, the button `aria-busy`. Slowed rather than stopped where motion is
+  // reduced, since a still ring says nothing is happening.
+  .spinner {
+    width: 1em;
+    height: 1em;
+    flex-shrink: 0;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: radius('pill');
+    animation: spinner-turn 0.8s linear infinite;
+
+    @include reduced-motion {
+      animation-duration: 2.4s;
+    }
+  }
+
+  @keyframes spinner-turn {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  // The side padding is sized for a word, and reads as a gap before a small
+  // round mark, so the left side comes in a step while the spinner shows.
+  .btn[aria-busy='true'] {
+    padding-left: space(3);
   }
 
   // A state rather than a modifier class, from either attribute: `disabled`
@@ -169,6 +225,127 @@
     }
   }
 
+  // A paged list's Prev and Next, centred under its table (the owner's
+  // calls, M5.6): a `nav` holding a list of full-size `.btn--quiet` anchors,
+  // quiet because paging changes nothing. The ‹ and › marks are
+  // `aria-hidden` spans, leaving each link named "Prev" or "Next".
+  .pager > ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: space(3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    // Two controls, not a bulleted list: no typography-base ◆ marker.
+    > li {
+      margin: 0;
+
+      &::before {
+        content: none;
+      }
+    }
+  }
+
+  // Twice the label, so the direction reads at a glance; a line height of 1
+  // so the mark does not make the button taller.
+  // A box of its own, a label's em wide, so the spinner that takes the
+  // chevron's place while the end's page is on the way leaves the button the
+  // size it was (the owner's call, MB.178).
+  .pager__mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 0.5em;
+    font-size: 2em;
+    line-height: 1;
+
+    // The label's size, back from the mark's double.
+    > .spinner {
+      font-size: 0.5em;
+    }
+  }
+
+  // The guillemet sits on the text's line, below the middle of the button,
+  // so it is brought up to the label's centre (the owner's call).
+  .pager__chevron {
+    translate: 0 -0.08em;
+  }
+
+  // A busy button's left side comes in for a spinner ahead of a word; an
+  // end's spinner stands in its chevron's box, so its padding stays put.
+  .pager .btn[aria-busy='true'] {
+    padding-left: space(5);
+  }
+
+  // "Page 2 of 3" between the ends, in the muted ink at the body size: it
+  // says where the list stands, and is not a control.
+  .pager__position {
+    align-self: center;
+    // Room either side, so it reads as standing between the ends rather than
+    // as a caption on either (the owner's call).
+    padding-inline: space(4);
+    color: $text-muted;
+    font-size: type-size('body');
+  }
+
+  // A page's heading with its one primary action on the same line, at the
+  // end (the owner's call, M5.6): Add Category beside "Categories". Centred,
+  // then the action brought down 0.25rem, the owner's measure: the heading's box
+  // carries room below its letters, so a centred button reads high and one on
+  // the baseline low. It wraps beneath on a narrow screen rather than
+  // squeezing the heading.
+  .page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: space(3) space(5);
+    margin-bottom: space(5);
+
+    > h1 {
+      margin: 0;
+    }
+
+    > :not(h1) {
+      translate: 0 0.25rem;
+    }
+  }
+
+  // A table is as wide as its columns: on a narrow screen it scrolls inside
+  // its frame rather than widening the page.
+  .data-table-frame {
+    overflow-x: auto;
+  }
+
+  // The admin lists' table (M5.6), a primitive once a third list carried it
+  // (M5.6a): banded on the card surface a modal wears, so a wide row stays
+  // readable across (the owner's call).
+  .data-table {
+    border-collapse: collapse;
+    width: 100%;
+
+    th,
+    td {
+      // Inset on both sides, as the rows are banded, so no text meets a band's edge.
+      padding: space(2) space(3);
+      text-align: start;
+      // The baseline, so a row's small button reads on its text's line.
+      vertical-align: baseline;
+    }
+
+    // The muted ink, as every hairline here is (the footer's, a specimen's):
+    // the body ink would draw a rule heavier than the text it heads.
+    thead th {
+      border-bottom: 1px solid $text-muted;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: $surface-card;
+    }
+  }
+
   // A sentence about the whole view rather than one field: a form's root
   // error, a sent confirmation. The role (`alert`, or `<output>`'s status)
   // is the markup's, since only it knows whether the text arrived late.
@@ -195,6 +372,36 @@
     color: $secondary;
   }
 
+  // The warning triangle before an error or a warning, the owner's call: in
+  // the notice's padding rather than in a flex row, so a link in the
+  // notice's text stays inline. Drawn by mask, so it takes the notice's ink,
+  // or the error red on a warning.
+  .notice--error,
+  .notice--warn {
+    position: relative;
+    padding-inline-start: calc(#{space(4)} + 1.0125rem + #{space(2)});
+
+    &::before {
+      content: '';
+      position: absolute;
+      // On the first line of text (the owner's call).
+      inset-block-start: 0.8rem;
+      inset-inline-start: space(4);
+      inline-size: 1.0125rem;
+      block-size: 1.0125rem;
+      background-color: currentColor;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.75 15 14.25H1Z' fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M8 6.25v4' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E%3Ccircle cx='8' cy='12.1' r='0.85'/%3E%3C/svg%3E")
+        center / contain no-repeat;
+    }
+  }
+
+  // A warning: the plain notice's box and ink, its triangle in the error red,
+  // for what deserves attention but does not block, such as a colour too near
+  // another group's (the owner's call).
+  .notice--warn::before {
+    background-color: $secondary;
+  }
+
   .notice--success {
     border-color: $accent;
     color: $accent;
@@ -214,12 +421,40 @@
     flex-direction: column;
     // Wider than a field's own gap, so each field reads as one group.
     gap: space(5);
+    // Its own width is what its buttons fit in, so they stack by it below.
+    container-type: inline-size;
+  }
+
+  // A phone-width form stacks its buttons, full width and in order, rather
+  // than wrapping them unevenly with a Delete pushed off to one side (the
+  // owner's call): every form's row of three fits on one line above 28rem.
+  @container (max-width: 28rem) {
+    .form .form__actions,
+    .form .modal__actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .form .form__actions > *,
+    .form .modal__actions > * {
+      margin-inline: 0;
+    }
   }
 
   .form__actions {
     display: flex;
     flex-wrap: wrap;
     gap: space(3);
+  }
+
+  // A form's buttons stand a little further from its last field than the
+  // fields from each other, 2rem in all, and as far again from what follows
+  // them — a modal's edge, with its padding — the owner's call during M5.5:
+  // every form reads its actions as their own group, whichever row carries
+  // them. A `.modal__actions` row's own margin gives way to it here.
+  .form > .form__actions,
+  .form > .modal__actions {
+    margin-block: space(2);
   }
 
   .field {
@@ -263,8 +498,9 @@
   .select {
     box-sizing: border-box;
     width: 100%;
-    // A 44px target at body size, whatever the platform's line height.
-    min-height: 2.75rem;
+    // Level with a button and a suggesting box, whatever the platform's line
+    // height ($control-height).
+    min-height: $control-height;
     margin: 0;
     padding: space(2) space(3);
     border: 1px solid $text-muted;

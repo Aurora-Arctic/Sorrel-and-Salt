@@ -239,6 +239,139 @@
       "when": 1791252953963,
       "tag": "0033_deities",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1791302037252,
+      "tag": "0034_element-list",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1791303253068,
+      "tag": "0035_refill-element-list",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791304248429,
+      "tag": "0036_drop-ingredient-singles",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1791304618752,
+      "tag": "0037_drop-element",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1791304882840,
+      "tag": "0038_unknown-carries-formal-name",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1791306234468,
+      "tag": "0039_drop-substitutes-list",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1791308445013,
+      "tag": "0040_picked-form-and-deities",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1791309123105,
+      "tag": "0041_fill-ingredient-deities",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1791311531810,
+      "tag": "0042_references",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1791319560914,
+      "tag": "0043_admin-role-changes",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1791324406382,
+      "tag": "0044_admin-role-change-pauses",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1791326893502,
+      "tag": "0045_seed-keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1791328303254,
+      "tag": "0046_admin-invitations",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1791329096556,
+      "tag": "0047_refill-seed-keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1791329454616,
+      "tag": "0048_drop-deities-list",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1791338034054,
+      "tag": "0049_sessions-impersonated-by",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1791350971185,
+      "tag": "0050_admins-hold-workspace-creation",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1791359182157,
+      "tag": "0051_compendium-form-picks-index",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1791399242553,
+      "tag": "0052_retune-category-group-colours",
+      "breakpoints": true
     }
   ]
 }

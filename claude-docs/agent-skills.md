@@ -34,8 +34,11 @@ to.
   and `create-release/reference-shared.md`, which `create-main-sync` also
   follows. A file two skills share goes inside one of them, so that every
   directory under `.claude/skills/` is a skill.
-- **Adding a skill means adding its row to `CLAUDE.md`'s Skills table** and
-  updating this summary, in the same PR. (Its transcript was archived by
+- **Adding a skill means adding its row to the table above**, in the same
+  PR. `CLAUDE.md` no longer tables them, the owner's call during MB.154:
+  every session already lists each skill with its description, which is its
+  trigger, so the table there only repeated it, at a cost against
+  `CLAUDE.md`'s 20 KB budget. (Its transcript was archived by
   M0.34, and MB.31 retired the obligation to keep writing one — a PR body
   carries what an entry would have said.)
 

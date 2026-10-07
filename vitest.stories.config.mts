@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module';
 import { defineConfig } from 'vitest/config';
-import { dbHarness } from './tests/support/db-project.mts';
+import { boundedPostgres, dbHarness } from './tests/support/db-project.mts';
 
 const require = createRequire(import.meta.url);
 const serverOnlyStub = require.resolve('next/dist/compiled/server-only/empty.js');
@@ -20,6 +20,8 @@ export default defineConfig({
   // import gets the CommonJS copy Pothos and Yoga hold, so a story that runs a
   // query against the real schema does not meet "another module or realm"
   // (vitest.config.mts carries the why).
+  // As the db project: every pool capped (tests/support/db/bounded-postgres.ts).
+  plugins: [boundedPostgres()],
   resolve: {
     tsconfigPaths: true,
     alias: [

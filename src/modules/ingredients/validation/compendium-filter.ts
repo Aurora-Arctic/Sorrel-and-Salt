@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { RowId } from '../../../lib/validation';
+import { NOMENCLATURE_KINDS } from '../schema/ingredient-enums';
 
 // The compendium list's filter as the `compendium` query receives it, parsed
 // by the service because the browser is not the only caller. Zod only, like
@@ -30,6 +31,16 @@ export const CompendiumFilter = z.object({
     .nullish()
     .transform((ids) => (ids && ids.length > 0 ? ids : undefined)),
   form: optionalText,
+  // The admin's to-do list: entries citing nothing (MB.153). False is no filter.
+  withoutReferences: z
+    .boolean()
+    .nullish()
+    .transform((only) => (only === true ? true : undefined)),
+  // How the entries are classified; `unknown` is the formal names still to look up (M5.5).
+  nomenclature: z
+    .enum(NOMENCLATURE_KINDS)
+    .nullish()
+    .transform((kind) => kind ?? undefined),
 });
 
 export type CompendiumFilterInput = z.input<typeof CompendiumFilter>;

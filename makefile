@@ -7,7 +7,7 @@
 .DEFAULT_GOAL := help
 
 .PHONY: help install dev dev-debug build start \
-	lint lint-fix format format-check typecheck check-destructive-ddl pre-commit \
+	lint lint-fix format format-check typecheck check-destructive-ddl check-migration-order pre-commit \
 	test-stories test-debug test-ui e2e-ui e2e-trace \
 	db-generate db-migrate db-seed db-drop db-reset db-studio db-psql codegen \
 	workshop workshop-build \
@@ -67,6 +67,10 @@ typecheck:
 ## Flag destructive DDL in migrations new on this branch
 check-destructive-ddl:
 	npm run check:destructive-ddl
+
+## Refuse a migration older than one already on this branch's base
+check-migration-order:
+	npm run check:migration-order
 
 ## The pre-commit checks: lint, format:check, typecheck
 pre-commit:

@@ -44,8 +44,9 @@ disambiguate.
   year.
 
 **Better Auth's three adapter tables are deliberately excluded.** `accounts`,
-`sessions` and `verifications` carry an `updated_at` and no `*_by` columns at
-all: nothing writes them through `withAudit`, they are not part of the audit
+`sessions` and `verifications` carry an `updated_at` and no audit columns at
+all (`sessions.impersonated_by` is the `admin` plugin's, MB.53, not an audit
+id): nothing writes them through `withAudit`, they are not part of the audit
 trail, and Better Auth's own `$onUpdate` stamps them (`src/modules/identity/schema/auth.ts`).
 Its fourth, `rate_limits` (MB.75), carries no `updated_at` at all — Better
 Auth's model declares none — so it is not a counter-example the sweep could
@@ -67,5 +68,6 @@ clone — which tables the sweep reached is the thing under test, so unlike the
 per-table schema tests it stubs nothing — and then compares two catalogue
 queries: the tables carrying all four audit stamps, and the tables carrying a
 `set_updated_at` trigger. A new audited table reddens it without that
-file being edited. The list of twenty-one is transcribed there as well, because
+file being edited. The list of twenty-seven is transcribed as well, as
+`AUDITED_TABLES` in `tests/support/db/table-metadata.ts`, because
 two empty sets are equal and something has to say they aren't.

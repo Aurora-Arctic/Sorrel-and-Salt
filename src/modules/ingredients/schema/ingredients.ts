@@ -3,6 +3,7 @@ import { check, index, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-
 import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS } from './ingredient-enums';
 import { auditColumns } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
+import { ingredientForms } from '../../vocabulary/schema/ingredient-forms';
 
 // DESIGN.md §5's seven values. `nomenclature` names the naming system, not a
 // rank within it; `fungal` is split from botanical because curators shelve
@@ -56,40 +57,50 @@ export const ingredients = pgTable(
     // Free text over the curated `ingredient_forms` vocabulary, not a foreign
     // key: an uncurated value must stay writable.
     form: text('form'),
+    // The curated row a member picked, beside the text and never instead of
+    // it (MB.165): two live forms may share a name, and only the link says
+    // which. Identity stays on `form`; typed text links nothing.
+    formId: uuid('form_id').references(() => ingredientForms.id),
     // GENERATED ALWAYS, so Postgres refuses a direct write — and Drizzle
     // omits generated columns from $inferInsert, so TypeScript refuses first.
     canonicalKey: text('canonical_key').notNull().generatedAlwaysAs(CANONICAL_KEY),
     description: text('description'),
-    element: ingredientElement('element'),
+    // A list of the five rather than the single `element` it replaced
+    // (MB.157), a new name for the reason the three lists below have one.
+    // MB.159 stopped declaring the single and MB.160 dropped it
+    // (claude-docs/db/identity-model.md, "The ingredient identity model").
+    elements: ingredientElement('elements').array(),
     // Lists rather than the single `planet`, `zodiac` and `color` they
     // replaced (MB.134): new names, because a column cannot turn from `text` to
-    // `text[]` under a deployed reader. The singles are undeclared but still in
-    // the database until MB.137 drops them, so `db:generate` emits that drop on
-    // any branch before it (claude-docs/db/identity-model.md, "The ingredient identity model").
+    // `text[]` under a deployed reader. MB.136 undeclared the singles and MB.137
+    // dropped them (claude-docs/db/identity-model.md, "The ingredient identity model").
     planets: text('planets').array(),
     zodiacSigns: text('zodiac_signs').array(),
-    deities: text('deities').array(),
     colors: text('colors').array(),
     safetyNotes: text('safety_notes'),
-    // `substitutes text[]` is undeclared since MB.140 moved every reader and
-    // writer to `ingredient_substitutes`, and stays in the database until
-    // MB.141 drops it (rule 10), so `db:generate` emits that drop on any
-    // branch before it.
+    // Substitutes are the child table `ingredient_substitutes`, not the
+    // `substitutes text[]` MB.141 dropped: a list of text cannot hold a link
+    // (MB.138). Deities are `ingredient_deities` for the same reason: MB.167
+    // stopped declaring `deities text[]` and MB.168 dropped it
+    // (claude-docs/db/identity-model.md, "The ingredient identity model").
     ...auditColumns,
   },
   (table) => [
-    // A biconditional: `none`/`unknown` carry no formal name, every other
-    // kind must. Enforced in Zod too, so the CHECK is never what a user sees.
+    // Three cases (MB.161): `none` carries no formal name, a named kind must,
+    // and `unknown` takes either, its name unconfirmed. Enforced in Zod too,
+    // so the CHECK is never what a user sees.
     check(
       'ingredients_nomenclature_declares_canonical_name',
-      sql`(nomenclature in ('none', 'unknown')) = (canonical_name is null)`,
+      sql`nomenclature = 'unknown' or (nomenclature = 'none') = (canonical_name is null)`,
     ),
-    // A blank formal name would satisfy the biconditional while keying nothing.
+    // A blank formal name would satisfy the CHECK above while keying nothing.
     check(
       'ingredients_canonical_name_not_blank',
       sql`canonical_name is null or btrim(canonical_name) <> ''`,
     ),
     check('ingredients_form_not_blank', sql`form is null or btrim(form) <> ''`),
+    // A link names the text it was picked as; one alone would key nothing.
+    check('ingredients_form_id_has_form', sql`form_id is null or form is not null`),
 
     // Partial per CLAUDE.md rule 4, and indexes rather than constraints: a
     // constraint carries no WHERE, and `nullsNotDistinct()` exists only on
@@ -116,6 +127,15 @@ export const ingredients = pgTable(
     uniqueIndex('ingredients_workspace_slug_unique')
       .on(table.workspaceId, table.slug)
       .where(sql`${table.deletedAt} is null`),
+
+    // The pick read backwards (M5.6a): the live compendium entries picking a
+    // form, which hold its delete and follow its rename (MB.167). Partial on
+    // the compendium's live rows, the only ones either reads — a coven's pick
+    // never blocks a delete or follows a rename, and a form is soft-deleted,
+    // so the foreign key's own check never runs.
+    index('ingredients_compendium_form_id_idx')
+      .on(table.formId)
+      .where(sql`${table.workspaceId} is null and ${table.deletedAt} is null`),
 
     // One multicolumn `gin_trgm_ops` index serves a predicate on either column
     // alone (asserted by EXPLAIN in ingredients-trigram.test.ts). Not partial:

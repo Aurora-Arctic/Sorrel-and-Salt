@@ -58,8 +58,10 @@ there, so no slot can reach that server, or attach to it under a local
 `reuseExistingServer`. Two projects split the specs between them: `chromium`
 (everything except `tests/e2e/sign-in-configured-providers.spec.ts`, against
 its slot's server) and `chromium-configured-providers` (that spec alone,
-against 8100 through its own `baseURL`, with `reducedMotion: 'reduce'` so a
-hover scan never samples a colour mid-transition). Only `chromium` collects
+against 8100 through its own `baseURL`). Both run with `reducedMotion:
+'reduce'`, set once in the shared `use`, so an axe scan never samples a colour
+mid-transition — on hover, or as a Save button enables and `.btn` fades its
+colours in. Only `chromium` collects
 JS coverage (`tests/e2e/fixtures.ts`) — the second project runs the same
 bundle. Placeholder ids are useless to a real authorization endpoint, so
 nothing may click a provider button against 8100; the spec aborts and fails

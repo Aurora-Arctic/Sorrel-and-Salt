@@ -122,6 +122,83 @@
   ["Expand/contract"](expand-contract.md). 0033 adds `deity_traditions` and
   `deities`, with their two `set_updated_at` triggers; see
   ["The deity vocabulary"](deity-vocabulary.md).
+- **`0034_element-list.sql`** (MB.158) is the expand of MB.157's list, made
+  the way 0032 was, because MB.137's and MB.141's drops are still pending.
+  Its `ADD COLUMN` for `elements` came from the scratch `generate`. The fill
+  was added by hand, as 0030's was: one `UPDATE` copying `element` as a
+  one-entry array where one is set. `element-list.test.ts` re-runs that
+  `UPDATE` against the seeded rows. See
+  ["The ingredient identity model"](identity-model.md).
+- **`0035_refill-element-list.sql`** (MB.159) is 0031 again for MB.157's
+  list: `generate --custom`, so `element`, which MB.159 stops declaring,
+  stays in the copied snapshot until MB.160 drops it. One
+  `UPDATE` rederives `elements` from `element` for every row that
+  disagrees, for anything the live deploy wrote after 0034. Data only, so no
+  sidecar. The seed writes lists since MB.159, so `element-list.test.ts`
+  put the seeded rows back as a deployed database held them before
+  re-running either fill, until 0037 dropped the column both read. See
+  ["The ingredient identity model"](identity-model.md).
+- **`0036_drop-ingredient-singles.sql`** (MB.137) is the contract of MB.134's
+  lists: `drizzle-kit generate` wrote the three `DROP COLUMN`s for `planet`,
+  `zodiac` and `color` and a fourth for `substitutes`, which was cut, its
+  column kept in the snapshot, since that drop is MB.141's. It fills nothing
+  first, and its sidecar says why and gates it on a production release
+  carrying MB.136. See ["The ingredient identity model"](identity-model.md).
+- **`0037_drop-element.sql`** (MB.160) is the contract of MB.157's list: one
+  `DROP COLUMN "element"`, with its `.ack.md` sidecar, and no last fill.
+  It is `generate --custom`, because a plain `generate` would also emit
+  MB.141's pending drop; its snapshot is 0036's with `element` deleted and
+  nothing else changed. `element-list.test.ts` asserts the column gone, the
+  type kept, and the drop as the file's only statement. See
+  ["The ingredient identity model"](identity-model.md).
+- **`0038_unknown-carries-formal-name.sql`** (MB.161) replaces
+  `ingredients_nomenclature_declares_canonical_name` under the same name,
+  so that an `unknown` entry may carry a formal name; see
+  ["The ingredient identity model"](identity-model.md). `generate --custom`
+  for the reason 0032 to 0034 were, MB.141's drop still pending: the two
+  constraint statements taken from a scratch `generate`, and the snapshot's
+  CHECK value changed by hand.
+  Its sidecar acknowledges the `DROP CONSTRAINT` and says why it is one PR:
+  the new CHECK only widens, and nothing reads a CHECK.
+- **`0039_drop-substitutes-list.sql`** (MB.141) is the contract of MB.140's
+  switch, and the first plain `generate` since 0031: with every other drop
+  landed, it emitted the `DROP COLUMN "substitutes"` alone. Before the drop
+  it copies across, as names, any list entry the table holds no row for, live
+  or removed, in any case. Its sidecar acknowledges the drop and says why it
+  is safe on production: v0.5.0 shipped MB.140 first.
+  `ingredient-substitutes-schema.test.ts` adds the column back in its clone
+  to re-run both fills. See ["Expand/contract"](expand-contract.md).
+- **`0043_admin-role-changes.sql`** (MB.58) is a plain `generate` of
+  `admin_role_changes` and its enum, with three statements added by hand: the
+  table's `set_updated_at` trigger; the demotion of the seed's bootstrap user,
+  which a database seeded before MB.58 holds as an admin and the seed never
+  rewrites; and the backfill, one `bootstrap` row for every live admin,
+  stamped as that admin. Both data statements re-run in
+  `admin-role-changes-schema.test.ts`. See [M2.9's record](../design-decisions/m2.9-granting-admin.md),
+  "What the audit trail records".
+- **`0044_admin-role-change-pauses.sql`** (MB.62) creates
+  `admin_role_change_pauses`, its pair CHECK and its one-open index, with the
+  `set_updated_at` trigger added by hand. It writes no row: nothing is paused
+  until someone pauses ([`mb.62-pause-ledger.md`](../design-decisions/mb.62-pause-ledger.md)).
+  It was made while MB.168's drop of `ingredients.deities` was pending, so
+  the drop `generate` also emitted is left out and the column kept in
+  `0044_snapshot.json`: the state ["Expand/contract"](expand-contract.md)'s
+  procedure leaves, and a scratch `generate` from it emits that drop alone.
+- **`0046_admin-invitations.sql`** (MB.69) creates `admin_invitations` and
+  its partial unique index on `token_hash`, with the `set_updated_at` trigger
+  added by hand (["Admin invitations"](invitations.md)). Made while MB.168's
+  drop was still pending, it leaves that drop out and keeps the column in
+  `0046_snapshot.json`, as 0044 does.
+- **`0048_drop-deities-list.sql`** (MB.168) is the contract of MB.167's
+  switch, a plain `generate` as 0039 was: it emitted the
+  `DROP COLUMN "deities"` alone. Before the drop it copies across, as
+  unlinked names, any list entry the ingredient holds no row for, linked or
+  not, live or removed, in any case, each after the ingredient's live rows in
+  the list's order. Its sidecar acknowledges the drop, and says why production
+  is not its gate: production is not live, the owner's call, so the release
+  carrying MB.167 carries this too, and v0.5.0's reads fail only for that
+  rollout. `ingredient-deities-schema.test.ts` adds the column back in its
+  clone to re-run both fills. See ["Expand/contract"](expand-contract.md).
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls
@@ -139,7 +216,7 @@
   back to `minimal`.** Both readers of `SEED_SCENARIO` — the CLI and the
   `db-init` compose service through it — go through that one parse, so they
   cannot disagree about what `demo` means. A silent fallback would hand
-  someone who mistyped `demo` one admin and one user, and they would then
+  someone who mistyped `demo` one system user and one user, and they would then
   debug the app rather than the variable. Unset or blank is still `minimal`.
 - **`npm run db:drop` and `npm run db:reset`** (M1.24). `db:drop` calls
   `dropSchema` from `src/db/seed/reset.ts`; `db:reset` is `db:drop &&
@@ -191,3 +268,47 @@ db:migrate && db:seed`, and that first step is what makes it a reset rather
 docker-studio` starts it as a profiled compose service (`studio`), the
   same shape as `workshop`; `make docker-all` brings up every long-running
   service, studio included.
+
+### Migration order
+
+**`db:migrate` applies a migration by its journal `when`, nothing else.**
+Drizzle's migrator reads the newest `created_at` in
+`drizzle.__drizzle_migrations` and applies only the `_journal.json` entries
+whose `when` is later; it compares no tag or hash (`migrate` in
+`drizzle-orm/pg-core/dialect.js`), and a tie is skipped too. `when` is stamped
+when the author runs `generate`, so with several migration branches in flight
+one can reach staging older than a migration already applied there:
+`migrate.yml` passes, the migration never runs, and the deploy meets a schema
+it expects and does not have. No test sees it, since a test database starts
+empty and runs every migration. On 2026-10-06 MB.171's 0045, MB.69's 0046,
+MB.172's 0047 and MB.168's 0048 were in flight together, and regenerating 0046
+to follow 0045 left it newer than 0047 and 0048: merged in number order, both
+would have been skipped.
+
+**`npm run check:migration-order` refuses that before the merge** (MB.173,
+`scripts/check-migration-order.ts`). It reads the branch's journal from the
+working tree, so a just-generated migration counts, against the base's
+committed one, the base resolving as `check:destructive-ddl`'s does
+(`-- --base <ref>` picks another). An entry is the branch's when the base has
+no entry of its tag, and it is refused when it sits ahead of an entry the base
+has, or when its `when` is no later than the base's newest; the journal as a
+whole is refused wherever `when` fails to rise. In CI it is the
+`checks / migration-order` leg ([`ci/reusable-checks.md`](../ci/reusable-checks.md)).
+A run is only as current as the base it read: a branch whose base moves after
+it passed is checked again on its next push, which the merge of the new base
+that a journal conflict forces will be.
+
+**A refused migration is regenerated on the current base**, not re-dated:
+`meta/<NNNN>_snapshot.json`'s `prevId` must name the base's newest snapshot as
+well, which only `generate` rewrites.
+
+1. Merge the base into the branch.
+2. Delete the migration's `.sql`, its `meta/` snapshot and its
+   `_journal.json` entry, taking the base's journal where they conflict.
+3. Run `npm run db:generate -- --name <its name>`, the name after the old
+   number. It numbers the migration after the base's and stamps a new `when`.
+4. Put back whatever was written into the SQL by hand (a header comment, a
+   trigger, a refill), and strip a pending column drop as
+   [rule 10](expand-contract.md) requires while one is in flight.
+5. Run `npm run check:migration-order` and `npm run check:destructive-ddl`; a
+   renamed migration carries its `.ack.md` sidecar under its new tag.

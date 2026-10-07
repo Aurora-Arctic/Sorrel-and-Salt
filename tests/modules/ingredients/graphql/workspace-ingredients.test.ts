@@ -10,6 +10,7 @@ import type { Session } from '@/lib/session';
 import { toValidationIssues } from '@/lib/validation';
 import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { curatedDeityId, curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { noSender } from '../../../support/email-verification';
@@ -52,8 +53,9 @@ async function run<T>(
 }
 
 const FIELDS = `
-  id name slug canonicalName nomenclature form description element planets zodiacSigns
-  deities colors safetyNotes substitutes { name ingredient { id } } isGlobal folkNames
+  id name slug canonicalName nomenclature form formChoice { id name group { name } } description
+  elements planets zodiacSigns deities { name deity { id tradition { name } } } colors safetyNotes
+  substitutes { name ingredient { id } } isGlobal folkNames
   categories { name }
   audit { createdBy updatedBy }
 `;
@@ -109,15 +111,18 @@ function wholeInput(fixture: IngredientFixture): Record<string, unknown> {
     canonicalName: fixture.canonicalName ?? '',
     nomenclature: fixture.nomenclature,
     form: fixture.form ?? '',
+    formId: fixture.formId ?? '',
     description: fixture.description ?? '',
-    element: fixture.element,
+    elements: fixture.elements ?? [],
     planets: fixture.planets ?? [],
     zodiacSigns: fixture.zodiacSigns ?? [],
-    deities: fixture.deities ?? [],
+    deities: fixture.deities.map((name) => ({ name })),
     colors: fixture.colors ?? [],
     safetyNotes: fixture.safetyNotes ?? '',
     substitutes: fixture.substitutes.map((name) => ({ name })),
     folkNames: fixture.folkNames,
+    references: [],
+    categoryIds: [],
   };
 }
 
@@ -154,15 +159,18 @@ describe('createWorkspaceIngredient', () => {
 
   it('answers the entity as a fresh read would, children included, so the client needs no refetch', async () => {
     const mockleaf = await seed(makeIngredient({ name: 'Mockleaf', nomenclature: 'none' }));
+    const root = await curatedFormId(sql, 'Root');
+    const hecate = await curatedDeityId(sql, 'Hecate');
     const result = await create(asUser(B), {
       name: 'Testwort',
       canonicalName: 'Fixtura testalis',
       nomenclature: 'botanical',
       form: 'root',
-      element: 'water',
+      formId: root,
+      elements: ['water', 'earth'],
       planets: ['Venus', 'Moon'],
       zodiacSigns: ['Taurus', 'Cancer'],
-      deities: ['Testara'],
+      deities: [{ name: 'Testara' }, { deityId: hecate }],
       colors: ['Green', 'Silver'],
       folkNames: ['Test Root', 'Fixture Herb'],
       substitutes: [{ name: 'Zest Root' }, { ingredientId: mockleaf }],
@@ -174,7 +182,15 @@ describe('createWorkspaceIngredient', () => {
       { name: 'Mockleaf', ingredient: { id: mockleaf } },
       { name: 'Zest Root', ingredient: null },
     ]);
+    // MB.167: the picks read back as picks, the typed deity as its name, in order.
+    expect(answered.form).toBe('Root');
+    expect(answered.formChoice).toEqual({ id: root, name: 'Root', group: { name: 'Botanical' } });
+    expect(answered.deities).toEqual([
+      { name: 'Testara', deity: null },
+      { name: 'Hecate', deity: { id: hecate, tradition: { name: 'Greek' } } },
+    ]);
     expect(answered).toMatchObject({
+      elements: ['water', 'earth'],
       planets: ['Venus', 'Moon'],
       zodiacSigns: ['Taurus', 'Cancer'],
       colors: ['Green', 'Silver'],
@@ -300,7 +316,7 @@ describe('updateIngredient', () => {
         local({
           name: 'Testroot',
           form: 'root',
-          element: 'fire',
+          elements: ['fire'],
           planets: ['Mars'],
           colors: ['Red', 'Black'],
           folkNames: ['Added Root'],
@@ -314,7 +330,7 @@ describe('updateIngredient', () => {
       id,
       name: 'Testroot',
       form: 'root',
-      element: 'fire',
+      elements: ['fire'],
       description: null,
       planets: ['Mars'],
       colors: ['Red', 'Black'],
@@ -336,12 +352,12 @@ describe('updateIngredient', () => {
     ]);
   });
 
-  it('clears a text field sent as "", a list sent as [], and element sent as null', async () => {
+  it('clears a text field sent as "", and a list sent as [], elements included', async () => {
     const id = await seed(
       local({
         form: 'root',
         description: 'Dug at dusk',
-        element: 'water',
+        elements: ['water', 'air'],
         planets: ['Moon'],
         zodiacSigns: ['Cancer'],
         deities: ['Testara'],
@@ -351,46 +367,48 @@ describe('updateIngredient', () => {
       }),
     );
 
-    const result = await update(asUser(B), id, wholeInput(local({ form: null, element: null })));
+    const result = await update(asUser(B), id, wholeInput(local({ form: null })));
 
     expect(result.errors).toBeUndefined();
     expect(result.data?.updateIngredient).toMatchObject({
       form: null,
       description: null,
-      element: null,
+      elements: null,
       planets: null,
       zodiacSigns: null,
-      deities: null,
+      deities: [],
       colors: null,
       substitutes: [],
       folkNames: [],
     });
     // Cleared to NULL, not to an empty array: "none" has one representation.
     expect(await rowOf(id)).toMatchObject({
+      elements: null,
       planets: null,
       zodiac_signs: null,
-      deities: null,
       colors: null,
     });
-    const [{ n }] = await sql`
-      select count(*)::int as n from ingredient_substitutes
-      where ingredient_id = ${id} and deleted_at is null`;
-    expect(n).toBe(0);
+    for (const table of ['ingredient_substitutes', 'ingredient_deities']) {
+      const [{ n }] = await sql`
+        select count(*)::int as n from ${sql(table)}
+        where ingredient_id = ${id} and deleted_at is null`;
+      expect(n, table).toBe(0);
+    }
   });
 
-  // `element` is an enum, which has no empty value to send, so it is the one
-  // field left nullable — and so the one a caller may leave out.
-  it('declares every field of its input required, but element', () => {
+  // An empty value clears every field, `elements` too since it became a list
+  // (MB.159), so none is left nullable and none may be left out.
+  it('declares every field of its input required', () => {
     const input = schema.getType('IngredientUpdateInput');
     expect(input).toBeInstanceOf(GraphQLInputObjectType);
     const fields = Object.values((input as GraphQLInputObjectType).getFields());
     // Precondition: the input is the whole ingredient, not a stub.
     expect(fields.map((field) => field.name)).toEqual(
-      expect.arrayContaining(['name', 'canonicalName', 'form', 'element', 'folkNames']),
+      expect.arrayContaining(['name', 'canonicalName', 'form', 'elements', 'folkNames']),
     );
 
     expect(fields.filter((field) => !isNonNullType(field.type)).map((field) => field.name)).toEqual(
-      ['element'],
+      [],
     );
   });
 
@@ -410,14 +428,76 @@ describe('updateIngredient', () => {
     expect(await rowOf(id)).toMatchObject({ name: 'Testwort', form: 'root' });
   });
 
-  it('clears element when it is left out', async () => {
-    const id = await seed(local({ element: 'water' }));
-    const { element: _element, ...withoutElement } = wholeInput(local({ element: 'water' }));
+  describe('its elements', () => {
+    it('saves several in the order chosen', async () => {
+      const id = await seed(local());
 
-    const result = await update(asUser(B), id, withoutElement);
+      const result = await update(
+        asUser(B),
+        id,
+        wholeInput(local({ elements: ['water', 'fire', 'spirit'] })),
+      );
 
-    expect(result.errors).toBeUndefined();
-    expect((await rowOf(id)).element).toBeNull();
+      expect(result.errors).toBeUndefined();
+      expect(result.data?.updateIngredient.elements).toEqual(['water', 'fire', 'spirit']);
+      expect((await rowOf(id)).elements).toEqual(['water', 'fire', 'spirit']);
+    });
+
+    it('replaces the list whole rather than adding to it', async () => {
+      const id = await seed(local({ elements: ['earth', 'water'] }));
+
+      const result = await update(asUser(B), id, wholeInput(local({ elements: ['air', 'earth'] })));
+
+      expect(result.errors).toBeUndefined();
+      expect((await rowOf(id)).elements).toEqual(['air', 'earth']);
+    });
+
+    it('refuses one chosen twice as VALIDATION at the repeat, changing nothing', async () => {
+      const id = await seed(local({ elements: ['earth'] }));
+
+      const result = await update(
+        asUser(B),
+        id,
+        wholeInput(local({ elements: ['fire', 'air', 'fire'] })),
+      );
+
+      expect(result.data).toBeNull();
+      expect(result.errors?.[0]?.extensions).toEqual({
+        code: 'VALIDATION',
+        fieldErrors: [{ path: ['elements', 2], message: 'Fire is already chosen' }],
+      });
+      expect((await rowOf(id)).elements).toEqual(['earth']);
+    });
+
+    // The enum refuses it before a resolver runs, so the service never sees it.
+    it('refuses a value outside the five, changing nothing', async () => {
+      const id = await seed(local({ elements: ['earth'] }));
+
+      const result = await update(asUser(B), id, wholeInput(local({ elements: ['fire'] })));
+      expect(result.errors).toBeUndefined();
+      const refused = await update(asUser(B), id, {
+        ...wholeInput(local()),
+        elements: ['fire', 'aether'],
+      });
+
+      expect(refused.data ?? null).toBeNull();
+      expect(refused.errors?.[0]?.message).toMatch(
+        /Value "aether" does not exist in "IngredientElement" enum/,
+      );
+      expect((await rowOf(id)).elements).toEqual(['fire']);
+    });
+
+    it('refuses an input that leaves the list out, as every field', async () => {
+      const id = await seed(local({ elements: ['water'] }));
+      const { elements: _elements, ...withoutElements } = wholeInput(local());
+
+      const result = await update(asUser(B), id, withoutElements);
+
+      expect(result.errors?.[0]?.message).toMatch(
+        /Field "elements" of required type "\[IngredientElement!\]!" was not provided/,
+      );
+      expect((await rowOf(id)).elements).toEqual(['water']);
+    });
   });
 
   it('answers a Zod failure as VALIDATION on the field, changing nothing', async () => {
@@ -486,14 +566,14 @@ describe('updateIngredient', () => {
 
   // Root mutation fields run one after another in one request, so the second
   // must not answer the folk names the first one read.
-  it('answers its own folk names and substitutes when one request updates the entry twice', async () => {
+  it('answers its own folk names, substitutes and deities when one request updates the entry twice', async () => {
     const id = await seed(local());
     const twice = `mutation ($workspaceId: ID!, $id: ID!, $first: IngredientUpdateInput!, $second: IngredientUpdateInput!) {
       first: updateIngredient(workspaceId: $workspaceId, id: $id, input: $first) {
-        folkNames substitutes { name }
+        folkNames substitutes { name } deities { name }
       }
       second: updateIngredient(workspaceId: $workspaceId, id: $id, input: $second) {
-        folkNames substitutes { name }
+        folkNames substitutes { name } deities { name }
       }
     }`;
 
@@ -503,8 +583,16 @@ describe('updateIngredient', () => {
       {
         workspaceId: WORKSPACE_W_ID,
         id,
-        first: wholeInput(local({ folkNames: ['First Root'], substitutes: ['First Zest'] })),
-        second: wholeInput(local({ folkNames: ['Second Root'], substitutes: ['Second Zest'] })),
+        first: wholeInput(
+          local({ folkNames: ['First Root'], substitutes: ['First Zest'], deities: ['Testara'] }),
+        ),
+        second: wholeInput(
+          local({
+            folkNames: ['Second Root'],
+            substitutes: ['Second Zest'],
+            deities: ['Testoros'],
+          }),
+        ),
       },
     );
 
@@ -513,6 +601,87 @@ describe('updateIngredient', () => {
     expect(result.data?.second.folkNames).toEqual(['Second Root']);
     expect(result.data?.first.substitutes).toEqual([{ name: 'First Zest' }]);
     expect(result.data?.second.substitutes).toEqual([{ name: 'Second Zest' }]);
+    expect(result.data?.first.deities).toEqual([{ name: 'Testara' }]);
+    expect(result.data?.second.deities).toEqual([{ name: 'Testoros' }]);
+  });
+});
+
+// Story 30 over the wire (MB.125): `categoryIds` on both inputs, required on
+// the update's where `[]` clears, answered back as the categories written.
+// The service's own rules are services/ingredient-categories.test.ts's.
+describe('categoryIds', () => {
+  const categoryId = async (name: string) => {
+    const [row] = await sql`select id from categories where name = ${name} and deleted_at is null`;
+    return row.id as string;
+  };
+
+  it('files a new ingredient, answering the categories just written', async () => {
+    const protection = await categoryId('Protection');
+    const cleansing = await categoryId('Cleansing');
+
+    const result = await create(asUser(B), {
+      name: 'Testwort',
+      categoryIds: [protection, cleansing],
+    });
+
+    expect(result.errors).toBeUndefined();
+    const created = result.data?.createWorkspaceIngredient as WorkspaceIngredientNode;
+    expect(created.categories).toEqual([{ name: 'Cleansing' }, { name: 'Protection' }]);
+    expect((await read(asUser(B), created.id)).data?.ingredient.categories).toEqual(
+      created.categories,
+    );
+  });
+
+  it('replaces the set on update, and clears it on []', async () => {
+    const id = await seed(local({ categories: ['Protection'] }));
+    const love = await categoryId('Love');
+
+    const replaced = await update(asUser(B), id, { ...wholeInput(local()), categoryIds: [love] });
+    expect(replaced.errors).toBeUndefined();
+    expect(replaced.data?.updateIngredient.categories).toEqual([{ name: 'Love' }]);
+
+    const cleared = await update(asUser(B), id, { ...wholeInput(local()), categoryIds: [] });
+    expect(cleared.data?.updateIngredient.categories).toEqual([]);
+  });
+
+  // Root mutation fields run one after another in one request, so the second
+  // must not answer the categories the first one read.
+  it('answers its own categories when one request updates the entry twice', async () => {
+    const id = await seed(local());
+    const twice = `mutation ($workspaceId: ID!, $id: ID!, $first: IngredientUpdateInput!, $second: IngredientUpdateInput!) {
+      first: updateIngredient(workspaceId: $workspaceId, id: $id, input: $first) { categories { name } }
+      second: updateIngredient(workspaceId: $workspaceId, id: $id, input: $second) { categories { name } }
+    }`;
+
+    const result = await run<{ first: WorkspaceIngredientNode; second: WorkspaceIngredientNode }>(
+      asUser(B),
+      twice,
+      {
+        workspaceId: WORKSPACE_W_ID,
+        id,
+        first: { ...wholeInput(local()), categoryIds: [await categoryId('Protection')] },
+        second: { ...wholeInput(local()), categoryIds: [await categoryId('Love')] },
+      },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.first.categories).toEqual([{ name: 'Protection' }]);
+    expect(result.data?.second.categories).toEqual([{ name: 'Love' }]);
+  });
+
+  it('refuses an id naming no live category as VALIDATION, beside the entry', async () => {
+    const protection = await categoryId('Protection');
+
+    const result = await create(asUser(B), {
+      name: 'Testwort',
+      categoryIds: [protection, '00000000-0000-4000-8000-0000000000c9'],
+    });
+
+    expect(result.errors?.[0]?.extensions).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['categoryIds', 1], message: expect.any(String) }],
+    });
+    expect(await countIngredients()).toBe(0);
   });
 });
 

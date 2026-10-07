@@ -1,0 +1,22 @@
+@use '../../scss/variables' as *;
+
+// Layout only, on the form primitives; no styling past the tokens before the
+// admin section's design review (MB.115). CategoryForm's, under this name.
+.group-form__actions {
+  flex-wrap: wrap;
+}
+
+// Apart from Save and Cancel, at the far end, so it is not pressed for either.
+.group-form__delete {
+  margin-left: auto;
+}
+
+.group-form__confirm {
+  // Where the buttons it stands in for would be (M5.5).
+  margin-block: space(2);
+}
+
+// Hard against the label, in the error red: it marks what a save will ask for.
+.group-form__required {
+  color: $secondary;
+}

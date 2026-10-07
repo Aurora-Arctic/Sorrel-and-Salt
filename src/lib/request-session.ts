@@ -27,8 +27,15 @@ function toUserRole(role: unknown): UserRole {
 async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> {
   const result = await auth.api.getSession({ headers: requestHeaders });
   if (!result) return { session: null, emailVerified: false };
+  // Present only while the `admin` plugin is registered and this session is
+  // an impersonation (MB.53); the type holds the plugin in either way.
+  const { impersonatedBy } = result.session as { impersonatedBy?: string | null };
   return {
-    session: { userId: result.user.id, role: toUserRole(result.user.role) },
+    session: {
+      userId: result.user.id,
+      role: toUserRole(result.user.role),
+      ...(impersonatedBy && { impersonatedBy }),
+    },
     emailVerified: result.user.emailVerified === true,
   };
 }

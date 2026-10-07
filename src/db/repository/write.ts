@@ -1,14 +1,27 @@
-import { and, eq, inArray, lte, sql, type SQL } from 'drizzle-orm';
-import type { PgTable } from 'drizzle-orm/pg-core';
+import { and, eq, getTableColumns, gt, inArray, isNull, lte, sql, type SQL } from 'drizzle-orm';
+import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { applyAudit } from '../audit';
 import type { AuditSession } from '../types';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
+import { adminInvitations } from '../../modules/identity/schema/admin-invitations';
+import { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
+import { users } from '../../modules/identity/schema/users';
+import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
-import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
+import { inCompendium, listFolds, notSoftDeleted, scopedTo } from './predicates';
+import { existsIn } from './select';
+import { hashToken } from './tokens';
 import type { Membership } from '@/modules/coven';
-import type { AuditWriter, Identified, TwoTier, WorkspaceScoped } from './types';
+import type {
+  AuditWriter,
+  ColumnMatch,
+  Identified,
+  IngredientRow,
+  TwoTier,
+  WorkspaceScoped,
+} from './types';
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -45,6 +58,28 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     id: string,
   ) => and(scopedTo(membership, table), eq(table.id, id));
 
+  // A pending invitation: neither accepted nor revoked, and not yet expired.
+  // Both stamps match only one, so neither overwrites the other or itself.
+  const pendingInvitation = (...which: SQL[]) =>
+    and(
+      ...which,
+      isNull(adminInvitations.acceptedAt),
+      isNull(adminInvitations.revokedAt),
+      gt(adminInvitations.expiresAt, sql`now()`),
+    );
+
+  // The session's user holds the invited address, verified, on a live row.
+  // Both sides lowered, though `users` holds its addresses lower-cased.
+  const heldVerifiedBySession = () =>
+    existsIn(
+      users,
+      and(
+        eq(users.id, session.userId),
+        eq(users.emailVerified, true),
+        eq(sql`lower(${users.email})`, sql`lower(${adminInvitations.email})`),
+      ),
+    );
+
   const inCompendiumById = (table: PgTable & TwoTier & Identified, id: string) =>
     and(inCompendium(table), eq(table.id, id));
 
@@ -80,8 +115,117 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
         .delete(retiredIngredientSlugs)
         .where(and(inCompendium(retiredIngredientSlugs), lte(retiredIngredientSlugs.expiresAt, at)))
         .returning(),
-    delete: (table, where) => tx.delete(table).where(where).returning() as never,
+    // One statement: no slug moves, so every holding entry takes the same
+    // rewrite. The list is rebuilt in its own order, each entry folding to
+    // `from` replaced and every other kept as written.
+    carryAstrologyRename: (_admin, list, from, to) => {
+      const column = ingredients[list];
+      const fold = sql`lower(btrim(${from}))`;
+      const entry = sql.identifier('entry');
+      const at = sql.identifier('at');
+      return update(
+        ingredients,
+        {
+          [list]: sql`array(
+            select case when lower(btrim(${entry})) = ${fold} then ${to}::text else ${entry} end
+            from unnest(${column}) with ordinality as listed(${entry}, ${at})
+            order by ${at})`,
+        },
+        and(inCompendium(ingredients), inArray(fold, listFolds(column))),
+      );
+    },
+    // One entry at a time: each takes its own slug, derived by the service from
+    // the one slug rule. `form_id` is matched here as well as read there, so
+    // an entry that picked another form since is not rewritten onto this one.
+    carryFormRename: async (_admin, formId, form, entries, at) => {
+      const rewritten: IngredientRow[] = [];
+      for (const { id, slug, previousSlug } of entries) {
+        const [row]: IngredientRow[] = await update(
+          ingredients,
+          { form, slug },
+          and(inCompendiumById(ingredients, id), eq(ingredients.formId, formId)),
+        );
+        if (!row) continue;
+        rewritten.push(row);
+        if (slug !== previousSlug) {
+          await insert(retiredIngredientSlugs, {
+            ingredientId: id,
+            slug: previousSlug,
+            retiredAt: at,
+            workspaceId: null,
+          });
+        }
+      }
+      return rewritten;
+    },
+    // No conflict target: the one-open index is an expression index, and the
+    // generated primary key is the only other unique.
+    pauseAdminRoleChanges: () =>
+      tx
+        .insert(adminRoleChangePauses)
+        .values(applyAudit('insert', {}, session) as never)
+        .onConflictDoNothing()
+        .returning(),
+    // `now()` beside the trigger's `updated_at`, so the two read alike.
+    resumeAdminRoleChanges: () =>
+      update(
+        adminRoleChangePauses,
+        { endedAt: sql`now()`, endedBy: session.userId },
+        isNull(adminRoleChangePauses.endedAt),
+      ),
+    // The columns named rather than spread, as `workspaceId` is placed last
+    // above: an invitation starts pending even if a cast smuggled a stamp in.
+    insertAdminInvitation: (_admin, { email, token, expiresAt, note }) =>
+      insert(adminInvitations, { email, tokenHash: hashToken(token), expiresAt, note }),
+    // The address match in the statement, not only in MB.70's service: the
+    // service checks first to say why, and this is what holds if it forgot.
+    acceptAdminInvitation: (token) =>
+      update(
+        adminInvitations,
+        { acceptedAt: sql`now()`, acceptedBy: session.userId },
+        pendingInvitation(
+          eq(adminInvitations.tokenHash, hashToken(token)),
+          heldVerifiedBySession(),
+        ),
+      ),
+    revokeAdminInvitation: (_admin, id) =>
+      update(
+        adminInvitations,
+        { revokedAt: sql`now()` },
+        pendingInvitation(eq(adminInvitations.id, id)),
+      ),
+    delete: (table, match) => {
+      const where = matching(table, match);
+      return where ? (tx.delete(table).where(where).returning() as never) : Promise.resolve([]);
+    },
   };
+}
+
+/**
+ * `delete`'s predicate: each column of `match` equal to its value, or in its
+ * list; `undefined` when a list is empty, since the delete then matches
+ * nothing. A match naming no column, or a key that is not one of the table's
+ * columns, throws: either would otherwise delete more than was asked.
+ */
+function matching<TTable extends PgTable>(
+  table: TTable,
+  match: ColumnMatch<TTable>,
+): SQL | undefined {
+  const columns: Record<string, AnyPgColumn> = getTableColumns(table);
+  const entries = Object.entries(match as Record<string, unknown>);
+  if (entries.length === 0) throw new Error('write.delete needs a column to match on');
+
+  const conditions: SQL[] = [];
+  for (const [key, value] of entries) {
+    const column = columns[key];
+    if (!column || value === undefined) {
+      throw new Error(`write.delete cannot match on "${key}"`);
+    }
+    if (!Array.isArray(value)) conditions.push(eq(column, value));
+    else if (value.length === 0) return undefined;
+    else conditions.push(inArray(column, value));
+  }
+  return and(...conditions);
 }
 
 /**
@@ -103,7 +247,13 @@ export async function withAudit<T>(
     // true)` is `SET LOCAL` with a bind parameter: discarded at COMMIT or
     // ROLLBACK, never riding a pooled connection into the next request
     // (claude-docs/db/write-path.md, "app.current_user_id, published per transaction").
-    await tx.execute(sql`select set_config('app.current_user_id', ${session.userId}, true)`);
+    // `app.impersonated_by` beside it, for the same reason and with no reader
+    // either: the admin acting as `userId` (MB.53), or empty — always set, so a
+    // reader never sees the placeholder an earlier transaction left on the
+    // connection. One statement, so it costs no second round trip.
+    await tx.execute(
+      sql`select set_config('app.current_user_id', ${session.userId}, true), set_config('app.impersonated_by', ${session.impersonatedBy ?? ''}, true)`,
+    );
     return fn(writerFor(tx, session));
   });
 }

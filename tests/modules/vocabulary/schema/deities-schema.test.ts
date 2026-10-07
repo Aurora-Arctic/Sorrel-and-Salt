@@ -5,6 +5,7 @@ import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { foreignKeyStatements, shippedMigrationStatements } from '../../../support/db/migrations';
 import { deities, deityTraditions } from '@/modules/vocabulary/schema/deities';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
+import { ingredientDeities } from '@/modules/ingredients/schema/ingredient-deities';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import type { Row } from './types';
 
@@ -21,7 +22,7 @@ describe('deity_traditions schema', () => {
 
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
-      ['id', 'name', 'slug', 'description', ...AUDIT_COLUMNS].sort(),
+      ['id', 'name', 'slug', 'description', 'seed_key', ...AUDIT_COLUMNS].sort(),
     );
   });
 
@@ -43,13 +44,16 @@ describe('deity_traditions schema', () => {
   });
 
   // No trigram index: the autofill returns a tradition's name and never searches it.
-  it('declares one index, the slug, unique and partial on deleted_at IS NULL (rule 4)', () => {
+  it('declares two indexes, the slug and the seed key, each unique and partial on deleted_at IS NULL (rule 4)', () => {
     const slugIndex = byIndexName[TRADITIONS_SLUG_UNIQUE];
 
     expect(slugIndex).toBeDefined();
     expect(slugIndex.config.unique).toBe(true);
     expect(slugIndex.config.where).toBeDefined();
-    expect(Object.keys(byIndexName)).toEqual([TRADITIONS_SLUG_UNIQUE]);
+    expect(Object.keys(byIndexName).sort()).toEqual([
+      'deity_traditions_seed_key_unique',
+      TRADITIONS_SLUG_UNIQUE,
+    ]);
   });
 });
 
@@ -58,7 +62,7 @@ describe('deities schema', () => {
 
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
-      ['id', 'name', 'slug', 'description', 'tradition_id', ...AUDIT_COLUMNS].sort(),
+      ['id', 'name', 'slug', 'description', 'tradition_id', 'seed_key', ...AUDIT_COLUMNS].sort(),
     );
   });
 
@@ -105,19 +109,24 @@ describe('deities schema', () => {
     expect(trigram?.config.columns).toHaveLength(2);
     expect(trigram?.config.unique).toBe(false);
     expect(trigram?.config.where).toBeUndefined();
-    expect(Object.keys(byIndexName).sort()).toEqual([DEITIES_SLUG_UNIQUE, DEITIES_TRGM]);
+    expect(Object.keys(byIndexName).sort()).toEqual([
+      'deities_seed_key_unique',
+      DEITIES_SLUG_UNIQUE,
+      DEITIES_TRGM,
+    ]);
   });
 });
 
-// §5: `ingredients.deities` is free text over this vocabulary — an FK would
-// make an uncurated value unwritable (claude-docs/db/deity-vocabulary.md).
-describe('ingredients.deities is a text list over this vocabulary, not a foreign key to it', () => {
-  it('declares deities as a nullable text[] column', () => {
+// §5: an ingredient's deities are free text over this vocabulary — an FK on
+// the text would make an uncurated value unwritable
+// (claude-docs/db/deity-vocabulary.md). The names moved from
+// `ingredients.deities` to `ingredient_deities.name` (MB.167), and the deity a
+// member picked is linked beside the name (MB.165), never instead of it.
+describe('an ingredient’s deities are text over this vocabulary, not a foreign key to it', () => {
+  it('no longer declares the ingredients.deities list, which ingredient_deities replaced', () => {
     const declared = tableFacts(ingredients).columns.find((column) => column.name === 'deities');
 
-    expect(declared).toBeDefined();
-    expect(declared?.getSQLType()).toBe('text[]');
-    expect(declared?.notNull).toBe(false);
+    expect(declared).toBeUndefined();
   });
 
   it('points no ingredients foreign key at either table', () => {
@@ -133,6 +142,36 @@ describe('ingredients.deities is a text list over this vocabulary, not a foreign
 
     expect(foreignKeyStatements(statements, 'ingredients', 'deities')).toEqual([]);
     expect(foreignKeyStatements(statements, 'ingredients', 'deity_traditions')).toEqual([]);
+  });
+});
+
+describe('ingredient_deities links a picked deity beside its name', () => {
+  const { byName, foreignKeys } = tableFacts(ingredientDeities);
+
+  it('keeps the name as required text', () => {
+    expect(byName.name.getSQLType()).toBe('text');
+    expect(byName.name.notNull).toBe(true);
+  });
+
+  it('points one foreign key at deities, from the nullable deity_id, and none at traditions', () => {
+    const keys = foreignKeys.map((fk) => fk.reference());
+    const atDeities = keys.filter((key) => key.foreignTable === deities);
+
+    expect(atDeities.map((key) => key.columns[0].name)).toEqual(['deity_id']);
+    expect(byName.deity_id.notNull).toBe(false);
+    expect(keys.map((key) => key.foreignTable)).not.toContain(deityTraditions);
+  });
+
+  // Read from disk, as above.
+  it('ships no migration adding a foreign key on the name', () => {
+    const atDeities = foreignKeyStatements(
+      shippedMigrationStatements(),
+      'ingredient_deities',
+      'deities',
+    );
+
+    expect(atDeities).toHaveLength(1);
+    expect(atDeities[0]).toMatch(/FOREIGN KEY \("deity_id"\)/);
   });
 });
 
@@ -191,8 +230,11 @@ beforeEach(async () => {
 });
 
 describe.each([
-  { table: 'deity_traditions', columns: ['id', 'name', 'slug', 'description'] },
-  { table: 'deities', columns: ['id', 'name', 'slug', 'description', 'tradition_id'] },
+  { table: 'deity_traditions', columns: ['id', 'name', 'slug', 'description', 'seed_key'] },
+  {
+    table: 'deities',
+    columns: ['id', 'name', 'slug', 'description', 'tradition_id', 'seed_key'],
+  },
 ])('$table in the catalogue', ({ table, columns }) => {
   it('carries exactly the §5 columns and the audit spread', async () => {
     expect((await catalogue.columnNames(table)).sort()).toEqual(
@@ -200,9 +242,10 @@ describe.each([
     );
   });
 
-  it('carries no unique index beyond the primary key and the slug', async () => {
+  it('carries no unique index beyond the primary key, the slug and the seed key', async () => {
     expect(await catalogue.uniqueIndexNames(table)).toEqual([
       `${table}_pkey`,
+      `${table}_seed_key_unique`,
       `${table}_slug_unique`,
     ]);
   });
@@ -236,6 +279,7 @@ describe('deity_traditions table', () => {
 
     expect(indexes.map((index) => index.indexname)).toEqual([
       'deity_traditions_pkey',
+      'deity_traditions_seed_key_unique',
       TRADITIONS_SLUG_UNIQUE,
     ]);
   });

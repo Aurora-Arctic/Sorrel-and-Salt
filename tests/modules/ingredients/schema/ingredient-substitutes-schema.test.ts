@@ -27,6 +27,8 @@ const CHECKS = [CHECK_LINK_OR_NAME, CHECK_NAME_NOT_BLANK, CHECK_NOT_ITSELF].sort
 
 // What marks the fill among the shipped migrations: it re-runs here.
 const FILL_MIGRATION = 'INSERT INTO "ingredient_substitutes"';
+// And the refill MB.141 runs before the drop it marks.
+const DROP_MIGRATION = 'DROP COLUMN "substitutes"';
 
 describe('ingredient_substitutes schema', () => {
   const {
@@ -326,47 +328,57 @@ describe('ingredient_substitutes table', () => {
   });
 });
 
-// The template is migrated before it is seeded, so the migration's own fill is
-// re-run here against lists shaped as a deployed database held them.
+// The template is migrated before it is seeded, so each migration's fill is
+// re-run here, read off disk, against lists shaped as a deployed database held
+// them. MB.141 dropped the list both fills read, so this file's clone takes it
+// back first: the template is re-cloned before every file, and no other sees it.
+async function restoreTheList(): Promise<void> {
+  await sql`alter table ingredients add column if not exists substitutes text[]`;
+}
+
+/** The `INSERT` of the first migration containing `marker`, run here. */
+async function runFillOf(marker: string): Promise<void> {
+  const fill = statementsOfMigrationContaining(marker).filter((statement) =>
+    /^insert\b/i.test(statement),
+  );
+  expect(fill).toHaveLength(1);
+  await sql.unsafe(fill[0]);
+}
+
+async function listOn(id: string, substitutes: (string | null)[] | null, editor = AUTHOR) {
+  await sql`
+    update ingredients set substitutes = ${substitutes}, updated_by = ${editor} where id = ${id}
+  `;
+}
+
+async function everySubstitute(): Promise<SubstituteRow[]> {
+  return sql<SubstituteRow[]>`
+    select ingredient_id, substitute_id, name, created_by, updated_by, deleted_at
+    from ingredient_substitutes
+    order by ingredient_id, name
+  `;
+}
+
+const nameRow = (ingredientId: string, name: string, by = AUTHOR): SubstituteRow => ({
+  ingredient_id: ingredientId,
+  substitute_id: null,
+  name,
+  created_by: by,
+  updated_by: by,
+  deleted_at: null,
+});
+
+const byParentAndName = (rows: SubstituteRow[]) =>
+  [...rows].sort((a, b) =>
+    a.ingredient_id === b.ingredient_id
+      ? (a.name ?? '').localeCompare(b.name ?? '')
+      : a.ingredient_id.localeCompare(b.ingredient_id),
+  );
+
 describe('the fill from ingredients.substitutes (MB.139)', () => {
-  /** The migration's `INSERT`, run here. */
-  async function runFill(): Promise<void> {
-    const fill = statementsOfMigrationContaining(FILL_MIGRATION).filter((statement) =>
-      /^insert\b/i.test(statement),
-    );
-    expect(fill).toHaveLength(1);
-    await sql.unsafe(fill[0]);
-  }
+  const runFill = () => runFillOf(FILL_MIGRATION);
 
-  async function listOn(id: string, substitutes: (string | null)[] | null, editor = AUTHOR) {
-    await sql`
-      update ingredients set substitutes = ${substitutes}, updated_by = ${editor} where id = ${id}
-    `;
-  }
-
-  async function everySubstitute(): Promise<SubstituteRow[]> {
-    return sql<SubstituteRow[]>`
-      select ingredient_id, substitute_id, name, created_by, updated_by, deleted_at
-      from ingredient_substitutes
-      order by ingredient_id, name
-    `;
-  }
-
-  const nameRow = (ingredientId: string, name: string, by = AUTHOR): SubstituteRow => ({
-    ingredient_id: ingredientId,
-    substitute_id: null,
-    name,
-    created_by: by,
-    updated_by: by,
-    deleted_at: null,
-  });
-
-  const byParentAndName = (rows: SubstituteRow[]) =>
-    [...rows].sort((a, b) =>
-      a.ingredient_id === b.ingredient_id
-        ? (a.name ?? '').localeCompare(b.name ?? '')
-        : a.ingredient_id.localeCompare(b.ingredient_id),
-    );
+  beforeAll(restoreTheList);
 
   beforeEach(async () => {
     await sql`update ingredients set substitutes = null`;
@@ -447,5 +459,94 @@ describe('the fill from ingredients.substitutes (MB.139)', () => {
 
     const [row] = await sql`select substitutes from ingredients where id = ${UNCARIA}`;
     expect(row.substitutes).toEqual(['Devil’s Claw', 'devil’s claw']);
+  });
+});
+
+// MB.141's migration copies whatever the live deploy wrote to the list after
+// MB.139's fill, then drops it. By then MB.140 owns the table, so the refill
+// only adds: what a row already holds is newer than the list, a removal
+// included, since nothing but MB.140's code ever soft-deleted one.
+describe('the refill before the list is dropped (MB.141)', () => {
+  const runRefill = () => runFillOf(DROP_MIGRATION);
+
+  beforeAll(restoreTheList);
+
+  beforeEach(async () => {
+    await sql`update ingredients set substitutes = null`;
+  });
+
+  it('copies an entry written since the fill, beside every row the table holds', async () => {
+    await addSubstitute(UNCARIA, { name: 'Devil’s Claw' });
+    await addSubstitute(UNCARIA, { substituteId: ACACIA });
+    await listOn(UNCARIA, ['Devil’s Claw', 'Wait-a-minute'], EDITOR);
+    await listOn(MUGWORT, ['Wormwood'], EDITOR);
+    const held = await everySubstitute();
+
+    await runRefill();
+
+    expect(byParentAndName(await everySubstitute())).toEqual(
+      byParentAndName([
+        ...held,
+        nameRow(UNCARIA, 'Wait-a-minute', EDITOR),
+        nameRow(MUGWORT, 'Wormwood', EDITOR),
+      ]),
+    );
+  });
+
+  // The unique index would otherwise refuse the refill, and the drop with it.
+  it('leaves a name the table holds in another case as it was', async () => {
+    await addSubstitute(UNCARIA, { name: 'Devil’s Claw' });
+    await listOn(UNCARIA, ['DEVIL’S CLAW'], EDITOR);
+    // Why it could have been refused: the folded names collide in the index.
+    const error = await failureOf(
+      sql`
+        insert into ingredient_substitutes (ingredient_id, name, created_by, updated_by)
+        values (${UNCARIA}, 'DEVIL’S CLAW', ${EDITOR}, ${EDITOR})`,
+    );
+    expect(error.constraint_name).toBe(NAME_INDEX);
+
+    await runRefill();
+
+    expect(await everySubstitute()).toEqual([nameRow(UNCARIA, 'Devil’s Claw')]);
+  });
+
+  // A soft-deleted row reserves nothing in the index, so only the refill's own
+  // check keeps the list from undoing a member's removal.
+  it('does not restore a name removed since the switch', async () => {
+    await softDelete(await addSubstitute(UNCARIA, { name: 'Devil’s Claw' }));
+    await listOn(UNCARIA, ['devil’s claw']);
+
+    await runRefill();
+
+    const live = (await everySubstitute()).filter((row) => row.deleted_at === null);
+    expect(live).toEqual([]);
+  });
+
+  it('skips a blank or null entry, trims the rest, and copies a repeat once', async () => {
+    await listOn(UNCARIA, ['  ', null, '  wait-a-minute ', 'Wait-a-minute']);
+
+    await runRefill();
+
+    expect(await everySubstitute()).toEqual([nameRow(UNCARIA, 'wait-a-minute')]);
+  });
+
+  // As MB.139's fill: a deleted row's list is kept for v2's restore.
+  it('refills a soft-deleted ingredient’s list too', async () => {
+    await listOn(UNCARIA, ['Devil’s Claw']);
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${AUTHOR} where id = ${UNCARIA}`;
+
+    await runRefill();
+
+    expect(await everySubstitute()).toEqual([nameRow(UNCARIA, 'Devil’s Claw')]);
+  });
+
+  it('writes nothing for a null or empty list', async () => {
+    await addSubstitute(UNCARIA, { name: 'Devil’s Claw' });
+    await listOn(ACACIA, []);
+    const held = await everySubstitute();
+
+    await runRefill();
+
+    expect(await everySubstitute()).toEqual(held);
   });
 });

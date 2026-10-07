@@ -15,8 +15,8 @@ to.
 - **Modern Sass modules only** — `@use '../../scss/variables' as *;`, never
   `@import`. Shared partials in `src/scss/` are `@use`'d directly by whichever
   component needs them, never routed through a parent (§9).
-- **Reach tokens through functions, not bare variables** — `category-group('mind')`,
-  `badge-token('safety', 'fill')`, `$text-on-color`. A typo is then a compile
+- **Reach tokens through functions, not bare variables** — `badge-token('safety', 'fill')`,
+  `space(4)`, `$text-on-color`. A typo is then a compile
   error rather than a silently wrong colour.
 - **WCAG AA 4.5:1 is the floor for every token, in both themes**, and several
   pairings sit close to it (the light `--accent` at 4.68 and `wellbeing` at
@@ -24,8 +24,9 @@ to.
   colour; do not assume headroom.
 - **Only `_variables.scss` and the theme mixins may name a raw hue.** Needing a
   colour that is not a token means adding a token, not inlining one.
-- **The per-theme saturation lifts (+14% dark, +50% light) stay separate.**
-  Collapsing them to one number re-muds the light theme.
+- **The seeded group colours live only in `src/db/seed/category-groups.ts`.**
+  No Sass token restates them, and retuning one takes a data migration as well
+  as the seed edit, because the seed never overwrites a row it finds (M5.6b).
 - **Never wash a chip or badge ground with its own group colour.** The eight
   group hues are tuned to sit just above 4.5:1, so a visible wash drops them
   under; solid is the only treatment that holds.
@@ -35,9 +36,9 @@ to.
   against the page surface plus 3:1 against both surfaces; tinted needs 4.5:1
   foreground-on-background plus 3:1 on the border.
 - **The group hues sit at odd multiples of 22.5° off `$sorrel`**, so none
-  collides with accent (96°) or secondary (8°). A ninth group is one map entry
-  plus a contrast check, and the seed's `categories.group` values must match the
-  slugs.
+  collides with accent (96°) or secondary (8°). A ninth group is a row an admin
+  adds at `/admin/category-groups`, outside the rotation, its two colours
+  refused on write below 4.5:1 on their own grounds (M5.6b, below).
 - **`badge()` takes no variant argument, deliberately.** The mixins set colour,
   edge and geometry only — never width, margin, layout or a modal backdrop. A
   component restating a mixin's colour is a bug.
@@ -143,37 +144,46 @@ lands on the accent hue (96°) or the secondary hue (8°), both already claimed 
 the UI chrome — a category chip wearing the accent colour would read as selected
 when it is not.
 
-| Slug         | Step | Hue    | Reads as     |
-| ------------ | ---- | ------ | ------------ |
-| `wellbeing`  | 1    | 118.5° | jade         |
-| `cleansing`  | 3    | 163.5° | teal         |
-| `protection` | 5    | 208.5° | steel blue   |
-| `mind`       | 7    | 253.5° | indigo       |
-| `craft`      | 9    | 298.5° | violet       |
-| `love`       | 11   | 343.5° | rose         |
-| `practice`   | 13   | 28.5°  | hearth amber |
-| `prosperity` | 15   | 73.5°  | gold         |
+| Group                | Step | Hue    | Reads as     |
+| -------------------- | ---- | ------ | ------------ |
+| Wellbeing            | 1    | 118.5° | jade         |
+| Cleansing & Release  | 3    | 163.5° | teal         |
+| Protection & Defense | 5    | 208.5° | steel blue   |
+| Mind & Spirit        | 7    | 253.5° | indigo       |
+| Craft & Change       | 9    | 298.5° | violet       |
+| Love & Connection    | 11   | 343.5° | rose         |
+| Practice & Place     | 13   | 28.5°  | hearth amber |
+| Prosperity & Work    | 15   | 73.5°  | gold         |
 
-**Saturation is lifted off `$sorrel` by one amount per theme** — the same lift
-for all eight, which is what keeps them reading as one family while letting each
-theme set its own intensity. Light needs by far the bigger lift (+50% against
-dark's +14%): to clear 4.5:1 on parchment a colour has to stay dark, and a dark
-colour at moderate saturation reads as mud rather than as colour. Dark lightens
-its colours instead, where moderate saturation already reads clearly.
+**The rotation is the rule; saturation and lightness are the owner's
+hand-tuning.** Each seeded pair is two hexes in `src/db/seed/category-groups.ts`,
+that file is their only source, and `tests/db/seed/categories.test.ts` holds
+both hexes of every pair within 2° of its step (every hue is in fact within
+1.04°) and to 4.5:1 on its own theme's page, `$soot` or `$parchment`. Every
+dark hex also clears the dark card, the harder dark surface, at 4.64:1 or
+better; the closest light hex is Mind & Spirit's, at 4.52:1 on the page. Within a group, the two
+hexes keep one hue to within 0.51°. Across groups they no longer share a
+saturation: dark-theme saturations run 30–50%, light-theme 37–75%, because
+equal HSL lightness and saturation are not equal perceived colour, and each
+pair was tuned by hand against the contrast floor rather than by formula. The
+light theme still runs the more saturated of the two: to clear 4.5:1 on
+parchment a colour has to stay dark, and a dark colour at moderate saturation
+reads as mud rather than as colour.
 
-**Lightness is then trimmed per group, and only as far as the contrast floor
-demands.** Equal HSL lightness is not equal perceived lightness: indigo takes a
-+34% lift to clear 4.5:1 on soot where jade takes +9%. The light-theme trims are
-`0%` or a small negative; the dark-theme trims run +7% to +34%.
-
-A ninth group is one map entry plus a contrast check — and the category seed's
-`group` values must match the slugs, since nothing joins them at runtime.
+**M0.7's `$category-groups` map is retired** (M5.6b). It lifted every group by
+one saturation per theme and trimmed lightness per group, which the hand-tuned
+pairs no longer follow, and it had been nothing but the seed's source since
+MB.35 put a group's colours on its `category_groups` row as a pair of hexes; a
+chip reads the row (MB.36). A ninth group is a row an admin adds with M5.6b's two pickers, each previewing
+its chip and ratio on its own ground and each refused on write below 4.5:1
+against the harder of its own theme's two surfaces; it is legible in both
+themes but does not join the rotation (§6).
 
 ## Badge palettes
 
 Three palettes, deliberately not equals. Two appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
-saturation alongside the groups. **Low stock** is an inventory state, not an
+saturation. **Low stock** is an inventory state, not an
 alarm (story 54), so it takes the muted ink and is left unsaturated. That keeps
 exactly one alarming badge in the app and spends no hue, which matters because every
 hue not already reserved belongs to one of the eight groups. **Last used** marks
@@ -255,6 +265,41 @@ tuned to land just above the floor, so washing the ground with the same colour
 closes exactly the gap they were tuned for. A solid fill sidesteps it and needs
 no new arithmetic, per `$text-on-color` above.
 
+**The colour comes from the row, on the element.** `chip($dark, $light, $state)`
+takes the pair rather than a slug, and by default reads it from the element's
+`--chip-dark` and `--chip-light`, which `chipColors(group)` in
+`src/lib/chip-colors.ts` sets inline from the group's `colorDark` and
+`colorLight`. `light-dark()` picks one off the `color-scheme` the theme mixins
+already set, so the per-theme switch `semantic-tokens` once made at build time
+happens at the element, and a theme toggle re-colours a chip without a render.
+It replaced one `--group-<slug>` custom property and one `.chip--<slug>` class
+per key of M0.7's `$category-groups` map (since retired), which a group created
+at runtime cannot have.
+`tests/guards/chip-colour-source.test.ts` fails if either shape returns, in a
+source file or in any stylesheet's compiled CSS, and `chip()` refuses a slug at
+compile time.
+
+`light-dark()` is newer than Next's default browser targets (Safari 16.4), so
+Turbopack's Lightning CSS lowers it: every `color-scheme` declaration also sets
+a pair of `--lightningcss-*` switches, and the chip reads those. Nothing in this
+project writes either.
+
+**The contrast holds for any colour the write check admits.** An unselected
+chip's label is the colour itself on whatever surface holds the chip, a page or
+a card, and a selected chip's label is `$text-on-color`, the page surface, on a
+fill of that colour. So M5.6b's `CategoryGroupInput` refuses a colour under
+4.5:1 against the harder of its own theme's two surfaces: `colorDark` against the dark card, which is lighter than
+the dark page, and `colorLight` against the light page, which is darker than
+the light card. Clearing that surface clears the other, and the selected label
+with it. Checked against the dark page instead, a dark colour could clear the
+floor and still read under it on a card: the seeded eight measure 5.1–5.3:1 on
+the dark page and 4.6–4.8:1 on the dark card (MB.36). The arithmetic is
+`src/lib/contrast.ts`: WCAG 2.1's ratio, and the two grounds as hexes,
+`#1f1c16` and `#efe9da`, written out because nothing at runtime can import a
+Sass value, so `tests/lib/contrast.test.ts` pins them to `$soot-raised` and
+`$parchment` in `_variables.scss`. A change to either token fails that test
+until the check follows it.
+
 Badges are square-cornered, which is what keeps a badge from reading as a chip
 now that chips are pills. Both shapes set their label to weight 500, a step over
 Lexend's 300 body weight, so a small label holds its colour at chip size.
@@ -282,6 +327,8 @@ the three the scale uses (500/600/700) are requested.
 - **Links get an underline under `prefers-contrast: more`**, on the body ink
   rather than a further-pushed sorrel: WCAG's "don't rely on colour alone", for
   users who have explicitly asked for more contrast than the baseline gives.
+- **A followed link takes the body ink**, from a `:visited` inside `:where()`,
+  so any class-level link colour still wins ("Buttons", below).
 - **A heading gathers four text roles**, all in `typography-base`: the
   `.eyebrow` above it, naming the section it sits in; `.meta`, a
   caption-size muted line tight under it — a formal name and form, a date, a
@@ -296,21 +343,48 @@ the three the scale uses (500/600/700) are requested.
 
 Every margin, padding and gap takes a step from `space()`, eight steps on a
 0.25rem base: 0.25, 0.5, 0.75, 1, 1.5, 2, 3 and 4rem. `space(4)` is 1rem. An
-unknown step fails to compile, as a mistyped group does. The steps are the
+unknown step fails to compile, as a mistyped theme does. The steps are the
 values the components had already converged on; the few between them (0.375,
 0.625, 1.25rem) fold into a neighbour when their section is designed.
 
 **Two things stay off the scale.** A chip's or badge's inner padding is its
 own geometry: it is trimmed by the 1px edge so the label sits optically
 centred, and rounding it to a step moves the label. A control's height is a
-target size rather than a gap — `.input` sets `min-height: 2.75rem`, 44px at
-body size, whatever the platform's line height.
+target size rather than a gap: `$control-height`, 2.78125rem, 44.5px, the
+owner's call during MB.154, so a text field, a select or suggesting box and
+a button stand level in a row whatever the font's line height. `.input`,
+`.textarea` and `.select` take it as their `min-height`; `.btn` takes it as
+its `min-height`, its vertical padding a step short of it so the minimum
+decides; and the combobox's text line is the control's height less its edge
+and padding. It is a minimum, so a list's box still grows with its rows of
+entries. 44.5 rather than 44 is what a button measured at its own padding,
+and both clear WCAG 2.5.5's 44px.
 
 Below body copy, type takes one of four sizes by role from `type-size()`:
 `small` (0.875rem) for what a person acts on — labels, buttons, notices,
 field errors; `caption` (0.8125rem) for hints, metadata, chips and badges; and
 `overline` (0.75rem) for the `.eyebrow`. The headings' scale is
 `typography-base`'s, above.
+
+### The top inset
+
+`$top-inset` (`var(--top-inset, 0px)`) is how much of the top of the window
+is taken by chrome in the page's flow above everything else. Today that is
+the impersonation banner on a touch screen alone (MB.53), and 0 everywhere
+else. The banner publishes its measured height as
+`--impersonation-banner-height`, and its own stylesheet maps it to
+`--top-inset` under `@media (hover: none)`.
+
+What pins itself to the top of the window or sizes itself to it offsets by
+the inset, so it starts below the banner and the page does not scroll by the
+banner's height:
+
+- `ThemeToggle` and the sorrel corner of `Backdrop` take `top: $top-inset`.
+- The five pages a full screen high (`Welcome`, `NotAuthorized`,
+  `SignInPanel`, `SignInMethods` and `EmailForm`) take
+  `min-height: calc(100dvh - #{$top-inset})`.
+
+A new full-height page, or anything new fixed to the top, does the same.
 
 ## Corner radius
 
@@ -342,25 +416,81 @@ included. Four variants:
 - **`.btn--quiet`**, an action that changes nothing: Cancel, Keep It, Back.
   The body ink on an edge, so it neither competes with the primary nor reads as
   destructive — and, unlike the muted ink, not as disabled either.
-- **`.btn--secondary`**, what destroys something: Delete, Remove. The wax.
+- **`.btn--destructive`**, what destroys something: Delete, Remove. The wax,
+  `$secondary`, which every error wears too. It was `.btn--secondary`, named
+  for the token rather than the job, until M5.6, the owner's call.
+
+**One size modifier, `.btn--small`**, which composes with any variant: half
+the padding (`space(1) space(3)`), no `$control-height` minimum, a 1px edge
+in place of `.btn`'s 1.6px, which reads heavy at this size, the `caption`
+type size, and a `space(2)` gap. It is for a compact strip that the full button would make taller, such
+as a banner or a table row. The impersonation banner's Stop is the first
+(MB.53).
+
+**A save in flight is `aria-busy` with a `.spinner`** (M5.6, the owner's call
+for every Save button). The spinner is a 1em ring in the button's own ink,
+open on one side so its turn reads, slowed rather than stopped where motion is
+reduced. It sits ahead of the label, which says what is happening ("Saving
+Category"). A `.btn[aria-busy='true']` brings its left padding in a step,
+since padding sized for a word reads as a gap before a small round mark.
+IngredientForm's two saves and its reference panel use the same one.
 
 **Disabled is dashed and faded**, from `disabled` or `aria-disabled`: the
 edge dashes, the fill clears, and the whole button drops to 55%. Neither
 state needs a component to restate it.
 
+**A `.btn` on an anchor is a button in every state**, Add Category and
+Continue among them. `.btn` sets `text-decoration: none`, and
+`_typography.scss`'s visited ink sits inside `:where()`, so it adds nothing to
+`a`'s specificity and every variant's own colour outranks it. As a plain
+`:visited` it outranked any class-level link colour, and Welcome and EmailForm
+each restated their label colour to keep a followed `.btn--solid` off the body
+ink. No component needs to now.
+
+**`.pager` is a paged list's Prev and Next** (the owner's calls in M5.6): a
+`nav` with `class="pager"` and `aria-label="Pages"`, holding a bare `ul` of
+two `li`s, each a full-size `.btn.btn--quiet` anchor. They are quiet because
+paging changes nothing. The list is a wrapping flex row, centred under the
+table, with a `space(3)` gap and no ◆ marker. The ‹ and › marks are
+`.pager__mark` spans at 2em with a line height of 1, raised 0.08em to the
+label's centre, so they read at a glance without making the button taller. They are `aria-hidden`, so the links
+are named "Prev" and "Next". `.pager__position`, "Page 2 of 3" between them,
+is muted text at the body size with `space(4)` either side, since it is not
+a control. An end with no page is disabled rather than
+hidden, so neither moves. The markup is the `Pager` component's
+([`components/pager.md`](components/pager.md)), which CategoryList,
+IngredientFormValueList, VocabularyValueList and UserList render.
+
+**`.page-header` puts a page's heading and its one primary action on one
+line**, the action at the end (the owner's call, M5.6): `/admin/categories`'
+Add Category beside its H1. The row is centred and the action brought down
+0.25rem, the owner's measure: a heading's box carries room below its letters,
+so a centred button reads high and one on the baseline low. The row wraps on
+a narrow screen rather than squeezing the heading.
+
+**The admin tables are banded**: every even body row on `$surface-card`, the
+surface a modal wears, so a wide row stays readable across. Each cell is
+inset `space(3)` on both sides so no text meets a band's edge, and aligned on
+the baseline so a row's small button reads on its text's line. A 1px
+`$text-muted` hairline runs under the header row. The rules are the
+`.data-table` primitive, inside a `.data-table-frame` that scrolls a wide
+table sideways rather than widening the page: CategoryList and UserList each
+carried them until IngredientFormValueList made a third (M5.6a), and
+CompendiumList (M5.5) and VocabularyValueList (MB.95) are on it too.
+
 ## Form fields
 
 The class layer every form is built from, in `_primitives.scss`:
 
-| Class                                            | What it is                                                                |
-| ------------------------------------------------ | ------------------------------------------------------------------------- |
-| `.form`, `.form__actions`                        | The column of fields, a `space(5)` apart, and the row of buttons after it |
-| `.field`                                         | One field: label, optional hint, control and error, `space(2)` apart      |
-| `.field__label`, `.field__hint`, `.field__error` | The parts around the control                                              |
-| `.input`, `.textarea`, `.select`                 | The control, one box for all three                                        |
-| `.checkbox`                                      | A `<label>` wrapping its box, so the whole line is the target             |
-| `.fieldset`, `.fieldset__legend`                 | Rows under one name: checkboxes, or a list of entries                     |
-| `.notice`, `--error`, `--success`                | A sentence about the whole view rather than one field                     |
+| Class                                            | What it is                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.form`, `.form__actions`                        | The column of fields, a `space(5)` apart, and the row of buttons after it, `space(2)` further off and as far again from what follows: 2rem either side in a modal (M5.5). A `.modal__actions` row in a `.form` takes the same                                                                                                            |
+| `.field`                                         | One field: label, optional hint, control and error, `space(2)` apart                                                                                                                                                                                                                                                                     |
+| `.field__label`, `.field__hint`, `.field__error` | The parts around the control                                                                                                                                                                                                                                                                                                             |
+| `.input`, `.textarea`, `.select`                 | The control, one box for all three                                                                                                                                                                                                                                                                                                       |
+| `.checkbox`                                      | A `<label>` wrapping its box, so the whole line is the target                                                                                                                                                                                                                                                                            |
+| `.fieldset`, `.fieldset__legend`                 | Rows under one name: checkboxes, or a list of entries                                                                                                                                                                                                                                                                                    |
+| `.notice`, `--error`, `--warn`, `--success`      | A sentence about the whole view rather than one field `--error` and `--warn` lead with a warning triangle, drawn by mask in the box's padding so a link in the text stays inline: in the error's red on an error, and in the error red on a warning's plain box and ink, for what needs attention but does not block (the owner's call). |
 
 - **A field's hint is an info tip beside its label** (`InfoTip`,
   [`components/info-tip.md`](components/info-tip.md)), not a line beneath it:
@@ -407,6 +537,8 @@ The class layer every form is built from, in `_primitives.scss`:
   one on a dim screen. The label dims for a disabled control only, not any
   disabled descendant, since a select's placeholder is a disabled option. A
   component never restates it.
+
+**A narrow form stacks its buttons.** A `.form` is a size container, and under 28rem of its own width its `.form__actions` or `.modal__actions` row turns to a column: each button full width, in order, any `margin-inline` pushing a Delete aside reset. Above that, every form's row fits one line. It keys off the form's width rather than the screen's, so a form in a narrow modal stacks too (the owner's call).
 
 ## Designing a section
 
@@ -456,13 +588,12 @@ heavier than the reverse; light reverts to the browser default.
 
 ## The files
 
-- `src/scss/_variables.scss` — base colour palette, category-group and badge
-  tokens, the `$font-body` / `$font-heading` / `$font-mono` stacks, the
+- `src/scss/_variables.scss` — base colour palette, badge tokens, the `$font-body` / `$font-heading` / `$font-mono` stacks, the
   `$measure`, and the three scales with their accessors — `type-size()`,
   `space()` and `radius()` — a component `@use`s directly.
 - `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `tip-bubble`,
   `theme-dark` / `theme-light`, `semantic-tokens` (the per-theme
-  category-group and badge custom properties), `focus-ring`,
+  badge custom properties), `focus-ring`,
   `theme-transition`, `reduced-motion`, `font-smoothing-antialiased`.
 - **Three `*-base` mixins**, each emitting nothing on its own `@use` and
   `@include`d at exactly one site, `globals.scss`'s `body`:
@@ -472,10 +603,11 @@ heavier than the reverse; light reverts to the browser default.
   - `_layout.scss` → `layout-base` — bare `section` / `header` structure, plus
     `.header` / `.footer`.
   - `_primitives.scss` → `primitives-base` — the class layer: `.panel`,
-    `.btn` and its `--solid` / `--quiet` / `--secondary` variants, `.notice`,
+    `.btn` and its `--solid` / `--quiet` / `--secondary` variants and
+    `--small` size, `.notice`,
     the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
     `.checkbox`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
-    the classes over `chip()` / `badge()`, and `.visually-hidden`, for text a
+    `.chip` and `.chip.is-selected` over `chip()`, the `.badge--*` classes over `badge()`, and `.visually-hidden`, for text a
     screen reader reads and nothing draws, such as a live region's news.
 - `src/app/fonts.ts` — Cormorant Unicase (weights 500/600/700) and Lexend,
   self-hosted at build time via `next/font/google`. The CSS variables it defines

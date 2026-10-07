@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { buildCoverageSection } from './lib/coverage-table.mjs';
+import { buildSlowestFilesSection } from './lib/slowest-files.mjs';
 
 const RESULTS_PATH = '/app/vitest-results.json';
 const COVERAGE_SUMMARY_PATH = '/app/.reports/coverage/coverage-summary.json';
@@ -23,7 +24,11 @@ const testSummary =
     : `${numPassedTests} passed, ${numFailedTests} failed`;
 
 const coverage = buildCoverageSection(COVERAGE_SUMMARY_PATH, REPO_ROOT);
-const summary = coverage ? `${testSummary} — ${coverage.stat}` : testSummary;
+// A file over the budget is named in the stat line too, so the warning is
+// read without opening the block (MB.180); it never fails the job.
+const slowest = buildSlowestFilesSection(data.testResults, REPO_ROOT);
+const overBudget = slowest?.over.length ? `, ${slowest.over.length} over the file budget` : '';
+const summary = `${coverage ? `${testSummary} — ${coverage.stat}` : testSummary}${overBudget}`;
 
 const failures = [];
 for (const testResult of data.testResults ?? []) {
@@ -50,8 +55,8 @@ if (failures.length > 0) {
   details = lines.join('\n');
 }
 
-if (coverage) {
-  details = details ? `${details}\n\n${coverage.table}` : coverage.table;
+for (const block of [coverage?.table, slowest?.block]) {
+  if (block) details = details ? `${details}\n\n${block}` : block;
 }
 
 setOutput('summary', summary);

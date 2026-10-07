@@ -16,6 +16,12 @@ without a page routed to it.
   `tests/components/<Name>/index.test.tsx`. The story stays in the component
   directory because Ladle discovers components by that file, which is the one
   thing the move could not relocate.
+- **A story that opens a modal sets `meta = { iframed: true }`** (M5.6, the
+  owner's call). `Modal` opens with `showModal()`, which puts the dialog in the
+  document's top layer: in the workshop's own document that covers Ladle's
+  sidebar too. In its own iframe, carrying the global provider and styles, the
+  dialog covers the story's frame and nothing else. `Modal` and `CategoryForm`
+  are the first.
 - `*.stories.tsx` is excluded from `tsc` while `@ladle/react`'s bundled types
   don't pass `strict`; `ladle build` still compiles stories through esbuild.
   Test files are not excluded — `tests/` is in tsconfig's `include` and `tsc`
@@ -24,14 +30,23 @@ without a page routed to it.
 ## `.ladle/`
 
 - **`config.mjs`** — `stories` glob, `port` 61000, `previewPort` 61001
-  (`ladle preview`), `outDir` `.reports/workshop`, pinned `hmrPort` 61002. `storyOrder`
+  (`ladle preview`), `outDir` `.reports/workshop`, pinned `hmrPort` 61002,
+  empty `hmrHost`. `storyOrder`
   forces each component's `Default` story first and leaves the rest in Ladle's
   own order; it is a global-config hook only (no per-story-file equivalent) and
   must stay a self-contained function, since Ladle serializes it with
-  `.toString()`. `hmrPort` is pinned only so the HMR socket lands on a known
-  port rather than a random free one — it stays reachable when the workshop is
-  opened over the LAN instead of at `localhost`, and it does not move between
-  restarts.
+  `.toString()`. `hmrPort` is pinned so the HMR socket lands on a known port
+  that compose can publish, rather than a random free one, and it does not
+  move between restarts.
+  - **`hmrHost: ''`** is what makes that socket reachable. Ladle runs Vite in
+    middleware mode, so the HMR socket is a standalone server bound to
+    `hmrHost ?? 'localhost'`; left unset, it listens on loopback only (`::1`),
+    and in the `workshop` container the published 61002 never reaches it, so
+    the page loads and never hot-reloads. The empty string survives the `??`,
+    Vite binds every interface, and the browser connects back to the page's own
+    hostname. `'0.0.0.0'` would bind the same but is also sent to the browser
+    as the address to connect to. `tests/guards/workshop-guards.test.ts` pins
+    it.
   - **`addons.theme.defaultState: 'dark'`** matches the app's dark-first default
     in `globals.scss` (`:root { @include theme-dark }`), so the workshop opens
     the same way a viewer who has never touched the toggle sees the app.
@@ -88,7 +103,12 @@ without a page routed to it.
   frame the containing block so a `position: fixed` child pins to the story
   rather than Ladle's chrome; `overflow: hidden` so it clips like a viewport;
   `.ladle-main` gutter zeroed and re-added on the frame, 3rem a side, and
-  `space(4)` below 30rem, where 3rem would leave a 375px story 279px. Also carries the
+  `space(4)` below 30rem, where 3rem would leave a 375px story 279px, and 6rem
+  at the bottom from 48rem, where Ladle pins its toolbar over the window's
+  bottom edge and a long story's last line sat beneath it (MB.131). It also
+  holds `.story-guide` and `.story-note`, a story's own "what to try" panel
+  and the line saying what it stands in for, such as where a page would
+  navigate. Also carries the
   `.ladle-story-frame--reduced-motion` rule the `reducedMotion` pin above
   toggles — a `!important` blanket over every transition in the frame, not
   just the ones the app's own `reduced-motion` mixin reaches, since the real
@@ -110,6 +130,10 @@ without a page routed to it.
   also when `vite.config.ts` turned out never to have been loaded: Ladle passes
   `viteConfig` to Vite's loader as given and Vite otherwise looks in the
   project root, so `config.mjs` now names the file explicitly.
+- **`navigation.ts`** — what `next/navigation` resolves to here, by the same
+  alias: a `useRouter` whose every method goes nowhere. Next's own throws with
+  no App Router mounted, and the first component to navigate on its own,
+  CategoryList's filter (MB.178), would render no story without it.
 - **`head.html`** — injected into `<head>`; loads Cormorant Unicase + Lexend by
   name from Google Fonts so the workshop's type matches the app's (the app
   self-hosts them via `next/font`, which the workshop has no equivalent of).
@@ -117,7 +141,9 @@ without a page routed to it.
   `Foundations`: the raw palette and the runtime tokens, the type scale and
   `type-size()`'s four roles, `space()`'s steps, `radius()`'s roles, every
   button, notices, a form built from the field primitives, the eight
-  `--group-*` colours as `chip()`'s two states, the badge palettes, a modal
+  seeded group colour pairs as `chip()`'s two states — read from
+  `src/db/seed/category-groups.ts` and set inline by `chipColors()`, as a page
+  does — the badge palettes, a modal
   and an ingredient-card specimen. All of it comes from the real partials, and
   every printed value — a hex, a step's length — is generated by
   `foundations.scss` from the partial's own map rather than typed. Its
@@ -219,7 +245,12 @@ environment. Production and hotfix previews never carry it.
   Ladle is a single page routed by `?story=`, and Next serves no directory
   index.
 - **No application data is reachable through it.** The build is static — no
-  story calls GraphQL, and `meta.json` is the story index. The workshop's own
+  story reaches GraphQL, and `meta.json` is the story index. A story whose
+  component asks `/api/graphql` answers it in the page: `IngredientForm`'s
+  stands in for `window.fetch` while mounted and answers its lookups from
+  invented rows ([`components/ingredient-form.md`](components/ingredient-form.md), "Stories"),
+  so the request never leaves the page and the policy below has nothing to
+  refuse. The workshop's own
   scripts nonetheless run on the app's origin carrying an admin's cookie, so
   every workshop response carries `connect-src 'none'`: `fetch`, XHR and
   WebSockets from the page are refused by the browser, `/api/graphql`

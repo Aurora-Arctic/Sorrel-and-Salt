@@ -6,7 +6,8 @@ import { countCompendium, getIngredient, listCompendium } from '@/modules/ingred
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { makeIngredient } from '../../../support/fixtures';
+import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
+import { type IngredientFixture, makeIngredient } from '../../../support/fixtures';
 import type { PageRequest } from '@/lib/types';
 
 // The compendium's two reads (claude-docs/db/compendium-read.md, "The compendium read"): the
@@ -41,6 +42,12 @@ beforeEach(async () => {
 const seed = (name: string, workspaceId: string | null = null) =>
   insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', workspaceId }), A.id);
 
+const seedAs = (
+  name: string,
+  nomenclature: IngredientFixture['nomenclature'],
+  workspaceId: string | null = null,
+) => insertIngredient(sql, makeIngredient({ name, nomenclature, workspaceId }), A.id);
+
 const PAGE: PageRequest = { limit: 26, inverted: false };
 
 describe('listCompendium', () => {
@@ -74,6 +81,49 @@ describe('listCompendium', () => {
       ([filter]) => (filter as { query?: string }).query,
     );
     expect(queries).toEqual([undefined, undefined, undefined, undefined, 'mu']);
+  });
+
+  // M5.5's to-do list of formal names to look up: the entries declared
+  // `unknown`, with the search and the citing filter on top.
+  it('narrows to one nomenclature, with the search and the to-do filter beside it', async () => {
+    const book = await insertReference(sql, {}, E.id);
+    await seedAs('Fixture Unsettled', 'unknown');
+    const cited = await seedAs('Fixture Unsettled Cited', 'unknown');
+    await insertReferenceLink(sql, cited, book, E.id);
+    await seedAs('Fixture Nameless', 'none');
+    await seedAs('Fixture Unsettled Here', 'unknown', WORKSPACE_W_ID);
+
+    const names = async (filter: Parameters<typeof listCompendium>[0]) =>
+      (await listCompendium(filter, PAGE)).map((entry) => entry.node.name).sort();
+
+    // Why each narrowing below is the filter's: without it, all three list.
+    expect(await names({})).toEqual([
+      'Fixture Nameless',
+      'Fixture Unsettled',
+      'Fixture Unsettled Cited',
+    ]);
+    expect(await names({ nomenclature: 'unknown' })).toEqual([
+      'Fixture Unsettled',
+      'Fixture Unsettled Cited',
+    ]);
+    expect(await names({ nomenclature: 'none' })).toEqual(['Fixture Nameless']);
+    expect(await names({ nomenclature: 'unknown', withoutReferences: true })).toEqual([
+      'Fixture Unsettled',
+    ]);
+    expect(await names({ nomenclature: 'unknown', query: 'Cited' })).toEqual([
+      'Fixture Unsettled Cited',
+    ]);
+    expect(await names({ nomenclature: 'botanical' })).toEqual([]);
+  });
+
+  it('refuses a nomenclature it does not know, before any read', async () => {
+    const attempt = listCompendium({ nomenclature: 'heraldic' as 'none' }, PAGE);
+
+    await expect(attempt).rejects.toBeInstanceOf(ValidationError);
+    await attempt.catch((error: ValidationError) => {
+      expect(error.issues[0].path).toEqual(['nomenclature']);
+    });
+    expect(repository.findCompendiumPage).not.toHaveBeenCalled();
   });
 
   // A category id reaches a `uuid` comparison inside the keyset query, whose
@@ -118,6 +168,18 @@ describe('countCompendium', () => {
       query: undefined,
       categoryIds: undefined,
       form: 'HERB',
+    });
+  });
+
+  it('counts what a nomenclature narrows to', async () => {
+    await seedAs('Fixture Unsettled', 'unknown');
+    await seedAs('Fixture Nameless', 'none');
+    await seedAs('Fixture Unsettled Here', 'unknown', WORKSPACE_W_ID);
+
+    await expect(countCompendium({}, undefined)).resolves.toMatchObject({ totalCount: 2 });
+    await expect(countCompendium({ nomenclature: 'unknown' }, undefined)).resolves.toEqual({
+      totalCount: 1,
+      countBefore: null,
     });
   });
 

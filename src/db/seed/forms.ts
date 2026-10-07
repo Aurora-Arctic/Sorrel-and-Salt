@@ -1,8 +1,12 @@
+import { and, eq, isNull } from 'drizzle-orm';
+import { applyAudit } from '../audit';
+import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { beginSeedTransaction } from './idempotent';
 import {
   ingredientFormGroups,
   ingredientForms,
 } from '../../modules/vocabulary/schema/ingredient-forms';
+import { formSlug } from '../../lib/slugify';
 import { seedTwoTierVocabulary } from './two-tier-vocabulary';
 import type {
   SeedDatabase,
@@ -13,13 +17,16 @@ import type {
 
 // DESIGN.md §5's form vocabulary: six groups and every form, a starting set an
 // admin may edit. Reference data, not a scenario — migrate.yml seeds it alone,
-// so it inserts the bootstrap admin itself. The groups answer "what are you
+// so it inserts the bootstrap user itself. The groups answer "what are you
 // holding", not "how was it made": three by source (Botanical, Animal, Mineral),
 // three by state (Fluid, Curio, Substance), and no `Other` — an unfitting value
-// stays free text and surfaces for curation. No slug is written down; every one
-// is `slugify(name)`. Where a value fits two groups the seed takes one sense and
-// leaves the other row for an admin (claude-docs/db/form-vocabulary-seed.md,
-// "The form vocabulary seed").
+// stays free text and surfaces for curation. No slug is written down; a group's
+// is `slugify(name)`, and a form's `formSlug` of its name and its group's
+// (M5.6a), since two live forms may share a name under two groups — a form's
+// seed key stays `slugify(name)`, as every database seeded before holds it.
+// Where a value fits two groups the seed takes one sense and leaves the other
+// row for an admin (claude-docs/db/form-vocabulary-seed.md, "The form
+// vocabulary seed").
 
 /**
  * §5's six groups in §5's order, which nothing reads — groups list
@@ -350,8 +357,9 @@ export async function seedForms(db: SeedDatabase): Promise<void> {
 
 /**
  * The same seed inside a transaction the caller opened, since `standard` writes
- * this vocabulary alongside the compendium drawing on it. Assumes the GUC is
- * published and the bootstrap admin exists.
+ * this vocabulary alongside the compendium drawing on it, then every live
+ * form's slug brought to the rule. Assumes the GUC is published and the
+ * bootstrap user exists.
  */
 export async function seedFormVocabulary(tx: SeedTransaction): Promise<void> {
   await seedTwoTierVocabulary(tx, {
@@ -362,5 +370,38 @@ export async function seedFormVocabulary(tx: SeedTransaction): Promise<void> {
     groupOf: (form) => form.group,
     toItemRow: (row, groupId) => ({ ...row, groupId }),
     itemNoun: 'Form',
+    slugOf: (form, groupName) => formSlug(form.name, groupName),
   });
+  await reslugForms(tx);
+}
+
+/**
+ * The backfill M5.6a's slug rule needs, run on every seed: each live form's
+ * slug re-derived from its name and its group's name, and written where it
+ * differs, so a reseed with nothing to change writes nothing. A database
+ * seeded before holds `slugify(name)`; a rewrite in SQL would be a second slug
+ * rule, so the seed is the backfill, as it was for ingredient slugs
+ * (claude-docs/db/ingredient-slugs.md). A soft-deleted form keeps its slug:
+ * the index reserves none.
+ */
+async function reslugForms(tx: SeedTransaction): Promise<void> {
+  const forms = await tx
+    .select({
+      id: ingredientForms.id,
+      name: ingredientForms.name,
+      slug: ingredientForms.slug,
+      groupName: ingredientFormGroups.name,
+    })
+    .from(ingredientForms)
+    .innerJoin(ingredientFormGroups, eq(ingredientFormGroups.id, ingredientForms.groupId))
+    .where(isNull(ingredientForms.deletedAt));
+
+  for (const { id, name, slug, groupName } of forms) {
+    const derived = formSlug(name, groupName);
+    if (derived === slug) continue;
+    await tx
+      .update(ingredientForms)
+      .set(applyAudit('update', { slug: derived }, BOOTSTRAP_SESSION))
+      .where(and(eq(ingredientForms.id, id), isNull(ingredientForms.deletedAt)));
+  }
 }

@@ -93,6 +93,10 @@ export default defineConfig({
     screenshot: process.env.CI ? 'off' : 'only-on-failure',
     video: process.env.CI ? 'off' : 'retain-on-failure',
     ...(wsEndpoint ? { connectOptions: { wsEndpoint } } : {}),
+    // `.btn` transitions its colours; without this an axe scan can sample
+    // one mid-fade — on hover, or as a Save button enables — rather than the
+    // colour a user settles on.
+    reducedMotion: 'reduce',
   },
   // Production build, against the e2e databases rather than the dev one.
   webServer: [...slotServers, configuredProvidersServer],
@@ -108,9 +112,6 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         baseURL: browserUrl(CONFIGURED_PROVIDERS_PORT),
-        // `.btn` transitions background-color; without this a hover scan can
-        // sample the colour mid-fade rather than the one a user settles on.
-        reducedMotion: 'reduce',
       },
     },
   ],

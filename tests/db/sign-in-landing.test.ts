@@ -77,8 +77,9 @@ async function roleOf(email: string): Promise<string | undefined> {
 /** A verified row with no provider account yet: a verified Google sign-in links to it. */
 async function insertVerified(email: string, role: 'user' | 'admin'): Promise<void> {
   await sql`
-    insert into users (name, email, role, email_verified, created_by, updated_by)
-    values ('Fixture Person', ${email}, ${role}, true, ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+    insert into users (name, email, role, can_create_workspace, email_verified, created_by, updated_by)
+    values ('Fixture Person', ${email}, ${role}, ${role === 'admin'}, true,
+            ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
   `;
 }
 
@@ -128,7 +129,8 @@ describe('a sign-in with no return path', () => {
   it('sends an unverified admin to the bare email page first, and the mailed link lands there bare too', async () => {
     const first = await signIn('microsoft', { sub: 'ms-admin', email: ADMIN, verified: true });
     expect(landingOf(first)).toBe('/account/email');
-    await sql`update users set role = 'admin' where email = ${ADMIN}`;
+    // An admin holds the creation flag, which the users CHECK requires (MB.177).
+    await sql`update users set role = 'admin', can_create_workspace = true where email = ${ADMIN}`;
     // The preconditions: an admin, and still unverified — Microsoft never vouches.
     const [row] =
       await sql`select role::text as role, email_verified from users where email = ${ADMIN}`;

@@ -182,7 +182,7 @@ describe('Story 58: what the sweep removes', () => {
     expect(await linkedRows(verified.id)).toMatchObject({ users: 1, accounts: 1 });
   });
 
-  it('never sweeps a row no provider can sign in to, like the seeded bootstrap admin', async () => {
+  it('never sweeps a row no provider can sign in to, like the seeded bootstrap user', async () => {
     const [bootstrap] = await sql`
       select email_verified from users where id = ${BOOTSTRAP_USER_ID}
     `;

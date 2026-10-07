@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 // The repo's one database CLI: reaching the database means importing the
 // client, and that exemption set is six files pinned by test (claude-docs/db/client-imports.md,
-// "Who may import the client"). `categories`, `forms`, `astrology` and
-// `deities` are reference data, not scenarios — what migrate.yml seeds after migrating. Runs through `tsx`:
+// "Who may import the client"). `categories`, `forms`, `astrology`, `deities`
+// and `sources` are reference data, not scenarios — what migrate.yml seeds after migrating. Runs through `tsx`:
 // Node's own type stripping resolves no extensionless relative import.
 //
 // Usage: npm run db:seed              # SEED_SCENARIO, default minimal
 //        npm run db:seed:categories | db:seed:forms | db:seed:astrology | db:seed:deities
+//        npm run db:seed:sources      # after the vocabularies it links
 //        npm run db:drop              # drop the schema, nothing else
 //        npm run db:reset             # drop, migrate, seed
 
@@ -19,6 +20,7 @@ import { seedCategories } from '../src/db/seed/categories.ts';
 import { seedAstrology } from '../src/db/seed/astrology.ts';
 import { seedForms } from '../src/db/seed/forms.ts';
 import { seedDeities } from '../src/db/seed/deities.ts';
+import { seedSources } from '../src/db/seed/sources.ts';
 import { dropSchema } from '../src/db/seed/reset.ts';
 
 const target = process.argv[2] ?? 'scenario';
@@ -36,6 +38,9 @@ try {
   } else if (target === 'deities') {
     await seedDeities(db);
     console.log('Seeded the deity traditions and deities.');
+  } else if (target === 'sources') {
+    await seedSources(db);
+    console.log("Seeded the vocabularies' sources and their links.");
   } else if (target === 'drop') {
     // The one guard on the one destructive verb: nothing in CI calls it, so a
     // production URL in a local shell is refused rather than confirmed.
@@ -50,7 +55,7 @@ try {
     console.log(`Seeded the ${scenario} scenario.`);
   } else {
     throw new Error(
-      `Unknown seed target "${target}". Pass "categories", "forms", "astrology", "deities" or "drop", or nothing to seed a scenario.`,
+      `Unknown seed target "${target}". Pass "categories", "forms", "astrology", "deities", "sources" or "drop", or nothing to seed a scenario.`,
     );
   }
 } finally {

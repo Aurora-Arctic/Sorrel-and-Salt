@@ -93,3 +93,58 @@ export interface ChainedError {
   code?: unknown;
   constraint_name?: unknown;
 }
+
+/** A category group's two colours, one per theme, as its row stores them (MB.35). */
+export interface GroupColors {
+  colorDark: string;
+  colorLight: string;
+}
+
+/** Which of a group's two colours: the one the dark theme wears, or the light (MB.36). */
+export type GroupColorColumn = keyof GroupColors;
+
+/**
+ * The two axes of a colour picker's area, as it lays them out for a format
+ * (M5.6b): saturation across, and brightness or lightness up, 100 at the top.
+ */
+export type AreaSpace = 'hsb' | 'hsl';
+
+/**
+ * The five kinds of source `references.kind` holds (MB.151), spelled here
+ * because a lib file imports no module; a row's `ReferenceKind` must stay
+ * assignable to it, so a sixth kind fails the type check at the renderer's
+ * callers.
+ */
+export type CitationKind = 'book' | 'chapter' | 'article' | 'entry' | 'web_page';
+
+/**
+ * What `renderCitation` reads: a `references` row's own fields, each text as
+ * Chicago prints it and absent or null when not given, the two days as
+ * `YYYY-MM-DD`.
+ */
+export interface CitationFields {
+  kind: CitationKind;
+  title: string;
+  authors?: string | null;
+  container?: string | null;
+  contributors?: string | null;
+  edition?: string | null;
+  volume?: string | null;
+  issue?: string | null;
+  series?: string | null;
+  place?: string | null;
+  publisher?: string | null;
+  published?: string | null;
+  pages?: string | null;
+  host?: string | null;
+  url?: string | null;
+  modified?: string | null;
+  accessed?: string | null;
+  note?: string | null;
+}
+
+/** One run of a rendered citation, set in italic or roman. */
+export interface CitationPart {
+  text: string;
+  italic: boolean;
+}

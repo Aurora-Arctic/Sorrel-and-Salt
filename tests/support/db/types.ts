@@ -1,4 +1,5 @@
 import type { PgTable } from 'drizzle-orm/pg-core';
+import type postgres from 'postgres';
 
 export interface IndexRow {
   unique: boolean;
@@ -30,3 +31,23 @@ export interface Logged {
   query: string;
   params: unknown[];
 }
+
+/**
+ * A `references` row's columns as a test seeds them, by the table's own names
+ * — `workspace_id` null for the compendium — each optional over a compendium
+ * book's defaults.
+ */
+export interface ReferenceSeed {
+  workspace_id?: string | null;
+  kind?: string;
+  title?: string;
+  authors?: string | null;
+  container?: string | null;
+  place?: string | null;
+  published?: string | null;
+  url?: string | null;
+  accessed?: string | null;
+}
+
+/** What `postgres()` takes beside a URL, as bounded-postgres.ts passes it on. */
+export type ClientOptions = postgres.Options<Record<string, postgres.PostgresType>> | undefined;

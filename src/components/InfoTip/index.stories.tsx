@@ -16,8 +16,8 @@ export const BesideALabel: Story = () => (
         Classification
       </label>
       <InfoTip id="story-tip" label="Classification">
-        Botanical for a plant, mineral for a stone, and so on. &ldquo;Unknown&rdquo; and
-        &ldquo;None&rdquo; take no formal name.
+        Botanical for a plant, mineral for a stone, and so on. &ldquo;Unknown&rdquo; if you are not
+        sure which, with or without a formal name. &ldquo;None&rdquo; takes no formal name.
       </InfoTip>
     </div>
     <input id="story-control" className="input" aria-describedby="story-tip" />

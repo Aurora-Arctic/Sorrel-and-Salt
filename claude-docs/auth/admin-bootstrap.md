@@ -458,21 +458,24 @@ the tests [`tests.md`](tests.md).
 Specified in DESIGN.md §5 and argued in
 [`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md);
 none of it is built yet. Until MB.58 and MB.59 land, a second admin is an
-`UPDATE` in `psql`. The tasks that build it:
+`UPDATE` in `psql`, setting `can_create_workspace` with `role`: MB.177's CHECK
+refuses an admin without the flag. The tasks that build it:
 
 - **MB.58 and MB.59**: the `admin_role_changes` ledger, and granting and
   revoking any other admin from `/admin/users`. The primary admin can be
   neither revoked nor deleted, and a revoke that would leave zero admins is
   refused (the record's "The primary admin" and "Revoking").
-- **MB.62 and MB.63**: the `site_settings` row through which the primary
-  admin pauses granting and revoking for every other admin (the record's
-  "Granting").
+- **MB.62 and MB.63**: the `admin_role_change_pauses` ledger through which
+  the primary admin pauses granting and revoking for every other admin (the
+  record's "Granting"; MB.62 built the table,
+  [`mb.62-pause-ledger.md`](../design-decisions/mb.62-pause-ledger.md)).
 - **MB.69 and MB.70**: inviting an admin by email, story 62
   ([`design-decisions/mb.61-email-verification-and-delivery.md`](../design-decisions/mb.61-email-verification-and-delivery.md),
-  "The admin invitation (story 62)").
-- **MB.53**: Better Auth's `admin` plugin, with only its two impersonation
-  endpoints reachable, since the rest would grant admin or delete users
-  outside `withAudit` ([`plugins.md`](plugins.md)).
+  "The admin invitation (story 62)"; MB.69 built the table,
+  [`db/invitations.md`](../db/invitations.md), "Admin invitations").
+- **MB.53** (built): Better Auth's `admin` plugin, with only its two
+  impersonation endpoints reachable, since the rest would grant admin or
+  delete users outside `withAudit` ([`impersonation.md`](impersonation.md)).
 
 ### The self-created user
 

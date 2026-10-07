@@ -50,7 +50,7 @@ afterEach(() => {
 
 async function userRow(email: string) {
   const [row] = await sql`
-    select id, role::text as role, email_verified, created_by, updated_by
+    select id, role::text as role, email_verified, can_create_workspace, created_by, updated_by
     from users where email = ${email} and deleted_at is null
   `;
   return row as
@@ -58,16 +58,19 @@ async function userRow(email: string) {
         id: string;
         role: string;
         email_verified: boolean;
+        can_create_workspace: boolean;
         created_by: string;
         updated_by: string;
       }
     | undefined;
 }
 
+// An admin holds the creation flag, which the users CHECK requires (MB.177);
+// a user starts without it, so a promotion setting it is what the tests see.
 async function insertUser(email: string, role: 'user' | 'admin' = 'user'): Promise<string> {
   const [row] = await sql`
-    insert into users (name, email, role, created_by, updated_by)
-    values ('Fixture Person', ${email}, ${role}, ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+    insert into users (name, email, role, can_create_workspace, created_by, updated_by)
+    values ('Fixture Person', ${email}, ${role}, ${role === 'admin'}, ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
     returning id
   `;
   return row.id as string;
@@ -78,6 +81,7 @@ const verifiedGoogle: SignInProfile = { providerId: 'google', email: PRIMARY, em
 describe('promotePrimaryAdmin', () => {
   it('promotes through withAudit, stamped as the signed-in user themselves', async () => {
     const id = await insertUser(PRIMARY);
+    expect((await userRow(PRIMARY))?.can_create_workspace).toBe(false);
 
     const outcome = await promotePrimaryAdmin(asUser({ id, role: 'user' }), {
       accountEmail: PRIMARY,
@@ -88,6 +92,8 @@ describe('promotePrimaryAdmin', () => {
     expect(outcome).toBe('promoted');
     const row = await userRow(PRIMARY);
     expect(row?.role).toBe('admin');
+    // Every admin may create a workspace, and the same write says so (MB.177).
+    expect(row?.can_create_workspace).toBe(true);
     // The insert stamped the seed's bootstrap user; the promotion restamps it
     // as the user, which is withAudit taking identity from the session.
     expect(row?.created_by).toBe(BOOTSTRAP_USER_ID);
@@ -244,6 +250,7 @@ describe('Promotion at sign-in', () => {
     expectSignedIn(response);
     const row = await userRow(PRIMARY);
     expect(row?.role).toBe('admin');
+    expect(row?.can_create_workspace).toBe(true);
     expect(row?.updated_by).toBe(row?.id);
   });
 
@@ -341,6 +348,7 @@ describe('Promotion at sign-in', () => {
 describe('promotePrimaryAdminAtVerification', () => {
   it('promotes through withAudit, stamped as the verifying user themselves', async () => {
     const id = await insertUser(PRIMARY);
+    expect((await userRow(PRIMARY))?.can_create_workspace).toBe(false);
 
     const outcome = await promotePrimaryAdminAtVerification(asUser({ id, role: 'user' }), {
       accountEmail: PRIMARY,
@@ -350,6 +358,7 @@ describe('promotePrimaryAdminAtVerification', () => {
     expect(outcome).toBe('promoted');
     const row = await userRow(PRIMARY);
     expect(row?.role).toBe('admin');
+    expect(row?.can_create_workspace).toBe(true);
     expect(row?.created_by).toBe(BOOTSTRAP_USER_ID);
     expect(row?.updated_by).toBe(id);
   });

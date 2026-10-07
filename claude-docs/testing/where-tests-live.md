@@ -10,7 +10,7 @@ tests/
   rsc/                        # what can only be seen from inside a server render, mirroring src/ below it
   acceptance/                 # one describe per user story — make test-stories
   guards/                     # the mechanical guards
-  scripts/                    # mirror scripts/ — the pure half of a script, imported by its .d.mts
+  scripts/                    # mirror scripts/ and .github/scripts/lib/ — the pure half of a script, imported by its .d.mts
   support/                    # the harness: as-user, db-setup, seeded-database, msw, paths
   e2e/                        # Playwright specs and their harness (database, fixtures, axe, coverage)
   support/fixtures/           # makeIngredient / makeSpell / makeWorkspace
@@ -171,11 +171,13 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
     set inside the single setup process, so it pre-clones one database per
     possible worker instead. That number is `undefined` there unless the
     config pins it, so `tests/support/db-project.mts` pins `maxWorkers` to
-    Vitest's own default (`os.availableParallelism() - 1`, floored at 1) —
-    and it must keep mirroring that default: the projects share one pool
-    group, and Vitest throws when two projects in a group disagree on
-    `maxWorkers`, which is what makes "every slot has a clone" a guarantee
-    rather than a hope. It `provide`s that list as `workerDatabases`,
+    Vitest's own default (`os.availableParallelism() - 1`, floored at 1)
+    under `DB_WORKER_CAP`, twelve, which is what bounds the connections a
+    run can hold (MB.179; [`db-harness.md`](db-harness.md#connections-per-run-mb179)) —
+    and `vitest.config.mts` pins its root `maxWorkers` to the same number:
+    the projects share one pool group, and Vitest throws when two projects in
+    a group disagree on `maxWorkers`, which is what makes "every slot has a
+    clone" a guarantee rather than a hope. It `provide`s that list as `workerDatabases`,
     which `test-database-isolation.test.ts` asserts its own database is a
     member of (MB.14) — the point being that a worker's name is checked
     against what was actually created, not against a bound the test
@@ -294,7 +296,9 @@ own `services: postgres:` (a `build-db-image` job feeding
 `claude-docs/ci/database-image.md`), and uploads `.reports/coverage/` as an
 artifact on every run. `vitest.config.mts`'s coverage `reporter` also gained
 `json-summary` alongside its existing `text`/`lcov`/`html`, so the PR comment
-can show a coverage table (`.github/scripts/summarize-vitest.mjs`).
+can show a coverage table (`.github/scripts/summarize-vitest.mjs`), and since
+MB.180 a slowest-files block ([`layer-ownership.md`](layer-ownership.md), "The
+file budget").
 
 **Quiet under Claude Code (MB.142).** `CLAUDECODE=1`, which only Claude Code's
 shell sets, switches the test reporter to `dot`, the coverage reporter to

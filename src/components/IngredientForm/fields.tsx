@@ -1,28 +1,42 @@
-import { type ReactElement, useId, useRef, useState } from 'react';
+import { type FocusEvent, type ReactElement, useId, useMemo, useRef, useState } from 'react';
 import {
   type FieldPath,
+  type FieldValues,
+  type PathValue,
   get,
   useController,
   useFieldArray,
   useFormContext,
   useFormState,
+  useWatch,
 } from 'react-hook-form';
-import Combobox, { ComboboxEntry } from '../Combobox';
+import Combobox, {
+  ComboboxEntry,
+  ComboboxMultiSelect,
+  ComboboxSelect,
+  ComboboxSortableEntries,
+} from '../Combobox';
+import type { ComboboxOption } from '../Combobox/types';
 import InfoTip from '../InfoTip';
 import type {
+  AnyListEntry,
   FieldErrorProps,
   FieldShellProps,
   IngredientFormValues,
   ListFieldProps,
+  ListOption,
+  MultiSelectFieldProps,
   SelectFieldProps,
   SuggestFieldProps,
   TextFieldProps,
 } from './types';
-import { addEntry, commitDraft, entryText } from './values';
+import { addEntry, commitDraft, entryDetail, entryText, repeatOf } from './values';
 
 // IngredientForm's fields, on the form primitives (claude-docs/styling.md,
 // "Form fields"). Each reads its own error out of the form state, so a field
-// re-renders for its own error and not for every other field's.
+// re-renders for its own error and not for every other field's. The text and
+// select fields read whichever form provides them, so the reference panel's
+// own form draws its fields and errors through the same ones (MB.154).
 
 /** The one element a field's error renders through, whether the resolver found it or the server did. */
 export function FieldError({ id, message }: FieldErrorProps): ReactElement | null {
@@ -40,15 +54,15 @@ export function FieldError({ id, message }: FieldErrorProps): ReactElement | nul
  * field — the hint too, though its tip is closed — and `aria-invalid` is what
  * draws the error edge, so one cannot ship without the other.
  */
-function useField(
-  name: FieldPath<IngredientFormValues>,
+function useField<V extends FieldValues>(
+  name: FieldPath<V>,
   hint?: string,
   note?: string,
   describedBy?: string,
   invalid?: boolean,
 ) {
   const id = useId();
-  const { errors } = useFormState<IngredientFormValues>({ name });
+  const { errors } = useFormState<V>({ name });
   const error: string | undefined = get(errors, name)?.message;
   const hintId = `${id}-hint`;
   const noteId = `${id}-note`;
@@ -116,21 +130,35 @@ function FieldShell({
   );
 }
 
-export function TextField({
+export function TextField<V extends FieldValues = IngredientFormValues>({
   name,
   label,
   hint,
   note,
   required,
   multiline,
+  type,
   disabled,
   deps,
   describedBy,
   invalid,
   after,
-}: TextFieldProps): ReactElement {
-  const { register } = useFormContext<IngredientFormValues>();
-  const { aria, ...field } = useField(name, hint, note, describedBy, invalid);
+  format,
+  autoComplete,
+}: TextFieldProps<V>): ReactElement {
+  const { register, setValue, getFieldState } = useFormContext<V>();
+  const { aria, ...field } = useField<V>(name, hint, note, describedBy, invalid);
+  // Tidied as it is left, the way the server will store it (MB.154); an
+  // error it was showing is judged again on the tidied text.
+  const tidy = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const text = event.target.value;
+    const formatted = format?.(text) ?? text;
+    if (formatted === text) return;
+    setValue(name, formatted as PathValue<V, FieldPath<V>>, {
+      shouldDirty: true,
+      shouldValidate: getFieldState(name).invalid,
+    });
+  };
   // The attribute, not register's `disabled`, which would also drop the value
   // from what is validated and sent: the form decides that itself. And
   // `aria-required` rather than `required`, whose `:invalid` would mark an
@@ -138,16 +166,17 @@ export function TextField({
   const control = {
     id: field.controlId,
     disabled,
+    autoComplete,
     'aria-required': required || undefined,
     ...aria,
-    ...register(name, { deps }),
+    ...register(name, { deps, onBlur: format ? tidy : undefined }),
   };
   return (
     <FieldShell label={label} hint={hint} note={note} required={required} after={after} {...field}>
       {multiline ? (
         <textarea className="textarea" {...control} />
       ) : (
-        <input className="input" {...control} />
+        <input className="input" type={type} {...control} />
       )}
     </FieldShell>
   );
@@ -155,19 +184,24 @@ export function TextField({
 
 /**
  * A text field whose box suggests as it is typed in (DESIGN.md §14): a pick
- * fills the field with the suggestion's value and links nothing, and free
- * text stays as typed, with no warning.
+ * fills the field with the suggestion's value, and free text stays as typed,
+ * with no warning. What a pick links is the caller's, told of each pick
+ * and each edit, and what it adds to the box is its qualifier.
  */
-export function SuggestField({
+export function SuggestField<O extends ComboboxOption = ComboboxOption>({
   name,
   label,
   hint,
   suggestions,
   onActivate,
-}: SuggestFieldProps): ReactElement {
+  onPick,
+  onEdit,
+  qualifier,
+  offerTyped,
+}: SuggestFieldProps<O>): ReactElement {
   const { control } = useFormContext<IngredientFormValues>();
   const { field } = useController({ control, name });
-  const { aria, ...shell } = useField(name, hint);
+  const { aria, ...shell } = useField<IngredientFormValues>(name, hint);
   return (
     <FieldShell label={label} hint={hint} {...shell}>
       <Combobox
@@ -175,11 +209,19 @@ export function SuggestField({
         label={label}
         labelId={shell.labelId}
         value={field.value}
-        onChange={field.onChange}
+        onChange={(text) => {
+          field.onChange(text);
+          onEdit?.(text);
+        }}
         onFocus={onActivate}
         onBlur={field.onBlur}
-        onPick={(value) => field.onChange(value)}
+        onPick={(value, option) => {
+          field.onChange(value);
+          onPick?.(option);
+        }}
         suggestions={suggestions}
+        qualifier={qualifier}
+        offerTyped={offerTyped}
         inputRef={field.ref}
         name={field.name}
         {...aria}
@@ -188,47 +230,79 @@ export function SuggestField({
   );
 }
 
-/** A closed set, as a native `<select>` (DESIGN.md §14). */
-export function SelectField({
+/**
+ * A closed set, on the combobox's select-only box (DESIGN.md §14): the same
+ * control and list as a suggesting field, with nothing to type.
+ */
+export function SelectField<V extends FieldValues = IngredientFormValues>({
   name,
   label,
   hint,
   placeholder,
-  none,
   options,
   required,
   deps,
   onChange,
-}: SelectFieldProps): ReactElement {
-  const { register } = useFormContext<IngredientFormValues>();
-  const { aria, ...field } = useField(name, hint);
-  const control = register(name, {
-    deps,
-    onChange: onChange && ((event: { target: { value: string } }) => onChange(event.target.value)),
-  });
+}: SelectFieldProps<V>): ReactElement {
+  const { control } = useFormContext<V>();
+  const { field } = useController({ control, name, rules: { deps } });
+  const { aria, ...shell } = useField<V>(name, hint);
   return (
-    <FieldShell label={label} hint={hint} required={required} {...field}>
-      <select
-        className="select"
-        id={field.controlId}
-        aria-required={required || undefined}
+    <FieldShell label={label} hint={hint} required={required} {...shell}>
+      <ComboboxSelect
+        id={shell.controlId}
+        label={label}
+        labelId={shell.labelId}
+        value={field.value}
+        // Before the field and its `deps` revalidate: None empties the formal
+        // name first, so its error is judged on the empty value.
+        onChange={(value) => {
+          onChange?.(value);
+          field.onChange(value);
+        }}
+        onBlur={field.onBlur}
+        choices={options}
+        placeholder={placeholder}
+        required={required}
+        inputRef={field.ref}
         {...aria}
-        {...control}
-      >
-        {/* A placeholder is shown until a choice is made, and cannot be made
-            itself; `none` is a choice, the one that clears the field. */}
-        {placeholder !== undefined && (
-          <option value="" disabled hidden>
-            {placeholder}
-          </option>
-        )}
-        {none !== undefined && <option value="">{none}</option>}
-        {options.map(({ value, label: text }) => (
-          <option key={value} value={value}>
-            {text}
-          </option>
-        ))}
-      </select>
+      />
+    </FieldShell>
+  );
+}
+
+/**
+ * A closed set holding several values, on the combobox's multi-select box:
+ * the select-only box, its choices as chips inside the control, as a list's
+ * entries are. Nothing is typed and nothing is added by a button, so it is a
+ * field, labelled and erring as one, rather than a list's fieldset.
+ */
+export function MultiSelectField({
+  name,
+  label,
+  hint,
+  placeholder,
+  options,
+  required,
+}: MultiSelectFieldProps): ReactElement {
+  const { control } = useFormContext<IngredientFormValues>();
+  const { field } = useController({ control, name });
+  const { aria, ...shell } = useField<IngredientFormValues>(name, hint);
+  return (
+    <FieldShell label={label} hint={hint} required={required} {...shell}>
+      <ComboboxMultiSelect
+        id={shell.controlId}
+        label={label}
+        labelId={shell.labelId}
+        values={field.value}
+        onChange={field.onChange}
+        onBlur={field.onBlur}
+        choices={options}
+        placeholder={placeholder}
+        required={required}
+        inputRef={field.ref}
+        {...aria}
+      />
     </FieldShell>
   );
 }
@@ -237,7 +311,9 @@ export function SelectField({
  * A list of free-text entries: one combobox to type in, with each entry added
  * shown inside it ahead of the text. A box with a source suggests, and a pick
  * adds as Add does. An error naming an entry marks that entry and reads out
- * on the box, through the list's one error element.
+ * on the box, through the list's one error element. An ordered list's entries
+ * move, each by its handle. A repeat is refused at the box, as the save
+ * would refuse it, and never suggested (MB.174).
  */
 export function ListField({
   name,
@@ -246,10 +322,12 @@ export function ListField({
   hint,
   suggestions,
   onActivate,
+  ordered,
+  pickOnly,
 }: ListFieldProps): ReactElement {
   const form = useFormContext<IngredientFormValues>();
-  const { control, trigger } = form;
-  const { fields, remove } = useFieldArray({ control, name });
+  const { control, trigger, setError, clearErrors, getFieldState, getValues } = form;
+  const { fields, remove, move } = useFieldArray({ control, name });
   const box = `drafts.${name}` as const;
   const { field } = useController({ control, name: box });
   const { errors, isSubmitted } = useFormState({ control, name: [name, box] });
@@ -257,6 +335,9 @@ export function ListField({
   // Its own ref rather than setFocus, which waits a tick: the box never
   // unmounts, so it can take the focus at once.
   const boxElement = useRef<HTMLInputElement | null>(null);
+  // The box and its button together, which an open list spans (MB.154).
+  // Held as state, through its callback ref, so the box is told once it exists.
+  const [boxRow, setBoxRow] = useState<HTMLDivElement | null>(null);
   // What the last add or removal did, for a screen reader: the box empties
   // and an entry appears or goes, and neither is otherwise announced.
   const [announcement, setAnnouncement] = useState('');
@@ -265,6 +346,32 @@ export function ListField({
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
   const focusBox = () => boxElement.current?.focus();
+
+  // What the list holds, and for folk names the name, which a repeat is
+  // judged against: watched only there, so Name's typing redraws no other list.
+  const listed: AnyListEntry[] = useWatch({ control, name });
+  const ingredientName = useWatch({ control, name: 'name', disabled: name !== 'folkNames' });
+  const nameToRefuse = name === 'folkNames' ? ingredientName : undefined;
+  const repeat = (text: string) => repeatOf(listed, text, undefined, nameToRefuse);
+  // The lookup leaves out what the list holds, as the References search does.
+  const offered = useMemo(
+    () =>
+      suggestions && {
+        ...suggestions,
+        options: suggestions.options
+          .filter(
+            (option) =>
+              // A pick-only list offers the curated rows alone: a value only in
+              // use is one the compendium refuses (MB.162).
+              !(pickOnly && option.curated === false) &&
+              !repeatOf(listed, option.value, option.link, nameToRefuse),
+          )
+          // And lists them flat: with every row the compendium's, a From
+          // Compendium heading over them would tell the admin nothing.
+          .map((option) => (pickOnly ? { ...option, curated: undefined } : option)),
+      },
+    [suggestions, listed, nameToRefuse, pickOnly],
+  );
 
   const entryErrors = fields.map(
     (_, index): string | undefined => get(errors, `${name}.${index}.value`)?.message,
@@ -285,17 +392,47 @@ export function ListField({
   const revalidate = () => {
     if (isSubmitted) void trigger([name, box]);
   };
+  // A repeat refused at the box: its text stays, to be put right, and the
+  // list's error element says why, where the save's refusal would read.
+  const refused = (text: string) => {
+    const why = repeat(text);
+    if (!why) return false;
+    setError(box, { type: 'repeat', message: why });
+    setAnnouncement(why);
+    focusBox();
+    return true;
+  };
+  // A pick-only list's Enter on text it has not picked from: refused at the
+  // box as a repeat is, the text kept to search on.
+  const unpicked = (text: string) => {
+    if (text.trim() === '') return;
+    const why = `Pick "${text.trim()}" from the list`;
+    setError(box, { type: 'unpicked', message: why });
+    setAnnouncement(why);
+    focusBox();
+  };
+  // Gone once the text it judged is changed, or something is added.
+  const clearRefusal = () => {
+    const type = getFieldState(box).error?.type;
+    if (type === 'repeat' || type === 'unpicked') clearErrors(box);
+  };
   const added = (value: string | undefined) => {
     if (value !== undefined) {
+      clearRefusal();
       setAnnouncement(`Added ${value}`);
       revalidate();
     }
     focusBox();
   };
   // Add, and Enter with no suggestion picked, add what the box holds; a pick
-  // adds the suggestion's value.
-  const add = () => added(commitDraft(form, name));
-  const pick = (value: string) => added(addEntry(form, name, value));
+  // adds the suggestion's value, linked when the suggestion is an ingredient.
+  // Add refuses a repeat; a pick never is one, since the lookup leaves out
+  // what the list holds and withholds the typed row for a repeat.
+  const add = () => {
+    if (!refused(getValues(box))) added(commitDraft(form, name));
+  };
+  const pick = (value: string, option: ListOption | null) =>
+    added(addEntry(form, name, value, option?.link));
   const clear = () => {
     setAnnouncement(`Cleared ${legend}`);
     remove();
@@ -311,24 +448,39 @@ export function ListField({
     revalidate();
   };
 
-  const entries = fields.length > 0 && (
-    <ul className="combobox__entries">
-      {fields.map((row, index) => (
-        <ComboboxEntry
-          key={row.id}
-          value={entryText(row)}
-          errorId={entryErrors[index] && errorId}
-          onRemove={() => {
-            setAnnouncement(`Removed ${entryText(row)}`);
-            remove(index);
-            revalidate();
-            // The pressed x is about to go; the box keeps the focus.
-            focusBox();
-          }}
-        />
-      ))}
-    </ul>
-  );
+  // Keyed by the field array's id, which follows an entry through a move.
+  const chips = fields.map((row, index) => ({
+    id: row.id,
+    value: entryText(row),
+    detail: entryDetail(row),
+    errorId: entryErrors[index] && errorId,
+    onRemove: () => {
+      setAnnouncement(`Removed ${entryText(row)}`);
+      remove(index);
+      revalidate();
+      // The pressed x is about to go; the box keeps the focus.
+      focusBox();
+    },
+  }));
+  // A move carries the entry's error with it, as the field array moves its
+  // errors, and is said by the sortable list itself, so it leaves the
+  // list's own announcement alone.
+  const moveEntry = (from: number, to: number) => {
+    move(from, to);
+    revalidate();
+  };
+
+  const entries =
+    fields.length > 0 &&
+    (ordered ? (
+      <ComboboxSortableEntries entries={chips} onMove={moveEntry} />
+    ) : (
+      <ul className="combobox__entries">
+        {chips.map(({ id: key, ...chip }) => (
+          <ComboboxEntry key={key} {...chip} />
+        ))}
+      </ul>
+    ));
 
   return (
     // Named by the legend's text alone: the tip's button inside the legend
@@ -342,18 +494,23 @@ export function ListField({
           </InfoTip>
         )}
       </legend>
-      <div className="ingredient-form__row">
+      <div ref={setBoxRow} className="ingredient-form__row">
         <Combobox
           id={boxId}
           label={entry}
           value={field.value}
-          onChange={field.onChange}
+          onChange={(text) => {
+            clearRefusal();
+            field.onChange(text);
+          }}
           onFocus={onActivate}
           onBlur={field.onBlur}
           onPick={pick}
-          onCommit={add}
+          onCommit={pickOnly ? () => unpicked(getValues(box)) : add}
           onRemoveLast={removeLast}
-          suggestions={suggestions}
+          suggestions={offered}
+          offerTyped={!pickOnly && !repeat(field.value)}
+          listAnchor={boxRow}
           entries={entries}
           clear={fields.length > 0 ? { label: `Clear ${legend}`, onClear: clear } : undefined}
           inputRef={(element) => {
@@ -364,9 +521,11 @@ export function ListField({
           aria-invalid={message ? true : undefined}
           aria-describedby={describedBy || undefined}
         />
-        <button type="button" className="btn" aria-label={`Add ${entry}`} onClick={add}>
-          Add
-        </button>
+        {!pickOnly && (
+          <button type="button" className="btn" aria-label={`Add ${entry}`} onClick={add}>
+            Add
+          </button>
+        )}
       </div>
       <FieldError id={errorId} message={message} />
       {/* Labelled, so that it is told from the box's own status region. */}

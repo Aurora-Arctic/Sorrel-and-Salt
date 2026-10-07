@@ -1,0 +1,84 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// Layout and motion only, until the admin area's design review (MB.115).
+// claude-docs/components/impersonation-banner.md, "Styling".
+
+// The rule along its foot: thick enough to read as a warning on its own,
+// which is all of it the tucked banner shows.
+$impersonation-banner-rule: 3px;
+// What shows while it is tucked away: the rule and a sliver above it.
+$impersonation-banner-peek: space(2);
+// How far below the sliver a pointer still counts as near the top.
+$impersonation-banner-reach: space(4);
+// ThemeToggle's corner, `$theme-toggle-corner-radius`, which the tucked banner
+// runs beneath and keeps its own content clear of.
+$impersonation-banner-corner: 3.9rem;
+
+// A wrapping row of the sentence and Stop. On a touch screen, where nothing
+// can hover to bring it back, it stays in the page's flow at the very top,
+// shown in full, and everything that measures from the top of the window
+// starts below it: its height, published by index.tsx, is the top inset there.
+.impersonation-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2) space(4);
+  // More below than above: wrapped on a phone, Stop sits on the bottom row,
+  // and the rule beneath it would otherwise crowd it.
+  padding: space(2) space(5) space(3);
+  border-bottom: $impersonation-banner-rule solid $secondary;
+  background-color: $surface-card;
+}
+
+@media (hover: none) {
+  :root {
+    --top-inset: var(--impersonation-banner-height, 0px);
+  }
+}
+
+.impersonation-banner__text {
+  margin: 0;
+}
+
+// Tucked away where a pointer can hover to bring it back: fixed over the top
+// of the page, so it adds nothing to the page's height.
+@media (hover: hover) {
+  .impersonation-banner {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    // Under ThemeToggle (`z-index: 2`), so aiming at the toggle reaches the
+    // toggle and never opens the banner.
+    z-index: 1;
+    padding-right: calc(#{$impersonation-banner-corner} + #{space(3)});
+    padding-bottom: space(2);
+    transform: translateY(calc(-100% + #{$impersonation-banner-peek}));
+    @include theme-transition(transform, background-color, border-color);
+
+    // The reach below the sliver: invisible, and part of the banner, so
+    // hovering it counts as hovering the banner.
+    &::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      right: 0;
+      left: 0;
+      height: $impersonation-banner-reach;
+    }
+
+    // Focus too, so a keyboard reaches Stop; and open while Stop is in flight
+    // or has failed, so its sentence cannot slide away unread.
+    &:hover,
+    &:focus-within,
+    &.impersonation-banner--open {
+      transform: translateY(0);
+      box-shadow: $shadow-floating;
+    }
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
+}

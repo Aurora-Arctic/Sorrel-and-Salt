@@ -24,9 +24,12 @@ name it shipped under, since its tag is in the journal.
 
 **They are `form`'s pattern, and the two lists stay free text.** A member
 writes planets and zodiac signs, so by MB.35's rule each entry is text over a
-vocabulary rather than a foreign key: a value off the list stays writable,
-soft-deleting a row rewrites no ingredient, and the value moves into the
-uncurated bucket instead. `nomenclature` and `element` stay enums — closed
+vocabulary rather than a foreign key: a value off the list stays writable on
+a coven's ingredient, and soft-deleting a row rewrites none of a coven's, its
+value moving into the in-use bucket instead. A compendium entry holds curated
+values alone, so a row one holds is not deleted and a rename carries onto it
+([MB.162](../design-decisions/mb.162-compendium-holds-curated-values.md)).
+`nomenclature` and `element` stay enums — closed
 sets, and `nomenclature` is coupled to `canonicalName` by a CHECK that names
 `none` and `unknown` and could not read a table (DESIGN.md §14).
 
@@ -61,17 +64,61 @@ both. `gin_trgm_ops` answers `<%` as it answers `%`.
   all curated names in title case, which match case-insensitively. MB.94
   decided against one: its tests write their own against an emptied
   `ingredients`, and one in the shared template would reach every
-  workspace's suggestions and MB.95's to-do list.
-- **Curating an uncurated value is not one click.** `description` is required,
-  so the admin page's add control opens the create form prefilled with the
-  value and asks for one (MB.95, and M5.6a for forms).
+  workspace's suggestions. Since MB.162 no compendium entry may hold one.
+- **Curating a value is not one click.** `description` is required, so the
+  admin writes one with the name (MB.95, and M5.6a for forms).
 
 **The two readers are scoped differently.** A member's autofill (MB.94) offers
 curated rows first, then uncurated values in use in the compendium and the
-current workspace only. The admin's to-do list (MB.95) reads the compendium
-tier only, since an admin reaches no workspace's ingredients (M6.6); its finder
+current workspace only, and since MB.162 every one of those is the
+workspace's. The admin's read (MB.95) is the compendium tier only — the live
+entries holding a value, which refuse its delete and take its rename
+(MB.162) — since an admin reaches no workspace's ingredients (M6.6); its finder
 joins `TIER_SEAM` in `tests/guards/module-boundaries.test.ts`, as the
 autofill's does. A value is uncurated when `lower(btrim(value))` matches no
 live row's `lower(name)`.
 
 **The member's autofill** has a file of its own: [`member-autofill.md`](member-autofill.md).
+
+### The admin writes (MB.95)
+
+`src/modules/vocabulary/services/astrology.ts`, in the form writes' shape
+([`categories.md`](categories.md), "Form writes") without the group, for
+`/admin/planets` and `/admin/zodiac-signs`. One code path for both, keyed by
+the ingredient list each curates (`CuratedField`, `'planets' | 'zodiacSigns'`).
+A compendium entry's planets and signs are curated spellings (MB.162), and
+these writes keep them so after the write.
+
+- **The reads.** `listAstrologyValues(field, filter, page)` pages the live
+  rows by `(name, id)` through `findAstrologyValues`, and
+  `countAstrologyValues` counts them through `findAstrologyValueCount` on the
+  page's own filter and key. The filter's `query` narrows both to a name
+  holding it through `containsText`, read literally; the service trims it, so
+  a blank one is no query. `getAstrologyValueBySlug` reads one row for the
+  page's `?edit=`, `NotFound` for none.
+- **The slug is `slugify(name)`** and follows a rename; `seedKey` stays as it
+  was (MB.171). A collision is `VALIDATION` on `name`, naming the row at the
+  address.
+- **A delete is refused while a live compendium entry's list holds the
+  value**: `Forbidden`, naming the first three entries and how many more,
+  through the compendium's own filter (`IngredientFilter.planet` or
+  `zodiacSign`) and the shared `heldBy`. A coven's ingredient never blocks
+  it; its value moves into that coven's in-use bucket.
+- **A rename carries the new name onto every live compendium entry holding
+  the old, in the same transaction**, through `write.carryAstrologyRename`:
+  each entry folding to the old spelling is replaced in its place, and
+  nothing else in the row moves, since a planet or a sign is no part of an
+  entry's identity or slug. A case-only rename carries too. A soft-deleted
+  entry keeps the old spelling, and a coven's ingredient is never written
+  (M6.6). The writer is the twenty-second, named below the module boundary
+  for `carryFormRename`'s reason: the vocabulary module may not name
+  `ingredients`.
+- **"While the row is the last live spelling of its value"** is always true.
+  MB.95's entry conditions both rules on it, and a value folds as its slug
+  does — trimmed and lower-cased — so two live rows of one fold would share a
+  slug, which the partial unique index refuses.
+- **The entries are read before the transaction**, as the form delete's are:
+  an entry saved with the value in the instant between keeps a retired
+  spelling.
+
+Revalidating the `compendium` tag after each write is M8.7's.

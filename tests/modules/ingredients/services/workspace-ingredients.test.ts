@@ -49,10 +49,17 @@ function local(overrides: Overrides<IngredientFixture> = {}): IngredientFixture 
   return makeIngredient({ workspaceId: WORKSPACE_W_ID, nomenclature, ...overrides });
 }
 
-/** The fixture as the service's input: everything but the tier and the category names, its substitutes typed. */
+/**
+ * The fixture as the service's input: everything but the tier and the
+ * category names, its substitutes and deities typed.
+ */
 function inputOf(fixture: IngredientFixture): LocalIngredientInput {
-  const { workspaceId: _tier, categories: _categories, substitutes, ...input } = fixture;
-  return { ...input, substitutes: substitutes.map((name) => ({ ingredientId: null, name })) };
+  const { workspaceId: _tier, categories: _categories, substitutes, deities, ...input } = fixture;
+  return {
+    ...input,
+    substitutes: substitutes.map((name) => ({ ingredientId: null, name })),
+    deities: deities.map((name) => ({ deityId: null, name })),
+  };
 }
 
 /** Seeds a row through the shared inserter, stamped by A — not through the code under test. */
@@ -112,27 +119,27 @@ describe('createWorkspaceIngredient', () => {
   });
 
   // DESIGN.md §5 (MB.134): as many of each as the practice gives it, in the
-  // member's order, and never into the single columns the lists replaced.
-  it('saves several planets, signs and colours, each in the order entered', async () => {
+  // member's order, and never into `element`, the single its list replaced.
+  it('saves several elements, planets, signs and colours, each in the order entered', async () => {
     const created = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
       ...inputOf(local()),
+      elements: ['water', 'earth'],
       planets: ['Venus', 'Moon'],
       zodiacSigns: ['Taurus', 'Cancer', 'Libra'],
       colors: ['Green', ' ', 'Silver'],
     });
 
     expect(created).toMatchObject({
+      elements: ['water', 'earth'],
       planets: ['Venus', 'Moon'],
       zodiacSigns: ['Taurus', 'Cancer', 'Libra'],
       colors: ['Green', 'Silver'],
     });
     expect(await rowOf(created.id)).toMatchObject({
+      elements: ['water', 'earth'],
       planets: ['Venus', 'Moon'],
       zodiac_signs: ['Taurus', 'Cancer', 'Libra'],
       colors: ['Green', 'Silver'],
-      planet: null,
-      zodiac: null,
-      color: null,
     });
   });
 
@@ -451,22 +458,30 @@ describe('updateWorkspaceIngredient', () => {
 
   it('replaces each list whole, an empty one clearing it', async () => {
     const id = await seed(
-      local({ planets: ['Moon', 'Venus'], zodiacSigns: ['Cancer'], colors: ['Silver', 'White'] }),
+      local({
+        elements: ['earth', 'water'],
+        planets: ['Moon', 'Venus'],
+        zodiacSigns: ['Cancer'],
+        colors: ['Silver', 'White'],
+      }),
     );
 
     const updated = await updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id, {
       ...inputOf(local()),
+      elements: ['air', 'earth'],
       planets: ['Mars'],
       zodiacSigns: [],
       colors: ['White', 'Silver'],
     });
 
     expect(updated).toMatchObject({
+      elements: ['air', 'earth'],
       planets: ['Mars'],
       zodiacSigns: null,
       colors: ['White', 'Silver'],
     });
     expect(await rowOf(id)).toMatchObject({
+      elements: ['air', 'earth'],
       planets: ['Mars'],
       zodiac_signs: null,
       colors: ['White', 'Silver'],

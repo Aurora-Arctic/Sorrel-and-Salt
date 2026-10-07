@@ -1,10 +1,10 @@
-import { eq, isNull, type SQL } from 'drizzle-orm';
-import type { PgTable } from 'drizzle-orm/pg-core';
+import { eq, ilike, isNull, sql, type SQL } from 'drizzle-orm';
+import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
 import type { SoftDeletable, WorkspaceScoped } from './types';
 
 // The `where` predicates the finders and the writer share: a proof's workspace,
-// the compendium tier, and the soft-delete filter.
+// the compendium tier, the soft-delete filter, and the admin lists' text match.
 
 /**
  * The proof's own predicate. Built here rather than by the caller: a
@@ -35,4 +35,26 @@ export function inCompendium<TTable extends PgTable & WorkspaceScoped>(table: TT
 export function notSoftDeleted<TTable extends PgTable>(table: TTable): SQL | undefined {
   const deletedAt = (table as Partial<SoftDeletable>).deletedAt;
   return deletedAt ? isNull(deletedAt) : undefined;
+}
+
+/**
+ * `column` holds `query` anywhere, case-insensitively, its `%`, `_` and `\`
+ * read literally: how an admin list narrows by a typed fragment. `ilike` rather
+ * than a trigram match: an admin looks a row up by part of a name or an
+ * address, which similarity scores poorly. Postgres' default LIKE escape is
+ * the backslash.
+ */
+export function containsText(column: AnyPgColumn, query: string): SQL {
+  return ilike(column, `%${query.replace(/[\\%_]/g, '\\$&')}%`);
+}
+
+/**
+ * Each entry of a `text[]` column, trimmed and lower-cased as the suggestions
+ * fold a value (MB.162), as a subquery: what an `inArray` matches a folded
+ * value against, so a list holds a value whatever spacing or case an entry
+ * was written with.
+ */
+export function listFolds(list: AnyPgColumn): SQL {
+  const entry = sql.identifier('entry');
+  return sql`(select lower(btrim(${entry})) from unnest(${list}) as ${entry})`;
 }

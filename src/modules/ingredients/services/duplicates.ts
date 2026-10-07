@@ -2,7 +2,7 @@ import 'server-only';
 import { type SimilarityScore, findSimilarIngredients } from '../../../db/repository';
 import type { ingredients } from '../schema/ingredients';
 import type { Session } from '../../../lib/session';
-import { assertMembership } from '@/modules/coven';
+import { type Membership, assertMembership } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 
 /**
@@ -10,23 +10,28 @@ import type { PageEntry, PageRequest } from '../../../lib/types';
  * workspace's own whose display name, formal name or a folk name is close to
  * `name`, best first, each with its score. Each row carries `canonicalName`,
  * which is what tells five Cat's Claws apart. A warning, never a refusal —
- * nothing here blocks a create.
+ * nothing here blocks a create. Without a workspace, the compendium's entries
+ * alone, as the admin's compendium form warns (M5.5).
  *
  * Asks only `ingredient: ['read']`: every row it can return is one a reader of
  * this workspace could already list.
  *
- * @throws {Forbidden} the caller may not read this workspace's ingredients.
+ * @throws {Forbidden} a workspace is named and the caller may not read its
+ * ingredients.
  */
 export async function findPossibleDuplicates(
   session: Session,
-  workspaceId: string,
+  workspaceId: string | null | undefined,
   name: string,
   page: PageRequest,
 ): Promise<PageEntry<typeof ingredients.$inferSelect, SimilarityScore>[]> {
-  const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
+  const memberships: Membership[] = [];
+  if (workspaceId != null) {
+    memberships.push(await assertMembership(session, workspaceId, { ingredient: ['read'] }));
+  }
 
   const trimmed = name.trim();
   if (!trimmed) return [];
 
-  return findSimilarIngredients(membership, trimmed, page);
+  return findSimilarIngredients(memberships, trimmed, page);
 }

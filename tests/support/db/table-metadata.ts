@@ -27,11 +27,15 @@ export const AUDIT_COLUMNS: readonly string[] = [
 // Transcribed so a catalogue sweep cannot pass on two empty sets. The two
 // hard-deleted join tables are in it: they carry the four stamps and the trigger.
 export const AUDITED_TABLES = [
+  'admin_invitations',
+  'admin_role_change_pauses',
+  'admin_role_changes',
   'categories',
   'category_groups',
   'deities',
   'deity_traditions',
   'ingredient_categories',
+  'ingredient_deities',
   'ingredient_folk_names',
   'ingredient_substitutes',
   'ingredient_form_groups',
@@ -39,6 +43,8 @@ export const AUDITED_TABLES = [
   'ingredients',
   'inventory_items',
   'planets',
+  'reference_links',
+  'references',
   'retired_ingredient_slugs',
   'spell_categories',
   'spell_ingredients',
@@ -50,8 +56,9 @@ export const AUDITED_TABLES = [
   'zodiac_signs',
 ].sort();
 
-// Better Auth's adapter tables that carry an `updated_at` and no `*_by`
-// columns; Better Auth's own `$onUpdate` stamps them. A real counter-example
+// Better Auth's adapter tables that carry an `updated_at` and no audit id;
+// Better Auth's own `$onUpdate` stamps them. `sessions.impersonated_by` is the
+// `admin` plugin's column (MB.53), not an audit id. A real counter-example
 // for "only the audited tables". `rate_limits` has no `updated_at` to mistake.
 export const UNAUDITED_TABLES = ['accounts', 'sessions', 'verifications'].sort();
 

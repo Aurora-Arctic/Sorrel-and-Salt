@@ -65,9 +65,9 @@ The long forms of rules 2–5 and 10 are `.claude/rules/database.md`, of 8 and 9
 
 ## Domain invariants that are easy to get wrong
 
-- **The site is invite-gated.** Signing in with any registered provider (Google, Discord, Facebook, Microsoft — M2.6) earns an account and _nothing else_. **The compendium is the one public surface** (MB.80): `/compendium` and `/compendium/ingredients/[slug]` are readable without an account and indexable by search engines, the compendium read takes no session, and nothing workspace-scoped follows them out — a workspace entry's slug at the public route is a 404. `canCreateWorkspace` defaults to `false` and turns true only by accepting an invitation (M7.5), an admin grant (M5.8), or being made admin (MB.59). Once true it stays true. Nothing in the OAuth flow sets it.
+- **The site is invite-gated.** Signing in with any registered provider (Google, Discord, Facebook, Microsoft — M2.6) earns an account and _nothing else_. **The compendium is the one public surface** (MB.80): `/compendium` and `/compendium/ingredients/[slug]` are readable without an account and indexable by search engines, the compendium read takes no session, and nothing workspace-scoped follows them out — a workspace entry's slug at the public route is a 404. `canCreateWorkspace` defaults to `false` and turns true only by accepting an invitation (M7.5), an admin grant (M5.8), or being made admin (MB.59), and a CHECK makes every admin hold it, so the gate reads the flag alone (MB.177). Once true it stays true. Nothing in the OAuth flow sets it.
 - **There are no personal workspaces.** No `kind` column; every workspace can take members and be deleted by an owner.
-- **Admins curate the compendium, global categories, the ingredient form vocabulary, the two group vocabularies that organise them, the planet and zodiac vocabularies, and the deity vocabulary with the traditions that group it — and nothing else.** A site admin has no access to any workspace's ingredients or grimoire — asserted by test (M6.6). `category_groups` and `ingredient_form_groups` are tables rather than enums precisely so an admin can add one without a migration (MB.35, §5); a category group carries `colorDark` and `colorLight` as hexes on the row, never Sass tokens, each contrast-checked on write against its own theme's ground. Groups list alphabetically by name — there is no order column.
+- **Admins curate the compendium, global categories, the ingredient form vocabulary, the two group vocabularies that organise them, the planet and zodiac vocabularies, and the deity vocabulary with the traditions that group it — and nothing else.** A site admin has no access to any workspace's ingredients or grimoire — asserted by test (M6.6). `category_groups` and `ingredient_form_groups` are tables rather than enums precisely so an admin can add one without a migration (MB.35, §5); a category group carries `colorDark` and `colorLight` as hexes on the row, never Sass tokens, each contrast-checked on write against its theme's harder surface. Groups list alphabetically by name — there is no order column.
 - **What the compendium says, it sources.** Every compendium entry and every curated row drawn from somewhere records where, as `references` rows — Chicago bibliography form, linked from every row it supports, two-tiered as ingredients are (§5; MB.151–MB.156). An unsourced entry still saves, and sits on the admin's to-do list. A seed list compiled by hand records its sources in its seed doc the same way: without them it is not done.
 - **An ingredient's identity is its formal name and its form.** `canonicalKey` is `lower(coalesce(canonical_name, name))` plus the normalised `form`; `name` is only what the ingredient is called _here_ and is freely relabellable, because identity moved off it. The compendium declares a `nomenclature` for every entry — `none` and `unknown` are answers, not absences, the same way `unitConvert` refuses rather than guesses. `ingredients.form` is text, **not a foreign key**: the curated vocabulary is an autofill, so an uncurated value stays writable. Local-beats-compendium resolution matches on identity, falling back to the label only when the local entry declares no formal name. Common-name and form lookups suggest from the compendium and the current workspace only — never another workspace, and that scoping covers the suggested strings themselves, not just their attribution.
 - **Invitations grant `viewer` or `member` only.** A DB check constraint rejects `owner`. Ownership is granted afterwards by an existing owner on the members page.
@@ -125,7 +125,7 @@ The issues of `Aurora-Arctic/Sorrel-and-Salt`, under the org Project **Sorrel & 
 
 ## Out of scope for v1
 
-Do not build, and do not leave hooks for beyond what the design doc names: the **entire notes subsystem** (stories 35–46; §13), edit history, viewer spell approval, compendium/category suggestions, duplicate merge tooling, bulk add from the compendium, GraphQL response caching, passkeys and every other first-party credential (email/password sign-in included), note moderation, subscription billing.
+Do not build, and do not leave hooks for beyond what the design doc names: the **entire notes subsystem** (stories 35–46; §13), edit history, viewer spell approval, compendium/category suggestions, duplicate merge tooling, bulk add from the compendium, GraphQL response caching, passkeys and every other first-party credential (email/password sign-in included), note moderation, subscription billing, help and FAQ articles (§13; MB.175).
 
 Story numbers 35–46 are **not reused** — v1 is 52 stories, numbered 1–34 and 47–64.
 
@@ -133,18 +133,7 @@ The one v1 concession to v2: the ingredient detail page (M8.19) is built so a no
 
 ## Skills
 
-Skills live in `.claude/skills/<name>/SKILL.md` and are invoked as `/<name>`; claude-docs/agent-skills.md holds their shape.
-
-| Skill              | Trigger                                                                                  |
-| ------------------ | ---------------------------------------------------------------------------------------- |
-| `start-task`       | "start M0.31", `/start-task` — finds the issue, then `create-feature` or `create-hotfix` |
-| `create-feature`   | "start a feature branch" — `feature/<slug>` off `origin/staging`, task In Progress       |
-| `create-hotfix`    | "start a hotfix" — `hotfix/<slug>` off `origin/main`, task In Progress                   |
-| `create-pr`        | "open a PR" — commits after asking, pushes, opens against the Gitflow target, In Review  |
-| `create-release`   | "cut a release" — `release/<version>` off `staging`, tag `v<version>`, PR into `main`    |
-| `create-main-sync` | "sync main into staging" — `main-sync/<timestamp>` off `main`, PR into `staging`         |
-| `prune-branches`   | "clean up my branches" — deletes merged and gone local branches, asks about the rest     |
-| `project-progress` | "project progress", "how many hours are left" — tallies from local data, no `gh`         |
+Skills live in `.claude/skills/<name>/SKILL.md` and are invoked as `/<name>`. Each one's trigger is its own description, which every session lists; claude-docs/agent-skills.md tables them all with what each does.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

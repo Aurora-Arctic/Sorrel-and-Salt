@@ -29,7 +29,7 @@ The endpoint sets `cors: false` and sends no `Access-Control-*` headers, because
 
 ## The schema
 
-Code-first Pothos with no ORM plugin and fields non-null by default: the `DateTime` scalar, `AuditInfo`, every field from `me` to the workspace ingredient mutations, the `signedIn`, `admin` and `self` scopes as the second check, and the committed `schema.graphql` snapshot. [`graphql/schema.md`](graphql/schema.md)
+Code-first Pothos with no ORM plugin and fields non-null by default: the `DateTime` scalar, `AuditInfo`, every field from `me` to the workspace and compendium ingredient mutations, the `signedIn`, `admin` and `self` scopes as the second check, and the committed `schema.graphql` snapshot. [`graphql/schema.md`](graphql/schema.md)
 
 ### `me`, `User` and the first module types
 
@@ -62,6 +62,26 @@ In [`graphql/schema.md`](graphql/schema.md#compendium-ingredient-and-ingredientf
 ### The workspace ingredient mutations
 
 In [`graphql/schema.md`](graphql/schema.md#the-workspace-ingredient-mutations).
+
+### The compendium mutations
+
+In [`graphql/schema.md`](graphql/schema.md#the-compendium-mutations).
+
+### References: `Reference`, `createReference`, `updateReference` and `referenceSuggestions`
+
+In [`graphql/schema.md`](graphql/schema.md#references-reference-createreference-updatereference-and-referencesuggestions).
+
+### Categories: `categories`, `createCategory`, `updateCategory` and `deleteCategory`
+
+In [`graphql/schema.md`](graphql/schema.md#categories-categories-createcategory-updatecategory-and-deletecategory).
+
+### Forms: `ingredientFormGroups` and the three form writes
+
+In [`graphql/schema.md`](graphql/schema.md#forms-ingredientformgroups-and-the-three-form-writes).
+
+### Groups: the category-group and form-group writes
+
+In [`graphql/schema.md`](graphql/schema.md#groups-the-category-group-and-form-group-writes).
 
 ### Auth scopes: the second check
 

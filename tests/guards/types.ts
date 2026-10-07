@@ -6,6 +6,8 @@ export interface Step {
   if?: string;
   run?: string;
   env?: Record<string, string>;
+  /** An action's inputs. */
+  with?: Record<string, string | boolean>;
 }
 
 /** A `concurrency:` block, at the workflow's level or a job's. */
@@ -23,6 +25,9 @@ export interface Job {
   steps?: Step[];
   /** A reusable-workflow call's inputs. */
   with?: Record<string, string | boolean>;
+  env?: Record<string, string>;
+  /** checks.yml's legs, one `include` entry each. */
+  strategy?: { matrix?: { include?: Record<string, string>[] } };
 }
 
 export interface Workflow {
@@ -91,4 +96,10 @@ export interface CopyInstruction {
 export interface ImportEdge {
   from: string;
   to: string;
+}
+
+/** The little of a Vitest project's config the connection-budget guard reads. */
+export interface Project {
+  test?: { name?: unknown };
+  plugins?: unknown;
 }

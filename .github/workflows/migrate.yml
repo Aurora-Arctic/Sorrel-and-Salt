@@ -251,6 +251,7 @@ jobs:
           npm run db:seed:forms 2>&1 | tee -a seed.log
           npm run db:seed:astrology 2>&1 | tee -a seed.log
           npm run db:seed:deities 2>&1 | tee -a seed.log
+          npm run db:seed:sources 2>&1 | tee -a seed.log
 
       - name: Write seed job summary
         if: always() && steps.guard.outputs.enabled == 'true' && inputs.seed-reference
@@ -259,4 +260,4 @@ jobs:
           check-name: Seed reference data (${{ inputs.environment }})
           outcome: ${{ steps.seed.outcome }}
           log-file: seed.log
-          summary: ${{ steps.seed.outcome == 'success' && 'Category, form, planet and zodiac vocabularies seeded' || 'Seed failed' }}
+          summary: ${{ steps.seed.outcome == 'success' && 'Category, form, planet, zodiac and deity vocabularies and their sources seeded' || 'Seed failed' }}

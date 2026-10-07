@@ -17,8 +17,8 @@ alone. The slug follows the label, the form and the formal name, and the one
 an update leaves is retired and redirects for 180 days
 (["Ingredient slugs"](ingredient-slugs.md)).
 The row mapping and the folk-name diff live in one internal file,
-`services/ingredient-rows.ts`, which both services import. Categories are not
-written here, since `CompendiumIngredientInput` carries none.
+`services/ingredient-rows.ts`, which both services import. The categories
+are `categoryIds`, written in the same transaction as a coven's are (MB.125).
 
 **`nomenclature` is required.** `CompendiumIngredientInput` gives it no
 default, because every compendium entry declares a naming system, `none` and
@@ -26,6 +26,32 @@ default, because every compendium entry declares a naming system, `none` and
 null, is a `ValidationError` on `nomenclature` from the parse, before
 `withAudit` opens; the column's `NOT NULL` would have answered with a driver
 error instead.
+
+**The form, planets, signs and deities are the curated rows'** (MB.162). A
+coven's write keeps what was typed; these two do not. After the parse,
+`inCuratedValues` checks the form and the deities by pick and the planets and
+signs by spelling (MB.167, which moved the form and deities onto the pick).
+The form and every deity must be a pick of a curated row, held or not,
+through `resolvePicks`, which `vocabulary`'s `curatedNames` answers by id: a
+curated value typed rather than picked is refused as an uncurated one is, and
+a held deity pick is refused once its deity is retired, where a coven keeps
+it. The planets and signs read the live curated rows each value folds to,
+through `vocabulary`'s `curatedSpellings`. Every value refused is one issue of
+one `ValidationError`, beside its field — `['form']` or `['formId']`, or
+`['planets', i]`, `['zodiacSigns', i]` or `['deities', i]` at the entry sent
+— naming the list to pick from or add it to. A value that passes is written in
+the row's spelling, so `moon ` is stored `Moon`. A form counts only under a live
+group and a deity only under a live tradition, as the autofill reads them
+([`validation.md`](../validation.md), "The two ingredient variants"). The
+rows are read before `withAudit` opens, on the bare client, so an admin
+deleting a row at the same instant can see one entry written with it, the
+window MB.148 would let a lock close
+([`design-decisions/mb.162-compendium-holds-curated-values.md`](../design-decisions/mb.162-compendium-holds-curated-values.md)).
+The vocabulary writes keep the rule after the write: deleting a row a live
+entry holds — picks, for a form or a deity — is refused, and a rename carries onto the entries (M5.6a, MB.95,
+MB.132). Deleting a form group is not refused for the compendium: its forms
+move to another live group first, so they stay curated and no entry's pick
+is rewritten (M5.6b).
 
 **The reach is the compendium's live rows.** A coven's ingredient, a
 soft-deleted entry, an id that names nothing and one that is not a uuid are
@@ -82,4 +108,6 @@ surfacing the raw error.
 
 Firing `revalidateTag` after each write is M8.7's, once M8.6 has put the
 compendium behind the cache (CLAUDE.md rule 6). The GraphQL mutations over
-these services are M5.5's.
+these services are M5.5's: `createCompendiumIngredient`,
+`updateCompendiumIngredient` and `deleteCompendiumIngredient`
+([`graphql/schema.md`](../graphql/schema.md), "The compendium mutations").

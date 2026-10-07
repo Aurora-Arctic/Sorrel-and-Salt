@@ -182,6 +182,31 @@ describe('app.current_user_id (M1.19)', () => {
     expect(value ?? null).toBeNull();
   });
 
+  it('publishes the impersonating admin as app.impersonated_by, stamping the user acted as (MB.53)', async () => {
+    const acting = { userId: session.userId, impersonatedBy: impostor.userId };
+
+    const [row] = await withAudit(acting, (write) => write.insert(herbs, { name: 'Mugwort' }));
+
+    expect(row.createdBy).toBe(session.userId);
+    expect(row.updatedBy).toBe(session.userId);
+    expect(row.actingUser).toBe(session.userId);
+    expect(row.impersonatingAdmin).toBe(impostor.userId);
+  });
+
+  it('publishes app.impersonated_by empty on every other write, so none inherits a pooled value (MB.53)', async () => {
+    await withAudit({ ...session, impersonatedBy: impostor.userId }, (write) =>
+      write.insert(herbs, { name: 'Tansy' }),
+    );
+
+    const rows = await Promise.all(
+      Array.from({ length: 12 }, (_, index) =>
+        withAudit(session, (write) => write.insert(herbs, { name: `Plain ${index}` })),
+      ),
+    );
+
+    for (const [row] of rows) expect(row.impersonatingAdmin).toBe('');
+  });
+
   it('never opens a transaction at all when there is no acting user', async () => {
     await expect(
       withAudit({ userId: '' }, (write) => write.insert(herbs, { name: 'Hemlock' })),
@@ -217,17 +242,38 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
   // redirect that has ended answers nothing, and `delete` is typed to refuse
   // such a table, so the one delete is named for it. Fifteen since M5.3, whose
   // coven delete names its ingredient by id, for `updateByIdInWorkspace`'s
-  // reason. A sixteenth is the next such decision.
-  it('offers exactly fifteen writer methods — a sixteenth is a decision, not a convenience', async () => {
+  // reason. Seventeen since MB.62, whose pause ledger is opened and ended by
+  // name: the generic insert would take a pause already ended and the generic
+  // update would reopen one, so both are refused the table and its two writes
+  // are named for it, the ended pair stamped from the session. Twenty since
+  // MB.69, whose admin invitation will authorise a grant: a generic insert
+  // would let any service mint one, so the table takes a named insert under
+  // the proof and a named accept and revoke, each matching a pending row.
+  // Twenty-one since M5.6a, whose form rename rewrites the compendium entries
+  // picking the form: the vocabulary module may not name `ingredients`, so
+  // the rewrite and the slugs it retires are named for it, below the boundary,
+  // matching only an entry that still picks the form. Twenty-two since MB.95,
+  // whose planet and sign renames rewrite the compendium entries listing them,
+  // for the same reason: the list is rewritten below the boundary, matching
+  // only an entry that still holds the old spelling. A twenty-third is the
+  // next such decision.
+  it('offers exactly twenty-two writer methods — a twenty-third is a decision, not a convenience', async () => {
     const methods = await withAudit(session, async (write) => Object.keys(write).sort());
 
     expect(methods).toEqual(
       [
+        'acceptAdminInvitation',
+        'carryAstrologyRename',
+        'carryFormRename',
         'delete',
         'deleteLapsedSlugRetirements',
         'insert',
+        'insertAdminInvitation',
         'insertInCompendium',
         'insertInWorkspace',
+        'pauseAdminRoleChanges',
+        'resumeAdminRoleChanges',
+        'revokeAdminInvitation',
         'softDelete',
         'softDeleteByIdInCompendium',
         'softDeleteByIdInWorkspace',
@@ -258,7 +304,7 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
     await withAudit(session, (write) => write.insert(pairs, { herbId, charmId: otherCharmId }));
 
     const [removed] = await withAudit(impostor, (write) =>
-      write.delete(pairs, isPair(herbId, charmId)),
+      write.delete(pairs, { herbId, charmId }),
     );
 
     expect(removed).toMatchObject({ herbId, charmId });
@@ -266,9 +312,40 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
     expect(rows.map((row) => row.charm_id)).toEqual([otherCharmId]);
   });
 
+  // MB.125: a service names the rows by value, since it may not build an `SQL`
+  // predicate (MB.33).
+  it('deletes every pair whose column is in a list, and nothing for an empty one', async () => {
+    const thirdCharmId = '55555555-5555-5555-5555-555555555555';
+    for (const charm of [charmId, otherCharmId, thirdCharmId]) {
+      await withAudit(session, (write) => write.insert(pairs, { herbId, charmId: charm }));
+    }
+
+    const none = await withAudit(session, (write) => write.delete(pairs, { herbId, charmId: [] }));
+    const removed = await withAudit(session, (write) =>
+      write.delete(pairs, { herbId, charmId: [charmId, thirdCharmId] }),
+    );
+
+    expect(none).toEqual([]);
+    expect(removed).toHaveLength(2);
+    const rows = await sql`select charm_id from repository_probe_pairs`;
+    expect(rows.map((row) => row.charm_id)).toEqual([otherCharmId]);
+  });
+
+  it('refuses a match naming no column, rather than emptying the table', async () => {
+    await withAudit(session, (write) => write.insert(pairs, { herbId, charmId }));
+
+    await expect(withAudit(session, (write) => write.delete(pairs, {}))).rejects.toThrow(
+      'needs a column to match on',
+    );
+    await expect(
+      withAudit(session, (write) => write.delete(pairs, { herbId: undefined })),
+    ).rejects.toThrow('cannot match on "herbId"');
+    await expect(findMany(pairs)).resolves.toHaveLength(1);
+  });
+
   it('lets the same pair be re-added afterwards, with no partial index to make it possible', async () => {
     await withAudit(session, (write) => write.insert(pairs, { herbId, charmId }));
-    await withAudit(session, (write) => write.delete(pairs, isPair(herbId, charmId)));
+    await withAudit(session, (write) => write.delete(pairs, { herbId, charmId }));
 
     const [readded] = await withAudit(session, (write) => write.insert(pairs, { herbId, charmId }));
 
@@ -281,7 +358,7 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
 
     await expect(
       withAudit(session, async (write) => {
-        await write.delete(pairs, isPair(herbId, charmId));
+        await write.delete(pairs, { herbId, charmId });
         throw new Error('spell fizzled');
       }),
     ).rejects.toThrow('spell fizzled');
@@ -317,7 +394,7 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
     const hardDeleteASoftDeletableTable = (write: AuditWriter) =>
       // @ts-expect-error — `herbs` carries deletedAt, so it is soft-deleted or
       // not deleted at all; write.delete cannot be pointed at it.
-      write.delete(herbs, eq(herbs.id, herbId));
+      write.delete(herbs, { id: herbId });
 
     const softDeleteATableWithNothingToStamp = (write: AuditWriter) =>
       // @ts-expect-error — `pairs` has no deleted_at to stamp, so softDelete
