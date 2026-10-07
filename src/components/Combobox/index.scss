@@ -358,6 +358,17 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
     content: none;
   }
 
+  // In its group's colours (MB.126): the solid fill `chip()` draws selected,
+  // the pair read from the element where chipColors() sets it, since a wash
+  // of the colour cannot hold 4.5:1 (claude-docs/styling.md, "Chips, badges
+  // and the solid-fill rule"). Not the mixin itself, which draws a pill: the
+  // shape, padding and x stay the plain chip's, so a row mixes the two
+  // without a jump, and only the inks change.
+  &.is-coloured {
+    background-color: light-dark(var(--chip-light), var(--chip-dark));
+    color: $text-on-color;
+  }
+
   // The field's error edge, a shape as well as a colour, on the entry it names.
   &.is-invalid {
     box-shadow: inset 0 0 0 1px $secondary;
@@ -377,6 +388,9 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   &.is-dragging.is-invalid {
     z-index: 1;
     background-color: color-mix(in srgb, $accent 22%, $surface-card);
+    // The body ink again for a coloured chip, whose inverted ink is checked
+    // against its own fill and not the wash.
+    color: $text-primary;
     box-shadow:
       inset 0 0 0 2px $accent,
       $shadow-floating;
@@ -420,6 +434,17 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
     @include focus-ring;
   }
 
+  // On a coloured chip's fill, the muted ink is not checked, and nor is the
+  // body ink the ring is drawn in; the inverted ink is. `:where` keeps the
+  // hover's and focus's own inks above these.
+  :where(.is-coloured) & {
+    color: inherit;
+
+    &:focus-visible {
+      outline-color: $text-on-color;
+    }
+  }
+
   @include reduced-motion {
     transition: none;
   }
@@ -456,6 +481,12 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
     @include focus-ring;
   }
 
+  // The ring sits on a coloured chip's fill, where only the inverted ink is
+  // checked; `:where` keeps the held chip's rule above it.
+  :where(.is-coloured) &:focus-visible {
+    outline-color: $text-on-color;
+  }
+
   // Held, the chip's accent edge marks it, so the ring around the text
   // inside it would only mark it twice.
   .is-dragging & {
@@ -475,6 +506,12 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   height: 1rem;
   color: $text-muted;
 
+  // The chip's own inverted ink on a coloured fill; `:where` keeps the held
+  // chip's ink, on the accent's wash, above it.
+  :where(.is-coloured) & {
+    color: inherit;
+  }
+
   .is-dragging & {
     color: $text-primary;
   }
@@ -490,18 +527,20 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 }
 
 // A cut-off entry's whole text, in InfoTip's bubble and its fade, above the
-// chip from its left edge. A cut-off chip spans the control, so the tip's
-// 100% is the control too, and an unbroken text breaks anywhere to stay
-// inside it.
+// chip from its left edge, as wide as its words up to InfoTip's own measure,
+// past the chip and the control alike, the owner's call during MB.126: only
+// being cut off is wrong. The entry shifts it left as it opens by however far
+// it would run off the screen. An unbroken text breaks anywhere to stay
+// inside the measure.
 .combobox__entry-tip {
   position: absolute;
   bottom: 100%;
-  left: 0;
+  left: var(--entry-tip-shift, 0);
   z-index: 1;
-  // Border-box, so the padding sits inside the 100% rather than past it.
+  // Border-box, so the padding sits inside the measure rather than past it.
   box-sizing: border-box;
   width: max-content;
-  max-width: 100%;
+  max-width: min(18rem, calc(100vw - #{space(6)}));
   margin-bottom: space(1);
   overflow-wrap: anywhere;
 

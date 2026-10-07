@@ -1,7 +1,8 @@
 'use client';
 
 import { CSS } from '@dnd-kit/utilities';
-import { type ReactElement, useId, useRef } from 'react';
+import { type ReactElement, useId, useLayoutEffect, useRef } from 'react';
+import { chipColors } from '../../lib/chip-colors';
 import { GripIcon } from './icons';
 import { useTip } from './tip';
 import type { ComboboxEntryProps, EntryHandleProps } from './types';
@@ -49,42 +50,75 @@ function EntryHandle({
   );
 }
 
+/** How close to the screen's edge a tooltip may come: the page's gutter. */
+const TIP_SCREEN_MARGIN_PX = 16;
+
 export function ComboboxEntry({
   value,
   errorId,
   detail,
+  qualifier,
+  colors,
   onRemove,
   sortable,
 }: ComboboxEntryProps): ReactElement {
   const text = useRef<HTMLSpanElement | null>(null);
   const detailId = useId();
+  const qualifierId = useId();
   const { open, show, hide, hideSoon } = useTip(() => {
     const element = text.current;
-    return Boolean(detail) || (element !== null && element.scrollWidth > element.clientWidth);
+    return (
+      Boolean(detail) ||
+      Boolean(qualifier) ||
+      (element !== null && element.scrollWidth > element.clientWidth)
+    );
   });
+  // The tooltip runs as wide as its words, past the chip and the control, the
+  // owner's call: only being cut off is wrong. Shifted left as it opens by
+  // however far it would run off the screen, as far as its own left edge
+  // allows, in a layout effect so the move lands in the commit that shows it.
+  const tip = useRef<HTMLSpanElement | null>(null);
+  useLayoutEffect(() => {
+    const bubble = tip.current;
+    if (!open || !bubble) return;
+    bubble.style.setProperty('--entry-tip-shift', '0px');
+    const { left, right } = bubble.getBoundingClientRect();
+    const over = right - (document.documentElement.clientWidth - TIP_SCREEN_MARGIN_PX);
+    const shift = Math.min(Math.max(over, 0), Math.max(left - TIP_SCREEN_MARGIN_PX, 0));
+    bubble.style.setProperty('--entry-tip-shift', `${-shift}px`);
+  }, [open]);
 
   const textSpan = (
     <span ref={text} className="combobox__entry-text">
       {value}
     </span>
   );
-  // What the x reads after its name, and the handle before how it moves.
-  const describedBy = [errorId, detail && detailId].filter(Boolean).join(' ') || undefined;
+  // What the x reads after its name, and the handle before how it moves: the
+  // error, the qualifier, then the detail.
+  const describedBy =
+    [errorId, qualifier && qualifierId, detail && detailId].filter(Boolean).join(' ') || undefined;
 
   return (
     <li
       ref={sortable?.setNodeRef}
-      className={['combobox__entry', errorId && 'is-invalid', sortable?.isDragging && 'is-dragging']
+      className={[
+        'combobox__entry',
+        colors && 'is-coloured',
+        errorId && 'is-invalid',
+        sortable?.isDragging && 'is-dragging',
+      ]
         .filter(Boolean)
         .join(' ')}
-      // Where a move has carried the chip so far, translated only: a chip
-      // keeps its own size wherever it goes.
-      style={
-        sortable && {
+      // Its group's colour pair, read by the stylesheet (MB.126), and where a
+      // move has carried the chip so far, translated only: a chip keeps its
+      // own size wherever it goes.
+      style={{
+        ...(colors && chipColors(colors)),
+        ...(sortable && {
           transform: CSS.Translate.toString(sortable.transform),
           transition: sortable.transition,
-        }
-      }
+        }),
+      }}
     >
       {/* Hover on a wrapper holding the tooltip as well as the text, so the
           pointer can move onto the tooltip without closing it. */}
@@ -106,11 +140,22 @@ export function ComboboxEntry({
         {/* In the page while closed, faded out and aria-hidden, so it fades
             both ways as InfoTip's does. */}
         <span
+          ref={tip}
           role="tooltip"
           className={open ? 'combobox__entry-tip is-open' : 'combobox__entry-tip'}
           aria-hidden={!open}
         >
           {value}
+          {/* After the text on its line, in brackets, as a picked deity's
+              pill reads its tradition (MB.126): the brackets outside the
+              span, so the x's description reads the name alone. */}
+          {qualifier && (
+            <>
+              {' ('}
+              <span id={qualifierId}>{qualifier}</span>
+              {')'}
+            </>
+          )}
           {/* Referenced by the x below, so read although the tooltip is
               aria-hidden while closed. */}
           {detail && (

@@ -39,22 +39,45 @@ export { ComboboxSortableEntries } from './sortable';
 const isTyped = <O extends ComboboxOption>(item: Item<O>): item is TypedRow => 'typed' in item;
 const isCreate = <O extends ComboboxOption>(item: Item<O>): item is CreateRow => 'create' in item;
 
-/** A row's identity, for React and Downshift: its own key, or else what it reads. */
+/** A row's identity, for React and Downshift: its own key, or else its bucket and what it reads. */
 const keyOf = <O extends ComboboxOption>(item: Item<O>): string => {
   if (isTyped(item)) return 'typed';
   if (isCreate(item)) return 'create';
-  return item.key ?? `${item.curated}:${item.label ?? ''}:${item.value}`;
+  return item.key ?? `${item.curated}:${item.heading ?? ''}:${item.label ?? ''}:${item.value}`;
 };
+
+/**
+ * The buckets a source names itself, by each row's `heading` (MB.126): one
+ * per heading in the order the headings first appear, since the caller has
+ * sorted them, and the rows with none in a trailing unheaded bucket. Keyed
+ * by the heading's place rather than its text, which may hold a space.
+ */
+function bucketByHeading<O extends ComboboxOption>(options: O[]): Bucket<O>[] {
+  const headed = new Map<string, O[]>();
+  const unheaded: O[] = [];
+  for (const option of options) {
+    if (option.heading === undefined) unheaded.push(option);
+    else headed.set(option.heading, [...(headed.get(option.heading) ?? []), option]);
+  }
+  const buckets: Bucket<O>[] = [...headed].map(([heading, rows], at) => ({
+    heading,
+    key: `heading-${at}`,
+    rows,
+  }));
+  if (unheaded.length > 0) buckets.push({ heading: null, key: 'unheaded', rows: unheaded });
+  return buckets;
+}
 
 /**
  * The rows in the order the list shows them — what was typed first, the
  * owner's call, then curated, then in use — flat for Downshift, which numbers
  * them, and bucketed for the headings. A source with one bucket shows no
- * headings. A caller that can make something new has its create row first
- * instead of the typed row, blank box or not, since what it lists can only be
- * picked (MB.154). A caller refusing what was typed has no typed row
- * (MB.174). The headings say where a value comes from, the owner's call
- * (MB.131): a curated value is the compendium's, since its entries hold
+ * headings; one whose rows carry a `heading` names its own buckets
+ * (bucketByHeading). A caller that can make something new has its create row
+ * first instead of the typed row, blank box or not, since what it lists can
+ * only be picked (MB.154). A caller refusing what was typed has no typed row
+ * (MB.174). The curated headings say where a value comes from, the owner's
+ * call (MB.131): a curated value is the compendium's, since its entries hold
  * nothing else, and one only in use is this coven's own.
  */
 function arrange<O extends ComboboxOption>(
@@ -63,17 +86,24 @@ function arrange<O extends ComboboxOption>(
   create: string | undefined,
   offerTyped: boolean,
 ): { items: Item<O>[]; buckets: Bucket<O>[]; firstRow: TypedRow | CreateRow | null } {
+  const headed = options.some((option) => option.heading !== undefined);
   const bucketed = options.some((option) => option.curated !== undefined);
-  const buckets: Bucket<O>[] = bucketed
-    ? [
-        {
-          heading: 'From Compendium',
-          key: 'compendium',
-          rows: options.filter((option) => option.curated),
-        },
-        { heading: 'From Coven', key: 'coven', rows: options.filter((option) => !option.curated) },
-      ].filter((bucket) => bucket.rows.length > 0)
-    : [{ heading: null, key: 'all', rows: options }];
+  const buckets: Bucket<O>[] = headed
+    ? bucketByHeading(options)
+    : bucketed
+      ? [
+          {
+            heading: 'From Compendium',
+            key: 'compendium',
+            rows: options.filter((option) => option.curated),
+          },
+          {
+            heading: 'From Coven',
+            key: 'coven',
+            rows: options.filter((option) => !option.curated),
+          },
+        ].filter((bucket) => bucket.rows.length > 0)
+      : [{ heading: null, key: 'all', rows: options }];
   let firstRow: TypedRow | CreateRow | null = null;
   if (create !== undefined) firstRow = { value: create, create: true };
   else if (typed !== '' && offerTyped) firstRow = { value: typed, typed: true };
