@@ -1,0 +1,28 @@
+@use '../../scss/variables' as *;
+
+// Layout only, until its section's design review: the box, its entries and
+// its list are the Combobox's, an entry's colour its group's row (MB.36).
+
+// The legend, the entries and the box a step further apart than a single
+// field's label and control, as the form keeps its lists; and a label and
+// its info tip on one line, positioned so an open tip spans the field
+// beneath it rather than hanging off the icon. Doubled, to outweigh the
+// primitives' `body .fieldset`.
+.fieldset.category-picker {
+  gap: space(3);
+
+  .fieldset__legend {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: space(1);
+    margin-bottom: space(3);
+  }
+}
+
+// Why the box offers nothing: the read failed.
+.category-picker__status {
+  margin: 0;
+  color: $text-muted;
+  font-size: type-size('small');
+}
