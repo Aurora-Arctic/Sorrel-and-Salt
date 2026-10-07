@@ -4,7 +4,11 @@
 It exports `db`, a Drizzle client, built with `drizzle-orm/postgres-js` over
 the `postgres` package (pure JS, no native binary). `db` reads `DATABASE_URL`
 from the environment at module load and throws if it is unset — no default,
-no silent fallback.
+no silent fallback. The client is one per process per URL, held on
+`globalThis` so a module evaluated twice in one process — `vi.resetModules()`
+in a test, a hot reload under `next dev` — reuses the pool rather than
+opening another that nothing ends (MB.179;
+[`testing/db-harness.md`](testing/db-harness.md#connections-per-run-mb179)).
 
 - **One driver call site.** Nothing outside `connection.ts` calls `postgres(...)`.
   `src/db/repository/` (M1.16) is the only _application_ code that imports

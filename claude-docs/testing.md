@@ -21,6 +21,10 @@ Every Vitest file sits under `tests/` mirroring `src/`, a path glob assigns it t
 
 `tests/support/db/` is the one part of `tests/support/` allowed a runtime `drizzle-orm` import, and holds `useTestDatabase`'s per-file client and catalogue reads, `tableFacts` and the audit lists, and the `insertIngredient` and `insertSpell` setup inserters. [`testing/db-harness.md`](testing/db-harness.md)
 
+### Connections per run (MB.179)
+
+A full run holds at most 97 connections — twelve workers at most, each an app client and a test-file client capped at four by `tests/support/db/bounded-postgres.ts`, plus global setup's one — against the image's `max_connections=200`, so the limit holds with half left for a second run or the e2e servers; measured, a run peaks at 28 where it held 59 before, and `tests/guards/db-connection-budget.test.ts` fails a change to any of the three numbers that breaks the arithmetic. [`testing/db-harness.md`](testing/db-harness.md#connections-per-run-mb179)
+
 ## Acceptance — `make test-stories` (M1.28)
 
 `npm run test:stories` runs `tests/acceptance/` on its own `vitest.stories.config.mts`, outside coverage, and prints a checklist of the v1 stories read from DESIGN.md §10, each status folded from every suite whose `describe` names the story. [`testing/acceptance.md`](testing/acceptance.md)
