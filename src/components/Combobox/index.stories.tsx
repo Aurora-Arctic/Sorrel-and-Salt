@@ -186,6 +186,30 @@ export const Sortable: Story = () => {
 };
 
 /** A box with no source yet: it never opens, and Enter adds as Add does. */
+/**
+ * A list whose entries can only be picked, the references' (MB.154): its first
+ * row makes something new, "Add a reference", whatever is typed, in place of
+ * the typed row. Picking it says so beneath the box.
+ */
+export const CreateRow: Story = () => {
+  const [value, setValue] = useState('');
+  const [made, setMade] = useState(0);
+  return (
+    <>
+      <Combobox
+        id="source"
+        label="Reference"
+        value={value}
+        onChange={setValue}
+        onPick={setValue}
+        suggestions={{ options: NAMES, pending: false }}
+        create={{ label: 'Add a reference', onCreate: () => setMade((count) => count + 1) }}
+      />
+      {made > 0 && <output className="story-note">Add a reference picked {made}×.</output>}
+    </>
+  );
+};
+
 export const NoSource: Story = () => {
   const [value, setValue] = useState('');
   return (

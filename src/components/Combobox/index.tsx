@@ -11,7 +11,15 @@ import {
 } from 'react';
 import { ChevronIcon, ClearIcon } from './icons';
 import { useTip } from './tip';
-import type { Bucket, ComboboxOption, ComboboxProps, Item, Suggestions, TypedRow } from './types';
+import type {
+  Bucket,
+  ComboboxOption,
+  ComboboxProps,
+  CreateRow,
+  Item,
+  Suggestions,
+  TypedRow,
+} from './types';
 import './index.scss';
 
 export { ComboboxEntry } from './entry';
@@ -28,10 +36,12 @@ export { ComboboxSortableEntries } from './sortable';
 // was typed. See claude-docs/components/combobox.md.
 
 const isTyped = <O extends ComboboxOption>(item: Item<O>): item is TypedRow => 'typed' in item;
+const isCreate = <O extends ComboboxOption>(item: Item<O>): item is CreateRow => 'create' in item;
 
 /** A row's identity, for React and Downshift: its own key, or else what it reads. */
 const keyOf = <O extends ComboboxOption>(item: Item<O>): string => {
   if (isTyped(item)) return 'typed';
+  if (isCreate(item)) return 'create';
   return item.key ?? `${item.curated}:${item.label ?? ''}:${item.value}`;
 };
 
@@ -39,14 +49,17 @@ const keyOf = <O extends ComboboxOption>(item: Item<O>): string => {
  * The rows in the order the list shows them — what was typed first, the
  * owner's call, then curated, then in use — flat for Downshift, which numbers
  * them, and bucketed for the headings. A source with one bucket shows no
- * headings. The headings say where a value comes from, the owner's call
+ * headings. A caller that can make something new has its create row first
+ * instead of the typed row, blank box or not, since what it lists can only be
+ * picked (MB.154). The headings say where a value comes from, the owner's call
  * (MB.131): a curated value is the compendium's, since its entries hold
  * nothing else, and one only in use is this coven's own.
  */
 function arrange<O extends ComboboxOption>(
   options: O[],
   typed: string,
-): { items: Item<O>[]; buckets: Bucket<O>[]; typedRow: TypedRow | null } {
+  create: string | undefined,
+): { items: Item<O>[]; buckets: Bucket<O>[]; firstRow: TypedRow | CreateRow | null } {
   const bucketed = options.some((option) => option.curated !== undefined);
   const buckets: Bucket<O>[] = bucketed
     ? [
@@ -58,10 +71,12 @@ function arrange<O extends ComboboxOption>(
         { heading: 'From Coven', key: 'coven', rows: options.filter((option) => !option.curated) },
       ].filter((bucket) => bucket.rows.length > 0)
     : [{ heading: null, key: 'all', rows: options }];
-  const typedRow: TypedRow | null = typed === '' ? null : { value: typed, typed: true };
-  const items: Item<O>[] = typedRow ? [typedRow] : [];
+  let firstRow: TypedRow | CreateRow | null = null;
+  if (create !== undefined) firstRow = { value: create, create: true };
+  else if (typed !== '') firstRow = { value: typed, typed: true };
+  const items: Item<O>[] = firstRow ? [firstRow] : [];
   items.push(...buckets.flatMap((bucket) => bucket.rows));
-  return { items, buckets, typedRow };
+  return { items, buckets, firstRow };
 }
 
 /**
@@ -79,6 +94,10 @@ function keepText<O extends ComboboxOption>(
       return { ...changes, inputValue: state.inputValue, selectedItem: state.selectedItem };
     case useCombobox.stateChangeTypes.ItemClick:
     case useCombobox.stateChangeTypes.InputKeyDownEnter:
+    // Downshift remembers the last row picked, so with `selectedItem` held at
+    // null the next pick reads as the prop changing, and it would write
+    // the null item's text, '', into the box.
+    case useCombobox.stateChangeTypes.ControlledPropUpdatedSelectedItem:
       return { ...changes, inputValue: state.inputValue };
     default:
       return changes;
@@ -106,6 +125,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   suggestions,
   entries,
   clear,
+  create,
   qualifier,
   inputRef,
   name,
@@ -121,9 +141,10 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   // Whether the list would be open had it rows: it opens as they arrive.
   const [wantsOpen, setWantsOpen] = useState(false);
   const hasSource = suggestions !== undefined;
-  const { items, buckets, typedRow } = useMemo(
-    () => arrange(suggestions?.options ?? [], value.trim()),
-    [suggestions, value],
+  const createLabel = create?.label;
+  const { items, buckets, firstRow } = useMemo(
+    () => arrange(suggestions?.options ?? [], value.trim(), createLabel),
+    [suggestions, value, createLabel],
   );
   const isOpen = hasSource && wantsOpen && items.length > 0;
 
@@ -146,7 +167,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
       onIsOpenChange: ({ isOpen: open }) => setWantsOpen(open),
       onSelectedItemChange: ({ selectedItem }) => {
         if (!selectedItem) return;
-        if (isTyped(selectedItem)) onPick(selectedItem.value, null);
+        if (isCreate(selectedItem)) create?.onCreate();
+        else if (isTyped(selectedItem)) onPick(selectedItem.value, null);
         else onPick(selectedItem.value, selectedItem);
       },
     });
@@ -193,16 +215,17 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         key={keyOf(item)}
         className={[
           'combobox__option',
-          isTyped(item) && 'combobox__option--typed',
+          // The create row is no suggestion either, and reads as the typed row does.
+          (isTyped(item) || isCreate(item)) && 'combobox__option--typed',
           highlighted && 'is-highlighted',
         ]
           .filter(Boolean)
           .join(' ')}
         {...getItemProps({ item, index: at })}
       >
-        {isTyped(item) ? (
-          `Use what you typed: ${item.value}`
-        ) : (
+        {isCreate(item) && item.value}
+        {isTyped(item) && `Use what you typed: ${item.value}`}
+        {!isCreate(item) && !isTyped(item) && (
           <>
             <span className="combobox__label">{item.label ?? item.value}</span>
             {item.note && <div className="combobox__note">{item.note}</div>}
@@ -319,7 +342,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         className={isOpen ? 'combobox__list is-open' : 'combobox__list'}
         {...getMenuProps({ 'aria-label': `${label} suggestions` })}
       >
-        {isOpen && typedRow && row(typedRow)}
+        {isOpen && firstRow && row(firstRow)}
         {isOpen &&
           buckets.map((bucket) =>
             bucket.heading === null ? (

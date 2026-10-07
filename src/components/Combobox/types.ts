@@ -48,6 +48,12 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   entries?: ReactNode;
   /** A control that empties the list, shown while it holds entries. */
   clear?: { label: string; onClear: () => void };
+  /**
+   * A first row that makes something new rather than picking a suggestion,
+   * "Add a reference", there whatever is typed and in place of the typed row:
+   * for a list whose entries can only be picked (MB.154).
+   */
+  create?: { label: string; onCreate: () => void };
   /** What a pick leaves out of the text, drawn muted in brackets after it: a picked form's group. */
   qualifier?: ComboboxQualifier;
   inputRef?: Ref<HTMLInputElement>;
@@ -137,8 +143,14 @@ export interface TypedRow {
   typed: true;
 }
 
-/** A row Downshift numbers: a suggestion, or the typed row. */
-export type Item<O extends ComboboxOption> = O | TypedRow;
+/** The first row of a list whose caller can make something new: its label. */
+export interface CreateRow {
+  value: string;
+  create: true;
+}
+
+/** A row Downshift numbers: a suggestion, the typed row, or the create row. */
+export type Item<O extends ComboboxOption> = O | TypedRow | CreateRow;
 
 /** A bucket of rows under its heading, or the one unheaded list of a source with one bucket. */
 export interface Bucket<O extends ComboboxOption> {

@@ -36,6 +36,7 @@ movable, on dnd-kit.
 | `entries`          | What a list holds, drawn inside the control ahead of the text.                                                                                                                |
 | `qualifier`        | `{ text, detail? }`: what a pick leaves out of the text, a picked form's group, in brackets after the text, muted, its detail in a tooltip. See "A qualifier".                |
 | `clear`            | `{ label, onClear }`: a control that empties the list, shown while it holds entries, named "Clear Folk Names".                                                                |
+| `create`           | `{ label, onCreate }`: a first row that makes something new, "Add a reference", in place of the typed row, there with a blank box too. See "The create row".                  |
 | `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                               |
 | `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                            |
 
@@ -90,6 +91,35 @@ reader as well as by the eye, and so is who claims a value.
   clear and the chevron on the control's right, parted by a line. Backspace or Delete in an empty box takes the last entry through `onRemoveLast`. The chip's
   classes, `combobox__entry` and `combobox__entry-remove`, are drawn here so
   that any list reuses them; `IngredientForm`'s entry adds its tooltip.
+
+## The create row
+
+A list whose entries can only be picked, the references' (MB.154), has
+nothing to do with what was typed: a search is not a source. Its caller
+passes `create`, and the list's first row reads its label, "Add a
+reference", in the typed row's place and italic as that row is. It is there
+whatever the box holds, a blank box included, so ArrowDown or the chevron
+opens the list on it even before any suggestion has arrived. Picking it, by
+click or by Enter, calls `onCreate` and never `onPick`, and leaves the text
+as typed. The caller still passes an `onCommit`, a no-op for the
+references, so that Enter with nothing highlighted never reaches the form.
+
+**A second pick keeps the text** (a regression MB.154 found and fixed).
+Downshift remembers the last row picked, and with `selectedItem` held at
+`null` the next pick read as that prop changing, so Downshift wrote the null
+item's text, `''`, into the box. A list empties its box on a pick anyway, so
+nothing showed it until the create row, picked twice, emptied a search. The
+state reducer keeps the text on `ControlledPropUpdatedSelectedItem` as it
+does on a click or Enter.
+
+**A browser script must wait a frame between a click and a key.** Downshift
+reports a click's close through an effect, so a key pressed before React
+commits it is handled by the last render, which still has the list open:
+ArrowDown then moves the highlight rather than opening the list. Playwright's
+`locator.press` straight after a pick does this; a person moving from the
+mouse to the keys never does, and with half a second between them the list
+opens every time (traced during MB.154's browser pass). It is not a defect,
+and there is nothing to fix.
 
 ## The select-only box
 
@@ -364,8 +394,10 @@ review.
 and text, by pointer or keyboard; `NoSource`, a box that never opens; `Qualifier`, "Wax" picked under
 Substance, the group in the box and its description in a tooltip, dropped by
 an edit; `SelectOnly`, the select-only box; and
-`MultiSelect`, the multi-select box with two elements chosen. The suggestions
-are fixed, so typing filters nothing.
+`MultiSelect`, the multi-select box with two elements chosen; and
+`CreateRow`, "Add a reference" first whatever is typed, saying beneath the
+box each time it is picked. The suggestions are fixed, so typing filters
+nothing.
 
 ## Testing
 
@@ -373,6 +405,9 @@ are fixed, so typing filters nothing.
 suggestions and asserts: the name from a label or a label element; the rows,
 their buckets and the typed row; a row's accessible name carrying its label
 and note; picking by keyboard and by click, and the typed row as `null`;
+the text kept through a second pick; the create row first in the typed
+row's place, there with a blank box and with no suggestions, calling
+`onCreate` by click or keyboard and never `onPick`;
 the entry's ×, its tooltip on a cut-off text only, and its error; the
 qualifier drawn inside the control before the clear, read as the box's
 description after the field's own, its detail's tooltip on hover and on the

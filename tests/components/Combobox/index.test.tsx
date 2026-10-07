@@ -234,6 +234,21 @@ describe('Combobox', () => {
     expect(onPick).toHaveBeenCalledWith('Rhizomes', RHIZOMES);
   });
 
+  // Regression (MB.154): Downshift remembered the first pick, and the second
+  // read as the held-null `selectedItem` changing, writing '' into the box.
+  it('keeps the text through a second pick, as through the first', () => {
+    const onPick = vi.fn();
+    render(<Harness suggestions={TWO_BUCKETS} onPick={onPick} />);
+
+    type('rhi');
+    fireEvent.click(screen.getByRole('option', { name: /Rhizomes/ }));
+    key('ArrowDown');
+    fireEvent.click(screen.getByRole('option', { name: /Rhizomes/ }));
+
+    expect(onPick).toHaveBeenCalledTimes(2);
+    expect(box()).toHaveValue('rhi');
+  });
+
   it('picks what was typed from its own row, as no suggestion', () => {
     const onPick = vi.fn();
     render(<Harness suggestions={TWO_BUCKETS} onPick={onPick} />);
@@ -252,6 +267,55 @@ describe('Combobox', () => {
     expect(box()).toHaveAttribute('aria-expanded', 'true');
     expect(options()).toHaveLength(3);
     expect(screen.queryByRole('option', { name: /typed/ })).not.toBeInTheDocument();
+  });
+
+  describe('a create row', () => {
+    const create = (onCreate = vi.fn()) => ({ label: 'Add a reference', onCreate });
+
+    it('is the first row in place of the typed one, there with a blank box too', () => {
+      render(<Harness suggestions={ONE_BUCKET} create={create()} />);
+
+      key('ArrowDown');
+      expect(options()).toEqual([
+        'Add a reference',
+        'Hedge FixtureUsed by Testwort',
+        'Fixture Bane',
+      ]);
+
+      type('fix');
+      expect(options()[0]).toBe('Add a reference');
+      expect(screen.queryByRole('option', { name: /Use what you typed/ })).not.toBeInTheDocument();
+    });
+
+    it('opens on ArrowDown with no suggestions at all, the row being one', () => {
+      render(<Harness suggestions={{ options: [], pending: false }} create={create()} />);
+
+      key('ArrowDown');
+
+      expect(box()).toHaveAttribute('aria-expanded', 'true');
+      expect(options()).toEqual(['Add a reference']);
+    });
+
+    it('calls its own callback when picked, by click or by keyboard, and never onPick', () => {
+      const onCreate = vi.fn();
+      const onPick = vi.fn();
+      render(<Harness suggestions={ONE_BUCKET} create={create(onCreate)} onPick={onPick} />);
+
+      type('fix');
+      fireEvent.click(screen.getByRole('option', { name: 'Add a reference' }));
+      // The click closed the list; ArrowDown opens it on its first row.
+      key('ArrowDown');
+      expect(box()).toHaveAttribute(
+        'aria-activedescendant',
+        screen.getByRole('option', { name: 'Add a reference' }).id,
+      );
+      key('Enter');
+
+      expect(onCreate).toHaveBeenCalledTimes(2);
+      expect(onPick).not.toHaveBeenCalled();
+      // The text is the caller's: picking the row leaves it as typed.
+      expect(box()).toHaveValue('fix');
+    });
   });
 
   it('hands Enter with nothing highlighted to the caller, closing the list', () => {
