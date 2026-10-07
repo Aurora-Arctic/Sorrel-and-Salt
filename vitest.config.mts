@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module';
 import { defineConfig } from 'vitest/config';
-import { dbHarness } from './tests/support/db-project.mts';
+import { boundedPostgres, dbHarness, dbMaxWorkers } from './tests/support/db-project.mts';
 
 const require = createRequire(import.meta.url);
 const serverOnlyStub = require.resolve('next/dist/compiled/server-only/empty.js');
@@ -57,6 +57,9 @@ export default defineConfig({
     ],
   },
   test: {
+    // Every project at the db harness's capped count: the projects share one
+    // pool group, which Vitest requires to agree (tests/support/db-project.mts).
+    maxWorkers: dbMaxWorkers,
     // Quiet under Claude Code, which sets `CLAUDECODE=1` in its shell and
     // nothing else does: a session reads the per-file coverage table and the
     // per-file test lines, ~400 lines a run, and needs neither — a failure
@@ -125,6 +128,9 @@ export default defineConfig({
       },
       {
         extends: true,
+        // Every pool this project opens, the app's included, capped at one
+        // constant: tests/support/db/bounded-postgres.ts.
+        plugins: [boundedPostgres()],
         test: {
           name: 'db',
           include: ['tests/db/**/*.test.ts', 'tests/modules/**/*.test.ts'],

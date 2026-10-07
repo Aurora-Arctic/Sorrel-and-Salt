@@ -171,11 +171,13 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
     set inside the single setup process, so it pre-clones one database per
     possible worker instead. That number is `undefined` there unless the
     config pins it, so `tests/support/db-project.mts` pins `maxWorkers` to
-    Vitest's own default (`os.availableParallelism() - 1`, floored at 1) —
-    and it must keep mirroring that default: the projects share one pool
-    group, and Vitest throws when two projects in a group disagree on
-    `maxWorkers`, which is what makes "every slot has a clone" a guarantee
-    rather than a hope. It `provide`s that list as `workerDatabases`,
+    Vitest's own default (`os.availableParallelism() - 1`, floored at 1)
+    under `DB_WORKER_CAP`, twelve, which is what bounds the connections a
+    run can hold (MB.179; [`db-harness.md`](db-harness.md#connections-per-run-mb179)) —
+    and `vitest.config.mts` pins its root `maxWorkers` to the same number:
+    the projects share one pool group, and Vitest throws when two projects in
+    a group disagree on `maxWorkers`, which is what makes "every slot has a
+    clone" a guarantee rather than a hope. It `provide`s that list as `workerDatabases`,
     which `test-database-isolation.test.ts` asserts its own database is a
     member of (MB.14) — the point being that a worker's name is checked
     against what was actually created, not against a bound the test

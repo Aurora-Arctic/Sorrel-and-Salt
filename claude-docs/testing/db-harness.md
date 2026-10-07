@@ -88,3 +88,125 @@ run as a test.
   asserts the table's _own_ columns, constraints and behaviour. A new
   audited table added without `...auditColumns` fails this file, where
   before it would simply have had no test.
+
+### Connections per run (MB.179)
+
+A `db` run can fail tests that pass alone. During M5.5 the OAuth sign-in
+tests in `tests/db/email-change.test.ts`, `tests/db/email-verification.test.ts`
+and `tests/modules/identity/services/provisional-accounts.test.ts` failed
+together, the sign-in start answering 500 with `remaining connection slots are
+reserved for roles with the SUPERUSER attribute`, and passed one file at a
+time. Postgres had run out of its hundred connections under the sign-in's
+insert into `verifications`, and which test fails depends on the room left by
+whatever else holds connections at that moment — another session's run, a
+`next dev` idle on `sorrel`, an e2e server left on `sorrel_e2e_*`.
+
+**What a run held.** Measured on the twelve-core devcontainer (eleven
+workers) by polling `pg_stat_activity` every 250 ms through a full
+`npm run test:coverage` — the run started with `PGAPPNAME` set, which
+postgres.js sends as `application_name`, so its connections are told apart
+from every other session's — with another session's eleven idle connections
+on `sorrel` excluded: a peak of **59 connections of the run's own** (70 on the
+server), twelve seconds in; per worker, peaks of 22, 19, 12, 12, 11, 10, 7, 6,
+5, 3 and 3 on the eleven `sorrel_test_<n>` clones, one on the template, and
+eleven at once on `sorrel` at the start, when every worker's first clone
+opened its admin client together. The 22 is the shape of the problem: the
+app's client in `src/db/connection.ts` and the client the test file opened
+are each postgres.js's default pool of ten, and a file that fires its queries
+concurrently — a loader test, a seed test — fills both. The configured worst
+case was eleven workers × (10 + 10) = 220 slots of 100; a second run beside
+the first was enough to cross the line. The 22 had a second cause, found
+once the pools were capped and the number barely moved: twelve of the
+identity and OAuth tests — the three from M5.5 among them — call
+`vi.resetModules()` to rebuild Better Auth under another environment, and
+every reset re-evaluated `src/db/connection.ts`, which opened a client per
+evaluation and ended none, so a worker idled on several pools' worth of
+connections at once, each only seconds old.
+
+**The bound.** One client per process, and three configured numbers, each
+read by `tests/guards/db-connection-budget.test.ts`, which fails a change
+that raises any one without the others:
+
+- **One app client per process per URL**, kept on `globalThis` by
+  `src/db/connection.ts` rather than in the module's scope, so a
+  re-evaluated module reuses the pool the first evaluation opened. Keyed by
+  the URL, so a test that repoints `DATABASE_URL` still gets its own. The
+  same shape guards `next dev`, whose hot reload re-evaluates a server
+  module the same way — the dev server idling on `sorrel` through these
+  measurements grew from eleven connections to twenty-seven. The regression
+  test is `tests/db/connection-budget.test.ts`'s "survives a module reset
+  without a second pool": a burst through `withAudit`, a reset, a second
+  burst through the re-imported repository, and the clone still holds the
+  cap's worth of connections rather than two caps' worth.
+
+- **`TEST_POOL_MAX = 4`** in `tests/support/db/bounded-postgres.ts` — a cap on
+  every pool opened inside the `db` project and the acceptance config, the
+  app's client and each test file's own alike. `tests/support/db-project.mts`'s
+  `boundedPostgres()` plugin resolves `import postgres from 'postgres'` to
+  that file for every module the project transforms (the wrapper's own import
+  is the one left to the real package), and the wrapper passes
+  `max: min(asked, TEST_POOL_MAX)`. A cap rather than a default: a call site
+  may lower it (postgres.js's ordering guarantee is `max: 1`) and cannot raise
+  it. `tests/db/connection-budget.test.ts` proves it at the server — a burst
+  three times the cap wide, counted mid-flight in `pg_stat_activity`, opens
+  exactly the cap for the app's client through `withAudit`, for a client a file
+  opens, and for one asking for more; one asking for less keeps its own.
+- **`DB_WORKER_CAP = 12`** in `tests/support/db-project.mts` — the worker count
+  is still Vitest's default, `availableParallelism() - 1`, but no higher than
+  twelve, so the budget is arithmetic over a constant rather than over the
+  cores a developer happens to have. Twelve clears every machine the suite
+  runs on today (eleven workers here, seven on CI's eight vCPUs), so nothing
+  slows; `vitest.config.mts` pins its root `maxWorkers` to the same number,
+  since the projects share one pool group and Vitest refuses two projects in
+  a group that disagree.
+- **`max_connections=200`** in `Docker/Dockerfile.postgres`'s `CMD`, the one
+  place every consumer of the image reads: compose passes no `command:` and a
+  CI `services:` entry cannot. Not `ALTER SYSTEM` in the init script, which
+  bakes into `PGDATA` and so into the image's copy of it, which an existing
+  `postgres_data` volume keeps ignoring. The image's content hash changes with
+  the line, so CI rebuilds it on the PR; locally it is live after
+  `make docker-build` and a `make docker-up` to recreate the container. Until
+  then the live limit stays 100, which a single run's worst case still fits.
+
+The guard's arithmetic: `DB_WORKER_CAP × 2 pools × TEST_POOL_MAX + 1 =
+12 × 2 × 4 + 1 = 97 ≤ 200 / 2`. The two pools are the app's and the file's;
+the `+ 1` is the run's one client outside the workers, global setup's admin
+client, which ends before a worker starts. The per-file clone's admin client
+is not a third term: it opens in the setup file, after the previous file's
+`afterAll` ended its client and before `useTestDatabase`'s `beforeAll` opens
+the next, and the `WITH (FORCE)` clone it runs kills the previous file's app
+pool. A file that opens a second client of its own (`tests/db/seed/reset.test.ts`'s
+admin client on `sorrel`) runs it one statement at a time, so it holds one
+connection and the term for the file's own client still covers it; a file
+that fired bursts through two clients of its own at once would be the thing
+to change. The other half of the limit is the room the task asked for: a
+second run's whole budget, or the e2e servers — `E2E_SLOTS + 1` of
+`next start`, each on postgres.js's default pool of ten.
+
+**After the bound**, the same measurement: a peak of **28 connections of the
+run's own** (63 on the server, beside the `next dev` idling on `sorrel`
+and an e2e `next start` holding its ten), sixteen seconds in; per worker, 9
+on the clone running `tests/db/connection-budget.test.ts` itself — its
+watcher, the app's four and its own four — and 5 or fewer on every other,
+with the eleven admin clients on `sorrel` at the start unchanged. The three
+files from M5.5 passed together ten runs in a row beside that server, the
+loop peaking at six connections. The run is no slower: 103 s against 139 s
+before, on a machine shared with other sessions either time.
+
+**What was rejected.** Passing `max` at every call: sixty files open a client
+of their own, and the sixty-first forgets. The environment variable
+postgres.js reads for `max` (`PGMAX`): undocumented, and the string it hands
+to `Array()` makes any value a pool of one. `resolve.alias` with a
+`customResolver`: Vite deprecates it in favour of the `resolveId` plugin the
+harness uses. An env var read by `src/db/connection.ts` alone: bounds the
+app's pool and leaves the sixty. Fewer workers: a cap under the cores on hand
+slows the suite, and twelve slows none. Keeping `max_connections` at 100: the
+pools would have to be two, and two runs would no longer fit beside the e2e
+servers.
+
+**The one thing a pool of four changes.** A service that held a transaction
+open while reading through the pool outside it would deadlock once four such
+calls were in flight, where ten were needed before. None does: `withAudit`
+hands its callback the transaction's own writer, and a test that opens many
+transactions at once (`tests/db/repository/write.test.ts`'s twelve) queues on
+the four and completes.

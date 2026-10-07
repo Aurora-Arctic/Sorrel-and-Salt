@@ -117,7 +117,11 @@ no Neon connection and no host Node-version juggling.
     the `sorrel` role and database at image build time). Both `app` and
     `db-init` have `depends_on: { postgres: { condition: service_healthy } }`,
     so `make docker-up` blocks on `postgres Healthy` before either starts. Port
-    **5432** is published for the host-side Vitest `db` project.
+    **5432** is published for the host-side Vitest `db` project. The image's
+    `CMD` sets `max_connections=200` (MB.179), which a container started
+    from an older build does not have: `make docker-build` then
+    `make docker-up` recreates it on the new image
+    ([`testing/db-harness.md`](testing/db-harness.md#connections-per-run-mb179)).
     - **Every `POSTGRES_*` env var is ignored**: PGDATA is populated at image
       _build_ time, and `docker-entrypoint.sh` only reads those vars on first
       boot. The credentials the image really has (`sorrel`/`sorrel`) come from
