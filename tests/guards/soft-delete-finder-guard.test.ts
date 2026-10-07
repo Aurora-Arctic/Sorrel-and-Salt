@@ -28,6 +28,8 @@ const SELECT_CALL = /\.select(?:Distinct)?(?:Fields)?\s*\(|\bdb\.query\./g;
 /** The repository's exported surface, pinned. A finder is added here too. */
 const EXPORTED_FUNCTIONS = [
   'deleteProvisionalUsers',
+  'findCategoryCount',
+  'findCategoryPage',
   'findCommonNameSuggestions',
   'findCompendiumCount',
   'findCompendiumEntryByIdentity',
@@ -53,6 +55,7 @@ const EXPORTED_FUNCTIONS = [
   'findOne',
   'findOneById',
   'findOneByIdInWorkspace',
+  'findOneBySlug',
   'findOneIngredient',
   'findOneInWorkspace',
   'findOneSpell',

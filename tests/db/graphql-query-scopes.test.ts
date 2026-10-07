@@ -9,7 +9,7 @@ import { noSender } from '../support/email-verification';
 import type { ScopeProbe } from './types';
 
 // MB.80's line, drawn field by field: the compendium is the one public
-// surface, so its three queries answer a null session and every other query
+// surface, so its queries answer a null session and every other query
 // refuses one. Every `Query` field is classified here, and the first test
 // fails on one that is not, so a field added later has to say which side it
 // is on (claude-docs/graphql/schema.md, "Auth scopes").
@@ -46,6 +46,10 @@ const PROBES: Record<string, ScopeProbe> = {
     get variables() {
       return { id: compendiumId };
     },
+    outcome: 'answers',
+  },
+  categories: {
+    source: '{ categories(first: 1) { edges { node { id } } } }',
     outcome: 'answers',
   },
   ingredientFormValues: {

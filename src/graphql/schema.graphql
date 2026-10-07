@@ -22,6 +22,12 @@ type CategoryGroup {
   slug: String!
 }
 
+input CategoryInput {
+  description: String!
+  groupId: ID!
+  name: String!
+}
+
 type CommonNameSuggestion {
   claimants: [SuggestionClaimant!]!
   value: String!
@@ -204,11 +210,21 @@ A local date string (i.e., with no associated timezone) in `YYYY-MM-DD` format, 
 scalar LocalDate
 
 type Mutation {
+  createCategory(input: CategoryInput!): Category!
+
   """A null workspaceId writes the compendium's, under the admin proof."""
   createReference(input: ReferenceInput!, workspaceId: ID): Reference!
   createWorkspaceIngredient(input: IngredientInput!, workspaceId: ID!): Ingredient!
+
+  """
+  A soft delete, refused while a live compendium entry is filed under it; a coven keeps its links.
+  """
+  deleteCategory(id: ID!): ID!
   deleteIngredient(id: ID!, workspaceId: ID!): ID!
   setEmail(email: String!, next: String): User!
+
+  """Replaces the category; the slug follows the name."""
+  updateCategory(id: ID!, input: CategoryInput!): Category!
   updateIngredient(id: ID!, input: IngredientUpdateInput!, workspaceId: ID!): Ingredient!
 
   """Reaches every row citing it; nothing deletes a reference in v1."""
@@ -233,6 +249,8 @@ type PageInfo {
 }
 
 type Query {
+  """The live categories by name, each under a live group."""
+  categories(after: String, before: String, first: Int, last: Int): QueryCategoriesConnection!
   commonNameSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryCommonNameSuggestionsConnection!
   compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, query: String, withoutReferences: Boolean): QueryCompendiumConnection!
   deitySuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryDeitySuggestionsConnection!
@@ -247,6 +265,23 @@ type Query {
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryReferenceSuggestionsConnection!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String): QueryUsersConnection!
   zodiacSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryZodiacSuggestionsConnection!
+}
+
+type QueryCategoriesConnection {
+  """
+  How many of the list's rows come before this page's first edge: 0 on the first page, so the page is floor(countBefore / size) + 1. Null on an empty page.
+  """
+  countBefore: Int
+  edges: [QueryCategoriesConnectionEdge!]!
+  pageInfo: PageInfo!
+
+  """How many rows the list holds under its arguments."""
+  totalCount: Int!
+}
+
+type QueryCategoriesConnectionEdge {
+  cursor: String!
+  node: Category!
 }
 
 type QueryCommonNameSuggestionsConnection {

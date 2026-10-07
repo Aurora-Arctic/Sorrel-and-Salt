@@ -767,6 +767,7 @@ type Query {
   ): QueryCompendiumConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient! # NOT_FOUND on a miss; workspaceId opens a coven's own entry to its members
   ingredientFormValues(first: Int, after: String): QueryIngredientFormValuesConnection! # the admin-curated form vocabulary
+  categories(first: Int, after: String): QueryCategoriesConnection! # the live categories by name, each with its group (M5.6)
   # §5's fuzzy duplicate warning: compendium and this workspace, best match first
   possibleDuplicates(
     workspaceId: ID!
@@ -834,6 +835,9 @@ type Mutation {
   createAdminInvitation(email: String!, note: String): AdminInvitation! # mailed, never returned (MB.70)
   acceptAdminInvitation(token: String!): User! # a grant, through the admin role service
   revokeAdminInvitation(id: ID!): AdminInvitation!
+  createCategory(input: CategoryInput!): Category! # CategoryInput: name, description, groupId; the slug follows the name
+  updateCategory(id: ID!, input: CategoryInput!): Category!
+  deleteCategory(id: ID!): ID! # refused while a live compendium entry is filed under it; a coven keeps its links (M5.6)
 }
 
 type Ingredient {
@@ -1128,7 +1132,7 @@ The same shape covers spell `visibility`: the finders that reach a `private` one
 | `/coven/[slug]/grimoire/[id]`    | Spell recipe view — the read surface for a saved spell, and the only page carrying print styles                                                                                                                                                                                     |
 | `/coven/[slug]/members`          | Members and invitations (owner only)                                                                                                                                                                                                                                                |
 | `/admin/compendium`              | Admin CRUD on global ingredients                                                                                                                                                                                                                                                    |
-| `/admin/categories`              | Admin CRUD on global categories                                                                                                                                                                                                                                                     |
+| `/admin/categories`              | Admin CRUD on global categories, in a modal the address opens: `?new`, or `?edit=<slug>` (M5.6)                                                                                                                                                                                     |
 | `/admin/category-groups`         | Admin CRUD on the category groups, including each group's chip colour                                                                                                                                                                                                               |
 | `/admin/forms`                   | Admin CRUD on the ingredient form vocabulary                                                                                                                                                                                                                                        |
 | `/admin/form-groups`             | Admin CRUD on the ingredient form groups                                                                                                                                                                                                                                            |

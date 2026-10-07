@@ -107,3 +107,53 @@ something" needs no ratio in its error message. The two category tables carry
 no counterpart: §5 asks for non-empty only on the form vocabulary, so M4.2
 shipped NOT NULL alone and this is a difference in the specification, not a
 gap in M4.2.
+
+## Category writes (M5.6)
+
+`src/modules/vocabulary/services/categories.ts`. The reads are public
+reference data like every curated vocabulary (MB.80). The writes are the site
+admin's alone, each opening on `assertSiteAdmin` before it reads the input.
+
+- **`listCategories(page)`** pages the live categories under a live group by
+  `(name, id)`, through `findCategoryPage`, and **`countCategories(start)`**
+  counts them, and those before a page's first row, through
+  `findCategoryCount`, which shares the page's filter and key. **`listCategoryGroups(page)`**
+  pages the live groups by name, through `findPage`. **`getCategoryBySlug`**
+  reads one by its address through `findOneBySlug`, for the admin page's
+  `?edit=`, and throws `NotFound` for none.
+- **`createCategory` and `updateCategory` write the row whole**, from the
+  shared `CategoryInput`, and set the slug from the name with `slugify` (M4.3).
+  A rename moves the slug. It leaves `seedKey` alone, so the next reseed still
+  knows a renamed seeded row as its own and does not reinsert the original
+  beside it (MB.171).
+- **The group is checked live before the write.** The foreign key admits a
+  soft-deleted group, so the service reads the group first and refuses a
+  retired or unknown one as `VALIDATION` on `groupId`.
+- **A slug collision is `VALIDATION` on `name`**, read off
+  `categories_slug_unique` once the write has rolled back, and naming the
+  category holding the address. The slug has no field of its own (MB.43). A
+  deleted category's slug is free, by the partial index.
+- **`deleteCategory` soft-deletes, and is refused while a live compendium
+  entry is filed under the category.** The refusal is `Forbidden`, naming the
+  first three entries by name, each told apart from a namesake by its formal
+  name and form, then how many more: `"Protection" is filed on 5 compendium
+entries — Bay Laurel (Laurus nobilis, Leaf), … and 2 more. Take it off them
+first.` The entries are read through the compendium's own category filter,
+  `findCompendiumPage` and `findCompendiumCount`, so "filed under" means what
+  the compendium's list means by it. A deleted entry's link does not hold
+  the category.
+- **A coven's links never block the delete, and the delete removes no link.**
+  The links in `ingredient_categories` and `spell_categories` belong to the
+  covens, and an admin writes nothing of a coven's (M6.6). Every read already
+  drops a deleted category: `categoriesOf` reads the link, then the category
+  through `findManyByIds`, which filters it. A coven's ingredient therefore
+  stops showing the chip and keeps the link, which a v2 restore would bring
+  back. A spell's categories (M10) must read the same way.
+- **The in-use read happens before the transaction.** An entry filed under
+  the category in the instant between is left holding a deleted one, which
+  every read drops. That is the same race `updateCompendiumEntry` accepts for
+  the slug it reads first.
+
+The owner chose the delete rule over two others, and
+[`design-decisions/m5.6-admin-categories.md`](../design-decisions/m5.6-admin-categories.md)
+records them. Revalidating the `compendium` tag after each write is M8.7's.

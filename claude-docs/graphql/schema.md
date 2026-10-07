@@ -555,6 +555,40 @@ A source, kept once and linked from every row it supports (DESIGN.md §5,
 `tests/modules/ingredients/graphql/references.test.ts` runs the writes, the
 search, `Ingredient.references` and the to-do filter through Yoga.
 
+### Categories: `categories`, `createCategory`, `updateCategory` and `deleteCategory`
+
+The category vocabulary (M5.6), registered by `vocabulary` over
+`services/categories.ts` ([`db/categories.md`](../db/categories.md),
+"Category writes"). `Category` and `CategoryGroup` are DESIGN.md §7's
+sketch, as the chips read them (MB.36).
+
+- **`categories` is public** (MB.80): no scope, and no session reaches the
+  service. It pages the live categories under live groups by `(name, id)`,
+  each group through `categoryGroupsById`, one read for a whole page. The
+  admin page reads the same service on navigation (rule 1). Like the
+  compendium's, the connection carries `totalCount` and `countBefore`, from
+  `countCategories` over `findCategoryCount`, the page's own filter and key, for
+  "Page X of Y". MB.126's picker
+  and M8.11's filter read it from the browser: one page of the hard maximum
+  holds the 63 seeded categories.
+- **One input, `CategoryInput`, for both writes**: `name`, `description`
+  and `groupId`, all required. There is no slug, which follows the name
+  (M4.3). An update replaces the category and keeps a seeded row's
+  `seedKey` (MB.171).
+- **The writes carry `admin`**, the scope M5.7 puts on every admin
+  mutation, and `assertSiteAdmin` refuses again in the service, which is the
+  gate. A slug collision is `VALIDATION` on `name`, naming the category
+  holding the address (MB.43). A retired or unknown group is `VALIDATION` on
+  `groupId`, and an unknown, deleted or malformed id is `NOT_FOUND`.
+- **`deleteCategory` answers the deleted id**, as `deleteIngredient` does.
+  While a live compendium entry is filed under the category it is
+  `FORBIDDEN`, and the message names the entries and how many more, verbatim
+  to the admin. Both writes clear `categoriesByIngredient`, which an earlier
+  root field may have filled. Revalidating the `compendium` tag is M8.7's.
+
+`tests/modules/vocabulary/graphql/categories.test.ts` runs the list and the
+writes through Yoga.
+
 ### Auth scopes: the second check
 
 `@pothos/plugin-scope-auth` gives the schema three scopes, all read off the
@@ -570,8 +604,9 @@ A scope is the second check, never the first. The service's own check is the
 gate (CLAUDE.md rule 1), and a scope on a field is a cheap early refusal in
 front of it: `me` carries `signedIn`; `User.email`, `role` and
 `canCreateWorkspace` carry `{ self: user.id, admin: true }`, which holds if
-either does; M5.7 puts `admin` on every admin mutation. `ok` and the
-compendium's three queries carry no scope at all, and the sweep above names
+either does; M5.7 puts `admin` on every admin mutation, and M5.6's three
+category writes carry it from the first. `ok` and the
+compendium's queries, `categories` among them, carry no scope at all, and the sweep above names
 them so. The private fields'
 test hands `me` another user's row, standing in for a service that chose the
 wrong one, which is the bug the scope is behind. A
