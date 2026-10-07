@@ -18,7 +18,7 @@ import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
 import { categories, categoryGroups } from '../schema/categories';
 import { CategoryInput } from '../validation/category';
-import type { CategoryGroupRow, CategoryRow } from '../types';
+import type { CategoryFilter, CategoryGroupRow, CategoryRow } from '../types';
 
 // The category vocabulary: its reads, public reference data like every
 // curated vocabulary (MB.80), and its writes, the site admin's alone (M5.6).
@@ -30,19 +30,29 @@ import type { CategoryGroupRow, CategoryRow } from '../types';
 const ENTRIES_NAMED = 3;
 
 /**
- * One page of the live categories, by name, each under a live group: the
- * `categories` query, and the admin page's list.
+ * One page of the live categories under `filter`, by name, each under a live
+ * group: the `categories` query, and the admin page's list. A blank query is
+ * no query, and a group id that is not a uuid names no group, so lists nothing.
  */
-export function listCategories(page: PageRequest): Promise<PageEntry<CategoryRow>[]> {
-  return findCategoryPage(page);
+export async function listCategories(
+  filter: CategoryFilter,
+  page: PageRequest,
+): Promise<PageEntry<CategoryRow>[]> {
+  const read = readable(filter);
+  return read ? findCategoryPage(read, page) : [];
 }
 
 /**
- * How many categories `listCategories` pages, and how many come before
- * `start` — a page's first row, none on an empty page: "Page X of Y".
+ * How many categories `listCategories` pages under `filter`, and how many
+ * come before `start` — a page's first row, none on an empty page: "Page X
+ * of Y".
  */
-export function countCategories(start: Cursor | undefined): Promise<PageCount> {
-  return findCategoryCount(start);
+export async function countCategories(
+  filter: CategoryFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  const read = readable(filter);
+  return read ? findCategoryCount(read, start) : { totalCount: 0, countBefore: null };
 }
 
 /** One page of the live category groups, alphabetical by name (MB.35): the group a category is filed under is picked from these. */
@@ -131,6 +141,16 @@ export async function deleteCategory(session: Session, id: string): Promise<void
     const [row] = await write.softDeleteByIds(categories, [id]);
     if (!row) throw new NotFound('No such category');
   });
+}
+
+/**
+ * The filter as the repository reads it, its query trimmed and a blank one
+ * dropped; `undefined` for a group id that is not a uuid, which names nothing
+ * and would be a driver error at the comparison.
+ */
+function readable({ query, groupId }: CategoryFilter): CategoryFilter | undefined {
+  if (groupId !== undefined && !RowId.safeParse(groupId).success) return undefined;
+  return { query: query?.trim() || undefined, groupId };
 }
 
 /** The input parsed, its group checked live: a foreign key admits a retired one. */

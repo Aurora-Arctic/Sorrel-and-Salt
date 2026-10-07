@@ -14,6 +14,7 @@ import {
   listCategoryGroups,
   updateCategory,
 } from '@/modules/vocabulary';
+import type { CategoryFilter } from '@/modules/vocabulary';
 import type { CategoryInput } from '@/modules/vocabulary/validation/category';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
@@ -119,10 +120,10 @@ describe('listCategories', () => {
       where c.deleted_at is null
         and exists (select 1 from category_groups g where g.id = c.group_id and g.deleted_at is null)
       order by c.name, c.id`;
-    const first = await resolvePage({ first: 25 }, listCategories);
+    const first = await resolvePage({ first: 25 }, (page) => listCategories({}, page));
     const second = await resolvePage(
       { first: 25, after: first.pageInfo.endCursor ?? undefined },
-      listCategories,
+      (page) => listCategories({}, page),
     );
 
     const listed = [...first.edges, ...second.edges].map((edge) => edge.node.id);
@@ -142,23 +143,123 @@ describe('countCategories', () => {
         and exists (select 1 from category_groups g where g.id = c.group_id and g.deleted_at is null)`;
     expect(n).toBeGreaterThan(25);
 
-    const first = await resolvePage({ first: 25 }, listCategories);
+    const first = await resolvePage({ first: 25 }, (page) => listCategories({}, page));
     const second = await resolvePage(
       { first: 25, after: first.pageInfo.endCursor ?? undefined },
-      listCategories,
+      (page) => listCategories({}, page),
     );
-    const [{ cursor: startOfSecond }] = await listCategories({
-      after: decodeCursor(first.pageInfo.endCursor as string),
-      limit: 1,
-      inverted: false,
-    });
+    const [{ cursor: startOfSecond }] = await listCategories(
+      {},
+      {
+        after: decodeCursor(first.pageInfo.endCursor as string),
+        limit: 1,
+        inverted: false,
+      },
+    );
 
-    await expect(countCategories(undefined)).resolves.toEqual({ totalCount: n, countBefore: null });
-    await expect(countCategories(startOfSecond)).resolves.toEqual({
+    await expect(countCategories({}, undefined)).resolves.toEqual({
+      totalCount: n,
+      countBefore: null,
+    });
+    await expect(countCategories({}, startOfSecond)).resolves.toEqual({
       totalCount: n,
       countBefore: 25,
     });
     expect(second.edges).toHaveLength(Math.min(25, n - 25));
+  });
+});
+
+describe('listCategories and countCategories under a filter', () => {
+  /** Every live category under a live group the filter reaches, by name — the list's own order. */
+  const listedUnder = async (filter: CategoryFilter): Promise<string[]> => {
+    const page = await resolvePage({ first: 100 }, (request) => listCategories(filter, request));
+    return page.edges.map((edge) => edge.node.name);
+  };
+
+  it('narrows to the names holding the query, whatever their case', async () => {
+    await seed('Testcraft Bramble Ward');
+    await seed('Testcraft Thistle');
+
+    expect(await listedUnder({ query: 'BRAMBLE' })).toEqual(['Testcraft Bramble Ward']);
+    expect(await listedUnder({ query: 'craft thi' })).toEqual(['Testcraft Thistle']);
+  });
+
+  it('reads `%`, `_` and `\\` in the query literally', async () => {
+    await seed('Testcraft 100% Pure');
+    await seed('Testcraft 100_ Pure');
+    await seed('Testcraft 100x Pure');
+    await seed('Testcraft Back\\slash');
+    // Why each could have been listed: read as wildcards, both patterns take all three.
+    const [{ n }] = await sql<{ n: number }[]>`
+      select count(*)::int as n from categories
+      where name ilike '%100%%' and name ilike '%100_%' and name like 'Testcraft 100%'`;
+    expect(n).toBe(3);
+
+    expect(await listedUnder({ query: '100%' })).toEqual(['Testcraft 100% Pure']);
+    expect(await listedUnder({ query: '100_' })).toEqual(['Testcraft 100_ Pure']);
+    expect(await listedUnder({ query: 'k\\s' })).toEqual(['Testcraft Back\\slash']);
+  });
+
+  it('reads a blank query as no query', async () => {
+    const all = await listedUnder({});
+    expect(all.length).toBeGreaterThan(1);
+
+    expect(await listedUnder({ query: '   ' })).toEqual(all);
+    await expect(countCategories({ query: '   ' }, undefined)).resolves.toEqual(
+      await countCategories({}, undefined),
+    );
+  });
+
+  it("narrows to a group's categories, alone and with a query", async () => {
+    await seed('Testcraft Ours');
+    await seed('Testcraft Theirs', otherGroupId);
+    const inGroup = await sql<{ name: string }[]>`
+      select name from categories where group_id = ${groupId} and deleted_at is null
+      order by name, id`;
+    // Why the other could have been listed: it is live, and the query matches it.
+    expect(await listedUnder({ query: 'Testcraft' })).toEqual([
+      'Testcraft Ours',
+      'Testcraft Theirs',
+    ]);
+
+    expect(await listedUnder({ groupId })).toEqual(inGroup.map((row) => row.name));
+    expect(await listedUnder({ groupId, query: 'testcraft' })).toEqual(['Testcraft Ours']);
+    expect(await listedUnder({ groupId: otherGroupId, query: 'testcraft' })).toEqual([
+      'Testcraft Theirs',
+    ]);
+  });
+
+  it('answers an empty page and a zero count for a group id that is not a uuid', async () => {
+    await expect(
+      listCategories({ groupId: 'not-a-uuid' }, { limit: 25, inverted: false }),
+    ).resolves.toEqual([]);
+    await expect(countCategories({ groupId: 'not-a-uuid' }, undefined)).resolves.toEqual({
+      totalCount: 0,
+      countBefore: null,
+    });
+  });
+
+  it('counts what the filtered page lists, and the rows before a page under it', async () => {
+    await seed('Testcraft Ash Ward');
+    await seed('Testcraft Elder Ward');
+    await seed('Testcraft Rowan Ward');
+    await seed('Testcraft Rowan Ward Elsewhere', otherGroupId);
+    const filter = { query: 'ward', groupId };
+    const [, second] = await listCategories(filter, { limit: 25, inverted: false });
+
+    expect(await listedUnder(filter)).toEqual([
+      'Testcraft Ash Ward',
+      'Testcraft Elder Ward',
+      'Testcraft Rowan Ward',
+    ]);
+    await expect(countCategories(filter, undefined)).resolves.toEqual({
+      totalCount: 3,
+      countBefore: null,
+    });
+    await expect(countCategories(filter, second.cursor)).resolves.toEqual({
+      totalCount: 3,
+      countBefore: 1,
+    });
   });
 });
 

@@ -530,6 +530,14 @@ export interface UserFilter {
   awaitingApproval?: boolean;
 }
 
+/** What the admin category list is narrowed by (MB.178). Each part is optional, and absent means no filter. */
+export interface CategoryFilter {
+  /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
+  query?: string;
+  /** Only the categories filed under this group. */
+  groupId?: string;
+}
+
 /** One provider account linked to a user, without the tokens its row holds. */
 export interface LinkedProvider {
   userId: string;

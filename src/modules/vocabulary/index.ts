@@ -12,6 +12,7 @@ export * from './graphql/categories';
 export * from './graphql/ingredient-form-values';
 export * from './graphql/deities';
 export type {
+  CategoryFilter,
   CategoryGroupRow,
   CategoryRow,
   CuratedField,

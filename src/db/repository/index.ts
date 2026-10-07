@@ -63,6 +63,7 @@ export type {
   AdminInvitationRow,
   AdminInvitationValues,
   AuditWriter,
+  CategoryFilter,
   CitingLink,
   Claimant,
   CommonNameSuggestion,

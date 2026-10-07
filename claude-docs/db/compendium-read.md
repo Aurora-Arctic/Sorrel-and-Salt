@@ -96,11 +96,11 @@ as an id that names nothing.
 **`findIngredientFormValues(page)`** is one keyset page of the curated form
 vocabulary in `(name, id)` order: the live forms whose group is live too, which
 is what curated means to `findVocabularySuggestions` as well, with the group's
-`deleted_at` read by `existsIn`. **`findCategoryPage(page)`** (M5.6) reads the
+`deleted_at` read by `existsIn`. **`findCategoryPage(filter, page)`** (M5.6) reads the
 categories the same way, a live category under a live group, behind the
-public `categories` query, and **`findCategoryCount(start)`** counts them
-under the same filter and key, as `findCompendiumCount` counts the
-compendium.
+public `categories` query, narrowed by MB.178's `CategoryFilter`, and
+**`findCategoryCount(filter, start)`** counts them under the same filter and
+key, as `findCompendiumCount` counts the compendium.
 
 **The services parse ids first.** `listCompendium` and `countCompendium` run
 their filter through `CompendiumFilter` (Zod, in `validation/compendium-filter.ts`) and
