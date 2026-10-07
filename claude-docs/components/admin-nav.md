@@ -27,8 +27,9 @@ only too.
   `/admin/form-groups` are not in M5.4's list; where they are reached from is
   M5.6b's call.
 - **Plain anchors, not `next/link`.** `typedRoutes` refuses an `href` for a
-  route the build does not contain, and only `/admin/users` exists yet, so
-  until each of the others lands its link reaches a 404. Once they all do, the list switches
+  route the build does not contain, and of the six only `/admin/compendium`,
+  `/admin/categories` and `/admin/users` exist yet, so until each of the
+  others lands its link reaches a 404. Once they all do, the list switches
   to `<Link>`. A plain anchor is a full page load, so the layout's guard
   re-runs on every click; `<Link>` will not, which is why every page under
   `/admin` runs the guard itself.

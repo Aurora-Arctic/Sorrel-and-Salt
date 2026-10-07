@@ -1,0 +1,23 @@
+@use '../../scss/variables' as *;
+
+// Layout only, until the admin area's design review (MB.115): the category
+// list's filter row, so the admin lists read as one. The table, Edit and the
+// pager are primitives (`.data-table`, `.btn--small`, `.pager`).
+
+.compendium-list {
+  display: flex;
+  flex-direction: column;
+  gap: space(5);
+
+  > p {
+    margin: 0;
+  }
+}
+
+// The fields, the checkbox and the button, wrapping.
+.compendium-list__search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: space(3) space(5);
+}
