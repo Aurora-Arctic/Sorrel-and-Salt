@@ -39,9 +39,10 @@ may _change_.
 - **Two filters, both in SQL.** `?query=` matches a substring of the name or
   the email, case-insensitively, with `%` and `_` read literally. It is an
   `ilike` rather than a trigram match, because an admin looks a person up by
-  part of an address, which similarity scores poorly. `?awaiting=1` narrows to
-  `canCreateWorkspace = false`, the to-do list M5.8 acts on. The filter is a
-  GET form to the page itself, so a filtered page is an address.
+  part of an address, which similarity scores poorly. `?awaiting`, a flag read by
+  its presence (MB.53), narrows to `canCreateWorkspace = false`, the to-do
+  list M5.8 acts on. The filter is a GET form to the page itself, so a
+  filtered page is an address.
 - **Soft-deleted users never appear.** `findUserPage` drops them, like every
   finder (rule 4); the service has no predicate to add, and no way to build
   one.
@@ -54,11 +55,11 @@ may _change_.
 - **`User.providers` is an admin's alone**, the user's own row included. It
   resolves through the `providersByUser` loader. A user's own providers come
   from Better Auth, on `/account`, whose table it is.
-- **The bootstrap user is left out.** The seed's system user,
 - **Impersonate sits on each non-admin row** where impersonation is
   registered (MB.53). The control is the page's, but the guard is Better
   Auth's endpoint, which refuses a non-admin caller and an admin target
   ([`impersonation.md`](impersonation.md)).
+- **The bootstrap user is left out.** The seed's system user,
   `BOOTSTRAP_USER_ID`, named Seed System User, is a live `users` row in every
   database, production included, because it stamps the seeded rows. Nobody can
   sign in as it ([`db/seed-module.md`](../db/seed-module.md), "The seed module"), so nothing

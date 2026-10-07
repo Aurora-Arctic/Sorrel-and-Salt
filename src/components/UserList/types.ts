@@ -28,6 +28,12 @@ export interface UserListProps {
   canImpersonate?: boolean;
 }
 
+/** The filter the page shows, which the form starts from and compares against. */
+export interface UserListFilterProps {
+  query: string;
+  awaitingApproval: boolean;
+}
+
 export interface ImpersonateButtonProps {
   userId: string;
   /** The user's name, completing the button's accessible name. */

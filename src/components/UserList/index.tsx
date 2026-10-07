@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
+import UserListFilter from './filter';
 import ImpersonateButton from './impersonate-button';
 import type { UserListEntry, UserListProps } from './types';
 import './index.scss';
@@ -55,34 +56,7 @@ const UserList = ({
   canImpersonate = false,
 }: UserListProps): ReactElement => (
   <div className="user-list">
-    <search>
-      <form
-        className="user-list__search"
-        method="get"
-        action="/admin/users"
-        aria-label="Filter users"
-      >
-        <div className="field">
-          <label className="field__label" htmlFor="user-list-query">
-            Name or email
-          </label>
-          <input
-            id="user-list-query"
-            className="input"
-            type="search"
-            name="query"
-            defaultValue={query}
-          />
-        </div>
-        <label className="checkbox">
-          <input type="checkbox" name="awaiting" value="1" defaultChecked={awaitingApproval} />
-          Awaiting approval only
-        </label>
-        <button className="btn btn--solid" type="submit">
-          Filter
-        </button>
-      </form>
-    </search>
+    <UserListFilter query={query} awaitingApproval={awaitingApproval} />
 
     {users.length ? (
       <div className="user-list__frame">

@@ -90,11 +90,26 @@ describe('the /admin/users page', () => {
   });
 
   it('turns the search parameters into the filter', async () => {
-    await renderPage({ query: 'fixture', awaiting: '1' });
+    // `?awaiting` arrives as an empty string.
+    await renderPage({ query: 'fixture', awaiting: '' });
 
     expect(listUsers.mock.calls[0]?.[1]).toEqual({ query: 'fixture', awaitingApproval: true });
     expect(screen.getByLabelText('Name or email')).toHaveValue('fixture');
     expect(screen.getByLabelText('Awaiting approval only')).toBeChecked();
+  });
+
+  // A flag by presence: a native submit's `awaiting=` and an older link's
+  // `awaiting=1` read the same as the bare one.
+  it.each([[''], ['1'], ['on']])('reads awaiting=%s as awaiting', async (value) => {
+    await renderPage({ awaiting: value });
+
+    expect(listUsers.mock.calls[0]?.[1]).toEqual({ query: undefined, awaitingApproval: true });
+  });
+
+  it('reads no awaiting as the whole list', async () => {
+    await renderPage({ query: 'fixture' });
+
+    expect(listUsers.mock.calls[0]?.[1]).toEqual({ query: 'fixture', awaitingApproval: false });
   });
 
   it('reads on after a cursor, and back before one', async () => {
@@ -117,16 +132,13 @@ describe('the /admin/users page', () => {
   it('links the next page, keeping the filter, when there is one', async () => {
     listUsers.mockResolvedValue(Array.from({ length: 26 }, (_, index) => entry(index + 1)));
 
-    await renderPage({ query: 'listed', awaiting: '1' });
+    await renderPage({ query: 'listed', awaiting: '' });
 
     const next = screen.getByRole('link', { name: 'Next' });
-    const url = new URL(next.getAttribute('href') as string, 'http://localhost');
-    expect(url.pathname).toBe('/admin/users');
-    expect(Object.fromEntries(url.searchParams)).toEqual({
-      query: 'listed',
-      awaiting: '1',
-      after: encodeCursor(entry(25).cursor),
-    });
+    const href = next.getAttribute('href') as string;
+    expect(href).toBe(
+      `/admin/users?query=listed&awaiting&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,
+    );
     expect(screen.queryByRole('link', { name: 'Previous' })).not.toBeInTheDocument();
   });
 

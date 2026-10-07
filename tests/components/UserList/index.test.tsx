@@ -115,14 +115,18 @@ describe('UserList', () => {
     render(<UserList {...props({ query: 'fixturewort', awaitingApproval: true })} />);
 
     // The <search> landmark around it is the e2e spec's to find: jsdom's role
-    // table predates the element, and a browser's does not.
+    // table predates the element, and a browser's does not. The action and
+    // method are what a submit before hydration uses.
     const search = screen.getByRole('form', { name: 'Filter users' });
     expect(search).toHaveAttribute('action', '/admin/users');
     expect(search).toHaveAttribute('method', 'get');
     expect(within(search).getByLabelText('Name or email')).toHaveValue('fixturewort');
     expect(within(search).getByLabelText('Name or email')).toHaveAttribute('name', 'query');
     expect(within(search).getByLabelText('Awaiting approval only')).toBeChecked();
-    expect(within(search).getByRole('button', { name: 'Filter' })).toBeInTheDocument();
+    expect(within(search).getByLabelText('Awaiting approval only')).toHaveAttribute(
+      'name',
+      'awaiting',
+    );
   });
 
   it('links the pages either side, and only those that exist', () => {
@@ -199,5 +203,66 @@ describe('UserList impersonation', () => {
       'Bo Fixturewort could not be impersonated.',
     );
     expect(assignMock).not.toHaveBeenCalled();
+  });
+});
+
+// MB.53, on the owner's word: Filter is offered only when there is a new
+// filter to apply, and the address it opens carries a bare `awaiting`.
+describe('UserList filter', () => {
+  afterEach(() => {
+    assignMock.mockReset();
+    vi.unstubAllGlobals();
+  });
+
+  const filterButton = () => screen.getByRole('button', { name: 'Filter' });
+
+  it('is disabled while the form matches the filter shown', () => {
+    render(<UserList {...props({ query: 'bo', awaitingApproval: true })} />);
+
+    expect(filterButton()).toBeDisabled();
+  });
+
+  it('enables once the query differs, and disables again when it is put back', () => {
+    render(<UserList {...props({ query: 'bo' })} />);
+    const box = screen.getByLabelText('Name or email');
+
+    fireEvent.change(box, { target: { value: 'bob' } });
+    expect(filterButton()).toBeEnabled();
+
+    fireEvent.change(box, { target: { value: 'bo ' } });
+    expect(filterButton()).toBeDisabled();
+  });
+
+  it('enables once the checkbox differs, and disables again when it is put back', () => {
+    render(<UserList {...props()} />);
+    const awaiting = screen.getByLabelText('Awaiting approval only');
+
+    fireEvent.click(awaiting);
+    expect(filterButton()).toBeEnabled();
+
+    fireEvent.click(awaiting);
+    expect(filterButton()).toBeDisabled();
+  });
+
+  it('opens the filtered page from the first, with a bare awaiting', () => {
+    vi.stubGlobal('location', { ...window.location, assign: assignMock });
+    render(<UserList {...props({ previousHref: '/admin/users?before=x' })} />);
+
+    fireEvent.change(screen.getByLabelText('Name or email'), { target: { value: ' Fixture B ' } });
+    fireEvent.click(screen.getByLabelText('Awaiting approval only'));
+    fireEvent.click(filterButton());
+
+    expect(assignMock).toHaveBeenCalledWith('/admin/users?query=Fixture+B&awaiting');
+  });
+
+  it('opens the unfiltered list when the filter is cleared', () => {
+    vi.stubGlobal('location', { ...window.location, assign: assignMock });
+    render(<UserList {...props({ query: 'bo', awaitingApproval: true })} />);
+
+    fireEvent.change(screen.getByLabelText('Name or email'), { target: { value: '' } });
+    fireEvent.click(screen.getByLabelText('Awaiting approval only'));
+    fireEvent.click(filterButton());
+
+    expect(assignMock).toHaveBeenCalledWith('/admin/users');
   });
 });

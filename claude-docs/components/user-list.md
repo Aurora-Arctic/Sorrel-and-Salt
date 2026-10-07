@@ -26,11 +26,22 @@ read beside it.
 ## Contracts
 
 - **The filter is a GET form to `/admin/users`**, named "Filter users" inside
-  a `<search>` landmark: a
-  search box labelled "Name or email" (`query`), an "Awaiting approval only"
-  checkbox (`awaiting=1`), and a Filter button. A filtered page is an address,
-  and submitting it starts again from the first page, since the form carries no
-  cursor.
+  a `<search>` landmark: a search box labelled "Name or email" (`query`), an
+  "Awaiting approval only" checkbox (`awaiting`), and a Filter button. A
+  filtered page is an address, and filtering starts again from the first page,
+  since the form carries no cursor. It is `filter.tsx`, the second client file
+  here.
+- **Filter is offered only when there is a new filter to apply** (MB.53, on
+  the owner's word). It is `disabled` while the trimmed query and the checkbox
+  match the filter the page shows, enabled once either differs, and disabled
+  again when they are put back. `disabled` rather than `aria-disabled`, as
+  the primitives reserve it for a submit with nothing to send.
+- **`awaiting` is a bare flag**, read by its presence (MB.53, on the owner's
+  word). A submit builds the address itself with `href.ts`'s `userListHref`,
+  the pager's builder too, so it reads `?query=bo&awaiting` rather than
+  `awaiting=1`, and opens it as a full load, as the pager's anchors do. Before
+  hydration the form submits natively, with the checkbox as `awaiting=`, which
+  the page reads the same, as it does an older link's `awaiting=1`.
 - **Seven columns**: Name, Email, Role, Can create a coven, Signed up, Sign-in
   methods and Email verified. The last two are what an admin granting admin
   judges a person by (MB.59). Booleans read Yes or No. The signup is the UTC
@@ -74,10 +85,11 @@ Render-only, no test ids, no snapshots.
 
 ## Testing
 
-`tests/components/UserList/index.test.tsx` covers the column headers, each
+`tests/components/UserList/index.test.tsx` covers the Filter button's
+disabled and enabled states, the bare `awaiting` it opens, the column headers, each
 row's cells, the `<time>`, a provider outside the roster, the empty list, the
 form's action, method, names and kept values, the pager's links, and the
 Impersonate column: absent when off, on non-admin rows only, the call and
 the landing, and the refusal.
 `tests/app/admin/users/page.test.tsx` covers what the page hands it, the
-impersonation gate included.
+impersonation gate included, and `awaiting` read by its presence.
