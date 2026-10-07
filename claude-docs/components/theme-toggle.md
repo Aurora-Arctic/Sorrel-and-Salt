@@ -115,11 +115,19 @@ of the app shares, so it is not a token.
   scale carries the hover and lands the same in both themes without forking a
   second hover colour per theme. It rides the shared `theme-transition()`
   duration/easing, and `reduced-motion` zeroes it with the rest.
+- **`z-index: 2`, above the tucked impersonation banner** (MB.53), which is
+  `z-index: 1` where a pointer can hover and runs the window's width beneath
+  this corner. The toggle stays reachable while the banner is open, and
+  pointing at it never opens the banner
+  ([`impersonation-banner.md`](impersonation-banner.md)).
 - **`overflow: hidden` on the button.** The parked facet sits past the
   window's right edge. `clip-path` hides it but still lets it count as
   overflow, which Chrome's device emulator lets the page pan to. The button's
   own box already holds the visible quarter, so containing the facet there
   changes nothing on screen (noticed during MB.53).
+- **`top: $top-inset`**, so on a touch screen, where the banner sits in the
+  page's flow at the very top, the toggle starts below it
+  ([`styling.md`](../styling.md), "The top inset").
 
 ## Stories
 
