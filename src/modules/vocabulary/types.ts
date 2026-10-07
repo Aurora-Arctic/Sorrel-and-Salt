@@ -2,6 +2,8 @@ import type { categories, categoryGroups } from './schema/categories';
 import type { deities, deityTraditions } from './schema/deities';
 import type { ingredientFormGroups, ingredientForms } from './schema/ingredient-forms';
 
+export type { CategoryFilter } from '../../db/repository';
+
 export type CategoryRow = typeof categories.$inferSelect;
 
 export type CategoryGroupRow = typeof categoryGroups.$inferSelect;

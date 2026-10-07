@@ -1,5 +1,7 @@
 import type { users } from '@/modules/identity/schema/users';
 import type { ViteUserConfig } from 'vitest/config';
+import type { ReactNode } from 'react';
+import type { Mock } from 'vitest';
 
 export interface Profile {
   /** The provider's own stable account id. */
@@ -67,4 +69,10 @@ export interface Checklist {
 export interface StoryReporterOptions {
   /** Where to write the checklist as JSON; relative paths resolve against the root. */
   outputFile?: string;
+}
+
+/** What `Navigating` takes: the mocked router's `push`, and what it wraps. */
+export interface NavigatingProps {
+  push: Mock;
+  children: ReactNode;
 }

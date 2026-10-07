@@ -114,10 +114,17 @@ gap in M4.2.
 reference data like every curated vocabulary (MB.80). The writes are the site
 admin's alone, each opening on `assertSiteAdmin` before it reads the input.
 
-- **`listCategories(page)`** pages the live categories under a live group by
-  `(name, id)`, through `findCategoryPage`, and **`countCategories(start)`**
-  counts them, and those before a page's first row, through
-  `findCategoryCount`, which shares the page's filter and key. **`listCategoryGroups(page)`**
+- **`listCategories(filter, page)`** pages the live categories under a live
+  group by `(name, id)`, through `findCategoryPage`, and
+  **`countCategories(filter, start)`** counts them, and those before a page's
+  first row, through `findCategoryCount`, which shares the page's filter and
+  key. The `CategoryFilter` narrows both in SQL (MB.178): `query` to a name
+  holding it, case-insensitively, through the repository's `containsText`,
+  which reads `%`, `_` and `\` literally; `groupId` to that group's
+  categories. The service trims the query, so a blank one is no query, and
+  answers a group id that is not a uuid with an empty page and a zero count
+  without reading, since it names no group and would be a driver error at the
+  comparison. **`listCategoryGroups(page)`**
   pages the live groups by name, through `findPage`. **`getCategoryBySlug`**
   reads one by its address through `findOneBySlug`, for the admin page's
   `?edit=`, and throws `NotFound` for none.

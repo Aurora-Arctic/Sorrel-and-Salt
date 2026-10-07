@@ -2,11 +2,20 @@ import type { Story } from '@ladle/react';
 import CategoryList from '.';
 import { slugify } from '../../lib/slugify';
 import { categoriesHref } from './href';
+import type { CategoryGroupOption, CategoryListFilter } from './types';
 
-// Render-only; behaviour is asserted in tests/components/CategoryList.
+// Render-only; behaviour is asserted in tests/components/CategoryList. The
+// filter reaches `/admin/categories`, which the workshop does not serve.
 export default {
   title: 'Admin / Category List',
 };
+
+const GROUPS: readonly CategoryGroupOption[] = [
+  { slug: 'fixture-healing', name: 'Fixture Healing' },
+  { slug: 'fixture-protection', name: 'Fixture Protection' },
+];
+
+const NO_FILTER: CategoryListFilter = { query: '', group: '' };
 
 const entry = (name: string, groupName: string, description: string) => {
   const slug = slugify(name);
@@ -27,6 +36,8 @@ export const OnePageOfSeveral: Story = () => (
       entry('Testward', 'Fixture Protection', 'Another, guarding nothing in particular.'),
       entry('Fixture Mending', 'Fixture Healing', 'Invented too.'),
     ]}
+    filter={NO_FILTER}
+    groups={GROUPS}
     previousHref={categoriesHref({ before: 'cursor' })}
     nextHref={categoriesHref({ after: 'cursor' })}
   />
@@ -38,8 +49,32 @@ export const FirstPage: Story = () => (
     categories={[
       entry('Testcraft', 'Fixture Protection', 'An invented category, for the workshop.'),
     ]}
+    filter={NO_FILTER}
+    groups={GROUPS}
     nextHref={categoriesHref({ after: 'cursor' })}
   />
 );
 
-export const Empty: Story = () => <CategoryList categories={[]} />;
+// Narrowed by part of a name and by a group (MB.178): the form shows both.
+export const Filtered: Story = () => (
+  <CategoryList
+    categories={[
+      entry('Testcraft', 'Fixture Protection', 'An invented category, for the workshop.'),
+      entry('Testward', 'Fixture Protection', 'Another, guarding nothing in particular.'),
+    ]}
+    filter={{ query: 'test', group: 'fixture-protection' }}
+    groups={GROUPS}
+  />
+);
+
+export const NoMatch: Story = () => (
+  <CategoryList
+    categories={[]}
+    filter={{ query: 'nothing', group: 'fixture-healing' }}
+    groups={GROUPS}
+  />
+);
+
+export const Empty: Story = () => (
+  <CategoryList categories={[]} filter={NO_FILTER} groups={GROUPS} />
+);

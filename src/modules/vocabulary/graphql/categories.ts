@@ -7,7 +7,7 @@ import {
   listCategories,
   updateCategory,
 } from '../services/categories';
-import type { CategoryGroupRow, CategoryRow } from '../types';
+import type { CategoryFilter, CategoryGroupRow, CategoryRow } from '../types';
 
 // The category vocabulary as a chip reads it (M8.11): each category with its
 // group, whose two stored colours are what the chip wears (MB.36). Public
@@ -43,12 +43,22 @@ export const CategoryRef = builder.objectRef<CategoryRow>('Category').implement(
 builder.queryField('categories', (t) =>
   t.pagedConnection({
     type: CategoryRef,
-    description: 'The live categories by name, each under a live group.',
-    resolve: (_query, _args, page) => listCategories(page),
+    description:
+      'The live categories by name, each under a live group: those whose name holds `query`, case-insensitively, and those filed under `groupId`, when given.',
+    args: {
+      query: t.arg.string({ required: false }),
+      groupId: t.arg.id({ required: false }),
+    },
+    resolve: (_query, args, page) => listCategories(categoryFilter(args), page),
     // "Page X of Y" (claude-docs/graphql/pagination.md, "Pagination").
-    count: (_query, _args, start) => countCategories(start),
+    count: (_query, args, start) => countCategories(categoryFilter(args), start),
   }),
 );
+
+/** The list's arguments as the service's filter: GraphQL's null is absent. */
+function categoryFilter(args: { query?: string | null; groupId?: string | null }): CategoryFilter {
+  return { query: args.query ?? undefined, groupId: args.groupId ?? undefined };
+}
 
 /** A category as the admin writes one, whole: no slug, which follows the name. */
 const CategoryInput = builder.inputType('CategoryInput', {

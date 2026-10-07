@@ -19,3 +19,15 @@ export interface PagerEndProps {
   soft: boolean;
   label: 'Prev' | 'Next';
 }
+
+/** An end that leads somewhere: its page, and its label. */
+export interface PagerLinkProps {
+  href: string;
+  label: 'Prev' | 'Next';
+}
+
+/** What an end shows: its label, and its chevron or, while `busy`, the spinner in its place. */
+export interface PagerEndContentProps {
+  label: 'Prev' | 'Next';
+  busy?: boolean;
+}

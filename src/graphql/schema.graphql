@@ -249,8 +249,10 @@ type PageInfo {
 }
 
 type Query {
-  """The live categories by name, each under a live group."""
-  categories(after: String, before: String, first: Int, last: Int): QueryCategoriesConnection!
+  """
+  The live categories by name, each under a live group: those whose name holds `query`, case-insensitively, and those filed under `groupId`, when given.
+  """
+  categories(after: String, before: String, first: Int, groupId: ID, last: Int, query: String): QueryCategoriesConnection!
   commonNameSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryCommonNameSuggestionsConnection!
   compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, query: String, withoutReferences: Boolean): QueryCompendiumConnection!
   deitySuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryDeitySuggestionsConnection!

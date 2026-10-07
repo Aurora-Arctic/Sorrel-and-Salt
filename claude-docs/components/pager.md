@@ -37,15 +37,30 @@ cursor helper (rule 8), so every list that shows its pages shows them here.
   every render, so a soft navigation is enough, and opening its modal works
   the same way. UserList keeps plain anchors, whose full load also runs the
   admin layout's guard again, as AdminNav does.
+- **The end followed shows its page is on the way** (the owner's call,
+  MB.178): the shared `.spinner` in its chevron's place and `aria-busy`,
+  on that end only. A soft end pushes its page inside a transition, pending
+  until the page renders; a plain end is busy from the click until the
+  browser leaves, and a `pageshow` from the back-forward cache clears it, so
+  Back does not land on a spinning end. A modified or middle click opens the
+  page elsewhere and leaves the end as it is. The live ends are
+  `pager-link.tsx`'s two client components, soft and plain apart so only
+  the soft one asks for the App Router; the disabled end stays a server
+  render, sharing `end-content.tsx` with them.
 - **A `nav` named "Pages"**, holding a bare `ul` of the two ends.
 
 ## Styling
 
 Entirely the `.pager` primitive: a centred, wrapping row of two full-size
-`.btn--quiet` buttons, with chevrons at 1.5em. `index.scss` holds nothing of
-its own.
+`.btn--quiet` buttons, with chevrons at twice the label. Each chevron sits in
+`.pager__mark`, a box a label's em wide that the spinner fills at the
+label's size, so an end is the same size busy or not; the busy rule's
+narrower left padding is put back for the pager's ends. `index.scss` holds
+nothing of its own.
 
 ## Testing
 
-`tests/components/Pager/index.test.tsx`. Each list's own test checks that the
+`tests/components/Pager/index.test.tsx`, its pending soft end through
+`tests/support/navigating.tsx`, which holds a mocked `push` pending as the
+App Router does. Each list's own test checks that the
 list passes its pages through.

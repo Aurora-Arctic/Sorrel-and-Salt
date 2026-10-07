@@ -1,22 +1,30 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
 import Pager from '../Pager';
+import CategoryListFilter from './filter';
 import type { CategoryListProps } from './types';
 import './index.scss';
 
-// `/admin/categories`' table and pager (M5.6). Render-only: the page reads one
-// page of the vocabulary through the service and hands it here. Each Edit is
+// `/admin/categories`' filter, table and pager (M5.6, MB.178). Render-only:
+// the page reads one page of the vocabulary under the address's filter
+// through the service and hands it here. The filter is a GET form to the page
+// itself, so a filtered page is an address. Each Edit is
 // an address — the page opens its modal from the URL, as it does for the Add
 // Category beside its heading — so a modal can be linked to and Back closes it
 // (claude-docs/components/category-list.md).
 
 const CategoryList = ({
   categories,
+  filter,
+  groups,
   previousHref,
   nextHref,
   position,
 }: CategoryListProps): ReactElement => (
   <div className="category-list">
+    {/* Keyed by the filter shown, so another one starts the form again from it. */}
+    <CategoryListFilter key={`${filter.query}\n${filter.group}`} filter={filter} groups={groups} />
+
     {categories.length ? (
       <div className="category-list__frame">
         <table className="category-list__table">
@@ -48,7 +56,7 @@ const CategoryList = ({
         </table>
       </div>
     ) : (
-      <p>No categories yet.</p>
+      <p>{filter.query || filter.group ? 'No category matches.' : 'No categories yet.'}</p>
     )}
 
     <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />

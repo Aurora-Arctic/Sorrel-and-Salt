@@ -168,7 +168,8 @@ test('an admin adds, edits and deletes a category in the modal over the list', a
   await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft');
   await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the e2e spec');
   await adding.getByRole('combobox', { name: 'Group' }).click();
-  await page.getByRole('option').first().click();
+  // The modal's own list: the filter's Group is a native select with options too.
+  await adding.getByRole('option').first().click();
   await adding.getByRole('button', { name: 'Save Category' }).click();
   await expect(adding).toHaveCount(0);
   // First by name, so on the first page.
@@ -191,6 +192,41 @@ test('an admin adds, edits and deletes a category in the modal over the list', a
   await editing.getByRole('button', { name: 'Delete', exact: true }).click();
   await expect(editing).toHaveCount(0);
   await expect(page.getByRole('row', { name: /Aaa Testcraft/ })).toHaveCount(0);
+});
+
+// MB.178: the list narrows by part of a name and by a group, a filtered page
+// is an address, and the links on it keep the filter.
+test('an admin filters the categories by part of a name and by a group', async ({ page }) => {
+  await signInAs(page, 'filter-admin@admin-categories.test', ['discord'], 'admin');
+  await page.goto('/admin/categories');
+  const search = page.getByRole('search');
+  const filter = search.getByRole('button', { name: 'Filter' });
+  const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
+  await expect(filter).toBeDisabled();
+
+  // Seven seeded categories end in "Work", matched whatever the case.
+  await search.getByRole('searchbox', { name: 'Name' }).fill('work');
+  await filter.click();
+  await expect(page).toHaveURL(/\/admin\/categories\?query=work$/);
+  await expect(rows).toHaveCount(7);
+  await expect(filter).toBeDisabled();
+
+  // Two of them are filed under Mind & Spirit.
+  await search.getByRole('combobox', { name: 'Group' }).selectOption({ label: 'Mind & Spirit' });
+  await filter.click();
+  await expect(page).toHaveURL(/\/admin\/categories\?query=work&group=mind-and-spirit$/);
+  await expect(rows).toHaveCount(2);
+  await expect(page.getByRole('row', { name: /Dream Work/ })).toBeVisible();
+  await expect(page.getByRole('row', { name: /Psychic Work/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Edit Dream Work' })).toHaveAttribute(
+    'href',
+    '/admin/categories?query=work&group=mind-and-spirit&edit=dream-work',
+  );
+  await assertNoAccessibilityViolations(page);
+
+  await search.getByRole('searchbox', { name: 'Name' }).fill('no such category');
+  await filter.click();
+  await expect(page.getByText('No category matches.')).toBeVisible();
 });
 
 test('an admin is told which compendium entries hold a category before it can go', async ({

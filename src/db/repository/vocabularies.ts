@@ -22,10 +22,11 @@ import {
 } from '../../modules/vocabulary/schema/ingredient-forms';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
-import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
+import { containsText, inCompendium, notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, pageBounds, selectFrom } from './select';
 import { claimantList, readSuggestionPage } from './suggestion-page';
 import type {
+  CategoryFilter,
   DeitySuggestion,
   FormSuggestion,
   InUseSource,
@@ -56,30 +57,34 @@ export function findIngredientFormValues(
 }
 
 /**
- * One page of the category vocabulary in `(name, id)` order, for
- * `categories`: the live categories whose group is live too, read as
- * `findIngredientFormValues` reads the forms. Public reference data, so no
- * proof.
+ * One page of the category vocabulary under `filter` in `(name, id)` order,
+ * for `categories` and the admin list: the live categories whose group is live
+ * too, read as `findIngredientFormValues` reads the forms. Public reference
+ * data, so no proof.
  */
 export function findCategoryPage(
+  filter: CategoryFilter,
   page: PageRequest,
 ): Promise<PageEntry<typeof categories.$inferSelect>[]> {
   const keyset = { ...CATEGORY_ORDER, request: page };
   return selectFrom(
     categories,
-    and(notSoftDeleted(categories), inLiveCategoryGroup(), pageBounds(keyset)),
+    and(notSoftDeleted(categories), ...categoryArms(filter), pageBounds(keyset)),
     keyset,
   );
 }
 
 /**
- * How many categories `findCategoryPage` pages, and how many come before
- * `start` in its order — the position of the page whose first row `start`
- * is, null with none: "Page X of Y" on the admin page and `categories`'
- * `totalCount`. One statement, over the page's own filter and key.
+ * How many categories `findCategoryPage` pages under `filter`, and how many
+ * come before `start` in its order — the position of the page whose first row
+ * `start` is, null with none: "Page X of Y" on the admin page and
+ * `categories`' `totalCount`. One statement, over the page's own filter and key.
  */
-export function findCategoryCount(start: Cursor | undefined): Promise<PageCount> {
-  return selectFrom(categories, and(notSoftDeleted(categories), inLiveCategoryGroup()), {
+export function findCategoryCount(
+  filter: CategoryFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return selectFrom(categories, and(notSoftDeleted(categories), ...categoryArms(filter)), {
     count: CATEGORY_ORDER,
     start,
   });
@@ -88,9 +93,17 @@ export function findCategoryCount(start: Cursor | undefined): Promise<PageCount>
 /** The category vocabulary's key: by name, then id. A page and its count share it. */
 const CATEGORY_ORDER = { sort: [categories.name], id: categories.id };
 
-/** A category's group is live, read by the builder's correlated `EXISTS`: a page and its count both read it. */
-function inLiveCategoryGroup(): SQL {
-  return existsIn(categoryGroups, eq(categoryGroups.id, categories.groupId));
+/**
+ * What a category page and its count both read beside the row's own filter:
+ * its group live, by the builder's correlated `EXISTS`, and the filter's
+ * arms, each `undefined` when its part is absent.
+ */
+function categoryArms({ query, groupId }: CategoryFilter): (SQL | undefined)[] {
+  return [
+    existsIn(categoryGroups, eq(categoryGroups.id, categories.groupId)),
+    query ? containsText(categories.name, query) : undefined,
+    groupId ? eq(categories.groupId, groupId) : undefined,
+  ];
 }
 
 /**

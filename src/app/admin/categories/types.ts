@@ -7,8 +7,14 @@ export interface AdminCategoriesPageProps {
   searchParams: Promise<CategoriesSearchParams>;
 }
 
-/** The page's address: at most one cursor, and the modal open over it — `new` by presence, or `edit` by slug. */
+/**
+ * The page's address: the filter — a name query, and a group by slug — at
+ * most one cursor, and the modal open over it — `new` by presence, or
+ * `edit` by slug.
+ */
 export interface CategoriesSearchParams {
+  query?: string | string[];
+  group?: string | string[];
   after?: string | string[];
   before?: string | string[];
   new?: string | string[];

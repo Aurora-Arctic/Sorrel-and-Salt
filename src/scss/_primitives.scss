@@ -250,12 +250,33 @@
 
   // Twice the label, so the direction reads at a glance; a line height of 1
   // so the mark does not make the button taller.
+  // A box of its own, a label's em wide, so the spinner that takes the
+  // chevron's place while the end's page is on the way leaves the button the
+  // size it was (the owner's call, MB.178).
   .pager__mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 0.5em;
     font-size: 2em;
     line-height: 1;
-    // The guillemet sits on the text's line, below the middle of the button,
-    // so it is brought up to the label's centre (the owner's call).
+
+    // The label's size, back from the mark's double.
+    > .spinner {
+      font-size: 0.5em;
+    }
+  }
+
+  // The guillemet sits on the text's line, below the middle of the button,
+  // so it is brought up to the label's centre (the owner's call).
+  .pager__chevron {
     translate: 0 -0.08em;
+  }
+
+  // A busy button's left side comes in for a spinner ahead of a word; an
+  // end's spinner stands in its chevron's box, so its padding stays put.
+  .pager .btn[aria-busy='true'] {
+    padding-left: space(5);
   }
 
   // "Page 2 of 3" between the ends, in the muted ink at the body size: it

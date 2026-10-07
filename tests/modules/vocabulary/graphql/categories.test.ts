@@ -12,7 +12,7 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { noSender } from '../../../support/email-verification';
 import { makeIngredient } from '../../../support/fixtures';
 import type { Context } from '@/graphql/types';
-import type { Answer, CategoryConnection, CategoryNode } from './types';
+import type { Answer, CategoryConnection, CategoryNode, FilteredCategories } from './types';
 
 // M5.6 over the wire: the public `categories` list and the admin's three
 // writes, run through Yoga with the route's own error mapping, so a refusal
@@ -71,6 +71,10 @@ const LIST = `query ($first: Int, $after: String) {
     edges { cursor node { ${FIELDS} } }
     pageInfo { hasNextPage endCursor }
   }
+}`;
+
+const FILTERED = `query ($query: String, $groupId: ID) {
+  categories(query: $query, groupId: $groupId) { totalCount edges { node { name } } }
 }`;
 
 const CREATE = `mutation ($input: CategoryInput!) { createCategory(input: $input) { ${FIELDS} } }`;
@@ -145,6 +149,45 @@ describe('categories', () => {
     expect(second.data?.categories.edges).toHaveLength(10);
     for (const edge of second.data?.categories.edges ?? [])
       expect(seen.has(edge.node.id)).toBe(false);
+  });
+
+  it('narrows its edges and its count by the query and the group', async () => {
+    await seed('Testcraft 100% Pure');
+    await seed('Testcraft 100x Pure');
+    const [other] = await sql<{ id: string }[]>`
+      select id from category_groups where deleted_at is null and id <> ${groupId}
+      order by name, id limit 1`;
+    // Why the second could have been listed: it sits in the same group, one character off.
+    const both = await run<{ categories: { totalCount: number } }>(
+      null,
+      'query { categories(query: "testcraft 100") { totalCount } }',
+    );
+    expect(both.data?.categories.totalCount).toBe(2);
+
+    const result = await run<{ categories: FilteredCategories }>(null, FILTERED, {
+      query: ' 100% ',
+      groupId,
+    });
+    const elsewhere = await run<{ categories: FilteredCategories }>(null, FILTERED, {
+      query: '100%',
+      groupId: other.id,
+    });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.categories).toEqual({
+      totalCount: 1,
+      edges: [{ node: { name: 'Testcraft 100% Pure' } }],
+    });
+    expect(elsewhere.data?.categories).toEqual({ totalCount: 0, edges: [] });
+  });
+
+  it('answers a group id that is not a uuid with an empty page, not an error', async () => {
+    const result = await run<{ categories: FilteredCategories }>(null, FILTERED, {
+      groupId: 'not-a-uuid',
+    });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.categories).toEqual({ totalCount: 0, edges: [] });
   });
 });
 

@@ -63,7 +63,8 @@ filed under it lose it too.` beside Delete and Keep It. A refusal comes back
 empty form, and `?edit=<slug>` opens the category at that slug, which the page
 reads through `getCategoryBySlug`. `src/app/admin/categories/category-dialog.tsx`
 is the client glue between them. Its `onDone` and the modal's `onClose` both
-`router.replace` the page the modal opened over, cursor kept, so Back does not
+`router.replace` the page the modal opened over, filter and cursor kept
+(`closeHref`, from `categoriesHref`), so Back does not
 reopen the modal, then `router.refresh()` so the list re-reads after a save or
 a delete. An `?edit=` naming no live category, renamed or deleted since the
 link was made, opens nothing and says so in an alert above the list.

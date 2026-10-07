@@ -53,6 +53,12 @@ export interface CategoryConnection {
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
 }
 
+/** A filtered `categories` page as the filter tests ask for it: the count, and each name. */
+export interface FilteredCategories {
+  totalCount: number;
+  edges: { node: { name: string } }[];
+}
+
 /** One error as the route sends it: the message, and the code and field errors MB.43 attaches. */
 export interface WireError {
   message: string;
