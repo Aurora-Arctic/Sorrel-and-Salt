@@ -17,8 +17,8 @@ MB.51 literally so — both call [`seedTwoTierVocabulary`](seed-module.md) with
 their own tables and literals:
 groups first (`ingredient_forms.group_id` is a NOT NULL foreign key),
 idempotency keyed on the seed key and **ignoring `deleted_at`** (MB.172), no update to
-anything already present, every slug derived by `slugify(name)` rather than
-written down, and the whole run inside one transaction that publishes
+anything already present, every slug derived rather than written down — a
+category's by `slugify(name)`, a form's by `formSlug(name, group)` (M5.6a) — and the whole run inside one transaction that publishes
 `app.current_user_id` and stamps through `applyAudit`. What it does not share is a colour: form groups section
 an autofill dropdown rather than tinting a chip, so there is no Sass map to
 resolve and no contrast floor to clear (§5, MB.35).
@@ -47,7 +47,17 @@ what you typed" row, so the escape hatch is visible rather than discovered.
 Where a value could sit in two groups the seed takes one sense and says which:
 `wax` is a Substance, rendered and set, so an admin who wants raw comb as an
 Animal part adds a second row — and may, because uniqueness is on the slug
-alone (§5).
+alone, and a form's slug names its group: `wax-substance` and `wax-animal`
+(§5).
+
+**The seed re-derives the form slugs a database already holds** (M5.6a). A
+form's slug was `slugify(name)` until M5.6a made it the name and the group,
+so after its inserts the seed brings every live form's slug to
+`formSlug(name, group)`, writing only the rows that differ: the backfill, in
+TypeScript, since one in SQL would be a second slug rule. A form's `seed_key`
+stays the slug it was seeded under, `slugify(name)`, as a seed key never
+changes after insert (MB.171), so the seed still keys a form by its name
+([`design-decisions/m5.6a-admin-forms.md`](../design-decisions/m5.6a-admin-forms.md)).
 
 **The descriptions are the criterion, not decoration.** §5's argument for the
 non-blank CHECK is that a curated value exists to explain itself. So

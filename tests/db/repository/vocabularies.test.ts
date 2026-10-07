@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { findIngredientFormValues } from '@/db/repository';
-import { resolvePage } from '@/lib/pagination';
+import { findIngredientFormValueCount, findIngredientFormValues } from '@/db/repository';
+import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { A } from '../../support/as-user';
 import type { ConnectionArgs, Page } from '@/lib/types';
 import type { IngredientFormValueRow } from '@/modules/vocabulary';
@@ -23,7 +23,7 @@ afterEach(async () => {
 });
 
 function pageOf(args: ConnectionArgs = {}): Promise<Page<IngredientFormValueRow>> {
-  return resolvePage(args, (request) => findIngredientFormValues(request));
+  return resolvePage(args, (request) => findIngredientFormValues({}, request));
 }
 
 /** Follows `endCursor` to the end, collecting ids and page sizes. */
@@ -64,7 +64,7 @@ describe('findIngredientFormValues', () => {
   });
 
   it('omits a soft-deleted form', async () => {
-    const [herb] = await sql`select id from ingredient_forms where slug = 'herb'`;
+    const [herb] = await sql`select id from ingredient_forms where slug = 'herb-botanical'`;
     await sql`
       update ingredient_forms set deleted_at = now(), deleted_by = ${A.id} where id = ${herb.id}`;
 
@@ -88,5 +88,34 @@ describe('findIngredientFormValues', () => {
 
     expect(ids).toHaveLength(78 - count);
     expect(ids).toEqual(await expectedOrder());
+  });
+});
+
+describe('findIngredientFormValueCount', () => {
+  it('counts what the pages hold, and how many come before a page’s first row', async () => {
+    const [herb] = await sql`select id from ingredient_forms where name = 'Herb'`;
+    const [curio] = await sql`select id from ingredient_form_groups where name = 'Curio'`;
+    const [{ count: underCurio }] = await sql`
+      select count(*)::int as count from ingredient_forms where group_id = ${curio.id}`;
+    await sql`
+      update ingredient_forms set deleted_at = now(), deleted_by = ${A.id} where id = ${herb.id}`;
+    await sql`
+      update ingredient_form_groups set deleted_at = now(), deleted_by = ${A.id}
+      where id = ${curio.id}`;
+    const expected = await expectedOrder();
+    // The precondition: a deleted form and a retired group's forms the count must leave out.
+    expect(underCurio).toBeGreaterThan(0);
+    expect(expected).toHaveLength(78 - 1 - underCurio);
+
+    const first = await pageOf({ first: 25 });
+    const second = await pageOf({ first: 25, after: first.pageInfo.endCursor });
+
+    await expect(findIngredientFormValueCount({}, undefined)).resolves.toEqual({
+      totalCount: expected.length,
+      countBefore: null,
+    });
+    await expect(
+      findIngredientFormValueCount({}, decodeCursor(second.pageInfo.startCursor as string)),
+    ).resolves.toEqual({ totalCount: expected.length, countBefore: 25 });
   });
 });

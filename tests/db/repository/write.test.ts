@@ -248,14 +248,19 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
   // are named for it, the ended pair stamped from the session. Twenty since
   // MB.69, whose admin invitation will authorise a grant: a generic insert
   // would let any service mint one, so the table takes a named insert under
-  // the proof and a named accept and revoke, each matching a pending row. A
-  // twenty-first is the next such decision.
-  it('offers exactly twenty writer methods — a twenty-first is a decision, not a convenience', async () => {
+  // the proof and a named accept and revoke, each matching a pending row.
+  // Twenty-one since M5.6a, whose form rename rewrites the compendium entries
+  // picking the form: the vocabulary module may not name `ingredients`, so
+  // the rewrite and the slugs it retires are named for it, below the boundary,
+  // matching only an entry that still picks the form. A twenty-second is the
+  // next such decision.
+  it('offers exactly twenty-one writer methods — a twenty-second is a decision, not a convenience', async () => {
     const methods = await withAudit(session, async (write) => Object.keys(write).sort());
 
     expect(methods).toEqual(
       [
         'acceptAdminInvitation',
+        'carryFormRename',
         'delete',
         'deleteLapsedSlugRetirements',
         'insert',

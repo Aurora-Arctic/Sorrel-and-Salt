@@ -13,6 +13,7 @@ import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { ingredientSlug } from '../../../lib/slugify';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
+import { inUtc } from '../../../lib/utc';
 import { RowId, parseInput } from '../../../lib/validation';
 import { ingredients } from '../schema/ingredients';
 import { retiredIngredientSlugs } from '../schema/retired-ingredient-slugs';
@@ -336,23 +337,6 @@ async function refuseEndingARedirect(
       message: `"${slug}" redirects to ${describeEntry(redirect.entry)} until ${inUtc(redirect.expiresAt)} — confirm to end that redirect`,
     },
   ]);
-}
-
-/** An instant as a person reads it, in UTC: `28 August 2026, 00:00 UTC`. */
-function inUtc(at: Date): string {
-  const day = at.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
-  const time = at.toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-    timeZone: 'UTC',
-  });
-  return `${day}, ${time} UTC`;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ingredientSlug, slugify } from '@/lib/slugify';
+import { formSlug, ingredientSlug, slugify } from '@/lib/slugify';
 
 // These pin the options, not the package: what breaks silently is a change to
 // `strict` or the charmap extension.
@@ -91,5 +91,21 @@ describe('ingredientSlug', () => {
     expect(ingredientSlug('Hidcote Lavender', 'flower', "Lavandula angustifolia 'Hidcote'")).toBe(
       ingredientSlug('Hidcote Lavender', 'flower', 'Lavandula angustifolia Hidcote'),
     );
+  });
+});
+
+// A form's address carries its group (M5.6a), so two live forms called "Wax"
+// under two groups hold two addresses, as DESIGN.md §5 lets them.
+describe('formSlug', () => {
+  it('joins the name and the group under the one slug rule', () => {
+    expect(formSlug('Wax', 'Substance')).toBe('wax-substance');
+    expect(formSlug('Wax', 'Animal')).toBe('wax-animal');
+    expect(formSlug('Fixture Shard', 'Stone & Salt')).toBe('fixture-shard-stone-and-salt');
+  });
+
+  it('is exactly slugify of the two, so either moves it', () => {
+    expect(formSlug('Testleaf', 'Fixture Group')).toBe(slugify('Testleaf Fixture Group'));
+    expect(formSlug('Testleaf', 'Fixture Group')).not.toBe(formSlug('Testroot', 'Fixture Group'));
+    expect(formSlug('Testleaf', 'Fixture Group')).not.toBe(formSlug('Testleaf', 'Fixture Other'));
   });
 });

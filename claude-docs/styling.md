@@ -445,8 +445,8 @@ are named "Prev" and "Next". `.pager__position`, "Page 2 of 3" between them,
 is muted text at the body size with `space(4)` either side, since it is not
 a control. An end with no page is disabled rather than
 hidden, so neither moves. The markup is the `Pager` component's
-([`components/pager.md`](components/pager.md)), which CategoryList and
-UserList render.
+([`components/pager.md`](components/pager.md)), which CategoryList,
+IngredientFormValueList and UserList render.
 
 **`.page-header` puts a page's heading and its one primary action on one
 line**, the action at the end (the owner's call, M5.6): `/admin/categories`'
@@ -459,8 +459,10 @@ a narrow screen rather than squeezing the heading.
 surface a modal wears, so a wide row stays readable across. Each cell is
 inset `space(3)` on both sides so no text meets a band's edge, and aligned on
 the baseline so a row's small button reads on its text's line. A 1px
-`$text-muted` hairline runs under the header row. CategoryList and UserList
-each carry the rules; a third table is the moment to make them a primitive.
+`$text-muted` hairline runs under the header row. The rules are the
+`.data-table` primitive, inside a `.data-table-frame` that scrolls a wide
+table sideways rather than widening the page: CategoryList and UserList each
+carried them until IngredientFormValueList made a third (M5.6a).
 
 ## Form fields
 

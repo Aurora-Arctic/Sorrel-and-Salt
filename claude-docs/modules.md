@@ -223,7 +223,8 @@ written under the proofs may cite; `findReferenceSuggestions` (MB.153), the
 reference picker's search; `citesNothing` (MB.153), the admin's to-do
 filter, an entry citing no compendium reference; and `writerFor` (M5.2), the private builder of `withAudit`'s writer, whose
 compendium-tier methods update and soft-delete a row only under
-`workspace_id IS NULL` and clear the tier's lapsed slug retirements. The
+`workspace_id IS NULL`, clear the tier's lapsed slug retirements, and carry a
+curated form's rename onto the entries picking it (`carryFormRename`, M5.6a). The
 list, its count, the identity lookup, the two address finders and the writer
 touch the compendium tier alone, as does `citesNothing`; each of the rest
 reads the compendium and the proofs' workspaces in a single statement. A later

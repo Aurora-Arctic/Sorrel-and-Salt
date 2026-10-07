@@ -26,8 +26,8 @@ const CategoryList = ({
     <CategoryListFilter key={`${filter.query}\n${filter.group}`} filter={filter} groups={groups} />
 
     {categories.length ? (
-      <div className="category-list__frame">
-        <table className="category-list__table">
+      <div className="data-table-frame">
+        <table className="data-table">
           <thead>
             <tr>
               <th scope="col">Name</th>

@@ -49,6 +49,7 @@ export {
   findCategoryPage,
   findCuratedRowsByIds,
   findCuratedRowsByName,
+  findIngredientFormValueCount,
   findIngredientFormValues,
   findVocabularySuggestions,
 } from './vocabularies';
@@ -69,8 +70,10 @@ export type {
   CommonNameSuggestion,
   CompendiumScore,
   DeitySuggestion,
+  FormRenameEntry,
   FormSuggestion,
   IngredientFilter,
+  IngredientFormValueFilter,
   IngredientIdentity,
   IngredientRow,
   JoinedRow,

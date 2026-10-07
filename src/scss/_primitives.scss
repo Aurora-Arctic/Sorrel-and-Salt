@@ -313,6 +313,39 @@
     }
   }
 
+  // A table is as wide as its columns: on a narrow screen it scrolls inside
+  // its frame rather than widening the page.
+  .data-table-frame {
+    overflow-x: auto;
+  }
+
+  // The admin lists' table (M5.6), a primitive once a third list carried it
+  // (M5.6a): banded on the card surface a modal wears, so a wide row stays
+  // readable across (the owner's call).
+  .data-table {
+    border-collapse: collapse;
+    width: 100%;
+
+    th,
+    td {
+      // Inset on both sides, as the rows are banded, so no text meets a band's edge.
+      padding: space(2) space(3);
+      text-align: start;
+      // The baseline, so a row's small button reads on its text's line.
+      vertical-align: baseline;
+    }
+
+    // The muted ink, as every hairline here is (the footer's, a specimen's):
+    // the body ink would draw a rule heavier than the text it heads.
+    thead th {
+      border-bottom: 1px solid $text-muted;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: $surface-card;
+    }
+  }
+
   // A sentence about the whole view rather than one field: a form's root
   // error, a sent confirmation. The role (`alert`, or `<output>`'s status)
   // is the markup's, since only it knows whether the text arrived late.

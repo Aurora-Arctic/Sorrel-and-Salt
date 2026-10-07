@@ -40,6 +40,7 @@ describe('repository public API', () => {
         'findCuratedRowsByIds',
         'findCuratedRowsByName',
         'findDeitiesOfIngredients',
+        'findIngredientFormValueCount',
         'findIngredientFormValues',
         'findIngredientSuggestions',
         'findIngredientsInSpellsIncludingSoftDeleted',

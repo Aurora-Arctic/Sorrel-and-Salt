@@ -77,9 +77,10 @@ A `CategoryListEntry` is the category's id, name, slug and description, plus
 
 The filter is the user list's: a wrapping row of the fields and the button,
 `.category-list__search`, on the `.field`, `.input`, `.select` and `.btn`
-primitives, Filter `.btn--solid`. The table is the user list's: it scrolls inside its frame on a narrow screen, and a
-description keeps to `$measure`. A 1px `$text-muted` hairline runs under the
-header row (`thead th`), the muted ink every hairline here uses. Add Category
+primitives, Filter `.btn--solid`. The table is the `.data-table` primitive (M5.6a): it scrolls inside its
+`.data-table-frame` on a narrow screen, and a 1px `$text-muted` hairline runs
+under the header row, the muted ink every hairline here uses. A description
+keeps to `$measure`. Add Category
 is `.btn--solid`, the page's one primary action, and each row's Edit is
 `.btn--small.btn--quiet`: a row action that changes nothing, small enough to
 keep the row short. The rows are banded, and the pager is
