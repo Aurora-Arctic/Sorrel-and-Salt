@@ -30,6 +30,7 @@ import type {
   DeitySuggestion,
   FormSuggestion,
   InUseSource,
+  KeyOrder,
   SuggestingVocabulary,
   VocabularySuggestion,
 } from './types';
@@ -57,10 +58,10 @@ export function findIngredientFormValues(
 }
 
 /**
- * One page of the category vocabulary under `filter` in `(name, id)` order,
- * for `categories` and the admin list: the live categories whose group is live
- * too, read as `findIngredientFormValues` reads the forms. Public reference
- * data, so no proof.
+ * One page of the category vocabulary under `filter`, by its group's name,
+ * then its own, then id, for `categories` and the admin list: the live
+ * categories whose group is live too, read as `findIngredientFormValues`
+ * reads the forms. Public reference data, so no proof.
  */
 export function findCategoryPage(
   filter: CategoryFilter,
@@ -90,8 +91,23 @@ export function findCategoryCount(
   });
 }
 
-/** The category vocabulary's key: by name, then id. A page and its count share it. */
-const CATEGORY_ORDER = { sort: [categories.name], id: categories.id };
+/** The groups, joined for their name alone: the row's own filter already holds the group live. */
+const grouped = sql.identifier('grouped');
+
+/**
+ * The category vocabulary's key: by its group's name, then its own, then id,
+ * the owner's call during MB.126, so a page reads as the picker lists it and
+ * two groups' namesakes sit apart. A page and its count share it, with the
+ * join that reads the group's name.
+ */
+const CATEGORY_ORDER: KeyOrder = {
+  sort: [{ expression: sql`${grouped}.name`, type: 'text' }, categories.name],
+  id: categories.id,
+  join: {
+    source: sql`(select ${categoryGroups.id}, ${categoryGroups.name} from ${categoryGroups}) as ${grouped}`,
+    on: eq(sql`${grouped}.id`, categories.groupId),
+  },
+};
 
 /**
  * What a category page and its count both read beside the row's own filter:

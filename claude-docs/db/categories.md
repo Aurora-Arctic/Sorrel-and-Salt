@@ -115,7 +115,9 @@ reference data like every curated vocabulary (MB.80). The writes are the site
 admin's alone, each opening on `assertSiteAdmin` before it reads the input.
 
 - **`listCategories(filter, page)`** pages the live categories under a live
-  group by `(name, id)`, through `findCategoryPage`, and
+  group by the group's name, then the category's, then id — the picker's
+  order, the owner's call during MB.126, read through a join on the groups
+  for the name alone — through `findCategoryPage`, and
   **`countCategories(filter, start)`** counts them, and those before a page's
   first row, through `findCategoryCount`, which shares the page's filter and
   key. The `CategoryFilter` narrows both in SQL (MB.178): `query` to a name

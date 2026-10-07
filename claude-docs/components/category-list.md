@@ -12,7 +12,7 @@ opens it to edit, with the filter as asked and the groups it can narrow to.
 
 | Prop           | What it is                                                          |
 | -------------- | ------------------------------------------------------------------- |
-| `categories`   | This page's `CategoryListEntry` rows, by name                       |
+| `categories`   | This page's `CategoryListEntry` rows, by group then name (MB.126)   |
 | `filter`       | `{ query, group }`, the filter as asked, each blank for none        |
 | `groups`       | Every live group as `{ slug, name }`, alphabetical: Group's choices |
 | `previousHref` | The page before this one, absent on the first                       |

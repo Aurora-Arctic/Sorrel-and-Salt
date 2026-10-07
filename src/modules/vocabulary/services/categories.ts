@@ -30,7 +30,7 @@ import type { CategoryFilter, CategoryGroupRow, CategoryRow } from '../types';
 const ENTRIES_NAMED = 3;
 
 /**
- * One page of the live categories under `filter`, by name, each under a live
+ * One page of the live categories under `filter`, by group then name, each under a live
  * group: the `categories` query, and the admin page's list. A blank query is
  * no query, and a group id that is not a uuid names no group, so lists nothing.
  */
